@@ -1,9 +1,9 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/auth";
+import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { 
   Card, 
   CardContent, 
@@ -12,33 +12,20 @@ import {
   CardHeader, 
   CardTitle 
 } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { 
-  Tabs, 
-  TabsContent, 
-  TabsList, 
-  TabsTrigger 
-} from "@/components/ui/tabs";
-import { 
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { 
-  User, 
-  Award, 
-  CheckCircle, 
-  BarChart, 
-  Calendar, 
-  Clock, 
-  TrendingUp, 
-  FileEdit,
-  BookOpen
+  ShieldCheck, 
+  Trophy, 
+  Activity, 
+  FileCheck, 
+  Clock,
+  Calendar,
+  Settings,
+  User
 } from "lucide-react";
-import LoadingScreen from "@/components/common/LoadingScreen";
-import { Link } from "react-router-dom";
 
 const formatDate = (dateString: string) => {
   const date = new Date(dateString);
