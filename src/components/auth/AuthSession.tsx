@@ -41,7 +41,7 @@ const AuthSession = ({ children }: { children: React.ReactNode }) => {
                   toast({
                     title: 'Aviso',
                     description: 'Perfil de usuário não encontrado. Algumas funcionalidades podem estar limitadas.',
-                    variant: 'warning',
+                    variant: 'default',
                   });
                 }
               })
@@ -78,7 +78,7 @@ const AuthSession = ({ children }: { children: React.ReactNode }) => {
               toast({
                 title: 'Aviso',
                 description: 'Perfil de usuário não encontrado. Algumas funcionalidades podem estar limitadas.',
-                variant: 'warning',
+                variant: 'default',
               });
             }
           })

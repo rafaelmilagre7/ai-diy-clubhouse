@@ -90,7 +90,7 @@ const Login = () => {
         )}
         
         {authDetails && (
-          <Alert variant="info" className="bg-blue-50 border-blue-200">
+          <Alert variant="default" className="bg-blue-50 border-blue-200">
             <Info className="h-4 w-4 text-blue-500" />
             <AlertDescription className="text-blue-700">
               <p><strong>Tentativa de login:</strong> {authDetails.provider}</p>
