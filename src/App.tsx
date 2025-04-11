@@ -21,6 +21,7 @@ import Profile from "@/pages/member/Profile";
 import AdminDashboard from "@/pages/admin/Dashboard";
 import SolutionsList from "@/pages/admin/SolutionsList";
 import SolutionEditor from "@/pages/admin/SolutionEditor";
+import SolutionMetrics from "@/pages/admin/SolutionMetrics";
 import UserManagement from "@/pages/admin/UserManagement";
 import NotFound from "@/pages/NotFound";
 
@@ -107,6 +108,7 @@ const AppRoutes = () => {
         <Route path="/admin/solutions" element={<SolutionsList />} />
         <Route path="/admin/solutions/new" element={<SolutionEditor />} />
         <Route path="/admin/solutions/:id" element={<SolutionEditor />} />
+        <Route path="/admin/analytics/solution/:id" element={<SolutionMetrics />} />
         <Route path="/admin/users" element={<UserManagement />} />
       </Route>
 

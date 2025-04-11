@@ -1,102 +1,154 @@
 
-import { useState, useEffect } from "react";
-import { Module } from "./BlockTypes";
-import { 
-  getContentBlocks, 
-  addBlock, 
-  updateBlock, 
-  removeBlock, 
-  moveBlock 
-} from "./utils/blockOperations";
-import { validateModule, createUpdatedModule } from "./utils/moduleValidation";
+import { useState } from "react";
+import { v4 as uuidv4 } from "uuid";
+import { Module } from "@/lib/supabase";
+import { validateModule } from "./utils/moduleValidation";
 
-export const useModuleEditor = (module: Module) => {
-  const [editedModule, setEditedModule] = useState<Module>({ ...module });
+export type BlockType =
+  | "header"
+  | "paragraph"
+  | "quote"
+  | "list"
+  | "image"
+  | "video"
+  | "youtube"
+  | "code"
+  | "checklist"
+  | "steps"
+  | "warning"
+  | "benefits"
+  | "metrics"
+  | "tips"
+  | "cta";
+
+export interface ContentBlock {
+  id: string;
+  type: BlockType;
+  data: Record<string, any>;
+}
+
+export const useModuleEditor = (initialModule: Module) => {
+  const [title, setTitle] = useState(initialModule.title);
   const [activeTab, setActiveTab] = useState("editor");
-  const [title, setTitle] = useState(module.title);
-
-  // Update local state when module prop changes
-  useEffect(() => {
-    setEditedModule({ ...module });
-    setTitle(module.title);
-  }, [module]);
-
-  // Initialize content if it doesn't exist or has an unexpected format
-  useEffect(() => {
-    if (!editedModule.content || !Array.isArray(editedModule.content.blocks)) {
-      setEditedModule(prev => ({
-        ...prev,
-        content: {
-          blocks: []
-        }
-      }));
+  const [content, setContent] = useState(() => {
+    if (initialModule.content && initialModule.content.blocks) {
+      return initialModule.content;
     }
-  }, []);
+    return { blocks: [] };
+  });
 
-  // Add a new block to the content
-  const handleAddBlock = (type: string) => {
-    const blocks = getContentBlocks(editedModule.content);
-    const updatedBlocks = addBlock(type, blocks);
+  const getContentBlocks = (): ContentBlock[] => {
+    return content.blocks || [];
+  };
+
+  const addBlock = (type: BlockType) => {
+    const newBlock: ContentBlock = {
+      id: uuidv4(),
+      type,
+      data: getDefaultDataForType(type),
+    };
+
+    setContent((prev) => ({
+      ...prev,
+      blocks: [...(prev.blocks || []), newBlock],
+    }));
+  };
+
+  const updateBlock = (id: string, data: Record<string, any>) => {
+    setContent((prev) => ({
+      ...prev,
+      blocks: (prev.blocks || []).map((block) =>
+        block.id === id ? { ...block, data } : block
+      ),
+    }));
+  };
+
+  const removeBlock = (id: string) => {
+    setContent((prev) => ({
+      ...prev,
+      blocks: (prev.blocks || []).filter((block) => block.id !== id),
+    }));
+  };
+
+  const moveBlock = (id: string, direction: "up" | "down") => {
+    const blocks = [...getContentBlocks()];
+    const index = blocks.findIndex((block) => block.id === id);
     
-    setEditedModule(prev => ({
-      ...prev,
-      content: {
-        ...prev.content,
-        blocks: updatedBlocks
-      }
-    }));
-  };
-
-  // Update a block at specific index
-  const handleUpdateBlock = (index: number, data: any) => {
-    const blocks = getContentBlocks(editedModule.content);
-    const updatedBlocks = updateBlock(blocks, index, data);
-
-    setEditedModule(prev => ({
-      ...prev,
-      content: {
-        ...prev.content,
-        blocks: updatedBlocks
-      }
-    }));
-  };
-
-  // Remove a block at specific index
-  const handleRemoveBlock = (index: number) => {
-    const blocks = getContentBlocks(editedModule.content);
-    const updatedBlocks = removeBlock(blocks, index);
+    if (index === -1) return;
     
-    setEditedModule(prev => ({
-      ...prev,
-      content: {
-        ...prev.content,
-        blocks: updatedBlocks
-      }
-    }));
-  };
-
-  // Move a block up or down
-  const handleMoveBlock = (index: number, direction: 'up' | 'down') => {
-    const blocks = getContentBlocks(editedModule.content);
-    const updatedBlocks = moveBlock(blocks, index, direction);
-
-    setEditedModule(prev => ({
-      ...prev,
-      content: {
-        ...prev.content,
-        blocks: updatedBlocks
-      }
-    }));
-  };
-
-  // Save the module
-  const handleSave = (onSave: (module: Module) => void) => {
-    if (!validateModule(title)) {
-      return;
+    if (direction === "up" && index > 0) {
+      const temp = blocks[index];
+      blocks[index] = blocks[index - 1];
+      blocks[index - 1] = temp;
+    } else if (direction === "down" && index < blocks.length - 1) {
+      const temp = blocks[index];
+      blocks[index] = blocks[index + 1];
+      blocks[index + 1] = temp;
     }
+    
+    setContent((prev) => ({
+      ...prev,
+      blocks,
+    }));
+  };
 
-    const updatedModule = createUpdatedModule(editedModule, title);
-    onSave(updatedModule);
+  const getDefaultDataForType = (type: BlockType): Record<string, any> => {
+    switch (type) {
+      case "header":
+        return { text: "", level: 2 };
+      case "paragraph":
+        return { text: "" };
+      case "quote":
+        return { text: "", caption: "" };
+      case "list":
+        return { style: "unordered", items: [""] };
+      case "image":
+        return { url: "", caption: "", alt: "" };
+      case "video":
+        return { url: "", caption: "" };
+      case "youtube":
+        return { videoId: "", caption: "" };
+      case "code":
+        return { code: "", language: "javascript" };
+      case "checklist":
+        return { items: [{ text: "", checked: false }] };
+      case "steps":
+        return { title: "Passo a passo", steps: [{ title: "Passo 1", description: "", imageUrl: "" }] };
+      case "warning":
+        return { title: "Atenção", text: "" };
+      case "benefits":
+        return { title: "Benefícios", items: [""] };
+      case "metrics":
+        return { title: "Métricas", description: "", metrics: [{ label: "", value: "", unit: "" }] };
+      case "tips":
+        return { title: "Dicas de otimização", items: [""] };
+      case "cta":
+        return { title: "Próximos passos", text: "", buttonText: "Continuar", buttonLink: "" };
+      default:
+        return {};
+    }
+  };
+
+  const handleSave = async (onSave: (module: Module) => void) => {
+    try {
+      // Validate module content before saving
+      const validationResult = validateModule(initialModule.type, content);
+      if (!validationResult.valid) {
+        throw new Error(validationResult.message);
+      }
+
+      const updatedModule: Module = {
+        ...initialModule,
+        title,
+        content,
+        updated_at: new Date().toISOString(),
+      };
+
+      onSave(updatedModule);
+    } catch (error) {
+      console.error("Error saving module:", error);
+      // Handle error (could be connected to a toast notification system)
+    }
   };
 
   return {
@@ -104,12 +156,11 @@ export const useModuleEditor = (module: Module) => {
     setTitle,
     activeTab,
     setActiveTab,
-    editedModule,
-    getContentBlocks: () => getContentBlocks(editedModule.content),
-    addBlock: handleAddBlock,
-    updateBlock: handleUpdateBlock,
-    removeBlock: handleRemoveBlock,
-    moveBlock: handleMoveBlock,
-    handleSave
+    getContentBlocks,
+    addBlock,
+    updateBlock,
+    removeBlock,
+    moveBlock,
+    handleSave,
   };
 };

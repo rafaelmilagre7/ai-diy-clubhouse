@@ -34,8 +34,11 @@ import {
   BarChart,
   Check,
   X,
+  SlidersHorizontal,
 } from "lucide-react";
 import LoadingScreen from "@/components/common/LoadingScreen";
+import { Card, CardContent } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const categoryLabel = (category: string) => {
   switch (category) {
@@ -87,6 +90,12 @@ const SolutionsList = () => {
   const [filteredSolutions, setFilteredSolutions] = useState<Solution[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [showFilters, setShowFilters] = useState(false);
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const [difficultyFilter, setDifficultyFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [sortBy, setSortBy] = useState<string>("updated_at");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   
   useEffect(() => {
     const fetchSolutions = async () => {
@@ -120,21 +129,65 @@ const SolutionsList = () => {
   }, [toast]);
   
   useEffect(() => {
-    if (!searchQuery) {
-      setFilteredSolutions(solutions);
-      return;
+    // Aplicar filtros e ordenação
+    let filtered = [...solutions];
+    
+    // Filtro por texto de busca
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(
+        (solution) =>
+          solution.title.toLowerCase().includes(query) ||
+          solution.description.toLowerCase().includes(query) ||
+          solution.category.toLowerCase().includes(query)
+      );
     }
     
-    const query = searchQuery.toLowerCase();
-    const filtered = solutions.filter(
-      (solution) =>
-        solution.title.toLowerCase().includes(query) ||
-        solution.description.toLowerCase().includes(query) ||
-        solution.category.toLowerCase().includes(query)
-    );
+    // Filtro por categoria
+    if (categoryFilter !== "all") {
+      filtered = filtered.filter(solution => solution.category === categoryFilter);
+    }
+    
+    // Filtro por dificuldade
+    if (difficultyFilter !== "all") {
+      filtered = filtered.filter(solution => solution.difficulty === difficultyFilter);
+    }
+    
+    // Filtro por status
+    if (statusFilter !== "all") {
+      const isPublished = statusFilter === "published";
+      filtered = filtered.filter(solution => solution.published === isPublished);
+    }
+    
+    // Ordenação
+    filtered.sort((a, b) => {
+      let valueA, valueB;
+      
+      switch (sortBy) {
+        case "title":
+          valueA = a.title;
+          valueB = b.title;
+          break;
+        case "created_at":
+          valueA = new Date(a.created_at).getTime();
+          valueB = new Date(b.created_at).getTime();
+          break;
+        case "updated_at":
+        default:
+          valueA = new Date(a.updated_at).getTime();
+          valueB = new Date(b.updated_at).getTime();
+          break;
+      }
+      
+      if (sortOrder === "asc") {
+        return valueA > valueB ? 1 : -1;
+      } else {
+        return valueA < valueB ? 1 : -1;
+      }
+    });
     
     setFilteredSolutions(filtered);
-  }, [searchQuery, solutions]);
+  }, [searchQuery, solutions, categoryFilter, difficultyFilter, statusFilter, sortBy, sortOrder]);
   
   const handleDelete = async (id: string) => {
     if (!window.confirm("Tem certeza que deseja excluir esta solução? Esta ação não pode ser desfeita.")) {
@@ -236,6 +289,10 @@ const SolutionsList = () => {
     }
   };
   
+  const viewMetrics = (solutionId: string) => {
+    navigate(`/admin/analytics/solution/${solutionId}`);
+  };
+  
   if (loading) {
     return <LoadingScreen />;
   }
@@ -266,11 +323,90 @@ const SolutionsList = () => {
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
-        <Button variant="outline">
+        <Button 
+          variant={showFilters ? "default" : "outline"} 
+          onClick={() => setShowFilters(!showFilters)}
+        >
           <Filter className="mr-2 h-4 w-4" />
-          Filtros
+          Filtros {showFilters ? "(Ativos)" : ""}
         </Button>
       </div>
+      
+      {showFilters && (
+        <Card>
+          <CardContent className="pt-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div>
+                <label className="text-sm font-medium mb-1 block">Categoria</label>
+                <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Todas categorias" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todas categorias</SelectItem>
+                    <SelectItem value="revenue">Receita</SelectItem>
+                    <SelectItem value="operational">Operacional</SelectItem>
+                    <SelectItem value="strategy">Estratégia</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div>
+                <label className="text-sm font-medium mb-1 block">Dificuldade</label>
+                <Select value={difficultyFilter} onValueChange={setDifficultyFilter}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Todas dificuldades" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todas dificuldades</SelectItem>
+                    <SelectItem value="easy">Fácil</SelectItem>
+                    <SelectItem value="medium">Médio</SelectItem>
+                    <SelectItem value="advanced">Avançado</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div>
+                <label className="text-sm font-medium mb-1 block">Status</label>
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Todos status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos status</SelectItem>
+                    <SelectItem value="published">Publicado</SelectItem>
+                    <SelectItem value="draft">Rascunho</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div>
+                <label className="text-sm font-medium mb-1 block">Ordenar por</label>
+                <div className="flex gap-2">
+                  <Select value={sortBy} onValueChange={setSortBy}>
+                    <SelectTrigger className="flex-1">
+                      <SelectValue placeholder="Última atualização" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="updated_at">Última atualização</SelectItem>
+                      <SelectItem value="created_at">Data de criação</SelectItem>
+                      <SelectItem value="title">Título</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button 
+                    variant="outline" 
+                    size="icon"
+                    onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
+                    title={sortOrder === "asc" ? "Crescente" : "Decrescente"}
+                  >
+                    <SlidersHorizontal className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
       
       <div className="rounded-md border">
         <Table>
@@ -342,6 +478,10 @@ const SolutionsList = () => {
                           <Copy className="mr-2 h-4 w-4" />
                           <span>Duplicar</span>
                         </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => viewMetrics(solution.id)}>
+                          <BarChart className="mr-2 h-4 w-4" />
+                          <span>Ver métricas</span>
+                        </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => handleTogglePublish(solution.id, solution.published)}>
                           {solution.published ? (
                             <>
@@ -371,11 +511,11 @@ const SolutionsList = () => {
                     <FileEdit className="h-8 w-8 text-muted-foreground mb-2" />
                     <h3 className="text-lg font-medium">Nenhuma solução encontrada</h3>
                     <p className="text-muted-foreground mt-1">
-                      {searchQuery
-                        ? "Tente mudar a busca para encontrar outras soluções."
+                      {searchQuery || categoryFilter !== "all" || difficultyFilter !== "all" || statusFilter !== "all"
+                        ? "Tente mudar os filtros para encontrar outras soluções."
                         : "Comece criando sua primeira solução!"}
                     </p>
-                    {!searchQuery && (
+                    {!searchQuery && categoryFilter === "all" && difficultyFilter === "all" && statusFilter === "all" && (
                       <Button 
                         className="mt-4"
                         onClick={() => navigate("/admin/solutions/new")}

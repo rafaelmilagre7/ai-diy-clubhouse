@@ -7,7 +7,8 @@ import {
   Users as UsersIcon,
   Settings,
   BarChart,
-  FileEdit
+  FileEdit,
+  Gauge
 } from "lucide-react";
 
 interface AdminSidebarNavProps {
@@ -58,7 +59,11 @@ export const AdminSidebarNav = ({ sidebarOpen }: AdminSidebarNavProps) => {
           to={item.path}
           className={cn(
             "flex items-center space-x-3 rounded-lg px-3 py-2 hover:bg-gray-100",
-            location.pathname === item.path ? "bg-gray-100 font-medium" : "text-gray-900"
+            location.pathname === item.path || 
+            (item.path === "/admin/solutions" && location.pathname.includes("/admin/solutions/")) ||
+            (item.path === "/admin/analytics" && location.pathname.includes("/admin/analytics/"))
+              ? "bg-gray-100 font-medium" 
+              : "text-gray-900"
           )}
         >
           <item.icon size={20} className="text-viverblue" />

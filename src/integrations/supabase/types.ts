@@ -196,6 +196,101 @@ export type Database = {
           },
         ]
       }
+      solution_metrics: {
+        Row: {
+          abandonment_rates: Json | null
+          average_completion_time: number | null
+          id: string
+          last_updated: string | null
+          solution_id: string | null
+          total_completions: number | null
+          total_starts: number | null
+          total_views: number | null
+        }
+        Insert: {
+          abandonment_rates?: Json | null
+          average_completion_time?: number | null
+          id?: string
+          last_updated?: string | null
+          solution_id?: string | null
+          total_completions?: number | null
+          total_starts?: number | null
+          total_views?: number | null
+        }
+        Update: {
+          abandonment_rates?: Json | null
+          average_completion_time?: number | null
+          id?: string
+          last_updated?: string | null
+          solution_id?: string | null
+          total_completions?: number | null
+          total_starts?: number | null
+          total_views?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "solution_metrics_solution_id_fkey"
+            columns: ["solution_id"]
+            isOneToOne: false
+            referencedRelation: "solutions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      solution_resources: {
+        Row: {
+          created_at: string | null
+          format: string | null
+          id: string
+          module_id: string | null
+          name: string
+          size: number | null
+          solution_id: string | null
+          type: string
+          updated_at: string | null
+          url: string
+        }
+        Insert: {
+          created_at?: string | null
+          format?: string | null
+          id?: string
+          module_id?: string | null
+          name: string
+          size?: number | null
+          solution_id?: string | null
+          type: string
+          updated_at?: string | null
+          url: string
+        }
+        Update: {
+          created_at?: string | null
+          format?: string | null
+          id?: string
+          module_id?: string | null
+          name?: string
+          size?: number | null
+          solution_id?: string | null
+          type?: string
+          updated_at?: string | null
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "solution_resources_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "modules"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "solution_resources_solution_id_fkey"
+            columns: ["solution_id"]
+            isOneToOne: false
+            referencedRelation: "solutions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       solutions: {
         Row: {
           category: string
@@ -207,6 +302,7 @@ export type Database = {
           published: boolean
           slug: string
           success_rate: number
+          tags: string[] | null
           thumbnail_url: string | null
           title: string
           updated_at: string
@@ -221,6 +317,7 @@ export type Database = {
           published?: boolean
           slug: string
           success_rate?: number
+          tags?: string[] | null
           thumbnail_url?: string | null
           title: string
           updated_at?: string
@@ -235,6 +332,7 @@ export type Database = {
           published?: boolean
           slug?: string
           success_rate?: number
+          tags?: string[] | null
           thumbnail_url?: string | null
           title?: string
           updated_at?: string

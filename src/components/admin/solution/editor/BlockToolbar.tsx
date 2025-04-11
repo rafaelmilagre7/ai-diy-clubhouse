@@ -1,78 +1,102 @@
 
-import React from "react";
 import { Button } from "@/components/ui/button";
-import { Type, FileText, Image, List, Video, Youtube, Code, Quote } from "lucide-react";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  AlertTriangle,
+  Check,
+  ChevronDown,
+  Heading,
+  Image,
+  List,
+  MessageSquareQuote,
+  Plus,
+  Type,
+  Code,
+  Youtube,
+  ListChecks,
+  GitBranch,
+  AlertOctagon,
+  Award,
+  BarChart3,
+  Lightbulb,
+  MousePointerClick
+} from "lucide-react";
+import { BlockType } from "./useModuleEditor";
+import { 
+  getBlockIcon, 
+  getBlockLabel,
+  getBlockCategory,
+  BlockCategory
+} from "./BlockIcons";
 
 interface BlockToolbarProps {
-  onAddBlock: (type: string) => void;
+  onAddBlock: (type: BlockType) => void;
 }
 
-const BlockToolbar: React.FC<BlockToolbarProps> = ({ onAddBlock }) => {
+interface BlockButtonProps {
+  type: BlockType;
+  onAdd: () => void;
+}
+
+const BlockButton = ({ type, onAdd }: BlockButtonProps) => {
+  const Icon = getBlockIcon(type);
+  
   return (
-    <div className="flex flex-wrap gap-2 mb-4">
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={() => onAddBlock('header')}
-      >
-        <Type className="h-4 w-4 mr-1" />
-        Título
-      </Button>
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={() => onAddBlock('paragraph')}
-      >
-        <FileText className="h-4 w-4 mr-1" />
-        Parágrafo
-      </Button>
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={() => onAddBlock('image')}
-      >
-        <Image className="h-4 w-4 mr-1" />
-        Imagem
-      </Button>
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={() => onAddBlock('list')}
-      >
-        <List className="h-4 w-4 mr-1" />
-        Lista
-      </Button>
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={() => onAddBlock('video')}
-      >
-        <Video className="h-4 w-4 mr-1" />
-        Vídeo
-      </Button>
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={() => onAddBlock('youtube')}
-      >
-        <Youtube className="h-4 w-4 mr-1" />
-        YouTube
-      </Button>
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={() => onAddBlock('code')}
-      >
-        <Code className="h-4 w-4 mr-1" />
-        Código
-      </Button>
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={() => onAddBlock('quote')}
-      >
-        <Quote className="h-4 w-4 mr-1" />
-        Citação
+    <Button
+      variant="outline"
+      className="justify-start"
+      onClick={onAdd}
+    >
+      <Icon className="mr-2 h-4 w-4" />
+      {getBlockLabel(type)}
+    </Button>
+  );
+};
+
+const BlockToolbar = ({ onAddBlock }: BlockToolbarProps) => {
+  
+  const blockTypes: { category: BlockCategory; types: BlockType[] }[] = [
+    {
+      category: "basic",
+      types: ["header", "paragraph", "quote", "list", "image", "video", "youtube", "code"]
+    },
+    {
+      category: "advanced",
+      types: ["checklist", "steps", "warning", "benefits", "metrics", "tips", "cta"]
+    }
+  ];
+  
+  return (
+    <div className="flex flex-wrap gap-2">
+      {blockTypes.map((category) => (
+        <Popover key={category.category}>
+          <PopoverTrigger asChild>
+            <Button variant="outline" className="gap-2">
+              {category.category === "basic" ? "Conteúdo Básico" : "Conteúdo Avançado"}
+              <ChevronDown className="h-3.5 w-3.5 opacity-70" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent align="start" className="w-72">
+            <div className="grid grid-cols-1 gap-1">
+              {category.types.map((type) => (
+                <BlockButton
+                  key={type}
+                  type={type}
+                  onAdd={() => onAddBlock(type)}
+                />
+              ))}
+            </div>
+          </PopoverContent>
+        </Popover>
+      ))}
+      
+      <Button variant="default" onClick={() => onAddBlock("paragraph")}>
+        <Plus className="mr-2 h-4 w-4" />
+        Adicionar Parágrafo
       </Button>
     </div>
   );

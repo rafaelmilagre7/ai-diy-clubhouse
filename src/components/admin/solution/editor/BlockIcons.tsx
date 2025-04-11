@@ -1,62 +1,59 @@
 
-import React from "react";
-import { cn } from "@/lib/utils";
-import { 
-  FileText, 
-  Image, 
-  List, 
-  Video, 
-  Youtube,
+import {
+  AlertTriangle,
+  Code,
+  GitBranch,
+  Heading,
+  Image,
+  List,
+  ListChecks,
+  MessageSquareQuote,
   Type,
-  PenTool,
-  Eye 
+  Video,
+  Youtube,
+  AlertOctagon,
+  Award,
+  BarChart3,
+  Lightbulb,
+  MousePointerClick,
+  LucideIcon
 } from "lucide-react";
+import { BlockType } from "./useModuleEditor";
 
-export const ChevronDown = ({ className }: { className?: string }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={cn("w-4 h-4", className)}>
-    <path d="m6 9 6 6 6-6"/>
-  </svg>
-);
+export type BlockCategory = "basic" | "advanced";
 
-export const ChevronUp = ({ className }: { className?: string }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={cn("w-4 h-4", className)}>
-    <path d="m18 15-6-6-6 6"/>
-  </svg>
-);
+interface BlockConfig {
+  label: string;
+  icon: LucideIcon;
+  category: BlockCategory;
+}
 
-export const Code = ({ className }: { className?: string }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={cn("w-4 h-4", className)}>
-    <polyline points="16 18 22 12 16 6" />
-    <polyline points="8 6 2 12 8 18" />
-  </svg>
-);
+const blockConfigs: Record<BlockType, BlockConfig> = {
+  header: { label: "Título", icon: Heading, category: "basic" },
+  paragraph: { label: "Parágrafo", icon: Type, category: "basic" },
+  quote: { label: "Citação", icon: MessageSquareQuote, category: "basic" },
+  list: { label: "Lista", icon: List, category: "basic" },
+  image: { label: "Imagem", icon: Image, category: "basic" },
+  video: { label: "Vídeo", icon: Video, category: "basic" },
+  youtube: { label: "YouTube", icon: Youtube, category: "basic" },
+  code: { label: "Código", icon: Code, category: "basic" },
+  checklist: { label: "Checklist", icon: ListChecks, category: "advanced" },
+  steps: { label: "Passos", icon: GitBranch, category: "advanced" },
+  warning: { label: "Alerta", icon: AlertTriangle, category: "advanced" },
+  benefits: { label: "Benefícios", icon: Award, category: "advanced" },
+  metrics: { label: "Métricas", icon: BarChart3, category: "advanced" },
+  tips: { label: "Dicas", icon: Lightbulb, category: "advanced" },
+  cta: { label: "Chamada para Ação", icon: MousePointerClick, category: "advanced" }
+};
 
-export const Quote = ({ className }: { className?: string }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={cn("w-4 h-4", className)}>
-    <path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z" />
-    <path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2.75 4v3c0 1 0 1 1 1z" />
-  </svg>
-);
+export const getBlockIcon = (type: BlockType): LucideIcon => {
+  return blockConfigs[type]?.icon || Type;
+};
 
-export const getBlockIcon = (type: string) => {
-  switch (type) {
-    case 'header':
-      return <Type className="h-4 w-4" />;
-    case 'paragraph':
-      return <FileText className="h-4 w-4" />;
-    case 'image':
-      return <Image className="h-4 w-4" />;
-    case 'list':
-      return <List className="h-4 w-4" />;
-    case 'video':
-      return <Video className="h-4 w-4" />;
-    case 'youtube':
-      return <Youtube className="h-4 w-4" />;
-    case 'code':
-      return <Code className="h-4 w-4" />;
-    case 'quote':
-      return <Quote className="h-4 w-4" />;
-    default:
-      return <FileText className="h-4 w-4" />;
-  }
+export const getBlockLabel = (type: BlockType): string => {
+  return blockConfigs[type]?.label || "Bloco";
+};
+
+export const getBlockCategory = (type: BlockType): BlockCategory => {
+  return blockConfigs[type]?.category || "basic";
 };
