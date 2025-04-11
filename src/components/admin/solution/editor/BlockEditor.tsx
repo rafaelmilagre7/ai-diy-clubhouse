@@ -23,6 +23,13 @@ import VideoBlock from "./blocks/VideoBlock";
 import YoutubeBlock from "./blocks/YoutubeBlock";
 import CodeBlock from "./blocks/CodeBlock";
 import QuoteBlock from "./blocks/QuoteBlock";
+import ChecklistBlock from "./blocks/ChecklistBlock";
+import StepsBlock from "./blocks/StepsBlock";
+import WarningBlock from "./blocks/WarningBlock";
+import BenefitsBlock from "./blocks/BenefitsBlock";
+import MetricsBlock from "./blocks/MetricsBlock";
+import TipsBlock from "./blocks/TipsBlock";
+import CTABlock from "./blocks/CTABlock";
 import { BlockType } from "./useModuleEditor";
 
 interface BlockEditorProps {
@@ -64,6 +71,20 @@ const BlockEditor: React.FC<BlockEditorProps> = ({
         return <CodeBlock data={data as CodeBlockData} onChange={(newData) => onUpdate(index, newData)} />;
       case 'quote':
         return <QuoteBlock data={data as QuoteBlockData} onChange={(newData) => onUpdate(index, newData)} />;
+      case 'checklist':
+        return <ChecklistBlock data={data as any} onChange={(newData) => onUpdate(index, newData)} />;
+      case 'steps':
+        return <StepsBlock data={data as any} onChange={(newData) => onUpdate(index, newData)} />;
+      case 'warning':
+        return <WarningBlock data={data as any} onChange={(newData) => onUpdate(index, newData)} />;
+      case 'benefits':
+        return <BenefitsBlock data={data as any} onChange={(newData) => onUpdate(index, newData)} />;
+      case 'metrics':
+        return <MetricsBlock data={data as any} onChange={(newData) => onUpdate(index, newData)} />;
+      case 'tips':
+        return <TipsBlock data={data as any} onChange={(newData) => onUpdate(index, newData)} />;
+      case 'cta':
+        return <CTABlock data={data as any} onChange={(newData) => onUpdate(index, newData)} />;
       default:
         return (
           <div className="bg-muted p-4 rounded">
