@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { FileText, Plus } from "lucide-react";
@@ -63,7 +62,7 @@ const ModulesForm = ({ solutionId, onSave, saving, currentModuleStep = -1 }: Mod
       // Se não há step específico e estamos editando, voltar para a lista
       handleBackToList();
     }
-  }, [currentModuleStep, modules, solutionId]);
+  }, [currentModuleStep, modules, solutionId, handleEditModule, handleBackToList, handleCreateDefaultModules, isEditing]);
 
   // Função para lidar com a criação de um novo módulo
   const handleCreateModule = () => {
