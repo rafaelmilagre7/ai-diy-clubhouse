@@ -1,13 +1,19 @@
 
 import { useState, useEffect } from "react";
-import { Module, ContentBlock, createEmptyBlock } from "./BlockTypes";
-import { useToast } from "@/hooks/use-toast";
+import { Module } from "./BlockTypes";
+import { 
+  getContentBlocks, 
+  addBlock, 
+  updateBlock, 
+  removeBlock, 
+  moveBlock 
+} from "./utils/blockOperations";
+import { validateModule, createUpdatedModule } from "./utils/moduleValidation";
 
 export const useModuleEditor = (module: Module) => {
   const [editedModule, setEditedModule] = useState<Module>({ ...module });
   const [activeTab, setActiveTab] = useState("editor");
   const [title, setTitle] = useState(module.title);
-  const { toast } = useToast();
 
   // Update local state when module prop changes
   useEffect(() => {
@@ -27,15 +33,10 @@ export const useModuleEditor = (module: Module) => {
     }
   }, []);
 
-  // Helper to get content blocks or return an empty array
-  const getContentBlocks = () => {
-    return editedModule.content?.blocks || [];
-  };
-
   // Add a new block to the content
-  const addBlock = (type: string) => {
-    const newBlock = createEmptyBlock(type);
-    const updatedBlocks = [...getContentBlocks(), newBlock];
+  const handleAddBlock = (type: string) => {
+    const blocks = getContentBlocks(editedModule.content);
+    const updatedBlocks = addBlock(type, blocks);
     
     setEditedModule(prev => ({
       ...prev,
@@ -47,16 +48,9 @@ export const useModuleEditor = (module: Module) => {
   };
 
   // Update a block at specific index
-  const updateBlock = (index: number, data: any) => {
-    const blocks = getContentBlocks();
-    const updatedBlocks = [...blocks];
-    updatedBlocks[index] = {
-      ...updatedBlocks[index],
-      data: {
-        ...updatedBlocks[index].data,
-        ...data
-      }
-    };
+  const handleUpdateBlock = (index: number, data: any) => {
+    const blocks = getContentBlocks(editedModule.content);
+    const updatedBlocks = updateBlock(blocks, index, data);
 
     setEditedModule(prev => ({
       ...prev,
@@ -68,9 +62,9 @@ export const useModuleEditor = (module: Module) => {
   };
 
   // Remove a block at specific index
-  const removeBlock = (index: number) => {
-    const blocks = getContentBlocks();
-    const updatedBlocks = blocks.filter((_, i) => i !== index);
+  const handleRemoveBlock = (index: number) => {
+    const blocks = getContentBlocks(editedModule.content);
+    const updatedBlocks = removeBlock(blocks, index);
     
     setEditedModule(prev => ({
       ...prev,
@@ -82,20 +76,9 @@ export const useModuleEditor = (module: Module) => {
   };
 
   // Move a block up or down
-  const moveBlock = (index: number, direction: 'up' | 'down') => {
-    const blocks = getContentBlocks();
-    if (
-      (direction === 'up' && index === 0) ||
-      (direction === 'down' && index === blocks.length - 1)
-    ) {
-      return;
-    }
-
-    const newIndex = direction === 'up' ? index - 1 : index + 1;
-    const updatedBlocks = [...blocks];
-    const temp = updatedBlocks[index];
-    updatedBlocks[index] = updatedBlocks[newIndex];
-    updatedBlocks[newIndex] = temp;
+  const handleMoveBlock = (index: number, direction: 'up' | 'down') => {
+    const blocks = getContentBlocks(editedModule.content);
+    const updatedBlocks = moveBlock(blocks, index, direction);
 
     setEditedModule(prev => ({
       ...prev,
@@ -108,21 +91,11 @@ export const useModuleEditor = (module: Module) => {
 
   // Save the module
   const handleSave = (onSave: (module: Module) => void) => {
-    // Validate fields
-    if (!title.trim()) {
-      toast({
-        title: "Título obrigatório",
-        description: "O módulo precisa ter um título.",
-        variant: "destructive",
-      });
+    if (!validateModule(title)) {
       return;
     }
 
-    const updatedModule = {
-      ...editedModule,
-      title,
-    };
-
+    const updatedModule = createUpdatedModule(editedModule, title);
     onSave(updatedModule);
   };
 
@@ -132,11 +105,11 @@ export const useModuleEditor = (module: Module) => {
     activeTab,
     setActiveTab,
     editedModule,
-    getContentBlocks,
-    addBlock,
-    updateBlock,
-    removeBlock,
-    moveBlock,
+    getContentBlocks: () => getContentBlocks(editedModule.content),
+    addBlock: handleAddBlock,
+    updateBlock: handleUpdateBlock,
+    removeBlock: handleRemoveBlock,
+    moveBlock: handleMoveBlock,
     handleSave
   };
 };

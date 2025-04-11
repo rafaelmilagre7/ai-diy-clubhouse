@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { ContentBlock, HeaderBlockData, ParagraphBlockData, ImageBlockData, ListBlockData, VideoBlockData, YoutubeBlockData, CodeBlockData, QuoteBlockData } from "./BlockTypes";
+import { ContentBlock } from "./BlockTypes";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronDown, ChevronUp, getBlockIcon } from "./BlockIcons";
 import HeaderBlock from "./blocks/HeaderBlock";
@@ -37,21 +37,21 @@ const BlockEditor: React.FC<BlockEditorProps> = ({
   const renderBlockEditor = () => {
     switch (type) {
       case 'header':
-        return <HeaderBlock data={data as HeaderBlockData} onChange={(newData) => onUpdate(index, newData)} />;
+        return <HeaderBlock data={data} onChange={(newData) => onUpdate(index, newData)} />;
       case 'paragraph':
-        return <ParagraphBlock data={data as ParagraphBlockData} onChange={(newData) => onUpdate(index, newData)} />;
+        return <ParagraphBlock data={data} onChange={(newData) => onUpdate(index, newData)} />;
       case 'image':
-        return <ImageBlock data={data as ImageBlockData} onChange={(newData) => onUpdate(index, newData)} />;
+        return <ImageBlock data={data} onChange={(newData) => onUpdate(index, newData)} />;
       case 'list':
-        return <ListBlock data={data as ListBlockData} onChange={(newData) => onUpdate(index, newData)} />;
+        return <ListBlock data={data} onChange={(newData) => onUpdate(index, newData)} />;
       case 'video':
-        return <VideoBlock data={data as VideoBlockData} onChange={(newData) => onUpdate(index, newData)} />;
+        return <VideoBlock data={data} onChange={(newData) => onUpdate(index, newData)} />;
       case 'youtube':
-        return <YoutubeBlock data={data as YoutubeBlockData} onChange={(newData) => onUpdate(index, newData)} />;
+        return <YoutubeBlock data={data} onChange={(newData) => onUpdate(index, newData)} />;
       case 'code':
-        return <CodeBlock data={data as CodeBlockData} onChange={(newData) => onUpdate(index, newData)} />;
+        return <CodeBlock data={data} onChange={(newData) => onUpdate(index, newData)} />;
       case 'quote':
-        return <QuoteBlock data={data as QuoteBlockData} onChange={(newData) => onUpdate(index, newData)} />;
+        return <QuoteBlock data={data} onChange={(newData) => onUpdate(index, newData)} />;
       default:
         return (
           <div className="bg-muted p-4 rounded">
