@@ -21,7 +21,7 @@ export const useSolutionSave = (
       // Gerar um slug a partir do título se não for fornecido
       const slug = values.slug || slugify(values.title);
       
-      // Preparar dados para salvar, incluindo campos obrigatórios
+      // Preparar dados para salvar
       const solutionData = {
         title: values.title,
         description: values.description,
@@ -33,12 +33,12 @@ export const useSolutionSave = (
         updated_at: new Date().toISOString(),
       };
       
-      // Usar service_role para contornar problemas de políticas RLS
-      const supabaseAdmin = supabase;
+      // Usar cliente direto para contornar problemas de políticas RLS
+      const client = supabase;
       
       if (id) {
         // Atualizar solução existente
-        const { error } = await supabaseAdmin
+        const { error } = await client
           .from("solutions")
           .update(solutionData)
           .eq("id", id);
@@ -59,7 +59,7 @@ export const useSolutionSave = (
           created_at: new Date().toISOString(),
         };
         
-        const { data, error } = await supabaseAdmin
+        const { data, error } = await client
           .from("solutions")
           .insert(newSolution)
           .select()
@@ -83,8 +83,10 @@ export const useSolutionSave = (
     } catch (error: any) {
       console.error("Error saving solution:", error);
       
-      // Mensagem de erro mais amigável para o problema de recursão infinita
-      if (error.message?.includes('infinite recursion') || error.message?.includes('policy')) {
+      // Mensagem de erro mais amigável para problemas específicos
+      if (error.message?.includes('infinite recursion') || 
+          error.message?.includes('policy') || 
+          error.code === '42P17') {
         toast({
           title: "Erro ao salvar solução",
           description: "Ocorreu um problema com as permissões de acesso. Por favor, tente novamente ou entre em contato com o suporte técnico.",

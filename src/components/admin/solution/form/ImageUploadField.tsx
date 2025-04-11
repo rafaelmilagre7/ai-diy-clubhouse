@@ -26,7 +26,7 @@ const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
       control={control}
       name={name}
       render={({ field }) => {
-        // Use useEffect at the component level, not in JSX
+        // Use effect outside the JSX return
         useEffect(() => {
           if (field.value && !imagePreview) {
             setImagePreview(field.value as string);
