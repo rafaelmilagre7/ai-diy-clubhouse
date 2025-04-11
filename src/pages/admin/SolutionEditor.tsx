@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -166,10 +165,18 @@ const SolutionEditor = () => {
         .replace(/[^\w\s]/gi, '')
         .replace(/\s+/g, '-');
       
+      // Garantir que todos os campos obrigatórios estejam presentes
       const solutionData = {
-        ...values,
-        slug,
-        updated_at: new Date().toISOString(),
+        title: values.title,
+        description: values.description,
+        category: values.category,
+        difficulty: values.difficulty,
+        estimated_time: values.estimated_time,
+        success_rate: values.success_rate,
+        slug: slug,
+        thumbnail_url: values.thumbnail_url || null,
+        published: values.published,
+        updated_at: new Date().toISOString()
       };
       
       if (id) {
