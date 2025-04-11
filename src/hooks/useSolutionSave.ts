@@ -14,7 +14,7 @@ export const useSolutionSave = (
   const navigate = useNavigate();
   const [saving, setSaving] = useState(false);
 
-  const onSubmit = async (values: SolutionFormValues, user: any) => {
+  const onSubmit = async (values: SolutionFormValues) => {
     try {
       setSaving(true);
       

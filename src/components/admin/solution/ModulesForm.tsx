@@ -11,6 +11,7 @@ import { MODULE_TYPE_MAPPING } from "./moduleConstants";
 import { ModuleProvider } from "./ModuleContext";
 import ModuleEmptyState from "./ModuleEmptyState";
 import ModuleCreationPanel from "./ModuleCreationPanel";
+import { Module } from "@/lib/supabase";
 
 interface ModulesFormProps {
   solutionId: string | null;
@@ -102,17 +103,19 @@ const ModulesForm = ({ solutionId, onSave, saving, currentModuleStep = -1 }: Mod
 };
 
 // Helper component to render module editor
+interface RenderModuleEditorProps {
+  modules: Module[];
+  selectedModuleIndex: number;
+  handleBackToList: () => void;
+  handleModuleSave: (module: Module) => Promise<void>;
+}
+
 const RenderModuleEditor = ({ 
   modules, 
   selectedModuleIndex, 
   handleBackToList, 
   handleModuleSave 
-}: {
-  modules: any[];
-  selectedModuleIndex: number;
-  handleBackToList: () => void;
-  handleModuleSave: (module: any) => Promise<void>;
-}) => {
+}: RenderModuleEditorProps) => {
   const moduleType = modules[selectedModuleIndex]?.type;
   const moduleStep = MODULE_TYPE_MAPPING.indexOf(moduleType || "");
   
@@ -145,7 +148,7 @@ const RenderModuleEditor = ({
 // Helper component to render modules list
 interface RenderModulesListProps {
   solutionId: string | null; 
-  modules: any[];
+  modules: Module[];
   onSave: () => void;
   saving: boolean;
   isLoading: boolean;

@@ -41,7 +41,7 @@ export const useSolutionEditor = (id: string | undefined, user: any) => {
 
   // Create a submit handler that uses our onSubmit function
   const handleSubmit = (values: SolutionFormValues) => {
-    return onSubmit(values, user);
+    return onSubmit(values);
   };
 
   return {
