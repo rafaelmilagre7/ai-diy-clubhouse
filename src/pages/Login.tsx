@@ -28,7 +28,7 @@ const Login = () => {
           setAuthProviders(["email"]);
         }
       } catch (err) {
-        console.error("Error checking authentication providers:", err);
+        console.error("Erro ao verificar provedores de autenticação:", err);
       }
     };
     
@@ -45,8 +45,8 @@ const Login = () => {
       });
       await signIn();
     } catch (err) {
-      console.error("Error logging in:", err);
-      setError("An error occurred during login. Please check if Supabase settings are correct.");
+      console.error("Erro ao fazer login:", err);
+      setError("Ocorreu um erro durante o login. Verifique se as configurações do Supabase estão corretas.");
     } finally {
       setIsLoading(false);
     }
@@ -58,8 +58,8 @@ const Login = () => {
       setError(null);
       await loginFn();
     } catch (err: any) {
-      console.error(`Error logging in as ${userType}:`, err);
-      setError(err?.message || `An error occurred logging in as ${userType}.`);
+      console.error(`Erro ao fazer login como ${userType}:`, err);
+      setError(err?.message || `Ocorreu um erro ao fazer login como ${userType}.`);
     } finally {
       setIsLoading(false);
     }
@@ -75,10 +75,10 @@ const Login = () => {
             alt="VIVER DE IA Club"
           />
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            DIY Platform
+            Plataforma DIY
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            Implement AI solutions with autonomy and success
+            Implemente soluções de IA com autonomia e sucesso
           </p>
         </div>
         
@@ -93,8 +93,8 @@ const Login = () => {
           <Alert variant="default" className="bg-blue-50 border-blue-200">
             <Info className="h-4 w-4 text-blue-500" />
             <AlertDescription className="text-blue-700">
-              <p><strong>Login attempt:</strong> {authDetails.provider}</p>
-              <p><strong>Redirect URL:</strong> {authDetails.redirectUrl}</p>
+              <p><strong>Tentativa de login:</strong> {authDetails.provider}</p>
+              <p><strong>URL de redirecionamento:</strong> {authDetails.redirectUrl}</p>
             </AlertDescription>
           </Alert>
         )}
@@ -109,16 +109,16 @@ const Login = () => {
               <span className="absolute left-0 inset-y-0 flex items-center pl-3">
                 <FcGoogle className="h-5 w-5" />
               </span>
-              {isLoading ? "Loading..." : "Sign in with Google"}
+              {isLoading ? "Carregando..." : "Entrar com Google"}
             </Button>
             
             {/* Test login buttons */}
             <Button 
               className="w-full py-6 text-base bg-blue-600 hover:bg-blue-700"
-              onClick={() => handleTestUserLogin(signInAsMember, "member")}
+              onClick={() => handleTestUserLogin(signInAsMember, "membro")}
               disabled={isLoading}
             >
-              {isLoading ? "Loading..." : "Login as Member (Test)"}
+              {isLoading ? "Carregando..." : "Login como Membro (Teste)"}
             </Button>
             
             <Button 
@@ -126,7 +126,7 @@ const Login = () => {
               onClick={() => handleTestUserLogin(signInAsAdmin, "admin")}
               disabled={isLoading}
             >
-              {isLoading ? "Loading..." : "Login as Admin (Test)"}
+              {isLoading ? "Carregando..." : "Login como Admin (Teste)"}
             </Button>
             
             <div className="text-center mt-2">
@@ -134,46 +134,46 @@ const Login = () => {
                 to="/" 
                 className="text-sm text-blue-600 hover:text-blue-500"
               >
-                Back to home page
+                Voltar para página inicial
               </Link>
             </div>
           </div>
 
           <div className="text-center text-sm text-gray-500 mt-8">
             <p>
-              Exclusive access for VIVER DE IA Club members.
+              Acesso exclusivo para membros do VIVER DE IA Club.
             </p>
             <p className="mt-2">
-              Not a member yet?{" "}
+              Não é membro ainda?{" "}
               <a
-                href="https://viverdeia.ai"
+                href="https://milagredigital.com/club/"
                 className="font-medium text-viverblue hover:text-viverblue-dark"
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                Learn about the Club
+                Conheça o Club
               </a>
             </p>
           </div>
           
           <div className="text-center text-xs text-gray-400 mt-4">
             <div className="p-3 bg-gray-100 rounded-md">
-              <p className="font-medium">Configuration information:</p>
+              <p className="font-medium">Informações de configuração:</p>
               <p className="break-all mt-1">
-                Current URL: {currentUrl}
+                URL atual: {currentUrl}
               </p>
               <p className="break-all mt-1">
-                Origin: {window.location.origin}
+                Origem: {window.location.origin}
               </p>
               <p className="mt-1 text-xs">
-                ⚠️ Add these URLs as Redirect URLs in Supabase
+                ⚠️ Adicione essas URLs como URLs de Redirecionamento no Supabase
               </p>
               <p className="mt-2 text-xs">
-                Active authentication providers: {authProviders.join(', ') || 'None detected'}
+                Provedores de autenticação ativos: {authProviders.join(', ') || 'Nenhum detectado'}
               </p>
             </div>
             <p className="mt-4">
-              For testing purposes, disable email confirmation in Supabase.
+              Para fins de teste, desative a confirmação de email no Supabase.
             </p>
           </div>
         </div>

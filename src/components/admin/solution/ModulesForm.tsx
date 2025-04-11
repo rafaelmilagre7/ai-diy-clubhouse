@@ -138,6 +138,19 @@ const RenderModuleEditor = ({
 };
 
 // Helper component to render modules list
+interface RenderModulesListProps {
+  solutionId: string | null; 
+  modules: any[];
+  onSave: () => void;
+  saving: boolean;
+  isLoading: boolean;
+  handleEditModule: (index: number) => void;
+  handlePreviewImplementation: () => void;
+  currentModuleStep: number;
+  onCreateModule: () => void;
+  handleCreateDefaultModules: (specificTypes?: string[]) => Promise<void>;
+}
+
 const RenderModulesList = ({ 
   solutionId, 
   modules, 
@@ -149,7 +162,7 @@ const RenderModulesList = ({
   currentModuleStep,
   onCreateModule,
   handleCreateDefaultModules
-}) => {
+}: RenderModulesListProps) => {
   return (
     <div>
       {modules.length > 0 ? (

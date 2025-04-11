@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase, Solution } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
@@ -106,8 +107,7 @@ export const useSolutionsData = (initialCategory: string | null) => {
         }
         
       } catch (error: any) {
-        console.error("Error fetching solutions:", error);
-        // Não mostrar erro na interface
+        console.error("Erro ao buscar soluções:", error);
         
         // Definir alguns dados fictícios para permitir o uso da aplicação
         const mockSolutions: Solution[] = [

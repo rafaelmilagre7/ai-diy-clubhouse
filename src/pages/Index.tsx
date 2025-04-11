@@ -83,7 +83,7 @@ const Index = () => {
             <p className="mt-2">
               Não é membro ainda?{" "}
               <a
-                href="https://viverdeiaclub.com.br"
+                href="https://milagredigital.com/club/"
                 className="font-medium text-blue-600 hover:text-blue-500"
                 target="_blank"
                 rel="noopener noreferrer"
