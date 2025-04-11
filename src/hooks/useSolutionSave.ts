@@ -33,14 +33,24 @@ export const useSolutionSave = (
         updated_at: new Date().toISOString(),
       };
       
+      // Utilizar a função rpc bypass_save_solution em vez de operações diretas
+      // para evitar problemas de recursão infinita nas políticas RLS
       if (id) {
-        const { error } = await supabase
-          .from("solutions")
-          .update(solutionData)
-          .eq("id", id);
+        // Atualizar solução existente
+        const { data, error } = await supabase.rpc('bypass_update_solution', {
+          p_id: id,
+          p_solution_data: solutionData
+        });
         
         if (error) {
-          throw error;
+          // Fallback para método direto se a função RPC não existir
+          console.warn("Função RPC não disponível, usando método direto:", error);
+          const { error: directError } = await supabase
+            .from("solutions")
+            .update(solutionData)
+            .eq("id", id);
+          
+          if (directError) throw directError;
         }
         
         toast({
@@ -48,37 +58,57 @@ export const useSolutionSave = (
           description: "As alterações foram salvas com sucesso.",
         });
       } else {
+        // Criar nova solução
         const newSolution = {
           ...solutionData,
           created_at: new Date().toISOString(),
         };
         
-        const { data, error } = await supabase
-          .from("solutions")
-          .insert(newSolution)
-          .select()
-          .single();
+        const { data, error } = await supabase.rpc('bypass_insert_solution', {
+          p_solution_data: newSolution
+        });
         
         if (error) {
-          throw error;
+          // Fallback para método direto se a função RPC não existir
+          console.warn("Função RPC não disponível, usando método direto:", error);
+          const { data: directData, error: directError } = await supabase
+            .from("solutions")
+            .insert(newSolution)
+            .select()
+            .single();
+          
+          if (directError) throw directError;
+          
+          setSolution(directData as Solution);
+          navigate(`/admin/solutions/${directData.id}`);
+        } else if (data) {
+          // Se a função RPC retornou dados
+          setSolution(data as Solution);
+          navigate(`/admin/solutions/${data.id}`);
         }
-        
-        setSolution(data as Solution);
         
         toast({
           title: "Solução criada",
           description: "A nova solução foi criada com sucesso.",
         });
-        
-        navigate(`/admin/solutions/${data.id}`);
       }
     } catch (error: any) {
       console.error("Error saving solution:", error);
-      toast({
-        title: "Erro ao salvar solução",
-        description: error.message || "Ocorreu um erro ao tentar salvar a solução.",
-        variant: "destructive",
-      });
+      
+      // Mensagem de erro mais específica para problemas de recursão
+      if (error.message && error.message.includes('infinite recursion')) {
+        toast({
+          title: "Erro de permissão",
+          description: "Problema de recursão detectado nas políticas de segurança. Entre em contato com o administrador.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Erro ao salvar solução",
+          description: error.message || "Ocorreu um erro ao tentar salvar a solução.",
+          variant: "destructive",
+        });
+      }
     } finally {
       setSaving(false);
     }
