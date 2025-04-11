@@ -3,7 +3,7 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 
 interface AuthErrorDisplayProps {
-  error: string;
+  error: Error | string; // Atualizado para aceitar tanto Error quanto string
   retryCount: number;
   maxRetries: number;
   onRetry: () => void;
@@ -18,11 +18,14 @@ const AuthErrorDisplay: React.FC<AuthErrorDisplayProps> = ({
   maxRetries,
   onRetry
 }) => {
+  // Extrair a mensagem de erro independentemente do tipo
+  const errorMessage = error instanceof Error ? error.message : error;
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4">
       <div className="bg-destructive/10 border border-destructive p-6 rounded-lg max-w-md">
         <h2 className="text-xl font-bold text-destructive mb-2">Erro de Autenticação</h2>
-        <p className="mb-4">{error}</p>
+        <p className="mb-4">{errorMessage}</p>
         <p className="mb-4">Houve um problema ao carregar seu perfil. Por favor, tente fazer login novamente.</p>
         <Button 
           variant="default"

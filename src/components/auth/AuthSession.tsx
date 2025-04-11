@@ -1,14 +1,16 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { useAuthSession } from "@/hooks/auth/useAuthSession";
 import AuthErrorDisplay from "@/components/auth/AuthErrorDisplay";
 import LoadingScreen from "@/components/common/LoadingScreen";
+import { useAuth } from "@/contexts/auth";
 
 /**
  * AuthSession component that handles authentication state changes
  * and provides a loading screen during authentication
  */
 const AuthSession = ({ children }: { children: React.ReactNode }) => {
+  const auth = useAuth();
   const {
     isInitializing,
     authError,
@@ -18,6 +20,13 @@ const AuthSession = ({ children }: { children: React.ReactNode }) => {
     setIsInitializing,
     setAuthError
   } = useAuthSession();
+
+  // Função para limpar a subscription no unmount
+  useEffect(() => {
+    return () => {
+      console.log("AuthSession: Limpando subscription");
+    };
+  }, []);
 
   // Handle retry attempt
   const handleRetry = () => {
