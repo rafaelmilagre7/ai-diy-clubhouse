@@ -1,6 +1,7 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { FileText, Plus } from "lucide-react";
+import { FileText, Plus, AlertTriangle } from "lucide-react";
 import { useModulesForm } from "./useModulesForm";
 import ModuleEditor from "./ModuleEditor";
 import ModuleNavigation from "./ModuleNavigation";
@@ -9,6 +10,8 @@ import NoSolutionPrompt from "./NoSolutionPrompt";
 import { Button } from "@/components/ui/button";
 import ModuleTypeSelector from "./ModuleTypeSelector";
 import { Badge } from "@/components/ui/badge";
+import ModuleGuide from "./ModuleGuide";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface ModulesFormProps {
   solutionId: string | null;
@@ -92,6 +95,12 @@ const ModulesForm = ({ solutionId, onSave, saving, currentModuleStep = -1 }: Mod
           </Button>
         </div>
         
+        {moduleType && (
+          <div className="mb-4">
+            <ModuleGuide moduleType={moduleType} />
+          </div>
+        )}
+        
         <ModuleEditor 
           module={modules[selectedModuleIndex]} 
           onSave={handleModuleSave} 
@@ -119,7 +128,10 @@ const ModulesForm = ({ solutionId, onSave, saving, currentModuleStep = -1 }: Mod
                 >
                   Cancelar
                 </Button>
-                <Button onClick={handleConfirmModuleCreation}>
+                <Button 
+                  onClick={handleConfirmModuleCreation}
+                  className="bg-[#0ABAB5] hover:bg-[#0ABAB5]/90"
+                >
                   Criar Módulo
                 </Button>
               </div>
@@ -133,6 +145,18 @@ const ModulesForm = ({ solutionId, onSave, saving, currentModuleStep = -1 }: Mod
                   "Gerencie os módulos da sua solução abaixo ou adicione novos módulos." :
                   "Primeiramente, salve as informações básicas da solução antes de configurar os módulos detalhados."}
               </p>
+              
+              {currentModuleStep >= 0 && !modules.find(m => m.type === MODULE_TYPE_MAPPING[currentModuleStep]) && (
+                <Alert variant="default" className="mt-4 bg-amber-50 border-amber-200 text-left">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertTitle>Módulo ainda não criado</AlertTitle>
+                  <AlertDescription>
+                    O módulo "{MODULE_TYPE_MAPPING[currentModuleStep]}" ainda não foi criado. 
+                    Clique em "Criar Estrutura Padrão" para criar todos os módulos ou crie este módulo específico.
+                  </AlertDescription>
+                </Alert>
+              )}
+              
               <div className="mt-6">
                 {solutionId ? (
                   <>
@@ -146,7 +170,7 @@ const ModulesForm = ({ solutionId, onSave, saving, currentModuleStep = -1 }: Mod
                     {modules.length < 8 && (
                       <Button 
                         onClick={handleCreateModule} 
-                        className="mt-4"
+                        className="mt-4 bg-[#0ABAB5] hover:bg-[#0ABAB5]/90"
                       >
                         <Plus className="mr-2 h-4 w-4" />
                         Adicionar Módulo
@@ -156,7 +180,7 @@ const ModulesForm = ({ solutionId, onSave, saving, currentModuleStep = -1 }: Mod
                     {modules.length === 0 && !isLoading && (
                       <Button 
                         onClick={() => handleCreateDefaultModules()} 
-                        className="mt-4"
+                        className="mt-4 bg-[#0ABAB5] hover:bg-[#0ABAB5]/90"
                       >
                         Criar Estrutura Padrão (8 Módulos)
                       </Button>

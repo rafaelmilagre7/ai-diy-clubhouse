@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase, Solution } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 import { SolutionFormValues } from "@/components/admin/solution/BasicInfoForm";
+import { moduleTypes } from "@/components/admin/solution/moduleTypes";
 
 export const useSolutionEditor = (id: string | undefined, user: any) => {
   const { toast } = useToast();
@@ -17,6 +18,20 @@ export const useSolutionEditor = (id: string | undefined, user: any) => {
   // Step management for the wizard-like interface
   const [currentStep, setCurrentStep] = useState(0);
   const totalSteps = 10; // Total number of steps in the solution creation process
+
+  // Títulos das etapas
+  const stepTitles = [
+    "Configuração Básica",
+    "Landing da Solução", 
+    "Visão Geral e Case",
+    "Preparação Express",
+    "Implementação Passo a Passo",
+    "Verificação de Implementação",
+    "Primeiros Resultados",
+    "Otimização Rápida", 
+    "Celebração e Próximos Passos",
+    "Revisão e Publicação"
+  ];
   
   const defaultValues: SolutionFormValues = {
     title: "",
@@ -26,6 +41,8 @@ export const useSolutionEditor = (id: string | undefined, user: any) => {
     thumbnail_url: "",
     published: false,
     slug: "",
+    estimated_time: 30, // Valor padrão em minutos
+    success_rate: 85, // Valor padrão de taxa de sucesso em porcentagem
   };
   
   useEffect(() => {
@@ -84,9 +101,8 @@ export const useSolutionEditor = (id: string | undefined, user: any) => {
         thumbnail_url: values.thumbnail_url || null,
         published: values.published,
         updated_at: new Date().toISOString(),
-        // Adicionar campos obrigatórios que faltavam
-        estimated_time: solution?.estimated_time || 30, // valor padrão de 30 minutos
-        success_rate: solution?.success_rate || 0 // valor padrão de 0%
+        estimated_time: values.estimated_time || 30, // valor padrão de 30 minutos
+        success_rate: values.success_rate || 85 // valor padrão de 85%
       };
       
       if (id) {
@@ -149,6 +165,8 @@ export const useSolutionEditor = (id: string | undefined, user: any) => {
         thumbnail_url: solution.thumbnail_url || "",
         published: solution.published,
         slug: solution.slug,
+        estimated_time: solution.estimated_time,
+        success_rate: solution.success_rate,
       }
     : defaultValues;
 
@@ -158,7 +176,7 @@ export const useSolutionEditor = (id: string | undefined, user: any) => {
       setActiveTab("basic");
     } else if (currentStep >= 1 && currentStep <= 8) {
       setActiveTab("modules");
-    } else {
+    } else if (currentStep === 9) {
       setActiveTab("resources");
     }
   }, [currentStep]);
@@ -173,6 +191,7 @@ export const useSolutionEditor = (id: string | undefined, user: any) => {
     currentValues,
     currentStep,
     setCurrentStep,
-    totalSteps
+    totalSteps,
+    stepTitles
   };
 };

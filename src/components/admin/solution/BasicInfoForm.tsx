@@ -22,6 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { Slider } from "@/components/ui/slider";
 import { Loader2, Save } from "lucide-react";
 import { slugify } from "@/utils/slugify";
 import React from "react";
@@ -46,6 +47,16 @@ const formSchema = z.object({
   slug: z.string().min(3, {
     message: "O slug deve ter pelo menos 3 caracteres.",
   }).optional(),
+  estimated_time: z.number().min(5, {
+    message: "O tempo estimado deve ser de pelo menos 5 minutos.",
+  }).max(180, {
+    message: "O tempo estimado não deve exceder 180 minutos.",
+  }),
+  success_rate: z.number().min(1, {
+    message: "A taxa de sucesso deve ser maior que 0%.",
+  }).max(100, {
+    message: "A taxa de sucesso não pode exceder 100%.",
+  }),
 });
 
 export type SolutionFormValues = z.infer<typeof formSchema>;
@@ -67,12 +78,23 @@ const BasicInfoForm = ({
   });
 
   const title = form.watch("title");
+  const difficulty = form.watch("difficulty");
   
   // Auto-gerar slug quando o título mudar e o slug não tiver sido modificado manualmente
   const handleTitleChange = (value: string) => {
     form.setValue("title", value);
     if (!form.getValues("slug") || form.getValues("slug") === slugify(form.getValues("title"))) {
       form.setValue("slug", slugify(value));
+    }
+  };
+
+  // Função para obter a cor correspondente à dificuldade
+  const getDifficultyColor = (diff: string) => {
+    switch (diff) {
+      case "easy": return "bg-green-500 text-white";
+      case "medium": return "bg-orange-500 text-white";
+      case "advanced": return "bg-red-500 text-white";
+      default: return "bg-gray-500 text-white";
     }
   };
 
@@ -182,18 +204,98 @@ const BasicInfoForm = ({
                     defaultValue={field.value}
                   >
                     <FormControl>
-                      <SelectTrigger>
+                      <SelectTrigger 
+                        className={field.value ? `${getDifficultyColor(field.value)} border-0` : ""}
+                      >
                         <SelectValue placeholder="Selecione uma dificuldade" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="easy">Fácil</SelectItem>
-                      <SelectItem value="medium">Médio</SelectItem>
-                      <SelectItem value="advanced">Avançado</SelectItem>
+                      <SelectItem value="easy" className="bg-green-100 hover:bg-green-200">
+                        Fácil
+                      </SelectItem>
+                      <SelectItem value="medium" className="bg-orange-100 hover:bg-orange-200">
+                        Médio
+                      </SelectItem>
+                      <SelectItem value="advanced" className="bg-red-100 hover:bg-red-200">
+                        Avançado
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                   <FormDescription>
                     O nível de dificuldade de implementação da solução.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="estimated_time"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Tempo Estimado (minutos)</FormLabel>
+                  <div className="flex space-x-4 items-center">
+                    <FormControl>
+                      <Input 
+                        type="number" 
+                        min={5}
+                        max={180}
+                        step={5}
+                        {...field}
+                        onChange={(e) => field.onChange(Number(e.target.value))}
+                        value={field.value}
+                        className="w-20"
+                      />
+                    </FormControl>
+                    <Slider 
+                      defaultValue={[field.value]} 
+                      max={180} 
+                      min={5} 
+                      step={5}
+                      onValueChange={(values) => field.onChange(values[0])}
+                      className="flex-grow"
+                    />
+                  </div>
+                  <FormDescription>
+                    Tempo médio necessário para implementar esta solução.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="success_rate"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Taxa de Sucesso Esperada (%)</FormLabel>
+                  <div className="flex space-x-4 items-center">
+                    <FormControl>
+                      <Input 
+                        type="number" 
+                        min={1}
+                        max={100}
+                        step={1}
+                        {...field}
+                        onChange={(e) => field.onChange(Number(e.target.value))}
+                        value={field.value}
+                        className="w-20"
+                      />
+                    </FormControl>
+                    <Slider 
+                      defaultValue={[field.value]} 
+                      max={100} 
+                      min={1} 
+                      step={1}
+                      onValueChange={(values) => field.onChange(values[0])}
+                      className="flex-grow"
+                    />
+                  </div>
+                  <FormDescription>
+                    A porcentagem esperada de membros que terão sucesso na implementação.
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -245,7 +347,7 @@ const BasicInfoForm = ({
           </div>
         </div>
 
-        <Button type="submit" disabled={saving}>
+        <Button type="submit" disabled={saving} className="bg-[#0ABAB5] hover:bg-[#0ABAB5]/90">
           {saving ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />

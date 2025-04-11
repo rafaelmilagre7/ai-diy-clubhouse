@@ -3,49 +3,57 @@ export const moduleTypes = [
   {
     type: "landing",
     title: "Landing da Solução",
+    description: "Apresentação inicial e benefícios principais da solução",
     order: 0,
-    description: "Apresentação inicial da solução e seus benefícios"
+    icon: "presentation",
   },
   {
     type: "overview",
     title: "Visão Geral e Case Real",
+    description: "Explicação detalhada e exemplo de caso de sucesso",
     order: 1,
-    description: "Explicação mais detalhada e exemplo de case de sucesso"
+    icon: "video",
   },
   {
     type: "preparation",
     title: "Preparação Express",
+    description: "Pré-requisitos e recursos necessários para implementação",
     order: 2,
-    description: "Checklist de pré-requisitos e recursos necessários"
+    icon: "check-square",
   },
   {
     type: "implementation",
     title: "Implementação Passo a Passo",
+    description: "Guia detalhado para implementação da solução",
     order: 3,
-    description: "Guia detalhado de implementação em passos sequenciais"
+    icon: "list",
   },
   {
     type: "verification",
     title: "Verificação de Implementação",
+    description: "Como validar se a solução foi implementada corretamente",
     order: 4,
-    description: "Checklist para validar a implementação correta"
+    icon: "check-circle",
   },
   {
     type: "results",
     title: "Primeiros Resultados",
+    description: "Como medir e comunicar os resultados iniciais",
     order: 5,
-    description: "Como extrair e mensurar os resultados iniciais"
+    icon: "bar-chart",
   },
   {
     type: "optimization",
     title: "Otimização Rápida",
+    description: "Melhorias e ajustes para maximizar resultados",
     order: 6,
-    description: "Dicas para melhorar e otimizar a implementação inicial"
+    icon: "zap",
   },
   {
     type: "celebration",
     title: "Celebração e Próximos Passos",
+    description: "Reconhecimento da conquista e sugestões de continuidade",
     order: 7,
-    description: "Resumo das conquistas e indicação de próximas soluções"
-  }
+    icon: "award",
+  },
 ];

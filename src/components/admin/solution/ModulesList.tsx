@@ -1,186 +1,122 @@
 
+import React from "react";
 import { Module } from "@/lib/supabase";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Edit, Eye, Loader2 } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
+import { Clock, Edit2, Eye, AlertCircle, CheckCircle, XCircle } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { moduleTypes } from "./moduleTypes";
 
 interface ModulesListProps {
   modules: Module[];
-  isLoading: boolean;
   onEditModule: (index: number) => void;
   onPreview: () => void;
+  isLoading: boolean;
 }
 
-const ModulesList = ({
-  modules,
-  isLoading,
-  onEditModule,
-  onPreview,
-}: ModulesListProps) => {
-  const getModuleTypeName = (type: string) => {
-    switch (type) {
-      case "landing":
-        return "Landing da Solução";
-      case "overview":
-        return "Visão Geral e Case Real";
-      case "preparation":
-        return "Preparação Express";
-      case "implementation":
-        return "Implementação Passo a Passo";
-      case "verification":
-        return "Verificação de Implementação";
-      case "results":
-        return "Primeiros Resultados";
-      case "optimization":
-        return "Otimização Rápida";
-      case "celebration":
-        return "Celebração e Próximos Passos";
-      default:
-        return type;
+const ModulesList = ({ modules, onEditModule, onPreview, isLoading }: ModulesListProps) => {
+  // Função para obter o ícone apropriado com base no status do módulo
+  const getModuleStatusIcon = (module: Module) => {
+    // Verificar se o módulo tem conteúdo significativo
+    const hasContent = module.content?.blocks && module.content.blocks.length > 0;
+    
+    if (!hasContent) {
+      return <XCircle className="h-5 w-5 text-red-500" />;
     }
+    
+    return <CheckCircle className="h-5 w-5 text-green-500" />;
   };
-
+  
+  // Função para obter a descrição do tipo de módulo
   const getModuleTypeDescription = (type: string) => {
-    switch (type) {
-      case "landing":
-        return "Apresentação inicial (30s)";
-      case "overview":
-        return "Contexto e case (2 min)";
-      case "preparation":
-        return "Requisitos e setup (3-5 min)";
-      case "implementation":
-        return "Passo a passo (15-30 min)";
-      case "verification":
-        return "Testes de funcionamento (2-5 min)";
-      case "results":
-        return "Primeiros resultados (5 min)";
-      case "optimization":
-        return "Melhorias e ajustes (5 min)";
-      case "celebration":
-        return "Conquista e próximos passos (1 min)";
-      default:
-        return "";
-    }
+    const moduleType = moduleTypes.find(m => m.type === type);
+    return moduleType?.description || "";
   };
 
-  const getModuleTypeClass = (type: string) => {
-    switch (type) {
-      case "landing":
-        return "border-blue-300 bg-blue-50";
-      case "overview":
-        return "border-green-300 bg-green-50";
-      case "preparation":
-        return "border-yellow-300 bg-yellow-50";
-      case "implementation":
-        return "border-purple-300 bg-purple-50";
-      case "verification":
-        return "border-red-300 bg-red-50";
-      case "results":
-        return "border-indigo-300 bg-indigo-50";
-      case "optimization":
-        return "border-pink-300 bg-pink-50";
-      case "celebration":
-        return "border-teal-300 bg-teal-50";
-      default:
-        return "border-gray-300";
-    }
-  };
-
-  const getModuleTypeColor = (type: string) => {
-    switch (type) {
-      case "landing":
-        return "border-blue-300 bg-blue-100 text-blue-800";
-      case "overview":
-        return "border-green-300 bg-green-100 text-green-800";
-      case "preparation":
-        return "border-yellow-300 bg-yellow-100 text-yellow-800";
-      case "implementation":
-        return "border-purple-300 bg-purple-100 text-purple-800";
-      case "verification":
-        return "border-red-300 bg-red-100 text-red-800";
-      case "results":
-        return "border-indigo-300 bg-indigo-100 text-indigo-800";
-      case "optimization":
-        return "border-pink-300 bg-pink-100 text-pink-800";
-      case "celebration":
-        return "border-teal-300 bg-teal-100 text-teal-800";
-      default:
-        return "border-gray-300 bg-gray-100 text-gray-800";
-    }
-  };
-
-  const getContentStatus = (module: Module) => {
-    if (!module.content || !module.content.blocks) {
-      return "Não configurado";
-    }
-    const blockCount = module.content.blocks.length;
-    if (blockCount === 0) {
-      return "Vazio";
-    }
-    return `${blockCount} bloco${blockCount !== 1 ? "s" : ""}`;
-  };
+  // Criar um array de todos os tipos de módulos para exibir inclusive os que não existem ainda
+  const allModuleTypes = moduleTypes.map(type => {
+    const existingModule = modules.find(m => m.type === type.type);
+    return {
+      id: existingModule?.id || `new-${type.type}`,
+      title: existingModule?.title || type.title,
+      type: type.type,
+      exists: !!existingModule,
+      module: existingModule,
+      order: type.order
+    };
+  }).sort((a, b) => a.order - b.order);
 
   if (isLoading) {
     return (
       <div className="flex justify-center items-center py-8">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-        <span className="ml-3 text-muted-foreground">Carregando módulos...</span>
+        <div className="animate-spin h-8 w-8 border-4 border-[#0ABAB5] border-t-transparent rounded-full"></div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-xl font-semibold">Módulos da Solução</h2>
-        <Button onClick={onPreview} variant="outline">
-          <Eye className="mr-2 h-4 w-4" />
-          Pré-visualizar Implementação
-        </Button>
-      </div>
-
-      <div className="grid grid-cols-1 gap-4">
-        {modules.map((module, index) => (
-          <Card
-            key={module.id}
-            className={cn("border-l-4", getModuleTypeClass(module.type))}
-          >
-            <CardHeader className="pb-2">
-              <div className="flex justify-between items-start">
-                <div>
-                  <Badge className={getModuleTypeColor(module.type)}>
-                    Módulo {index + 1}
-                  </Badge>
-                  <CardTitle className="mt-2">{module.title || getModuleTypeName(module.type)}</CardTitle>
-                  <CardDescription>{getModuleTypeDescription(module.type)}</CardDescription>
+    <ScrollArea className="max-h-[500px] pr-4">
+      <div className="space-y-3">
+        {allModuleTypes.map((item) => {
+          const moduleIndex = item.exists ? modules.findIndex(m => m.type === item.type) : -1;
+          
+          return (
+            <Card 
+              key={item.id}
+              className={`transition-all ${
+                item.exists ? "hover:border-[#0ABAB5]/60" : "opacity-60 hover:opacity-100"
+              }`}
+            >
+              <CardContent className="p-4 flex justify-between items-center">
+                <div className="flex items-start gap-3">
+                  <div className="mt-1">
+                    {item.exists ? getModuleStatusIcon(item.module!) : <AlertCircle className="h-5 w-5 text-amber-500" />}
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-medium">{item.title}</h3>
+                      <Badge variant="outline" className="text-xs">
+                        Módulo {item.order + 1}
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {getModuleTypeDescription(item.type)}
+                    </p>
+                    {item.module?.content?.blocks && (
+                      <div className="flex items-center gap-1 mt-1">
+                        <Clock className="h-3 w-3 text-muted-foreground" />
+                        <span className="text-xs text-muted-foreground">
+                          {item.module.content.blocks.length} blocos de conteúdo
+                        </span>
+                      </div>
+                    )}
+                  </div>
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => onEditModule(index)}
+                <Button 
+                  size="sm" 
+                  variant={item.exists ? "default" : "outline"}
+                  onClick={() => onEditModule(moduleIndex)}
+                  className={item.exists ? "bg-[#0ABAB5] hover:bg-[#0ABAB5]/90" : ""}
                 >
-                  <Edit className="mr-2 h-4 w-4" />
-                  Editar
+                  <Edit2 className="h-4 w-4 mr-1" />
+                  {item.exists ? "Editar" : "Criar"}
                 </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="flex justify-between text-sm text-muted-foreground">
-                <span>Status do conteúdo: {getContentStatus(module)}</span>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
-    </div>
+      
+      {modules.length > 0 && (
+        <div className="mt-6 flex justify-center">
+          <Button onClick={onPreview} variant="outline" className="w-full sm:w-auto">
+            <Eye className="h-4 w-4 mr-2" />
+            Visualizar Implementação
+          </Button>
+        </div>
+      )}
+    </ScrollArea>
   );
 };
 

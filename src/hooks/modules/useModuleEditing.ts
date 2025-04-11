@@ -5,84 +5,112 @@ import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 
 /**
- * Hook for editing module functionality
+ * Hook para gerenciar a edição de módulos
  */
 export const useModuleEditing = (
-  modules: Module[], 
+  modules: Module[],
   setModules: React.Dispatch<React.SetStateAction<Module[]>>
 ) => {
   const [selectedModuleIndex, setSelectedModuleIndex] = useState<number | null>(null);
-  const [isEditing, setIsEditing] = useState(false);
+  const [isEditing, setIsEditing] = useState<boolean>(false);
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  // Select a module to edit
+  // Função para editar um módulo específico
   const handleEditModule = (index: number) => {
-    setSelectedModuleIndex(index);
-    setIsEditing(true);
-  };
-
-  // Preview implementation
-  const handlePreviewImplementation = (solutionId: string | null) => {
-    if (solutionId) {
-      navigate(`/implement/${solutionId}/0`);
+    if (index >= 0 && index < modules.length) {
+      setSelectedModuleIndex(index);
+      setIsEditing(true);
     }
   };
 
-  // Go back to module list
-  const handleBackToList = () => {
-    setSelectedModuleIndex(null);
-    setIsEditing(false);
-  };
-
-  // Handle module save
+  // Função para salvar um módulo atualizado
   const handleModuleSave = async (updatedModule: Module) => {
     try {
+      if (!updatedModule.id) {
+        throw new Error("Module ID is required for update");
+      }
+
+      // Atualizar no banco de dados
       const { error } = await supabase
         .from("modules")
         .update({
           title: updatedModule.title,
-          content: updatedModule.content
+          content: updatedModule.content,
+          updated_at: new Date().toISOString()
         })
         .eq("id", updatedModule.id);
-      
+
       if (error) {
         throw error;
       }
-      
-      // Update the local modules list
-      setModules(prevModules => 
-        prevModules.map(module => 
-          module.id === updatedModule.id ? updatedModule : module
-        )
-      );
-      
+
+      // Atualizar o estado local
+      setModules(prevModules => {
+        const updatedModules = [...prevModules];
+        const indexToUpdate = updatedModules.findIndex(m => m.id === updatedModule.id);
+        
+        if (indexToUpdate !== -1) {
+          updatedModules[indexToUpdate] = updatedModule;
+        }
+        
+        return updatedModules;
+      });
+
       toast({
         title: "Módulo atualizado",
-        description: "As alterações foram salvas com sucesso.",
+        description: "As alterações no módulo foram salvas com sucesso.",
       });
-      
-      setIsEditing(false);
-      setSelectedModuleIndex(null);
+
+      // Opcional: voltar para a lista de módulos após salvar
+      // Comentado porque podemos querer continuar editando
+      // setIsEditing(false);
+      // setSelectedModuleIndex(null);
     } catch (error) {
       console.error("Error saving module:", error);
       toast({
         title: "Erro ao salvar módulo",
-        description: "Não foi possível salvar as alterações.",
+        description: "Ocorreu um erro ao tentar salvar as alterações do módulo.",
         variant: "destructive",
       });
     }
   };
 
-  // Navigate to next or previous module
+  // Função para voltar para a lista de módulos
+  const handleBackToList = () => {
+    setIsEditing(false);
+    setSelectedModuleIndex(null);
+  };
+
+  // Função para navegar entre módulos
   const handleNavigateModule = (direction: 'next' | 'prev') => {
     if (selectedModuleIndex === null) return;
-    
-    const newIndex = direction === 'next' 
-      ? Math.min(selectedModuleIndex + 1, modules.length - 1)
-      : Math.max(selectedModuleIndex - 1, 0);
-    
-    setSelectedModuleIndex(newIndex);
+
+    const totalModules = modules.length;
+    let newIndex = selectedModuleIndex;
+
+    if (direction === 'next' && selectedModuleIndex < totalModules - 1) {
+      newIndex = selectedModuleIndex + 1;
+    } else if (direction === 'prev' && selectedModuleIndex > 0) {
+      newIndex = selectedModuleIndex - 1;
+    }
+
+    if (newIndex !== selectedModuleIndex) {
+      setSelectedModuleIndex(newIndex);
+    }
+  };
+
+  // Função para pré-visualizar a implementação
+  const handlePreviewImplementation = (solutionId: string | null) => {
+    if (solutionId) {
+      navigate(`/implement/${solutionId}/0`);
+    } else {
+      toast({
+        title: "Impossível pré-visualizar",
+        description: "Salve a solução primeiro para poder pré-visualizar a implementação.",
+        variant: "destructive",
+      });
+    }
   };
 
   return {

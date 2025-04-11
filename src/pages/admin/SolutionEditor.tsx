@@ -10,6 +10,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { moduleTypes } from "@/components/admin/solution/moduleTypes";
 
 const SolutionEditor = () => {
   const { id } = useParams<{ id: string }>();
@@ -25,7 +26,8 @@ const SolutionEditor = () => {
     currentValues,
     currentStep,
     setCurrentStep,
-    totalSteps
+    totalSteps,
+    stepTitles
   } = useSolutionEditor(id, user);
   
   if (loading) {
@@ -42,23 +44,45 @@ const SolutionEditor = () => {
   };
 
   const handleNextStep = () => {
-    if (currentStep < totalSteps) {
+    if (currentStep < totalSteps - 1) {
+      // Salvar o estado atual antes de avançar
+      handleSave();
       setCurrentStep(currentStep + 1);
     }
   };
 
   const handlePreviousStep = () => {
     if (currentStep > 0) {
+      // Salvar o estado atual antes de retroceder
+      handleSave();
       setCurrentStep(currentStep - 1);
+    }
+  };
+
+  // Determina a cor do nível de dificuldade
+  const getDifficultyColor = () => {
+    const difficulty = currentValues.difficulty;
+    switch (difficulty) {
+      case "easy":
+        return "bg-green-500";
+      case "medium":
+        return "bg-orange-500";
+      case "advanced":
+        return "bg-red-500";
+      default:
+        return "bg-gray-500";
     }
   };
   
   return (
-    <div className="space-y-6 max-w-7xl mx-auto">
+    <div className="space-y-6 max-w-7xl mx-auto pb-10">
       <SolutionEditorHeader 
         id={id} 
         saving={saving} 
-        onSave={handleSave} 
+        onSave={handleSave}
+        title={currentValues.title}
+        difficulty={currentValues.difficulty}
+        difficultyColor={getDifficultyColor()}
       />
       
       {!user && (
@@ -75,13 +99,18 @@ const SolutionEditor = () => {
         <div className="mb-6">
           <div className="flex justify-between items-center mb-2">
             <span className="text-sm font-medium text-muted-foreground">
-              Etapa {currentStep + 1} de {totalSteps}
+              Etapa {currentStep + 1} de {totalSteps}:
+              <span className="ml-2 font-semibold text-primary">{stepTitles[currentStep]}</span>
             </span>
             <span className="text-sm text-muted-foreground">
               {Math.round((currentStep / (totalSteps - 1)) * 100)}% concluído
             </span>
           </div>
-          <Progress value={(currentStep / (totalSteps - 1)) * 100} className="h-2" />
+          <Progress 
+            value={(currentStep / (totalSteps - 1)) * 100} 
+            className="h-2" 
+            indicatorClassName="bg-[#0ABAB5]"
+          />
         </div>
       )}
       
@@ -114,7 +143,7 @@ const SolutionEditor = () => {
           <Button
             onClick={handleNextStep}
             disabled={currentStep === totalSteps - 1}
-            className="flex items-center"
+            className="flex items-center bg-[#0ABAB5] hover:bg-[#0ABAB5]/90"
           >
             Próximo
             <ChevronRight className="w-4 h-4 ml-2" />

@@ -2,16 +2,37 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, Save, Eye, Layers } from "lucide-react";
+import { ChevronLeft, Save, Eye, Layers, Clock } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 interface SolutionEditorHeaderProps {
   id: string | undefined;
   saving: boolean;
   onSave: () => void;
+  title?: string;
+  difficulty?: "easy" | "medium" | "advanced";
+  difficultyColor?: string;
 }
 
-const SolutionEditorHeader = ({ id, saving, onSave }: SolutionEditorHeaderProps) => {
+const SolutionEditorHeader = ({ 
+  id, 
+  saving, 
+  onSave,
+  title,
+  difficulty,
+  difficultyColor 
+}: SolutionEditorHeaderProps) => {
   const navigate = useNavigate();
+  
+  // Mapear dificuldade para texto em português
+  const getDifficultyText = (diff?: string) => {
+    switch (diff) {
+      case "easy": return "Fácil";
+      case "medium": return "Médio";
+      case "advanced": return "Avançado";
+      default: return "";
+    }
+  };
 
   return (
     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white p-4 rounded-lg shadow-sm border">
@@ -25,13 +46,22 @@ const SolutionEditorHeader = ({ id, saving, onSave }: SolutionEditorHeaderProps)
           Voltar para lista
         </Button>
         <h1 className="text-2xl font-bold text-gray-900">
-          {id ? "Editar Solução" : "Nova Solução"}
+          {id ? (title ? title : "Editar Solução") : "Nova Solução"}
         </h1>
-        <p className="text-muted-foreground text-sm mt-1">
-          {id
-            ? "Atualize os detalhes e conteúdo da solução"
-            : "Crie uma nova solução para a plataforma DIY"}
-        </p>
+        <div className="flex items-center gap-2 mt-2">
+          {difficulty && (
+            <Badge 
+              className={`${difficultyColor} text-white`}
+            >
+              {getDifficultyText(difficulty)}
+            </Badge>
+          )}
+          <p className="text-muted-foreground text-sm">
+            {id
+              ? "Atualize os detalhes e conteúdo da solução"
+              : "Crie uma nova solução para a plataforma DIY"}
+          </p>
+        </div>
       </div>
       <div className="flex items-center gap-3">
         {id && (
