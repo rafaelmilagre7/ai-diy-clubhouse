@@ -1,6 +1,6 @@
 
 import { supabase, UserProfile, UserRole } from '@/lib/supabase';
-import { TEST_ADMIN, TEST_MEMBER } from '../types';
+import { TEST_ADMIN, TEST_MEMBER } from '../constants';
 import { toast } from '@/hooks/use-toast';
 
 // Create test user (member or admin)
