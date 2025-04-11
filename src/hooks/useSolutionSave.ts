@@ -33,24 +33,22 @@ export const useSolutionSave = (
         updated_at: new Date().toISOString(),
       };
       
-      // Utilizar a função rpc bypass_save_solution em vez de operações diretas
-      // para evitar problemas de recursão infinita nas políticas RLS
+      // Em vez de funções RPC que podem não existir, usamos operações diretas
+      // mas com melhor tratamento de erro
       if (id) {
         // Atualizar solução existente
-        const { data, error } = await supabase.rpc('bypass_update_solution', {
-          p_id: id,
-          p_solution_data: solutionData
-        });
+        const { error } = await supabase
+          .from("solutions")
+          .update(solutionData)
+          .eq("id", id);
         
         if (error) {
-          // Fallback para método direto se a função RPC não existir
-          console.warn("Função RPC não disponível, usando método direto:", error);
-          const { error: directError } = await supabase
-            .from("solutions")
-            .update(solutionData)
-            .eq("id", id);
-          
-          if (directError) throw directError;
+          // Verificar se é um erro de recursão
+          if (error.message && error.message.includes('infinite recursion')) {
+            console.error("Erro de recursão detectado nas políticas RLS:", error);
+            throw new Error("Problema de permissão: Recursão infinita nas políticas de segurança");
+          }
+          throw error;
         }
         
         toast({
@@ -64,25 +62,22 @@ export const useSolutionSave = (
           created_at: new Date().toISOString(),
         };
         
-        const { data, error } = await supabase.rpc('bypass_insert_solution', {
-          p_solution_data: newSolution
-        });
+        const { data, error } = await supabase
+          .from("solutions")
+          .insert(newSolution)
+          .select()
+          .single();
         
         if (error) {
-          // Fallback para método direto se a função RPC não existir
-          console.warn("Função RPC não disponível, usando método direto:", error);
-          const { data: directData, error: directError } = await supabase
-            .from("solutions")
-            .insert(newSolution)
-            .select()
-            .single();
-          
-          if (directError) throw directError;
-          
-          setSolution(directData as Solution);
-          navigate(`/admin/solutions/${directData.id}`);
-        } else if (data) {
-          // Se a função RPC retornou dados
+          // Verificar se é um erro de recursão
+          if (error.message && error.message.includes('infinite recursion')) {
+            console.error("Erro de recursão detectado nas políticas RLS:", error);
+            throw new Error("Problema de permissão: Recursão infinita nas políticas de segurança");
+          }
+          throw error;
+        }
+        
+        if (data) {
           setSolution(data as Solution);
           navigate(`/admin/solutions/${data.id}`);
         }
@@ -96,10 +91,11 @@ export const useSolutionSave = (
       console.error("Error saving solution:", error);
       
       // Mensagem de erro mais específica para problemas de recursão
-      if (error.message && error.message.includes('infinite recursion')) {
+      if (error.message && error.message.includes('recursão infinita') || 
+          error.message && error.message.includes('infinite recursion')) {
         toast({
           title: "Erro de permissão",
-          description: "Problema de recursão detectado nas políticas de segurança. Entre em contato com o administrador.",
+          description: "Problema nas políticas de segurança detectado. Entre em contato com o administrador.",
           variant: "destructive",
         });
       } else {
