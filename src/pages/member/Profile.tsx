@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
@@ -42,7 +41,6 @@ import {
 import LoadingScreen from "@/components/common/LoadingScreen";
 import { Link } from "react-router-dom";
 
-// Helper function to format date
 const formatDate = (dateString: string) => {
   const date = new Date(dateString);
   return new Intl.DateTimeFormat("pt-BR", {
@@ -52,7 +50,6 @@ const formatDate = (dateString: string) => {
   }).format(date);
 };
 
-// Mock data for badges
 const mockBadges = [
   {
     id: "1",
@@ -88,7 +85,6 @@ const mockBadges = [
   },
 ];
 
-// Mock implementations data
 const mockImplementations = [
   {
     id: "1",
@@ -126,7 +122,6 @@ const mockImplementations = [
   },
 ];
 
-// Badge card component
 const BadgeCard = ({ badge }: { badge: any }) => {
   return (
     <TooltipProvider>
@@ -165,7 +160,6 @@ const BadgeCard = ({ badge }: { badge: any }) => {
   );
 };
 
-// Implementation card component
 const ImplementationCard = ({ implementation }: { implementation: any }) => {
   return (
     <Card className={cn("overflow-hidden hover:shadow-md transition-shadow", 
@@ -390,21 +384,21 @@ const Profile = () => {
                               <span className="text-revenue">Aumento de Receita</span>
                               <span>1/5</span>
                             </div>
-                            <Progress value={20} className="h-2 bg-muted" indicatorColor="bg-revenue" />
+                            <Progress value={20} className="h-2 bg-muted" />
                           </div>
                           <div>
                             <div className="flex justify-between text-sm mb-1">
                               <span className="text-operational">Otimização Operacional</span>
                               <span>1/6</span>
                             </div>
-                            <Progress value={16.7} className="h-2 bg-muted" indicatorColor="bg-operational" />
+                            <Progress value={16.7} className="h-2 bg-muted" />
                           </div>
                           <div>
                             <div className="flex justify-between text-sm mb-1">
                               <span className="text-strategy">Gestão Estratégica</span>
                               <span>0/4</span>
                             </div>
-                            <Progress value={0} className="h-2 bg-muted" indicatorColor="bg-strategy" />
+                            <Progress value={0} className="h-2 bg-muted" />
                           </div>
                         </div>
                       </div>

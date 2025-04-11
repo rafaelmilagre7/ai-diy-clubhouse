@@ -5,7 +5,7 @@ import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BarChart, LineChart, Scatter } from "recharts";
+import { BarChart as RechartsBarChart, Bar, LineChart as RechartsLineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { 
   Users, 
   FileText, 
@@ -168,25 +168,23 @@ const AdminDashboard = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <BarChart
-              width={500}
-              height={300}
-              data={engagementData}
-              margin={{
-                top: 5,
-                right: 30,
-                left: 20,
-                bottom: 5,
-              }}
-            >
-              <defs>
-                <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#0ABAB5" stopOpacity={0.8} />
-                  <stop offset="95%" stopColor="#0ABAB5" stopOpacity={0.3} />
-                </linearGradient>
-              </defs>
-              <bar dataKey="value" fill="url(#colorValue)" radius={[4, 4, 0, 0]} />
-            </BarChart>
+            <ResponsiveContainer width="100%" height={300}>
+              <RechartsBarChart
+                data={engagementData}
+                margin={{
+                  top: 5,
+                  right: 30,
+                  left: 20,
+                  bottom: 5,
+                }}
+              >
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip />
+                <Bar dataKey="value" fill="#0ABAB5" radius={[4, 4, 0, 0]} />
+              </RechartsBarChart>
+            </ResponsiveContainer>
           </CardContent>
         </Card>
         
@@ -198,19 +196,23 @@ const AdminDashboard = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <LineChart
-              width={500}
-              height={300}
-              data={completionRateData}
-              margin={{
-                top: 5,
-                right: 30,
-                left: 20,
-                bottom: 5,
-              }}
-            >
-              <line type="monotone" dataKey="completion" stroke="#0ABAB5" strokeWidth={2} />
-            </LineChart>
+            <ResponsiveContainer width="100%" height={300}>
+              <RechartsLineChart
+                data={completionRateData}
+                margin={{
+                  top: 5,
+                  right: 30,
+                  left: 20,
+                  bottom: 5,
+                }}
+              >
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip />
+                <Line type="monotone" dataKey="completion" stroke="#0ABAB5" strokeWidth={2} />
+              </RechartsLineChart>
+            </ResponsiveContainer>
           </CardContent>
         </Card>
       </div>

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -54,7 +53,6 @@ import {
 } from "lucide-react";
 import LoadingScreen from "@/components/common/LoadingScreen";
 
-// Form schema
 const formSchema = z.object({
   title: z.string().min(5, {
     message: "O título deve ter pelo menos 5 caracteres",
@@ -91,7 +89,6 @@ const SolutionEditor = () => {
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState("basic");
   
-  // Form setup
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -106,7 +103,6 @@ const SolutionEditor = () => {
     },
   });
   
-  // Fetch solution if editing existing one
   useEffect(() => {
     const fetchSolution = async () => {
       if (!id) return;
@@ -126,7 +122,6 @@ const SolutionEditor = () => {
         
         setSolution(data as Solution);
         
-        // Set form values
         form.reset({
           title: data.title,
           description: data.description,
@@ -153,7 +148,6 @@ const SolutionEditor = () => {
     fetchSolution();
   }, [id, form, toast, navigate]);
   
-  // Form submission
   const onSubmit = async (values: FormValues) => {
     if (!user) return;
     
@@ -166,7 +160,6 @@ const SolutionEditor = () => {
       };
       
       if (id) {
-        // Update existing solution
         const { error } = await supabase
           .from("solutions")
           .update(solutionData)
@@ -181,7 +174,6 @@ const SolutionEditor = () => {
           description: "As alterações foram salvas com sucesso.",
         });
       } else {
-        // Create new solution
         const newSolution = {
           ...solutionData,
           created_at: new Date().toISOString(),
@@ -202,7 +194,6 @@ const SolutionEditor = () => {
           description: "A nova solução foi criada com sucesso.",
         });
         
-        // Navigate to edit the new solution
         navigate(`/admin/solutions/${data.id}`);
       }
     } catch (error) {
