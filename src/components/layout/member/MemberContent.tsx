@@ -1,10 +1,12 @@
 
-import { Outlet } from "react-router-dom";
+import { Outlet, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { MemberHeader } from "./MemberHeader";
 import { Toaster } from "@/components/ui/sonner";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, LogOut } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useEffect, useState } from "react";
 
 interface MemberContentProps {
   sidebarOpen: boolean;
@@ -12,9 +14,32 @@ interface MemberContentProps {
 }
 
 export const MemberContent = ({ sidebarOpen, setSidebarOpen }: MemberContentProps) => {
-  // Check if the current path is /dashboard to show the error alert
-  const isDashboard = window.location.pathname === '/dashboard';
-  const hasError = isDashboard && document.querySelector('.destructive'); // Simple check for error message
+  const [hasError, setHasError] = useState(false);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Check for error messages in console logs
+    const originalConsoleError = console.error;
+    console.error = (...args) => {
+      const errorMessage = args.join(' ');
+      if (errorMessage.includes('infinite recursion') || 
+          errorMessage.includes('policy for relation') ||
+          errorMessage.includes('Error fetching') ||
+          errorMessage.includes('useAuth must be used')) {
+        setHasError(true);
+      }
+      originalConsoleError.apply(console, args);
+    };
+
+    return () => {
+      console.error = originalConsoleError;
+    };
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem('supabase.auth.token');
+    window.location.href = '/login';
+  };
 
   return (
     <main
@@ -31,8 +56,17 @@ export const MemberContent = ({ sidebarOpen, setSidebarOpen }: MemberContentProp
           <Alert variant="destructive" className="mb-6">
             <AlertTriangle className="h-4 w-4" />
             <AlertTitle>Erro de sessão</AlertTitle>
-            <AlertDescription>
-              Ocorreu um problema com sua sessão. Por favor, clique no botão "Sair" no canto superior direito para voltar à tela de login.
+            <AlertDescription className="flex flex-col space-y-3">
+              <p>Ocorreu um problema com sua sessão. Por favor, faça login novamente.</p>
+              <Button 
+                variant="destructive" 
+                size="sm" 
+                className="w-fit" 
+                onClick={handleLogout}
+              >
+                <LogOut className="h-4 w-4 mr-2" />
+                Ir para Login
+              </Button>
             </AlertDescription>
           </Alert>
         )}

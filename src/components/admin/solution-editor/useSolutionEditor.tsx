@@ -19,8 +19,6 @@ export const useSolutionEditor = (id: string | undefined, user: any) => {
     description: "",
     category: "revenue" as const,
     difficulty: "medium" as const,
-    estimated_time: 30,
-    success_rate: 80,
     thumbnail_url: "",
     published: false,
     slug: "",
@@ -72,17 +70,18 @@ export const useSolutionEditor = (id: string | undefined, user: any) => {
         .replace(/[^\w\s]/gi, '')
         .replace(/\s+/g, '-');
       
-      // Garantir que todos os campos obrigatórios estejam presentes
+      // Preparar dados para salvar
       const solutionData = {
         title: values.title,
         description: values.description,
         category: values.category,
         difficulty: values.difficulty,
-        estimated_time: values.estimated_time,
-        success_rate: values.success_rate,
         slug: slug,
         thumbnail_url: values.thumbnail_url || null,
         published: values.published,
+        // Adicionar valores padrão para os campos removidos
+        estimated_time: 30,
+        success_rate: 90,
         updated_at: new Date().toISOString()
       };
       
@@ -143,8 +142,6 @@ export const useSolutionEditor = (id: string | undefined, user: any) => {
         description: solution.description,
         category: solution.category as "revenue" | "operational" | "strategy",
         difficulty: solution.difficulty as "easy" | "medium" | "advanced",
-        estimated_time: solution.estimated_time,
-        success_rate: solution.success_rate,
         thumbnail_url: solution.thumbnail_url || "",
         published: solution.published,
         slug: solution.slug,

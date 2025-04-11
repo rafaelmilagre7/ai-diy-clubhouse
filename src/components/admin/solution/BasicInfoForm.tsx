@@ -39,12 +39,6 @@ const formSchema = z.object({
   difficulty: z.enum(["easy", "medium", "advanced"], {
     required_error: "Por favor, selecione uma dificuldade.",
   }),
-  estimated_time: z.coerce.number().min(1, {
-    message: "O tempo estimado deve ser de pelo menos 1 minuto.",
-  }),
-  success_rate: z.coerce.number().min(0).max(100, {
-    message: "A taxa de sucesso deve estar entre 0% e 100%.",
-  }),
   thumbnail_url: z.string().url({
     message: "Por favor, insira uma URL de imagem válida.",
   }).optional().or(z.literal("")),
@@ -52,7 +46,6 @@ const formSchema = z.object({
   slug: z.string().min(3, {
     message: "O slug deve ter pelo menos 3 caracteres.",
   }).optional(),
-  tags: z.string().optional(),
 });
 
 export type SolutionFormValues = z.infer<typeof formSchema>;
@@ -146,26 +139,6 @@ const BasicInfoForm = ({
                 </FormItem>
               )}
             />
-
-            <FormField
-              control={form.control}
-              name="tags"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Tags</FormLabel>
-                  <FormControl>
-                    <Input 
-                      placeholder="Ex: vendas, atendimento, conversão (separadas por vírgula)" 
-                      {...field} 
-                    />
-                  </FormControl>
-                  <FormDescription>
-                    Tags para categorização e busca (separadas por vírgula).
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
           </div>
 
           <div className="space-y-6">
@@ -221,51 +194,6 @@ const BasicInfoForm = ({
                   </Select>
                   <FormDescription>
                     O nível de dificuldade de implementação da solução.
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="estimated_time"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Tempo estimado (minutos)</FormLabel>
-                  <FormControl>
-                    <Input 
-                      type="number" 
-                      min={1}
-                      placeholder="Ex: 30" 
-                      {...field} 
-                    />
-                  </FormControl>
-                  <FormDescription>
-                    Quanto tempo leva para implementar esta solução (em minutos).
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="success_rate"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Taxa de sucesso (%)</FormLabel>
-                  <FormControl>
-                    <Input 
-                      type="number" 
-                      min={0} 
-                      max={100}
-                      placeholder="Ex: 95" 
-                      {...field} 
-                    />
-                  </FormControl>
-                  <FormDescription>
-                    Porcentagem de membros que conseguem implementar com sucesso.
                   </FormDescription>
                   <FormMessage />
                 </FormItem>

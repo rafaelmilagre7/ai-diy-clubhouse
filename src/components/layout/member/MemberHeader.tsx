@@ -2,6 +2,7 @@
 import { Menu, Bell, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { toast } from "sonner";
 
 interface MemberHeaderProps {
   sidebarOpen: boolean;
@@ -10,9 +11,19 @@ interface MemberHeaderProps {
 
 export const MemberHeader = ({ sidebarOpen, setSidebarOpen }: MemberHeaderProps) => {
   const handleLogout = () => {
-    // Clear local storage and redirect to login page
-    localStorage.removeItem('supabase.auth.token');
-    window.location.href = '/login';
+    try {
+      // Clear local storage and redirect to login page
+      localStorage.removeItem('supabase.auth.token');
+      toast.success("Logout realizado com sucesso");
+      setTimeout(() => {
+        window.location.href = '/login';
+      }, 500);
+    } catch (error) {
+      console.error("Erro ao fazer logout:", error);
+      toast.error("Erro ao fazer logout. Tentando redirecionamento direto...");
+      // Fallback direto para login em caso de erro
+      window.location.href = '/login';
+    }
   };
 
   return (

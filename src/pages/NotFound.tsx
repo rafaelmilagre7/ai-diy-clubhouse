@@ -3,6 +3,7 @@ import { useLocation } from "react-router-dom";
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Home, LogOut } from "lucide-react";
+import { toast } from "sonner";
 
 const NotFound = () => {
   const location = useLocation();
@@ -15,8 +16,17 @@ const NotFound = () => {
   }, [location.pathname]);
 
   const handleLogout = () => {
-    localStorage.removeItem('supabase.auth.token');
-    window.location.href = '/login';
+    try {
+      localStorage.removeItem('supabase.auth.token');
+      toast.success("Redirecionando para o login...");
+      setTimeout(() => {
+        window.location.href = '/login';
+      }, 500);
+    } catch (error) {
+      console.error("Erro ao redirecionar:", error);
+      // Fallback direto
+      window.location.href = '/login';
+    }
   };
 
   return (
@@ -33,7 +43,7 @@ const NotFound = () => {
             Voltar para o Início
           </Button>
           <Button 
-            variant="outline" 
+            variant="destructive" 
             className="flex items-center gap-2"
             onClick={handleLogout}
           >

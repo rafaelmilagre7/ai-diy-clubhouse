@@ -6,6 +6,8 @@ import SolutionEditorHeader from "@/components/admin/solution-editor/SolutionEdi
 import SolutionEditorTabs from "@/components/admin/solution-editor/SolutionEditorTabs";
 import { useSolutionEditor } from "@/components/admin/solution-editor/useSolutionEditor";
 import { Card, CardContent } from "@/components/ui/card";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 const SolutionEditor = () => {
   const { id } = useParams<{ id: string }>();
@@ -41,6 +43,16 @@ const SolutionEditor = () => {
         saving={saving} 
         onSave={handleSave} 
       />
+      
+      {!user && (
+        <Alert variant="destructive" className="mb-4">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Erro de autenticação</AlertTitle>
+          <AlertDescription>
+            Você precisa estar autenticado para editar soluções. Por favor, faça login novamente.
+          </AlertDescription>
+        </Alert>
+      )}
       
       <Card className="border-none shadow-sm">
         <CardContent className="p-0">
