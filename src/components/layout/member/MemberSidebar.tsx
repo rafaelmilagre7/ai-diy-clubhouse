@@ -13,6 +13,7 @@ import {
   ChevronRight
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
+import { MemberUserMenu } from "./MemberUserMenu";
 
 interface MemberSidebarProps {
   sidebarOpen: boolean;
@@ -73,13 +74,16 @@ export const MemberSidebar = ({
       <MemberSidebarNav sidebarOpen={sidebarOpen} />
 
       {/* User menu at bottom of sidebar */}
-      <MemberSidebarFooter 
-        sidebarOpen={sidebarOpen} 
-        profileName={profileName}
-        profileEmail={profileEmail}
-        profileAvatar={profileAvatar}
-        getInitials={getInitials}
-      />
+      <div className="mt-auto">
+        <Separator />
+        <MemberUserMenu 
+          sidebarOpen={sidebarOpen} 
+          profileName={profileName}
+          profileEmail={profileEmail}
+          profileAvatar={profileAvatar}
+          getInitials={getInitials}
+        />
+      </div>
     </aside>
   );
 };
@@ -172,35 +176,5 @@ export const MemberSidebarNav = ({ sidebarOpen }: MemberSidebarNavProps) => {
         {sidebarOpen && <span>Comunidade</span>}
       </Link>
     </nav>
-  );
-};
-
-// Footer with user menu
-interface MemberSidebarFooterProps {
-  sidebarOpen: boolean;
-  profileName: string | null;
-  profileEmail: string | null;
-  profileAvatar: string | undefined;
-  getInitials: (name: string | null) => string;
-}
-
-export const MemberSidebarFooter = ({ 
-  sidebarOpen, 
-  profileName, 
-  profileEmail, 
-  profileAvatar,
-  getInitials 
-}: MemberSidebarFooterProps) => {
-  return (
-    <>
-      <Separator />
-      <MemberUserMenu 
-        sidebarOpen={sidebarOpen} 
-        profileName={profileName}
-        profileEmail={profileEmail}
-        profileAvatar={profileAvatar}
-        getInitials={getInitials}
-      />
-    </>
   );
 };
