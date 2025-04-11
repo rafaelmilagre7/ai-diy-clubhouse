@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -37,7 +36,6 @@ import {
 } from "lucide-react";
 import LoadingScreen from "@/components/common/LoadingScreen";
 
-// Convert category to Portuguese
 const categoryLabel = (category: string) => {
   switch (category) {
     case "revenue":
@@ -51,7 +49,6 @@ const categoryLabel = (category: string) => {
   }
 };
 
-// Convert difficulty to Portuguese
 const difficultyLabel = (difficulty: string) => {
   switch (difficulty) {
     case "easy":
@@ -65,14 +62,12 @@ const difficultyLabel = (difficulty: string) => {
   }
 };
 
-// Format minutes to time
 const formatTime = (minutes: number) => {
   const hours = Math.floor(minutes / 60);
   const mins = minutes % 60;
   return hours > 0 ? `${hours}h ${mins}min` : `${mins} min`;
 };
 
-// Format date for display
 const formatDate = (dateString: string) => {
   const date = new Date(dateString);
   return new Intl.DateTimeFormat("pt-BR", {
@@ -123,7 +118,6 @@ const SolutionsList = () => {
     fetchSolutions();
   }, [toast]);
   
-  // Filter solutions when search changes
   useEffect(() => {
     if (!searchQuery) {
       setFilteredSolutions(solutions);
@@ -156,7 +150,6 @@ const SolutionsList = () => {
         throw error;
       }
       
-      // Update the state to remove the deleted solution
       setSolutions(solutions.filter((solution) => solution.id !== id));
       toast({
         title: "Solução excluída",
@@ -183,7 +176,6 @@ const SolutionsList = () => {
         throw error;
       }
       
-      // Update the state to reflect the change
       setSolutions(
         solutions.map((solution) =>
           solution.id === id
@@ -214,7 +206,7 @@ const SolutionsList = () => {
         .from("solutions")
         .insert({
           ...solution,
-          id: undefined, // Let Supabase generate a new ID
+          id: undefined,
           title: `${solution.title} (Cópia)`,
           published: false,
           created_at: new Date().toISOString(),

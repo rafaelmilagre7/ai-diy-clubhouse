@@ -9,6 +9,267 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      analytics: {
+        Row: {
+          created_at: string
+          event_data: Json | null
+          event_type: string
+          id: string
+          module_id: string | null
+          solution_id: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_data?: Json | null
+          event_type: string
+          id?: string
+          module_id?: string | null
+          solution_id?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          event_data?: Json | null
+          event_type?: string
+          id?: string
+          module_id?: string | null
+          solution_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "analytics_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "modules"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "analytics_solution_id_fkey"
+            columns: ["solution_id"]
+            isOneToOne: false
+            referencedRelation: "solutions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      badges: {
+        Row: {
+          category: string
+          created_at: string
+          description: string
+          id: string
+          image_url: string
+          name: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          description: string
+          id?: string
+          image_url: string
+          name: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string
+          id?: string
+          image_url?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      modules: {
+        Row: {
+          content: Json
+          created_at: string
+          id: string
+          module_order: number
+          solution_id: string
+          title: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          content: Json
+          created_at?: string
+          id?: string
+          module_order: number
+          solution_id: string
+          title: string
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          content?: Json
+          created_at?: string
+          id?: string
+          module_order?: number
+          solution_id?: string
+          title?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "modules_solution_id_fkey"
+            columns: ["solution_id"]
+            isOneToOne: false
+            referencedRelation: "solutions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          company_name: string | null
+          created_at: string
+          email: string
+          id: string
+          industry: string | null
+          name: string | null
+          role: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          company_name?: string | null
+          created_at?: string
+          email: string
+          id: string
+          industry?: string | null
+          name?: string | null
+          role?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          company_name?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          industry?: string | null
+          name?: string | null
+          role?: string
+        }
+        Relationships: []
+      }
+      progress: {
+        Row: {
+          completion_date: string | null
+          created_at: string
+          current_module: number
+          id: string
+          is_completed: boolean
+          last_activity: string
+          solution_id: string
+          user_id: string
+        }
+        Insert: {
+          completion_date?: string | null
+          created_at?: string
+          current_module?: number
+          id?: string
+          is_completed?: boolean
+          last_activity?: string
+          solution_id: string
+          user_id: string
+        }
+        Update: {
+          completion_date?: string | null
+          created_at?: string
+          current_module?: number
+          id?: string
+          is_completed?: boolean
+          last_activity?: string
+          solution_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "progress_solution_id_fkey"
+            columns: ["solution_id"]
+            isOneToOne: false
+            referencedRelation: "solutions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      solutions: {
+        Row: {
+          category: string
+          created_at: string
+          description: string
+          difficulty: string
+          estimated_time: number
+          id: string
+          published: boolean
+          slug: string
+          success_rate: number
+          thumbnail_url: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          description: string
+          difficulty: string
+          estimated_time: number
+          id?: string
+          published?: boolean
+          slug: string
+          success_rate?: number
+          thumbnail_url?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string
+          difficulty?: string
+          estimated_time?: number
+          id?: string
+          published?: boolean
+          slug?: string
+          success_rate?: number
+          thumbnail_url?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      user_badges: {
+        Row: {
+          badge_id: string
+          earned_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          badge_id: string
+          earned_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          badge_id?: string
+          earned_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_badges_badge_id_fkey"
+            columns: ["badge_id"]
+            isOneToOne: false
+            referencedRelation: "badges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       users: {
         Row: {
           created_at: string

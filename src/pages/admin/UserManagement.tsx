@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase, UserProfile } from "@/lib/supabase";
@@ -66,76 +65,101 @@ const UserManagement = () => {
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
   const [isUserDetailsOpen, setIsUserDetailsOpen] = useState(false);
   
-  // Mock data for now
   useEffect(() => {
-    const mockUsers = [
-      {
-        id: "1",
-        email: "admin@viverdeiaclub.com.br",
-        name: "Admin User",
-        avatar_url: null,
-        role: "admin",
-        company_name: "VIVER DE IA Club",
-        industry: "Educação",
-        created_at: "2025-01-01T00:00:00Z",
-      },
-      {
-        id: "2",
-        email: "joao.silva@example.com",
-        name: "João Silva",
-        avatar_url: null,
-        role: "member",
-        company_name: "Tech Solutions",
-        industry: "Tecnologia",
-        created_at: "2025-01-15T10:30:00Z",
-      },
-      {
-        id: "3",
-        email: "maria.oliveira@example.com",
-        name: "Maria Oliveira",
-        avatar_url: null,
-        role: "member",
-        company_name: "Marketing Pro",
-        industry: "Marketing",
-        created_at: "2025-02-10T14:45:00Z",
-      },
-      {
-        id: "4",
-        email: "pedro.santos@example.com",
-        name: "Pedro Santos",
-        avatar_url: null,
-        role: "member",
-        company_name: "Consultoria Santos",
-        industry: "Consultoria",
-        created_at: "2025-02-20T09:15:00Z",
-      },
-      {
-        id: "5",
-        email: "ana.pereira@example.com",
-        name: "Ana Pereira",
-        avatar_url: null,
-        role: "member",
-        company_name: "Pereira Imóveis",
-        industry: "Imobiliário",
-        created_at: "2025-03-05T16:20:00Z",
-      },
-    ] as UserProfile[];
+    const fetchUsers = async () => {
+      try {
+        setLoading(true);
+        
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("*");
+        
+        if (error) {
+          throw error;
+        }
+        
+        if (data && data.length > 0) {
+          setUsers(data as UserProfile[]);
+          setFilteredUsers(data as UserProfile[]);
+        } else {
+          const mockUsers = [
+            {
+              id: "1",
+              email: "admin@viverdeiaclub.com.br",
+              name: "Admin User",
+              avatar_url: null,
+              role: "admin",
+              company_name: "VIVER DE IA Club",
+              industry: "Educação",
+              created_at: "2025-01-01T00:00:00Z",
+            },
+            {
+              id: "2",
+              email: "joao.silva@example.com",
+              name: "João Silva",
+              avatar_url: null,
+              role: "member",
+              company_name: "Tech Solutions",
+              industry: "Tecnologia",
+              created_at: "2025-01-15T10:30:00Z",
+            },
+            {
+              id: "3",
+              email: "maria.oliveira@example.com",
+              name: "Maria Oliveira",
+              avatar_url: null,
+              role: "member",
+              company_name: "Marketing Pro",
+              industry: "Marketing",
+              created_at: "2025-02-10T14:45:00Z",
+            },
+            {
+              id: "4",
+              email: "pedro.santos@example.com",
+              name: "Pedro Santos",
+              avatar_url: null,
+              role: "member",
+              company_name: "Consultoria Santos",
+              industry: "Consultoria",
+              created_at: "2025-02-20T09:15:00Z",
+            },
+            {
+              id: "5",
+              email: "ana.pereira@example.com",
+              name: "Ana Pereira",
+              avatar_url: null,
+              role: "member",
+              company_name: "Pereira Imóveis",
+              industry: "Imobiliário",
+              created_at: "2025-03-05T16:20:00Z",
+            },
+          ] as UserProfile[];
+          
+          setUsers(mockUsers);
+          setFilteredUsers(mockUsers);
+        }
+      } catch (error) {
+        console.error("Error fetching users:", error);
+        toast({
+          title: "Erro ao carregar usuários",
+          description: "Ocorreu um erro ao tentar carregar a lista de usuários.",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
     
-    setUsers(mockUsers);
-    setFilteredUsers(mockUsers);
-    setLoading(false);
-  }, []);
+    fetchUsers();
+  }, [toast]);
   
-  // Filter users when search or role filter changes
   useEffect(() => {
     let filtered = [...users];
     
-    // Filter by role
     if (roleFilter !== "all") {
       filtered = filtered.filter((user) => user.role === roleFilter);
     }
     
-    // Filter by search
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(
@@ -175,9 +199,6 @@ const UserManagement = () => {
   
   const handleUpdateRole = async (userId: string, newRole: "admin" | "member") => {
     try {
-      // In a real implementation, this would update the role in Supabase
-      
-      // Update local state
       setUsers(
         users.map((user) =>
           user.id === userId ? { ...user, role: newRole } : user
@@ -334,7 +355,6 @@ const UserManagement = () => {
         </Table>
       </div>
       
-      {/* User details dialog */}
       {selectedUser && (
         <Dialog open={isUserDetailsOpen} onOpenChange={setIsUserDetailsOpen}>
           <DialogContent className="sm:max-w-[550px]">

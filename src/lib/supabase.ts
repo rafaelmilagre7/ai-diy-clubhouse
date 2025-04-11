@@ -1,12 +1,9 @@
 
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '@/integrations/supabase/client';
 
-const supabaseUrl = 'https://zotzvtepvpnkcoobdubt.supabase.co';
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpvdHp2dGVwdnBua2Nvb2JkdWJ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQzNzgzODAsImV4cCI6MjA1OTk1NDM4MH0.dxjPkqTPnK8gjjxJbooPX5_kpu3INciLeDpuU8dszHQ';
+export { supabase };
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
-// Types for Supabase tables
+// Types para as tabelas do Supabase
 export type UserRole = 'admin' | 'member';
 
 export interface UserProfile {
@@ -27,7 +24,7 @@ export interface Solution {
   slug: string;
   category: 'revenue' | 'operational' | 'strategy';
   difficulty: 'easy' | 'medium' | 'advanced';
-  estimated_time: number; // in minutes
+  estimated_time: number; // em minutos
   success_rate: number;
   thumbnail_url: string | null;
   published: boolean;
@@ -41,7 +38,7 @@ export interface Module {
   title: string;
   content: any; // JSON content
   type: 'landing' | 'overview' | 'preparation' | 'implementation' | 'verification' | 'results' | 'optimization' | 'celebration';
-  order: number;
+  module_order: number; // Alterado de 'order' para 'module_order'
   created_at: string;
   updated_at: string;
 }

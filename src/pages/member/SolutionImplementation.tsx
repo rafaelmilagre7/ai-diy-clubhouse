@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -209,12 +208,12 @@ const SolutionImplementation = () => {
         
         setSolution(solutionData as Solution);
         
-        // Fetch modules for this solution
+        // Fetch modules for this solution - Atualizado para usar module_order
         const { data: modulesData, error: modulesError } = await supabase
           .from("modules")
           .select("*")
           .eq("solution_id", id)
-          .order("order", { ascending: true });
+          .order("module_order", { ascending: true });
         
         if (modulesError) {
           throw modulesError;
@@ -229,7 +228,7 @@ const SolutionImplementation = () => {
               title: `Module ${idx}`,
               content: {},
               type: ["landing", "overview", "preparation", "implementation", "verification", "results", "optimization", "celebration"][idx],
-              order: idx,
+              module_order: idx, // Atualizado para usar module_order
               created_at: new Date().toISOString(),
               updated_at: new Date().toISOString(),
             }));
