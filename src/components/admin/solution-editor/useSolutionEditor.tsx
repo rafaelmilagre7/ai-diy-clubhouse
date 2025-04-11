@@ -74,7 +74,7 @@ export const useSolutionEditor = (id: string | undefined, user: any) => {
         .replace(/[^\w\s]/gi, '')
         .replace(/\s+/g, '-');
       
-      // Preparar dados para salvar
+      // Preparar dados para salvar, incluindo campos obrigatórios
       const solutionData = {
         title: values.title,
         description: values.description,
@@ -83,7 +83,10 @@ export const useSolutionEditor = (id: string | undefined, user: any) => {
         slug: slug,
         thumbnail_url: values.thumbnail_url || null,
         published: values.published,
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
+        // Adicionar campos obrigatórios que faltavam
+        estimated_time: solution?.estimated_time || 30, // valor padrão de 30 minutos
+        success_rate: solution?.success_rate || 0 // valor padrão de 0%
       };
       
       if (id) {
