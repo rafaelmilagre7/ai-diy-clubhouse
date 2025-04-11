@@ -30,7 +30,12 @@ const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
           <FormLabel>{label}</FormLabel>
           <FormControl>
             <div className="space-y-4">
-              {field.value && !imagePreview && setImagePreview(field.value as string)}
+              {/* Initialize image preview from field value using useEffect */}
+              {React.useEffect(() => {
+                if (field.value && !imagePreview) {
+                  setImagePreview(field.value as string);
+                }
+              }, [field.value, imagePreview])}
               
               {imagePreview ? (
                 <div className="relative">
