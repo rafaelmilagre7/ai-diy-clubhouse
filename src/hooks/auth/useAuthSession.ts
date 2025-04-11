@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/auth";
 import { fetchUserProfile, createUserProfileIfNeeded } from "@/contexts/auth/utils/profileUtils";
+import { UserRole } from "@/lib/supabase";
 
 export const useAuthSession = () => {
   const {
@@ -61,11 +62,13 @@ export const useAuthSession = () => {
             console.error("Erro ao buscar/criar perfil:", profileError);
             
             // Como fallback, crie um perfil temporário na memória
+            const userRole: UserRole = session.user.email?.includes('admin') ? 'admin' : 'member';
+            
             const tempProfile = {
               id: session.user.id,
               email: session.user.email || 'sem-email@viverdeia.ai',
               name: session.user.user_metadata?.name || 'Usuário',
-              role: session.user.email?.includes('admin') ? 'admin' : 'member',
+              role: userRole,
               avatar_url: null,
               company_name: null,
               industry: null,
@@ -104,11 +107,13 @@ export const useAuthSession = () => {
                 console.error("Erro ao buscar/criar perfil:", profileError);
                 
                 // Criar perfil temporário na memória
+                const userRole: UserRole = newSession.user.email?.includes('admin') ? 'admin' : 'member';
+                
                 const tempProfile = {
                   id: newSession.user.id,
                   email: newSession.user.email || 'sem-email@viverdeia.ai',
                   name: newSession.user.user_metadata?.name || 'Usuário',
-                  role: newSession.user.email?.includes('admin') ? 'admin' : 'member',
+                  role: userRole,
                   avatar_url: null,
                   company_name: null,
                   industry: null,

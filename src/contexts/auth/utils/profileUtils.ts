@@ -1,5 +1,5 @@
 
-import { supabase, UserProfile } from '@/lib/supabase';
+import { supabase, UserProfile, UserRole } from '@/lib/supabase';
 
 // Fetch user profile from Supabase
 export const fetchUserProfile = async (userId: string): Promise<UserProfile | null> => {
@@ -53,7 +53,7 @@ export const createUserProfileIfNeeded = async (
                     email === 'admin@teste.com' ||
                     email === 'admin@viverdeia.ai';
     
-    const userRole = isAdmin ? 'admin' : 'member';
+    const userRole: UserRole = isAdmin ? 'admin' : 'member';
     
     console.log(`Tentando criar perfil para ${email} com papel ${userRole}`);
     
@@ -96,11 +96,13 @@ export const createUserProfileIfNeeded = async (
   } catch (error) {
     console.error('Erro inesperado ao criar perfil:', error);
     // Retorne um perfil mínimo em caso de erro para não bloquear a aplicação
+    const userRole: UserRole = email.includes('admin') ? 'admin' : 'member';
+    
     return {
       id: userId,
       email,
       name,
-      role: email.includes('admin') ? 'admin' : 'member',
+      role: userRole,
       avatar_url: null,
       company_name: null,
       industry: null,
