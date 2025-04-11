@@ -33,8 +33,19 @@ export const useSolutionSave = (
         updated_at: new Date().toISOString(),
       };
       
-      // Em vez de funções RPC que podem não existir, usamos operações diretas
-      // mas com melhor tratamento de erro
+      // Usar a função is_admin_user() que evita recursão infinita
+      const { data: isAdmin, error: adminCheckError } = await supabase
+        .rpc('is_admin_user');
+      
+      if (adminCheckError) {
+        console.error("Erro ao verificar permissões de admin:", adminCheckError);
+        throw new Error("Erro ao verificar permissões de administrador");
+      }
+      
+      if (!isAdmin) {
+        throw new Error("Você não tem permissão para salvar soluções");
+      }
+      
       if (id) {
         // Atualizar solução existente
         const { error } = await supabase

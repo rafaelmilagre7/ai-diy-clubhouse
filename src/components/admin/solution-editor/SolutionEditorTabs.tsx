@@ -10,9 +10,11 @@ import { SolutionFormValues } from "@/components/admin/solution/form/solutionFor
 import TabHeader from "./TabHeader";
 import TabNav from "./TabNav";
 import BasicInfoTab from "./tabs/BasicInfoTab";
-import ModulesTab from "./tabs/ModulesTab";
 import ResourcesTab from "./tabs/ResourcesTab";
-import ImplementationTip from "./ImplementationTip";
+import ToolsTab from "./tabs/ToolsTab";
+import VideoTab from "./tabs/VideoTab";
+import ChecklistTab from "./tabs/ChecklistTab";
+import PublishTab from "./tabs/PublishTab";
 
 interface SolutionEditorTabsProps {
   activeTab: string;
@@ -34,55 +36,91 @@ const SolutionEditorTabs = ({
   currentStep,
 }: SolutionEditorTabsProps) => {
   const isValid = solution && solution.id;
-  const needsBasicInfo = currentStep === 0 || !isValid;
-  const needsModules = currentStep > 0 && currentStep < 9 && isValid;
-  const needsReview = currentStep === 9 && isValid;
   
   // Renderiza apenas o conteúdo apropriado para a etapa atual
   const renderContent = () => {
-    if (needsBasicInfo) {
+    // Verificar se a solução existe para exibir as abas que exigem ID
+    if (!isValid && currentStep > 0) {
       return (
-        <BasicInfoTab 
-          currentValues={currentValues} 
-          onSubmit={onSubmit} 
-          saving={saving} 
-        />
+        <Alert variant="destructive">
+          <AlertTitle>Solução não encontrada</AlertTitle>
+          <AlertDescription>
+            É necessário salvar as informações básicas antes de prosseguir.
+          </AlertDescription>
+        </Alert>
       );
     }
-    
-    if (needsModules) {
-      return (
-        <ModulesTab 
-          solutionId={solution?.id || null} 
-          onSave={() => onSubmit(currentValues)} 
-          saving={saving}
-          currentModuleStep={currentStep}
-        />
-      );
+
+    switch (currentStep) {
+      case 0:
+        return (
+          <BasicInfoTab 
+            currentValues={currentValues} 
+            onSubmit={onSubmit} 
+            saving={saving} 
+          />
+        );
+      
+      case 1:
+        return (
+          <ToolsTab 
+            solutionId={solution?.id || null} 
+            onSave={() => onSubmit(currentValues)} 
+            saving={saving}
+          />
+        );
+      
+      case 2:
+        return (
+          <ResourcesTab 
+            solutionId={solution?.id || null} 
+            onSave={() => onSubmit(currentValues)} 
+            saving={saving} 
+          />
+        );
+      
+      case 3:
+        return (
+          <VideoTab 
+            solutionId={solution?.id || null} 
+            onSave={() => onSubmit(currentValues)} 
+            saving={saving}
+          />
+        );
+      
+      case 4:
+        return (
+          <ChecklistTab 
+            solutionId={solution?.id || null} 
+            onSave={() => onSubmit(currentValues)} 
+            saving={saving}
+          />
+        );
+      
+      case 5:
+        return (
+          <PublishTab 
+            solutionId={solution?.id || null}
+            solution={solution}
+            onSave={onSubmit}
+            saving={saving}
+          />
+        );
+      
+      default:
+        return (
+          <Alert variant="default" className="bg-amber-50 border-amber-200">
+            <AlertTitle>Etapa não reconhecida</AlertTitle>
+            <AlertDescription>
+              Por favor, volte para uma etapa válida ou recarregue a página.
+            </AlertDescription>
+          </Alert>
+        );
     }
-    
-    if (needsReview) {
-      return (
-        <ResourcesTab 
-          solutionId={solution?.id || null} 
-          onSave={() => onSubmit(currentValues)} 
-          saving={saving} 
-        />
-      );
-    }
-    
-    return (
-      <Alert variant="default" className="bg-amber-50 border-amber-200">
-        <AlertTitle>Etapa não reconhecida</AlertTitle>
-        <AlertDescription>
-          Por favor, volte para uma etapa válida ou recarregue a página.
-        </AlertDescription>
-      </Alert>
-    );
   };
 
-  // Mostra abas apenas na primeira etapa e etapa final
-  const shouldShowTabs = currentStep === 0 || currentStep === 9;
+  // Mostra abas apenas na primeira etapa
+  const shouldShowTabs = currentStep === 0;
 
   return (
     <div className="space-y-6">
@@ -99,12 +137,6 @@ const SolutionEditorTabs = ({
       ) : (
         <div className="px-6 pb-6 pt-4">
           {renderContent()}
-        </div>
-      )}
-      
-      {solution && currentStep > 0 && currentStep < 9 && (
-        <div className="px-6 pb-6 border-t pt-4 mt-6">
-          <ImplementationTip currentStep={currentStep} />
         </div>
       )}
     </div>

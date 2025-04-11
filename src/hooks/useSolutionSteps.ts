@@ -5,30 +5,33 @@ export const useSolutionSteps = (initialStep: number = 0) => {
   const [currentStep, setCurrentStep] = useState(initialStep);
   const [activeTab, setActiveTab] = useState("basic");
   
-  const totalSteps = 10; // Total number of steps in the solution creation process
+  const totalSteps = 7; // Total número de etapas no processo de criação de solução
 
   // Títulos das etapas
   const stepTitles = [
     "Configuração Básica",
-    "Landing da Solução", 
-    "Visão Geral e Case",
-    "Preparação Express",
-    "Implementação Passo a Passo",
-    "Verificação de Implementação",
-    "Primeiros Resultados",
-    "Otimização Rápida", 
-    "Celebração e Próximos Passos",
-    "Revisão e Publicação"
+    "Ferramentas Necessárias", 
+    "Materiais de Apoio",
+    "Vídeo-aulas",
+    "Checklist de Implementação",
+    "Publicação",
+    "Conclusão"
   ];
 
-  // Update activeTab based on currentStep
+  // Atualizar activeTab com base no currentStep
   useEffect(() => {
     if (currentStep === 0) {
       setActiveTab("basic");
-    } else if (currentStep >= 1 && currentStep <= 8) {
-      setActiveTab("modules");
-    } else if (currentStep === 9) {
+    } else if (currentStep === 1) {
+      setActiveTab("tools");
+    } else if (currentStep === 2) {
       setActiveTab("resources");
+    } else if (currentStep === 3) {
+      setActiveTab("video");
+    } else if (currentStep === 4) {
+      setActiveTab("checklist");
+    } else if (currentStep === 5) {
+      setActiveTab("publish");
     }
   }, [currentStep]);
 

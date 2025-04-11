@@ -5,7 +5,7 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
-import { FileText, Layers, Link } from "lucide-react";
+import { FileText, Wrench, FileSymlink, Video, ClipboardCheck, Globe } from "lucide-react";
 
 interface TabNavProps {
   activeTab: string;
@@ -14,18 +14,35 @@ interface TabNavProps {
 
 const TabNav: React.FC<TabNavProps> = ({ activeTab, setActiveTab }) => {
   return (
-    <TabsList className="grid grid-cols-3 w-full sm:w-[400px] bg-muted/50 mx-6">
+    <TabsList className="grid grid-cols-6 w-full bg-muted/50 mx-6 rounded-md overflow-x-auto">
       <TabsTrigger value="basic" className="flex items-center gap-1.5">
         <FileText className="h-4 w-4" />
-        <span>Informações</span>
+        <span className="hidden sm:inline">Informações</span>
       </TabsTrigger>
-      <TabsTrigger value="modules" className="flex items-center gap-1.5">
-        <Layers className="h-4 w-4" />
-        <span>Módulos</span>
+      
+      <TabsTrigger value="tools" className="flex items-center gap-1.5">
+        <Wrench className="h-4 w-4" />
+        <span className="hidden sm:inline">Ferramentas</span>
       </TabsTrigger>
+      
       <TabsTrigger value="resources" className="flex items-center gap-1.5">
-        <Link className="h-4 w-4" />
-        <span>Recursos</span>
+        <FileSymlink className="h-4 w-4" />
+        <span className="hidden sm:inline">Materiais</span>
+      </TabsTrigger>
+      
+      <TabsTrigger value="video" className="flex items-center gap-1.5">
+        <Video className="h-4 w-4" />
+        <span className="hidden sm:inline">Vídeos</span>
+      </TabsTrigger>
+      
+      <TabsTrigger value="checklist" className="flex items-center gap-1.5">
+        <ClipboardCheck className="h-4 w-4" />
+        <span className="hidden sm:inline">Checklist</span>
+      </TabsTrigger>
+      
+      <TabsTrigger value="publish" className="flex items-center gap-1.5">
+        <Globe className="h-4 w-4" />
+        <span className="hidden sm:inline">Publicar</span>
       </TabsTrigger>
     </TabsList>
   );

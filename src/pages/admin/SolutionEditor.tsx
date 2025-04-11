@@ -33,10 +33,12 @@ const SolutionEditor = () => {
   }
   
   const handleSave = () => {
-    if (activeTab === "basic") {
+    // Na primeira etapa, dispara o submit do formulário
+    if (currentStep === 0) {
       const form = document.querySelector("form");
       if (form) form.dispatchEvent(new Event("submit", { cancelable: true, bubbles: true }));
     } else {
+      // Nas outras etapas, chama a função específica de salvamento
       onSubmit(currentValues);
     }
   };
@@ -51,8 +53,6 @@ const SolutionEditor = () => {
 
   const handlePreviousStep = () => {
     if (currentStep > 0) {
-      // Salvar o estado atual antes de retroceder
-      handleSave();
       setCurrentStep(currentStep - 1);
     }
   };
@@ -85,7 +85,7 @@ const SolutionEditor = () => {
       
       {!user && <AuthError />}
       
-      {solution && (
+      {(solution || currentStep === 0) && (
         <ProgressIndicator 
           currentStep={currentStep}
           totalSteps={totalSteps}
@@ -107,7 +107,7 @@ const SolutionEditor = () => {
         </CardContent>
       </Card>
       
-      {solution && (
+      {(solution || currentStep === 0) && (
         <NavigationButtons 
           currentStep={currentStep}
           totalSteps={totalSteps}

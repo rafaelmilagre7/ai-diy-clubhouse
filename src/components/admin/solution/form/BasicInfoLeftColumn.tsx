@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { UseFormReturn } from "react-hook-form";
 import { SolutionFormValues } from "./solutionFormSchema";
 import {
@@ -12,12 +12,21 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { FileUpload } from "@/components/ui/file-upload";
+import { useToast } from "@/hooks/use-toast";
 
 interface BasicInfoLeftColumnProps {
   form: UseFormReturn<SolutionFormValues>;
 }
 
 const BasicInfoLeftColumn: React.FC<BasicInfoLeftColumnProps> = ({ form }) => {
+  const [uploading, setUploading] = useState(false);
+  const { toast } = useToast();
+
+  const handleUploadComplete = (url: string) => {
+    form.setValue("thumbnail_url", url, { shouldValidate: true });
+  };
+
   return (
     <div className="space-y-6">
       <FormField
@@ -72,6 +81,48 @@ const BasicInfoLeftColumn: React.FC<BasicInfoLeftColumnProps> = ({ form }) => {
             </FormControl>
             <FormDescription>
               Uma descrição curta que aparecerá no card da solução.
+            </FormDescription>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <FormField
+        control={form.control}
+        name="thumbnail_url"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Imagem da Solução</FormLabel>
+            <FormControl>
+              <div className="space-y-4">
+                <FileUpload
+                  bucketName="solution_files"
+                  folder="thumbnails"
+                  onUploadComplete={handleUploadComplete}
+                  accept="image/*"
+                  buttonText="Upload de Imagem"
+                  fieldLabel=""
+                  maxSize={5} // 5MB
+                />
+                
+                {field.value && (
+                  <div className="mt-2 border rounded overflow-hidden">
+                    <img 
+                      src={field.value}
+                      alt="Preview da imagem"
+                      className="max-h-[200px] max-w-full object-cover"
+                    />
+                  </div>
+                )}
+                
+                <Input
+                  type="hidden"
+                  {...field}
+                />
+              </div>
+            </FormControl>
+            <FormDescription>
+              Uma imagem representativa para a solução (recomendado: 600x400px).
             </FormDescription>
             <FormMessage />
           </FormItem>

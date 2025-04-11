@@ -81,6 +81,38 @@ export type Database = {
         }
         Relationships: []
       }
+      implementation_checkpoints: {
+        Row: {
+          checkpoint_order: number
+          created_at: string | null
+          description: string
+          id: string
+          solution_id: string | null
+        }
+        Insert: {
+          checkpoint_order: number
+          created_at?: string | null
+          description: string
+          id?: string
+          solution_id?: string | null
+        }
+        Update: {
+          checkpoint_order?: number
+          created_at?: string | null
+          description?: string
+          id?: string
+          solution_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "implementation_checkpoints_solution_id_fkey"
+            columns: ["solution_id"]
+            isOneToOne: false
+            referencedRelation: "solutions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       modules: {
         Row: {
           certificate_template: Json | null
@@ -300,6 +332,41 @@ export type Database = {
           },
         ]
       }
+      solution_tools: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_required: boolean | null
+          solution_id: string | null
+          tool_name: string
+          tool_url: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_required?: boolean | null
+          solution_id?: string | null
+          tool_name: string
+          tool_url?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_required?: boolean | null
+          solution_id?: string | null
+          tool_name?: string
+          tool_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "solution_tools_solution_id_fkey"
+            columns: ["solution_id"]
+            isOneToOne: false
+            referencedRelation: "solutions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       solutions: {
         Row: {
           category: string
@@ -401,6 +468,10 @@ export type Database = {
     }
     Functions: {
       is_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      is_admin_user: {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
