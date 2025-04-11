@@ -26,8 +26,10 @@ export const uploadFileToStorage = async (
 
   // Simulate progress updates
   if (onProgressUpdate) {
+    let progress = 0;
     const interval = setInterval(() => {
-      onProgressUpdate((prev) => Math.min(prev + 10, 100));
+      progress = Math.min(progress + 10, 100);
+      onProgressUpdate(progress);
     }, 300);
     
     setTimeout(() => {
