@@ -2,9 +2,27 @@
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/auth";
 import { Link } from "react-router-dom";
+import { useState } from "react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 const Index = () => {
   const { signInAsMember, signInAsAdmin } = useAuth();
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleTestUserLogin = async (loginFn: () => Promise<void>, userType: string) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      await loginFn();
+    } catch (err: any) {
+      console.error(`Erro ao fazer login como ${userType}:`, err);
+      setError(err?.message || `Ocorreu um erro ao fazer login como ${userType}.`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
@@ -23,6 +41,13 @@ const Index = () => {
           </p>
         </div>
 
+        {error && (
+          <Alert variant="destructive" className="mt-4">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+
         <div className="mt-12 space-y-6">
           <div className="grid grid-cols-1 gap-4">
             <Link to="/login" className="w-full">
@@ -36,16 +61,18 @@ const Index = () => {
             
             <Button 
               className="w-full py-6 text-base bg-blue-600 hover:bg-blue-700"
-              onClick={signInAsMember}
+              onClick={() => handleTestUserLogin(signInAsMember, "membro")}
+              disabled={isLoading}
             >
-              Login como Membro (Teste)
+              {isLoading ? "Carregando..." : "Login como Membro (Teste)"}
             </Button>
             
             <Button 
               className="w-full py-6 text-base bg-purple-600 hover:bg-purple-700"
-              onClick={signInAsAdmin}
+              onClick={() => handleTestUserLogin(signInAsAdmin, "admin")}
+              disabled={isLoading}
             >
-              Login como Admin (Teste)
+              {isLoading ? "Carregando..." : "Login como Admin (Teste)"}
             </Button>
           </div>
 
@@ -63,6 +90,9 @@ const Index = () => {
               >
                 Conheça o Club
               </a>
+            </p>
+            <p className="mt-4 text-xs text-gray-400">
+              Para fins de teste, desative a confirmação de email no Supabase.
             </p>
           </div>
         </div>

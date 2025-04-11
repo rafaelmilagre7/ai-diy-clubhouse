@@ -25,6 +25,19 @@ const Login = () => {
     }
   };
 
+  const handleTestUserLogin = async (loginFn: () => Promise<void>, userType: string) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      await loginFn();
+    } catch (err: any) {
+      console.error(`Erro ao fazer login como ${userType}:`, err);
+      setError(err?.message || `Ocorreu um erro ao fazer login como ${userType}.`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
@@ -65,16 +78,18 @@ const Login = () => {
             {/* Botões de login de teste */}
             <Button 
               className="w-full py-6 text-base bg-blue-600 hover:bg-blue-700"
-              onClick={signInAsMember}
+              onClick={() => handleTestUserLogin(signInAsMember, "membro")}
+              disabled={isLoading}
             >
-              Login como Membro (Teste)
+              {isLoading ? "Carregando..." : "Login como Membro (Teste)"}
             </Button>
             
             <Button 
               className="w-full py-6 text-base bg-purple-600 hover:bg-purple-700"
-              onClick={signInAsAdmin}
+              onClick={() => handleTestUserLogin(signInAsAdmin, "admin")}
+              disabled={isLoading}
             >
-              Login como Admin (Teste)
+              {isLoading ? "Carregando..." : "Login como Admin (Teste)"}
             </Button>
             
             <div className="text-center mt-2">
@@ -107,6 +122,9 @@ const Login = () => {
           <div className="text-center text-xs text-gray-400 mt-4">
             <p>
               URL atual: {window.location.origin}
+            </p>
+            <p className="mt-1">
+              Para fins de teste, desative a confirmação de email no Supabase.
             </p>
           </div>
         </div>
