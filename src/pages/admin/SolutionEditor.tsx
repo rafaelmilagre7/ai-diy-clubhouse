@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -74,6 +75,9 @@ const formSchema = z.object({
   }),
   thumbnail_url: z.string().optional(),
   published: z.boolean().default(false),
+  slug: z.string().min(3, {
+    message: "O slug deve ter pelo menos 3 caracteres",
+  }).optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -94,12 +98,13 @@ const SolutionEditor = () => {
     defaultValues: {
       title: "",
       description: "",
-      category: "revenue",
-      difficulty: "medium",
+      category: "revenue" as const,
+      difficulty: "medium" as const,
       estimated_time: 30,
       success_rate: 80,
       thumbnail_url: "",
       published: false,
+      slug: "",
     },
   });
   
@@ -125,12 +130,13 @@ const SolutionEditor = () => {
         form.reset({
           title: data.title,
           description: data.description,
-          category: data.category,
-          difficulty: data.difficulty,
+          category: data.category as "revenue" | "operational" | "strategy",
+          difficulty: data.difficulty as "easy" | "medium" | "advanced",
           estimated_time: data.estimated_time,
           success_rate: data.success_rate,
           thumbnail_url: data.thumbnail_url || "",
           published: data.published,
+          slug: data.slug,
         });
       } catch (error) {
         console.error("Error fetching solution:", error);
@@ -154,8 +160,15 @@ const SolutionEditor = () => {
     try {
       setSaving(true);
       
+      // Gerar um slug a partir do título se não for fornecido
+      const slug = values.slug || values.title
+        .toLowerCase()
+        .replace(/[^\w\s]/gi, '')
+        .replace(/\s+/g, '-');
+      
       const solutionData = {
         ...values,
+        slug,
         updated_at: new Date().toISOString(),
       };
       
@@ -283,6 +296,27 @@ const SolutionEditor = () => {
                   
                   <FormField
                     control={form.control}
+                    name="slug"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Slug (URL)</FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="Ex: assistente-vendas-instagram" 
+                            {...field} 
+                            value={field.value || ''}
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          Identificador único para URL (deixe em branco para gerar automaticamente)
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
                     name="description"
                     render={({ field }) => (
                       <FormItem>
@@ -312,6 +346,7 @@ const SolutionEditor = () => {
                           <Select 
                             onValueChange={field.onChange} 
                             defaultValue={field.value}
+                            value={field.value}
                           >
                             <FormControl>
                               <SelectTrigger>
@@ -341,6 +376,7 @@ const SolutionEditor = () => {
                           <Select 
                             onValueChange={field.onChange} 
                             defaultValue={field.value}
+                            value={field.value}
                           >
                             <FormControl>
                               <SelectTrigger>
