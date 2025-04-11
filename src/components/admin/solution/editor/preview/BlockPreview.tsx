@@ -1,6 +1,16 @@
 
 import React from "react";
-import { ContentBlock } from "../BlockTypes";
+import { 
+  ContentBlock, 
+  HeaderBlockData,
+  ParagraphBlockData,
+  ImageBlockData,
+  ListBlockData,
+  VideoBlockData,
+  YoutubeBlockData,
+  CodeBlockData,
+  QuoteBlockData
+} from "../BlockTypes";
 import HeaderPreview from "./HeaderPreview";
 import ParagraphPreview from "./ParagraphPreview";
 import ImagePreview from "./ImagePreview";
@@ -19,21 +29,21 @@ const BlockPreview: React.FC<BlockPreviewProps> = ({ block }) => {
 
   switch (type) {
     case 'header':
-      return <HeaderPreview data={data} />;
+      return <HeaderPreview data={data as HeaderBlockData} />;
     case 'paragraph':
-      return <ParagraphPreview data={data} />;
+      return <ParagraphPreview data={data as ParagraphBlockData} />;
     case 'image':
-      return <ImagePreview data={data} />;
+      return <ImagePreview data={data as ImageBlockData} />;
     case 'list':
-      return <ListPreview data={data} />;
+      return <ListPreview data={data as ListBlockData} />;
     case 'video':
-      return <VideoPreview data={data} />;
+      return <VideoPreview data={data as VideoBlockData} />;
     case 'youtube':
-      return <YoutubePreview data={data} />;
+      return <YoutubePreview data={data as YoutubeBlockData} />;
     case 'code':
-      return <CodePreview data={data} />;
+      return <CodePreview data={data as CodeBlockData} />;
     case 'quote':
-      return <QuotePreview data={data} />;
+      return <QuotePreview data={data as QuoteBlockData} />;
     default:
       return <div>Tipo de bloco desconhecido: {type}</div>;
   }
