@@ -55,6 +55,13 @@ export const createUserProfileIfNeeded = async (
       return existingProfile as UserProfile;
     }
     
+    // Determina se deve ser admin baseado no email
+    const isAdminEmail = email.endsWith('@viverdeia.ai') || 
+                         email === 'admin@teste.com' ||
+                         email === 'admin@viverdeia.ai';
+    
+    const userRole = isAdminEmail ? 'admin' : role;
+    
     // Se não existe ou houve erro, tenta criar
     const { data: newProfile, error: insertError } = await supabase
       .from('profiles')
@@ -62,7 +69,7 @@ export const createUserProfileIfNeeded = async (
         id: userId,
         email,
         name,
-        role
+        role: userRole
       })
       .select()
       .single();

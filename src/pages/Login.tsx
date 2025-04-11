@@ -146,7 +146,7 @@ const Login = () => {
             <p className="mt-2">
               Não é membro ainda?{" "}
               <a
-                href="https://viverdeiaclub.com.br"
+                href="https://viverdeia.ai"
                 className="font-medium text-viverblue hover:text-viverblue-dark"
                 target="_blank"
                 rel="noopener noreferrer"
