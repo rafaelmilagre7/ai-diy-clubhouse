@@ -1,7 +1,9 @@
 
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Filter } from "lucide-react";
+import { Search, Filter, Settings } from "lucide-react";
+import { useAuth } from "@/contexts/auth";
+import { Link } from "react-router-dom";
 
 interface DashboardHeaderProps {
   profileName: string | null;
@@ -14,6 +16,8 @@ export const DashboardHeader = ({
   searchQuery,
   onSearchChange,
 }: DashboardHeaderProps) => {
+  const { isAdmin } = useAuth();
+  
   return (
     <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
       <div>
@@ -23,6 +27,14 @@ export const DashboardHeader = ({
         </p>
       </div>
       <div className="flex items-center gap-2">
+        {isAdmin && (
+          <Link to="/admin/solutions">
+            <Button variant="default" className="bg-viverblue hover:bg-viverblue/90">
+              <Settings className="mr-2 h-4 w-4" />
+              Painel Admin
+            </Button>
+          </Link>
+        )}
         <div className="relative flex-1 md:w-64">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
