@@ -6,11 +6,9 @@ import SolutionEditorHeader from "@/components/admin/solution-editor/SolutionEdi
 import SolutionEditorTabs from "@/components/admin/solution-editor/SolutionEditorTabs";
 import { useSolutionEditor } from "@/components/admin/solution-editor/useSolutionEditor";
 import { Card, CardContent } from "@/components/ui/card";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle, ChevronLeft, ChevronRight } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
-import { moduleTypes } from "@/components/admin/solution/moduleTypes";
+import ProgressIndicator from "@/components/admin/solution-editor/ProgressIndicator";
+import NavigationButtons from "@/components/admin/solution-editor/NavigationButtons";
+import AuthError from "@/components/admin/solution-editor/AuthError";
 
 const SolutionEditor = () => {
   const { id } = useParams<{ id: string }>();
@@ -85,32 +83,14 @@ const SolutionEditor = () => {
         difficultyColor={getDifficultyColor()}
       />
       
-      {!user && (
-        <Alert variant="destructive" className="mb-4">
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Erro de autenticação</AlertTitle>
-          <AlertDescription>
-            Você precisa estar autenticado para editar soluções. Por favor, faça login novamente.
-          </AlertDescription>
-        </Alert>
-      )}
+      {!user && <AuthError />}
       
       {solution && (
-        <div className="mb-6">
-          <div className="flex justify-between items-center mb-2">
-            <span className="text-sm font-medium text-muted-foreground">
-              Etapa {currentStep + 1} de {totalSteps}:
-              <span className="ml-2 font-semibold text-primary">{stepTitles[currentStep]}</span>
-            </span>
-            <span className="text-sm text-muted-foreground">
-              {Math.round((currentStep / (totalSteps - 1)) * 100)}% concluído
-            </span>
-          </div>
-          <Progress 
-            value={(currentStep / (totalSteps - 1)) * 100} 
-            className="h-2 bg-[#0ABAB5]/20"
-          />
-        </div>
+        <ProgressIndicator 
+          currentStep={currentStep}
+          totalSteps={totalSteps}
+          stepTitle={stepTitles[currentStep]}
+        />
       )}
       
       <Card className="border-none shadow-sm">
@@ -128,26 +108,12 @@ const SolutionEditor = () => {
       </Card>
       
       {solution && (
-        <div className="flex justify-between mt-8">
-          <Button
-            variant="outline"
-            onClick={handlePreviousStep}
-            disabled={currentStep === 0}
-            className="flex items-center"
-          >
-            <ChevronLeft className="w-4 h-4 mr-2" />
-            Anterior
-          </Button>
-          
-          <Button
-            onClick={handleNextStep}
-            disabled={currentStep === totalSteps - 1}
-            className="flex items-center bg-[#0ABAB5] hover:bg-[#0ABAB5]/90"
-          >
-            Próximo
-            <ChevronRight className="w-4 h-4 ml-2" />
-          </Button>
-        </div>
+        <NavigationButtons 
+          currentStep={currentStep}
+          totalSteps={totalSteps}
+          onPrevious={handlePreviousStep}
+          onNext={handleNextStep}
+        />
       )}
     </div>
   );
