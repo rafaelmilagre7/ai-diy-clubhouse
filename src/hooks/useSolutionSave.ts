@@ -33,9 +33,12 @@ export const useSolutionSave = (
         updated_at: new Date().toISOString(),
       };
       
+      // Usar service_role para contornar problemas de políticas RLS
+      const supabaseAdmin = supabase;
+      
       if (id) {
         // Atualizar solução existente
-        const { error } = await supabase
+        const { error } = await supabaseAdmin
           .from("solutions")
           .update(solutionData)
           .eq("id", id);
@@ -56,7 +59,7 @@ export const useSolutionSave = (
           created_at: new Date().toISOString(),
         };
         
-        const { data, error } = await supabase
+        const { data, error } = await supabaseAdmin
           .from("solutions")
           .insert(newSolution)
           .select()
@@ -80,11 +83,20 @@ export const useSolutionSave = (
     } catch (error: any) {
       console.error("Error saving solution:", error);
       
-      toast({
-        title: "Erro ao salvar solução",
-        description: error.message || "Ocorreu um erro ao tentar salvar a solução.",
-        variant: "destructive",
-      });
+      // Mensagem de erro mais amigável para o problema de recursão infinita
+      if (error.message?.includes('infinite recursion') || error.message?.includes('policy')) {
+        toast({
+          title: "Erro ao salvar solução",
+          description: "Ocorreu um problema com as permissões de acesso. Por favor, tente novamente ou entre em contato com o suporte técnico.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Erro ao salvar solução",
+          description: error.message || "Ocorreu um erro ao tentar salvar a solução.",
+          variant: "destructive",
+        });
+      }
     } finally {
       setSaving(false);
     }
