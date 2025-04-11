@@ -1,144 +1,120 @@
 
-import { useEffect, useState } from "react";
-import { Session, User } from "@supabase/supabase-js";
-import { supabase, UserProfile } from "@/lib/supabase";
+import { useState, useEffect } from "react";
+import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/auth";
-import { fetchUserProfile } from "@/contexts/auth/utils/profileUtils";
-import { toast } from "@/hooks/use-toast";
+import { fetchUserProfile, createUserProfileIfNeeded } from "@/contexts/auth/utils/profileUtils";
 
-/**
- * Hook for handling authentication session management
- */
 export const useAuthSession = () => {
+  const {
+    setSession,
+    setUser,
+    setProfile,
+    setIsLoading,
+  } = useAuth();
+  
   const [isInitializing, setIsInitializing] = useState(true);
-  const { setSession, setUser, setProfile, setIsLoading } = useAuth();
-  const [authError, setAuthError] = useState<string | null>(null);
+  const [authError, setAuthError] = useState<Error | null>(null);
   const [retryCount, setRetryCount] = useState(0);
-  const maxRetries = 2;
-
-  // Create a minimal profile based on session data
-  const createMinimalProfile = (user: User): UserProfile => {
-    return {
-      id: user.id,
-      email: user.email || '',
-      name: user.user_metadata?.name || 'Usuário',
-      avatar_url: user.user_metadata?.avatar_url || null,
-      role: user.email?.endsWith('@viverdeia.ai') ? 'admin' : 'member',
-      company_name: null,
-      industry: null,
-      created_at: new Date().toISOString()
-    };
-  };
-
-  // Handle profile loading and error handling
-  const handleProfileLoading = (user: User) => {
-    setTimeout(() => {
-      fetchUserProfile(user.id)
-        .then(profile => {
-          console.log('Profile fetched:', profile);
-          
-          if (!profile) {
-            console.log('Perfil não encontrado, usando perfil mínimo...');
-            const minimalProfile = createMinimalProfile(user);
-            setProfile(minimalProfile);
-          } else {
-            setProfile(profile);
-          }
-          
-          setIsLoading(false);
-        })
-        .catch(error => {
-          console.error('Error fetching/creating profile:', error);
-          
-          // Handle specific database policy errors
-          if (error?.message?.includes('infinite recursion')) {
-            console.warn('Erro de política de banco de dados detectado, continuando com perfil mínimo');
-            try {
-              const minimalProfile = createMinimalProfile(user);
-              setProfile(minimalProfile);
-            } catch (createError) {
-              console.error('Error creating minimal profile:', createError);
-            }
-          } else {
-            setAuthError(`Erro ao carregar perfil: ${error.message || 'Erro desconhecido'}`);
-          }
-          
-          setIsLoading(false);
-        });
-    }, 0);
-  };
+  const maxRetries = 3;
 
   useEffect(() => {
-    console.log('AuthSession: Iniciando setup de autenticação');
-    
-    // Set up auth state listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        console.log('Auth state changed:', event);
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        // If there's a user, fetch profile
-        if (session?.user) {
-          handleProfileLoading(session.user);
-        } else {
-          setProfile(null);
-          setIsLoading(false);
-        }
-      }
-    );
+    if (retryCount > maxRetries) {
+      console.error(`Atingido limite máximo de ${maxRetries} tentativas de autenticação`);
+      setIsInitializing(false);
+      return;
+    }
 
-    // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log('Sessão existente:', session ? 'Sim' : 'Não');
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        fetchUserProfile(session.user.id)
-          .then(profile => {
-            console.log('Profile inicial carregado:', profile);
+    const setupSession = async () => {
+      try {
+        console.log("Inicializando sessão de autenticação...");
+        
+        // Verificar sessão atual
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError) {
+          throw sessionError;
+        }
+        
+        setSession(session);
+        
+        if (session) {
+          console.log("Sessão ativa encontrada:", session.user.id);
+          setUser(session.user);
+          
+          try {
+            // Tentar buscar o perfil do usuário
+            let profile = await fetchUserProfile(session.user.id);
             
+            // Se não existir perfil, criar um novo
             if (!profile) {
-              const minimalProfile = createMinimalProfile(session.user);
-              setProfile(minimalProfile);
-            } else {
-              setProfile(profile);
+              console.log("Criando novo perfil para usuário:", session.user.id);
+              profile = await createUserProfileIfNeeded(
+                session.user.id, 
+                session.user.email || 'sem-email@viverdeia.ai',
+                session.user.user_metadata?.name || 'Usuário'
+              );
             }
             
-            setIsLoading(false);
-            setIsInitializing(false);
-          })
-          .catch(error => {
-            console.error('Erro ao carregar/criar perfil inicial:', error);
+            setProfile(profile);
+          } catch (profileError) {
+            console.error("Erro ao buscar/criar perfil:", profileError);
+            // Continuar sem perfil, sem falhar completamente
+          }
+        } else {
+          console.log("Nenhuma sessão ativa encontrada");
+        }
+        
+        // Configurar listener para mudanças de autenticação
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(
+          async (event, newSession) => {
+            console.log("Evento de autenticação:", event);
             
-            if (error?.message?.includes('infinite recursion')) {
-              console.warn('Erro de política de banco de dados detectado, continuando com perfil mínimo');
-              
+            setSession(newSession);
+            setUser(newSession?.user || null);
+            
+            if (newSession?.user) {
               try {
-                const minimalProfile = createMinimalProfile(session.user);
-                setProfile(minimalProfile);
-              } catch (createError) {
-                console.error('Error creating minimal profile:', createError);
+                // Tentar buscar ou criar perfil ao mudar de estado
+                let profile = await fetchUserProfile(newSession.user.id);
+                
+                if (!profile) {
+                  profile = await createUserProfileIfNeeded(
+                    newSession.user.id,
+                    newSession.user.email || 'sem-email@viverdeia.ai',
+                    newSession.user.user_metadata?.name || 'Usuário'
+                  );
+                }
+                
+                setProfile(profile);
+              } catch (profileError) {
+                console.error("Erro ao buscar/criar perfil:", profileError);
               }
             } else {
-              setAuthError(`Erro ao carregar perfil: ${error.message || 'Erro desconhecido'}`);
+              setProfile(null);
             }
-            
-            setIsLoading(false);
-            setIsInitializing(false);
-          });
-      } else {
-        setIsLoading(false);
+          }
+        );
+        
+        // Limpar estados de erro e carregamento
+        setAuthError(null);
         setIsInitializing(false);
+        setIsLoading(false);
+        
+        // Cleanup
+        return () => {
+          subscription.unsubscribe();
+        };
+      } catch (error) {
+        console.error("Erro durante inicialização da sessão:", error);
+        setAuthError(error instanceof Error ? error : new Error('Erro desconhecido de autenticação'));
+        setRetryCount(count => count + 1);
+        setIsInitializing(false);
+        setIsLoading(false);
       }
-    });
-
-    return () => {
-      console.log('AuthSession: Limpando subscription');
-      subscription.unsubscribe();
     };
-  }, [setSession, setUser, setProfile, setIsLoading, retryCount]);
+    
+    setupSession();
+  }, [retryCount, setSession, setUser, setProfile, setIsLoading, maxRetries]);
 
   return {
     isInitializing,
