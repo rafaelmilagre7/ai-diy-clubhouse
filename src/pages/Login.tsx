@@ -4,24 +4,45 @@ import { useAuth } from "@/contexts/auth";
 import { FcGoogle } from "react-icons/fc";
 import { useState, useEffect } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Info } from "lucide-react";
 import { Link } from "react-router-dom";
+import { supabase } from "@/lib/supabase";
 
 const Login = () => {
   const { signIn, signInAsMember, signInAsAdmin } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [currentUrl, setCurrentUrl] = useState<string>("");
+  const [authDetails, setAuthDetails] = useState<{provider: string, redirectUrl: string} | null>(null);
+  const [authProviders, setAuthProviders] = useState<string[]>([]);
 
   // Captura a URL atual para ajudar no debug
   useEffect(() => {
     setCurrentUrl(window.location.href);
+    
+    // Verifica quais provedores de autenticação estão configurados
+    const checkAuthProviders = async () => {
+      try {
+        const { data, error } = await supabase.auth.getUser();
+        if (!error) {
+          setAuthProviders(["email"]);
+        }
+      } catch (err) {
+        console.error("Erro ao verificar provedores de autenticação:", err);
+      }
+    };
+    
+    checkAuthProviders();
   }, []);
 
   const handleSignIn = async () => {
     try {
       setIsLoading(true);
       setError(null);
+      setAuthDetails({
+        provider: 'google',
+        redirectUrl: `${window.location.origin}`
+      });
       await signIn();
     } catch (err) {
       console.error("Erro ao fazer login:", err);
@@ -65,6 +86,16 @@ const Login = () => {
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+        
+        {authDetails && (
+          <Alert variant="info" className="bg-blue-50 border-blue-200">
+            <Info className="h-4 w-4 text-blue-500" />
+            <AlertDescription className="text-blue-700">
+              <p><strong>Tentativa de login:</strong> {authDetails.provider}</p>
+              <p><strong>URL de redirecionamento:</strong> {authDetails.redirectUrl}</p>
+            </AlertDescription>
           </Alert>
         )}
         
@@ -136,6 +167,9 @@ const Login = () => {
               </p>
               <p className="mt-1 text-xs">
                 ⚠️ Adicione estas URLs como Redirect URLs no Supabase
+              </p>
+              <p className="mt-2 text-xs">
+                Provedores de autenticação ativos: {authProviders.join(', ') || 'Nenhum detectado'}
               </p>
             </div>
             <p className="mt-4">

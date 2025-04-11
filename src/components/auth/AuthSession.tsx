@@ -5,6 +5,7 @@ import { supabase, UserProfile } from "@/lib/supabase";
 import { fetchUserProfile } from "@/contexts/auth/utils/profileUtils";
 import { useAuth } from "@/contexts/auth";
 import LoadingScreen from "@/components/common/LoadingScreen";
+import { toast } from "@/hooks/use-toast";
 
 /**
  * AuthSession component that handles authentication state changes
@@ -13,6 +14,7 @@ import LoadingScreen from "@/components/common/LoadingScreen";
 const AuthSession = ({ children }: { children: React.ReactNode }) => {
   const [isInitializing, setIsInitializing] = useState(true);
   const { setSession, setUser, setProfile, setIsLoading } = useAuth();
+  const [authError, setAuthError] = useState<string | null>(null);
 
   useEffect(() => {
     // Configuração de log de debug
@@ -33,9 +35,19 @@ const AuthSession = ({ children }: { children: React.ReactNode }) => {
                 console.log('Profile fetched:', profile);
                 setProfile(profile);
                 setIsLoading(false);
+                
+                if (!profile) {
+                  console.warn('Perfil não encontrado para usuário autenticado');
+                  toast({
+                    title: 'Aviso',
+                    description: 'Perfil de usuário não encontrado. Algumas funcionalidades podem estar limitadas.',
+                    variant: 'warning',
+                  });
+                }
               })
               .catch(error => {
                 console.error('Error fetching profile:', error);
+                setAuthError(`Erro ao carregar perfil: ${error.message || 'Erro desconhecido'}`);
                 // Ainda definimos isLoading como false mesmo com erro
                 setIsLoading(false);
               });
@@ -60,9 +72,19 @@ const AuthSession = ({ children }: { children: React.ReactNode }) => {
             setProfile(profile);
             setIsLoading(false);
             setIsInitializing(false);
+            
+            if (!profile) {
+              console.warn('Perfil inicial não encontrado para usuário autenticado');
+              toast({
+                title: 'Aviso',
+                description: 'Perfil de usuário não encontrado. Algumas funcionalidades podem estar limitadas.',
+                variant: 'warning',
+              });
+            }
           })
           .catch(error => {
             console.error('Erro ao carregar perfil inicial:', error);
+            setAuthError(`Erro ao carregar perfil: ${error.message || 'Erro desconhecido'}`);
             // Continuamos mesmo com erro
             setIsLoading(false);
             setIsInitializing(false);

@@ -14,6 +14,7 @@ export const createTestUser = async (email: string, password: string, role: User
       .single();
     
     if (!existingUser) {
+      console.log("Criando novo usuário de teste:", role);
       // Create the user with admin access
       const { data: userData, error: signUpError } = await supabase.auth.signUp({
         email,
@@ -29,13 +30,22 @@ export const createTestUser = async (email: string, password: string, role: User
       });
 
       if (signUpError) throw signUpError;
-      
-      // For test users, we'll automatically confirm their email using admin functions
-      // This requires the service role key in production, but for testing purposes
-      // we'll handle by directly trying to sign in
-      console.log("Criando novo usuário de teste:", role);
     } else {
       console.log("Usuário de teste já existe:", role);
+      
+      // Atualizar o perfil com o papel correto se necessário
+      if (existingUser.role !== role) {
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update({ role: role })
+          .eq('id', existingUser.id);
+          
+        if (updateError) {
+          console.error(`Erro ao atualizar papel do usuário para ${role}:`, updateError);
+        } else {
+          console.log(`Papel do usuário atualizado para ${role}`);
+        }
+      }
     }
 
     // Login with the created user
@@ -67,7 +77,7 @@ export const createTestUser = async (email: string, password: string, role: User
     console.error(`Erro ao criar/logar usuário ${role}:`, error);
     toast({
       title: 'Erro no login',
-      description: error?.message || `Não foi possível fazer login como ${role} de teste.`,
+      description: error?.message || `Ocorreu um erro ao fazer login como ${role} de teste.`,
       variant: 'destructive',
     });
     throw error;
@@ -126,6 +136,27 @@ export const signInAsTestAdmin = async (): Promise<void> => {
         throw error;
       }
     } else {
+      // Se o login foi bem-sucedido, verifica se o perfil tem o papel correto
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', data.user?.id)
+        .single();
+        
+      if (!profileError && profileData && profileData.role !== 'admin') {
+        // Atualiza o papel para admin se necessário
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update({ role: 'admin' })
+          .eq('id', data.user?.id);
+          
+        if (updateError) {
+          console.error('Erro ao atualizar papel para admin:', updateError);
+        } else {
+          console.log('Papel atualizado para admin com sucesso');
+        }
+      }
+      
       toast({
         title: 'Login como Admin',
         description: 'Você está logado como usuário administrador de teste.',
