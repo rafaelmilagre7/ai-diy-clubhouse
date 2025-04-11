@@ -3,7 +3,6 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase, UserProfile } from '@/lib/supabase';
 import { 
-  fetchUserProfile, 
   signInWithGoogle, 
   signInAsTestMember, 
   signInAsTestAdmin, 
@@ -18,49 +17,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    // Set up auth state listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        console.log('Auth state changed:', event);
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        // If there's a user, fetch profile using setTimeout to avoid deadlock
-        if (session?.user) {
-          setTimeout(() => {
-            fetchUserProfile(session.user.id).then(profile => {
-              setProfile(profile);
-              setIsLoading(false);
-            });
-          }, 0);
-        } else {
-          setProfile(null);
-          setIsLoading(false);
-        }
-      }
-    );
-
-    // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        fetchUserProfile(session.user.id).then(profile => {
-          setProfile(profile);
-          setIsLoading(false);
-        });
-      } else {
-        setIsLoading(false);
-      }
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, []);
 
   const signIn = async () => {
     setIsLoading(true);
@@ -113,6 +69,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signOut,
     signInAsMember,
     signInAsAdmin,
+    // Expose setState functions for the AuthSession component
+    setSession,
+    setUser,
+    setProfile,
+    setIsLoading,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
