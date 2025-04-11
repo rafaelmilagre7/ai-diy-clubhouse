@@ -5,20 +5,28 @@ import { toast } from '@/hooks/use-toast';
 // Sign in with Google
 export const signInWithGoogle = async (): Promise<void> => {
   try {
-    // Use current URL as redirect URL
+    // Obter a URL atual (importante para o redirecionamento funcionar)
     const redirectUrl = `${window.location.origin}`;
     console.log('Redirecionando para:', redirectUrl);
     
-    const { error } = await supabase.auth.signInWithOAuth({
+    const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
         redirectTo: redirectUrl,
+        // Adiciona algumas configs opcionais
+        queryParams: {
+          access_type: 'offline',
+          prompt: 'consent',
+        },
       },
     });
 
     if (error) {
       throw error;
     }
+    
+    // Feedback positivo (opcional)
+    console.log('Login iniciado com sucesso', data);
   } catch (error) {
     console.error('Error signing in:', error);
     toast({

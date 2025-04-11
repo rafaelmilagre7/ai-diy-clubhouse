@@ -15,6 +15,9 @@ const AuthSession = ({ children }: { children: React.ReactNode }) => {
   const { setSession, setUser, setProfile, setIsLoading } = useAuth();
 
   useEffect(() => {
+    // Configuração de log de debug
+    console.log('AuthSession: Iniciando setup de autenticação');
+    
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
@@ -25,10 +28,17 @@ const AuthSession = ({ children }: { children: React.ReactNode }) => {
         // If there's a user, fetch profile using setTimeout to avoid deadlock
         if (session?.user) {
           setTimeout(() => {
-            fetchUserProfile(session.user.id).then(profile => {
-              setProfile(profile);
-              setIsLoading(false);
-            });
+            fetchUserProfile(session.user.id)
+              .then(profile => {
+                console.log('Profile fetched:', profile);
+                setProfile(profile);
+                setIsLoading(false);
+              })
+              .catch(error => {
+                console.error('Error fetching profile:', error);
+                // Ainda definimos isLoading como false mesmo com erro
+                setIsLoading(false);
+              });
           }, 0);
         } else {
           setProfile(null);
@@ -39,15 +49,24 @@ const AuthSession = ({ children }: { children: React.ReactNode }) => {
 
     // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('Sessão existente:', session ? 'Sim' : 'Não');
       setSession(session);
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        fetchUserProfile(session.user.id).then(profile => {
-          setProfile(profile);
-          setIsLoading(false);
-          setIsInitializing(false);
-        });
+        fetchUserProfile(session.user.id)
+          .then(profile => {
+            console.log('Profile inicial carregado:', profile);
+            setProfile(profile);
+            setIsLoading(false);
+            setIsInitializing(false);
+          })
+          .catch(error => {
+            console.error('Erro ao carregar perfil inicial:', error);
+            // Continuamos mesmo com erro
+            setIsLoading(false);
+            setIsInitializing(false);
+          });
       } else {
         setIsLoading(false);
         setIsInitializing(false);
@@ -55,6 +74,7 @@ const AuthSession = ({ children }: { children: React.ReactNode }) => {
     });
 
     return () => {
+      console.log('AuthSession: Limpando subscription');
       subscription.unsubscribe();
     };
   }, [setSession, setUser, setProfile, setIsLoading]);

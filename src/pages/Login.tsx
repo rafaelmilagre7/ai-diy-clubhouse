@@ -2,7 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/auth";
 import { FcGoogle } from "react-icons/fc";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -11,6 +11,12 @@ const Login = () => {
   const { signIn, signInAsMember, signInAsAdmin } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [currentUrl, setCurrentUrl] = useState<string>("");
+
+  // Captura a URL atual para ajudar no debug
+  useEffect(() => {
+    setCurrentUrl(window.location.href);
+  }, []);
 
   const handleSignIn = async () => {
     try {
@@ -120,10 +126,19 @@ const Login = () => {
           </div>
           
           <div className="text-center text-xs text-gray-400 mt-4">
-            <p>
-              URL atual: {window.location.origin}
-            </p>
-            <p className="mt-1">
+            <div className="p-3 bg-gray-100 rounded-md">
+              <p className="font-medium">Informações para configuração:</p>
+              <p className="break-all mt-1">
+                URL atual: {currentUrl}
+              </p>
+              <p className="break-all mt-1">
+                Origin: {window.location.origin}
+              </p>
+              <p className="mt-1 text-xs">
+                ⚠️ Adicione estas URLs como Redirect URLs no Supabase
+              </p>
+            </div>
+            <p className="mt-4">
               Para fins de teste, desative a confirmação de email no Supabase.
             </p>
           </div>
