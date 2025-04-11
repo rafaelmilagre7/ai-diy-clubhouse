@@ -3,49 +3,49 @@ export const moduleTypes = [
   {
     type: "landing",
     title: "Landing da Solução",
-    description: "Apresentação inicial (30s)",
-    order: 0
+    order: 0,
+    description: "Apresentação inicial da solução e seus benefícios"
   },
   {
     type: "overview",
     title: "Visão Geral e Case Real",
-    description: "Contexto e case (2 min)",
-    order: 1
+    order: 1,
+    description: "Explicação mais detalhada e exemplo de case de sucesso"
   },
   {
     type: "preparation",
     title: "Preparação Express",
-    description: "Requisitos e setup (3-5 min)",
-    order: 2
+    order: 2,
+    description: "Checklist de pré-requisitos e recursos necessários"
   },
   {
     type: "implementation",
     title: "Implementação Passo a Passo",
-    description: "Passo a passo (15-30 min)",
-    order: 3
+    order: 3,
+    description: "Guia detalhado de implementação em passos sequenciais"
   },
   {
     type: "verification",
     title: "Verificação de Implementação",
-    description: "Testes de funcionamento (2-5 min)",
-    order: 4
+    order: 4,
+    description: "Checklist para validar a implementação correta"
   },
   {
     type: "results",
     title: "Primeiros Resultados",
-    description: "Primeiros resultados (5 min)",
-    order: 5
+    order: 5,
+    description: "Como extrair e mensurar os resultados iniciais"
   },
   {
     type: "optimization",
     title: "Otimização Rápida",
-    description: "Melhorias e ajustes (5 min)",
-    order: 6
+    order: 6,
+    description: "Dicas para melhorar e otimizar a implementação inicial"
   },
   {
     type: "celebration",
     title: "Celebração e Próximos Passos",
-    description: "Conquista e próximos passos (1 min)",
-    order: 7
+    order: 7,
+    description: "Resumo das conquistas e indicação de próximas soluções"
   }
 ];

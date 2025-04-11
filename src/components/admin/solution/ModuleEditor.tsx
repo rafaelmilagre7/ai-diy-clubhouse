@@ -1,15 +1,17 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Module } from "@/lib/supabase";
-import { Save, Eye, PenTool } from "lucide-react";
+import { Save, Eye, PenTool, AlertCircle } from "lucide-react";
 import BlockToolbar from "./editor/BlockToolbar";
 import BlockEditor from "./editor/BlockEditor";
 import BlockPreview from "./editor/preview/BlockPreview";
 import { useModuleEditor } from "./editor/useModuleEditor";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { validateModule } from "./editor/utils/moduleValidation";
 
 interface ModuleEditorProps {
   module: Module;
@@ -30,20 +32,49 @@ const ModuleEditor = ({ module, onSave }: ModuleEditorProps) => {
     handleSave
   } = useModuleEditor(module);
 
+  const [validationError, setValidationError] = useState<string | null>(null);
+
+  // Função para salvar com validação
+  const saveWithValidation = () => {
+    // Validar o módulo
+    const validation = validateModule(module.type, { blocks: getContentBlocks() });
+    
+    if (!validation.valid) {
+      setValidationError(validation.message);
+      return;
+    }
+    
+    setValidationError(null);
+    handleSave(onSave);
+  };
+
   return (
     <div className="space-y-6">
       <Card>
         <CardHeader>
           <CardTitle>
-            <Input
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Título do módulo"
-              className="text-xl font-bold"
-            />
+            <div className="flex items-center gap-4">
+              <Input
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="Título do módulo"
+                className="text-xl font-bold"
+              />
+              <div className="bg-slate-100 rounded px-3 py-1 text-sm">
+                Tipo: {getModuleTypeName(module.type)}
+              </div>
+            </div>
           </CardTitle>
         </CardHeader>
         <CardContent>
+          {validationError && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Erro de validação</AlertTitle>
+              <AlertDescription>{validationError}</AlertDescription>
+            </Alert>
+          )}
+          
           <Tabs defaultValue="editor" value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="mb-4">
               <TabsTrigger value="editor">Editor</TabsTrigger>
@@ -114,7 +145,7 @@ const ModuleEditor = ({ module, onSave }: ModuleEditorProps) => {
               </>
             )}
           </Button>
-          <Button onClick={() => handleSave(onSave)}>
+          <Button onClick={saveWithValidation}>
             <Save className="mr-2 h-4 w-4" />
             Salvar Módulo
           </Button>
@@ -122,6 +153,22 @@ const ModuleEditor = ({ module, onSave }: ModuleEditorProps) => {
       </Card>
     </div>
   );
+};
+
+// Função auxiliar para converter o tipo do módulo para um nome legível
+const getModuleTypeName = (type: string): string => {
+  const typeMap: Record<string, string> = {
+    landing: "Landing da Solução",
+    overview: "Visão Geral e Case Real",
+    preparation: "Preparação Express",
+    implementation: "Implementação Passo a Passo",
+    verification: "Verificação de Implementação",
+    results: "Primeiros Resultados",
+    optimization: "Otimização Rápida",
+    celebration: "Celebração e Próximos Passos"
+  };
+  
+  return typeMap[type] || type;
 };
 
 export default ModuleEditor;

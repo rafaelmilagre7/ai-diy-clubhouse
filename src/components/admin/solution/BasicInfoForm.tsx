@@ -24,6 +24,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Loader2, Save } from "lucide-react";
 import { slugify } from "@/utils/slugify";
+import React from "react";
 
 const formSchema = z.object({
   title: z.string().min(3, {

@@ -15,9 +15,12 @@ const CTAPreview: React.FC<CTAPreviewProps> = ({ data }) => {
         <p className="mt-2 mb-4 text-blue-700 max-w-lg mx-auto">{data.text}</p>
       )}
       
-      <button className="px-6 py-2 bg-blue-600 text-white rounded-full font-medium hover:bg-blue-700 transition-colors">
-        {data.buttonText}
-      </button>
+      <a 
+        href={data.buttonLink || "#"} 
+        className="inline-block px-6 py-2 bg-blue-600 text-white rounded-full font-medium hover:bg-blue-700 transition-colors"
+      >
+        {data.buttonText || "Continuar"}
+      </a>
     </div>
   );
 };

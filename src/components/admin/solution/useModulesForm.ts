@@ -17,6 +17,8 @@ export const useModulesForm = (solutionId: string | null) => {
   useEffect(() => {
     if (solutionId) {
       fetchModules();
+    } else {
+      setModules([]);
     }
   }, [solutionId]);
 
@@ -37,11 +39,8 @@ export const useModulesForm = (solutionId: string | null) => {
         throw error;
       }
       
-      if (data && data.length > 0) {
+      if (data) {
         setModules(data as Module[]);
-      } else {
-        // If no modules exist, we'll create the default structure
-        await createDefaultModules();
       }
     } catch (error) {
       console.error("Error fetching modules:", error);
@@ -56,15 +55,30 @@ export const useModulesForm = (solutionId: string | null) => {
   };
 
   // Create default modules structure
-  const createDefaultModules = async () => {
+  const handleCreateDefaultModules = async (specificTypes?: string[]) => {
     if (!solutionId) return;
     
     try {
-      const defaultModules = moduleTypes.map(moduleType => ({
+      setIsLoading(true);
+      
+      // Se tivermos tipos específicos, filtramos os tipos de módulo
+      const typesToCreate = specificTypes 
+        ? moduleTypes.filter(m => specificTypes.includes(m.type))
+        : moduleTypes;
+      
+      // Calcular o próximo order disponível
+      let nextOrder = 0;
+      if (modules.length > 0) {
+        // Encontrar o maior order atual e adicionar 1
+        nextOrder = Math.max(...modules.map(m => m.module_order)) + 1;
+      }
+      
+      // Criar os novos módulos com os orders corretos
+      const newModules = typesToCreate.map((moduleType, idx) => ({
         solution_id: solutionId,
         title: moduleType.title,
         type: moduleType.type,
-        module_order: moduleType.order,
+        module_order: nextOrder + idx,
         content: {
           blocks: []
         }
@@ -72,25 +86,35 @@ export const useModulesForm = (solutionId: string | null) => {
       
       const { data, error } = await supabase
         .from("modules")
-        .insert(defaultModules)
+        .insert(newModules)
         .select();
       
       if (error) {
         throw error;
       }
       
-      setModules(data as Module[]);
+      // Atualizar a lista de módulos local
+      if (data) {
+        setModules(prev => [...prev, ...(data as Module[])].sort((a, b) => a.module_order - b.module_order));
+      }
+      
       toast({
-        title: "Módulos criados",
-        description: "A estrutura básica de módulos foi criada com sucesso.",
+        title: specificTypes && specificTypes.length === 1 
+          ? "Módulo criado" 
+          : "Módulos criados",
+        description: specificTypes && specificTypes.length === 1 
+          ? "O novo módulo foi criado com sucesso." 
+          : "A estrutura de módulos foi criada com sucesso.",
       });
     } catch (error) {
-      console.error("Error creating default modules:", error);
+      console.error("Error creating modules:", error);
       toast({
         title: "Erro ao criar módulos",
-        description: "Não foi possível criar a estrutura básica de módulos.",
+        description: "Não foi possível criar os módulos para esta solução.",
         variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -172,6 +196,7 @@ export const useModulesForm = (solutionId: string | null) => {
     handlePreviewImplementation,
     handleBackToList,
     handleModuleSave,
-    handleNavigateModule
+    handleNavigateModule,
+    handleCreateDefaultModules
   };
 };
