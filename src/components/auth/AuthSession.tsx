@@ -6,6 +6,7 @@ import { fetchUserProfile, createUserProfileIfNeeded } from "@/contexts/auth/uti
 import { useAuth } from "@/contexts/auth";
 import LoadingScreen from "@/components/common/LoadingScreen";
 import { toast } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
 
 /**
  * AuthSession component that handles authentication state changes
