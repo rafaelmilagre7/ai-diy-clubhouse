@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/auth";
 import { FcGoogle } from "react-icons/fc";
 import { useState } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
