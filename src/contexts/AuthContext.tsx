@@ -12,9 +12,22 @@ interface AuthContextType {
   isLoading: boolean;
   signIn: () => Promise<void>;
   signOut: () => Promise<void>;
+  signInAsMember: () => Promise<void>;
+  signInAsAdmin: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+// Usuários de teste pré-configurados
+const TEST_MEMBER = {
+  email: "membro@viverdeia.ai",
+  password: "membro-teste-2024"
+};
+
+const TEST_ADMIN = {
+  email: "admin@viverdeia.ai",
+  password: "admin-teste-2024"
+};
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
@@ -108,6 +121,137 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // Função para login como membro de teste
+  const signInAsMember = async () => {
+    try {
+      setIsLoading(true);
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: TEST_MEMBER.email,
+        password: TEST_MEMBER.password
+      });
+      
+      if (error) {
+        // Se o usuário não existir, criar uma conta
+        if (error.message.includes('Invalid login credentials')) {
+          await createTestUser(TEST_MEMBER.email, TEST_MEMBER.password, 'member');
+        } else {
+          throw error;
+        }
+      } else {
+        toast({
+          title: 'Login como Membro',
+          description: 'Você está logado como usuário membro de teste.',
+        });
+      }
+    } catch (error: any) {
+      console.error('Erro ao fazer login como membro:', error);
+      toast({
+        title: 'Erro no login',
+        description: error?.message || 'Erro ao fazer login como membro de teste.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Função para login como admin de teste
+  const signInAsAdmin = async () => {
+    try {
+      setIsLoading(true);
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: TEST_ADMIN.email,
+        password: TEST_ADMIN.password
+      });
+      
+      if (error) {
+        // Se o usuário não existir, criar uma conta
+        if (error.message.includes('Invalid login credentials')) {
+          await createTestUser(TEST_ADMIN.email, TEST_ADMIN.password, 'admin');
+        } else {
+          throw error;
+        }
+      } else {
+        toast({
+          title: 'Login como Admin',
+          description: 'Você está logado como usuário administrador de teste.',
+        });
+      }
+    } catch (error: any) {
+      console.error('Erro ao fazer login como admin:', error);
+      toast({
+        title: 'Erro no login',
+        description: error?.message || 'Erro ao fazer login como administrador de teste.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Função auxiliar para criar usuários de teste
+  const createTestUser = async (email: string, password: string, role: UserRole) => {
+    try {
+      // Criar o usuário
+      const { data: userData, error: signUpError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            name: role === 'admin' ? 'Administrador Teste' : 'Membro Teste',
+            role: role
+          }
+        }
+      });
+
+      if (signUpError) throw signUpError;
+
+      // Login imediato após a criação
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      if (signInError) throw signInError;
+
+      // Verificar se o perfil foi criado automaticamente (via trigger)
+      // Se não, vamos criar manualmente
+      if (userData.user) {
+        setTimeout(async () => {
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', userData.user!.id)
+            .single();
+
+          if (!profileData) {
+            // Criar perfil manualmente se necessário
+            await supabase.from('profiles').insert({
+              id: userData.user!.id,
+              email: email,
+              name: role === 'admin' ? 'Administrador Teste' : 'Membro Teste',
+              role: role
+            });
+          }
+        }, 1000);
+      }
+
+      toast({
+        title: `Usuário ${role} criado`,
+        description: `Usuário de teste ${role} criado e logado com sucesso.`,
+      });
+
+    } catch (error: any) {
+      console.error(`Erro ao criar usuário ${role}:`, error);
+      toast({
+        title: 'Erro ao criar usuário',
+        description: error?.message || `Não foi possível criar o usuário de teste ${role}.`,
+        variant: 'destructive',
+      });
+      throw error;
+    }
+  };
+
   const signOut = async () => {
     try {
       const { error } = await supabase.auth.signOut();
@@ -138,6 +282,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     isLoading,
     signIn,
     signOut,
+    signInAsMember,
+    signInAsAdmin,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
