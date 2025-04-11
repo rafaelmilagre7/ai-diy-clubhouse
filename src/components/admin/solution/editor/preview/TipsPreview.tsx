@@ -1,12 +1,10 @@
 
 import React from "react";
 import { Lightbulb } from "lucide-react";
+import { TipsBlockData } from "../BlockTypes";
 
 interface TipsPreviewProps {
-  data: {
-    title: string;
-    items: string[];
-  };
+  data: TipsBlockData;
 }
 
 const TipsPreview: React.FC<TipsPreviewProps> = ({ data }) => {

@@ -1,13 +1,9 @@
 
 import React from "react";
+import { CTABlockData } from "../BlockTypes";
 
 interface CTAPreviewProps {
-  data: {
-    title: string;
-    text: string;
-    buttonText: string;
-    buttonLink: string;
-  };
+  data: CTABlockData;
 }
 
 const CTAPreview: React.FC<CTAPreviewProps> = ({ data }) => {

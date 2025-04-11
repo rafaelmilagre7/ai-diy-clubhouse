@@ -26,35 +26,35 @@ const BlockPreview: React.FC<BlockPreviewProps> = ({ block }) => {
 
   switch (type) {
     case "header":
-      return <HeaderPreview data={data} />;
+      return <HeaderPreview data={data as { text: string; level: number }} />;
     case "paragraph":
-      return <ParagraphPreview data={data} />;
+      return <ParagraphPreview data={data as { text: string }} />;
     case "image":
-      return <ImagePreview data={data} />;
+      return <ImagePreview data={data as { url: string; alt?: string; caption?: string }} />;
     case "list":
-      return <ListPreview data={data} />;
+      return <ListPreview data={data as { items: string[] }} />;
     case "video":
-      return <VideoPreview data={data} />;
+      return <VideoPreview data={data as { url: string; caption?: string }} />;
     case "youtube":
-      return <YoutubePreview data={data} />;
+      return <YoutubePreview data={data as { youtubeId: string; caption?: string }} />;
     case "code":
-      return <CodePreview data={data} />;
+      return <CodePreview data={data as { code: string; language: string }} />;
     case "quote":
-      return <QuotePreview data={data} />;
+      return <QuotePreview data={data as { text: string; caption?: string }} />;
     case "checklist":
-      return <ChecklistPreview data={data} />;
+      return <ChecklistPreview data={data as { items: { text: string; checked: boolean }[] }} />;
     case "steps":
-      return <StepsPreview data={data} />;
+      return <StepsPreview data={data as { title: string; steps: { title: string; description: string; imageUrl: string }[] }} />;
     case "warning":
-      return <WarningPreview data={data} />;
+      return <WarningPreview data={data as { title: string; text: string }} />;
     case "benefits":
-      return <BenefitsPreview data={data} />;
+      return <BenefitsPreview data={data as { title: string; items: string[] }} />;
     case "metrics":
-      return <MetricsPreview data={data} />;
+      return <MetricsPreview data={data as { title: string; description: string; metrics: { label: string; value: string; unit: string }[] }} />;
     case "tips":
-      return <TipsPreview data={data} />;
+      return <TipsPreview data={data as { title: string; items: string[] }} />;
     case "cta":
-      return <CTAPreview data={data} />;
+      return <CTAPreview data={data as { title: string; text: string; buttonText: string; buttonLink: string }} />;
     default:
       return (
         <div className="bg-muted p-4 rounded my-4">

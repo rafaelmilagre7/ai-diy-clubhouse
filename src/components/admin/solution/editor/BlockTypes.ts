@@ -61,6 +61,60 @@ export interface QuoteBlockData {
   caption?: string;
 }
 
+export interface ChecklistItem {
+  text: string;
+  checked: boolean;
+}
+
+export interface ChecklistBlockData {
+  items: ChecklistItem[];
+}
+
+export interface Step {
+  title: string;
+  description: string;
+  imageUrl: string;
+}
+
+export interface StepsBlockData {
+  title: string;
+  steps: Step[];
+}
+
+export interface WarningBlockData {
+  title: string;
+  text: string;
+}
+
+export interface BenefitsBlockData {
+  title: string;
+  items: string[];
+}
+
+export interface Metric {
+  label: string;
+  value: string;
+  unit: string;
+}
+
+export interface MetricsBlockData {
+  title: string;
+  description: string;
+  metrics: Metric[];
+}
+
+export interface TipsBlockData {
+  title: string;
+  items: string[];
+}
+
+export interface CTABlockData {
+  title: string;
+  text: string;
+  buttonText: string;
+  buttonLink: string;
+}
+
 export const createEmptyBlock = (type: string): ContentBlock => {
   const baseBlock = {
     id: Date.now().toString(),
@@ -107,6 +161,53 @@ export const createEmptyBlock = (type: string): ContentBlock => {
       return {
         ...baseBlock,
         data: { youtubeId: '', caption: '' }
+      };
+    case 'checklist':
+      return {
+        ...baseBlock,
+        data: { items: [{ text: 'Item 1', checked: false }] }
+      };
+    case 'steps':
+      return {
+        ...baseBlock,
+        data: { 
+          title: 'Passo a passo',
+          steps: [{ title: 'Passo 1', description: 'Descrição do passo', imageUrl: '' }] 
+        }
+      };
+    case 'warning':
+      return {
+        ...baseBlock,
+        data: { title: 'Atenção', text: 'Texto de aviso importante' }
+      };
+    case 'benefits':
+      return {
+        ...baseBlock,
+        data: { title: 'Benefícios', items: ['Benefício 1'] }
+      };
+    case 'metrics':
+      return {
+        ...baseBlock,
+        data: { 
+          title: 'Métricas', 
+          description: 'Descrição das métricas',
+          metrics: [{ label: 'Métrica', value: '0', unit: '%' }] 
+        }
+      };
+    case 'tips':
+      return {
+        ...baseBlock,
+        data: { title: 'Dicas', items: ['Dica 1'] }
+      };
+    case 'cta':
+      return {
+        ...baseBlock,
+        data: { 
+          title: 'Próximos Passos', 
+          text: 'Descreva a próxima ação', 
+          buttonText: 'Continuar',
+          buttonLink: '#'
+        }
       };
     default:
       return {

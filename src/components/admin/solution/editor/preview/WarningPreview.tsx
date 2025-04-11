@@ -1,12 +1,10 @@
 
 import React from "react";
 import { AlertTriangle } from "lucide-react";
+import { WarningBlockData } from "../BlockTypes";
 
 interface WarningPreviewProps {
-  data: {
-    title: string;
-    text: string;
-  };
+  data: WarningBlockData;
 }
 
 const WarningPreview: React.FC<WarningPreviewProps> = ({ data }) => {
