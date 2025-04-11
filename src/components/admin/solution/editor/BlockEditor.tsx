@@ -22,6 +22,7 @@ import VideoBlock from "./blocks/VideoBlock";
 import YoutubeBlock from "./blocks/YoutubeBlock";
 import CodeBlock from "./blocks/CodeBlock";
 import QuoteBlock from "./blocks/QuoteBlock";
+import { BlockType } from "./useModuleEditor";
 
 interface BlockEditorProps {
   block: ContentBlock;
