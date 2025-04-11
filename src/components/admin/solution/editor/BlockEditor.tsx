@@ -37,21 +37,21 @@ const BlockEditor: React.FC<BlockEditorProps> = ({
   const renderBlockEditor = () => {
     switch (type) {
       case 'header':
-        return <HeaderBlock data={data} onChange={(newData) => onUpdate(index, newData)} />;
+        return <HeaderBlock data={data as { text: string; level: number }} onChange={(newData) => onUpdate(index, newData)} />;
       case 'paragraph':
-        return <ParagraphBlock data={data} onChange={(newData) => onUpdate(index, newData)} />;
+        return <ParagraphBlock data={data as { text: string }} onChange={(newData) => onUpdate(index, newData)} />;
       case 'image':
-        return <ImageBlock data={data} onChange={(newData) => onUpdate(index, newData)} />;
+        return <ImageBlock data={data as { url: string; caption?: string; alt?: string }} onChange={(newData) => onUpdate(index, newData)} />;
       case 'list':
-        return <ListBlock data={data} onChange={(newData) => onUpdate(index, newData)} />;
+        return <ListBlock data={data as { items: string[] }} onChange={(newData) => onUpdate(index, newData)} />;
       case 'video':
-        return <VideoBlock data={data} onChange={(newData) => onUpdate(index, newData)} />;
+        return <VideoBlock data={data as { url: string; caption?: string }} onChange={(newData) => onUpdate(index, newData)} />;
       case 'youtube':
-        return <YoutubeBlock data={data} onChange={(newData) => onUpdate(index, newData)} />;
+        return <YoutubeBlock data={data as { youtubeId: string; caption?: string }} onChange={(newData) => onUpdate(index, newData)} />;
       case 'code':
-        return <CodeBlock data={data} onChange={(newData) => onUpdate(index, newData)} />;
+        return <CodeBlock data={data as { code: string; language: string }} onChange={(newData) => onUpdate(index, newData)} />;
       case 'quote':
-        return <QuoteBlock data={data} onChange={(newData) => onUpdate(index, newData)} />;
+        return <QuoteBlock data={data as { text: string; caption?: string }} onChange={(newData) => onUpdate(index, newData)} />;
       default:
         return (
           <div className="bg-muted p-4 rounded">

@@ -1,10 +1,9 @@
 
 import React from "react";
+import { ParagraphBlockData } from "../BlockTypes";
 
 interface ParagraphPreviewProps {
-  data: {
-    text: string;
-  };
+  data: ParagraphBlockData;
 }
 
 const ParagraphPreview: React.FC<ParagraphPreviewProps> = ({ data }) => {

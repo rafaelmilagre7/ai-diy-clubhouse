@@ -19,21 +19,21 @@ const BlockPreview: React.FC<BlockPreviewProps> = ({ block }) => {
 
   switch (type) {
     case 'header':
-      return <HeaderPreview data={data} />;
+      return <HeaderPreview data={data as { text: string; level: number }} />;
     case 'paragraph':
-      return <ParagraphPreview data={data} />;
+      return <ParagraphPreview data={data as { text: string }} />;
     case 'image':
-      return <ImagePreview data={data} />;
+      return <ImagePreview data={data as { url: string; alt?: string; caption?: string }} />;
     case 'list':
-      return <ListPreview data={data} />;
+      return <ListPreview data={data as { items: string[] }} />;
     case 'video':
-      return <VideoPreview data={data} />;
+      return <VideoPreview data={data as { url: string; caption?: string }} />;
     case 'youtube':
-      return <YoutubePreview data={data} />;
+      return <YoutubePreview data={data as { youtubeId: string; caption?: string }} />;
     case 'code':
-      return <CodePreview data={data} />;
+      return <CodePreview data={data as { code: string; language: string }} />;
     case 'quote':
-      return <QuotePreview data={data} />;
+      return <QuotePreview data={data as { text: string; caption?: string }} />;
     default:
       return <div>Tipo de bloco desconhecido: {type}</div>;
   }

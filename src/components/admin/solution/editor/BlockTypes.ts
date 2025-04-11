@@ -22,6 +22,45 @@ export interface Module {
   updated_at: string;
 }
 
+export interface HeaderBlockData {
+  text: string;
+  level: number;
+}
+
+export interface ParagraphBlockData {
+  text: string;
+}
+
+export interface ImageBlockData {
+  url: string;
+  caption?: string;
+  alt?: string;
+}
+
+export interface ListBlockData {
+  items: string[];
+}
+
+export interface VideoBlockData {
+  url: string;
+  caption?: string;
+}
+
+export interface YoutubeBlockData {
+  youtubeId: string;
+  caption?: string;
+}
+
+export interface CodeBlockData {
+  code: string;
+  language: string;
+}
+
+export interface QuoteBlockData {
+  text: string;
+  caption?: string;
+}
+
 export const createEmptyBlock = (type: string): ContentBlock => {
   const baseBlock = {
     id: Date.now().toString(),
