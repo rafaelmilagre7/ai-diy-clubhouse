@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase, UserProfile } from "@/lib/supabase";
-import { fetchUserProfile } from "@/contexts/auth/utils/profileUtils";
+import { fetchUserProfile, createUserProfileIfNeeded } from "@/contexts/auth/utils/profileUtils";
 import { useAuth } from "@/contexts/auth";
 import LoadingScreen from "@/components/common/LoadingScreen";
 import { toast } from "@/hooks/use-toast";
@@ -33,20 +33,34 @@ const AuthSession = ({ children }: { children: React.ReactNode }) => {
             fetchUserProfile(session.user.id)
               .then(profile => {
                 console.log('Profile fetched:', profile);
+                
+                // Se o perfil não existe, tenta criá-lo
+                if (!profile) {
+                  console.log('Perfil não encontrado, tentando criar...');
+                  return createUserProfileIfNeeded(
+                    session.user.id,
+                    session.user.email || '',
+                    session.user.user_metadata?.name || 'Usuário'
+                  );
+                }
+                
+                return profile;
+              })
+              .then(profile => {
                 setProfile(profile);
                 setIsLoading(false);
                 
                 if (!profile) {
-                  console.warn('Perfil não encontrado para usuário autenticado');
+                  console.warn('Não foi possível obter ou criar perfil para usuário autenticado');
                   toast({
                     title: 'Aviso',
-                    description: 'Perfil de usuário não encontrado. Algumas funcionalidades podem estar limitadas.',
+                    description: 'Houve um problema ao carregar seu perfil. Algumas funcionalidades podem estar limitadas.',
                     variant: 'default',
                   });
                 }
               })
               .catch(error => {
-                console.error('Error fetching profile:', error);
+                console.error('Error fetching/creating profile:', error);
                 setAuthError(`Erro ao carregar perfil: ${error.message || 'Erro desconhecido'}`);
                 // Ainda definimos isLoading como false mesmo com erro
                 setIsLoading(false);
@@ -69,21 +83,35 @@ const AuthSession = ({ children }: { children: React.ReactNode }) => {
         fetchUserProfile(session.user.id)
           .then(profile => {
             console.log('Profile inicial carregado:', profile);
+            
+            // Se o perfil não existe, tenta criá-lo
+            if (!profile) {
+              console.log('Perfil inicial não encontrado, tentando criar...');
+              return createUserProfileIfNeeded(
+                session.user.id,
+                session.user.email || '',
+                session.user.user_metadata?.name || 'Usuário'
+              );
+            }
+            
+            return profile;
+          })
+          .then(profile => {
             setProfile(profile);
             setIsLoading(false);
             setIsInitializing(false);
             
             if (!profile) {
-              console.warn('Perfil inicial não encontrado para usuário autenticado');
+              console.warn('Não foi possível obter ou criar perfil para usuário autenticado');
               toast({
                 title: 'Aviso',
-                description: 'Perfil de usuário não encontrado. Algumas funcionalidades podem estar limitadas.',
+                description: 'Houve um problema ao carregar seu perfil. Algumas funcionalidades podem estar limitadas.',
                 variant: 'default',
               });
             }
           })
           .catch(error => {
-            console.error('Erro ao carregar perfil inicial:', error);
+            console.error('Erro ao carregar/criar perfil inicial:', error);
             setAuthError(`Erro ao carregar perfil: ${error.message || 'Erro desconhecido'}`);
             // Continuamos mesmo com erro
             setIsLoading(false);
