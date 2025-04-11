@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase, UserProfile } from "@/lib/supabase";
-import { fetchUserProfile } from "@/contexts/auth/authUtils";
+import { fetchUserProfile } from "@/contexts/auth/utils/profileUtils";
 import { useAuth } from "@/contexts/auth";
 import LoadingScreen from "@/components/common/LoadingScreen";
 

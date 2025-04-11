@@ -7,7 +7,7 @@ import {
   signInAsTestMember, 
   signInAsTestAdmin, 
   signOutUser 
-} from './authUtils';
+} from './utils';
 import { AuthContextType } from './types';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
