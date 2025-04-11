@@ -60,4 +60,12 @@ export const getBlockCategory = (type: BlockType): BlockCategory => {
   return blockConfigs[type]?.category || "basic";
 };
 
+// Create a default export that provides the icon based on the type
+const BlockIcons = ({ type, className }: { type: BlockType; className?: string }) => {
+  const Icon = getBlockIcon(type);
+  return <Icon className={className} />;
+};
+
+export default BlockIcons;
+
 export { ChevronDown, ChevronUp };

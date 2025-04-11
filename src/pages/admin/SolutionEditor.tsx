@@ -108,8 +108,7 @@ const SolutionEditor = () => {
           </div>
           <Progress 
             value={(currentStep / (totalSteps - 1)) * 100} 
-            className="h-2" 
-            indicatorClassName="bg-[#0ABAB5]"
+            className="h-2 bg-[#0ABAB5]/20"
           />
         </div>
       )}

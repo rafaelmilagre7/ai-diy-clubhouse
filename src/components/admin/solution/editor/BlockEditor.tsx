@@ -48,105 +48,105 @@ const BlockEditor: React.FC<BlockEditorProps> = ({
       case "header":
         return (
           <HeaderBlock
-            data={data}
+            data={data as { text: string; level: number }}
             onChange={(newData) => onUpdate(index, newData)}
           />
         );
       case "paragraph":
         return (
           <ParagraphBlock
-            data={data}
+            data={data as { text: string }}
             onChange={(newData) => onUpdate(index, newData)}
           />
         );
       case "list":
         return (
           <ListBlock
-            data={data}
+            data={data as { items: string[] }}
             onChange={(newData) => onUpdate(index, newData)}
           />
         );
       case "image":
         return (
           <ImageBlock
-            data={data}
+            data={data as { url: string; alt?: string; caption?: string }}
             onChange={(newData) => onUpdate(index, newData)}
           />
         );
       case "video":
         return (
           <VideoBlock
-            data={data}
+            data={data as { url: string; caption?: string }}
             onChange={(newData) => onUpdate(index, newData)}
           />
         );
       case "youtube":
         return (
           <YoutubeBlock
-            data={data}
+            data={data as { youtubeId: string; caption?: string }}
             onChange={(newData) => onUpdate(index, newData)}
           />
         );
       case "quote":
         return (
           <QuoteBlock
-            data={data}
+            data={data as { text: string; caption?: string }}
             onChange={(newData) => onUpdate(index, newData)}
           />
         );
       case "code":
         return (
           <CodeBlock
-            data={data}
+            data={data as { code: string; language: string }}
             onChange={(newData) => onUpdate(index, newData)}
           />
         );
       case "checklist":
         return (
           <ChecklistBlock
-            data={data}
+            data={data as { items: { text: string; checked: boolean }[] }}
             onChange={(newData) => onUpdate(index, newData)}
           />
         );
       case "steps":
         return (
           <StepsBlock
-            data={data}
+            data={data as { title: string; steps: { title: string; description: string; imageUrl: string }[] }}
             onChange={(newData) => onUpdate(index, newData)}
           />
         );
       case "warning":
         return (
           <WarningBlock
-            data={data}
+            data={data as { title: string; text: string }}
             onChange={(newData) => onUpdate(index, newData)}
           />
         );
       case "benefits":
         return (
           <BenefitsBlock
-            data={data}
+            data={data as { title: string; items: string[] }}
             onChange={(newData) => onUpdate(index, newData)}
           />
         );
       case "metrics":
         return (
           <MetricsBlock
-            data={data}
+            data={data as { title: string; description: string; metrics: { label: string; value: string; unit: string }[] }}
             onChange={(newData) => onUpdate(index, newData)}
           />
         );
       case "tips":
         return (
           <TipsBlock
-            data={data}
+            data={data as { title: string; items: string[] }}
             onChange={(newData) => onUpdate(index, newData)}
           />
         );
       case "cta":
         return (
           <CTABlock
-            data={data}
+            data={data as { title: string; text: string; buttonText: string; buttonLink: string }}
             onChange={(newData) => onUpdate(index, newData)}
           />
         );
