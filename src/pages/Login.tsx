@@ -5,9 +5,10 @@ import { FcGoogle } from "react-icons/fc";
 import { useState } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const Login = () => {
-  const { signIn } = useAuth();
+  const { signIn, signInAsMember, signInAsAdmin } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -60,6 +61,30 @@ const Login = () => {
               </span>
               {isLoading ? "Carregando..." : "Entrar com Google"}
             </Button>
+            
+            {/* Botões de login de teste */}
+            <Button 
+              className="w-full py-6 text-base bg-blue-600 hover:bg-blue-700"
+              onClick={signInAsMember}
+            >
+              Login como Membro (Teste)
+            </Button>
+            
+            <Button 
+              className="w-full py-6 text-base bg-purple-600 hover:bg-purple-700"
+              onClick={signInAsAdmin}
+            >
+              Login como Admin (Teste)
+            </Button>
+            
+            <div className="text-center mt-2">
+              <Link 
+                to="/" 
+                className="text-sm text-blue-600 hover:text-blue-500"
+              >
+                Voltar para a página inicial
+              </Link>
+            </div>
           </div>
 
           <div className="text-center text-sm text-gray-500 mt-8">
