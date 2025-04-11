@@ -39,7 +39,7 @@ const SolutionEditor = () => {
       if (form) form.dispatchEvent(new Event("submit", { cancelable: true, bubbles: true }));
     } else {
       // Nas outras etapas, chama a função específica de salvamento
-      onSubmit(currentValues);
+      onSubmit({...currentValues, published: currentStep === totalSteps - 1});
     }
   };
 
@@ -113,6 +113,8 @@ const SolutionEditor = () => {
           totalSteps={totalSteps}
           onPrevious={handlePreviousStep}
           onNext={handleNextStep}
+          onSave={handleSave}
+          saving={saving}
         />
       )}
     </div>

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { 
@@ -68,12 +69,11 @@ const ResourcesUploadForm: React.FC<ResourcesUploadFormProps> = ({
       
       if (data) {
         const typedResources = data.map(item => {
-          const resourceType = item.type as string;
           let validType: "document" | "image" | "template" = "document";
           
-          if (resourceType === "image") {
+          if (item.type === "image") {
             validType = "image";
-          } else if (resourceType === "template") {
+          } else if (item.type === "template") {
             validType = "template";
           }
           

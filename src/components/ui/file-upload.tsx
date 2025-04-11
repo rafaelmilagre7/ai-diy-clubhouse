@@ -86,37 +86,27 @@ export const FileUpload = ({
       const { data, error } = await supabase.storage
         .from(bucketName)
         .upload(filePath, file, {
-          upsert: true,
-          // Fix: Remove onUploadProgress property
+          upsert: true
         });
 
       if (error) {
         throw error;
       }
 
-      // Listen for upload progress using the upload task
-      const uploadTask = supabase.storage
-        .from(bucketName)
-        .upload(filePath, file, { upsert: true });
-        
-      // Manually update progress in intervals if needed
+      // Manually update progress in intervals
       const interval = setInterval(() => {
         setUploadProgress((prev) => Math.min(prev + 10, 100));
       }, 300);
       
-      const { data: uploadData, error: uploadError } = await uploadTask;
+      setTimeout(() => {
+        clearInterval(interval);
+        setUploadProgress(100);
+      }, 3000);
       
-      clearInterval(interval);
-      setUploadProgress(100);
-      
-      if (uploadError) {
-        throw uploadError;
-      }
-
       // Obter URL pública do arquivo
       const { data: { publicUrl } } = supabase.storage
         .from(bucketName)
-        .getPublicUrl(uploadData.path);
+        .getPublicUrl(data.path);
 
       // Notificar o componente pai que o upload foi concluído
       onUploadComplete(publicUrl, file.name);

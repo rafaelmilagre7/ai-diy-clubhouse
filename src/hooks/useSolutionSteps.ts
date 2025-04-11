@@ -5,7 +5,7 @@ export const useSolutionSteps = (initialStep: number = 0) => {
   const [currentStep, setCurrentStep] = useState(initialStep);
   const [activeTab, setActiveTab] = useState("basic");
   
-  const totalSteps = 7; // Total número de etapas no processo de criação de solução
+  const totalSteps = 6; // Total número de etapas no processo de criação de solução
 
   // Títulos das etapas
   const stepTitles = [
@@ -14,8 +14,7 @@ export const useSolutionSteps = (initialStep: number = 0) => {
     "Materiais de Apoio",
     "Vídeo-aulas",
     "Checklist de Implementação",
-    "Publicação",
-    "Conclusão"
+    "Publicação"
   ];
 
   // Atualizar activeTab com base no currentStep
