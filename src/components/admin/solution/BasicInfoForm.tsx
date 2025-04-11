@@ -24,7 +24,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Loader2, Save } from "lucide-react";
 import { slugify } from "@/utils/slugify";
-import React from "react";
+import React, { useEffect } from "react";
 
 const formSchema = z.object({
   title: z.string().min(3, {
@@ -69,16 +69,13 @@ const BasicInfoForm = ({
   const title = form.watch("title");
   const difficulty = form.watch("difficulty");
   
-  // Auto-gerar slug quando o título mudar e o slug não tiver sido modificado manualmente
-  React.useEffect(() => {
+  // Auto-gerar slug quando o título mudar
+  useEffect(() => {
     if (title) {
       const newSlug = slugify(title);
-      const currentSlug = form.getValues("slug");
       
-      // Se o slug estiver vazio ou for igual ao slug gerado anteriormente do título
-      if (!currentSlug || currentSlug === slugify(form.formState.defaultValues?.title || '')) {
-        form.setValue("slug", newSlug);
-      }
+      // Atualizar o campo de slug com o novo valor
+      form.setValue("slug", newSlug, { shouldValidate: true });
     }
   }, [title, form]);
 
@@ -127,7 +124,7 @@ const BasicInfoForm = ({
                     <Input placeholder="Ex: assistente-vendas-ia" {...field} />
                   </FormControl>
                   <FormDescription>
-                    Identificador único para URLs (gerado automaticamente).
+                    Identificador único para URLs (gerado automaticamente do título).
                   </FormDescription>
                   <FormMessage />
                 </FormItem>

@@ -4,15 +4,8 @@ import { cn } from "@/lib/utils";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Clock, BarChart, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { DifficultyBadge } from "./DifficultyBadge";
-
-// Helper function to format minutes to time
-const formatTime = (minutes: number) => {
-  const hours = Math.floor(minutes / 60);
-  const mins = minutes % 60;
-  return hours > 0 ? `${hours}h ${mins}min` : `${mins} min`;
-};
 
 interface SolutionCardProps {
   solution: Solution;
@@ -48,18 +41,11 @@ export const SolutionCard = ({ solution, onSelect }: SolutionCardProps) => {
       </CardContent>
       <CardFooter className="flex justify-between items-center p-4 border-t">
         <div className="flex items-center text-sm text-muted-foreground">
-          <Clock className="mr-1 h-4 w-4" />
-          <span>{formatTime(solution.estimated_time)}</span>
+          <span>{new Date(solution.created_at).toLocaleDateString()}</span>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="text-sm text-muted-foreground flex items-center">
-            <BarChart className="mr-1 h-4 w-4" />
-            <span>{solution.success_rate}% sucesso</span>
-          </div>
-          <Button size="sm" variant="ghost" onClick={() => onSelect(solution.id)}>
-            <ArrowRight className="h-4 w-4" />
-          </Button>
-        </div>
+        <Button size="sm" variant="ghost" onClick={() => onSelect(solution.id)}>
+          <ArrowRight className="h-4 w-4" />
+        </Button>
       </CardFooter>
     </Card>
   );

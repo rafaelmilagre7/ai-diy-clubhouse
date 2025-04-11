@@ -1,8 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Solution } from "@/lib/supabase";
-import { Clock, BarChart, Award, Play, CheckCircle } from "lucide-react";
-import { formatTime } from "@/utils/timeUtils";
+import { Award, Play, CheckCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 interface SolutionSidebarProps {
@@ -24,18 +23,6 @@ export const SolutionSidebar = ({
     <div className="space-y-6">
       <div className="rounded-lg border bg-card p-6 shadow-sm">
         <div className="space-y-4">
-          <div className="flex items-center gap-2">
-            <Clock className="h-5 w-5 text-muted-foreground" />
-            <span className="text-muted-foreground">Tempo estimado:</span>
-            <span className="font-medium">{formatTime(solution.estimated_time)}</span>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <BarChart className="h-5 w-5 text-muted-foreground" />
-            <span className="text-muted-foreground">Taxa de sucesso:</span>
-            <span className="font-medium">{solution.success_rate}%</span>
-          </div>
-          
           <div className="flex items-center gap-2">
             <Award className="h-5 w-5 text-muted-foreground" />
             <span className="text-muted-foreground">Badge ao concluir:</span>

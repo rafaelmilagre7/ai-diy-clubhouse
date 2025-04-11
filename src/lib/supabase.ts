@@ -28,6 +28,7 @@ export interface Solution {
   published: boolean;
   created_at: string;
   updated_at: string;
+  // Campos removidos: estimated_time, success_rate
 }
 
 export interface Module {
