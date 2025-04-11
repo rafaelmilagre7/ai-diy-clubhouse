@@ -83,9 +83,12 @@ export type Database = {
       }
       modules: {
         Row: {
+          certificate_template: Json | null
           content: Json
           created_at: string
+          estimated_time_minutes: number | null
           id: string
+          metrics: Json | null
           module_order: number
           solution_id: string
           title: string
@@ -93,9 +96,12 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          certificate_template?: Json | null
           content: Json
           created_at?: string
+          estimated_time_minutes?: number | null
           id?: string
+          metrics?: Json | null
           module_order: number
           solution_id: string
           title: string
@@ -103,9 +109,12 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          certificate_template?: Json | null
           content?: Json
           created_at?: string
+          estimated_time_minutes?: number | null
           id?: string
+          metrics?: Json | null
           module_order?: number
           solution_id?: string
           title?: string
@@ -300,6 +309,7 @@ export type Database = {
           estimated_time: number
           id: string
           published: boolean
+          related_solutions: string[] | null
           slug: string
           success_rate: number
           tags: string[] | null
@@ -315,6 +325,7 @@ export type Database = {
           estimated_time: number
           id?: string
           published?: boolean
+          related_solutions?: string[] | null
           slug: string
           success_rate?: number
           tags?: string[] | null
@@ -330,6 +341,7 @@ export type Database = {
           estimated_time?: number
           id?: string
           published?: boolean
+          related_solutions?: string[] | null
           slug?: string
           success_rate?: number
           tags?: string[] | null

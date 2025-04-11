@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -263,7 +264,7 @@ const ResourcesForm = ({ solutionId, onSave, saving }: ResourcesFormProps) => {
                         <FormDescription>
                           Liste todos os materiais, templates e recursos incluídos nesta solução.
                           Use formato JSON para estruturar, exemplo:
-                          [{"title":"Template de Email", "description":"Modelo pronto para personalizar", "url":"https://..."}]
+                          {`[{"title":"Template de Email", "description":"Modelo pronto para personalizar", "url":"https://..."}]`}
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
@@ -288,7 +289,7 @@ const ResourcesForm = ({ solutionId, onSave, saving }: ResourcesFormProps) => {
                         <FormDescription>
                           Adicione links para ferramentas, artigos ou recursos externos.
                           Use formato JSON para estruturar, exemplo:
-                          [{"title":"OpenAI", "description":"Plataforma de IA", "url":"https://openai.com"}]
+                          {`[{"title":"OpenAI", "description":"Plataforma de IA", "url":"https://openai.com"}]`}
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
@@ -313,7 +314,7 @@ const ResourcesForm = ({ solutionId, onSave, saving }: ResourcesFormProps) => {
                         <FormDescription>
                           Adicione perguntas e respostas que antecipem as dúvidas dos membros.
                           Use formato JSON para estruturar, exemplo:
-                          [{"question":"Como integrar com Gmail?", "answer":"Primeiro, acesse..."}]
+                          {`[{"question":"Como integrar com Gmail?", "answer":"Primeiro, acesse..."}]`}
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
