@@ -508,7 +508,7 @@ const SolutionEditor = () => {
                     <CardContent className="p-4 space-y-4">
                       <div className="flex justify-between items-center">
                         <h3 className="font-medium">Prévia</h3>
-                        <Badge variant="outline" className={field => 
+                        <Badge variant="outline" className={
                           form.watch("published") 
                             ? "bg-green-100 text-green-800 border-green-200" 
                             : "bg-amber-100 text-amber-800 border-amber-200"
