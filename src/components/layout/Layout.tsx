@@ -5,7 +5,7 @@ import { MemberSidebar } from "./member/MemberSidebar";
 import { MemberContent } from "./member/MemberContent";
 
 const Layout = () => {
-  const { user, profile } = useAuth();
+  const { user, profile, signOut } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const getInitials = (name: string | null) => {
@@ -27,6 +27,7 @@ const Layout = () => {
         profileEmail={profile?.email}
         profileAvatar={profile?.avatar_url}
         getInitials={getInitials}
+        signOut={signOut}
       />
       <MemberContent 
         sidebarOpen={sidebarOpen} 

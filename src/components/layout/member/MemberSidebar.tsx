@@ -12,6 +12,7 @@ interface MemberSidebarProps {
   profileEmail: string | null;
   profileAvatar: string | undefined;
   getInitials: (name: string | null) => string;
+  signOut: () => Promise<void>;
 }
 
 export const MemberSidebar = ({ 
@@ -20,7 +21,8 @@ export const MemberSidebar = ({
   profileName,
   profileEmail,
   profileAvatar,
-  getInitials
+  getInitials,
+  signOut
 }: MemberSidebarProps) => {
   return (
     <aside
@@ -46,6 +48,7 @@ export const MemberSidebar = ({
           profileEmail={profileEmail}
           profileAvatar={profileAvatar}
           getInitials={getInitials}
+          signOut={signOut}
         />
       </div>
     </aside>

@@ -12,7 +12,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useAuth } from "@/contexts/auth";
 import { useState } from "react";
 
 interface MemberUserMenuProps {
@@ -21,6 +20,7 @@ interface MemberUserMenuProps {
   profileEmail: string | null;
   profileAvatar: string | undefined;
   getInitials: (name: string | null) => string;
+  signOut: () => Promise<void>;
 }
 
 export const MemberUserMenu = ({ 
@@ -28,9 +28,9 @@ export const MemberUserMenu = ({
   profileName, 
   profileEmail, 
   profileAvatar,
-  getInitials 
+  getInitials,
+  signOut
 }: MemberUserMenuProps) => {
-  const { signOut } = useAuth();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   
   const handleSignOut = async (e: Event) => {
