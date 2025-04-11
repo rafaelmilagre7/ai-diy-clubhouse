@@ -5,14 +5,8 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { 
   LogOut, 
-  LayoutDashboard, 
-  FileText, 
-  Users as UsersIcon,
-  Settings,
-  BarChart,
   ChevronLeft,
   ChevronRight,
-  FileEdit
 } from "lucide-react";
 import { 
   DropdownMenu,
@@ -34,6 +28,7 @@ interface AdminSidebarProps {
 
 export const AdminSidebar = ({ sidebarOpen, setSidebarOpen }: AdminSidebarProps) => {
   const { profile, signOut } = useAuth();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   
   const getInitials = (name: string | null) => {
     if (!name) return "U";
@@ -45,10 +40,23 @@ export const AdminSidebar = ({ sidebarOpen, setSidebarOpen }: AdminSidebarProps)
       .substring(0, 2);
   };
 
+  const handleSignOut = async () => {
+    try {
+      setIsLoggingOut(true);
+      await signOut();
+    } catch (error) {
+      console.error("Erro ao fazer logout:", error);
+      // Força redirecionamento para login em caso de falha
+      window.location.href = '/login';
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
+
   return (
     <aside
       className={cn(
-        "fixed inset-y-0 left-0 z-20 flex h-full flex-col border-r bg-background transition-all duration-300 ease-in-out",
+        "fixed inset-y-0 left-0 z-20 flex h-full flex-col border-r bg-white shadow-sm transition-all duration-300 ease-in-out",
         sidebarOpen ? "w-64" : "w-20"
       )}
     >
@@ -75,7 +83,7 @@ export const AdminSidebar = ({ sidebarOpen, setSidebarOpen }: AdminSidebarProps)
           variant="ghost"
           size="icon"
           onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="ml-auto"
+          className="ml-auto text-muted-foreground hover:text-foreground"
         >
           {sidebarOpen ? <ChevronLeft size={20} /> : <ChevronRight size={20} />}
         </Button>
@@ -89,7 +97,7 @@ export const AdminSidebar = ({ sidebarOpen, setSidebarOpen }: AdminSidebarProps)
       <Separator />
       
       {/* User menu */}
-      <div className="p-3">
+      <div className="p-3 mt-auto">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
@@ -114,15 +122,9 @@ export const AdminSidebar = ({ sidebarOpen, setSidebarOpen }: AdminSidebarProps)
           <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuLabel>Minha Conta</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <Link to="/admin/settings">
-              <DropdownMenuItem>
-                <Settings className="mr-2 h-4 w-4" />
-                <span>Configurações</span>
-              </DropdownMenuItem>
-            </Link>
-            <DropdownMenuItem onSelect={signOut}>
+            <DropdownMenuItem onSelect={handleSignOut} disabled={isLoggingOut}>
               <LogOut className="mr-2 h-4 w-4" />
-              <span>Sair</span>
+              <span>{isLoggingOut ? "Saindo..." : "Sair"}</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

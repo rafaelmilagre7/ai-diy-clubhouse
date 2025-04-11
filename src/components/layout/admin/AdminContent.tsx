@@ -2,6 +2,7 @@
 import { Outlet } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { AdminHeader } from "./AdminHeader";
+import { Toaster } from "@/components/ui/sonner";
 
 interface AdminContentProps {
   sidebarOpen: boolean;
@@ -19,9 +20,11 @@ export const AdminContent = ({ sidebarOpen, setSidebarOpen }: AdminContentProps)
       <AdminHeader sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
       
       {/* Page content */}
-      <div className="container py-6">
+      <div className="container py-6 px-4 md:px-6">
         <Outlet />
       </div>
+      
+      <Toaster position="top-right" />
     </main>
   );
 };

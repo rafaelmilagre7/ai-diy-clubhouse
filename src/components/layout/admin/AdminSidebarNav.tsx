@@ -4,12 +4,12 @@ import { cn } from "@/lib/utils";
 import { 
   LayoutDashboard, 
   FileText, 
+  Plus,
   Users as UsersIcon,
   Settings,
   BarChart,
-  FileEdit,
-  Gauge
 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 interface AdminSidebarNavProps {
   sidebarOpen: boolean;
@@ -23,33 +23,49 @@ export const AdminSidebarNav = ({ sidebarOpen }: AdminSidebarNavProps) => {
       title: "Dashboard",
       icon: LayoutDashboard,
       path: "/admin",
+      exact: true
     },
     {
       title: "Soluções",
       icon: FileText,
       path: "/admin/solutions",
+      exact: false,
+      badge: "Gerenciar"
     },
     {
       title: "Nova Solução",
-      icon: FileEdit,
+      icon: Plus,
       path: "/admin/solutions/new",
+      exact: true
     },
     {
       title: "Usuários",
       icon: UsersIcon,
       path: "/admin/users",
+      exact: false
     },
     {
       title: "Métricas",
       icon: BarChart,
       path: "/admin/analytics",
+      exact: false
     },
     {
       title: "Configurações",
       icon: Settings,
       path: "/admin/settings",
+      exact: false
     },
   ];
+
+  const isActive = (item: typeof navItems[0]) => {
+    if (item.exact) {
+      return location.pathname === item.path;
+    }
+    
+    return location.pathname === item.path || 
+           (item.path !== "/admin" && location.pathname.startsWith(item.path));
+  };
 
   return (
     <nav className="flex-1 overflow-y-auto p-3 space-y-1">
@@ -58,16 +74,25 @@ export const AdminSidebarNav = ({ sidebarOpen }: AdminSidebarNavProps) => {
           key={item.path}
           to={item.path}
           className={cn(
-            "flex items-center space-x-3 rounded-lg px-3 py-2 hover:bg-gray-100",
-            location.pathname === item.path || 
-            (item.path === "/admin/solutions" && location.pathname.includes("/admin/solutions/")) ||
-            (item.path === "/admin/analytics" && location.pathname.includes("/admin/analytics/"))
-              ? "bg-gray-100 font-medium" 
-              : "text-gray-900"
+            "flex items-center justify-between rounded-lg px-3 py-2 transition-colors",
+            isActive(item)
+              ? "bg-[#0ABAB5]/10 text-[#0ABAB5]" 
+              : "text-muted-foreground hover:bg-muted hover:text-foreground"
           )}
         >
-          <item.icon size={20} className="text-viverblue" />
-          {sidebarOpen && <span>{item.title}</span>}
+          <div className="flex items-center">
+            <item.icon size={20} className={cn(
+              "mr-3",
+              isActive(item) ? "text-[#0ABAB5]" : "text-muted-foreground"
+            )} />
+            {sidebarOpen && <span>{item.title}</span>}
+          </div>
+          
+          {sidebarOpen && item.badge && (
+            <Badge variant="outline" className="text-xs bg-[#0ABAB5]/10 text-[#0ABAB5] border-[#0ABAB5]/20">
+              {item.badge}
+            </Badge>
+          )}
         </Link>
       ))}
     </nav>

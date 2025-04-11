@@ -5,6 +5,7 @@ import LoadingScreen from "@/components/common/LoadingScreen";
 import SolutionEditorHeader from "@/components/admin/solution-editor/SolutionEditorHeader";
 import SolutionEditorTabs from "@/components/admin/solution-editor/SolutionEditorTabs";
 import { useSolutionEditor } from "@/components/admin/solution-editor/useSolutionEditor";
+import { Card, CardContent } from "@/components/ui/card";
 
 const SolutionEditor = () => {
   const { id } = useParams<{ id: string }>();
@@ -34,21 +35,25 @@ const SolutionEditor = () => {
   };
   
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-7xl mx-auto">
       <SolutionEditorHeader 
         id={id} 
         saving={saving} 
         onSave={handleSave} 
       />
       
-      <SolutionEditorTabs 
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        solution={solution}
-        currentValues={currentValues}
-        onSubmit={onSubmit}
-        saving={saving}
-      />
+      <Card className="border-none shadow-sm">
+        <CardContent className="p-0">
+          <SolutionEditorTabs 
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+            solution={solution}
+            currentValues={currentValues}
+            onSubmit={onSubmit}
+            saving={saving}
+          />
+        </CardContent>
+      </Card>
     </div>
   );
 };
