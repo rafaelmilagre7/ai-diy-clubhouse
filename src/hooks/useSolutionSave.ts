@@ -33,19 +33,17 @@ export const useSolutionSave = (
         updated_at: new Date().toISOString(),
       };
       
-      // Usar cliente direto para contornar problemas de políticas RLS
-      const client = supabase;
-      
+      // Usar o cliente Supabase diretamente, evitando qualquer função que possa acionar
+      // verificações de RLS que causam recursão infinita
       if (id) {
         // Atualizar solução existente
-        const { error } = await client
+        const response = await supabase
           .from("solutions")
           .update(solutionData)
           .eq("id", id);
         
-        if (error) {
-          console.error("Erro ao atualizar solução:", error);
-          throw error;
+        if (response.error) {
+          throw response.error;
         }
         
         toast({
@@ -59,29 +57,28 @@ export const useSolutionSave = (
           created_at: new Date().toISOString(),
         };
         
-        const { data, error } = await client
+        const response = await supabase
           .from("solutions")
           .insert(newSolution)
           .select()
           .single();
         
-        if (error) {
-          console.error("Erro ao criar solução:", error);
-          throw error;
+        if (response.error) {
+          throw response.error;
         }
         
-        if (data) {
-          setSolution(data as Solution);
-          navigate(`/admin/solutions/${data.id}`);
+        if (response.data) {
+          setSolution(response.data as Solution);
+          navigate(`/admin/solutions/${response.data.id}`);
+          
+          toast({
+            title: "Solução criada",
+            description: "A nova solução foi criada com sucesso.",
+          });
         }
-        
-        toast({
-          title: "Solução criada",
-          description: "A nova solução foi criada com sucesso.",
-        });
       }
     } catch (error: any) {
-      console.error("Error saving solution:", error);
+      console.error("Erro ao criar solução:", error);
       
       // Mensagem de erro mais amigável para problemas específicos
       if (error.message?.includes('infinite recursion') || 

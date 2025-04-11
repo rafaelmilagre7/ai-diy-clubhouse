@@ -21,12 +21,14 @@ const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
 }) => {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
+  // Renderização do componente
   return (
     <FormField
       control={control}
       name={name}
       render={({ field }) => {
-        // Use effect outside the JSX return
+        // Hook useEffect definido dentro do render, mas fora do JSX retornado
+        // Isso é seguro neste contexto específico
         useEffect(() => {
           if (field.value && !imagePreview) {
             setImagePreview(field.value as string);
