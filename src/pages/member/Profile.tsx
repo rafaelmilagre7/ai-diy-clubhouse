@@ -16,6 +16,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Link } from "react-router-dom";
 import { 
   ShieldCheck, 
   Trophy, 
@@ -24,8 +33,15 @@ import {
   Clock,
   Calendar,
   Settings,
-  User
+  User,
+  Award,
+  CheckCircle,
+  BarChart,
+  BookOpen,
+  TrendingUp,
+  FileEdit,
 } from "lucide-react";
+import LoadingScreen from "@/components/common/LoadingScreen";
 
 const formatDate = (dateString: string) => {
   const date = new Date(dateString);
