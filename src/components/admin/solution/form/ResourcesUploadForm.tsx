@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { 
@@ -10,10 +9,9 @@ import {
 } from "@/components/ui/card";
 import { 
   FileText, 
-  FilePdf, 
+  File as FileIcon, 
   FileImage, 
   FileCode, 
-  File, 
   Save, 
   Loader2, 
   Trash2, 
@@ -69,7 +67,27 @@ const ResourcesUploadForm: React.FC<ResourcesUploadFormProps> = ({
       if (error) throw error;
       
       if (data) {
-        setResources(data);
+        const typedResources = data.map(item => {
+          const resourceType = item.type as string;
+          let validType: "document" | "image" | "template" = "document";
+          
+          if (resourceType === "image") {
+            validType = "image";
+          } else if (resourceType === "template") {
+            validType = "template";
+          }
+          
+          return {
+            id: item.id,
+            name: item.name,
+            url: item.url,
+            type: validType,
+            format: item.format,
+            solution_id: item.solution_id
+          } as Resource;
+        });
+        
+        setResources(typedResources);
       }
     } catch (error) {
       console.error("Erro ao carregar recursos:", error);
@@ -87,11 +105,9 @@ const ResourcesUploadForm: React.FC<ResourcesUploadFormProps> = ({
     if (!solutionId) return;
     
     try {
-      // Detectar o formato do arquivo
       const fileExt = fileName.split(".").pop()?.toLowerCase() || "";
       let format = fileExt;
       
-      // Para formatos mais comuns, usamos descrições mais amigáveis
       if (["doc", "docx"].includes(fileExt)) format = "Word";
       if (["xls", "xlsx"].includes(fileExt)) format = "Excel";
       if (["ppt", "pptx"].includes(fileExt)) format = "PowerPoint";
@@ -115,7 +131,16 @@ const ResourcesUploadForm: React.FC<ResourcesUploadFormProps> = ({
       if (error) throw error;
       
       if (data) {
-        setResources(prev => [...prev, data as Resource]);
+        const resource: Resource = {
+          id: data.id,
+          name: data.name,
+          url: data.url,
+          type: type,
+          format: data.format,
+          solution_id: data.solution_id
+        };
+        
+        setResources(prev => [...prev, resource]);
       }
       
       toast({
@@ -136,7 +161,6 @@ const ResourcesUploadForm: React.FC<ResourcesUploadFormProps> = ({
     if (!id) return;
     
     try {
-      // Remover o arquivo do storage
       if (url) {
         const filePath = url.split("/").pop();
         if (filePath) {
@@ -146,7 +170,6 @@ const ResourcesUploadForm: React.FC<ResourcesUploadFormProps> = ({
         }
       }
       
-      // Remover o registro do banco de dados
       const { error } = await supabase
         .from("solution_resources")
         .delete()
@@ -176,9 +199,6 @@ const ResourcesUploadForm: React.FC<ResourcesUploadFormProps> = ({
     try {
       setSavingResources(true);
       
-      // Aqui podemos adicionar validações adicionais se necessário
-      
-      // Chamar a função de salvamento da solução
       onSave();
       
       toast({
@@ -197,20 +217,19 @@ const ResourcesUploadForm: React.FC<ResourcesUploadFormProps> = ({
     }
   };
 
-  // Função para renderizar o ícone do arquivo com base no formato
   const getFileIcon = (format?: string) => {
     const iconProps = { className: "h-6 w-6" };
     
-    if (!format) return <File {...iconProps} />;
+    if (!format) return <FileIcon {...iconProps} />;
     
     const lowerFormat = format.toLowerCase();
     
-    if (lowerFormat === "pdf") return <FilePdf {...iconProps} />;
+    if (lowerFormat === "pdf") return <FileText {...iconProps} />;
     if (["doc", "docx", "word"].includes(lowerFormat)) return <FileText {...iconProps} />;
     if (["jpg", "jpeg", "png", "gif", "webp", "imagem"].includes(lowerFormat)) return <FileImage {...iconProps} />;
     if (["html", "css", "js", "json", "xml", "template"].includes(lowerFormat)) return <FileCode {...iconProps} />;
     
-    return <File {...iconProps} />;
+    return <FileIcon {...iconProps} />;
   };
 
   if (loading) {
@@ -231,7 +250,6 @@ const ResourcesUploadForm: React.FC<ResourcesUploadFormProps> = ({
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Upload de documentos */}
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Documentos</CardTitle>
@@ -251,7 +269,6 @@ const ResourcesUploadForm: React.FC<ResourcesUploadFormProps> = ({
           </CardContent>
         </Card>
         
-        {/* Upload de templates */}
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Templates e Fluxos</CardTitle>
@@ -272,7 +289,6 @@ const ResourcesUploadForm: React.FC<ResourcesUploadFormProps> = ({
         </Card>
       </div>
       
-      {/* Lista de recursos */}
       {resources.length > 0 && (
         <Card>
           <CardHeader>

@@ -87,20 +87,36 @@ export const FileUpload = ({
         .from(bucketName)
         .upload(filePath, file, {
           upsert: true,
-          onUploadProgress: (progress) => {
-            const percent = Math.round((progress.loaded / progress.total) * 100);
-            setUploadProgress(percent);
-          },
+          // Fix: Remove onUploadProgress property
         });
 
       if (error) {
         throw error;
       }
 
+      // Listen for upload progress using the upload task
+      const uploadTask = supabase.storage
+        .from(bucketName)
+        .upload(filePath, file, { upsert: true });
+        
+      // Manually update progress in intervals if needed
+      const interval = setInterval(() => {
+        setUploadProgress((prev) => Math.min(prev + 10, 100));
+      }, 300);
+      
+      const { data: uploadData, error: uploadError } = await uploadTask;
+      
+      clearInterval(interval);
+      setUploadProgress(100);
+      
+      if (uploadError) {
+        throw uploadError;
+      }
+
       // Obter URL pública do arquivo
       const { data: { publicUrl } } = supabase.storage
         .from(bucketName)
-        .getPublicUrl(data.path);
+        .getPublicUrl(uploadData.path);
 
       // Notificar o componente pai que o upload foi concluído
       onUploadComplete(publicUrl, file.name);

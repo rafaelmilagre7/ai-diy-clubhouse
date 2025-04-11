@@ -83,15 +83,23 @@ const VideoLessonsForm: React.FC<VideoLessonsFormProps> = ({
       if (error) throw error;
       
       if (data) {
-        // Converter dados para o formato VideoLesson
-        const lessons = data.map(item => ({
-          id: item.id,
-          title: item.name,
-          description: item.format || "",
-          url: item.url,
-          type: item.url.includes("youtube") || item.url.includes("youtu.be") ? "youtube" : "video",
-          solution_id: item.solution_id
-        }));
+        // Convert database records to VideoLesson type with proper type checking
+        const lessons = data.map(item => {
+          // Determine the correct video type
+          const videoType: "youtube" | "video" = 
+            item.url.includes("youtube") || item.url.includes("youtu.be") 
+              ? "youtube" 
+              : "video";
+              
+          return {
+            id: item.id,
+            title: item.name,
+            description: item.format || "",
+            url: item.url,
+            type: videoType,
+            solution_id: item.solution_id
+          } as VideoLesson;
+        });
         
         setVideoLessons(lessons);
       }
@@ -133,7 +141,7 @@ const VideoLessonsForm: React.FC<VideoLessonsFormProps> = ({
           title: data.name,
           description: data.format || "",
           url: data.url,
-          type: "video",
+          type: "video" as const,
           solution_id: data.solution_id
         };
         
@@ -203,7 +211,7 @@ const VideoLessonsForm: React.FC<VideoLessonsFormProps> = ({
           title: data.name,
           description: data.format || "",
           url: data.url,
-          type: "youtube",
+          type: "youtube" as const,
           solution_id: data.solution_id
         };
         
