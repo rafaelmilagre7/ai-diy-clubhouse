@@ -13,12 +13,6 @@ export const fetchUserProfile = async (userId: string): Promise<UserProfile | nu
       .single();
 
     if (error) {
-      // Verifica se é um erro de recursão infinita em políticas RLS
-      if (error.message && error.message.includes('infinite recursion detected in policy')) {
-        console.error('Erro de recursão infinita em políticas RLS: ', error);
-        throw new Error('Existe um problema com as políticas de segurança no Supabase. Por favor, verifique as políticas RLS na tabela "profiles".');
-      }
-      
       console.error('Error fetching user profile:', error);
       throw error;
     }
