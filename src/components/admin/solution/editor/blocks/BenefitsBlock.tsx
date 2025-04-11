@@ -2,7 +2,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, CheckCircle2 } from "lucide-react";
 
 interface BenefitsBlockProps {
   data: {
@@ -40,35 +40,46 @@ const BenefitsBlock: React.FC<BenefitsBlockProps> = ({ data, onChange }) => {
         placeholder="Título dos benefícios"
       />
       
-      {data.items.map((item, index) => (
-        <div key={index} className="flex items-center gap-2">
-          <Input
-            value={item}
-            onChange={(e) => updateItem(index, e.target.value)}
-            placeholder="Descreva um benefício..."
-            className="flex-1"
-          />
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => removeItem(index)}
-            disabled={data.items.length === 1}
-          >
-            <Trash2 className="h-4 w-4" />
+      <div className="space-y-3 mt-4">
+        <div className="flex justify-between items-center">
+          <h4 className="font-medium text-sm text-muted-foreground">Benefícios:</h4>
+          <Button variant="outline" size="sm" onClick={addItem}>
+            <Plus className="h-4 w-4 mr-2" />
+            Adicionar Benefício
           </Button>
         </div>
-      ))}
+        
+        {data.items.map((item, index) => (
+          <div key={index} className="flex items-center gap-2 border p-3 rounded-md">
+            <div className="flex items-center gap-2 flex-1">
+              <CheckCircle2 className="h-5 w-5 text-green-500 flex-shrink-0" />
+              <Input
+                value={item}
+                onChange={(e) => updateItem(index, e.target.value)}
+                placeholder="Descreva um benefício..."
+                className="flex-1"
+              />
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => removeItem(index)}
+              disabled={data.items.length === 1}
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
+        ))}
+      </div>
       
-      <Button variant="outline" size="sm" onClick={addItem} className="mt-2">
-        <Plus className="h-4 w-4 mr-2" />
-        Adicionar Benefício
-      </Button>
-      
-      <div className="mt-4 p-4 border border-green-200 bg-green-50 rounded">
-        <h4 className="font-bold text-green-800">{data.title || "Benefícios"}</h4>
-        <ul className="mt-2 space-y-1 list-disc pl-5">
+      <div className="mt-6 p-6 border border-green-200 bg-green-50 rounded-lg">
+        <h3 className="font-bold text-xl text-green-800 mb-4">{data.title || "Benefícios"}</h3>
+        <ul className="space-y-3">
           {data.items.map((item, index) => (
-            <li key={index} className="text-green-700">{item || "Descrição do benefício"}</li>
+            <li key={index} className="flex items-start gap-3">
+              <CheckCircle2 className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
+              <span className="text-green-700">{item || "Descrição do benefício"}</span>
+            </li>
           ))}
         </ul>
       </div>

@@ -19,6 +19,7 @@ interface SolutionEditorTabsProps {
   currentValues: SolutionFormValues;
   onSubmit: (values: SolutionFormValues) => Promise<void>;
   saving: boolean;
+  currentStep: number;
 }
 
 const SolutionEditorTabs = ({
@@ -28,10 +29,42 @@ const SolutionEditorTabs = ({
   currentValues,
   onSubmit,
   saving,
+  currentStep,
 }: SolutionEditorTabsProps) => {
+  const getTabTitle = () => {
+    switch (currentStep) {
+      case 0:
+        return "Etapa 1: Configuração Básica";
+      case 1:
+        return "Etapa 2: Landing da Solução";
+      case 2:
+        return "Etapa 3: Visão Geral e Case";
+      case 3:
+        return "Etapa 4: Preparação Express";
+      case 4:
+        return "Etapa 5: Implementação Passo a Passo";
+      case 5:
+        return "Etapa 6: Verificação de Implementação";
+      case 6:
+        return "Etapa 7: Primeiros Resultados";
+      case 7:
+        return "Etapa 8: Otimização Rápida";
+      case 8:
+        return "Etapa 9: Celebração e Próximos Passos";
+      case 9:
+        return "Etapa 10: Revisão e Publicação";
+      default:
+        return "Configuração da Solução";
+    }
+  };
+
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-6">
-      <TabsList className="grid grid-cols-3 w-full sm:w-[400px] bg-muted/50">
+      <div className="px-6 pt-4 pb-2 border-b">
+        <h2 className="text-xl font-semibold">{getTabTitle()}</h2>
+      </div>
+      
+      <TabsList className="grid grid-cols-3 w-full sm:w-[400px] bg-muted/50 mx-6 mt-4">
         <TabsTrigger value="basic" className="flex items-center gap-1.5">
           <FileText className="h-4 w-4" />
           <span>Informações</span>
@@ -46,7 +79,7 @@ const SolutionEditorTabs = ({
         </TabsTrigger>
       </TabsList>
       
-      <TabsContent value="basic" className="space-y-6 mt-6">
+      <TabsContent value="basic" className="space-y-6 mt-6 px-6 pb-6">
         <BasicInfoForm 
           defaultValues={currentValues} 
           onSubmit={onSubmit} 
@@ -54,15 +87,16 @@ const SolutionEditorTabs = ({
         />
       </TabsContent>
       
-      <TabsContent value="modules" className="space-y-6 mt-6">
+      <TabsContent value="modules" className="space-y-6 mt-6 px-6 pb-6">
         <ModulesForm 
           solutionId={solution?.id || null} 
           onSave={() => onSubmit(currentValues)} 
-          saving={saving} 
+          saving={saving}
+          currentModuleStep={currentStep - 1} // Adjust to 0-based index for modules
         />
       </TabsContent>
       
-      <TabsContent value="resources" className="space-y-6 mt-6">
+      <TabsContent value="resources" className="space-y-6 mt-6 px-6 pb-6">
         <ResourcesForm 
           solutionId={solution?.id || null} 
           onSave={() => onSubmit(currentValues)} 

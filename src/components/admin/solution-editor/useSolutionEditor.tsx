@@ -14,6 +14,10 @@ export const useSolutionEditor = (id: string | undefined, user: any) => {
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState("basic");
   
+  // Step management for the wizard-like interface
+  const [currentStep, setCurrentStep] = useState(0);
+  const totalSteps = 10; // Total number of steps in the solution creation process
+  
   const defaultValues: SolutionFormValues = {
     title: "",
     description: "",
@@ -79,9 +83,6 @@ export const useSolutionEditor = (id: string | undefined, user: any) => {
         slug: slug,
         thumbnail_url: values.thumbnail_url || null,
         published: values.published,
-        // Adicionar valores padrão para os campos removidos
-        estimated_time: 30,
-        success_rate: 90,
         updated_at: new Date().toISOString()
       };
       
@@ -148,6 +149,17 @@ export const useSolutionEditor = (id: string | undefined, user: any) => {
       }
     : defaultValues;
 
+  // Update activeTab based on currentStep
+  useEffect(() => {
+    if (currentStep === 0) {
+      setActiveTab("basic");
+    } else if (currentStep >= 1 && currentStep <= 8) {
+      setActiveTab("modules");
+    } else {
+      setActiveTab("resources");
+    }
+  }, [currentStep]);
+
   return {
     solution,
     loading,
@@ -155,6 +167,9 @@ export const useSolutionEditor = (id: string | undefined, user: any) => {
     activeTab,
     setActiveTab,
     onSubmit,
-    currentValues
+    currentValues,
+    currentStep,
+    setCurrentStep,
+    totalSteps
   };
 };

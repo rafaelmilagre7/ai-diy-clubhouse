@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { FileText, Plus } from "lucide-react";
 import { useModulesForm } from "./useModulesForm";
@@ -9,14 +9,27 @@ import ModulesList from "./ModulesList";
 import NoSolutionPrompt from "./NoSolutionPrompt";
 import { Button } from "@/components/ui/button";
 import ModuleTypeSelector from "./ModuleTypeSelector";
+import { Badge } from "@/components/ui/badge";
 
 interface ModulesFormProps {
   solutionId: string | null;
   onSave: () => void;
   saving: boolean;
+  currentModuleStep?: number;
 }
 
-const ModulesForm = ({ solutionId, onSave, saving }: ModulesFormProps) => {
+const MODULE_TYPE_MAPPING = [
+  "landing",          // Etapa 2: Landing da Solução (index 0)
+  "overview",         // Etapa 3: Visão Geral e Case (index 1)
+  "preparation",      // Etapa 4: Preparação Express (index 2)
+  "implementation",   // Etapa 5: Implementação Passo a Passo (index 3)
+  "verification",     // Etapa 6: Verificação de Implementação (index 4)
+  "results",          // Etapa 7: Primeiros Resultados (index 5)
+  "optimization",     // Etapa 8: Otimização Rápida (index 6)
+  "celebration"       // Etapa 9: Celebração e Próximos Passos (index 7)
+];
+
+const ModulesForm = ({ solutionId, onSave, saving, currentModuleStep = -1 }: ModulesFormProps) => {
   const {
     modules,
     selectedModuleIndex,
@@ -34,6 +47,24 @@ const ModulesForm = ({ solutionId, onSave, saving }: ModulesFormProps) => {
   const [showTypeSelector, setShowTypeSelector] = useState(false);
   const [selectedModuleType, setSelectedModuleType] = useState("landing");
 
+  // Estado para rastrear qual módulo está sendo editado com base no currentModuleStep
+  useEffect(() => {
+    if (currentModuleStep >= 0 && currentModuleStep < MODULE_TYPE_MAPPING.length) {
+      const moduleType = MODULE_TYPE_MAPPING[currentModuleStep];
+      const moduleIndex = modules.findIndex(m => m.type === moduleType);
+      
+      if (moduleIndex >= 0) {
+        handleEditModule(moduleIndex);
+      } else if (modules.length > 0 && solutionId) {
+        // Se não encontrou o módulo mas há outros módulos, podemos criar este
+        handleCreateDefaultModules([moduleType]);
+      }
+    } else if (currentModuleStep === -1 && isEditing) {
+      // Se não há step específico e estamos editando, voltar para a lista
+      handleBackToList();
+    }
+  }, [currentModuleStep, modules, solutionId]);
+
   // Função para lidar com a criação de um novo módulo
   const handleCreateModule = () => {
     setShowTypeSelector(true);
@@ -47,14 +78,20 @@ const ModulesForm = ({ solutionId, onSave, saving }: ModulesFormProps) => {
 
   // Render module editor if in editing mode
   if (isEditing && selectedModuleIndex !== null && modules.length > 0) {
+    const moduleType = modules[selectedModuleIndex]?.type;
+    const moduleStep = MODULE_TYPE_MAPPING.indexOf(moduleType || "");
+    
     return (
       <div className="flex flex-col gap-6">
-        <ModuleNavigation 
-          selectedModuleIndex={selectedModuleIndex}
-          totalModules={modules.length}
-          onNavigate={handleNavigateModule}
-          onBackToList={handleBackToList}
-        />
+        <div className="flex justify-between items-center">
+          <Badge variant="outline" className="px-3 py-1">
+            Módulo {moduleStep + 2}: {modules[selectedModuleIndex]?.title}
+          </Badge>
+          
+          <Button variant="outline" size="sm" onClick={handleBackToList}>
+            Voltar para lista
+          </Button>
+        </div>
         
         <ModuleEditor 
           module={modules[selectedModuleIndex]} 

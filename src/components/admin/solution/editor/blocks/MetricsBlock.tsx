@@ -3,7 +3,7 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, TrendingUp } from "lucide-react";
 
 interface Metric {
   label: string;
@@ -43,6 +43,17 @@ const MetricsBlock: React.FC<MetricsBlockProps> = ({ data, onChange }) => {
     onChange({ ...data, metrics: newMetrics });
   };
 
+  const getMetricColor = (index: number) => {
+    const colors = [
+      "bg-blue-50 border-blue-200 text-blue-800",
+      "bg-green-50 border-green-200 text-green-800",
+      "bg-purple-50 border-purple-200 text-purple-800",
+      "bg-amber-50 border-amber-200 text-amber-800",
+      "bg-rose-50 border-rose-200 text-rose-800",
+    ];
+    return colors[index % colors.length];
+  };
+
   return (
     <div className="space-y-3">
       <Input
@@ -59,12 +70,21 @@ const MetricsBlock: React.FC<MetricsBlockProps> = ({ data, onChange }) => {
       />
       
       <div className="space-y-4 mt-4">
-        <h4 className="font-medium text-sm text-muted-foreground">Métricas:</h4>
+        <div className="flex justify-between items-center">
+          <h4 className="font-medium text-sm text-muted-foreground">Métricas:</h4>
+          <Button variant="outline" size="sm" onClick={addMetric}>
+            <Plus className="h-4 w-4 mr-2" />
+            Adicionar Métrica
+          </Button>
+        </div>
         
         {data.metrics.map((metric, index) => (
-          <div key={index} className="border p-3 rounded-md">
-            <div className="flex justify-between items-center mb-2">
-              <h5 className="font-medium">Métrica {index + 1}</h5>
+          <div key={index} className="border p-4 rounded-md">
+            <div className="flex justify-between items-center mb-3">
+              <h5 className="font-medium flex items-center">
+                <TrendingUp className="h-4 w-4 mr-2 text-muted-foreground" />
+                Métrica {index + 1}
+              </h5>
               <Button
                 variant="ghost"
                 size="icon"
@@ -75,7 +95,7 @@ const MetricsBlock: React.FC<MetricsBlockProps> = ({ data, onChange }) => {
               </Button>
             </div>
             
-            <div className="space-y-2">
+            <div className="space-y-3">
               <Input
                 value={metric.label}
                 onChange={(e) => updateMetric(index, "label", e.target.value)}
@@ -102,20 +122,15 @@ const MetricsBlock: React.FC<MetricsBlockProps> = ({ data, onChange }) => {
         ))}
       </div>
       
-      <Button variant="outline" onClick={addMetric}>
-        <Plus className="h-4 w-4 mr-2" />
-        Adicionar Métrica
-      </Button>
-      
-      <div className="mt-4 p-4 border border-indigo-200 bg-indigo-50 rounded">
-        <h4 className="font-bold text-indigo-800">{data.title || "Métricas"}</h4>
-        {data.description && <p className="mt-1 text-indigo-700">{data.description}</p>}
+      <div className="mt-6 p-6 border rounded-md bg-slate-50">
+        <h4 className="font-bold text-xl text-slate-800 mb-2">{data.title || "Métricas"}</h4>
+        {data.description && <p className="mt-1 text-slate-600 mb-4">{data.description}</p>}
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-3">
           {data.metrics.map((metric, index) => (
-            <div key={index} className="bg-white p-3 rounded shadow-sm">
-              <p className="text-sm text-indigo-500 font-medium">{metric.label || "Nome da métrica"}</p>
-              <p className="text-2xl font-bold text-indigo-800">
+            <div key={index} className={`p-4 rounded-md shadow-sm ${getMetricColor(index)}`}>
+              <p className="text-sm font-medium opacity-80">{metric.label || "Nome da métrica"}</p>
+              <p className="text-2xl font-bold mt-1">
                 {metric.value || "0"}{metric.unit}
               </p>
             </div>

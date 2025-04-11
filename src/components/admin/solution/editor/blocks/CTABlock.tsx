@@ -2,6 +2,7 @@
 import React from "react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { ArrowRight } from "lucide-react";
 
 interface CTABlockProps {
   data: {
@@ -15,7 +16,7 @@ interface CTABlockProps {
 
 const CTABlock: React.FC<CTABlockProps> = ({ data, onChange }) => {
   return (
-    <div className="space-y-2">
+    <div className="space-y-4">
       <Input
         value={data.title}
         onChange={(e) => onChange({ ...data, title: e.target.value })}
@@ -29,24 +30,33 @@ const CTABlock: React.FC<CTABlockProps> = ({ data, onChange }) => {
         className="min-h-[80px]"
       />
       
-      <Input
-        value={data.buttonText}
-        onChange={(e) => onChange({ ...data, buttonText: e.target.value })}
-        placeholder="Texto do botão"
-      />
+      <div className="grid grid-cols-2 gap-3">
+        <Input
+          value={data.buttonText}
+          onChange={(e) => onChange({ ...data, buttonText: e.target.value })}
+          placeholder="Texto do botão"
+        />
+        
+        <Input
+          value={data.buttonLink}
+          onChange={(e) => onChange({ ...data, buttonLink: e.target.value })}
+          placeholder="Link do botão (URL ou caminho)"
+        />
+      </div>
       
-      <Input
-        value={data.buttonLink}
-        onChange={(e) => onChange({ ...data, buttonLink: e.target.value })}
-        placeholder="Link do botão (URL ou caminho)"
-      />
-      
-      <div className="mt-4 p-4 border border-blue-200 bg-blue-50 rounded text-center">
-        <h4 className="font-bold text-xl text-blue-800">{data.title || "Próximos Passos"}</h4>
-        <p className="mt-2 mb-4 text-blue-700">{data.text || "Texto da chamada para ação irá aparecer aqui."}</p>
-        <button className="px-6 py-2 bg-blue-600 text-white rounded-full font-medium hover:bg-blue-700 transition-colors">
-          {data.buttonText || "Continuar"}
-        </button>
+      <div className="mt-6 p-6 rounded-lg border border-indigo-200 bg-indigo-50">
+        <div className="max-w-lg mx-auto text-center">
+          <h3 className="font-bold text-xl text-indigo-800 mb-3">
+            {data.title || "Próximos Passos"}
+          </h3>
+          <p className="mb-6 text-indigo-600">
+            {data.text || "Texto da chamada para ação irá aparecer aqui."}
+          </p>
+          <button className="inline-flex items-center px-6 py-3 bg-indigo-600 text-white rounded-full font-medium hover:bg-indigo-700 transition-colors">
+            {data.buttonText || "Continuar"}
+            <ArrowRight className="ml-2 h-4 w-4" />
+          </button>
+        </div>
       </div>
     </div>
   );

@@ -24,6 +24,17 @@ interface BlockPreviewProps {
 const BlockPreview: React.FC<BlockPreviewProps> = ({ block }) => {
   const { type, data } = block;
 
+  // Type safety check
+  if (!type || !data) {
+    return (
+      <div className="bg-red-100 p-4 rounded my-4 border border-red-300">
+        <p className="text-red-600">
+          Bloco inválido: faltando tipo ou dados
+        </p>
+      </div>
+    );
+  }
+
   switch (type) {
     case "header":
       return <HeaderPreview data={data as { text: string; level: number }} />;
