@@ -147,7 +147,8 @@ const RenderModulesList = ({
   handleEditModule,
   handlePreviewImplementation,
   currentModuleStep,
-  onCreateModule
+  onCreateModule,
+  handleCreateDefaultModules
 }) => {
   return (
     <div>
