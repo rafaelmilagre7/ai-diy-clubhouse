@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Outlet, Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
@@ -89,16 +88,12 @@ const AdminLayout = () => {
         {/* Logo area */}
         <div className="flex h-16 items-center justify-between px-4">
           {sidebarOpen ? (
-            <Link to="/admin" className="flex items-center space-x-2">
+            <Link to="/admin" className="flex items-center">
               <img 
                 src="https://milagredigital.com/wp-content/uploads/2025/04/viverdeiaclub.avif" 
                 alt="VIVER DE IA Club" 
                 className="h-8 w-auto" 
               />
-              <div className="flex flex-col">
-                <span className="font-semibold text-lg">DIY</span>
-                <span className="text-xs text-muted-foreground">Admin Panel</span>
-              </div>
             </Link>
           ) : (
             <Link to="/admin" className="mx-auto">

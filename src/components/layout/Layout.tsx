@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Outlet } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
@@ -55,13 +54,12 @@ const Layout = () => {
         {/* Logo area */}
         <div className="flex h-16 items-center justify-between px-4">
           {sidebarOpen ? (
-            <Link to="/dashboard" className="flex items-center space-x-2">
+            <Link to="/dashboard" className="flex items-center">
               <img 
                 src="https://milagredigital.com/wp-content/uploads/2025/04/viverdeiaclub.avif" 
                 alt="VIVER DE IA Club" 
                 className="h-8 w-auto" 
               />
-              <span className="font-semibold text-lg">DIY</span>
             </Link>
           ) : (
             <Link to="/dashboard" className="mx-auto">
