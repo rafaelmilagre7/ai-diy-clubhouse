@@ -1,6 +1,7 @@
 
-import { Menu, Bell } from "lucide-react";
+import { Menu, Bell, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 
 interface MemberHeaderProps {
   sidebarOpen: boolean;
@@ -8,23 +9,33 @@ interface MemberHeaderProps {
 }
 
 export const MemberHeader = ({ sidebarOpen, setSidebarOpen }: MemberHeaderProps) => {
+  const handleLogout = () => {
+    // Clear local storage and redirect to login page
+    localStorage.removeItem('supabase.auth.token');
+    window.location.href = '/login';
+  };
+
   return (
-    <header className="sticky top-0 z-10 flex h-16 items-center border-b bg-background px-6">
-      <Button 
-        variant="ghost" 
-        size="icon" 
-        className="md:hidden" 
-        onClick={() => setSidebarOpen(!sidebarOpen)}
-      >
+    <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6">
+      <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(!sidebarOpen)}>
         <Menu className="h-5 w-5" />
+        <span className="sr-only">Toggle sidebar</span>
       </Button>
       
-      <div className="ml-auto flex items-center space-x-4">
-        <Button variant="outline" size="icon" className="relative">
+      <div className="ml-auto flex items-center gap-2">
+        <Button variant="ghost" size="icon">
           <Bell className="h-5 w-5" />
-          <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-viverblue text-xs text-white">
-            2
-          </span>
+          <span className="sr-only">Notifications</span>
+        </Button>
+        
+        <Button 
+          variant="destructive" 
+          size="sm"
+          onClick={handleLogout}
+          className="ml-2"
+        >
+          <LogOut className="h-4 w-4 mr-2" />
+          Sair
         </Button>
       </div>
     </header>

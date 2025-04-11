@@ -6,6 +6,9 @@ import LoadingScreen from "@/components/common/LoadingScreen";
 import { useSolutionsData } from "@/hooks/useSolutionsData";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { CategoryTabs } from "@/components/dashboard/CategoryTabs";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const Dashboard = () => {
   const { profile } = useAuth();
@@ -16,6 +19,7 @@ const Dashboard = () => {
   const { 
     filteredSolutions, 
     loading, 
+    error,
     searchQuery, 
     setSearchQuery, 
     activeCategory, 
@@ -33,6 +37,11 @@ const Dashboard = () => {
     navigate(`/solution/${id}`);
   };
   
+  const handleLogout = () => {
+    localStorage.removeItem('supabase.auth.token');
+    window.location.href = '/login';
+  };
+  
   if (loading) {
     return <LoadingScreen />;
   }
@@ -45,6 +54,22 @@ const Dashboard = () => {
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
       />
+      
+      {/* Error message */}
+      {error && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Erro ao carregar soluções</AlertTitle>
+          <AlertDescription>
+            {error}
+            <div className="mt-3">
+              <Button variant="outline" onClick={handleLogout}>
+                Voltar para o login
+              </Button>
+            </div>
+          </AlertDescription>
+        </Alert>
+      )}
       
       {/* Category tabs */}
       <CategoryTabs 

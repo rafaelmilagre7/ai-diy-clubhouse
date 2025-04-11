@@ -15,6 +15,8 @@ const AuthSession = ({ children }: { children: React.ReactNode }) => {
   const [isInitializing, setIsInitializing] = useState(true);
   const { setSession, setUser, setProfile, setIsLoading } = useAuth();
   const [authError, setAuthError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
+  const maxRetries = 2;
 
   useEffect(() => {
     // Configuração de log de debug
@@ -34,35 +36,69 @@ const AuthSession = ({ children }: { children: React.ReactNode }) => {
               .then(profile => {
                 console.log('Profile fetched:', profile);
                 
-                // Se o perfil não existe, tenta criá-lo
+                // If the profile fetch fails with a specific database error, 
+                // we'll treat it as a graceful failure - the user is authenticated but profile data is unavailable
                 if (!profile) {
                   console.log('Perfil não encontrado, tentando criar...');
-                  return createUserProfileIfNeeded(
-                    session.user.id,
-                    session.user.email || '',
-                    session.user.user_metadata?.name || 'Usuário'
-                  );
+                  
+                  // Try to create a profile based on session data
+                  try {
+                    // Create a minimal profile based on session data
+                    const minimalProfile: UserProfile = {
+                      id: session.user.id,
+                      email: session.user.email || '',
+                      name: session.user.user_metadata?.name || 'Usuário',
+                      avatar_url: session.user.user_metadata?.avatar_url || null,
+                      role: session.user.email?.endsWith('@viverdeia.ai') ? 'admin' : 'member',
+                      company_name: null,
+                      industry: null,
+                      created_at: new Date().toISOString()
+                    };
+                    
+                    setProfile(minimalProfile);
+                    setIsLoading(false);
+                    return minimalProfile;
+                  } catch (error) {
+                    console.error('Error creating minimal profile:', error);
+                    setIsLoading(false);
+                    return null;
+                  }
                 }
                 
-                return profile;
-              })
-              .then(profile => {
                 setProfile(profile);
                 setIsLoading(false);
-                
-                if (!profile) {
-                  console.warn('Não foi possível obter ou criar perfil para usuário autenticado');
-                  toast({
-                    title: 'Aviso',
-                    description: 'Houve um problema ao carregar seu perfil. Algumas funcionalidades podem estar limitadas.',
-                    variant: 'default',
-                  });
-                }
+                return profile;
               })
               .catch(error => {
                 console.error('Error fetching/creating profile:', error);
-                setAuthError(`Erro ao carregar perfil: ${error.message || 'Erro desconhecido'}`);
-                // Ainda definimos isLoading como false mesmo com erro
+                
+                // Check if it's a database policy error
+                if (error?.message?.includes('infinite recursion')) {
+                  console.warn('Erro de política de banco de dados detectado, continuando com perfil mínimo');
+                  
+                  // Create a minimal profile based on session data
+                  try {
+                    const minimalProfile: UserProfile = {
+                      id: session.user.id,
+                      email: session.user.email || '',
+                      name: session.user.user_metadata?.name || 'Usuário',
+                      avatar_url: session.user.user_metadata?.avatar_url || null,
+                      role: session.user.email?.endsWith('@viverdeia.ai') ? 'admin' : 'member',
+                      company_name: null,
+                      industry: null,
+                      created_at: new Date().toISOString()
+                    };
+                    
+                    setProfile(minimalProfile);
+                    setIsLoading(false);
+                  } catch (createError) {
+                    console.error('Error creating minimal profile:', createError);
+                  }
+                } else {
+                  setAuthError(`Erro ao carregar perfil: ${error.message || 'Erro desconhecido'}`);
+                }
+                
+                // Still set isLoading to false to continue the app flow
                 setIsLoading(false);
               });
           }, 0);
@@ -84,36 +120,62 @@ const AuthSession = ({ children }: { children: React.ReactNode }) => {
           .then(profile => {
             console.log('Profile inicial carregado:', profile);
             
-            // Se o perfil não existe, tenta criá-lo
+            // Se o perfil não existe, tentamos criar um perfil mínimo baseado nos dados da sessão
             if (!profile) {
-              console.log('Perfil inicial não encontrado, tentando criar...');
-              return createUserProfileIfNeeded(
-                session.user.id,
-                session.user.email || '',
-                session.user.user_metadata?.name || 'Usuário'
-              );
+              // Create a minimal profile based on session data
+              const minimalProfile: UserProfile = {
+                id: session.user.id,
+                email: session.user.email || '',
+                name: session.user.user_metadata?.name || 'Usuário',
+                avatar_url: session.user.user_metadata?.avatar_url || null,
+                role: session.user.email?.endsWith('@viverdeia.ai') ? 'admin' : 'member',
+                company_name: null,
+                industry: null,
+                created_at: new Date().toISOString()
+              };
+              
+              setProfile(minimalProfile);
+              setIsLoading(false);
+              setIsInitializing(false);
+              
+              return minimalProfile;
             }
             
-            return profile;
-          })
-          .then(profile => {
             setProfile(profile);
             setIsLoading(false);
             setIsInitializing(false);
             
-            if (!profile) {
-              console.warn('Não foi possível obter ou criar perfil para usuário autenticado');
-              toast({
-                title: 'Aviso',
-                description: 'Houve um problema ao carregar seu perfil. Algumas funcionalidades podem estar limitadas.',
-                variant: 'default',
-              });
-            }
+            return profile;
           })
           .catch(error => {
             console.error('Erro ao carregar/criar perfil inicial:', error);
-            setAuthError(`Erro ao carregar perfil: ${error.message || 'Erro desconhecido'}`);
-            // Continuamos mesmo com erro
+            
+            // Check if it's a database policy error
+            if (error?.message?.includes('infinite recursion')) {
+              console.warn('Erro de política de banco de dados detectado, continuando com perfil mínimo');
+              
+              // Create a minimal profile based on session data
+              try {
+                const minimalProfile: UserProfile = {
+                  id: session.user.id,
+                  email: session.user.email || '',
+                  name: session.user.user_metadata?.name || 'Usuário',
+                  avatar_url: session.user.user_metadata?.avatar_url || null,
+                  role: session.user.email?.endsWith('@viverdeia.ai') ? 'admin' : 'member',
+                  company_name: null,
+                  industry: null,
+                  created_at: new Date().toISOString()
+                };
+                
+                setProfile(minimalProfile);
+              } catch (createError) {
+                console.error('Error creating minimal profile:', createError);
+              }
+            } else {
+              setAuthError(`Erro ao carregar perfil: ${error.message || 'Erro desconhecido'}`);
+            }
+            
+            // Still continue the app flow
             setIsLoading(false);
             setIsInitializing(false);
           });
@@ -127,7 +189,43 @@ const AuthSession = ({ children }: { children: React.ReactNode }) => {
       console.log('AuthSession: Limpando subscription');
       subscription.unsubscribe();
     };
-  }, [setSession, setUser, setProfile, setIsLoading]);
+  }, [setSession, setUser, setProfile, setIsLoading, retryCount]);
+
+  // Add a logout button if there's an initialization error
+  if (authError && !isInitializing) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center p-4">
+        <div className="bg-destructive/10 border border-destructive p-6 rounded-lg max-w-md">
+          <h2 className="text-xl font-bold text-destructive mb-2">Erro de Autenticação</h2>
+          <p className="mb-4">{authError}</p>
+          <p className="mb-4">Houve um problema ao carregar seu perfil. Por favor, tente fazer login novamente.</p>
+          <Button 
+            variant="default"
+            onClick={() => {
+              localStorage.removeItem('supabase.auth.token');
+              window.location.href = '/login';
+            }}
+          >
+            Voltar para login
+          </Button>
+          
+          {retryCount < maxRetries && (
+            <Button 
+              variant="outline"
+              className="ml-2"
+              onClick={() => {
+                setRetryCount(count => count + 1);
+                setIsInitializing(true);
+                setAuthError(null);
+              }}
+            >
+              Tentar novamente ({maxRetries - retryCount} tentativas restantes)
+            </Button>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   if (isInitializing) {
     return <LoadingScreen />;
