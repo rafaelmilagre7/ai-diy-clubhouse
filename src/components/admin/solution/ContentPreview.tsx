@@ -5,9 +5,44 @@ import { cn } from "@/lib/utils";
 interface ContentPreviewProps {
   content: any;
   className?: string;
+  isJson?: boolean; // Added this prop
 }
 
-const ContentPreview = ({ content, className }: ContentPreviewProps) => {
+const ContentPreview = ({ content, className, isJson = false }: ContentPreviewProps) => {
+  if (isJson) {
+    try {
+      // Try to parse the content as JSON if isJson is true
+      const parsedContent = typeof content === 'string' ? JSON.parse(content) : content;
+      
+      return (
+        <div className={cn("space-y-2", className)}>
+          {Array.isArray(parsedContent) ? (
+            parsedContent.map((item, index) => (
+              <div key={index} className="bg-card p-3 rounded-md border">
+                {Object.entries(item).map(([key, value]) => (
+                  <div key={key} className="flex flex-col mb-1">
+                    <span className="text-sm font-medium capitalize">{key}:</span>
+                    <span className="text-sm text-muted-foreground">{String(value)}</span>
+                  </div>
+                ))}
+              </div>
+            ))
+          ) : (
+            <div className="text-center py-6 text-muted-foreground">
+              JSON inválido ou vazio
+            </div>
+          )}
+        </div>
+      );
+    } catch (error) {
+      return (
+        <div className="text-center py-6 text-destructive">
+          Erro ao processar JSON: {String(error)}
+        </div>
+      );
+    }
+  }
+
   if (!content || !content.blocks || content.blocks.length === 0) {
     return (
       <div className={cn("text-center py-6 text-muted-foreground", className)}>

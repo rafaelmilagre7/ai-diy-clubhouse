@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -22,7 +21,16 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ContentPreview from './ContentPreview';
 
-// Schema for form validation
+interface SolutionResources {
+  id?: string;
+  solution_id: string;
+  overview: string;
+  materials: string;
+  external_links: string;
+  faq: string;
+  updated_at?: string;
+}
+
 const resourcesSchema = z.object({
   overview: z.string().optional(),
   materials: z.string().optional(),
@@ -68,6 +76,7 @@ const ResourcesForm = ({ solutionId, onSave, saving }: ResourcesFormProps) => {
         .from('solution_resources')
         .select('*')
         .eq('solution_id', solutionId)
+        .eq('type', 'resources')
         .single();
       
       if (error) {
@@ -79,12 +88,17 @@ const ResourcesForm = ({ solutionId, onSave, saving }: ResourcesFormProps) => {
       }
       
       if (data) {
-        form.reset({
-          overview: data.overview || '',
-          materials: data.materials || '',
-          external_links: data.external_links || '',
-          faq: data.faq || '',
-        });
+        try {
+          const resourceData = JSON.parse(data.url);
+          form.reset({
+            overview: resourceData.overview || '',
+            materials: resourceData.materials || '',
+            external_links: resourceData.external_links || '',
+            faq: resourceData.faq || '',
+          });
+        } catch (e) {
+          console.error('Error parsing resource data:', e);
+        }
       }
     } catch (error) {
       console.error('Error:', error);
@@ -148,9 +162,18 @@ const ResourcesForm = ({ solutionId, onSave, saving }: ResourcesFormProps) => {
         .from('solution_resources')
         .select('id')
         .eq('solution_id', solutionId)
+        .eq('type', 'resources')
         .single();
       
       let result;
+      
+      // Serialize all resources into a JSON string to store in the url field
+      const resourceData = JSON.stringify({
+        overview: values.overview,
+        materials: values.materials,
+        external_links: values.external_links,
+        faq: values.faq,
+      });
       
       if (checkError && checkError.code === 'PGRST116') {
         // Resources don't exist, insert new record
@@ -158,23 +181,20 @@ const ResourcesForm = ({ solutionId, onSave, saving }: ResourcesFormProps) => {
           .from('solution_resources')
           .insert({
             solution_id: solutionId,
-            overview: values.overview,
-            materials: values.materials,
-            external_links: values.external_links,
-            faq: values.faq,
+            name: 'Resources',
+            type: 'resources',
+            url: resourceData
           });
       } else {
         // Resources exist, update record
         result = await supabase
           .from('solution_resources')
           .update({
-            overview: values.overview,
-            materials: values.materials,
-            external_links: values.external_links,
-            faq: values.faq,
+            url: resourceData,
             updated_at: new Date().toISOString(),
           })
-          .eq('solution_id', solutionId);
+          .eq('solution_id', solutionId)
+          .eq('type', 'resources');
       }
       
       if (result.error) {
@@ -451,7 +471,6 @@ const ResourcesForm = ({ solutionId, onSave, saving }: ResourcesFormProps) => {
   );
 };
 
-// Função auxiliar para converter tipo de módulo para nome legível
 const moduleTypeToName = (type: string): string => {
   const types: Record<string, string> = {
     landing: "Landing da Solução",
@@ -467,11 +486,9 @@ const moduleTypeToName = (type: string): string => {
   return types[type] || type;
 };
 
-// Função para contar o número de blocos de conteúdo em um módulo
 const getBlocksCount = (content: any): number => {
   if (!content) return 0;
   
-  // Se o conteúdo for uma string, tenta fazer o parse para objeto
   if (typeof content === 'string') {
     try {
       const parsed = JSON.parse(content);
@@ -481,7 +498,6 @@ const getBlocksCount = (content: any): number => {
     }
   }
   
-  // Se o conteúdo já for um objeto
   return content.blocks?.length || 0;
 };
 

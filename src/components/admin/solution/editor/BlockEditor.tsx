@@ -19,7 +19,7 @@ import BenefitsBlock from "./blocks/BenefitsBlock";
 import MetricsBlock from "./blocks/MetricsBlock";
 import TipsBlock from "./blocks/TipsBlock";
 import CTABlock from "./blocks/CTABlock";
-import BlockIcons from "./BlockIcons";
+import { getBlockIcon } from "./BlockIcons";
 
 interface BlockEditorProps {
   block: ContentBlock;
@@ -159,11 +159,14 @@ const BlockEditor: React.FC<BlockEditorProps> = ({
     }
   };
 
+  // Get the icon for the current block type
+  const BlockIcon = getBlockIcon(type);
+
   return (
     <Card className="border border-muted relative group">
       <CardHeader className="p-3 flex flex-row items-center justify-between bg-muted/20 border-b">
         <div className="flex items-center gap-2">
-          <BlockIcons type={type} className="h-5 w-5 text-muted-foreground" />
+          <BlockIcon className="h-5 w-5 text-muted-foreground" />
           <span className="font-medium text-sm capitalize">
             {type === "cta" ? "Call to Action" : type}
           </span>

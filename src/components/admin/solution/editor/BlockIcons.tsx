@@ -11,16 +11,31 @@ import {
   Type,
   Video,
   Youtube,
-  AlertOctagon,
   Award,
   BarChart3,
   Lightbulb,
   MousePointerClick,
-  LucideIcon,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  LucideIcon
 } from "lucide-react";
-import { BlockType } from "./useModuleEditor";
+
+export type BlockType = 
+  | "header"
+  | "paragraph"
+  | "quote"
+  | "list"
+  | "image"
+  | "video"
+  | "youtube"
+  | "code"
+  | "checklist"
+  | "steps"
+  | "warning"
+  | "benefits"
+  | "metrics"
+  | "tips"
+  | "cta";
 
 export type BlockCategory = "basic" | "advanced";
 
