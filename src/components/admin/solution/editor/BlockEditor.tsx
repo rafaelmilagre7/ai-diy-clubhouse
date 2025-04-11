@@ -13,7 +13,7 @@ import {
   QuoteBlockData
 } from "./BlockTypes";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ChevronDown, ChevronUp, getBlockIcon } from "./BlockIcons";
+import { getBlockIcon, ChevronDown, ChevronUp } from "./BlockIcons";
 import HeaderBlock from "./blocks/HeaderBlock";
 import ParagraphBlock from "./blocks/ParagraphBlock";
 import ImageBlock from "./blocks/ImageBlock";
@@ -76,7 +76,7 @@ const BlockEditor: React.FC<BlockEditorProps> = ({
       <CollapsibleTrigger asChild>
         <div className="flex items-center justify-between p-3 cursor-pointer hover:bg-accent">
           <div className="flex items-center">
-            {getBlockIcon(type)}
+            {React.createElement(getBlockIcon(type as BlockType))}
             <span className="ml-2 capitalize">{type}</span>
           </div>
           <ChevronDown className="h-4 w-4 text-muted-foreground" />

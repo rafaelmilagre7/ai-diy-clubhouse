@@ -16,7 +16,9 @@ import {
   BarChart3,
   Lightbulb,
   MousePointerClick,
-  LucideIcon
+  LucideIcon,
+  ChevronDown,
+  ChevronUp
 } from "lucide-react";
 import { BlockType } from "./useModuleEditor";
 
@@ -57,3 +59,5 @@ export const getBlockLabel = (type: BlockType): string => {
 export const getBlockCategory = (type: BlockType): BlockCategory => {
   return blockConfigs[type]?.category || "basic";
 };
+
+export { ChevronDown, ChevronUp };

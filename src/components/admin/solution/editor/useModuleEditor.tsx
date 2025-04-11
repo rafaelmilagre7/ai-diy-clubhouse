@@ -54,42 +54,55 @@ export const useModuleEditor = (initialModule: Module) => {
     }));
   };
 
-  const updateBlock = (id: string, data: Record<string, any>) => {
-    setContent((prev) => ({
-      ...prev,
-      blocks: (prev.blocks || []).map((block) =>
-        block.id === id ? { ...block, data } : block
-      ),
-    }));
+  // Método modificado para aceitar índice ao invés de ID
+  const updateBlock = (index: number, data: Record<string, any>) => {
+    setContent((prev) => {
+      const updatedBlocks = [...(prev.blocks || [])];
+      if (updatedBlocks[index]) {
+        updatedBlocks[index] = {
+          ...updatedBlocks[index],
+          data: { ...updatedBlocks[index].data, ...data }
+        };
+      }
+      return {
+        ...prev,
+        blocks: updatedBlocks
+      };
+    });
   };
 
-  const removeBlock = (id: string) => {
-    setContent((prev) => ({
-      ...prev,
-      blocks: (prev.blocks || []).filter((block) => block.id !== id),
-    }));
+  // Método modificado para aceitar índice ao invés de ID
+  const removeBlock = (index: number) => {
+    setContent((prev) => {
+      const updatedBlocks = [...(prev.blocks || [])];
+      updatedBlocks.splice(index, 1);
+      return {
+        ...prev,
+        blocks: updatedBlocks
+      };
+    });
   };
 
-  const moveBlock = (id: string, direction: "up" | "down") => {
-    const blocks = [...getContentBlocks()];
-    const index = blocks.findIndex((block) => block.id === id);
+  // Método modificado para aceitar índice ao invés de ID
+  const moveBlock = (index: number, direction: "up" | "down") => {
+    if (index < 0 || index >= getContentBlocks().length) return;
     
-    if (index === -1) return;
-    
-    if (direction === "up" && index > 0) {
-      const temp = blocks[index];
-      blocks[index] = blocks[index - 1];
-      blocks[index - 1] = temp;
-    } else if (direction === "down" && index < blocks.length - 1) {
-      const temp = blocks[index];
-      blocks[index] = blocks[index + 1];
-      blocks[index + 1] = temp;
-    }
-    
-    setContent((prev) => ({
-      ...prev,
-      blocks,
-    }));
+    setContent((prev) => {
+      const blocks = [...(prev.blocks || [])];
+      
+      if (direction === "up" && index > 0) {
+        // Troca com o elemento anterior
+        [blocks[index], blocks[index - 1]] = [blocks[index - 1], blocks[index]];
+      } else if (direction === "down" && index < blocks.length - 1) {
+        // Troca com o próximo elemento
+        [blocks[index], blocks[index + 1]] = [blocks[index + 1], blocks[index]];
+      }
+      
+      return {
+        ...prev,
+        blocks,
+      };
+    });
   };
 
   const getDefaultDataForType = (type: BlockType): Record<string, any> => {
@@ -101,13 +114,13 @@ export const useModuleEditor = (initialModule: Module) => {
       case "quote":
         return { text: "", caption: "" };
       case "list":
-        return { style: "unordered", items: [""] };
+        return { items: [""] };
       case "image":
         return { url: "", caption: "", alt: "" };
       case "video":
         return { url: "", caption: "" };
       case "youtube":
-        return { videoId: "", caption: "" };
+        return { youtubeId: "" };
       case "code":
         return { code: "", language: "javascript" };
       case "checklist":
