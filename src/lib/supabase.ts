@@ -24,8 +24,6 @@ export interface Solution {
   slug: string;
   category: 'revenue' | 'operational' | 'strategy';
   difficulty: 'easy' | 'medium' | 'advanced';
-  estimated_time: number; // em minutos
-  success_rate: number;
   thumbnail_url: string | null;
   published: boolean;
   created_at: string;

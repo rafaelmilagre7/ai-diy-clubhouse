@@ -41,8 +41,6 @@ export const useSolutionEditor = (id: string | undefined, user: any) => {
     thumbnail_url: "",
     published: false,
     slug: "",
-    estimated_time: 30, // Valor padrão em minutos
-    success_rate: 85, // Valor padrão de taxa de sucesso em porcentagem
   };
   
   useEffect(() => {
@@ -86,10 +84,7 @@ export const useSolutionEditor = (id: string | undefined, user: any) => {
       setSaving(true);
       
       // Gerar um slug a partir do título se não for fornecido
-      const slug = values.slug || values.title
-        .toLowerCase()
-        .replace(/[^\w\s]/gi, '')
-        .replace(/\s+/g, '-');
+      const slug = values.slug || slugify(values.title);
       
       // Preparar dados para salvar, incluindo campos obrigatórios
       const solutionData = {
@@ -101,8 +96,6 @@ export const useSolutionEditor = (id: string | undefined, user: any) => {
         thumbnail_url: values.thumbnail_url || null,
         published: values.published,
         updated_at: new Date().toISOString(),
-        estimated_time: values.estimated_time || 30, // valor padrão de 30 minutos
-        success_rate: values.success_rate || 85 // valor padrão de 85%
       };
       
       if (id) {
@@ -165,8 +158,6 @@ export const useSolutionEditor = (id: string | undefined, user: any) => {
         thumbnail_url: solution.thumbnail_url || "",
         published: solution.published,
         slug: solution.slug,
-        estimated_time: solution.estimated_time,
-        success_rate: solution.success_rate,
       }
     : defaultValues;
 
@@ -180,6 +171,21 @@ export const useSolutionEditor = (id: string | undefined, user: any) => {
       setActiveTab("resources");
     }
   }, [currentStep]);
+
+  // Função para slugificar strings
+  const slugify = (text: string): string => {
+    return text
+      .toString()
+      .normalize('NFD')           // normaliza os caracteres decompostos
+      .replace(/[\u0300-\u036f]/g, '') // remove acentos
+      .toLowerCase()
+      .trim()
+      .replace(/\s+/g, '-')       // substitui espaços por -
+      .replace(/[^\w\-]+/g, '')   // remove caracteres não-palavra
+      .replace(/\-\-+/g, '-')     // substitui múltiplos hifens por um único
+      .replace(/^-+/, '')         // remove hifens do início
+      .replace(/-+$/, '');        // remove hifens do final
+  };
 
   return {
     solution,

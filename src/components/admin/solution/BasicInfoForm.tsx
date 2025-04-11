@@ -22,7 +22,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Slider } from "@/components/ui/slider";
 import { Loader2, Save } from "lucide-react";
 import { slugify } from "@/utils/slugify";
 import React from "react";
@@ -47,16 +46,6 @@ const formSchema = z.object({
   slug: z.string().min(3, {
     message: "O slug deve ter pelo menos 3 caracteres.",
   }).optional(),
-  estimated_time: z.number().min(5, {
-    message: "O tempo estimado deve ser de pelo menos 5 minutos.",
-  }).max(180, {
-    message: "O tempo estimado não deve exceder 180 minutos.",
-  }),
-  success_rate: z.number().min(1, {
-    message: "A taxa de sucesso deve ser maior que 0%.",
-  }).max(100, {
-    message: "A taxa de sucesso não pode exceder 100%.",
-  }),
 });
 
 export type SolutionFormValues = z.infer<typeof formSchema>;
@@ -81,12 +70,17 @@ const BasicInfoForm = ({
   const difficulty = form.watch("difficulty");
   
   // Auto-gerar slug quando o título mudar e o slug não tiver sido modificado manualmente
-  const handleTitleChange = (value: string) => {
-    form.setValue("title", value);
-    if (!form.getValues("slug") || form.getValues("slug") === slugify(form.getValues("title"))) {
-      form.setValue("slug", slugify(value));
+  React.useEffect(() => {
+    if (title) {
+      const newSlug = slugify(title);
+      const currentSlug = form.getValues("slug");
+      
+      // Se o slug estiver vazio ou for igual ao slug gerado anteriormente do título
+      if (!currentSlug || currentSlug === slugify(form.formState.defaultValues?.title || '')) {
+        form.setValue("slug", newSlug);
+      }
     }
-  };
+  }, [title, form]);
 
   // Função para obter a cor correspondente à dificuldade
   const getDifficultyColor = (diff: string) => {
@@ -113,7 +107,6 @@ const BasicInfoForm = ({
                     <Input 
                       placeholder="Ex: Assistente de Vendas com IA" 
                       {...field} 
-                      onChange={(e) => handleTitleChange(e.target.value)}
                     />
                   </FormControl>
                   <FormDescription>
@@ -224,78 +217,6 @@ const BasicInfoForm = ({
                   </Select>
                   <FormDescription>
                     O nível de dificuldade de implementação da solução.
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="estimated_time"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Tempo Estimado (minutos)</FormLabel>
-                  <div className="flex space-x-4 items-center">
-                    <FormControl>
-                      <Input 
-                        type="number" 
-                        min={5}
-                        max={180}
-                        step={5}
-                        {...field}
-                        onChange={(e) => field.onChange(Number(e.target.value))}
-                        value={field.value}
-                        className="w-20"
-                      />
-                    </FormControl>
-                    <Slider 
-                      defaultValue={[field.value]} 
-                      max={180} 
-                      min={5} 
-                      step={5}
-                      onValueChange={(values) => field.onChange(values[0])}
-                      className="flex-grow"
-                    />
-                  </div>
-                  <FormDescription>
-                    Tempo médio necessário para implementar esta solução.
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="success_rate"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Taxa de Sucesso Esperada (%)</FormLabel>
-                  <div className="flex space-x-4 items-center">
-                    <FormControl>
-                      <Input 
-                        type="number" 
-                        min={1}
-                        max={100}
-                        step={1}
-                        {...field}
-                        onChange={(e) => field.onChange(Number(e.target.value))}
-                        value={field.value}
-                        className="w-20"
-                      />
-                    </FormControl>
-                    <Slider 
-                      defaultValue={[field.value]} 
-                      max={100} 
-                      min={1} 
-                      step={1}
-                      onValueChange={(values) => field.onChange(values[0])}
-                      className="flex-grow"
-                    />
-                  </div>
-                  <FormDescription>
-                    A porcentagem esperada de membros que terão sucesso na implementação.
                   </FormDescription>
                   <FormMessage />
                 </FormItem>

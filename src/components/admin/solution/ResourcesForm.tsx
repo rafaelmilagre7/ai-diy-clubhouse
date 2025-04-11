@@ -2,44 +2,81 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { supabase } from "@/lib/supabase";
+import { useToast } from "@/hooks/use-toast";
+import ContentPreview from "./ContentPreview";
 import { 
-  Form, 
-  FormField, 
-  FormItem, 
-  FormLabel, 
-  FormControl,
-  FormDescription,
-  FormMessage 
-} from "@/components/ui/form";
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
-import * as z from 'zod';
-import { supabase } from '@/lib/supabase';
-import { AlertTriangle } from 'lucide-react';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import ContentPreview from './ContentPreview';
+  FileText, 
+  Download, 
+  Upload, 
+  Link, 
+  HelpCircle, 
+  Save,
+  Loader2,
+  PlusCircle,
+  Trash2
+} from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
-interface SolutionResources {
-  id?: string;
-  solution_id: string;
-  overview: string;
-  materials: string;
-  external_links: string;
-  faq: string;
-  updated_at?: string;
-}
-
-const resourcesSchema = z.object({
+// Definição do schema para validação do formulário
+const resourceFormSchema = z.object({
   overview: z.string().optional(),
   materials: z.string().optional(),
   external_links: z.string().optional(),
   faq: z.string().optional(),
 });
 
-type ResourcesFormValues = z.infer<typeof resourcesSchema>;
+type ResourceFormValues = z.infer<typeof resourceFormSchema>;
+
+// Templates para os diferentes tipos de recursos
+const TEMPLATES = {
+  materials: `[
+  {
+    "title": "Guia de Implementação",
+    "description": "Guia completo em PDF para a implementação da solução.",
+    "url": "https://example.com/guia.pdf",
+    "type": "pdf"
+  },
+  {
+    "title": "Template de Planilha",
+    "description": "Modelo de planilha para acompanhamento da solução.",
+    "url": "https://example.com/template.xlsx",
+    "type": "spreadsheet"
+  }
+]`,
+
+  external_links: `[
+  {
+    "title": "Documentação Oficial",
+    "description": "Link para a documentação oficial da ferramenta.",
+    "url": "https://example.com/docs"
+  },
+  {
+    "title": "Comunidade de Suporte",
+    "description": "Fórum da comunidade para tirar dúvidas.",
+    "url": "https://example.com/forum"
+  }
+]`,
+
+  faq: `[
+  {
+    "question": "Quanto tempo leva para ver resultados?",
+    "answer": "Você deve começar a ver os primeiros resultados em cerca de 2 semanas após a implementação completa."
+  },
+  {
+    "question": "É necessário conhecimento técnico?",
+    "answer": "Não é necessário conhecimento técnico avançado, mas familiaridade básica com as ferramentas mencionadas é recomendada."
+  }
+]`
+};
 
 interface ResourcesFormProps {
   solutionId: string | null;
@@ -55,81 +92,85 @@ interface ModuleContent {
 const ResourcesForm = ({ solutionId, onSave, saving }: ResourcesFormProps) => {
   const [activeTab, setActiveTab] = useState('overview');
   const [error, setError] = useState<string | null>(null);
-  const [isSaving, setIsSaving] = useState(false);
   const [modules, setModules] = useState<any[]>([]);
-  const [showPreview, setShowPreview] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
   
-  const form = useForm<ResourcesFormValues>({
-    resolver: zodResolver(resourcesSchema),
+  const form = useForm<ResourceFormValues>({
+    resolver: zodResolver(resourceFormSchema),
     defaultValues: {
       overview: '',
-      materials: '',
-      external_links: '',
-      faq: '',
-    },
+      materials: TEMPLATES.materials,
+      external_links: TEMPLATES.external_links,
+      faq: TEMPLATES.faq
+    }
   });
   
+  // Carregar recursos existentes
   useEffect(() => {
-    if (solutionId) {
-      fetchResources();
-      fetchModules();
-    }
-  }, [solutionId]);
-  
-  const fetchResources = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('solution_resources')
-        .select('*')
-        .eq('solution_id', solutionId)
-        .eq('type', 'resources')
-        .single();
-      
-      if (error) {
-        if (error.code !== 'PGRST116') { // Not found error is expected for new solutions
-          console.error('Error fetching resources:', error);
-          setError('Erro ao carregar recursos. Tente novamente.');
-        }
-        return;
-      }
-      
-      if (data) {
-        try {
-          // Parse the URL field as it contains our JSON data
-          const resourceData = JSON.parse(data.url);
-          form.reset({
-            overview: resourceData.overview || '',
-            materials: resourceData.materials || '',
-            external_links: resourceData.external_links || '',
-            faq: resourceData.faq || '',
-          });
-        } catch (e) {
-          console.error('Error parsing resource data:', e);
-        }
-      }
-    } catch (error) {
-      console.error('Error:', error);
-      setError('Erro ao carregar recursos. Tente novamente.');
-    }
-  };
-  
-  const fetchModules = async () => {
-    try {
+    const fetchResources = async () => {
       if (!solutionId) return;
       
-      const { data, error } = await supabase
-        .from('modules')
-        .select('*')
-        .eq('solution_id', solutionId)
-        .order('module_order', { ascending: true });
+      setIsLoading(true);
+      setError(null);
       
-      if (error) {
-        console.error('Error fetching modules:', error);
-        return;
+      try {
+        const { data, error } = await supabase
+          .from('solution_resources')
+          .select('*')
+          .eq('solution_id', solutionId)
+          .eq('type', 'resources')
+          .single();
+        
+        if (error && error.code !== 'PGRST116') {
+          throw error;
+        }
+        
+        if (data) {
+          try {
+            // Parse the URL field as it contains our JSON data
+            const resourceData = JSON.parse(data.url);
+            form.reset({
+              overview: resourceData.overview || '',
+              materials: resourceData.materials ? JSON.stringify(resourceData.materials, null, 2) : TEMPLATES.materials,
+              external_links: resourceData.external_links ? JSON.stringify(resourceData.external_links, null, 2) : TEMPLATES.external_links,
+              faq: resourceData.faq ? JSON.stringify(resourceData.faq, null, 2) : TEMPLATES.faq
+            });
+          } catch (parseError) {
+            console.error('Error parsing resource data:', parseError);
+            form.reset({
+              overview: '',
+              materials: TEMPLATES.materials,
+              external_links: TEMPLATES.external_links,
+              faq: TEMPLATES.faq
+            });
+          }
+        }
+      } catch (fetchError) {
+        console.error('Error fetching resources:', fetchError);
+        setError('Erro ao carregar recursos. Por favor, tente novamente.');
+      } finally {
+        setIsLoading(false);
       }
+    };
+    
+    // Fetch módulos para o resumo de conteúdo
+    const fetchModules = async () => {
+      if (!solutionId) return;
       
-      if (data) {
-        // Filter out modules with empty content
+      try {
+        const { data, error } = await supabase
+          .from('modules')
+          .select('*')
+          .eq('solution_id', solutionId)
+          .order('module_order', { ascending: true });
+        
+        if (error) {
+          throw error;
+        }
+        
+        // Filter modules with valid content structure
         const validModules = data.filter(module => {
           if (!module.content) return false;
           
@@ -154,350 +195,416 @@ const ResourcesForm = ({ solutionId, onSave, saving }: ResourcesFormProps) => {
         });
         
         setModules(validModules);
+      } catch (fetchError) {
+        console.error('Error fetching modules:', fetchError);
       }
-    } catch (error) {
-      console.error('Error:', error);
-    }
-  };
+    };
+    
+    fetchResources();
+    fetchModules();
+  }, [solutionId, form]);
   
-  const onSubmit = async (values: ResourcesFormValues) => {
-    if (!solutionId) return;
+  // Função para salvar todos os recursos
+  const handleSaveResources = async () => {
+    if (!solutionId) {
+      toast({
+        title: "Salve a solução primeiro",
+        description: "Você precisa salvar as informações básicas antes de adicionar recursos.",
+        variant: "destructive",
+      });
+      return;
+    }
     
     setIsSaving(true);
+    setError(null);
     
     try {
-      // Check if resources exist for this solution
-      const { data: existingData, error: checkError } = await supabase
+      const values = form.getValues();
+      
+      // Parse JSON fields
+      let resourcesData: any = { overview: values.overview };
+      
+      try {
+        if (values.materials) {
+          resourcesData.materials = JSON.parse(values.materials);
+        }
+      } catch (parseError) {
+        throw new Error('Erro ao processar materiais. Verifique o formato JSON.');
+      }
+      
+      try {
+        if (values.external_links) {
+          resourcesData.external_links = JSON.parse(values.external_links);
+        }
+      } catch (parseError) {
+        throw new Error('Erro ao processar links externos. Verifique o formato JSON.');
+      }
+      
+      try {
+        if (values.faq) {
+          resourcesData.faq = JSON.parse(values.faq);
+        }
+      } catch (parseError) {
+        throw new Error('Erro ao processar FAQ. Verifique o formato JSON.');
+      }
+      
+      // Check if resource already exists
+      const { data: existingResource, error: queryError } = await supabase
         .from('solution_resources')
         .select('id')
         .eq('solution_id', solutionId)
         .eq('type', 'resources')
         .single();
       
-      let result;
+      if (queryError && queryError.code !== 'PGRST116') {
+        throw queryError;
+      }
       
-      // Serialize all resources into a JSON string to store in the url field
-      const resourceData = JSON.stringify({
-        overview: values.overview,
-        materials: values.materials,
-        external_links: values.external_links,
-        faq: values.faq,
-      });
-      
-      if (checkError && checkError.code === 'PGRST116') {
-        // Resources don't exist, insert new record
-        result = await supabase
+      if (existingResource) {
+        // Update existing resource
+        const { error: updateError } = await supabase
+          .from('solution_resources')
+          .update({
+            url: JSON.stringify(resourcesData),
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', existingResource.id);
+        
+        if (updateError) throw updateError;
+      } else {
+        // Create new resource
+        const { error: insertError } = await supabase
           .from('solution_resources')
           .insert({
             solution_id: solutionId,
-            name: 'Resources',
             type: 'resources',
-            url: resourceData
+            name: 'Solution Resources',
+            url: JSON.stringify(resourcesData),
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
           });
-      } else {
-        // Resources exist, update record
-        result = await supabase
-          .from('solution_resources')
-          .update({
-            url: resourceData,
-            updated_at: new Date().toISOString(),
-          })
-          .eq('solution_id', solutionId)
-          .eq('type', 'resources');
+        
+        if (insertError) throw insertError;
       }
       
-      if (result.error) {
-        throw result.error;
-      }
+      toast({
+        title: "Recursos salvos",
+        description: "Os recursos da solução foram salvos com sucesso.",
+      });
       
-      // Successful save
+      // Call parent save callback
       onSave();
-    } catch (error: any) {
-      console.error('Error saving resources:', error);
-      setError(`Erro ao salvar recursos: ${error.message}`);
+    } catch (saveError: any) {
+      console.error('Error saving resources:', saveError);
+      setError(saveError.message || 'Erro ao salvar recursos. Por favor, tente novamente.');
+      toast({
+        title: "Erro ao salvar recursos",
+        description: saveError.message || "Ocorreu um erro ao tentar salvar os recursos da solução.",
+        variant: "destructive",
+      });
     } finally {
       setIsSaving(false);
     }
   };
   
-  const previewContent = () => {
-    setShowPreview(!showPreview);
+  const addResourceSection = () => {
+    const currentValues = form.getValues()[activeTab as keyof ResourceFormValues] as string || '';
+    let newItem = '';
+    
+    switch(activeTab) {
+      case 'materials':
+        newItem = ',\n  {\n    "title": "Novo Material",\n    "description": "Descrição do novo material",\n    "url": "https://example.com/novo-material",\n    "type": "pdf"\n  }';
+        break;
+      case 'external_links':
+        newItem = ',\n  {\n    "title": "Novo Link",\n    "description": "Descrição do novo link",\n    "url": "https://example.com/novo-link"\n  }';
+        break;
+      case 'faq':
+        newItem = ',\n  {\n    "question": "Nova Pergunta",\n    "answer": "Resposta para a nova pergunta"\n  }';
+        break;
+      default:
+        return;
+    }
+    
+    try {
+      // Add new item to existing JSON array
+      let jsonArray = JSON.parse(currentValues);
+      if (Array.isArray(jsonArray)) {
+        const updatedContent = currentValues.trim();
+        const newContent = updatedContent.endsWith(']') 
+          ? updatedContent.substring(0, updatedContent.length - 1) + newItem + '\n]'
+          : updatedContent;
+        
+        form.setValue(activeTab as any, newContent);
+      }
+    } catch (error) {
+      console.error('Error adding resource section:', error);
+      // If parsing fails, just append as string
+      const baseTemplate = TEMPLATES[activeTab as keyof typeof TEMPLATES] || '[]';
+      form.setValue(activeTab as any, baseTemplate);
+    }
   };
+  
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center py-20">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-4" />
+          <p>Carregando recursos...</p>
+        </div>
+      </div>
+    );
+  }
   
   return (
     <div className="space-y-6">
-      {error && (
-        <Alert variant="destructive">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertTitle>Erro</AlertTitle>
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
-      
       <Card>
         <CardHeader>
-          <CardTitle>Recursos e Materiais Adicionais</CardTitle>
+          <CardTitle>Recursos da Solução</CardTitle>
           <CardDescription>
-            Adicione recursos, materiais e links externos para complementar a solução.
+            Gerencie os recursos, materiais de apoio e FAQs relacionados a esta solução.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="mb-4">
-              <TabsTrigger value="overview">Visão Geral</TabsTrigger>
-              <TabsTrigger value="materials">Materiais</TabsTrigger>
-              <TabsTrigger value="links">Links Externos</TabsTrigger>
-              <TabsTrigger value="faq">FAQ</TabsTrigger>
-              <TabsTrigger value="preview">Pré-visualização</TabsTrigger>
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="w-full mb-4">
+              <TabsTrigger value="overview" className="flex-1">
+                <FileText className="h-4 w-4 mr-2" />
+                Visão Geral
+              </TabsTrigger>
+              <TabsTrigger value="materials" className="flex-1">
+                <Download className="h-4 w-4 mr-2" />
+                Materiais
+              </TabsTrigger>
+              <TabsTrigger value="external_links" className="flex-1">
+                <Link className="h-4 w-4 mr-2" />
+                Links Externos
+              </TabsTrigger>
+              <TabsTrigger value="faq" className="flex-1">
+                <HelpCircle className="h-4 w-4 mr-2" />
+                FAQ
+              </TabsTrigger>
             </TabsList>
-            
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                <TabsContent value="overview">
-                  <FormField
-                    control={form.control}
-                    name="overview"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Visão Geral dos Recursos</FormLabel>
-                        <FormControl>
-                          <Textarea 
-                            placeholder="Descreva a visão geral dos recursos disponíveis para esta solução..."
-                            className="min-h-[200px]"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormDescription>
-                          Explique brevemente os recursos disponíveis e como utilizá-los.
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
+
+            <TabsContent value="overview" className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <Label htmlFor="overview">Resumo da Solução</Label>
+                  <Textarea
+                    id="overview"
+                    placeholder="Forneça uma visão geral completa desta solução..."
+                    rows={15}
+                    {...form.register('overview')}
                   />
-                </TabsContent>
-                
-                <TabsContent value="materials">
-                  <FormField
-                    control={form.control}
-                    name="materials"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Materiais e Recursos</FormLabel>
-                        <FormControl>
-                          <Textarea 
-                            placeholder="Liste os materiais e recursos disponíveis..."
-                            className="min-h-[200px]"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormDescription>
-                          Liste todos os materiais, templates e recursos incluídos nesta solução.
-                          Use formato JSON para estruturar, exemplo:
-                          {`[{"title":"Template de Email", "description":"Modelo pronto para personalizar", "url":"https://..."}]`}
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </TabsContent>
-                
-                <TabsContent value="links">
-                  <FormField
-                    control={form.control}
-                    name="external_links"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Links Externos</FormLabel>
-                        <FormControl>
-                          <Textarea 
-                            placeholder="Adicione links externos úteis..."
-                            className="min-h-[200px]"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormDescription>
-                          Adicione links para ferramentas, artigos ou recursos externos.
-                          Use formato JSON para estruturar, exemplo:
-                          {`[{"title":"OpenAI", "description":"Plataforma de IA", "url":"https://openai.com"}]`}
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </TabsContent>
-                
-                <TabsContent value="faq">
-                  <FormField
-                    control={form.control}
-                    name="faq"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Perguntas Frequentes (FAQ)</FormLabel>
-                        <FormControl>
-                          <Textarea 
-                            placeholder="Adicione perguntas e respostas frequentes..."
-                            className="min-h-[200px]"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormDescription>
-                          Adicione perguntas e respostas que antecipem as dúvidas dos membros.
-                          Use formato JSON para estruturar, exemplo:
-                          {`[{"question":"Como integrar com Gmail?", "answer":"Primeiro, acesse..."}]`}
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </TabsContent>
-                
-                <TabsContent value="preview">
-                  <div className="bg-gray-50 p-4 rounded-md">
-                    <h3 className="text-lg font-medium mb-4">Pré-visualização dos Recursos</h3>
-                    
-                    {/* Visão Geral */}
-                    <div className="mb-8">
-                      <h4 className="font-semibold text-md mb-2">Visão Geral</h4>
-                      <div className="prose max-w-none">
-                        {form.watch('overview') ? (
-                          <ContentPreview content={form.watch('overview')} />
-                        ) : (
-                          <p className="text-muted-foreground italic">Nenhuma visão geral adicionada.</p>
-                        )}
-                      </div>
-                    </div>
-                    
-                    {/* Materiais */}
-                    <div className="mb-8">
-                      <h4 className="font-semibold text-md mb-2">Materiais e Recursos</h4>
-                      <div className="prose max-w-none">
-                        {form.watch('materials') ? (
-                          <ContentPreview content={form.watch('materials')} isJson={true} />
-                        ) : (
-                          <p className="text-muted-foreground italic">Nenhum material adicionado.</p>
-                        )}
-                      </div>
-                    </div>
-                    
-                    {/* Links Externos */}
-                    <div className="mb-8">
-                      <h4 className="font-semibold text-md mb-2">Links Externos</h4>
-                      <div className="prose max-w-none">
-                        {form.watch('external_links') ? (
-                          <ContentPreview content={form.watch('external_links')} isJson={true} />
-                        ) : (
-                          <p className="text-muted-foreground italic">Nenhum link externo adicionado.</p>
-                        )}
-                      </div>
-                    </div>
-                    
-                    {/* FAQ */}
-                    <div className="mb-8">
-                      <h4 className="font-semibold text-md mb-2">Perguntas Frequentes</h4>
-                      <div className="prose max-w-none">
-                        {form.watch('faq') ? (
-                          <ContentPreview content={form.watch('faq')} isJson={true} />
-                        ) : (
-                          <p className="text-muted-foreground italic">Nenhuma FAQ adicionada.</p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </TabsContent>
-                
-                <div className="flex justify-end space-x-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={previewContent}
-                  >
-                    {showPreview ? "Voltar para Edição" : "Pré-visualizar"}
-                  </Button>
-                  <Button
-                    type="submit"
-                    disabled={saving || isSaving}
-                    className="bg-[#0ABAB5] hover:bg-[#0ABAB5]/90"
-                  >
-                    {saving || isSaving ? "Salvando..." : "Salvar Recursos"}
-                  </Button>
+                  <p className="text-sm text-muted-foreground">
+                    Este texto será exibido na página principal da solução, acima dos módulos de implementação.
+                  </p>
                 </div>
-              </form>
-            </Form>
+                
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <Label>Pré-visualização</Label>
+                  </div>
+                  <ContentPreview 
+                    content={form.watch('overview')} 
+                    isJson={false}
+                  />
+                </div>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="materials" className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <div className="flex justify-between">
+                    <Label htmlFor="materials">Materiais de Apoio (JSON)</Label>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={addResourceSection}
+                      type="button"
+                      className="h-8 px-2 text-xs"
+                    >
+                      <PlusCircle className="h-3.5 w-3.5 mr-1" />
+                      Adicionar Item
+                    </Button>
+                  </div>
+                  <Textarea
+                    id="materials"
+                    placeholder={TEMPLATES.materials}
+                    rows={15}
+                    {...form.register('materials')}
+                  />
+                  <div className="text-sm text-muted-foreground space-y-1">
+                    <p>Adicione materiais de suporte para esta solução (PDFs, planilhas, slides, etc).</p>
+                    <p>Campos necessários: <code>title</code>, <code>description</code>, <code>url</code>, <code>type</code>.</p>
+                    <p>Tipos suportados: <code>pdf</code>, <code>spreadsheet</code>, <code>presentation</code>, <code>image</code>, <code>video</code>, <code>document</code>, <code>other</code>.</p>
+                  </div>
+                </div>
+                
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <Label>Pré-visualização</Label>
+                  </div>
+                  <ContentPreview 
+                    content={form.watch('materials')} 
+                    isJson={true}
+                  />
+                </div>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="external_links" className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <div className="flex justify-between">
+                    <Label htmlFor="external_links">Links Externos (JSON)</Label>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={addResourceSection}
+                      type="button"
+                      className="h-8 px-2 text-xs"
+                    >
+                      <PlusCircle className="h-3.5 w-3.5 mr-1" />
+                      Adicionar Link
+                    </Button>
+                  </div>
+                  <Textarea
+                    id="external_links"
+                    placeholder={TEMPLATES.external_links}
+                    rows={15}
+                    {...form.register('external_links')}
+                  />
+                  <div className="text-sm text-muted-foreground space-y-1">
+                    <p>Adicione links para recursos externos úteis para esta solução.</p>
+                    <p>Campos necessários: <code>title</code>, <code>description</code>, <code>url</code>.</p>
+                  </div>
+                </div>
+                
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <Label>Pré-visualização</Label>
+                  </div>
+                  <ContentPreview 
+                    content={form.watch('external_links')} 
+                    isJson={true}
+                  />
+                </div>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="faq" className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <div className="flex justify-between">
+                    <Label htmlFor="faq">Perguntas Frequentes (JSON)</Label>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={addResourceSection}
+                      type="button"
+                      className="h-8 px-2 text-xs"
+                    >
+                      <PlusCircle className="h-3.5 w-3.5 mr-1" />
+                      Adicionar Pergunta
+                    </Button>
+                  </div>
+                  <Textarea
+                    id="faq"
+                    placeholder={TEMPLATES.faq}
+                    rows={15}
+                    {...form.register('faq')}
+                  />
+                  <div className="text-sm text-muted-foreground space-y-1">
+                    <p>Adicione perguntas frequentes sobre esta solução.</p>
+                    <p>Campos necessários: <code>question</code>, <code>answer</code>.</p>
+                  </div>
+                </div>
+                
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <Label>Pré-visualização</Label>
+                  </div>
+                  <ContentPreview 
+                    content={form.watch('faq')} 
+                    isJson={true}
+                  />
+                </div>
+              </div>
+            </TabsContent>
           </Tabs>
-        </CardContent>
-      </Card>
-      
-      <Card>
-        <CardHeader>
-          <CardTitle>Revisão da Solução</CardTitle>
-          <CardDescription>
-            Revise todos os módulos da solução antes de publicar.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {modules.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {modules.map((module, index) => (
-                  <Card key={module.id} className="shadow-sm hover:shadow transition-shadow">
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-sm font-medium flex items-center">
-                        <div className="flex items-center justify-center w-6 h-6 rounded-full bg-[#0ABAB5] text-white text-xs mr-2">
-                          {index + 1}
-                        </div>
-                        {module.title}
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="pt-0">
-                      <p className="text-xs text-muted-foreground mb-2">
-                        {moduleTypeToName(module.type)}
-                      </p>
-                      <p className="text-xs">
-                        {getBlocksCount(module.content)} blocos de conteúdo
-                      </p>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8 border-2 border-dashed rounded-md">
-                <p className="text-muted-foreground">
-                  Nenhum módulo foi configurado para esta solução.
-                </p>
-                <Button
-                  variant="outline"
-                  className="mt-4"
-                  onClick={() => setActiveTab("modules")}
-                >
-                  Configurar Módulos
-                </Button>
-              </div>
-            )}
+          
+          {error && (
+            <div className="mt-4 p-3 bg-destructive/10 text-destructive rounded-md">
+              {error}
+            </div>
+          )}
+          
+          <div className="mt-6 flex justify-end">
+            <Button 
+              onClick={handleSaveResources} 
+              disabled={isSaving || saving || !solutionId}
+              className="bg-[#0ABAB5] hover:bg-[#0ABAB5]/90"
+            >
+              {isSaving || saving ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Salvando...
+                </>
+              ) : (
+                <>
+                  <Save className="mr-2 h-4 w-4" />
+                  Salvar Recursos
+                </>
+              )}
+            </Button>
           </div>
         </CardContent>
       </Card>
+
+      {modules.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Resumo de Conteúdo</CardTitle>
+            <CardDescription>
+              Visão geral dos módulos de conteúdo existentes nesta solução.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ScrollArea className="h-[300px] pr-4">
+              <div className="space-y-6">
+                {modules.map((module, index) => (
+                  <div key={module.id} className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <h4 className="font-medium">
+                        Módulo {index + 1}: {module.title}
+                      </h4>
+                      <span className="text-sm text-muted-foreground">
+                        {getBlocksCount(module.content)} blocos
+                      </span>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      Tipo: <span className="capitalize">{module.type}</span>
+                    </p>
+                    <Separator />
+                  </div>
+                ))}
+                
+                {modules.length === 0 && (
+                  <div className="text-center py-8 text-muted-foreground">
+                    Nenhum módulo de conteúdo criado ainda.
+                  </div>
+                )}
+              </div>
+            </ScrollArea>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };
 
-const moduleTypeToName = (type: string): string => {
-  const types: Record<string, string> = {
-    landing: "Landing da Solução",
-    overview: "Visão Geral e Case Real",
-    preparation: "Preparação Express",
-    implementation: "Implementação Passo a Passo",
-    verification: "Verificação de Implementação",
-    results: "Primeiros Resultados",
-    optimization: "Otimização Rápida",
-    celebration: "Celebração e Próximos Passos"
-  };
-  
-  return types[type] || type;
-};
-
 const getBlocksCount = (content: any): number => {
-  if (!content) return 0;
-  
   try {
     // Handle content whether it's a string or already parsed JSON
     let parsedContent: ModuleContent;
