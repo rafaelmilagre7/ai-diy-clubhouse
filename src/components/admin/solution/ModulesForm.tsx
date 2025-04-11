@@ -179,6 +179,7 @@ const RenderModulesList = ({
           saving={saving}
           onCreateModule={onCreateModule}
           currentModuleStep={currentModuleStep}
+          handleCreateDefaultModules={handleCreateDefaultModules}
         />
       )}
     </div>

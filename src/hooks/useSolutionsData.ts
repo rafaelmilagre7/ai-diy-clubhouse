@@ -21,7 +21,7 @@ export const useSolutionsData = (initialCategory: string | null) => {
         // Verificar sessão
         const { data: sessionData } = await supabase.auth.getSession();
         
-        // Definir alguns dados fictícios para testes
+        // Definir dados fictícios para testes caso necessário
         const mockSolutions: Solution[] = [
           {
             id: "1",
@@ -46,70 +46,39 @@ export const useSolutionsData = (initialCategory: string | null) => {
             published: true,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
-          },
-          {
-            id: "3",
-            title: "Automação de Marketing com IA",
-            description: "Implemente ferramentas de IA para personalizar suas campanhas de marketing e aumentar conversões.",
-            slug: "automacao-marketing",
-            category: "revenue",
-            difficulty: "medium",
-            thumbnail_url: null,
-            published: true,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          },
-          {
-            id: "4",
-            title: "Análise de Sentimento em Redes Sociais",
-            description: "Monitore a percepção da sua marca nas redes sociais utilizando análise de sentimento com IA.",
-            slug: "analise-sentimento",
-            category: "strategy",
-            difficulty: "easy",
-            thumbnail_url: null,
-            published: true,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
           }
         ];
         
-        // Tentar buscar soluções reais primeiro
-        try {
-          const { data, error: fetchError } = await supabase
-            .from("solutions")
-            .select("*")
-            .eq("published", true);
-          
-          if (fetchError) {
-            if (fetchError.message.includes("infinite recursion") || 
-                fetchError.message.includes("policy")) {
-              console.warn("Erro de política detectado. Usando dados fictícios:", fetchError);
-              // Usar dados fictícios
-              setSolutions(mockSolutions);
-              setFilteredSolutions(mockSolutions);
-            } else {
-              throw fetchError;
-            }
-          } else if (data && data.length > 0) {
-            // Se temos dados reais, usamos eles
-            setSolutions(data as Solution[]);
-            setFilteredSolutions(data as Solution[]);
-          } else {
-            // Se não temos dados, usar os fictícios
+        // Buscar soluções reais
+        const { data, error: fetchError } = await supabase
+          .from("solutions")
+          .select("*");
+        
+        if (fetchError) {
+          console.warn("Erro ao buscar soluções do Supabase:", fetchError);
+          // Em caso de erro de políticas ou recursão, usar dados fictícios silenciosamente
+          if (fetchError.message.includes("infinite recursion") || fetchError.message.includes("policy")) {
+            console.info("Usando dados fictícios devido a erro de política");
             setSolutions(mockSolutions);
             setFilteredSolutions(mockSolutions);
+          } else {
+            // Para outros erros, mostrar o toast
+            throw fetchError;
           }
-        } catch (fetchError) {
-          console.error("Erro ao buscar soluções:", fetchError);
-          // Em caso de erro, usar dados fictícios
+        } else if (data && data.length > 0) {
+          console.log("Dados obtidos com sucesso:", data);
+          setSolutions(data as Solution[]);
+          setFilteredSolutions(data as Solution[]);
+        } else {
+          console.info("Nenhuma solução encontrada, usando dados fictícios");
           setSolutions(mockSolutions);
           setFilteredSolutions(mockSolutions);
         }
-        
       } catch (error: any) {
         console.error("Erro ao buscar soluções:", error);
+        setError(error?.message || "Ocorreu um erro ao carregar as soluções");
         
-        // Definir alguns dados fictícios para permitir o uso da aplicação
+        // Definir dados fictícios para permitir o uso da aplicação mesmo com erros
         const mockSolutions: Solution[] = [
           {
             id: "1",
@@ -137,6 +106,7 @@ export const useSolutionsData = (initialCategory: string | null) => {
           }
         ];
         
+        // Em caso de erro, ainda assim usar dados fictícios sem mostrar toast
         setSolutions(mockSolutions);
         setFilteredSolutions(mockSolutions);
       } finally {

@@ -2,7 +2,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, Save, Eye, Layers, Clock } from "lucide-react";
+import { ChevronLeft, Save, Eye, Layers } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 interface SolutionEditorHeaderProps {
@@ -49,7 +49,7 @@ const SolutionEditorHeader = ({
           {id ? (title ? title : "Editar Solução") : "Nova Solução"}
         </h1>
         <div className="flex items-center gap-2 mt-2">
-          {difficulty && (
+          {difficulty && title && (
             <Badge 
               className={`${difficultyColor} text-white`}
             >
@@ -59,7 +59,7 @@ const SolutionEditorHeader = ({
           <p className="text-muted-foreground text-sm">
             {id
               ? "Atualize os detalhes e conteúdo da solução"
-              : "Crie uma nova solução para a plataforma DIY"}
+              : "Crie uma nova solução para o VIVER DE IA Club"}
           </p>
         </div>
       </div>

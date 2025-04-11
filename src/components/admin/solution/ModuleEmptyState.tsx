@@ -1,17 +1,17 @@
 
-import React from "react";
-import { FileText, Plus, AlertTriangle } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { useModuleContext } from "./ModuleContext";
-import { MODULE_TYPE_MAPPING } from "./moduleConstants";
+import React from 'react';
+import { Button } from '@/components/ui/button';
+import { AlertCircle, Plus } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import NoSolutionPrompt from './NoSolutionPrompt';
 
 interface ModuleEmptyStateProps {
   solutionId: string | null;
   onSave: () => void;
   saving: boolean;
   onCreateModule: () => void;
-  currentModuleStep?: number;
+  currentModuleStep: number;
+  handleCreateDefaultModules: (specificTypes?: string[]) => Promise<void>;
 }
 
 const ModuleEmptyState: React.FC<ModuleEmptyStateProps> = ({
@@ -19,77 +19,52 @@ const ModuleEmptyState: React.FC<ModuleEmptyStateProps> = ({
   onSave,
   saving,
   onCreateModule,
-  currentModuleStep = -1
+  currentModuleStep,
+  handleCreateDefaultModules
 }) => {
-  const { modules, isLoading, handleCreateDefaultModules } = useModuleContext();
+  // Ações para criar todos os módulos padrão ou continuar com a criação individual
+  const handleCreateAll = async () => {
+    if (!solutionId) return;
+    await handleCreateDefaultModules();
+    onSave();
+  };
+
+  // Se não temos ID de solução, mostrar prompt para salvar informações básicas primeiro
+  if (!solutionId) {
+    return <NoSolutionPrompt onSave={onSave} saving={saving} />;
+  }
 
   return (
-    <div className="text-center py-8">
-      <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-      <h3 className="text-xl font-semibold">Módulos da Solução</h3>
-      <p className="text-muted-foreground mt-2 max-w-md mx-auto">
-        {solutionId ? 
-          "Gerencie os módulos da sua solução abaixo ou adicione novos módulos." :
-          "Primeiramente, salve as informações básicas da solução antes de configurar os módulos detalhados."}
+    <div className="flex flex-col items-center justify-center py-12 px-6 text-center">
+      <h3 className="text-xl font-medium mb-3">Nenhum módulo criado</h3>
+      <p className="text-muted-foreground mb-6 max-w-md">
+        Módulos são as etapas da jornada de implementação da sua solução de IA.
+        Cada módulo tem um propósito específico para guiar os membros.
       </p>
-      
-      {currentModuleStep >= 0 && !modules.find(m => m.type === MODULE_TYPE_MAPPING[currentModuleStep]) && (
-        <Alert variant="default" className="mt-4 bg-amber-50 border-amber-200 text-left">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertTitle>Módulo ainda não criado</AlertTitle>
-          <AlertDescription>
-            O módulo "{MODULE_TYPE_MAPPING[currentModuleStep]}" ainda não foi criado. 
-            Clique em "Criar Estrutura Padrão" para criar todos os módulos ou crie este módulo específico.
-          </AlertDescription>
-        </Alert>
-      )}
-      
-      <div className="mt-6">
-        {solutionId ? (
-          <>
-            {modules.length < 8 && (
-              <Button 
-                onClick={onCreateModule} 
-                className="mt-4 bg-[#0ABAB5] hover:bg-[#0ABAB5]/90"
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                Adicionar Módulo
-              </Button>
-            )}
-            
-            {modules.length === 0 && !isLoading && (
-              <Button 
-                onClick={() => handleCreateDefaultModules()} 
-                className="mt-4 bg-[#0ABAB5] hover:bg-[#0ABAB5]/90"
-              >
-                Criar Estrutura Padrão (8 Módulos)
-              </Button>
-            )}
-          </>
-        ) : (
-          <NoSolutionPrompt onSave={onSave} saving={saving} />
-        )}
+
+      <div className="flex flex-col sm:flex-row gap-3 mb-8">
+        <Button onClick={onCreateModule} className="gap-2">
+          <Plus className="h-4 w-4" />
+          Adicionar Módulo Individual
+        </Button>
+        <Button
+          variant="outline"
+          onClick={handleCreateAll}
+          className="gap-2"
+        >
+          Criar Todos os Módulos Padrão
+        </Button>
       </div>
-    </div>
-  );
-};
 
-const NoSolutionPrompt: React.FC<{ onSave: () => void; saving: boolean }> = ({
-  onSave,
-  saving
-}) => {
-  return (
-    <div className="text-center p-6 border-2 border-dashed rounded-md">
-      <p className="text-muted-foreground mb-4">
-        Para começar a criar módulos, primeiro salve as informações básicas da solução.
-      </p>
-      <Button
-        onClick={onSave}
-        disabled={saving}
-        className="bg-[#0ABAB5] hover:bg-[#0ABAB5]/90"
-      >
-        {saving ? "Salvando..." : "Salvar Solução"}
-      </Button>
+      <Alert variant="default" className="bg-blue-50 border-blue-200 max-w-xl">
+        <AlertCircle className="h-4 w-4 text-blue-500" />
+        <AlertTitle>Dica</AlertTitle>
+        <AlertDescription className="text-sm text-left">
+          Recomendamos seguir o fluxo de módulos padrão para garantir uma
+          experiência completa para seus membros. Comece com a Landing e termine
+          com a Celebração.
+        </AlertDescription>
+      </Alert>
     </div>
   );
 };

@@ -34,7 +34,7 @@ const Index = () => {
             alt="VIVER DE IA Club"
           />
           <h1 className="mt-6 text-center text-4xl font-extrabold text-gray-900">
-            Plataforma DIY
+            VIVER DE IA Club
           </h1>
           <p className="mt-2 text-center text-lg text-gray-600">
             Implemente soluções de IA com autonomia e sucesso
