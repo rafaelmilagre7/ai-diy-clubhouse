@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -13,8 +14,8 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 179 90% 39%; /* VIVER DE IA blue (#0ABAB5) */
+    --primary-foreground: 0 0% 100%;
 
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222.2 47.4% 11.2%;
@@ -30,25 +31,9 @@
 
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --ring: 179 90% 39%; /* VIVER DE IA blue for focus rings */
 
     --radius: 0.5rem;
-
-    --sidebar-background: 0 0% 98%;
-
-    --sidebar-foreground: 240 5.3% 26.1%;
-
-    --sidebar-primary: 240 5.9% 10%;
-
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
   .dark {
@@ -61,8 +46,8 @@
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --primary: 179 90% 39%; /* VIVER DE IA blue (#0ABAB5) */
+    --primary-foreground: 0 0% 100%;
 
     --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
@@ -78,15 +63,7 @@
 
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --ring: 179 90% 39%; /* VIVER DE IA blue for focus rings */
   }
 }
 
@@ -96,6 +73,60 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans;
+  }
+}
+
+@layer components {
+  .glass-card {
+    @apply bg-white/80 backdrop-blur-sm border border-white/20 shadow-md;
+  }
+
+  .progress-step {
+    @apply relative flex items-center justify-center w-8 h-8 rounded-full bg-secondary text-secondary-foreground;
+  }
+
+  .progress-step.active {
+    @apply bg-viverblue text-white;
+  }
+
+  .progress-step.completed {
+    @apply bg-green-500 text-white;
+  }
+
+  .progress-line {
+    @apply flex-1 h-1 bg-secondary;
+  }
+
+  .progress-line.completed {
+    @apply bg-green-500;
+  }
+
+  .solution-card {
+    @apply relative overflow-hidden rounded-xl border bg-card text-card-foreground shadow-sm transition-all duration-200 hover:shadow-md;
+  }
+
+  .solution-card.revenue {
+    @apply border-l-4 border-l-revenue;
+  }
+
+  .solution-card.operational {
+    @apply border-l-4 border-l-operational;
+  }
+
+  .solution-card.strategy {
+    @apply border-l-4 border-l-strategy;
+  }
+
+  .badge-revenue {
+    @apply bg-revenue text-white;
+  }
+
+  .badge-operational {
+    @apply bg-operational text-white;
+  }
+
+  .badge-strategy {
+    @apply bg-strategy text-white;
   }
 }
