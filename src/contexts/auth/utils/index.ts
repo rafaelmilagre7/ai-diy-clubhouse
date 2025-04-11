@@ -1,4 +1,5 @@
 
+// Export all utility functions
 export { fetchUserProfile } from './profileUtils';
 export { signInWithGoogle } from './googleAuth';
 export { 

@@ -1,13 +1,8 @@
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 import { Session, User } from '@supabase/supabase-js';
-import { supabase, UserProfile } from '@/lib/supabase';
-import { 
-  signInWithGoogle, 
-  signInAsTestMember, 
-  signInAsTestAdmin, 
-  signOutUser 
-} from './utils';
+import { UserProfile } from '@/lib/supabase';
+import { useAuthMethods } from './hooks/useAuthMethods';
 import { AuthContextType } from './types';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -18,46 +13,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const signIn = async () => {
-    setIsLoading(true);
-    try {
-      await signInWithGoogle();
-    } catch (error) {
-      console.error('Login error:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const signInAsMember = async () => {
-    setIsLoading(true);
-    try {
-      await signInAsTestMember();
-    } catch (error) {
-      console.error('Member login error:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const signInAsAdmin = async () => {
-    setIsLoading(true);
-    try {
-      await signInAsTestAdmin();
-    } catch (error) {
-      console.error('Admin login error:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const signOut = async () => {
-    try {
-      await signOutUser();
-    } catch (error) {
-      console.error('Logout error:', error);
-    }
-  };
+  // Use our extracted auth methods hook
+  const { signIn, signOut, signInAsMember, signInAsAdmin } = useAuthMethods({ setIsLoading });
 
   const value = {
     session,
