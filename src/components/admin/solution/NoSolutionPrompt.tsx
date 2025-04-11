@@ -1,7 +1,6 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { AlertCircle, Save } from "lucide-react";
 
 interface NoSolutionPromptProps {
   onSave: () => void;
@@ -10,19 +9,16 @@ interface NoSolutionPromptProps {
 
 const NoSolutionPrompt: React.FC<NoSolutionPromptProps> = ({ onSave, saving }) => {
   return (
-    <div className="flex flex-col items-center">
-      <AlertCircle className="h-10 w-10 text-amber-500 mb-2" />
-      <p className="text-sm">
-        Você precisa salvar a solução primeiro para configurar os módulos.
+    <div className="text-center p-6 border-2 border-dashed rounded-md">
+      <p className="text-muted-foreground mb-4">
+        Para começar a criar módulos, primeiro salve as informações básicas da solução.
       </p>
-      <Button 
-        type="button"
+      <Button
         onClick={onSave}
-        className="mt-4"
         disabled={saving}
+        className="bg-[#0ABAB5] hover:bg-[#0ABAB5]/90"
       >
-        <Save className="mr-2 h-4 w-4" />
-        Salvar Solução
+        {saving ? "Salvando..." : "Salvar Solução"}
       </Button>
     </div>
   );
