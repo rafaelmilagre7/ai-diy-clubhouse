@@ -107,6 +107,11 @@ const RenderModuleEditor = ({
   selectedModuleIndex, 
   handleBackToList, 
   handleModuleSave 
+}: {
+  modules: any[];
+  selectedModuleIndex: number;
+  handleBackToList: () => void;
+  handleModuleSave: (module: any) => Promise<void>;
 }) => {
   const moduleType = modules[selectedModuleIndex]?.type;
   const moduleStep = MODULE_TYPE_MAPPING.indexOf(moduleType || "");

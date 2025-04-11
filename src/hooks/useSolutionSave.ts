@@ -15,8 +15,6 @@ export const useSolutionSave = (
   const [saving, setSaving] = useState(false);
 
   const onSubmit = async (values: SolutionFormValues, user: any) => {
-    if (!user) return;
-    
     try {
       setSaving(true);
       
@@ -74,11 +72,11 @@ export const useSolutionSave = (
         
         navigate(`/admin/solutions/${data.id}`);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error saving solution:", error);
       toast({
         title: "Erro ao salvar solução",
-        description: "Ocorreu um erro ao tentar salvar a solução.",
+        description: error.message || "Ocorreu um erro ao tentar salvar a solução.",
         variant: "destructive",
       });
     } finally {
