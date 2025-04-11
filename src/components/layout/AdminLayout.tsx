@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { Outlet, Link, useLocation } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/auth";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { 

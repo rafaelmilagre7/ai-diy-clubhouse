@@ -1,6 +1,6 @@
 
 import { useParams } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/auth";
 import LoadingScreen from "@/components/common/LoadingScreen";
 import SolutionEditorHeader from "@/components/admin/solution-editor/SolutionEditorHeader";
 import SolutionEditorTabs from "@/components/admin/solution-editor/SolutionEditorTabs";
