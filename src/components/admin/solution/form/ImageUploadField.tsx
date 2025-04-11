@@ -25,64 +25,66 @@ const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
     <FormField
       control={control}
       name={name}
-      render={({ field }) => (
-        <FormItem>
-          <FormLabel>{label}</FormLabel>
-          <FormControl>
-            <div className="space-y-4">
-              {/* Initialize image preview from field value using useEffect */}
-              {React.useEffect(() => {
-                if (field.value && !imagePreview) {
-                  setImagePreview(field.value as string);
-                }
-              }, [field.value, imagePreview])}
-              
-              {imagePreview ? (
-                <div className="relative">
-                  <Card className="overflow-hidden">
-                    <CardContent className="p-2">
-                      <div className="aspect-video relative">
-                        <img 
-                          src={imagePreview} 
-                          alt="Thumbnail preview" 
-                          className="rounded object-cover w-full h-full"
-                          onError={() => setImagePreview(null)}
-                        />
-                        <Button
-                          type="button"
-                          variant="destructive"
-                          size="icon"
-                          className="absolute top-2 right-2 h-6 w-6 rounded-full"
-                          onClick={() => {
-                            field.onChange("");
-                            setImagePreview(null);
-                          }}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-              ) : (
-                <FileUpload
-                  bucketName="solution_files"
-                  folder="thumbnails"
-                  onUploadComplete={(url) => {
-                    field.onChange(url);
-                    setImagePreview(url);
-                  }}
-                  accept="image/*"
-                  buttonText="Upload de Imagem"
-                  fieldLabel={`${label} (opcional)`}
-                  maxSize={5} // 5MB
-                />
-              )}
-            </div>
-          </FormControl>
-          <FormMessage />
-        </FormItem>
-      )}
+      render={({ field }) => {
+        // Use useEffect at the component level, not in JSX
+        useEffect(() => {
+          if (field.value && !imagePreview) {
+            setImagePreview(field.value as string);
+          }
+        }, [field.value, imagePreview]);
+        
+        return (
+          <FormItem>
+            <FormLabel>{label}</FormLabel>
+            <FormControl>
+              <div className="space-y-4">
+                {imagePreview ? (
+                  <div className="relative">
+                    <Card className="overflow-hidden">
+                      <CardContent className="p-2">
+                        <div className="aspect-video relative">
+                          <img 
+                            src={imagePreview} 
+                            alt="Thumbnail preview" 
+                            className="rounded object-cover w-full h-full"
+                            onError={() => setImagePreview(null)}
+                          />
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            size="icon"
+                            className="absolute top-2 right-2 h-6 w-6 rounded-full"
+                            onClick={() => {
+                              field.onChange("");
+                              setImagePreview(null);
+                            }}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                ) : (
+                  <FileUpload
+                    bucketName="solution_files"
+                    folder="thumbnails"
+                    onUploadComplete={(url) => {
+                      field.onChange(url);
+                      setImagePreview(url);
+                    }}
+                    accept="image/*"
+                    buttonText="Upload de Imagem"
+                    fieldLabel={`${label} (opcional)`}
+                    maxSize={5} // 5MB
+                  />
+                )}
+              </div>
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        );
+      }}
     />
   );
 };
