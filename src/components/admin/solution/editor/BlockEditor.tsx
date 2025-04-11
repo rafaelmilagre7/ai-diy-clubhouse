@@ -13,7 +13,8 @@ import {
   QuoteBlockData
 } from "./BlockTypes";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { getBlockIcon, ChevronDown, ChevronUp } from "./BlockIcons";
+import { getBlockIcon } from "./BlockIcons";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import HeaderBlock from "./blocks/HeaderBlock";
 import ParagraphBlock from "./blocks/ParagraphBlock";
 import ImageBlock from "./blocks/ImageBlock";
