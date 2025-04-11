@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/auth";
+import { useState } from "react";
 
 interface MemberUserMenuProps {
   sidebarOpen: boolean;
@@ -30,6 +31,22 @@ export const MemberUserMenu = ({
   getInitials 
 }: MemberUserMenuProps) => {
   const { signOut } = useAuth();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  
+  const handleSignOut = async (e: Event) => {
+    e.preventDefault();
+    
+    try {
+      setIsLoggingOut(true);
+      await signOut();
+    } catch (error) {
+      console.error("Erro ao fazer logout:", error);
+      // Força redirecionamento para login em caso de falha
+      window.location.href = '/login';
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
   
   return (
     <div className="p-3">
@@ -65,9 +82,12 @@ export const MemberUserMenu = ({
               <span>Perfil</span>
             </DropdownMenuItem>
           </Link>
-          <DropdownMenuItem onSelect={signOut}>
+          <DropdownMenuItem 
+            disabled={isLoggingOut} 
+            onSelect={handleSignOut}
+          >
             <LogOut className="mr-2 h-4 w-4" />
-            <span>Sair</span>
+            <span>{isLoggingOut ? "Saindo..." : "Sair"}</span>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
