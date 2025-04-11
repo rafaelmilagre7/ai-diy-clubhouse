@@ -7,7 +7,8 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs";
 import { FileText, Layers, Link, Eye, CheckCircle2 } from "lucide-react";
-import BasicInfoForm, { SolutionFormValues } from "@/components/admin/solution/BasicInfoForm";
+import BasicInfoForm from "@/components/admin/solution/BasicInfoForm";
+import { SolutionFormValues } from "@/components/admin/solution/form/solutionFormSchema";
 import ModulesForm from "@/components/admin/solution/ModulesForm";
 import ResourcesForm from "@/components/admin/solution/ResourcesForm";
 import { Solution } from "@/lib/supabase";

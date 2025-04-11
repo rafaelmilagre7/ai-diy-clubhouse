@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase, Solution } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
-import { SolutionFormValues } from "@/components/admin/solution/BasicInfoForm";
+import { SolutionFormValues } from "@/components/admin/solution/form/solutionFormSchema";
 import { moduleTypes } from "@/components/admin/solution/moduleTypes";
 
 export const useSolutionEditor = (id: string | undefined, user: any) => {
