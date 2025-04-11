@@ -19,7 +19,7 @@ import BenefitsBlock from "./blocks/BenefitsBlock";
 import MetricsBlock from "./blocks/MetricsBlock";
 import TipsBlock from "./blocks/TipsBlock";
 import CTABlock from "./blocks/CTABlock";
-import { getBlockIcon } from "./BlockIcons";
+import { getBlockIcon, BlockType } from "./BlockIcons";
 
 interface BlockEditorProps {
   block: ContentBlock;
@@ -44,7 +44,7 @@ const BlockEditor: React.FC<BlockEditorProps> = ({
 
   // Renderiza o editor apropriado com base no tipo de bloco
   const renderBlockEditor = () => {
-    switch (type) {
+    switch (type as BlockType) {
       case "header":
         return (
           <HeaderBlock
@@ -160,7 +160,7 @@ const BlockEditor: React.FC<BlockEditorProps> = ({
   };
 
   // Get the icon for the current block type
-  const BlockIcon = getBlockIcon(type);
+  const BlockIcon = getBlockIcon(type as BlockType);
 
   return (
     <Card className="border border-muted relative group">

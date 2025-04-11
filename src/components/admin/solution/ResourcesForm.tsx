@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -46,6 +47,11 @@ interface ResourcesFormProps {
   saving: boolean;
 }
 
+interface ModuleContent {
+  blocks?: any[];
+  [key: string]: any;
+}
+
 const ResourcesForm = ({ solutionId, onSave, saving }: ResourcesFormProps) => {
   const [activeTab, setActiveTab] = useState('overview');
   const [error, setError] = useState<string | null>(null);
@@ -89,6 +95,7 @@ const ResourcesForm = ({ solutionId, onSave, saving }: ResourcesFormProps) => {
       
       if (data) {
         try {
+          // Parse the URL field as it contains our JSON data
           const resourceData = JSON.parse(data.url);
           form.reset({
             overview: resourceData.overview || '',
@@ -126,22 +133,24 @@ const ResourcesForm = ({ solutionId, onSave, saving }: ResourcesFormProps) => {
         const validModules = data.filter(module => {
           if (!module.content) return false;
           
-          // Check if content is a string (possible legacy format)
-          if (typeof module.content === 'string') {
-            try {
-              const parsed = JSON.parse(module.content);
-              return parsed && Array.isArray(parsed.blocks) && parsed.blocks.length > 0;
-            } catch {
-              return false;
+          try {
+            // Safely parse content regardless of its current format
+            let parsedContent: ModuleContent;
+            
+            if (typeof module.content === 'string') {
+              parsedContent = JSON.parse(module.content);
+            } else {
+              parsedContent = module.content as ModuleContent;
             }
+            
+            // Check if it has blocks array and it's not empty
+            return parsedContent && 
+                  Array.isArray(parsedContent.blocks) && 
+                  parsedContent.blocks.length > 0;
+          } catch (e) {
+            console.error('Error parsing module content:', e);
+            return false;
           }
-          
-          // Otherwise check if it's an object with blocks
-          return module.content && 
-                 typeof module.content === 'object' && 
-                 module.content.blocks && 
-                 Array.isArray(module.content.blocks) && 
-                 module.content.blocks.length > 0;
         });
         
         setModules(validModules);
@@ -489,16 +498,21 @@ const moduleTypeToName = (type: string): string => {
 const getBlocksCount = (content: any): number => {
   if (!content) return 0;
   
-  if (typeof content === 'string') {
-    try {
-      const parsed = JSON.parse(content);
-      return parsed.blocks?.length || 0;
-    } catch {
-      return 0;
+  try {
+    // Handle content whether it's a string or already parsed JSON
+    let parsedContent: ModuleContent;
+    
+    if (typeof content === 'string') {
+      parsedContent = JSON.parse(content);
+    } else {
+      parsedContent = content as ModuleContent;
     }
+    
+    return parsedContent.blocks?.length || 0;
+  } catch (e) {
+    console.error('Error parsing content:', e);
+    return 0;
   }
-  
-  return content.blocks?.length || 0;
 };
 
 export default ResourcesForm;
