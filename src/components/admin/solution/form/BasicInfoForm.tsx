@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
-import { Loader2, ArrowRight } from "lucide-react";
+import { Loader2, Save } from "lucide-react";
 import { slugify } from "@/utils/slugify";
 import React, { useEffect } from "react";
 import { SolutionFormValues, solutionFormSchema } from "./solutionFormSchema";
@@ -58,8 +58,8 @@ const BasicInfoForm = ({
             </>
           ) : (
             <>
-              <ArrowRight className="mr-2 h-4 w-4" />
-              Próxima Etapa
+              <Save className="mr-2 h-4 w-4" />
+              Salvar Informações Básicas
             </>
           )}
         </Button>

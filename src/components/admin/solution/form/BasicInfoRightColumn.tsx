@@ -10,8 +10,6 @@ import {
   FormDescription,
   FormMessage,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
@@ -102,49 +100,6 @@ const BasicInfoRightColumn: React.FC<BasicInfoRightColumnProps> = ({
             <FormDescription>
               O nível de dificuldade de implementação da solução.
             </FormDescription>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-
-      <FormField
-        control={form.control}
-        name="thumbnail_url"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>URL da Imagem</FormLabel>
-            <FormControl>
-              <Input 
-                placeholder="https://exemplo.com/imagem.jpg" 
-                {...field} 
-                value={field.value || ""}
-              />
-            </FormControl>
-            <FormDescription>
-              URL da imagem que será exibida no card da solução.
-            </FormDescription>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-
-      <FormField
-        control={form.control}
-        name="published"
-        render={({ field }) => (
-          <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-            <div className="space-y-0.5">
-              <FormLabel className="text-base">Publicar solução</FormLabel>
-              <FormDescription>
-                Se ativado, a solução ficará visível para os membros.
-              </FormDescription>
-            </div>
-            <FormControl>
-              <Switch
-                checked={field.value}
-                onCheckedChange={field.onChange}
-              />
-            </FormControl>
             <FormMessage />
           </FormItem>
         )}

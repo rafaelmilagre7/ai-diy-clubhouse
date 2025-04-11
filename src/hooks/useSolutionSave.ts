@@ -29,22 +29,9 @@ export const useSolutionSave = (
         difficulty: values.difficulty,
         slug: slug,
         thumbnail_url: values.thumbnail_url || null,
-        published: values.published,
+        published: false, // Sempre definir como false inicialmente
         updated_at: new Date().toISOString(),
       };
-      
-      // Usar a função is_admin_user() que evita recursão infinita
-      const { data: isAdmin, error: adminCheckError } = await supabase
-        .rpc('is_admin_user');
-      
-      if (adminCheckError) {
-        console.error("Erro ao verificar permissões de admin:", adminCheckError);
-        throw new Error("Erro ao verificar permissões de administrador");
-      }
-      
-      if (!isAdmin) {
-        throw new Error("Você não tem permissão para salvar soluções");
-      }
       
       if (id) {
         // Atualizar solução existente
@@ -54,11 +41,7 @@ export const useSolutionSave = (
           .eq("id", id);
         
         if (error) {
-          // Verificar se é um erro de recursão
-          if (error.message && error.message.includes('infinite recursion')) {
-            console.error("Erro de recursão detectado nas políticas RLS:", error);
-            throw new Error("Problema de permissão: Recursão infinita nas políticas de segurança");
-          }
+          console.error("Erro ao atualizar solução:", error);
           throw error;
         }
         
@@ -80,11 +63,7 @@ export const useSolutionSave = (
           .single();
         
         if (error) {
-          // Verificar se é um erro de recursão
-          if (error.message && error.message.includes('infinite recursion')) {
-            console.error("Erro de recursão detectado nas políticas RLS:", error);
-            throw new Error("Problema de permissão: Recursão infinita nas políticas de segurança");
-          }
+          console.error("Erro ao criar solução:", error);
           throw error;
         }
         
@@ -101,21 +80,11 @@ export const useSolutionSave = (
     } catch (error: any) {
       console.error("Error saving solution:", error);
       
-      // Mensagem de erro mais específica para problemas de recursão
-      if (error.message && error.message.includes('recursão infinita') || 
-          error.message && error.message.includes('infinite recursion')) {
-        toast({
-          title: "Erro de permissão",
-          description: "Problema nas políticas de segurança detectado. Entre em contato com o administrador.",
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Erro ao salvar solução",
-          description: error.message || "Ocorreu um erro ao tentar salvar a solução.",
-          variant: "destructive",
-        });
-      }
+      toast({
+        title: "Erro ao salvar solução",
+        description: error.message || "Ocorreu um erro ao tentar salvar a solução.",
+        variant: "destructive",
+      });
     } finally {
       setSaving(false);
     }

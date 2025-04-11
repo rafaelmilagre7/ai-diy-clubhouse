@@ -52,26 +52,6 @@ const BasicInfoLeftColumn = ({ form }: BasicInfoLeftColumnProps) => {
         )}
       />
 
-      <FormField
-        control={form.control}
-        name="category"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Categoria</FormLabel>
-            <FormControl>
-              <CategorySelector 
-                value={field.value} 
-                onChange={field.onChange}
-              />
-            </FormControl>
-            <FormDescription>
-              Escolha a categoria que melhor representa o benefício principal da solução.
-            </FormDescription>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-
       <ImageUploadField 
         control={form.control}
         name="thumbnail_url"

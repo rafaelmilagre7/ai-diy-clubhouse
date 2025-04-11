@@ -75,7 +75,7 @@ const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
                     }}
                     accept="image/*"
                     buttonText="Upload de Imagem"
-                    fieldLabel={`${label} (opcional)`}
+                    fieldLabel=""
                     maxSize={5} // 5MB
                   />
                 )}
