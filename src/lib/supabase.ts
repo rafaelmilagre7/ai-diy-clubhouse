@@ -28,7 +28,10 @@ export interface Solution {
   published: boolean;
   created_at: string;
   updated_at: string;
-  // Campos removidos: estimated_time, success_rate
+  estimated_time?: number; // Made optional
+  success_rate?: number; // Made optional
+  related_solutions?: string[];
+  tags?: string[];
 }
 
 export interface Module {

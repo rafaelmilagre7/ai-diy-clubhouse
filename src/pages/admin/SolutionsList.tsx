@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
@@ -129,10 +128,8 @@ const SolutionsList = () => {
   }, [toast]);
   
   useEffect(() => {
-    // Aplicar filtros e ordenação
     let filtered = [...solutions];
     
-    // Filtro por texto de busca
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(
@@ -143,23 +140,19 @@ const SolutionsList = () => {
       );
     }
     
-    // Filtro por categoria
     if (categoryFilter !== "all") {
       filtered = filtered.filter(solution => solution.category === categoryFilter);
     }
     
-    // Filtro por dificuldade
     if (difficultyFilter !== "all") {
       filtered = filtered.filter(solution => solution.difficulty === difficultyFilter);
     }
     
-    // Filtro por status
     if (statusFilter !== "all") {
       const isPublished = statusFilter === "published";
       filtered = filtered.filter(solution => solution.published === isPublished);
     }
     
-    // Ordenação
     filtered.sort((a, b) => {
       let valueA, valueB;
       
@@ -256,16 +249,19 @@ const SolutionsList = () => {
   
   const duplicateSolution = async (solution: Solution) => {
     try {
+      const { id, ...solutionData } = solution;
+      
+      const duplicateData = {
+        ...solutionData,
+        title: `${solution.title} (Cópia)`,
+        published: false,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+      
       const { data, error } = await supabase
         .from("solutions")
-        .insert({
-          ...solution,
-          id: undefined,
-          title: `${solution.title} (Cópia)`,
-          published: false,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        })
+        .insert(duplicateData)
         .select()
         .single();
       
@@ -415,7 +411,6 @@ const SolutionsList = () => {
               <TableHead>Título</TableHead>
               <TableHead>Categoria</TableHead>
               <TableHead>Dificuldade</TableHead>
-              <TableHead>Tempo</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Última Atualização</TableHead>
               <TableHead className="text-right">Ações</TableHead>
@@ -435,11 +430,16 @@ const SolutionsList = () => {
                         solution.category === "strategy" && "bg-strategy/10 text-strategy border-strategy/30"
                       )}
                     >
-                      {categoryLabel(solution.category)}
+                      {solution.category === "revenue" ? "Receita" : 
+                       solution.category === "operational" ? "Operacional" : 
+                       solution.category === "strategy" ? "Estratégia" : solution.category}
                     </Badge>
                   </TableCell>
-                  <TableCell>{difficultyLabel(solution.difficulty)}</TableCell>
-                  <TableCell>{formatTime(solution.estimated_time)}</TableCell>
+                  <TableCell>
+                    {solution.difficulty === "easy" ? "Fácil" : 
+                     solution.difficulty === "medium" ? "Médio" : 
+                     solution.difficulty === "advanced" ? "Avançado" : solution.difficulty}
+                  </TableCell>
                   <TableCell>
                     {solution.published ? (
                       <Badge variant="outline" className="bg-green-100 text-green-800 border-green-200">
@@ -506,7 +506,7 @@ const SolutionsList = () => {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-8">
+                <TableCell colSpan={6} className="text-center py-8">
                   <div className="flex flex-col items-center justify-center">
                     <FileEdit className="h-8 w-8 text-muted-foreground mb-2" />
                     <h3 className="text-lg font-medium">Nenhuma solução encontrada</h3>
