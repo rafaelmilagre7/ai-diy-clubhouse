@@ -1,10 +1,10 @@
 
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Loader2, UploadCloud, X, FileIcon, CheckCircle } from "lucide-react";
-import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
+import { FileInput } from "./file/FileInput";
+import { UploadButton } from "./file/UploadButton";
+import { FilePreview } from "./file/FilePreview";
+import { uploadFileToStorage } from "./file/uploadUtils";
 
 interface FileUploadProps {
   bucketName: string;
@@ -74,42 +74,17 @@ export const FileUpload = ({
 
     try {
       setUploading(true);
+      setUploadProgress(0);
       
-      // Criar um nome de arquivo único baseado no timestamp e nome original
-      const timestamp = new Date().getTime();
-      const fileExt = file.name.split(".").pop();
-      const filePath = folder 
-        ? `${folder}/${timestamp}-${file.name}` 
-        : `${timestamp}-${file.name}`;
-
-      // Upload do arquivo usando o client do Supabase
-      const { data, error } = await supabase.storage
-        .from(bucketName)
-        .upload(filePath, file, {
-          upsert: true
-        });
-
-      if (error) {
-        throw error;
-      }
-
-      // Manually update progress in intervals
-      const interval = setInterval(() => {
-        setUploadProgress((prev) => Math.min(prev + 10, 100));
-      }, 300);
-      
-      setTimeout(() => {
-        clearInterval(interval);
-        setUploadProgress(100);
-      }, 3000);
-      
-      // Obter URL pública do arquivo
-      const { data: { publicUrl } } = supabase.storage
-        .from(bucketName)
-        .getPublicUrl(data.path);
+      const { publicUrl, fileName } = await uploadFileToStorage(
+        file, 
+        bucketName, 
+        folder,
+        (progress) => setUploadProgress(progress)
+      );
 
       // Notificar o componente pai que o upload foi concluído
-      onUploadComplete(publicUrl, file.name);
+      onUploadComplete(publicUrl, fileName);
       
       toast({
         title: "Upload concluído",
@@ -129,74 +104,30 @@ export const FileUpload = ({
 
   return (
     <div className="space-y-4">
-      {fieldLabel && (
-        <label className="block text-sm font-medium text-gray-700">
-          {fieldLabel}
-        </label>
-      )}
-      
       <div className="flex items-center gap-3">
-        <div className="relative flex-1">
-          <Input
-            type="file"
-            accept={accept}
-            onChange={handleFileChange}
-            className={`cursor-pointer ${file ? 'file:hidden' : ''}`}
-            disabled={uploading}
-          />
-          {file && (
-            <div className="absolute inset-0 flex items-center">
-              <div className="bg-muted rounded px-3 py-2 w-full flex items-center justify-between">
-                <div className="flex items-center gap-2 truncate">
-                  <FileIcon className="h-4 w-4 text-primary" />
-                  <span className="text-sm truncate">{file.name}</span>
-                </div>
-                <button 
-                  type="button"
-                  onClick={clearFile} 
-                  className="p-1 hover:bg-gray-200 rounded-full"
-                  disabled={uploading}
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
+        <FileInput
+          file={file}
+          onFileChange={handleFileChange}
+          onClearFile={clearFile}
+          accept={accept}
+          uploading={uploading}
+          fieldLabel={fieldLabel}
+        />
         
-        <Button 
-          type="button"
-          onClick={handleUpload} 
+        <UploadButton
+          onClick={handleUpload}
           disabled={!file || uploading}
-          className="shrink-0"
-        >
-          {uploading ? (
-            <>
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              {uploadProgress}%
-            </>
-          ) : (
-            <>
-              <UploadCloud className="h-4 w-4 mr-2" />
-              {buttonText}
-            </>
-          )}
-        </Button>
+          uploading={uploading}
+          uploadProgress={uploadProgress}
+          buttonText={buttonText}
+        />
       </div>
       
       {filePreview && (
-        <div className="mt-2 relative w-full max-w-xs">
-          <img 
-            src={filePreview} 
-            alt="Preview" 
-            className="rounded border max-h-40 object-contain" 
-          />
-          {uploadProgress === 100 && (
-            <div className="absolute top-2 right-2 bg-green-500 text-white rounded-full p-1">
-              <CheckCircle className="h-4 w-4" />
-            </div>
-          )}
-        </div>
+        <FilePreview 
+          filePreview={filePreview} 
+          uploadProgress={uploadProgress} 
+        />
       )}
     </div>
   );
