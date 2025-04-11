@@ -39,8 +39,7 @@ export const fetchUserProfile = async (userId: string): Promise<UserProfile | nu
 export const createUserProfileIfNeeded = async (
   userId: string, 
   email: string, 
-  name: string = 'Usuário', 
-  role: 'admin' | 'member' = 'member'
+  name: string = 'Usuário'
 ): Promise<UserProfile | null> => {
   try {
     // Primeiro verifica se já existe um perfil
@@ -56,11 +55,11 @@ export const createUserProfileIfNeeded = async (
     }
     
     // Determina se deve ser admin baseado no email
-    const isAdminEmail = email.endsWith('@viverdeia.ai') || 
-                         email === 'admin@teste.com' ||
-                         email === 'admin@viverdeia.ai';
+    const isAdmin = email.endsWith('@viverdeia.ai') || 
+                    email === 'admin@teste.com' ||
+                    email === 'admin@viverdeia.ai';
     
-    const userRole = isAdminEmail ? 'admin' : role;
+    const userRole = isAdmin ? 'admin' : 'member';
     
     // Se não existe ou houve erro, tenta criar
     const { data: newProfile, error: insertError } = await supabase
