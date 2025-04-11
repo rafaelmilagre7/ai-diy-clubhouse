@@ -28,8 +28,8 @@ export interface Solution {
   published: boolean;
   created_at: string;
   updated_at: string;
-  estimated_time?: number; // Made optional
-  success_rate?: number; // Made optional
+  estimated_time?: number | null;
+  success_rate?: number | null;
   related_solutions?: string[];
   tags?: string[];
 }

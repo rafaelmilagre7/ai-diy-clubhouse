@@ -306,12 +306,12 @@ export type Database = {
           created_at: string
           description: string
           difficulty: string
-          estimated_time: number
+          estimated_time: number | null
           id: string
           published: boolean
           related_solutions: string[] | null
           slug: string
-          success_rate: number
+          success_rate: number | null
           tags: string[] | null
           thumbnail_url: string | null
           title: string
@@ -322,12 +322,12 @@ export type Database = {
           created_at?: string
           description: string
           difficulty: string
-          estimated_time: number
+          estimated_time?: number | null
           id?: string
           published?: boolean
           related_solutions?: string[] | null
           slug: string
-          success_rate?: number
+          success_rate?: number | null
           tags?: string[] | null
           thumbnail_url?: string | null
           title: string
@@ -338,12 +338,12 @@ export type Database = {
           created_at?: string
           description?: string
           difficulty?: string
-          estimated_time?: number
+          estimated_time?: number | null
           id?: string
           published?: boolean
           related_solutions?: string[] | null
           slug?: string
-          success_rate?: number
+          success_rate?: number | null
           tags?: string[] | null
           thumbnail_url?: string | null
           title?: string
