@@ -10,7 +10,6 @@ import { useAuth } from "@/contexts/auth";
  * and provides a loading screen during authentication
  */
 const AuthSession = ({ children }: { children: React.ReactNode }) => {
-  const auth = useAuth();
   const {
     isInitializing,
     authError,
@@ -21,10 +20,10 @@ const AuthSession = ({ children }: { children: React.ReactNode }) => {
     setAuthError
   } = useAuthSession();
 
-  // Função para limpar a subscription no unmount
+  // Function to clean up the subscription on unmount
   useEffect(() => {
     return () => {
-      console.log("AuthSession: Limpando subscription");
+      console.log("AuthSession: Cleaning up subscription");
     };
   }, []);
 

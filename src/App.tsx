@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -24,6 +23,7 @@ import SolutionEditor from "@/pages/admin/SolutionEditor";
 import SolutionMetrics from "@/pages/admin/SolutionMetrics";
 import UserManagement from "@/pages/admin/UserManagement";
 import NotFound from "@/pages/NotFound";
+import Index from "@/pages/Index";
 
 const queryClient = new QueryClient();
 
@@ -67,71 +67,77 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
+// Move AppRoutes inside App to ensure it has access to AuthProvider
+const App = () => {
+  const queryClient = new QueryClient();
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <AuthSession>
+              <Routes>
+                {/* Public routes */}
+                <Route path="/login" element={
+                  <PublicRoute>
+                    <Login />
+                  </PublicRoute>
+                } />
+                
+                <Route path="/index" element={<Index />} />
+
+                {/* Root redirect */}
+                <Route path="/" element={<AppRoutes />} />
+
+                {/* Member routes - within Layout */}
+                <Route path="/" element={
+                  <ProtectedRoute>
+                    <Layout />
+                  </ProtectedRoute>
+                }>
+                  <Route path="/dashboard" element={<MemberDashboard />} />
+                  <Route path="/solution/:id" element={<SolutionDetails />} />
+                  <Route path="/implement/:id/:moduleIndex" element={<SolutionImplementation />} />
+                  <Route path="/profile" element={<Profile />} />
+                </Route>
+
+                {/* Admin routes - within AdminLayout */}
+                <Route path="/admin" element={
+                  <ProtectedRoute requireAdmin>
+                    <AdminLayout />
+                  </ProtectedRoute>
+                }>
+                  <Route index element={<AdminDashboard />} />
+                  <Route path="/admin/solutions" element={<SolutionsList />} />
+                  <Route path="/admin/solutions/new" element={<SolutionEditor />} />
+                  <Route path="/admin/solutions/:id" element={<SolutionEditor />} />
+                  <Route path="/admin/analytics/solution/:id" element={<SolutionMetrics />} />
+                  <Route path="/admin/users" element={<UserManagement />} />
+                </Route>
+
+                {/* 404 route */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </AuthSession>
+          </BrowserRouter>
+        </TooltipProvider>
+      </AuthProvider>
+    </QueryClientProvider>
+  );
+};
+
+// Helper component to handle route redirection
 const AppRoutes = () => {
   const { profile, isAdmin } = useAuth();
   
   // If user is logged in and is admin, redirect to admin dashboard
   // Otherwise, redirect to member dashboard
   const homePath = isAdmin ? "/admin" : "/dashboard";
-
-  return (
-    <Routes>
-      {/* Public routes */}
-      <Route path="/login" element={
-        <PublicRoute>
-          <Login />
-        </PublicRoute>
-      } />
-
-      {/* Root redirect */}
-      <Route path="/" element={<Navigate to={homePath} replace />} />
-
-      {/* Member routes - within Layout */}
-      <Route path="/" element={
-        <ProtectedRoute>
-          <Layout />
-        </ProtectedRoute>
-      }>
-        <Route path="/dashboard" element={<MemberDashboard />} />
-        <Route path="/solution/:id" element={<SolutionDetails />} />
-        <Route path="/implement/:id/:moduleIndex" element={<SolutionImplementation />} />
-        <Route path="/profile" element={<Profile />} />
-      </Route>
-
-      {/* Admin routes - within AdminLayout */}
-      <Route path="/admin" element={
-        <ProtectedRoute requireAdmin>
-          <AdminLayout />
-        </ProtectedRoute>
-      }>
-        <Route index element={<AdminDashboard />} />
-        <Route path="/admin/solutions" element={<SolutionsList />} />
-        <Route path="/admin/solutions/new" element={<SolutionEditor />} />
-        <Route path="/admin/solutions/:id" element={<SolutionEditor />} />
-        <Route path="/admin/analytics/solution/:id" element={<SolutionMetrics />} />
-        <Route path="/admin/users" element={<UserManagement />} />
-      </Route>
-
-      {/* 404 route */}
-      <Route path="*" element={<NotFound />} />
-    </Routes>
-  );
+  
+  return <Navigate to={homePath} replace />;
 };
-
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <AuthSession>
-            <AppRoutes />
-          </AuthSession>
-        </BrowserRouter>
-      </TooltipProvider>
-    </AuthProvider>
-  </QueryClientProvider>
-);
 
 export default App;
