@@ -84,10 +84,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signIn = async () => {
     try {
+      // Use a URL atual do navegador como base para o redirecionamento
+      const redirectUrl = `${window.location.origin}`;
+      console.log('Redirecionando para:', redirectUrl);
+      
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: window.location.origin,
+          redirectTo: redirectUrl,
         },
       });
 
