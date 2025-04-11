@@ -1,10 +1,9 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { AuthProvider } from "@/contexts/auth";
+import { AuthProvider, useAuth } from "@/contexts/auth";
 import AuthSession from "@/components/auth/AuthSession";
 import Layout from "@/components/layout/Layout";
 import AdminLayout from "@/components/layout/AdminLayout";
