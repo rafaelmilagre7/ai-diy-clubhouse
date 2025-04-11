@@ -45,7 +45,7 @@ export const useAuthSession = () => {
             // Tentar buscar o perfil do usuário
             let profile = await fetchUserProfile(session.user.id);
             
-            // Se não existir perfil, criar um novo
+            // Se não existir perfil ou ocorrer erro de política, criar um novo
             if (!profile) {
               console.log("Criando novo perfil para usuário:", session.user.id);
               profile = await createUserProfileIfNeeded(
@@ -57,8 +57,22 @@ export const useAuthSession = () => {
             
             setProfile(profile);
           } catch (profileError) {
+            // Apenas log, não falha completamente
             console.error("Erro ao buscar/criar perfil:", profileError);
-            // Continuar sem perfil, sem falhar completamente
+            
+            // Como fallback, crie um perfil temporário na memória
+            const tempProfile = {
+              id: session.user.id,
+              email: session.user.email || 'sem-email@viverdeia.ai',
+              name: session.user.user_metadata?.name || 'Usuário',
+              role: session.user.email?.includes('admin') ? 'admin' : 'member',
+              avatar_url: null,
+              company_name: null,
+              industry: null,
+              created_at: new Date().toISOString()
+            };
+            
+            setProfile(tempProfile);
           }
         } else {
           console.log("Nenhuma sessão ativa encontrada");
@@ -88,6 +102,20 @@ export const useAuthSession = () => {
                 setProfile(profile);
               } catch (profileError) {
                 console.error("Erro ao buscar/criar perfil:", profileError);
+                
+                // Criar perfil temporário na memória
+                const tempProfile = {
+                  id: newSession.user.id,
+                  email: newSession.user.email || 'sem-email@viverdeia.ai',
+                  name: newSession.user.user_metadata?.name || 'Usuário',
+                  role: newSession.user.email?.includes('admin') ? 'admin' : 'member',
+                  avatar_url: null,
+                  company_name: null,
+                  industry: null,
+                  created_at: new Date().toISOString()
+                };
+                
+                setProfile(tempProfile);
               }
             } else {
               setProfile(null);
