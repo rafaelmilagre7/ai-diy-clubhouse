@@ -82,10 +82,13 @@ export const useSolutionSave = (
           lastError = error;
           retryCount++;
           
+          // Logar detalhes do erro para depuração
+          console.error("Tentativa " + retryCount + " falhou:", error);
+          
           // Se não for um erro de política ou recursão, não tente novamente
           if (!error.message?.includes('infinite recursion') && 
               !error.message?.includes('policy') && 
-              error.code !== '42P17') {
+              !error.code?.includes('42P17')) {
             break;
           }
           

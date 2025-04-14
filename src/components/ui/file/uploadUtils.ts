@@ -48,7 +48,9 @@ export const uploadFileToStorage = async (
       
       // Simular o processamento final
       setTimeout(() => {
-        onProgressUpdate(100);
+        if (onProgressUpdate) {
+          onProgressUpdate(100);
+        }
       }, 500);
     }
 
