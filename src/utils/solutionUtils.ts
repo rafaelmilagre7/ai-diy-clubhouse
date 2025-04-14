@@ -1,21 +1,28 @@
 
+import { slugify as baseSlugify, truncateSlug } from "./slugify";
+
 /**
  * Utility functions for solution management
  */
 
 /**
- * Converts a text string into a URL-friendly slug
+ * Converts a text string into a URL-friendly slug with a timestamp for uniqueness
  */
 export const slugify = (text: string): string => {
-  return text
-    .toString()
-    .normalize('NFD')           // normaliza os caracteres decompostos
-    .replace(/[\u0300-\u036f]/g, '') // remove acentos
-    .toLowerCase()
-    .trim()
-    .replace(/\s+/g, '-')       // substitui espaços por -
-    .replace(/[^\w\-]+/g, '')   // remove caracteres não-palavra
-    .replace(/\-\-+/g, '-')     // substitui múltiplos hifens por um único
-    .replace(/^-+/, '')         // remove hifens do início
-    .replace(/-+$/, '');        // remove hifens do final
+  return baseSlugify(text, true);
+};
+
+/**
+ * Creates a slug without a timestamp (for display or user-editable slugs)
+ */
+export const createSimpleSlug = (text: string): string => {
+  return baseSlugify(text, false);
+};
+
+/**
+ * Creates a unique slug with a timestamp and ensures it's not too long
+ */
+export const createUniqueSlug = (text: string, maxLength = 60): string => {
+  const slug = baseSlugify(text, true);
+  return truncateSlug(slug, maxLength);
 };

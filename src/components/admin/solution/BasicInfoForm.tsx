@@ -32,9 +32,14 @@ const BasicInfoForm = ({
   // Auto-gerar slug quando o título mudar
   useEffect(() => {
     if (title) {
-      const newSlug = slugify(title);
+      // Gerar um slug único com timestamp
+      const newSlug = slugify(title, true);
+      
+      // Truncar o slug se ele ficar muito longo
+      const truncatedSlug = newSlug.length > 60 ? newSlug.substring(0, 60) : newSlug;
+      
       // Atualizar o campo de slug com o novo valor
-      form.setValue("slug", newSlug, { shouldValidate: true });
+      form.setValue("slug", truncatedSlug, { shouldValidate: true });
     }
   }, [title, form]);
 

@@ -32,7 +32,9 @@ const BasicInfoForm = ({
   // Auto-gerar slug quando o título mudar
   useEffect(() => {
     if (title) {
-      const newSlug = slugify(title);
+      // Gerar um slug único com timestamp
+      const newSlug = slugify(title, true);
+      
       // Atualizar o campo de slug com o novo valor
       form.setValue("slug", newSlug, { shouldValidate: true });
     }

@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase, Solution } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 import { SolutionFormValues } from "@/components/admin/solution/form/solutionFormSchema";
-import { slugify } from "@/utils/solutionUtils";
+import { slugify } from "@/utils/slugify";
 
 export const useSolutionSave = (
   id: string | undefined,
@@ -18,8 +18,8 @@ export const useSolutionSave = (
     try {
       setSaving(true);
       
-      // Gerar um slug a partir do título se não for fornecido
-      const slug = values.slug || slugify(values.title);
+      // Gerar um slug único a partir do título com timestamp
+      const slug = values.slug || slugify(values.title, true);
       
       // Preparar dados para salvar
       const solutionData = {
@@ -63,6 +63,11 @@ export const useSolutionSave = (
               created_at: new Date().toISOString(),
             };
             
+            // Se houver erro de duplicação de slug, adicionar um timestamp adicional
+            if (retryCount > 0) {
+              newSolution.slug = `${slug}-${new Date().getTime() + retryCount}`;
+            }
+            
             const response = await supabase
               .from("solutions")
               .insert(newSolution)
@@ -85,7 +90,14 @@ export const useSolutionSave = (
           // Logar detalhes do erro para depuração
           console.error("Tentativa " + retryCount + " falhou:", error);
           
-          // Se não for um erro de política ou recursão, não tente novamente
+          // Se for um erro de duplicação de slug, tente novamente com um slug diferente
+          if (error.message?.includes('duplicate key value violates unique constraint') && 
+              error.message?.includes('solutions_slug_key')) {
+            // Próxima iteração usará um slug diferente
+            continue;
+          }
+          
+          // Se não for um erro de política ou recursão ou duplicação, não tente novamente
           if (!error.message?.includes('infinite recursion') && 
               !error.message?.includes('policy') && 
               !error.code?.includes('42P17')) {
@@ -109,7 +121,14 @@ export const useSolutionSave = (
       console.error("Erro ao salvar solução:", error);
       
       // Mensagem de erro mais amigável baseada no tipo de erro
-      if (error.message?.includes('infinite recursion') || 
+      if (error.message?.includes('duplicate key value violates unique constraint') && 
+          error.message?.includes('solutions_slug_key')) {
+        toast({
+          title: "Erro ao salvar solução",
+          description: "Já existe uma solução com este slug. Tente modificar o título para criar um slug único.",
+          variant: "destructive",
+        });
+      } else if (error.message?.includes('infinite recursion') || 
           error.message?.includes('policy') || 
           error.code === '42P17') {
         toast({
