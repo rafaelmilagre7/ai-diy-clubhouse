@@ -1,7 +1,10 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Input } from "@/components/ui/input";
-import { Image, LinkIcon } from "lucide-react";
+import { Image, LinkIcon, UploadCloud } from "lucide-react";
+import { uploadFileToStorage } from "@/components/ui/file/uploadUtils";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 
 interface ImageBlockProps {
   data: {
@@ -13,6 +16,65 @@ interface ImageBlockProps {
 }
 
 const ImageBlock: React.FC<ImageBlockProps> = ({ data, onChange }) => {
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const { toast } = useToast();
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    
+    const file = e.target.files[0];
+    
+    if (!file.type.startsWith("image/")) {
+      toast({
+        title: "Tipo de arquivo inválido",
+        description: "Por favor, selecione uma imagem",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "Arquivo muito grande",
+        description: "A imagem deve ter menos de 5MB",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    try {
+      setUploading(true);
+      
+      const result = await uploadFileToStorage(
+        file,
+        "solution_files",
+        "content_images",
+        (progress) => setUploadProgress(progress)
+      );
+      
+      onChange({ 
+        ...data, 
+        url: result.publicUrl,
+        alt: data.alt || file.name
+      });
+      
+      toast({
+        title: "Upload concluído",
+        description: "A imagem foi enviada com sucesso."
+      });
+    } catch (error: any) {
+      toast({
+        title: "Erro ao fazer upload",
+        description: error.message || "Ocorreu um erro ao tentar enviar a imagem.",
+        variant: "destructive",
+      });
+    } finally {
+      setUploading(false);
+      setUploadProgress(0);
+    }
+  };
+
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-2">
@@ -23,6 +85,33 @@ const ImageBlock: React.FC<ImageBlockProps> = ({ data, onChange }) => {
           placeholder="URL da imagem"
           className="flex-1"
         />
+        <div className="relative">
+          <Button 
+            type="button" 
+            variant="outline" 
+            disabled={uploading}
+            className="shrink-0"
+          >
+            {uploading ? (
+              <>
+                <div className="h-4 w-4 mr-2 animate-spin border-2 border-current border-t-transparent rounded-full" />
+                {uploadProgress}%
+              </>
+            ) : (
+              <>
+                <UploadCloud className="h-4 w-4 mr-2" />
+                Upload
+              </>
+            )}
+            <Input
+              type="file"
+              className="absolute inset-0 opacity-0 cursor-pointer"
+              accept="image/*"
+              onChange={handleFileChange}
+              disabled={uploading}
+            />
+          </Button>
+        </div>
       </div>
       
       <Input
@@ -60,7 +149,7 @@ const ImageBlock: React.FC<ImageBlockProps> = ({ data, onChange }) => {
       ) : (
         <div className="mt-4 border rounded-md p-8 bg-slate-50 flex flex-col items-center justify-center text-slate-400">
           <Image className="h-10 w-10 mb-2" />
-          <p className="text-sm">Insira uma URL para visualizar a imagem</p>
+          <p className="text-sm">Insira uma URL ou faça upload de uma imagem</p>
         </div>
       )}
     </div>

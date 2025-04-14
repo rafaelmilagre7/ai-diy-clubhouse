@@ -76,7 +76,7 @@ export const FileUpload = ({
       setUploading(true);
       setUploadProgress(0);
       
-      const { publicUrl, fileName } = await uploadFileToStorage(
+      const result = await uploadFileToStorage(
         file, 
         bucketName, 
         folder,
@@ -84,7 +84,7 @@ export const FileUpload = ({
       );
 
       // Notificar o componente pai que o upload foi concluído
-      onUploadComplete(publicUrl, fileName);
+      onUploadComplete(result.publicUrl, result.fileName);
       
       toast({
         title: "Upload concluído",
