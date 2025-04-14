@@ -29,56 +29,78 @@ export const useSolutionSave = (
         difficulty: values.difficulty,
         slug: slug,
         thumbnail_url: values.thumbnail_url || null,
-        published: false, // Sempre definir como false inicialmente
+        published: values.published || false,
         updated_at: new Date().toISOString(),
       };
       
-      // Usar o cliente Supabase com service_role para contornar problemas de RLS
-      if (id) {
-        // Atualizar solução existente
-        const response = await supabase
-          .from("solutions")
-          .update(solutionData)
-          .eq("id", id)
-          .select();
-        
-        if (response.error) {
-          throw response.error;
+      // Tentar salvar com retry para contornar possíveis erros de RLS
+      let retryCount = 0;
+      let success = false;
+      let lastError: any = null;
+      
+      while (retryCount < 3 && !success) {
+        try {
+          if (id) {
+            // Atualizar solução existente
+            const response = await supabase
+              .from("solutions")
+              .update(solutionData)
+              .eq("id", id)
+              .select();
+            
+            if (response.error) {
+              throw response.error;
+            }
+            
+            if (response.data && response.data.length > 0) {
+              setSolution(response.data[0] as Solution);
+              success = true;
+            }
+          } else {
+            // Criar nova solução
+            const newSolution = {
+              ...solutionData,
+              created_at: new Date().toISOString(),
+            };
+            
+            const response = await supabase
+              .from("solutions")
+              .insert(newSolution)
+              .select();
+            
+            if (response.error) {
+              throw response.error;
+            }
+            
+            if (response.data && response.data.length > 0) {
+              setSolution(response.data[0] as Solution);
+              navigate(`/admin/solutions/${response.data[0].id}`);
+              success = true;
+            }
+          }
+        } catch (error: any) {
+          lastError = error;
+          retryCount++;
+          
+          // Se não for um erro de política ou recursão, não tente novamente
+          if (!error.message?.includes('infinite recursion') && 
+              !error.message?.includes('policy') && 
+              error.code !== '42P17') {
+            break;
+          }
+          
+          // Pequena pausa antes de tentar novamente
+          await new Promise(resolve => setTimeout(resolve, 500));
         }
-        
-        if (response.data && response.data.length > 0) {
-          setSolution(response.data[0] as Solution);
-        }
-        
+      }
+      
+      if (success) {
         toast({
-          title: "Solução atualizada",
-          description: "As alterações foram salvas com sucesso.",
+          title: id ? "Solução atualizada" : "Solução criada",
+          description: id ? "As alterações foram salvas com sucesso." : "A nova solução foi criada com sucesso.",
         });
       } else {
-        // Criar nova solução
-        const newSolution = {
-          ...solutionData,
-          created_at: new Date().toISOString(),
-        };
-        
-        const response = await supabase
-          .from("solutions")
-          .insert(newSolution)
-          .select();
-        
-        if (response.error) {
-          throw response.error;
-        }
-        
-        if (response.data && response.data.length > 0) {
-          setSolution(response.data[0] as Solution);
-          navigate(`/admin/solutions/${response.data[0].id}`);
-          
-          toast({
-            title: "Solução criada",
-            description: "A nova solução foi criada com sucesso.",
-          });
-        }
+        throw lastError || new Error("Não foi possível salvar a solução após várias tentativas");
       }
     } catch (error: any) {
       console.error("Erro ao salvar solução:", error);
@@ -89,7 +111,7 @@ export const useSolutionSave = (
           error.code === '42P17') {
         toast({
           title: "Erro ao salvar solução",
-          description: "Ocorreu um problema com as permissões de acesso. Por favor, tente novamente ou entre em contato com o suporte técnico.",
+          description: "Ocorreu um problema com as permissões de acesso. Estamos trabalhando para resolver isso. Tente novamente em alguns instantes.",
           variant: "destructive",
         });
       } else {
