@@ -90,6 +90,10 @@ export const FileUpload = ({
         title: "Upload concluído",
         description: "O arquivo foi enviado com sucesso.",
       });
+      
+      // Limpar o campo de arquivo após o upload bem-sucedido
+      // setFile(null);
+      // Manter o preview para mostrar a imagem que foi enviada
     } catch (error: any) {
       console.error("Erro ao fazer upload:", error);
       toast({

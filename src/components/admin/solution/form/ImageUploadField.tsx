@@ -21,17 +21,15 @@ const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
 }) => {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
-  // Renderização do componente
   return (
     <FormField
       control={control}
       name={name}
       render={({ field }) => {
-        // Hook useEffect definido dentro do render, mas fora do JSX retornado
-        // Isso é seguro neste contexto específico
+        // Efeito para sincronizar o preview com o valor do campo
         useEffect(() => {
-          if (field.value && !imagePreview) {
-            setImagePreview(field.value as string);
+          if (field.value && typeof field.value === 'string' && !imagePreview) {
+            setImagePreview(field.value);
           }
         }, [field.value, imagePreview]);
         
@@ -72,7 +70,9 @@ const ImageUploadField: React.FC<ImageUploadFieldProps> = ({
                     bucketName="solution_files"
                     folder="thumbnails"
                     onUploadComplete={(url) => {
+                      // Atualizar o campo do formulário com a URL da imagem
                       field.onChange(url);
+                      // Atualizar o preview
                       setImagePreview(url);
                     }}
                     accept="image/*"

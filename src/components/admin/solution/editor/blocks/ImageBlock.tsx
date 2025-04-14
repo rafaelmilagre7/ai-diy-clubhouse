@@ -45,6 +45,7 @@ const ImageBlock: React.FC<ImageBlockProps> = ({ data, onChange }) => {
     
     try {
       setUploading(true);
+      setUploadProgress(0);
       
       const result = await uploadFileToStorage(
         file,
@@ -64,6 +65,7 @@ const ImageBlock: React.FC<ImageBlockProps> = ({ data, onChange }) => {
         description: "A imagem foi enviada com sucesso."
       });
     } catch (error: any) {
+      console.error("Erro ao fazer upload:", error);
       toast({
         title: "Erro ao fazer upload",
         description: error.message || "Ocorreu um erro ao tentar enviar a imagem.",

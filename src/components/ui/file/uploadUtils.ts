@@ -114,23 +114,20 @@ export const uploadFileToStorage = async (
       throw error;
     }
 
-    // Simular progresso para feedback visual
+    // Atualizar para 80% após o upload ser concluído
     if (onProgressUpdate) {
-      // Atualizar para 80% após o upload ser concluído
       onProgressUpdate(80);
-      
-      // Simular o processamento final
-      setTimeout(() => {
-        if (onProgressUpdate) {
-          onProgressUpdate(100);
-        }
-      }, 500);
     }
 
     // Obter URL pública do arquivo
     const { data: { publicUrl } } = supabase.storage
       .from(bucketName)
       .getPublicUrl(data.path);
+
+    // Completar o progresso
+    if (onProgressUpdate) {
+      onProgressUpdate(100);
+    }
 
     return {
       publicUrl,
