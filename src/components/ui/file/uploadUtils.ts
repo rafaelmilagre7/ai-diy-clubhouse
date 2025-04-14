@@ -7,44 +7,62 @@ export const uploadFileToStorage = async (
   folderPath: string,
   onProgressUpdate?: (progress: number) => void
 ) => {
-  // Criar um nome de arquivo único baseado no timestamp e nome original
-  const timestamp = new Date().getTime();
-  const filePath = folderPath 
-    ? `${folderPath}/${timestamp}-${file.name}` 
-    : `${timestamp}-${file.name}`;
+  try {
+    // Criar um nome de arquivo único baseado no timestamp e nome original
+    const timestamp = new Date().getTime();
+    const filePath = folderPath 
+      ? `${folderPath}/${timestamp}-${file.name}` 
+      : `${timestamp}-${file.name}`;
 
-  // Upload do arquivo usando o client do Supabase
-  const { data, error } = await supabase.storage
-    .from(bucketName)
-    .upload(filePath, file, {
-      upsert: true
-    });
+    // Verificar se o bucket existe e criar se necessário
+    const { data: buckets } = await supabase.storage.listBuckets();
+    const bucketExists = buckets?.some(bucket => bucket.name === bucketName);
+    
+    if (!bucketExists) {
+      await supabase.storage.createBucket(bucketName, {
+        public: true
+      });
+    }
 
-  if (error) {
+    // Iniciar o progresso em 10%
+    if (onProgressUpdate) {
+      onProgressUpdate(10);
+    }
+
+    // Upload do arquivo usando o client do Supabase
+    const { data, error } = await supabase.storage
+      .from(bucketName)
+      .upload(filePath, file, {
+        upsert: true,
+        cacheControl: '3600'
+      });
+
+    if (error) {
+      throw error;
+    }
+
+    // Simular progresso para feedback visual
+    if (onProgressUpdate) {
+      // Atualizar para 80% após o upload ser concluído
+      onProgressUpdate(80);
+      
+      // Simular o processamento final
+      setTimeout(() => {
+        onProgressUpdate(100);
+      }, 500);
+    }
+
+    // Obter URL pública do arquivo
+    const { data: { publicUrl } } = supabase.storage
+      .from(bucketName)
+      .getPublicUrl(data.path);
+
+    return {
+      publicUrl,
+      fileName: file.name
+    };
+  } catch (error) {
+    console.error("Erro ao fazer upload do arquivo:", error);
     throw error;
   }
-
-  // Simulate progress updates
-  if (onProgressUpdate) {
-    let progress = 0;
-    const interval = setInterval(() => {
-      progress = Math.min(progress + 10, 100);
-      onProgressUpdate(progress);
-    }, 300);
-    
-    setTimeout(() => {
-      clearInterval(interval);
-      onProgressUpdate(100);
-    }, 3000);
-  }
-
-  // Obter URL pública do arquivo
-  const { data: { publicUrl } } = supabase.storage
-    .from(bucketName)
-    .getPublicUrl(data.path);
-
-  return {
-    publicUrl,
-    fileName: file.name
-  };
 };

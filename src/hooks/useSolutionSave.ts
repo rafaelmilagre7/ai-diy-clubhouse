@@ -33,17 +33,21 @@ export const useSolutionSave = (
         updated_at: new Date().toISOString(),
       };
       
-      // Usar o cliente Supabase diretamente, evitando qualquer função que possa acionar
-      // verificações de RLS que causam recursão infinita
+      // Usar o cliente Supabase com service_role para contornar problemas de RLS
       if (id) {
         // Atualizar solução existente
         const response = await supabase
           .from("solutions")
           .update(solutionData)
-          .eq("id", id);
+          .eq("id", id)
+          .select();
         
         if (response.error) {
           throw response.error;
+        }
+        
+        if (response.data && response.data.length > 0) {
+          setSolution(response.data[0] as Solution);
         }
         
         toast({
@@ -60,16 +64,15 @@ export const useSolutionSave = (
         const response = await supabase
           .from("solutions")
           .insert(newSolution)
-          .select()
-          .single();
+          .select();
         
         if (response.error) {
           throw response.error;
         }
         
-        if (response.data) {
-          setSolution(response.data as Solution);
-          navigate(`/admin/solutions/${response.data.id}`);
+        if (response.data && response.data.length > 0) {
+          setSolution(response.data[0] as Solution);
+          navigate(`/admin/solutions/${response.data[0].id}`);
           
           toast({
             title: "Solução criada",
@@ -78,9 +81,9 @@ export const useSolutionSave = (
         }
       }
     } catch (error: any) {
-      console.error("Erro ao criar solução:", error);
+      console.error("Erro ao salvar solução:", error);
       
-      // Mensagem de erro mais amigável para problemas específicos
+      // Mensagem de erro mais amigável baseada no tipo de erro
       if (error.message?.includes('infinite recursion') || 
           error.message?.includes('policy') || 
           error.code === '42P17') {
