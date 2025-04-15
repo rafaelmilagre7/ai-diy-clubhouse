@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { 
@@ -57,7 +56,6 @@ interface ResourceMetadata {
   version?: string;
 }
 
-// Update the Resource interface to include the metadata field
 interface Resource {
   id?: string;
   name: string;
@@ -83,7 +81,6 @@ const ResourcesUploadForm: React.FC<ResourcesUploadFormProps> = ({
   onSave,
   saving
 }) => {
-  // State variables
   const [resources, setResources] = useState<Resource[]>([]);
   const [loading, setLoading] = useState(true);
   const [savingResources, setSavingResources] = useState(false);
@@ -118,13 +115,12 @@ const ResourcesUploadForm: React.FC<ResourcesUploadFormProps> = ({
         .from("solution_resources")
         .select("*")
         .eq("solution_id", solutionId)
-        .is("module_id", null); // apenas recursos da solução, não de módulos específicos
+        .is("module_id", null);
         
       if (error) throw error;
       
       if (data) {
         const typedResources = data.map(item => {
-          // Extract or create metadata
           let metadata: ResourceMetadata | undefined;
           try {
             if (typeof item.metadata === 'string') {
@@ -132,7 +128,6 @@ const ResourcesUploadForm: React.FC<ResourcesUploadFormProps> = ({
             } else if (item.metadata) {
               metadata = item.metadata as ResourceMetadata;
             } else {
-              // Create default metadata if none exists
               metadata = {
                 title: item.name,
                 description: `Arquivo ${item.format || getFileFormatName(item.name)}`,
@@ -156,7 +151,6 @@ const ResourcesUploadForm: React.FC<ResourcesUploadFormProps> = ({
             };
           }
           
-          // Determine resource type
           let validType: "document" | "image" | "template" | "pdf" | "spreadsheet" | "presentation" | "video" | "other" = "document";
           
           if (item.type === "image") {
@@ -190,7 +184,6 @@ const ResourcesUploadForm: React.FC<ResourcesUploadFormProps> = ({
           } as Resource;
         });
         
-        // Sort resources by order if available
         const sortedResources = typedResources.sort((a, b) => {
           const orderA = a.metadata?.order || 0;
           const orderB = b.metadata?.order || 0;
@@ -261,7 +254,6 @@ const ResourcesUploadForm: React.FC<ResourcesUploadFormProps> = ({
       const fileType = detectFileType(fileName);
       const format = getFileFormatName(fileName);
       
-      // Create resource metadata
       const metadata: ResourceMetadata = {
         title: fileName,
         description: `Arquivo ${format}`,
@@ -328,7 +320,6 @@ const ResourcesUploadForm: React.FC<ResourcesUploadFormProps> = ({
     if (!solutionId) return;
     
     try {
-      // Validate required fields
       if (!newResource.title || !newResource.description || !newResource.url) {
         toast({
           title: "Campos obrigatórios",
@@ -371,7 +362,6 @@ const ResourcesUploadForm: React.FC<ResourcesUploadFormProps> = ({
         setResources(prev => [...prev, resource]);
       }
       
-      // Reset form and close dialog
       setNewResource({
         title: "",
         description: "",
@@ -405,7 +395,6 @@ const ResourcesUploadForm: React.FC<ResourcesUploadFormProps> = ({
       if (url) {
         const filePath = url.split("/").pop();
         if (filePath) {
-          // Try to delete from storage if it's a stored file
           try {
             await supabase.storage
               .from("solution_files")
@@ -512,13 +501,11 @@ const ResourcesUploadForm: React.FC<ResourcesUploadFormProps> = ({
   };
 
   const filteredResources = resources.filter(resource => {
-    // Filter by search query
     const searchMatch = 
       resource.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       resource.metadata?.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       resource.metadata?.tags?.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
     
-    // Filter by tab selection
     const tabMatch = 
       activeFilterTab === "all" || 
       resource.type === activeFilterTab;
@@ -543,7 +530,6 @@ const ResourcesUploadForm: React.FC<ResourcesUploadFormProps> = ({
         </p>
       </div>
       
-      {/* Search and filter bar */}
       <div className="flex flex-col sm:flex-row gap-4">
         <div className="relative flex-1">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -685,7 +671,6 @@ const ResourcesUploadForm: React.FC<ResourcesUploadFormProps> = ({
         </Dialog>
       </div>
       
-      {/* Filter tabs */}
       <Tabs value={activeFilterTab} onValueChange={setActiveFilterTab} className="w-full">
         <TabsList className="flex w-full h-auto flex-wrap gap-2">
           <TabsTrigger value="all" className="flex gap-1 items-center">
@@ -701,7 +686,7 @@ const ResourcesUploadForm: React.FC<ResourcesUploadFormProps> = ({
             <span>Planilhas</span>
           </TabsTrigger>
           <TabsTrigger value="presentation" className="flex gap-1 items-center">
-            <FilePresentation className="h-4 w-4" />
+            <Presentation className="h-4 w-4" />
             <span>Apresentações</span>
           </TabsTrigger>
           <TabsTrigger value="pdf" className="flex gap-1 items-center">
@@ -719,7 +704,6 @@ const ResourcesUploadForm: React.FC<ResourcesUploadFormProps> = ({
         </TabsList>
       </Tabs>
       
-      {/* Quick upload cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
@@ -742,7 +726,6 @@ const ResourcesUploadForm: React.FC<ResourcesUploadFormProps> = ({
         </Card>
       </div>
       
-      {/* Resources list */}
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Materiais Adicionados</CardTitle>
