@@ -85,7 +85,7 @@ const ResourcesForm = ({ solutionId, onSave, saving }: ResourcesFormProps) => {
             </TabsContent>
 
             <TabsContent value="materials" className="space-y-4">
-              <ResourceMaterialsTab form={form} />
+              <ResourceMaterialsTab form={form} solutionId={solutionId} />
             </TabsContent>
 
             <TabsContent value="external_links" className="space-y-4">
