@@ -1,6 +1,8 @@
 
 import React from "react";
 import { FileUpload } from "@/components/ui/file-upload";
+import { detectFileType, getFileFormatName } from "../utils/resourceUtils";
+import { ResourceMetadata } from "../types/ResourceTypes";
 
 interface MaterialUploadSectionProps {
   solutionId: string | null;
@@ -11,6 +13,10 @@ const MaterialUploadSection: React.FC<MaterialUploadSectionProps> = ({
   solutionId, 
   onUploadComplete 
 }) => {
+  const handleFileUploadComplete = async (url: string, fileName: string, fileSize: number) => {
+    await onUploadComplete(url, fileName, fileSize);
+  };
+  
   return (
     <div className="bg-white border p-6 rounded-lg">
       <h3 className="text-lg font-medium mb-4">Upload de Material</h3>
@@ -22,7 +28,7 @@ const MaterialUploadSection: React.FC<MaterialUploadSectionProps> = ({
         <FileUpload
           bucketName="solution_files"
           folder="documents"
-          onUploadComplete={onUploadComplete}
+          onUploadComplete={handleFileUploadComplete}
           accept="*"
           maxSize={25} // 25MB
           buttonText="Upload de Material"

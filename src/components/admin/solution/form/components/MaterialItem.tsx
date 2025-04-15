@@ -3,8 +3,8 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { Upload, Trash2 } from "lucide-react";
 import { Resource } from "../types/ResourceTypes";
-import { getFileIcon } from "../utils/iconUtils";
 import { formatFileSize } from "../utils/resourceUtils";
+import { getFileIcon } from "../utils/iconUtils";
 
 interface MaterialItemProps {
   material: Resource;
@@ -12,8 +12,14 @@ interface MaterialItemProps {
 }
 
 const MaterialItem: React.FC<MaterialItemProps> = ({ material, onRemove }) => {
+  const handleRemove = async () => {
+    if (material.id) {
+      await onRemove(material.id);
+    }
+  };
+
   return (
-    <div key={material.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border rounded-md bg-gray-50 gap-3">
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border rounded-md bg-gray-50 gap-3">
       <div className="flex items-start gap-3">
         {getFileIcon(material.type)}
         <div className="flex-1 min-w-0">
@@ -54,7 +60,7 @@ const MaterialItem: React.FC<MaterialItemProps> = ({ material, onRemove }) => {
         <Button 
           variant="outline" 
           size="sm"
-          onClick={() => onRemove(material.id || '')}
+          onClick={handleRemove}
           className="flex gap-1 text-red-500 hover:text-red-700 hover:bg-red-50"
         >
           <Trash2 className="h-4 w-4 flex-shrink-0" />
