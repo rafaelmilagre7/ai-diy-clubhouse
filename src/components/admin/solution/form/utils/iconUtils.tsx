@@ -17,17 +17,17 @@ export const getFileIcon = (type?: string) => {
   
   switch(type) {
     case 'pdf':
-      return <FileText {...iconProps} />;
+      return <FileText className="text-red-500" {...iconProps} />;
     case 'document':
-      return <FileText {...iconProps} />;
+      return <FileText className="text-sky-500" {...iconProps} />;
     case 'spreadsheet':
-      return <FileSpreadsheet {...iconProps} />;
+      return <FileSpreadsheet className="text-green-500" {...iconProps} />;
     case 'presentation':
-      return <Presentation {...iconProps} />;
+      return <Presentation className="text-blue-500" {...iconProps} />;
     case 'image':
-      return <FileImage {...iconProps} />;
+      return <FileImage className="text-purple-500" {...iconProps} />;
     case 'video':
-      return <FileVideo {...iconProps} />;
+      return <FileVideo className="text-orange-500" {...iconProps} />;
     case 'template':
       return <FileCode {...iconProps} />;
     default:

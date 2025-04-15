@@ -1,24 +1,26 @@
-import React, { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { PlusCircle, Upload, Trash2 } from "lucide-react";
-import ContentPreview from "../../ContentPreview";
+import React from "react";
 import { UseFormReturn } from "react-hook-form";
 import { ResourceFormValues } from "../hooks/useResourcesFormData";
-import { FileUpload } from "@/components/ui/file-upload";
+import { Resource } from "../types/ResourceTypes";
 import { useToast } from "@/hooks/use-toast";
+import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
-import { Resource, ResourceMetadata } from "../types/ResourceTypes";
 import { detectFileType, getFileFormatName, formatFileSize } from "../utils/resourceUtils";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Button } from "@/components/ui/button";
+import { Upload, Trash2 } from "lucide-react";
+import { FileUpload } from "@/components/ui/file-upload";
 
 interface ResourceMaterialsTabProps {
   form: UseFormReturn<ResourceFormValues>;
   solutionId: string | null;
 }
 
-const ResourceMaterialsTab: React.FC<ResourceMaterialsTabProps> = ({ form, solutionId }) => {
+const ResourceMaterialsTab: React.FC<ResourceMaterialsTabProps> = ({ 
+  form, 
+  solutionId 
+}) => {
   const { toast } = useToast();
   const [materials, setMaterials] = useState<Resource[]>([]);
   const [loading, setLoading] = useState(true);
@@ -49,12 +51,12 @@ const ResourceMaterialsTab: React.FC<ResourceMaterialsTabProps> = ({ form, solut
         // Process the materials data
         const processedMaterials = data.map(item => {
           try {
-            let metadata: ResourceMetadata;
+            let metadata: any;
             
             if (typeof item.metadata === 'string') {
               metadata = JSON.parse(item.metadata);
             } else if (item.metadata) {
-              metadata = item.metadata as ResourceMetadata;
+              metadata = item.metadata as any;
             } else {
               // Create default metadata
               metadata = {
@@ -136,7 +138,7 @@ const ResourceMaterialsTab: React.FC<ResourceMaterialsTabProps> = ({ form, solut
       const fileType = detectFileType(fileName);
       const format = getFileFormatName(fileName);
       
-      const metadata: ResourceMetadata = {
+      const metadata = {
         title: fileName,
         description: `Arquivo ${format}`,
         url: url,
