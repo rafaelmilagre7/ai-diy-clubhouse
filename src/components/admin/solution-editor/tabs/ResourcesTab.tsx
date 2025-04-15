@@ -3,7 +3,6 @@ import React from "react";
 import ResourcesForm from "@/components/admin/solution/ResourcesForm";
 import ResourcesUploadForm from "@/components/admin/solution/form/ResourcesUploadForm";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Card } from "@/components/ui/card";
 
 interface ResourcesTabProps {
   solutionId: string | null;
