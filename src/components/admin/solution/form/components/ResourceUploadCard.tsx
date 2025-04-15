@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/card";
 import { FileUpload } from "@/components/ui/file-upload";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, Upload } from "lucide-react";
 
 interface ResourceUploadCardProps {
   handleUploadComplete: (url: string, fileName: string, fileSize: number) => Promise<void>;
@@ -28,9 +28,12 @@ const ResourceUploadCard: React.FC<ResourceUploadCardProps> = ({ handleUploadCom
   };
   
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-base">Upload Rápido</CardTitle>
+    <Card className="border-2 border-dashed border-[#0ABAB5]/30 hover:border-[#0ABAB5]/50 transition-all">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-[#0ABAB5] flex items-center">
+          <Upload className="h-5 w-5 mr-2" />
+          Upload Rápido
+        </CardTitle>
         <CardDescription>
           Adicione PDFs, documentos, planilhas e outros materiais de apoio.
         </CardDescription>

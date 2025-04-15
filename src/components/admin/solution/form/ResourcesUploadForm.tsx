@@ -1,6 +1,7 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Save, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { formatFileSize } from "./utils/resourceUtils";
@@ -65,23 +66,26 @@ const ResourcesUploadForm: React.FC<ResourcesUploadFormProps> = ({
 
   return (
     <div className="space-y-6">
-      <div>
-        <h3 className="text-lg font-medium">Materiais de Apoio</h3>
-        <p className="text-sm text-muted-foreground">
-          Adicione documentos, templates e imagens que ajudarão o usuário a implementar a solução.
-        </p>
-      </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <ResourceUploadCard handleUploadComplete={handleUploadComplete} />
-      </div>
-      
-      <ResourceList 
-        filteredResources={resources} 
-        searchQuery="" 
-        handleRemoveResource={handleRemoveResource}
-        formatFileSize={formatFileSize}
-      />
+      <Card className="border border-[#0ABAB5]/20">
+        <CardHeader>
+          <CardTitle>Materiais de Apoio</CardTitle>
+          <CardDescription>
+            Adicione documentos, templates e imagens que ajudarão o usuário a implementar a solução.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <ResourceUploadCard handleUploadComplete={handleUploadComplete} />
+          </div>
+          
+          <ResourceList 
+            filteredResources={resources} 
+            searchQuery="" 
+            handleRemoveResource={handleRemoveResource}
+            formatFileSize={formatFileSize}
+          />
+        </CardContent>
+      </Card>
       
       <Button 
         onClick={saveAndContinue}

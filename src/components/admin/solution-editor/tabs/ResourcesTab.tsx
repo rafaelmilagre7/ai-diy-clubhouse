@@ -25,9 +25,19 @@ const ResourcesTab: React.FC<ResourcesTabProps> = ({
         onValueChange={setActiveResourceTab}
         className="w-full"
       >
-        <TabsList className="grid grid-cols-2 mb-6">
-          <TabsTrigger value="materials">Materiais</TabsTrigger>
-          <TabsTrigger value="faq">FAQ</TabsTrigger>
+        <TabsList className="grid grid-cols-2 mb-6 bg-[#F1F0FB] p-1">
+          <TabsTrigger 
+            value="materials"
+            className="data-[state=active]:bg-[#0ABAB5] data-[state=active]:text-white"
+          >
+            Materiais
+          </TabsTrigger>
+          <TabsTrigger 
+            value="faq"
+            className="data-[state=active]:bg-[#0ABAB5] data-[state=active]:text-white"
+          >
+            FAQ
+          </TabsTrigger>
         </TabsList>
         
         <TabsContent value="materials" className="mt-0">

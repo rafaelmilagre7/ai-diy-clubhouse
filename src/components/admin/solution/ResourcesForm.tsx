@@ -1,8 +1,8 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, Save, HelpCircle } from "lucide-react";
+import { Loader2, Save } from "lucide-react";
 import { useResourcesFormData } from './form/hooks/useResourcesFormData';
 
 // Import FAQ tab component
@@ -44,7 +44,7 @@ const ResourcesForm = ({ solutionId, onSave, saving }: ResourcesFormProps) => {
   
   return (
     <div className="space-y-6">
-      <Card>
+      <Card className="border border-[#0ABAB5]/20">
         <CardHeader>
           <CardTitle>Perguntas Frequentes (FAQ)</CardTitle>
           <CardDescription>
