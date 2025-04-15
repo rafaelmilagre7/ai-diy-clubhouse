@@ -22,7 +22,7 @@ import {
   Plus,
   Tag,
   FileSpreadsheet,
-  FilePresentation,
+  Presentation,
   FileVideo
 } from "lucide-react";
 import { FileUpload } from "@/components/ui/file-upload";
@@ -57,6 +57,7 @@ interface ResourceMetadata {
   version?: string;
 }
 
+// Update the Resource interface to include the metadata field
 interface Resource {
   id?: string;
   name: string;
@@ -67,6 +68,8 @@ interface Resource {
   metadata?: ResourceMetadata;
   created_at?: string;
   updated_at?: string;
+  module_id?: string;
+  size?: number;
 }
 
 interface ResourcesUploadFormProps {
@@ -124,13 +127,33 @@ const ResourcesUploadForm: React.FC<ResourcesUploadFormProps> = ({
           // Extract or create metadata
           let metadata: ResourceMetadata | undefined;
           try {
-            if (item.metadata) {
-              metadata = typeof item.metadata === 'string' 
-                ? JSON.parse(item.metadata) 
-                : item.metadata;
+            if (typeof item.metadata === 'string') {
+              metadata = JSON.parse(item.metadata);
+            } else if (item.metadata) {
+              metadata = item.metadata as ResourceMetadata;
+            } else {
+              // Create default metadata if none exists
+              metadata = {
+                title: item.name,
+                description: `Arquivo ${item.format || getFileFormatName(item.name)}`,
+                url: item.url,
+                type: item.type as any,
+                format: item.format,
+                tags: [],
+                order: 0,
+                downloads: 0,
+                size: item.size,
+                version: "1.0"
+              };
             }
           } catch (e) {
             console.error("Error parsing metadata:", e);
+            metadata = {
+              title: item.name,
+              description: `Arquivo`,
+              url: item.url,
+              type: item.type as any,
+            };
           }
           
           // Determine resource type
@@ -161,7 +184,9 @@ const ResourcesUploadForm: React.FC<ResourcesUploadFormProps> = ({
             solution_id: item.solution_id,
             metadata: metadata,
             created_at: item.created_at,
-            updated_at: item.updated_at
+            updated_at: item.updated_at,
+            module_id: item.module_id,
+            size: item.size
           } as Resource;
         });
         
@@ -277,7 +302,9 @@ const ResourcesUploadForm: React.FC<ResourcesUploadFormProps> = ({
           solution_id: data.solution_id,
           metadata: metadata,
           created_at: data.created_at,
-          updated_at: data.updated_at
+          updated_at: data.updated_at,
+          module_id: data.module_id,
+          size: data.size
         };
         
         setResources(prev => [...prev, resource]);
@@ -472,7 +499,7 @@ const ResourcesUploadForm: React.FC<ResourcesUploadFormProps> = ({
       case 'spreadsheet':
         return <FileSpreadsheet {...iconProps} />;
       case 'presentation':
-        return <FilePresentation {...iconProps} />;
+        return <Presentation {...iconProps} />;
       case 'image':
         return <FileImage {...iconProps} />;
       case 'video':
