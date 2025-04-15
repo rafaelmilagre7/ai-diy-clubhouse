@@ -1,5 +1,4 @@
 
-import { Tool as IconComponent } from "lucide-react";
 import * as Icons from "lucide-react";
 
 export interface ToolItem {
@@ -16,7 +15,7 @@ export const availableTools: ToolItem[] = [
     name: "API da OpenAI",
     url: "https://platform.openai.com/assistants",
     description: "Plataforma para desenvolvedores integrarem modelos de IA como GPT-4 em aplicações",
-    icon: "Api"
+    icon: "CircuitBoard"
   },
   {
     id: "chatgpt",
@@ -37,7 +36,7 @@ export const availableTools: ToolItem[] = [
     name: "API da Anthropic",
     url: "https://console.anthropic.com/dashboard",
     description: "Plataforma para desenvolvedores integrarem os modelos Claude em aplicações",
-    icon: "Api"
+    icon: "CircuitBoard"
   },
   {
     id: "gemini",
@@ -324,7 +323,7 @@ export const availableTools: ToolItem[] = [
     name: "Apify",
     url: "https://apify.com/",
     description: "Plataforma para extração de dados e automação web em escala",
-    icon: "Spider"
+    icon: "Globe"
   },
   {
     id: "google-calendar",
@@ -345,6 +344,6 @@ export const availableTools: ToolItem[] = [
     name: "Pipedrive",
     url: "https://www.pipedrive.com/pt",
     description: "CRM focado em gestão de pipeline de vendas e acompanhamento de negócios",
-    icon: "PipeLine"
+    icon: "PieChart"
   }
 ];
