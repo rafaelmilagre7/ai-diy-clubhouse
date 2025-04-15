@@ -35,7 +35,8 @@ export function useResourceUpload(
         url: url,
         type: fileType,
         format: format,
-        metadata: metadata
+        metadata: metadata,
+        size: fileSize
       };
       
       const { data, error } = await supabase

@@ -283,6 +283,7 @@ export type Database = {
           created_at: string | null
           format: string | null
           id: string
+          metadata: Json | null
           module_id: string | null
           name: string
           size: number | null
@@ -295,6 +296,7 @@ export type Database = {
           created_at?: string | null
           format?: string | null
           id?: string
+          metadata?: Json | null
           module_id?: string | null
           name: string
           size?: number | null
@@ -307,6 +309,7 @@ export type Database = {
           created_at?: string | null
           format?: string | null
           id?: string
+          metadata?: Json | null
           module_id?: string | null
           name?: string
           size?: number | null
