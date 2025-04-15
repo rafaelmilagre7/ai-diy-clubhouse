@@ -81,34 +81,35 @@ const ResourcesUploadForm: React.FC<ResourcesUploadFormProps> = ({
       
       if (data) {
         const typedResources = data.map(item => {
-          let metadata: ResourceMetadata | undefined;
-          try {
-            if (typeof item.metadata === 'string') {
-              metadata = JSON.parse(item.metadata);
-            } else if (item.metadata) {
-              metadata = item.metadata as ResourceMetadata;
-            } else {
-              metadata = {
-                title: item.name,
-                description: `Arquivo ${item.format || getFileFormatName(item.name)}`,
-                url: item.url,
-                type: item.type as any,
-                format: item.format,
-                tags: [],
-                order: 0,
-                downloads: 0,
-                size: item.size,
-                version: "1.0"
-              };
+          // Create default metadata object from the resource properties
+          const defaultMetadata: ResourceMetadata = {
+            title: item.name,
+            description: `Arquivo ${item.format || getFileFormatName(item.name)}`,
+            url: item.url,
+            type: item.type as any,
+            format: item.format,
+            tags: [],
+            order: 0,
+            downloads: 0,
+            size: item.size,
+            version: "1.0"
+          };
+          
+          // Try to parse metadata if it exists, otherwise use default
+          let metadata: ResourceMetadata = defaultMetadata;
+          
+          if (item.metadata) {
+            try {
+              if (typeof item.metadata === 'string') {
+                metadata = JSON.parse(item.metadata);
+              } else {
+                metadata = item.metadata as ResourceMetadata;
+              }
+            } catch (e) {
+              console.error("Error parsing metadata:", e);
+              // Fallback to default metadata on parse error
+              metadata = defaultMetadata;
             }
-          } catch (e) {
-            console.error("Error parsing metadata:", e);
-            metadata = {
-              title: item.name,
-              description: `Arquivo`,
-              url: item.url,
-              type: item.type as any,
-            };
           }
           
           let validType: "document" | "image" | "template" | "pdf" | "spreadsheet" | "presentation" | "video" | "other" = "document";
@@ -136,7 +137,7 @@ const ResourcesUploadForm: React.FC<ResourcesUploadFormProps> = ({
             type: validType,
             format: item.format,
             solution_id: item.solution_id,
-            metadata: metadata,
+            metadata: metadata, // Always assign a valid metadata object
             created_at: item.created_at,
             updated_at: item.updated_at,
             module_id: item.module_id,
@@ -145,8 +146,8 @@ const ResourcesUploadForm: React.FC<ResourcesUploadFormProps> = ({
         });
         
         const sortedResources = typedResources.sort((a, b) => {
-          const orderA = a.metadata?.order || 0;
-          const orderB = b.metadata?.order || 0;
+          const orderA = a.metadata.order || 0;
+          const orderB = b.metadata.order || 0;
           return orderA - orderB;
         });
         
@@ -397,8 +398,8 @@ const ResourcesUploadForm: React.FC<ResourcesUploadFormProps> = ({
   const filteredResources = resources.filter(resource => {
     const searchMatch = 
       resource.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (resource.metadata?.description?.toLowerCase().includes(searchQuery.toLowerCase()) || false) ||
-      (resource.metadata?.tags?.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase())) || false);
+      (resource.metadata.description.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (resource.metadata.tags?.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase())) || false);
     
     const tabMatch = 
       activeFilterTab === "all" || 
