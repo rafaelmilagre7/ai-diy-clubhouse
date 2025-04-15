@@ -83,9 +83,11 @@ export const uploadFileToStorage = async (
     // Para outros tipos de arquivo, continuar com o Supabase
     // Criar um nome de arquivo único baseado no timestamp e nome original
     const timestamp = new Date().getTime();
+    // Sanitize filename to avoid issues with special characters
+    const sanitizedFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
     const filePath = folderPath 
-      ? `${folderPath}/${timestamp}-${file.name}` 
-      : `${timestamp}-${file.name}`;
+      ? `${folderPath}/${timestamp}-${sanitizedFileName}` 
+      : `${timestamp}-${sanitizedFileName}`;
 
     // Verificar se o bucket existe e criar se necessário
     const { data: buckets } = await supabase.storage.listBuckets();

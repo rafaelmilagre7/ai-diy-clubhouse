@@ -6,6 +6,8 @@ import { UploadButton } from "./file/UploadButton";
 import { FilePreview } from "./file/FilePreview";
 import { uploadFileToStorage } from "./file/uploadUtils";
 import { Progress } from "./progress";
+import { AlertCircle } from "lucide-react";
+import { Alert, AlertDescription } from "./alert";
 
 interface FileUploadProps {
   bucketName: string;
@@ -30,6 +32,7 @@ export const FileUpload = ({
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [filePreview, setFilePreview] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -39,9 +42,11 @@ export const FileUpload = ({
     }
 
     const selectedFile = e.target.files[0];
+    setError(null);
     
     // Verificar tamanho do arquivo
     if (selectedFile.size > maxSize * 1024 * 1024) {
+      setError(`O arquivo excede o limite de ${maxSize}MB permitido.`);
       toast({
         title: "Arquivo muito grande",
         description: `O arquivo deve ter menos de ${maxSize}MB`,
@@ -68,6 +73,7 @@ export const FileUpload = ({
     setFile(null);
     setFilePreview(null);
     setUploadProgress(0);
+    setError(null);
   };
 
   const handleUpload = async () => {
@@ -76,6 +82,7 @@ export const FileUpload = ({
     try {
       setUploading(true);
       setUploadProgress(0);
+      setError(null);
       
       const result = await uploadFileToStorage(
         file, 
@@ -93,10 +100,10 @@ export const FileUpload = ({
       });
       
       // Limpar o campo de arquivo após o upload bem-sucedido
-      // setFile(null);
-      // Manter o preview para mostrar a imagem que foi enviada
+      clearFile();
     } catch (error: any) {
       console.error("Erro ao fazer upload:", error);
+      setError(error.message || "Ocorreu um erro ao tentar enviar o arquivo.");
       toast({
         title: "Erro ao fazer upload",
         description: error.message || "Ocorreu um erro ao tentar enviar o arquivo.",
@@ -109,6 +116,13 @@ export const FileUpload = ({
 
   return (
     <div className="space-y-4">
+      {error && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+      
       <div className="flex items-center gap-3">
         <FileInput
           file={file}
