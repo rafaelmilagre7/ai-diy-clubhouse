@@ -3,10 +3,16 @@ import { useState } from "react";
 import { useAuth } from "@/contexts/auth";
 import { MemberSidebar } from "./member/MemberSidebar";
 import { MemberContent } from "./member/MemberContent";
+import { Navigate } from "react-router-dom";
 
 const Layout = () => {
-  const { user, profile, signOut } = useAuth();
+  const { user, profile, signOut, isAdmin } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(true);
+
+  // If user is admin, redirect to admin layout
+  if (isAdmin) {
+    return <Navigate to="/admin" replace />;
+  }
 
   const getInitials = (name: string | null) => {
     if (!name) return "U";
