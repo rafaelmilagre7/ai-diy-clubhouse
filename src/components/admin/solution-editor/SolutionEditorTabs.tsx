@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import {
   Tabs,
   TabsContent,
@@ -37,6 +37,15 @@ const SolutionEditorTabs = ({
 }: SolutionEditorTabsProps) => {
   const isValid = solution && solution.id;
   
+  // Auto-save when changing tabs
+  useEffect(() => {
+    // Don't trigger auto-save if we're in the process of initial loading
+    if (solution && !saving) {
+      // Save the current values automatically when changing tabs
+      onSubmit(currentValues);
+    }
+  }, [activeTab]); // Only trigger on tab change
+  
   // Renderiza apenas o conteúdo apropriado para a etapa atual
   const renderContent = () => {
     // Verificar se a solução existe para exibir as abas que exigem ID
@@ -51,72 +60,134 @@ const SolutionEditorTabs = ({
       );
     }
 
-    switch (currentStep) {
-      case 0:
-        return (
-          <BasicInfoTab 
-            currentValues={currentValues} 
-            onSubmit={onSubmit} 
-            saving={saving} 
-          />
-        );
-      
-      case 1:
-        return (
-          <ToolsTab 
-            solutionId={solution?.id || null} 
-            onSave={() => onSubmit(currentValues)} 
-            saving={saving}
-          />
-        );
-      
-      case 2:
-        return (
-          <ResourcesTab 
-            solutionId={solution?.id || null} 
-            onSave={() => onSubmit(currentValues)} 
-            saving={saving} 
-          />
-        );
-      
-      case 3:
-        return (
-          <VideoTab 
-            solutionId={solution?.id || null} 
-            onSave={() => onSubmit(currentValues)} 
-            saving={saving}
-          />
-        );
-      
-      case 4:
-        return (
-          <ChecklistTab 
-            solutionId={solution?.id || null} 
-            onSave={() => onSubmit(currentValues)} 
-            saving={saving}
-          />
-        );
-      
-      case 5:
-        return (
-          <PublishTab 
-            solutionId={solution?.id || null}
-            solution={solution}
-            onSave={onSubmit}
-            saving={saving}
-          />
-        );
-      
-      default:
-        return (
-          <Alert variant="default" className="bg-amber-50 border-amber-200">
-            <AlertTitle>Etapa não reconhecida</AlertTitle>
-            <AlertDescription>
-              Por favor, volte para uma etapa válida ou recarregue a página.
-            </AlertDescription>
-          </Alert>
-        );
+    // Render different content based on active tab OR step
+    if (currentStep === 0) {
+      // In step 0, show tab content based on active tab
+      switch (activeTab) {
+        case "basic":
+          return (
+            <BasicInfoTab 
+              currentValues={currentValues} 
+              onSubmit={onSubmit} 
+              saving={saving} 
+            />
+          );
+        case "resources":
+          if (isValid) {
+            return (
+              <ResourcesTab 
+                solutionId={solution?.id || null} 
+                onSave={() => onSubmit(currentValues)} 
+                saving={saving} 
+              />
+            );
+          }
+          break;
+        case "tools":
+          if (isValid) {
+            return (
+              <ToolsTab 
+                solutionId={solution?.id || null} 
+                onSave={() => onSubmit(currentValues)} 
+                saving={saving} 
+              />
+            );
+          }
+          break;
+        case "video":
+          if (isValid) {
+            return (
+              <VideoTab 
+                solutionId={solution?.id || null} 
+                onSave={() => onSubmit(currentValues)} 
+                saving={saving} 
+              />
+            );
+          }
+          break;
+        case "checklist":
+          if (isValid) {
+            return (
+              <ChecklistTab 
+                solutionId={solution?.id || null} 
+                onSave={() => onSubmit(currentValues)} 
+                saving={saving} 
+              />
+            );
+          }
+          break;
+      }
+    } else {
+      // For steps > 0, show content based on step
+      switch (currentStep) {
+        case 1:
+          return (
+            <ToolsTab 
+              solutionId={solution?.id || null} 
+              onSave={() => onSubmit(currentValues)} 
+              saving={saving}
+            />
+          );
+        
+        case 2:
+          return (
+            <ResourcesTab 
+              solutionId={solution?.id || null} 
+              onSave={() => onSubmit(currentValues)} 
+              saving={saving} 
+            />
+          );
+        
+        case 3:
+          return (
+            <VideoTab 
+              solutionId={solution?.id || null} 
+              onSave={() => onSubmit(currentValues)} 
+              saving={saving}
+            />
+          );
+        
+        case 4:
+          return (
+            <ChecklistTab 
+              solutionId={solution?.id || null} 
+              onSave={() => onSubmit(currentValues)} 
+              saving={saving}
+            />
+          );
+        
+        case 5:
+          return (
+            <PublishTab 
+              solutionId={solution?.id || null}
+              solution={solution}
+              onSave={onSubmit}
+              saving={saving}
+            />
+          );
+      }
     }
+    
+    // Default view for step 0 if no valid tab is selected
+    if (currentStep === 0) {
+      return (
+        <BasicInfoTab 
+          currentValues={currentValues} 
+          onSubmit={onSubmit} 
+          saving={saving} 
+        />
+      );
+    }
+    
+    // Default alert for unrecognized steps
+    return (
+      <Alert variant="default" className="bg-amber-50 border-amber-200">
+        <AlertTitle>Etapa não reconhecida</AlertTitle>
+        <AlertDescription>
+          Por favor, volte para uma etapa válida ou recarregue a página.
+        </AlertDescription>
+      </Alert>
+    );
   };
 
   // Mostra abas apenas na primeira etapa

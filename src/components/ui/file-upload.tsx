@@ -5,11 +5,12 @@ import { FileInput } from "./file/FileInput";
 import { UploadButton } from "./file/UploadButton";
 import { FilePreview } from "./file/FilePreview";
 import { uploadFileToStorage } from "./file/uploadUtils";
+import { Progress } from "./progress";
 
 interface FileUploadProps {
   bucketName: string;
   folder?: string;
-  onUploadComplete: (filePath: string, fileName: string) => void;
+  onUploadComplete: (filePath: string, fileName: string, fileSize: number) => void;
   accept?: string;
   maxSize?: number; // in MB
   buttonText?: string;
@@ -84,7 +85,7 @@ export const FileUpload = ({
       );
 
       // Notificar o componente pai que o upload foi concluído
-      onUploadComplete(result.publicUrl, result.fileName);
+      onUploadComplete(result.publicUrl, result.fileName, file.size);
       
       toast({
         title: "Upload concluído",
@@ -126,6 +127,16 @@ export const FileUpload = ({
           buttonText={buttonText}
         />
       </div>
+      
+      {file && (
+        <div className="mt-2">
+          <div className="flex justify-between text-xs text-muted-foreground mb-1">
+            <span>{file.name}</span>
+            <span>{(file.size / (1024 * 1024)).toFixed(2)} MB</span>
+          </div>
+          <Progress value={uploadProgress} className="h-2" />
+        </div>
+      )}
       
       {filePreview && (
         <FilePreview 

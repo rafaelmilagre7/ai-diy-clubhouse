@@ -1,6 +1,9 @@
 
 import React from "react";
 import ResourcesForm from "@/components/admin/solution/ResourcesForm";
+import ResourcesUploadForm from "@/components/admin/solution/form/ResourcesUploadForm";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Card } from "@/components/ui/card";
 
 interface ResourcesTabProps {
   solutionId: string | null;
@@ -13,12 +16,38 @@ const ResourcesTab: React.FC<ResourcesTabProps> = ({
   onSave,
   saving,
 }) => {
+  const [activeResourceTab, setActiveResourceTab] = React.useState<string>("advanced");
+
   return (
-    <ResourcesForm 
-      solutionId={solutionId} 
-      onSave={onSave} 
-      saving={saving} 
-    />
+    <div className="space-y-6">
+      <Tabs 
+        defaultValue="advanced" 
+        value={activeResourceTab} 
+        onValueChange={setActiveResourceTab}
+        className="w-full"
+      >
+        <TabsList className="grid grid-cols-2 mb-6">
+          <TabsTrigger value="advanced">Editor Avançado</TabsTrigger>
+          <TabsTrigger value="upload">Upload de Materiais</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="advanced" className="mt-0">
+          <ResourcesForm 
+            solutionId={solutionId} 
+            onSave={onSave} 
+            saving={saving} 
+          />
+        </TabsContent>
+        
+        <TabsContent value="upload" className="mt-0">
+          <ResourcesUploadForm 
+            solutionId={solutionId} 
+            onSave={onSave} 
+            saving={saving} 
+          />
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 };
 
