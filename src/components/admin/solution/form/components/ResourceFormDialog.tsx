@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import { FileUpload } from "@/components/ui/file-upload";
 import { ResourceMetadata } from "../types/ResourceTypes";
+import { detectFileType, getFileFormatName } from "../utils/resourceUtils";
 
 interface ResourceFormDialogProps {
   showDialog: boolean;
@@ -21,8 +22,6 @@ interface ResourceFormDialogProps {
   newResource: ResourceMetadata;
   setNewResource: (resource: ResourceMetadata) => void;
   handleCreateResource: () => Promise<void>;
-  detectFileType: (fileName: string) => "document" | "image" | "template" | "pdf" | "spreadsheet" | "presentation" | "video" | "other";
-  getFileFormatName: (fileName: string) => string;
   getFileIcon: (type: string) => React.ReactNode;
 }
 
@@ -32,8 +31,6 @@ const ResourceFormDialog: React.FC<ResourceFormDialogProps> = ({
   newResource,
   setNewResource,
   handleCreateResource,
-  detectFileType,
-  getFileFormatName,
   getFileIcon
 }) => {
   const [newTag, setNewTag] = useState("");
