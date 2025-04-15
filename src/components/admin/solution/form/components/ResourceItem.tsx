@@ -60,7 +60,7 @@ const ResourceItem: React.FC<ResourceItemProps> = ({
         {getFileIcon(resource.type)}
         <div className="flex-1 min-w-0">
           <p className="font-medium truncate">{resource.metadata?.title || resource.name}</p>
-          <p className="text-sm text-muted-foreground line-clamp-2">{resource.metadata?.description}</p>
+          <p className="text-sm text-muted-foreground line-clamp-2">{resource.metadata?.description || resource.name}</p>
           
           <div className="flex flex-wrap gap-2 mt-2">
             <Badge variant={resource.type as any} className="capitalize">
@@ -73,9 +73,9 @@ const ResourceItem: React.FC<ResourceItemProps> = ({
               </Badge>
             )}
             
-            {resource.metadata?.size && (
+            {(resource.metadata?.size || resource.size) && (
               <Badge variant="outline">
-                {formatFileSize(resource.metadata.size)}
+                {formatFileSize(resource.metadata?.size || resource.size || 0)}
               </Badge>
             )}
             
@@ -105,11 +105,11 @@ const ResourceItem: React.FC<ResourceItemProps> = ({
               <p className="font-medium mb-2">Detalhes do arquivo:</p>
               <div className="space-y-1">
                 <p><span className="text-muted-foreground">Nome:</span> {resource.name}</p>
-                {resource.metadata?.size && (
-                  <p><span className="text-muted-foreground">Tamanho:</span> {formatFileSize(resource.metadata.size)}</p>
+                {(resource.metadata?.size || resource.size) && (
+                  <p><span className="text-muted-foreground">Tamanho:</span> {formatFileSize(resource.metadata?.size || resource.size || 0)}</p>
                 )}
-                {resource.metadata?.format && (
-                  <p><span className="text-muted-foreground">Formato:</span> {resource.metadata.format}</p>
+                {(resource.metadata?.format || resource.format) && (
+                  <p><span className="text-muted-foreground">Formato:</span> {resource.metadata?.format || resource.format}</p>
                 )}
                 {resource.metadata?.version && (
                   <p><span className="text-muted-foreground">Versão:</span> {resource.metadata.version}</p>

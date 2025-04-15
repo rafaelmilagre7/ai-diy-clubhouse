@@ -397,8 +397,8 @@ const ResourcesUploadForm: React.FC<ResourcesUploadFormProps> = ({
   const filteredResources = resources.filter(resource => {
     const searchMatch = 
       resource.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      resource.metadata?.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      resource.metadata?.tags?.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
+      (resource.metadata?.description?.toLowerCase().includes(searchQuery.toLowerCase()) || false) ||
+      (resource.metadata?.tags?.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase())) || false);
     
     const tabMatch = 
       activeFilterTab === "all" || 
