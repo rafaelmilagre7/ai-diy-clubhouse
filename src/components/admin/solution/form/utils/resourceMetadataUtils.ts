@@ -24,7 +24,7 @@ export function parseResourceMetadata(item: any): Resource {
     try {
       if (typeof item.metadata === 'string') {
         metadata = JSON.parse(item.metadata);
-      } else {
+      } else if (typeof item.metadata === 'object') {
         metadata = item.metadata as ResourceMetadata;
       }
     } catch (e) {
@@ -38,7 +38,7 @@ export function parseResourceMetadata(item: any): Resource {
     id: item.id,
     name: item.name,
     url: item.url,
-    type: metadata.type,
+    type: metadata.type || detectFileType(item.name),
     format: item.format,
     solution_id: item.solution_id,
     metadata: metadata,

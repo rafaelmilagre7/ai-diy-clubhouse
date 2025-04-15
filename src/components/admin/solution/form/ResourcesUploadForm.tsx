@@ -5,15 +5,8 @@ import { Save, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { formatFileSize } from "./utils/resourceUtils";
 import { useResourcesManager } from "./hooks/useResourcesManager";
-import { useResourceFiltering } from "./hooks/useResourceFiltering";
-import { useResourceDialog } from "./hooks/useResourceDialog";
-import { getFileIcon } from "./utils/iconUtils";
-
-// Import custom components
-import ResourceFilterBar from "./components/ResourceFilterBar";
 import ResourceUploadCard from "./components/ResourceUploadCard";
 import ResourceList from "./components/ResourceList";
-import ResourceFormDialog from "./components/ResourceFormDialog";
 
 interface ResourcesUploadFormProps {
   solutionId: string | null;
@@ -35,33 +28,8 @@ const ResourcesUploadForm: React.FC<ResourcesUploadFormProps> = ({
     savingResources,
     setSavingResources,
     handleUploadComplete,
-    handleCreateResource,
     handleRemoveResource
   } = useResourcesManager(solutionId);
-  
-  const {
-    searchQuery,
-    setSearchQuery,
-    activeFilterTab,
-    setActiveFilterTab,
-    filteredResources
-  } = useResourceFiltering(resources);
-  
-  const {
-    showNewResourceDialog,
-    setShowNewResourceDialog,
-    newResource,
-    setNewResource,
-    resetNewResource
-  } = useResourceDialog();
-
-  const handleCreateAndCloseDialog = async () => {
-    const success = await handleCreateResource(newResource);
-    if (success) {
-      resetNewResource();
-      setShowNewResourceDialog(false);
-    }
-  };
 
   const saveAndContinue = async () => {
     if (!solutionId) return;
@@ -72,14 +40,14 @@ const ResourcesUploadForm: React.FC<ResourcesUploadFormProps> = ({
       onSave();
       
       toast({
-        title: "Recursos salvos",
-        description: "Os recursos foram salvos com sucesso.",
+        title: "Materiais salvos",
+        description: "Os materiais foram salvos com sucesso.",
       });
     } catch (error: any) {
-      console.error("Erro ao salvar recursos:", error);
+      console.error("Erro ao salvar materiais:", error);
       toast({
-        title: "Erro ao salvar recursos",
-        description: error.message || "Ocorreu um erro ao tentar salvar os recursos.",
+        title: "Erro ao salvar materiais",
+        description: error.message || "Ocorreu um erro ao tentar salvar os materiais.",
         variant: "destructive",
       });
     } finally {
@@ -104,32 +72,15 @@ const ResourcesUploadForm: React.FC<ResourcesUploadFormProps> = ({
         </p>
       </div>
       
-      <ResourceFilterBar
-        searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
-        activeFilterTab={activeFilterTab}
-        setActiveFilterTab={setActiveFilterTab}
-        openNewResourceDialog={() => setShowNewResourceDialog(true)}
-      />
-      
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <ResourceUploadCard handleUploadComplete={handleUploadComplete} />
       </div>
       
       <ResourceList 
-        filteredResources={filteredResources} 
-        searchQuery={searchQuery} 
+        filteredResources={resources} 
+        searchQuery="" 
         handleRemoveResource={handleRemoveResource}
         formatFileSize={formatFileSize}
-      />
-      
-      <ResourceFormDialog
-        showDialog={showNewResourceDialog}
-        setShowDialog={setShowNewResourceDialog}
-        newResource={newResource}
-        setNewResource={setNewResource}
-        handleCreateResource={handleCreateAndCloseDialog}
-        getFileIcon={getFileIcon}
       />
       
       <Button 
@@ -145,7 +96,7 @@ const ResourcesUploadForm: React.FC<ResourcesUploadFormProps> = ({
         ) : (
           <>
             <Save className="mr-2 h-4 w-4" />
-            Salvar e Continuar
+            Salvar Materiais
           </>
         )}
       </Button>

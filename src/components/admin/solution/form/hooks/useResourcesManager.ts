@@ -2,9 +2,8 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
-import { Resource, ResourceMetadata } from "../types/ResourceTypes";
+import { Resource } from "../types/ResourceTypes";
 import { useResourceUpload } from "./useResourceUpload";
-import { useResourceCreate } from "./useResourceCreate";
 import { useResourceRemove } from "./useResourceRemove";
 import { parseResourceMetadata } from "../utils/resourceMetadataUtils";
 
@@ -16,7 +15,6 @@ export function useResourcesManager(solutionId: string | null) {
 
   // Use custom hooks for specific resource operations
   const { handleUploadComplete } = useResourceUpload(solutionId, setResources, toast);
-  const { handleCreateResource } = useResourceCreate(solutionId, setResources, toast);
   const { handleRemoveResource } = useResourceRemove(setResources, toast);
 
   useEffect(() => {
@@ -68,7 +66,6 @@ export function useResourcesManager(solutionId: string | null) {
     savingResources,
     setSavingResources,
     handleUploadComplete,
-    handleCreateResource,
     handleRemoveResource
   };
 }

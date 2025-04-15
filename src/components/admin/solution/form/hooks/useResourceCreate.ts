@@ -28,7 +28,8 @@ export function useResourceCreate(
         url: newResource.url,
         type: newResource.type,
         format: newResource.format || getFileFormatName(newResource.url),
-        metadata: newResource
+        metadata: JSON.stringify(newResource),
+        size: newResource.size
       };
       
       const { data, error } = await supabase
@@ -58,16 +59,16 @@ export function useResourceCreate(
       }
       
       toast({
-        title: "Recurso adicionado",
-        description: "O recurso foi adicionado com sucesso.",
+        title: "Material adicionado",
+        description: "O material foi adicionado com sucesso.",
       });
       
       return true;
     } catch (error: any) {
-      console.error("Erro ao adicionar recurso:", error);
+      console.error("Erro ao adicionar material:", error);
       toast({
-        title: "Erro ao adicionar recurso",
-        description: error.message || "Ocorreu um erro ao tentar adicionar o recurso.",
+        title: "Erro ao adicionar material",
+        description: error.message || "Ocorreu um erro ao tentar adicionar o material.",
         variant: "destructive",
       });
       return false;

@@ -15,31 +15,31 @@ const ResourcesTab: React.FC<ResourcesTabProps> = ({
   onSave,
   saving,
 }) => {
-  const [activeResourceTab, setActiveResourceTab] = React.useState<string>("advanced");
+  const [activeResourceTab, setActiveResourceTab] = React.useState<string>("materials");
 
   return (
     <div className="space-y-6">
       <Tabs 
-        defaultValue="advanced" 
+        defaultValue="materials" 
         value={activeResourceTab} 
         onValueChange={setActiveResourceTab}
         className="w-full"
       >
         <TabsList className="grid grid-cols-2 mb-6">
-          <TabsTrigger value="advanced">Editor Avançado</TabsTrigger>
-          <TabsTrigger value="upload">Upload de Materiais</TabsTrigger>
+          <TabsTrigger value="materials">Materiais</TabsTrigger>
+          <TabsTrigger value="faq">FAQ</TabsTrigger>
         </TabsList>
         
-        <TabsContent value="advanced" className="mt-0">
-          <ResourcesForm 
+        <TabsContent value="materials" className="mt-0">
+          <ResourcesUploadForm 
             solutionId={solutionId} 
             onSave={onSave} 
             saving={saving} 
           />
         </TabsContent>
         
-        <TabsContent value="upload" className="mt-0">
-          <ResourcesUploadForm 
+        <TabsContent value="faq" className="mt-0">
+          <ResourcesForm 
             solutionId={solutionId} 
             onSave={onSave} 
             saving={saving} 
