@@ -4,6 +4,7 @@ import { supabase } from "@/lib/supabase";
 import { Resource, ResourceMetadata } from "../types/ResourceTypes";
 import { useToast } from "@/hooks/use-toast";
 import { parseResourceMetadata } from "../utils/resourceMetadataUtils";
+import { detectFileType } from "../utils/resourceUtils";
 
 export function useResourcesManager(solutionId: string | null) {
   const [resources, setResources] = useState<Resource[]>([]);
@@ -161,7 +162,7 @@ export function useResourcesManager(solutionId: string | null) {
   };
   
   // Helper functions for file type and format detection
-  function getFileType(extension: string): string {
+  function getFileType(extension: string): Resource['type'] {
     const documentExtensions = ['doc', 'docx', 'odt', 'rtf', 'txt'];
     const spreadsheetExtensions = ['xls', 'xlsx', 'ods', 'csv'];
     const presentationExtensions = ['ppt', 'pptx', 'odp', 'key'];
