@@ -6,11 +6,13 @@ import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { detectFileType, getFileFormatName, formatFileSize } from "../utils/resourceUtils";
+import { parseResourceMetadata } from "../utils/resourceMetadataUtils";
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Upload, Trash2 } from "lucide-react";
 import { FileUpload } from "@/components/ui/file-upload";
+import { getFileIcon } from "../utils/iconUtils";
 
 interface ResourceMaterialsTabProps {
   form: UseFormReturn<ResourceFormValues>;
@@ -48,48 +50,9 @@ const ResourceMaterialsTab: React.FC<ResourceMaterialsTabProps> = ({
       if (error) throw error;
       
       if (data) {
-        // Process the materials data
-        const processedMaterials = data.map(item => {
-          try {
-            let metadata: any;
-            
-            if (typeof item.metadata === 'string') {
-              metadata = JSON.parse(item.metadata);
-            } else if (item.metadata) {
-              metadata = item.metadata as any;
-            } else {
-              // Create default metadata
-              metadata = {
-                title: item.name,
-                description: `Arquivo ${item.format || getFileFormatName(item.name)}`,
-                url: item.url,
-                type: item.type as any,
-                format: item.format,
-                tags: [],
-                size: item.size
-              };
-            }
-            
-            return {
-              ...item,
-              metadata
-            } as Resource;
-          } catch (e) {
-            console.error("Error processing material:", e);
-            
-            // Return with minimal metadata
-            return {
-              ...item,
-              metadata: {
-                title: item.name,
-                description: "Arquivo",
-                url: item.url,
-                type: item.type as any
-              }
-            } as Resource;
-          }
-        });
-
+        // Process the materials data using the parseResourceMetadata utility
+        const processedMaterials = data.map(item => parseResourceMetadata(item));
+        
         // Update materials state and form value
         setMaterials(processedMaterials);
         
@@ -170,11 +133,11 @@ const ResourceMaterialsTab: React.FC<ResourceMaterialsTabProps> = ({
       if (error) throw error;
       
       if (data) {
+        // Create a proper Resource object with the received data
+        const newMaterial = parseResourceMetadata(data);
+        
         // Add the new resource to the state
-        const newMaterials = [...materials, {
-          ...data,
-          metadata
-        }];
+        const newMaterials = [...materials, newMaterial];
         
         setMaterials(newMaterials);
         updateFormValue(newMaterials);
@@ -239,20 +202,6 @@ const ResourceMaterialsTab: React.FC<ResourceMaterialsTabProps> = ({
         description: error.message || "Ocorreu um erro ao tentar remover o material.",
         variant: "destructive",
       });
-    }
-  };
-
-  const getFileIcon = (type?: string) => {
-    const iconProps = { className: "h-6 w-6" };
-    
-    switch(type) {
-      case 'pdf': return <FileIcon.PDF {...iconProps} />;
-      case 'spreadsheet': return <FileIcon.Spreadsheet {...iconProps} />;
-      case 'presentation': return <FileIcon.Presentation {...iconProps} />;
-      case 'image': return <FileIcon.Image {...iconProps} />;
-      case 'video': return <FileIcon.Video {...iconProps} />;
-      case 'document': return <FileIcon.Document {...iconProps} />;
-      default: return <FileIcon.File {...iconProps} />;
     }
   };
 
@@ -358,64 +307,6 @@ const ResourceMaterialsTab: React.FC<ResourceMaterialsTabProps> = ({
       <input type="hidden" {...form.register('materials')} />
     </div>
   );
-};
-
-// File icons components
-const FileIcon = {
-  File: (props: React.ComponentProps<"svg">) => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
-      <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
-      <polyline points="14 2 14 8 20 8" />
-    </svg>
-  ),
-  PDF: (props: React.ComponentProps<"svg">) => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-red-500" {...props}>
-      <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
-      <polyline points="14 2 14 8 20 8" />
-      <path d="M9 13h6" />
-      <path d="M9 17h6" />
-      <path d="M9 9h1" />
-    </svg>
-  ),
-  Spreadsheet: (props: React.ComponentProps<"svg">) => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-500" {...props}>
-      <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
-      <polyline points="14 2 14 8 20 8" />
-      <path d="M8 13h2" />
-      <path d="M8 17h2" />
-      <path d="M14 13h2" />
-      <path d="M14 17h2" />
-    </svg>
-  ),
-  Presentation: (props: React.ComponentProps<"svg">) => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-500" {...props}>
-      <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
-      <polyline points="14 2 14 8 20 8" />
-      <rect x="8" y="12" width="8" height="6" />
-    </svg>
-  ),
-  Image: (props: React.ComponentProps<"svg">) => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-purple-500" {...props}>
-      <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-      <circle cx="8.5" cy="8.5" r="1.5" />
-      <polyline points="21 15 16 10 5 21" />
-    </svg>
-  ),
-  Video: (props: React.ComponentProps<"svg">) => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-orange-500" {...props}>
-      <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18" />
-      <polygon points="10 8 16 12 10 16 10 8" />
-    </svg>
-  ),
-  Document: (props: React.ComponentProps<"svg">) => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-sky-500" {...props}>
-      <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
-      <polyline points="14 2 14 8 20 8" />
-      <line x1="16" y1="13" x2="8" y2="13" />
-      <line x1="16" y1="17" x2="8" y2="17" />
-      <line x1="10" y1="9" x2="8" y2="9" />
-    </svg>
-  )
 };
 
 export default ResourceMaterialsTab;
