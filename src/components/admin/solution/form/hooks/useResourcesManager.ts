@@ -48,7 +48,7 @@ export function useResourcesManager(solutionId: string | null) {
           };
           
           // Try to parse metadata if it exists, otherwise use default
-          let metadata: ResourceMetadata = defaultMetadata;
+          let metadata = defaultMetadata;
           
           if (item.metadata) {
             try {
