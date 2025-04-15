@@ -29,7 +29,7 @@ export function useResourceUpload(
         version: "1.0"
       };
       
-      // Convert metadata to a plain JSON object for storage
+      // Convert metadata to a string for storage
       const newResource = {
         solution_id: solutionId,
         name: fileName,

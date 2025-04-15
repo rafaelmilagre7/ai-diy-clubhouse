@@ -28,7 +28,7 @@ export function useResourceCreate(
         url: newResource.url,
         type: newResource.type,
         format: newResource.format || getFileFormatName(newResource.url),
-        metadata: JSON.stringify(newResource),
+        metadata: JSON.stringify(newResource), // Convert to string
         size: newResource.size
       };
       

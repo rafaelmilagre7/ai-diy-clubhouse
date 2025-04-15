@@ -83,13 +83,14 @@ export function useMaterialsTab(solutionId: string | null,
         version: "1.0"
       };
       
+      // Convert metadata to string before sending to Supabase
       const newResource = {
         solution_id: solutionId,
         name: fileName,
         url: url,
         type: fileType,
         format: format,
-        metadata: metadata,
+        metadata: JSON.stringify(metadata), // Convert metadata to string
         size: fileSize
       };
       
