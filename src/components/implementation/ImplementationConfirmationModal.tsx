@@ -1,17 +1,17 @@
 
-import React, { useState } from "react";
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogDescription, 
-  DialogFooter, 
-  DialogHeader, 
-  DialogTitle 
+import React from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { CheckCircle, AlertCircle } from "lucide-react";
 import { Solution } from "@/lib/supabase";
+import { Loader, CheckCircle } from "lucide-react";
+import { useLogging } from "@/hooks/useLogging";
 
 interface ImplementationConfirmationModalProps {
   solution: Solution;
@@ -26,82 +26,66 @@ export const ImplementationConfirmationModal = ({
   isOpen,
   isSubmitting,
   onClose,
-  onConfirm
+  onConfirm,
 }: ImplementationConfirmationModalProps) => {
-  const [confirmChecked, setConfirmChecked] = useState(false);
+  const { log } = useLogging();
   
-  const confirmationRequirements = [
-    "Eu li todo o conteúdo dos módulos desta solução",
-    "Eu implementei esta solução na minha empresa",
-    "Estou ciente que esta ação não pode ser desfeita",
-    "Entendo que esta confirmação será utilizada para métricas e relatórios"
-  ];
-
+  const handleConfirm = () => {
+    log("User confirmed implementation", { 
+      solution_id: solution.id, 
+      solution_title: solution.title 
+    });
+    onConfirm();
+  };
+  
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+    <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="flex items-center">
-            <CheckCircle className="mr-2 h-5 w-5 text-green-600" />
-            Confirmar Implementação Completa
+          <DialogTitle className="flex items-center gap-2">
+            <CheckCircle className="h-5 w-5 text-green-600" />
+            Confirmar Implementação
           </DialogTitle>
           <DialogDescription>
-            Você está prestes a marcar a solução <span className="font-semibold">{solution.title}</span> como completamente implementada.
+            Você está prestes a confirmar que implementou esta solução com sucesso.
           </DialogDescription>
         </DialogHeader>
         
-        <div className="space-y-4 py-4">
-          <div className="bg-amber-50 border border-amber-200 text-amber-800 p-3 rounded-md flex">
-            <AlertCircle className="h-5 w-5 text-amber-600 mr-2 flex-shrink-0 mt-0.5" />
-            <div className="text-sm">
-              Ao confirmar, você está declarando que realmente implementou esta solução em seu negócio. 
-              Esta confirmação será usada para cálculos de ROI e impacto dos resultados.
-            </div>
-          </div>
-        
-          <div className="space-y-2">
-            {confirmationRequirements.map((req, i) => (
-              <div key={i} className="flex items-start space-x-2">
-                <Checkbox 
-                  id={`confirm-req-${i}`} 
-                  checked={confirmChecked} 
-                  onCheckedChange={(checked) => setConfirmChecked(checked as boolean)}
-                />
-                <label 
-                  htmlFor={`confirm-req-${i}`} 
-                  className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                >
-                  {req}
-                </label>
-              </div>
-            ))}
+        <div className="py-4">
+          <h3 className="font-medium mb-2">Solução: {solution.title}</h3>
+          <p className="text-sm text-muted-foreground mb-4">
+            A confirmação de implementação não pode ser desfeita. Isso ajuda a acompanhar 
+            seu progresso no VIVER DE IA Club e libera acesso para certificados e benefícios.
+          </p>
+          
+          <div className="bg-blue-50 p-3 rounded border border-blue-100">
+            <p className="text-sm text-blue-700">
+              Ao confirmar, você declara que implementou com sucesso esta solução 
+              em sua empresa ou ambiente de negócios.
+            </p>
           </div>
         </div>
         
-        <DialogFooter className="flex space-x-2 sm:space-x-0">
+        <DialogFooter className="gap-2 sm:gap-0">
           <Button
-            type="button"
             variant="outline"
             onClick={onClose}
+            disabled={isSubmitting}
           >
             Cancelar
           </Button>
           <Button
-            type="button"
-            onClick={onConfirm}
-            disabled={!confirmChecked || isSubmitting}
-            className="bg-green-600 hover:bg-green-700"
+            onClick={handleConfirm}
+            disabled={isSubmitting}
+            className="gap-2"
           >
             {isSubmitting ? (
-              <span className="flex items-center">
-                <span className="animate-spin mr-2">●</span> 
+              <>
+                <Loader className="h-4 w-4 animate-spin" />
                 Processando...
-              </span>
+              </>
             ) : (
-              <span className="flex items-center">
-                <CheckCircle className="mr-2 h-4 w-4" /> 
-                Confirmar Implementação
-              </span>
+              "Confirmar Implementação"
             )}
           </Button>
         </DialogFooter>

@@ -1,9 +1,10 @@
 
 import React, { useEffect, useState } from "react";
 import { Module, supabase } from "@/lib/supabase";
-import { ExternalLink, CheckCircle } from "lucide-react";
+import { ExternalLink, CheckCircle, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useLogging } from "@/hooks/useLogging";
 
 interface ModuleContentToolsProps {
   module: Module;
@@ -15,36 +16,40 @@ interface Tool {
   tool_url: string | null;
   is_required: boolean;
   solution_id: string;
+  description?: string;
 }
 
 export const ModuleContentTools = ({ module }: ModuleContentToolsProps) => {
   const [tools, setTools] = useState<Tool[]>([]);
   const [loading, setLoading] = useState(true);
+  const { log, logError } = useLogging();
 
   useEffect(() => {
     const fetchTools = async () => {
       try {
         setLoading(true);
+        log("Fetching tools", { solution_id: module.solution_id, module_id: module.id });
+        
         const { data, error } = await supabase
           .from("solution_tools")
           .select("*")
           .eq("solution_id", module.solution_id);
         
         if (error) {
-          console.error("Error fetching tools:", error);
-          return;
+          throw error;
         }
         
+        log("Tools fetched successfully", { count: data?.length || 0 });
         setTools(data || []);
       } catch (err) {
-        console.error("Error in tools fetch:", err);
+        logError("Error fetching tools", err);
       } finally {
         setLoading(false);
       }
     };
 
     fetchTools();
-  }, [module.solution_id]);
+  }, [module.solution_id, module.id, log, logError]);
 
   if (loading) {
     return (
@@ -66,6 +71,7 @@ export const ModuleContentTools = ({ module }: ModuleContentToolsProps) => {
   }
 
   if (tools.length === 0) {
+    log("No tools found for this solution", { solution_id: module.solution_id });
     return null;
   }
 
@@ -80,14 +86,18 @@ export const ModuleContentTools = ({ module }: ModuleContentToolsProps) => {
         {tools.map((tool) => (
           <div key={tool.id} className="flex items-start p-4 border rounded-md">
             <div className="bg-blue-100 p-2 rounded mr-4">
-              <CheckCircle className="h-5 w-5 text-blue-600" />
+              {tool.is_required ? (
+                <CheckCircle className="h-5 w-5 text-blue-600" />
+              ) : (
+                <AlertTriangle className="h-5 w-5 text-yellow-600" />
+              )}
             </div>
             <div className="flex-1">
               <h4 className="font-medium">{tool.tool_name}</h4>
               <p className="text-sm text-muted-foreground mt-1">
-                {tool.is_required 
+                {tool.description || (tool.is_required 
                   ? "Esta ferramenta é obrigatória para implementação." 
-                  : "Esta ferramenta é opcional para implementação."}
+                  : "Esta ferramenta é opcional para implementação.")}
               </p>
               
               {tool.tool_url && (
@@ -95,7 +105,10 @@ export const ModuleContentTools = ({ module }: ModuleContentToolsProps) => {
                   variant="ghost"
                   size="sm"
                   className="text-blue-600 hover:text-blue-800 hover:bg-blue-50 mt-2 p-0"
-                  onClick={() => window.open(tool.tool_url || "", "_blank")}
+                  onClick={() => {
+                    log("Tool URL clicked", { tool_id: tool.id, tool_name: tool.tool_name });
+                    window.open(tool.tool_url || "", "_blank");
+                  }}
                 >
                   <ExternalLink className="h-4 w-4 mr-1" />
                   Acessar ferramenta

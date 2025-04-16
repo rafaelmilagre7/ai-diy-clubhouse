@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
 import { supabase, Progress } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
+import { useLogging } from "@/hooks/useLogging";
 
 export const useProgressTracking = (
   progress: Progress | null, 
@@ -14,10 +15,12 @@ export const useProgressTracking = (
   const moduleIdx = parseInt(moduleIndex || "0");
   const { user } = useAuth();
   const { toast } = useToast();
+  const { log, logError } = useLogging();
   
   const [isCompleting, setIsCompleting] = useState(false);
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
   const [hasInteracted, setHasInteracted] = useState(false);
+  const [requireUserConfirmation, setRequireUserConfirmation] = useState(true);
 
   // Update progress when module changes
   useEffect(() => {
@@ -25,6 +28,12 @@ export const useProgressTracking = (
       if (!user || !id || !progress) return;
       
       try {
+        log("Updating progress for module change", { 
+          moduleIdx, 
+          progressId: progress.id,
+          solution_id: id
+        });
+        
         const { error } = await supabase
           .from("progress")
           .update({ 
@@ -36,29 +45,46 @@ export const useProgressTracking = (
         if (error) {
           throw error;
         }
+        
+        log("Progress updated successfully");
       } catch (error) {
-        console.error("Error updating progress:", error);
+        logError("Error updating progress", error);
       }
     };
     
     updateProgress();
-  }, [moduleIdx, user, id, progress]);
+  }, [moduleIdx, user, id, progress, log, logError]);
   
-  // Mark module as completed
+  // Mark module as completed - Always requires user confirmation
   const handleMarkAsCompleted = async () => {
-    // Show confirmation modal for last module
+    // Always require user to confirm completion of final module
     if (moduleIdx >= modulesLength - 1) {
+      log("Showing confirmation modal for final module", { moduleIdx, modulesLength });
       setShowConfirmationModal(true);
+      return;
+    }
+    
+    // Only mark as completed if user has actually interacted with the content
+    if (!hasInteracted && requireUserConfirmation) {
+      log("User hasn't interacted with content yet", { hasInteracted });
+      toast({
+        title: "Interação necessária",
+        description: "Você precisa revisar o conteúdo completo antes de marcar como concluído.",
+        variant: "warning",
+      });
       return;
     }
     
     // Otherwise just mark this module as completed
     if (user && progress) {
       try {
+        log("Marking module as completed", { moduleIdx });
+        
         // Add this module to completed modules if not already there
         if (!completedModules.includes(moduleIdx)) {
           const updatedCompletedModules = [...completedModules, moduleIdx];
           
+          // Update in database
           const { error } = await supabase
             .from("progress")
             .update({ 
@@ -71,15 +97,23 @@ export const useProgressTracking = (
             throw error;
           }
           
+          // Update local state
           setCompletedModules(updatedCompletedModules);
           
           toast({
             title: "Módulo concluído!",
             description: "Este módulo foi marcado como concluído com sucesso.",
           });
+          
+          log("Module marked as completed successfully", { 
+            moduleIdx, 
+            updatedCompletedModules 
+          });
+        } else {
+          log("Module already marked as completed", { moduleIdx });
         }
       } catch (error) {
-        console.error("Error marking module as completed:", error);
+        logError("Error marking module as completed", error);
         toast({
           title: "Erro ao marcar módulo",
           description: "Ocorreu um erro ao tentar marcar o módulo como concluído.",
@@ -94,6 +128,7 @@ export const useProgressTracking = (
     if (user && progress) {
       try {
         setIsCompleting(true);
+        log("Confirming full implementation", { solution_id: id });
         
         // Add this module to completed modules if not already there
         let updatedCompletedModules = [...completedModules];
@@ -101,6 +136,7 @@ export const useProgressTracking = (
           updatedCompletedModules = [...completedModules, moduleIdx];
         }
         
+        // Update in database
         const { error } = await supabase
           .from("progress")
           .update({ 
@@ -123,8 +159,13 @@ export const useProgressTracking = (
           title: "Implementação concluída!",
           description: "Parabéns! Você concluiu com sucesso a implementação desta solução.",
         });
+        
+        log("Implementation confirmed successfully", {
+          solution_id: id,
+          completed_modules: updatedCompletedModules
+        });
       } catch (error) {
-        console.error("Error completing implementation:", error);
+        logError("Error completing implementation", error);
         toast({
           title: "Erro ao concluir implementação",
           description: "Ocorreu um erro ao tentar marcar a implementação como concluída.",
@@ -138,6 +179,7 @@ export const useProgressTracking = (
 
   // Set interaction state for the current module
   const setModuleInteraction = (interacted: boolean) => {
+    log("Setting module interaction", { interacted, moduleIdx });
     setHasInteracted(interacted);
   };
   
@@ -156,6 +198,8 @@ export const useProgressTracking = (
     handleMarkAsCompleted,
     handleConfirmImplementation,
     calculateProgress,
-    setModuleInteraction
+    setModuleInteraction,
+    requireUserConfirmation,
+    setRequireUserConfirmation
   };
 };

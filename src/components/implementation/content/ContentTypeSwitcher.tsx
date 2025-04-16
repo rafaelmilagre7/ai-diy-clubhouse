@@ -1,31 +1,51 @@
 
 import React from "react";
 import { Module } from "@/lib/supabase";
-import { ModuleContentTools } from "./ModuleContentTools";
-import { ModuleContentMaterials } from "./ModuleContentMaterials";
-import { ModuleContentVideos } from "./ModuleContentVideos";
 import { ModuleContentChecklist } from "./ModuleContentChecklist";
+import { ModuleContentMaterials } from "./ModuleContentMaterials";
+import { ModuleContentTools } from "./ModuleContentTools";
+import { ModuleContentVideos } from "./ModuleContentVideos";
+import { useLogging } from "@/hooks/useLogging";
 
 interface ContentTypeSwitcherProps {
   contentType: string;
   module: Module;
 }
 
-/**
- * Component to render the appropriate content based on the content type
- */
 export const ContentTypeSwitcher = ({ contentType, module }: ContentTypeSwitcherProps) => {
-  // Render specific content based on module type
-  switch (contentType) {
-    case "tools":
-      return <ModuleContentTools module={module} />;
-    case "materials":
-      return <ModuleContentMaterials module={module} />;
-    case "videos":
-      return <ModuleContentVideos module={module} />;
-    case "checklist":
-      return <ModuleContentChecklist module={module} />;
-    default:
-      return null;
+  const { log, logError } = useLogging();
+  
+  log("ContentTypeSwitcher", { 
+    moduleId: module.id, 
+    moduleType: module.type, 
+    contentType, 
+    hasContent: !!module.content
+  });
+  
+  try {
+    // Render specific components based on module type and content
+    return (
+      <div className="space-y-8">
+        {/* Render módulo-específico tools */}
+        <ModuleContentTools module={module} />
+        
+        {/* Render module-specific materials */}
+        <ModuleContentMaterials module={module} />
+        
+        {/* Render module-specific videos when needed */}
+        <ModuleContentVideos module={module} />
+        
+        {/* Render checklist for modules that need verification */}
+        <ModuleContentChecklist module={module} />
+      </div>
+    );
+  } catch (error) {
+    logError("Error rendering content type", error);
+    return (
+      <div className="p-4 bg-red-50 border border-red-200 rounded-md text-red-600">
+        <p className="font-medium">Erro ao renderizar conteúdo</p>
+        <p className="text-sm">Ocorreu um problema ao exibir este conteúdo. Por favor, tente novamente mais tarde.</p>
+      </div>
+    );
   }
 };

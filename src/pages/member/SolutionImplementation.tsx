@@ -7,6 +7,7 @@ import { ImplementationFooter } from "@/components/implementation/Implementation
 import { ImplementationNotFound } from "@/components/implementation/ImplementationNotFound";
 import { useImplementationShortcuts } from "@/hooks/useImplementationShortcuts";
 import { ImplementationConfirmationModal } from "@/components/implementation/ImplementationConfirmationModal";
+import { useLogging } from "@/hooks/useLogging";
 
 const SolutionImplementation = () => {
   const {
@@ -27,6 +28,8 @@ const SolutionImplementation = () => {
     setModuleInteraction
   } = useModuleImplementation();
   
+  const { log, logError } = useLogging();
+  
   // Setup keyboard shortcuts
   useImplementationShortcuts(
     solution,
@@ -35,6 +38,22 @@ const SolutionImplementation = () => {
     handleComplete,
     handlePrevious
   );
+  
+  // Log module data when it changes
+  useEffect(() => {
+    if (currentModule && solution) {
+      log("Module loaded", { 
+        solution_id: solution.id,
+        solution_title: solution.title,
+        module_id: currentModule.id,
+        module_title: currentModule.title,
+        module_type: currentModule.type,
+        module_index: moduleIdx,
+        has_content: !!currentModule.content,
+        content_keys: currentModule.content ? Object.keys(currentModule.content) : []
+      });
+    }
+  }, [currentModule, solution, moduleIdx, log]);
   
   // Keep track of user's interaction with the module
   useEffect(() => {
@@ -47,8 +66,15 @@ const SolutionImplementation = () => {
   }
   
   if (!solution || !currentModule) {
+    const error = "Solution or module not found";
+    logError("Implementation not found", { error, solution_id: solution?.id });
     return <ImplementationNotFound />;
   }
+  
+  // Log any content rendering errors
+  const handleContentError = (error: any) => {
+    logError("Error rendering module content", error);
+  };
   
   return (
     <>
@@ -67,6 +93,7 @@ const SolutionImplementation = () => {
           <ModuleContent 
             module={currentModule} 
             onComplete={() => setModuleInteraction(true)} 
+            onError={handleContentError}
           />
         </div>
         
