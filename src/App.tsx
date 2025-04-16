@@ -73,62 +73,6 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
-const App = () => {
-  const queryClient = new QueryClient();
-
-  return (
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <AuthSession>
-              <Routes>
-                {/* Public routes that don't require authentication */}
-                <Route path="/login" element={<Login />} />
-                <Route path="/index" element={<Index />} />
-
-                {/* Root redirect */}
-                <Route path="/" element={<RootRedirect />} />
-
-                {/* Member routes - within Layout */}
-                <Route path="/dashboard" element={
-                  <ProtectedRoute>
-                    <Layout />
-                  </ProtectedRoute>
-                }>
-                  <Route index element={<MemberDashboard />} />
-                  <Route path="/dashboard/solution/:id" element={<SolutionDetails />} />
-                  <Route path="/dashboard/implement/:id/:moduleIndex" element={<SolutionImplementation />} />
-                  <Route path="/dashboard/profile" element={<Profile />} />
-                </Route>
-
-                {/* Admin routes - within AdminLayout */}
-                <Route path="/admin" element={
-                  <ProtectedRoute requireAdmin>
-                    <AdminLayout />
-                  </ProtectedRoute>
-                }>
-                  <Route index element={<AdminDashboard />} />
-                  <Route path="/admin/solutions" element={<SolutionsList />} />
-                  <Route path="/admin/solutions/new" element={<SolutionEditor />} />
-                  <Route path="/admin/solutions/:id" element={<SolutionEditor />} />
-                  <Route path="/admin/analytics/solution/:id" element={<SolutionMetrics />} />
-                  <Route path="/admin/users" element={<UserManagement />} />
-                </Route>
-
-                {/* 404 route */}
-                <Route path="*" element={<Navigate to="/index" replace />} />
-              </Routes>
-            </AuthSession>
-          </BrowserRouter>
-        </TooltipProvider>
-      </AuthProvider>
-    </QueryClientProvider>
-  );
-};
-
 // Helper component to handle route redirection
 const RootRedirect = () => {
   const { user, profile, isAdmin, isLoading } = useAuth();
@@ -179,6 +123,68 @@ const RootRedirect = () => {
     console.log("RootRedirect: redirecionando membro para /dashboard");
     return <Navigate to="/dashboard" replace />;
   }
+};
+
+const AppRoutes = () => {
+  return (
+    <AuthSession>
+      <Routes>
+        {/* Public routes that don't require authentication */}
+        <Route path="/login" element={<Login />} />
+        <Route path="/index" element={<Index />} />
+
+        {/* Root redirect */}
+        <Route path="/" element={<RootRedirect />} />
+
+        {/* Member routes - within Layout */}
+        <Route path="/dashboard" element={
+          <ProtectedRoute>
+            <Layout />
+          </ProtectedRoute>
+        }>
+          <Route index element={<MemberDashboard />} />
+          <Route path="/dashboard/solution/:id" element={<SolutionDetails />} />
+          <Route path="/dashboard/implement/:id/:moduleIndex" element={<SolutionImplementation />} />
+          <Route path="/dashboard/profile" element={<Profile />} />
+        </Route>
+
+        {/* Admin routes - within AdminLayout */}
+        <Route path="/admin" element={
+          <ProtectedRoute requireAdmin>
+            <AdminLayout />
+          </ProtectedRoute>
+        }>
+          <Route index element={<AdminDashboard />} />
+          <Route path="/admin/solutions" element={<SolutionsList />} />
+          <Route path="/admin/solutions/new" element={<SolutionEditor />} />
+          <Route path="/admin/solutions/:id" element={<SolutionEditor />} />
+          <Route path="/admin/analytics/solution/:id" element={<SolutionMetrics />} />
+          <Route path="/admin/users" element={<UserManagement />} />
+        </Route>
+
+        {/* 404 route */}
+        <Route path="*" element={<Navigate to="/index" replace />} />
+      </Routes>
+    </AuthSession>
+  );
+};
+
+const App = () => {
+  const queryClient = new QueryClient();
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <AuthProvider>
+            <AppRoutes />
+          </AuthProvider>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
 };
 
 export default App;

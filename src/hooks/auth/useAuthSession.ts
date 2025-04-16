@@ -4,7 +4,25 @@ import { useAuth } from '@/contexts/auth';
 import { useAuthStateManager } from './useAuthStateManager';
 
 export const useAuthSession = () => {
-  const { setIsLoading } = useAuth();
+  // Safe access to useAuth, return defaults if not in provider context
+  let authContext;
+  try {
+    authContext = useAuth();
+  } catch (error) {
+    console.error("useAuthSession error:", error);
+    // Return early with defaults if we can't access auth context
+    return {
+      isInitializing: false,
+      authError: new Error("Authentication provider not found"),
+      retryCount: 0,
+      maxRetries: 3,
+      setRetryCount: () => {},
+      setIsInitializing: () => {},
+      setAuthError: () => {}
+    };
+  }
+  
+  const { setIsLoading } = authContext;
   const [isInitializing, setIsInitializing] = useState(true);
   const [authError, setAuthError] = useState<Error | null>(null);
   const [retryCount, setRetryCount] = useState(0);

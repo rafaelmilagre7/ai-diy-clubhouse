@@ -5,12 +5,24 @@ import { useAuth } from '@/contexts/auth';
 import { processUserProfile } from './utils/authSessionUtils';
 
 export const useAuthStateManager = () => {
+  // Safe access to useAuth, use default implementation if not in context
+  let authContext;
+  try {
+    authContext = useAuth();
+  } catch (error) {
+    console.error("useAuthStateManager error:", error);
+    // Return a dummy function that doesn't do anything if we're not in the AuthProvider context
+    return { 
+      setupAuthSession: async () => ({ success: false, error: new Error("Authentication provider not found") }) 
+    };
+  }
+  
   const {
     setSession,
     setUser,
     setProfile,
     setIsLoading,
-  } = useAuth();
+  } = authContext;
   
   // Setup auth session function
   const setupAuthSession = useCallback(async () => {
