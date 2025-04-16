@@ -18,7 +18,10 @@ import {
   Video,
   ClipboardCheck,
   Globe,
-  Loader2
+  Loader2,
+  AlertCircle,
+  Eye,
+  Play
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
@@ -264,8 +267,5 @@ const StatusCard: React.FC<StatusCardProps> = ({ icon, title, status }) => {
     </Card>
   );
 };
-
-// Adicionar ícones que não foram importados
-import { AlertCircle, Eye, Play } from "lucide-react";
 
 export default PublishSolutionForm;

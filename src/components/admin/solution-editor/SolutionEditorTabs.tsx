@@ -27,7 +27,7 @@ const SolutionEditorTabs = ({
 }: SolutionEditorTabsProps) => {
   const isValid = solution && solution.id;
   
-  // Auto-save when changing tabs
+  // Auto-save when changing tabs (silently, without toast)
   useEffect(() => {
     // Don't trigger auto-save if we're in the process of initial loading
     if (solution && !saving) {

@@ -4,7 +4,6 @@ import { useAuth } from "@/contexts/auth";
 import LoadingScreen from "@/components/common/LoadingScreen";
 import SolutionEditorHeader from "@/components/admin/solution-editor/SolutionEditorHeader";
 import SolutionEditorTabs from "@/components/admin/solution-editor/SolutionEditorTabs";
-import { useSolutionEditor } from "@/components/admin/solution-editor/useSolutionEditor";
 import { Card, CardContent } from "@/components/ui/card";
 import ProgressIndicator from "@/components/admin/solution-editor/ProgressIndicator";
 import NavigationButtons from "@/components/admin/solution-editor/NavigationButtons";
@@ -31,7 +30,7 @@ const SolutionEditor = () => {
     stepTitles
   } = useSolutionEditor(id, user);
   
-  // Auto-save when changing steps
+  // Auto-save when changing steps (silenciosamente, sem mostrar toast)
   useEffect(() => {
     // Skip auto-save during initial loading
     if (solution && currentStep > 0) {
@@ -50,6 +49,7 @@ const SolutionEditor = () => {
       if (form) form.dispatchEvent(new Event("submit", { cancelable: true, bubbles: true }));
     } else {
       // Nas outras etapas, chama a função específica de salvamento
+      // e mostra toast de confirmação
       onSubmit({...currentValues, published: currentStep === totalSteps - 1})
         .then(() => {
           toast({
@@ -69,8 +69,13 @@ const SolutionEditor = () => {
 
   const handleNextStep = () => {
     if (currentStep < totalSteps - 1) {
-      // Salvar o estado atual antes de avançar
-      handleSave();
+      // Salvar o estado atual antes de avançar, sem mostrar toast
+      if (currentStep === 0) {
+        const form = document.querySelector("form");
+        if (form) form.dispatchEvent(new Event("submit", { cancelable: true, bubbles: true }));
+      } else {
+        onSubmit({...currentValues});
+      }
       setCurrentStep(currentStep + 1);
     }
   };

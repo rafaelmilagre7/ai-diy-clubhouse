@@ -97,6 +97,18 @@ const TabContent: React.FC<TabContentProps> = ({
           );
         }
         break;
+      case "publish":
+        if (isValid) {
+          return (
+            <PublishTab 
+              solutionId={solution?.id || null}
+              solution={solution}
+              onSave={onSubmit}
+              saving={saving}
+            />
+          );
+        }
+        break;
     }
   } else {
     // For steps > 0, show content based on step
