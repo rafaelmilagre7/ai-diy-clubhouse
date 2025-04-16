@@ -117,7 +117,7 @@ const generateAchievements = (progress: any[], solutions: Solution[], badges: an
   }, {});
 
   // Add achievements for each completed solution category
-  const categoryNames = {
+  const categoryNames: Record<SolutionCategory, string> = {
     revenue: "Receita",
     operational: "Operacional",
     strategy: "Estratégia",
