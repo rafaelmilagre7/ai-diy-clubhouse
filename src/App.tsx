@@ -12,7 +12,7 @@ import LoadingScreen from "@/components/common/LoadingScreen";
 import { useEffect, useState } from "react";
 
 // Member routes
-import Login from "@/pages/Login";
+import Auth from "@/pages/Auth";
 import MemberDashboard from "@/pages/member/Dashboard";
 import SolutionDetails from "@/pages/member/SolutionDetails";
 import SolutionImplementation from "@/pages/member/SolutionImplementation";
@@ -42,8 +42,8 @@ const ProtectedRoute = ({
   }
 
   if (!user) {
-    console.log("ProtectedRoute: Usuário não autenticado, redirecionando para login");
-    return <Navigate to="/index" replace />;
+    console.log("ProtectedRoute: Usuário não autenticado, redirecionando para auth");
+    return <Navigate to="/auth" replace />;
   }
 
   if (requireAdmin && !isAdmin) {
@@ -82,9 +82,9 @@ const RootRedirect = () => {
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       if (isLoading && !timeoutExceeded) {
-        console.log("RootRedirect: Tempo limite de carregamento excedido, redirecionando para /index");
+        console.log("RootRedirect: Tempo limite de carregamento excedido, redirecionando para /auth");
         setTimeoutExceeded(true);
-        navigate('/index', { replace: true });
+        navigate('/auth', { replace: true });
       }
     }, 3000); // 3 segundos é suficiente
     
@@ -102,12 +102,12 @@ const RootRedirect = () => {
   
   if (!user) {
     console.log("RootRedirect: Usuário não autenticado, redirecionando para login");
-    return <Navigate to="/index" replace />;
+    return <Navigate to="/auth" replace />;
   }
   
   if (!profile) {
-    console.log("RootRedirect: Perfil não encontrado, redirecionando para /index");
-    return <Navigate to="/index" replace />;
+    console.log("RootRedirect: Perfil não encontrado, redirecionando para /auth");
+    return <Navigate to="/auth" replace />;
   }
   
   console.log("RootRedirect: Verificando papel do usuário para redirecionamento", {
@@ -130,7 +130,7 @@ const AppRoutes = () => {
     <AuthSession>
       <Routes>
         {/* Public routes that don't require authentication */}
-        <Route path="/login" element={<Login />} />
+        <Route path="/auth" element={<Auth />} />
         <Route path="/index" element={<Index />} />
 
         {/* Root redirect */}
@@ -163,7 +163,7 @@ const AppRoutes = () => {
         </Route>
 
         {/* 404 route */}
-        <Route path="*" element={<Navigate to="/index" replace />} />
+        <Route path="*" element={<Navigate to="/auth" replace />} />
       </Routes>
     </AuthSession>
   );
