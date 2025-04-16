@@ -50,7 +50,34 @@ const Dashboard = () => {
           throw solutionsError;
         }
         
-        setSolutions(solutionsData || []);
+        // Verificar se os dados retornados são do tipo Solution
+        if (solutionsData && solutionsData.length > 0) {
+          // Validar e converter as categorias para garantir que atendam ao tipo Solution
+          const validatedSolutions = solutionsData.map(solution => {
+            // Garantir que category é um dos valores válidos
+            let validCategory: 'revenue' | 'operational' | 'strategy' = 'revenue';
+            
+            if (
+              solution.category === 'revenue' || 
+              solution.category === 'operational' || 
+              solution.category === 'strategy'
+            ) {
+              validCategory = solution.category as 'revenue' | 'operational' | 'strategy';
+            } else {
+              // Log para debug caso ocorra uma categoria inválida
+              console.warn(`Categoria inválida encontrada: ${solution.category}, usando 'revenue' como padrão`);
+            }
+            
+            return {
+              ...solution,
+              category: validCategory
+            } as Solution;
+          });
+          
+          setSolutions(validatedSolutions);
+        } else {
+          setSolutions([]);
+        }
         
         // Fetch user progress
         const { data: progressData, error: progressError } = await supabase
@@ -70,6 +97,9 @@ const Dashboard = () => {
           description: "Não foi possível carregar as soluções. Tente novamente mais tarde.",
           variant: "destructive",
         });
+        
+        // Em caso de erro, inicializar com um array vazio
+        setSolutions([]);
       } finally {
         setLoading(false);
       }

@@ -67,8 +67,31 @@ export const useSolutionsData = (initialCategory: string | null) => {
           }
         } else if (data && data.length > 0) {
           console.log("Dados obtidos com sucesso:", data);
-          setSolutions(data as Solution[]);
-          setFilteredSolutions(data as Solution[]);
+          
+          // Validar e converter as categorias para garantir que atendam ao tipo Solution
+          const validatedSolutions = data.map(solution => {
+            // Garantir que category é um dos valores válidos
+            let validCategory: 'revenue' | 'operational' | 'strategy' = 'revenue';
+            
+            if (
+              solution.category === 'revenue' || 
+              solution.category === 'operational' || 
+              solution.category === 'strategy'
+            ) {
+              validCategory = solution.category as 'revenue' | 'operational' | 'strategy';
+            } else {
+              // Log para debug caso ocorra uma categoria inválida
+              console.warn(`Categoria inválida encontrada: ${solution.category}, usando 'revenue' como padrão`);
+            }
+            
+            return {
+              ...solution,
+              category: validCategory
+            } as Solution;
+          });
+          
+          setSolutions(validatedSolutions);
+          setFilteredSolutions(validatedSolutions);
         } else {
           console.info("Nenhuma solução encontrada, usando dados fictícios");
           setSolutions(mockSolutions);
