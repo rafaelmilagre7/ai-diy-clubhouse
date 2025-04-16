@@ -21,8 +21,15 @@ const LoggingContext = createContext<LoggingContextType | undefined>(undefined);
 // Provider component
 export const LoggingProvider = ({ children }: { children: ReactNode }) => {
   const { toast } = useToast();
-  const auth = useAuth();
   const [lastError, setLastError] = useState<any>(null);
+  
+  // Try to get auth context - may be null during initialization
+  let auth = null;
+  try {
+    auth = useAuth();
+  } catch (e) {
+    console.warn("Auth context not available yet in LoggingProvider");
+  }
   
   const log = useCallback((action: string, data: LogData = {}) => {
     console.log(`[Log] ${action}:`, data);
