@@ -63,7 +63,7 @@ const AuthSession = ({ children }: { children: React.ReactNode }) => {
     return () => {
       if (loadingTimerId) window.clearTimeout(loadingTimerId);
     };
-  }, [isInitializing, isLoading, location.pathname, navigate, setIsLoading, user]);
+  }, [isInitializing, isLoading, location.pathname, navigate, setIsLoading, user, setIsInitializing]);
 
   // Handle retry
   const handleRetry = () => {
