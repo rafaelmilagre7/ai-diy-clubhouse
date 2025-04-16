@@ -45,25 +45,25 @@ export const MemberSidebarNav = ({ sidebarOpen }: MemberSidebarNavProps) => {
     }
   ];
 
-  // Fixed isActive function to properly determine the current active item
+  // Improved isActive function to precisely determine the current active item
   const isActive = (path: string) => {
-    // For dashboard path
-    if (path === "/dashboard" && (location.pathname === "/dashboard" || location.pathname === "/")) {
-      return true;
+    // Exact match logic - simpler is better
+    switch (path) {
+      case "/dashboard":
+        return location.pathname === "/dashboard" || location.pathname === "/";
+      case "/solutions":
+        // For now, solutions redirect to dashboard with specific params
+        return location.pathname.includes("/solution/") || 
+               (location.pathname.includes("/implement/"));
+      case "/achievements":
+        // For now, achievements is on the profile page with a tab
+        return location.pathname === "/profile" && location.search.includes("tab=achievements");
+      case "/profile":
+        // Profile is active only when it's exactly /profile without query params
+        return location.pathname === "/profile" && !location.search.includes("tab=achievements");
+      default:
+        return false;
     }
-    
-    // Temporary routing until solutions path is implemented
-    if (path === "/solutions" && location.pathname.includes("/dashboard") && !location.pathname.endsWith("/dashboard")) {
-      return true;
-    }
-    
-    // Temporary routing until achievements path is implemented
-    if (path === "/achievements" && location.pathname === "/profile" && location.search.includes("tab=achievements")) {
-      return true;
-    }
-    
-    // Exact match for profile and other paths
-    return location.pathname === path;
   };
 
   return (

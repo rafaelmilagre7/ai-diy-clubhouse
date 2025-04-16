@@ -1,5 +1,5 @@
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
 import { toast } from "@/hooks/use-toast";
@@ -15,21 +15,45 @@ const LayoutProvider = () => {
   const navigate = useNavigate();
   const [redirectChecked, setRedirectChecked] = useState(false);
   const [loadingTimeout, setLoadingTimeout] = useState(false);
+  const timeoutRef = useRef<number | null>(null);
+  const isMounted = useRef(true);
 
+  // Setup component lifecycle
+  useEffect(() => {
+    isMounted.current = true;
+    return () => {
+      isMounted.current = false;
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
+  
   // Setup loading timeout effect
   useEffect(() => {
-    if (isLoading) {
-      const timeoutId = setTimeout(() => {
-        setLoadingTimeout(true);
-      }, 500); // Reduced to 500ms
+    if (isLoading && isMounted.current) {
+      // Clear any existing timeout
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
       
-      return () => clearTimeout(timeoutId);
+      timeoutRef.current = window.setTimeout(() => {
+        if (isMounted.current) {
+          setLoadingTimeout(true);
+        }
+      }, 400); // Very short timeout
+      
+      return () => {
+        if (timeoutRef.current) {
+          clearTimeout(timeoutRef.current);
+        }
+      };
     }
   }, [isLoading]);
   
   // Handle timeout and redirect to auth if needed
   useEffect(() => {
-    if (loadingTimeout && isLoading) {
+    if (loadingTimeout && isLoading && isMounted.current) {
       console.log("LayoutProvider: Loading timeout exceeded, redirecting to /auth");
       setIsLoading(false);
       navigate('/auth', { replace: true });
@@ -38,7 +62,7 @@ const LayoutProvider = () => {
 
   // Check user role when profile is loaded
   useEffect(() => {
-    if (!profile || redirectChecked) {
+    if (!profile || redirectChecked || !isMounted.current) {
       return;
     }
     
@@ -46,17 +70,18 @@ const LayoutProvider = () => {
       console.log("LayoutProvider: User is admin, redirecting to /admin");
       
       toast({
-        title: "Redirecting to admin area",
-        description: "You are being redirected to the admin area."
+        title: "Redirecionando para área admin",
+        description: "Você está sendo redirecionado para área administrativa."
       });
       
       navigate('/admin', { replace: true });
+    } else {
+      console.log("LayoutProvider: User is member, staying on member layout");
     }
     
     setRedirectChecked(true);
   }, [profile, navigate, redirectChecked]);
 
-  // Render different layouts based on conditions
   // Fast path for members - If we have user and profile, render immediately
   if (user && profile && !isAdmin) {
     return <MemberLayout />;
@@ -64,7 +89,7 @@ const LayoutProvider = () => {
 
   // Show loading screen while checking the session (but only if timeout not exceeded)
   if (isLoading && !loadingTimeout) {
-    return <LoadingScreen />;
+    return <LoadingScreen message="Preparando seu dashboard..." />;
   }
 
   // If user is not authenticated, redirect to login

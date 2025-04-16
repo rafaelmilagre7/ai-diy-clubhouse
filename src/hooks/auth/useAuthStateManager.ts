@@ -24,17 +24,22 @@ export const useAuthStateManager = () => {
     setIsLoading,
   } = authContext;
   
-  // Setup auth session function
+  // Setup auth session function with optimized performance
   const setupAuthSession = useCallback(async () => {
     try {
       console.log("Verificando sessão atual");
       
-      // Get current session
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      // Try to get session with a strict timeout
+      const sessionPromise = supabase.auth.getSession();
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error("Session fetch timeout")), 500)
+      );
       
-      if (sessionError) {
-        throw sessionError;
-      }
+      // Race between actual fetch and timeout
+      const { data: { session } } = await Promise.race([
+        sessionPromise,
+        timeoutPromise
+      ]) as { data: { session: any } };
       
       setSession(session);
       
@@ -42,19 +47,25 @@ export const useAuthStateManager = () => {
         console.log("Sessão ativa encontrada:", session.user.id);
         setUser(session.user);
         
-        // Process user profile
-        const profile = await processUserProfile(
+        // Process user profile with performance optimization
+        const profilePromise = processUserProfile(
           session.user.id,
           session.user.email,
           session.user.user_metadata?.name
         );
         
+        const profile = await profilePromise;
+        
         setProfile(profile);
         
-        // Forçar atualização dos metadados do usuário para garantir que o papel está correto
+        // Atualizar metadados do usuário em segundo plano
         if (profile) {
-          await supabase.auth.updateUser({
+          supabase.auth.updateUser({
             data: { role: profile.role }
+          }).then(() => {
+            console.log("Metadados do usuário atualizados com sucesso");
+          }).catch(error => {
+            console.error("Erro ao atualizar metadados do usuário:", error);
           });
         }
       } else {

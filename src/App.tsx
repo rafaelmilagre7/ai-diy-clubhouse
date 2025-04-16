@@ -82,8 +82,21 @@ const RootRedirect = () => {
   const { user, profile, isAdmin, isLoading, setIsLoading } = useAuth();
   const navigate = useNavigate();
   const [timeoutExceeded, setTimeoutExceeded] = useState(false);
+  const timeoutRef = useRef<number | null>(null);
+  const isMounted = useRef(true);
   
-  // Fast pass - redirecionar rapidamente se já temos as informações
+  // Setup component lifecycle
+  useEffect(() => {
+    isMounted.current = true;
+    return () => {
+      isMounted.current = false;
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
+  
+  // Fast path - redirecionar rapidamente se já temos as informações
   if (user && profile) {
     if (profile.role === 'admin') {
       return <Navigate to="/admin" replace />;
@@ -93,16 +106,24 @@ const RootRedirect = () => {
   }
   
   useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      if (isLoading && !timeoutExceeded) {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+    
+    timeoutRef.current = window.setTimeout(() => {
+      if (isLoading && !timeoutExceeded && isMounted.current) {
         console.log("RootRedirect: Tempo limite de carregamento excedido, redirecionando para /auth");
         setTimeoutExceeded(true);
         setIsLoading(false);
         navigate('/auth', { replace: true });
       }
-    }, 500); // Reduzido para 500ms
+    }, 400); // Ultra rápido
     
-    return () => clearTimeout(timeoutId);
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
   }, [isLoading, navigate, timeoutExceeded, setIsLoading]);
   
   if (timeoutExceeded) {
@@ -110,7 +131,7 @@ const RootRedirect = () => {
   }
   
   if (isLoading) {
-    return <LoadingScreen />;
+    return <LoadingScreen message="Preparando sua experiência..." />;
   }
   
   if (!user) {

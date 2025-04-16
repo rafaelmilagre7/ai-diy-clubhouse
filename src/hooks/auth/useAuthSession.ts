@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAuth } from '@/contexts/auth';
 import { useAuthStateManager } from './useAuthStateManager';
 
@@ -26,20 +26,29 @@ export const useAuthSession = () => {
   const [isInitializing, setIsInitializing] = useState(true);
   const [authError, setAuthError] = useState<Error | null>(null);
   const [retryCount, setRetryCount] = useState(0);
-  const maxRetries = 1; // Reduced to 1 retry attempt
+  const maxRetries = 1;
+  const isMounted = useRef(true);
+  const timeoutRef = useRef<number | null>(null);
   
   const { setupAuthSession } = useAuthStateManager();
 
+  // Handle component lifecycle
+  useEffect(() => {
+    isMounted.current = true;
+    
+    return () => {
+      isMounted.current = false;
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
+
   // Handle session initialization with extremely short timeout
   useEffect(() => {
-    if (retryCount > maxRetries) {
-      console.error(`Maximum number of ${maxRetries} authentication attempts reached`);
-      setIsInitializing(false);
-      setIsLoading(false);
+    if (retryCount > maxRetries || !isMounted.current) {
       return;
     }
-
-    let isMounted = true;
     
     const initializeSession = async () => {
       try {
@@ -52,14 +61,14 @@ export const useAuthSession = () => {
         }
         
         // Clear error states and loading states immediately
-        if (isMounted) {
+        if (isMounted.current) {
           setAuthError(null);
           setIsInitializing(false);
           setIsLoading(false);
         }
       } catch (error) {
         console.error("Error during session initialization:", error);
-        if (isMounted) {
+        if (isMounted.current) {
           setAuthError(error instanceof Error ? error : new Error('Unknown authentication error'));
           setRetryCount(count => count + 1);
           setIsInitializing(false);
@@ -68,22 +77,24 @@ export const useAuthSession = () => {
       }
     };
     
-    // Extremely short timeout for maximum acceleration
-    const timeoutId = setTimeout(() => {
-      if (isInitializing && isMounted) {
+    // Start session initialization immediately
+    initializeSession();
+    
+    // Set an extremely short timeout as a fallback
+    timeoutRef.current = window.setTimeout(() => {
+      if (isInitializing && isMounted.current) {
         console.log("Session initialization timeout exceeded");
         setIsInitializing(false);
         setIsLoading(false);
       }
-    }, 500); // Only 500ms
-    
-    initializeSession();
+    }, 400); // Ultra short timeout
     
     return () => {
-      isMounted = false;
-      clearTimeout(timeoutId);
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
     };
-  }, [retryCount, setIsLoading, maxRetries, setupAuthSession]);
+  }, [retryCount, setIsLoading, maxRetries, setupAuthSession, isInitializing]);
 
   return {
     isInitializing,

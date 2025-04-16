@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
 import { Button } from "@/components/ui/button";
@@ -15,13 +15,21 @@ const LoginForm = () => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const { signIn, signInAsMember, signInAsAdmin } = useAuth();
+  const { signIn, signInAsMember, signInAsAdmin, user } = useAuth();
   const navigate = useNavigate();
+  
+  // Redirect if already logged in
+  useEffect(() => {
+    if (user) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [user, navigate]);
 
   const handleGoogleSignIn = async () => {
     try {
       setIsLoading(true);
       await signIn();
+      // Redirecionamento acontece na função de login
     } catch (error) {
       console.error("Erro ao fazer login com Google:", error);
       toast({
@@ -62,7 +70,8 @@ const LoginForm = () => {
           description: "Bem-vindo de volta!",
         });
         
-        // A redireção acontecerá automaticamente pelo RootRedirect
+        // Redirecionar imediatamente para o dashboard
+        navigate('/dashboard', { replace: true });
       }
     } catch (error: any) {
       console.error("Erro ao fazer login:", error);
@@ -79,8 +88,19 @@ const LoginForm = () => {
   const handleTestLogin = async (loginFn: () => Promise<void>, userType: string) => {
     try {
       setIsLoading(true);
+      
+      // Mostra toast antes de iniciar login para feedback imediato
+      toast({
+        title: `Entrando como ${userType}`,
+        description: "Por favor, aguarde...",
+      });
+      
       await loginFn();
-      // Redirecionamento acontece dentro da função de login
+      
+      // Redirecionar imediatamente para o dashboard
+      setTimeout(() => {
+        navigate('/dashboard', { replace: true });
+      }, 100);
     } catch (error: any) {
       console.error(`Erro ao fazer login como ${userType}:`, error);
       toast({

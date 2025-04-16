@@ -25,6 +25,7 @@ const AuthSession = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const [showLoading, setShowLoading] = useState(false);
+  const [timeoutId, setTimeoutId] = useState<number | null>(null);
 
   // Set up timeout for showing loading screen
   useEffect(() => {
@@ -37,23 +38,36 @@ const AuthSession = ({ children }: { children: React.ReactNode }) => {
       // Show loading screen immediately for quick visual feedback
       setShowLoading(true);
       
-      // Short timeout to force navigation if it takes too long
-      const forceNavigateTimeout = window.setTimeout(() => {
+      // Ultra short timeout to force navigation if it takes too long
+      const id = window.setTimeout(() => {
         if (isLoading || isInitializing) {
           console.log("AuthSession: Redirecting due to loading timeout");
           setIsLoading(false);
           navigate('/auth', { replace: true });
         }
         setShowLoading(false);
-      }, 800); // Reduced time
+      }, 500); // Ultra short timeout
+      
+      setTimeoutId(id);
       
       return () => {
-        window.clearTimeout(forceNavigateTimeout);
+        if (timeoutId) {
+          window.clearTimeout(timeoutId);
+        }
       };
     } else {
       setShowLoading(false);
     }
-  }, [isInitializing, isLoading, location.pathname, navigate, setIsLoading, user]);
+  }, [isInitializing, isLoading, location.pathname, navigate, setIsLoading, user, timeoutId]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (timeoutId) {
+        window.clearTimeout(timeoutId);
+      }
+    };
+  }, [timeoutId]);
 
   // Handle retry
   const handleRetry = () => {
@@ -86,7 +100,7 @@ const AuthSession = ({ children }: { children: React.ReactNode }) => {
 
   // Show loading screen only if necessary and for a short time
   if ((isInitializing || isLoading) && !user && showLoading) {
-    return <LoadingScreen />;
+    return <LoadingScreen message="Carregando seu dashboard..." />;
   }
 
   // Default case - render children
