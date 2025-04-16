@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -146,19 +145,17 @@ const RootRedirect = () => {
     return <Navigate to="/login" replace />;
   }
   
-  // Verificação de segurança para garantir que o redirecionamento use o papel correto
   let homePath = '/dashboard'; // Default para usuários normais
   
-  if (profile && profile.role === 'admin') {
+  if (profile?.role === 'admin') {
     homePath = '/admin';
     console.log("RootRedirect: Detectado papel admin, redirecionando para /admin");
   } else {
-    homePath = '/dashboard';
     console.log("RootRedirect: Detectado papel member ou outro, redirecionando para /dashboard");
   }
   
   console.log("RootRedirect: redirecionando usuário para", homePath, { 
-    role: profile?.role,
+    role: profile?.role || 'não definido',
     isAdmin, 
     userId: user.id
   });

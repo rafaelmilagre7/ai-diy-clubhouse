@@ -19,12 +19,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Calculate isAdmin based on profile role - usando string literal para comparação
   const isAdmin = profile?.role === 'admin';
   
-  console.log("AuthProvider: Perfil de usuário carregado", { 
-    profileId: profile?.id,
-    email: profile?.email,
-    role: profile?.role,
-    isAdmin: profile?.role === 'admin'
-  });
+  // Debug log de inicialização
+  useEffect(() => {
+    console.log("AuthProvider: Perfil de usuário carregado", { 
+      profileId: profile?.id || 'não definido',
+      email: profile?.email || 'não definido',
+      role: profile?.role || 'não definido',
+      isAdmin: profile?.role === 'admin'
+    });
+  }, [profile]);
 
   const value = {
     session,

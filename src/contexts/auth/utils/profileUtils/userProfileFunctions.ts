@@ -22,7 +22,7 @@ export const fetchUserProfile = async (userId: string): Promise<UserProfile | nu
         return null;
       }
       console.error('Error fetching user profile:', error);
-      throw error;
+      return null; // Retornar null ao invés de lançar erro
     }
     
     if (!data) {
@@ -34,13 +34,7 @@ export const fetchUserProfile = async (userId: string): Promise<UserProfile | nu
     return data as UserProfile;
   } catch (error) {
     console.error('Unexpected error fetching profile:', error);
-    
-    // If error is infinite recursion, don't propagate to allow alternative profile creation
-    if (error instanceof Error && error.message.includes('infinite recursion')) {
-      return null;
-    }
-    
-    throw error;
+    return null; // Retornar null ao invés de lançar erro
   }
 };
 
@@ -74,13 +68,13 @@ export const createUserProfileIfNeeded = async (
     if (insertError) {
       // If insertion fails due to policies, try using RPC function created in SQL
       if (insertError.message.includes('policy') || insertError.message.includes('permission denied')) {
-        console.warn('Erro de política ao criar perfil. Continuando sem perfil:', insertError);
+        console.warn('Erro de política ao criar perfil. Continuando com perfil alternativo:', insertError);
         // Return minimal profile to allow application use
         return createFallbackProfile(userId, email, name, userRole);
       }
       
       console.error('Erro ao criar perfil:', insertError);
-      throw insertError;
+      return createFallbackProfile(userId, email, name, userRole);
     }
     
     console.log('Perfil criado com sucesso:', newProfile);
@@ -102,6 +96,7 @@ const createFallbackProfile = (
   name: string, 
   role: UserRole
 ): UserProfile => {
+  console.log(`Criando perfil alternativo para ${email} com papel ${role}`);
   return {
     id: userId,
     email,

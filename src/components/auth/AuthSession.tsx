@@ -19,6 +19,8 @@ const AuthSession = ({ children }: { children: React.ReactNode }) => {
     setIsInitializing,
     setAuthError
   } = useAuthSession();
+  
+  const { user } = useAuth();
 
   // Function to clean up the subscription on unmount
   useEffect(() => {
@@ -34,8 +36,11 @@ const AuthSession = ({ children }: { children: React.ReactNode }) => {
     setAuthError(null);
   };
 
-  // Display error if authentication failed
-  if (authError && !isInitializing) {
+  // Verificação adicional - se o usuário está autenticado, permite passar para o conteúdo
+  const isAuthenticated = !!user;
+
+  // Display error if authentication failed and não tem usuário autenticado
+  if (authError && !isInitializing && !isAuthenticated) {
     return (
       <AuthErrorDisplay
         error={authError}
@@ -46,8 +51,8 @@ const AuthSession = ({ children }: { children: React.ReactNode }) => {
     );
   }
 
-  // Show loading screen during initialization
-  if (isInitializing) {
+  // Show loading screen during initialization e se não tiver usuário
+  if (isInitializing && !isAuthenticated) {
     return <LoadingScreen />;
   }
 
