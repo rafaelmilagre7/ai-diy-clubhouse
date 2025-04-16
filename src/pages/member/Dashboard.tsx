@@ -1,4 +1,3 @@
-
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
 import { useState } from "react";
@@ -15,13 +14,12 @@ const Dashboard = () => {
   const [searchParams] = useSearchParams();
   const categoryParam = searchParams.get("category") || "all";
   
-  // Use custom hooks for data fetching and state management
   const [searchQuery, setSearchQuery] = useState("");
   const { 
     activeSolutions, 
     completedSolutions, 
     loading, 
-    userProgress 
+    allSolutions 
   } = useDashboardProgress();
   
   const { 
@@ -30,7 +28,6 @@ const Dashboard = () => {
     setActiveCategory 
   } = useSolutionsData(categoryParam);
   
-  // Calculate metrics for ProgressSummary
   const completedCount = completedSolutions.length;
   const inProgressCount = activeSolutions.length;
   const totalSolutions = filteredSolutions.length;
@@ -49,14 +46,12 @@ const Dashboard = () => {
   
   return (
     <div className="space-y-6">
-      {/* Welcome section with header */}
       <DashboardHeader 
         profileName={profile?.name}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
       />
       
-      {/* Progress summary cards */}
       <ProgressSummary 
         completedCount={completedCount}
         inProgressCount={inProgressCount}
@@ -64,7 +59,6 @@ const Dashboard = () => {
         totalSolutions={totalSolutions}
       />
       
-      {/* Category tabs and solutions grid */}
       <div className="space-y-4">
         <CategoryTabs
           activeCategory={activeCategory}
