@@ -6,6 +6,7 @@ import { AdminContent } from "./admin/AdminContent";
 import { Navigate, useNavigate } from "react-router-dom";
 import LoadingScreen from "@/components/common/LoadingScreen";
 import { toast } from "@/hooks/use-toast";
+import { UserRole } from "@/lib/supabase";
 
 const AdminLayout = () => {
   const { user, profile, isAdmin, isLoading } = useAuth();
@@ -60,7 +61,7 @@ const AdminLayout = () => {
   
   // Verificação final do papel do usuário
   if (profile && profile.role !== 'admin') {
-    console.log("AdminLayout render: Papel do usuário não é admin, atualizando...", {
+    console.log("AdminLayout render: Papel do usuário não é admin, mas é:", {
       papel_atual: profile.role
     });
     
@@ -82,3 +83,4 @@ const AdminLayout = () => {
 };
 
 export default AdminLayout;
+

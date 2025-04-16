@@ -6,6 +6,7 @@ import { MemberContent } from "./member/MemberContent";
 import { Navigate, useNavigate } from "react-router-dom";
 import LoadingScreen from "@/components/common/LoadingScreen";
 import { toast } from "@/hooks/use-toast";
+import { UserRole } from "@/lib/supabase";
 
 const Layout = () => {
   const { user, profile, signOut, isAdmin, isLoading } = useAuth();
@@ -64,7 +65,7 @@ const Layout = () => {
   
   // Verificação final do papel do usuário
   if (profile && profile.role !== 'member') {
-    console.log("Layout render: Papel do usuário não é member, atualizando...", {
+    console.log("Layout render: Papel do usuário não é member, mas é:", {
       papel_atual: profile.role
     });
     
@@ -108,3 +109,4 @@ const Layout = () => {
 };
 
 export default Layout;
+
