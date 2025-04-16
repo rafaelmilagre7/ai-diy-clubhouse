@@ -6,6 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import LoadingScreen from "@/components/common/LoadingScreen";
 import { AchievementGrid, Achievement } from "@/components/achievements/AchievementGrid";
+import { SolutionCategory, toSolutionCategory } from "@/lib/types/categoryTypes";
 
 const Achievements = () => {
   const { user, profile } = useAuth();
@@ -55,7 +56,7 @@ const Achievements = () => {
           const typedSolutions = solutionsData?.map(solution => ({
             ...solution,
             difficulty: solution.difficulty as "easy" | "medium" | "advanced",
-            category: solution.category as "revenue" | "operational" | "strategy"
+            category: toSolutionCategory(solution.category)
           })) || [];
           
           setSolutions(typedSolutions);
@@ -75,7 +76,7 @@ const Achievements = () => {
         const processedSolutions = solutionsData?.map(solution => ({
           ...solution,
           difficulty: solution.difficulty as "easy" | "medium" | "advanced",
-          category: solution.category as "revenue" | "operational" | "strategy"
+          category: toSolutionCategory(solution.category)
         })) || [];
         
         if (progressData) {
@@ -105,7 +106,7 @@ const Achievements = () => {
     const solutionCategories = solutions.reduce((acc, solution) => {
       acc[solution.id] = solution.category;
       return acc;
-    }, {} as Record<string, "revenue" | "operational" | "strategy">);
+    }, {} as Record<string, SolutionCategory>);
 
     // Add achievements for each completed solution category
     const categoryNames = {
@@ -137,7 +138,7 @@ const Achievements = () => {
     }
 
     // Category-specific achievements
-    const categories: ('revenue' | 'operational' | 'strategy')[] = ['revenue', 'operational', 'strategy'];
+    const categories: SolutionCategory[] = ['revenue', 'operational', 'strategy'];
     
     categories.forEach(category => {
       // Find completed solutions in this category
