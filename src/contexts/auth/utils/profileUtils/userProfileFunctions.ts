@@ -60,7 +60,10 @@ export const createUserProfileIfNeeded = async (
         email,
         name,
         role: userRole,
-        created_at: new Date().toISOString()
+        created_at: new Date().toISOString(),
+        avatar_url: null,
+        company_name: null,
+        industry: null
       })
       .select()
       .single();

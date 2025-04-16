@@ -1,5 +1,6 @@
 
 import { fetchUserProfile, createUserProfileIfNeeded } from '@/contexts/auth/utils/profileUtils';
+import { UserProfile } from '@/lib/supabase';
 
 /**
  * Process user profile after authentication
@@ -9,7 +10,7 @@ export const processUserProfile = async (
   userId: string,
   email: string | null | undefined,
   name?: string | null
-): Promise<any> => {
+): Promise<UserProfile | null> => {
   try {
     console.log(`Processando perfil para usuário ${userId}, email: ${email || 'não disponível'}`);
     
@@ -36,7 +37,10 @@ export const processUserProfile = async (
           email: email,
           name: name || 'Usuário',
           role: email?.includes('admin') || email?.includes('@viverdeia.ai') ? 'admin' : 'member',
-          created_at: new Date().toISOString()
+          created_at: new Date().toISOString(),
+          avatar_url: null,
+          company_name: null,
+          industry: null
         };
       }
     }
@@ -53,7 +57,10 @@ export const processUserProfile = async (
           email: email,
           name: name || 'Usuário',
           role: email.includes('admin') || email.includes('@viverdeia.ai') ? 'admin' : 'member',
-          created_at: new Date().toISOString()
+          created_at: new Date().toISOString(),
+          avatar_url: null,
+          company_name: null,
+          industry: null
         };
         console.log('Criado perfil local temporário:', profile);
       }
