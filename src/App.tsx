@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -8,7 +9,7 @@ import AuthSession from "@/components/auth/AuthSession";
 import Layout from "@/components/layout/Layout";
 import AdminLayout from "@/components/layout/AdminLayout";
 import LoadingScreen from "@/components/common/LoadingScreen";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 // Member routes
 import Login from "@/pages/Login";
@@ -132,17 +133,24 @@ const App = () => {
 const RootRedirect = () => {
   const { user, profile, isAdmin, isLoading } = useAuth();
   const navigate = useNavigate();
+  const [timeoutExceeded, setTimeoutExceeded] = useState(false);
   
   useEffect(() => {
     const timeoutId = setTimeout(() => {
-      if (isLoading) {
+      if (isLoading && !timeoutExceeded) {
         console.log("RootRedirect: Tempo limite de carregamento excedido, redirecionando para /index");
+        setTimeoutExceeded(true);
         navigate('/index', { replace: true });
       }
     }, 3000); // 3 segundos é suficiente
     
     return () => clearTimeout(timeoutId);
-  }, [isLoading, navigate]);
+  }, [isLoading, navigate, timeoutExceeded]);
+  
+  // If timeout exceeded, return null to avoid rendering
+  if (timeoutExceeded) {
+    return null;
+  }
   
   if (isLoading) {
     return <LoadingScreen />;

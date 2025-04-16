@@ -17,11 +17,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Use our extracted auth methods hook
   const { signIn, signOut, signInAsMember, signInAsAdmin } = useAuthMethods({ setIsLoading });
 
-  // Set up initial auth state on mount
+  // Set up initial auth state on mount and handle auth state changes
   useEffect(() => {
     console.log("AuthProvider initializing");
     
-    // Get current session
+    // First set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, newSession) => {
+        console.log("Auth state changed:", event);
+        setSession(newSession);
+        setUser(newSession?.user || null);
+        
+        // Don't set isLoading to false here, let the AuthSession component handle that
+        // after profile processing
+      }
+    );
+    
+    // Then get current session
     const initAuth = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
@@ -30,21 +42,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } catch (error) {
         console.error("Error getting initial session:", error);
       } finally {
-        setIsLoading(false);
+        // Set loading to false only if we don't have a session
+        // If we have a session, the AuthSession component will set it to false after fetching the profile
+        if (!session) {
+          setIsLoading(false);
+        }
       }
     };
     
     initAuth();
-    
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, newSession) => {
-        console.log("Auth state changed:", event);
-        setSession(newSession);
-        setUser(newSession?.user || null);
-        setIsLoading(false);
-      }
-    );
     
     // Cleanup on unmount
     return () => {

@@ -1,5 +1,5 @@
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useAuthSession } from "@/hooks/auth/useAuthSession";
 import AuthErrorDisplay from "@/components/auth/AuthErrorDisplay";
 import LoadingScreen from "@/components/common/LoadingScreen";
@@ -24,6 +24,27 @@ const AuthSession = ({ children }: { children: React.ReactNode }) => {
   const { user, isLoading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const [showLoading, setShowLoading] = useState(true);
+
+  // Start a timeout to prevent infinite loading
+  useEffect(() => {
+    let timeoutId: number;
+    
+    if ((isInitializing || isLoading) && location.pathname !== '/index' && location.pathname !== '/login') {
+      setShowLoading(true);
+      timeoutId = window.setTimeout(() => {
+        console.log("Timeout de carregamento atingido, redirecionando para /index");
+        setShowLoading(false);
+        navigate("/index", { replace: true });
+      }, 6000); // 6 segundos para timeout
+    } else {
+      setShowLoading(false);
+    }
+    
+    return () => {
+      if (timeoutId) window.clearTimeout(timeoutId);
+    };
+  }, [isInitializing, isLoading, navigate, location.pathname]);
 
   // Cleanup subscription on unmount
   useEffect(() => {
@@ -31,22 +52,6 @@ const AuthSession = ({ children }: { children: React.ReactNode }) => {
       console.log("AuthSession: Cleaning up subscription");
     };
   }, []);
-
-  // Redirect to /index if stuck in loading state for too long
-  useEffect(() => {
-    let timeoutId: number;
-    
-    if ((isInitializing || isLoading) && location.pathname !== '/index' && location.pathname !== '/login') {
-      timeoutId = window.setTimeout(() => {
-        console.log("Timeout de carregamento atingido, redirecionando para /index");
-        navigate("/index", { replace: true });
-      }, 8000); // 8 segundos para timeout
-    }
-    
-    return () => {
-      if (timeoutId) window.clearTimeout(timeoutId);
-    };
-  }, [isInitializing, isLoading, navigate, location.pathname]);
 
   // Handle retry
   const handleRetry = () => {
@@ -76,7 +81,7 @@ const AuthSession = ({ children }: { children: React.ReactNode }) => {
   }
 
   // Show loading screen during initialization and if no user
-  if ((isInitializing || isLoading) && !isAuthenticated) {
+  if ((isInitializing || isLoading) && !isAuthenticated && showLoading) {
     return <LoadingScreen />;
   }
 

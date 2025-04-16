@@ -2,16 +2,24 @@
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/auth";
 import { FcGoogle } from "react-icons/fc";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const Login = () => {
-  const { signIn, signInAsMember, signInAsAdmin } = useAuth();
+  const { signIn, signInAsMember, signInAsAdmin, user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
   
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (user) {
+      navigate('/', { replace: true });
+    }
+  }, [user, navigate]);
+
   const handleSignIn = async () => {
     try {
       setIsLoading(true);
@@ -94,7 +102,7 @@ const Login = () => {
             
             <div className="text-center mt-2">
               <Link 
-                to="/" 
+                to="/index" 
                 className="text-sm text-blue-600 hover:text-blue-500"
               >
                 Voltar para página inicial

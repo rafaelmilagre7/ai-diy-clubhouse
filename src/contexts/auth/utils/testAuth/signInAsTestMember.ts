@@ -23,15 +23,16 @@ export const signInAsTestMember = async (): Promise<void> => {
     if (data && data.user) {
       console.log("Login como membro de teste bem-sucedido:", data.user.id);
       
-      // Redirect to home page to trigger proper routing
-      setTimeout(() => {
-        window.location.href = '/';
-      }, 500);
-      
       toast({
         title: "Login como Membro",
         description: "Você está logado como um membro de teste.",
       });
+      
+      // Give time for the auth state to update before redirecting
+      // This prevents race conditions with the auth state listener
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 800);
     }
   } catch (error) {
     console.error("Erro no login de membro de teste:", error);

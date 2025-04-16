@@ -56,7 +56,7 @@ export const processUserProfile = async (
           id: userId,
           email: email,
           name: name || 'Usuário',
-          role: email.includes('admin') || email.includes('@viverdeia.ai') ? 'admin' : 'member',
+          role: email.includes('admin') || email?.includes('@viverdeia.ai') ? 'admin' : 'member',
           created_at: new Date().toISOString(),
           avatar_url: null,
           company_name: null,

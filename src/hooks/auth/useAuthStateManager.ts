@@ -42,15 +42,19 @@ export const useAuthStateManager = () => {
         console.log("Nenhuma sessão ativa encontrada");
       }
       
+      // Set loading to false regardless of the outcome
+      setIsLoading(false);
+      
       return { success: true, error: null };
     } catch (error) {
       console.error("Erro durante inicialização da sessão:", error);
+      setIsLoading(false);
       return { 
         success: false, 
         error: error instanceof Error ? error : new Error('Erro desconhecido de autenticação')
       };
     }
-  }, [setSession, setUser, setProfile]);
+  }, [setSession, setUser, setProfile, setIsLoading]);
   
   return { setupAuthSession };
 };

@@ -23,15 +23,16 @@ export const signInAsTestAdmin = async (): Promise<void> => {
     if (data && data.user) {
       console.log("Login como admin de teste bem-sucedido:", data.user.id);
       
-      // Redirect to home page to trigger proper routing
-      setTimeout(() => {
-        window.location.href = '/';
-      }, 500);
-      
       toast({
         title: "Login como Admin",
         description: "Você está logado como um administrador de teste.",
       });
+      
+      // Give time for the auth state to update before redirecting
+      // This prevents race conditions with the auth state listener
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 800);
     }
   } catch (error) {
     console.error("Erro no login de admin de teste:", error);
