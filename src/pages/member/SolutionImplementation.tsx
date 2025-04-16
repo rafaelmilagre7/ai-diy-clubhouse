@@ -1,14 +1,16 @@
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useModuleImplementation } from "@/hooks/useModuleImplementation";
 import LoadingScreen from "@/components/common/LoadingScreen";
-import { ModuleContent } from "@/components/implementation/ModuleContent";
 import { ImplementationHeader } from "@/components/implementation/ImplementationHeader";
-import { ImplementationFooter } from "@/components/implementation/ImplementationFooter";
 import { ImplementationNotFound } from "@/components/implementation/ImplementationNotFound";
-import { useImplementationShortcuts } from "@/hooks/useImplementationShortcuts";
-import { ImplementationConfirmationModal } from "@/components/implementation/ImplementationConfirmationModal";
 import { useLogging } from "@/hooks/useLogging";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ModuleContentMaterials } from "@/components/implementation/content/ModuleContentMaterials";
+import { ModuleContentVideos } from "@/components/implementation/content/ModuleContentVideos";
+import { ModuleContentTools } from "@/components/implementation/content/ModuleContentTools";
+import { ModuleContentChecklist } from "@/components/implementation/content/ModuleContentChecklist";
+import { ModuleContentText } from "@/components/implementation/content/ModuleContentText";
 
 const SolutionImplementation = () => {
   const {
@@ -18,27 +20,10 @@ const SolutionImplementation = () => {
     loading,
     moduleIdx,
     completedModules,
-    handleComplete,
-    handlePrevious,
-    handleMarkAsCompleted,
-    handleConfirmImplementation,
-    showConfirmationModal,
-    setShowConfirmationModal,
-    isCompleting,
-    hasInteracted,
-    setModuleInteraction
   } = useModuleImplementation();
   
   const { log, logError } = useLogging();
-  
-  // Setup keyboard shortcuts
-  useImplementationShortcuts(
-    solution,
-    moduleIdx,
-    modules,
-    handleComplete,
-    handlePrevious
-  );
+  const [activeTab, setActiveTab] = useState("overview");
   
   // Log module data when it changes
   useEffect(() => {
@@ -56,12 +41,6 @@ const SolutionImplementation = () => {
     }
   }, [currentModule, solution, moduleIdx, log]);
   
-  // Keep track of user's interaction with the module
-  useEffect(() => {
-    // Reset interaction state when module changes
-    setModuleInteraction(false);
-  }, [moduleIdx, setModuleInteraction]);
-  
   if (loading) {
     return <LoadingScreen />;
   }
@@ -72,59 +51,53 @@ const SolutionImplementation = () => {
     return <ImplementationNotFound />;
   }
   
-  // Log any content rendering errors
-  const handleContentError = (error: any) => {
-    logError("Error rendering module content", error);
-  };
-  
-  // Use fixed total of 6 modules
-  const totalModules = 6;
-  
   return (
-    <>
-      <div className="pb-20 min-h-screen bg-slate-50">
-        {/* Header section */}
-        <ImplementationHeader
-          solution={solution}
-          moduleIdx={moduleIdx}
-          modulesLength={totalModules}
-          completedModules={completedModules}
-          isCompleting={isCompleting}
-        />
-        
-        {/* Module content */}
-        <div className="container mt-6 bg-white p-6 rounded-lg shadow-sm">
-          <ModuleContent 
-            module={currentModule} 
-            onComplete={() => setModuleInteraction(true)} 
-            onError={handleContentError}
-          />
-        </div>
-        
-        {/* Navigation footer */}
-        <ImplementationFooter
-          moduleIdx={moduleIdx}
-          modulesLength={totalModules}
-          completedModules={completedModules}
-          handlePrevious={handlePrevious}
-          handleComplete={handleComplete}
-          handleMarkAsCompleted={handleMarkAsCompleted}
-          isCompleting={isCompleting}
-          hasInteracted={hasInteracted}
-        />
-      </div>
+    <div className="pb-20 min-h-screen bg-slate-50">
+      {/* Header section */}
+      <ImplementationHeader
+        solution={solution}
+        moduleIdx={moduleIdx}
+        modulesLength={modules.length}
+        completedModules={completedModules}
+        isCompleting={false}
+      />
       
-      {/* Confirmation modal for completing the entire solution */}
-      {solution && (
-        <ImplementationConfirmationModal 
-          solution={solution}
-          isOpen={showConfirmationModal}
-          isSubmitting={isCompleting}
-          onClose={() => setShowConfirmationModal(false)}
-          onConfirm={handleConfirmImplementation}
-        />
-      )}
-    </>
+      {/* Module content */}
+      <div className="container mt-6 bg-white p-6 rounded-lg shadow-sm">
+        <h1 className="text-2xl font-bold mb-6">{currentModule.title}</h1>
+        
+        {currentModule.content && (
+          <div className="mb-8">
+            <ModuleContentText content={currentModule.content} />
+          </div>
+        )}
+        
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full mt-8">
+          <TabsList className="w-full grid grid-cols-4 mb-6">
+            <TabsTrigger value="tools">Ferramentas</TabsTrigger>
+            <TabsTrigger value="materials">Materiais</TabsTrigger>
+            <TabsTrigger value="videos">Vídeos</TabsTrigger>
+            <TabsTrigger value="checklist">Checklist</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="tools">
+            <ModuleContentTools module={currentModule} />
+          </TabsContent>
+          
+          <TabsContent value="materials">
+            <ModuleContentMaterials module={currentModule} />
+          </TabsContent>
+          
+          <TabsContent value="videos">
+            <ModuleContentVideos module={currentModule} />
+          </TabsContent>
+          
+          <TabsContent value="checklist">
+            <ModuleContentChecklist module={currentModule} />
+          </TabsContent>
+        </Tabs>
+      </div>
+    </div>
   );
 };
 

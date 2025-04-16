@@ -1,5 +1,4 @@
 
-import { useState } from "react";
 import { useParams } from "react-router-dom";
 import LoadingScreen from "@/components/common/LoadingScreen";
 import { useSolutionData } from "@/hooks/useSolutionData";
@@ -13,7 +12,6 @@ import { SolutionNotFound } from "@/components/solution/SolutionNotFound";
 
 const SolutionDetails = () => {
   const { id } = useParams<{ id: string }>();
-  const [activeTab, setActiveTab] = useState("overview");
   
   // Fetch solution data
   const { solution, loading, progress } = useSolutionData(id);
@@ -43,11 +41,7 @@ const SolutionDetails = () => {
       
       <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-8">
         <div className="md:col-span-2">
-          <SolutionTabsContent 
-            solution={solution}
-            activeTab={activeTab}
-            setActiveTab={setActiveTab}
-          />
+          <SolutionTabsContent solution={solution} />
           
           <SolutionMobileActions 
             solutionId={solution.id}
