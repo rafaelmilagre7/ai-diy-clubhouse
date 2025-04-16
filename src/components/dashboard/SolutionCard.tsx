@@ -16,7 +16,13 @@ export const SolutionCard = ({ solution, onSelect }: SolutionCardProps) => {
   const handleSelect = () => onSelect(solution.id);
 
   return (
-    <Card className={cn("solution-card transition-all duration-200 cursor-pointer hover:translate-y-[-4px]", solution.category)}>
+    <Card 
+      className={cn(
+        "solution-card transition-all duration-200 cursor-pointer hover:shadow-md hover:translate-y-[-4px]", 
+        solution.category
+      )}
+      onClick={handleSelect}
+    >
       <CardContent className="p-0">
         <CardThumbnail thumbnailUrl={solution.thumbnail_url} />
         <div className="p-4 space-y-2">

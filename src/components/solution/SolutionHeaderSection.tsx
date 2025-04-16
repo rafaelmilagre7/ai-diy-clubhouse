@@ -1,9 +1,6 @@
 
-import { Badge } from "@/components/ui/badge";
 import { Solution } from "@/lib/supabase";
-import { cn } from "@/lib/utils";
-import { DifficultyBadge } from "@/components/dashboard/DifficultyBadge";
-import { Play } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 interface SolutionHeaderSectionProps {
   solution: Solution;
@@ -11,54 +8,42 @@ interface SolutionHeaderSectionProps {
 
 export const SolutionHeaderSection = ({ solution }: SolutionHeaderSectionProps) => {
   return (
-    <div className="relative rounded-xl overflow-hidden shadow-md animate-fade-in">
-      <div 
-        className="h-72 bg-cover bg-center transition-transform duration-500 hover:scale-105"
-        style={{ 
-          backgroundImage: solution.thumbnail_url 
-            ? `url(${solution.thumbnail_url})` 
-            : `url('https://placehold.co/1200x400/0ABAB5/FFFFFF.png?text=VIVER+DE+IA+DIY&font=montserrat')` 
-        }}
-      >
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/60 to-transparent" />
-      </div>
-      
-      <div className="absolute top-4 right-4">
-        <div className="flex gap-2">
-          <Badge variant="outline" className="bg-white/10 text-white backdrop-blur-sm">
-            {solution.category === "revenue" && "Aumento de Receita"}
-            {solution.category === "operational" && "Otimização Operacional"}
-            {solution.category === "strategy" && "Gestão Estratégica"}
-          </Badge>
-          <DifficultyBadge difficulty={solution.difficulty} />
-        </div>
-      </div>
-      
-      <div className="absolute bottom-0 left-0 p-6 text-white">
-        <h1 className="text-3xl font-bold drop-shadow-sm">{solution.title}</h1>
-        <p className="mt-2 text-white/90 max-w-xl line-clamp-2">
-          {solution.description}
-        </p>
+    <div className="space-y-4">
+      <div className="flex items-center gap-2">
+        <Badge 
+          variant="outline" 
+          className={`
+            px-3 py-1
+            ${solution.category === "revenue" ? "bg-revenue/10 text-revenue border-revenue/30" : ""}
+            ${solution.category === "operational" ? "bg-operational/10 text-operational border-operational/30" : ""}
+            ${solution.category === "strategy" ? "bg-strategy/10 text-strategy border-strategy/30" : ""}
+          `}
+        >
+          {solution.category === "revenue" ? "Receita" : 
+           solution.category === "operational" ? "Operacional" : 
+           "Estratégia"}
+        </Badge>
         
-        <div className="flex items-center mt-3">
-          <div className="flex items-center mr-6">
-            <div className="w-6 h-6 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center mr-2">
-              <Play className="h-3 w-3 text-white" fill="white" />
-            </div>
-            <span className="text-sm text-white/80">8 módulos</span>
-          </div>
-          
-          <div className="flex items-center">
-            <div className="w-6 h-6 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center mr-2">
-              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white">
-                <circle cx="12" cy="12" r="10" />
-                <polyline points="12 6 12 12 16 14" />
-              </svg>
-            </div>
-            <span className="text-sm text-white/80">Aprox. 1-2 horas</span>
-          </div>
-        </div>
+        <Badge variant="outline" className="px-3 py-1 bg-gray-100">
+          {solution.difficulty === "easy" ? "Fácil" :
+           solution.difficulty === "medium" ? "Médio" :
+           "Avançado"}
+        </Badge>
       </div>
+      
+      <h1 className="text-2xl md:text-3xl font-bold">{solution.title}</h1>
+      
+      <p className="text-muted-foreground">{solution.description}</p>
+      
+      {solution.thumbnail_url && (
+        <div className="mt-6">
+          <img 
+            src={solution.thumbnail_url} 
+            alt={solution.title} 
+            className="w-full h-60 object-cover rounded-lg shadow-sm"
+          />
+        </div>
+      )}
     </div>
   );
 };

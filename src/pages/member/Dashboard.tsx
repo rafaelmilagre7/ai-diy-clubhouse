@@ -1,3 +1,4 @@
+
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
 import { useState } from "react";
@@ -7,6 +8,8 @@ import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { CategoryTabs } from "@/components/dashboard/CategoryTabs";
 import { ProgressSummary } from "@/components/dashboard/ProgressSummary";
 import { useDashboardProgress } from "@/hooks/useDashboardProgress";
+import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 const Dashboard = () => {
   const { profile } = useAuth();
@@ -36,7 +39,8 @@ const Dashboard = () => {
     : 0;
   
   const handleSelectSolution = (id: string) => {
-    console.log("Navigating to solution detail:", id);
+    console.log("Navegando para detalhes da solução:", id);
+    toast.success("Carregando solução...");
     navigate(`/solution/${id}`);
   };
   
