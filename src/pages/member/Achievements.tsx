@@ -51,8 +51,13 @@ const Achievements = () => {
           console.error("Error fetching solutions:", solutionsError);
           setSolutions([]);
         } else {
-          // Ensure we're setting complete Solution objects
-          setSolutions(solutionsData || []);
+          // Ensure we're setting type-safe Solution objects
+          const typedSolutions = solutionsData?.map(solution => ({
+            ...solution,
+            category: solution.category as "revenue" | "operational" | "strategy"
+          })) || [];
+          
+          setSolutions(typedSolutions);
         }
 
         // Try to fetch badges (if the table exists)
@@ -66,7 +71,11 @@ const Achievements = () => {
         }
 
         // Generate achievements based on progress
-        generateAchievements(progressData || [], solutionsData || [], badgesData || []);
+        if (progressData && solutionsData) {
+          generateAchievements(progressData, typedSolutions, badgesData || []);
+        } else {
+          generateAchievements([], [], []);
+        }
       } catch (error) {
         console.error("Error in fetching achievements data:", error);
         toast({
@@ -89,7 +98,7 @@ const Achievements = () => {
     const solutionCategories = solutions.reduce((acc, solution) => {
       acc[solution.id] = solution.category;
       return acc;
-    }, {} as Record<string, string>);
+    }, {} as Record<string, "revenue" | "operational" | "strategy">);
 
     // Add achievements for each completed solution category
     const categoryNames = {
@@ -141,8 +150,8 @@ const Achievements = () => {
         
         achievementsList.push({
           id: `${category}-${count}`,
-          name: `${nameMap[count]} em ${categoryNames[category as keyof typeof categoryNames]}`,
-          description: `Complete ${count} soluções na categoria ${categoryNames[category as keyof typeof categoryNames]}`,
+          name: `${nameMap[count]} em ${categoryNames[category]}`,
+          description: `Complete ${count} soluções na categoria ${categoryNames[category]}`,
           category: category,
           isUnlocked: completedInCategory.length >= count,
           earnedAt: completedInCategory.length >= count ? 

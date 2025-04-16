@@ -21,6 +21,18 @@ export const ProfileTabs = ({
   achievements, 
   stats 
 }: ProfileTabsProps) => {
+  // Convert UserAchievement[] to Achievement[] for the AchievementGrid
+  const formattedAchievements = achievements.map(achievement => ({
+    id: achievement.id,
+    name: achievement.name,
+    description: achievement.description,
+    category: achievement.category as "operational" | "revenue" | "strategy" | "achievement",
+    isUnlocked: achievement.isUnlocked,
+    earnedAt: achievement.earnedAt,
+    requiredCount: achievement.requiredCount,
+    currentCount: achievement.currentCount
+  }));
+
   return (
     <Tabs defaultValue={defaultTab}>
       <TabsList>
@@ -47,7 +59,7 @@ export const ProfileTabs = ({
       </TabsContent>
       
       <TabsContent value="badges" className="mt-6">
-        <AchievementGrid achievements={achievements} />
+        <AchievementGrid achievements={formattedAchievements} />
       </TabsContent>
     </Tabs>
   );
