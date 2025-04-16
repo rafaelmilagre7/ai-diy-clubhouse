@@ -1,5 +1,5 @@
 
-import React, { useState, useCallback, createContext, useContext, ReactNode } from "react";
+import { useState, useCallback, createContext, useContext, ReactNode } from "react";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/auth";
@@ -21,34 +21,22 @@ const LoggingContext = createContext<LoggingContextType | undefined>(undefined);
 // Provider component
 export const LoggingProvider = ({ children }: { children: ReactNode }) => {
   const { toast } = useToast();
-  
-  // Safe access to useAuth with fallback
-  let user = null;
-  try {
-    const auth = useAuth();
-    user = auth?.user;
-  } catch (error) {
-    console.warn("LoggingProvider: Auth context not available");
-    // Continue without auth - logging will work but not save to database
-  }
-  
+  const auth = useAuth();
   const [lastError, setLastError] = useState<any>(null);
   
   const log = useCallback((action: string, data: LogData = {}) => {
     console.log(`[Log] ${action}:`, data);
     
     // Only store important logs in database
-    if (data.critical && user) {
+    if (data.critical) {
       storeLog(action, data, "info");
     }
-  }, [user]);
+  }, []);
   
   const logWarning = useCallback((action: string, data: LogData = {}) => {
     console.warn(`[Warning] ${action}:`, data);
-    if (user) {
-      storeLog(action, data, "warning");
-    }
-  }, [user]);
+    storeLog(action, data, "warning");
+  }, []);
   
   const logError = useCallback((action: string, error: any) => {
     console.error(`[Error] ${action}:`, error);
@@ -61,22 +49,21 @@ export const LoggingProvider = ({ children }: { children: ReactNode }) => {
       variant: "destructive",
     });
     
-    if (user) {
-      storeLog(action, { 
-        error: error?.message || String(error),
-        stack: error?.stack
-      }, "error");
-    }
+    storeLog(action, { 
+      error: error?.message || String(error),
+      stack: error?.stack
+    }, "error");
     
     return error;
-  }, [toast, user]);
+  }, [toast]);
   
   const storeLog = async (action: string, data: LogData, level: string) => {
-    if (!user) return;
+    // Skip if user is not available
+    if (!auth || !auth.user) return;
     
     try {
       const logEntry = {
-        user_id: user.id,
+        user_id: auth.user.id,
         action,
         data,
         level,
@@ -89,7 +76,7 @@ export const LoggingProvider = ({ children }: { children: ReactNode }) => {
       const { error } = await supabase
         .from("analytics")
         .insert({
-          user_id: user.id,
+          user_id: auth.user.id,
           event_type: `log_${level}`,
           solution_id: data.solution_id, 
           module_id: data.module_id,
@@ -104,19 +91,17 @@ export const LoggingProvider = ({ children }: { children: ReactNode }) => {
     }
   };
   
-  // Create the value object for the context
-  const contextValue: LoggingContextType = {
+  const contextValue = {
     log,
     logWarning,
     logError,
     lastError
   };
   
-  // Using createElement instead of JSX since this is a .ts file
-  return React.createElement(
-    LoggingContext.Provider,
-    { value: contextValue },
-    children
+  return (
+    <LoggingContext.Provider value={contextValue}>
+      {children}
+    </LoggingContext.Provider>
   );
 };
 

@@ -34,7 +34,7 @@ export const MemberSidebarNav = ({ sidebarOpen }: MemberSidebarNavProps) => {
     {
       title: "Minhas Conquistas",
       icon: Award,
-      path: "/profile?tab=badges",
+      path: "/achievements",
       id: "achievements"
     },
     {
@@ -60,18 +60,8 @@ export const MemberSidebarNav = ({ sidebarOpen }: MemberSidebarNavProps) => {
       return true;
     }
     
-    if (path === "/profile?tab=badges" && 
-        (currentPath === "/profile" && location.search.includes("tab=badges"))) {
-      return true;
-    }
-    
-    if (path === "/profile" && 
-        currentPath === "/profile" && !location.search.includes("tab=badges")) {
-      return true;
-    }
-    
     // Direct match for other cases
-    return currentPath === path || (path.startsWith("/profile") && currentPath === "/profile");
+    return currentPath.startsWith(path);
   };
 
   return (

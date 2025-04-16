@@ -21,6 +21,9 @@ export const SolutionSidebar = ({
 }: SolutionSidebarProps) => {
   const navigate = useNavigate();
   
+  // Fixed module count to 6
+  const totalModules = 6;
+  
   return (
     <div className="bg-white p-6 rounded-lg shadow-sm space-y-6 hidden sm:block">
       <div>
@@ -35,16 +38,16 @@ export const SolutionSidebar = ({
             <div>
               <div className="flex justify-between text-sm mb-1">
                 <span>Progresso atual</span>
-                <span className="font-medium">{Math.round((progress.current_module / 6) * 100)}%</span>
+                <span className="font-medium">{Math.round((progress.current_module / totalModules) * 100)}%</span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2.5">
                 <div 
                   className="bg-blue-600 h-2.5 rounded-full" 
-                  style={{width: `${Math.round((progress.current_module / 6) * 100)}%`}}
+                  style={{width: `${Math.round((progress.current_module / totalModules) * 100)}%`}}
                 ></div>
               </div>
               <p className="text-sm text-muted-foreground mt-2">
-                Você está no módulo {progress.current_module + 1} de 6
+                Você está no módulo {progress.current_module + 1} de {totalModules}
               </p>
             </div>
           )

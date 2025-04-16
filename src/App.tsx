@@ -9,7 +9,7 @@ import { AdminContent } from './components/layout/admin/AdminContent';
 import { LoggingProvider } from './hooks/useLogging';
 
 function App() {
-  const [sidebarOpen, setSidebarOpen] = React.useState(false);
+  const [sidebarOpen, setSidebarOpen] = React.useState(true);
 
   return (
     <AuthProvider>
@@ -27,7 +27,9 @@ function App() {
             <Route path="/" element={<ProtectedRoute><MemberContent sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} /></ProtectedRoute>}>
               <Route index element={<Dashboard />} />
               <Route path="dashboard" element={<Dashboard />} />
-              <Route path="profile-settings" element={<ProfileSettings />} />
+              <Route path="solutions" element={<Dashboard />} />
+              <Route path="achievements" element={<Dashboard />} />
+              <Route path="profile" element={<ProfileSettings />} />
               <Route path="solution/:id" element={<SolutionDetails />} />
             </Route>
             
