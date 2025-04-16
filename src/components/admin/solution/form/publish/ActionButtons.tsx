@@ -2,7 +2,6 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Eye } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 
 interface ActionButtonsProps {
   solutionId: string | null;
@@ -18,8 +17,6 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({
   solutionId, 
   handleViewSolution
 }) => {
-  const navigate = useNavigate();
-  
   return (
     <>
       {/* Botão para visualizar detalhes da solução */}

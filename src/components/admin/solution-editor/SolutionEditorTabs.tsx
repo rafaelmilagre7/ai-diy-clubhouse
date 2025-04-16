@@ -46,7 +46,7 @@ const SolutionEditorTabs = ({
 
   return (
     <div className="space-y-6">
-      <TabHeader currentStep={currentStep} />
+      <TabHeader currentStep={currentStep} activeTab={activeTab} />
       
       {shouldShowTabs ? (
         <TabBasedNavigation 

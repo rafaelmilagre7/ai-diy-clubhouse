@@ -2,7 +2,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, Save, Eye, Layers } from "lucide-react";
+import { ChevronLeft, Save, Eye } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 interface SolutionEditorHeaderProps {
@@ -14,6 +14,11 @@ interface SolutionEditorHeaderProps {
   difficultyColor?: string;
 }
 
+/**
+ * Cabeçalho do editor de solução
+ * Mostra informações básicas e ações principais
+ * @param props Propriedades do componente
+ */
 const SolutionEditorHeader = ({ 
   id, 
   saving, 
@@ -72,16 +77,6 @@ const SolutionEditorHeader = ({
           >
             <Eye className="mr-2 h-4 w-4" />
             Visualizar
-          </Button>
-        )}
-        {id && (
-          <Button 
-            variant="outline" 
-            onClick={() => navigate(`/implement/${id}/0`)}
-            className="h-9"
-          >
-            <Layers className="mr-2 h-4 w-4" />
-            Testar Implementação
           </Button>
         )}
         <Button 

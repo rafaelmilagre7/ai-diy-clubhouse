@@ -44,7 +44,8 @@ const SolutionEditor = () => {
     return <LoadingScreen />;
   }
   
-  const handleSave = () => {
+  // Função específica para mostrar toast explicitamente
+  const handleSaveWithToast = () => {
     // Na primeira etapa, dispara o submit do formulário
     if (currentStep === 0) {
       const form = document.querySelector("form");
@@ -69,15 +70,20 @@ const SolutionEditor = () => {
     }
   };
 
+  // Função de salvamento sem toast para navegação entre etapas
+  const handleSilentSave = () => {
+    if (currentStep === 0) {
+      const form = document.querySelector("form");
+      if (form) form.dispatchEvent(new Event("submit", { cancelable: true, bubbles: true }));
+    } else {
+      onSubmit({...currentValues});
+    }
+  };
+
   const handleNextStep = () => {
     if (currentStep < totalSteps - 1) {
       // Salvar o estado atual antes de avançar, sem mostrar toast
-      if (currentStep === 0) {
-        const form = document.querySelector("form");
-        if (form) form.dispatchEvent(new Event("submit", { cancelable: true, bubbles: true }));
-      } else {
-        onSubmit({...currentValues});
-      }
+      handleSilentSave();
       setCurrentStep(currentStep + 1);
     }
   };
@@ -108,7 +114,7 @@ const SolutionEditor = () => {
       <SolutionEditorHeader 
         id={id} 
         saving={saving} 
-        onSave={handleSave}
+        onSave={handleSaveWithToast}
         title={currentValues.title}
         difficulty={currentValues.difficulty}
         difficultyColor={getDifficultyColor()}
@@ -144,7 +150,7 @@ const SolutionEditor = () => {
           totalSteps={totalSteps}
           onPrevious={handlePreviousStep}
           onNext={handleNextStep}
-          onSave={handleSave}
+          onSave={handleSaveWithToast}
           saving={saving}
         />
       )}
