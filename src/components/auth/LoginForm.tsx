@@ -29,7 +29,7 @@ const LoginForm = () => {
     try {
       setIsLoading(true);
       await signIn();
-      // Redirecionamento acontece na função de login
+      // Navigation is handled by auth state change listeners
     } catch (error) {
       console.error("Erro ao fazer login com Google:", error);
       toast({
@@ -57,6 +57,12 @@ const LoginForm = () => {
     try {
       setIsLoading(true);
       
+      // Show immediate feedback toast
+      toast({
+        title: "Entrando...",
+        description: "Autenticando sua conta.",
+      });
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -67,11 +73,10 @@ const LoginForm = () => {
       if (data.user) {
         toast({
           title: "Login bem-sucedido",
-          description: "Bem-vindo de volta!",
+          description: "Bem-vindo de volta ao VIVER DE IA Club!",
         });
         
-        // Redirecionar imediatamente para o dashboard
-        navigate('/dashboard', { replace: true });
+        // Leave redirect handling to auth state change listeners
       }
     } catch (error: any) {
       console.error("Erro ao fazer login:", error);
@@ -97,10 +102,7 @@ const LoginForm = () => {
       
       await loginFn();
       
-      // Redirecionar imediatamente para o dashboard
-      setTimeout(() => {
-        navigate('/dashboard', { replace: true });
-      }, 100);
+      // Leave redirect handling to auth state change listeners
     } catch (error: any) {
       console.error(`Erro ao fazer login como ${userType}:`, error);
       toast({

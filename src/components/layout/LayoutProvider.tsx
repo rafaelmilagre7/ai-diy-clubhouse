@@ -29,7 +29,7 @@ const LayoutProvider = () => {
     };
   }, []);
   
-  // Setup loading timeout effect
+  // Setup loading timeout effect with a longer delay for better UX
   useEffect(() => {
     if (isLoading && isMounted.current) {
       // Clear any existing timeout
@@ -41,7 +41,7 @@ const LayoutProvider = () => {
         if (isMounted.current) {
           setLoadingTimeout(true);
         }
-      }, 400); // Very short timeout
+      }, 2000); // Longer timeout for better UX
       
       return () => {
         if (timeoutRef.current) {

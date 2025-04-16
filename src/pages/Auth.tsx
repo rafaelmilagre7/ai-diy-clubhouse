@@ -3,19 +3,25 @@ import AuthLayout from "@/components/auth/AuthLayout";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
+import { toast } from "@/hooks/use-toast";
 
 const Auth = () => {
-  const { user, profile, isAdmin } = useAuth();
+  const { user, profile, isAdmin, isLoading } = useAuth();
   const navigate = useNavigate();
 
-  // Redirecionar se o usuário já estiver autenticado
+  // Redirect if user is already authenticated
   useEffect(() => {
     if (user) {
-      // Se o usuário for admin, redirecionar para o painel de admin
+      // Show feedback toast
+      toast({
+        title: "Autenticado",
+        description: "Redirecionando para o dashboard...",
+      });
+      
+      // Redirect based on role
       if (profile?.role === 'admin' || isAdmin) {
         navigate('/admin', { replace: true });
       } else {
-        // Caso contrário, redirecionar para o dashboard de membro
         navigate('/dashboard', { replace: true });
       }
     }

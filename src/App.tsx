@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -37,7 +38,18 @@ const ProtectedRoute = ({
   const { user, isAdmin, isLoading, setIsLoading } = useAuth();
   const navigate = useNavigate();
   const [loadingTimeout, setLoadingTimeout] = useState(false);
+  const timeoutRef = useRef<number | null>(null);
   
+  // Clean up on unmount
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
+  
+  // Immediate pass through for authenticated users
   if (user && !requireAdmin) {
     return <>{children}</>;
   }
@@ -46,21 +58,26 @@ const ProtectedRoute = ({
     return <>{children}</>;
   }
   
+  // Handle loading timeout
   useEffect(() => {
     if (isLoading) {
-      const timeoutId = setTimeout(() => {
-        console.log("ProtectedRoute: Tempo limite de carregamento excedido");
+      timeoutRef.current = window.setTimeout(() => {
+        console.log("ProtectedRoute: Loading timeout exceeded");
         setLoadingTimeout(true);
         setIsLoading(false);
         navigate('/auth', { replace: true });
-      }, 500);
+      }, 2000); // Longer timeout for better UX
       
-      return () => clearTimeout(timeoutId);
+      return () => {
+        if (timeoutRef.current) {
+          clearTimeout(timeoutRef.current);
+        }
+      };
     }
   }, [isLoading, navigate, setIsLoading]);
 
   if (isLoading && !loadingTimeout) {
-    return <LoadingScreen />;
+    return <LoadingScreen message="Verificando sua autenticação..." />;
   }
 
   if (!user) {
@@ -82,6 +99,7 @@ const RootRedirect = () => {
   const timeoutRef = useRef<number | null>(null);
   const isMounted = useRef(true);
   
+  // Clean up on unmount
   useEffect(() => {
     isMounted.current = true;
     return () => {
@@ -92,7 +110,9 @@ const RootRedirect = () => {
     };
   }, []);
   
+  // Handle immediate redirection if user and profile are available
   if (user && profile) {
+    console.log("RootRedirect: User and profile available, redirecting");
     if (profile.role === 'admin') {
       return <Navigate to="/admin" replace />;
     } else {
@@ -100,6 +120,7 @@ const RootRedirect = () => {
     }
   }
   
+  // Handle loading timeout
   useEffect(() => {
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
@@ -107,12 +128,12 @@ const RootRedirect = () => {
     
     timeoutRef.current = window.setTimeout(() => {
       if (isLoading && !timeoutExceeded && isMounted.current) {
-        console.log("RootRedirect: Tempo limite de carregamento excedido, redirecionando para /auth");
+        console.log("RootRedirect: Loading timeout exceeded, redirecting to /auth");
         setTimeoutExceeded(true);
         setIsLoading(false);
         navigate('/auth', { replace: true });
       }
-    }, 400);
+    }, 2000); // Longer timeout for better UX
     
     return () => {
       if (timeoutRef.current) {
@@ -121,14 +142,17 @@ const RootRedirect = () => {
     };
   }, [isLoading, navigate, timeoutExceeded, setIsLoading]);
   
+  // Show nothing if timeout exceeded (navigation will happen)
   if (timeoutExceeded) {
     return null;
   }
   
+  // Show loading screen during check
   if (isLoading) {
     return <LoadingScreen message="Preparando sua experiência..." />;
   }
   
+  // Default redirects based on authentication state
   if (!user) {
     return <Navigate to="/auth" replace />;
   }
@@ -140,6 +164,7 @@ const RootRedirect = () => {
   return <Navigate to="/dashboard" replace />;
 };
 
+// Main routes component
 const AppRoutes = () => {
   return (
     <AuthSession>
@@ -169,12 +194,13 @@ const AppRoutes = () => {
           <Route path="analytics/solution/:id" element={<SolutionMetrics />} />
           <Route path="users" element={<UserManagement />} />
         </Route>
-        <Route path="*" element={<Navigate to="/auth" replace />} />
+        <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
     </AuthSession>
   );
 };
 
+// Main App component
 const App = () => {
   const queryClient = new QueryClient({
     defaultOptions: {

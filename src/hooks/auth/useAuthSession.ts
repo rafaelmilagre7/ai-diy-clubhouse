@@ -26,7 +26,7 @@ export const useAuthSession = () => {
   const [isInitializing, setIsInitializing] = useState(true);
   const [authError, setAuthError] = useState<Error | null>(null);
   const [retryCount, setRetryCount] = useState(0);
-  const maxRetries = 1;
+  const maxRetries = 2;
   const isMounted = useRef(true);
   const timeoutRef = useRef<number | null>(null);
   
@@ -44,7 +44,7 @@ export const useAuthSession = () => {
     };
   }, []);
 
-  // Handle session initialization with extremely short timeout
+  // Handle session initialization with longer timeout for better UX
   useEffect(() => {
     if (retryCount > maxRetries || !isMounted.current) {
       return;
@@ -80,14 +80,14 @@ export const useAuthSession = () => {
     // Start session initialization immediately
     initializeSession();
     
-    // Set an extremely short timeout as a fallback
+    // Set a longer timeout as a fallback
     timeoutRef.current = window.setTimeout(() => {
       if (isInitializing && isMounted.current) {
         console.log("Session initialization timeout exceeded");
         setIsInitializing(false);
         setIsLoading(false);
       }
-    }, 400); // Ultra short timeout
+    }, 3000); // Longer timeout for better UX
     
     return () => {
       if (timeoutRef.current) {

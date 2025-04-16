@@ -25,49 +25,45 @@ const AuthSession = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const [showLoading, setShowLoading] = useState(false);
-  const [timeoutId, setTimeoutId] = useState<number | null>(null);
-
-  // Set up timeout for showing loading screen
+  
+  // Set up loading display logic with reduced timeouts
   useEffect(() => {
     // Skip auth checks for public routes
     if (location.pathname === '/index' || location.pathname === '/auth') {
       return;
     }
     
+    // Only show loading if the process takes more than 200ms
+    let loadingTimerId: number | null = null;
+    
     if ((isInitializing || isLoading) && !user) {
-      // Show loading screen immediately for quick visual feedback
-      setShowLoading(true);
+      loadingTimerId = window.setTimeout(() => {
+        setShowLoading(true);
+      }, 200);
       
       // Ultra short timeout to force navigation if it takes too long
-      const id = window.setTimeout(() => {
-        if (isLoading || isInitializing) {
+      const navigationTimerId = window.setTimeout(() => {
+        if ((isLoading || isInitializing) && !user) {
           console.log("AuthSession: Redirecting due to loading timeout");
           setIsLoading(false);
+          setIsInitializing(false);
           navigate('/auth', { replace: true });
         }
         setShowLoading(false);
-      }, 500); // Ultra short timeout
-      
-      setTimeoutId(id);
+      }, 2000); // Increased timeout for better user experience
       
       return () => {
-        if (timeoutId) {
-          window.clearTimeout(timeoutId);
-        }
+        if (loadingTimerId) window.clearTimeout(loadingTimerId);
+        window.clearTimeout(navigationTimerId);
       };
     } else {
       setShowLoading(false);
     }
-  }, [isInitializing, isLoading, location.pathname, navigate, setIsLoading, user, timeoutId]);
-
-  // Cleanup on unmount
-  useEffect(() => {
+    
     return () => {
-      if (timeoutId) {
-        window.clearTimeout(timeoutId);
-      }
+      if (loadingTimerId) window.clearTimeout(loadingTimerId);
     };
-  }, [timeoutId]);
+  }, [isInitializing, isLoading, location.pathname, navigate, setIsLoading, user]);
 
   // Handle retry
   const handleRetry = () => {

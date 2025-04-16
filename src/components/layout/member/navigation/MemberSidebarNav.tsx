@@ -45,25 +45,33 @@ export const MemberSidebarNav = ({ sidebarOpen }: MemberSidebarNavProps) => {
     }
   ];
 
-  // Improved isActive function to precisely determine the current active item
+  // Simplified isActive function for more reliable route detection
   const isActive = (path: string) => {
-    // Exact match logic - simpler is better
-    switch (path) {
-      case "/dashboard":
-        return location.pathname === "/dashboard" || location.pathname === "/";
-      case "/solutions":
-        // For now, solutions redirect to dashboard with specific params
-        return location.pathname.includes("/solution/") || 
-               (location.pathname.includes("/implement/"));
-      case "/achievements":
-        // For now, achievements is on the profile page with a tab
-        return location.pathname === "/profile" && location.search.includes("tab=achievements");
-      case "/profile":
-        // Profile is active only when it's exactly /profile without query params
-        return location.pathname === "/profile" && !location.search.includes("tab=achievements");
-      default:
-        return false;
+    const currentPath = location.pathname;
+    
+    // Handle special cases
+    if (path === "/dashboard" && 
+        (currentPath === "/dashboard" || currentPath === "/" || currentPath === "")) {
+      return true;
     }
+    
+    if (path === "/solutions" && 
+        (currentPath.includes("/solution/") || currentPath.includes("/implement/"))) {
+      return true;
+    }
+    
+    if (path === "/achievements" && 
+        (currentPath === "/profile" && location.search.includes("tab=achievements"))) {
+      return true;
+    }
+    
+    if (path === "/profile" && 
+        currentPath === "/profile" && !location.search.includes("tab=achievements")) {
+      return true;
+    }
+    
+    // Direct match for other cases
+    return currentPath === path;
   };
 
   return (
@@ -71,7 +79,7 @@ export const MemberSidebarNav = ({ sidebarOpen }: MemberSidebarNavProps) => {
       {navItems.map((item) => (
         <Link
           key={item.id}
-          to={item.path}
+          to={item.path === "/solutions" ? "/dashboard" : item.path}
           className={cn(
             "flex items-center justify-between rounded-lg px-3 py-2 transition-colors",
             isActive(item.path)
