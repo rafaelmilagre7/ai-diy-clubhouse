@@ -11,6 +11,13 @@ interface ModuleContentProps {
 }
 
 export const ModuleContent = ({ module, onComplete }: ModuleContentProps) => {
+  // Mark landing and celebration modules as automatically interacted with
+  useEffect(() => {
+    if (module && (module.type === "landing" || module.type === "celebration")) {
+      onComplete();
+    }
+  }, [module, onComplete]);
+
   if (!module) return null;
   
   // Renderiza o conteúdo apropriado com base no tipo do módulo

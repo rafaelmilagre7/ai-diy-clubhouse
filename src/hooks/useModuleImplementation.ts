@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
@@ -16,8 +15,11 @@ export const useModuleImplementation = () => {
   const [modules, setModules] = useState<Module[]>([]);
   const [currentModule, setCurrentModule] = useState<Module | null>(null);
   const [progress, setProgress] = useState<any | null>(null);
+  const [completedModules, setCompletedModules] = useState<number[]>([]);
   const [loading, setLoading] = useState(true);
   const [isCompleting, setIsCompleting] = useState(false);
+  const [showConfirmationModal, setShowConfirmationModal] = useState(false);
+  const [hasInteracted, setHasInteracted] = useState(false);
   
   // Fetch solution and modules
   useEffect(() => {
@@ -51,10 +53,12 @@ export const useModuleImplementation = () => {
           throw modulesError;
         }
         
-        // For now, we'll create temporary mock modules if none exist
-        const actualModules = modulesData.length > 0 
-          ? modulesData 
-          : Array(8).fill(0).map((_, idx) => ({
+        if (modulesData && modulesData.length > 0) {
+          setModules(modulesData as Module[]);
+          setCurrentModule(modulesData[moduleIdx] as Module || null);
+        } else {
+          // Create temporary mock modules if none exist
+          const mockModules = Array(8).fill(0).map((_, idx) => ({
               id: `mock-${idx}`,
               solution_id: id,
               title: `Module ${idx}`,
@@ -64,9 +68,10 @@ export const useModuleImplementation = () => {
               created_at: new Date().toISOString(),
               updated_at: new Date().toISOString(),
             }));
-        
-        setModules(actualModules as Module[]);
-        setCurrentModule(actualModules[moduleIdx] as Module || null);
+          
+          setModules(mockModules as Module[]);
+          setCurrentModule(mockModules[moduleIdx] as Module || null);
+        }
         
         // Fetch user progress
         if (user) {
@@ -79,6 +84,30 @@ export const useModuleImplementation = () => {
           
           if (!progressError && progressData) {
             setProgress(progressData);
+            
+            // Parse completed modules from progress data
+            if (progressData.completed_modules && Array.isArray(progressData.completed_modules)) {
+              setCompletedModules(progressData.completed_modules);
+            }
+          } else {
+            // Create initial progress record if not exists
+            const { data: newProgress, error: createError } = await supabase
+              .from("progress")
+              .insert({
+                user_id: user.id,
+                solution_id: id,
+                current_module: moduleIdx,
+                is_completed: false,
+                completed_modules: [],
+                last_activity: new Date().toISOString(),
+              })
+              .select()
+              .single();
+            
+            if (!createError && newProgress) {
+              setProgress(newProgress);
+              setCompletedModules([]);
+            }
           }
         }
       } catch (error) {
@@ -121,50 +150,15 @@ export const useModuleImplementation = () => {
     updateProgress();
   }, [moduleIdx, user, id, progress]);
   
-  const handleComplete = async () => {
-    // If this is the last module, ask for confirmation before marking as complete
-    if (moduleIdx >= modules.length - 1) {
-      setIsCompleting(true);
-      
-      if (user && progress) {
-        try {
-          const { error } = await supabase
-            .from("progress")
-            .update({ 
-              is_completed: true,
-              completion_date: new Date().toISOString(),
-              last_activity: new Date().toISOString()
-            })
-            .eq("id", progress.id);
-          
-          if (error) {
-            throw error;
-          }
-          
-          // Navigate to the solution details page
-          toast({
-            title: "Implementação concluída!",
-            description: "Parabéns! Você concluiu com sucesso a implementação desta solução.",
-          });
-          
-          navigate(`/solution/${id}`);
-        } catch (error) {
-          console.error("Error completing implementation:", error);
-          toast({
-            title: "Erro ao concluir implementação",
-            description: "Ocorreu um erro ao tentar marcar a implementação como concluída.",
-            variant: "destructive",
-          });
-        } finally {
-          setIsCompleting(false);
-        }
-      }
-    } else {
-      // Navigate to the next module
+  // Navigate to next module
+  const handleComplete = () => {
+    // Navigate to the next module
+    if (moduleIdx < modules.length - 1) {
       navigate(`/implement/${id}/${moduleIdx + 1}`);
     }
   };
   
+  // Navigate to previous module
   const handlePrevious = () => {
     if (moduleIdx > 0) {
       navigate(`/implement/${id}/${moduleIdx - 1}`);
@@ -173,9 +167,116 @@ export const useModuleImplementation = () => {
     }
   };
   
+  // Mark module as completed
+  const handleMarkAsCompleted = async () => {
+    // Show confirmation modal for last module
+    if (moduleIdx >= modules.length - 1) {
+      setShowConfirmationModal(true);
+      return;
+    }
+    
+    // Otherwise just mark this module as completed
+    if (user && progress) {
+      try {
+        // Add this module to completed modules if not already there
+        if (!completedModules.includes(moduleIdx)) {
+          const updatedCompletedModules = [...completedModules, moduleIdx];
+          
+          const { error } = await supabase
+            .from("progress")
+            .update({ 
+              completed_modules: updatedCompletedModules,
+              last_activity: new Date().toISOString()
+            })
+            .eq("id", progress.id);
+          
+          if (error) {
+            throw error;
+          }
+          
+          setCompletedModules(updatedCompletedModules);
+          
+          toast({
+            title: "Módulo concluído!",
+            description: "Este módulo foi marcado como concluído com sucesso.",
+          });
+          
+          // Navigate to next module
+          if (moduleIdx < modules.length - 1) {
+            navigate(`/implement/${id}/${moduleIdx + 1}`);
+          }
+        }
+      } catch (error) {
+        console.error("Error marking module as completed:", error);
+        toast({
+          title: "Erro ao marcar módulo",
+          description: "Ocorreu um erro ao tentar marcar o módulo como concluído.",
+          variant: "destructive",
+        });
+      }
+    }
+  };
+  
+  // Handle full implementation confirmation
+  const handleConfirmImplementation = async () => {
+    if (user && progress) {
+      try {
+        setIsCompleting(true);
+        
+        // Add this module to completed modules if not already there
+        if (!completedModules.includes(moduleIdx)) {
+          const updatedCompletedModules = [...completedModules, moduleIdx];
+          setCompletedModules(updatedCompletedModules);
+        }
+        
+        const { error } = await supabase
+          .from("progress")
+          .update({ 
+            is_completed: true,
+            completion_date: new Date().toISOString(),
+            completed_modules: completedModules.includes(moduleIdx) 
+              ? completedModules 
+              : [...completedModules, moduleIdx],
+            last_activity: new Date().toISOString()
+          })
+          .eq("id", progress.id);
+        
+        if (error) {
+          throw error;
+        }
+        
+        // Close the confirmation modal
+        setShowConfirmationModal(false);
+        
+        // Navigate to the solution details page
+        toast({
+          title: "Implementação concluída!",
+          description: "Parabéns! Você concluiu com sucesso a implementação desta solução.",
+        });
+        
+        navigate(`/solution/${id}`);
+      } catch (error) {
+        console.error("Error completing implementation:", error);
+        toast({
+          title: "Erro ao concluir implementação",
+          description: "Ocorreu um erro ao tentar marcar a implementação como concluída.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsCompleting(false);
+      }
+    }
+  };
+  
+  // Set interaction state for the current module
+  const setModuleInteraction = (hasInteracted: boolean) => {
+    setHasInteracted(hasInteracted);
+  };
+  
+  // Calculate progress percentage based on completed modules
   const calculateProgress = () => {
     if (!modules.length) return 0;
-    return Math.min(100, Math.round((moduleIdx / (modules.length - 1)) * 100));
+    return Math.min(100, Math.round((completedModules.length / modules.length) * 100));
   };
   
   return {
@@ -184,9 +285,16 @@ export const useModuleImplementation = () => {
     currentModule,
     loading,
     moduleIdx,
+    completedModules,
     handleComplete,
     handlePrevious,
+    handleMarkAsCompleted,
+    handleConfirmImplementation,
+    showConfirmationModal,
+    setShowConfirmationModal,
     calculateProgress,
-    isCompleting
+    isCompleting,
+    hasInteracted,
+    setModuleInteraction
   };
 };

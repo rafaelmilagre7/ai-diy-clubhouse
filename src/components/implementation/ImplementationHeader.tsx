@@ -1,28 +1,29 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, Book, Info, LifeBuoy, BarChart } from "lucide-react";
-import { Progress } from "@/components/ui/progress";
+import { ChevronLeft, Book, Info, LifeBuoy } from "lucide-react";
 import { Solution } from "@/lib/supabase";
 import { useNavigate } from "react-router-dom";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
+import { ImplementationProgress } from "./ImplementationProgress";
 
 interface ImplementationHeaderProps {
   solution: Solution;
   moduleIdx: number;
   modulesLength: number;
-  calculateProgress: () => number;
+  completedModules: number[];
+  isCompleting: boolean;
 }
 
 export const ImplementationHeader = ({
   solution,
   moduleIdx,
   modulesLength,
-  calculateProgress
+  completedModules,
+  isCompleting
 }: ImplementationHeaderProps) => {
   const navigate = useNavigate();
-  const progress = calculateProgress();
   
   const moduleTypes = [
     "Visão Geral",
@@ -115,18 +116,12 @@ export const ImplementationHeader = ({
         </div>
         
         <div className="mt-4">
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-xs font-medium text-muted-foreground flex items-center">
-              <BarChart className="h-3 w-3 mr-1" />
-              Seu progresso
-            </span>
-            <span className="text-xs font-medium">{progress}%</span>
-          </div>
-          <Progress value={progress} className="h-2" />
-          <div className="flex justify-between mt-1 text-xs text-muted-foreground">
-            <span>Módulo {moduleIdx + 1} de {modulesLength}</span>
-            <span>{moduleIdx === modulesLength - 1 ? "Conclusão" : `Próximo: ${moduleTypes[Math.min(moduleIdx + 1, moduleTypes.length - 1)]}`}</span>
-          </div>
+          <ImplementationProgress
+            currentModule={moduleIdx}
+            totalModules={modulesLength}
+            completedModules={completedModules}
+            isCompleting={isCompleting}
+          />
         </div>
       </div>
     </div>
