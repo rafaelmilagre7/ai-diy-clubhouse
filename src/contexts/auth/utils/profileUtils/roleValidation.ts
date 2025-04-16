@@ -1,0 +1,76 @@
+
+import { UserRole } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase';
+
+/**
+ * Determines the user role based on email address
+ */
+export const determineRoleFromEmail = (email: string | undefined | null): UserRole => {
+  if (!email) return 'member';
+  
+  const isAdminEmail = email === 'admin@teste.com' || 
+                        email === 'admin@viverdeia.ai' || 
+                        email?.endsWith('@viverdeia.ai');
+                        
+  return isAdminEmail ? 'admin' : 'member';
+};
+
+/**
+ * Validates if a user has the correct role and updates if needed
+ */
+export const validateUserRole = async (profileId: string, currentRole: UserRole, email: string | null): Promise<UserRole> => {
+  if (!email) return currentRole;
+  
+  const correctRole = determineRoleFromEmail(email);
+  
+  // If role doesn't match email, update in database
+  if (currentRole !== correctRole) {
+    console.log(`Atualizando papel de ${currentRole} para ${correctRole}...`);
+    
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ role: correctRole })
+        .eq('id', profileId);
+      
+      if (error) {
+        console.error(`Erro ao atualizar papel para ${correctRole}:`, error);
+        return currentRole; // Keep existing role on error
+      }
+      
+      console.log(`Papel atualizado para ${correctRole} no banco de dados`);
+      
+      // Also update user metadata
+      await updateUserMetadata(correctRole);
+      
+      return correctRole;
+    } catch (error) {
+      console.error(`Erro ao atualizar papel para ${correctRole}:`, error);
+      return currentRole; // Keep existing role on error
+    }
+  }
+  
+  return currentRole;
+};
+
+/**
+ * Updates the user metadata with role information
+ */
+export const updateUserMetadata = async (role: UserRole): Promise<boolean> => {
+  try {
+    const { error } = await supabase.auth.updateUser({
+      data: { role }
+    });
+    
+    if (error) {
+      console.error("Erro ao atualizar metadata do usuário:", error);
+      return false;
+    }
+    
+    console.log(`Metadata do usuário atualizada com papel: ${role}`);
+    return true;
+  } catch (error) {
+    console.error("Erro ao atualizar metadata do usuário:", error);
+    return false;
+  }
+};
