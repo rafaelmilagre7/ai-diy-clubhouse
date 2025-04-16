@@ -118,7 +118,7 @@ const generateAchievements = (progress: any[], solutions: Solution[], badges: an
 
   // Map to store solution categories by id
   const solutionCategories = solutions.reduce<Record<string, SolutionCategory>>((acc, solution) => {
-    acc[solution.id] = solution.category;
+    acc[solution.id] = solution.category as SolutionCategory;
     return acc;
   }, {});
 
