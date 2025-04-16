@@ -1,5 +1,5 @@
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, createContext, useContext, ReactNode } from "react";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/auth";
@@ -8,7 +8,18 @@ interface LogData {
   [key: string]: any;
 }
 
-export const useLogging = () => {
+interface LoggingContextType {
+  log: (action: string, data?: LogData) => void;
+  logWarning: (action: string, data?: LogData) => void;
+  logError: (action: string, error: any) => any;
+  lastError: any;
+}
+
+// Create a context for logging functions
+const LoggingContext = createContext<LoggingContextType | undefined>(undefined);
+
+// Provider component
+export const LoggingProvider = ({ children }: { children: ReactNode }) => {
   const { toast } = useToast();
   const { user } = useAuth();
   const [lastError, setLastError] = useState<any>(null);
@@ -79,10 +90,18 @@ export const useLogging = () => {
     }
   };
   
-  return {
-    log,
-    logWarning,
-    logError,
-    lastError
-  };
+  return (
+    <LoggingContext.Provider value={{ log, logWarning, logError, lastError }}>
+      {children}
+    </LoggingContext.Provider>
+  );
+};
+
+// Hook to use the logging context
+export const useLogging = (): LoggingContextType => {
+  const context = useContext(LoggingContext);
+  if (context === undefined) {
+    throw new Error("useLogging must be used within a LoggingProvider");
+  }
+  return context;
 };
