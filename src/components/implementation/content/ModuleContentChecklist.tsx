@@ -36,10 +36,17 @@ export const ModuleContentChecklist = ({ module }: ModuleContentChecklistProps) 
           return;
         }
         
-        setSolution(data);
+        // Ensure data is of Solution type before setting
+        const solutionData = data as Solution;
+        setSolution(solutionData);
         
-        if (data.checklist && Array.isArray(data.checklist)) {
-          setChecklist(data.checklist);
+        // Check if checklist property exists and is an array
+        if (solutionData.checklist && Array.isArray(solutionData.checklist)) {
+          setChecklist(solutionData.checklist);
+        } else {
+          // Log for debugging if checklist is missing
+          console.warn("Checklist property is missing or not an array", solutionData);
+          setChecklist([]);
         }
       } catch (err) {
         console.error("Error fetching solution data:", err);

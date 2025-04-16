@@ -34,7 +34,8 @@ export const ModuleContentVideos = ({ module }: ModuleContentVideosProps) => {
           return;
         }
         
-        setSolution(data);
+        // Cast data to Solution type
+        setSolution(data as Solution);
       } catch (err) {
         console.error("Error fetching solution data:", err);
       } finally {
@@ -58,6 +59,7 @@ export const ModuleContentVideos = ({ module }: ModuleContentVideosProps) => {
     );
   }
 
+  // Ensure videos exists and is an array before accessing
   const videos = solution?.videos || [];
 
   if (videos.length === 0) {

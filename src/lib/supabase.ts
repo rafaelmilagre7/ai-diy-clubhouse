@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 
 export { supabase };
@@ -21,8 +22,8 @@ export interface Solution {
   title: string;
   description: string;
   slug: string;
-  category: 'revenue' | 'operational' | 'strategy';
-  difficulty: 'easy' | 'medium' | 'advanced';
+  category: string; // Changed from enum to string to match database
+  difficulty: string; // Changed from enum to string
   thumbnail_url: string | null;
   published: boolean;
   created_at: string;
@@ -75,6 +76,7 @@ export interface Progress {
   completion_date: string | null;
   last_activity: string;
   created_at: string;
+  completed_modules?: number[]; // Added completed_modules property as optional
 }
 
 export interface Badge {
@@ -82,7 +84,7 @@ export interface Badge {
   name: string;
   description: string;
   image_url: string;
-  category: 'revenue' | 'operational' | 'strategy' | 'achievement';
+  category: string; // Changed from enum to string
   created_at: string;
 }
 
@@ -98,7 +100,7 @@ export interface Analytics {
   user_id: string;
   solution_id: string | null;
   module_id: string | null;
-  event_type: 'view' | 'complete' | 'start' | 'abandon' | 'interact';
+  event_type: string; // Changed from enum to string
   event_data: any; // JSON data
   created_at: string;
 }

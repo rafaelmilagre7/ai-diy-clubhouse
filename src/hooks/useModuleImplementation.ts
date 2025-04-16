@@ -1,7 +1,8 @@
+
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
-import { supabase, Solution, Module } from "@/lib/supabase";
+import { supabase, Solution, Module, Progress } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 
 export const useModuleImplementation = () => {
@@ -14,7 +15,7 @@ export const useModuleImplementation = () => {
   const [solution, setSolution] = useState<Solution | null>(null);
   const [modules, setModules] = useState<Module[]>([]);
   const [currentModule, setCurrentModule] = useState<Module | null>(null);
-  const [progress, setProgress] = useState<any | null>(null);
+  const [progress, setProgress] = useState<Progress | null>(null);
   const [completedModules, setCompletedModules] = useState<number[]>([]);
   const [loading, setLoading] = useState(true);
   const [isCompleting, setIsCompleting] = useState(false);
@@ -83,11 +84,17 @@ export const useModuleImplementation = () => {
             .single();
           
           if (!progressError && progressData) {
-            setProgress(progressData);
+            // Cast to Progress type
+            const typedProgressData = progressData as Progress;
+            setProgress(typedProgressData);
             
             // Parse completed modules from progress data
-            if (progressData.completed_modules && Array.isArray(progressData.completed_modules)) {
-              setCompletedModules(progressData.completed_modules);
+            // Handle the case where completed_modules might not exist in the database
+            if (typedProgressData.completed_modules && Array.isArray(typedProgressData.completed_modules)) {
+              setCompletedModules(typedProgressData.completed_modules);
+            } else {
+              console.log("No completed_modules found in progress data, initializing as empty array");
+              setCompletedModules([]);
             }
           } else {
             // Create initial progress record if not exists
@@ -98,14 +105,14 @@ export const useModuleImplementation = () => {
                 solution_id: id,
                 current_module: moduleIdx,
                 is_completed: false,
-                completed_modules: [],
+                completed_modules: [], // Initialize as empty array
                 last_activity: new Date().toISOString(),
               })
               .select()
               .single();
             
             if (!createError && newProgress) {
-              setProgress(newProgress);
+              setProgress(newProgress as Progress);
               setCompletedModules([]);
             }
           }
