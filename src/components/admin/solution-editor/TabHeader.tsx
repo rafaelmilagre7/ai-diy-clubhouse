@@ -17,7 +17,7 @@ const TabHeader: React.FC<TabHeaderProps> = ({ currentStep, activeTab }) => {
     // Se estivermos na etapa 0, o título deve ser baseado na aba ativa
     if (currentStep === 0) {
       switch (activeTab) {
-        case "basic": return "Etapa 1: Configuração Básica";
+        case "basic": return "Informações Básicas";
         case "tools": return "Ferramentas Necessárias";
         case "resources": return "Materiais de Apoio";
         case "video": return "Vídeo-aulas";
@@ -28,12 +28,12 @@ const TabHeader: React.FC<TabHeaderProps> = ({ currentStep, activeTab }) => {
     } else {
       // Para outras etapas, usar o título baseado no índice
       const titles = [
-        "Etapa 1: Configuração Básica",
-        "Etapa 2: Ferramentas Necessárias",
-        "Etapa 3: Materiais de Apoio",
-        "Etapa 4: Vídeo-aulas",
-        "Etapa 5: Checklist de Implementação",
-        "Etapa 6: Publicação"
+        "Informações Básicas",
+        "Ferramentas Necessárias",
+        "Materiais de Apoio",
+        "Vídeo-aulas",
+        "Checklist de Implementação",
+        "Publicação"
       ];
       
       return titles[currentStep] || "Configuração da Solução";

@@ -1,5 +1,5 @@
 
-import React, { useEffect } from "react";
+import React from "react";
 import { Solution } from "@/lib/supabase";
 import { SolutionFormValues } from "@/components/admin/solution/form/solutionFormSchema";
 import TabHeader from "./TabHeader";
@@ -19,7 +19,6 @@ interface SolutionEditorTabsProps {
 /**
  * Componente principal para o editor de soluções baseado em abas/etapas
  * Gerencia a exibição correta do conteúdo com base na etapa atual
- * Implementa autosave silencioso ao navegar entre abas
  */
 const SolutionEditorTabs = ({
   activeTab,
@@ -31,15 +30,6 @@ const SolutionEditorTabs = ({
   currentStep,
 }: SolutionEditorTabsProps) => {
   const isValid = solution && solution.id;
-  
-  // Auto-save when changing tabs (silently, without toast)
-  useEffect(() => {
-    // Don't trigger auto-save if we're in the process of initial loading
-    if (solution && !saving) {
-      // Salvamento silencioso ao mudar de aba (sem toast)
-      onSubmit(currentValues);
-    }
-  }, [activeTab]); // Only trigger on tab change
   
   // Mostra abas apenas na primeira etapa
   const shouldShowTabs = currentStep === 0;

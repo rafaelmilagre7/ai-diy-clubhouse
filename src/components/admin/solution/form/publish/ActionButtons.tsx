@@ -18,18 +18,15 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({
   handleViewSolution
 }) => {
   return (
-    <>
-      {/* Botão para visualizar detalhes da solução */}
-      <Button 
-        variant="outline"
-        onClick={handleViewSolution}
-        disabled={!solutionId}
-        className="flex-1"
-      >
-        <Eye className="h-4 w-4 mr-2" />
-        Visualizar Solução
-      </Button>
-    </>
+    <Button 
+      variant="outline"
+      onClick={handleViewSolution}
+      disabled={!solutionId}
+      className="flex-1"
+    >
+      <Eye className="h-4 w-4 mr-2" />
+      Visualizar Solução
+    </Button>
   );
 };
 

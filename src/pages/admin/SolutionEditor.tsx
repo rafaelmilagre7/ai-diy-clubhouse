@@ -5,11 +5,9 @@ import LoadingScreen from "@/components/common/LoadingScreen";
 import SolutionEditorHeader from "@/components/admin/solution-editor/SolutionEditorHeader";
 import SolutionEditorTabs from "@/components/admin/solution-editor/SolutionEditorTabs";
 import { Card, CardContent } from "@/components/ui/card";
-import ProgressIndicator from "@/components/admin/solution-editor/ProgressIndicator";
 import NavigationButtons from "@/components/admin/solution-editor/NavigationButtons";
 import AuthError from "@/components/admin/solution-editor/AuthError";
 import { useToast } from "@/hooks/use-toast";
-import { useEffect } from "react";
 import { useSolutionEditor } from "@/components/admin/solution-editor/useSolutionEditor";
 
 const SolutionEditor = () => {
@@ -31,20 +29,11 @@ const SolutionEditor = () => {
     stepTitles
   } = useSolutionEditor(id, user);
   
-  // Auto-save when changing steps (silenciosamente, sem mostrar toast)
-  useEffect(() => {
-    // Skip auto-save during initial loading
-    if (solution && currentStep > 0) {
-      // Salvamento silencioso ao mudar de etapa (sem toast)
-      onSubmit(currentValues);
-    }
-  }, [currentStep]);
-  
   if (loading) {
     return <LoadingScreen />;
   }
   
-  // Função específica para mostrar toast explicitamente
+  // Função para mostrar toast explicitamente ao salvar
   const handleSaveWithToast = () => {
     // Na primeira etapa, dispara o submit do formulário
     if (currentStep === 0) {
@@ -52,7 +41,6 @@ const SolutionEditor = () => {
       if (form) form.dispatchEvent(new Event("submit", { cancelable: true, bubbles: true }));
     } else {
       // Nas outras etapas, chama a função específica de salvamento
-      // e mostra toast de confirmação apenas quando o usuário clica explicitamente em salvar
       onSubmit({...currentValues, published: currentStep === totalSteps - 1})
         .then(() => {
           toast({
@@ -70,20 +58,8 @@ const SolutionEditor = () => {
     }
   };
 
-  // Função de salvamento sem toast para navegação entre etapas
-  const handleSilentSave = () => {
-    if (currentStep === 0) {
-      const form = document.querySelector("form");
-      if (form) form.dispatchEvent(new Event("submit", { cancelable: true, bubbles: true }));
-    } else {
-      onSubmit({...currentValues});
-    }
-  };
-
   const handleNextStep = () => {
     if (currentStep < totalSteps - 1) {
-      // Salvar o estado atual antes de avançar, sem mostrar toast
-      handleSilentSave();
       setCurrentStep(currentStep + 1);
     }
   };
@@ -121,14 +97,6 @@ const SolutionEditor = () => {
       />
       
       {!user && <AuthError />}
-      
-      {(solution || currentStep === 0) && (
-        <ProgressIndicator 
-          currentStep={currentStep}
-          totalSteps={totalSteps}
-          stepTitle={stepTitles[currentStep]}
-        />
-      )}
       
       <Card className="border-none shadow-sm">
         <CardContent className="p-0">
