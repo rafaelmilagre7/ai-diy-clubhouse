@@ -14,24 +14,24 @@ export const processUserProfile = async (
   try {
     console.log(`Processando perfil para usuário ${userId}, email: ${email || 'não disponível'}`);
     
-    // Verificação de segurança para evitar processamentos com dados inválidos
+    // Security check to avoid processing with invalid data
     if (!userId) {
       console.error('ID de usuário inválido ao processar perfil');
       return null;
     }
     
-    // Tentar buscar perfil existente
+    // Try to fetch existing profile
     let profile = await fetchUserProfile(userId);
     
-    // Se não encontrar perfil, tentar criar um novo
+    // If no profile is found, try to create a new one
     if (!profile && email) {
       console.log(`Nenhum perfil encontrado. Tentando criar um novo para ${email}`);
       profile = await createUserProfileIfNeeded(userId, email, name || 'Usuário');
       
-      // Verificação adicional para garantir que temos um perfil
+      // Additional check to ensure we have a profile
       if (!profile) {
         console.log('Criação de perfil falhou, criando perfil local temporário');
-        // Criar um perfil local temporário para evitar bloqueio da aplicação
+        // Create a temporary local profile to avoid blocking the application
         profile = {
           id: userId,
           email: email,
@@ -45,12 +45,12 @@ export const processUserProfile = async (
       }
     }
     
-    // Verifica se o perfil foi carregado
+    // Check if profile was loaded
     if (profile) {
       console.log(`Perfil processado com sucesso: ${profile.id}, role: ${profile.role}`);
     } else {
       console.error(`Não foi possível carregar ou criar perfil para ${userId}`);
-      // Criar perfil mínimo para não bloquear a aplicação
+      // Create minimal profile to not block application
       if (email) {
         profile = {
           id: userId,
@@ -69,7 +69,7 @@ export const processUserProfile = async (
     return profile;
   } catch (error) {
     console.error('Erro ao processar perfil de usuário:', error);
-    // Retorna null em caso de erro para evitar travamento da aplicação
+    // Return null in case of error to avoid application freezing
     return null;
   }
 };

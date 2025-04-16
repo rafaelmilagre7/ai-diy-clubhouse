@@ -4,7 +4,7 @@ import { useAuthSession } from "@/hooks/auth/useAuthSession";
 import AuthErrorDisplay from "@/components/auth/AuthErrorDisplay";
 import LoadingScreen from "@/components/common/LoadingScreen";
 import { useAuth } from "@/contexts/auth";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 /**
  * AuthSession component that handles authentication state changes
@@ -23,19 +23,20 @@ const AuthSession = ({ children }: { children: React.ReactNode }) => {
   
   const { user, isLoading } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
-  // Função para limpar a assinatura ao desmontar
+  // Cleanup subscription on unmount
   useEffect(() => {
     return () => {
       console.log("AuthSession: Cleaning up subscription");
     };
   }, []);
 
-  // Se estiver travado no carregamento por muito tempo, forçar redirecionamento para /index
+  // Redirect to /index if stuck in loading state for too long
   useEffect(() => {
     let timeoutId: number;
     
-    if (isInitializing || isLoading) {
+    if ((isInitializing || isLoading) && location.pathname !== '/index' && location.pathname !== '/login') {
       timeoutId = window.setTimeout(() => {
         console.log("Timeout de carregamento atingido, redirecionando para /index");
         navigate("/index", { replace: true });
@@ -45,19 +46,24 @@ const AuthSession = ({ children }: { children: React.ReactNode }) => {
     return () => {
       if (timeoutId) window.clearTimeout(timeoutId);
     };
-  }, [isInitializing, isLoading, navigate]);
+  }, [isInitializing, isLoading, navigate, location.pathname]);
 
-  // Lidar com tentativa de nova autenticação
+  // Handle retry
   const handleRetry = () => {
     setRetryCount(count => count + 1);
     setIsInitializing(true);
     setAuthError(null);
   };
 
-  // Verificação adicional - se o usuário está autenticado, permite passar para o conteúdo
+  // Skip auth checks for /index and /login routes
+  if (location.pathname === '/index' || location.pathname === '/login') {
+    return <>{children}</>;
+  }
+
+  // Verification - if user is authenticated, allow content
   const isAuthenticated = !!user;
 
-  // Exibir erro se a autenticação falhou e não tem usuário autenticado
+  // Display error if authentication failed and no user is authenticated
   if (authError && !isInitializing && !isAuthenticated) {
     return (
       <AuthErrorDisplay
@@ -69,12 +75,12 @@ const AuthSession = ({ children }: { children: React.ReactNode }) => {
     );
   }
 
-  // Mostrar tela de carregamento durante inicialização e se não tiver usuário
+  // Show loading screen during initialization and if no user
   if ((isInitializing || isLoading) && !isAuthenticated) {
     return <LoadingScreen />;
   }
 
-  // Renderizar filhos quando a autenticação estiver completa
+  // Render children when authentication is complete
   return <>{children}</>;
 };
 

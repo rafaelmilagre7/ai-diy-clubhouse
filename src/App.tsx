@@ -84,13 +84,8 @@ const App = () => {
           <BrowserRouter>
             <AuthSession>
               <Routes>
-                {/* Public routes */}
-                <Route path="/login" element={
-                  <PublicRoute>
-                    <Login />
-                  </PublicRoute>
-                } />
-                
+                {/* Public routes that don't require authentication */}
+                <Route path="/login" element={<Login />} />
                 <Route path="/index" element={<Index />} />
 
                 {/* Root redirect */}
@@ -123,7 +118,7 @@ const App = () => {
                 </Route>
 
                 {/* 404 route */}
-                <Route path="*" element={<NotFound />} />
+                <Route path="*" element={<Navigate to="/index" replace />} />
               </Routes>
             </AuthSession>
           </BrowserRouter>
@@ -138,17 +133,16 @@ const RootRedirect = () => {
   const { user, profile, isAdmin, isLoading } = useAuth();
   const navigate = useNavigate();
   
-  // Adicionando um temporizador para evitar loops infinitos
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       if (isLoading) {
         console.log("RootRedirect: Tempo limite de carregamento excedido, redirecionando para /index");
-        window.location.href = '/index';
+        navigate('/index', { replace: true });
       }
-    }, 5000); // 5 segundos
+    }, 3000); // 3 segundos é suficiente
     
     return () => clearTimeout(timeoutId);
-  }, [isLoading]);
+  }, [isLoading, navigate]);
   
   if (isLoading) {
     return <LoadingScreen />;
@@ -159,25 +153,16 @@ const RootRedirect = () => {
     return <Navigate to="/login" replace />;
   }
   
-  // Verificação de segurança: se o perfil for null, redirecione para /index
   if (!profile) {
     console.log("RootRedirect: Perfil não encontrado, redirecionando para /index");
     return <Navigate to="/index" replace />;
   }
   
-  let homePath = '/dashboard'; // Default para usuários normais
-  
-  if (profile?.role === 'admin') {
-    homePath = '/admin';
-    console.log("RootRedirect: Detectado papel admin, redirecionando para /admin");
-  } else {
-    console.log("RootRedirect: Detectado papel member ou outro, redirecionando para /dashboard");
-  }
+  const homePath = profile.role === 'admin' ? '/admin' : '/dashboard';
   
   console.log("RootRedirect: redirecionando usuário para", homePath, { 
-    role: profile?.role || 'não definido',
-    isAdmin, 
-    userId: user.id
+    role: profile.role || 'não definido',
+    isAdmin
   });
   
   return <Navigate to={homePath} replace />;

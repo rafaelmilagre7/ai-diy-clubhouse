@@ -4,6 +4,7 @@ import { Session, User } from '@supabase/supabase-js';
 import { UserProfile } from '@/lib/supabase';
 import { useAuthMethods } from './hooks/useAuthMethods';
 import { AuthContextType } from './types';
+import { supabase } from '@/lib/supabase';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -16,10 +17,45 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Use our extracted auth methods hook
   const { signIn, signOut, signInAsMember, signInAsAdmin } = useAuthMethods({ setIsLoading });
 
-  // Calculate isAdmin based on profile role - usando string literal para comparação
+  // Set up initial auth state on mount
+  useEffect(() => {
+    console.log("AuthProvider initializing");
+    
+    // Get current session
+    const initAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        setSession(session);
+        setUser(session?.user || null);
+      } catch (error) {
+        console.error("Error getting initial session:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    initAuth();
+    
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, newSession) => {
+        console.log("Auth state changed:", event);
+        setSession(newSession);
+        setUser(newSession?.user || null);
+        setIsLoading(false);
+      }
+    );
+    
+    // Cleanup on unmount
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  // Calculate isAdmin based on profile role
   const isAdmin = profile?.role === 'admin';
   
-  // Debug log de inicialização
+  // Debug log for profile
   useEffect(() => {
     console.log("AuthProvider: Perfil de usuário carregado", { 
       profileId: profile?.id || 'não definido',
