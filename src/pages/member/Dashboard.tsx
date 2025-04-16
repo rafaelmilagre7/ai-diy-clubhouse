@@ -40,11 +40,11 @@ const Dashboard = () => {
         const mockSolutions: Solution[] = [
           {
             id: "1",
-            title: "Chatbot para Atendimento ao Cliente",
-            description: "Implemente um chatbot de IA para atendimento ao cliente, reduzindo custos e melhorando a satisfação.",
-            slug: "chatbot-atendimento",
+            title: "Assistente de IA no WhatsApp",
+            description: "Implemente um assistente de IA para atendimento via WhatsApp, automatizando respostas e melhorando o tempo de resposta.",
+            slug: "assistente-whatsapp",
             category: "operational",
-            difficulty: "medium",
+            difficulty: "easy",
             thumbnail_url: null,
             published: true,
             created_at: new Date().toISOString(),
@@ -68,7 +68,7 @@ const Dashboard = () => {
             description: "Automatize seu fluxo de gestão de projetos com IA para aumentar a eficiência e reduzir atrasos.",
             slug: "assistente-gestao-projetos",
             category: "strategy",
-            difficulty: "easy",
+            difficulty: "medium",
             thumbnail_url: null,
             published: true,
             created_at: new Date().toISOString(),
@@ -147,11 +147,11 @@ const Dashboard = () => {
         setSolutions([
           {
             id: "1",
-            title: "Chatbot para Atendimento ao Cliente",
-            description: "Implemente um chatbot de IA para atendimento ao cliente, reduzindo custos e melhorando a satisfação.",
-            slug: "chatbot-atendimento",
+            title: "Assistente de IA no WhatsApp",
+            description: "Implemente um assistente de IA para atendimento via WhatsApp, automatizando respostas e melhorando o tempo de resposta.",
+            slug: "assistente-whatsapp",
             category: "operational",
-            difficulty: "medium",
+            difficulty: "easy",
             thumbnail_url: null,
             published: true,
             created_at: new Date().toISOString(),
@@ -175,7 +175,7 @@ const Dashboard = () => {
             description: "Automatize seu fluxo de gestão de projetos com IA para aumentar a eficiência e reduzir atrasos.",
             slug: "assistente-gestao-projetos",
             category: "strategy",
-            difficulty: "easy",
+            difficulty: "medium",
             thumbnail_url: null,
             published: true,
             created_at: new Date().toISOString(),
@@ -218,7 +218,8 @@ const Dashboard = () => {
     : 0;
   
   const handleSelectSolution = (id: string) => {
-    navigate(`/dashboard/solution/${id}`);
+    console.log("Navigating to solution detail:", id);
+    navigate(`/solution/${id}`);
   };
   
   if (loading) {

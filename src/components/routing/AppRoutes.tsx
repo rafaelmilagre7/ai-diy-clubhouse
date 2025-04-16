@@ -13,6 +13,7 @@ import MemberDashboard from "@/pages/member/Dashboard";
 import SolutionDetails from "@/pages/member/SolutionDetails";
 import SolutionImplementation from "@/pages/member/SolutionImplementation";
 import Profile from "@/pages/member/Profile";
+import Achievements from "@/pages/member/Achievements";
 
 // Admin routes
 import AdminDashboard from "@/pages/admin/Dashboard";
@@ -38,6 +39,7 @@ const AppRoutes = () => {
           <Route path="solution/:id" element={<SolutionDetails />} />
           <Route path="implement/:id/:moduleIndex" element={<SolutionImplementation />} />
           <Route path="profile" element={<Profile />} />
+          <Route path="achievements" element={<Achievements />} />
         </Route>
         <Route path="/admin" element={
           <ProtectedRoute requireAdmin>

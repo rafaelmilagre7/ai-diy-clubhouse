@@ -1,7 +1,9 @@
-import React, { useState, useEffect } from "react";
+
+import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/auth";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
+import { useUserStats } from "@/hooks/useUserStats";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { 
@@ -12,19 +14,18 @@ import {
   CardHeader, 
   CardTitle 
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
+import { AchievementGrid, Achievement } from "@/components/achievements/AchievementGrid";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { 
   ShieldCheck, 
   Trophy, 
@@ -50,116 +51,6 @@ const formatDate = (dateString: string) => {
     month: "2-digit",
     year: "numeric",
   }).format(date);
-};
-
-const mockBadges = [
-  {
-    id: "1",
-    name: "Pioneiro",
-    description: "Completou sua primeira implementação",
-    image_url: "/placeholder.svg",
-    category: "achievement",
-    earned_at: "2025-01-15T10:30:00Z",
-  },
-  {
-    id: "2",
-    name: "Especialista em Vendas",
-    description: "Implementou 3 soluções da trilha de Receita",
-    image_url: "/placeholder.svg",
-    category: "revenue",
-    earned_at: "2025-02-20T14:45:00Z",
-  },
-  {
-    id: "3",
-    name: "Mestre em Automação",
-    description: "Implementou 5 soluções com sucesso",
-    image_url: "/placeholder.svg",
-    category: "operational",
-    earned_at: "2025-03-10T09:15:00Z",
-  },
-  {
-    id: "4",
-    name: "Estrategista",
-    description: "Completou uma solução da trilha de Estratégia",
-    image_url: "/placeholder.svg",
-    category: "strategy",
-    earned_at: "2025-03-25T16:20:00Z",
-  },
-];
-
-const mockImplementations = [
-  {
-    id: "1",
-    solution: {
-      id: "s1",
-      title: "Assistente de vendas no Instagram",
-      category: "revenue",
-      difficulty: "medium",
-    },
-    completed_at: "2025-01-15T10:30:00Z",
-    is_completed: true,
-  },
-  {
-    id: "2",
-    solution: {
-      id: "s2",
-      title: "Automação de atendimento ao cliente",
-      category: "operational",
-      difficulty: "easy",
-    },
-    completed_at: "2025-02-20T14:45:00Z",
-    is_completed: true,
-  },
-  {
-    id: "3",
-    solution: {
-      id: "s3",
-      title: "Análise preditiva de tendências",
-      category: "strategy",
-      difficulty: "advanced",
-    },
-    completed_at: null,
-    is_completed: false,
-    current_module: 3,
-  },
-];
-
-const BadgeCard = ({ badge }: { badge: any }) => {
-  return (
-    <TooltipProvider>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Card className="relative overflow-hidden hover:shadow-md transition-shadow">
-            <div className={cn(
-              "absolute top-0 right-0 w-0 h-0 border-t-[3rem] border-r-[3rem]",
-              badge.category === "revenue" && "border-t-revenue/20 border-r-revenue/20",
-              badge.category === "operational" && "border-t-operational/20 border-r-operational/20",
-              badge.category === "strategy" && "border-t-strategy/20 border-r-strategy/20",
-              badge.category === "achievement" && "border-t-viverblue/20 border-r-viverblue/20"
-            )} />
-            <CardContent className="pt-6 pb-4 text-center flex flex-col items-center">
-              <div className={cn(
-                "h-20 w-20 rounded-full flex items-center justify-center mb-4",
-                badge.category === "revenue" && "bg-revenue/10 text-revenue",
-                badge.category === "operational" && "bg-operational/10 text-operational",
-                badge.category === "strategy" && "bg-strategy/10 text-strategy",
-                badge.category === "achievement" && "bg-viverblue/10 text-viverblue"
-              )}>
-                <Award className="h-10 w-10" />
-              </div>
-              <h3 className="font-semibold text-base">{badge.name}</h3>
-              <p className="text-xs text-muted-foreground mt-1">
-                Conquistado em {formatDate(badge.earned_at)}
-              </p>
-            </CardContent>
-          </Card>
-        </TooltipTrigger>
-        <TooltipContent>
-          <p>{badge.description}</p>
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
-  );
 };
 
 const ImplementationCard = ({ implementation }: { implementation: any }) => {
@@ -230,16 +121,150 @@ const ImplementationCard = ({ implementation }: { implementation: any }) => {
 const Profile = () => {
   const { user, profile } = useAuth();
   const { toast } = useToast();
+  const { stats, loading: statsLoading } = useUserStats();
+  const [searchParams] = useSearchParams();
+  const defaultTab = searchParams.get("tab") || "stats";
   
-  const [loading, setLoading] = useState(false);
-  const [badges, setBadges] = useState<any[]>(mockBadges);
-  const [implementations, setImplementations] = useState<any[]>(mockImplementations);
-  const [stats, setStats] = useState({
-    total: 3,
-    completed: 2,
-    inProgress: 1,
-    completionRate: 67,
-  });
+  const [loading, setLoading] = useState(true);
+  const [implementations, setImplementations] = useState<any[]>([]);
+  const [achievements, setAchievements] = useState<Achievement[]>([]);
+  
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (!user) return;
+      
+      try {
+        setLoading(true);
+        
+        // Buscar soluções concluídas ou em andamento pelo usuário
+        const { data: progressData, error: progressError } = await supabase
+          .from("progress")
+          .select(`
+            *,
+            solution:solution_id (
+              id, title, category, difficulty
+            )
+          `)
+          .eq("user_id", user.id);
+        
+        if (progressError) {
+          console.error("Erro ao buscar progresso:", progressError);
+          // Usar dados fictícios em caso de erro
+          setImplementations([
+            {
+              id: "1",
+              solution: {
+                id: "s1",
+                title: "Assistente de IA no WhatsApp",
+                category: "operational",
+                difficulty: "easy",
+              },
+              current_module: 2,
+              is_completed: false,
+            }
+          ]);
+        } else {
+          const formattedImplementations = progressData?.map(item => ({
+            id: item.id,
+            solution: item.solution,
+            current_module: item.current_module,
+            is_completed: item.is_completed,
+            completed_at: item.completion_date,
+            last_activity: item.last_activity
+          })) || [];
+          
+          setImplementations(formattedImplementations);
+        }
+        
+        // Buscar conquistas do usuário (neste momento usamos dados mockados)
+        const defaultAchievements: Achievement[] = [
+          {
+            id: "1",
+            name: "Pioneiro",
+            description: "Completou sua primeira implementação",
+            category: "achievement",
+            isUnlocked: false,
+            requiredCount: 1,
+            currentCount: 0
+          },
+          {
+            id: "2",
+            name: "Especialista em Vendas",
+            description: "Implementou 3 soluções da trilha de Receita",
+            category: "revenue",
+            isUnlocked: false,
+            requiredCount: 3,
+            currentCount: 0
+          },
+          {
+            id: "3",
+            name: "Mestre em Automação",
+            description: "Implementou 5 soluções com sucesso",
+            category: "operational",
+            isUnlocked: false,
+            requiredCount: 5,
+            currentCount: 0
+          },
+          {
+            id: "4",
+            name: "Estrategista",
+            description: "Completou uma solução da trilha de Estratégia",
+            category: "strategy",
+            isUnlocked: false,
+            requiredCount: 1,
+            currentCount: 0
+          }
+        ];
+        
+        if (progressData) {
+          const completedCount = progressData.filter(p => p.is_completed).length;
+          const completedRevenue = progressData.filter(p => 
+            p.is_completed && p.solution?.category === "revenue"
+          ).length;
+          const completedStrategy = progressData.filter(p => 
+            p.is_completed && p.solution?.category === "strategy"
+          ).length;
+          
+          defaultAchievements[0].currentCount = completedCount;
+          defaultAchievements[0].isUnlocked = completedCount >= 1;
+          if (defaultAchievements[0].isUnlocked) {
+            defaultAchievements[0].earnedAt = new Date().toISOString();
+          }
+          
+          defaultAchievements[1].currentCount = completedRevenue;
+          defaultAchievements[1].isUnlocked = completedRevenue >= 3;
+          if (defaultAchievements[1].isUnlocked) {
+            defaultAchievements[1].earnedAt = new Date().toISOString();
+          }
+          
+          defaultAchievements[2].currentCount = completedCount;
+          defaultAchievements[2].isUnlocked = completedCount >= 5;
+          if (defaultAchievements[2].isUnlocked) {
+            defaultAchievements[2].earnedAt = new Date().toISOString();
+          }
+          
+          defaultAchievements[3].currentCount = completedStrategy;
+          defaultAchievements[3].isUnlocked = completedStrategy >= 1;
+          if (defaultAchievements[3].isUnlocked) {
+            defaultAchievements[3].earnedAt = new Date().toISOString();
+          }
+        }
+        
+        setAchievements(defaultAchievements);
+      } catch (error) {
+        console.error("Erro ao buscar dados do usuário:", error);
+        toast({
+          title: "Erro ao carregar dados",
+          description: "Não foi possível carregar seus dados. Tente novamente mais tarde.",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchUserData();
+  }, [user, toast]);
   
   const getInitials = (name: string | null) => {
     if (!name) return "U";
@@ -250,6 +275,10 @@ const Profile = () => {
       .toUpperCase()
       .substring(0, 2);
   };
+  
+  if (loading || statsLoading) {
+    return <LoadingScreen message="Carregando seu perfil..." />;
+  }
   
   return (
     <div className="space-y-6">
@@ -278,11 +307,11 @@ const Profile = () => {
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Implementações</span>
-                  <span className="font-medium">{stats.total}</span>
+                  <span className="font-medium">{stats.totalSolutions}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Concluídas</span>
-                  <span className="font-medium">{stats.completed}</span>
+                  <span className="font-medium">{stats.completedSolutions}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Taxa de conclusão</span>
@@ -303,69 +332,21 @@ const Profile = () => {
         </Card>
         
         <div className="md:col-span-2 space-y-6">
-          <Tabs defaultValue="badges">
+          <Tabs defaultValue={defaultTab}>
             <TabsList>
-              <TabsTrigger value="badges">
-                <Award className="mr-2 h-4 w-4" />
-                Conquistas
+              <TabsTrigger value="stats">
+                <BarChart className="mr-2 h-4 w-4" />
+                Estatísticas
               </TabsTrigger>
               <TabsTrigger value="implementations">
                 <CheckCircle className="mr-2 h-4 w-4" />
                 Implementações
               </TabsTrigger>
-              <TabsTrigger value="stats">
-                <BarChart className="mr-2 h-4 w-4" />
-                Estatísticas
+              <TabsTrigger value="badges">
+                <Award className="mr-2 h-4 w-4" />
+                Conquistas
               </TabsTrigger>
             </TabsList>
-            
-            <TabsContent value="badges" className="mt-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                {badges.map((badge) => (
-                  <BadgeCard key={badge.id} badge={badge} />
-                ))}
-                
-                <Card className="border-dashed border-2 flex flex-col items-center justify-center p-6 text-center">
-                  <div className="bg-muted/30 h-20 w-20 rounded-full flex items-center justify-center mb-4">
-                    <BookOpen className="h-10 w-10 text-muted-foreground" />
-                  </div>
-                  <h3 className="font-semibold text-base">Próximas Conquistas</h3>
-                  <p className="text-xs text-muted-foreground mt-2">
-                    Implemente mais soluções para desbloquear novas conquistas
-                  </p>
-                  <Button className="mt-4" variant="outline" size="sm" asChild>
-                    <Link to="/dashboard">
-                      Ver Soluções
-                    </Link>
-                  </Button>
-                </Card>
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="implementations" className="mt-6">
-              <div className="space-y-4">
-                {implementations.map((implementation) => (
-                  <ImplementationCard key={implementation.id} implementation={implementation} />
-                ))}
-              </div>
-              
-              <Card className="border-dashed border-2 mt-4 p-6 text-center">
-                <div className="flex flex-col items-center">
-                  <div className="bg-muted/30 h-16 w-16 rounded-full flex items-center justify-center mb-4">
-                    <TrendingUp className="h-8 w-8 text-muted-foreground" />
-                  </div>
-                  <h3 className="font-semibold text-base">Continue Crescendo</h3>
-                  <p className="text-sm text-muted-foreground mt-2 max-w-md mx-auto">
-                    Explore nossa biblioteca de soluções e continue implementando IA em sua empresa
-                  </p>
-                  <Button className="mt-4" asChild>
-                    <Link to="/dashboard">
-                      Explorar Soluções
-                    </Link>
-                  </Button>
-                </div>
-              </Card>
-            </TabsContent>
             
             <TabsContent value="stats" className="mt-6">
               <Card>
@@ -384,23 +365,38 @@ const Profile = () => {
                           <div>
                             <div className="flex justify-between text-sm mb-1">
                               <span className="text-revenue">Aumento de Receita</span>
-                              <span>1/5</span>
+                              <span>{stats.categoryDistribution.revenue.completed}/{stats.categoryDistribution.revenue.total}</span>
                             </div>
-                            <Progress value={20} className="h-2 bg-muted" />
+                            <Progress 
+                              value={stats.categoryDistribution.revenue.total > 0 ? 
+                                (stats.categoryDistribution.revenue.completed / stats.categoryDistribution.revenue.total) * 100 : 0
+                              } 
+                              className="h-2 bg-muted" 
+                            />
                           </div>
                           <div>
                             <div className="flex justify-between text-sm mb-1">
                               <span className="text-operational">Otimização Operacional</span>
-                              <span>1/6</span>
+                              <span>{stats.categoryDistribution.operational.completed}/{stats.categoryDistribution.operational.total}</span>
                             </div>
-                            <Progress value={16.7} className="h-2 bg-muted" />
+                            <Progress 
+                              value={stats.categoryDistribution.operational.total > 0 ? 
+                                (stats.categoryDistribution.operational.completed / stats.categoryDistribution.operational.total) * 100 : 0
+                              } 
+                              className="h-2 bg-muted" 
+                            />
                           </div>
                           <div>
                             <div className="flex justify-between text-sm mb-1">
                               <span className="text-strategy">Gestão Estratégica</span>
-                              <span>0/4</span>
+                              <span>{stats.categoryDistribution.strategy.completed}/{stats.categoryDistribution.strategy.total}</span>
                             </div>
-                            <Progress value={0} className="h-2 bg-muted" />
+                            <Progress 
+                              value={stats.categoryDistribution.strategy.total > 0 ? 
+                                (stats.categoryDistribution.strategy.completed / stats.categoryDistribution.strategy.total) * 100 : 0
+                              } 
+                              className="h-2 bg-muted" 
+                            />
                           </div>
                         </div>
                       </div>
@@ -410,13 +406,13 @@ const Profile = () => {
                         <div className="grid grid-cols-2 gap-4 mt-2">
                           <Card>
                             <CardContent className="p-4 text-center">
-                              <p className="text-3xl font-bold">125</p>
+                              <p className="text-3xl font-bold">{stats.totalTimeSpent}</p>
                               <p className="text-xs text-muted-foreground">minutos totais</p>
                             </CardContent>
                           </Card>
                           <Card>
                             <CardContent className="p-4 text-center">
-                              <p className="text-3xl font-bold">62</p>
+                              <p className="text-3xl font-bold">{stats.avgTimePerSolution}</p>
                               <p className="text-xs text-muted-foreground">min. por solução</p>
                             </CardContent>
                           </Card>
@@ -428,77 +424,129 @@ const Profile = () => {
                       <div>
                         <h4 className="text-sm font-medium">Atividade Recente</h4>
                         <div className="mt-2 space-y-3">
-                          <div className="flex items-start gap-3">
-                            <div className="h-8 w-8 rounded-full bg-viverblue/10 flex items-center justify-center">
-                              <CheckCircle className="h-4 w-4 text-viverblue" />
+                          {implementations.length > 0 ? (
+                            implementations
+                              .sort((a, b) => new Date(b.last_activity).getTime() - new Date(a.last_activity).getTime())
+                              .slice(0, 3)
+                              .map((implementation, index) => (
+                                <div key={index} className="flex items-start gap-3">
+                                  <div className="h-8 w-8 rounded-full bg-viverblue/10 flex items-center justify-center">
+                                    {implementation.is_completed ? (
+                                      <CheckCircle className="h-4 w-4 text-viverblue" />
+                                    ) : (
+                                      <Clock className="h-4 w-4 text-viverblue" />
+                                    )}
+                                  </div>
+                                  <div>
+                                    <p className="text-sm font-medium">
+                                      {implementation.is_completed ? "Implementação concluída" : "Implementação em andamento"}
+                                    </p>
+                                    <p className="text-xs text-muted-foreground">{implementation.solution?.title}</p>
+                                    <p className="text-xs text-muted-foreground">
+                                      {formatDate(implementation.last_activity)}
+                                    </p>
+                                  </div>
+                                </div>
+                              ))
+                          ) : (
+                            <div className="text-center py-4">
+                              <p className="text-sm text-muted-foreground">
+                                Nenhuma atividade recente encontrada
+                              </p>
                             </div>
-                            <div>
-                              <p className="text-sm font-medium">Implementação concluída</p>
-                              <p className="text-xs text-muted-foreground">Automação de atendimento ao cliente</p>
-                              <p className="text-xs text-muted-foreground">2 dias atrás</p>
-                            </div>
-                          </div>
-                          
-                          <div className="flex items-start gap-3">
-                            <div className="h-8 w-8 rounded-full bg-viverblue/10 flex items-center justify-center">
-                              <Award className="h-4 w-4 text-viverblue" />
-                            </div>
-                            <div>
-                              <p className="text-sm font-medium">Nova conquista</p>
-                              <p className="text-xs text-muted-foreground">Mestre em Automação</p>
-                              <p className="text-xs text-muted-foreground">5 dias atrás</p>
-                            </div>
-                          </div>
-                          
-                          <div className="flex items-start gap-3">
-                            <div className="h-8 w-8 rounded-full bg-viverblue/10 flex items-center justify-center">
-                              <BookOpen className="h-4 w-4 text-viverblue" />
-                            </div>
-                            <div>
-                              <p className="text-sm font-medium">Iniciou implementação</p>
-                              <p className="text-xs text-muted-foreground">Análise preditiva de tendências</p>
-                              <p className="text-xs text-muted-foreground">1 semana atrás</p>
-                            </div>
-                          </div>
+                          )}
                         </div>
                       </div>
                       
                       <div>
                         <h4 className="text-sm font-medium">Próximos Passos Recomendados</h4>
                         <div className="mt-2 space-y-2">
-                          <Card className="p-3">
-                            <div className="flex justify-between items-center">
-                              <div>
-                                <p className="text-sm font-medium">Concluir implementação atual</p>
-                                <p className="text-xs text-muted-foreground">Análise preditiva de tendências</p>
+                          {implementations.some(imp => !imp.is_completed) ? (
+                            <Card className="p-3">
+                              <div className="flex justify-between items-center">
+                                <div>
+                                  <p className="text-sm font-medium">Concluir implementação atual</p>
+                                  <p className="text-xs text-muted-foreground">
+                                    {implementations.find(imp => !imp.is_completed)?.solution?.title}
+                                  </p>
+                                </div>
+                                <Button size="sm" variant="outline" asChild>
+                                  <Link to={`/implement/${implementations.find(imp => !imp.is_completed)?.solution?.id}/${implementations.find(imp => !imp.is_completed)?.current_module}`}>
+                                    Continuar
+                                  </Link>
+                                </Button>
                               </div>
-                              <Button size="sm" variant="outline" asChild>
-                                <Link to={`/implement/s3/3`}>
-                                  Continuar
-                                </Link>
-                              </Button>
-                            </div>
-                          </Card>
+                            </Card>
+                          ) : (
+                            <Card className="p-3">
+                              <div className="flex justify-between items-center">
+                                <div>
+                                  <p className="text-sm font-medium">Explore novas soluções</p>
+                                  <p className="text-xs text-muted-foreground">
+                                    Descubra soluções que podem ajudar seu negócio
+                                  </p>
+                                </div>
+                                <Button size="sm" variant="outline" asChild>
+                                  <Link to="/dashboard">
+                                    Explorar
+                                  </Link>
+                                </Button>
+                              </div>
+                            </Card>
+                          )}
                           
-                          <Card className="p-3">
-                            <div className="flex justify-between items-center">
-                              <div>
-                                <p className="text-sm font-medium">Explore a trilha de estratégia</p>
-                                <p className="text-xs text-muted-foreground">Ainda não implementou soluções desta trilha</p>
+                          {stats.categoryDistribution.strategy.completed === 0 && (
+                            <Card className="p-3">
+                              <div className="flex justify-between items-center">
+                                <div>
+                                  <p className="text-sm font-medium">Explore a trilha de estratégia</p>
+                                  <p className="text-xs text-muted-foreground">Ainda não implementou soluções desta trilha</p>
+                                </div>
+                                <Button size="sm" variant="outline" asChild>
+                                  <Link to="/dashboard?category=strategy">
+                                    Explorar
+                                  </Link>
+                                </Button>
                               </div>
-                              <Button size="sm" variant="outline" asChild>
-                                <Link to="/dashboard?category=strategy">
-                                  Explorar
-                                </Link>
-                              </Button>
-                            </div>
-                          </Card>
+                            </Card>
+                          )}
                         </div>
                       </div>
                     </div>
                   </div>
                 </CardContent>
               </Card>
+            </TabsContent>
+            
+            <TabsContent value="implementations" className="mt-6">
+              <div className="space-y-4">
+                {implementations.length > 0 ? (
+                  implementations.map((implementation) => (
+                    <ImplementationCard key={implementation.id} implementation={implementation} />
+                  ))
+                ) : (
+                  <Card className="border-dashed border-2 p-6 text-center">
+                    <div className="flex flex-col items-center">
+                      <div className="bg-muted/30 h-16 w-16 rounded-full flex items-center justify-center mb-4">
+                        <BookOpen className="h-8 w-8 text-muted-foreground" />
+                      </div>
+                      <h3 className="font-semibold text-base">Comece sua jornada</h3>
+                      <p className="text-sm text-muted-foreground mt-2 max-w-md mx-auto">
+                        Explore nossa biblioteca de soluções e comece a implementar IA em sua empresa
+                      </p>
+                      <Button className="mt-4" asChild>
+                        <Link to="/dashboard">
+                          Explorar Soluções
+                        </Link>
+                      </Button>
+                    </div>
+                  </Card>
+                )}
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="badges" className="mt-6">
+              <AchievementGrid achievements={achievements} />
             </TabsContent>
           </Tabs>
         </div>

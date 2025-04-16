@@ -34,7 +34,7 @@ export const MemberSidebarNav = ({ sidebarOpen }: MemberSidebarNavProps) => {
     {
       title: "Minhas Conquistas",
       icon: Award,
-      path: "/achievements",
+      path: "/profile?tab=badges",
       id: "achievements"
     },
     {
@@ -60,18 +60,18 @@ export const MemberSidebarNav = ({ sidebarOpen }: MemberSidebarNavProps) => {
       return true;
     }
     
-    if (path === "/achievements" && 
-        (currentPath === "/profile" && location.search.includes("tab=achievements"))) {
+    if (path === "/profile?tab=badges" && 
+        (currentPath === "/profile" && location.search.includes("tab=badges"))) {
       return true;
     }
     
     if (path === "/profile" && 
-        currentPath === "/profile" && !location.search.includes("tab=achievements")) {
+        currentPath === "/profile" && !location.search.includes("tab=badges")) {
       return true;
     }
     
     // Direct match for other cases
-    return currentPath === path;
+    return currentPath === path || (path.startsWith("/profile") && currentPath === "/profile");
   };
 
   return (
@@ -79,7 +79,7 @@ export const MemberSidebarNav = ({ sidebarOpen }: MemberSidebarNavProps) => {
       {navItems.map((item) => (
         <Link
           key={item.id}
-          to={item.path === "/solutions" ? "/dashboard" : item.path}
+          to={item.path}
           className={cn(
             "flex items-center justify-between rounded-lg px-3 py-2 transition-colors",
             isActive(item.path)
