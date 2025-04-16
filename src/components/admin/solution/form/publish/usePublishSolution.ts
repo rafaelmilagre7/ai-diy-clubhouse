@@ -3,8 +3,11 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Solution } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
-import { SolutionFormValues } from "../solutionFormSchema";
 
+/**
+ * Hook personalizado para gerenciar as funcionalidades da tela de publicação
+ * Gerencia estado de publicação, notificações e navegação
+ */
 export const usePublishSolution = (
   solutionId: string | null,
   solution: Solution | null,
@@ -15,6 +18,10 @@ export const usePublishSolution = (
   const { toast } = useToast();
   const navigate = useNavigate();
 
+  /**
+   * Função para alternar o estado de publicação da solução
+   * Exibe feedback ao usuário sobre o sucesso ou falha da operação
+   */
   const handlePublishToggle = async (checked: boolean) => {
     setIsPublished(checked);
     
@@ -45,15 +52,13 @@ export const usePublishSolution = (
     }
   };
 
+  /**
+   * Função para navegar para a visualização da solução
+   * Permite previsualizar como a solução ficará para os membros
+   */
   const handleViewSolution = () => {
     if (solutionId) {
       navigate(`/solution/${solutionId}`);
-    }
-  };
-
-  const handleTestImplementation = () => {
-    if (solutionId) {
-      navigate(`/implement/${solutionId}/0`);
     }
   };
 
@@ -61,7 +66,6 @@ export const usePublishSolution = (
     isPublished,
     saving,
     handlePublishToggle,
-    handleViewSolution,
-    handleTestImplementation
+    handleViewSolution
   };
 };

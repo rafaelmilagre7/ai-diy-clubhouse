@@ -5,6 +5,11 @@ interface TabHeaderProps {
   currentStep: number;
 }
 
+/**
+ * Componente de cabeçalho para as etapas do editor de solução
+ * Exibe o título e a descrição correspondente à etapa atual
+ * Atualiza dinamicamente conforme o usuário avança no fluxo
+ */
 const TabHeader: React.FC<TabHeaderProps> = ({ currentStep }) => {
   // Função para mostrar o título da etapa atual baseado no currentStep
   const getTabTitle = () => {

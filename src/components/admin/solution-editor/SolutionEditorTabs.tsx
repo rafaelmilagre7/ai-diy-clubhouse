@@ -16,6 +16,11 @@ interface SolutionEditorTabsProps {
   currentStep: number;
 }
 
+/**
+ * Componente principal para o editor de soluções baseado em abas/etapas
+ * Gerencia a exibição correta do conteúdo com base na etapa atual
+ * Implementa autosave silencioso ao navegar entre abas
+ */
 const SolutionEditorTabs = ({
   activeTab,
   setActiveTab,
@@ -31,7 +36,7 @@ const SolutionEditorTabs = ({
   useEffect(() => {
     // Don't trigger auto-save if we're in the process of initial loading
     if (solution && !saving) {
-      // Save the current values automatically when changing tabs
+      // Salvamento silencioso ao mudar de aba (sem toast)
       onSubmit(currentValues);
     }
   }, [activeTab]); // Only trigger on tab change

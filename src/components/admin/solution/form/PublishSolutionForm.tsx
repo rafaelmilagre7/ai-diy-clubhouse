@@ -18,6 +18,11 @@ interface PublishSolutionFormProps {
   saving: boolean;
 }
 
+/**
+ * Formulário para publicação de solução
+ * Permite revisar, publicar e visualizar a solução antes de disponibilizá-la aos membros
+ * Exibe status de implementação e controles para gerenciar publicação
+ */
 const PublishSolutionForm: React.FC<PublishSolutionFormProps> = ({
   solutionId,
   solution,
@@ -28,8 +33,7 @@ const PublishSolutionForm: React.FC<PublishSolutionFormProps> = ({
   const {
     isPublished,
     handlePublishToggle,
-    handleViewSolution,
-    handleTestImplementation
+    handleViewSolution
   } = usePublishSolution(solutionId, solution, onSave, saving);
 
   return (
@@ -58,7 +62,6 @@ const PublishSolutionForm: React.FC<PublishSolutionFormProps> = ({
           <ActionButtons 
             solutionId={solutionId}
             handleViewSolution={handleViewSolution}
-            handleTestImplementation={handleTestImplementation}
           />
         </CardFooter>
       </Card>

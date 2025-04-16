@@ -12,6 +12,11 @@ interface NavigationButtonsProps {
   saving: boolean;
 }
 
+/**
+ * Componente de navegação entre etapas do editor de solução
+ * Provê botões para avançar/retroceder nas etapas
+ * Adapta-se ao contexto da etapa atual (última etapa mostra publicação)
+ */
 const NavigationButtons: React.FC<NavigationButtonsProps> = ({
   currentStep,
   totalSteps,

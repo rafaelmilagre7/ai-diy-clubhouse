@@ -35,6 +35,7 @@ const SolutionEditor = () => {
   useEffect(() => {
     // Skip auto-save during initial loading
     if (solution && currentStep > 0) {
+      // Salvamento silencioso ao mudar de etapa (sem toast)
       onSubmit(currentValues);
     }
   }, [currentStep]);
@@ -50,7 +51,7 @@ const SolutionEditor = () => {
       if (form) form.dispatchEvent(new Event("submit", { cancelable: true, bubbles: true }));
     } else {
       // Nas outras etapas, chama a função específica de salvamento
-      // e mostra toast de confirmação
+      // e mostra toast de confirmação apenas quando o usuário clica explicitamente em salvar
       onSubmit({...currentValues, published: currentStep === totalSteps - 1})
         .then(() => {
           toast({
