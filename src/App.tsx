@@ -97,37 +97,18 @@ const RootRedirect = () => {
   const navigate = useNavigate();
   const [timeoutExceeded, setTimeoutExceeded] = useState(false);
   const timeoutRef = useRef<number | null>(null);
-  const isMounted = useRef(true);
   
-  // Clean up on unmount
+  // Handle timing out the loading state
   useEffect(() => {
-    isMounted.current = true;
-    return () => {
-      isMounted.current = false;
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
-  }, []);
-  
-  // Handle immediate redirection if user and profile are available
-  if (user && profile) {
-    console.log("RootRedirect: User and profile available, redirecting");
-    if (profile.role === 'admin') {
-      return <Navigate to="/admin" replace />;
-    } else {
-      return <Navigate to="/dashboard" replace />;
-    }
-  }
-  
-  // Handle loading timeout
-  useEffect(() => {
+    const isMounted = true;
+    
+    // Clear any existing timeout
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
     }
     
     timeoutRef.current = window.setTimeout(() => {
-      if (isLoading && !timeoutExceeded && isMounted.current) {
+      if (isLoading && !timeoutExceeded) {
         console.log("RootRedirect: Loading timeout exceeded, redirecting to /auth");
         setTimeoutExceeded(true);
         setIsLoading(false);
@@ -142,13 +123,21 @@ const RootRedirect = () => {
     };
   }, [isLoading, navigate, timeoutExceeded, setIsLoading]);
   
-  // Show nothing if timeout exceeded (navigation will happen)
-  if (timeoutExceeded) {
-    return null;
-  }
+  // Always render something, but determine what based on conditions
+  useEffect(() => {
+    // Handle immediate redirection if user and profile are available
+    if (user && profile) {
+      console.log("RootRedirect: User and profile available, redirecting");
+      if (profile.role === 'admin') {
+        navigate('/admin', { replace: true });
+      } else {
+        navigate('/dashboard', { replace: true });
+      }
+    }
+  }, [user, profile, navigate]);
   
   // Show loading screen during check
-  if (isLoading) {
+  if (isLoading && !timeoutExceeded) {
     return <LoadingScreen message="Preparando sua experiência..." />;
   }
   
