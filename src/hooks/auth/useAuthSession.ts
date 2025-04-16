@@ -4,13 +4,13 @@ import { useAuth } from '@/contexts/auth';
 import { useAuthStateManager } from './useAuthStateManager';
 
 export const useAuthSession = () => {
-  // Safe access to useAuth, return defaults if not in provider context
+  // Get auth context safely
   let authContext;
   try {
     authContext = useAuth();
   } catch (error) {
     console.error("useAuthSession error:", error);
-    // Return early with defaults if we can't access auth context
+    // Return default values if auth context is not available
     return {
       isInitializing: false,
       authError: new Error("Authentication provider not found"),
@@ -26,22 +26,24 @@ export const useAuthSession = () => {
   const [isInitializing, setIsInitializing] = useState(true);
   const [authError, setAuthError] = useState<Error | null>(null);
   const [retryCount, setRetryCount] = useState(0);
-  const maxRetries = 1; // Reduzido para 1 tentativa
+  const maxRetries = 1; // Reduced to 1 retry attempt
   
   const { setupAuthSession } = useAuthStateManager();
 
-  // Handle session initialization and retries com timeout extremamente reduzido
+  // Handle session initialization with extremely short timeout
   useEffect(() => {
     if (retryCount > maxRetries) {
-      console.error(`Atingido limite máximo de ${maxRetries} tentativas de autenticação`);
+      console.error(`Maximum number of ${maxRetries} authentication attempts reached`);
       setIsInitializing(false);
       setIsLoading(false);
       return;
     }
 
+    let isMounted = true;
+    
     const initializeSession = async () => {
       try {
-        console.log("Inicializando sessão de autenticação...");
+        console.log("Initializing authentication session...");
         
         const { success, error } = await setupAuthSession();
         
@@ -49,32 +51,39 @@ export const useAuthSession = () => {
           throw error;
         }
         
-        // Limpar estados de erro e carregamento imediatamente
-        setAuthError(null);
-        setIsInitializing(false);
-        setIsLoading(false);
+        // Clear error states and loading states immediately
+        if (isMounted) {
+          setAuthError(null);
+          setIsInitializing(false);
+          setIsLoading(false);
+        }
       } catch (error) {
-        console.error("Erro durante inicialização da sessão:", error);
-        setAuthError(error instanceof Error ? error : new Error('Erro desconhecido de autenticação'));
-        setRetryCount(count => count + 1);
-        setIsInitializing(false);
-        setIsLoading(false);
+        console.error("Error during session initialization:", error);
+        if (isMounted) {
+          setAuthError(error instanceof Error ? error : new Error('Unknown authentication error'));
+          setRetryCount(count => count + 1);
+          setIsInitializing(false);
+          setIsLoading(false);
+        }
       }
     };
     
-    // Timeout extremamente reduzido para aceleração máxima
+    // Extremely short timeout for maximum acceleration
     const timeoutId = setTimeout(() => {
-      if (isInitializing) {
-        console.log("Tempo limite de inicialização da sessão excedido");
+      if (isInitializing && isMounted) {
+        console.log("Session initialization timeout exceeded");
         setIsInitializing(false);
         setIsLoading(false);
       }
-    }, 500); // 500ms apenas
+    }, 500); // Only 500ms
     
     initializeSession();
     
-    return () => clearTimeout(timeoutId);
-  }, [retryCount, setIsLoading, maxRetries, setupAuthSession, isInitializing]);
+    return () => {
+      isMounted = false;
+      clearTimeout(timeoutId);
+    };
+  }, [retryCount, setIsLoading, maxRetries, setupAuthSession]);
 
   return {
     isInitializing,

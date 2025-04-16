@@ -26,7 +26,7 @@ const AuthSession = ({ children }: { children: React.ReactNode }) => {
   const navigate = useNavigate();
   const [showLoading, setShowLoading] = useState(false);
 
-  // Configurar um timeout muito curto para mostrar a tela de carregamento
+  // Set up timeout for showing loading screen
   useEffect(() => {
     // Skip auth checks for public routes
     if (location.pathname === '/index' || location.pathname === '/auth') {
@@ -34,18 +34,18 @@ const AuthSession = ({ children }: { children: React.ReactNode }) => {
     }
     
     if ((isInitializing || isLoading) && !user) {
-      // Mostrar tela de carregamento imediatamente para feedback visual rápido
+      // Show loading screen immediately for quick visual feedback
       setShowLoading(true);
       
-      // Timeout mais curto para forçar navegação se demorar muito
+      // Short timeout to force navigation if it takes too long
       const forceNavigateTimeout = window.setTimeout(() => {
         if (isLoading || isInitializing) {
-          console.log("AuthSession: Redirecionando devido ao timeout de carregamento");
+          console.log("AuthSession: Redirecting due to loading timeout");
           setIsLoading(false);
           navigate('/auth', { replace: true });
         }
         setShowLoading(false);
-      }, 800); // Tempo ainda mais reduzido
+      }, 800); // Reduced time
       
       return () => {
         window.clearTimeout(forceNavigateTimeout);
@@ -67,14 +67,13 @@ const AuthSession = ({ children }: { children: React.ReactNode }) => {
     return <>{children}</>;
   }
 
-  // Fast pass - Se temos usuário, mostrar conteúdo imediatamente
-  const isAuthenticated = !!user;
-  if (isAuthenticated && !isLoading) {
+  // Fast pass - If user is already authenticated, show content immediately
+  if (user && !isLoading) {
     return <>{children}</>;
   }
 
   // Display error if authentication failed and no user is authenticated
-  if (authError && !isInitializing && !isAuthenticated) {
+  if (authError && !isInitializing && !user) {
     return (
       <AuthErrorDisplay
         error={authError}
@@ -86,7 +85,7 @@ const AuthSession = ({ children }: { children: React.ReactNode }) => {
   }
 
   // Show loading screen only if necessary and for a short time
-  if ((isInitializing || isLoading) && !isAuthenticated && showLoading) {
+  if ((isInitializing || isLoading) && !user && showLoading) {
     return <LoadingScreen />;
   }
 

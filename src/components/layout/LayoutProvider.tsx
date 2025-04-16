@@ -16,52 +16,53 @@ const LayoutProvider = () => {
   const [redirectChecked, setRedirectChecked] = useState(false);
   const [loadingTimeout, setLoadingTimeout] = useState(false);
 
-  // Fast path para membros - Se temos usuário e perfil, renderizar imediatamente
-  if (user && profile && !isAdmin) {
-    return <MemberLayout />;
-  }
-
-  // Verificar se o carregamento está demorando muito - tempo reduzido ao mínimo 
+  // Setup loading timeout effect
   useEffect(() => {
     if (isLoading) {
       const timeoutId = setTimeout(() => {
         setLoadingTimeout(true);
-      }, 500); // Reduzido para 500ms
+      }, 500); // Reduced to 500ms
       
       return () => clearTimeout(timeoutId);
     }
   }, [isLoading]);
   
-  // Se o timeout for atingido, redirecionar para auth
+  // Handle timeout and redirect to auth if needed
   useEffect(() => {
     if (loadingTimeout && isLoading) {
-      console.log("LayoutProvider: Tempo limite de carregamento excedido, redirecionando para /auth");
+      console.log("LayoutProvider: Loading timeout exceeded, redirecting to /auth");
       setIsLoading(false);
       navigate('/auth', { replace: true });
     }
   }, [loadingTimeout, isLoading, navigate, setIsLoading]);
 
-  // Check user role only once when profile is loaded
+  // Check user role when profile is loaded
   useEffect(() => {
     if (!profile || redirectChecked) {
       return;
     }
     
     if (profile.role === 'admin') {
-      console.log("LayoutProvider: Usuário é admin, redirecionando para /admin");
+      console.log("LayoutProvider: User is admin, redirecting to /admin");
       
       toast({
-        title: "Redirecionando para área de administração",
-        description: "Você está sendo redirecionado para a área de admin."
+        title: "Redirecting to admin area",
+        description: "You are being redirected to the admin area."
       });
       
       navigate('/admin', { replace: true });
     }
     
     setRedirectChecked(true);
-  }, [profile, navigate, redirectChecked, toast]);
+  }, [profile, navigate, redirectChecked]);
 
-  // Show loading screen while checking the session (mas apenas se não excedeu o timeout)
+  // Render different layouts based on conditions
+  // Fast path for members - If we have user and profile, render immediately
+  if (user && profile && !isAdmin) {
+    return <MemberLayout />;
+  }
+
+  // Show loading screen while checking the session (but only if timeout not exceeded)
   if (isLoading && !loadingTimeout) {
     return <LoadingScreen />;
   }
@@ -76,7 +77,7 @@ const LayoutProvider = () => {
     return <Navigate to="/admin" replace />;
   }
 
-  // Render the member layout
+  // Default case: Render the member layout
   return <MemberLayout />;
 };
 
