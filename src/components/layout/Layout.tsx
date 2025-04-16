@@ -6,7 +6,7 @@ import { MemberContent } from "./member/MemberContent";
 import { Navigate, useNavigate } from "react-router-dom";
 import LoadingScreen from "@/components/common/LoadingScreen";
 import { toast } from "@/hooks/use-toast";
-import { UserRole } from "@/lib/supabase";
+import { UserRole } from "@/lib/supabase";  // Import UserRole type
 
 const Layout = () => {
   const { user, profile, signOut, isAdmin, isLoading } = useAuth();
@@ -20,8 +20,8 @@ const Layout = () => {
       return;
     }
     
-    // Compare with the string 'admin' explicitly, not as a type
-    if (profile.role === 'admin') {
+    // Use explicit role comparison with UserRole type
+    if (profile.role === 'admin' as UserRole) {
       console.log("Layout useEffect: Usuário é admin, redirecionando para /admin", { 
         profileRole: profile.role,
         isAdmin: profile.role === 'admin'
