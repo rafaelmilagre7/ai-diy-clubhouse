@@ -10,6 +10,11 @@ interface ActionButtonsProps {
   handleTestImplementation: () => void;
 }
 
+/**
+ * Componente de botões de ação para a seção de publicação
+ * Permite visualizar a solução e testar sua implementação
+ * Os botões são desabilitados caso não exista um ID de solução
+ */
 const ActionButtons: React.FC<ActionButtonsProps> = ({ 
   solutionId, 
   handleViewSolution, 
@@ -19,6 +24,7 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({
   
   return (
     <>
+      {/* Botão para visualizar detalhes da solução */}
       <Button 
         variant="outline"
         onClick={handleViewSolution}
@@ -29,6 +35,7 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({
         Visualizar Solução
       </Button>
       
+      {/* Botão para testar a implementação da solução */}
       <Button 
         onClick={handleTestImplementation}
         disabled={!solutionId}

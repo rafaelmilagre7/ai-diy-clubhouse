@@ -1,6 +1,10 @@
 
 /**
- * Formata uma string de data para exibição
+ * Função utilitária para formatar datas de forma consistente
+ * Converte timestamps em strings formatadas para exibição amigável
+ * 
+ * @param dateString - String de data ISO ou timestamp
+ * @returns String de data formatada ou 'N/A' se nenhuma data for fornecida
  */
 export const formatDate = (dateString?: string): string => {
   if (!dateString) return "N/A";
