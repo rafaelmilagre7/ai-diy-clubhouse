@@ -36,7 +36,7 @@ const AuthSession = ({ children }: { children: React.ReactNode }) => {
         console.log("Timeout de carregamento atingido, redirecionando para /index");
         setShowLoading(false);
         navigate("/index", { replace: true });
-      }, 6000); // 6 segundos para timeout
+      }, 5000); // 5 segundos para timeout
     } else {
       setShowLoading(false);
     }

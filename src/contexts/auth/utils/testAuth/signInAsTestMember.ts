@@ -2,6 +2,7 @@
 import { supabase } from '@/lib/supabase';
 import { TEST_MEMBER } from './constants';
 import { toast } from '@/hooks/use-toast';
+import { UserProfile } from '@/lib/supabase';
 
 export const signInAsTestMember = async (): Promise<void> => {
   try {
@@ -23,16 +24,41 @@ export const signInAsTestMember = async (): Promise<void> => {
     if (data && data.user) {
       console.log("Login como membro de teste bem-sucedido:", data.user.id);
       
+      // Forçar a atualização dos metadados do usuário para garantir que o papel está correto
+      await supabase.auth.updateUser({
+        data: { role: 'member' }
+      });
+      
+      // Verificar se o perfil já existe
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', data.user.id)
+        .single();
+      
+      // Se o perfil não existir, criar um
+      if (!profileData) {
+        const newProfile: Partial<UserProfile> = {
+          id: data.user.id,
+          email: TEST_MEMBER.email,
+          name: 'Membro Teste',
+          role: 'member',
+          avatar_url: null,
+          company_name: null,
+          industry: null
+        };
+        
+        await supabase.from('profiles').insert([newProfile]);
+      }
+      
       toast({
         title: "Login como Membro",
         description: "Você está logado como um membro de teste.",
       });
       
-      // Give time for the auth state to update before redirecting
-      // This prevents race conditions with the auth state listener
-      setTimeout(() => {
-        window.location.href = '/';
-      }, 800);
+      // Usar window.location para forçar um refresh completo,
+      // garantindo que o estado de autenticação seja atualizado em toda a aplicação
+      window.location.href = '/dashboard';
     }
   } catch (error) {
     console.error("Erro no login de membro de teste:", error);

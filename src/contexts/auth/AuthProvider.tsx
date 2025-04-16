@@ -20,16 +20,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Set up initial auth state on mount and handle auth state changes
   useEffect(() => {
     console.log("AuthProvider initializing");
+    let isMounted = true;
     
     // First set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, newSession) => {
+      async (event, newSession) => {
         console.log("Auth state changed:", event);
+        
+        if (!isMounted) return;
+        
         setSession(newSession);
         setUser(newSession?.user || null);
         
-        // Don't set isLoading to false here, let the AuthSession component handle that
-        // after profile processing
+        // Resetar o perfil quando o usuário faz logout
+        if (event === 'SIGNED_OUT') {
+          setProfile(null);
+        }
       }
     );
     
@@ -37,14 +43,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const initAuth = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!isMounted) return;
+        
         setSession(session);
         setUser(session?.user || null);
+        
+        // Se não temos sessão, não precisamos esperar pelo perfil
+        if (!session) {
+          setIsLoading(false);
+        }
       } catch (error) {
         console.error("Error getting initial session:", error);
-      } finally {
-        // Set loading to false only if we don't have a session
-        // If we have a session, the AuthSession component will set it to false after fetching the profile
-        if (!session) {
+        if (isMounted) {
           setIsLoading(false);
         }
       }
@@ -54,6 +65,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     
     // Cleanup on unmount
     return () => {
+      isMounted = false;
       subscription.unsubscribe();
     };
   }, []);

@@ -25,6 +25,7 @@ const Login = () => {
       setIsLoading(true);
       setError(null);
       await signIn();
+      // Redirecionamento acontece dentro da função signIn
     } catch (err) {
       console.error("Erro ao fazer login:", err);
       setError("Ocorreu um erro durante o login. Por favor, tente novamente.");
@@ -38,6 +39,7 @@ const Login = () => {
       setIsLoading(true);
       setError(null);
       await loginFn();
+      // Redirecionamento acontece dentro das funções de login
     } catch (err: any) {
       console.error(`Erro ao fazer login como ${userType}:`, err);
       setError(err?.message || `Ocorreu um erro ao fazer login como ${userType}.`);
@@ -75,7 +77,7 @@ const Login = () => {
             <Button 
               onClick={handleSignIn} 
               disabled={isLoading}
-              className="group relative w-full flex justify-center py-6 px-4 border border-transparent text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-viverblue shadow"
+              className="group relative w-full flex justify-center py-6 px-4 border border-transparent text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#0ABAB5] shadow"
             >
               <span className="absolute left-0 inset-y-0 flex items-center pl-3">
                 <FcGoogle className="h-5 w-5" />
@@ -118,7 +120,7 @@ const Login = () => {
               Não é membro ainda?{" "}
               <a
                 href="https://milagredigital.com/club/"
-                className="font-medium text-viverblue hover:text-viverblue-dark"
+                className="font-medium text-[#0ABAB5] hover:text-[#0ABAB5]/90"
                 target="_blank"
                 rel="noopener noreferrer"
               >

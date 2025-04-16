@@ -16,6 +16,8 @@ const Index = () => {
       setIsLoading(true);
       setError(null);
       await loginFn();
+      // Não redirecionamos aqui pois o redirecionamento acontece 
+      // dentro das funções de login signInAsMember e signInAsAdmin
     } catch (err: any) {
       console.error(`Erro ao fazer login como ${userType}:`, err);
       setError(err?.message || `Ocorreu um erro ao fazer login como ${userType}.`);
@@ -52,7 +54,7 @@ const Index = () => {
           <div className="grid grid-cols-1 gap-4">
             <Link to="/login" className="w-full">
               <Button 
-                className="w-full py-6 text-base"
+                className="w-full py-6 text-base bg-[#0ABAB5] hover:bg-[#0ABAB5]/90"
                 variant="default"
               >
                 Login Normal

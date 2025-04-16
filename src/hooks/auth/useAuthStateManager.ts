@@ -26,7 +26,7 @@ export const useAuthStateManager = () => {
       
       setSession(session);
       
-      if (session) {
+      if (session?.user) {
         console.log("Sessão ativa encontrada:", session.user.id);
         setUser(session.user);
         
@@ -38,8 +38,17 @@ export const useAuthStateManager = () => {
         );
         
         setProfile(profile);
+        
+        // Forçar atualização dos metadados do usuário para garantir que o papel está correto
+        if (profile) {
+          await supabase.auth.updateUser({
+            data: { role: profile.role }
+          });
+        }
       } else {
         console.log("Nenhuma sessão ativa encontrada");
+        setUser(null);
+        setProfile(null);
       }
       
       // Set loading to false regardless of the outcome

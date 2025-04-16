@@ -43,7 +43,7 @@ const ProtectedRoute = ({
 
   if (!user) {
     console.log("ProtectedRoute: Usuário não autenticado, redirecionando para login");
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/index" replace />;
   }
 
   if (requireAdmin && !isAdmin) {
@@ -158,7 +158,7 @@ const RootRedirect = () => {
   
   if (!user) {
     console.log("RootRedirect: Usuário não autenticado, redirecionando para login");
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/index" replace />;
   }
   
   if (!profile) {
@@ -166,14 +166,19 @@ const RootRedirect = () => {
     return <Navigate to="/index" replace />;
   }
   
-  const homePath = profile.role === 'admin' ? '/admin' : '/dashboard';
-  
-  console.log("RootRedirect: redirecionando usuário para", homePath, { 
-    role: profile.role || 'não definido',
+  console.log("RootRedirect: Verificando papel do usuário para redirecionamento", {
+    profileRole: profile.role,
     isAdmin
   });
   
-  return <Navigate to={homePath} replace />;
+  // Determinar para onde redirecionar com base no papel do usuário
+  if (profile.role === 'admin') {
+    console.log("RootRedirect: redirecionando admin para /admin");
+    return <Navigate to="/admin" replace />;
+  } else {
+    console.log("RootRedirect: redirecionando membro para /dashboard");
+    return <Navigate to="/dashboard" replace />;
+  }
 };
 
 export default App;
