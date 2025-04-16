@@ -1,10 +1,9 @@
 
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import LoadingScreen from "@/components/common/LoadingScreen";
 import { useSolutionsData } from "@/hooks/useSolutionsData";
-import { useToast } from "@/hooks/use-toast";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { CategoryTabs } from "@/components/dashboard/CategoryTabs";
 import { ProgressSummary } from "@/components/dashboard/ProgressSummary";
@@ -13,18 +12,31 @@ import { useDashboardProgress } from "@/hooks/useDashboardProgress";
 const Dashboard = () => {
   const { profile } = useAuth();
   const navigate = useNavigate();
-  const { toast } = useToast();
   const [searchParams] = useSearchParams();
   const categoryParam = searchParams.get("category") || "all";
   
   // Use custom hooks for data fetching and state management
   const [searchQuery, setSearchQuery] = useState("");
-  const { loading, userProgress, completedCount, inProgressCount, progressPercentage } = useDashboardProgress();
+  const { 
+    activeSolutions, 
+    completedSolutions, 
+    loading, 
+    userProgress 
+  } = useDashboardProgress();
+  
   const { 
     filteredSolutions, 
     activeCategory, 
     setActiveCategory 
   } = useSolutionsData(categoryParam);
+  
+  // Calculate metrics for ProgressSummary
+  const completedCount = completedSolutions.length;
+  const inProgressCount = activeSolutions.length;
+  const totalSolutions = filteredSolutions.length;
+  const progressPercentage = totalSolutions > 0 
+    ? Math.round((completedCount / totalSolutions) * 100) 
+    : 0;
   
   const handleSelectSolution = (id: string) => {
     console.log("Navigating to solution detail:", id);
@@ -49,7 +61,7 @@ const Dashboard = () => {
         completedCount={completedCount}
         inProgressCount={inProgressCount}
         progressPercentage={progressPercentage}
-        totalSolutions={filteredSolutions.length}
+        totalSolutions={totalSolutions}
       />
       
       {/* Category tabs and solutions grid */}

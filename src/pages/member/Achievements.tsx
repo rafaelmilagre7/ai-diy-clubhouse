@@ -54,6 +54,7 @@ const Achievements = () => {
           // Ensure we're setting type-safe Solution objects
           const typedSolutions = solutionsData?.map(solution => ({
             ...solution,
+            difficulty: solution.difficulty as "easy" | "medium" | "advanced",
             category: solution.category as "revenue" | "operational" | "strategy"
           })) || [];
           
@@ -71,8 +72,14 @@ const Achievements = () => {
         }
 
         // Generate achievements based on progress
-        if (progressData && solutionsData) {
-          generateAchievements(progressData, typedSolutions, badgesData || []);
+        const processedSolutions = solutionsData?.map(solution => ({
+          ...solution,
+          difficulty: solution.difficulty as "easy" | "medium" | "advanced",
+          category: solution.category as "revenue" | "operational" | "strategy"
+        })) || [];
+        
+        if (progressData) {
+          generateAchievements(progressData, processedSolutions, badgesData || []);
         } else {
           generateAchievements([], [], []);
         }

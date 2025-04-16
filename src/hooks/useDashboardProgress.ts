@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/auth";
 import { supabase } from "@/lib/supabase";
@@ -177,8 +178,9 @@ export const useDashboardProgress = () => {
           .sort((a, b) => {
             // Sort by difficulty
             const difficultyOrder = { "easy": 0, "medium": 1, "advanced": 2 };
-            return difficultyOrder[a.difficulty as "easy" | "medium" | "advanced"] - 
-                   difficultyOrder[b.difficulty as "easy" | "medium" | "advanced"];
+            const diffA = a.difficulty as "easy" | "medium" | "advanced";
+            const diffB = b.difficulty as "easy" | "medium" | "advanced";
+            return difficultyOrder[diffA] - difficultyOrder[diffB];
           })
           .slice(0, 3); // Get top 3
         

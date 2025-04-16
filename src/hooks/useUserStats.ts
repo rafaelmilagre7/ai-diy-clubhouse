@@ -8,10 +8,9 @@ export type SolutionCategory = "revenue" | "operational" | "strategy";
 
 // Type for category distribution metrics
 export interface CategoryDistribution {
-  [key in SolutionCategory]: {
-    total: number;
-    completed: number;
-  };
+  revenue: { total: number; completed: number };
+  operational: { total: number; completed: number };
+  strategy: { total: number; completed: number };
 }
 
 // Comprehensive type for user statistics
@@ -103,7 +102,7 @@ export const useUserStats = () => {
           ? Math.round((completedSolutions / totalSolutions) * 100) 
           : 0;
 
-        // Calculate category distribution
+        // Initialize category distribution
         const categoryDistribution: CategoryDistribution = {
           revenue: { total: 0, completed: 0 },
           operational: { total: 0, completed: 0 },
