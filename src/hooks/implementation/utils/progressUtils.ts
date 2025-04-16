@@ -41,3 +41,43 @@ export const logProgressEvent = (
     timestamp: new Date().toISOString()
   });
 };
+
+/**
+ * Check if a step in the implementation flow should be accessible
+ */
+export const validateStepAccess = (
+  step: number,
+  completedModules: number[],
+  requireSequentialProgress: boolean = true
+): { canAccess: boolean; message?: string } => {
+  // Always allow access to first step
+  if (step === 0) return { canAccess: true };
+  
+  // If sequential progress is required, check if previous step is completed
+  if (requireSequentialProgress && !completedModules.includes(step - 1)) {
+    return {
+      canAccess: false,
+      message: "Você precisa completar as etapas anteriores primeiro."
+    };
+  }
+  
+  return { canAccess: true };
+};
+
+/**
+ * Get user-friendly step name based on module type
+ */
+export const getStepNameByType = (type: string): string => {
+  const typeMap: Record<string, string> = {
+    "landing": "Visão Geral",
+    "overview": "Visão Geral e Case Real",
+    "preparation": "Preparação Express",
+    "implementation": "Implementação Passo a Passo",
+    "verification": "Verificação de Implementação",
+    "results": "Primeiros Resultados",
+    "optimization": "Otimização Rápida",
+    "celebration": "Celebração e Próximos Passos"
+  };
+  
+  return typeMap[type] || type;
+};
