@@ -70,7 +70,7 @@ export const useProgressTracking = (
       toast({
         title: "Interação necessária",
         description: "Você precisa revisar o conteúdo completo antes de marcar como concluído.",
-        variant: "warning",
+        variant: "default", // Changed from "warning" to "default"
       });
       return;
     }
