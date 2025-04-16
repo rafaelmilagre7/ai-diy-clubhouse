@@ -28,7 +28,7 @@ export const MemberSidebar = ({
     <aside
       className={cn(
         "fixed inset-y-0 left-0 z-20 flex h-full flex-col border-r bg-background transition-all duration-300 ease-in-out",
-        sidebarOpen ? "w-64" : "w-20"
+        sidebarOpen ? "w-64" : "w-[70px]"
       )}
     >
       {/* Logo area */}

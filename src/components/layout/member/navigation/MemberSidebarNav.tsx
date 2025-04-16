@@ -6,7 +6,8 @@ import {
   BookOpen, 
   Award,
   User,
-  BarChart
+  BarChart,
+  Briefcase
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
@@ -52,7 +53,7 @@ export const MemberSidebarNav = ({ sidebarOpen }: MemberSidebarNavProps) => {
     }
   ];
 
-  // Simplified isActive function for more reliable route detection
+  // Improved isActive function for more reliable route detection
   const isActive = (path: string) => {
     const currentPath = location.pathname;
     
@@ -89,7 +90,7 @@ export const MemberSidebarNav = ({ sidebarOpen }: MemberSidebarNavProps) => {
               "mr-3",
               isActive(item.path) ? "text-[#0ABAB5]" : "text-muted-foreground"
             )} />
-            {sidebarOpen && <span>{item.title}</span>}
+            {sidebarOpen && <span className="font-medium">{item.title}</span>}
           </div>
           
           {sidebarOpen && item.badge && (

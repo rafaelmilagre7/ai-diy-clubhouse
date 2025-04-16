@@ -32,6 +32,9 @@ function App() {
               <Route path="achievements" element={<Dashboard />} />
               <Route path="profile" element={<ProfileSettings />} />
               <Route path="solution/:id" element={<SolutionDetails />} />
+              <Route path="implement/:id/:moduleIndex" element={<SolutionImplementation />} />
+              <Route path="implement/:id/confirm" element={<ImplementationConfirmation />} />
+              <Route path="solution/:id/completed" element={<ImplementationCompleted />} />
             </Route>
             
             {/* Admin routes */}
@@ -45,11 +48,6 @@ function App() {
             
             {/* Shared routes */}
             <Route path="*" element={<Error404 />} />
-
-            {/* Implementation routes */}
-            <Route path="/implement/:id/:moduleIndex" element={<ProtectedRoute><SolutionImplementation /></ProtectedRoute>} />
-            <Route path="/implement/:id/confirm" element={<ProtectedRoute><ImplementationConfirmation /></ProtectedRoute>} />
-            <Route path="/solution/:id/completed" element={<ProtectedRoute><ImplementationCompleted /></ProtectedRoute>} />
           </Routes>
         </Router>
       </LoggingProvider>

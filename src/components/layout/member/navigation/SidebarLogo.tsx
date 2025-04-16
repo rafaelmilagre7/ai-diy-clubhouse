@@ -1,8 +1,7 @@
 
 import { Link } from "react-router-dom";
-import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Menu } from "lucide-react";
 
 interface SidebarLogoProps {
   sidebarOpen: boolean;
@@ -11,7 +10,7 @@ interface SidebarLogoProps {
 
 export const SidebarLogo = ({ sidebarOpen, setSidebarOpen }: SidebarLogoProps) => {
   return (
-    <div className="flex h-16 items-center justify-between px-4">
+    <div className="flex h-16 items-center justify-between px-3">
       {sidebarOpen ? (
         <Link to="/dashboard" className="flex items-center">
           <img 
@@ -22,20 +21,18 @@ export const SidebarLogo = ({ sidebarOpen, setSidebarOpen }: SidebarLogoProps) =
         </Link>
       ) : (
         <Link to="/dashboard" className="mx-auto">
-          <img 
-            src="https://milagredigital.com/wp-content/uploads/2025/04/viverdeiaclub.avif" 
-            alt="VIVER DE IA Club" 
-            className="h-8 w-auto" 
-          />
+          <div className="h-8 w-8 flex items-center justify-center bg-[#0ABAB5] rounded-full text-white font-bold">
+            VI
+          </div>
         </Link>
       )}
       <Button
         variant="ghost"
         size="icon"
         onClick={() => setSidebarOpen(!sidebarOpen)}
-        className="ml-auto"
+        className={sidebarOpen ? "ml-auto" : "mx-auto mt-2"}
       >
-        {sidebarOpen ? <ChevronLeft size={20} /> : <ChevronRight size={20} />}
+        {sidebarOpen ? <ChevronLeft size={20} /> : <Menu size={20} />}
       </Button>
     </div>
   );
