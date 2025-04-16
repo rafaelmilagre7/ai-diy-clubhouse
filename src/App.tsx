@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -94,15 +93,15 @@ const App = () => {
                 <Route path="/" element={<AppRoutes />} />
 
                 {/* Member routes - within Layout */}
-                <Route path="/" element={
+                <Route path="/dashboard" element={
                   <ProtectedRoute>
                     <Layout />
                   </ProtectedRoute>
                 }>
-                  <Route path="/dashboard" element={<MemberDashboard />} />
-                  <Route path="/solution/:id" element={<SolutionDetails />} />
-                  <Route path="/implement/:id/:moduleIndex" element={<SolutionImplementation />} />
-                  <Route path="/profile" element={<Profile />} />
+                  <Route index element={<MemberDashboard />} />
+                  <Route path="/dashboard/solution/:id" element={<SolutionDetails />} />
+                  <Route path="/dashboard/implement/:id/:moduleIndex" element={<SolutionImplementation />} />
+                  <Route path="/dashboard/profile" element={<Profile />} />
                 </Route>
 
                 {/* Admin routes - within AdminLayout */}
@@ -132,7 +131,7 @@ const App = () => {
 
 // Helper component to handle route redirection
 const AppRoutes = () => {
-  const { profile, isAdmin, isLoading } = useAuth();
+  const { user, isAdmin, isLoading } = useAuth();
   
   if (isLoading) {
     return <LoadingScreen />;

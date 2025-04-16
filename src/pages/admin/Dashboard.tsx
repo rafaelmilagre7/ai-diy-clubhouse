@@ -103,7 +103,7 @@ const AdminDashboard = () => {
         <div>
           <h1 className="text-3xl font-bold">Dashboard Admin</h1>
           <p className="text-muted-foreground mt-1">
-            Visão geral da plataforma DIY
+            Visão geral da plataforma VIVER DE IA Club
           </p>
         </div>
         <Tabs value={timeRange} onValueChange={setTimeRange} className="w-[400px]">
