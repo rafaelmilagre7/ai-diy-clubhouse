@@ -36,6 +36,7 @@ const AppRoutes = () => {
           </ProtectedRoute>
         }>
           <Route path="dashboard" element={<MemberDashboard />} />
+          <Route path="solutions" element={<MemberDashboard />} />
           <Route path="solution/:id" element={<SolutionDetails />} />
           <Route path="implement/:id/:moduleIndex" element={<SolutionImplementation />} />
           <Route path="profile" element={<Profile />} />
