@@ -10,6 +10,7 @@ export const useAchievementsData = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [userProgress, setUserProgress] = useState<any[]>([]);
   const [solutions, setSolutions] = useState<Solution[]>([]);
@@ -20,6 +21,7 @@ export const useAchievementsData = () => {
 
       try {
         setLoading(true);
+        setError(null);
 
         // Fetch user progress
         const { data: progressData, error: progressError } = await supabase
@@ -35,6 +37,7 @@ export const useAchievementsData = () => {
             variant: "destructive",
           });
           setUserProgress([]);
+          setError("Falha ao carregar os dados de progresso");
         } else {
           setUserProgress(progressData || []);
         }
@@ -48,6 +51,7 @@ export const useAchievementsData = () => {
         if (solutionsError) {
           console.error("Error fetching solutions:", solutionsError);
           setSolutions([]);
+          setError("Falha ao carregar as soluções");
         } else {
           // Ensure we're setting type-safe Solution objects
           const typedSolutions = solutionsData?.map(solution => ({
@@ -70,13 +74,13 @@ export const useAchievementsData = () => {
         }
 
         // Generate achievements based on progress
-        const processedSolutions = solutionsData?.map(solution => ({
-          ...solution,
-          difficulty: solution.difficulty as "easy" | "medium" | "advanced",
-          category: toSolutionCategory(solution.category)
-        })) || [];
-        
-        if (progressData) {
+        if (progressData && solutionsData) {
+          const processedSolutions = solutionsData?.map(solution => ({
+            ...solution,
+            difficulty: solution.difficulty as "easy" | "medium" | "advanced",
+            category: toSolutionCategory(solution.category)
+          })) || [];
+          
           const generatedAchievements = generateAchievements(progressData, processedSolutions, badgesData || []);
           setAchievements(generatedAchievements);
         } else {
@@ -84,6 +88,7 @@ export const useAchievementsData = () => {
         }
       } catch (error) {
         console.error("Error in fetching achievements data:", error);
+        setError("Ocorreu um erro ao carregar suas conquistas");
         toast({
           title: "Erro ao carregar conquistas",
           description: "Ocorreu um erro ao carregar suas conquistas. Tente novamente mais tarde.",
@@ -100,6 +105,7 @@ export const useAchievementsData = () => {
 
   return {
     loading,
+    error,
     achievements,
     userProgress,
     solutions

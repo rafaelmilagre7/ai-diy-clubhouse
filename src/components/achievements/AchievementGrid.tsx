@@ -92,12 +92,15 @@ const AchievementCard = ({ achievement }: { achievement: Achievement }) => {
       <CardContent className="pt-6 pb-4 text-center flex flex-col items-center">
         <div className={cn(
           "h-20 w-20 rounded-full flex items-center justify-center mb-4",
-          achievement.isUnlocked ? (
-            achievement.category === "revenue" && "bg-revenue/10 text-revenue",
-            achievement.category === "operational" && "bg-operational/10 text-operational",
-            achievement.category === "strategy" && "bg-strategy/10 text-strategy",
-            achievement.category === "achievement" && "bg-viverblue/10 text-viverblue"
-          ) : "bg-gray-100 text-gray-400"
+          achievement.isUnlocked 
+            ? (achievement.category === "revenue" 
+                ? "bg-revenue/10 text-revenue" 
+                : achievement.category === "operational" 
+                  ? "bg-operational/10 text-operational" 
+                  : achievement.category === "strategy" 
+                    ? "bg-strategy/10 text-strategy" 
+                    : "bg-viverblue/10 text-viverblue")
+            : "bg-gray-100 text-gray-400"
         )}>
           {achievement.isUnlocked ? (
             <Award className="h-10 w-10" />
