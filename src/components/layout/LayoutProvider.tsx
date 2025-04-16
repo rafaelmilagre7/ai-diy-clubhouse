@@ -11,9 +11,30 @@ import MemberLayout from "./MemberLayout";
  * before rendering the appropriate layout component
  */
 const LayoutProvider = () => {
-  const { user, profile, isAdmin, isLoading } = useAuth();
+  const { user, profile, isAdmin, isLoading, setIsLoading } = useAuth();
   const navigate = useNavigate();
   const [redirectChecked, setRedirectChecked] = useState(false);
+  const [loadingTimeout, setLoadingTimeout] = useState(false);
+
+  // Verificar se o carregamento está demorando muito
+  useEffect(() => {
+    if (isLoading) {
+      const timeoutId = setTimeout(() => {
+        setLoadingTimeout(true);
+      }, 1500); // Reduzido para 1.5 segundos
+      
+      return () => clearTimeout(timeoutId);
+    }
+  }, [isLoading]);
+  
+  // Se o timeout for atingido, redirecionar para auth
+  useEffect(() => {
+    if (loadingTimeout && isLoading) {
+      console.log("LayoutProvider: Tempo limite de carregamento excedido, redirecionando para /auth");
+      setIsLoading(false);
+      navigate('/auth', { replace: true });
+    }
+  }, [loadingTimeout, isLoading, navigate, setIsLoading]);
 
   // Check user role only once when profile is loaded
   useEffect(() => {
@@ -35,8 +56,8 @@ const LayoutProvider = () => {
     setRedirectChecked(true);
   }, [profile, navigate, redirectChecked]);
 
-  // Show loading screen while checking the session
-  if (isLoading) {
+  // Show loading screen while checking the session (mas apenas se não excedeu o timeout)
+  if (isLoading && !loadingTimeout) {
     return <LoadingScreen />;
   }
 

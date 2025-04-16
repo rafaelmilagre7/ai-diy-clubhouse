@@ -35,9 +35,25 @@ const ProtectedRoute = ({
   children: React.ReactNode;
   requireAdmin?: boolean;
 }) => {
-  const { user, isAdmin, isLoading } = useAuth();
+  const { user, isAdmin, isLoading, setIsLoading } = useAuth();
+  const navigate = useNavigate();
+  const [loadingTimeout, setLoadingTimeout] = useState(false);
+  
+  // Configurar timeout para carregamento lento
+  useEffect(() => {
+    if (isLoading) {
+      const timeoutId = setTimeout(() => {
+        console.log("ProtectedRoute: Tempo limite de carregamento excedido");
+        setLoadingTimeout(true);
+        setIsLoading(false);
+        navigate('/auth', { replace: true });
+      }, 1500); // Timeout reduzido para 1.5 segundos
+      
+      return () => clearTimeout(timeoutId);
+    }
+  }, [isLoading, navigate, setIsLoading]);
 
-  if (isLoading) {
+  if (isLoading && !loadingTimeout) {
     return <LoadingScreen />;
   }
 
@@ -54,7 +70,7 @@ const ProtectedRoute = ({
 
 // Helper component to handle route redirection
 const RootRedirect = () => {
-  const { user, profile, isAdmin, isLoading } = useAuth();
+  const { user, profile, isAdmin, isLoading, setIsLoading } = useAuth();
   const navigate = useNavigate();
   const [timeoutExceeded, setTimeoutExceeded] = useState(false);
   
@@ -63,12 +79,13 @@ const RootRedirect = () => {
       if (isLoading && !timeoutExceeded) {
         console.log("RootRedirect: Tempo limite de carregamento excedido, redirecionando para /auth");
         setTimeoutExceeded(true);
+        setIsLoading(false);
         navigate('/auth', { replace: true });
       }
-    }, 2000); // Reduzindo para 2 segundos para melhor experiência
+    }, 1500); // Reduzido para 1.5 segundos
     
     return () => clearTimeout(timeoutId);
-  }, [isLoading, navigate, timeoutExceeded]);
+  }, [isLoading, navigate, timeoutExceeded, setIsLoading]);
   
   if (timeoutExceeded) {
     return null;

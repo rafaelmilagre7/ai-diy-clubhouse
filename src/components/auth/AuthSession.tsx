@@ -4,7 +4,7 @@ import { useAuthSession } from "@/hooks/auth/useAuthSession";
 import AuthErrorDisplay from "@/components/auth/AuthErrorDisplay";
 import LoadingScreen from "@/components/common/LoadingScreen";
 import { useAuth } from "@/contexts/auth";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 /**
  * AuthSession component that handles authentication state changes
@@ -22,19 +22,30 @@ const AuthSession = ({ children }: { children: React.ReactNode }) => {
       setAuthError
     } = useAuthSession();
     
-    const { user, isLoading } = useAuth();
+    const { user, isLoading, setIsLoading } = useAuth();
     const location = useLocation();
+    const navigate = useNavigate();
     const [showLoading, setShowLoading] = useState(true);
 
-    // Start a timeout to prevent infinite loading
+    // Reduzir o tempo de espera antes de tentar recuperação automática
     useEffect(() => {
       let timeoutId: number;
       
       if ((isInitializing || isLoading) && location.pathname !== '/index' && location.pathname !== '/auth') {
         setShowLoading(true);
+        
+        // Reduzir para 1.5 segundos o timeout de carregamento
         timeoutId = window.setTimeout(() => {
+          if (location.pathname === '/' || location.pathname === '/dashboard') {
+            // Verificar se ainda estamos carregando após o timeout
+            if (isLoading || isInitializing) {
+              console.log("AuthSession: Redirecionando para /auth devido ao timeout de carregamento");
+              navigate('/auth', { replace: true });
+              setIsLoading(false);
+            }
+          }
           setShowLoading(false);
-        }, 3000); // 3 segundos para timeout
+        }, 1500);
       } else {
         setShowLoading(false);
       }
@@ -42,7 +53,7 @@ const AuthSession = ({ children }: { children: React.ReactNode }) => {
       return () => {
         if (timeoutId) window.clearTimeout(timeoutId);
       };
-    }, [isInitializing, isLoading, location.pathname]);
+    }, [isInitializing, isLoading, location.pathname, navigate, setIsLoading]);
 
     // Handle retry
     const handleRetry = () => {

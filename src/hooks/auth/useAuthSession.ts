@@ -26,7 +26,7 @@ export const useAuthSession = () => {
   const [isInitializing, setIsInitializing] = useState(true);
   const [authError, setAuthError] = useState<Error | null>(null);
   const [retryCount, setRetryCount] = useState(0);
-  const maxRetries = 3;
+  const maxRetries = 2; // Reduzido de 3 para 2
   
   const { setupAuthSession } = useAuthStateManager();
 
@@ -39,8 +39,6 @@ export const useAuthSession = () => {
     }
 
     const initializeSession = async () => {
-      setIsLoading(true);
-      
       try {
         console.log("Inicializando sessão de autenticação...");
         
@@ -59,12 +57,24 @@ export const useAuthSession = () => {
         setRetryCount(count => count + 1);
         setIsInitializing(false);
       } finally {
+        // Garantir que o estado de carregamento seja desativado
         setIsLoading(false);
       }
     };
     
+    // Definir um timeout para inicialização da sessão
+    const timeoutId = setTimeout(() => {
+      if (isInitializing) {
+        console.log("Tempo limite de inicialização da sessão excedido");
+        setIsInitializing(false);
+        setIsLoading(false);
+      }
+    }, 1500); // 1.5 segundos
+    
     initializeSession();
-  }, [retryCount, setIsLoading, maxRetries, setupAuthSession]);
+    
+    return () => clearTimeout(timeoutId);
+  }, [retryCount, setIsLoading, maxRetries, setupAuthSession, isInitializing]);
 
   return {
     isInitializing,
