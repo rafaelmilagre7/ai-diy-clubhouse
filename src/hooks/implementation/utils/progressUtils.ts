@@ -1,12 +1,10 @@
 
 import { Progress } from "@/lib/supabase";
-import { useToast } from "@/hooks/use-toast";
-import { useLogging } from "@/hooks/useLogging";
 
 /**
  * Calculate progress percentage based on completed modules
  */
-export const calculateProgressPercentage = (completedModules: number[], modulesLength: number): number => {
+export const calculateProgressPercentage = (completedModules: number[], modulesLength: number = 6): number => {
   if (!modulesLength) return 0;
   return Math.min(100, Math.round((completedModules.length / modulesLength) * 100));
 };
@@ -70,13 +68,13 @@ export const validateStepAccess = (
 export const getStepNameByType = (type: string): string => {
   const typeMap: Record<string, string> = {
     "landing": "Visão Geral",
-    "overview": "Visão Geral e Case Real",
-    "preparation": "Preparação Express",
-    "implementation": "Implementação Passo a Passo",
-    "verification": "Verificação de Implementação",
-    "results": "Primeiros Resultados",
-    "optimization": "Otimização Rápida",
-    "celebration": "Celebração e Próximos Passos"
+    "overview": "Visão Geral",
+    "preparation": "Ferramentas",
+    "implementation": "Materiais",
+    "verification": "Vídeos",
+    "results": "Checklist",
+    "optimization": "Conclusão",
+    "celebration": "Conclusão"
   };
   
   return typeMap[type] || type;

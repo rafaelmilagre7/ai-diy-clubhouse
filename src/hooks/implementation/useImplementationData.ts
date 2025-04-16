@@ -51,13 +51,14 @@ export const useImplementationData = () => {
         if (modulesData && modulesData.length > 0) {
           setModules(modulesData as Module[]);
         } else {
-          // Create temporary mock modules if none exist
-          const mockModules = Array(8).fill(0).map((_, idx) => ({
+          // Create temporary mock modules if none exist - use 6 modules instead of 8
+          const moduleTypes = ["landing", "preparation", "implementation", "verification", "results", "celebration"];
+          const mockModules = moduleTypes.map((type, idx) => ({
               id: `mock-${idx}`,
               solution_id: id,
               title: `Module ${idx}`,
               content: {},
-              type: ["landing", "overview", "preparation", "implementation", "verification", "results", "optimization", "celebration"][idx],
+              type: type,
               module_order: idx,
               created_at: new Date().toISOString(),
               updated_at: new Date().toISOString(),

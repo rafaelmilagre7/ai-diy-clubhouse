@@ -12,7 +12,7 @@ export const useProgressTracking = (
   progress: Progress | null, 
   completedModules: number[], 
   setCompletedModules: (modules: number[]) => void,
-  modulesLength: number
+  modulesLength: number = 6
 ) => {
   const { id, moduleIndex } = useParams<{ id: string; moduleIndex: string }>();
   const moduleIdx = parseInt(moduleIndex || "0");

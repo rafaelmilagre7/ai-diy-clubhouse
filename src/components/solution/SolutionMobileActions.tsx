@@ -24,13 +24,13 @@ export const SolutionMobileActions = ({
   return (
     <div className="mt-8 sm:hidden">
       {progress?.is_completed ? (
-        <Button className="w-full bg-green-600 hover:bg-green-700" onClick={() => navigate(`/implement/${solutionId}/7`)}>
+        <Button className="w-full bg-green-600 hover:bg-green-700" onClick={() => navigate(`/implement/${solutionId}/5`)}>
           Solução Implementada com Sucesso!
         </Button>
       ) : progress ? (
         <Button className="w-full" onClick={continueImplementation} disabled={initializing}>
           <PlayCircle className="mr-2 h-5 w-5" />
-          Continuar Implementação ({Math.round((progress.current_module / 8) * 100)}%)
+          Continuar Implementação ({Math.round((progress.current_module / 6) * 100)}%)
         </Button>
       ) : (
         <Button className="w-full" onClick={startImplementation} disabled={initializing}>

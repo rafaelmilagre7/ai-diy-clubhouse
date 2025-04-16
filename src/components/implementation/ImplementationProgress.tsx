@@ -18,22 +18,21 @@ export const ImplementationProgress = ({
   isCompleting 
 }: ImplementationProgressProps) => {
   // Calculate true progress based on completed modules, not just viewed
-  const completionPercentage = Math.round((completedModules.length / totalModules) * 100);
+  const completionPercentage = Math.round((completedModules.length / 6) * 100);
   
   // Find the next module type label based on the current module
   const getNextModuleLabel = () => {
     const moduleTypes = [
       "Visão Geral",
-      "Preparação Express",
-      "Implementação",
-      "Verificação",
-      "Resultados",
-      "Otimização",
-      "Celebração"
+      "Ferramentas",
+      "Materiais",
+      "Vídeos",
+      "Checklist",
+      "Conclusão"
     ];
     
     const nextIndex = currentModule + 1;
-    if (nextIndex >= totalModules) {
+    if (nextIndex >= 6) {
       return "Conclusão";
     }
     
@@ -64,7 +63,7 @@ export const ImplementationProgress = ({
           <Tooltip>
             <TooltipTrigger asChild>
               <span className="text-xs font-medium flex items-center cursor-help">
-                {completedModules.length} de {totalModules} concluídos
+                {completedModules.length} de 6 concluídos
                 <CheckCircle2 className={`h-3 w-3 ml-1 ${completionPercentage === 100 ? 'text-green-500' : 'text-muted-foreground'}`} />
               </span>
             </TooltipTrigger>
@@ -81,8 +80,8 @@ export const ImplementationProgress = ({
       />
       
       <div className="flex justify-between mt-1 text-xs text-muted-foreground">
-        <span>Módulo {currentModule + 1} de {totalModules}</span>
-        <span>{currentModule === totalModules - 1 ? "Conclusão" : `Próximo: ${getNextModuleLabel()}`}</span>
+        <span>Módulo {currentModule + 1} de 6</span>
+        <span>{currentModule === 5 ? "Conclusão" : `Próximo: ${getNextModuleLabel()}`}</span>
       </div>
     </div>
   );

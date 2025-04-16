@@ -1,3 +1,4 @@
+
 import React, { useEffect } from "react";
 import { useModuleImplementation } from "@/hooks/useModuleImplementation";
 import LoadingScreen from "@/components/common/LoadingScreen";
@@ -76,6 +77,9 @@ const SolutionImplementation = () => {
     logError("Error rendering module content", error);
   };
   
+  // Use fixed total of 6 modules
+  const totalModules = 6;
+  
   return (
     <>
       <div className="pb-20 min-h-screen bg-slate-50">
@@ -83,7 +87,7 @@ const SolutionImplementation = () => {
         <ImplementationHeader
           solution={solution}
           moduleIdx={moduleIdx}
-          modulesLength={modules.length}
+          modulesLength={totalModules}
           completedModules={completedModules}
           isCompleting={isCompleting}
         />
@@ -100,7 +104,7 @@ const SolutionImplementation = () => {
         {/* Navigation footer */}
         <ImplementationFooter
           moduleIdx={moduleIdx}
-          modulesLength={modules.length}
+          modulesLength={totalModules}
           completedModules={completedModules}
           handlePrevious={handlePrevious}
           handleComplete={handleComplete}

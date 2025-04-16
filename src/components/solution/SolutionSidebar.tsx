@@ -1,7 +1,7 @@
 
 import { Solution } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
-import { PlayCircle, CheckCircle, Star, Download } from "lucide-react";
+import { PlayCircle, CheckCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 interface SolutionSidebarProps {
@@ -35,16 +35,16 @@ export const SolutionSidebar = ({
             <div>
               <div className="flex justify-between text-sm mb-1">
                 <span>Progresso atual</span>
-                <span className="font-medium">{Math.round((progress.current_module / 8) * 100)}%</span>
+                <span className="font-medium">{Math.round((progress.current_module / 6) * 100)}%</span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2.5">
                 <div 
                   className="bg-blue-600 h-2.5 rounded-full" 
-                  style={{width: `${Math.round((progress.current_module / 8) * 100)}%`}}
+                  style={{width: `${Math.round((progress.current_module / 6) * 100)}%`}}
                 ></div>
               </div>
               <p className="text-sm text-muted-foreground mt-2">
-                Você está no módulo {progress.current_module + 1} de 8
+                Você está no módulo {progress.current_module + 1} de 6
               </p>
             </div>
           )
@@ -60,7 +60,7 @@ export const SolutionSidebar = ({
         {progress?.is_completed ? (
           <Button 
             className="w-full bg-green-600 hover:bg-green-700"
-            onClick={() => navigate(`/implement/${solution.id}/7`)}
+            onClick={() => navigate(`/implement/${solution.id}/5`)}
           >
             <CheckCircle className="mr-2 h-5 w-5" />
             Ver Certificado
@@ -84,23 +84,6 @@ export const SolutionSidebar = ({
             {initializing ? 'Preparando...' : 'Iniciar Implementação'}
           </Button>
         )}
-        
-        <div className="space-y-2 mt-3">
-          <Button variant="outline" className="w-full" onClick={() => {}}>
-            <Star className="mr-2 h-5 w-5" />
-            Adicionar aos Favoritos
-          </Button>
-          
-          <Button 
-            variant="outline" 
-            className="w-full" 
-            onClick={() => {}}
-            disabled={!solution.materials || !Array.isArray(solution.materials) || solution.materials.length === 0}
-          >
-            <Download className="mr-2 h-5 w-5" />
-            Baixar Materiais
-          </Button>
-        </div>
       </div>
       
       <div className="pt-4 border-t">

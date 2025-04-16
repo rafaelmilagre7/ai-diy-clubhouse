@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Module } from "@/lib/supabase";
@@ -51,13 +52,13 @@ export const useModuleImplementation = () => {
     progress, 
     completedModules, 
     setCompletedModules,
-    modules.length
+    6 // Set total modules to 6 instead of calculating from modules.length
   );
   
   // Custom complete handler to mark as completed and navigate
   const handleCompleteAndNavigate = () => {
-    // If this is the last module, show the confirmation modal
-    if (moduleIdx >= modules.length - 1) {
+    // If this is the last module (index 5), show the confirmation modal
+    if (moduleIdx >= 5) {
       setShowConfirmationModal(true);
       return;
     }
