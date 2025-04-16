@@ -6,6 +6,8 @@ import { toast } from '@/hooks/use-toast';
 // Create test user (member or admin)
 export const createTestUser = async (email: string, password: string, role: UserRole): Promise<void> => {
   try {
+    console.log(`Criando/verificando usuário de teste: ${email} com papel ${role}`);
+
     // Check if the user already exists
     const { data: existingUser, error: checkError } = await supabase
       .from('profiles')
@@ -13,8 +15,10 @@ export const createTestUser = async (email: string, password: string, role: User
       .eq('email', email)
       .single();
     
+    let userId: string | undefined = existingUser?.id;
+    
     if (!existingUser) {
-      console.log("Criando novo usuário de teste:", role);
+      console.log(`Criando novo usuário de teste: ${email} (${role})`);
       // Create the user with admin access
       const { data: userData, error: signUpError } = await supabase.auth.signUp({
         email,
@@ -30,11 +34,17 @@ export const createTestUser = async (email: string, password: string, role: User
       });
 
       if (signUpError) throw signUpError;
+      
+      userId = userData.user?.id;
+      
+      console.log(`Usuário criado com ID: ${userId}`);
     } else {
-      console.log("Usuário de teste já existe:", role);
+      console.log(`Usuário de teste já existe: ${email} (${existingUser.role})`);
       
       // Atualizar o perfil com o papel correto se necessário
       if (existingUser.role !== role) {
+        console.log(`Atualizando papel do usuário de ${existingUser.role} para ${role}`);
+        
         const { error: updateError } = await supabase
           .from('profiles')
           .update({ role: role })
@@ -48,7 +58,21 @@ export const createTestUser = async (email: string, password: string, role: User
       }
     }
 
+    // Garantir que temos role metadata correta
+    if (userId) {
+      const { error: updateUserError } = await supabase.auth.updateUser({
+        data: { role: role }
+      });
+      
+      if (updateUserError) {
+        console.error("Erro ao atualizar metadata do usuário:", updateUserError);
+      } else {
+        console.log(`Metadata do usuário atualizada com papel: ${role}`);
+      }
+    }
+
     // Login with the created user
+    console.log(`Fazendo login com ${email} (${role})`);
     const { error: signInError } = await supabase.auth.signInWithPassword({
       email,
       password
@@ -86,6 +110,7 @@ export const createTestUser = async (email: string, password: string, role: User
 
 // Sign in as test member
 export const signInAsTestMember = async (): Promise<void> => {
+  console.log("Tentando login como membro de teste");
   try {
     // Try to sign in directly first
     const { data, error } = await supabase.auth.signInWithPassword({
@@ -102,6 +127,40 @@ export const signInAsTestMember = async (): Promise<void> => {
         throw error;
       }
     } else {
+      console.log("Login bem-sucedido como membro");
+      
+      // Garante que o perfil tem o papel 'member'
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', data.user?.id)
+        .single();
+        
+      if (!profileError && profileData && profileData.role !== 'member') {
+        console.log("Corrigindo papel para member, estava como:", profileData.role);
+        
+        // Atualiza o papel para member se necessário
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update({ role: 'member' })
+          .eq('id', data.user?.id);
+          
+        if (updateError) {
+          console.error('Erro ao atualizar papel para member:', updateError);
+        } else {
+          console.log('Papel atualizado para member com sucesso');
+        }
+      }
+      
+      // Atualiza os metadados do usuário também
+      const { error: updateUserError } = await supabase.auth.updateUser({
+        data: { role: 'member' }
+      });
+      
+      if (updateUserError) {
+        console.error("Erro ao atualizar metadata do usuário:", updateUserError);
+      }
+      
       toast({
         title: 'Login como Membro',
         description: 'Você está logado como usuário membro de teste.',
@@ -120,6 +179,7 @@ export const signInAsTestMember = async (): Promise<void> => {
 
 // Sign in as test admin
 export const signInAsTestAdmin = async (): Promise<void> => {
+  console.log("Tentando login como admin de teste");
   try {
     // Try to sign in directly first
     const { data, error } = await supabase.auth.signInWithPassword({
@@ -136,6 +196,8 @@ export const signInAsTestAdmin = async (): Promise<void> => {
         throw error;
       }
     } else {
+      console.log("Login bem-sucedido como admin");
+      
       // Se o login foi bem-sucedido, verifica se o perfil tem o papel correto
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
@@ -144,6 +206,8 @@ export const signInAsTestAdmin = async (): Promise<void> => {
         .single();
         
       if (!profileError && profileData && profileData.role !== 'admin') {
+        console.log("Corrigindo papel para admin, estava como:", profileData.role);
+        
         // Atualiza o papel para admin se necessário
         const { error: updateError } = await supabase
           .from('profiles')
@@ -155,6 +219,15 @@ export const signInAsTestAdmin = async (): Promise<void> => {
         } else {
           console.log('Papel atualizado para admin com sucesso');
         }
+      }
+      
+      // Atualiza os metadados do usuário também
+      const { error: updateUserError } = await supabase.auth.updateUser({
+        data: { role: 'admin' }
+      });
+      
+      if (updateUserError) {
+        console.error("Erro ao atualizar metadata do usuário:", updateUserError);
       }
       
       toast({

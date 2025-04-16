@@ -57,16 +57,46 @@ export const useAuthSession = () => {
               );
             }
             
-            console.log("Perfil carregado:", profile);
+            console.log("Perfil carregado com papel:", profile?.role);
+            
+            // Verificação adicional da role - se for admin@teste.com, garantir que a role seja admin
+            if (profile && session.user.email) {
+              const shouldBeAdmin = session.user.email === 'admin@teste.com' || 
+                                   session.user.email === 'admin@viverdeia.ai' || 
+                                   session.user.email?.endsWith('@viverdeia.ai');
+                                   
+              if (shouldBeAdmin && profile.role !== 'admin') {
+                console.log("Corrigindo papel para admin, estava como:", profile.role);
+                profile.role = 'admin';
+              }
+              
+              const shouldBeMember = session.user.email === 'membro@teste.com' || 
+                                   (!session.user.email.endsWith('@viverdeia.ai') &&
+                                    session.user.email !== 'admin@teste.com' &&
+                                    session.user.email !== 'admin@viverdeia.ai');
+                                   
+              if (shouldBeMember && profile.role !== 'member') {
+                console.log("Corrigindo papel para member, estava como:", profile.role);
+                profile.role = 'member';
+              }
+            }
+            
             setProfile(profile);
+            console.log("Perfil final carregado com papel:", profile?.role);
           } catch (profileError) {
             // Apenas log, não falha completamente
             console.error("Erro ao buscar/criar perfil:", profileError);
             
             // Como fallback, crie um perfil temporário na memória
-            // Verificar se o email inclui admin para definir a role corretamente
-            const isAdminEmail = session.user.email?.includes('admin') || session.user.email?.includes('viverdeia.ai');
-            const userRole: UserRole = isAdminEmail ? 'admin' : 'member';
+            let userRole: UserRole = 'member';
+            
+            if (session.user.email) {
+              const isAdminEmail = session.user.email === 'admin@teste.com' || 
+                                  session.user.email === 'admin@viverdeia.ai' || 
+                                  session.user.email?.endsWith('@viverdeia.ai');
+                                  
+              userRole = isAdminEmail ? 'admin' : 'member';
+            }
             
             console.log("Criando perfil temporário com role:", userRole);
             
@@ -82,6 +112,7 @@ export const useAuthSession = () => {
             };
             
             setProfile(tempProfile);
+            console.log("Perfil temporário criado com papel:", tempProfile.role);
           }
         } else {
           console.log("Nenhuma sessão ativa encontrada");
@@ -98,7 +129,7 @@ export const useAuthSession = () => {
             if (newSession?.user) {
               try {
                 // Tentar buscar ou criar perfil ao mudar de estado
-                console.log("Buscando perfil para usuário:", newSession.user.id);
+                console.log("Buscando perfil para usuário após evento auth:", newSession.user.id);
                 let profile = await fetchUserProfile(newSession.user.id);
                 
                 if (!profile) {
@@ -109,14 +140,44 @@ export const useAuthSession = () => {
                   );
                 }
                 
-                console.log("Perfil carregado após evento de auth:", profile);
-                setProfile(profile);
-              } catch (profileError) {
-                console.error("Erro ao buscar/criar perfil:", profileError);
+                console.log("Perfil carregado após evento de auth com papel:", profile?.role);
                 
-                // Verificar se o email inclui admin para definir a role corretamente
-                const isAdminEmail = newSession.user.email?.includes('admin') || newSession.user.email?.includes('viverdeia.ai');
-                const userRole: UserRole = isAdminEmail ? 'admin' : 'member';
+                // Verificação adicional da role após evento de autenticação
+                if (profile && newSession.user.email) {
+                  const shouldBeAdmin = newSession.user.email === 'admin@teste.com' || 
+                                       newSession.user.email === 'admin@viverdeia.ai' || 
+                                       newSession.user.email?.endsWith('@viverdeia.ai');
+                                       
+                  if (shouldBeAdmin && profile.role !== 'admin') {
+                    console.log("Corrigindo papel para admin após evento, estava como:", profile.role);
+                    profile.role = 'admin';
+                  }
+                  
+                  const shouldBeMember = newSession.user.email === 'membro@teste.com' || 
+                                       (!newSession.user.email.endsWith('@viverdeia.ai') &&
+                                        newSession.user.email !== 'admin@teste.com' &&
+                                        newSession.user.email !== 'admin@viverdeia.ai');
+                                       
+                  if (shouldBeMember && profile.role !== 'member') {
+                    console.log("Corrigindo papel para member após evento, estava como:", profile.role);
+                    profile.role = 'member';
+                  }
+                }
+                
+                setProfile(profile);
+                console.log("Perfil final após evento com papel:", profile?.role);
+              } catch (profileError) {
+                console.error("Erro ao buscar/criar perfil após evento:", profileError);
+                
+                let userRole: UserRole = 'member';
+                
+                if (newSession.user.email) {
+                  const isAdminEmail = newSession.user.email === 'admin@teste.com' || 
+                                      newSession.user.email === 'admin@viverdeia.ai' || 
+                                      newSession.user.email?.endsWith('@viverdeia.ai');
+                                      
+                  userRole = isAdminEmail ? 'admin' : 'member';
+                }
                 
                 console.log("Criando perfil temporário com role após evento:", userRole);
                 
@@ -133,6 +194,7 @@ export const useAuthSession = () => {
                 };
                 
                 setProfile(tempProfile);
+                console.log("Perfil temporário após evento com papel:", tempProfile.role);
               }
             } else {
               setProfile(null);

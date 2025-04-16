@@ -21,6 +21,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   
   console.log("AuthProvider: Perfil de usuário carregado", { 
     profileId: profile?.id,
+    email: profile?.email,
     role: profile?.role,
     isAdmin: profile?.role === 'admin'
   });

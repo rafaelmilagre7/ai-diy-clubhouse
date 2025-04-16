@@ -48,11 +48,10 @@ export const createUserProfileIfNeeded = async (
   name: string = 'Usuário'
 ): Promise<UserProfile | null> => {
   try {
-    // Tenta criar o perfil diretamente, sem verificar primeiro
-    // Isso ajuda a evitar problemas com políticas RLS
-    const isAdmin = email.endsWith('@viverdeia.ai') || 
-                    email === 'admin@teste.com' ||
-                    email === 'admin@viverdeia.ai';
+    // Determinar o papel correto com base no email
+    const isAdmin = email === 'admin@teste.com' || 
+                    email === 'admin@viverdeia.ai' || 
+                    email.endsWith('@viverdeia.ai');
     
     const userRole: UserRole = isAdmin ? 'admin' : 'member';
     
@@ -97,9 +96,9 @@ export const createUserProfileIfNeeded = async (
   } catch (error) {
     console.error('Erro inesperado ao criar perfil:', error);
     // Retorne um perfil mínimo em caso de erro para não bloquear a aplicação
-    const isAdmin = email.endsWith('@viverdeia.ai') || 
-                    email === 'admin@teste.com' ||
-                    email === 'admin@viverdeia.ai';
+    const isAdmin = email === 'admin@teste.com' || 
+                    email === 'admin@viverdeia.ai' || 
+                    email.endsWith('@viverdeia.ai');
     
     const userRole: UserRole = isAdmin ? 'admin' : 'member';
     

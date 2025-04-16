@@ -41,11 +41,15 @@ const ProtectedRoute = ({
   }
 
   if (!user) {
+    console.log("ProtectedRoute: Usuário não autenticado, redirecionando para login");
     return <Navigate to="/login" replace />;
   }
 
   if (requireAdmin && !isAdmin) {
-    console.log("Tentativa de acesso à área admin por não-admin, redirecionando", { isAdmin });
+    console.log("ProtectedRoute: Tentativa de acesso à área admin por não-admin, redirecionando", { 
+      isAdmin,
+      role: isAdmin ? 'admin' : 'member' 
+    });
     return <Navigate to="/dashboard" replace />;
   }
 
@@ -61,6 +65,7 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
   }
 
   if (user) {
+    console.log("PublicRoute: Usuário já autenticado, redirecionando para home");
     return <Navigate to="/" replace />;
   }
 
@@ -137,15 +142,26 @@ const RootRedirect = () => {
   }
   
   if (!user) {
+    console.log("RootRedirect: Usuário não autenticado, redirecionando para login");
     return <Navigate to="/login" replace />;
   }
   
-  // Ensure we redirect based on the profile role, not just the isAdmin calculation
-  const role = profile?.role;
-  const homePath = role === 'admin' ? "/admin" : "/dashboard";
+  // Verificação de segurança para garantir que o redirecionamento use o papel correto
+  let homePath = '/dashboard'; // Default para usuários normais
+  
+  if (profile) {
+    if (profile.role === 'admin') {
+      homePath = '/admin';
+    } else {
+      homePath = '/dashboard';
+    }
+  } else {
+    // Se não tivermos perfil, usamos o isAdmin calculado como fallback
+    homePath = isAdmin ? '/admin' : '/dashboard';
+  }
   
   console.log("RootRedirect: redirecionando usuário para", homePath, { 
-    role,
+    role: profile?.role,
     isAdmin, 
     userId: user.id
   });

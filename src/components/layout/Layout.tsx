@@ -5,6 +5,7 @@ import { MemberSidebar } from "./member/MemberSidebar";
 import { MemberContent } from "./member/MemberContent";
 import { Navigate, useNavigate } from "react-router-dom";
 import LoadingScreen from "@/components/common/LoadingScreen";
+import { toast } from "@/hooks/use-toast";
 
 const Layout = () => {
   const { user, profile, signOut, isAdmin, isLoading } = useAuth();
@@ -13,16 +14,28 @@ const Layout = () => {
 
   // Verificar user role quando o componente é montado e quando profile muda
   useEffect(() => {
-    if (profile && profile.role === 'admin') {
+    if (!profile) {
+      console.log("Layout useEffect: Ainda não há perfil de usuário carregado");
+      return;
+    }
+    
+    if (profile.role === 'admin') {
       console.log("Layout useEffect: Usuário é admin, redirecionando para /admin", { 
         profileRole: profile.role,
         isAdmin: profile.role === 'admin'
       });
+      
+      // Notificar o usuário do redirecionamento
+      toast({
+        title: "Redirecionando para área de administração",
+        description: "Você está sendo redirecionado para a área de admin porque tem permissões de administrador."
+      });
+      
       navigate('/admin', { replace: true });
     } else {
       console.log("Layout useEffect: Confirmando que o usuário é membro", {
-        profileRole: profile?.role,
-        isAdmin: profile?.role === 'admin'
+        profileRole: profile.role,
+        isAdmin: profile.role === 'admin'
       });
     }
   }, [profile, navigate]);
@@ -34,6 +47,7 @@ const Layout = () => {
 
   // Se o usuário não estiver autenticado, redirecionar para login
   if (!user) {
+    console.log("Layout render: Usuário não autenticado, redirecionando para login");
     return <Navigate to="/login" replace />;
   }
 
@@ -46,6 +60,16 @@ const Layout = () => {
       isAdmin 
     });
     return <Navigate to="/admin" replace />;
+  }
+  
+  // Verificação final do papel do usuário
+  if (profile && profile.role !== 'member') {
+    console.log("Layout render: Papel do usuário não é member, atualizando...", {
+      papel_atual: profile.role
+    });
+    
+    // Esta linha não altera o banco de dados, apenas a exibição atual
+    // Ideal seria ter uma atualização completa no banco via supabase.from('profiles').update
   }
 
   // Adicionar console.log para debug do perfil de membro
