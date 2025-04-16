@@ -43,7 +43,7 @@ export const ModuleContentChecklist = ({ module }: ModuleContentChecklistProps) 
         // Check if checklist property exists and is an array
         if (solutionData.checklist && Array.isArray(solutionData.checklist)) {
           // Transform items to ensure they have the required properties
-          const transformedChecklist = solutionData.checklist.map((item: any) => ({
+          const transformedChecklist: ChecklistItem[] = solutionData.checklist.map((item: any) => ({
             title: item.title || "Item sem título",
             description: item.description,
             checked: item.checked || false

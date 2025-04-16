@@ -4,6 +4,7 @@ import { Module } from "@/lib/supabase";
 import { LandingModule } from "./LandingModule";
 import { CelebrationModule } from "./CelebrationModule";
 import { DefaultModule } from "./DefaultModule";
+import { shouldAutoComplete } from "./content/ContentManager";
 
 interface ModuleContentProps {
   module: Module | null;
@@ -13,7 +14,7 @@ interface ModuleContentProps {
 export const ModuleContent = ({ module, onComplete }: ModuleContentProps) => {
   // Mark landing and celebration modules as automatically interacted with
   useEffect(() => {
-    if (module && (module.type === "landing" || module.type === "celebration")) {
+    if (module && shouldAutoComplete(module)) {
       onComplete();
     }
   }, [module, onComplete]);

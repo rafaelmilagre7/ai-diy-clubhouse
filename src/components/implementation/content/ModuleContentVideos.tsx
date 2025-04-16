@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { Module, Solution, supabase } from "@/lib/supabase";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -40,7 +41,14 @@ export const ModuleContentVideos = ({ module }: ModuleContentVideosProps) => {
         
         // Check if videos property exists and is an array
         if (solutionData.videos && Array.isArray(solutionData.videos)) {
-          setVideos(solutionData.videos);
+          // Ensure each video has a title property to satisfy TypeScript
+          const processedVideos: Video[] = solutionData.videos.map((video: any) => ({
+            title: video.title || `Vídeo sem título`,
+            description: video.description,
+            url: video.url,
+            youtube_id: video.youtube_id
+          }));
+          setVideos(processedVideos);
         } else {
           console.warn("Videos property is missing or not an array", solutionData);
           setVideos([]);
