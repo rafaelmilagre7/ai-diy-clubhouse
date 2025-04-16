@@ -27,6 +27,7 @@ export const fetchUserProfile = async (userId: string): Promise<UserProfile | nu
       return null;
     }
     
+    console.log('Perfil encontrado:', data);
     return data as UserProfile;
   } catch (error) {
     console.error('Unexpected error fetching profile:', error);
@@ -96,7 +97,11 @@ export const createUserProfileIfNeeded = async (
   } catch (error) {
     console.error('Erro inesperado ao criar perfil:', error);
     // Retorne um perfil mínimo em caso de erro para não bloquear a aplicação
-    const userRole: UserRole = email.includes('admin') ? 'admin' : 'member';
+    const isAdmin = email.endsWith('@viverdeia.ai') || 
+                    email === 'admin@teste.com' ||
+                    email === 'admin@viverdeia.ai';
+    
+    const userRole: UserRole = isAdmin ? 'admin' : 'member';
     
     return {
       id: userId,

@@ -130,7 +130,7 @@ const App = () => {
 
 // Helper component to handle route redirection
 const RootRedirect = () => {
-  const { user, isAdmin, isLoading } = useAuth();
+  const { user, profile, isAdmin, isLoading } = useAuth();
   
   if (isLoading) {
     return <LoadingScreen />;
@@ -140,11 +140,12 @@ const RootRedirect = () => {
     return <Navigate to="/login" replace />;
   }
   
-  // If user is logged in and is admin, redirect to admin dashboard
-  // Otherwise, redirect to member dashboard
-  const homePath = isAdmin ? "/admin" : "/dashboard";
+  // Ensure we redirect based on the profile role, not just the isAdmin calculation
+  const role = profile?.role;
+  const homePath = role === 'admin' ? "/admin" : "/dashboard";
   
   console.log("RootRedirect: redirecionando usuário para", homePath, { 
+    role,
     isAdmin, 
     userId: user.id
   });

@@ -1,14 +1,31 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/auth";
 import { MemberSidebar } from "./member/MemberSidebar";
 import { MemberContent } from "./member/MemberContent";
-import { Navigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import LoadingScreen from "@/components/common/LoadingScreen";
 
 const Layout = () => {
   const { user, profile, signOut, isAdmin, isLoading } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const navigate = useNavigate();
+
+  // Verificar user role quando o componente é montado e quando profile muda
+  useEffect(() => {
+    if (profile && profile.role === 'admin') {
+      console.log("Layout useEffect: Usuário é admin, redirecionando para /admin", { 
+        profileRole: profile.role,
+        isAdmin: profile.role === 'admin'
+      });
+      navigate('/admin', { replace: true });
+    } else {
+      console.log("Layout useEffect: Confirmando que o usuário é membro", {
+        profileRole: profile?.role,
+        isAdmin: profile?.role === 'admin'
+      });
+    }
+  }, [profile, navigate]);
 
   // Mostrar tela de carregamento enquanto verifica a sessão
   if (isLoading) {
@@ -21,9 +38,10 @@ const Layout = () => {
   }
 
   // Se o usuário for admin, redirecionar para o layout admin
+  // (isso é feito também no useEffect, mas mantemos aqui como dupla segurança)
   if (isAdmin) {
     // Adicionar console.log para debug
-    console.log("Usuário é admin, redirecionando para /admin", { 
+    console.log("Layout render: Usuário é admin, redirecionando para /admin", { 
       profileRole: profile?.role, 
       isAdmin 
     });
@@ -31,7 +49,7 @@ const Layout = () => {
   }
 
   // Adicionar console.log para debug do perfil de membro
-  console.log("Usuário é membro, permanecendo na área de membro", { 
+  console.log("Layout render: Usuário é membro, permanecendo na área de membro", { 
     profileRole: profile?.role, 
     isAdmin 
   });
