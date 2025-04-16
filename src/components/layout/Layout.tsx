@@ -4,6 +4,7 @@ import { useAuth } from "@/contexts/auth";
 import { MemberSidebar } from "./member/MemberSidebar";
 import { MemberContent } from "./member/MemberContent";
 import { Navigate } from "react-router-dom";
+import LoadingScreen from "@/components/common/LoadingScreen";
 
 const Layout = () => {
   const { user, profile, signOut, isAdmin, isLoading } = useAuth();
@@ -11,7 +12,7 @@ const Layout = () => {
 
   // Mostrar tela de carregamento enquanto verifica a sessão
   if (isLoading) {
-    return <div className="flex items-center justify-center min-h-screen">Carregando...</div>;
+    return <LoadingScreen />;
   }
 
   // Se o usuário não estiver autenticado, redirecionar para login

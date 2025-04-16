@@ -3,22 +3,26 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
 import { useEffect, useState } from "react";
 import LoadingScreen from "@/components/common/LoadingScreen";
-import { useSolutionsData } from "@/hooks/useSolutionsData";
+import { supabase, Solution } from "@/lib/supabase";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { ArrowRight, Clock, Search, CheckCircle, TrendingUp } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 const Dashboard = () => {
   const { profile } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [searchParams] = useSearchParams();
   const categoryParam = searchParams.get("category") || "all";
   const [searchQuery, setSearchQuery] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [solutions, setSolutions] = useState<Solution[]>([]);
+  const [userProgress, setUserProgress] = useState<any[]>([]);
   
-  // Dados mockados para demonstração
   const solutionCategories = [
     { id: "all", name: "Todas as Soluções" },
     { id: "revenue", name: "Aumento de Receita" },
@@ -26,69 +30,59 @@ const Dashboard = () => {
     { id: "strategy", name: "Gestão Estratégica" }
   ];
   
-  const mockSolutions = [
-    {
-      id: "1",
-      title: "Assistente de Vendas no Instagram",
-      description: "Crie um assistente virtual para responder perguntas e aumentar vendas no Instagram",
-      category: "revenue",
-      difficulty: "iniciante",
-      implementationTime: "30 min",
-      image: "https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8aW5zdGFncmFtfGVufDB8fDB8fHww"
-    },
-    {
-      id: "2",
-      title: "Automação de Atendimento ao Cliente",
-      description: "Implemente um sistema automatizado para responder dúvidas frequentes",
-      category: "operational",
-      difficulty: "intermediário",
-      implementationTime: "45 min",
-      image: "https://images.unsplash.com/photo-1560472355-536de3962603?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTh8fGN1c3RvbWVyJTIwc2VydmljZXxlbnwwfHwwfHx8MA%3D%3D"
-    },
-    {
-      id: "3",
-      title: "Análise Preditiva de Vendas",
-      description: "Use IA para prever tendências de vendas e otimizar seu estoque",
-      category: "strategy",
-      difficulty: "avançado",
-      implementationTime: "60 min",
-      image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8Y2hhcnR8ZW58MHx8MHx8fDA%3D"
-    },
-    {
-      id: "4",
-      title: "Gerador de Conteúdo para Redes Sociais",
-      description: "Crie conteúdo engajador para suas redes sociais em minutos",
-      category: "revenue",
-      difficulty: "iniciante",
-      implementationTime: "20 min",
-      image: "https://images.unsplash.com/photo-1611162616305-c69b3fa7fbe0?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8c29jaWFsJTIwbWVkaWF8ZW58MHx8MHx8fDA%3D"
-    },
-    {
-      id: "5",
-      title: "Assistente de Pesquisa de Mercado",
-      description: "Obtenha insights valiosos sobre seu mercado e concorrentes",
-      category: "strategy",
-      difficulty: "intermediário",
-      implementationTime: "40 min",
-      image: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8bWFya2V0JTIwcmVzZWFyY2h8ZW58MHx8MHx8fDA%3D"
-    },
-    {
-      id: "6",
-      title: "Otimização de Processos Internos",
-      description: "Automatize fluxos de trabalho repetitivos e ganhe produtividade",
-      category: "operational",
-      difficulty: "avançado",
-      implementationTime: "50 min",
-      image: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8cHJvY2Vzc3xlbnwwfHwwfHx8MA%3D%3D"
-    }
-  ];
-  
-  const [filteredSolutions, setFilteredSolutions] = useState(mockSolutions);
+  const [filteredSolutions, setFilteredSolutions] = useState<Solution[]>([]);
   const [activeCategory, setActiveCategory] = useState(categoryParam);
   
-  // Filtrar soluções por categoria e busca
+  // Fetch solutions and user progress
   useEffect(() => {
-    let filtered = [...mockSolutions];
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        
+        // Fetch published solutions
+        const { data: solutionsData, error: solutionsError } = await supabase
+          .from("solutions")
+          .select("*")
+          .eq("published", true)
+          .order("created_at", { ascending: false });
+        
+        if (solutionsError) {
+          throw solutionsError;
+        }
+        
+        setSolutions(solutionsData || []);
+        
+        // Fetch user progress
+        const { data: progressData, error: progressError } = await supabase
+          .from("progress")
+          .select("*")
+          .eq("user_id", profile?.id || '');
+        
+        if (progressError) {
+          console.error("Error fetching progress:", progressError);
+        } else {
+          setUserProgress(progressData || []);
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        toast({
+          title: "Erro ao carregar dados",
+          description: "Não foi possível carregar as soluções. Tente novamente mais tarde.",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    if (profile?.id) {
+      fetchData();
+    }
+  }, [profile?.id, toast]);
+  
+  // Filter solutions by category and search
+  useEffect(() => {
+    let filtered = [...solutions];
     
     if (activeCategory !== "all") {
       filtered = filtered.filter(solution => solution.category === activeCategory);
@@ -104,14 +98,14 @@ const Dashboard = () => {
     }
     
     setFilteredSolutions(filtered);
-  }, [activeCategory, searchQuery]);
+  }, [activeCategory, searchQuery, solutions]);
   
-  // Atualizar categoria ativa quando o parâmetro da URL mudar
-  useEffect(() => {
-    if (categoryParam) {
-      setActiveCategory(categoryParam);
-    }
-  }, [categoryParam]);
+  // Calculate statistics for progress overview
+  const completedCount = userProgress.filter(p => p.is_completed).length;
+  const inProgressCount = userProgress.filter(p => !p.is_completed).length;
+  const progressPercentage = solutions.length > 0 
+    ? Math.round((completedCount / solutions.length) * 100) 
+    : 0;
   
   const handleSelectSolution = (id: string) => {
     navigate(`/dashboard/solution/${id}`);
@@ -119,16 +113,33 @@ const Dashboard = () => {
   
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
-      case "iniciante":
+      case "easy":
         return "bg-green-100 text-green-800";
-      case "intermediário":
+      case "medium":
         return "bg-yellow-100 text-yellow-800";
-      case "avançado":
+      case "advanced":
         return "bg-red-100 text-red-800";
       default:
         return "bg-gray-100 text-gray-800";
     }
   };
+  
+  const getDifficultyLabel = (difficulty: string) => {
+    switch (difficulty) {
+      case "easy":
+        return "Iniciante";
+      case "medium":
+        return "Intermediário";
+      case "advanced":
+        return "Avançado";
+      default:
+        return difficulty;
+    }
+  };
+  
+  if (loading) {
+    return <LoadingScreen />;
+  }
   
   return (
     <div className="space-y-6">
@@ -163,7 +174,7 @@ const Dashboard = () => {
               </div>
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Implementações Completas</p>
-                <p className="text-2xl font-bold">2 de 6</p>
+                <p className="text-2xl font-bold">{completedCount} de {solutions.length}</p>
               </div>
             </div>
           </CardContent>
@@ -176,8 +187,8 @@ const Dashboard = () => {
                 <Clock className="h-6 w-6 text-[#0ABAB5]" />
               </div>
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Próxima Implementação</p>
-                <p className="text-2xl font-bold">Em andamento</p>
+                <p className="text-sm font-medium text-muted-foreground">Em Andamento</p>
+                <p className="text-2xl font-bold">{inProgressCount} soluções</p>
               </div>
             </div>
           </CardContent>
@@ -191,7 +202,7 @@ const Dashboard = () => {
               </div>
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Seu Progresso</p>
-                <p className="text-2xl font-bold">33%</p>
+                <p className="text-2xl font-bold">{progressPercentage}%</p>
               </div>
             </div>
           </CardContent>
@@ -212,41 +223,44 @@ const Dashboard = () => {
           <TabsContent value={activeCategory} className="mt-6">
             {filteredSolutions.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredSolutions.map((solution) => (
-                  <Card key={solution.id} className="overflow-hidden transition-shadow hover:shadow-md">
-                    <div className="aspect-video w-full overflow-hidden">
-                      <img 
-                        src={solution.image} 
-                        alt={solution.title} 
-                        className="h-full w-full object-cover" 
-                      />
-                    </div>
-                    <CardHeader>
-                      <div className="flex items-center justify-between">
-                        <Badge className={getDifficultyColor(solution.difficulty)}>
-                          {solution.difficulty}
-                        </Badge>
-                        <div className="flex items-center text-sm text-muted-foreground">
-                          <Clock className="mr-1 h-4 w-4" />
-                          <span>{solution.implementationTime}</span>
-                        </div>
+                {filteredSolutions.map((solution) => {
+                  const progress = userProgress.find(p => p.solution_id === solution.id);
+                  return (
+                    <Card key={solution.id} className="overflow-hidden transition-shadow hover:shadow-md">
+                      <div className="aspect-video w-full overflow-hidden">
+                        <img 
+                          src={solution.thumbnail_url || "https://images.unsplash.com/photo-1677442135136-760c813098b6?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OHx8YWklMjBpbWFnZXxlbnwwfHwwfHx8MA%3D%3D"} 
+                          alt={solution.title} 
+                          className="h-full w-full object-cover" 
+                        />
                       </div>
-                      <CardTitle className="mt-2 line-clamp-1">{solution.title}</CardTitle>
-                      <CardDescription className="line-clamp-2">
-                        {solution.description}
-                      </CardDescription>
-                    </CardHeader>
-                    <CardFooter>
-                      <Button 
-                        onClick={() => handleSelectSolution(solution.id)}
-                        className="w-full bg-[#0ABAB5] hover:bg-[#0ABAB5]/90"
-                      >
-                        Implementar
-                        <ArrowRight className="ml-2 h-4 w-4" />
-                      </Button>
-                    </CardFooter>
-                  </Card>
-                ))}
+                      <CardHeader>
+                        <div className="flex items-center justify-between">
+                          <Badge className={getDifficultyColor(solution.difficulty)}>
+                            {getDifficultyLabel(solution.difficulty)}
+                          </Badge>
+                          <div className="flex items-center text-sm text-muted-foreground">
+                            <Clock className="mr-1 h-4 w-4" />
+                            <span>{solution.estimated_time || 30} min</span>
+                          </div>
+                        </div>
+                        <CardTitle className="mt-2 line-clamp-1">{solution.title}</CardTitle>
+                        <CardDescription className="line-clamp-2">
+                          {solution.description}
+                        </CardDescription>
+                      </CardHeader>
+                      <CardFooter>
+                        <Button 
+                          onClick={() => handleSelectSolution(solution.id)}
+                          className="w-full bg-[#0ABAB5] hover:bg-[#0ABAB5]/90"
+                        >
+                          {progress?.is_completed ? 'Ver Detalhes' : (progress ? 'Continuar' : 'Implementar')}
+                          <ArrowRight className="ml-2 h-4 w-4" />
+                        </Button>
+                      </CardFooter>
+                    </Card>
+                  );
+                })}
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center py-12">

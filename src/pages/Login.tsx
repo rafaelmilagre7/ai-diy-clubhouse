@@ -2,51 +2,24 @@
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/auth";
 import { FcGoogle } from "react-icons/fc";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, Info } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 import { Link } from "react-router-dom";
-import { supabase } from "@/lib/supabase";
 
 const Login = () => {
   const { signIn, signInAsMember, signInAsAdmin } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [currentUrl, setCurrentUrl] = useState<string>("");
-  const [authDetails, setAuthDetails] = useState<{provider: string, redirectUrl: string} | null>(null);
-  const [authProviders, setAuthProviders] = useState<string[]>([]);
-
-  // Capture current URL for debugging
-  useEffect(() => {
-    setCurrentUrl(window.location.href);
-    
-    // Check which authentication providers are configured
-    const checkAuthProviders = async () => {
-      try {
-        const { data, error } = await supabase.auth.getUser();
-        if (!error) {
-          setAuthProviders(["email"]);
-        }
-      } catch (err) {
-        console.error("Erro ao verificar provedores de autenticação:", err);
-      }
-    };
-    
-    checkAuthProviders();
-  }, []);
-
+  
   const handleSignIn = async () => {
     try {
       setIsLoading(true);
       setError(null);
-      setAuthDetails({
-        provider: 'google',
-        redirectUrl: `${window.location.origin}`
-      });
       await signIn();
     } catch (err) {
       console.error("Erro ao fazer login:", err);
-      setError("Ocorreu um erro durante o login. Verifique se as configurações do Supabase estão corretas.");
+      setError("Ocorreu um erro durante o login. Por favor, tente novamente.");
     } finally {
       setIsLoading(false);
     }
@@ -75,7 +48,7 @@ const Login = () => {
             alt="VIVER DE IA Club"
           />
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Plataforma DIY
+            VIVER DE IA Club
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
             Implemente soluções de IA com autonomia e sucesso
@@ -86,16 +59,6 @@ const Login = () => {
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
-        
-        {authDetails && (
-          <Alert variant="default" className="bg-blue-50 border-blue-200">
-            <Info className="h-4 w-4 text-blue-500" />
-            <AlertDescription className="text-blue-700">
-              <p><strong>Tentativa de login:</strong> {authDetails.provider}</p>
-              <p><strong>URL de redirecionamento:</strong> {authDetails.redirectUrl}</p>
-            </AlertDescription>
           </Alert>
         )}
         
@@ -153,27 +116,6 @@ const Login = () => {
               >
                 Conheça o Club
               </a>
-            </p>
-          </div>
-          
-          <div className="text-center text-xs text-gray-400 mt-4">
-            <div className="p-3 bg-gray-100 rounded-md">
-              <p className="font-medium">Informações de configuração:</p>
-              <p className="break-all mt-1">
-                URL atual: {currentUrl}
-              </p>
-              <p className="break-all mt-1">
-                Origem: {window.location.origin}
-              </p>
-              <p className="mt-1 text-xs">
-                ⚠️ Adicione essas URLs como URLs de Redirecionamento no Supabase
-              </p>
-              <p className="mt-2 text-xs">
-                Provedores de autenticação ativos: {authProviders.join(', ') || 'Nenhum detectado'}
-              </p>
-            </div>
-            <p className="mt-4">
-              Para fins de teste, desative a confirmação de email no Supabase.
             </p>
           </div>
         </div>

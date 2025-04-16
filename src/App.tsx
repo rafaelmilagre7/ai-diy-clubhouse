@@ -25,8 +25,6 @@ import UserManagement from "@/pages/admin/UserManagement";
 import NotFound from "@/pages/NotFound";
 import Index from "@/pages/Index";
 
-const queryClient = new QueryClient();
-
 // Route guard for authenticated routes
 const ProtectedRoute = ({ 
   children, 
@@ -35,7 +33,7 @@ const ProtectedRoute = ({
   children: React.ReactNode;
   requireAdmin?: boolean;
 }) => {
-  const { user, profile, isAdmin, isLoading } = useAuth();
+  const { user, isAdmin, isLoading } = useAuth();
 
   if (isLoading) {
     return <LoadingScreen />;
@@ -67,7 +65,6 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
-// Move AppRoutes inside App to ensure it has access to AuthProvider
 const App = () => {
   const queryClient = new QueryClient();
 
@@ -90,7 +87,7 @@ const App = () => {
                 <Route path="/index" element={<Index />} />
 
                 {/* Root redirect */}
-                <Route path="/" element={<AppRoutes />} />
+                <Route path="/" element={<RootRedirect />} />
 
                 {/* Member routes - within Layout */}
                 <Route path="/dashboard" element={
@@ -130,11 +127,15 @@ const App = () => {
 };
 
 // Helper component to handle route redirection
-const AppRoutes = () => {
+const RootRedirect = () => {
   const { user, isAdmin, isLoading } = useAuth();
   
   if (isLoading) {
     return <LoadingScreen />;
+  }
+  
+  if (!user) {
+    return <Navigate to="/login" replace />;
   }
   
   // If user is logged in and is admin, redirect to admin dashboard
