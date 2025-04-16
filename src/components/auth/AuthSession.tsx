@@ -28,31 +28,32 @@ const AuthSession = ({ children }: { children: React.ReactNode }) => {
 
   // Configurar um timeout muito curto para mostrar a tela de carregamento
   useEffect(() => {
-    if ((isInitializing || isLoading) && location.pathname !== '/index' && location.pathname !== '/auth') {
-      // Se estamos carregando, mostrar a tela de carregamento
-      // mas apenas por um tempo muito curto
-      const timeoutId = window.setTimeout(() => {
-        setShowLoading(true);
-      }, 300); // Mostrar após 300ms para evitar flashes
+    // Skip auth checks for public routes
+    if (location.pathname === '/index' || location.pathname === '/auth') {
+      return;
+    }
+    
+    if ((isInitializing || isLoading) && !user) {
+      // Mostrar tela de carregamento imediatamente para feedback visual rápido
+      setShowLoading(true);
       
-      // Timeout para forçar a navegação caso demore muito
+      // Timeout mais curto para forçar navegação se demorar muito
       const forceNavigateTimeout = window.setTimeout(() => {
         if (isLoading || isInitializing) {
-          console.log("AuthSession: Redirecionando para /auth devido ao timeout de carregamento");
+          console.log("AuthSession: Redirecionando devido ao timeout de carregamento");
           setIsLoading(false);
           navigate('/auth', { replace: true });
         }
         setShowLoading(false);
-      }, 1000); // Reduzido para 1 segundo
+      }, 800); // Tempo ainda mais reduzido
       
       return () => {
-        window.clearTimeout(timeoutId);
         window.clearTimeout(forceNavigateTimeout);
       };
     } else {
       setShowLoading(false);
     }
-  }, [isInitializing, isLoading, location.pathname, navigate, setIsLoading]);
+  }, [isInitializing, isLoading, location.pathname, navigate, setIsLoading, user]);
 
   // Handle retry
   const handleRetry = () => {
@@ -66,8 +67,11 @@ const AuthSession = ({ children }: { children: React.ReactNode }) => {
     return <>{children}</>;
   }
 
-  // Verification - if user is authenticated, allow content
+  // Fast pass - Se temos usuário, mostrar conteúdo imediatamente
   const isAuthenticated = !!user;
+  if (isAuthenticated && !isLoading) {
+    return <>{children}</>;
+  }
 
   // Display error if authentication failed and no user is authenticated
   if (authError && !isInitializing && !isAuthenticated) {
@@ -86,7 +90,7 @@ const AuthSession = ({ children }: { children: React.ReactNode }) => {
     return <LoadingScreen />;
   }
 
-  // Render children when authentication is complete
+  // Default case - render children
   return <>{children}</>;
 };
 

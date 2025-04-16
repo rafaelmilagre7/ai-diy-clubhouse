@@ -39,20 +39,6 @@ const ProtectedRoute = ({
   const navigate = useNavigate();
   const [loadingTimeout, setLoadingTimeout] = useState(false);
   
-  // Configurar timeout para carregamento lento com tempo reduzido
-  useEffect(() => {
-    if (isLoading) {
-      const timeoutId = setTimeout(() => {
-        console.log("ProtectedRoute: Tempo limite de carregamento excedido");
-        setLoadingTimeout(true);
-        setIsLoading(false);
-        navigate('/auth', { replace: true });
-      }, 1000); // Timeout reduzido para 1 segundo
-      
-      return () => clearTimeout(timeoutId);
-    }
-  }, [isLoading, navigate, setIsLoading]);
-
   // Fast pass - se já temos usuário, mostrar conteúdo imediatamente
   if (user && !requireAdmin) {
     return <>{children}</>;
@@ -61,6 +47,20 @@ const ProtectedRoute = ({
   if (user && requireAdmin && isAdmin) {
     return <>{children}</>;
   }
+  
+  // Configurar timeout para carregamento com tempo extremamente reduzido
+  useEffect(() => {
+    if (isLoading) {
+      const timeoutId = setTimeout(() => {
+        console.log("ProtectedRoute: Tempo limite de carregamento excedido");
+        setLoadingTimeout(true);
+        setIsLoading(false);
+        navigate('/auth', { replace: true });
+      }, 500); // Timeout reduzido para 500ms
+      
+      return () => clearTimeout(timeoutId);
+    }
+  }, [isLoading, navigate, setIsLoading]);
 
   if (isLoading && !loadingTimeout) {
     return <LoadingScreen />;
@@ -83,19 +83,6 @@ const RootRedirect = () => {
   const navigate = useNavigate();
   const [timeoutExceeded, setTimeoutExceeded] = useState(false);
   
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      if (isLoading && !timeoutExceeded) {
-        console.log("RootRedirect: Tempo limite de carregamento excedido, redirecionando para /auth");
-        setTimeoutExceeded(true);
-        setIsLoading(false);
-        navigate('/auth', { replace: true });
-      }
-    }, 1000); // Reduzido para 1 segundo
-    
-    return () => clearTimeout(timeoutId);
-  }, [isLoading, navigate, timeoutExceeded, setIsLoading]);
-  
   // Fast pass - redirecionar rapidamente se já temos as informações
   if (user && profile) {
     if (profile.role === 'admin') {
@@ -104,6 +91,19 @@ const RootRedirect = () => {
       return <Navigate to="/dashboard" replace />;
     }
   }
+  
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (isLoading && !timeoutExceeded) {
+        console.log("RootRedirect: Tempo limite de carregamento excedido, redirecionando para /auth");
+        setTimeoutExceeded(true);
+        setIsLoading(false);
+        navigate('/auth', { replace: true });
+      }
+    }, 500); // Reduzido para 500ms
+    
+    return () => clearTimeout(timeoutId);
+  }, [isLoading, navigate, timeoutExceeded, setIsLoading]);
   
   if (timeoutExceeded) {
     return null;

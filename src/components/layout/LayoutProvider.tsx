@@ -16,12 +16,17 @@ const LayoutProvider = () => {
   const [redirectChecked, setRedirectChecked] = useState(false);
   const [loadingTimeout, setLoadingTimeout] = useState(false);
 
-  // Verificar se o carregamento está demorando muito 
+  // Fast path para membros - Se temos usuário e perfil, renderizar imediatamente
+  if (user && profile && !isAdmin) {
+    return <MemberLayout />;
+  }
+
+  // Verificar se o carregamento está demorando muito - tempo reduzido ao mínimo 
   useEffect(() => {
     if (isLoading) {
       const timeoutId = setTimeout(() => {
         setLoadingTimeout(true);
-      }, 1000); // Reduzido para 1 segundo
+      }, 500); // Reduzido para 500ms
       
       return () => clearTimeout(timeoutId);
     }
@@ -47,7 +52,7 @@ const LayoutProvider = () => {
       
       toast({
         title: "Redirecionando para área de administração",
-        description: "Você está sendo redirecionado para a área de admin porque tem permissões de administrador."
+        description: "Você está sendo redirecionado para a área de admin."
       });
       
       navigate('/admin', { replace: true });
@@ -55,11 +60,6 @@ const LayoutProvider = () => {
     
     setRedirectChecked(true);
   }, [profile, navigate, redirectChecked, toast]);
-
-  // Fast pass - se temos usuário e o perfil, não mostrar loading
-  if (user && profile && !isAdmin) {
-    return <MemberLayout />;
-  }
 
   // Show loading screen while checking the session (mas apenas se não excedeu o timeout)
   if (isLoading && !loadingTimeout) {

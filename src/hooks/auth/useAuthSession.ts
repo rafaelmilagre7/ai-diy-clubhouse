@@ -15,7 +15,7 @@ export const useAuthSession = () => {
       isInitializing: false,
       authError: new Error("Authentication provider not found"),
       retryCount: 0,
-      maxRetries: 3,
+      maxRetries: 2,
       setRetryCount: () => {},
       setIsInitializing: () => {},
       setAuthError: () => {}
@@ -26,11 +26,11 @@ export const useAuthSession = () => {
   const [isInitializing, setIsInitializing] = useState(true);
   const [authError, setAuthError] = useState<Error | null>(null);
   const [retryCount, setRetryCount] = useState(0);
-  const maxRetries = 2;
+  const maxRetries = 1; // Reduzido para 1 tentativa
   
   const { setupAuthSession } = useAuthStateManager();
 
-  // Handle session initialization and retries with faster timeout
+  // Handle session initialization and retries com timeout extremamente reduzido
   useEffect(() => {
     if (retryCount > maxRetries) {
       console.error(`Atingido limite máximo de ${maxRetries} tentativas de autenticação`);
@@ -49,7 +49,7 @@ export const useAuthSession = () => {
           throw error;
         }
         
-        // Limpar estados de erro e carregamento
+        // Limpar estados de erro e carregamento imediatamente
         setAuthError(null);
         setIsInitializing(false);
         setIsLoading(false);
@@ -62,14 +62,14 @@ export const useAuthSession = () => {
       }
     };
     
-    // Definir um timeout bastante reduzido para inicialização da sessão
+    // Timeout extremamente reduzido para aceleração máxima
     const timeoutId = setTimeout(() => {
       if (isInitializing) {
         console.log("Tempo limite de inicialização da sessão excedido");
         setIsInitializing(false);
         setIsLoading(false);
       }
-    }, 1000); // 1 segundo
+    }, 500); // 500ms apenas
     
     initializeSession();
     

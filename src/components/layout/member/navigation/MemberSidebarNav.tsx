@@ -16,31 +16,36 @@ interface MemberSidebarNavProps {
 export const MemberSidebarNav = ({ sidebarOpen }: MemberSidebarNavProps) => {
   const location = useLocation();
 
+  // Corrigido o problema de chaves duplicadas mudando os paths
   const navItems = [
     {
       title: "Dashboard",
       icon: LayoutDashboard,
       path: "/dashboard",
-      exact: true
+      exact: true,
+      id: "dashboard"
     },
     {
       title: "Soluções",
       icon: BookOpen,
       path: "/dashboard", // Mesmo caminho para evitar navegação desnecessária
       exact: false,
-      badge: "Explorar"
+      badge: "Explorar",
+      id: "solutions"
     },
     {
       title: "Minhas Conquistas",
       icon: Award,
       path: "/profile", // Redirecionando para profile temporariamente
-      exact: false
+      exact: false,
+      id: "achievements"
     },
     {
       title: "Meu Perfil",
       icon: User,
       path: "/profile",
-      exact: false
+      exact: false,
+      id: "profile"
     }
   ];
 
@@ -61,7 +66,7 @@ export const MemberSidebarNav = ({ sidebarOpen }: MemberSidebarNavProps) => {
     <nav className="flex-1 overflow-y-auto p-3 space-y-1">
       {navItems.map((item) => (
         <Link
-          key={item.path}
+          key={item.id} // Usando id único em vez de path
           to={item.path}
           className={cn(
             "flex items-center justify-between rounded-lg px-3 py-2 transition-colors",
