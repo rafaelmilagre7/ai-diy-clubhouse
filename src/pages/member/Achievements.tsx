@@ -44,13 +44,14 @@ const Achievements = () => {
         // Fetch solutions to get categories
         const { data: solutionsData, error: solutionsError } = await supabase
           .from("solutions")
-          .select("id, category")
+          .select("*")
           .eq("published", true);
 
         if (solutionsError) {
           console.error("Error fetching solutions:", solutionsError);
           setSolutions([]);
         } else {
+          // Ensure we're setting complete Solution objects
           setSolutions(solutionsData || []);
         }
 

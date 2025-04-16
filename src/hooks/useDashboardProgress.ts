@@ -18,7 +18,7 @@ export const useDashboardProgress = () => {
         setLoading(true);
         
         // Define mock data for fallback in case of errors
-        const mockSolutions: Solution[] = [
+        const mockSolutionsData: Solution[] = [
           {
             id: "1",
             title: "Assistente de IA no WhatsApp",
@@ -67,7 +67,7 @@ export const useDashboardProgress = () => {
           
           if (solutionsError) {
             console.warn("Error fetching solutions:", solutionsError);
-            setSolutions(mockSolutions);
+            setSolutions(mockSolutionsData);
           } else if (solutionsData && solutionsData.length > 0) {
             // Validate and convert categories
             const validatedSolutions = solutionsData.map(solution => {
@@ -90,11 +90,11 @@ export const useDashboardProgress = () => {
             setSolutions(validatedSolutions);
           } else {
             console.log("No solutions found, using mock data");
-            setSolutions(mockSolutions);
+            setSolutions(mockSolutionsData);
           }
         } catch (error) {
           console.error("Error in solutions fetch:", error);
-          setSolutions(mockSolutions);
+          setSolutions(mockSolutionsData);
         }
         
         try {
@@ -125,7 +125,7 @@ export const useDashboardProgress = () => {
         });
         
         // Fallback to mock data
-        setSolutions(mockSolutions);
+        setSolutions(mockSolutionsData);
       } finally {
         setLoading(false);
       }
