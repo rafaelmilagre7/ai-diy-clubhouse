@@ -6,7 +6,6 @@ import { AdminContent } from "./admin/AdminContent";
 import { Navigate, useNavigate } from "react-router-dom";
 import LoadingScreen from "@/components/common/LoadingScreen";
 import { toast } from "@/hooks/use-toast";
-import { UserRole } from "@/lib/supabase";
 
 const AdminLayout = () => {
   const { user, profile, isAdmin, isLoading } = useAuth();
@@ -20,7 +19,6 @@ const AdminLayout = () => {
       return;
     }
     
-    // Compare with the string 'admin' explicitly, not as a type
     if (profile.role !== 'admin') {
       console.log("AdminLayout useEffect: Usuário não é admin, redirecionando para /dashboard", { 
         profileRole: profile.role
@@ -53,23 +51,10 @@ const AdminLayout = () => {
 
   // Se o usuário não for admin, redirecionar para dashboard de membro
   if (!isAdmin) {
-    console.log("AdminLayout render: Usuário não é admin, redirecionando para /dashboard", {
-      profileRole: profile?.role,
-      isAdmin
-    });
+    console.log("AdminLayout render: Usuário não é admin, redirecionando para /dashboard");
     return <Navigate to="/dashboard" replace />;
   }
   
-  // Verificação final do papel do usuário
-  if (profile && profile.role !== 'admin') {
-    console.log("AdminLayout render: Papel do usuário não é admin, mas é:", {
-      papel_atual: profile.role
-    });
-    
-    // Esta linha não altera o banco de dados, apenas a exibição atual
-    // Ideal seria ter uma atualização completa no banco via supabase.from('profiles').update
-  }
-
   console.log("AdminLayout render: Usuário é admin, permanecendo na área admin", {
     profileRole: profile?.role,
     isAdmin

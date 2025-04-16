@@ -149,15 +149,12 @@ const RootRedirect = () => {
   // Verificação de segurança para garantir que o redirecionamento use o papel correto
   let homePath = '/dashboard'; // Default para usuários normais
   
-  if (profile) {
-    if (profile.role === 'admin') {
-      homePath = '/admin';
-    } else {
-      homePath = '/dashboard';
-    }
+  if (profile && profile.role === 'admin') {
+    homePath = '/admin';
+    console.log("RootRedirect: Detectado papel admin, redirecionando para /admin");
   } else {
-    // Se não tivermos perfil, usamos o isAdmin calculado como fallback
-    homePath = isAdmin ? '/admin' : '/dashboard';
+    homePath = '/dashboard';
+    console.log("RootRedirect: Detectado papel member ou outro, redirecionando para /dashboard");
   }
   
   console.log("RootRedirect: redirecionando usuário para", homePath, { 

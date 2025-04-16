@@ -59,25 +59,52 @@ export const useAuthSession = () => {
             
             console.log("Perfil carregado com papel:", profile?.role);
             
-            // Verificação adicional da role - se for admin@teste.com, garantir que a role seja admin
+            // Verificação adicional da role com base no email
             if (profile && session.user.email) {
-              const shouldBeAdmin = session.user.email === 'admin@teste.com' || 
-                                   session.user.email === 'admin@viverdeia.ai' || 
-                                   session.user.email?.endsWith('@viverdeia.ai');
+              const isAdminEmail = session.user.email === 'admin@teste.com' || 
+                                  session.user.email === 'admin@viverdeia.ai' || 
+                                  session.user.email?.endsWith('@viverdeia.ai');
                                    
-              if (shouldBeAdmin && profile.role !== 'admin') {
-                console.log("Corrigindo papel para admin, estava como:", profile.role);
-                profile.role = 'admin';
-              }
-              
-              const shouldBeMember = session.user.email === 'membro@teste.com' || 
+              const isMemberEmail = session.user.email === 'membro@teste.com' || 
                                    (!session.user.email.endsWith('@viverdeia.ai') &&
                                     session.user.email !== 'admin@teste.com' &&
                                     session.user.email !== 'admin@viverdeia.ai');
-                                   
-              if (shouldBeMember && profile.role !== 'member') {
-                console.log("Corrigindo papel para member, estava como:", profile.role);
-                profile.role = 'member';
+              
+              // IMPORTANTE: se o perfil não corresponder ao e-mail, vamos atualizá-lo no banco de dados
+              if (isAdminEmail && profile.role !== 'admin') {
+                console.log("Email de administrador detectado, atualizando papel...");
+                try {
+                  const { error } = await supabase
+                    .from('profiles')
+                    .update({ role: 'admin' })
+                    .eq('id', profile.id);
+                  
+                  if (!error) {
+                    profile.role = 'admin';
+                    console.log("Papel atualizado para admin no banco de dados");
+                  } else {
+                    console.error("Erro ao atualizar papel para admin:", error);
+                  }
+                } catch (updateError) {
+                  console.error("Erro ao atualizar papel de admin:", updateError);
+                }
+              } else if (isMemberEmail && profile.role !== 'member') {
+                console.log("Email de membro detectado, atualizando papel...");
+                try {
+                  const { error } = await supabase
+                    .from('profiles')
+                    .update({ role: 'member' })
+                    .eq('id', profile.id);
+                  
+                  if (!error) {
+                    profile.role = 'member';
+                    console.log("Papel atualizado para member no banco de dados");
+                  } else {
+                    console.error("Erro ao atualizar papel para member:", error);
+                  }
+                } catch (updateError) {
+                  console.error("Erro ao atualizar papel de membro:", updateError);
+                }
               }
             }
             
@@ -142,25 +169,52 @@ export const useAuthSession = () => {
                 
                 console.log("Perfil carregado após evento de auth com papel:", profile?.role);
                 
-                // Verificação adicional da role após evento de autenticação
+                // Verificação da role após evento de autenticação
                 if (profile && newSession.user.email) {
-                  const shouldBeAdmin = newSession.user.email === 'admin@teste.com' || 
-                                       newSession.user.email === 'admin@viverdeia.ai' || 
-                                       newSession.user.email?.endsWith('@viverdeia.ai');
+                  const isAdminEmail = newSession.user.email === 'admin@teste.com' || 
+                                      newSession.user.email === 'admin@viverdeia.ai' || 
+                                      newSession.user.email?.endsWith('@viverdeia.ai');
                                        
-                  if (shouldBeAdmin && profile.role !== 'admin') {
-                    console.log("Corrigindo papel para admin após evento, estava como:", profile.role);
-                    profile.role = 'admin';
-                  }
-                  
-                  const shouldBeMember = newSession.user.email === 'membro@teste.com' || 
+                  const isMemberEmail = newSession.user.email === 'membro@teste.com' || 
                                        (!newSession.user.email.endsWith('@viverdeia.ai') &&
                                         newSession.user.email !== 'admin@teste.com' &&
                                         newSession.user.email !== 'admin@viverdeia.ai');
-                                       
-                  if (shouldBeMember && profile.role !== 'member') {
-                    console.log("Corrigindo papel para member após evento, estava como:", profile.role);
-                    profile.role = 'member';
+                  
+                  // IMPORTANTE: Atualizar o banco de dados se o papel não corresponder ao e-mail
+                  if (isAdminEmail && profile.role !== 'admin') {
+                    console.log("Email de administrador detectado após evento, atualizando papel...");
+                    try {
+                      const { error } = await supabase
+                        .from('profiles')
+                        .update({ role: 'admin' })
+                        .eq('id', profile.id);
+                      
+                      if (!error) {
+                        profile.role = 'admin';
+                        console.log("Papel atualizado para admin no banco de dados após evento");
+                      } else {
+                        console.error("Erro ao atualizar papel para admin após evento:", error);
+                      }
+                    } catch (updateError) {
+                      console.error("Erro ao atualizar papel de admin após evento:", updateError);
+                    }
+                  } else if (isMemberEmail && profile.role !== 'member') {
+                    console.log("Email de membro detectado após evento, atualizando papel...");
+                    try {
+                      const { error } = await supabase
+                        .from('profiles')
+                        .update({ role: 'member' })
+                        .eq('id', profile.id);
+                      
+                      if (!error) {
+                        profile.role = 'member';
+                        console.log("Papel atualizado para member no banco de dados após evento");
+                      } else {
+                        console.error("Erro ao atualizar papel para member após evento:", error);
+                      }
+                    } catch (updateError) {
+                      console.error("Erro ao atualizar papel de membro após evento:", updateError);
+                    }
                   }
                 }
                 
@@ -169,6 +223,7 @@ export const useAuthSession = () => {
               } catch (profileError) {
                 console.error("Erro ao buscar/criar perfil após evento:", profileError);
                 
+                // Como fallback, crie um perfil temporário na memória
                 let userRole: UserRole = 'member';
                 
                 if (newSession.user.email) {

@@ -22,11 +22,10 @@ const LayoutProvider = () => {
       return;
     }
     
-    // Use explicit role comparison with UserRole type
-    if (profile.role === 'admin' as UserRole) {
+    if (profile.role === 'admin') {
       console.log("LayoutProvider useEffect: Usuário é admin, redirecionando para /admin", { 
         profileRole: profile.role,
-        isAdmin: profile.role === 'admin'
+        isAdmin
       });
       
       // Notify the user about the redirect
@@ -39,10 +38,10 @@ const LayoutProvider = () => {
     } else {
       console.log("LayoutProvider useEffect: Confirmando que o usuário é membro", {
         profileRole: profile.role,
-        isAdmin: profile.role === 'admin'
+        isAdmin
       });
     }
-  }, [profile, navigate]);
+  }, [profile, navigate, isAdmin]);
 
   // Show loading screen while checking the session
   if (isLoading) {
@@ -56,22 +55,11 @@ const LayoutProvider = () => {
   }
 
   // If user is admin, redirect to admin layout
-  // (this is also done in useEffect, but kept here as a double check)
   if (isAdmin) {
-    console.log("LayoutProvider render: Usuário é admin, redirecionando para /admin", { 
-      profileRole: profile?.role, 
-      isAdmin 
-    });
+    console.log("LayoutProvider render: Usuário é admin, redirecionando para /admin");
     return <Navigate to="/admin" replace />;
   }
   
-  // Final check of user role
-  if (profile && profile.role !== 'member') {
-    console.log("LayoutProvider render: Papel do usuário não é member, mas é:", {
-      papel_atual: profile.role
-    });
-  }
-
   console.log("LayoutProvider render: Usuário é membro, permanecendo na área de membro", { 
     profileRole: profile?.role, 
     isAdmin 
