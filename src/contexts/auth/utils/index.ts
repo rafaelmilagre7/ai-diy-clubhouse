@@ -6,5 +6,5 @@ export {
   createTestUser, 
   signInAsTestMember, 
   signInAsTestAdmin 
-} from './testUserAuth';
+} from './testAuth';
 export { signOutUser } from './sessionUtils';
