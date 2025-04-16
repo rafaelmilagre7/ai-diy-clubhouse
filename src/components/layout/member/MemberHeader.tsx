@@ -1,8 +1,7 @@
 
-import { Menu, Bell, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Menu, Bell, Search } from "lucide-react";
 import { Link } from "react-router-dom";
-import { toast } from "sonner";
 
 interface MemberHeaderProps {
   sidebarOpen: boolean;
@@ -10,43 +9,35 @@ interface MemberHeaderProps {
 }
 
 export const MemberHeader = ({ sidebarOpen, setSidebarOpen }: MemberHeaderProps) => {
-  const handleLogout = () => {
-    try {
-      // Clear local storage and redirect to login page
-      localStorage.removeItem('supabase.auth.token');
-      toast.success("Logout realizado com sucesso");
-      setTimeout(() => {
-        window.location.href = '/login';
-      }, 500);
-    } catch (error) {
-      console.error("Erro ao fazer logout:", error);
-      toast.error("Erro ao fazer logout. Tentando redirecionamento direto...");
-      // Fallback direto para login em caso de erro
-      window.location.href = '/login';
-    }
-  };
-
   return (
-    <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6">
-      <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(!sidebarOpen)}>
-        <Menu className="h-5 w-5" />
-        <span className="sr-only">Toggle sidebar</span>
-      </Button>
-      
-      <div className="ml-auto flex items-center gap-2">
-        <Button variant="ghost" size="icon">
-          <Bell className="h-5 w-5" />
-          <span className="sr-only">Notifications</span>
+    <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between border-b bg-background px-4">
+      <div className="flex items-center">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setSidebarOpen(!sidebarOpen)}
+          className="mr-2 md:hidden"
+        >
+          <Menu className="h-5 w-5" />
         </Button>
         
-        <Button 
-          variant="destructive" 
-          size="sm"
-          onClick={handleLogout}
-          className="ml-2"
-        >
-          <LogOut className="h-4 w-4 mr-2" />
-          Sair
+        <div className="md:hidden">
+          <Link to="/dashboard">
+            <img 
+              src="https://milagredigital.com/wp-content/uploads/2025/04/viverdeiaclub.avif" 
+              alt="VIVER DE IA Club" 
+              className="h-8 w-auto" 
+            />
+          </Link>
+        </div>
+      </div>
+      
+      <div className="flex items-center space-x-2">
+        <Button variant="ghost" size="icon">
+          <Search className="h-5 w-5" />
+        </Button>
+        <Button variant="ghost" size="icon">
+          <Bell className="h-5 w-5" />
         </Button>
       </div>
     </header>

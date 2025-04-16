@@ -27,29 +27,31 @@ export const MemberSidebar = ({
   return (
     <aside
       className={cn(
-        "fixed inset-y-0 left-0 z-20 flex h-full flex-col border-r bg-background transition-all duration-300 ease-in-out",
-        sidebarOpen ? "w-64" : "w-[70px]"
+        "fixed inset-y-0 left-0 z-50 flex h-full flex-col border-r bg-background shadow-sm transition-all duration-300 ease-in-out",
+        sidebarOpen ? "w-64" : "w-0 md:w-[70px]"
       )}
     >
-      {/* Logo area */}
-      <SidebarLogo sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
-      
-      <Separator />
-
-      {/* Navigation */}
-      <MemberSidebarNav sidebarOpen={sidebarOpen} />
-
-      {/* User menu at bottom of sidebar */}
-      <div className="mt-auto">
+      <div className={cn("flex flex-col h-full", !sidebarOpen && "md:flex hidden")}>
+        {/* Logo area */}
+        <SidebarLogo sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+        
         <Separator />
-        <MemberUserMenu 
-          sidebarOpen={sidebarOpen} 
-          profileName={profileName}
-          profileEmail={profileEmail}
-          profileAvatar={profileAvatar}
-          getInitials={getInitials}
-          signOut={signOut}
-        />
+
+        {/* Navigation */}
+        <MemberSidebarNav sidebarOpen={sidebarOpen} />
+
+        {/* User menu at bottom of sidebar */}
+        <div className="mt-auto">
+          <Separator />
+          <MemberUserMenu 
+            sidebarOpen={sidebarOpen} 
+            profileName={profileName}
+            profileEmail={profileEmail}
+            profileAvatar={profileAvatar}
+            getInitials={getInitials}
+            signOut={signOut}
+          />
+        </div>
       </div>
     </aside>
   );

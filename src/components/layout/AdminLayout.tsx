@@ -9,8 +9,21 @@ import { toast } from "@/hooks/use-toast";
 
 const AdminLayout = () => {
   const { user, profile, isAdmin, isLoading } = useAuth();
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  // Default to showing sidebar on desktop, hiding on mobile
+  const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 768);
   const navigate = useNavigate();
+
+  // Handle window resize to auto-adjust sidebar visibility
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth <= 768) {
+        setSidebarOpen(false);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Verificar user role quando o componente é montado e quando profile muda
   useEffect(() => {

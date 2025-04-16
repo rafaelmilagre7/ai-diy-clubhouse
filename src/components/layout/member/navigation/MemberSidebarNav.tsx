@@ -7,9 +7,9 @@ import {
   Award,
   User,
   BarChart,
-  Briefcase
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface MemberSidebarNavProps {
   sidebarOpen: boolean;
@@ -57,7 +57,6 @@ export const MemberSidebarNav = ({ sidebarOpen }: MemberSidebarNavProps) => {
   const isActive = (path: string) => {
     const currentPath = location.pathname;
     
-    // Handle special cases
     if (path === "/dashboard" && 
         (currentPath === "/dashboard" || currentPath === "/" || currentPath === "")) {
       return true;
@@ -68,38 +67,48 @@ export const MemberSidebarNav = ({ sidebarOpen }: MemberSidebarNavProps) => {
       return true;
     }
     
-    // Direct match for other cases
     return currentPath.startsWith(path);
   };
 
   return (
     <nav className="flex-1 overflow-y-auto p-3 space-y-1">
-      {navItems.map((item) => (
-        <Link
-          key={item.id}
-          to={item.path}
-          className={cn(
-            "flex items-center justify-between rounded-lg px-3 py-2 transition-colors",
-            isActive(item.path)
-              ? "bg-[#0ABAB5]/10 text-[#0ABAB5]" 
-              : "text-muted-foreground hover:bg-muted hover:text-foreground"
-          )}
-        >
-          <div className="flex items-center">
-            <item.icon size={20} className={cn(
-              "mr-3",
-              isActive(item.path) ? "text-[#0ABAB5]" : "text-muted-foreground"
-            )} />
-            {sidebarOpen && <span className="font-medium">{item.title}</span>}
-          </div>
-          
-          {sidebarOpen && item.badge && (
-            <Badge variant="outline" className="text-xs bg-[#0ABAB5]/10 text-[#0ABAB5] border-[#0ABAB5]/20">
-              {item.badge}
-            </Badge>
-          )}
-        </Link>
-      ))}
+      <TooltipProvider delayDuration={300}>
+        {navItems.map((item) => (
+          <Tooltip key={item.id}>
+            <TooltipTrigger asChild>
+              <Link
+                to={item.path}
+                className={cn(
+                  "flex items-center justify-between rounded-lg px-3 py-2 transition-colors",
+                  isActive(item.path)
+                    ? "bg-[#0ABAB5]/10 text-[#0ABAB5]" 
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                )}
+              >
+                <div className="flex items-center">
+                  <item.icon size={20} className={cn(
+                    sidebarOpen ? "mr-3" : "mx-auto",
+                    isActive(item.path) ? "text-[#0ABAB5]" : "text-muted-foreground"
+                  )} />
+                  {sidebarOpen && <span className="font-medium">{item.title}</span>}
+                </div>
+                
+                {sidebarOpen && item.badge && (
+                  <Badge variant="outline" className="text-xs bg-[#0ABAB5]/10 text-[#0ABAB5] border-[#0ABAB5]/20">
+                    {item.badge}
+                  </Badge>
+                )}
+              </Link>
+            </TooltipTrigger>
+            {!sidebarOpen && (
+              <TooltipContent side="right">
+                {item.title}
+                {item.badge && ` (${item.badge})`}
+              </TooltipContent>
+            )}
+          </Tooltip>
+        ))}
+      </TooltipProvider>
     </nav>
   );
 };

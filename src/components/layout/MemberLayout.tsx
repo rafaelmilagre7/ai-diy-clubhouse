@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/auth";
 import { MemberSidebar } from "./member/MemberSidebar";
 import { MemberContent } from "./member/MemberContent";
@@ -10,7 +10,20 @@ import { MemberContent } from "./member/MemberContent";
  */
 const MemberLayout = () => {
   const { profile, signOut } = useAuth();
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  // Default to showing sidebar on desktop, hiding on mobile
+  const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 768);
+
+  // Handle window resize to auto-adjust sidebar visibility
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth <= 768) {
+        setSidebarOpen(false);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const getInitials = (name: string | null) => {
     if (!name) return "U";

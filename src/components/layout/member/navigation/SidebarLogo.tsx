@@ -1,7 +1,7 @@
 
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, Menu } from "lucide-react";
+import { ChevronLeft, Menu } from "lucide-react";
 
 interface SidebarLogoProps {
   sidebarOpen: boolean;
@@ -31,6 +31,7 @@ export const SidebarLogo = ({ sidebarOpen, setSidebarOpen }: SidebarLogoProps) =
         size="icon"
         onClick={() => setSidebarOpen(!sidebarOpen)}
         className={sidebarOpen ? "ml-auto" : "mx-auto mt-2"}
+        aria-label={sidebarOpen ? "Colapsar menu" : "Expandir menu"}
       >
         {sidebarOpen ? <ChevronLeft size={20} /> : <Menu size={20} />}
       </Button>
