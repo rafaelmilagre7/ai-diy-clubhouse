@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -9,7 +8,7 @@ import AuthSession from "@/components/auth/AuthSession";
 import Layout from "@/components/layout/Layout";
 import AdminLayout from "@/components/layout/AdminLayout";
 import LoadingScreen from "@/components/common/LoadingScreen";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 
 // Member routes
 import Auth from "@/pages/Auth";
@@ -39,7 +38,6 @@ const ProtectedRoute = ({
   const navigate = useNavigate();
   const [loadingTimeout, setLoadingTimeout] = useState(false);
   
-  // Fast pass - se já temos usuário, mostrar conteúdo imediatamente
   if (user && !requireAdmin) {
     return <>{children}</>;
   }
@@ -48,7 +46,6 @@ const ProtectedRoute = ({
     return <>{children}</>;
   }
   
-  // Configurar timeout para carregamento com tempo extremamente reduzido
   useEffect(() => {
     if (isLoading) {
       const timeoutId = setTimeout(() => {
@@ -56,7 +53,7 @@ const ProtectedRoute = ({
         setLoadingTimeout(true);
         setIsLoading(false);
         navigate('/auth', { replace: true });
-      }, 500); // Timeout reduzido para 500ms
+      }, 500);
       
       return () => clearTimeout(timeoutId);
     }
@@ -85,7 +82,6 @@ const RootRedirect = () => {
   const timeoutRef = useRef<number | null>(null);
   const isMounted = useRef(true);
   
-  // Setup component lifecycle
   useEffect(() => {
     isMounted.current = true;
     return () => {
@@ -96,7 +92,6 @@ const RootRedirect = () => {
     };
   }, []);
   
-  // Fast path - redirecionar rapidamente se já temos as informações
   if (user && profile) {
     if (profile.role === 'admin') {
       return <Navigate to="/admin" replace />;
@@ -117,7 +112,7 @@ const RootRedirect = () => {
         setIsLoading(false);
         navigate('/auth', { replace: true });
       }
-    }, 400); // Ultra rápido
+    }, 400);
     
     return () => {
       if (timeoutRef.current) {
@@ -149,14 +144,9 @@ const AppRoutes = () => {
   return (
     <AuthSession>
       <Routes>
-        {/* Public routes that don't require authentication */}
         <Route path="/auth" element={<Auth />} />
         <Route path="/index" element={<Index />} />
-
-        {/* Root redirect */}
         <Route path="/" element={<RootRedirect />} />
-
-        {/* Member routes - within Layout */}
         <Route path="/" element={
           <ProtectedRoute>
             <Layout />
@@ -167,8 +157,6 @@ const AppRoutes = () => {
           <Route path="implement/:id/:moduleIndex" element={<SolutionImplementation />} />
           <Route path="profile" element={<Profile />} />
         </Route>
-
-        {/* Admin routes - within AdminLayout */}
         <Route path="/admin" element={
           <ProtectedRoute requireAdmin>
             <AdminLayout />
@@ -181,8 +169,6 @@ const AppRoutes = () => {
           <Route path="analytics/solution/:id" element={<SolutionMetrics />} />
           <Route path="users" element={<UserManagement />} />
         </Route>
-
-        {/* 404 route */}
         <Route path="*" element={<Navigate to="/auth" replace />} />
       </Routes>
     </AuthSession>
@@ -193,8 +179,8 @@ const App = () => {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: {
-        retry: 1, // Manter número reduzido de tentativas
-        staleTime: 1000 * 60 * 5, // 5 minutos de cache
+        retry: 1,
+        staleTime: 1000 * 60 * 5,
       },
     },
   });
