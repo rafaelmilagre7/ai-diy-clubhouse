@@ -1,5 +1,5 @@
 
-import { useState, useCallback, createContext, useContext, ReactNode } from "react";
+import React, { useState, useCallback, createContext, useContext, ReactNode } from "react";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/auth";
@@ -90,10 +90,19 @@ export const LoggingProvider = ({ children }: { children: ReactNode }) => {
     }
   };
   
-  return (
-    <LoggingContext.Provider value={{ log, logWarning, logError, lastError }}>
-      {children}
-    </LoggingContext.Provider>
+  // Create the value object for the context
+  const contextValue: LoggingContextType = {
+    log,
+    logWarning,
+    logError,
+    lastError
+  };
+  
+  // Using createElement instead of JSX since this is a .ts file
+  return React.createElement(
+    LoggingContext.Provider,
+    { value: contextValue },
+    children
   );
 };
 
