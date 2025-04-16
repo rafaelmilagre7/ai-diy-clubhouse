@@ -2,7 +2,7 @@
 import { Outlet, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { MemberHeader } from "./MemberHeader";
-import { Toaster } from "@/components/ui/sonner";
+import { Toaster } from "sonner";
 
 interface MemberContentProps {
   sidebarOpen: boolean;
@@ -13,18 +13,24 @@ export const MemberContent = ({ sidebarOpen, setSidebarOpen }: MemberContentProp
   return (
     <main
       className={cn(
-        "flex-1 overflow-x-hidden transition-all duration-300 ease-in-out",
+        "flex-1 overflow-x-hidden bg-slate-50 transition-all duration-300 ease-in-out",
         sidebarOpen ? "ml-64" : "ml-20"
       )}
     >
       <MemberHeader sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
       
       {/* Page content */}
-      <div className="container py-6 px-4 md:px-6">
+      <div className="py-6 px-4 md:px-6">
         <Outlet />
       </div>
       
-      <Toaster position="top-right" />
+      <Toaster 
+        position="top-right" 
+        closeButton 
+        richColors 
+        expand={false}
+        duration={4000}
+      />
     </main>
   );
 };

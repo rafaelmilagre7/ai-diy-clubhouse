@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/auth";
 import { supabase, Solution } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, PlayCircle } from "lucide-react";
 import LoadingScreen from "@/components/common/LoadingScreen";
 import { SolutionHeaderSection } from "@/components/solution/SolutionHeaderSection";
 import { SolutionContentSection } from "@/components/solution/SolutionContentSection";
@@ -135,7 +135,7 @@ const SolutionDetails = () => {
   }
   
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-5xl mx-auto pb-12 animate-fade-in">
       <Button 
         variant="ghost" 
         className="mb-6"
@@ -150,6 +150,24 @@ const SolutionDetails = () => {
       <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-8">
         <div className="md:col-span-2">
           <SolutionContentSection solution={solution} />
+          
+          <div className="mt-8 sm:hidden">
+            {progress?.is_completed ? (
+              <Button className="w-full bg-green-600 hover:bg-green-700" onClick={() => navigate(`/implement/${solution.id}/7`)}>
+                Solução Implementada com Sucesso!
+              </Button>
+            ) : progress ? (
+              <Button className="w-full" onClick={continueImplementation}>
+                <PlayCircle className="mr-2 h-5 w-5" />
+                Continuar Implementação ({Math.round((progress.current_module / 8) * 100)}%)
+              </Button>
+            ) : (
+              <Button className="w-full" onClick={startImplementation}>
+                <PlayCircle className="mr-2 h-5 w-5" />
+                Iniciar Implementação Guiada
+              </Button>
+            )}
+          </div>
         </div>
         
         <SolutionSidebar 

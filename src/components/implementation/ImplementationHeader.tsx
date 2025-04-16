@@ -1,10 +1,11 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, Clock, HelpCircle, MessageSquare } from "lucide-react";
+import { ChevronLeft, Book, Info, LifeBuoy, BarChart } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Solution } from "@/lib/supabase";
 import { useNavigate } from "react-router-dom";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface ImplementationHeaderProps {
   solution: Solution;
@@ -20,9 +21,22 @@ export const ImplementationHeader = ({
   calculateProgress
 }: ImplementationHeaderProps) => {
   const navigate = useNavigate();
+  const progress = calculateProgress();
+  
+  const moduleTypes = [
+    "Visão Geral",
+    "Preparação Express",
+    "Implementação",
+    "Verificação",
+    "Resultados",
+    "Otimização",
+    "Celebração"
+  ];
+  
+  const currentModuleType = moduleTypes[moduleIdx] || `Módulo ${moduleIdx + 1}`;
   
   return (
-    <div className="sticky top-16 z-10 bg-background pt-2 pb-4 border-b">
+    <div className="sticky top-0 z-10 bg-white shadow-sm pt-2 pb-2">
       <div className="container">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
@@ -30,34 +44,73 @@ export const ImplementationHeader = ({
               variant="ghost" 
               size="sm"
               onClick={() => navigate(`/solution/${solution.id}`)}
+              className="text-muted-foreground hover:text-foreground"
             >
               <ChevronLeft className="mr-1 h-4 w-4" />
               Voltar para detalhes
             </Button>
-            <h1 className="text-2xl font-bold mt-1">{solution.title}</h1>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
-              <Clock className="h-4 w-4" />
-              <span>Módulo {moduleIdx + 1} de {modulesLength}</span>
-            </div>
+            <h1 className="text-xl font-bold mt-1 flex items-center">
+              <div className="w-6 h-6 rounded-full bg-viverblue text-white flex items-center justify-center mr-2">
+                {moduleIdx + 1}
+              </div>
+              {solution.title}: {currentModuleType}
+            </h1>
           </div>
           
-          <div className="flex items-center gap-3">
-            <Button variant="outline" size="sm">
-              <HelpCircle className="mr-1 h-4 w-4" />
-              <span className="hidden sm:inline">Ajuda</span>
-            </Button>
-            <Button variant="outline" size="sm">
-              <MessageSquare className="mr-1 h-4 w-4" />
-              <span className="hidden sm:inline">Suporte</span>
-            </Button>
+          <div className="flex items-center gap-2">
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="outline" size="icon" className="h-8 w-8">
+                    <Book className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Material de referência</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="outline" size="icon" className="h-8 w-8">
+                    <Info className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Informações do módulo</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="outline" size="icon" className="h-8 w-8">
+                    <LifeBuoy className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Obter suporte</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
         </div>
         
         <div className="mt-4">
-          <Progress value={calculateProgress()} className="h-2" />
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-xs font-medium text-muted-foreground flex items-center">
+              <BarChart className="h-3 w-3 mr-1" />
+              Seu progresso
+            </span>
+            <span className="text-xs font-medium">{progress}%</span>
+          </div>
+          <Progress value={progress} className="h-2" />
           <div className="flex justify-between mt-1 text-xs text-muted-foreground">
-            <span>Início</span>
-            <span>{calculateProgress()}% concluído</span>
+            <span>Módulo {moduleIdx + 1} de {modulesLength}</span>
+            <span>{moduleIdx === modulesLength - 1 ? "Conclusão" : `Próximo: ${moduleTypes[Math.min(moduleIdx + 1, moduleTypes.length - 1)]}`}</span>
           </div>
         </div>
       </div>
