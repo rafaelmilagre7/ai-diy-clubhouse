@@ -26,15 +26,16 @@ export const useAuthSession = () => {
   const [isInitializing, setIsInitializing] = useState(true);
   const [authError, setAuthError] = useState<Error | null>(null);
   const [retryCount, setRetryCount] = useState(0);
-  const maxRetries = 2; // Reduzido de 3 para 2
+  const maxRetries = 2;
   
   const { setupAuthSession } = useAuthStateManager();
 
-  // Handle session initialization and retries
+  // Handle session initialization and retries with faster timeout
   useEffect(() => {
     if (retryCount > maxRetries) {
       console.error(`Atingido limite máximo de ${maxRetries} tentativas de autenticação`);
       setIsInitializing(false);
+      setIsLoading(false);
       return;
     }
 
@@ -51,25 +52,24 @@ export const useAuthSession = () => {
         // Limpar estados de erro e carregamento
         setAuthError(null);
         setIsInitializing(false);
+        setIsLoading(false);
       } catch (error) {
         console.error("Erro durante inicialização da sessão:", error);
         setAuthError(error instanceof Error ? error : new Error('Erro desconhecido de autenticação'));
         setRetryCount(count => count + 1);
         setIsInitializing(false);
-      } finally {
-        // Garantir que o estado de carregamento seja desativado
         setIsLoading(false);
       }
     };
     
-    // Definir um timeout para inicialização da sessão
+    // Definir um timeout bastante reduzido para inicialização da sessão
     const timeoutId = setTimeout(() => {
       if (isInitializing) {
         console.log("Tempo limite de inicialização da sessão excedido");
         setIsInitializing(false);
         setIsLoading(false);
       }
-    }, 1500); // 1.5 segundos
+    }, 1000); // 1 segundo
     
     initializeSession();
     

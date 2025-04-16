@@ -16,12 +16,12 @@ const LayoutProvider = () => {
   const [redirectChecked, setRedirectChecked] = useState(false);
   const [loadingTimeout, setLoadingTimeout] = useState(false);
 
-  // Verificar se o carregamento está demorando muito
+  // Verificar se o carregamento está demorando muito 
   useEffect(() => {
     if (isLoading) {
       const timeoutId = setTimeout(() => {
         setLoadingTimeout(true);
-      }, 1500); // Reduzido para 1.5 segundos
+      }, 1000); // Reduzido para 1 segundo
       
       return () => clearTimeout(timeoutId);
     }
@@ -54,7 +54,12 @@ const LayoutProvider = () => {
     }
     
     setRedirectChecked(true);
-  }, [profile, navigate, redirectChecked]);
+  }, [profile, navigate, redirectChecked, toast]);
+
+  // Fast pass - se temos usuário e o perfil, não mostrar loading
+  if (user && profile && !isAdmin) {
+    return <MemberLayout />;
+  }
 
   // Show loading screen while checking the session (mas apenas se não excedeu o timeout)
   if (isLoading && !loadingTimeout) {

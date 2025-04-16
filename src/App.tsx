@@ -39,7 +39,7 @@ const ProtectedRoute = ({
   const navigate = useNavigate();
   const [loadingTimeout, setLoadingTimeout] = useState(false);
   
-  // Configurar timeout para carregamento lento
+  // Configurar timeout para carregamento lento com tempo reduzido
   useEffect(() => {
     if (isLoading) {
       const timeoutId = setTimeout(() => {
@@ -47,11 +47,20 @@ const ProtectedRoute = ({
         setLoadingTimeout(true);
         setIsLoading(false);
         navigate('/auth', { replace: true });
-      }, 1500); // Timeout reduzido para 1.5 segundos
+      }, 1000); // Timeout reduzido para 1 segundo
       
       return () => clearTimeout(timeoutId);
     }
   }, [isLoading, navigate, setIsLoading]);
+
+  // Fast pass - se já temos usuário, mostrar conteúdo imediatamente
+  if (user && !requireAdmin) {
+    return <>{children}</>;
+  }
+  
+  if (user && requireAdmin && isAdmin) {
+    return <>{children}</>;
+  }
 
   if (isLoading && !loadingTimeout) {
     return <LoadingScreen />;
@@ -82,10 +91,19 @@ const RootRedirect = () => {
         setIsLoading(false);
         navigate('/auth', { replace: true });
       }
-    }, 1500); // Reduzido para 1.5 segundos
+    }, 1000); // Reduzido para 1 segundo
     
     return () => clearTimeout(timeoutId);
   }, [isLoading, navigate, timeoutExceeded, setIsLoading]);
+  
+  // Fast pass - redirecionar rapidamente se já temos as informações
+  if (user && profile) {
+    if (profile.role === 'admin') {
+      return <Navigate to="/admin" replace />;
+    } else {
+      return <Navigate to="/dashboard" replace />;
+    }
+  }
   
   if (timeoutExceeded) {
     return null;
@@ -102,12 +120,8 @@ const RootRedirect = () => {
   if (!profile) {
     return <Navigate to="/auth" replace />;
   }
-  
-  if (profile.role === 'admin') {
-    return <Navigate to="/admin" replace />;
-  } else {
-    return <Navigate to="/dashboard" replace />;
-  }
+
+  return <Navigate to="/dashboard" replace />;
 };
 
 const AppRoutes = () => {
@@ -158,7 +172,7 @@ const App = () => {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: {
-        retry: 1, // Reduzir número de tentativas de requisições
+        retry: 1, // Manter número reduzido de tentativas
         staleTime: 1000 * 60 * 5, // 5 minutos de cache
       },
     },
