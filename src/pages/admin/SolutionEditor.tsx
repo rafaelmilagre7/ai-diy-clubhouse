@@ -10,6 +10,7 @@ import NavigationButtons from "@/components/admin/solution-editor/NavigationButt
 import AuthError from "@/components/admin/solution-editor/AuthError";
 import { useToast } from "@/hooks/use-toast";
 import { useEffect } from "react";
+import { useSolutionEditor } from "@/components/admin/solution-editor/useSolutionEditor";
 
 const SolutionEditor = () => {
   const { id } = useParams<{ id: string }>();
