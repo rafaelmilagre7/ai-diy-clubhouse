@@ -2,18 +2,16 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { FcGoogle } from "react-icons/fc";
-import { Eye, EyeOff, Mail, Lock } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase";
+import EmailPasswordForm from "./login/EmailPasswordForm";
+import GoogleLoginButton from "./login/GoogleLoginButton";
+import TestLoginButtons from "./login/TestLoginButtons";
+import Divider from "./login/Divider";
 
 const LoginForm = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { signIn, signInAsMember, signInAsAdmin, user } = useAuth();
   const navigate = useNavigate();
@@ -94,7 +92,7 @@ const LoginForm = () => {
     try {
       setIsLoading(true);
       
-      // Mostra toast antes de iniciar login para feedback imediato
+      // Show toast before starting login for immediate feedback
       toast({
         title: `Entrando como ${userType}`,
         description: "Por favor, aguarde...",
@@ -115,107 +113,33 @@ const LoginForm = () => {
     }
   };
 
+  const handleMemberLogin = () => handleTestLogin(signInAsMember, "membro");
+  const handleAdminLogin = () => handleTestLogin(signInAsAdmin, "admin");
+
   return (
-    <form onSubmit={handleEmailSignIn} className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="email" className="text-white">
-          Email
-        </Label>
-        <div className="relative">
-          <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-            <Mail className="h-5 w-5 text-gray-400" />
-          </div>
-          <Input
-            id="email"
-            type="email"
-            placeholder="seu@email.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="pl-10 bg-gray-800 border-gray-700 text-white"
-          />
-        </div>
-      </div>
+    <div className="space-y-4">
+      <EmailPasswordForm
+        email={email}
+        setEmail={setEmail}
+        password={password}
+        setPassword={setPassword}
+        onSubmit={handleEmailSignIn}
+        isLoading={isLoading}
+      />
 
-      <div className="space-y-2">
-        <Label htmlFor="password" className="text-white">
-          Senha
-        </Label>
-        <div className="relative">
-          <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-            <Lock className="h-5 w-5 text-gray-400" />
-          </div>
-          <Input
-            id="password"
-            type={showPassword ? "text" : "password"}
-            placeholder="********"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="pl-10 pr-10 bg-gray-800 border-gray-700 text-white"
-          />
-          <button
-            type="button"
-            onClick={() => setShowPassword(!showPassword)}
-            className="absolute inset-y-0 right-0 flex items-center pr-3"
-          >
-            {showPassword ? (
-              <EyeOff className="h-5 w-5 text-gray-400" />
-            ) : (
-              <Eye className="h-5 w-5 text-gray-400" />
-            )}
-          </button>
-        </div>
-      </div>
+      <Divider />
 
-      <Button
-        type="submit"
-        className="w-full bg-viverblue hover:bg-viverblue/90"
-        disabled={isLoading}
-      >
-        {isLoading ? "Entrando..." : "Entrar"}
-      </Button>
-
-      <div className="relative flex items-center justify-center my-4">
-        <div className="border-t border-gray-700 w-full"></div>
-        <div className="text-gray-500 bg-black px-2 text-sm">ou</div>
-        <div className="border-t border-gray-700 w-full"></div>
-      </div>
-
-      <Button
-        type="button"
-        variant="outline"
+      <GoogleLoginButton 
         onClick={handleGoogleSignIn}
-        className="w-full bg-transparent border border-gray-700 hover:bg-gray-800 text-white"
-        disabled={isLoading}
-      >
-        <FcGoogle className="mr-2 h-5 w-5" />
-        Entrar com Google
-      </Button>
+        isLoading={isLoading}
+      />
 
-      <div className="pt-4 space-y-2">
-        <p className="text-center text-gray-500 text-sm mb-2">Acesso de teste</p>
-        <div className="grid grid-cols-2 gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => handleTestLogin(signInAsMember, "membro")}
-            className="bg-blue-600/30 border-blue-800 hover:bg-blue-700/50 text-white text-xs"
-            disabled={isLoading}
-          >
-            Login Membro (Teste)
-          </Button>
-          
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => handleTestLogin(signInAsAdmin, "admin")}
-            className="bg-purple-600/30 border-purple-800 hover:bg-purple-700/50 text-white text-xs"
-            disabled={isLoading}
-          >
-            Login Admin (Teste)
-          </Button>
-        </div>
-      </div>
-    </form>
+      <TestLoginButtons
+        onMemberLogin={handleMemberLogin}
+        onAdminLogin={handleAdminLogin}
+        isLoading={isLoading}
+      />
+    </div>
   );
 };
 
