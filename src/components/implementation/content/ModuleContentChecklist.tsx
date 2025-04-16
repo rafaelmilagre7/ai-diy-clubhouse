@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Module, Solution, supabase } from "@/lib/supabase";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
@@ -42,7 +42,13 @@ export const ModuleContentChecklist = ({ module }: ModuleContentChecklistProps) 
         
         // Check if checklist property exists and is an array
         if (solutionData.checklist && Array.isArray(solutionData.checklist)) {
-          setChecklist(solutionData.checklist);
+          // Transform items to ensure they have the required properties
+          const transformedChecklist = solutionData.checklist.map((item: any) => ({
+            title: item.title || "Item sem título",
+            description: item.description,
+            checked: item.checked || false
+          }));
+          setChecklist(transformedChecklist);
         } else {
           // Log for debugging if checklist is missing
           console.warn("Checklist property is missing or not an array", solutionData);

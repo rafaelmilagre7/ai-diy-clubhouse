@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { Module, Solution, supabase } from "@/lib/supabase";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -16,6 +15,7 @@ interface Video {
 
 export const ModuleContentVideos = ({ module }: ModuleContentVideosProps) => {
   const [solution, setSolution] = useState<Solution | null>(null);
+  const [videos, setVideos] = useState<Video[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -35,7 +35,16 @@ export const ModuleContentVideos = ({ module }: ModuleContentVideosProps) => {
         }
         
         // Cast data to Solution type
-        setSolution(data as Solution);
+        const solutionData = data as Solution;
+        setSolution(solutionData);
+        
+        // Check if videos property exists and is an array
+        if (solutionData.videos && Array.isArray(solutionData.videos)) {
+          setVideos(solutionData.videos);
+        } else {
+          console.warn("Videos property is missing or not an array", solutionData);
+          setVideos([]);
+        }
       } catch (err) {
         console.error("Error fetching solution data:", err);
       } finally {
@@ -58,9 +67,6 @@ export const ModuleContentVideos = ({ module }: ModuleContentVideosProps) => {
       </div>
     );
   }
-
-  // Ensure videos exists and is an array before accessing
-  const videos = solution?.videos || [];
 
   if (videos.length === 0) {
     return null;
