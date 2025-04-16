@@ -12,8 +12,8 @@ function App() {
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
 
   return (
-    <LoggingProvider>
-      <AuthProvider>
+    <AuthProvider>
+      <LoggingProvider>
         <Router>
           <Routes>
             {/* Auth routes */}
@@ -49,8 +49,8 @@ function App() {
             <Route path="/solution/:id/completed" element={<ProtectedRoute><ImplementationCompleted /></ProtectedRoute>} />
           </Routes>
         </Router>
-      </AuthProvider>
-    </LoggingProvider>
+      </LoggingProvider>
+    </AuthProvider>
   );
 }
 
