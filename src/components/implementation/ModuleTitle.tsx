@@ -1,29 +1,18 @@
 
 import React from "react";
 
-interface ModuleTitleProps {
-  type: string;
-}
+export const ModuleTitle = ({ type }: { type: string }) => {
+  // Mapeamento de tipos de módulos para títulos mais amigáveis
+  const titles: Record<string, string> = {
+    "landing": "Visão Geral da Solução",
+    "overview": "Visão Geral e Case Real",
+    "preparation": "Preparação Express",
+    "implementation": "Implementação Passo a Passo",
+    "verification": "Verificação de Implementação",
+    "results": "Primeiros Resultados",
+    "optimization": "Otimização Rápida",
+    "celebration": "Celebração e Próximos Passos"
+  };
 
-export const ModuleTitle = ({ type }: ModuleTitleProps) => {
-  switch (type) {
-    case "landing":
-      return <>Início</>;
-    case "overview":
-      return <>Visão Geral</>;
-    case "preparation":
-      return <>Preparação</>;
-    case "implementation":
-      return <>Implementação</>;
-    case "verification":
-      return <>Verificação</>;
-    case "results":
-      return <>Resultados</>;
-    case "optimization":
-      return <>Otimização</>;
-    case "celebration":
-      return <>Celebração</>;
-    default:
-      return <>{type}</>;
-  }
+  return <>{titles[type] || "Módulo"}</>;
 };
