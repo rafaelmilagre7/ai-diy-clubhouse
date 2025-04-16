@@ -6,10 +6,20 @@ import { MemberContent } from "./member/MemberContent";
 import { Navigate } from "react-router-dom";
 
 const Layout = () => {
-  const { user, profile, signOut, isAdmin } = useAuth();
+  const { user, profile, signOut, isAdmin, isLoading } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
-  // If user is admin, redirect to admin layout
+  // Mostrar tela de carregamento enquanto verifica a sessão
+  if (isLoading) {
+    return <div className="flex items-center justify-center min-h-screen">Carregando...</div>;
+  }
+
+  // Se o usuário não estiver autenticado, redirecionar para login
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  // Se o usuário for admin, redirecionar para o layout admin
   if (isAdmin) {
     return <Navigate to="/admin" replace />;
   }

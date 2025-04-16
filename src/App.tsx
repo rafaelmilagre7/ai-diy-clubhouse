@@ -132,7 +132,11 @@ const App = () => {
 
 // Helper component to handle route redirection
 const AppRoutes = () => {
-  const { profile, isAdmin } = useAuth();
+  const { profile, isAdmin, isLoading } = useAuth();
+  
+  if (isLoading) {
+    return <LoadingScreen />;
+  }
   
   // If user is logged in and is admin, redirect to admin dashboard
   // Otherwise, redirect to member dashboard
