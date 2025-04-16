@@ -136,6 +136,18 @@ const App = () => {
 const RootRedirect = () => {
   const { user, profile, isAdmin, isLoading } = useAuth();
   
+  // Adicionando um temporizador para evitar loops infinitos
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (isLoading) {
+        console.log("RootRedirect: Tempo limite de carregamento excedido, redirecionando para /index");
+        window.location.href = '/index';
+      }
+    }, 5000); // 5 segundos
+    
+    return () => clearTimeout(timeoutId);
+  }, [isLoading]);
+  
   if (isLoading) {
     return <LoadingScreen />;
   }
@@ -143,6 +155,12 @@ const RootRedirect = () => {
   if (!user) {
     console.log("RootRedirect: Usuário não autenticado, redirecionando para login");
     return <Navigate to="/login" replace />;
+  }
+  
+  // Verificação de segurança: se o perfil for null, redirecione para /index
+  if (!profile) {
+    console.log("RootRedirect: Perfil não encontrado, redirecionando para /index");
+    return <Navigate to="/index" replace />;
   }
   
   let homePath = '/dashboard'; // Default para usuários normais

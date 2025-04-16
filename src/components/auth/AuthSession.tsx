@@ -4,6 +4,7 @@ import { useAuthSession } from "@/hooks/auth/useAuthSession";
 import AuthErrorDisplay from "@/components/auth/AuthErrorDisplay";
 import LoadingScreen from "@/components/common/LoadingScreen";
 import { useAuth } from "@/contexts/auth";
+import { useNavigate } from "react-router-dom";
 
 /**
  * AuthSession component that handles authentication state changes
@@ -20,16 +21,33 @@ const AuthSession = ({ children }: { children: React.ReactNode }) => {
     setAuthError
   } = useAuthSession();
   
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
+  const navigate = useNavigate();
 
-  // Function to clean up the subscription on unmount
+  // Função para limpar a assinatura ao desmontar
   useEffect(() => {
     return () => {
       console.log("AuthSession: Cleaning up subscription");
     };
   }, []);
 
-  // Handle retry attempt
+  // Se estiver travado no carregamento por muito tempo, forçar redirecionamento para /index
+  useEffect(() => {
+    let timeoutId: number;
+    
+    if (isInitializing || isLoading) {
+      timeoutId = window.setTimeout(() => {
+        console.log("Timeout de carregamento atingido, redirecionando para /index");
+        navigate("/index", { replace: true });
+      }, 8000); // 8 segundos para timeout
+    }
+    
+    return () => {
+      if (timeoutId) window.clearTimeout(timeoutId);
+    };
+  }, [isInitializing, isLoading, navigate]);
+
+  // Lidar com tentativa de nova autenticação
   const handleRetry = () => {
     setRetryCount(count => count + 1);
     setIsInitializing(true);
@@ -39,7 +57,7 @@ const AuthSession = ({ children }: { children: React.ReactNode }) => {
   // Verificação adicional - se o usuário está autenticado, permite passar para o conteúdo
   const isAuthenticated = !!user;
 
-  // Display error if authentication failed and não tem usuário autenticado
+  // Exibir erro se a autenticação falhou e não tem usuário autenticado
   if (authError && !isInitializing && !isAuthenticated) {
     return (
       <AuthErrorDisplay
@@ -51,12 +69,12 @@ const AuthSession = ({ children }: { children: React.ReactNode }) => {
     );
   }
 
-  // Show loading screen during initialization e se não tiver usuário
-  if (isInitializing && !isAuthenticated) {
+  // Mostrar tela de carregamento durante inicialização e se não tiver usuário
+  if ((isInitializing || isLoading) && !isAuthenticated) {
     return <LoadingScreen />;
   }
 
-  // Render children when authentication is complete
+  // Renderizar filhos quando a autenticação estiver completa
   return <>{children}</>;
 };
 
