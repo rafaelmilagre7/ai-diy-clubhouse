@@ -49,18 +49,14 @@ const ProtectedRoute = ({
     };
   }, []);
   
-  // Immediate pass through for authenticated users
-  if (user && !requireAdmin) {
-    return <>{children}</>;
-  }
-  
-  if (user && requireAdmin && isAdmin) {
-    return <>{children}</>;
-  }
-  
   // Handle loading timeout
   useEffect(() => {
     if (isLoading) {
+      // Clear any existing timeout
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+      
       timeoutRef.current = window.setTimeout(() => {
         console.log("ProtectedRoute: Loading timeout exceeded");
         setLoadingTimeout(true);
@@ -76,19 +72,31 @@ const ProtectedRoute = ({
     }
   }, [isLoading, navigate, setIsLoading]);
 
+  // Handle rendering based on auth state
   if (isLoading && !loadingTimeout) {
     return <LoadingScreen message="Verificando sua autenticação..." />;
   }
 
-  if (!user) {
-    return <Navigate to="/auth" replace />;
+  // Centralize all navigation logic in one useEffect to prevent conditional hook calls
+  useEffect(() => {
+    if (!isLoading) {
+      if (!user) {
+        console.log("ProtectedRoute: No user, redirecting to auth");
+        navigate('/auth', { replace: true });
+      } else if (requireAdmin && !isAdmin) {
+        console.log("ProtectedRoute: User is not admin, redirecting to dashboard");
+        navigate('/dashboard', { replace: true });
+      }
+    }
+  }, [user, isAdmin, isLoading, requireAdmin, navigate]);
+
+  // Only render children if conditions are met
+  if (user && ((!requireAdmin) || (requireAdmin && isAdmin))) {
+    return <>{children}</>;
   }
 
-  if (requireAdmin && !isAdmin) {
-    return <Navigate to="/dashboard" replace />;
-  }
-
-  return <>{children}</>;
+  // Return empty fragment while navigation happens
+  return <LoadingScreen message="Redirecionando..." />;
 };
 
 // Helper component to handle route redirection
@@ -100,8 +108,6 @@ const RootRedirect = () => {
   
   // Handle timing out the loading state
   useEffect(() => {
-    const isMounted = true;
-    
     // Clear any existing timeout
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
