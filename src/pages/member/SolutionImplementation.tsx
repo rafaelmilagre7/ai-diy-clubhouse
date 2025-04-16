@@ -6,13 +6,9 @@ import { ModuleContent } from "@/components/implementation/ModuleContent";
 import { ImplementationHeader } from "@/components/implementation/ImplementationHeader";
 import { ImplementationFooter } from "@/components/implementation/ImplementationFooter";
 import { NotFoundContent } from "@/components/implementation/NotFoundContent";
-import { useHotkeys } from "@/hooks/use-hotkeys";
-import { useNavigate } from "react-router-dom";
-import { toast } from "sonner";
+import { useImplementationShortcuts } from "@/hooks/useImplementationShortcuts";
 
 const SolutionImplementation = () => {
-  const navigate = useNavigate();
-  
   const {
     solution,
     modules,
@@ -25,24 +21,14 @@ const SolutionImplementation = () => {
     isCompleting
   } = useModuleImplementation();
   
-  // Adicionar atalhos de teclado para navegação
-  useHotkeys('ArrowRight', () => {
-    if (moduleIdx < modules.length - 1) {
-      handleComplete();
-    }
-  }, [moduleIdx, modules, handleComplete]);
-  
-  useHotkeys('ArrowLeft', () => {
-    handlePrevious();
-  }, [handlePrevious]);
-  
-  useHotkeys('Escape', () => {
-    if (solution) {
-      navigate(`/solution/${solution.id}`);
-    } else {
-      navigate("/dashboard");
-    }
-  }, [solution, navigate]);
+  // Setup keyboard shortcuts
+  useImplementationShortcuts(
+    solution,
+    moduleIdx,
+    modules,
+    handleComplete,
+    handlePrevious
+  );
   
   if (loading) {
     return <LoadingScreen />;
@@ -52,6 +38,31 @@ const SolutionImplementation = () => {
     return <NotFoundContent />;
   }
   
+  return (
+    <ImplementationContainer 
+      solution={solution}
+      currentModule={currentModule}
+      moduleIdx={moduleIdx}
+      modules={modules}
+      handleComplete={handleComplete}
+      handlePrevious={handlePrevious}
+      calculateProgress={calculateProgress}
+      isCompleting={isCompleting}
+    />
+  );
+};
+
+// Separate container component to reduce complexity of the main component
+const ImplementationContainer = ({
+  solution,
+  currentModule,
+  moduleIdx,
+  modules,
+  handleComplete,
+  handlePrevious,
+  calculateProgress,
+  isCompleting
+}) => {
   return (
     <div className="pb-20 min-h-screen bg-slate-50">
       {/* Header section */}
