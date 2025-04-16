@@ -6,17 +6,17 @@ import { Button } from "@/components/ui/button";
 const LoadingScreen = () => {
   const [showEmergencyButton, setShowEmergencyButton] = useState(false);
 
-  // Mostrar botão de emergência após 5 segundos para evitar loop de carregamento
+  // Mostrar botão de emergência após 3 segundos para evitar loop de carregamento
   useEffect(() => {
     const timer = setTimeout(() => {
       setShowEmergencyButton(true);
-    }, 5000);
+    }, 3000);
 
     return () => clearTimeout(timer);
   }, []);
 
   const handleEmergencyRedirect = () => {
-    window.location.href = '/index';
+    window.location.href = '/auth';
   };
 
   return (

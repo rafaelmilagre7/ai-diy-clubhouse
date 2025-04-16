@@ -42,32 +42,11 @@ const ProtectedRoute = ({
   }
 
   if (!user) {
-    console.log("ProtectedRoute: Usuário não autenticado, redirecionando para auth");
     return <Navigate to="/auth" replace />;
   }
 
   if (requireAdmin && !isAdmin) {
-    console.log("ProtectedRoute: Tentativa de acesso à área admin por não-admin, redirecionando", { 
-      isAdmin,
-      role: isAdmin ? 'admin' : 'member' 
-    });
     return <Navigate to="/dashboard" replace />;
-  }
-
-  return <>{children}</>;
-};
-
-// Route guard that redirects authenticated users
-const PublicRoute = ({ children }: { children: React.ReactNode }) => {
-  const { user, isLoading } = useAuth();
-
-  if (isLoading) {
-    return <LoadingScreen />;
-  }
-
-  if (user) {
-    console.log("PublicRoute: Usuário já autenticado, redirecionando para home");
-    return <Navigate to="/" replace />;
   }
 
   return <>{children}</>;
@@ -86,12 +65,11 @@ const RootRedirect = () => {
         setTimeoutExceeded(true);
         navigate('/auth', { replace: true });
       }
-    }, 3000); // 3 segundos é suficiente
+    }, 2000); // Reduzindo para 2 segundos para melhor experiência
     
     return () => clearTimeout(timeoutId);
   }, [isLoading, navigate, timeoutExceeded]);
   
-  // If timeout exceeded, return null to avoid rendering
   if (timeoutExceeded) {
     return null;
   }
@@ -101,26 +79,16 @@ const RootRedirect = () => {
   }
   
   if (!user) {
-    console.log("RootRedirect: Usuário não autenticado, redirecionando para login");
     return <Navigate to="/auth" replace />;
   }
   
   if (!profile) {
-    console.log("RootRedirect: Perfil não encontrado, redirecionando para /auth");
     return <Navigate to="/auth" replace />;
   }
   
-  console.log("RootRedirect: Verificando papel do usuário para redirecionamento", {
-    profileRole: profile.role,
-    isAdmin
-  });
-  
-  // Determinar para onde redirecionar com base no papel do usuário
   if (profile.role === 'admin') {
-    console.log("RootRedirect: redirecionando admin para /admin");
     return <Navigate to="/admin" replace />;
   } else {
-    console.log("RootRedirect: redirecionando membro para /dashboard");
     return <Navigate to="/dashboard" replace />;
   }
 };
@@ -137,15 +105,15 @@ const AppRoutes = () => {
         <Route path="/" element={<RootRedirect />} />
 
         {/* Member routes - within Layout */}
-        <Route path="/dashboard" element={
+        <Route path="/" element={
           <ProtectedRoute>
             <Layout />
           </ProtectedRoute>
         }>
-          <Route index element={<MemberDashboard />} />
-          <Route path="/dashboard/solution/:id" element={<SolutionDetails />} />
-          <Route path="/dashboard/implement/:id/:moduleIndex" element={<SolutionImplementation />} />
-          <Route path="/dashboard/profile" element={<Profile />} />
+          <Route path="dashboard" element={<MemberDashboard />} />
+          <Route path="solution/:id" element={<SolutionDetails />} />
+          <Route path="implement/:id/:moduleIndex" element={<SolutionImplementation />} />
+          <Route path="profile" element={<Profile />} />
         </Route>
 
         {/* Admin routes - within AdminLayout */}
@@ -155,11 +123,11 @@ const AppRoutes = () => {
           </ProtectedRoute>
         }>
           <Route index element={<AdminDashboard />} />
-          <Route path="/admin/solutions" element={<SolutionsList />} />
-          <Route path="/admin/solutions/new" element={<SolutionEditor />} />
-          <Route path="/admin/solutions/:id" element={<SolutionEditor />} />
-          <Route path="/admin/analytics/solution/:id" element={<SolutionMetrics />} />
-          <Route path="/admin/users" element={<UserManagement />} />
+          <Route path="solutions" element={<SolutionsList />} />
+          <Route path="solutions/new" element={<SolutionEditor />} />
+          <Route path="solutions/:id" element={<SolutionEditor />} />
+          <Route path="analytics/solution/:id" element={<SolutionMetrics />} />
+          <Route path="users" element={<UserManagement />} />
         </Route>
 
         {/* 404 route */}
@@ -170,7 +138,14 @@ const AppRoutes = () => {
 };
 
 const App = () => {
-  const queryClient = new QueryClient();
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: 1, // Reduzir número de tentativas de requisições
+        staleTime: 1000 * 60 * 5, // 5 minutos de cache
+      },
+    },
+  });
 
   return (
     <QueryClientProvider client={queryClient}>

@@ -73,6 +73,11 @@ const SolutionDetails = () => {
     if (!user || !solution) return;
     
     try {
+      toast({
+        title: "Iniciando implementação",
+        description: "Preparando ambiente para implementação guiada...",
+      });
+      
       // If there's no progress record yet, create one
       if (!progress) {
         const { data, error } = await supabase
@@ -95,7 +100,7 @@ const SolutionDetails = () => {
       }
       
       // Navigate to the implementation page, starting with module 0 (landing)
-      navigate(`/implement/${solution.id}/${progress?.current_module || 0}`);
+      navigate(`/implement/${solution.id}/0`);
     } catch (error) {
       console.error("Error starting implementation:", error);
       toast({
@@ -108,6 +113,12 @@ const SolutionDetails = () => {
   
   const continueImplementation = () => {
     if (!solution || !progress) return;
+    
+    toast({
+      title: "Continuando implementação",
+      description: "Carregando seu progresso anterior...",
+    });
+    
     navigate(`/implement/${solution.id}/${progress.current_module}`);
   };
   

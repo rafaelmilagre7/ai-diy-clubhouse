@@ -4,14 +4,13 @@ import { useAuthSession } from "@/hooks/auth/useAuthSession";
 import AuthErrorDisplay from "@/components/auth/AuthErrorDisplay";
 import LoadingScreen from "@/components/common/LoadingScreen";
 import { useAuth } from "@/contexts/auth";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 
 /**
  * AuthSession component that handles authentication state changes
  * and provides a loading screen during authentication
  */
 const AuthSession = ({ children }: { children: React.ReactNode }) => {
-  // We need to handle the case where AuthSession might be used outside of AuthProvider
   try {
     const {
       isInitializing,
@@ -24,7 +23,6 @@ const AuthSession = ({ children }: { children: React.ReactNode }) => {
     } = useAuthSession();
     
     const { user, isLoading } = useAuth();
-    const navigate = useNavigate();
     const location = useLocation();
     const [showLoading, setShowLoading] = useState(true);
 
@@ -32,13 +30,11 @@ const AuthSession = ({ children }: { children: React.ReactNode }) => {
     useEffect(() => {
       let timeoutId: number;
       
-      if ((isInitializing || isLoading) && location.pathname !== '/index' && location.pathname !== '/login') {
+      if ((isInitializing || isLoading) && location.pathname !== '/index' && location.pathname !== '/auth') {
         setShowLoading(true);
         timeoutId = window.setTimeout(() => {
-          console.log("Timeout de carregamento atingido, redirecionando para /index");
           setShowLoading(false);
-          navigate("/index", { replace: true });
-        }, 5000); // 5 segundos para timeout
+        }, 3000); // 3 segundos para timeout
       } else {
         setShowLoading(false);
       }
@@ -46,14 +42,7 @@ const AuthSession = ({ children }: { children: React.ReactNode }) => {
       return () => {
         if (timeoutId) window.clearTimeout(timeoutId);
       };
-    }, [isInitializing, isLoading, navigate, location.pathname]);
-
-    // Cleanup subscription on unmount
-    useEffect(() => {
-      return () => {
-        console.log("AuthSession: Cleaning up subscription");
-      };
-    }, []);
+    }, [isInitializing, isLoading, location.pathname]);
 
     // Handle retry
     const handleRetry = () => {
@@ -62,8 +51,8 @@ const AuthSession = ({ children }: { children: React.ReactNode }) => {
       setAuthError(null);
     };
 
-    // Skip auth checks for /index and /login routes
-    if (location.pathname === '/index' || location.pathname === '/login') {
+    // Skip auth checks for public routes
+    if (location.pathname === '/index' || location.pathname === '/auth') {
       return <>{children}</>;
     }
 
@@ -90,12 +79,7 @@ const AuthSession = ({ children }: { children: React.ReactNode }) => {
     // Render children when authentication is complete
     return <>{children}</>;
   } catch (error) {
-    // If there's an error (likely because useAuth is used outside AuthProvider),
-    // redirect to index page
     console.error("AuthSession error:", error);
-    
-    // Since we can't use navigate here (as it requires React Router context),
-    // we'll render children and let the app's normal error boundaries handle it
     return <>{children}</>;
   }
 };

@@ -1,9 +1,8 @@
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
 import { toast } from "@/hooks/use-toast";
-import { UserRole } from "@/lib/supabase";
 import LoadingScreen from "@/components/common/LoadingScreen";
 import MemberLayout from "./MemberLayout";
 
@@ -14,34 +13,27 @@ import MemberLayout from "./MemberLayout";
 const LayoutProvider = () => {
   const { user, profile, isAdmin, isLoading } = useAuth();
   const navigate = useNavigate();
+  const [redirectChecked, setRedirectChecked] = useState(false);
 
-  // Check user role when the component is mounted and when profile changes
+  // Check user role only once when profile is loaded
   useEffect(() => {
-    if (!profile) {
-      console.log("LayoutProvider useEffect: Ainda não há perfil de usuário carregado");
+    if (!profile || redirectChecked) {
       return;
     }
     
     if (profile.role === 'admin') {
-      console.log("LayoutProvider useEffect: Usuário é admin, redirecionando para /admin", { 
-        profileRole: profile.role,
-        isAdmin
-      });
+      console.log("LayoutProvider: Usuário é admin, redirecionando para /admin");
       
-      // Notify the user about the redirect
       toast({
         title: "Redirecionando para área de administração",
         description: "Você está sendo redirecionado para a área de admin porque tem permissões de administrador."
       });
       
       navigate('/admin', { replace: true });
-    } else {
-      console.log("LayoutProvider useEffect: Confirmando que o usuário é membro", {
-        profileRole: profile.role,
-        isAdmin
-      });
     }
-  }, [profile, navigate, isAdmin]);
+    
+    setRedirectChecked(true);
+  }, [profile, navigate, redirectChecked]);
 
   // Show loading screen while checking the session
   if (isLoading) {
@@ -50,20 +42,13 @@ const LayoutProvider = () => {
 
   // If user is not authenticated, redirect to login
   if (!user) {
-    console.log("LayoutProvider render: Usuário não autenticado, redirecionando para login");
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/auth" replace />;
   }
 
   // If user is admin, redirect to admin layout
   if (isAdmin) {
-    console.log("LayoutProvider render: Usuário é admin, redirecionando para /admin");
     return <Navigate to="/admin" replace />;
   }
-  
-  console.log("LayoutProvider render: Usuário é membro, permanecendo na área de membro", { 
-    profileRole: profile?.role, 
-    isAdmin 
-  });
 
   // Render the member layout
   return <MemberLayout />;

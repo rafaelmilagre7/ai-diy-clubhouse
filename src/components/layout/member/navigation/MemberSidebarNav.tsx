@@ -26,20 +26,20 @@ export const MemberSidebarNav = ({ sidebarOpen }: MemberSidebarNavProps) => {
     {
       title: "Soluções",
       icon: BookOpen,
-      path: "/dashboard/solutions",
+      path: "/dashboard", // Mesmo caminho para evitar navegação desnecessária
       exact: false,
       badge: "Explorar"
     },
     {
       title: "Minhas Conquistas",
       icon: Award,
-      path: "/dashboard/achievements",
+      path: "/profile", // Redirecionando para profile temporariamente
       exact: false
     },
     {
       title: "Meu Perfil",
       icon: User,
-      path: "/dashboard/profile",
+      path: "/profile",
       exact: false
     }
   ];
@@ -47,6 +47,10 @@ export const MemberSidebarNav = ({ sidebarOpen }: MemberSidebarNavProps) => {
   const isActive = (item: typeof navItems[0]) => {
     if (item.exact) {
       return location.pathname === item.path;
+    }
+    
+    if (item.path === "/dashboard" && (location.pathname === "/dashboard" || location.pathname === "/")) {
+      return true;
     }
     
     return location.pathname === item.path || 
