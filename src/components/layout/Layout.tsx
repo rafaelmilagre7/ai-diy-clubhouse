@@ -22,8 +22,19 @@ const Layout = () => {
 
   // Se o usuário for admin, redirecionar para o layout admin
   if (isAdmin) {
+    // Adicionar console.log para debug
+    console.log("Usuário é admin, redirecionando para /admin", { 
+      profileRole: profile?.role, 
+      isAdmin 
+    });
     return <Navigate to="/admin" replace />;
   }
+
+  // Adicionar console.log para debug do perfil de membro
+  console.log("Usuário é membro, permanecendo na área de membro", { 
+    profileRole: profile?.role, 
+    isAdmin 
+  });
 
   const getInitials = (name: string | null) => {
     if (!name) return "U";

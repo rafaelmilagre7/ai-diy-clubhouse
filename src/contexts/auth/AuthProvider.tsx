@@ -16,11 +16,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Use our extracted auth methods hook
   const { signIn, signOut, signInAsMember, signInAsAdmin } = useAuthMethods({ setIsLoading });
 
+  // Calculate isAdmin based on profile role
+  const isAdmin = profile?.role === 'admin';
+  
+  console.log("AuthProvider: Perfil de usuário carregado", { 
+    profileId: profile?.id,
+    role: profile?.role,
+    isAdmin: profile?.role === 'admin'
+  });
+
   const value = {
     session,
     user,
     profile,
-    isAdmin: profile?.role === 'admin',
+    isAdmin,
     isLoading,
     signIn,
     signOut,

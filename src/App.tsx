@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -44,6 +45,7 @@ const ProtectedRoute = ({
   }
 
   if (requireAdmin && !isAdmin) {
+    console.log("Tentativa de acesso à área admin por não-admin, redirecionando", { isAdmin });
     return <Navigate to="/dashboard" replace />;
   }
 
@@ -141,6 +143,11 @@ const RootRedirect = () => {
   // If user is logged in and is admin, redirect to admin dashboard
   // Otherwise, redirect to member dashboard
   const homePath = isAdmin ? "/admin" : "/dashboard";
+  
+  console.log("RootRedirect: redirecionando usuário para", homePath, { 
+    isAdmin, 
+    userId: user.id
+  });
   
   return <Navigate to={homePath} replace />;
 };

@@ -44,6 +44,7 @@ export const useAuthSession = () => {
           
           try {
             // Tentar buscar o perfil do usuário
+            console.log("Buscando perfil para usuário:", session.user.id);
             let profile = await fetchUserProfile(session.user.id);
             
             // Se não existir perfil ou ocorrer erro de política, criar um novo
@@ -56,13 +57,18 @@ export const useAuthSession = () => {
               );
             }
             
+            console.log("Perfil carregado:", profile);
             setProfile(profile);
           } catch (profileError) {
             // Apenas log, não falha completamente
             console.error("Erro ao buscar/criar perfil:", profileError);
             
             // Como fallback, crie um perfil temporário na memória
-            const userRole: UserRole = session.user.email?.includes('admin') ? 'admin' : 'member';
+            // Verificar se o email inclui admin para definir a role corretamente
+            const isAdminEmail = session.user.email?.includes('admin') || session.user.email?.includes('viverdeia.ai');
+            const userRole: UserRole = isAdminEmail ? 'admin' : 'member';
+            
+            console.log("Criando perfil temporário com role:", userRole);
             
             const tempProfile = {
               id: session.user.id,
@@ -92,6 +98,7 @@ export const useAuthSession = () => {
             if (newSession?.user) {
               try {
                 // Tentar buscar ou criar perfil ao mudar de estado
+                console.log("Buscando perfil para usuário:", newSession.user.id);
                 let profile = await fetchUserProfile(newSession.user.id);
                 
                 if (!profile) {
@@ -102,13 +109,18 @@ export const useAuthSession = () => {
                   );
                 }
                 
+                console.log("Perfil carregado após evento de auth:", profile);
                 setProfile(profile);
               } catch (profileError) {
                 console.error("Erro ao buscar/criar perfil:", profileError);
                 
-                // Criar perfil temporário na memória
-                const userRole: UserRole = newSession.user.email?.includes('admin') ? 'admin' : 'member';
+                // Verificar se o email inclui admin para definir a role corretamente
+                const isAdminEmail = newSession.user.email?.includes('admin') || newSession.user.email?.includes('viverdeia.ai');
+                const userRole: UserRole = isAdminEmail ? 'admin' : 'member';
                 
+                console.log("Criando perfil temporário com role após evento:", userRole);
+                
+                // Criar perfil temporário na memória
                 const tempProfile = {
                   id: newSession.user.id,
                   email: newSession.user.email || 'sem-email@viverdeia.ai',
