@@ -24,7 +24,7 @@ export const useHotkeys = (
     window.addEventListener("keydown", handleKeyDown);
     
     return () => {
-      window.addEventListener("keydown", handleKeyDown);
+      window.removeEventListener("keydown", handleKeyDown);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [...deps]);

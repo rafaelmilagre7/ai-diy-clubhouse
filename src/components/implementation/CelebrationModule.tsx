@@ -2,12 +2,14 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { CheckCircle, Download, Home } from "lucide-react";
+import { Module } from "@/lib/supabase";
 
 interface CelebrationModuleProps {
+  module: Module;
   onComplete: () => void;
 }
 
-export const CelebrationModule = ({ onComplete }: CelebrationModuleProps) => {
+export const CelebrationModule = ({ module, onComplete }: CelebrationModuleProps) => {
   return (
     <div className="max-w-3xl mx-auto text-center space-y-8 py-12">
       <div className="animate-celebrate">
