@@ -28,6 +28,7 @@ function App() {
               <Route index element={<Dashboard />} />
               <Route path="dashboard" element={<Dashboard />} />
               <Route path="solutions" element={<Dashboard />} />
+              <Route path="implementations" element={<Dashboard />} />
               <Route path="achievements" element={<Dashboard />} />
               <Route path="profile" element={<ProfileSettings />} />
               <Route path="solution/:id" element={<SolutionDetails />} />

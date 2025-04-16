@@ -5,7 +5,8 @@ import {
   LayoutDashboard, 
   BookOpen, 
   Award,
-  User
+  User,
+  BarChart
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
@@ -30,6 +31,12 @@ export const MemberSidebarNav = ({ sidebarOpen }: MemberSidebarNavProps) => {
       path: "/solutions",
       badge: "Explorar",
       id: "solutions"
+    },
+    {
+      title: "Implementações",
+      icon: BarChart,
+      path: "/implementations",
+      id: "implementations"
     },
     {
       title: "Minhas Conquistas",
