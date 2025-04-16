@@ -1,21 +1,26 @@
 
 import { Solution } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
-import { PlayCircle, CheckCircle } from "lucide-react";
+import { PlayCircle, CheckCircle, Star, Download } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface SolutionSidebarProps {
   solution: Solution;
   progress: any | null;
   startImplementation: () => void;
   continueImplementation: () => void;
+  initializing?: boolean;
 }
 
 export const SolutionSidebar = ({ 
   solution, 
   progress, 
   startImplementation,
-  continueImplementation 
+  continueImplementation,
+  initializing = false
 }: SolutionSidebarProps) => {
+  const navigate = useNavigate();
+  
   return (
     <div className="bg-white p-6 rounded-lg shadow-sm space-y-6 hidden sm:block">
       <div>
@@ -53,21 +58,49 @@ export const SolutionSidebar = ({
       <div className="pt-4 border-t">
         <h3 className="font-medium mb-3">Ações</h3>
         {progress?.is_completed ? (
-          <Button className="w-full bg-green-600 hover:bg-green-700">
+          <Button 
+            className="w-full bg-green-600 hover:bg-green-700"
+            onClick={() => navigate(`/implement/${solution.id}/7`)}
+          >
             <CheckCircle className="mr-2 h-5 w-5" />
             Ver Certificado
           </Button>
         ) : progress ? (
-          <Button className="w-full" onClick={continueImplementation}>
+          <Button 
+            className="w-full" 
+            onClick={continueImplementation} 
+            disabled={initializing}
+          >
             <PlayCircle className="mr-2 h-5 w-5" />
-            Continuar Implementação
+            {initializing ? 'Preparando...' : 'Continuar Implementação'}
           </Button>
         ) : (
-          <Button className="w-full" onClick={startImplementation}>
+          <Button 
+            className="w-full" 
+            onClick={startImplementation} 
+            disabled={initializing}
+          >
             <PlayCircle className="mr-2 h-5 w-5" />
-            Iniciar Implementação
+            {initializing ? 'Preparando...' : 'Iniciar Implementação'}
           </Button>
         )}
+        
+        <div className="space-y-2 mt-3">
+          <Button variant="outline" className="w-full" onClick={() => {}}>
+            <Star className="mr-2 h-5 w-5" />
+            Adicionar aos Favoritos
+          </Button>
+          
+          <Button 
+            variant="outline" 
+            className="w-full" 
+            onClick={() => {}}
+            disabled={!solution.materials || !Array.isArray(solution.materials) || solution.materials.length === 0}
+          >
+            <Download className="mr-2 h-5 w-5" />
+            Baixar Materiais
+          </Button>
+        </div>
       </div>
       
       <div className="pt-4 border-t">
@@ -103,6 +136,22 @@ export const SolutionSidebar = ({
           </div>
         </div>
       </div>
+      
+      {solution.tags && solution.tags.length > 0 && (
+        <div className="pt-4 border-t">
+          <h3 className="font-medium mb-2">Tags</h3>
+          <div className="flex flex-wrap gap-2">
+            {solution.tags.map((tag, index) => (
+              <span 
+                key={index}
+                className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

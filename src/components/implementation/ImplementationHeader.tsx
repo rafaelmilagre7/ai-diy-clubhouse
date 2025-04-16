@@ -6,6 +6,7 @@ import { Progress } from "@/components/ui/progress";
 import { Solution } from "@/lib/supabase";
 import { useNavigate } from "react-router-dom";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 
 interface ImplementationHeaderProps {
   solution: Solution;
@@ -49,12 +50,26 @@ export const ImplementationHeader = ({
               <ChevronLeft className="mr-1 h-4 w-4" />
               Voltar para detalhes
             </Button>
-            <h1 className="text-xl font-bold mt-1 flex items-center">
-              <div className="w-6 h-6 rounded-full bg-viverblue text-white flex items-center justify-center mr-2">
-                {moduleIdx + 1}
-              </div>
-              {solution.title}: {currentModuleType}
-            </h1>
+            
+            <Breadcrumb className="mt-2">
+              <BreadcrumbList>
+                <BreadcrumbItem>
+                  <BreadcrumbLink onClick={() => navigate('/dashboard')}>Dashboard</BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator />
+                <BreadcrumbItem>
+                  <BreadcrumbLink onClick={() => navigate(`/solution/${solution.id}`)}>
+                    {solution.title}
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator />
+                <BreadcrumbItem>
+                  <BreadcrumbLink className="font-semibold">
+                    {currentModuleType}
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+              </BreadcrumbList>
+            </Breadcrumb>
           </div>
           
           <div className="flex items-center gap-2">

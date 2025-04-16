@@ -14,13 +14,15 @@ interface ImplementationFooterProps {
   modulesLength: number;
   handlePrevious: () => void;
   handleComplete: () => void;
+  isCompleting: boolean;
 }
 
 export const ImplementationFooter = ({
   moduleIdx,
   modulesLength,
   handlePrevious,
-  handleComplete
+  handleComplete,
+  isCompleting = false
 }: ImplementationFooterProps) => {
   const isLastModule = moduleIdx >= modulesLength - 1;
   
@@ -54,18 +56,33 @@ export const ImplementationFooter = ({
           <Button 
             onClick={handleComplete} 
             className="bg-green-600 hover:bg-green-700 flex-1 sm:flex-initial"
+            disabled={isCompleting}
           >
             <CheckCircle className="mr-2 h-5 w-5" />
-            Concluir Implementação
+            {isCompleting ? (
+              <>Confirmando implementação...</>
+            ) : (
+              <>Confirmar Implementação Completa</>
+            )}
           </Button>
         ) : (
-          <Button 
-            onClick={handleComplete} 
-            className="bg-viverblue hover:bg-viverblue/90 flex-1 sm:flex-initial"
-          >
-            Próximo
-            <ChevronRight className="ml-2 h-5 w-5" />
-          </Button>
+          <div className="flex flex-1 sm:flex-initial gap-2">
+            <Button 
+              variant="outline" 
+              onClick={handleComplete} 
+              className="flex-1"
+            >
+              <CheckCircle className="mr-2 h-5 w-5" />
+              Marcar como Concluído
+            </Button>
+            <Button 
+              onClick={handleComplete} 
+              className="bg-viverblue hover:bg-viverblue/90 flex-1"
+            >
+              Próximo
+              <ChevronRight className="ml-2 h-5 w-5" />
+            </Button>
+          </div>
         )}
       </div>
     </div>

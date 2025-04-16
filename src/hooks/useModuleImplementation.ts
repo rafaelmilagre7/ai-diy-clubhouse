@@ -17,6 +17,7 @@ export const useModuleImplementation = () => {
   const [currentModule, setCurrentModule] = useState<Module | null>(null);
   const [progress, setProgress] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isCompleting, setIsCompleting] = useState(false);
   
   // Fetch solution and modules
   useEffect(() => {
@@ -105,8 +106,7 @@ export const useModuleImplementation = () => {
           .from("progress")
           .update({ 
             current_module: moduleIdx,
-            last_activity: new Date().toISOString(),
-            ...(moduleIdx === 7 ? { is_completed: true, completion_date: new Date().toISOString() } : {})
+            last_activity: new Date().toISOString()
           })
           .eq("id", progress.id);
         
@@ -122,8 +122,10 @@ export const useModuleImplementation = () => {
   }, [moduleIdx, user, id, progress]);
   
   const handleComplete = async () => {
-    // If this is the last module, mark as complete and show celebration
+    // If this is the last module, ask for confirmation before marking as complete
     if (moduleIdx >= modules.length - 1) {
+      setIsCompleting(true);
+      
       if (user && progress) {
         try {
           const { error } = await supabase
@@ -140,14 +142,21 @@ export const useModuleImplementation = () => {
           }
           
           // Navigate to the solution details page
-          navigate(`/solution/${id}`);
-          
           toast({
             title: "Implementação concluída!",
             description: "Parabéns! Você concluiu com sucesso a implementação desta solução.",
           });
+          
+          navigate(`/solution/${id}`);
         } catch (error) {
           console.error("Error completing implementation:", error);
+          toast({
+            title: "Erro ao concluir implementação",
+            description: "Ocorreu um erro ao tentar marcar a implementação como concluída.",
+            variant: "destructive",
+          });
+        } finally {
+          setIsCompleting(false);
         }
       }
     } else {
@@ -177,6 +186,7 @@ export const useModuleImplementation = () => {
     moduleIdx,
     handleComplete,
     handlePrevious,
-    calculateProgress
+    calculateProgress,
+    isCompleting
   };
 };

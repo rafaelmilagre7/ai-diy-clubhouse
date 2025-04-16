@@ -21,28 +21,24 @@ const SolutionImplementation = () => {
     moduleIdx,
     handleComplete,
     handlePrevious,
-    calculateProgress
+    calculateProgress,
+    isCompleting
   } = useModuleImplementation();
   
   // Adicionar atalhos de teclado para navegação
   useHotkeys('ArrowRight', () => {
     if (moduleIdx < modules.length - 1) {
       handleComplete();
-      toast.success("Avançando para o próximo módulo");
     }
   }, [moduleIdx, modules, handleComplete]);
   
   useHotkeys('ArrowLeft', () => {
     handlePrevious();
-    if (moduleIdx > 0) {
-      toast.success("Voltando para o módulo anterior");
-    }
-  }, [moduleIdx, handlePrevious]);
+  }, [handlePrevious]);
   
   useHotkeys('Escape', () => {
     if (solution) {
       navigate(`/solution/${solution.id}`);
-      toast.success("Voltando para os detalhes da solução");
     } else {
       navigate("/dashboard");
     }
@@ -80,6 +76,7 @@ const SolutionImplementation = () => {
         modulesLength={modules.length}
         handlePrevious={handlePrevious}
         handleComplete={handleComplete}
+        isCompleting={isCompleting}
       />
     </div>
   );
