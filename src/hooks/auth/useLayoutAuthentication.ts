@@ -36,13 +36,13 @@ export const useLayoutAuthentication = () => {
           setLoadingTimeout(true);
         }
       }, 2000); // Longer timeout for better UX
-      
-      return () => {
-        if (timeoutRef.current) {
-          clearTimeout(timeoutRef.current);
-        }
-      };
     }
+    
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
   }, [isLoading]);
   
   // Handle timeout and redirect to auth if needed

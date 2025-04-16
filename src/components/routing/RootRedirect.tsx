@@ -10,21 +10,21 @@ const RootRedirect = () => {
   const [timeoutExceeded, setTimeoutExceeded] = useState(false);
   const timeoutRef = useRef<number | null>(null);
   
-  // Handle timing out the loading state
+  // Handle timing out the loading state - always runs
   useEffect(() => {
     // Clear any existing timeout
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
     }
     
-    timeoutRef.current = window.setTimeout(() => {
-      if (isLoading && !timeoutExceeded) {
+    if (isLoading && !timeoutExceeded) {
+      timeoutRef.current = window.setTimeout(() => {
         console.log("RootRedirect: Loading timeout exceeded, redirecting to /auth");
         setTimeoutExceeded(true);
         setIsLoading(false);
         navigate('/auth', { replace: true });
-      }
-    }, 2000); // Longer timeout for better UX
+      }, 2000); // Longer timeout for better UX
+    }
     
     return () => {
       if (timeoutRef.current) {
@@ -33,10 +33,9 @@ const RootRedirect = () => {
     };
   }, [isLoading, navigate, timeoutExceeded, setIsLoading]);
   
-  // Always render something, but determine what based on conditions
+  // Handle redirection based on user state - always runs
   useEffect(() => {
-    // Handle immediate redirection if user and profile are available
-    if (user && profile) {
+    if (user && profile && !isLoading) {
       console.log("RootRedirect: User and profile available, redirecting");
       if (profile.role === 'admin') {
         navigate('/admin', { replace: true });
@@ -44,7 +43,7 @@ const RootRedirect = () => {
         navigate('/dashboard', { replace: true });
       }
     }
-  }, [user, profile, navigate]);
+  }, [user, profile, navigate, isLoading]);
   
   // Show loading screen during check
   if (isLoading && !timeoutExceeded) {
