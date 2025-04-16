@@ -2,7 +2,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { AuthProvider } from './contexts/auth';
-import { ProtectedRoute } from './components/auth/ProtectedRoute';
+import ProtectedRoute from './components/routing/ProtectedRoute';
 import { Dashboard, Login, Register, ForgotPassword, ResetPassword, AdminDashboard, SolutionEditor, SolutionsList, ProfileSettings, SolutionDetails, SolutionImplementation, Error404, ImplementationConfirmation, ImplementationCompleted } from './pages';
 import { MemberContent } from './components/layout/member/MemberContent';
 import { AdminContent } from './components/layout/admin/AdminContent';
