@@ -20,6 +20,7 @@ const AdminLayout = () => {
       return;
     }
     
+    // Compare with the string 'admin' explicitly, not as a type
     if (profile.role !== 'admin') {
       console.log("AdminLayout useEffect: Usuário não é admin, redirecionando para /dashboard", { 
         profileRole: profile.role

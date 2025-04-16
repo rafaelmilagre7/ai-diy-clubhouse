@@ -20,6 +20,7 @@ const Layout = () => {
       return;
     }
     
+    // Compare with the string 'admin' explicitly, not as a type
     if (profile.role === 'admin') {
       console.log("Layout useEffect: Usuário é admin, redirecionando para /admin", { 
         profileRole: profile.role,
