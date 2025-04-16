@@ -38,7 +38,8 @@ export const signInAsTestMember = async (): Promise<void> => {
       
       // Se o perfil não existir, criar um
       if (!profileData) {
-        const newProfile: Partial<UserProfile> = {
+        // Criando um objeto com as propriedades obrigatórias
+        const newProfile = {
           id: data.user.id,
           email: TEST_MEMBER.email,
           name: 'Membro Teste',
@@ -48,7 +49,7 @@ export const signInAsTestMember = async (): Promise<void> => {
           industry: null
         };
         
-        await supabase.from('profiles').insert([newProfile]);
+        await supabase.from('profiles').insert(newProfile);
       }
       
       toast({
