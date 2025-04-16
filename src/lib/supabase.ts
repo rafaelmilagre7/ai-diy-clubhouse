@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 export { supabase };
@@ -32,6 +31,28 @@ export interface Solution {
   success_rate?: number | null;
   related_solutions?: string[];
   tags?: string[];
+  overview?: string;
+  tools?: Array<{
+    name: string;
+    description?: string;
+    url?: string;
+  }>;
+  materials?: Array<{
+    name: string;
+    description?: string;
+    url?: string;
+  }>;
+  videos?: Array<{
+    title?: string;
+    description?: string;
+    url?: string;
+    youtube_id?: string;
+  }>;
+  checklist?: Array<{
+    title?: string;
+    description?: string;
+    checked?: boolean;
+  }>;
 }
 
 export interface Module {

@@ -10,7 +10,7 @@ import LoadingScreen from "@/components/common/LoadingScreen";
 import { SolutionHeaderSection } from "@/components/solution/SolutionHeaderSection";
 import { SolutionContentSection } from "@/components/solution/SolutionContentSection";
 import { SolutionSidebar } from "@/components/solution/SolutionSidebar";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 
 const SolutionDetails = () => {
