@@ -1,6 +1,7 @@
 
 import { StatCard } from "./StatCard";
 import { Users, FileText, Award, Clock, TrendingUp, Activity } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface StatsOverviewProps {
   data: {
@@ -11,9 +12,29 @@ interface StatsOverviewProps {
     userGrowth: number;
     implementationRate: number;
   };
+  loading: boolean;
 }
 
-export const StatsOverview = ({ data }: StatsOverviewProps) => {
+export const StatsOverview = ({ data, loading }: StatsOverviewProps) => {
+  if (loading) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {Array(6).fill(0).map((_, index) => (
+          <div key={index} className="p-6 rounded-lg border">
+            <div className="flex justify-between items-start">
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-[120px]" />
+                <Skeleton className="h-8 w-[80px]" />
+                <Skeleton className="h-4 w-[160px]" />
+              </div>
+              <Skeleton className="h-12 w-12 rounded-md" />
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       <StatCard 
@@ -51,7 +72,7 @@ export const StatsOverview = ({ data }: StatsOverviewProps) => {
       />
       <StatCard 
         title="Atividade Diária" 
-        value="36 usuários ativos" 
+        value={data.totalUsers > 0 ? `${Math.round(data.totalUsers * 0.3)} usuários ativos` : "0 usuários ativos"} 
         icon={Activity} 
       />
     </div>

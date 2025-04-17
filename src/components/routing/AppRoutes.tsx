@@ -24,6 +24,7 @@ import AdminSolutionCreate from '@/pages/admin/AdminSolutionCreate';
 import AdminUsers from '@/pages/admin/AdminUsers';
 import AdminAnalytics from '@/pages/admin/AdminAnalytics';
 import AdminSettings from '@/pages/admin/AdminSettings';
+import SolutionMetrics from '@/pages/admin/SolutionMetrics';
 
 const AppRoutes = () => {
   return (
@@ -57,6 +58,7 @@ const AppRoutes = () => {
         <Route path="/admin/users" element={<ProtectedRoute requireAdmin={true}><AdminUsers /></ProtectedRoute>} />
         <Route path="/admin/analytics" element={<ProtectedRoute requireAdmin={true}><AdminAnalytics /></ProtectedRoute>} />
         <Route path="/admin/settings" element={<ProtectedRoute requireAdmin={true}><AdminSettings /></ProtectedRoute>} />
+        <Route path="/admin/metrics/:id" element={<ProtectedRoute requireAdmin={true}><SolutionMetrics /></ProtectedRoute>} />
       </Route>
     </Routes>
   );
