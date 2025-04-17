@@ -14,11 +14,12 @@ export const SolutionContentSection = ({ solution }: SolutionContentSectionProps
   return (
     <div className="bg-white p-6 rounded-lg shadow-sm">
       <div className="prose max-w-none">
+        <h2 className="text-xl font-semibold mb-4">Sobre esta solução</h2>
+        
         {solution.overview ? (
           <div dangerouslySetInnerHTML={renderContent(solution.overview)} />
         ) : (
           <>
-            <h2 className="text-xl font-semibold mb-4">Sobre esta solução</h2>
             <p>
               {solution.description}
             </p>

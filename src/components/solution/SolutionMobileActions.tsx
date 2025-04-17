@@ -21,9 +21,6 @@ export const SolutionMobileActions = ({
 }: SolutionMobileActionsProps) => {
   const navigate = useNavigate();
   
-  // Fixed module count to 6
-  const totalModules = 6;
-  
   return (
     <div className="mt-8 sm:hidden">
       {progress?.is_completed ? (
@@ -33,12 +30,12 @@ export const SolutionMobileActions = ({
       ) : progress ? (
         <Button className="w-full" onClick={continueImplementation} disabled={initializing}>
           <PlayCircle className="mr-2 h-5 w-5" />
-          Continuar Implementação ({Math.round((progress.current_module / totalModules) * 100)}%)
+          {initializing ? 'Preparando...' : 'Implementar solução'}
         </Button>
       ) : (
         <Button className="w-full" onClick={startImplementation} disabled={initializing}>
           <PlayCircle className="mr-2 h-5 w-5" />
-          {initializing ? 'Preparando...' : 'Iniciar Implementação Guiada'}
+          {initializing ? 'Preparando...' : 'Implementar solução'}
         </Button>
       )}
     </div>
