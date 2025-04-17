@@ -33,16 +33,15 @@ export const ToolItem: React.FC<ToolItemProps> = ({ tool }) => {
         : <Icons.AlertTriangle className={cn("h-5 w-5", "text-yellow-600")} />;
     }
     
-    // Type-safe approach to render dynamic icons
+    // Type assertion with a more specific type to ensure we get a valid React component
     const iconName = tool.icon as keyof typeof Icons;
-    const IconComponent = Icons[iconName];
+    const IconComponent = Icons[iconName] as React.FC<{ className?: string }>;
     
     // Get color based on required status
     const iconColorClass = tool.is_required ? "text-blue-600" : "text-yellow-600";
     
-    return React.createElement(IconComponent, {
-      className: cn("h-5 w-5", iconColorClass)
-    });
+    // Return JSX directly instead of using createElement
+    return <IconComponent className={cn("h-5 w-5", iconColorClass)} />;
   };
   
   return (
