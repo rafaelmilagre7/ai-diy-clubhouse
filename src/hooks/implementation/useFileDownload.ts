@@ -2,15 +2,7 @@
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useLogging } from "@/hooks/useLogging";
-
-export interface Material {
-  id: string;
-  title: string;
-  description?: string;
-  url?: string;
-  file_type?: string;
-  size?: number;
-}
+import { Material } from "./useMaterialsData";
 
 export const useFileDownload = () => {
   const [downloading, setDownloading] = useState<string | null>(null);
@@ -31,7 +23,7 @@ export const useFileDownload = () => {
       setDownloading(material.id);
       log("Starting file download", { 
         material_id: material.id, 
-        material_title: material.title 
+        material_name: material.name 
       });
 
       // Usa a API fetch para obter o arquivo
@@ -52,7 +44,7 @@ export const useFileDownload = () => {
       link.href = blobUrl;
       
       // Extrai o nome do arquivo da URL, ou usa o título
-      const fileName = material.title || 
+      const fileName = material.name || 
                       material.url.split("/").pop() || 
                       `arquivo-${material.id}`;
                       
@@ -70,7 +62,7 @@ export const useFileDownload = () => {
       
       toast({
         title: "Download iniciado",
-        description: `O arquivo "${material.title}" está sendo baixado.`,
+        description: `O arquivo "${material.name}" está sendo baixado.`,
       });
     } catch (error) {
       logError("Error downloading file", error);

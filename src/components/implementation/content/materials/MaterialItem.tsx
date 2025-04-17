@@ -6,7 +6,7 @@ import { Material } from "@/hooks/implementation/useMaterialsData";
 
 interface MaterialItemProps {
   material: Material;
-  onDownload: (material: Material) => void;
+  onDownload: (material: Material) => Promise<void>;
 }
 
 export const MaterialItem: React.FC<MaterialItemProps> = ({ material, onDownload }) => {

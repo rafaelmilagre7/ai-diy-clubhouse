@@ -13,7 +13,7 @@ export interface Tool {
   is_required: boolean;
   solution_id: string;
   description?: string;
-  icon?: keyof typeof Icons;
+  icon?: string;
 }
 
 interface ToolItemProps {
@@ -23,10 +23,15 @@ interface ToolItemProps {
 export const ToolItem: React.FC<ToolItemProps> = ({ tool }) => {
   const { log } = useLogging();
   
-  // Determine which icon to show based on tool configuration
-  const IconComponent = tool.icon ? Icons[tool.icon] : 
-                       tool.is_required ? Icons.CheckCircle : 
-                       Icons.AlertTriangle;
+  // Determine which icon to show
+  let IconComponent = Icons.CheckCircle;
+  
+  if (tool.icon && tool.icon in Icons) {
+    // Use type assertion to safely access the dynamic icon
+    IconComponent = Icons[tool.icon as keyof typeof Icons];
+  } else if (!tool.is_required) {
+    IconComponent = Icons.AlertTriangle;
+  }
 
   // Get color based on required status
   const iconColorClass = tool.is_required ? "text-blue-600" : "text-yellow-600";
