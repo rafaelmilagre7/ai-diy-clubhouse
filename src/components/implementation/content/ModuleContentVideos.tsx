@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { Module, Solution, supabase } from "@/lib/supabase";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useLogging } from "@/hooks/useLogging";
 
 interface ModuleContentVideosProps {
   module: Module;
@@ -18,6 +19,7 @@ export const ModuleContentVideos = ({ module }: ModuleContentVideosProps) => {
   const [solution, setSolution] = useState<Solution | null>(null);
   const [videos, setVideos] = useState<Video[]>([]);
   const [loading, setLoading] = useState(true);
+  const { log, logError } = useLogging();
 
   useEffect(() => {
     const fetchSolution = async () => {
@@ -31,7 +33,7 @@ export const ModuleContentVideos = ({ module }: ModuleContentVideosProps) => {
           .single();
         
         if (error) {
-          console.error("Error fetching solution:", error);
+          logError("Error fetching solution:", error);
           return;
         }
         
@@ -49,19 +51,20 @@ export const ModuleContentVideos = ({ module }: ModuleContentVideosProps) => {
             youtube_id: video.youtube_id
           }));
           setVideos(processedVideos);
+          log("Videos loaded", { count: processedVideos.length });
         } else {
           console.warn("Videos property is missing or not an array", solutionData);
           setVideos([]);
         }
       } catch (err) {
-        console.error("Error fetching solution data:", err);
+        logError("Error fetching solution data:", err);
       } finally {
         setLoading(false);
       }
     };
 
     fetchSolution();
-  }, [module.solution_id]);
+  }, [module.solution_id, log, logError]);
 
   if (loading) {
     return (
@@ -77,7 +80,11 @@ export const ModuleContentVideos = ({ module }: ModuleContentVideosProps) => {
   }
 
   if (videos.length === 0) {
-    return null;
+    return (
+      <div className="text-center py-12">
+        <p className="text-muted-foreground">Nenhum vídeo disponível para esta solução.</p>
+      </div>
+    );
   }
 
   return (

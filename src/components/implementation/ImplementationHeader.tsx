@@ -3,23 +3,13 @@ import React from "react";
 import { ChevronLeft } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Solution } from "@/lib/supabase";
-import { Button } from "@/components/ui/button";
-import { ImplementationProgress } from "./ImplementationProgress";
 
 interface ImplementationHeaderProps {
   solution: Solution;
-  moduleIdx: number;
-  modulesLength: number;
-  completedModules: number[];
-  isCompleting: boolean;
 }
 
 export const ImplementationHeader = ({
-  solution,
-  moduleIdx,
-  modulesLength,
-  completedModules,
-  isCompleting
+  solution
 }: ImplementationHeaderProps) => {
   return (
     <div className="bg-white border-b">

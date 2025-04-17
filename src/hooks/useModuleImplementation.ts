@@ -5,9 +5,6 @@ import { Module } from "@/lib/supabase";
 import { useImplementationData } from "./implementation/useImplementationData";
 
 export const useModuleImplementation = () => {
-  const { moduleIndex } = useParams<{ moduleIndex: string }>();
-  const moduleIdx = parseInt(moduleIndex || "0");
-  
   // Get data from implementation hooks
   const {
     solution,
@@ -18,24 +15,23 @@ export const useModuleImplementation = () => {
     loading
   } = useImplementationData();
   
-  // Current module state
+  // Current module state - always use the first module (index 0)
   const [currentModule, setCurrentModule] = useState<Module | null>(null);
   
-  // Set current module based on moduleIndex
+  // Set current module to the first module
   useEffect(() => {
-    if (modules.length > 0 && moduleIdx < modules.length) {
-      setCurrentModule(modules[moduleIdx]);
+    if (modules.length > 0) {
+      setCurrentModule(modules[0]);
     } else {
       setCurrentModule(null);
     }
-  }, [modules, moduleIdx]);
+  }, [modules]);
   
   return {
     solution,
     modules,
     currentModule,
     loading,
-    moduleIdx,
     completedModules
   };
 };

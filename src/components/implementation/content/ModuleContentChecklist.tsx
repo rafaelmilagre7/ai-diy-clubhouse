@@ -6,33 +6,36 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { CheckCircle } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/auth";
 import { useLogging } from "@/hooks/useLogging";
+import { toast } from "sonner";
 
 interface ModuleContentChecklistProps {
   module: Module;
-  onComplete?: () => void;
 }
 
 interface ChecklistItem {
+  id: string;
   title: string;
   description?: string;
   checked: boolean;
 }
 
-export const ModuleContentChecklist = ({ module, onComplete }: ModuleContentChecklistProps) => {
+export const ModuleContentChecklist = ({ module }: ModuleContentChecklistProps) => {
   const [solution, setSolution] = useState<Solution | null>(null);
   const [checklist, setChecklist] = useState<ChecklistItem[]>([]);
+  const [userChecklist, setUserChecklist] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(true);
-  const [allChecked, setAllChecked] = useState(false);
-  const navigate = useNavigate();
-  const { log } = useLogging();
+  const [saving, setSaving] = useState(false);
+  const { user } = useAuth();
+  const { log, logError } = useLogging();
 
   useEffect(() => {
-    const fetchSolution = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true);
         
+        // Fetch solution data
         const { data, error } = await supabase
           .from("solutions")
           .select("*")
@@ -40,64 +43,130 @@ export const ModuleContentChecklist = ({ module, onComplete }: ModuleContentChec
           .single();
         
         if (error) {
-          console.error("Error fetching solution:", error);
+          logError("Error fetching solution:", error);
           return;
         }
         
-        // Ensure data is of Solution type before setting
+        // Ensure data is of Solution type
         const solutionData = data as Solution;
         setSolution(solutionData);
         
         // Check if checklist property exists and is an array
         if (solutionData.checklist && Array.isArray(solutionData.checklist)) {
           // Transform items to ensure they have the required properties
-          const transformedChecklist: ChecklistItem[] = solutionData.checklist.map((item: any) => ({
+          const transformedChecklist: ChecklistItem[] = solutionData.checklist.map((item: any, index: number) => ({
+            id: item.id || `checklist-${index}`,
             title: item.title || "Item sem título",
             description: item.description,
-            checked: item.checked || false
+            checked: false
           }));
           setChecklist(transformedChecklist);
+          
+          // Initialize user checklist state
+          const initialUserChecklist: Record<string, boolean> = {};
+          transformedChecklist.forEach(item => {
+            initialUserChecklist[item.id] = false;
+          });
+          
+          // If user is logged in, fetch their specific checklist progress
+          if (user) {
+            const { data: userData, error: userError } = await supabase
+              .from("user_checklists")
+              .select("*")
+              .eq("user_id", user.id)
+              .eq("solution_id", module.solution_id)
+              .single();
+              
+            if (!userError && userData && userData.checked_items) {
+              // Update the initial state with user's saved progress
+              Object.keys(userData.checked_items).forEach(itemId => {
+                if (initialUserChecklist.hasOwnProperty(itemId)) {
+                  initialUserChecklist[itemId] = userData.checked_items[itemId];
+                }
+              });
+            }
+          }
+          
+          setUserChecklist(initialUserChecklist);
         } else {
           // Log for debugging if checklist is missing
           console.warn("Checklist property is missing or not an array", solutionData);
           setChecklist([]);
         }
       } catch (err) {
-        console.error("Error fetching solution data:", err);
+        logError("Error fetching solution data:", err);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchSolution();
-  }, [module.solution_id]);
+    fetchData();
+  }, [module.solution_id, user, log, logError]);
 
-  // Verify if all items are checked
-  useEffect(() => {
-    if (checklist.length > 0) {
-      const isAllChecked = checklist.every(item => item.checked);
-      setAllChecked(isAllChecked);
-    }
-  }, [checklist]);
-
-  const handleCheckChange = (index: number, checked: boolean) => {
-    const newChecklist = [...checklist];
-    newChecklist[index] = { ...newChecklist[index], checked };
-    setChecklist(newChecklist);
-    
-    // Log user interaction
-    log("User toggled checklist item", { 
-      solution_id: module.solution_id,
-      module_id: module.id,
-      item_index: index,
-      checked
-    });
-  };
-
-  const handleImplementationConfirm = () => {
-    if (solution) {
-      // Navigate to implementation confirmation
-      navigate(`/implement/${solution.id}/confirm`);
+  // Handle checkbox change and save to user's progress
+  const handleCheckChange = async (itemId: string, checked: boolean) => {
+    try {
+      // Update local state first for immediate feedback
+      const newUserChecklist = { ...userChecklist };
+      newUserChecklist[itemId] = checked;
+      setUserChecklist(newUserChecklist);
+      
+      // Only save to database if user is logged in
+      if (user && solution) {
+        setSaving(true);
+        
+        // Check if a record already exists
+        const { data, error } = await supabase
+          .from("user_checklists")
+          .select("*")
+          .eq("user_id", user.id)
+          .eq("solution_id", solution.id)
+          .single();
+          
+        if (error && error.code !== "PGRST116") { // PGRST116 = Not found, which is expected if no record yet
+          throw error;
+        }
+        
+        if (data) {
+          // Update existing record
+          await supabase
+            .from("user_checklists")
+            .update({
+              checked_items: newUserChecklist,
+              updated_at: new Date().toISOString()
+            })
+            .eq("id", data.id);
+        } else {
+          // Create new record
+          await supabase
+            .from("user_checklists")
+            .insert({
+              user_id: user.id,
+              solution_id: solution.id,
+              checked_items: newUserChecklist,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            });
+        }
+        
+        // Log user interaction
+        log("User toggled checklist item", { 
+          solution_id: solution.id,
+          item_id: itemId,
+          checked
+        });
+      }
+    } catch (error) {
+      logError("Error saving checklist progress:", error);
+      toast.error("Erro ao salvar progresso do checklist");
+      
+      // Revert the change in UI if save fails
+      setUserChecklist(prevState => ({
+        ...prevState,
+        [itemId]: !checked
+      }));
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -119,7 +188,11 @@ export const ModuleContentChecklist = ({ module, onComplete }: ModuleContentChec
   }
 
   if (checklist.length === 0) {
-    return null;
+    return (
+      <div className="text-center py-12">
+        <p className="text-muted-foreground">Nenhum checklist disponível para esta solução.</p>
+      </div>
+    );
   }
 
   return (
@@ -130,16 +203,17 @@ export const ModuleContentChecklist = ({ module, onComplete }: ModuleContentChec
       </p>
       
       <div className="space-y-3 mt-4">
-        {checklist.map((item, index) => (
-          <div key={index} className="flex items-start p-4 border rounded-md">
+        {checklist.map((item) => (
+          <div key={item.id} className="flex items-start p-4 border rounded-md">
             <Checkbox
-              id={`checklist-item-${index}`}
-              checked={item.checked}
-              onCheckedChange={(checked) => handleCheckChange(index, checked as boolean)}
+              id={`checklist-item-${item.id}`}
+              checked={userChecklist[item.id] || false}
+              onCheckedChange={(checked) => handleCheckChange(item.id, checked as boolean)}
               className="mt-0.5 mr-3"
+              disabled={saving}
             />
             <div>
-              <Label htmlFor={`checklist-item-${index}`} className="font-medium cursor-pointer">
+              <Label htmlFor={`checklist-item-${item.id}`} className="font-medium cursor-pointer">
                 {item.title}
               </Label>
               {item.description && (
@@ -150,24 +224,17 @@ export const ModuleContentChecklist = ({ module, onComplete }: ModuleContentChec
         ))}
       </div>
       
-      {/* Botão de confirmação de implementação */}
-      {module.type === "verification" && (
-        <div className="mt-8 pt-4 border-t">
-          <Button
-            onClick={handleImplementationConfirm}
-            disabled={!allChecked}
-            className="w-full py-6"
-          >
-            <CheckCircle className="mr-2 h-5 w-5" />
-            Confirmar Implementação
-          </Button>
-          {!allChecked && (
-            <p className="text-sm text-center text-muted-foreground mt-2">
-              Complete todos os itens do checklist para confirmar a implementação.
-            </p>
-          )}
+      {/* Progresso do checklist */}
+      <div className="mt-4 p-4 bg-green-50 border border-green-100 rounded-lg">
+        <div className="flex justify-between items-center">
+          <span className="text-sm font-medium text-green-800">
+            Progresso do checklist
+          </span>
+          <span className="text-sm font-medium text-green-800">
+            {Object.values(userChecklist).filter(Boolean).length} de {checklist.length}
+          </span>
         </div>
-      )}
+      </div>
     </div>
   );
 };

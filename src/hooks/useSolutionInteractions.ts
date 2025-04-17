@@ -38,7 +38,7 @@ export const useSolutionInteractions = (solutionId: string | undefined, progress
         }
       }
       
-      // Navega diretamente para a implementação, indo para a aba de ferramentas
+      // Navigate directly to the implementation page, tools tab
       navigate(`/implement/${solutionId}/0`);
     } catch (error) {
       console.error("Error starting implementation:", error);
@@ -54,6 +54,7 @@ export const useSolutionInteractions = (solutionId: string | undefined, progress
   
   const continueImplementation = () => {
     if (!solutionId || !progress) return;
+    // Navigate directly to the implementation page, tools tab
     navigate(`/implement/${solutionId}/0`);
   };
   

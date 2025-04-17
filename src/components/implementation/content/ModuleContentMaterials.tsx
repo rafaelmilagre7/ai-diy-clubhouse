@@ -4,6 +4,7 @@ import { Module, supabase } from "@/lib/supabase";
 import { Download, FileText, Image, FileArchive } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useLogging } from "@/hooks/useLogging";
 
 interface ModuleContentMaterialsProps {
   module: Module;
@@ -22,6 +23,7 @@ interface Material {
 export const ModuleContentMaterials = ({ module }: ModuleContentMaterialsProps) => {
   const [materials, setMaterials] = useState<Material[]>([]);
   const [loading, setLoading] = useState(true);
+  const { log, logError } = useLogging();
 
   useEffect(() => {
     const fetchMaterials = async () => {
@@ -43,23 +45,33 @@ export const ModuleContentMaterials = ({ module }: ModuleContentMaterialsProps) 
             .is("module_id", null);
           
           if (solutionError) {
-            console.error("Error fetching materials:", solutionError);
+            logError("Error fetching materials:", solutionError);
             return;
           }
           
-          setMaterials(solutionData || []);
+          // Filter out video types - they should be in the Videos tab only
+          const filteredData = (solutionData || []).filter(
+            item => item.type !== 'video' && item.type !== 'youtube'
+          );
+          
+          setMaterials(filteredData);
         } else {
-          setMaterials(moduleData);
+          // Filter out video types from module data too
+          const filteredModuleData = moduleData.filter(
+            item => item.type !== 'video' && item.type !== 'youtube'
+          );
+          
+          setMaterials(filteredModuleData);
         }
       } catch (err) {
-        console.error("Error in materials fetch:", err);
+        logError("Error in materials fetch:", err);
       } finally {
         setLoading(false);
       }
     };
 
     fetchMaterials();
-  }, [module.id, module.solution_id]);
+  }, [module.id, module.solution_id, log, logError]);
 
   if (loading) {
     return (
@@ -81,7 +93,11 @@ export const ModuleContentMaterials = ({ module }: ModuleContentMaterialsProps) 
   }
 
   if (materials.length === 0) {
-    return null;
+    return (
+      <div className="text-center py-12">
+        <p className="text-muted-foreground">Nenhum material de apoio disponível para esta solução.</p>
+      </div>
+    );
   }
 
   // Function to get appropriate icon based on file type

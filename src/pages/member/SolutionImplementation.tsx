@@ -10,6 +10,9 @@ import { ModuleContentMaterials } from "@/components/implementation/content/Modu
 import { ModuleContentVideos } from "@/components/implementation/content/ModuleContentVideos";
 import { ModuleContentTools } from "@/components/implementation/content/ModuleContentTools";
 import { ModuleContentChecklist } from "@/components/implementation/content/ModuleContentChecklist";
+import { ImplementationComplete } from "@/components/implementation/content/ImplementationComplete";
+import { useSolutionCompletion } from "@/hooks/implementation/useSolutionCompletion";
+import { useNavigate } from "react-router-dom";
 
 const SolutionImplementation = () => {
   const {
@@ -17,12 +20,31 @@ const SolutionImplementation = () => {
     modules,
     currentModule,
     loading,
-    moduleIdx,
     completedModules,
   } = useModuleImplementation();
   
-  const { log, logError } = useLogging();
   const [activeTab, setActiveTab] = useState("tools");
+  const navigate = useNavigate();
+  const { log, logError } = useLogging();
+  
+  const {
+    isCompleting,
+    handleConfirmImplementation
+  } = useSolutionCompletion({
+    progressId: solution?.progress?.id,
+    solutionId: solution?.id,
+    moduleIdx: 0,
+    completedModules: completedModules,
+    setCompletedModules: () => {} // We're not using this anymore
+  });
+  
+  const onComplete = async () => {
+    const success = await handleConfirmImplementation();
+    if (success) {
+      // Navigate back to solution or dashboard
+      navigate(`/solution/${solution?.id}`);
+    }
+  };
   
   // Log module data when it changes
   useEffect(() => {
@@ -33,19 +55,18 @@ const SolutionImplementation = () => {
         module_id: currentModule.id,
         module_title: currentModule.title,
         module_type: currentModule.type,
-        module_index: moduleIdx,
         has_content: !!currentModule.content,
         content_keys: currentModule.content ? Object.keys(currentModule.content) : []
       });
     }
-  }, [currentModule, solution, moduleIdx, log]);
+  }, [currentModule, solution, log]);
   
   if (loading) {
     return <LoadingScreen />;
   }
   
-  if (!solution || !currentModule) {
-    const error = "Solution or module not found";
+  if (!solution) {
+    const error = "Solution not found";
     logError("Implementation not found", { error, solution_id: solution?.id });
     return <ImplementationNotFound />;
   }
@@ -53,22 +74,17 @@ const SolutionImplementation = () => {
   return (
     <div className="pb-20 min-h-screen bg-slate-50">
       {/* Header section */}
-      <ImplementationHeader
-        solution={solution}
-        moduleIdx={moduleIdx}
-        modulesLength={modules.length}
-        completedModules={completedModules}
-        isCompleting={false}
-      />
+      <ImplementationHeader solution={solution} />
       
       {/* Module content */}
       <div className="container mt-6 bg-white p-6 rounded-lg shadow-sm">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="w-full grid grid-cols-4 mb-6">
+          <TabsList className="w-full grid grid-cols-5 mb-6">
             <TabsTrigger value="tools">Ferramentas</TabsTrigger>
             <TabsTrigger value="materials">Materiais</TabsTrigger>
             <TabsTrigger value="videos">Vídeos</TabsTrigger>
             <TabsTrigger value="checklist">Checklist</TabsTrigger>
+            <TabsTrigger value="complete">Concluir</TabsTrigger>
           </TabsList>
           
           <TabsContent value="tools">
@@ -85,6 +101,14 @@ const SolutionImplementation = () => {
           
           <TabsContent value="checklist">
             <ModuleContentChecklist module={currentModule} />
+          </TabsContent>
+          
+          <TabsContent value="complete">
+            <ImplementationComplete 
+              solution={solution} 
+              onComplete={onComplete} 
+              isCompleting={isCompleting} 
+            />
           </TabsContent>
         </Tabs>
       </div>
