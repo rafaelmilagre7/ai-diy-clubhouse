@@ -1,7 +1,7 @@
 
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Filter } from "lucide-react";
+import { Search, Filter, Settings } from "lucide-react";
 import { useAuth } from "@/contexts/auth";
 import { Link } from "react-router-dom";
 

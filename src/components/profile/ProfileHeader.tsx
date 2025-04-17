@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { FileEdit } from "lucide-react";
 import { formatDate } from "@/utils/dateUtils";
+import { Link } from "react-router-dom";
 
 interface ProfileHeaderProps {
   profileName: string | null;
@@ -62,10 +63,12 @@ export const ProfileHeader = ({
             <Progress value={completionRate} className="h-2" />
           </div>
           
-          <Button className="mt-6" variant="outline" size="sm">
-            <FileEdit className="mr-2 h-4 w-4" />
-            Editar Perfil
-          </Button>
+          <Link to="/profile/edit">
+            <Button className="mt-6" variant="outline" size="sm">
+              <FileEdit className="mr-2 h-4 w-4" />
+              Editar Perfil
+            </Button>
+          </Link>
         </div>
       </CardContent>
     </Card>

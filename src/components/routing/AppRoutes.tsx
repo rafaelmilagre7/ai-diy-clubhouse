@@ -19,15 +19,14 @@ const AppRoutes = () => {
       <Route path="/index" element={<Index />} />
       <Route path="/auth" element={<Auth />} />
       <Route element={<Layout />}>
-        <Route element={<ProtectedRoute />}>
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/profile/edit" element={<EditProfile />} />
-          <Route path="/solution/:id" element={<SolutionDetails />} />
-          <Route path="/solution/:id/implement" element={<SolutionImplementation />} />
-          <Route path="/implementation/:id/completed" element={<ImplementationCompleted />} />
-          <Route path="/implementation/:id/confirmation" element={<ImplementationConfirmation />} />
-        </Route>
+        <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+        <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+        <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+        <Route path="/profile/edit" element={<ProtectedRoute><EditProfile /></ProtectedRoute>} />
+        <Route path="/solution/:id" element={<ProtectedRoute><SolutionDetails /></ProtectedRoute>} />
+        <Route path="/solution/:id/implement" element={<ProtectedRoute><SolutionImplementation /></ProtectedRoute>} />
+        <Route path="/implementation/:id/completed" element={<ProtectedRoute><ImplementationCompleted /></ProtectedRoute>} />
+        <Route path="/implementation/:id/confirmation" element={<ProtectedRoute><ImplementationConfirmation /></ProtectedRoute>} />
       </Route>
     </Routes>
   );

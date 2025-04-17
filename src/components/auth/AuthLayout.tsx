@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import LoginForm from "./LoginForm";
+import LoginForm from "./login/LoginForm";
 import RegisterForm from "./RegisterForm";
 import { motion } from "framer-motion";
 

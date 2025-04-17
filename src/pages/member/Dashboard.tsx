@@ -51,7 +51,6 @@ const Dashboard = () => {
   return (
     <div className="space-y-6">
       <DashboardHeader 
-        profileName={profile?.name}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
       />

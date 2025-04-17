@@ -57,11 +57,13 @@ export const useSolutionsData = (initialCategory: string | null) => {
     
     // Filter by search query
     if (searchQuery) {
-      const query = searchQuery.toLowerCase();
+      const query = searchQuery.toLowerCase().trim();
       filtered = filtered.filter(
         (solution) =>
           solution.title.toLowerCase().includes(query) ||
-          solution.description.toLowerCase().includes(query)
+          solution.description.toLowerCase().includes(query) ||
+          solution.tags?.some(tag => tag.toLowerCase().includes(query)) ||
+          false
       );
     }
     
