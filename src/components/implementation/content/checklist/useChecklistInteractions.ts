@@ -74,10 +74,9 @@ export const useChecklistInteractions = (solution: Solution | null) => {
       toast.error("Erro ao salvar progresso do checklist");
       
       // Revert the change in UI if save fails
-      setUserChecklist(prevState => ({
-        ...prevState,
-        [itemId]: !checked
-      }));
+      const revertedChecklist = { ...userChecklist };
+      revertedChecklist[itemId] = !checked;
+      setUserChecklist(revertedChecklist);
     } finally {
       setSaving(false);
     }

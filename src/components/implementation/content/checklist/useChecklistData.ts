@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { Module, Solution, supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/auth";
 import { useLogging } from "@/hooks/useLogging";
-import { ChecklistItem, extractChecklistFromSolution, initializeUserChecklist, applyUserProgress, handleChecklistError } from "./checklistUtils";
+import { ChecklistItem, extractChecklistFromSolution, initializeUserChecklist, handleChecklistError } from "./checklistUtils";
 
 export const useChecklistData = (module: Module) => {
   const [solution, setSolution] = useState<Solution | null>(null);
@@ -74,8 +74,12 @@ export const useChecklistData = (module: Module) => {
             .single();
               
           if (!userError && userData) {
-            const updatedChecklist = applyUserProgress(initialUserChecklist, userData);
-            setUserChecklist(updatedChecklist);
+            // Parse the JSON data if it's a string
+            const userItems = typeof userData.checked_items === 'string' 
+              ? JSON.parse(userData.checked_items) 
+              : userData.checked_items;
+              
+            setUserChecklist(userItems as Record<string, boolean>);
           } else {
             setUserChecklist(initialUserChecklist);
           }
