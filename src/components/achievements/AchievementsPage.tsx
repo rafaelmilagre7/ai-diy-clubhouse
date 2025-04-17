@@ -1,7 +1,6 @@
-
 import { useState } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useAchievementsData } from "@/hooks/useAchievementsData";
+import { useAchievements } from "@/hooks/achievements/useAchievements";
 import { AchievementsTabs } from "@/components/achievements/AchievementsTabs";
 import { AchievementsHeader } from "@/components/achievements/AchievementsHeader";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -15,7 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 export const AchievementsPage = () => {
   const isMobile = useIsMobile();
   const { toast } = useToast();
-  const { loading, error, achievements } = useAchievementsData();
+  const { loading, error, achievements } = useAchievements();
   const [activeCategory, setActiveCategory] = useState("all");
   const [filterOpen, setFilterOpen] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
