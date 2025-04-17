@@ -1,16 +1,11 @@
 
-import React, { useEffect, useState } from "react";
-import { useAuthSession } from "@/hooks/auth/useAuthSession";
-import AuthErrorDisplay from "@/components/auth/AuthErrorDisplay";
-import LoadingScreen from "@/components/common/LoadingScreen";
-import { useAuth } from "@/contexts/auth";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useEffect } from 'react';
+import { useAuthSession } from '@/hooks/auth/useAuthSession';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { AlertCircle, RefreshCw } from "lucide-react";
 
-/**
- * AuthSession component that handles authentication state changes
- * and provides a loading screen during authentication
- */
-const AuthSession = ({ children }: { children: React.ReactNode }) => {
+const AuthSession = () => {
   const {
     isInitializing,
     authError,
@@ -21,86 +16,55 @@ const AuthSession = ({ children }: { children: React.ReactNode }) => {
     setAuthError
   } = useAuthSession();
   
-  const { user, isLoading, setIsLoading } = useAuth();
-  const location = useLocation();
-  const navigate = useNavigate();
-  const [showLoading, setShowLoading] = useState(false);
-  
-  // Set up loading display logic with reduced timeouts
+  // Effect to handle session initialization errors
   useEffect(() => {
-    // Skip auth checks for public routes
-    if (location.pathname === '/index' || location.pathname === '/auth') {
-      return;
+    if (!isInitializing && authError && retryCount > 0) {
+      console.error(`AuthSession: Authentication error (attempt ${retryCount}/${maxRetries}):`, authError);
     }
-    
-    // Only show loading if the process takes more than 200ms
-    let loadingTimerId: number | null = null;
-    
-    if ((isInitializing || isLoading) && !user) {
-      loadingTimerId = window.setTimeout(() => {
-        setShowLoading(true);
-      }, 200);
-      
-      // Ultra short timeout to force navigation if it takes too long
-      const navigationTimerId = window.setTimeout(() => {
-        if ((isLoading || isInitializing) && !user) {
-          console.log("AuthSession: Redirecting due to loading timeout");
-          setIsLoading(false);
-          setIsInitializing(false);
-          navigate('/auth', { replace: true });
-        }
-        setShowLoading(false);
-      }, 2000); // Increased timeout for better user experience
-      
-      return () => {
-        if (loadingTimerId) window.clearTimeout(loadingTimerId);
-        window.clearTimeout(navigationTimerId);
-      };
-    } else {
-      setShowLoading(false);
-    }
-    
-    return () => {
-      if (loadingTimerId) window.clearTimeout(loadingTimerId);
-    };
-  }, [isInitializing, isLoading, location.pathname, navigate, setIsLoading, user, setIsInitializing]);
-
-  // Handle retry
+  }, [isInitializing, authError, retryCount, maxRetries]);
+  
+  // Don't render anything during initialization
+  if (isInitializing) {
+    return null;
+  }
+  
+  // Don't render anything if no error
+  if (!authError) {
+    return null;
+  }
+  
+  // Only show error alert after exceeding retry count to reduce UI noise
+  if (retryCount <= maxRetries) {
+    return null;
+  }
+  
+  // Reset error state and trigger retry
   const handleRetry = () => {
-    setRetryCount(count => count + 1);
-    setIsInitializing(true);
     setAuthError(null);
+    setRetryCount(0);
+    setIsInitializing(true);
   };
-
-  // Skip auth checks for public routes
-  if (location.pathname === '/index' || location.pathname === '/auth') {
-    return <>{children}</>;
-  }
-
-  // Fast pass - If user is already authenticated, show content immediately
-  if (user && !isLoading) {
-    return <>{children}</>;
-  }
-
-  // Display error if authentication failed and no user is authenticated
-  if (authError && !isInitializing && !user) {
-    return (
-      <AuthErrorDisplay
-        error={authError}
-        retryCount={retryCount}
-        maxRetries={maxRetries}
-        onRetry={handleRetry}
-      />
-    );
-  }
-
-  // Show loading screen only if necessary and for a short time
-  if ((isInitializing || isLoading) && !user && showLoading) {
-    return <LoadingScreen message="Carregando seu dashboard..." />;
-  }
-
-  // Default case - render children
-  return <>{children}</>;
+  
+  return (
+    <div className="fixed top-4 right-4 z-50 w-96 max-w-[90vw]">
+      <Alert variant="destructive">
+        <AlertCircle className="h-4 w-4" />
+        <AlertTitle>Erro de Autenticação</AlertTitle>
+        <AlertDescription className="mt-2">
+          <p>Ocorreu um erro ao carregar sua sessão. Tente novamente.</p>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleRetry} 
+            className="mt-2"
+          >
+            <RefreshCw className="mr-2 h-4 w-4" />
+            Tentar novamente
+          </Button>
+        </AlertDescription>
+      </Alert>
+    </div>
+  );
 };
 
 export default AuthSession;

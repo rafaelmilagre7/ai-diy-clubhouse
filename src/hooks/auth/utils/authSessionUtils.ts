@@ -1,75 +1,57 @@
 
-import { fetchUserProfile, createUserProfileIfNeeded } from '@/contexts/auth/utils/profileUtils';
+import { supabase } from '@/lib/supabase';
 import { UserProfile } from '@/lib/supabase';
 
-/**
- * Process user profile after authentication
- * Returns a profile object or null if processing fails
- */
+// Process user profile with efficient profile fetching
 export const processUserProfile = async (
   userId: string,
-  email: string | null | undefined,
+  email?: string | null,
   name?: string | null
 ): Promise<UserProfile | null> => {
   try {
-    console.log(`Processando perfil para usuário ${userId}, email: ${email || 'não disponível'}`);
+    console.log(`Processing profile for user: ${userId}`);
     
-    // Security check to avoid processing with invalid data
-    if (!userId) {
-      console.error('ID de usuário inválido ao processar perfil');
+    // Fetch profile from database
+    const { data: profile, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .single();
+    
+    if (error) {
+      console.error("Error fetching profile:", error);
       return null;
     }
     
-    // Try to fetch existing profile
-    let profile = await fetchUserProfile(userId);
-    
-    // If no profile is found, try to create a new one
-    if (!profile && email) {
-      console.log(`Nenhum perfil encontrado. Tentando criar um novo para ${email}`);
-      profile = await createUserProfileIfNeeded(userId, email, name || 'Usuário');
-      
-      // Additional check to ensure we have a profile
-      if (!profile) {
-        console.log('Criação de perfil falhou, criando perfil local temporário');
-        // Create a temporary local profile to avoid blocking the application
-        profile = {
-          id: userId,
-          email: email,
-          name: name || 'Usuário',
-          role: email?.includes('admin') || email?.includes('@viverdeia.ai') ? 'admin' : 'member',
-          created_at: new Date().toISOString(),
-          avatar_url: null,
-          company_name: null,
-          industry: null
-        };
-      }
-    }
-    
-    // Check if profile was loaded
     if (profile) {
-      console.log(`Perfil processado com sucesso: ${profile.id}, role: ${profile.role}`);
-    } else {
-      console.error(`Não foi possível carregar ou criar perfil para ${userId}`);
-      // Create minimal profile to not block application
-      if (email) {
-        profile = {
-          id: userId,
-          email: email,
-          name: name || 'Usuário',
-          role: email.includes('admin') || email?.includes('@viverdeia.ai') ? 'admin' : 'member',
-          created_at: new Date().toISOString(),
-          avatar_url: null,
-          company_name: null,
-          industry: null
-        };
-        console.log('Criado perfil local temporário:', profile);
-      }
+      console.log("Profile found:", profile.id);
+      return profile as UserProfile;
     }
     
-    return profile;
+    // If no profile exists, create one
+    const defaultProfile: Partial<UserProfile> = {
+      id: userId,
+      email: email || '',
+      name: name || 'Novo Membro',
+      role: 'member',
+    };
+    
+    console.log("Creating new profile:", defaultProfile);
+    
+    const { data: newProfile, error: createError } = await supabase
+      .from('profiles')
+      .insert(defaultProfile)
+      .select()
+      .single();
+    
+    if (createError) {
+      console.error("Error creating profile:", createError);
+      return null;
+    }
+    
+    return newProfile as UserProfile;
   } catch (error) {
-    console.error('Erro ao processar perfil de usuário:', error);
-    // Return null in case of error to avoid application freezing
+    console.error("Profile processing error:", error);
     return null;
   }
 };
