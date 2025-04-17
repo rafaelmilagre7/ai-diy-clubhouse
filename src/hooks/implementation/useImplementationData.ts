@@ -1,14 +1,16 @@
 
 import { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
 import { supabase, Solution, Module, Progress } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 
 export const useImplementationData = () => {
   const { id } = useParams<{ id: string }>();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const isAdmin = profile?.role === 'admin';
   
   const [solution, setSolution] = useState<Solution | null>(null);
   const [modules, setModules] = useState<Module[]>([]);
@@ -25,13 +27,30 @@ export const useImplementationData = () => {
         setLoading(true);
         
         // Fetch solution details
-        const { data: solutionData, error: solutionError } = await supabase
+        let query = supabase
           .from("solutions")
           .select("*")
-          .eq("id", id)
-          .single();
+          .eq("id", id);
+          
+        // Se não for admin, filtra apenas soluções publicadas
+        if (!isAdmin) {
+          query = query.eq("published", true);
+        }
+        
+        const { data: solutionData, error: solutionError } = await query.single();
         
         if (solutionError) {
+          // Se a solução não for encontrada ou não estiver publicada (para membros)
+          if (solutionError.code === "PGRST116" && !isAdmin) {
+            toast({
+              title: "Solução não disponível",
+              description: "Esta solução não está disponível para implementação.",
+              variant: "destructive"
+            });
+            navigate("/solutions");
+            return;
+          }
+          
           throw solutionError;
         }
         
@@ -55,7 +74,7 @@ export const useImplementationData = () => {
           const placeholderModule = {
             id: `placeholder-module`,
             solution_id: id,
-            title: solution?.title || "Implementação",
+            title: solutionData?.title || "Implementação",
             content: {},
             type: "implementation",
             module_order: 0,
@@ -115,13 +134,14 @@ export const useImplementationData = () => {
           description: "Ocorreu um erro ao tentar carregar os dados da implementação.",
           variant: "destructive",
         });
+        navigate("/solutions");
       } finally {
         setLoading(false);
       }
     };
     
     fetchData();
-  }, [id, user, toast]);
+  }, [id, user, toast, navigate, isAdmin, profile?.role]);
   
   return {
     solution,

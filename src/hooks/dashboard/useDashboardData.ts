@@ -6,7 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Solution } from "@/lib/supabase";
 
 export const useDashboardData = () => {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [solutions, setSolutions] = useState<Solution[]>([]);
@@ -14,6 +14,7 @@ export const useDashboardData = () => {
   const [analyticsData, setAnalyticsData] = useState<any[]>([]);
   const [profilesData, setProfilesData] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const isAdmin = profile?.role === 'admin';
 
   useEffect(() => {
     const fetchData = async () => {
@@ -21,10 +22,13 @@ export const useDashboardData = () => {
         setLoading(true);
         setError(null);
         
-        // Fetch all published solutions
-        const { data: solutionsData, error: solutionsError } = await supabase
-          .from("solutions")
-          .select("*");
+        // Fetch solutions - filtrar apenas publicadas se não for admin
+        let query = supabase.from("solutions").select("*");
+        if (!isAdmin) {
+          query = query.eq("published", true);
+        }
+        
+        const { data: solutionsData, error: solutionsError } = await query;
         
         if (solutionsError) {
           throw solutionsError;
@@ -82,7 +86,7 @@ export const useDashboardData = () => {
     };
     
     fetchData();
-  }, [toast]);
+  }, [toast, isAdmin, profile?.role]);
   
   return { 
     solutions, 

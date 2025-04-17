@@ -20,7 +20,8 @@ export const useSolutionsData = (initialCategory: string | null) => {
         
         const { data, error: fetchError } = await supabase
           .from("solutions")
-          .select("*");
+          .select("*")
+          .eq("published", true); // Apenas soluções publicadas
         
         if (fetchError) {
           console.error("Erro ao buscar soluções:", fetchError);
