@@ -38,12 +38,14 @@ const AppRoutes = () => {
         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
         <Route path="/profile/edit" element={<ProtectedRoute><EditProfile /></ProtectedRoute>} />
         <Route path="/solution/:id" element={<ProtectedRoute><SolutionDetails /></ProtectedRoute>} />
-        <Route path="/solution/:id/implement" element={<ProtectedRoute><SolutionImplementation /></ProtectedRoute>} />
-        <Route path="/implementation/:id/completed" element={<ProtectedRoute><ImplementationCompleted /></ProtectedRoute>} />
-        <Route path="/implementation/:id/confirmation" element={<ProtectedRoute><ImplementationConfirmation /></ProtectedRoute>} />
-        {/* Adicionando rotas que estavam faltando */}
         <Route path="/solutions" element={<ProtectedRoute><Solutions /></ProtectedRoute>} />
         <Route path="/achievements" element={<ProtectedRoute><Achievements /></ProtectedRoute>} />
+        
+        {/* Rotas de Implementação - Corrigidas */}
+        <Route path="/implement/:id/:moduleIndex" element={<ProtectedRoute><SolutionImplementation /></ProtectedRoute>} />
+        <Route path="/implementation/:id/completed" element={<ProtectedRoute><ImplementationCompleted /></ProtectedRoute>} />
+        <Route path="/implementation/:id/confirmation" element={<ProtectedRoute><ImplementationConfirmation /></ProtectedRoute>} />
+        <Route path="/solution/:id/implement" element={<ProtectedRoute><SolutionImplementation /></ProtectedRoute>} />
       </Route>
       
       {/* Rotas de Administração */}

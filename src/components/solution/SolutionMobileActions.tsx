@@ -24,7 +24,7 @@ export const SolutionMobileActions = ({
   return (
     <div className="mt-8 sm:hidden">
       {progress?.is_completed ? (
-        <Button className="w-full bg-green-600 hover:bg-green-700" onClick={() => navigate(`/implement/${solutionId}/5`)}>
+        <Button className="w-full bg-green-600 hover:bg-green-700" onClick={() => navigate(`/implementation/${solutionId}/completed`)}>
           Solução Implementada com Sucesso!
         </Button>
       ) : progress ? (

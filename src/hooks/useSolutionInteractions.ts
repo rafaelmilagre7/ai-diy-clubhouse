@@ -28,6 +28,7 @@ export const useSolutionInteractions = (solutionId: string | undefined, progress
             solution_id: solutionId,
             current_module: 0,
             is_completed: false,
+            completed_modules: [], // Initialize as empty array
             last_activity: new Date().toISOString(),
           })
           .select()
@@ -38,7 +39,7 @@ export const useSolutionInteractions = (solutionId: string | undefined, progress
         }
       }
       
-      // Navigate directly to the implementation page, tools tab
+      // Navigate directly to the implementation page
       navigate(`/implement/${solutionId}/0`);
     } catch (error) {
       console.error("Error starting implementation:", error);
@@ -54,8 +55,8 @@ export const useSolutionInteractions = (solutionId: string | undefined, progress
   
   const continueImplementation = () => {
     if (!solutionId || !progress) return;
-    // Navigate directly to the implementation page, tools tab
-    navigate(`/implement/${solutionId}/0`);
+    // Navigate directly to the implementation page
+    navigate(`/implement/${solutionId}/${progress.current_module || 0}`);
   };
   
   const toggleFavorite = () => {

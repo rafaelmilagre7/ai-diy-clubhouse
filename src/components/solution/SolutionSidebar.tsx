@@ -49,7 +49,7 @@ export const SolutionSidebar = ({
         {progress?.is_completed ? (
           <Button 
             className="w-full bg-green-600 hover:bg-green-700"
-            onClick={() => navigate(`/implement/${solution.id}/0`)}
+            onClick={() => navigate(`/implementation/${solution.id}/completed`)}
           >
             <CheckCircle className="mr-2 h-5 w-5" />
             Ver Certificado
