@@ -54,11 +54,35 @@ export const ModuleContentVideos: React.FC<ModuleContentVideosProps> = ({ module
           setVideos(solutionData.videos);
           log("Found videos in solution data", { count: solutionData.videos.length });
         } else {
-          log("No videos found in module or solution", {
-            module_id: module.id,
-            solution_id: module.solution_id
-          });
-          setVideos([]);
+          // Fetch videos from solution_resources
+          const { data: resourcesData, error: resourcesError } = await supabase
+            .from("solution_resources")
+            .select("*")
+            .eq("solution_id", module.solution_id)
+            .eq("type", "video");
+            
+          if (resourcesError) {
+            logError("Error fetching video resources:", resourcesError);
+          } else if (resourcesData && resourcesData.length > 0) {
+            // Convert resource data to video format
+            const videoResources = resourcesData.map(resource => ({
+              title: resource.name,
+              description: resource.format || "",
+              url: resource.url,
+              youtube_id: resource.url.includes("youtube.com/embed/") 
+                ? resource.url.split("youtube.com/embed/")[1]?.split("?")[0] 
+                : null
+            }));
+            
+            setVideos(videoResources);
+            log("Found videos in resources", { count: videoResources.length });
+          } else {
+            log("No videos found in module, solution or resources", {
+              module_id: module.id,
+              solution_id: module.solution_id
+            });
+            setVideos([]);
+          }
         }
       } catch (err) {
         logError("Error loading videos:", err);
@@ -72,9 +96,14 @@ export const ModuleContentVideos: React.FC<ModuleContentVideosProps> = ({ module
 
   // Extract YouTube ID from URL
   const getYouTubeId = (url: string): string | null => {
-    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
-    const match = url.match(regExp);
-    return (match && match[2].length === 11) ? match[2] : null;
+    try {
+      const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+      const match = url.match(regExp);
+      return (match && match[2].length === 11) ? match[2] : null;
+    } catch (error) {
+      logError("Error extracting YouTube ID:", error);
+      return null;
+    }
   };
 
   if (loading) {
@@ -106,7 +135,7 @@ export const ModuleContentVideos: React.FC<ModuleContentVideosProps> = ({ module
       
       <div className="space-y-8">
         {videos.map((video, index) => {
-          // Log video to debug
+          // Log video data for debugging
           log("Processing video", { video, index });
           
           // Get video ID from provided youtube_id or extract from URL
@@ -121,7 +150,7 @@ export const ModuleContentVideos: React.FC<ModuleContentVideosProps> = ({ module
             <div key={index} className="space-y-2">
               {youtubeId ? (
                 <YoutubeEmbed youtubeId={youtubeId} title={video.title} />
-              ) : (
+              ) : video.url ? (
                 <div className="aspect-video rounded-md overflow-hidden">
                   <video
                     src={video.url}
@@ -130,7 +159,7 @@ export const ModuleContentVideos: React.FC<ModuleContentVideosProps> = ({ module
                     title={video.title || `Vídeo ${index + 1}`}
                   />
                 </div>
-              )}
+              ) : null}
               
               {video.title && (
                 <h4 className="font-medium text-lg mt-2">{video.title}</h4>

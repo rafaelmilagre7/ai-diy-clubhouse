@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { Download, FileText, Image, FileArchive } from "lucide-react";
+import { Download, FileText, Image, FileArchive, Video } from "lucide-react";
 import { Material } from "@/hooks/implementation/useMaterialsData";
 
 interface MaterialItemProps {
@@ -21,6 +21,8 @@ export const MaterialItem: React.FC<MaterialItemProps> = ({ material, onDownload
       case "template":
       case "spreadsheet":
         return <FileText className="h-5 w-5 text-green-600" />;
+      case "video":
+        return <Video className="h-5 w-5 text-green-600" />;
       default:
         return <FileArchive className="h-5 w-5 text-green-600" />;
     }

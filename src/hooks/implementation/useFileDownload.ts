@@ -26,6 +26,16 @@ export const useFileDownload = () => {
         material_name: material.name 
       });
 
+      // Para vídeos embutidos do YouTube, abrir em uma nova aba
+      if (material.type === 'video' && (material.url.includes('youtube.com') || material.url.includes('youtu.be'))) {
+        window.open(material.url, '_blank');
+        toast({
+          title: "Vídeo aberto",
+          description: `O vídeo "${material.name}" foi aberto em uma nova aba.`,
+        });
+        return;
+      }
+
       // Usa a API fetch para obter o arquivo
       const response = await fetch(material.url);
       

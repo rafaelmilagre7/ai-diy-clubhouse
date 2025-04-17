@@ -23,8 +23,7 @@ interface ToolItemProps {
 export const ToolItem: React.FC<ToolItemProps> = ({ tool }) => {
   const { log } = useLogging();
   
-  // Instead of trying to use a variable for the component itself,
-  // we'll use a render function approach
+  // Function to render the appropriate icon
   const renderIcon = () => {
     // Default icon
     if (!tool.icon || !(tool.icon in Icons)) {
@@ -33,14 +32,13 @@ export const ToolItem: React.FC<ToolItemProps> = ({ tool }) => {
         : <Icons.AlertTriangle className={cn("h-5 w-5", "text-yellow-600")} />;
     }
     
-    // Type assertion with a more specific type to ensure we get a valid React component
-    const iconName = tool.icon as keyof typeof Icons;
-    const IconComponent = Icons[iconName] as React.FC<{ className?: string }>;
+    // Get the icon component using the icon name from the tool
+    const IconComponent = Icons[tool.icon as keyof typeof Icons] as React.ElementType;
     
     // Get color based on required status
     const iconColorClass = tool.is_required ? "text-blue-600" : "text-yellow-600";
     
-    // Return JSX directly instead of using createElement
+    // Return JSX with the icon component
     return <IconComponent className={cn("h-5 w-5", iconColorClass)} />;
   };
   
