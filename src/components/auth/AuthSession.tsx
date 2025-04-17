@@ -1,70 +1,53 @@
 
 import { useEffect } from 'react';
-import { useAuthSession } from '@/hooks/auth/useAuthSession';
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
-import { AlertCircle, RefreshCw } from "lucide-react";
+import { useAuth } from '@/contexts/auth';
+import { supabase } from '@/lib/supabase';
+import { processUserProfile } from '@/hooks/auth/utils/authSessionUtils';
+import LoadingScreen from '@/components/common/LoadingScreen';
 
 const AuthSession = () => {
-  const {
-    isInitializing,
-    authError,
-    retryCount,
-    maxRetries,
-    setRetryCount,
-    setIsInitializing,
-    setAuthError
-  } = useAuthSession();
-  
-  // Effect to handle session initialization errors
+  const { 
+    user, 
+    isLoading, 
+    setProfile, 
+    setIsLoading 
+  } = useAuth();
+
+  // Carrega o perfil do usuário quando o usuário é autenticado
   useEffect(() => {
-    if (!isInitializing && authError && retryCount > 0) {
-      console.error(`AuthSession: Authentication error (attempt ${retryCount}/${maxRetries}):`, authError);
+    const loadUserProfile = async () => {
+      if (!user) return;
+      
+      try {
+        console.log("Carregando perfil para usuário:", user.id);
+        
+        const profile = await processUserProfile(
+          user.id,
+          user.email,
+          user.user_metadata?.name || user.user_metadata?.full_name
+        );
+        
+        if (profile) {
+          console.log("Perfil carregado:", profile);
+          setProfile(profile);
+        }
+      } catch (error) {
+        console.error("Erro ao carregar perfil:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    if (user) {
+      loadUserProfile();
     }
-  }, [isInitializing, authError, retryCount, maxRetries]);
+  }, [user, setProfile, setIsLoading]);
   
-  // Don't render anything during initialization
-  if (isInitializing) {
-    return null;
+  if (isLoading) {
+    return <LoadingScreen />;
   }
   
-  // Don't render anything if no error
-  if (!authError) {
-    return null;
-  }
-  
-  // Only show error alert after exceeding retry count to reduce UI noise
-  if (retryCount <= maxRetries) {
-    return null;
-  }
-  
-  // Reset error state and trigger retry
-  const handleRetry = () => {
-    setAuthError(null);
-    setRetryCount(0);
-    setIsInitializing(true);
-  };
-  
-  return (
-    <div className="fixed top-4 right-4 z-50 w-96 max-w-[90vw]">
-      <Alert variant="destructive">
-        <AlertCircle className="h-4 w-4" />
-        <AlertTitle>Erro de Autenticação</AlertTitle>
-        <AlertDescription className="mt-2">
-          <p>Ocorreu um erro ao carregar sua sessão. Tente novamente.</p>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={handleRetry} 
-            className="mt-2"
-          >
-            <RefreshCw className="mr-2 h-4 w-4" />
-            Tentar novamente
-          </Button>
-        </AlertDescription>
-      </Alert>
-    </div>
-  );
+  return null;
 };
 
 export default AuthSession;

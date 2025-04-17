@@ -13,6 +13,8 @@ import SolutionImplementation from '@/pages/member/SolutionImplementation';
 import SolutionDetails from '@/pages/member/SolutionDetails';
 import ImplementationCompleted from '@/pages/member/ImplementationCompleted';
 import ImplementationConfirmation from '@/pages/member/ImplementationConfirmation';
+import Solutions from '@/pages/member/Solutions';
+import Achievements from '@/pages/member/Achievements';
 
 // Importação das páginas de administração
 import AdminDashboard from '@/pages/admin/AdminDashboard';
@@ -39,6 +41,9 @@ const AppRoutes = () => {
         <Route path="/solution/:id/implement" element={<ProtectedRoute><SolutionImplementation /></ProtectedRoute>} />
         <Route path="/implementation/:id/completed" element={<ProtectedRoute><ImplementationCompleted /></ProtectedRoute>} />
         <Route path="/implementation/:id/confirmation" element={<ProtectedRoute><ImplementationConfirmation /></ProtectedRoute>} />
+        {/* Adicionando rotas que estavam faltando */}
+        <Route path="/solutions" element={<ProtectedRoute><Solutions /></ProtectedRoute>} />
+        <Route path="/achievements" element={<ProtectedRoute><Achievements /></ProtectedRoute>} />
       </Route>
       
       {/* Rotas de Administração */}

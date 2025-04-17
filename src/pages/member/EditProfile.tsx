@@ -10,13 +10,20 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const EditProfile = () => {
-  const { profile, user } = useAuth();
+  const { profile, user, setProfile } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
   const [name, setName] = useState(profile?.name || "");
   const [avatarUrl, setAvatarUrl] = useState(profile?.avatar_url || "");
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    if (profile) {
+      setName(profile.name || "");
+      setAvatarUrl(profile.avatar_url || "");
+    }
+  }, [profile]);
 
   const getInitials = (name: string | null) => {
     if (!name) return "U";
@@ -28,22 +35,14 @@ const EditProfile = () => {
       .substring(0, 2);
   };
 
-  const handleProfileImageUpload = async (filePath: string, fileName: string) => {
+  const handleProfileImageUpload = async (filePath: string, fileName: string, fileSize: number) => {
     try {
       if (!user) return;
-
-      // Update user profile with new avatar URL
-      const { error: updateError } = await supabase
-        .from("profiles")
-        .update({ avatar_url: filePath })
-        .eq("id", user.id);
-
-      if (updateError) throw updateError;
 
       setAvatarUrl(filePath);
       toast({
         title: "Imagem de perfil atualizada",
-        description: "Sua imagem de perfil foi alterada com sucesso.",
+        description: "Sua imagem de perfil foi alterada. Clique em Salvar Alterações para confirmar.",
       });
     } catch (error) {
       console.error("Erro ao atualizar imagem de perfil:", error);
@@ -61,12 +60,24 @@ const EditProfile = () => {
     try {
       setIsLoading(true);
 
-      const { error } = await supabase
+      const updateData = {
+        name: name,
+        avatar_url: avatarUrl
+      };
+
+      const { data, error } = await supabase
         .from("profiles")
-        .update({ name })
-        .eq("id", user.id);
+        .update(updateData)
+        .eq("id", user.id)
+        .select("*")
+        .single();
 
       if (error) throw error;
+
+      // Atualizar o contexto de autenticação com os novos dados
+      if (data && setProfile) {
+        setProfile(data);
+      }
 
       toast({
         title: "Perfil atualizado",
@@ -95,7 +106,7 @@ const EditProfile = () => {
         <div className="md:col-span-1 flex flex-col items-center">
           <Avatar className="w-40 h-40 mb-4">
             <AvatarImage src={avatarUrl} />
-            <AvatarFallback>{getInitials(profile?.name)}</AvatarFallback>
+            <AvatarFallback>{getInitials(name)}</AvatarFallback>
           </Avatar>
           <FileUpload
             bucketName="profile_images"

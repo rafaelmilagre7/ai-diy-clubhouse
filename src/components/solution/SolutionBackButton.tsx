@@ -1,20 +1,26 @@
 
-import React from "react";
-import { Button } from "@/components/ui/button";
-import { ChevronLeft } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { ChevronLeft } from 'lucide-react';
 
 export const SolutionBackButton = () => {
   const navigate = useNavigate();
   
+  const handleBack = () => {
+    // Tentar navegar para a página de soluções, ou para o dashboard se algo der errado
+    navigate('/solutions', { replace: true });
+  };
+  
   return (
     <Button 
       variant="ghost" 
-      className="mb-6"
-      onClick={() => navigate("/dashboard")}
+      size="sm" 
+      className="mb-6" 
+      onClick={handleBack}
     >
       <ChevronLeft className="mr-2 h-4 w-4" />
-      Voltar para o Dashboard
+      Voltar para Soluções
     </Button>
   );
 };

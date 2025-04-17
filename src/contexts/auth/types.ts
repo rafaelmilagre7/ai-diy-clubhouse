@@ -2,19 +2,18 @@
 import { Session, User } from '@supabase/supabase-js';
 import { UserProfile } from '@/lib/supabase';
 
-export interface AuthContextType {
+export type AuthContextType = {
   session: Session | null;
   user: User | null;
   profile: UserProfile | null;
   isAdmin: boolean;
   isLoading: boolean;
-  signIn: () => Promise<void>;
+  signIn: (email: string, password: string) => Promise<{ data: any; error: any }>;
   signOut: () => Promise<void>;
   signInAsMember: () => Promise<void>;
   signInAsAdmin: () => Promise<void>;
-  // Added setState functions for the AuthSession component
-  setSession: React.Dispatch<React.SetStateAction<Session | null>>;
-  setUser: React.Dispatch<React.SetStateAction<User | null>>;
-  setProfile: React.Dispatch<React.SetStateAction<UserProfile | null>>;
-  setIsLoading: React.Dispatch<React.SetStateAction<boolean>>;
-}
+  setSession: (session: Session | null) => void;
+  setUser: (user: User | null) => void;
+  setProfile: (profile: UserProfile | null) => void;
+  setIsLoading: (isLoading: boolean) => void;
+};
