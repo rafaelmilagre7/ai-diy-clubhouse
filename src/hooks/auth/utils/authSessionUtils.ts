@@ -28,12 +28,18 @@ export const processUserProfile = async (
       return profile as UserProfile;
     }
     
-    // If no profile exists, create one
-    const defaultProfile: Partial<UserProfile> = {
+    // If no profile exists, create one with required fields
+    // Email is required in the profiles table, so we need to ensure it's provided
+    if (!email) {
+      console.error("Email is required to create a profile, but none was provided");
+      return null;
+    }
+    
+    const defaultProfile = {
       id: userId,
-      email: email || '',
+      email: email, // This is now guaranteed to be non-null
       name: name || 'Novo Membro',
-      role: 'member',
+      role: 'member' as const,
     };
     
     console.log("Creating new profile:", defaultProfile);
