@@ -20,15 +20,18 @@ interface ToolItemProps {
   tool: Tool;
 }
 
+// Define a type for the icons to help TypeScript understand what we're doing
+type IconComponent = (typeof Icons)[keyof typeof Icons];
+
 export const ToolItem: React.FC<ToolItemProps> = ({ tool }) => {
   const { log } = useLogging();
   
-  // Determine which icon to show
-  let IconComponent = Icons.CheckCircle;
+  // Determine which icon to show with proper type handling
+  let IconComponent: IconComponent = Icons.CheckCircle;
   
   if (tool.icon && tool.icon in Icons) {
     // Use type assertion to safely access the dynamic icon
-    IconComponent = Icons[tool.icon as keyof typeof Icons];
+    IconComponent = Icons[tool.icon as keyof typeof Icons] as IconComponent;
   } else if (!tool.is_required) {
     IconComponent = Icons.AlertTriangle;
   }
