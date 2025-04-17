@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
@@ -373,8 +372,8 @@ const AdminAnalytics = () => {
                       category="value"
                       index="name"
                       valueFormatter={(value) => `${value} implementações`}
-                      className="h-[200px]"
                       colors={['green', 'blue']}
+                      className="h-[200px]"
                     />
                   </CardContent>
                 </Card>

@@ -16,6 +16,7 @@ interface BarChartProps {
   showGridLines?: boolean
   layout?: "horizontal" | "vertical"
   stack?: boolean
+  className?: string
 }
 
 export function BarChart({
@@ -31,6 +32,7 @@ export function BarChart({
   showGridLines = true,
   layout = "horizontal",
   stack = false,
+  className,
 }: BarChartProps) {
   const [hoveredValue, setHoveredValue] = React.useState<number | null>(null)
 
@@ -41,7 +43,7 @@ export function BarChart({
   const customColors = colors || ["var(--color-primary)", "var(--color-secondary)", "var(--color-muted)"]
 
   return (
-    <div className="h-full w-full">
+    <div className={className || "h-full w-full"}>
       <ResponsiveContainer width="100%" height="100%">
         <RechartsBarChart
           data={data}

@@ -16,6 +16,7 @@ interface PieChartProps {
   outerRadius?: number
   paddingAngle?: number
   labelLine?: boolean
+  className?: string
 }
 
 export function PieChart({
@@ -31,13 +32,14 @@ export function PieChart({
   outerRadius = 80,
   paddingAngle = 0,
   labelLine = true,
+  className,
 }: PieChartProps) {
   const [hoveredIndex, setHoveredIndex] = React.useState<number | null>(null)
 
   const customColors = colors || ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884D8", "#FF6B6B", "#6A6AFF", "#FFD700"];
 
   return (
-    <div className="h-full w-full">
+    <div className={className || "h-full w-full"}>
       <ResponsiveContainer width="100%" height="100%">
         <RechartsPieChart
           margin={{
@@ -121,5 +123,5 @@ export function PieChart({
         </RechartsPieChart>
       </ResponsiveContainer>
     </div>
-  );
+  )
 }

@@ -1,7 +1,6 @@
 
 import * as React from "react"
 import { Area, AreaChart as RechartsAreaChart, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts"
-import { ChartConfig } from "./chart-container"
 
 interface AreaChartProps {
   data: any[]
@@ -14,6 +13,7 @@ interface AreaChartProps {
   showXAxis?: boolean
   showYAxis?: boolean
   showGridLines?: boolean
+  className?: string
 }
 
 export function AreaChart({
@@ -27,6 +27,7 @@ export function AreaChart({
   showXAxis = true,
   showYAxis = true,
   showGridLines = true,
+  className,
 }: AreaChartProps) {
   const [hoveredValue, setHoveredValue] = React.useState<number | null>(null)
 
@@ -37,7 +38,7 @@ export function AreaChart({
   const customColors = colors || ["var(--color-primary)", "var(--color-secondary)", "var(--color-muted)"]
 
   return (
-    <div className="h-full w-full">
+    <div className={className || "h-full w-full"}>
       <ResponsiveContainer width="100%" height="100%">
         <RechartsAreaChart
           data={data}
