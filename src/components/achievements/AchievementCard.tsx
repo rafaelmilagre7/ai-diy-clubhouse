@@ -1,5 +1,6 @@
-import { Award, Star, Zap, CheckCircle, Timer, Target, Trophy, Flame } from "lucide-react";
-import { Achievement } from "./AchievementGrid";
+
+import { Award, Star, Zap, CheckCircle, Timer, Target, Trophy, Flame, LockIcon } from "lucide-react";
+import { Achievement } from "@/types/achievementTypes";
 import { cn } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -71,7 +72,7 @@ export const AchievementCard = ({ achievement }: AchievementCardProps) => {
           {achievement.isUnlocked ? (
             getIcon()
           ) : (
-            <Lock className="h-10 w-10" />
+            <LockIcon className="h-10 w-10" />
           )}
         </div>
         <h3 className="font-semibold text-base">{achievement.name}</h3>

@@ -1,5 +1,5 @@
 
-import { Achievement, ProgressData, ChecklistData, BadgeData } from "@/types/achievementTypes";
+import { Achievement, ProgressData } from "@/types/achievementTypes";
 import { Solution } from "@/lib/supabase";
 import { SolutionCategory } from "@/lib/types/categoryTypes";
 
