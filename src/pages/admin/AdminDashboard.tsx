@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '@/contexts/auth';
 import { DashboardHeader } from '@/components/admin/dashboard/DashboardHeader';
 import { StatsOverview } from '@/components/admin/dashboard/StatsOverview';
@@ -8,6 +8,17 @@ import { RecentActivity } from '@/components/admin/dashboard/RecentActivity';
 
 const AdminDashboard = () => {
   const { profile } = useAuth();
+  const [timeRange, setTimeRange] = useState('30d');
+
+  // Dados de exemplo para os componentes
+  const statsData = {
+    totalUsers: 124,
+    totalSolutions: 15,
+    completedImplementations: 67,
+    averageTime: 32,
+    userGrowth: 12.5,
+    implementationRate: 71
+  };
 
   // Dados de exemplo para os gráficos
   const engagementData = [
@@ -31,15 +42,17 @@ const AdminDashboard = () => {
   return (
     <div className="space-y-6">
       <DashboardHeader 
-        title="Dashboard Administrativo" 
-        description="Monitore o desempenho geral e as estatísticas da plataforma"
+        timeRange={timeRange}
+        setTimeRange={setTimeRange}
       />
 
-      <StatsOverview />
+      <StatsOverview data={statsData} />
+      
       <DashboardCharts 
         engagementData={engagementData} 
         completionRateData={completionRateData} 
       />
+      
       <RecentActivity />
     </div>
   );
