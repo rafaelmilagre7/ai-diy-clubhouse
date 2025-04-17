@@ -1,100 +1,68 @@
 
-import { useState, useEffect, useRef } from "react";
-import { useAuth } from '@/contexts/auth';
-import { useAuthStateManager } from './useAuthStateManager';
+import { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
+import { toast } from '@/hooks/use-toast';
+import { processUserProfile } from './utils/authSessionUtils';
 
 export const useAuthSession = () => {
-  // Get auth context safely
-  let authContext;
-  try {
-    authContext = useAuth();
-  } catch (error) {
-    console.error("useAuthSession error:", error);
-    // Return default values if auth context is not available
-    return {
-      isInitializing: false,
-      authError: new Error("Authentication provider not found"),
-      retryCount: 0,
-      maxRetries: 2,
-      setRetryCount: () => {},
-      setIsInitializing: () => {},
-      setAuthError: () => {}
-    };
-  }
-  
-  const { setIsLoading } = authContext;
   const [isInitializing, setIsInitializing] = useState(true);
   const [authError, setAuthError] = useState<Error | null>(null);
   const [retryCount, setRetryCount] = useState(0);
-  const maxRetries = 2;
-  const isMounted = useRef(true);
-  const timeoutRef = useRef<number | null>(null);
-  
-  const { setupAuthSession } = useAuthStateManager();
+  const maxRetries = 3;
 
-  // Handle component lifecycle
   useEffect(() => {
-    isMounted.current = true;
-    
-    return () => {
-      isMounted.current = false;
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
-  }, []);
-
-  // Handle session initialization with longer timeout for better UX
-  useEffect(() => {
-    if (retryCount > maxRetries || !isMounted.current) {
-      return;
-    }
-    
-    const initializeSession = async () => {
+    const initSession = async () => {
       try {
-        console.log("Initializing authentication session...");
+        console.info('Initializing authentication session...');
         
-        const { success, error } = await setupAuthSession();
+        const { data: { session }, error } = await supabase.auth.getSession();
         
-        if (!success) {
+        if (error) {
           throw error;
         }
         
-        // Clear error states and loading states immediately
-        if (isMounted.current) {
-          setAuthError(null);
-          setIsInitializing(false);
-          setIsLoading(false);
+        console.info('Verificando sessão atual');
+        
+        if (session) {
+          const userId = session.user.id;
+          const email = session.user.email;
+          const name = session.user.user_metadata?.name || session.user.user_metadata?.full_name;
+          
+          console.info(`Sessão ativa encontrada: ${userId}`);
+          
+          // Processar perfil do usuário
+          await processUserProfile(userId, email, name);
         }
-      } catch (error) {
-        console.error("Error during session initialization:", error);
-        if (isMounted.current) {
-          setAuthError(error instanceof Error ? error : new Error('Unknown authentication error'));
-          setRetryCount(count => count + 1);
+        
+      } catch (error: any) {
+        console.error('Erro ao inicializar sessão:', error);
+        setAuthError(error);
+        
+        // Tentativa automática de reinicialização
+        if (retryCount < maxRetries) {
+          console.warn(`Tentando reinicializar sessão (${retryCount + 1}/${maxRetries})...`);
+          setRetryCount(prev => prev + 1);
+          // Não definir isInitializing como false ainda, para tentar novamente
+          return;
+        } else {
+          toast({
+            title: 'Erro de autenticação',
+            description: 'Não foi possível inicializar sua sessão. Por favor, tente novamente mais tarde.',
+            variant: 'destructive',
+          });
+        }
+      } finally {
+        // Marcar inicialização como concluída apenas se não estiver tentando novamente
+        if (retryCount >= maxRetries || !authError) {
           setIsInitializing(false);
-          setIsLoading(false);
         }
       }
     };
-    
-    // Start session initialization immediately
-    initializeSession();
-    
-    // Set a longer timeout as a fallback
-    timeoutRef.current = window.setTimeout(() => {
-      if (isInitializing && isMounted.current) {
-        console.log("Session initialization timeout exceeded");
-        setIsInitializing(false);
-        setIsLoading(false);
-      }
-    }, 3000); // Longer timeout for better UX
-    
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
-  }, [retryCount, setIsLoading, maxRetries, setupAuthSession, isInitializing]);
+
+    if (isInitializing) {
+      initSession();
+    }
+  }, [isInitializing, retryCount, maxRetries, authError]);
 
   return {
     isInitializing,

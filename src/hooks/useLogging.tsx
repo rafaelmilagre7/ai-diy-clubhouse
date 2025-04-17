@@ -2,7 +2,6 @@
 import { useState, useCallback, createContext, useContext, ReactNode } from "react";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/contexts/auth";
 
 interface LogData {
   [key: string]: any;
@@ -23,26 +22,23 @@ export const LoggingProvider = ({ children }: { children: ReactNode }) => {
   const { toast } = useToast();
   const [lastError, setLastError] = useState<any>(null);
   
-  // Try to get auth context - may be null during initialization
-  let auth = null;
-  try {
-    auth = useAuth();
-  } catch (e) {
-    console.warn("Auth context not available yet in LoggingProvider");
-  }
-  
+  // Funções de logging independentes de auth
   const log = useCallback((action: string, data: LogData = {}) => {
     console.log(`[Log] ${action}:`, data);
     
-    // Only store important logs in database
-    if (data.critical) {
-      storeLog(action, data, "info");
+    // Armazenar logs críticos apenas se tivermos um user_id
+    if (data.critical && data.user_id) {
+      storeLog(action, data, "info", data.user_id);
     }
   }, []);
   
   const logWarning = useCallback((action: string, data: LogData = {}) => {
     console.warn(`[Warning] ${action}:`, data);
-    storeLog(action, data, "warning");
+    
+    // Armazenar avisos apenas se tivermos um user_id
+    if (data.user_id) {
+      storeLog(action, data, "warning", data.user_id);
+    }
   }, []);
   
   const logError = useCallback((action: string, error: any) => {
@@ -56,21 +52,24 @@ export const LoggingProvider = ({ children }: { children: ReactNode }) => {
       variant: "destructive",
     });
     
-    storeLog(action, { 
-      error: error?.message || String(error),
-      stack: error?.stack
-    }, "error");
+    // Armazenar erros apenas se tivermos um user_id
+    if (error?.user_id) {
+      storeLog(action, { 
+        error: error?.message || String(error),
+        stack: error?.stack
+      }, "error", error.user_id);
+    }
     
     return error;
   }, [toast]);
   
-  const storeLog = async (action: string, data: LogData, level: string) => {
-    // Skip if user is not available
-    if (!auth || !auth.user) return;
-    
+  const storeLog = async (action: string, data: LogData, level: string, user_id: string) => {
     try {
+      // Verificar se temos o user_id antes de armazenar
+      if (!user_id) return;
+      
       const logEntry = {
-        user_id: auth.user.id,
+        user_id,
         action,
         data,
         level,
@@ -83,7 +82,7 @@ export const LoggingProvider = ({ children }: { children: ReactNode }) => {
       const { error } = await supabase
         .from("analytics")
         .insert({
-          user_id: auth.user.id,
+          user_id,
           event_type: `log_${level}`,
           solution_id: data.solution_id, 
           module_id: data.module_id,
