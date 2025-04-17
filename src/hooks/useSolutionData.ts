@@ -2,10 +2,13 @@
 import { useState, useEffect } from "react";
 import { supabase, Solution } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/auth";
 
 export const useSolutionData = (id: string | undefined) => {
+  const { user } = useAuth();
   const { toast } = useToast();
   const [solution, setSolution] = useState<Solution | null>(null);
+  const [progress, setProgress] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -34,6 +37,20 @@ export const useSolutionData = (id: string | undefined) => {
         if (data) {
           console.log("Solution data retrieved:", data);
           setSolution(data as Solution);
+          
+          // Fetch progress for this solution and user if user is authenticated
+          if (user) {
+            const { data: progressData, error: progressError } = await supabase
+              .from("progress")
+              .select("*")
+              .eq("solution_id", id)
+              .eq("user_id", user.id)
+              .single();
+              
+            if (!progressError && progressData) {
+              setProgress(progressData);
+            }
+          }
         } else {
           console.log("No solution found with ID:", id);
           setError("Solução não encontrada");
@@ -57,12 +74,13 @@ export const useSolutionData = (id: string | undefined) => {
     };
     
     fetchSolution();
-  }, [id, toast]);
+  }, [id, toast, user]);
 
   return {
     solution,
     setSolution,
     loading,
-    error
+    error,
+    progress
   };
 };

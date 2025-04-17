@@ -13,8 +13,8 @@ import { SolutionNotFound } from "@/components/solution/SolutionNotFound";
 const SolutionDetails = () => {
   const { id } = useParams<{ id: string }>();
   
-  // Fetch solution data
-  const { solution, loading, progress } = useSolutionData(id);
+  // Fetch solution data with the updated hook that includes progress
+  const { solution, loading, error, progress } = useSolutionData(id);
   
   // Solution interaction handlers
   const { 

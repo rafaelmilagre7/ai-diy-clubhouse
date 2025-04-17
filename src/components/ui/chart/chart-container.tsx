@@ -41,15 +41,14 @@ export function ChartStyle({ config }: { config?: ChartConfig }) {
     return null
   }
 
+  // Fix: Remove JSX style props and use dangerouslySetInnerHTML instead
   return (
-    <style jsx global>{`
-      :root {
-        ${Object.entries(config)
-          .map(([key, value]) => {
-            return `--color-${key}: ${value.color};`
-          })
-          .join("\n")}
-      }
-    `}</style>
+    <style dangerouslySetInnerHTML={{
+      __html: Object.entries(config)
+        .map(([key, value]) => {
+          return `--color-${key}: ${value.color};`
+        })
+        .join("\n")
+    }} />
   )
 }
