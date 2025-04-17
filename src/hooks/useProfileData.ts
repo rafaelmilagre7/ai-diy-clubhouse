@@ -79,7 +79,7 @@ export const useProfileData = () => {
             solution: item.solution,
             current_module: item.current_module,
             is_completed: item.is_completed,
-            completed_at: item.completion_date,
+            completed_at: item.completed_at,
             last_activity: item.last_activity
           })) || [];
           

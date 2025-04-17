@@ -76,14 +76,13 @@ export const useImplementationData = () => {
             .single();
           
           if (!progressError && progressData) {
-            // Cast to Progress type
-            const typedProgressData = progressData as Progress;
-            setProgress(typedProgressData);
+            // Cast to Progress type - now with completed_at instead of completion_date
+            setProgress(progressData as Progress);
             
             // Parse completed modules from progress data
             // Handle the case where completed_modules might not exist in the database
-            if (typedProgressData.completed_modules && Array.isArray(typedProgressData.completed_modules)) {
-              setCompletedModules(typedProgressData.completed_modules);
+            if (progressData.completed_modules && Array.isArray(progressData.completed_modules)) {
+              setCompletedModules(progressData.completed_modules);
             } else {
               console.log("No completed_modules found in progress data, initializing as empty array");
               setCompletedModules([]);

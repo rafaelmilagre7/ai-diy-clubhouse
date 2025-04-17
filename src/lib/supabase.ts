@@ -76,7 +76,7 @@ export interface Progress {
   solution_id: string;
   current_module: number;
   is_completed: boolean;
-  completion_date: string | null;
+  completed_at: string | null; // Changed from completion_date to completed_at
   last_activity: string;
   created_at: string;
   completed_modules?: number[]; // Added completed_modules property as optional
