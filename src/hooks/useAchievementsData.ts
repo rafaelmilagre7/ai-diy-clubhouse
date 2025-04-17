@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/auth";
 import { supabase, Solution } from "@/lib/supabase";
@@ -23,68 +22,61 @@ export const useAchievementsData = () => {
         setLoading(true);
         setError(null);
 
-        // Fetch user progress
-        const { data: progressData, error: progressError } = await supabase
-          .from("progress")
-          .select("*, solutions!inner(id, category)")
-          .eq("user_id", user.id);
+        const [progressData, solutionsData, checklistData, badgesData] = await Promise.all([
+          supabase
+            .from("progress")
+            .select("*, solutions!inner(id, category)")
+            .eq("user_id", user.id)
+            .then(({ data, error }) => {
+              if (error) throw error;
+              return data || [];
+            }),
 
-        if (progressError) {
-          console.error("Error fetching progress:", progressError);
-          toast({
-            title: "Erro ao carregar progresso",
-            description: "Não foi possível carregar seu progresso. Tente novamente mais tarde.",
-            variant: "destructive",
-          });
-          setUserProgress([]);
-          setError("Falha ao carregar os dados de progresso");
-        } else {
-          setUserProgress(progressData || []);
-        }
+          supabase
+            .from("solutions")
+            .select("*")
+            .eq("published", true)
+            .then(({ data, error }) => {
+              if (error) throw error;
+              return data || [];
+            }),
 
-        // Fetch solutions to get categories
-        const { data: solutionsData, error: solutionsError } = await supabase
-          .from("solutions")
-          .select("*")
-          .eq("published", true);
+          supabase
+            .from("user_checklists")
+            .select("*")
+            .eq("user_id", user.id)
+            .then(({ data, error }) => {
+              if (error) throw error;
+              return data || [];
+            }),
 
-        if (solutionsError) {
-          console.error("Error fetching solutions:", solutionsError);
-          setSolutions([]);
-          setError("Falha ao carregar as soluções");
-        } else {
-          // Ensure we're setting type-safe Solution objects
-          const typedSolutions = solutionsData?.map(solution => ({
-            ...solution,
-            difficulty: solution.difficulty as "easy" | "medium" | "advanced",
-            category: toSolutionCategory(solution.category)
-          })) || [];
-          
-          setSolutions(typedSolutions);
-        }
+          supabase
+            .from("user_badges")
+            .select("*, badges(*)")
+            .eq("user_id", user.id)
+            .then(({ data, error }) => {
+              if (error && !error.message.includes("relation")) throw error;
+              return data || [];
+            })
+        ]);
 
-        // Try to fetch badges (if the table exists)
-        const { data: badgesData, error: badgesError } = await supabase
-          .from("user_badges")
-          .select("*, badges(*)")
-          .eq("user_id", user.id);
-
-        if (badgesError && !badgesError.message.includes("relation") && !badgesError.message.includes("does not exist")) {
-          console.error("Error fetching badges:", badgesError);
-        }
-
-        // Generate achievements based on progress
         if (progressData && solutionsData) {
-          const processedSolutions = solutionsData?.map(solution => ({
+          const typedSolutions = solutionsData.map(solution => ({
             ...solution,
             difficulty: solution.difficulty as "easy" | "medium" | "advanced",
             category: toSolutionCategory(solution.category)
-          })) || [];
+          }));
+
+          const generatedAchievements = generateAchievements(
+            progressData, 
+            typedSolutions,
+            checklistData,
+            badgesData
+          );
           
-          const generatedAchievements = generateAchievements(progressData, processedSolutions, badgesData || []);
           setAchievements(generatedAchievements);
-        } else {
-          setAchievements([]);
+          setUserProgress(progressData);
+          setSolutions(typedSolutions);
         }
       } catch (error) {
         console.error("Error in fetching achievements data:", error);
@@ -112,91 +104,175 @@ export const useAchievementsData = () => {
   };
 };
 
-// Generate achievements based on progress and solutions data
-const generateAchievements = (progress: any[], solutions: Solution[], badges: any[]): Achievement[] => {
+const generateAchievements = (
+  progress: any[], 
+  solutions: Solution[], 
+  checklists: any[],
+  badges: any[]
+): Achievement[] => {
   const achievementsList: Achievement[] = [];
 
-  // Map to store solution categories by id
   const solutionCategories = solutions.reduce<Record<string, SolutionCategory>>((acc, solution) => {
     acc[solution.id] = solution.category as SolutionCategory;
     return acc;
   }, {});
 
-  // Add achievements for each completed solution category
   const categoryNames: Record<SolutionCategory, string> = {
     revenue: "Receita",
     operational: "Operacional",
     strategy: "Estratégia",
   };
 
-  // Achievement for first solution completed
-  if (progress.some(p => p.is_completed)) {
-    achievementsList.push({
-      id: "first-solution",
-      name: "Primeira Implementação",
-      description: "Parabéns por implementar sua primeira solução de IA!",
-      category: "achievement",
-      isUnlocked: true,
-      earnedAt: progress.find(p => p.is_completed)?.completion_date,
-    });
-  } else {
-    achievementsList.push({
-      id: "first-solution",
-      name: "Primeira Implementação",
-      description: "Implemente sua primeira solução de IA",
-      category: "achievement",
-      isUnlocked: false,
-      requiredCount: 1,
-      currentCount: 0,
-    });
-  }
+  const implementationMilestones = [1, 5, 10, 25];
+  const completedSolutions = progress.filter(p => p.is_completed).length;
 
-  // Category-specific achievements
-  const categories: SolutionCategory[] = ['revenue', 'operational', 'strategy'];
-  
-  categories.forEach(category => {
-    // Find completed solutions in this category
+  implementationMilestones.forEach(milestone => {
+    achievementsList.push({
+      id: `implementation-${milestone}`,
+      name: `Implementador Nível ${milestone}`,
+      description: `Complete ${milestone} implementações de soluções`,
+      category: "achievement",
+      isUnlocked: completedSolutions >= milestone,
+      earnedAt: completedSolutions >= milestone ? 
+        progress.find(p => p.is_completed)?.completed_at : undefined,
+      requiredCount: milestone,
+      currentCount: completedSolutions,
+    });
+  });
+
+  Object.entries(categoryNames).forEach(([category, categoryName]) => {
     const completedInCategory = progress.filter(p => {
       const solutionCategory = solutionCategories[p.solution_id];
       return p.is_completed && solutionCategory === category;
     });
-    
-    // Achievement for completing solutions in each category
-    const achievementCounts = [1, 3, 5];
-    achievementCounts.forEach(count => {
-      const nameMap: Record<number, string> = {
+
+    [1, 3, 5].forEach(count => {
+      const levelNames = {
         1: "Iniciante",
         3: "Intermediário",
-        5: "Especialista",
+        5: "Especialista"
       };
-      
+
       achievementsList.push({
         id: `${category}-${count}`,
-        name: `${nameMap[count]} em ${categoryNames[category]}`,
-        description: `Complete ${count} soluções na categoria ${categoryNames[category]}`,
-        category: category,
+        name: `${levelNames[count as keyof typeof levelNames]} em ${categoryName}`,
+        description: `Complete ${count} soluções na categoria ${categoryName}`,
+        category: category as SolutionCategory,
         isUnlocked: completedInCategory.length >= count,
         earnedAt: completedInCategory.length >= count ? 
-          completedInCategory[Math.min(count - 1, completedInCategory.length - 1)]?.completion_date : undefined,
+          completedInCategory[Math.min(count - 1, completedInCategory.length - 1)]?.completed_at : undefined,
         requiredCount: count,
         currentCount: completedInCategory.length,
       });
     });
   });
 
-  // Add dummy achievement placeholders if few achievements
-  if (achievementsList.length < 8) {
-    const placeholdersNeeded = 8 - achievementsList.length;
-    for (let i = 0; i < placeholdersNeeded; i++) {
-      achievementsList.push({
-        id: `placeholder-${i}`,
-        name: "Conquista Secreta",
-        description: "Continue implementando soluções para desbloquear esta conquista",
-        category: "achievement",
-        isUnlocked: false,
-      });
-    }
+  const streakLevels = [3, 7, 14, 30];
+  const currentStreak = calculateStreak(progress);
+  
+  streakLevels.forEach(days => {
+    achievementsList.push({
+      id: `streak-${days}`,
+      name: `Sequência de ${days} dias`,
+      description: `Mantenha uma sequência de implementação por ${days} dias`,
+      category: "achievement",
+      isUnlocked: currentStreak >= days,
+      requiredCount: days,
+      currentCount: currentStreak,
+    });
+  });
+
+  const fastImplementations = progress.filter(p => {
+    const completionTime = new Date(p.completed_at).getTime() - new Date(p.created_at).getTime();
+    return completionTime <= 24 * 60 * 60 * 1000; // 24 hours
+  }).length;
+
+  if (fastImplementations > 0) {
+    achievementsList.push({
+      id: "speed-implementation",
+      name: "Implementação Relâmpago",
+      description: "Complete uma solução em menos de 24 horas",
+      category: "achievement",
+      isUnlocked: true,
+      earnedAt: progress.find(p => p.is_completed)?.completed_at,
+    });
+  }
+
+  const completedChecklists = checklists.filter(c => {
+    const items = Object.values(c.checked_items || {});
+    return items.length > 0 && items.every(item => item === true);
+  }).length;
+
+  if (completedChecklists > 0) {
+    achievementsList.push({
+      id: "checklist-master",
+      name: "Mestre das Checklists",
+      description: "Complete todas as checklists de uma solução",
+      category: "achievement",
+      isUnlocked: true,
+      earnedAt: progress.find(p => p.is_completed)?.completed_at,
+    });
+  }
+
+  const perfectImplementations = progress.filter(p => {
+    const checklist = checklists.find(c => c.solution_id === p.solution_id);
+    if (!checklist) return false;
+    const items = Object.values(checklist.checked_items || {});
+    return p.is_completed && items.length > 0 && items.every(item => item === true);
+  }).length;
+
+  if (perfectImplementations > 0) {
+    achievementsList.push({
+      id: "perfect-implementation",
+      name: "Implementação Perfeita",
+      description: "Complete uma solução com 100% da checklist",
+      category: "achievement",
+      isUnlocked: true,
+      earnedAt: progress.find(p => p.is_completed)?.completed_at,
+    });
+  }
+
+  if (progress.some(p => {
+    const createdDate = new Date(p.created_at);
+    const solutionCreatedDate = solutions.find(s => s.id === p.solution_id)?.created_at;
+    if (!solutionCreatedDate) return false;
+    return createdDate.getTime() - new Date(solutionCreatedDate).getTime() <= 7 * 24 * 60 * 60 * 1000;
+  })) {
+    achievementsList.push({
+      id: "early-adopter",
+      name: "Early Adopter",
+      description: "Implemente uma solução na primeira semana de lançamento",
+      category: "achievement",
+      isUnlocked: true,
+    });
   }
 
   return achievementsList;
+};
+
+const calculateStreak = (progress: any[]): number => {
+  if (!progress.length) return 0;
+
+  const dates = progress
+    .filter(p => p.last_activity)
+    .map(p => new Date(p.last_activity).toISOString().split('T')[0])
+    .sort();
+
+  let currentStreak = 1;
+  let maxStreak = 1;
+
+  for (let i = 1; i < dates.length; i++) {
+    const prevDate = new Date(dates[i - 1]);
+    const currDate = new Date(dates[i]);
+    const diffDays = Math.floor((currDate.getTime() - prevDate.getTime()) / (1000 * 60 * 60 * 24));
+
+    if (diffDays === 1) {
+      currentStreak++;
+      maxStreak = Math.max(maxStreak, currentStreak);
+    } else {
+      currentStreak = 1;
+    }
+  }
+
+  return maxStreak;
 };
