@@ -1,118 +1,87 @@
 
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Module, Solution, supabase } from "@/lib/supabase";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLogging } from "@/hooks/useLogging";
-
-interface ModuleContentVideosProps {
-  module: Module;
-}
+import { YoutubeEmbed } from "@/components/common/YoutubeEmbed";
 
 interface Video {
-  title: string;
+  title?: string;
   description?: string;
   url?: string;
   youtube_id?: string;
 }
 
+interface ModuleContentVideosProps {
+  module: Module;
+}
+
 export const ModuleContentVideos = ({ module }: ModuleContentVideosProps) => {
-  const [solution, setSolution] = useState<Solution | null>(null);
   const [videos, setVideos] = useState<Video[]>([]);
+  const [solution, setSolution] = useState<Solution | null>(null);
   const [loading, setLoading] = useState(true);
   const { log, logError } = useLogging();
 
+  // Fetch solution data to get videos
   useEffect(() => {
-    const fetchVideos = async () => {
+    const fetchSolution = async () => {
       try {
         setLoading(true);
         
-        // First, get the solution data
-        const { data: solutionData, error: solutionError } = await supabase
+        // Fetch solution data
+        const { data, error } = await supabase
           .from("solutions")
           .select("*")
           .eq("id", module.solution_id)
           .single();
         
-        if (solutionError) {
-          logError("Error fetching solution:", solutionError);
+        if (error) {
+          logError("Error fetching solution for videos:", error);
           return;
         }
         
-        setSolution(solutionData as Solution);
+        // Ensure data is of Solution type
+        const solutionData = data as Solution;
+        setSolution(solutionData);
         
-        // Next, fetch videos from solution_resources
-        const { data: resourceData, error: resourceError } = await supabase
-          .from("solution_resources")
-          .select("*")
-          .eq("solution_id", module.solution_id)
-          .in("type", ['video', 'youtube']);
-        
-        if (resourceError) {
-          logError("Error fetching video resources:", resourceError);
-          return;
-        }
-        
-        // Process video data from resources
-        const processedVideos: Video[] = (resourceData || []).map((video: any) => {
-          let youtubeId = video.url;
-          
-          // Try to extract YouTube ID if it's a full URL
-          if (video.url && video.url.includes('youtube.com')) {
-            const url = new URL(video.url);
-            youtubeId = url.searchParams.get('v') || video.url;
-          } else if (video.url && video.url.includes('youtu.be')) {
-            youtubeId = video.url.split('/').pop() || video.url;
-          }
-          
-          return {
-            title: video.name || 'Vídeo sem título',
-            description: video.metadata?.description || '',
-            url: video.url,
-            youtube_id: youtubeId
-          };
-        });
-        
-        // Also check the legacy videos array in the solution object if present
-        if (solutionData.videos && Array.isArray(solutionData.videos)) {
-          const legacyVideos: Video[] = solutionData.videos.map((video: any) => ({
-            title: video.title || 'Vídeo sem título',
-            description: video.description || '',
-            url: video.url || '',
-            youtube_id: video.youtube_id || ''
-          }));
-          
-          // Combine both sources, removing duplicates
-          const allVideos = [...processedVideos, ...legacyVideos];
-          // Remove duplicates by youtube_id or url
-          const uniqueVideos = Array.from(new Map(allVideos.map(video => 
-            [video.youtube_id || video.url, video]
-          )).values());
-          
-          setVideos(uniqueVideos);
+        // Check for videos in module content first
+        if (module.content && module.content.videos && Array.isArray(module.content.videos)) {
+          setVideos(module.content.videos);
+        } 
+        // Then check for videos in solution data
+        else if (solutionData.videos && Array.isArray(solutionData.videos)) {
+          setVideos(solutionData.videos);
         } else {
-          setVideos(processedVideos);
+          setVideos([]);
         }
-        
-        log("Videos loaded", { count: processedVideos.length });
       } catch (err) {
-        logError("Error fetching video data:", err);
+        logError("Error loading videos:", err);
       } finally {
         setLoading(false);
       }
     };
+    
+    fetchSolution();
+  }, [module, logError, log]);
 
-    fetchVideos();
-  }, [module.solution_id, log, logError]);
+  // Extract YouTube ID from URL
+  const getYouTubeId = (url: string): string | null => {
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+    const match = url.match(regExp);
+    return (match && match[2].length === 11) ? match[2] : null;
+  };
 
   if (loading) {
     return (
       <div className="space-y-4 mt-8">
-        <h3 className="text-lg font-semibold">Vídeos Explicativos</h3>
-        <div className="aspect-video bg-gray-100 rounded-lg">
-          <Skeleton className="h-full w-full rounded-lg" />
-        </div>
-        <Skeleton className="h-6 w-64" />
-        <Skeleton className="h-4 w-full" />
+        <h3 className="text-lg font-semibold">Vídeos</h3>
+        {[1, 2].map((i) => (
+          <div key={i} className="space-y-2">
+            <Skeleton className="h-40 md:h-56 w-full rounded-md" />
+            <Skeleton className="h-5 w-3/4" />
+            <Skeleton className="h-4 w-1/2" />
+          </div>
+        ))}
       </div>
     );
   }
@@ -126,45 +95,44 @@ export const ModuleContentVideos = ({ module }: ModuleContentVideosProps) => {
   }
 
   return (
-    <div className="space-y-6 mt-8">
-      <h3 className="text-lg font-semibold">Vídeos Explicativos</h3>
+    <div className="space-y-8 mt-8">
+      <h3 className="text-lg font-semibold">Vídeos</h3>
       
       <div className="space-y-8">
-        {videos.map((video: Video, index: number) => (
-          <div key={index} className="border rounded-lg overflow-hidden">
-            <div className="aspect-video bg-gray-100">
-              {video.youtube_id ? (
-                <iframe 
-                  className="w-full h-full"
-                  src={`https://www.youtube.com/embed/${video.youtube_id}`}
-                  title={video.title || `Vídeo ${index + 1}`}
-                  frameBorder="0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                ></iframe>
-              ) : video.url ? (
-                <iframe 
-                  className="w-full h-full"
-                  src={video.url}
-                  title={video.title || `Vídeo ${index + 1}`}
-                  frameBorder="0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                ></iframe>
+        {videos.map((video, index) => {
+          // Get video ID from provided youtube_id or extract from URL
+          const youtubeId = video.youtube_id || (video.url ? getYouTubeId(video.url) : null);
+          
+          if (!youtubeId && !video.url) {
+            return null;
+          }
+          
+          return (
+            <div key={index} className="space-y-2">
+              {youtubeId ? (
+                <YoutubeEmbed youtubeId={youtubeId} />
               ) : (
-                <div className="flex items-center justify-center h-full">
-                  <p className="text-muted-foreground">Vídeo não disponível</p>
+                <div className="aspect-w-16 aspect-h-9 rounded-md overflow-hidden">
+                  <iframe 
+                    src={video.url} 
+                    title={video.title || `Vídeo ${index + 1}`}
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                    className="w-full h-56 md:h-72"
+                  />
                 </div>
               )}
-            </div>
-            <div className="p-4">
-              <h4 className="font-medium">{video.title || `Vídeo ${index + 1}`}</h4>
+              
+              {video.title && (
+                <h4 className="font-medium text-lg mt-2">{video.title}</h4>
+              )}
+              
               {video.description && (
-                <p className="text-sm text-muted-foreground mt-2">{video.description}</p>
+                <p className="text-muted-foreground">{video.description}</p>
               )}
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
