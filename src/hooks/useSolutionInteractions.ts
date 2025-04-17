@@ -38,7 +38,7 @@ export const useSolutionInteractions = (solutionId: string | undefined, progress
         }
       }
       
-      // Navigate to the implementation page, starting with module 0 (landing)
+      // Navega diretamente para a implementação, indo para a aba de ferramentas
       navigate(`/implement/${solutionId}/0`);
     } catch (error) {
       console.error("Error starting implementation:", error);
@@ -54,7 +54,7 @@ export const useSolutionInteractions = (solutionId: string | undefined, progress
   
   const continueImplementation = () => {
     if (!solutionId || !progress) return;
-    navigate(`/implement/${solutionId}/${progress.current_module}`);
+    navigate(`/implement/${solutionId}/0`);
   };
   
   const toggleFavorite = () => {

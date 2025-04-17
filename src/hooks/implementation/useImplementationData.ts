@@ -51,20 +51,19 @@ export const useImplementationData = () => {
         if (modulesData && modulesData.length > 0) {
           setModules(modulesData as Module[]);
         } else {
-          // Create temporary mock modules if none exist - use 6 modules instead of 8
-          const moduleTypes = ["landing", "preparation", "implementation", "verification", "results", "celebration"];
-          const mockModules = moduleTypes.map((type, idx) => ({
-              id: `mock-${idx}`,
-              solution_id: id,
-              title: `Module ${idx}`,
-              content: {},
-              type: type,
-              module_order: idx,
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
-            }));
+          // Create placeholder module for implementation screen
+          const placeholderModule = {
+            id: `placeholder-module`,
+            solution_id: id,
+            title: solution?.title || "Implementação",
+            content: {},
+            type: "implementation",
+            module_order: 0,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          };
           
-          setModules(mockModules as Module[]);
+          setModules([placeholderModule as Module]);
         }
         
         // Fetch user progress

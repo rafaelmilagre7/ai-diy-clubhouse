@@ -10,7 +10,6 @@ import { ModuleContentMaterials } from "@/components/implementation/content/Modu
 import { ModuleContentVideos } from "@/components/implementation/content/ModuleContentVideos";
 import { ModuleContentTools } from "@/components/implementation/content/ModuleContentTools";
 import { ModuleContentChecklist } from "@/components/implementation/content/ModuleContentChecklist";
-import { ModuleContentText } from "@/components/implementation/content/ModuleContentText";
 
 const SolutionImplementation = () => {
   const {
@@ -23,7 +22,7 @@ const SolutionImplementation = () => {
   } = useModuleImplementation();
   
   const { log, logError } = useLogging();
-  const [activeTab, setActiveTab] = useState("overview");
+  const [activeTab, setActiveTab] = useState("tools");
   
   // Log module data when it changes
   useEffect(() => {
@@ -64,15 +63,7 @@ const SolutionImplementation = () => {
       
       {/* Module content */}
       <div className="container mt-6 bg-white p-6 rounded-lg shadow-sm">
-        <h1 className="text-2xl font-bold mb-6">{currentModule.title}</h1>
-        
-        {currentModule.content && (
-          <div className="mb-8">
-            <ModuleContentText content={currentModule.content} />
-          </div>
-        )}
-        
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full mt-8">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="w-full grid grid-cols-4 mb-6">
             <TabsTrigger value="tools">Ferramentas</TabsTrigger>
             <TabsTrigger value="materials">Materiais</TabsTrigger>

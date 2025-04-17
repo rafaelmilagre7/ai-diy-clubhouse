@@ -7,14 +7,6 @@ import { Solution } from '@/lib/supabase';
 export const useImplementationShortcuts = (
   solution: Solution | null
 ) => {
-  const navigate = useNavigate();
-  
-  // Add keyboard shortcut for escape only
-  useHotkeys('Escape', () => {
-    if (solution) {
-      navigate(`/solution/${solution.id}`);
-    } else {
-      navigate("/dashboard");
-    }
-  }, [solution, navigate]);
+  // Removendo implementação de atalhos de teclado conforme solicitado
+  return {};
 };
