@@ -21,6 +21,7 @@ const SolutionImplementation = () => {
     currentModule,
     loading,
     completedModules,
+    progress
   } = useModuleImplementation();
   
   const [activeTab, setActiveTab] = useState("tools");
@@ -31,7 +32,7 @@ const SolutionImplementation = () => {
     isCompleting,
     handleConfirmImplementation
   } = useSolutionCompletion({
-    progressId: solution?.progress?.id,
+    progressId: progress?.id,
     solutionId: solution?.id,
     moduleIdx: 0,
     completedModules: completedModules,

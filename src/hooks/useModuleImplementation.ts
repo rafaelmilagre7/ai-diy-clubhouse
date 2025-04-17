@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
-import { Module } from "@/lib/supabase";
+import { Module, Progress } from "@/lib/supabase";
 import { useImplementationData } from "./implementation/useImplementationData";
 
 export const useModuleImplementation = () => {
@@ -32,6 +32,7 @@ export const useModuleImplementation = () => {
     modules,
     currentModule,
     loading,
-    completedModules
+    completedModules,
+    progress
   };
 };

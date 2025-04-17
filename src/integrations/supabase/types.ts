@@ -198,6 +198,7 @@ export type Database = {
       }
       progress: {
         Row: {
+          completed_modules: number[] | null
           completion_date: string | null
           created_at: string
           current_module: number
@@ -208,6 +209,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          completed_modules?: number[] | null
           completion_date?: string | null
           created_at?: string
           current_module?: number
@@ -218,6 +220,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          completed_modules?: number[] | null
           completion_date?: string | null
           created_at?: string
           current_module?: number
@@ -446,6 +449,41 @@ export type Database = {
             columns: ["badge_id"]
             isOneToOne: false
             referencedRelation: "badges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_checklists: {
+        Row: {
+          checked_items: Json | null
+          created_at: string
+          id: string
+          solution_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          checked_items?: Json | null
+          created_at?: string
+          id?: string
+          solution_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          checked_items?: Json | null
+          created_at?: string
+          id?: string
+          solution_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_checklists_solution_id_fkey"
+            columns: ["solution_id"]
+            isOneToOne: false
+            referencedRelation: "solutions"
             referencedColumns: ["id"]
           },
         ]

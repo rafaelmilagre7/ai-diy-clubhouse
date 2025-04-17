@@ -1,11 +1,9 @@
 
 import React, { useEffect, useState } from "react";
-import { Module, Solution, supabase } from "@/lib/supabase";
+import { Module, Solution, supabase, UserChecklist } from "@/lib/supabase";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
-import { CheckCircle } from "lucide-react";
 import { useAuth } from "@/contexts/auth";
 import { useLogging } from "@/hooks/useLogging";
 import { toast } from "sonner";
@@ -77,13 +75,16 @@ export const ModuleContentChecklist = ({ module }: ModuleContentChecklistProps) 
               .eq("solution_id", module.solution_id)
               .single();
               
-            if (!userError && userData && userData.checked_items) {
+            if (!userError && userData) {
+              const typedUserData = userData as UserChecklist;
               // Update the initial state with user's saved progress
-              Object.keys(userData.checked_items).forEach(itemId => {
-                if (initialUserChecklist.hasOwnProperty(itemId)) {
-                  initialUserChecklist[itemId] = userData.checked_items[itemId];
-                }
-              });
+              if (typedUserData.checked_items) {
+                Object.keys(typedUserData.checked_items).forEach(itemId => {
+                  if (initialUserChecklist.hasOwnProperty(itemId)) {
+                    initialUserChecklist[itemId] = typedUserData.checked_items[itemId];
+                  }
+                });
+              }
             }
           }
           

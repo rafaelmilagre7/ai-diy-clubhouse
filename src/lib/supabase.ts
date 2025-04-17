@@ -50,10 +50,13 @@ export interface Solution {
     youtube_id?: string;
   }>;
   checklist?: Array<{
+    id?: string;
     title?: string;
     description?: string;
     checked?: boolean;
   }>;
+  // Used internally - not part of database schema
+  progress?: Progress;
 }
 
 export interface Module {
@@ -77,6 +80,15 @@ export interface Progress {
   last_activity: string;
   created_at: string;
   completed_modules?: number[]; // Added completed_modules property as optional
+}
+
+export interface UserChecklist {
+  id: string;
+  user_id: string;
+  solution_id: string;
+  checked_items: Record<string, boolean>;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface Badge {
