@@ -54,7 +54,7 @@ export const ModuleContentChecklist = ({ module }: ModuleContentChecklistProps) 
           // Transform items to ensure they have the required properties
           const transformedChecklist: ChecklistItem[] = solutionData.checklist.map((item: any, index: number) => ({
             id: item.id || `checklist-${index}`,
-            title: item.title || "Item sem título",
+            title: item.title || item.text || "Item sem título",
             description: item.description,
             checked: false
           }));
@@ -90,9 +90,55 @@ export const ModuleContentChecklist = ({ module }: ModuleContentChecklistProps) 
           
           setUserChecklist(initialUserChecklist);
         } else {
-          // Log for debugging if checklist is missing
-          console.warn("Checklist property is missing or not an array", solutionData);
-          setChecklist([]);
+          // Fallback to implementation_checkpoints table
+          const { data: checkpointData, error: checkpointError } = await supabase
+            .from("implementation_checkpoints")
+            .select("*")
+            .eq("solution_id", module.solution_id)
+            .order("checkpoint_order", { ascending: true });
+            
+          if (!checkpointError && checkpointData && checkpointData.length > 0) {
+            const checkpointChecklist: ChecklistItem[] = checkpointData.map((item: any) => ({
+              id: item.id,
+              title: item.description,
+              checked: false
+            }));
+            
+            setChecklist(checkpointChecklist);
+            
+            // Initialize user checklist state
+            const initialUserChecklist: Record<string, boolean> = {};
+            checkpointChecklist.forEach(item => {
+              initialUserChecklist[item.id] = false;
+            });
+            
+            // If user is logged in, fetch their specific checklist progress
+            if (user) {
+              const { data: userData, error: userError } = await supabase
+                .from("user_checklists")
+                .select("*")
+                .eq("user_id", user.id)
+                .eq("solution_id", module.solution_id)
+                .single();
+                  
+              if (!userError && userData) {
+                const typedUserData = userData as UserChecklist;
+                // Update the initial state with user's saved progress
+                if (typedUserData.checked_items) {
+                  Object.keys(typedUserData.checked_items).forEach(itemId => {
+                    if (initialUserChecklist.hasOwnProperty(itemId)) {
+                      initialUserChecklist[itemId] = typedUserData.checked_items[itemId];
+                    }
+                  });
+                }
+              }
+            }
+            
+            setUserChecklist(initialUserChecklist);
+          } else {
+            console.warn("No checklist or implementation_checkpoints found", solutionData);
+            setChecklist([]);
+          }
         }
       } catch (err) {
         logError("Error fetching solution data:", err);

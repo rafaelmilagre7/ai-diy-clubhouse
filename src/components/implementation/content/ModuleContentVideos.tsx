@@ -22,48 +22,86 @@ export const ModuleContentVideos = ({ module }: ModuleContentVideosProps) => {
   const { log, logError } = useLogging();
 
   useEffect(() => {
-    const fetchSolution = async () => {
+    const fetchVideos = async () => {
       try {
         setLoading(true);
         
-        const { data, error } = await supabase
+        // First, get the solution data
+        const { data: solutionData, error: solutionError } = await supabase
           .from("solutions")
           .select("*")
           .eq("id", module.solution_id)
           .single();
         
-        if (error) {
-          logError("Error fetching solution:", error);
+        if (solutionError) {
+          logError("Error fetching solution:", solutionError);
           return;
         }
         
-        // Cast data to Solution type
-        const solutionData = data as Solution;
-        setSolution(solutionData);
+        setSolution(solutionData as Solution);
         
-        // Check if videos property exists and is an array
-        if (solutionData.videos && Array.isArray(solutionData.videos)) {
-          // Ensure each video has a title property to satisfy TypeScript
-          const processedVideos: Video[] = solutionData.videos.map((video: any) => ({
-            title: video.title || `Vídeo sem título`,
-            description: video.description,
-            url: video.url,
-            youtube_id: video.youtube_id
-          }));
-          setVideos(processedVideos);
-          log("Videos loaded", { count: processedVideos.length });
-        } else {
-          console.warn("Videos property is missing or not an array", solutionData);
-          setVideos([]);
+        // Next, fetch videos from solution_resources
+        const { data: resourceData, error: resourceError } = await supabase
+          .from("solution_resources")
+          .select("*")
+          .eq("solution_id", module.solution_id)
+          .in("type", ['video', 'youtube']);
+        
+        if (resourceError) {
+          logError("Error fetching video resources:", resourceError);
+          return;
         }
+        
+        // Process video data from resources
+        const processedVideos: Video[] = (resourceData || []).map((video: any) => {
+          let youtubeId = video.url;
+          
+          // Try to extract YouTube ID if it's a full URL
+          if (video.url && video.url.includes('youtube.com')) {
+            const url = new URL(video.url);
+            youtubeId = url.searchParams.get('v') || video.url;
+          } else if (video.url && video.url.includes('youtu.be')) {
+            youtubeId = video.url.split('/').pop() || video.url;
+          }
+          
+          return {
+            title: video.name || 'Vídeo sem título',
+            description: video.metadata?.description || '',
+            url: video.url,
+            youtube_id: youtubeId
+          };
+        });
+        
+        // Also check the legacy videos array in the solution object if present
+        if (solutionData.videos && Array.isArray(solutionData.videos)) {
+          const legacyVideos: Video[] = solutionData.videos.map((video: any) => ({
+            title: video.title || 'Vídeo sem título',
+            description: video.description || '',
+            url: video.url || '',
+            youtube_id: video.youtube_id || ''
+          }));
+          
+          // Combine both sources, removing duplicates
+          const allVideos = [...processedVideos, ...legacyVideos];
+          // Remove duplicates by youtube_id or url
+          const uniqueVideos = Array.from(new Map(allVideos.map(video => 
+            [video.youtube_id || video.url, video]
+          )).values());
+          
+          setVideos(uniqueVideos);
+        } else {
+          setVideos(processedVideos);
+        }
+        
+        log("Videos loaded", { count: processedVideos.length });
       } catch (err) {
-        logError("Error fetching solution data:", err);
+        logError("Error fetching video data:", err);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchSolution();
+    fetchVideos();
   }, [module.solution_id, log, logError]);
 
   if (loading) {

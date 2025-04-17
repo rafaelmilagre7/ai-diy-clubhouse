@@ -42,8 +42,8 @@ const SolutionImplementation = () => {
   const onComplete = async () => {
     const success = await handleConfirmImplementation();
     if (success) {
-      // Navigate back to solution or dashboard
-      navigate(`/solution/${solution?.id}`);
+      // Stay on the same page but the ImplementationComplete component will show a different view
+      log("Implementation completed successfully", { solution_id: solution?.id });
     }
   };
   

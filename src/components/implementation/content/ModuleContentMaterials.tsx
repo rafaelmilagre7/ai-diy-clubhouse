@@ -5,6 +5,7 @@ import { Download, FileText, Image, FileArchive } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLogging } from "@/hooks/useLogging";
+import { toast } from "sonner";
 
 interface ModuleContentMaterialsProps {
   module: Module;
@@ -73,6 +74,34 @@ export const ModuleContentMaterials = ({ module }: ModuleContentMaterialsProps) 
     fetchMaterials();
   }, [module.id, module.solution_id, log, logError]);
 
+  // Function to handle download of file
+  const handleDownload = async (material: Material) => {
+    try {
+      log("Downloading material", { material_id: material.id, material_name: material.name });
+      
+      // Create an anchor element and set properties for download
+      const link = document.createElement("a");
+      link.href = material.url;
+      link.download = material.name; // Set suggested filename
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      
+      // Required for Firefox
+      document.body.appendChild(link);
+      
+      // Trigger download
+      link.click();
+      
+      // Clean up
+      document.body.removeChild(link);
+      
+      toast.success("Download iniciado");
+    } catch (error) {
+      logError("Error downloading file:", error);
+      toast.error("Erro ao baixar arquivo");
+    }
+  };
+
   if (loading) {
     return (
       <div className="space-y-4 mt-8">
@@ -135,7 +164,7 @@ export const ModuleContentMaterials = ({ module }: ModuleContentMaterialsProps) 
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => window.open(material.url, "_blank")}
+                  onClick={() => handleDownload(material)}
                 >
                   <Download className="h-4 w-4 mr-1" />
                   Baixar

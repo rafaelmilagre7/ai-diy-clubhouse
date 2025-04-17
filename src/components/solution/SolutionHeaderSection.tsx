@@ -33,7 +33,7 @@ export const SolutionHeaderSection = ({ solution }: SolutionHeaderSectionProps) 
       
       <h1 className="text-2xl md:text-3xl font-bold">{solution.title}</h1>
       
-      <p className="text-muted-foreground">{solution.description}</p>
+      {/* Removed the description to avoid duplication */}
       
       {solution.thumbnail_url && (
         <div className="mt-6">
