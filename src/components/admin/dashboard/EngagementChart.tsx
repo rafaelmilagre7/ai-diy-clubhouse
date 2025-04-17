@@ -1,39 +1,43 @@
 
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { BarChartIcon } from "lucide-react";
-import { BarChart as RechartsBarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import React, { useMemo } from "react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { AreaChart } from "@/components/ui/chart";
 
 interface EngagementChartProps {
   data: { name: string; value: number }[];
 }
 
 export const EngagementChart = ({ data }: EngagementChartProps) => {
+  // Transformar os dados para o formato esperado pelo AreaChart
+  const formattedData = useMemo(() => {
+    return data.map(item => ({
+      month: item.name,
+      atividade: item.value
+    }));
+  }, [data]);
+
+  // Formatador de valores para o eixo Y
+  const valueFormatter = (value: number) => `${value.toLocaleString('pt-BR')} usuários`;
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <BarChartIcon className="h-5 w-5" />
-          <span>Engajamento por Dia</span>
-        </CardTitle>
+        <CardTitle>Atividade Mensal</CardTitle>
+        <CardDescription>
+          Engajamento de usuários nos últimos meses
+        </CardDescription>
       </CardHeader>
       <CardContent>
-        <ResponsiveContainer width="100%" height={300}>
-          <RechartsBarChart
-            data={data}
-            margin={{
-              top: 5,
-              right: 30,
-              left: 20,
-              bottom: 5,
-            }}
-          >
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="name" />
-            <YAxis />
-            <Tooltip />
-            <Bar dataKey="value" fill="#0ABAB5" radius={[4, 4, 0, 0]} />
-          </RechartsBarChart>
-        </ResponsiveContainer>
+        <div className="h-80">
+          <AreaChart
+            data={formattedData}
+            index="month"
+            categories={["atividade"]}
+            colors={["#0ABAB5"]}
+            valueFormatter={valueFormatter}
+            yAxisWidth={70}
+          />
+        </div>
       </CardContent>
     </Card>
   );

@@ -1,39 +1,43 @@
 
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { TrendingUp } from "lucide-react";
-import { LineChart as RechartsLineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import React, { useMemo } from "react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { BarChart } from "@/components/ui/chart";
 
 interface CompletionRateChartProps {
   data: { name: string; completion: number }[];
 }
 
 export const CompletionRateChart = ({ data }: CompletionRateChartProps) => {
+  // Transformar os dados para o formato esperado pelo BarChart
+  const formattedData = useMemo(() => {
+    return data.map(item => ({
+      solucao: item.name,
+      conclusao: item.completion
+    }));
+  }, [data]);
+
+  // Formatador de valores para o eixo Y
+  const valueFormatter = (value: number) => `${value}%`;
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <TrendingUp className="h-5 w-5" />
-          <span>Taxa de Conclusão por Módulo</span>
-        </CardTitle>
+        <CardTitle>Taxa de Conclusão por Solução</CardTitle>
+        <CardDescription>
+          Percentual de implementações concluídas
+        </CardDescription>
       </CardHeader>
       <CardContent>
-        <ResponsiveContainer width="100%" height={300}>
-          <RechartsLineChart
-            data={data}
-            margin={{
-              top: 5,
-              right: 30,
-              left: 20,
-              bottom: 5,
-            }}
-          >
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="name" />
-            <YAxis />
-            <Tooltip />
-            <Line type="monotone" dataKey="completion" stroke="#0ABAB5" strokeWidth={2} />
-          </RechartsLineChart>
-        </ResponsiveContainer>
+        <div className="h-80">
+          <BarChart
+            data={formattedData}
+            index="solucao"
+            categories={["conclusao"]}
+            colors={["#0ABAB5"]}
+            valueFormatter={valueFormatter}
+            yAxisWidth={50}
+          />
+        </div>
       </CardContent>
     </Card>
   );
