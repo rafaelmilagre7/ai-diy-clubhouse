@@ -24,6 +24,7 @@ const Login = () => {
     try {
       setIsLoading(true);
       setError(null);
+      // Call signIn without arguments for Google auth
       await signIn();
       // Redirecionamento acontece dentro da função signIn
     } catch (err) {

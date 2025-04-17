@@ -15,6 +15,16 @@ export interface UserProfile {
   created_at: string;
 }
 
+// Tipo para checklists de usuário
+export interface UserChecklist {
+  id: string;
+  user_id: string;
+  solution_id: string;
+  checked_items: Record<string, boolean>;
+  created_at: string;
+  updated_at: string;
+}
+
 // Tipo para soluções
 export interface Solution {
   id: string;
@@ -31,6 +41,10 @@ export interface Solution {
   created_at: string;
   updated_at: string;
   published: boolean;
+  // Adicionar novos campos necessários
+  overview?: string;
+  checklist?: any[];
+  videos?: any[];
 }
 
 // Tipos para módulos

@@ -25,6 +25,7 @@ const LoginForm = () => {
   const handleGoogleSignIn = async () => {
     try {
       setIsLoading(true);
+      // Call signIn without arguments for Google auth
       await signIn();
       // Navigation is handled by auth state change listeners
     } catch (error) {

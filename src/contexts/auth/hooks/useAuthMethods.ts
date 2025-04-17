@@ -7,12 +7,22 @@ interface UseAuthMethodsProps {
 }
 
 export const useAuthMethods = ({ setIsLoading }: UseAuthMethodsProps) => {
-  const signIn = async () => {
+  const signIn = async (email?: string, password?: string) => {
     setIsLoading(true);
     try {
-      await signInWithGoogle();
+      if (email && password) {
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+        return { data, error };
+      } else {
+        await signInWithGoogle();
+        return { data: null, error: null };
+      }
     } catch (error) {
       console.error('Login error:', error);
+      return { data: null, error };
     } finally {
       setIsLoading(false);
     }
