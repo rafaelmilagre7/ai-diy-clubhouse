@@ -56,16 +56,17 @@ const AdminDashboard = () => {
       <DashboardHeader timeRange={timeRange} setTimeRange={setTimeRange} />
       
       {/* Overview stats */}
-      <StatsOverview data={overviewData} />
+      <StatsOverview data={overviewData} loading={loading} />
       
       {/* Charts */}
       <DashboardCharts 
         engagementData={engagementData} 
-        completionRateData={completionRateData} 
+        completionRateData={completionRateData}
+        loading={loading}
       />
       
       {/* Recent activity */}
-      <RecentActivity />
+      <RecentActivity activities={[]} loading={loading} />
     </div>
   );
 };

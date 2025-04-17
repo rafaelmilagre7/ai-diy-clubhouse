@@ -48,7 +48,7 @@ const AdminDashboard = () => {
         // Buscar estatísticas de progresso
         const { data: progressData, error: progressError } = await supabase
           .from('progress')
-          .select('id, is_completed, created_at, last_activity');
+          .select('id, is_completed, created_at, last_activity, solution_id');
         
         if (progressError) throw progressError;
 
