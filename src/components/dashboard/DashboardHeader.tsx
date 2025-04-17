@@ -1,27 +1,25 @@
 
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Filter, Settings } from "lucide-react";
+import { Search, Filter } from "lucide-react";
 import { useAuth } from "@/contexts/auth";
 import { Link } from "react-router-dom";
 
 interface DashboardHeaderProps {
-  profileName: string | null;
   searchQuery: string;
   onSearchChange: (query: string) => void;
 }
 
 export const DashboardHeader = ({
-  profileName,
   searchQuery,
   onSearchChange,
 }: DashboardHeaderProps) => {
-  const { isAdmin } = useAuth();
+  const { isAdmin, profile } = useAuth();
   
   return (
     <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
       <div>
-        <h1 className="text-3xl font-bold">Bem-vindo, {profileName?.split(" ")[0] || "Membro"}!</h1>
+        <h1 className="text-3xl font-bold">Bem-vindo, {profile?.name?.split(" ")[0] || "Membro"}!</h1>
         <p className="text-muted-foreground mt-1">
           Escolha uma solução de IA para implementar em sua empresa
         </p>

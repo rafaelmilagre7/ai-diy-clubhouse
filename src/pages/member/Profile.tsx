@@ -1,6 +1,9 @@
 
 import { useSearchParams } from "react-router-dom";
 import { useProfileData } from "@/hooks/useProfileData";
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Pencil } from "lucide-react";
 import LoadingScreen from "@/components/common/LoadingScreen";
 import { ProfileHeader } from "@/components/profile/ProfileHeader";
 import { ProfileTabs } from "@/components/profile/tabs/ProfileTabs";
@@ -26,11 +29,18 @@ const Profile = () => {
   
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Meu Perfil</h1>
-        <p className="text-muted-foreground mt-1">
-          Acompanhe seu progresso e conquistas
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Meu Perfil</h1>
+          <p className="text-muted-foreground mt-1">
+            Acompanhe seu progresso e conquistas
+          </p>
+        </div>
+        <Link to="/profile/edit">
+          <Button variant="outline">
+            <Pencil className="mr-2 h-4 w-4" /> Editar Perfil
+          </Button>
+        </Link>
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

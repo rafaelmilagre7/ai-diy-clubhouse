@@ -1,61 +1,35 @@
 
-import { Routes, Route, Navigate } from "react-router-dom";
-import AuthSession from "@/components/auth/AuthSession";
-import Layout from "@/components/layout/Layout";
-import AdminLayout from "@/components/layout/AdminLayout";
-import ProtectedRoute from "./ProtectedRoute";
-import RootRedirect from "./RootRedirect";
-
-// Member routes
-import Auth from "@/pages/Auth";
-import MemberDashboard from "@/pages/member/Dashboard";
-import SolutionDetails from "@/pages/member/SolutionDetails";
-import SolutionImplementation from "@/pages/member/SolutionImplementation";
-import Profile from "@/pages/member/Profile";
-import Achievements from "@/pages/member/Achievements";
-
-// Admin routes
-import AdminDashboard from "@/pages/admin/Dashboard";
-import SolutionsList from "@/pages/admin/SolutionsList";
-import SolutionEditor from "@/pages/admin/SolutionEditor";
-import SolutionMetrics from "@/pages/admin/SolutionMetrics";
-import UserManagement from "@/pages/admin/UserManagement";
-import Index from "@/pages/Index";
+import React from 'react';
+import { Routes, Route } from 'react-router-dom';
+import ProtectedRoute from './ProtectedRoute';
+import Layout from '@/components/layout/Layout';
+import Index from '@/pages/Index';
+import Auth from '@/pages/Auth';
+import Dashboard from '@/pages/member/Dashboard';
+import Profile from '@/pages/member/Profile';
+import EditProfile from '@/pages/member/EditProfile';
+import SolutionImplementation from '@/pages/member/SolutionImplementation';
+import SolutionDetails from '@/pages/member/SolutionDetails';
+import ImplementationCompleted from '@/pages/member/ImplementationCompleted';
+import ImplementationConfirmation from '@/pages/member/ImplementationConfirmation';
 
 const AppRoutes = () => {
   return (
-    <AuthSession>
-      <Routes>
-        <Route path="/auth" element={<Auth />} />
-        <Route path="/index" element={<Index />} />
-        <Route path="/" element={<RootRedirect />} />
-        <Route path="/" element={
-          <ProtectedRoute>
-            <Layout />
-          </ProtectedRoute>
-        }>
-          <Route path="dashboard" element={<MemberDashboard />} />
-          <Route path="solutions" element={<MemberDashboard />} />
-          <Route path="solution/:id" element={<SolutionDetails />} />
-          <Route path="implement/:id/:moduleIndex" element={<SolutionImplementation />} />
-          <Route path="profile" element={<Profile />} />
-          <Route path="achievements" element={<Achievements />} />
+    <Routes>
+      <Route path="/index" element={<Index />} />
+      <Route path="/auth" element={<Auth />} />
+      <Route element={<Layout />}>
+        <Route element={<ProtectedRoute />}>
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/profile/edit" element={<EditProfile />} />
+          <Route path="/solution/:id" element={<SolutionDetails />} />
+          <Route path="/solution/:id/implement" element={<SolutionImplementation />} />
+          <Route path="/implementation/:id/completed" element={<ImplementationCompleted />} />
+          <Route path="/implementation/:id/confirmation" element={<ImplementationConfirmation />} />
         </Route>
-        <Route path="/admin" element={
-          <ProtectedRoute requireAdmin>
-            <AdminLayout />
-          </ProtectedRoute>
-        }>
-          <Route index element={<AdminDashboard />} />
-          <Route path="solutions" element={<SolutionsList />} />
-          <Route path="solutions/new" element={<SolutionEditor />} />
-          <Route path="solutions/:id" element={<SolutionEditor />} />
-          <Route path="analytics/solution/:id" element={<SolutionMetrics />} />
-          <Route path="users" element={<UserManagement />} />
-        </Route>
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
-      </Routes>
-    </AuthSession>
+      </Route>
+    </Routes>
   );
 };
 

@@ -12,7 +12,7 @@ const AuthLayout = () => {
       <div className="w-full md:w-1/2 bg-black flex items-center justify-center p-4">
         <div className="w-full max-w-md p-8 rounded-lg">
           <div className="mb-6 text-center">
-            <h1 className="text-2xl font-bold text-white mb-2">VIVER DE IA Club</h1>
+            <h1 className="text-2xl font-bold text-white mb-2">Entrar</h1>
             <p className="text-gray-400">Entre na sua conta para continuar</p>
           </div>
 
@@ -59,7 +59,6 @@ const AuthLayout = () => {
               alt="VIVER DE IA Club"
               className="h-10 mr-3"
             />
-            <h2 className="text-3xl font-bold text-gray-800">VIVER DE IA Club</h2>
           </div>
 
           <h3 className="text-3xl font-bold text-gray-800 mb-8">
