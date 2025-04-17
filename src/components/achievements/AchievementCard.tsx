@@ -1,7 +1,6 @@
 
-import { Award, Star, Zap, CheckCircle, Timer, Target, Trophy, Flame, LockIcon } from "lucide-react";
-import { Achievement } from "@/types/achievementTypes";
 import { cn } from "@/lib/utils";
+import { Achievement } from "@/types/achievementTypes";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Tooltip,
@@ -10,36 +9,15 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { AchievementProgress } from "./components/AchievementProgress";
+import { AchievementIcon } from "./components/AchievementIcon";
+import { formatDate } from "./utils/achievementUtils";
 
 interface AchievementCardProps {
   achievement: Achievement;
 }
 
-const formatDate = (dateString?: string) => {
-  if (!dateString) return "";
-  
-  const date = new Date(dateString);
-  return new Intl.DateTimeFormat("pt-BR", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  }).format(date);
-};
-
 export const AchievementCard = ({ achievement }: AchievementCardProps) => {
-  const getIcon = () => {
-    if (!achievement.isUnlocked) return <Trophy className="h-10 w-10" />;
-    
-    if (achievement.id.includes('streak')) return <Flame className="h-10 w-10" />;
-    if (achievement.id.includes('speed')) return <Zap className="h-10 w-10" />;
-    if (achievement.id.includes('checklist')) return <CheckCircle className="h-10 w-10" />;
-    if (achievement.id.includes('perfect')) return <Star className="h-10 w-10" />;
-    if (achievement.id.includes('early')) return <Timer className="h-10 w-10" />;
-    if (achievement.id.includes('implementation')) return <Target className="h-10 w-10" />;
-    
-    return <Award className="h-10 w-10" />;
-  };
-
   const isMobile = useIsMobile();
   
   const cardContent = (
@@ -57,24 +35,7 @@ export const AchievementCard = ({ achievement }: AchievementCardProps) => {
         achievement.category === "achievement" && "border-t-viverblue/20 border-r-viverblue/20"
       )} />
       <CardContent className="pt-6 pb-4 text-center flex flex-col items-center">
-        <div className={cn(
-          "h-20 w-20 rounded-full flex items-center justify-center mb-4",
-          achievement.isUnlocked 
-            ? (achievement.category === "revenue" 
-                ? "bg-revenue/10 text-revenue" 
-                : achievement.category === "operational" 
-                  ? "bg-operational/10 text-operational" 
-                  : achievement.category === "strategy" 
-                    ? "bg-strategy/10 text-strategy" 
-                    : "bg-viverblue/10 text-viverblue")
-            : "bg-gray-100 text-gray-400"
-        )}>
-          {achievement.isUnlocked ? (
-            getIcon()
-          ) : (
-            <LockIcon className="h-10 w-10" />
-          )}
-        </div>
+        <AchievementIcon achievement={achievement} />
         <h3 className="font-semibold text-base">{achievement.name}</h3>
         {achievement.isUnlocked ? (
           <p className="text-xs text-muted-foreground mt-1">
@@ -82,20 +43,10 @@ export const AchievementCard = ({ achievement }: AchievementCardProps) => {
           </p>
         ) : (
           achievement.requiredCount && (
-            <div className="w-full mt-2">
-              <div className="flex justify-between text-xs text-muted-foreground mb-1">
-                <span>Progresso</span>
-                <span>{achievement.currentCount || 0}/{achievement.requiredCount}</span>
-              </div>
-              <div className="h-1.5 bg-gray-100 rounded-full w-full">
-                <div 
-                  className="h-full bg-gray-300 rounded-full" 
-                  style={{
-                    width: `${Math.min(((achievement.currentCount || 0) / achievement.requiredCount) * 100, 100)}%`
-                  }}
-                />
-              </div>
-            </div>
+            <AchievementProgress 
+              currentCount={achievement.currentCount} 
+              requiredCount={achievement.requiredCount}
+            />
           )
         )}
       </CardContent>
