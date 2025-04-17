@@ -42,7 +42,7 @@ const AppRoutes = () => {
         <Route path="/solutions" element={<ProtectedRoute><Solutions /></ProtectedRoute>} />
         <Route path="/achievements" element={<ProtectedRoute><Achievements /></ProtectedRoute>} />
         
-        {/* Rotas de Implementação - Corrigidas */}
+        {/* Rotas de Implementação */}
         <Route path="/implement/:id/:moduleIndex" element={<ProtectedRoute><SolutionImplementation /></ProtectedRoute>} />
         <Route path="/implementation/:id/completed" element={<ProtectedRoute><ImplementationCompleted /></ProtectedRoute>} />
         <Route path="/implementation/:id/confirmation" element={<ProtectedRoute><ImplementationConfirmation /></ProtectedRoute>} />

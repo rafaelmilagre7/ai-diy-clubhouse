@@ -33,7 +33,7 @@ export function AreaChart({
 
   return (
     <ChartContainer className={cn("w-full h-full", className)} config={config}>
-      <RechartsPrimitive.ComposedChart data={data} className="h-full w-full">
+      <RechartsPrimitive.AreaChart data={data} className="h-full w-full">
         <RechartsPrimitive.XAxis
           dataKey={index}
           stroke="#888888"
@@ -61,16 +61,15 @@ export function AreaChart({
         {categories.map((category, idx) => (
           <RechartsPrimitive.Area
             key={category}
-            type="monotone"
             dataKey={category}
-            stroke={`var(--color-${category}, ${colors[idx % colors.length]})`}
-            strokeWidth={2}
             fill={`var(--color-${category}, ${colors[idx % colors.length]})`}
+            stroke={`var(--color-${category}, ${colors[idx % colors.length]})`}
+            type="monotone"
+            strokeWidth={2}
             fillOpacity={0.2}
-            activeDot={{ r: 6 }}
           />
         ))}
-      </RechartsPrimitive.ComposedChart>
+      </RechartsPrimitive.AreaChart>
     </ChartContainer>
   )
 }

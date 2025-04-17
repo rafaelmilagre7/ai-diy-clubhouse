@@ -1,45 +1,59 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
-export const useSolutionSteps = (initialStep: number = 0) => {
+export const useSolutionSteps = (initialStep = 0) => {
   const [currentStep, setCurrentStep] = useState(initialStep);
   const [activeTab, setActiveTab] = useState("basic");
-  
-  const totalSteps = 6; // Total número de etapas no processo de criação de solução
 
-  // Títulos das etapas
+  // Define the step titles for each step in the solution editor
   const stepTitles = [
-    "Configuração Básica",
-    "Ferramentas Necessárias", 
-    "Materiais de Apoio",
-    "Vídeo-aulas",
+    "Informações Básicas",
+    "Ferramentas",
+    "Recursos",
+    "Vídeos e Lições",
     "Checklist de Implementação",
     "Publicação"
   ];
 
-  // Atualizar activeTab com base no currentStep
-  useEffect(() => {
-    if (currentStep === 0) {
-      setActiveTab("basic");
-    } else if (currentStep === 1) {
-      setActiveTab("tools");
-    } else if (currentStep === 2) {
-      setActiveTab("resources");
-    } else if (currentStep === 3) {
-      setActiveTab("video");
-    } else if (currentStep === 4) {
-      setActiveTab("checklist");
-    } else if (currentStep === 5) {
-      setActiveTab("publish");
+  // Map step to active tab
+  const stepToTabMap = [
+    "basic",      // Step 0: Basic Info
+    "tools",      // Step 1: Tools
+    "resources",  // Step 2: Resources
+    "video",      // Step 3: Video
+    "checklist",  // Step 4: Checklist
+    "publish"     // Step 5: Publish
+  ];
+
+  // Update active tab based on current step
+  const updateActiveTabFromStep = (step: number) => {
+    if (step >= 0 && step < stepToTabMap.length) {
+      setActiveTab(stepToTabMap[step]);
     }
-  }, [currentStep]);
+  };
+
+  // Effect to update the active tab when the step changes
+  if (stepToTabMap[currentStep] !== activeTab) {
+    updateActiveTabFromStep(currentStep);
+  }
+
+  // Effect to update the step when the tab changes
+  const updateStepFromActiveTab = (tab: string) => {
+    const stepIndex = stepToTabMap.findIndex(t => t === tab);
+    if (stepIndex !== -1 && stepIndex !== currentStep) {
+      setCurrentStep(stepIndex);
+    }
+  };
 
   return {
     currentStep,
     setCurrentStep,
     activeTab,
-    setActiveTab,
-    totalSteps,
+    setActiveTab: (tab: string) => {
+      setActiveTab(tab);
+      updateStepFromActiveTab(tab);
+    },
+    totalSteps: stepTitles.length,
     stepTitles
   };
 };

@@ -40,15 +40,18 @@ const AdminSolutions = () => {
     const fetchSolutions = async () => {
       try {
         setLoading(true);
+        console.log("Fetching solutions...");
         const { data, error } = await supabase
           .from('solutions')
           .select('*')
           .order('created_at', { ascending: false });
 
         if (error) {
+          console.error('Erro ao buscar soluções:', error);
           throw error;
         }
 
+        console.log("Solutions fetched:", data ? data.length : 0);
         setSolutions(data || []);
       } catch (error: any) {
         console.error('Erro ao buscar soluções:', error.message);
@@ -197,21 +200,30 @@ const AdminSolutions = () => {
                         <Button 
                           variant="outline" 
                           size="sm"
-                          onClick={() => navigate(`/solution/${solution.id}`)}
+                          onClick={() => {
+                            console.log("Navigating to solution view:", solution.id);
+                            navigate(`/solution/${solution.id}`);
+                          }}
                         >
                           <Eye className="h-4 w-4" />
                         </Button>
                         <Button 
                           variant="outline" 
                           size="sm"
-                          onClick={() => navigate(`/admin/solutions/${solution.id}`)}
+                          onClick={() => {
+                            console.log("Navigating to solution edit:", solution.id);
+                            navigate(`/admin/solutions/${solution.id}`);
+                          }}
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
                         <Button 
                           variant="outline" 
                           size="sm"
-                          onClick={() => navigate(`/admin/metrics/${solution.id}`)}
+                          onClick={() => {
+                            console.log("Navigating to solution metrics:", solution.id);
+                            navigate(`/admin/metrics/${solution.id}`);
+                          }}
                         >
                           <BarChart2 className="h-4 w-4" />
                         </Button>

@@ -1,40 +1,55 @@
 
 import * as React from "react"
-import * as RechartsPrimitive from "recharts"
-
 import { cn } from "@/lib/utils"
-import { ChartContext, ChartConfig, THEMES } from "./context"
-import { ChartStyle } from "./chart-style"
 
-export const ChartContainer = React.forwardRef<
-  HTMLDivElement,
-  React.ComponentProps<"div"> & {
-    config: ChartConfig
-    children: React.ComponentProps<
-      typeof RechartsPrimitive.ResponsiveContainer
-    >["children"]
+export interface ChartConfig {
+  [key: string]: {
+    label: string
+    color: string
   }
->(({ id, className, children, config, ...props }, ref) => {
-  const uniqueId = React.useId()
-  const chartId = `chart-${id || uniqueId.replace(/:/g, "")}`
+}
 
+interface ChartContainerProps extends React.HTMLAttributes<HTMLDivElement> {
+  config?: ChartConfig
+}
+
+const ChartContext = React.createContext<ChartConfig | undefined>(undefined)
+
+export function ChartContainer({
+  children,
+  config,
+  className,
+  ...props
+}: ChartContainerProps) {
   return (
-    <ChartContext.Provider value={{ config }}>
-      <div
-        data-chart={chartId}
-        ref={ref}
-        className={cn(
-          "flex aspect-video justify-center text-xs [&_.recharts-cartesian-axis-tick_text]:fill-muted-foreground [&_.recharts-cartesian-grid_line[stroke='#ccc']]:stroke-border/50 [&_.recharts-curve.recharts-tooltip-cursor]:stroke-border [&_.recharts-dot[stroke='#fff']]:stroke-transparent [&_.recharts-layer]:outline-none [&_.recharts-polar-grid_[stroke='#ccc']]:stroke-border [&_.recharts-radial-bar-background-sector]:fill-muted [&_.recharts-rectangle.recharts-tooltip-cursor]:fill-muted [&_.recharts-reference-line_[stroke='#ccc']]:stroke-border [&_.recharts-sector[stroke='#fff']]:stroke-transparent [&_.recharts-sector]:outline-none [&_.recharts-surface]:outline-none",
-          className
-        )}
-        {...props}
-      >
-        <ChartStyle id={chartId} config={config} />
-        <RechartsPrimitive.ResponsiveContainer>
-          {children}
-        </RechartsPrimitive.ResponsiveContainer>
+    <ChartContext.Provider value={config}>
+      <div className={cn("", className)} {...props}>
+        {children}
       </div>
+      <ChartStyle config={config} />
     </ChartContext.Provider>
   )
-})
-ChartContainer.displayName = "Chart"
+}
+
+export function useConfig() {
+  const config = React.useContext(ChartContext)
+  return config
+}
+
+export function ChartStyle({ config }: { config?: ChartConfig }) {
+  if (!config) {
+    return null
+  }
+
+  return (
+    <style jsx global>{`
+      :root {
+        ${Object.entries(config)
+          .map(([key, value]) => {
+            return `--color-${key}: ${value.color};`
+          })
+          .join("\n")}
+      }
+    `}</style>
+  )
+}
