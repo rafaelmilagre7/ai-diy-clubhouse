@@ -33,12 +33,16 @@ export const ToolItem: React.FC<ToolItemProps> = ({ tool }) => {
         : <Icons.AlertTriangle className={cn("h-5 w-5", "text-yellow-600")} />;
     }
     
-    // Get the icon dynamically with proper type handling
-    const DynamicIcon = Icons[tool.icon as keyof typeof Icons];
+    // Type-safe approach to render dynamic icons
+    const iconName = tool.icon as keyof typeof Icons;
+    const IconComponent = Icons[iconName];
+    
     // Get color based on required status
     const iconColorClass = tool.is_required ? "text-blue-600" : "text-yellow-600";
     
-    return <DynamicIcon className={cn("h-5 w-5", iconColorClass)} />;
+    return React.createElement(IconComponent, {
+      className: cn("h-5 w-5", iconColorClass)
+    });
   };
   
   return (
