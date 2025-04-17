@@ -2,19 +2,37 @@
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AnalyticsHeader } from '@/components/admin/analytics/AnalyticsHeader';
+import { AnalyticsFilters } from '@/components/admin/analytics/AnalyticsFilters';
 import { OverviewTabContent } from '@/components/admin/analytics/OverviewTabContent';
 import { PlaceholderTabContent } from '@/components/admin/analytics/PlaceholderTabContent';
+import { RealtimeStats } from '@/components/admin/analytics/RealtimeStats';
 import { useAnalyticsData } from '@/hooks/analytics/useAnalyticsData';
 
 const AdminAnalytics = () => {
   const [timeRange, setTimeRange] = useState('30d');
-  const { data, loading } = useAnalyticsData(timeRange);
+  const [category, setCategory] = useState('all');
+  const [difficulty, setDifficulty] = useState('all');
+  const [activeTab, setActiveTab] = useState('overview');
+  
+  const filters = { timeRange, category, difficulty };
+  const { data, loading } = useAnalyticsData(filters);
 
   return (
     <div className="space-y-6">
       <AnalyticsHeader timeRange={timeRange} setTimeRange={setTimeRange} />
       
-      <Tabs defaultValue="overview">
+      <AnalyticsFilters 
+        timeRange={timeRange} 
+        setTimeRange={setTimeRange}
+        category={category}
+        setCategory={setCategory}
+        difficulty={difficulty}
+        setDifficulty={setDifficulty}
+      />
+      
+      <RealtimeStats />
+      
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
           <TabsTrigger value="overview">Visão Geral</TabsTrigger>
           <TabsTrigger value="users">Usuários</TabsTrigger>

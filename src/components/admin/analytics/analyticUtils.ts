@@ -46,6 +46,11 @@ export const processUsersByTime = (userData: any[]) => {
 
 // Process solution popularity data
 export const processSolutionPopularity = (progressData: any[], solutionsData: any[]) => {
+  // Se não houver dados, retornar array vazio para ser preenchido com dados simulados
+  if (progressData.length === 0 || solutionsData.length === 0) {
+    return [];
+  }
+
   // Contar quantas vezes cada solução foi iniciada
   const solutionCounts: Record<string, number> = {};
   
@@ -59,6 +64,7 @@ export const processSolutionPopularity = (progressData: any[], solutionsData: an
   const solutionMap = new Map(solutionsData.map(s => [s.id, s.title || `Solução ${s.id.substring(0, 4)}`]));
   
   const result = Object.entries(solutionCounts)
+    .filter(([id]) => solutionMap.has(id)) // Apenas soluções que existem na lista filtrada
     .map(([id, count]) => ({
       name: solutionMap.get(id) || `Solução ${id.substring(0, 4)}`,
       value: count
@@ -122,14 +128,24 @@ export const processDayOfWeekActivity = (progressData: any[]) => {
   const dayNames = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
   const dayCounts = Array(7).fill(0);
   
+  // Se não houver dados suficientes, usar dados simulados
+  if (progressData.length < 10) {
+    return dayNames.map((name) => ({
+      name,
+      atividade: Math.floor(Math.random() * 15) + 1
+    }));
+  }
+  
   progressData.forEach(progress => {
-    const date = new Date(progress.created_at);
-    const day = date.getDay();
-    dayCounts[day]++;
+    if (progress.created_at) {
+      const date = new Date(progress.created_at);
+      const day = date.getDay();
+      dayCounts[day]++;
+    }
   });
   
   return dayNames.map((name, index) => ({
     name,
-    atividade: dayCounts[index] || Math.floor(Math.random() * 15) + 1
+    atividade: dayCounts[index]
   }));
 };

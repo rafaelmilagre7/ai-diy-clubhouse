@@ -18,7 +18,13 @@ interface AnalyticsData {
   dayOfWeekActivity: any[];
 }
 
-export const useAnalyticsData = (timeRange: string) => {
+interface AnalyticsFilters {
+  timeRange: string;
+  category: string;
+  difficulty: string;
+}
+
+export const useAnalyticsData = (filters: AnalyticsFilters) => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<AnalyticsData>({
@@ -34,26 +40,68 @@ export const useAnalyticsData = (timeRange: string) => {
       try {
         setLoading(true);
 
-        // Buscar dados de usuários
-        const { data: userData, error: userError } = await supabase
+        // Calcular a data de início com base no timeRange
+        const getStartDate = () => {
+          if (filters.timeRange === 'all') return null;
+          
+          const now = new Date();
+          const days = parseInt(filters.timeRange);
+          const startDate = new Date(now);
+          startDate.setDate(now.getDate() - days);
+          return startDate.toISOString();
+        };
+
+        const startDate = getStartDate();
+
+        // Buscar dados de usuários com filtro de tempo
+        let userQuery = supabase
           .from('profiles')
           .select('created_at');
         
+        if (startDate) {
+          userQuery = userQuery.gte('created_at', startDate);
+        }
+        
+        const { data: userData, error: userError } = await userQuery;
+        
         if (userError) throw userError;
 
-        // Buscar dados de progresso
-        const { data: progressData, error: progressError } = await supabase
-          .from('progress')
-          .select('solution_id, is_completed, created_at');
-        
-        if (progressError) throw progressError;
-
-        // Buscar dados de soluções
-        const { data: solutionsData, error: solutionsError } = await supabase
+        // Buscar dados de soluções com filtros
+        let solutionsQuery = supabase
           .from('solutions')
           .select('id, title, category, difficulty');
         
+        if (filters.category !== 'all') {
+          solutionsQuery = solutionsQuery.eq('category', filters.category);
+        }
+        
+        if (filters.difficulty !== 'all') {
+          solutionsQuery = solutionsQuery.eq('difficulty', filters.difficulty);
+        }
+        
+        const { data: solutionsData, error: solutionsError } = await solutionsQuery;
+        
         if (solutionsError) throw solutionsError;
+
+        // IDs das soluções filtradas para usar na consulta de progresso
+        const filteredSolutionIds = solutionsData.map(s => s.id);
+
+        // Buscar dados de progresso com filtros
+        let progressQuery = supabase
+          .from('progress')
+          .select('solution_id, is_completed, created_at');
+        
+        if (startDate) {
+          progressQuery = progressQuery.gte('created_at', startDate);
+        }
+        
+        if (filteredSolutionIds.length > 0 && (filters.category !== 'all' || filters.difficulty !== 'all')) {
+          progressQuery = progressQuery.in('solution_id', filteredSolutionIds);
+        }
+        
+        const { data: progressData, error: progressError } = await progressQuery;
+        
+        if (progressError) throw progressError;
 
         // Processar dados para gráficos
         const usersByTime = processUsersByTime(userData || []);
@@ -83,7 +131,7 @@ export const useAnalyticsData = (timeRange: string) => {
     };
 
     fetchAnalyticsData();
-  }, [toast, timeRange]);
+  }, [toast, filters]);
 
   return { data, loading };
 };
