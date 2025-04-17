@@ -20,29 +20,31 @@ interface ToolItemProps {
   tool: Tool;
 }
 
-// Define a type for the icons to help TypeScript understand what we're doing
-type IconComponent = (typeof Icons)[keyof typeof Icons];
-
 export const ToolItem: React.FC<ToolItemProps> = ({ tool }) => {
   const { log } = useLogging();
   
-  // Determine which icon to show with proper type handling
-  let IconComponent: IconComponent = Icons.CheckCircle;
-  
-  if (tool.icon && tool.icon in Icons) {
-    // Use type assertion to safely access the dynamic icon
-    IconComponent = Icons[tool.icon as keyof typeof Icons] as IconComponent;
-  } else if (!tool.is_required) {
-    IconComponent = Icons.AlertTriangle;
-  }
-
-  // Get color based on required status
-  const iconColorClass = tool.is_required ? "text-blue-600" : "text-yellow-600";
+  // Instead of trying to use a variable for the component itself,
+  // we'll use a render function approach
+  const renderIcon = () => {
+    // Default icon
+    if (!tool.icon || !(tool.icon in Icons)) {
+      return tool.is_required 
+        ? <Icons.CheckCircle className={cn("h-5 w-5", "text-blue-600")} />
+        : <Icons.AlertTriangle className={cn("h-5 w-5", "text-yellow-600")} />;
+    }
+    
+    // Get the icon dynamically with proper type handling
+    const DynamicIcon = Icons[tool.icon as keyof typeof Icons];
+    // Get color based on required status
+    const iconColorClass = tool.is_required ? "text-blue-600" : "text-yellow-600";
+    
+    return <DynamicIcon className={cn("h-5 w-5", iconColorClass)} />;
+  };
   
   return (
     <div className="flex items-start p-4 border rounded-md">
       <div className="bg-blue-100 p-2 rounded mr-4">
-        <IconComponent className={cn("h-5 w-5", iconColorClass)} />
+        {renderIcon()}
       </div>
       <div className="flex-1">
         <h4 className="font-medium">{tool.tool_name}</h4>
