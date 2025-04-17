@@ -12,7 +12,6 @@ import { ModuleContentTools } from "@/components/implementation/content/ModuleCo
 import { ModuleContentChecklist } from "@/components/implementation/content/ModuleContentChecklist";
 import { ImplementationComplete } from "@/components/implementation/content/ImplementationComplete";
 import { useSolutionCompletion } from "@/hooks/implementation/useSolutionCompletion";
-import { useNavigate } from "react-router-dom";
 
 const SolutionImplementation = () => {
   const {
@@ -25,11 +24,11 @@ const SolutionImplementation = () => {
   } = useModuleImplementation();
   
   const [activeTab, setActiveTab] = useState("tools");
-  const navigate = useNavigate();
   const { log, logError } = useLogging();
   
   const {
     isCompleting,
+    isCompleted,
     handleConfirmImplementation
   } = useSolutionCompletion({
     progressId: progress?.id,
@@ -42,7 +41,6 @@ const SolutionImplementation = () => {
   const onComplete = async () => {
     const success = await handleConfirmImplementation();
     if (success) {
-      // Stay on the same page but the ImplementationComplete component will show a different view
       log("Implementation completed successfully", { solution_id: solution?.id });
     }
   };
@@ -108,7 +106,8 @@ const SolutionImplementation = () => {
             <ImplementationComplete 
               solution={solution} 
               onComplete={onComplete} 
-              isCompleting={isCompleting} 
+              isCompleting={isCompleting}
+              isCompleted={isCompleted}
             />
           </TabsContent>
         </Tabs>

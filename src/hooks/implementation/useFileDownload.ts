@@ -1,51 +1,91 @@
 
+import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
 import { useLogging } from "@/hooks/useLogging";
-import { toast } from "sonner";
-import { Material } from "./useMaterialsData";
+
+export interface Material {
+  id: string;
+  title: string;
+  description?: string;
+  url?: string;
+  file_type?: string;
+  size?: number;
+}
 
 export const useFileDownload = () => {
+  const [downloading, setDownloading] = useState<string | null>(null);
+  const { toast } = useToast();
   const { log, logError } = useLogging();
 
-  // Function to handle download of file
   const handleDownload = async (material: Material) => {
+    if (!material.url) {
+      toast({
+        title: "Erro ao baixar arquivo",
+        description: "URL do arquivo não disponível.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
-      log("Downloading material", { material_id: material.id, material_name: material.name });
-      
-      // Fetch the file from the URL
+      setDownloading(material.id);
+      log("Starting file download", { 
+        material_id: material.id, 
+        material_title: material.title 
+      });
+
+      // Usa a API fetch para obter o arquivo
       const response = await fetch(material.url);
       
       if (!response.ok) {
-        throw new Error(`Failed to download file: ${response.status} ${response.statusText}`);
+        throw new Error(`Erro ao baixar: ${response.statusText}`);
       }
       
-      // Get the file content as blob
+      // Converte para blob
       const blob = await response.blob();
       
-      // Create a temporary URL for the blob
-      const url = window.URL.createObjectURL(blob);
+      // Cria um URL para o blob
+      const blobUrl = window.URL.createObjectURL(blob);
       
-      // Create an anchor element and set properties for download
+      // Cria um elemento <a> para download
       const link = document.createElement("a");
-      link.href = url;
-      link.download = material.name; // Set suggested filename
-      link.style.display = "none";
+      link.href = blobUrl;
       
-      // Add to document, trigger download, and clean up
+      // Extrai o nome do arquivo da URL, ou usa o título
+      const fileName = material.title || 
+                      material.url.split("/").pop() || 
+                      `arquivo-${material.id}`;
+                      
+      link.download = fileName;
+      
+      // Anexa e clica no link para iniciar o download
       document.body.appendChild(link);
       link.click();
       
-      // Clean up
-      window.URL.revokeObjectURL(url);
+      // Limpa
       document.body.removeChild(link);
+      window.URL.revokeObjectURL(blobUrl);
       
-      toast.success("Download iniciado");
+      log("File download completed", { material_id: material.id });
+      
+      toast({
+        title: "Download iniciado",
+        description: `O arquivo "${material.title}" está sendo baixado.`,
+      });
     } catch (error) {
-      logError("Error downloading file:", error);
-      toast.error("Erro ao baixar arquivo");
+      logError("Error downloading file", error);
+      toast({
+        title: "Erro ao baixar arquivo",
+        description: "Ocorreu um erro ao tentar baixar o arquivo. Tente novamente.",
+        variant: "destructive",
+      });
+    } finally {
+      setDownloading(null);
     }
   };
 
   return {
-    handleDownload
+    handleDownload,
+    downloading
   };
 };

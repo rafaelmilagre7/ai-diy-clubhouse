@@ -1,56 +1,53 @@
 
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { useAuth } from "@/contexts/auth";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "@/components/ui/use-toast";
 import { useLogging } from "@/hooks/useLogging";
-import { logProgressEvent } from "./utils/progressUtils";
 
-interface UseSolutionCompletionProps {
-  progressId: string | undefined;
-  solutionId: string | undefined;
+interface SolutionCompletionProps {
+  progressId?: string;
+  solutionId?: string;
   moduleIdx: number;
   completedModules: number[];
-  setCompletedModules: (modules: number[]) => void;
+  setCompletedModules: React.Dispatch<React.SetStateAction<number[]>>;
 }
 
-/**
- * Hook to handle completing the entire solution implementation
- */
 export const useSolutionCompletion = ({
   progressId,
   solutionId,
   moduleIdx,
   completedModules,
   setCompletedModules
-}: UseSolutionCompletionProps) => {
-  const { user } = useAuth();
-  const { toast } = useToast();
-  const { log, logError } = useLogging();
+}: SolutionCompletionProps) => {
   const [isCompleting, setIsCompleting] = useState(false);
+  const [isCompleted, setIsCompleted] = useState(false);
+  const { log, logError } = useLogging();
   
-  // Handle full implementation confirmation
-  const handleConfirmImplementation = async () => {
-    if (!user || !progressId) return;
+  const handleConfirmImplementation = async (): Promise<boolean> => {
+    if (!progressId || !solutionId) {
+      toast({
+        title: "Erro",
+        description: "Não foi possível completar a implementação. Dados de progresso inválidos.",
+        variant: "destructive",
+      });
+      return false;
+    }
+    
+    setIsCompleting(true);
     
     try {
-      setIsCompleting(true);
-      logProgressEvent(log, "Confirming full implementation", { solution_id: solutionId });
+      log("Confirming implementation", { 
+        progress_id: progressId, 
+        solution_id: solutionId 
+      });
       
-      // Add this module to completed modules if not already there
-      let updatedCompletedModules = [...completedModules];
-      if (!completedModules.includes(moduleIdx)) {
-        updatedCompletedModules = [...completedModules, moduleIdx];
-      }
-      
-      // Update in database
+      // Marcar solução como implementada
       const { error } = await supabase
         .from("progress")
-        .update({ 
+        .update({
           is_completed: true,
-          completion_date: new Date().toISOString(),
-          completed_modules: updatedCompletedModules,
-          last_activity: new Date().toISOString()
+          completed_modules: [...new Set([...completedModules, moduleIdx])],
+          completed_at: new Date().toISOString(),
         })
         .eq("id", progressId);
       
@@ -58,25 +55,26 @@ export const useSolutionCompletion = ({
         throw error;
       }
       
-      // Update completed modules
-      setCompletedModules(updatedCompletedModules);
-      
-      toast({
-        title: "Implementação concluída!",
-        description: "Parabéns! Você concluiu com sucesso a implementação desta solução.",
+      log("Implementation marked as complete", { 
+        progress_id: progressId,
+        solution_id: solutionId
       });
       
-      logProgressEvent(log, "Implementation confirmed successfully", {
-        solution_id: solutionId,
-        completed_modules: updatedCompletedModules
+      // Atualizar estado local
+      setCompletedModules(prev => [...new Set([...prev, moduleIdx])]);
+      setIsCompleted(true);
+      
+      toast({
+        title: "Parabéns!",
+        description: "Você concluiu com sucesso a implementação desta solução.",
       });
       
       return true;
     } catch (error) {
-      logError("Error completing implementation", error);
+      logError("Error confirming implementation", error);
       toast({
-        title: "Erro ao concluir implementação",
-        description: "Ocorreu um erro ao tentar marcar a implementação como concluída.",
+        title: "Erro",
+        description: "Ocorreu um erro ao tentar completar a implementação. Tente novamente.",
         variant: "destructive",
       });
       return false;
@@ -87,6 +85,7 @@ export const useSolutionCompletion = ({
   
   return {
     isCompleting,
+    isCompleted,
     handleConfirmImplementation
   };
 };

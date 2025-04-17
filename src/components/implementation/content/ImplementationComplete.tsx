@@ -1,106 +1,84 @@
 
-import React, { useState } from "react";
-import { Solution } from "@/lib/supabase";
+import React from "react";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, Loader } from "lucide-react";
+import { Solution } from "@/lib/supabase";
+import { CheckCircle, Loader2 } from "lucide-react";
+import confetti from "canvas-confetti";
 
 interface ImplementationCompleteProps {
   solution: Solution;
-  onComplete: () => void;
+  onComplete: () => Promise<void>;
   isCompleting: boolean;
+  isCompleted?: boolean;
 }
 
-export const ImplementationComplete = ({ 
-  solution, 
-  onComplete, 
-  isCompleting 
-}: ImplementationCompleteProps) => {
-  const [isCompleted, setIsCompleted] = useState(false);
-  
-  const handleConfirmComplete = () => {
-    onComplete();
-    setIsCompleted(true);
+export const ImplementationComplete: React.FC<ImplementationCompleteProps> = ({
+  solution,
+  onComplete,
+  isCompleting,
+  isCompleted = false
+}) => {
+  const handleComplete = async () => {
+    await onComplete();
+    
+    // Trigger confetti after successful completion
+    confetti({
+      particleCount: 100,
+      spread: 70,
+      origin: { y: 0.6 }
+    });
   };
   
   if (isCompleted) {
     return (
-      <div className="py-8 max-w-2xl mx-auto text-center space-y-6">
-        <div className="rounded-full bg-green-100 w-16 h-16 flex items-center justify-center mx-auto">
-          <CheckCircle className="h-8 w-8 text-green-600" />
-        </div>
-        
-        <h2 className="text-2xl font-bold">Parabéns!</h2>
-        
-        <p className="text-muted-foreground">
-          Você concluiu com sucesso a implementação da solução "{solution.title}".
-          Esta conquista foi registrada em seu perfil.
-        </p>
-        
-        <div className="bg-green-50 p-6 rounded-lg border border-green-200 mt-6 text-left">
-          <h3 className="font-medium text-green-800 mb-2">O que acontece agora:</h3>
-          <ul className="space-y-2 text-green-700">
-            <li className="flex items-start">
-              <span className="mr-2">•</span>
-              <span>Você receberá uma certificação por esta implementação</span>
-            </li>
-            <li className="flex items-start">
-              <span className="mr-2">•</span>
-              <span>Esta solução aparecerá no seu histórico de implementações</span>
-            </li>
-            <li className="flex items-start">
-              <span className="mr-2">•</span>
-              <span>Seu progresso foi registrado nas estatísticas do seu perfil</span>
-            </li>
-          </ul>
+      <div className="text-center py-12 space-y-6">
+        <div className="bg-green-50 p-6 rounded-lg border border-green-100 mx-auto max-w-xl">
+          <CheckCircle className="mx-auto h-16 w-16 text-green-500 mb-4" />
+          <h2 className="text-2xl font-bold text-green-800 mb-2">Parabéns!</h2>
+          <p className="text-green-700 mb-6">
+            Você concluiu com sucesso a implementação da solução "{solution.title}".
+            Continue explorando outras soluções para maximizar o potencial do seu negócio.
+          </p>
+          <Button 
+            onClick={() => window.location.href = "/solutions"}
+            className="bg-green-600 hover:bg-green-700"
+          >
+            Explorar mais soluções
+          </Button>
         </div>
       </div>
     );
   }
   
   return (
-    <div className="py-8 max-w-2xl mx-auto text-center space-y-6">
-      <h2 className="text-2xl font-semibold">Concluir Implementação</h2>
-      
-      <p className="text-muted-foreground">
-        Você chegou à etapa final da implementação da solução "{solution.title}". 
-        Ao confirmar abaixo, esta solução será marcada como concluída em seu perfil.
-      </p>
-      
-      <div className="bg-blue-50 p-6 rounded-lg border border-blue-200 mt-6 text-left">
-        <h3 className="font-medium text-blue-800 mb-2">Antes de confirmar a conclusão:</h3>
-        <ul className="space-y-2 text-blue-700">
-          <li className="flex items-start">
-            <span className="mr-2">•</span>
-            <span>Certifique-se de que implementou todos os passos necessários</span>
-          </li>
-          <li className="flex items-start">
-            <span className="mr-2">•</span>
-            <span>Verifique se todos os itens do checklist foram marcados</span>
-          </li>
-          <li className="flex items-start">
-            <span className="mr-2">•</span>
-            <span>Confirme que a solução está funcionando conforme esperado</span>
-          </li>
-        </ul>
+    <div className="py-6 space-y-6">
+      <div className="bg-blue-50 p-6 rounded-lg border border-blue-100">
+        <h3 className="text-xl font-semibold text-blue-800 mb-2">Conclusão da Implementação</h3>
+        <p className="text-blue-700 mb-4">
+          Você completou todos os passos necessários para implementar a solução "{solution.title}"?
+        </p>
+        <p className="text-blue-600 mb-6">
+          Após confirmar a conclusão, esta solução será marcada como implementada no seu perfil e 
+          você poderá receber conquistas baseadas neste progresso.
+        </p>
+        <Button 
+          onClick={handleComplete} 
+          disabled={isCompleting}
+          className="bg-blue-600 hover:bg-blue-700"
+        >
+          {isCompleting ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Confirmando...
+            </>
+          ) : (
+            <>
+              <CheckCircle className="mr-2 h-4 w-4" />
+              Confirmar Implementação
+            </>
+          )}
+        </Button>
       </div>
-      
-      <Button 
-        onClick={handleConfirmComplete} 
-        disabled={isCompleting} 
-        className="mt-8 py-6 px-8 text-lg"
-      >
-        {isCompleting ? (
-          <>
-            <Loader className="mr-2 h-5 w-5 animate-spin" />
-            Processando...
-          </>
-        ) : (
-          <>
-            <CheckCircle className="mr-2 h-5 w-5" />
-            Confirmar conclusão da implementação
-          </>
-        )}
-      </Button>
     </div>
   );
 };

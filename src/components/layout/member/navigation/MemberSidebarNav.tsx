@@ -5,8 +5,7 @@ import {
   LayoutDashboard, 
   BookOpen, 
   Award,
-  User,
-  BarChart,
+  User
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -34,12 +33,6 @@ export const MemberSidebarNav = ({ sidebarOpen }: MemberSidebarNavProps) => {
       id: "solutions"
     },
     {
-      title: "Implementações",
-      icon: BarChart,
-      path: "/implementations",
-      id: "implementations"
-    },
-    {
       title: "Minhas Conquistas",
       icon: Award,
       path: "/achievements",
@@ -63,7 +56,9 @@ export const MemberSidebarNav = ({ sidebarOpen }: MemberSidebarNavProps) => {
     }
     
     if (path === "/solutions" && 
-        (currentPath.includes("/solution/") || currentPath.includes("/implement/"))) {
+        (currentPath.includes("/solution/") || 
+         currentPath.includes("/implement/") || 
+         currentPath.includes("/implementations/"))) {
       return true;
     }
     

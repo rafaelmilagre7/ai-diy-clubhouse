@@ -16,7 +16,7 @@ interface ModuleContentVideosProps {
   module: Module;
 }
 
-export const ModuleContentVideos = ({ module }: ModuleContentVideosProps) => {
+export const ModuleContentVideos: React.FC<ModuleContentVideosProps> = ({ module }) => {
   const [videos, setVideos] = useState<Video[]>([]);
   const [solution, setSolution] = useState<Solution | null>(null);
   const [loading, setLoading] = useState(true);
@@ -47,11 +47,17 @@ export const ModuleContentVideos = ({ module }: ModuleContentVideosProps) => {
         // Check for videos in module content first
         if (module.content && module.content.videos && Array.isArray(module.content.videos)) {
           setVideos(module.content.videos);
+          log("Found videos in module content", { count: module.content.videos.length });
         } 
         // Then check for videos in solution data
         else if (solutionData.videos && Array.isArray(solutionData.videos)) {
           setVideos(solutionData.videos);
+          log("Found videos in solution data", { count: solutionData.videos.length });
         } else {
+          log("No videos found in module or solution", {
+            module_id: module.id,
+            solution_id: module.solution_id
+          });
           setVideos([]);
         }
       } catch (err) {
@@ -77,7 +83,7 @@ export const ModuleContentVideos = ({ module }: ModuleContentVideosProps) => {
         <h3 className="text-lg font-semibold">Vídeos</h3>
         {[1, 2].map((i) => (
           <div key={i} className="space-y-2">
-            <Skeleton className="h-40 md:h-56 w-full rounded-md" />
+            <Skeleton className="h-52 w-full rounded-md" />
             <Skeleton className="h-5 w-3/4" />
             <Skeleton className="h-4 w-1/2" />
           </div>
@@ -100,25 +106,28 @@ export const ModuleContentVideos = ({ module }: ModuleContentVideosProps) => {
       
       <div className="space-y-8">
         {videos.map((video, index) => {
+          // Log video to debug
+          log("Processing video", { video, index });
+          
           // Get video ID from provided youtube_id or extract from URL
           const youtubeId = video.youtube_id || (video.url ? getYouTubeId(video.url) : null);
           
           if (!youtubeId && !video.url) {
+            log("Skipping video - no youtube_id or url", { video });
             return null;
           }
           
           return (
             <div key={index} className="space-y-2">
               {youtubeId ? (
-                <YoutubeEmbed youtubeId={youtubeId} />
+                <YoutubeEmbed youtubeId={youtubeId} title={video.title} />
               ) : (
-                <div className="aspect-w-16 aspect-h-9 rounded-md overflow-hidden">
-                  <iframe 
-                    src={video.url} 
+                <div className="aspect-video rounded-md overflow-hidden">
+                  <video
+                    src={video.url}
+                    controls
+                    className="w-full h-full"
                     title={video.title || `Vídeo ${index + 1}`}
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                    className="w-full h-56 md:h-72"
                   />
                 </div>
               )}
