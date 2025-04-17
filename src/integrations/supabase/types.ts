@@ -198,8 +198,8 @@ export type Database = {
       }
       progress: {
         Row: {
+          completed_at: string | null
           completed_modules: number[] | null
-          completion_date: string | null
           created_at: string
           current_module: number
           id: string
@@ -209,8 +209,8 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          completed_at?: string | null
           completed_modules?: number[] | null
-          completion_date?: string | null
           created_at?: string
           current_module?: number
           id?: string
@@ -220,8 +220,8 @@ export type Database = {
           user_id: string
         }
         Update: {
+          completed_at?: string | null
           completed_modules?: number[] | null
-          completion_date?: string | null
           created_at?: string
           current_module?: number
           id?: string
