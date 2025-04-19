@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft } from 'lucide-react';
-import { useSuggestions } from '@/hooks/useSuggestions';
+import { useSuggestions } from '@/hooks/suggestions/useSuggestions';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/auth';
