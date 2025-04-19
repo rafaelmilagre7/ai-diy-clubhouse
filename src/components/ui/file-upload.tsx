@@ -7,6 +7,7 @@ import { FilePreview } from './file/FilePreview';
 
 interface FileUploadProps {
   bucketName: string;
+  folder?: string;
   onUploadComplete: (url: string, fileName?: string, fileSize?: number) => void;
   accept?: string;
   maxSize?: number;
@@ -17,6 +18,7 @@ interface FileUploadProps {
 
 export const FileUpload: React.FC<FileUploadProps> = ({
   bucketName,
+  folder,
   onUploadComplete,
   accept = '*',
   maxSize = 5,
@@ -33,6 +35,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
     setUploadedFileUrl
   } = useFileUpload({
     bucketName,
+    folder,
     onUploadComplete,
     maxSize
   });
@@ -41,7 +44,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
     if (initialFileUrl) {
       setUploadedFileUrl(initialFileUrl);
     }
-  }, [initialFileUrl]);
+  }, [initialFileUrl, setUploadedFileUrl]);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;

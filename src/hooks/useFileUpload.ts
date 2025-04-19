@@ -2,15 +2,18 @@
 import { useState, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
+import { uploadFileToStorage } from '@/components/ui/file/uploadUtils';
 
 interface UseFileUploadProps {
   bucketName: string;
+  folder?: string;
   onUploadComplete: (url: string, fileName?: string, fileSize?: number) => void;
   maxSize?: number;
 }
 
 export const useFileUpload = ({ 
   bucketName, 
+  folder,
   onUploadComplete, 
   maxSize = 5 
 }: UseFileUploadProps) => {
@@ -43,30 +46,17 @@ export const useFileUpload = ({
       setUploading(true);
       setFileName(file.name);
 
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
-      const filePath = `${fileName}`;
+      const { publicUrl, fileName: uploadedFileName } = await uploadFileToStorage(
+        file,
+        bucketName,
+        folder || '',
+        (progress) => {
+          console.log('Upload progress:', progress);
+        }
+      );
 
-      console.log('Iniciando upload para', { bucketName, filePath });
-
-      const { data, error } = await supabase.storage
-        .from(bucketName)
-        .upload(filePath, file, {
-          cacheControl: '3600',
-          upsert: true
-        });
-
-      if (error) throw error;
-
-      console.log('Upload completo:', data);
-
-      const { data: publicURLData } = supabase.storage
-        .from(bucketName)
-        .getPublicUrl(filePath);
-
-      const publicURL = publicURLData.publicUrl;
-      setUploadedFileUrl(publicURL);
-      onUploadComplete(publicURL, file.name, file.size);
+      setUploadedFileUrl(publicUrl);
+      onUploadComplete(publicUrl, uploadedFileName, file.size);
 
       toast({
         title: 'Upload concluído',

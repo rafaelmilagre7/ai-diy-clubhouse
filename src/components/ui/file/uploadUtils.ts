@@ -1,4 +1,3 @@
-
 import { supabase } from "@/lib/supabase";
 
 // Função para upload de imagens usando ImgBB API
