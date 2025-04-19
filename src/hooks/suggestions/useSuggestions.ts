@@ -19,8 +19,11 @@ export const useSuggestions = (categoryId?: string) => {
 
   // Forçar refetch quando o componente montar
   useEffect(() => {
-    refetch().catch(console.error);
-  }, [refetch]);
+    console.log("useSuggestions hook: forçando refetch inicial...");
+    refetch().catch(error => {
+      console.error("Erro ao fazer refetch inicial:", error);
+    });
+  }, [refetch, filter]); // Também refazer a busca quando o filtro mudar
 
   return {
     suggestions,

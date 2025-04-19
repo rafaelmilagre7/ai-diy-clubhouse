@@ -5,12 +5,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useSuggestions } from '@/hooks/suggestions/useSuggestions';
-import { Plus, ThumbsUp, MessageCircle, Calendar } from 'lucide-react';
+import { Plus, ThumbsUp, ThumbsDown, MessageCircle, Calendar } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
-import { format } from 'date-fns';
+import { format, formatDistance } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
 
@@ -42,8 +42,50 @@ const SuggestionsPage = () => {
 
   console.log("Sugestões filtradas:", filteredSuggestions.length, filteredSuggestions);
 
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case 'new':
+        return 'Novo';
+      case 'under_review':
+        return 'Em Análise';
+      case 'approved':
+        return 'Aprovado';
+      case 'in_development':
+        return 'Em Desenvolvimento';
+      case 'implemented':
+        return 'Implementado';
+      case 'rejected':
+        return 'Rejeitado';
+      default:
+        return status;
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'new':
+        return 'bg-blue-100 text-blue-800';
+      case 'under_review':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'approved':
+        return 'bg-green-100 text-green-800';
+      case 'in_development':
+        return 'bg-purple-100 text-purple-800';
+      case 'implemented':
+        return 'bg-emerald-100 text-emerald-800';
+      case 'rejected':
+        return 'bg-red-100 text-red-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
   const renderSuggestionCard = (suggestion: any) => {
-    const formattedDate = format(new Date(suggestion.created_at), "dd 'de' MMMM", { locale: ptBR });
+    const createdAtDate = new Date(suggestion.created_at);
+    const timeAgo = formatDistance(createdAtDate, new Date(), { 
+      addSuffix: true,
+      locale: ptBR 
+    });
     
     return (
       <Card key={suggestion.id} className="h-full flex flex-col">
@@ -60,7 +102,7 @@ const SuggestionsPage = () => {
                 )}
                 <span className="flex items-center text-xs gap-1">
                   <Calendar size={12} />
-                  {formattedDate}
+                  {timeAgo}
                 </span>
               </CardDescription>
             </div>
@@ -82,9 +124,16 @@ const SuggestionsPage = () => {
             </span>
           </div>
           <div className="flex items-center gap-3 text-muted-foreground">
+            <Badge className={`text-xs ${getStatusColor(suggestion.status)}`}>
+              {getStatusLabel(suggestion.status)}
+            </Badge>
             <div className="flex items-center gap-1 text-xs">
-              <ThumbsUp size={14} />
+              <ThumbsUp size={14} className="text-green-600" />
               {suggestion.upvotes || 0}
+            </div>
+            <div className="flex items-center gap-1 text-xs">
+              <ThumbsDown size={14} className="text-red-600" />
+              {suggestion.downvotes || 0}
             </div>
             <div className="flex items-center gap-1 text-xs">
               <MessageCircle size={14} />

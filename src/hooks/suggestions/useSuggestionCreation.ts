@@ -70,6 +70,7 @@ export const useSuggestionCreation = () => {
       }
     },
     onSuccess: () => {
+      // Invalidar todas as queries relacionadas a sugestões para garantir refresh
       queryClient.invalidateQueries({ queryKey: ['suggestions'] });
     },
     onError: (error: any) => {
