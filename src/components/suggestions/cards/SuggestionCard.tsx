@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardHeader, CardContent, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -18,18 +19,34 @@ export const SuggestionCard = ({
   getStatusLabel, 
   getStatusColor 
 }: SuggestionCardProps) => {
+  const navigate = useNavigate();
   const createdAtDate = new Date(suggestion.created_at);
   const timeAgo = formatDistance(createdAtDate, new Date(), { 
     addSuffix: true,
     locale: ptBR 
   });
 
+  const handleClick = () => {
+    navigate(`/suggestions/${suggestion.id}`);
+  };
+
+  // Extrai informações do perfil, lidando com estruturas diferentes
+  const profileName = suggestion.profiles?.name || 
+                     (suggestion.profiles && suggestion.profiles[0]?.name) || 
+                     'Usuário';
+  
+  const profileAvatar = suggestion.profiles?.avatar_url || 
+                       (suggestion.profiles && suggestion.profiles[0]?.avatar_url) || 
+                       '';
+
+  console.log('Rendering suggestion card:', suggestion);
+
   return (
-    <Card key={suggestion.id} className="h-full flex flex-col">
+    <Card key={suggestion.id} className="h-full flex flex-col hover:shadow-md transition-shadow cursor-pointer" onClick={handleClick}>
       <CardHeader className="pb-2">
         <div className="flex justify-between items-start">
           <div>
-            <h3 className="line-clamp-1 hover:text-primary cursor-pointer text-lg font-semibold">
+            <h3 className="line-clamp-1 hover:text-primary text-lg font-semibold">
               {suggestion.title}
             </h3>
             <div className="flex flex-wrap gap-2 mt-1 text-sm text-muted-foreground">
@@ -52,11 +69,11 @@ export const SuggestionCard = ({
       <CardFooter className="pt-2 flex justify-between items-center border-t">
         <div className="flex items-center gap-2">
           <Avatar className="h-6 w-6">
-            <AvatarImage src={suggestion.profiles?.avatar_url || ''} />
-            <AvatarFallback>{(suggestion.profiles?.name || '?').charAt(0)}</AvatarFallback>
+            <AvatarImage src={profileAvatar} />
+            <AvatarFallback>{profileName.charAt(0)}</AvatarFallback>
           </Avatar>
           <span className="text-xs text-muted-foreground line-clamp-1">
-            {suggestion.profiles?.name || 'Usuário'}
+            {profileName}
           </span>
         </div>
         <div className="flex items-center gap-3 text-muted-foreground">

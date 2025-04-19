@@ -603,6 +603,13 @@ export type Database = {
             referencedRelation: "suggestions"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "suggestion_comments_suggestion_id_fkey"
+            columns: ["suggestion_id"]
+            isOneToOne: false
+            referencedRelation: "suggestions_with_profiles"
+            referencedColumns: ["id"]
+          },
         ]
       }
       suggestion_notifications: {
@@ -651,6 +658,13 @@ export type Database = {
             referencedRelation: "suggestions"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "suggestion_notifications_suggestion_id_fkey"
+            columns: ["suggestion_id"]
+            isOneToOne: false
+            referencedRelation: "suggestions_with_profiles"
+            referencedColumns: ["id"]
+          },
         ]
       }
       suggestion_votes: {
@@ -686,6 +700,13 @@ export type Database = {
             referencedRelation: "suggestions"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "suggestion_votes_suggestion_id_fkey"
+            columns: ["suggestion_id"]
+            isOneToOne: false
+            referencedRelation: "suggestions_with_profiles"
+            referencedColumns: ["id"]
+          },
         ]
       }
       suggestions: {
@@ -699,6 +720,7 @@ export type Database = {
           image_url: string | null
           is_hidden: boolean
           is_pinned: boolean
+          profiles: Json | null
           status: Database["public"]["Enums"]["suggestion_status"]
           title: string
           updated_at: string
@@ -715,6 +737,7 @@ export type Database = {
           image_url?: string | null
           is_hidden?: boolean
           is_pinned?: boolean
+          profiles?: Json | null
           status?: Database["public"]["Enums"]["suggestion_status"]
           title: string
           updated_at?: string
@@ -731,6 +754,7 @@ export type Database = {
           image_url?: string | null
           is_hidden?: boolean
           is_pinned?: boolean
+          profiles?: Json | null
           status?: Database["public"]["Enums"]["suggestion_status"]
           title?: string
           updated_at?: string
@@ -897,7 +921,36 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      suggestions_with_profiles: {
+        Row: {
+          category_id: string | null
+          comment_count: number | null
+          created_at: string | null
+          description: string | null
+          downvotes: number | null
+          id: string | null
+          image_url: string | null
+          is_hidden: boolean | null
+          is_pinned: boolean | null
+          profiles: Json | null
+          status: Database["public"]["Enums"]["suggestion_status"] | null
+          title: string | null
+          updated_at: string | null
+          upvotes: number | null
+          user_avatar: string | null
+          user_id: string | null
+          user_name: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "suggestions_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "suggestion_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       decrement_suggestion_downvote: {

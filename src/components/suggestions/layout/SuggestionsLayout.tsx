@@ -15,7 +15,8 @@ const SuggestionsLayout = () => {
     setFilter,
     searchQuery,
     setSearchQuery,
-    refetch
+    refetch,
+    error
   } = useSuggestions();
 
   React.useEffect(() => {
@@ -27,7 +28,17 @@ const SuggestionsLayout = () => {
   }, [refetch]);
 
   React.useEffect(() => {
+    if (error) {
+      console.error("Erro ao buscar sugestões:", error);
+      toast.error("Erro ao carregar sugestões. Por favor, tente novamente.");
+    }
+  }, [error]);
+
+  React.useEffect(() => {
     console.log("Quantidade de sugestões carregadas:", suggestions?.length || 0);
+    if (suggestions && suggestions.length > 0) {
+      console.log("Primeira sugestão:", suggestions[0]);
+    }
   }, [suggestions]);
 
   const filteredSuggestions = suggestions.filter(suggestion => 

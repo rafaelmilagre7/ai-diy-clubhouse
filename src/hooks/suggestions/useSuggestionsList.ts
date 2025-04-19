@@ -18,7 +18,7 @@ export const useSuggestionsList = (categoryId?: string, filter: 'popular' | 'rec
         .from('suggestions')
         .select(`
           *,
-          profiles:user_id(name, avatar_url),
+          profiles:profiles(name, avatar_url),
           category:category_id(name)
         `)
         .eq('is_hidden', false); // Apenas sugestões não ocultas
