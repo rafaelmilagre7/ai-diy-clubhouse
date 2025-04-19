@@ -48,6 +48,7 @@ const AdminToolEdit = () => {
         description: error.message || 'Ocorreu um erro ao carregar os dados da ferramenta.',
         variant: 'destructive',
       });
+      // Redireciona para a lista mesmo em caso de erro
       navigate('/admin/tools');
     } finally {
       setLoading(false);
@@ -60,7 +61,8 @@ const AdminToolEdit = () => {
       console.log('Salvando ferramenta:', data);
       
       if (isNew) {
-        const { error } = await supabase.from('tools').insert([data]);
+        const { data: insertedData, error } = await supabase.from('tools').insert([data]).select();
+        
         if (error) throw error;
         
         toast({
@@ -81,7 +83,11 @@ const AdminToolEdit = () => {
         });
       }
       
-      navigate('/admin/tools');
+      // Garantir que o navegador complete o redirecionamento
+      setTimeout(() => {
+        navigate('/admin/tools');
+      }, 100);
+      
     } catch (error: any) {
       console.error('Erro ao salvar ferramenta:', error);
       toast({
@@ -89,7 +95,7 @@ const AdminToolEdit = () => {
         description: error.message || 'Ocorreu um erro ao tentar salvar a ferramenta.',
         variant: 'destructive',
       });
-    } finally {
+      // Mesmo em caso de erro, não deixamos o usuário preso
       setSaving(false);
     }
   };

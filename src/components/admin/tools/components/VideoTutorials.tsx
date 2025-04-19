@@ -98,34 +98,40 @@ export const VideoTutorials = ({ form }: any) => {
                   <FormField
                     control={form.control}
                     name={`video_tutorials.${index}.url`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>URL ou Upload do Vídeo</FormLabel>
-                        <FormControl>
-                          {field.value?.type === 'upload' ? (
-                            <FileUpload
-                              bucketName="tool_files"
-                              onUploadComplete={(url) => field.onChange(url)}
-                              accept="video/*"
-                              maxSize={100}
-                              buttonText="Upload do Vídeo"
-                              fieldLabel="Selecione um vídeo"
-                            />
-                          ) : (
-                            <Input 
-                              placeholder="https://www.youtube.com/watch?v=..." 
-                              {...field}
-                            />
-                          )}
-                        </FormControl>
-                        <FormDescription>
-                          {field.value?.type === 'upload' 
-                            ? 'Faça upload do vídeo (max: 100MB)' 
-                            : 'Links do YouTube, Vimeo ou outras plataformas'}
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
+                    render={({ field }) => {
+                      const fieldValue = field.value || '';
+                      const fieldType = form.watch(`video_tutorials.${index}.type`);
+                      
+                      return (
+                        <FormItem>
+                          <FormLabel>URL ou Upload do Vídeo</FormLabel>
+                          <FormControl>
+                            {fieldType === 'upload' ? (
+                              <FileUpload
+                                bucketName="tool_files"
+                                onUploadComplete={(url) => field.onChange(url)}
+                                accept="video/*"
+                                maxSize={100}
+                                buttonText="Upload do Vídeo"
+                                fieldLabel="Selecione um vídeo"
+                              />
+                            ) : (
+                              <Input 
+                                placeholder="https://www.youtube.com/watch?v=..." 
+                                value={fieldValue}
+                                onChange={field.onChange}
+                              />
+                            )}
+                          </FormControl>
+                          <FormDescription>
+                            {fieldType === 'upload' 
+                              ? 'Faça upload do vídeo (max: 100MB)' 
+                              : 'Links do YouTube, Vimeo ou outras plataformas'}
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      );
+                    }}
                   />
                 </div>
 
