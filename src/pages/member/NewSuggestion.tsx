@@ -50,10 +50,8 @@ const NewSuggestionPage = () => {
       await submitSuggestion(data);
       toast.success("Sugestão criada com sucesso!");
       
-      // Aguardar um pequeno delay para garantir que o toast seja visto
-      setTimeout(() => {
-        navigate('/suggestions');
-      }, 500);
+      // Redirecionamento imediato
+      navigate('/suggestions');
     } catch (error: any) {
       console.error('Erro ao enviar sugestão:', error);
       toast.error('Erro ao enviar sugestão: ' + (error.message || 'Tente novamente.'));

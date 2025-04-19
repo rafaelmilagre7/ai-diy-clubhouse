@@ -23,7 +23,10 @@ export const useSuggestions = (categoryId?: string) => {
     refetch().catch(error => {
       console.error("Erro ao fazer refetch inicial:", error);
     });
-  }, [refetch, filter]); // Também refazer a busca quando o filtro mudar
+    
+    // Não incluir refetch na lista de dependências para evitar loop infinito
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filter, categoryId]); // Refazer a busca quando o filtro ou categoria mudar
 
   return {
     suggestions,

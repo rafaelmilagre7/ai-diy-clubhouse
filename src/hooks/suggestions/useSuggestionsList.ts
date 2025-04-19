@@ -45,6 +45,7 @@ export const useSuggestionsList = (categoryId?: string, filter: 'popular' | 'rec
     },
     refetchOnWindowFocus: false,
     staleTime: 1000 * 60 * 1, // 1 minuto
+    refetchOnMount: true, // Garante que os dados sejam buscados quando o componente montar
   });
 
   return {

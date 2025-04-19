@@ -13,6 +13,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { format, formatDistance } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
+import { formatDate } from '@/utils/dateUtils';
 
 const SuggestionsPage = () => {
   const navigate = useNavigate();
@@ -35,12 +36,16 @@ const SuggestionsPage = () => {
     });
   }, [refetch]);
 
+  useEffect(() => {
+    // Log para debug
+    console.log("Quantidade de sugestões carregadas:", suggestions?.length || 0);
+    console.log("Detalhes das sugestões:", suggestions);
+  }, [suggestions]);
+
   const filteredSuggestions = suggestions.filter(suggestion => 
     suggestion.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     suggestion.description.toLowerCase().includes(searchQuery.toLowerCase())
   );
-
-  console.log("Sugestões filtradas:", filteredSuggestions.length, filteredSuggestions);
 
   const getStatusLabel = (status: string) => {
     switch (status) {
