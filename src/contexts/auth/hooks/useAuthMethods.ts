@@ -1,6 +1,7 @@
 
 import { useState } from 'react';
-import { supabase, TEST_ADMIN, TEST_MEMBER } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase';
+import { TEST_ADMIN, TEST_MEMBER } from '@/contexts/auth/constants';
 import { toast } from '@/hooks/use-toast';
 
 interface UseAuthMethodsProps {
