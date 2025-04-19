@@ -21,6 +21,9 @@ import SuggestionDetailsPage from '@/pages/member/SuggestionDetails';
 import Dashboard from '@/pages/member/Dashboard';
 import Solutions from '@/pages/member/Solutions';
 import SolutionDetails from '@/pages/member/SolutionDetails';
+import SolutionImplementation from '@/pages/member/SolutionImplementation';
+import ImplementationConfirmation from '@/pages/member/ImplementationConfirmation';
+import ImplementationCompleted from '@/pages/member/ImplementationCompleted';
 import Tools from '@/pages/member/Tools';
 import ToolDetails from '@/pages/member/ToolDetails';
 import Benefits from '@/pages/member/Benefits';
@@ -60,8 +63,12 @@ const AppRoutes = () => {
         <Route path="/suggestions" element={<SuggestionsPage />} />
         <Route path="/suggestions/new" element={<NewSuggestionPage />} />
         <Route path="/suggestions/:id" element={<SuggestionDetailsPage />} />
-        {/* Garantir que /implement/:id/:moduleIndex existe para a implementação */}
-        <Route path="/implement/:id/:moduleIndex" element={<SolutionDetails />} />
+        
+        {/* Rotas de implementação de soluções */}
+        <Route path="/implement/:id/:moduleIndex" element={<SolutionImplementation />} />
+        <Route path="/implementation/:id/confirm" element={<ImplementationConfirmation />} />
+        <Route path="/implementation/:id/completed" element={<ImplementationCompleted />} />
+        <Route path="/solution/:id/completed" element={<ImplementationCompleted />} />
       </Route>
 
       {/* Catch-all route for 404 */}

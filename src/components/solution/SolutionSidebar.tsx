@@ -21,6 +21,19 @@ export const SolutionSidebar = ({
 }: SolutionSidebarProps) => {
   const navigate = useNavigate();
   
+  // Handler para o botão de implementação
+  const handleImplementation = () => {
+    if (progress?.is_completed) {
+      navigate(`/implementation/${solution.id}/completed`);
+    } else if (progress) {
+      console.log("Chamando continueImplementation");
+      continueImplementation();
+    } else {
+      console.log("Chamando startImplementation");
+      startImplementation();
+    }
+  };
+  
   return (
     <div className="bg-white p-6 rounded-lg shadow-sm space-y-6 hidden sm:block">
       <div>
@@ -54,19 +67,10 @@ export const SolutionSidebar = ({
             <CheckCircle className="mr-2 h-5 w-5" />
             Ver Certificado
           </Button>
-        ) : progress ? (
-          <Button 
-            className="w-full" 
-            onClick={continueImplementation} 
-            disabled={initializing}
-          >
-            <PlayCircle className="mr-2 h-5 w-5" />
-            {initializing ? 'Preparando...' : 'Implementar solução'}
-          </Button>
         ) : (
           <Button 
             className="w-full" 
-            onClick={startImplementation} 
+            onClick={handleImplementation} 
             disabled={initializing}
           >
             <PlayCircle className="mr-2 h-5 w-5" />

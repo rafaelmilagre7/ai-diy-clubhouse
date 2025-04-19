@@ -1,5 +1,5 @@
 
-import { useParams } from "react-router-dom";
+import { useParams, useLocation } from "react-router-dom";
 import LoadingScreen from "@/components/common/LoadingScreen";
 import { useSolutionData } from "@/hooks/useSolutionData";
 import { useSolutionInteractions } from "@/hooks/useSolutionInteractions";
@@ -9,9 +9,13 @@ import { SolutionTabsContent } from "@/components/solution/tabs/SolutionTabsCont
 import { SolutionSidebar } from "@/components/solution/SolutionSidebar";
 import { SolutionMobileActions } from "@/components/solution/SolutionMobileActions";
 import { SolutionNotFound } from "@/components/solution/SolutionNotFound";
+import { useEffect } from "react";
+import { useLogging } from "@/hooks/useLogging";
 
 const SolutionDetails = () => {
   const { id } = useParams<{ id: string }>();
+  const location = useLocation();
+  const { log } = useLogging();
   
   // Fetch solution data with the updated hook that includes progress
   const { solution, loading, error, progress } = useSolutionData(id);
@@ -25,6 +29,17 @@ const SolutionDetails = () => {
     downloadMaterials 
   } = useSolutionInteractions(id, progress);
   
+  // Log page visit and troubleshooting info
+  useEffect(() => {
+    if (solution) {
+      log("Solution details page visited", { 
+        solution_id: solution.id, 
+        solution_title: solution.title,
+        path: location.pathname
+      });
+    }
+  }, [solution, location.pathname, log]);
+  
   if (loading) {
     return <LoadingScreen message="Carregando detalhes da solução..." />;
   }
@@ -35,6 +50,7 @@ const SolutionDetails = () => {
   
   // Log para depuração
   console.log("Renderizando SolutionDetails com solução:", solution.id, solution.title);
+  console.log("Progresso atual:", progress);
   
   return (
     <div className="max-w-5xl mx-auto pb-12 animate-fade-in">

@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { PlayCircle } from "lucide-react";
+import { PlayCircle, CheckCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 interface SolutionMobileActionsProps {
@@ -21,19 +21,35 @@ export const SolutionMobileActions = ({
 }: SolutionMobileActionsProps) => {
   const navigate = useNavigate();
   
+  // Handler para o botão de implementação
+  const handleImplementation = () => {
+    if (progress?.is_completed) {
+      navigate(`/implementation/${solutionId}/completed`);
+    } else if (progress) {
+      console.log("Mobile: Chamando continueImplementation");
+      continueImplementation();
+    } else {
+      console.log("Mobile: Chamando startImplementation");
+      startImplementation();
+    }
+  };
+  
   return (
     <div className="mt-8 sm:hidden">
       {progress?.is_completed ? (
-        <Button className="w-full bg-green-600 hover:bg-green-700" onClick={() => navigate(`/implementation/${solutionId}/completed`)}>
+        <Button 
+          className="w-full bg-green-600 hover:bg-green-700" 
+          onClick={() => navigate(`/implementation/${solutionId}/completed`)}
+        >
+          <CheckCircle className="mr-2 h-5 w-5" />
           Solução Implementada com Sucesso!
         </Button>
-      ) : progress ? (
-        <Button className="w-full" onClick={continueImplementation} disabled={initializing}>
-          <PlayCircle className="mr-2 h-5 w-5" />
-          {initializing ? 'Preparando...' : 'Implementar solução'}
-        </Button>
       ) : (
-        <Button className="w-full" onClick={startImplementation} disabled={initializing}>
+        <Button 
+          className="w-full" 
+          onClick={handleImplementation} 
+          disabled={initializing}
+        >
           <PlayCircle className="mr-2 h-5 w-5" />
           {initializing ? 'Preparando...' : 'Implementar solução'}
         </Button>
