@@ -105,7 +105,7 @@ const AdminToolEdit = () => {
       // Garantir que o navegador complete o redirecionamento
       setTimeout(() => {
         navigate('/admin/tools');
-      }, 100);
+      }, 500);
       
     } catch (error: any) {
       console.error('Erro ao salvar ferramenta:', error);

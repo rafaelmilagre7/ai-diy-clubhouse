@@ -10,10 +10,12 @@ import { MemberBenefit } from './components/MemberBenefit';
 import { toolFormSchema } from './schema/toolFormSchema';
 import { ToolFormProps, ToolFormValues } from './types/toolFormTypes';
 import { BenefitType } from '@/types/toolTypes';
+import { useEffect, useState } from 'react';
 
 export const ToolForm = ({ initialData, onSubmit, isSubmitting }: ToolFormProps) => {
   // Garantir que benefit_type seja sempre um dos valores válidos
   const defaultBenefitType = initialData?.benefit_type as BenefitType | undefined;
+  const [formChanged, setFormChanged] = useState(false);
 
   const form = useForm<ToolFormValues>({
     resolver: zodResolver(toolFormSchema),
@@ -35,6 +37,15 @@ export const ToolForm = ({ initialData, onSubmit, isSubmitting }: ToolFormProps)
     }
   });
 
+  // Monitorar o estado do formulário para detectar mudanças
+  useEffect(() => {
+    const subscription = form.watch(() => {
+      setFormChanged(form.formState.isDirty);
+    });
+    
+    return () => subscription.unsubscribe();
+  }, [form, form.formState]);
+
   const handleFormSubmit = (data: ToolFormValues) => {
     console.log("Formulário enviado:", data);
     onSubmit(data);
@@ -48,13 +59,20 @@ export const ToolForm = ({ initialData, onSubmit, isSubmitting }: ToolFormProps)
         <MemberBenefit className="mt-6" />
         <VideoTutorials form={form} />
         
-        <Button 
-          type="submit" 
-          className="w-full" 
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? 'Salvando...' : 'Salvar Ferramenta'}
-        </Button>
+        <div className="pt-4 border-t">
+          <Button 
+            type="submit" 
+            className="w-full" 
+            disabled={isSubmitting || (!formChanged && initialData)}
+          >
+            {isSubmitting ? 'Salvando...' : 'Salvar Ferramenta'}
+          </Button>
+          {(!formChanged && initialData) && (
+            <p className="text-sm text-muted-foreground text-center mt-2">
+              Faça alterações no formulário para salvar
+            </p>
+          )}
+        </div>
       </form>
     </Form>
   );
