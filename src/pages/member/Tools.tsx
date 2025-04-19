@@ -17,12 +17,12 @@ const Tools = () => {
   if (error) {
     return (
       <div className="text-center py-10">
-        <p className="text-destructive">Erro ao carregar ferramentas.</p>
+        <p className="text-destructive">Erro ao carregar ferramentas: {error.message}</p>
       </div>
     );
   }
 
-  const filteredTools = tools?.filter(tool => {
+  const filteredTools = tools.filter(tool => {
     const matchesSearch = tool.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       tool.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
     const matchesCategory = !selectedCategory || tool.category === selectedCategory;
@@ -37,7 +37,7 @@ const Tools = () => {
         selectedCategory={selectedCategory}
         onCategoryChange={setSelectedCategory}
       />
-      <ToolGrid tools={filteredTools || []} />
+      <ToolGrid tools={filteredTools} />
     </div>
   );
 };

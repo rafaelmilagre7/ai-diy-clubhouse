@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import LoadingScreen from '@/components/common/LoadingScreen';
-import YoutubeEmbed from '@/components/common/YoutubeEmbed';
+import { YoutubeEmbed } from '@/components/common/YoutubeEmbed';
 
 const ToolDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -85,7 +85,7 @@ const ToolDetails = () => {
           <div key={index} className="space-y-2">
             <h3 className="text-lg font-medium">{video.title}</h3>
             <div className="aspect-video overflow-hidden rounded-lg">
-              <YoutubeEmbed url={video.url} />
+              <YoutubeEmbed youtubeId={getYoutubeId(video.url) || ''} title={video.title} />
             </div>
           </div>
         ))}
@@ -94,7 +94,7 @@ const ToolDetails = () => {
   };
 
   // Extrair o código do YouTube da URL
-  const getYoutubeId = (url: string) => {
+  const getYoutubeId = (url: string): string | null => {
     const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
     const match = url.match(regExp);
     return (match && match[2].length === 11) ? match[2] : null;
