@@ -45,6 +45,8 @@ export const useSuggestionDetails = () => {
       return data;
     },
     enabled: !!id,
+    retry: 1, // Limitar tentativas para evitar loops infinitos
+    staleTime: 1000 * 60 * 5, // Cache por 5 minutos
   });
 
   // Buscar voto do usuário atual
@@ -142,6 +144,6 @@ export const useSuggestionDetails = () => {
     userVote,
     voteLoading,
     handleVote,
-    refetch, // Adicionando a função refetch ao objeto retornado
+    refetch,
   };
 };

@@ -1,99 +1,68 @@
 
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Card, CardHeader, CardContent, CardFooter } from '@/components/ui/card';
+import { Link } from 'react-router-dom';
+import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Calendar, MessageCircle, ThumbsUp } from 'lucide-react';
-import { formatDistance } from 'date-fns';
+import { ThumbsUp, MessageSquare, Clock } from 'lucide-react';
+import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { Suggestion } from '@/types/suggestionTypes';
+import { useAuth } from '@/contexts/auth';
 
 interface SuggestionCardProps {
-  suggestion: any;
+  suggestion: Suggestion;
   getStatusLabel: (status: string) => string;
   getStatusColor: (status: string) => string;
 }
 
-export const SuggestionCard = ({ 
-  suggestion, 
-  getStatusLabel, 
-  getStatusColor 
-}: SuggestionCardProps) => {
-  const navigate = useNavigate();
-  const createdAtDate = new Date(suggestion.created_at);
-  const timeAgo = formatDistance(createdAtDate, new Date(), { 
-    addSuffix: true,
-    locale: ptBR 
-  });
-
-  const handleClick = () => {
-    console.log('Navegando para sugestão:', suggestion.id);
-    navigate(`/suggestions/${suggestion.id}`);
-  };
-
-  // Calcular o saldo de votos
-  const voteBalance = (suggestion.upvotes || 0) - (suggestion.downvotes || 0);
-
+export const SuggestionCard: React.FC<SuggestionCardProps> = ({
+  suggestion,
+  getStatusLabel,
+  getStatusColor,
+}) => {
+  const { isAdmin } = useAuth();
+  const voteBalance = suggestion.upvotes - suggestion.downvotes;
+  
+  // Determinar o link de navegação com base no tipo de usuário
+  // Administradores vão para o detalhe da sugestão (que tem ações de admin)
+  // Membros vão para o detalhe da sugestão (visualização normal)
+  const linkPath = `/suggestions/${suggestion.id}`;
+  
   return (
-    <Card 
-      key={suggestion.id} 
-      className="h-full flex flex-col hover:shadow-md transition-shadow cursor-pointer" 
-      onClick={handleClick}
-    >
-      <CardHeader className="pb-2">
-        <div className="flex justify-between items-start">
-          <div className="space-y-1">
-            <h3 className="line-clamp-1 hover:text-primary text-lg font-semibold">
-              {suggestion.title}
-            </h3>
-            <div className="flex flex-wrap gap-2 mt-1 text-sm text-muted-foreground">
-              {suggestion.category && (
-                <Badge variant="outline">{suggestion.category.name}</Badge>
-              )}
-              <span className="flex items-center text-xs gap-1">
-                <Calendar size={12} />
-                {timeAgo}
-              </span>
+    <Link to={linkPath}>
+      <Card className="h-full hover:shadow-md transition-shadow">
+        <CardContent className="p-4 space-y-2">
+          <div className="flex items-center justify-between">
+            <Badge className={getStatusColor(suggestion.status)}>
+              {getStatusLabel(suggestion.status)}
+            </Badge>
+            <div className="text-xs text-muted-foreground flex items-center">
+              <Clock className="h-3 w-3 mr-1" />
+              {formatDistanceToNow(new Date(suggestion.created_at), {
+                addSuffix: true,
+                locale: ptBR,
+              })}
             </div>
           </div>
-        </div>
-      </CardHeader>
-
-      <CardContent className="py-2 flex-grow">
-        <p className="line-clamp-3 text-sm text-muted-foreground">
-          {suggestion.description}
-        </p>
-      </CardContent>
-
-      <CardFooter className="pt-2 flex justify-between items-center border-t">
-        <div className="flex items-center gap-2">
-          <Avatar className="h-6 w-6">
-            <AvatarImage src={suggestion.user_avatar} />
-            <AvatarFallback>{(suggestion.user_name || 'U').charAt(0)}</AvatarFallback>
-          </Avatar>
-          <span className="text-xs text-muted-foreground line-clamp-1">
-            {suggestion.user_name || 'Usuário'}
-          </span>
-        </div>
-
-        <div className="flex items-center gap-3 text-muted-foreground">
-          <Badge className={`text-xs ${getStatusColor(suggestion.status)}`}>
-            {getStatusLabel(suggestion.status)}
-          </Badge>
           
-          <div className="flex items-center gap-1 text-xs">
-            <ThumbsUp size={14} className={voteBalance >= 0 ? "text-green-600" : "text-red-600"} />
-            <span className={voteBalance >= 0 ? "text-green-600" : "text-red-600"}>
-              {voteBalance > 0 ? `+${voteBalance}` : voteBalance}
-            </span>
-          </div>
+          <h3 className="font-medium text-base">{suggestion.title}</h3>
+          <p className="text-sm text-muted-foreground line-clamp-3">
+            {suggestion.description}
+          </p>
+        </CardContent>
 
-          <div className="flex items-center gap-1 text-xs">
-            <MessageCircle size={14} />
-            {suggestion.comment_count || 0}
+        <CardFooter className="px-4 py-3 border-t flex justify-between text-xs text-muted-foreground">
+          <div className="flex items-center">
+            <ThumbsUp className="h-3 w-3 mr-1" />
+            <span>{voteBalance}</span>
           </div>
-        </div>
-      </CardFooter>
-    </Card>
+          
+          <div className="flex items-center">
+            <MessageSquare className="h-3 w-3 mr-1" />
+            <span>{suggestion.comment_count} comentários</span>
+          </div>
+        </CardFooter>
+      </Card>
+    </Link>
   );
 };

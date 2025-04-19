@@ -28,6 +28,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { MoreVertical, Trash2, Play } from 'lucide-react';
 import { useState } from 'react';
+import { toast } from 'sonner';
 
 const SuggestionDetailsPage = () => {
   const { user, isAdmin } = useAuth();
@@ -45,7 +46,7 @@ const SuggestionDetailsPage = () => {
     refetch
   } = useSuggestionDetails();
 
-  const { removeSuggestion, updateSuggestionStatus } = useAdminSuggestions();
+  const { removeSuggestion, updateSuggestionStatus, loading: adminActionLoading } = useAdminSuggestions();
 
   // Adicionando logs para debug
   useEffect(() => {
@@ -68,18 +69,30 @@ const SuggestionDetailsPage = () => {
 
   const handleRemoveSuggestion = async () => {
     if (suggestion?.id) {
-      const success = await removeSuggestion(suggestion.id);
-      if (success) {
-        navigate('/suggestions');
+      try {
+        const success = await removeSuggestion(suggestion.id);
+        if (success) {
+          toast.success('Sugestão removida com sucesso');
+          navigate('/suggestions');
+        }
+      } catch (error) {
+        console.error('Erro ao remover sugestão:', error);
+        toast.error('Erro ao remover sugestão');
       }
     }
   };
 
   const handleUpdateStatus = async (status: string) => {
     if (suggestion?.id) {
-      const success = await updateSuggestionStatus(suggestion.id, status);
-      if (success) {
-        refetch();
+      try {
+        const success = await updateSuggestionStatus(suggestion.id, status);
+        if (success) {
+          toast.success(`Sugestão marcada como ${status === 'in_development' ? 'Em Desenvolvimento' : status}`);
+          refetch();
+        }
+      } catch (error) {
+        console.error('Erro ao atualizar status da sugestão:', error);
+        toast.error('Erro ao atualizar status da sugestão');
       }
     }
   };
@@ -112,13 +125,17 @@ const SuggestionDetailsPage = () => {
             <DropdownMenuContent align="end">
               <DropdownMenuItem 
                 onClick={() => handleUpdateStatus('in_development')}
+                disabled={adminActionLoading || suggestion.status === 'in_development'}
               >
                 <Play className="mr-2 h-4 w-4" />
-                Marcar como Em Desenvolvimento
+                {suggestion.status === 'in_development' 
+                  ? 'Já em Desenvolvimento' 
+                  : 'Marcar como Em Desenvolvimento'}
               </DropdownMenuItem>
               <DropdownMenuItem 
                 onClick={() => setDeleteDialogOpen(true)}
                 className="text-destructive"
+                disabled={adminActionLoading}
               >
                 <Trash2 className="mr-2 h-4 w-4" />
                 Remover Sugestão

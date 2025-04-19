@@ -28,32 +28,46 @@ import {
 import { useSuggestions } from '@/hooks/suggestions/useSuggestions';
 import { useAdminSuggestions } from '@/hooks/suggestions/useAdminSuggestions';
 import { getStatusLabel, getStatusColor } from '@/utils/suggestionUtils';
-import { MoreVertical, Trash2, Play } from 'lucide-react';
+import { MoreVertical, Trash2, Play, Eye } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 
 const AdminSuggestionsPage = () => {
   const { suggestions, refetch } = useSuggestions();
   const { removeSuggestion, updateSuggestionStatus, loading } = useAdminSuggestions();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedSuggestion, setSelectedSuggestion] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   const handleRemoveSuggestion = async () => {
     if (selectedSuggestion) {
       const success = await removeSuggestion(selectedSuggestion);
       if (success) {
+        toast.success('Sugestão removida com sucesso');
         refetch();
         setDeleteDialogOpen(false);
       }
     }
   };
 
-  const handleUpdateStatus = async (status: string) => {
-    if (selectedSuggestion) {
-      const success = await updateSuggestionStatus(selectedSuggestion, status);
+  const handleUpdateStatus = async (status: string, suggestionId: string) => {
+    try {
+      setSelectedSuggestion(suggestionId);
+      const success = await updateSuggestionStatus(suggestionId, status);
       if (success) {
+        toast.success(`Sugestão marcada como ${status === 'in_development' ? 'Em Desenvolvimento' : status}`);
         refetch();
       }
+    } catch (error) {
+      console.error('Erro ao atualizar status:', error);
+      toast.error('Erro ao atualizar status da sugestão');
     }
+  };
+
+  const viewSuggestionDetails = (suggestionId: string) => {
+    console.log('Navegando para detalhes da sugestão:', suggestionId);
+    navigate(`/suggestions/${suggestionId}`);
   };
 
   return (
@@ -89,13 +103,19 @@ const AdminSuggestionsPage = () => {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem 
-                      onClick={() => {
-                        setSelectedSuggestion(suggestion.id);
-                        handleUpdateStatus('in_development');
-                      }}
+                      onClick={() => viewSuggestionDetails(suggestion.id)}
+                    >
+                      <Eye className="mr-2 h-4 w-4" />
+                      Ver Detalhes
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      onClick={() => handleUpdateStatus('in_development', suggestion.id)}
+                      disabled={suggestion.status === 'in_development' || loading}
                     >
                       <Play className="mr-2 h-4 w-4" />
-                      Marcar como Em Desenvolvimento
+                      {suggestion.status === 'in_development' 
+                        ? 'Já em Desenvolvimento' 
+                        : 'Marcar como Em Desenvolvimento'}
                     </DropdownMenuItem>
                     <DropdownMenuItem 
                       onClick={() => {
@@ -103,6 +123,7 @@ const AdminSuggestionsPage = () => {
                         setDeleteDialogOpen(true);
                       }}
                       className="text-destructive"
+                      disabled={loading}
                     >
                       <Trash2 className="mr-2 h-4 w-4" />
                       Remover Sugestão

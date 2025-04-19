@@ -12,6 +12,27 @@ export const useAdminSuggestions = () => {
       setLoading(true);
       console.log('Removendo sugestão:', suggestionId);
       
+      // Primeiro removemos os votos associados à sugestão
+      const { error: votesError } = await supabase
+        .from('suggestion_votes')
+        .delete()
+        .eq('suggestion_id', suggestionId);
+      
+      if (votesError) {
+        console.error('Erro ao remover votos da sugestão:', votesError);
+      }
+      
+      // Depois removemos os comentários associados à sugestão
+      const { error: commentsError } = await supabase
+        .from('suggestion_comments')
+        .delete()
+        .eq('suggestion_id', suggestionId);
+      
+      if (commentsError) {
+        console.error('Erro ao remover comentários da sugestão:', commentsError);
+      }
+      
+      // Por fim, removemos a sugestão
       const { error } = await supabase
         .from('suggestions')
         .delete()
@@ -19,7 +40,6 @@ export const useAdminSuggestions = () => {
 
       if (error) throw error;
 
-      toast.success('Sugestão removida com sucesso');
       return true;
     } catch (error: any) {
       console.error('Erro ao remover sugestão:', error);
@@ -42,7 +62,6 @@ export const useAdminSuggestions = () => {
 
       if (error) throw error;
 
-      toast.success(`Sugestão marcada como ${status === 'in_development' ? 'Em Desenvolvimento' : status}`);
       return true;
     } catch (error: any) {
       console.error('Erro ao atualizar status da sugestão:', error);
