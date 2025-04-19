@@ -56,7 +56,7 @@ const AdminToolEdit = () => {
     }
   };
 
-  const onSubmit = async (data: ToolFormValues) => {
+  const onSubmit = async (data: ToolFormValues): Promise<boolean> => {
     console.log('Formulário enviado para processo de salvamento:', data);
     const success = await handleSubmit(data);
     
@@ -67,6 +67,8 @@ const AdminToolEdit = () => {
     } else {
       console.log('Erro ao atualizar ferramenta, permanecendo na página');
     }
+    
+    return success;
   };
 
   if (loading) {

@@ -9,7 +9,7 @@ export const useToolForm = (toolId: string) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
-  const handleSubmit = async (data: ToolFormValues) => {
+  const handleSubmit = async (data: ToolFormValues): Promise<boolean> => {
     try {
       setIsSubmitting(true);
       console.log('Salvando ferramenta:', data);
