@@ -48,6 +48,7 @@ const SuggestionVoting = ({
           onClick={() => handleVote('upvote')}
         >
           <ThumbsUp size={16} />
+          <span>Apoiar</span>
         </Button>
         
         <Button
@@ -60,11 +61,14 @@ const SuggestionVoting = ({
           onClick={() => handleVote('downvote')}
         >
           <ThumbsDown size={16} />
+          <span>Não apoiar</span>
         </Button>
 
-        <span className={`text-lg font-semibold ${voteBalance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-          {voteBalance > 0 ? `+${voteBalance}` : voteBalance}
-        </span>
+        <div className="ml-3 px-3 py-1 rounded-full bg-gray-100">
+          <span className={`text-lg font-semibold ${voteBalance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+            {voteBalance > 0 ? `+${voteBalance}` : voteBalance}
+          </span>
+        </div>
       </div>
       
       <div className="text-sm text-muted-foreground flex-1">

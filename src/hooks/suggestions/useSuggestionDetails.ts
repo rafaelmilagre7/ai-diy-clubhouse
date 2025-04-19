@@ -27,19 +27,24 @@ export const useSuggestionDetails = () => {
     queryFn: async () => {
       if (!id) throw new Error('ID da sugestão não fornecido');
       
+      console.log('Buscando sugestão com ID:', id);
+      
+      // Usar a view suggestions_with_profiles para obter os dados com perfil
       const { data, error } = await supabase
-        .from('suggestions')
-        .select(`
-          *,
-          category:category_id(name),
-          user:user_id(id, email, name, avatar_url)
-        `)
+        .from('suggestions_with_profiles')
+        .select('*')
         .eq('id', id)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erro ao buscar sugestão:', error);
+        throw error;
+      }
+      
+      console.log('Dados da sugestão encontrados:', data);
       return data;
     },
+    enabled: !!id,
   });
 
   // Buscar voto do usuário atual

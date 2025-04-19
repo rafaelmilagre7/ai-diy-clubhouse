@@ -27,6 +27,7 @@ export const SuggestionCard = ({
   });
 
   const handleClick = () => {
+    console.log('Navegando para sugestão:', suggestion.id);
     navigate(`/suggestions/${suggestion.id}`);
   };
 

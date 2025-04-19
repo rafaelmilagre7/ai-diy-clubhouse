@@ -1,6 +1,6 @@
 
-import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useState, useEffect } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/auth';
 import { toast } from 'sonner';
@@ -11,6 +11,11 @@ export const useComments = ({ suggestionId }: { suggestionId: string }) => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
+  // Limpar o campo de comentário quando mudar a sugestão
+  useEffect(() => {
+    setComment('');
+  }, [suggestionId]);
+
   const {
     data: comments = [],
     isLoading: commentsLoading,
@@ -18,7 +23,12 @@ export const useComments = ({ suggestionId }: { suggestionId: string }) => {
   } = useQuery({
     queryKey: ['suggestion-comments', suggestionId],
     queryFn: async () => {
-      if (!suggestionId) return [];
+      if (!suggestionId) {
+        console.log('ID da sugestão não fornecido para buscar comentários');
+        return [];
+      }
+
+      console.log('Buscando comentários para a sugestão:', suggestionId);
 
       const { data, error } = await supabase
         .from('suggestion_comments')
@@ -34,6 +44,7 @@ export const useComments = ({ suggestionId }: { suggestionId: string }) => {
         throw error;
       }
 
+      console.log('Comentários encontrados:', data?.length);
       return data || [];
     },
     enabled: !!suggestionId
@@ -52,8 +63,15 @@ export const useComments = ({ suggestionId }: { suggestionId: string }) => {
       return;
     }
     
+    if (!suggestionId) {
+      toast.error("ID da sugestão não encontrado.");
+      return;
+    }
+    
     try {
       setIsSubmitting(true);
+      
+      console.log('Enviando comentário para a sugestão:', suggestionId);
       
       // Inserir comentário
       const { data, error } = await supabase

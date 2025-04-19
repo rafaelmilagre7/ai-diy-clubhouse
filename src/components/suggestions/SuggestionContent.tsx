@@ -14,9 +14,12 @@ interface SuggestionContentProps {
     status: string;
     created_at: string;
     category?: { name: string };
+    category_id?: string;
     upvotes: number;
     downvotes: number;
     user_id?: string;
+    user_name?: string;
+    user_avatar?: string;
   };
   comment: string;
   comments: any[];
@@ -46,13 +49,16 @@ const SuggestionContent = ({
   // Calcular o saldo de votos
   const voteBalance = suggestion.upvotes - suggestion.downvotes;
 
+  // Garantir que possamos exibir dados de category vindos de diferentes estruturas de dados
+  const categoryName = suggestion.category?.name || '';
+
   return (
     <Card>
       <CardHeader>
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
           <SuggestionTitle
             title={suggestion.title}
-            category={suggestion.category}
+            category={{ name: categoryName }}
             createdAt={suggestion.created_at}
             isOwner={isOwner}
           />

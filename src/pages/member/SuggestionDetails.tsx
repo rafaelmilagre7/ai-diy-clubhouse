@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useAuth } from '@/contexts/auth';
 import SuggestionContent from '@/components/suggestions/SuggestionContent';
 import SuggestionHeader from '@/components/suggestions/SuggestionHeader';
@@ -7,9 +7,12 @@ import SuggestionLoadingState from '@/components/suggestions/states/SuggestionLo
 import SuggestionErrorState from '@/components/suggestions/states/SuggestionErrorState';
 import { useComments } from '@/hooks/suggestions/useComments';
 import { useSuggestionDetails } from '@/hooks/suggestions/useSuggestionDetails';
+import { useParams } from 'react-router-dom';
 
 const SuggestionDetailsPage = () => {
   const { user } = useAuth();
+  const { id } = useParams<{ id: string }>();
+  
   const {
     suggestion,
     isLoading,
@@ -19,13 +22,22 @@ const SuggestionDetailsPage = () => {
     handleVote
   } = useSuggestionDetails();
 
+  // Adicionando logs para debug
+  useEffect(() => {
+    console.log('SuggestionDetailsPage - ID da sugestão:', id);
+    console.log('SuggestionDetailsPage - Dados da sugestão:', suggestion);
+    console.log('SuggestionDetailsPage - Estado de carregamento:', isLoading);
+    console.log('SuggestionDetailsPage - Erro:', error);
+  }, [id, suggestion, isLoading, error]);
+
   const { 
     comment, 
     setComment, 
     comments, 
     commentsLoading, 
     isSubmitting, 
-    handleSubmitComment 
+    handleSubmitComment,
+    refetchComments
   } = useComments({ suggestionId: suggestion?.id || '' });
 
   if (isLoading) {
@@ -33,7 +45,8 @@ const SuggestionDetailsPage = () => {
   }
 
   if (error || !suggestion) {
-    return <SuggestionErrorState />;
+    const errorMessage = error ? `Erro: ${error.message}` : 'Sugestão não encontrada';
+    return <SuggestionErrorState errorMessage={errorMessage} onRetry={() => window.location.reload()} />;
   }
 
   // Verificar se o usuário é o criador da sugestão
