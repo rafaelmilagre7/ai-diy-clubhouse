@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Card, CardHeader, CardContent, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Calendar, ThumbsUp, ThumbsDown, MessageCircle } from 'lucide-react';
+import { Calendar, MessageCircle, ThumbsUp } from 'lucide-react';
 import { formatDistance } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -30,15 +30,18 @@ export const SuggestionCard = ({
     navigate(`/suggestions/${suggestion.id}`);
   };
 
-  // Obter o nome e avatar do usuário diretamente dos campos da view
-  const profileName = suggestion.user_name || 'Usuário';
-  const profileAvatar = suggestion.user_avatar || '';
+  // Calcular o saldo de votos
+  const voteBalance = (suggestion.upvotes || 0) - (suggestion.downvotes || 0);
 
   return (
-    <Card key={suggestion.id} className="h-full flex flex-col hover:shadow-md transition-shadow cursor-pointer" onClick={handleClick}>
+    <Card 
+      key={suggestion.id} 
+      className="h-full flex flex-col hover:shadow-md transition-shadow cursor-pointer" 
+      onClick={handleClick}
+    >
       <CardHeader className="pb-2">
         <div className="flex justify-between items-start">
-          <div>
+          <div className="space-y-1">
             <h3 className="line-clamp-1 hover:text-primary text-lg font-semibold">
               {suggestion.title}
             </h3>
@@ -54,33 +57,36 @@ export const SuggestionCard = ({
           </div>
         </div>
       </CardHeader>
+
       <CardContent className="py-2 flex-grow">
         <p className="line-clamp-3 text-sm text-muted-foreground">
           {suggestion.description}
         </p>
       </CardContent>
+
       <CardFooter className="pt-2 flex justify-between items-center border-t">
         <div className="flex items-center gap-2">
           <Avatar className="h-6 w-6">
-            <AvatarImage src={profileAvatar} />
-            <AvatarFallback>{profileName.charAt(0)}</AvatarFallback>
+            <AvatarImage src={suggestion.user_avatar} />
+            <AvatarFallback>{(suggestion.user_name || 'U').charAt(0)}</AvatarFallback>
           </Avatar>
           <span className="text-xs text-muted-foreground line-clamp-1">
-            {profileName}
+            {suggestion.user_name || 'Usuário'}
           </span>
         </div>
+
         <div className="flex items-center gap-3 text-muted-foreground">
           <Badge className={`text-xs ${getStatusColor(suggestion.status)}`}>
             {getStatusLabel(suggestion.status)}
           </Badge>
+          
           <div className="flex items-center gap-1 text-xs">
-            <ThumbsUp size={14} className="text-green-600" />
-            {suggestion.upvotes || 0}
+            <ThumbsUp size={14} className={voteBalance >= 0 ? "text-green-600" : "text-red-600"} />
+            <span className={voteBalance >= 0 ? "text-green-600" : "text-red-600"}>
+              {voteBalance > 0 ? `+${voteBalance}` : voteBalance}
+            </span>
           </div>
-          <div className="flex items-center gap-1 text-xs">
-            <ThumbsDown size={14} className="text-red-600" />
-            {suggestion.downvotes || 0}
-          </div>
+
           <div className="flex items-center gap-1 text-xs">
             <MessageCircle size={14} />
             {suggestion.comment_count || 0}

@@ -14,13 +14,15 @@ interface SuggestionVotingProps {
   userVote?: { id: string; vote_type: 'upvote' | 'downvote' } | null;
   voteLoading?: boolean;
   onVote: (voteType: 'upvote' | 'downvote') => Promise<void>;
+  voteBalance: number;
 }
 
 const SuggestionVoting = ({
   suggestion,
   userVote,
   voteLoading = false,
-  onVote
+  onVote,
+  voteBalance
 }: SuggestionVotingProps) => {
   const { user } = useAuth();
 
@@ -46,7 +48,6 @@ const SuggestionVoting = ({
           onClick={() => handleVote('upvote')}
         >
           <ThumbsUp size={16} />
-          <span>{suggestion.upvotes || 0}</span>
         </Button>
         
         <Button
@@ -59,16 +60,19 @@ const SuggestionVoting = ({
           onClick={() => handleVote('downvote')}
         >
           <ThumbsDown size={16} />
-          <span>{suggestion.downvotes || 0}</span>
         </Button>
+
+        <span className={`text-lg font-semibold ${voteBalance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+          {voteBalance > 0 ? `+${voteBalance}` : voteBalance}
+        </span>
       </div>
       
       <div className="text-sm text-muted-foreground flex-1">
         {userVote ? (
           userVote.vote_type === 'upvote' ? (
-            <span>Você gostou desta sugestão</span>
+            <span>Você apoiou esta sugestão</span>
           ) : (
-            <span>Você não gostou desta sugestão</span>
+            <span>Você não apoiou esta sugestão</span>
           )
         ) : (
           <span>Vote para mostrar seu apoio</span>

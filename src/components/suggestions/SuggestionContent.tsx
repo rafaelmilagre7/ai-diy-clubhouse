@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import SuggestionTitle from './content/SuggestionTitle';
 import SuggestionDescription from './content/SuggestionDescription';
 import SuggestionVoting from './SuggestionVoting';
@@ -12,7 +11,7 @@ interface SuggestionContentProps {
     id: string;
     title: string;
     description: string;
-    status: 'new' | 'under_review' | 'approved' | 'in_development' | 'implemented' | 'rejected';
+    status: string;
     created_at: string;
     category?: { name: string };
     upvotes: number;
@@ -31,15 +30,6 @@ interface SuggestionContentProps {
   voteLoading?: boolean;
 }
 
-const statusMap = {
-  new: { label: 'Nova', color: 'bg-blue-500' },
-  under_review: { label: 'Em análise', color: 'bg-orange-500' },
-  approved: { label: 'Aprovada', color: 'bg-green-500' },
-  in_development: { label: 'Em desenvolvimento', color: 'bg-purple-500' },
-  implemented: { label: 'Implementada', color: 'bg-emerald-500' },
-  rejected: { label: 'Rejeitada', color: 'bg-red-500' },
-};
-
 const SuggestionContent = ({
   suggestion,
   comment,
@@ -53,7 +43,8 @@ const SuggestionContent = ({
   userVote,
   voteLoading = false
 }: SuggestionContentProps) => {
-  const status = statusMap[suggestion.status] || { label: 'Desconhecido', color: 'bg-gray-500' };
+  // Calcular o saldo de votos
+  const voteBalance = suggestion.upvotes - suggestion.downvotes;
 
   return (
     <Card>
@@ -65,7 +56,6 @@ const SuggestionContent = ({
             createdAt={suggestion.created_at}
             isOwner={isOwner}
           />
-          <Badge className={`${status.color} text-white`}>{status.label}</Badge>
         </div>
       </CardHeader>
       
@@ -77,6 +67,7 @@ const SuggestionContent = ({
           userVote={userVote}
           voteLoading={voteLoading}
           onVote={onVote}
+          voteBalance={voteBalance}
         />
 
         <CommentsSection
