@@ -1,11 +1,9 @@
 
-import { FormField, FormItem, FormLabel, FormControl, FormDescription } from '@/components/ui/form';
-import { Switch } from '@/components/ui/switch';
-import { UseFormReturn } from 'react-hook-form';
-import { ToolFormValues } from '../../types/toolFormTypes';
+import { FormField, FormItem, FormLabel, FormControl, FormDescription } from "@/components/ui/form";
+import { Switch } from "@/components/ui/switch";
 
 interface StatusToggleProps {
-  form: UseFormReturn<ToolFormValues>;
+  form: any;
 }
 
 export const StatusToggle = ({ form }: StatusToggleProps) => {
@@ -14,11 +12,11 @@ export const StatusToggle = ({ form }: StatusToggleProps) => {
       control={form.control}
       name="status"
       render={({ field }) => (
-        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+        <FormItem className="flex flex-row items-center justify-between p-4 rounded-lg border">
           <div className="space-y-0.5">
-            <FormLabel className="text-base">Status</FormLabel>
+            <FormLabel>Status</FormLabel>
             <FormDescription>
-              Ativa para exibir aos membros
+              Tornar esta ferramenta visível para os membros
             </FormDescription>
           </div>
           <FormControl>

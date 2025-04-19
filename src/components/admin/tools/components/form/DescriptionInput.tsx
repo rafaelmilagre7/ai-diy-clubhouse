@@ -1,11 +1,9 @@
 
-import { FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage } from '@/components/ui/form';
-import { Textarea } from '@/components/ui/textarea';
-import { UseFormReturn } from 'react-hook-form';
-import { ToolFormValues } from '../../types/toolFormTypes';
+import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
+import { Textarea } from "@/components/ui/textarea";
 
 interface DescriptionInputProps {
-  form: UseFormReturn<ToolFormValues>;
+  form: any;
 }
 
 export const DescriptionInput = ({ form }: DescriptionInputProps) => {
@@ -14,18 +12,15 @@ export const DescriptionInput = ({ form }: DescriptionInputProps) => {
       control={form.control}
       name="description"
       render={({ field }) => (
-        <FormItem>
-          <FormLabel>Descrição</FormLabel>
+        <FormItem className="col-span-1 md:col-span-2">
+          <FormLabel>Descrição*</FormLabel>
           <FormControl>
             <Textarea 
-              placeholder="Descreva o que a ferramenta faz..." 
+              placeholder="Descreva a ferramenta e suas principais funcionalidades..." 
+              className="min-h-[120px]"
               {...field} 
-              rows={4}
             />
           </FormControl>
-          <FormDescription>
-            Descrição clara e objetiva da ferramenta
-          </FormDescription>
           <FormMessage />
         </FormItem>
       )}
