@@ -8,3 +8,4 @@ export {
   signInAsTestAdmin 
 } from './testAuth';
 export { signOutUser } from './sessionUtils';
+export { isSuperAdmin } from './profileUtils/roleValidation';

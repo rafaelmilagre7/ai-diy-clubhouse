@@ -6,5 +6,6 @@ export {
 } from './userProfileFunctions';
 export { 
   determineRoleFromEmail,
-  validateUserRole
+  validateUserRole,
+  isSuperAdmin
 } from './roleValidation';

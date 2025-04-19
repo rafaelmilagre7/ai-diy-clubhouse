@@ -41,6 +41,7 @@ import {
   SelectValue 
 } from '@/components/ui/select';
 import { useAuth } from '@/contexts/auth';
+import { isSuperAdmin } from '@/contexts/auth/utils/profileUtils/roleValidation';
 
 interface UserProfile {
   id: string;

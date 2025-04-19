@@ -18,6 +18,13 @@ export const determineRoleFromEmail = (email: string | undefined | null): UserRo
 };
 
 /**
+ * Verifica se um usuário é o Super Admin (rafael@viverdeia.ai)
+ */
+export const isSuperAdmin = (email: string | undefined | null): boolean => {
+  return email === 'rafael@viverdeia.ai';
+};
+
+/**
  * Validates if a user has the correct role and updates if needed
  */
 export const validateUserRole = async (profileId: string, currentRole: UserRole, email: string | null): Promise<UserRole> => {
