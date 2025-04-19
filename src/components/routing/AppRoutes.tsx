@@ -19,6 +19,7 @@ import NewSuggestionPage from '@/pages/member/NewSuggestion';
 import SuggestionDetailsPage from '@/pages/member/SuggestionDetails';
 import Tools from '@/pages/member/Tools';
 import ToolDetails from '@/pages/member/ToolDetails';
+import Benefits from '@/pages/member/Benefits'; // Importando a página de benefícios
 
 const AppRoutes = () => {
   return (
@@ -44,6 +45,9 @@ const AppRoutes = () => {
         {/* Ferramentas */}
         <Route path="/tools" element={<Tools />} />
         <Route path="/tools/:id" element={<ToolDetails />} />
+        
+        {/* Benefícios - Nova rota */}
+        <Route path="/benefits" element={<Benefits />} />
         
         {/* Sugestões */}
         <Route path="/suggestions" element={<SuggestionsPage />} />

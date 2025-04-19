@@ -1,7 +1,7 @@
 
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
-import { Home, GraduationCap, Settings, HelpCircle, PencilLine, Wrench } from "lucide-react";
+import { Home, GraduationCap, Settings, HelpCircle, PencilLine, Wrench, Gift } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
@@ -46,6 +46,19 @@ export const MemberSidebarNav = ({ sidebarOpen }: { sidebarOpen: boolean }) => {
             <Wrench className="h-5 w-5 mr-2" />
             <span className={cn("flex-1", !sidebarOpen && "hidden")}>
               Ferramentas
+            </span>
+          </Link>
+        </Button>
+
+        <Button
+          variant={location.pathname.startsWith("/benefits") ? "default" : "ghost"}
+          asChild
+          className="w-full justify-start"
+        >
+          <Link to="/benefits">
+            <Gift className="h-5 w-5 mr-2" />
+            <span className={cn("flex-1", !sidebarOpen && "hidden")}>
+              Benefícios
             </span>
           </Link>
         </Button>
