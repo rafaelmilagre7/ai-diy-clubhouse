@@ -45,8 +45,20 @@ const AdminSuggestionsPage = () => {
       const success = await removeSuggestion(selectedSuggestion);
       if (success) {
         toast.success('Sugestão removida com sucesso');
-        refetch();
+        // Primeiro fechamos o modal
         setDeleteDialogOpen(false);
+        
+        // Depois atualizamos a lista com um pequeno delay
+        setTimeout(() => {
+          refetch();
+          // Garantir que a interface está responsiva
+          document.body.style.pointerEvents = 'auto';
+        }, 100);
+      } else {
+        // Garantir que o modal é fechado mesmo em caso de erro
+        setDeleteDialogOpen(false);
+        // Garantir que a interface está responsiva
+        document.body.style.pointerEvents = 'auto';
       }
     }
   };
@@ -136,7 +148,16 @@ const AdminSuggestionsPage = () => {
         </TableBody>
       </Table>
 
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+      <AlertDialog 
+        open={deleteDialogOpen} 
+        onOpenChange={(open) => {
+          setDeleteDialogOpen(open);
+          // Se for fechado manualmente pelo usuário, garantimos que a interação funcione
+          if (!open) {
+            document.body.style.pointerEvents = 'auto';
+          }
+        }}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Remover Sugestão</AlertDialogTitle>
@@ -145,8 +166,19 @@ const AdminSuggestionsPage = () => {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleRemoveSuggestion} className="bg-destructive text-destructive-foreground">
+            <AlertDialogCancel onClick={() => {
+              setDeleteDialogOpen(false);
+              // Garantir que o foco é restaurado
+              setTimeout(() => {
+                document.body.style.pointerEvents = 'auto';
+              }, 100);
+            }}>
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleRemoveSuggestion} 
+              className="bg-destructive text-destructive-foreground"
+            >
               Remover
             </AlertDialogAction>
           </AlertDialogFooter>

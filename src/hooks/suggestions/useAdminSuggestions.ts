@@ -40,13 +40,24 @@ export const useAdminSuggestions = () => {
 
       if (error) throw error;
 
+      // Garantir que o loading state é liberado mesmo em caso de sucesso
+      setLoading(false);
+      
+      // Restaurar o pointer-events para garantir que a interface continue responsiva
+      document.body.style.pointerEvents = 'auto';
+      
       return true;
     } catch (error: any) {
       console.error('Erro ao remover sugestão:', error);
       toast.error('Não foi possível remover a sugestão');
-      return false;
-    } finally {
+      
+      // Garantir que o loading state é liberado mesmo em caso de erro
       setLoading(false);
+      
+      // Restaurar o pointer-events para garantir que a interface continue responsiva
+      document.body.style.pointerEvents = 'auto';
+      
+      return false;
     }
   };
 

@@ -15,7 +15,7 @@ const AdminLayout = () => {
   
   // Se não for admin e tiver usuário, redireciona para o dashboard
   // Mas não redireciona se estiver em uma URL de sugestão específica
-  if (!isAdmin && user && !location.pathname.includes('/suggestions/')) {
+  if (!isAdmin && user) {
     console.log("Não é admin, redirecionando para dashboard");
     return <Navigate to="/dashboard" replace />;
   }
@@ -33,6 +33,17 @@ const AdminLayout = () => {
 
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Garantir que o documento está sempre clicável
+  useEffect(() => {
+    // Restaurar pointer-events quando o componente montar
+    document.body.style.pointerEvents = 'auto';
+    
+    return () => {
+      // Garantir que está restaurado ao desmontar
+      document.body.style.pointerEvents = 'auto';
+    };
   }, []);
 
   return (

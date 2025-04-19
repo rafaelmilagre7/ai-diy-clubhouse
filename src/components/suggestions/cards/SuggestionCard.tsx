@@ -30,7 +30,7 @@ export const SuggestionCard: React.FC<SuggestionCardProps> = ({
     : `/suggestions/${suggestion.id}`;
   
   return (
-    <Link to={linkPath}>
+    <Link to={linkPath} className="block h-full">
       <Card className="h-full hover:shadow-md transition-shadow">
         <CardContent className="p-4 space-y-2">
           <div className="flex items-center justify-between">

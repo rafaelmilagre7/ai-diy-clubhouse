@@ -76,13 +76,21 @@ const SuggestionDetailsPage = () => {
       try {
         const success = await removeSuggestion(suggestion.id);
         if (success) {
+          // Primeiro fechamos o modal de alerta
+          setDeleteDialogOpen(false);
+          
           toast.success('Sugestão removida com sucesso');
-          // Redireciona para a lista de sugestões apropriada (admin ou membro)
-          navigate(isAdminView ? '/admin/suggestions' : '/suggestions');
+          
+          // Pequeno delay antes de navegar para garantir que o modal foi fechado
+          setTimeout(() => {
+            // Redireciona para a lista de sugestões apropriada (admin ou membro)
+            navigate(isAdminView ? '/admin/suggestions' : '/suggestions', { replace: true });
+          }, 100);
         }
       } catch (error) {
         console.error('Erro ao remover sugestão:', error);
         toast.error('Erro ao remover sugestão');
+        setDeleteDialogOpen(false);
       }
     }
   };
@@ -164,7 +172,16 @@ const SuggestionDetailsPage = () => {
         voteLoading={voteLoading}
       />
 
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+      <AlertDialog 
+        open={deleteDialogOpen} 
+        onOpenChange={(open) => {
+          setDeleteDialogOpen(open);
+          // Se for fechado manualmente pelo usuário, garantimos que a interação funcione
+          if (!open) {
+            document.body.style.pointerEvents = 'auto';
+          }
+        }}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Remover Sugestão</AlertDialogTitle>
@@ -173,7 +190,15 @@ const SuggestionDetailsPage = () => {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogCancel onClick={() => {
+              setDeleteDialogOpen(false);
+              // Garantir que o foco é restaurado
+              setTimeout(() => {
+                document.body.style.pointerEvents = 'auto';
+              }, 100);
+            }}>
+              Cancelar
+            </AlertDialogCancel>
             <AlertDialogAction onClick={handleRemoveSuggestion} className="bg-destructive text-destructive-foreground">
               Remover
             </AlertDialogAction>
