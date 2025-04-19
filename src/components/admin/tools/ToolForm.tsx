@@ -8,10 +8,14 @@ import { TagManager } from './components/TagManager';
 import { VideoTutorials } from './components/VideoTutorials';
 import { MemberBenefit } from './components/MemberBenefit';
 import { toolFormSchema } from './schema/toolFormSchema';
-import { ToolFormProps } from './types/toolFormTypes';
+import { ToolFormProps, ToolFormValues } from './types/toolFormTypes';
+import { BenefitType } from '@/types/toolTypes';
 
 export const ToolForm = ({ initialData, onSubmit, isSubmitting }: ToolFormProps) => {
-  const form = useForm({
+  // Garantir que benefit_type seja sempre um dos valores válidos
+  const defaultBenefitType = initialData?.benefit_type as BenefitType | undefined;
+
+  const form = useForm<ToolFormValues>({
     resolver: zodResolver(toolFormSchema),
     defaultValues: {
       name: initialData?.name || '',
@@ -23,7 +27,7 @@ export const ToolForm = ({ initialData, onSubmit, isSubmitting }: ToolFormProps)
       tags: initialData?.tags || [],
       video_tutorials: initialData?.video_tutorials || [],
       has_member_benefit: initialData?.has_member_benefit || false,
-      benefit_type: initialData?.benefit_type || '',
+      benefit_type: defaultBenefitType || undefined,
       benefit_title: initialData?.benefit_title || '',
       benefit_description: initialData?.benefit_description || '',
       benefit_link: initialData?.benefit_link || '',

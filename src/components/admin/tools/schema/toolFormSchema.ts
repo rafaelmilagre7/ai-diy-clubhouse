@@ -1,5 +1,6 @@
 
 import { z } from 'zod';
+import { BenefitType } from '@/types/toolTypes';
 
 export const toolFormSchema = z.object({
   name: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres'),
@@ -17,7 +18,7 @@ export const toolFormSchema = z.object({
     })
   ).default([]),
   has_member_benefit: z.boolean().default(false),
-  benefit_type: z.enum(['discount', 'exclusive', 'free', 'trial', 'other']).optional(),
+  benefit_type: z.enum(['discount', 'exclusive', 'free', 'trial', 'other'] as const).optional(),
   benefit_title: z.string().optional(),
   benefit_description: z.string().optional(),
   benefit_link: z.string().url('URL inválida').optional(),
