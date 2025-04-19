@@ -66,8 +66,8 @@ const AdminSuggestionsPage = () => {
   };
 
   const viewSuggestionDetails = (suggestionId: string) => {
-    console.log('Navegando para detalhes da sugestão:', suggestionId);
-    navigate(`/suggestions/${suggestionId}`);
+    console.log('Navegando para detalhes da sugestão (admin):', suggestionId);
+    navigate(`/admin/suggestions/${suggestionId}`);
   };
 
   return (

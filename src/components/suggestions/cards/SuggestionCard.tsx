@@ -24,9 +24,10 @@ export const SuggestionCard: React.FC<SuggestionCardProps> = ({
   const voteBalance = suggestion.upvotes - suggestion.downvotes;
   
   // Determinar o link de navegação com base no tipo de usuário
-  // Administradores vão para o detalhe da sugestão (que tem ações de admin)
-  // Membros vão para o detalhe da sugestão (visualização normal)
-  const linkPath = `/suggestions/${suggestion.id}`;
+  // Administradores vão para um caminho específico para admin
+  const linkPath = isAdmin 
+    ? `/admin/suggestions/${suggestion.id}` 
+    : `/suggestions/${suggestion.id}`;
   
   return (
     <Link to={linkPath}>

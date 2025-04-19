@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/auth";
-import { Navigate } from "react-router-dom";
+import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { AdminSidebar } from "./admin/AdminSidebar";
 import { AdminContent } from "./admin/AdminContent";
 
@@ -11,9 +11,12 @@ import { AdminContent } from "./admin/AdminContent";
  */
 const AdminLayout = () => {
   const { profile, isAdmin, user } = useAuth();
+  const location = useLocation();
   
-  // Se não for admin, redireciona para o dashboard
-  if (!isAdmin && user) {
+  // Se não for admin e tiver usuário, redireciona para o dashboard
+  // Mas não redireciona se estiver em uma URL de sugestão específica
+  if (!isAdmin && user && !location.pathname.includes('/suggestions/')) {
+    console.log("Não é admin, redirecionando para dashboard");
     return <Navigate to="/dashboard" replace />;
   }
   

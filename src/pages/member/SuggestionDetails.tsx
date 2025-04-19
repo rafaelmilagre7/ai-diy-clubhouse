@@ -8,7 +8,7 @@ import SuggestionErrorState from '@/components/suggestions/states/SuggestionErro
 import { useComments } from '@/hooks/suggestions/useComments';
 import { useSuggestionDetails } from '@/hooks/suggestions/useSuggestionDetails';
 import { useAdminSuggestions } from '@/hooks/suggestions/useAdminSuggestions';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -34,7 +34,9 @@ const SuggestionDetailsPage = () => {
   const { user, isAdmin } = useAuth();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const isAdminView = location.pathname.includes('/admin/');
   
   const {
     suggestion,
@@ -55,7 +57,9 @@ const SuggestionDetailsPage = () => {
     console.log('SuggestionDetailsPage - Estado de carregamento:', isLoading);
     console.log('SuggestionDetailsPage - Erro:', error);
     console.log('SuggestionDetailsPage - O usuário é admin?', isAdmin);
-  }, [id, suggestion, isLoading, error, isAdmin]);
+    console.log('SuggestionDetailsPage - Está na visualização de admin?', isAdminView);
+    console.log('SuggestionDetailsPage - Localização atual:', location.pathname);
+  }, [id, suggestion, isLoading, error, isAdmin, isAdminView, location.pathname]);
 
   const { 
     comment, 
@@ -73,7 +77,8 @@ const SuggestionDetailsPage = () => {
         const success = await removeSuggestion(suggestion.id);
         if (success) {
           toast.success('Sugestão removida com sucesso');
-          navigate('/suggestions');
+          // Redireciona para a lista de sugestões apropriada (admin ou membro)
+          navigate(isAdminView ? '/admin/suggestions' : '/suggestions');
         }
       } catch (error) {
         console.error('Erro ao remover sugestão:', error);

@@ -14,6 +14,8 @@ import AdminUsers from '@/pages/admin/AdminUsers';
 import AdminAnalytics from '@/pages/admin/AdminAnalytics';
 import AdminBenefits from '@/pages/admin/BenefitStats';
 import AdminSettings from '@/pages/admin/AdminSettings';
+import AdminSuggestionsPage from '@/pages/admin/Suggestions';
+import SuggestionDetailsPage from '@/pages/member/SuggestionDetails';
 
 // Member pages
 import Dashboard from '@/pages/member/Dashboard';
@@ -24,7 +26,6 @@ import ToolDetails from '@/pages/member/ToolDetails';
 import Benefits from '@/pages/member/Benefits';
 import SuggestionsPage from '@/pages/member/Suggestions';
 import NewSuggestionPage from '@/pages/member/NewSuggestion';
-import SuggestionDetailsPage from '@/pages/member/SuggestionDetails';
 
 const AppRoutes = () => {
   return (
@@ -42,7 +43,9 @@ const AppRoutes = () => {
         <Route path="analytics" element={<AdminAnalytics />} />
         <Route path="benefits" element={<AdminBenefits />} />
         <Route path="settings" element={<AdminSettings />} />
-        <Route path="suggestions" element={<SuggestionsPage />} />
+        <Route path="suggestions" element={<AdminSuggestionsPage />} />
+        {/* Adicionando rota para detalhes de sugestão dentro do layout de admin */}
+        <Route path="suggestions/:id" element={<SuggestionDetailsPage />} />
       </Route>
 
       {/* Member Routes */}
