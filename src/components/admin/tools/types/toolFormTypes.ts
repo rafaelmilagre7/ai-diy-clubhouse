@@ -1,5 +1,5 @@
 
-import { Tool } from '@/types/toolTypes';
+import { Tool, BenefitType } from '@/types/toolTypes';
 
 export interface ToolFormProps {
   initialData?: Tool;
@@ -17,7 +17,7 @@ export interface ToolFormValues {
   tags: string[];
   video_tutorials: VideoTutorial[];
   has_member_benefit?: boolean;
-  benefit_type?: 'discount' | 'exclusive' | 'free' | 'trial' | 'other';
+  benefit_type?: BenefitType;
   benefit_title?: string;
   benefit_description?: string;
   benefit_link?: string;

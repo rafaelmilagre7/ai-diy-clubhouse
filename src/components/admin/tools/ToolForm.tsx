@@ -27,7 +27,7 @@ export const ToolForm = ({ initialData, onSubmit, isSubmitting }: ToolFormProps)
       tags: initialData?.tags || [],
       video_tutorials: initialData?.video_tutorials || [],
       has_member_benefit: initialData?.has_member_benefit || false,
-      benefit_type: defaultBenefitType || undefined,
+      benefit_type: defaultBenefitType,
       benefit_title: initialData?.benefit_title || '',
       benefit_description: initialData?.benefit_description || '',
       benefit_link: initialData?.benefit_link || '',
@@ -35,15 +35,24 @@ export const ToolForm = ({ initialData, onSubmit, isSubmitting }: ToolFormProps)
     }
   });
 
+  const handleFormSubmit = (data: ToolFormValues) => {
+    console.log("Formulário enviado:", data);
+    onSubmit(data);
+  };
+
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+      <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-8">
         <BasicInfo form={form} />
         <TagManager form={form} />
         <MemberBenefit className="mt-6" />
         <VideoTutorials form={form} />
         
-        <Button type="submit" className="w-full" disabled={isSubmitting}>
+        <Button 
+          type="submit" 
+          className="w-full" 
+          disabled={isSubmitting}
+        >
           {isSubmitting ? 'Salvando...' : 'Salvar Ferramenta'}
         </Button>
       </form>

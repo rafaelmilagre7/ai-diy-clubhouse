@@ -60,11 +60,29 @@ const AdminToolEdit = () => {
       setSaving(true);
       console.log('Salvando ferramenta:', data);
       
+      // Preparar os dados para salvar, garantindo que campos opcionais undefined sejam null
+      const toolData = {
+        ...data,
+        benefit_type: data.benefit_type || null,
+        benefit_title: data.benefit_title || null,
+        benefit_description: data.benefit_description || null,
+        benefit_link: data.benefit_link || null,
+        benefit_badge_url: data.benefit_badge_url || null,
+        updated_at: new Date().toISOString()
+      };
+      
       if (isNew) {
-        const { data: insertedData, error } = await supabase.from('tools').insert([data]).select();
+        // Adicionar created_at para novas ferramentas
+        toolData.created_at = new Date().toISOString();
+        
+        const { data: insertedData, error } = await supabase
+          .from('tools')
+          .insert([toolData])
+          .select();
         
         if (error) throw error;
         
+        console.log('Ferramenta criada com sucesso:', insertedData);
         toast({
           title: 'Ferramenta criada',
           description: 'A ferramenta foi criada com sucesso.',
@@ -72,11 +90,12 @@ const AdminToolEdit = () => {
       } else {
         const { error } = await supabase
           .from('tools')
-          .update(data)
+          .update(toolData)
           .eq('id', id);
           
         if (error) throw error;
         
+        console.log('Ferramenta atualizada com sucesso');
         toast({
           title: 'Ferramenta atualizada',
           description: 'As alterações foram salvas com sucesso.',
@@ -95,7 +114,7 @@ const AdminToolEdit = () => {
         description: error.message || 'Ocorreu um erro ao tentar salvar a ferramenta.',
         variant: 'destructive',
       });
-      // Mesmo em caso de erro, não deixamos o usuário preso
+    } finally {
       setSaving(false);
     }
   };

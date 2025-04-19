@@ -21,6 +21,6 @@ export const toolFormSchema = z.object({
   benefit_type: z.enum(['discount', 'exclusive', 'free', 'trial', 'other'] as const).optional(),
   benefit_title: z.string().optional(),
   benefit_description: z.string().optional(),
-  benefit_link: z.string().url('URL inválida').optional(),
+  benefit_link: z.string().url('URL inválida').optional().or(z.literal('')),
   benefit_badge_url: z.string().optional()
 });
