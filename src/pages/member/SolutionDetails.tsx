@@ -33,6 +33,9 @@ const SolutionDetails = () => {
     return <SolutionNotFound />;
   }
   
+  // Log para depuração
+  console.log("Renderizando SolutionDetails com solução:", solution.id, solution.title);
+  
   return (
     <div className="max-w-5xl mx-auto pb-12 animate-fade-in">
       <SolutionBackButton />

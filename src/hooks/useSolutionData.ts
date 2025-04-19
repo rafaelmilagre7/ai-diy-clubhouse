@@ -24,7 +24,7 @@ export const useSolutionData = (id: string | undefined) => {
       
       try {
         setLoading(true);
-        console.log(`Fetching solution with ID: ${id}`);
+        console.log(`Buscando solução com ID: ${id}`);
         
         let query = supabase
           .from("solutions")
@@ -39,7 +39,7 @@ export const useSolutionData = (id: string | undefined) => {
         const { data, error: fetchError } = await query.single();
         
         if (fetchError) {
-          console.error("Error fetching solution:", fetchError);
+          console.error("Erro ao buscar solução:", fetchError);
           
           // Se o erro for de registro não encontrado e o usuário não é admin,
           // provavelmente está tentando acessar uma solução não publicada
@@ -57,7 +57,7 @@ export const useSolutionData = (id: string | undefined) => {
         }
         
         if (data) {
-          console.log("Solution data retrieved:", data);
+          console.log("Dados da solução encontrados:", data);
           setSolution(data as Solution);
           
           // Fetch progress for this solution and user if user is authenticated
@@ -71,10 +71,13 @@ export const useSolutionData = (id: string | undefined) => {
               
             if (!progressError && progressData) {
               setProgress(progressData);
+              console.log("Dados de progresso encontrados:", progressData);
+            } else {
+              console.log("Nenhum progresso encontrado para esta solução");
             }
           }
         } else {
-          console.log("No solution found with ID:", id);
+          console.log("Nenhuma solução encontrada com ID:", id);
           setError("Solução não encontrada");
           toast({
             title: "Solução não encontrada",
@@ -84,7 +87,7 @@ export const useSolutionData = (id: string | undefined) => {
           navigate("/solutions");
         }
       } catch (error: any) {
-        console.error("Error in useSolutionData:", error);
+        console.error("Erro em useSolutionData:", error);
         setError(error.message || "Erro ao buscar a solução");
         toast({
           title: "Erro ao carregar solução",

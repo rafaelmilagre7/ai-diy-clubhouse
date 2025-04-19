@@ -14,13 +14,18 @@ export const useSolutionInteractions = (solutionId: string | undefined, progress
   const [initializing, setInitializing] = useState(false);
   
   const startImplementation = async () => {
-    if (!user || !solutionId) return;
+    if (!user || !solutionId) {
+      toast.error("Você precisa estar logado para implementar esta solução");
+      return;
+    }
     
     try {
       setInitializing(true);
+      console.log("Iniciando implementação da solução:", solutionId);
       
       // If there's no progress record yet, create one
       if (!progress) {
+        console.log("Criando novo registro de progresso");
         const { data, error } = await supabase
           .from("progress")
           .insert({
@@ -35,14 +40,20 @@ export const useSolutionInteractions = (solutionId: string | undefined, progress
           .single();
         
         if (error) {
+          console.error("Erro ao criar progresso:", error);
           throw error;
         }
+        
+        console.log("Progresso criado com sucesso:", data);
+      } else {
+        console.log("Usando progresso existente:", progress);
       }
       
       // Navigate directly to the implementation page
+      toast.success("Redirecionando para a implementação...");
       navigate(`/implement/${solutionId}/0`);
     } catch (error) {
-      console.error("Error starting implementation:", error);
+      console.error("Erro ao iniciar implementação:", error);
       uiToast({
         title: "Erro ao iniciar implementação",
         description: "Ocorreu um erro ao tentar iniciar a implementação da solução.",
@@ -54,8 +65,14 @@ export const useSolutionInteractions = (solutionId: string | undefined, progress
   };
   
   const continueImplementation = () => {
-    if (!solutionId || !progress) return;
+    if (!solutionId || !progress) {
+      toast.error("Não foi possível continuar a implementação");
+      return;
+    }
+    
     // Navigate directly to the implementation page
+    console.log("Continuando implementação no módulo:", progress.current_module);
+    toast.success("Redirecionando para onde você parou...");
     navigate(`/implement/${solutionId}/${progress.current_module || 0}`);
   };
   

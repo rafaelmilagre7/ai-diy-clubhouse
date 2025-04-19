@@ -53,13 +53,15 @@ const AppRoutes = () => {
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/solutions" element={<Solutions />} />
-        <Route path="/solutions/:id" element={<SolutionDetails />} />
+        <Route path="/solution/:id" element={<SolutionDetails />} />
         <Route path="/tools" element={<Tools />} />
         <Route path="/tools/:id" element={<ToolDetails />} />
         <Route path="/benefits" element={<Benefits />} />
         <Route path="/suggestions" element={<SuggestionsPage />} />
         <Route path="/suggestions/new" element={<NewSuggestionPage />} />
         <Route path="/suggestions/:id" element={<SuggestionDetailsPage />} />
+        {/* Garantir que /implement/:id/:moduleIndex existe para a implementação */}
+        <Route path="/implement/:id/:moduleIndex" element={<SolutionDetails />} />
       </Route>
 
       {/* Catch-all route for 404 */}

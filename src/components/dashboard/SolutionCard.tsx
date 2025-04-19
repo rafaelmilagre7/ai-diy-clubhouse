@@ -13,7 +13,10 @@ interface SolutionCardProps {
 }
 
 export const SolutionCard = ({ solution, onSelect }: SolutionCardProps) => {
-  const handleSelect = () => onSelect(solution.id);
+  const handleSelect = () => {
+    console.log("Card selecionado, navegando para a solução:", solution.id);
+    onSelect(solution.id);
+  };
 
   return (
     <Card 
