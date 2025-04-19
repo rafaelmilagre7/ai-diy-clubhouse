@@ -1,15 +1,18 @@
+
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Home, GraduationCap, Users, Settings, HelpCircle, PencilLine } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
 export const MemberSidebarNav = ({ sidebarOpen }: { sidebarOpen: boolean }) => {
+  const location = useLocation();
+  
   return (
     <ScrollArea className="flex-1 px-4">
       <nav className="space-y-2 py-4">
         <Button
-          variant="ghost"
+          variant={location.pathname === "/dashboard" ? "default" : "ghost"}
           asChild
           className="w-full justify-start"
         >
@@ -22,7 +25,7 @@ export const MemberSidebarNav = ({ sidebarOpen }: { sidebarOpen: boolean }) => {
         </Button>
 
         <Button
-          variant="ghost"
+          variant={location.pathname.startsWith("/solutions") ? "default" : "ghost"}
           asChild
           className="w-full justify-start"
         >
@@ -35,7 +38,7 @@ export const MemberSidebarNav = ({ sidebarOpen }: { sidebarOpen: boolean }) => {
         </Button>
 
         <Button
-          variant="ghost"
+          variant={location.pathname === "/community" ? "default" : "ghost"}
           asChild
           className="w-full justify-start"
         >
@@ -48,7 +51,7 @@ export const MemberSidebarNav = ({ sidebarOpen }: { sidebarOpen: boolean }) => {
         </Button>
 
         <Button
-          variant="ghost"
+          variant={location.pathname === "/settings" ? "default" : "ghost"}
           asChild
           className="w-full justify-start"
         >
@@ -61,7 +64,7 @@ export const MemberSidebarNav = ({ sidebarOpen }: { sidebarOpen: boolean }) => {
         </Button>
 
         <Button
-          variant="ghost"
+          variant={location.pathname === "/help" ? "default" : "ghost"}
           asChild
           className="w-full justify-start"
         >
@@ -74,7 +77,7 @@ export const MemberSidebarNav = ({ sidebarOpen }: { sidebarOpen: boolean }) => {
         </Button>
 
         <Button
-          variant="ghost"
+          variant={location.pathname.startsWith("/suggestions") ? "default" : "ghost"}
           asChild
           className="w-full justify-start"
         >

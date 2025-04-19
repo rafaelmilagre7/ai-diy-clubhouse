@@ -1,17 +1,22 @@
-import React, { useEffect } from 'react';
+
+import React from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/auth';
 import Auth from '@/pages/Auth';
 import Layout from '@/components/layout/Layout';
-import Dashboard from '@/pages/Dashboard';
-import Solutions from '@/pages/Solutions';
-import SolutionDetails from '@/pages/SolutionDetails';
 import AdminLayout from '@/components/layout/AdminLayout';
 import AdminDashboard from '@/pages/admin/Dashboard';
 import AdminTools from '@/pages/admin/AdminTools';
 import AdminToolEdit from '@/pages/admin/AdminToolEdit';
 import AdminUsers from '@/pages/admin/AdminUsers';
+
+// Corrigindo importação - importando do caminho correto
+import Dashboard from '@/pages/member/Dashboard';
+import Solutions from '@/pages/member/Solutions';
+import SolutionDetails from '@/pages/member/SolutionDetails';
 import SuggestionsPage from '@/pages/member/Suggestions';
+
+// Vamos criar os arquivos que estão faltando
 import NewSuggestionPage from '@/pages/member/NewSuggestion';
 import SuggestionDetailsPage from '@/pages/member/SuggestionDetails';
 
