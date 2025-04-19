@@ -1,10 +1,9 @@
 
-import { UseFormReturn } from 'react-hook-form';
-import { ToolFormValues } from '../../types/toolFormTypes';
 import { VideoTutorialItem } from './VideoTutorialItem';
+import { VideoTutorial } from '@/types/toolTypes';
 
 interface VideoTutorialsListProps {
-  videoTutorials: ToolFormValues['video_tutorials'];
+  videoTutorials: VideoTutorial[];
   onUpdate: (index: number, field: 'title' | 'url', value: string) => void;
   onRemove: (index: number) => void;
 }
