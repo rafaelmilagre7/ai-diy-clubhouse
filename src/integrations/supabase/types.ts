@@ -492,6 +492,261 @@ export type Database = {
         }
         Relationships: []
       }
+      suggestion_categories: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      suggestion_comment_votes: {
+        Row: {
+          comment_id: string
+          created_at: string
+          id: string
+          user_id: string
+          vote_type: Database["public"]["Enums"]["vote_type"]
+        }
+        Insert: {
+          comment_id: string
+          created_at?: string
+          id?: string
+          user_id: string
+          vote_type: Database["public"]["Enums"]["vote_type"]
+        }
+        Update: {
+          comment_id?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+          vote_type?: Database["public"]["Enums"]["vote_type"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "suggestion_comment_votes_comment_id_fkey"
+            columns: ["comment_id"]
+            isOneToOne: false
+            referencedRelation: "suggestion_comments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      suggestion_comments: {
+        Row: {
+          content: string
+          created_at: string
+          downvotes: number
+          id: string
+          is_hidden: boolean
+          is_official: boolean
+          parent_id: string | null
+          suggestion_id: string
+          updated_at: string
+          upvotes: number
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          downvotes?: number
+          id?: string
+          is_hidden?: boolean
+          is_official?: boolean
+          parent_id?: string | null
+          suggestion_id: string
+          updated_at?: string
+          upvotes?: number
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          downvotes?: number
+          id?: string
+          is_hidden?: boolean
+          is_official?: boolean
+          parent_id?: string | null
+          suggestion_id?: string
+          updated_at?: string
+          upvotes?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "suggestion_comments_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "suggestion_comments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "suggestion_comments_suggestion_id_fkey"
+            columns: ["suggestion_id"]
+            isOneToOne: false
+            referencedRelation: "suggestions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      suggestion_notifications: {
+        Row: {
+          comment_id: string | null
+          content: string | null
+          created_at: string
+          id: string
+          is_read: boolean
+          suggestion_id: string
+          type: Database["public"]["Enums"]["notification_type"]
+          user_id: string
+        }
+        Insert: {
+          comment_id?: string | null
+          content?: string | null
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          suggestion_id: string
+          type: Database["public"]["Enums"]["notification_type"]
+          user_id: string
+        }
+        Update: {
+          comment_id?: string | null
+          content?: string | null
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          suggestion_id?: string
+          type?: Database["public"]["Enums"]["notification_type"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "suggestion_notifications_comment_id_fkey"
+            columns: ["comment_id"]
+            isOneToOne: false
+            referencedRelation: "suggestion_comments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "suggestion_notifications_suggestion_id_fkey"
+            columns: ["suggestion_id"]
+            isOneToOne: false
+            referencedRelation: "suggestions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      suggestion_votes: {
+        Row: {
+          created_at: string
+          id: string
+          suggestion_id: string
+          updated_at: string
+          user_id: string
+          vote_type: Database["public"]["Enums"]["vote_type"]
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          suggestion_id: string
+          updated_at?: string
+          user_id: string
+          vote_type: Database["public"]["Enums"]["vote_type"]
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          suggestion_id?: string
+          updated_at?: string
+          user_id?: string
+          vote_type?: Database["public"]["Enums"]["vote_type"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "suggestion_votes_suggestion_id_fkey"
+            columns: ["suggestion_id"]
+            isOneToOne: false
+            referencedRelation: "suggestions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      suggestions: {
+        Row: {
+          category_id: string | null
+          comment_count: number
+          created_at: string
+          description: string
+          downvotes: number
+          id: string
+          image_url: string | null
+          is_hidden: boolean
+          is_pinned: boolean
+          status: Database["public"]["Enums"]["suggestion_status"]
+          title: string
+          updated_at: string
+          upvotes: number
+          user_id: string
+        }
+        Insert: {
+          category_id?: string | null
+          comment_count?: number
+          created_at?: string
+          description: string
+          downvotes?: number
+          id?: string
+          image_url?: string | null
+          is_hidden?: boolean
+          is_pinned?: boolean
+          status?: Database["public"]["Enums"]["suggestion_status"]
+          title: string
+          updated_at?: string
+          upvotes?: number
+          user_id: string
+        }
+        Update: {
+          category_id?: string | null
+          comment_count?: number
+          created_at?: string
+          description?: string
+          downvotes?: number
+          id?: string
+          image_url?: string | null
+          is_hidden?: boolean
+          is_pinned?: boolean
+          status?: Database["public"]["Enums"]["suggestion_status"]
+          title?: string
+          updated_at?: string
+          upvotes?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "suggestions_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "suggestion_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tools: {
         Row: {
           benefit_badge_url: string | null
@@ -655,7 +910,20 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      notification_type:
+        | "status_change"
+        | "new_comment"
+        | "new_vote"
+        | "comment_reply"
+        | "admin_response"
+      suggestion_status:
+        | "new"
+        | "under_review"
+        | "approved"
+        | "in_development"
+        | "implemented"
+        | "rejected"
+      vote_type: "upvote" | "downvote"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -770,6 +1038,23 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      notification_type: [
+        "status_change",
+        "new_comment",
+        "new_vote",
+        "comment_reply",
+        "admin_response",
+      ],
+      suggestion_status: [
+        "new",
+        "under_review",
+        "approved",
+        "in_development",
+        "implemented",
+        "rejected",
+      ],
+      vote_type: ["upvote", "downvote"],
+    },
   },
 } as const
