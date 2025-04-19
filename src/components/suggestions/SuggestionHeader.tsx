@@ -1,21 +1,23 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
+import { ChevronLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const SuggestionHeader = () => {
   const navigate = useNavigate();
 
   return (
-    <Button 
-      variant="ghost" 
-      className="flex items-center gap-2 mb-4" 
-      onClick={() => navigate('/suggestions')}
-    >
-      <ArrowLeft size={16} />
-      Voltar para sugestões
-    </Button>
+    <div className="mb-6">
+      <Button
+        variant="ghost"
+        className="flex items-center gap-2 mb-2"
+        onClick={() => navigate('/suggestions')}
+      >
+        <ChevronLeft size={16} />
+        Voltar para sugestões
+      </Button>
+    </div>
   );
 };
 

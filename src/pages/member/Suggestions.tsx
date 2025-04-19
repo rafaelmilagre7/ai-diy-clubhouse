@@ -32,7 +32,7 @@ const SuggestionsPage = () => {
     console.log("Componente SuggestionsPage montado, buscando sugestões...");
     refetch().catch(error => {
       console.error("Erro ao buscar sugestões:", error);
-      toast("Erro ao carregar sugestões. Tente novamente.");
+      toast.error("Erro ao carregar sugestões. Tente novamente.");
     });
   }, [refetch]);
 
@@ -77,7 +77,7 @@ const SuggestionsPage = () => {
           <div className="flex items-center gap-2">
             <Avatar className="h-6 w-6">
               <AvatarImage src={suggestion.profiles?.avatar_url || ''} />
-              <AvatarFallback>{suggestion.profiles?.name?.charAt(0) || '?'}</AvatarFallback>
+              <AvatarFallback>{(suggestion.profiles?.name || '?').charAt(0)}</AvatarFallback>
             </Avatar>
             <span className="text-xs text-muted-foreground line-clamp-1">
               {suggestion.profiles?.name || 'Usuário'}

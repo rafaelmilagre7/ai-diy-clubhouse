@@ -63,7 +63,7 @@ export const MemberSidebarNav = ({ sidebarOpen }: { sidebarOpen: boolean }) => {
           </Link>
         </Button>
 
-        {/* Item de menu Sugestões - Agora visível para todos os usuários (membros e admin) */}
+        {/* Item de menu Sugestões - Exibido para todos os usuários */}
         <Button
           variant={location.pathname.startsWith("/suggestions") ? "default" : "ghost"}
           asChild

@@ -11,6 +11,7 @@ import { ArrowLeft } from 'lucide-react';
 import { useSuggestions } from '@/hooks/useSuggestions';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
+import { useAuth } from '@/contexts/auth';
 
 type FormValues = {
   title: string;
@@ -20,6 +21,7 @@ type FormValues = {
 
 const NewSuggestionPage = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { categories, submitSuggestion, isLoading } = useSuggestions();
   
   const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<FormValues>({
@@ -33,6 +35,7 @@ const NewSuggestionPage = () => {
   const selectedCategory = watch('category_id');
   
   console.log("Categorias disponíveis:", categories);
+  console.log("Usuário logado:", user);
 
   const onSubmit = async (data: FormValues) => {
     try {
@@ -42,9 +45,30 @@ const NewSuggestionPage = () => {
       navigate('/suggestions');
     } catch (error: any) {
       console.error('Erro ao enviar sugestão:', error);
-      toast.error('Erro ao enviar sugestão. Tente novamente.');
+      toast.error('Erro ao enviar sugestão: ' + (error.message || 'Tente novamente.'));
     }
   };
+
+  // Verificar se o usuário está logado
+  if (!user) {
+    return (
+      <div className="container py-6">
+        <Card className="max-w-2xl mx-auto">
+          <CardHeader>
+            <CardTitle>Acesso Restrito</CardTitle>
+            <CardDescription>
+              Você precisa estar logado para criar uma sugestão.
+            </CardDescription>
+          </CardHeader>
+          <CardFooter>
+            <Button onClick={() => navigate('/auth')}>
+              Fazer Login
+            </Button>
+          </CardFooter>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="container py-6 space-y-6">
