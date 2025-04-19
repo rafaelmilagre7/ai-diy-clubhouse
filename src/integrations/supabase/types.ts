@@ -499,6 +499,7 @@ export type Database = {
           benefit_description: string | null
           benefit_link: string | null
           benefit_title: string | null
+          benefit_type: string | null
           category: string
           created_at: string
           description: string
@@ -520,6 +521,7 @@ export type Database = {
           benefit_description?: string | null
           benefit_link?: string | null
           benefit_title?: string | null
+          benefit_type?: string | null
           category: string
           created_at?: string
           description: string
@@ -541,6 +543,7 @@ export type Database = {
           benefit_description?: string | null
           benefit_link?: string | null
           benefit_title?: string | null
+          benefit_type?: string | null
           category?: string
           created_at?: string
           description?: string

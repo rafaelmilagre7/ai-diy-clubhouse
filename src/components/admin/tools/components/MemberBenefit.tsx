@@ -10,13 +10,10 @@ import { BenefitBadge } from "@/components/tools/BenefitBadge";
 
 interface MemberBenefitProps {
   className?: string;
-  form?: any; // Adicionando a prop form como opcional
 }
 
-export const MemberBenefit = ({ className, form: formProp }: MemberBenefitProps) => {
-  // Usar o form passado como prop ou obter do contexto
-  const formContext = useFormContext();
-  const form = formProp || formContext;
+export const MemberBenefit = ({ className }: MemberBenefitProps) => {
+  const form = useFormContext();
   const hasBenefit = form.watch("has_member_benefit");
 
   return (
