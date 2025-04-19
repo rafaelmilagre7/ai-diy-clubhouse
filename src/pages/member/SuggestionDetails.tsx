@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -15,8 +14,8 @@ import SuggestionHeader from '@/components/suggestions/SuggestionHeader';
 import SuggestionVoting from '@/components/suggestions/SuggestionVoting';
 import CommentForm from '@/components/suggestions/CommentForm';
 import CommentsList from '@/components/suggestions/CommentsList';
+import SuggestionLoadingState from '@/components/suggestions/SuggestionLoadingState';
 import { useComments } from '@/hooks/useComments';
-import { Skeleton } from '@/components/ui/skeleton';
 
 interface Suggestion {
   id: string;
@@ -81,49 +80,8 @@ const SuggestionDetailsPage = () => {
     },
   });
 
-  const handleVote = async (voteType: 'upvote' | 'downvote') => {
-    if (!user) {
-      toast.error("Você precisa estar logado para votar.");
-      return;
-    }
-
-    try {
-      await supabase
-        .from('suggestion_votes')
-        .upsert({
-          suggestion_id: id,
-          user_id: user.id,
-          vote_type: voteType
-        }, {
-          onConflict: 'suggestion_id,user_id'
-        });
-      
-      refetch();
-    } catch (error: any) {
-      console.error('Erro ao votar:', error);
-      toast.error(error.message || "Ocorreu um erro ao registrar seu voto.");
-    }
-  };
-
   if (isLoading) {
-    return (
-      <div className="container py-6 space-y-6">
-        <SuggestionHeader />
-        <Card>
-          <CardHeader>
-            <Skeleton className="h-8 w-3/4 mb-2" />
-            <Skeleton className="h-4 w-1/2" />
-          </CardHeader>
-          <CardContent>
-            <Skeleton className="h-24 w-full mb-4" />
-            <div className="flex items-center gap-2">
-              <Skeleton className="h-10 w-10 rounded-full" />
-              <Skeleton className="h-4 w-32" />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
+    return <SuggestionLoadingState />;
   }
 
   if (error || !suggestion) {
