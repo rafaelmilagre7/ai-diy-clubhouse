@@ -42,6 +42,7 @@ export interface Solution {
   videos?: any[];
   checklist?: any[];
   module_order?: number;
+  related_solutions?: string[];
 }
 
 export interface Module {

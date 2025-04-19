@@ -16,6 +16,7 @@ export const fallbackSolutionsData: Solution[] = [
     tags: ["whatsapp", "automation", "ai"],
     related_solutions: [],
     published: true,
+    author_id: "",
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString()
   },
@@ -32,6 +33,7 @@ export const fallbackSolutionsData: Solution[] = [
     tags: ["chatbot", "lead generation", "sales"],
     related_solutions: [],
     published: true,
+    author_id: "",
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString()
   },
@@ -48,6 +50,7 @@ export const fallbackSolutionsData: Solution[] = [
     tags: ["sentiment analysis", "customer satisfaction", "retention"],
     related_solutions: [],
     published: true,
+    author_id: "",
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString()
   }
