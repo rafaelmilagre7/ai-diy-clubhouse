@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -12,6 +11,7 @@ import { useSuggestions } from '@/hooks/useSuggestions';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/auth';
+import { useSuggestionCreation } from '@/hooks/suggestions/useSuggestionCreation';
 
 type FormValues = {
   title: string;
@@ -22,7 +22,8 @@ type FormValues = {
 const NewSuggestionPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { categories, submitSuggestion, isLoading } = useSuggestions();
+  const { categories } = useSuggestions();
+  const { isSubmitting, submitSuggestion } = useSuggestionCreation();
   
   const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<FormValues>({
     defaultValues: {
@@ -41,7 +42,6 @@ const NewSuggestionPage = () => {
     try {
       console.log("Enviando sugestão:", data);
       await submitSuggestion(data);
-      toast.success('Sugestão enviada com sucesso!');
       navigate('/suggestions');
     } catch (error: any) {
       console.error('Erro ao enviar sugestão:', error);
@@ -147,8 +147,8 @@ const NewSuggestionPage = () => {
             >
               Cancelar
             </Button>
-            <Button type="submit" disabled={isLoading}>
-              {isLoading ? 'Enviando...' : 'Enviar sugestão'}
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? 'Enviando...' : 'Enviar sugestão'}
             </Button>
           </CardFooter>
         </form>

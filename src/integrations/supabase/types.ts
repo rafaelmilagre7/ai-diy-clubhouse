@@ -900,6 +900,22 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      decrement_suggestion_downvote: {
+        Args: { suggestion_id: string }
+        Returns: undefined
+      }
+      decrement_suggestion_upvote: {
+        Args: { suggestion_id: string }
+        Returns: undefined
+      }
+      increment_suggestion_downvote: {
+        Args: { suggestion_id: string }
+        Returns: undefined
+      }
+      increment_suggestion_upvote: {
+        Args: { suggestion_id: string }
+        Returns: undefined
+      }
       is_admin: {
         Args: Record<PropertyKey, never>
         Returns: boolean
