@@ -31,13 +31,16 @@ const NewSuggestionPage = () => {
   });
 
   const selectedCategory = watch('category_id');
+  
+  console.log("Categorias disponíveis:", categories);
 
   const onSubmit = async (data: FormValues) => {
     try {
+      console.log("Enviando sugestão:", data);
       await submitSuggestion(data);
       toast.success('Sugestão enviada com sucesso!');
       navigate('/suggestions');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao enviar sugestão:', error);
       toast.error('Erro ao enviar sugestão. Tente novamente.');
     }

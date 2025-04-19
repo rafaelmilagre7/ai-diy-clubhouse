@@ -1,14 +1,14 @@
 
 import { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { Suggestion, SuggestionCategory } from '@/types/suggestionTypes';
 import { useAuth } from '@/contexts/auth';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 export const useSuggestions = (categoryId?: string) => {
   const { user } = useAuth();
-  const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [filter, setFilter] = useState<'popular' | 'recent'>('popular');
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -20,6 +20,8 @@ export const useSuggestions = (categoryId?: string) => {
   } = useQuery({
     queryKey: ['suggestions', categoryId, filter],
     queryFn: async () => {
+      console.log('Buscando sugestões...', { categoryId, filter });
+      
       let query = supabase
         .from('suggestions')
         .select(`
@@ -46,8 +48,11 @@ export const useSuggestions = (categoryId?: string) => {
         throw error;
       }
 
+      console.log('Sugestões encontradas:', data);
       return data;
     },
+    refetchOnWindowFocus: false,
+    staleTime: 1000 * 60 * 5, // 5 minutos
   });
 
   const {
@@ -70,59 +75,45 @@ export const useSuggestions = (categoryId?: string) => {
     },
   });
 
-  const submitSuggestion = async (values: {
-    title: string;
-    description: string;
-    category_id: string;
-    image_url?: string;
-  }) => {
-    if (!user) {
-      toast({
-        title: "Erro ao criar sugestão",
-        description: "Você precisa estar logado para criar uma sugestão.",
-        variant: "destructive"
-      });
-      return;
-    }
+  const submitSuggestionMutation = useMutation({
+    mutationFn: async (values: {
+      title: string;
+      description: string;
+      category_id: string;
+      image_url?: string;
+    }) => {
+      if (!user) {
+        throw new Error("Você precisa estar logado para criar uma sugestão.");
+      }
 
-    try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('suggestions')
         .insert({
           ...values,
           user_id: user.id
-        });
+        })
+        .select();
 
       if (error) throw error;
-
-      toast({
-        title: "Sugestão criada",
-        description: "Sua sugestão foi enviada com sucesso!"
-      });
-
-      refetch();
-    } catch (error: any) {
+      return data;
+    },
+    onSuccess: () => {
+      toast("Sugestão criada com sucesso!");
+      queryClient.invalidateQueries({ queryKey: ['suggestions'] });
+    },
+    onError: (error: any) => {
       console.error('Erro ao criar sugestão:', error);
-      toast({
-        title: "Erro ao criar sugestão",
-        description: error.message || "Ocorreu um erro ao enviar sua sugestão.",
-        variant: "destructive"
-      });
+      toast(`Erro ao criar sugestão: ${error.message}`);
     }
-  };
+  });
 
-  const vote = async (suggestionId: string, voteType: 'upvote' | 'downvote') => {
-    if (!user) {
-      toast({
-        title: "Erro ao votar",
-        description: "Você precisa estar logado para votar.",
-        variant: "destructive"
-      });
-      return;
-    }
+  const voteMutation = useMutation({
+    mutationFn: async ({ suggestionId, voteType }: { suggestionId: string, voteType: 'upvote' | 'downvote' }) => {
+      if (!user) {
+        throw new Error("Você precisa estar logado para votar.");
+      }
 
-    try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('suggestion_votes')
         .upsert({
           suggestion_id: suggestionId,
@@ -133,22 +124,34 @@ export const useSuggestions = (categoryId?: string) => {
         });
 
       if (error) throw error;
-
-      refetch();
-    } catch (error: any) {
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['suggestions'] });
+    },
+    onError: (error: any) => {
       console.error('Erro ao votar:', error);
-      toast({
-        title: "Erro ao votar",
-        description: error.message || "Ocorreu um erro ao registrar seu voto.",
-        variant: "destructive"
-      });
+      toast(`Erro ao votar: ${error.message}`);
     }
+  });
+
+  const submitSuggestion = async (values: {
+    title: string;
+    description: string;
+    category_id: string;
+    image_url?: string;
+  }) => {
+    return submitSuggestionMutation.mutateAsync(values);
+  };
+
+  const vote = async (suggestionId: string, voteType: 'upvote' | 'downvote') => {
+    return voteMutation.mutateAsync({ suggestionId, voteType });
   };
 
   return {
     suggestions,
     categories,
-    isLoading: isLoading || categoriesLoading,
+    isLoading: isLoading || categoriesLoading || submitSuggestionMutation.isPending || voteMutation.isPending,
     error,
     filter,
     setFilter,

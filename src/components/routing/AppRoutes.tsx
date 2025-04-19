@@ -15,8 +15,6 @@ import Dashboard from '@/pages/member/Dashboard';
 import Solutions from '@/pages/member/Solutions';
 import SolutionDetails from '@/pages/member/SolutionDetails';
 import SuggestionsPage from '@/pages/member/Suggestions';
-
-// Vamos criar os arquivos que estão faltando
 import NewSuggestionPage from '@/pages/member/NewSuggestion';
 import SuggestionDetailsPage from '@/pages/member/SuggestionDetails';
 

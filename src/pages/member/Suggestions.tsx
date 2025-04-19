@@ -1,4 +1,5 @@
 
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,6 +12,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { toast } from 'sonner';
 
 const SuggestionsPage = () => {
   const navigate = useNavigate();
@@ -21,14 +23,26 @@ const SuggestionsPage = () => {
     filter,
     setFilter,
     searchQuery,
-    setSearchQuery
+    setSearchQuery,
+    refetch
   } = useSuggestions();
+
+  // Forçar refetch quando a página carregar
+  useEffect(() => {
+    console.log("Componente SuggestionsPage montado, buscando sugestões...");
+    refetch().catch(error => {
+      console.error("Erro ao buscar sugestões:", error);
+      toast("Erro ao carregar sugestões. Tente novamente.");
+    });
+  }, [refetch]);
 
   // Filtrar sugestões por pesquisa
   const filteredSuggestions = suggestions.filter(suggestion => 
     suggestion.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     suggestion.description.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  console.log("Sugestões filtradas:", filteredSuggestions.length, filteredSuggestions);
 
   const renderSuggestionCard = (suggestion: any) => {
     const formattedDate = format(new Date(suggestion.created_at), "dd 'de' MMMM", { locale: ptBR });
