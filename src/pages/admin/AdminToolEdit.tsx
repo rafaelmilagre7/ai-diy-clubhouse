@@ -6,15 +6,16 @@ import { Tool } from '@/types/toolTypes';
 import { useToast } from '@/hooks/use-toast';
 import { ToolForm } from '@/components/admin/tools/ToolForm';
 import LoadingScreen from '@/components/common/LoadingScreen';
+import { useToolForm } from '@/hooks/admin/useToolForm';
 
 const AdminToolEdit = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
   const [tool, setTool] = useState<Tool | null>(null);
   const isNew = !id || id === 'new';
+  const { isSubmitting, handleSubmit } = useToolForm(id || '');
 
   useEffect(() => {
     console.log('AdminToolEdit montado', { id, isNew });
@@ -48,80 +49,17 @@ const AdminToolEdit = () => {
         description: error.message || 'Ocorreu um erro ao carregar os dados da ferramenta.',
         variant: 'destructive',
       });
-      // Redireciona para a lista mesmo em caso de erro
       navigate('/admin/tools');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSubmit = async (data: any) => {
-    try {
-      setSaving(true);
-      console.log('Salvando ferramenta:', data);
-      
-      // Preparar os dados para salvar, garantindo que campos opcionais undefined sejam null
-      const toolData = {
-        ...data,
-        benefit_type: data.benefit_type || null,
-        benefit_title: data.benefit_title || null,
-        benefit_description: data.benefit_description || null,
-        benefit_link: data.benefit_link || null,
-        benefit_badge_url: data.benefit_badge_url || null,
-        updated_at: new Date().toISOString()
-      };
-      
-      if (isNew) {
-        // Adicionar created_at para novas ferramentas
-        toolData.created_at = new Date().toISOString();
-        
-        const { data: insertedData, error } = await supabase
-          .from('tools')
-          .insert([toolData])
-          .select();
-        
-        if (error) throw error;
-        
-        console.log('Ferramenta criada com sucesso:', insertedData);
-        toast({
-          title: 'Ferramenta criada',
-          description: 'A ferramenta foi criada com sucesso.',
-        });
-        
-        // Redirecionar após a criação ser concluída
-        setTimeout(() => navigate('/admin/tools'), 1000);
-      } else {
-        const { data: updatedData, error } = await supabase
-          .from('tools')
-          .update(toolData)
-          .eq('id', id)
-          .select();
-          
-        if (error) throw error;
-        
-        console.log('Ferramenta atualizada com sucesso:', updatedData);
-        toast({
-          title: 'Ferramenta atualizada',
-          description: 'As alterações foram salvas com sucesso.',
-        });
-        
-        // Atualizar o estado local com os dados atualizados
-        if (updatedData && updatedData.length > 0) {
-          setTool(updatedData[0] as Tool);
-        }
-        
-        // Redirecionar após um breve atraso para exibir a mensagem de sucesso
-        setTimeout(() => navigate('/admin/tools'), 1000);
-      }
-    } catch (error: any) {
-      console.error('Erro ao salvar ferramenta:', error);
-      toast({
-        title: 'Erro ao salvar',
-        description: error.message || 'Ocorreu um erro ao tentar salvar a ferramenta.',
-        variant: 'destructive',
-      });
-    } finally {
-      setSaving(false);
+  const onSubmit = async (data: any) => {
+    const success = await handleSubmit(data);
+    if (success) {
+      // Aguardar um momento para mostrar o feedback antes de redirecionar
+      setTimeout(() => navigate('/admin/tools'), 1500);
     }
   };
 
@@ -137,8 +75,8 @@ const AdminToolEdit = () => {
       
       <ToolForm
         initialData={tool || undefined}
-        onSubmit={handleSubmit}
-        isSubmitting={saving}
+        onSubmit={onSubmit}
+        isSubmitting={isSubmitting}
       />
     </div>
   );

@@ -23,6 +23,14 @@ export const toolFormSchema = z.object({
   benefit_description: z.string().optional(),
   benefit_link: z.string().url('URL inválida').optional().or(z.literal('')),
   benefit_badge_url: z.string().optional(),
-  // Campo auxiliar para rastrear modificações, com valor padrão true para novos formulários
   formModified: z.boolean().default(false)
+}).refine((data) => {
+  // Se has_member_benefit for true, os campos de benefício são obrigatórios
+  if (data.has_member_benefit) {
+    return !!data.benefit_type && !!data.benefit_title;
+  }
+  return true;
+}, {
+  message: "Tipo e título do benefício são obrigatórios quando há benefício para membros",
+  path: ["benefit_type"]
 });
