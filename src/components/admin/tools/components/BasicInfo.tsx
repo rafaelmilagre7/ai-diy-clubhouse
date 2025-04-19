@@ -57,6 +57,7 @@ export const BasicInfo = ({ form }: any) => {
                 </FormControl>
                 <SelectContent>
                   <SelectItem value="IA">Inteligência Artificial</SelectItem>
+                  <SelectItem value="API">API</SelectItem>
                   <SelectItem value="Automação">Automação</SelectItem>
                   <SelectItem value="No-Code">No-Code</SelectItem>
                   <SelectItem value="Integração">Integração</SelectItem>

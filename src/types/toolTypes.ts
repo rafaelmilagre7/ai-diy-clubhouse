@@ -1,5 +1,4 @@
-
-export type ToolCategory = 'IA' | 'Automação' | 'No-Code' | 'Integração' | 'Produtividade' | 'Outro';
+export type ToolCategory = 'IA' | 'API' | 'Automação' | 'No-Code' | 'Integração' | 'Produtividade' | 'Outro';
 
 export type BenefitType = 'discount' | 'exclusive' | 'free' | 'trial' | 'other';
 

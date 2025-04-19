@@ -24,6 +24,7 @@ export const CategorySelect = ({ form }: CategorySelectProps) => {
             </FormControl>
             <SelectContent>
               <SelectItem value="IA">IA</SelectItem>
+              <SelectItem value="API">API</SelectItem>
               <SelectItem value="Automação">Automação</SelectItem>
               <SelectItem value="No-Code">No-Code</SelectItem>
               <SelectItem value="Integração">Integração</SelectItem>
