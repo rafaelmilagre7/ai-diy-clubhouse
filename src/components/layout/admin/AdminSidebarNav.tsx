@@ -6,12 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { 
   LayoutDashboard, 
-  PlusCircle, 
+  ListTodo,
+  MessageSquare,
   Users, 
-  Settings, 
-  BarChart, 
-  Wrench,
-  Gift
+  BarChart,
+  Gift,
+  Settings,
+  Wrench
 } from "lucide-react";
 
 interface AdminSidebarNavProps {
@@ -32,14 +33,20 @@ export const AdminSidebarNav = ({ sidebarOpen }: AdminSidebarNavProps) => {
     {
       name: "Soluções",
       href: "/admin/solutions",
-      icon: <PlusCircle className="h-5 w-5" />,
-      active: pathname.includes("/admin/solutions") || pathname.includes("/admin/solution"),
+      icon: <ListTodo className="h-5 w-5" />,
+      active: pathname.includes("/admin/solutions"),
     },
     {
       name: "Ferramentas",
       href: "/admin/tools",
       icon: <Wrench className="h-5 w-5" />,
       active: pathname.includes("/admin/tools"),
+    },
+    {
+      name: "Sugestões",
+      href: "/admin/suggestions",
+      icon: <MessageSquare className="h-5 w-5" />,
+      active: pathname.includes("/admin/suggestions"),
     },
     {
       name: "Usuários",
