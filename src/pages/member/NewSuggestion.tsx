@@ -12,6 +12,7 @@ import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/auth';
 import { useSuggestionCreation } from '@/hooks/suggestions/useSuggestionCreation';
+import { useCategories } from '@/hooks/suggestions/useCategories';
 
 type FormValues = {
   title: string;
@@ -24,6 +25,7 @@ const NewSuggestionPage = () => {
   const { user } = useAuth();
   const { categories } = useSuggestions();
   const { isSubmitting, submitSuggestion } = useSuggestionCreation();
+  const { categories: categoriesList } = useCategories();
   
   const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<FormValues>({
     defaultValues: {
@@ -35,7 +37,7 @@ const NewSuggestionPage = () => {
 
   const selectedCategory = watch('category_id');
   
-  console.log("Categorias disponíveis:", categories);
+  console.log("Categorias disponíveis:", categoriesList);
   console.log("Usuário logado:", user);
 
   const onSubmit = async (data: FormValues) => {
@@ -113,7 +115,7 @@ const NewSuggestionPage = () => {
                   <SelectValue placeholder="Selecione uma categoria" />
                 </SelectTrigger>
                 <SelectContent>
-                  {categories.map((category) => (
+                  {categoriesList.map((category) => (
                     <SelectItem key={category.id} value={category.id}>
                       {category.name}
                     </SelectItem>

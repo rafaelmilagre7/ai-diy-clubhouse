@@ -1,10 +1,9 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useSuggestions } from '@/hooks/useSuggestions';
+import { useSuggestions } from '@/hooks/suggestions/useSuggestions';
 import { Plus, ThumbsUp, MessageCircle, Calendar } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -27,7 +26,6 @@ const SuggestionsPage = () => {
     refetch
   } = useSuggestions();
 
-  // Forçar refetch quando a página carregar
   useEffect(() => {
     console.log("Componente SuggestionsPage montado, buscando sugestões...");
     refetch().catch(error => {
@@ -36,7 +34,6 @@ const SuggestionsPage = () => {
     });
   }, [refetch]);
 
-  // Filtrar sugestões por pesquisa
   const filteredSuggestions = suggestions.filter(suggestion => 
     suggestion.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     suggestion.description.toLowerCase().includes(searchQuery.toLowerCase())
