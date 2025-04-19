@@ -5,6 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Plus, Trash, Video } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { FileUpload } from "@/components/ui/file-upload";
 
 export const VideoTutorials = ({ form }: any) => {
   const { fields, append, remove } = useFieldArray({
@@ -13,7 +15,7 @@ export const VideoTutorials = ({ form }: any) => {
   });
 
   const handleAddVideo = () => {
-    append({ title: "", url: "" });
+    append({ title: "", url: "", type: "youtube" });
   };
 
   return (
@@ -53,7 +55,7 @@ export const VideoTutorials = ({ form }: any) => {
           fields.map((field, index) => (
             <Card key={field.id} className="overflow-hidden">
               <CardContent className="p-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4">
                   <FormField
                     control={form.control}
                     name={`video_tutorials.${index}.title`}
@@ -70,15 +72,56 @@ export const VideoTutorials = ({ form }: any) => {
 
                   <FormField
                     control={form.control}
+                    name={`video_tutorials.${index}.type`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Tipo de Vídeo</FormLabel>
+                        <Select 
+                          value={field.value} 
+                          onValueChange={field.onChange}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecione o tipo" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="youtube">YouTube</SelectItem>
+                            <SelectItem value="upload">Upload de Vídeo</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
                     name={`video_tutorials.${index}.url`}
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>URL do Vídeo</FormLabel>
+                        <FormLabel>URL ou Upload do Vídeo</FormLabel>
                         <FormControl>
-                          <Input placeholder="https://www.youtube.com/watch?v=..." {...field} />
+                          {field.value?.type === 'upload' ? (
+                            <FileUpload
+                              bucketName="tool_files"
+                              onUploadComplete={(url) => field.onChange(url)}
+                              accept="video/*"
+                              maxSize={100}
+                              buttonText="Upload do Vídeo"
+                              fieldLabel="Selecione um vídeo"
+                            />
+                          ) : (
+                            <Input 
+                              placeholder="https://www.youtube.com/watch?v=..." 
+                              {...field}
+                            />
+                          )}
                         </FormControl>
                         <FormDescription>
-                          Links do YouTube, Vimeo ou outras plataformas
+                          {field.value?.type === 'upload' 
+                            ? 'Faça upload do vídeo (max: 100MB)' 
+                            : 'Links do YouTube, Vimeo ou outras plataformas'}
                         </FormDescription>
                         <FormMessage />
                       </FormItem>

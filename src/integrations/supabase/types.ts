@@ -473,6 +473,8 @@ export type Database = {
           tags: string[] | null
           updated_at: string
           video_tutorials: Json | null
+          video_type: string | null
+          video_url: string | null
         }
         Insert: {
           category: string
@@ -486,6 +488,8 @@ export type Database = {
           tags?: string[] | null
           updated_at?: string
           video_tutorials?: Json | null
+          video_type?: string | null
+          video_url?: string | null
         }
         Update: {
           category?: string
@@ -499,6 +503,8 @@ export type Database = {
           tags?: string[] | null
           updated_at?: string
           video_tutorials?: Json | null
+          video_type?: string | null
+          video_url?: string | null
         }
         Relationships: []
       }

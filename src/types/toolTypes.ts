@@ -4,6 +4,7 @@ export type ToolCategory = 'IA' | 'Automação' | 'No-Code' | 'Integração' | '
 export interface VideoTutorial {
   title: string;
   url: string;
+  type: 'youtube' | 'upload';
 }
 
 export interface Tool {
@@ -18,4 +19,6 @@ export interface Tool {
   status: boolean;
   created_at: string;
   updated_at: string;
+  video_url?: string;
+  video_type?: 'youtube' | 'upload';
 }

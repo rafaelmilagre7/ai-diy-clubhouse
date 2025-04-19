@@ -12,7 +12,8 @@ export const toolFormSchema = z.object({
   video_tutorials: z.array(
     z.object({
       title: z.string().min(1, 'Título é obrigatório'),
-      url: z.string().url('URL inválida')
+      url: z.string().url('URL inválida'),
+      type: z.enum(['youtube', 'upload']),
     })
   ).default([])
 });

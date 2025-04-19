@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { LogoUpload } from "./form/LogoUpload";
 
 export const BasicInfo = ({ form }: any) => {
   return (
@@ -68,22 +69,7 @@ export const BasicInfo = ({ form }: any) => {
           )}
         />
         
-        <FormField
-          control={form.control}
-          name="logo_url"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>URL do Logo</FormLabel>
-              <FormControl>
-                <Input placeholder="https://www.exemplo.com/logo.png" {...field} />
-              </FormControl>
-              <FormDescription>
-                URL da imagem do logo da ferramenta (opcional)
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <LogoUpload form={form} />
         
         <FormField
           control={form.control}
