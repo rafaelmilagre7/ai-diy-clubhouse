@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -7,7 +8,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft } from 'lucide-react';
-import { useSuggestions } from '@/hooks/suggestions/useSuggestions';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/auth';
@@ -23,7 +23,6 @@ type FormValues = {
 const NewSuggestionPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { categories } = useSuggestions();
   const { isSubmitting, submitSuggestion } = useSuggestionCreation();
   const { categories: categoriesList } = useCategories();
   
@@ -42,8 +41,14 @@ const NewSuggestionPage = () => {
 
   const onSubmit = async (data: FormValues) => {
     try {
+      if (!data.category_id) {
+        toast.error("Por favor, selecione uma categoria");
+        return;
+      }
+
       console.log("Enviando sugestão:", data);
       await submitSuggestion(data);
+      toast.success("Sugestão criada com sucesso!");
       navigate('/suggestions');
     } catch (error: any) {
       console.error('Erro ao enviar sugestão:', error);
@@ -124,6 +129,9 @@ const NewSuggestionPage = () => {
               </Select>
               {errors.category_id && (
                 <p className="text-sm text-red-500">{errors.category_id.message}</p>
+              )}
+              {!selectedCategory && (
+                <p className="text-sm text-amber-500">Selecione uma categoria para sua sugestão</p>
               )}
             </div>
 

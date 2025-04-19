@@ -20,6 +20,10 @@ export const useSuggestionCreation = () => {
         throw new Error("Você precisa estar logado para criar uma sugestão.");
       }
 
+      if (!values.category_id) {
+        throw new Error("A categoria é obrigatória.");
+      }
+
       setIsSubmitting(true);
       
       try {
@@ -37,7 +41,10 @@ export const useSuggestionCreation = () => {
           })
           .select();
 
-        if (error) throw error;
+        if (error) {
+          console.error("Erro ao criar sugestão:", error);
+          throw new Error(error.message || "Erro ao criar sugestão");
+        }
         
         // Registrar o voto automático do criador
         if (data && data.length > 0) {
@@ -55,12 +62,14 @@ export const useSuggestionCreation = () => {
         }
         
         return data;
+      } catch (error: any) {
+        console.error("Erro durante a criação da sugestão:", error);
+        throw error;
       } finally {
         setIsSubmitting(false);
       }
     },
     onSuccess: () => {
-      toast.success("Sugestão criada com sucesso!");
       queryClient.invalidateQueries({ queryKey: ['suggestions'] });
     },
     onError: (error: any) => {

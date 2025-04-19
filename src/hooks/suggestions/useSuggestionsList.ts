@@ -20,7 +20,8 @@ export const useSuggestionsList = (categoryId?: string, filter: 'popular' | 'rec
           *,
           profiles(name, avatar_url),
           category:category_id(name)
-        `);
+        `)
+        .eq('is_hidden', false); // Apenas sugestões não ocultas
 
       if (categoryId) {
         query = query.eq('category_id', categoryId);
