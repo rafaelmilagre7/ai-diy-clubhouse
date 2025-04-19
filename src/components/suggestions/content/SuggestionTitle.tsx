@@ -43,4 +43,3 @@ const SuggestionTitle = ({
 };
 
 export default SuggestionTitle;
-

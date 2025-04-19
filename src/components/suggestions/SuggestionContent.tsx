@@ -93,4 +93,3 @@ const SuggestionContent = ({
 };
 
 export default SuggestionContent;
-

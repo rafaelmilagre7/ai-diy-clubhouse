@@ -14,4 +14,3 @@ const SuggestionDescription = ({ description }: SuggestionDescriptionProps) => {
 };
 
 export default SuggestionDescription;
-

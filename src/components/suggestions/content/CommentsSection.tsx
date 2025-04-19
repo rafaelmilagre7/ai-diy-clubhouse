@@ -44,4 +44,3 @@ const CommentsSection = ({
 };
 
 export default CommentsSection;
-
