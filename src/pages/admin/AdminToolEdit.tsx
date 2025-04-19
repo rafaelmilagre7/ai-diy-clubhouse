@@ -102,10 +102,10 @@ const AdminToolEdit = () => {
         });
       }
       
-      // Garantir que o navegador complete o redirecionamento após salvar
+      // Aguardar um momento para a notificação ser exibida antes do redirecionamento
       setTimeout(() => {
         navigate('/admin/tools');
-      }, 500);
+      }, 1000);
       
     } catch (error: any) {
       console.error('Erro ao salvar ferramenta:', error);
@@ -114,7 +114,6 @@ const AdminToolEdit = () => {
         description: error.message || 'Ocorreu um erro ao tentar salvar a ferramenta.',
         variant: 'destructive',
       });
-    } finally {
       setSaving(false);
     }
   };

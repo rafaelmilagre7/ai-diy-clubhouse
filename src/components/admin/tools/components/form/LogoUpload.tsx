@@ -28,18 +28,29 @@ export const LogoUpload = ({ form }: LogoUploadProps) => {
   const handleUploadComplete = (url: string) => {
     // Verifica se o URL é diferente antes de atualizar
     if (url !== form.getValues('logo_url')) {
+      console.log('Atualizando logo_url para:', url);
+      
+      // Usar setValue com as flags adequadas
       form.setValue('logo_url', url, { 
         shouldDirty: true,
         shouldTouch: true,
         shouldValidate: true 
       });
       
-      // Notificar os ouvintes sobre as alterações - sem tentar redefinir a propriedade isDirty
-      form.trigger();
+      // Forçar o formulário a reconhecer a mudança
+      form.trigger('logo_url');
       
-      // Em vez de tentar modificar diretamente o objeto formState,
-      // vamos forçar uma mudança de estado que o React Hook Form detectará
+      // Atualizar o estado local
       setLogoUrl(url);
+      
+      // Forçar a atualização do estado do formulário
+      setTimeout(() => {
+        const updatedFormState = form.formState;
+        console.log('Estado do formulário após upload:', { 
+          isDirty: updatedFormState.isDirty, 
+          touchedFields: updatedFormState.touchedFields 
+        });
+      }, 100);
     }
   };
 

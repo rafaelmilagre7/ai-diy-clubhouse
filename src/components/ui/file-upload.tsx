@@ -81,8 +81,13 @@ export const FileUpload: React.FC<FileUploadProps> = ({
       const publicURL = publicURLData.publicUrl;
       console.log('URL pública do arquivo:', publicURL);
       
+      // Atualizar o estado local
       setUploadedFileUrl(publicURL);
-      onUploadComplete(publicURL);
+      
+      // Garantir que onUploadComplete seja chamado após a conclusão
+      setTimeout(() => {
+        onUploadComplete(publicURL, file.name, file.size);
+      }, 100);
       
       toast({
         title: 'Upload concluído',
