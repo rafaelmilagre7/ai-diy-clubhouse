@@ -19,7 +19,7 @@ const ResourceMaterialsTab: React.FC<ResourceMaterialsTabProps> = ({
     materials,
     loading,
     handleUploadComplete,
-    handleRemoveMaterial
+    handleRemoveResource
   } = useResourceMaterialsTab(form, solutionId);
 
   return (
@@ -32,7 +32,7 @@ const ResourceMaterialsTab: React.FC<ResourceMaterialsTabProps> = ({
       <MaterialsList 
         materials={materials} 
         loading={loading} 
-        onRemove={handleRemoveMaterial} 
+        onRemove={handleRemoveResource} 
       />
       
       {/* Hidden input to keep form working */}
