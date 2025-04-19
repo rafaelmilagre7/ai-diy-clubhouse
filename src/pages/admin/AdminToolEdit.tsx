@@ -7,7 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import { ToolForm } from '@/components/admin/tools/ToolForm';
 import LoadingScreen from '@/components/common/LoadingScreen';
 import { useToolForm } from '@/hooks/admin/useToolForm';
-import { ToolFormValues } from '@/components/admin/tools/types/toolFormTypes';
+import { ToolFormValues } from '@/components/admin/tools/types/toolFormValues';
 
 const AdminToolEdit = () => {
   const { id } = useParams<{ id: string }>();
@@ -15,8 +15,9 @@ const AdminToolEdit = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [tool, setTool] = useState<Tool | null>(null);
-  const isNew = !id || id === 'new';
-  const { isSubmitting, handleSubmit } = useToolForm(id || '');
+  const toolId = id || 'new';
+  const isNew = toolId === 'new';
+  const { isSubmitting, handleSubmit } = useToolForm(toolId);
 
   useEffect(() => {
     console.log('AdminToolEdit montado', { id, isNew });
@@ -26,7 +27,7 @@ const AdminToolEdit = () => {
     } else {
       setLoading(false);
     }
-  }, [id]);
+  }, [id, isNew]);
 
   const fetchTool = async () => {
     try {
@@ -61,18 +62,18 @@ const AdminToolEdit = () => {
     const success = await handleSubmit(data);
     
     if (success) {
-      console.log('Ferramenta atualizada com sucesso, redirecionando...');
+      console.log('Ferramenta salva com sucesso, redirecionando...');
       // Aguardar um momento para mostrar o feedback antes de redirecionar
       setTimeout(() => navigate('/admin/tools'), 1500);
     } else {
-      console.log('Erro ao atualizar ferramenta, permanecendo na página');
+      console.log('Erro ao salvar ferramenta, permanecendo na página');
     }
     
     return success;
   };
 
   if (loading) {
-    return <LoadingScreen message="Carregando dados da ferramenta..." />;
+    return <LoadingScreen message={isNew ? "Preparando formulário..." : "Carregando dados da ferramenta..."} />;
   }
 
   return (

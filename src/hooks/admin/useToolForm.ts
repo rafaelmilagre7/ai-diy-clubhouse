@@ -35,11 +35,30 @@ export const useToolForm = (toolId: string) => {
 
       console.log('Dados formatados para salvar:', toolData);
 
-      const { error, data: responseData } = await supabase
-        .from('tools')
-        .update(toolData)
-        .eq('id', toolId)
-        .select();
+      let response;
+
+      // Verifica se é uma nova ferramenta ou atualização
+      if (toolId === 'new') {
+        // Adicionando created_at para novas ferramentas
+        const newToolData = {
+          ...toolData,
+          created_at: new Date().toISOString()
+        };
+
+        response = await supabase
+          .from('tools')
+          .insert(newToolData)
+          .select();
+      } else {
+        // Atualização de ferramenta existente
+        response = await supabase
+          .from('tools')
+          .update(toolData)
+          .eq('id', toolId)
+          .select();
+      }
+
+      const { error, data: responseData } = response;
 
       if (error) {
         console.error('Erro do Supabase:', error);
@@ -49,8 +68,10 @@ export const useToolForm = (toolId: string) => {
       console.log('Resposta do Supabase:', responseData);
 
       toast({
-        title: "Ferramenta atualizada",
-        description: "As alterações foram salvas com sucesso",
+        title: toolId === 'new' ? "Ferramenta criada" : "Ferramenta atualizada",
+        description: toolId === 'new' 
+          ? "A nova ferramenta foi adicionada com sucesso" 
+          : "As alterações foram salvas com sucesso",
       });
 
       return true;
