@@ -51,6 +51,9 @@ export const ToolForm = ({ initialData, onSubmit, isSubmitting }: ToolFormProps)
     onSubmit(data);
   };
 
+  // Corrigindo a linha problemática - verificamos corretamente se initialData existe e se formChanged é falso
+  const isSaveDisabled = isSubmitting || (!formChanged && initialData !== undefined);
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-8">
@@ -63,7 +66,7 @@ export const ToolForm = ({ initialData, onSubmit, isSubmitting }: ToolFormProps)
           <Button 
             type="submit" 
             className="w-full" 
-            disabled={isSubmitting || (!formChanged && initialData)}
+            disabled={isSaveDisabled}
           >
             {isSubmitting ? 'Salvando...' : 'Salvar Ferramenta'}
           </Button>
