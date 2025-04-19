@@ -18,6 +18,8 @@ const AdminToolEdit = () => {
 
   // Uso correto de useEffect em vez de useState com callback
   useEffect(() => {
+    console.log('AdminToolEdit montado', { id, isNew });
+    
     if (!isNew) {
       fetchTool();
     } else {
@@ -28,6 +30,8 @@ const AdminToolEdit = () => {
   const fetchTool = async () => {
     try {
       setLoading(true);
+      console.log('Buscando ferramenta pelo ID:', id);
+      
       const { data, error } = await supabase
         .from('tools')
         .select('*')
@@ -35,6 +39,8 @@ const AdminToolEdit = () => {
         .single();
 
       if (error) throw error;
+      
+      console.log('Ferramenta encontrada:', data);
       setTool(data);
     } catch (error: any) {
       console.error('Erro ao carregar ferramenta:', error);
@@ -52,6 +58,7 @@ const AdminToolEdit = () => {
   const handleSubmit = async (data: any) => {
     try {
       setSaving(true);
+      console.log('Salvando ferramenta:', data);
       
       if (isNew) {
         const { error } = await supabase.from('tools').insert([data]);

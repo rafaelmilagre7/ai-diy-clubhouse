@@ -16,6 +16,9 @@ const ProtectedRoute = ({
   const { user, isAdmin, isLoading } = useAuth();
   const location = useLocation();
   
+  // Adicionando mais informações de debug
+  console.log("ProtectedRoute:", { user, isAdmin, isLoading, requireAdmin, path: location.pathname });
+  
   // Show loading screen during the loading state
   if (isLoading) {
     return <LoadingScreen message="Verificando sua autenticação..." />;
@@ -28,6 +31,7 @@ const ProtectedRoute = ({
   
   // Redirect to dashboard if trying to access admin route without admin permissions
   if (requireAdmin && !isAdmin) {
+    console.log("Usuário não é admin, redirecionando para dashboard");
     return <Navigate to="/dashboard" replace />;
   }
 

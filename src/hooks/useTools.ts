@@ -7,15 +7,18 @@ export const useTools = () => {
   const query = useQuery<Tool[], Error>({
     queryKey: ['tools'],
     queryFn: async () => {
+      console.log('Buscando ferramentas...');
       const { data, error } = await supabase
         .from('tools')
         .select('*')
         .order('name');
 
       if (error) {
+        console.error('Erro ao buscar ferramentas:', error);
         throw error;
       }
 
+      console.log('Ferramentas encontradas:', data);
       return data as Tool[];
     }
   });
