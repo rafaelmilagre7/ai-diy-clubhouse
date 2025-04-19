@@ -7,6 +7,7 @@ import { Plus, Trash, Video } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FileUpload } from "@/components/ui/file-upload";
+import { useEffect } from "react";
 
 export const VideoTutorials = ({ form }: any) => {
   const { fields, append, remove } = useFieldArray({
@@ -14,8 +15,17 @@ export const VideoTutorials = ({ form }: any) => {
     name: "video_tutorials",
   });
 
+  // Garantir que qualquer mudança nos vídeos force uma reavaliação do estado do formulário
+  useEffect(() => {
+    if (fields.length > 0) {
+      form.trigger("video_tutorials");
+    }
+  }, [fields, form]);
+
   const handleAddVideo = () => {
     append({ title: "", url: "", type: "youtube" });
+    // Importante: Marcar formulário como modificado após adicionar vídeo
+    form.setValue("formModified", true, { shouldDirty: true });
   };
 
   return (
@@ -63,7 +73,15 @@ export const VideoTutorials = ({ form }: any) => {
                       <FormItem>
                         <FormLabel>Título do Vídeo</FormLabel>
                         <FormControl>
-                          <Input placeholder="Ex: Como configurar a ferramenta" {...field} />
+                          <Input 
+                            placeholder="Ex: Como configurar a ferramenta" 
+                            {...field} 
+                            onChange={(e) => {
+                              field.onChange(e);
+                              // Marcar que houve mudança
+                              form.setValue("formModified", true, { shouldDirty: true });
+                            }}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -78,7 +96,11 @@ export const VideoTutorials = ({ form }: any) => {
                         <FormLabel>Tipo de Vídeo</FormLabel>
                         <Select 
                           value={field.value} 
-                          onValueChange={field.onChange}
+                          onValueChange={(value) => {
+                            field.onChange(value);
+                            // Marcar que houve mudança
+                            form.setValue("formModified", true, { shouldDirty: true });
+                          }}
                         >
                           <FormControl>
                             <SelectTrigger>
@@ -109,7 +131,11 @@ export const VideoTutorials = ({ form }: any) => {
                             {fieldType === 'upload' ? (
                               <FileUpload
                                 bucketName="tool_files"
-                                onUploadComplete={(url) => field.onChange(url)}
+                                onUploadComplete={(url) => {
+                                  field.onChange(url);
+                                  // Marcar que houve mudança após upload
+                                  form.setValue("formModified", true, { shouldDirty: true });
+                                }}
                                 accept="video/*"
                                 maxSize={100}
                                 buttonText="Upload do Vídeo"
@@ -119,7 +145,11 @@ export const VideoTutorials = ({ form }: any) => {
                               <Input 
                                 placeholder="https://www.youtube.com/watch?v=..." 
                                 value={fieldValue}
-                                onChange={field.onChange}
+                                onChange={(e) => {
+                                  field.onChange(e);
+                                  // Marcar que houve mudança
+                                  form.setValue("formModified", true, { shouldDirty: true });
+                                }}
                               />
                             )}
                           </FormControl>
@@ -140,7 +170,11 @@ export const VideoTutorials = ({ form }: any) => {
                   variant="ghost"
                   size="icon"
                   className="mt-2 text-destructive hover:text-destructive hover:bg-destructive/10"
-                  onClick={() => remove(index)}
+                  onClick={() => {
+                    remove(index);
+                    // Marcar que houve mudança após remoção
+                    form.setValue("formModified", true, { shouldDirty: true });
+                  }}
                 >
                   <Trash className="h-4 w-4" />
                 </Button>

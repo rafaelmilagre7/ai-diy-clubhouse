@@ -11,6 +11,7 @@ import { toolFormSchema } from './schema/toolFormSchema';
 import { ToolFormProps, ToolFormValues } from './types/toolFormTypes';
 import { BenefitType } from '@/types/toolTypes';
 import { useEffect, useState, useRef } from 'react';
+import { toast } from '@/hooks/use-toast';
 
 export const ToolForm = ({ initialData, onSubmit, isSubmitting }: ToolFormProps) => {
   // Garantir que benefit_type seja sempre um dos valores válidos
@@ -34,7 +35,8 @@ export const ToolForm = ({ initialData, onSubmit, isSubmitting }: ToolFormProps)
       benefit_title: initialData?.benefit_title || '',
       benefit_description: initialData?.benefit_description || '',
       benefit_link: initialData?.benefit_link || '',
-      benefit_badge_url: initialData?.benefit_badge_url || ''
+      benefit_badge_url: initialData?.benefit_badge_url || '',
+      formModified: false // Novo campo para controle de mudanças
     }
   });
 
@@ -53,6 +55,13 @@ export const ToolForm = ({ initialData, onSubmit, isSubmitting }: ToolFormProps)
       
       // Se não houver dados iniciais, o formulário é novo e deve estar sempre habilitado
       if (!initialData) {
+        setFormChanged(true);
+        return;
+      }
+      
+      // Verificar se o formulário foi explicitamente marcado como modificado
+      if (form.getValues('formModified')) {
+        console.log('Formulário marcado como modificado explicitamente');
         setFormChanged(true);
         return;
       }
@@ -80,8 +89,26 @@ export const ToolForm = ({ initialData, onSubmit, isSubmitting }: ToolFormProps)
   }, [form, initialData]);
 
   const handleFormSubmit = (data: ToolFormValues) => {
-    console.log("Formulário enviado:", data);
-    onSubmit(data);
+    try {
+      console.log("Formulário enviado:", data);
+      
+      // Remover campos auxiliares antes de enviar para o backend
+      const { formModified, ...submitData } = data;
+      
+      onSubmit(submitData);
+      
+      toast({
+        title: "Formulário enviado",
+        description: "Salvando alterações...",
+      });
+    } catch (error) {
+      console.error("Erro ao enviar formulário:", error);
+      toast({
+        title: "Erro ao salvar",
+        description: "Ocorreu um erro ao enviar o formulário",
+        variant: "destructive"
+      });
+    }
   };
 
   // Garantir que o botão de salvar seja habilitado quando houver mudanças

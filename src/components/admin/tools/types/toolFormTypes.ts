@@ -22,6 +22,7 @@ export interface ToolFormValues {
   benefit_description?: string;
   benefit_link?: string;
   benefit_badge_url?: string;
+  formModified?: boolean; // Campo auxiliar para rastrear modificações no formulário
 }
 
 export interface VideoTutorial {

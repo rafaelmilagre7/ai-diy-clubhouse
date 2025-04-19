@@ -22,5 +22,7 @@ export const toolFormSchema = z.object({
   benefit_title: z.string().optional(),
   benefit_description: z.string().optional(),
   benefit_link: z.string().url('URL inválida').optional().or(z.literal('')),
-  benefit_badge_url: z.string().optional()
+  benefit_badge_url: z.string().optional(),
+  // Campo auxiliar para rastrear modificações, especialmente em arrays
+  formModified: z.boolean().optional()
 });
