@@ -1,4 +1,16 @@
-export type ToolCategory = 'IA' | 'API' | 'Automação' | 'No-Code' | 'Integração' | 'Produtividade' | 'Outro';
+export type ToolCategory = 
+  | 'Modelos de IA e Interfaces'
+  | 'Geração de Conteúdo Visual'
+  | 'Geração e Processamento de Áudio'
+  | 'Automação e Integrações'
+  | 'Comunicação e Atendimento'
+  | 'Captura e Análise de Dados'
+  | 'Pesquisa e Síntese de Informações'
+  | 'Gestão de Documentos e Conteúdo'
+  | 'Marketing e CRM'
+  | 'Produtividade e Organização'
+  | 'Desenvolvimento e Código'
+  | 'Plataformas de Mídia';
 
 export type BenefitType = 'discount' | 'exclusive' | 'free' | 'trial' | 'other';
 

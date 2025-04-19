@@ -15,12 +15,18 @@ interface ToolsHeaderProps {
 
 const categories: { value: string | null; label: string }[] = [
   { value: null, label: 'Todas' },
-  { value: 'IA', label: 'IA' },
-  { value: 'Automação', label: 'Automação' },
-  { value: 'No-Code', label: 'No-Code' },
-  { value: 'Integração', label: 'Integração' },
-  { value: 'Produtividade', label: 'Produtividade' },
-  { value: 'Outro', label: 'Outros' },
+  { value: 'Modelos de IA e Interfaces', label: 'Modelos de IA e Interfaces' },
+  { value: 'Geração de Conteúdo Visual', label: 'Geração de Conteúdo Visual' },
+  { value: 'Geração e Processamento de Áudio', label: 'Geração e Processamento de Áudio' },
+  { value: 'Automação e Integrações', label: 'Automação e Integrações' },
+  { value: 'Comunicação e Atendimento', label: 'Comunicação e Atendimento' },
+  { value: 'Captura e Análise de Dados', label: 'Captura e Análise de Dados' },
+  { value: 'Pesquisa e Síntese de Informações', label: 'Pesquisa e Síntese de Informações' },
+  { value: 'Gestão de Documentos e Conteúdo', label: 'Gestão de Documentos e Conteúdo' },
+  { value: 'Marketing e CRM', label: 'Marketing e CRM' },
+  { value: 'Produtividade e Organização', label: 'Produtividade e Organização' },
+  { value: 'Desenvolvimento e Código', label: 'Desenvolvimento e Código' },
+  { value: 'Plataformas de Mídia', label: 'Plataformas de Mídia' },
 ];
 
 export const ToolsHeader = ({
