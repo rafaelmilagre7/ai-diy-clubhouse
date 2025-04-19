@@ -1,20 +1,20 @@
-
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Textarea } from '@/components/ui/textarea';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Skeleton } from '@/components/ui/skeleton';
+import React, { useState } from 'react';
+import { useParams } from 'react-router-dom';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, ThumbsUp, ThumbsDown, MessageCircle, Calendar } from 'lucide-react';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import { Calendar } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/auth';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
-import { Suggestion, SuggestionComment } from '@/types/suggestionTypes';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+
+import SuggestionHeader from '@/components/suggestions/SuggestionHeader';
+import SuggestionVoting from '@/components/suggestions/SuggestionVoting';
+import CommentForm from '@/components/suggestions/CommentForm';
+import CommentsList from '@/components/suggestions/CommentsList';
 
 const statusMap = {
   new: { label: 'Nova', color: 'bg-blue-500' },
@@ -27,9 +27,7 @@ const statusMap = {
 
 const SuggestionDetailsPage = () => {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
   const { user } = useAuth();
-  const { toast } = useToast();
   const [comment, setComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -118,14 +116,12 @@ const SuggestionDetailsPage = () => {
     }
 
     try {
-      // Se já votou com o mesmo tipo, remove o voto
       if (userVote && userVote.vote_type === voteType) {
         await supabase
           .from('suggestion_votes')
           .delete()
           .eq('id', userVote.id);
       } else {
-        // Se não votou ou votou com tipo diferente, insere/atualiza
         await supabase
           .from('suggestion_votes')
           .upsert({
@@ -136,8 +132,6 @@ const SuggestionDetailsPage = () => {
             onConflict: 'suggestion_id,user_id'
           });
       }
-
-      // Refetch suggestion to update vote counts
       refetch();
     } catch (error: any) {
       console.error('Erro ao votar:', error);
@@ -183,7 +177,7 @@ const SuggestionDetailsPage = () => {
 
       setComment('');
       refetchComments();
-      refetch(); // Para atualizar o contador de comentários
+      refetch();
       
       toast({
         title: "Comentário enviado",
@@ -204,10 +198,7 @@ const SuggestionDetailsPage = () => {
   if (isLoading) {
     return (
       <div className="container py-6 space-y-6">
-        <Button variant="ghost" className="flex items-center gap-2 mb-4" disabled>
-          <ArrowLeft size={16} />
-          Voltar para sugestões
-        </Button>
+        <SuggestionHeader />
         <Card>
           <CardHeader>
             <Skeleton className="h-8 w-3/4 mb-2" />
@@ -228,14 +219,7 @@ const SuggestionDetailsPage = () => {
   if (error || !suggestion) {
     return (
       <div className="container py-6">
-        <Button 
-          variant="ghost" 
-          className="flex items-center gap-2 mb-4" 
-          onClick={() => navigate('/suggestions')}
-        >
-          <ArrowLeft size={16} />
-          Voltar para sugestões
-        </Button>
+        <SuggestionHeader />
         <Card>
           <CardHeader>
             <CardTitle>Sugestão não encontrada</CardTitle>
@@ -243,9 +227,6 @@ const SuggestionDetailsPage = () => {
               A sugestão que você está procurando não existe ou foi removida.
             </CardDescription>
           </CardHeader>
-          <CardFooter>
-            <Button onClick={() => navigate('/suggestions')}>Ver todas as sugestões</Button>
-          </CardFooter>
         </Card>
       </div>
     );
@@ -256,14 +237,7 @@ const SuggestionDetailsPage = () => {
 
   return (
     <div className="container py-6 space-y-6">
-      <Button 
-        variant="ghost" 
-        className="flex items-center gap-2 mb-4" 
-        onClick={() => navigate('/suggestions')}
-      >
-        <ArrowLeft size={16} />
-        Voltar para sugestões
-      </Button>
+      <SuggestionHeader />
 
       <Card>
         <CardHeader>
@@ -283,6 +257,7 @@ const SuggestionDetailsPage = () => {
             <Badge className={`${status.color} text-white`}>{status.label}</Badge>
           </div>
         </CardHeader>
+        
         <CardContent className="space-y-6">
           <div className="prose max-w-none dark:prose-invert">
             <p className="whitespace-pre-line">{suggestion.description}</p>
@@ -300,26 +275,12 @@ const SuggestionDetailsPage = () => {
               </div>
             </div>
 
-            <div className="flex items-center space-x-2">
-              <Button 
-                variant={userVote?.vote_type === 'upvote' ? 'default' : 'outline'} 
-                size="sm"
-                onClick={() => handleVote('upvote')}
-                disabled={voteLoading}
-              >
-                <ThumbsUp size={16} className="mr-1" />
-                {suggestion.upvotes || 0}
-              </Button>
-              <Button 
-                variant={userVote?.vote_type === 'downvote' ? 'default' : 'outline'} 
-                size="sm"
-                onClick={() => handleVote('downvote')}
-                disabled={voteLoading}
-              >
-                <ThumbsDown size={16} className="mr-1" />
-                {suggestion.downvotes || 0}
-              </Button>
-            </div>
+            <SuggestionVoting
+              suggestion={suggestion}
+              userVote={userVote}
+              voteLoading={voteLoading}
+              onVote={handleVote}
+            />
           </div>
 
           <div>
@@ -328,59 +289,17 @@ const SuggestionDetailsPage = () => {
               Comentários ({comments.length})
             </h3>
 
-            <form onSubmit={handleSubmitComment} className="mb-6">
-              <Textarea
-                placeholder="Adicione um comentário..."
-                value={comment}
-                onChange={(e) => setComment(e.target.value)}
-                className="mb-2"
-              />
-              <div className="flex justify-end">
-                <Button type="submit" disabled={isSubmitting || !comment.trim()}>
-                  {isSubmitting ? 'Enviando...' : 'Comentar'}
-                </Button>
-              </div>
-            </form>
+            <CommentForm
+              comment={comment}
+              isSubmitting={isSubmitting}
+              onCommentChange={setComment}
+              onSubmit={handleSubmitComment}
+            />
 
-            {commentsLoading ? (
-              <div className="space-y-4">
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="border rounded-lg p-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Skeleton className="h-8 w-8 rounded-full" />
-                      <Skeleton className="h-4 w-32" />
-                    </div>
-                    <Skeleton className="h-12 w-full" />
-                  </div>
-                ))}
-              </div>
-            ) : comments.length === 0 ? (
-              <div className="text-center py-8 border border-dashed rounded-lg">
-                <MessageCircle className="h-10 w-10 mx-auto text-muted-foreground mb-2" />
-                <h3 className="text-lg font-medium">Nenhum comentário ainda</h3>
-                <p className="text-muted-foreground text-sm">Seja o primeiro a comentar nesta sugestão.</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {comments.map((comment) => (
-                  <div key={comment.id} className="border rounded-lg p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <Avatar className="h-8 w-8">
-                          <AvatarImage src={comment.user?.avatar_url || ''} />
-                          <AvatarFallback>{comment.user?.name?.charAt(0) || '?'}</AvatarFallback>
-                        </Avatar>
-                        <span className="font-medium text-sm">{comment.user?.name || 'Usuário'}</span>
-                      </div>
-                      <span className="text-xs text-muted-foreground">
-                        {format(new Date(comment.created_at), "dd/MM/yyyy HH:mm")}
-                      </span>
-                    </div>
-                    <p className="text-sm whitespace-pre-line">{comment.content}</p>
-                  </div>
-                ))}
-              </div>
-            )}
+            <CommentsList
+              comments={comments}
+              isLoading={commentsLoading}
+            />
           </div>
         </CardContent>
       </Card>
