@@ -21,4 +21,10 @@ export interface Tool {
   updated_at: string;
   video_url?: string;
   video_type?: 'youtube' | 'upload';
+  has_member_benefit?: boolean;
+  benefit_title?: string;
+  benefit_description?: string;
+  benefit_link?: string;
+  benefit_badge_url?: string;
+  benefit_clicks?: number;
 }

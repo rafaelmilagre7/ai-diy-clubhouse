@@ -15,5 +15,10 @@ export const toolFormSchema = z.object({
       url: z.string().url('URL inválida'),
       type: z.enum(['youtube', 'upload']),
     })
-  ).default([])
+  ).default([]),
+  has_member_benefit: z.boolean().default(false),
+  benefit_title: z.string().optional(),
+  benefit_description: z.string().optional(),
+  benefit_link: z.string().url('URL inválida').optional(),
+  benefit_badge_url: z.string().optional()
 });

@@ -16,9 +16,15 @@ export interface ToolFormValues {
   logo_url: string;
   tags: string[];
   video_tutorials: VideoTutorial[];
+  has_member_benefit?: boolean;
+  benefit_title?: string;
+  benefit_description?: string;
+  benefit_link?: string;
+  benefit_badge_url?: string;
 }
 
 export interface VideoTutorial {
   title: string;
   url: string;
+  type: 'youtube' | 'upload';
 }

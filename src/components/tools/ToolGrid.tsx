@@ -3,7 +3,7 @@ import { Tool } from '@/types/toolTypes';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ExternalLink } from 'lucide-react';
+import { ExternalLink, Gift } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface ToolGridProps {
@@ -35,7 +35,7 @@ interface ToolCardProps {
 const ToolCard = ({ tool }: ToolCardProps) => {
   return (
     <Card className="flex flex-col h-full border overflow-hidden hover:shadow-md transition-shadow">
-      <CardHeader className="pb-3 pt-6 px-6 flex-row items-center gap-4">
+      <CardHeader className="pb-3 pt-6 px-6 flex-row items-center gap-4 relative">
         <div className="h-12 w-12 rounded-lg bg-gray-100 border flex items-center justify-center overflow-hidden flex-shrink-0">
           {tool.logo_url ? (
             <img 
@@ -51,9 +51,17 @@ const ToolCard = ({ tool }: ToolCardProps) => {
         </div>
         <div>
           <h3 className="font-semibold text-lg line-clamp-1">{tool.name}</h3>
-          <Badge variant="outline" className="bg-[#0ABAB5]/10 text-[#0ABAB5]">
-            {tool.category}
-          </Badge>
+          <div className="flex flex-wrap gap-2">
+            <Badge variant="outline" className="bg-[#0ABAB5]/10 text-[#0ABAB5]">
+              {tool.category}
+            </Badge>
+            {tool.has_member_benefit && (
+              <Badge className="bg-[#10b981] hover:bg-[#10b981]/90">
+                <Gift className="h-3 w-3 mr-1" />
+                Benefício Membro
+              </Badge>
+            )}
+          </div>
         </div>
       </CardHeader>
       <CardContent className="px-6 flex-1">

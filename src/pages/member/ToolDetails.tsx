@@ -9,9 +9,9 @@ import { ExternalLink, ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Skeleton } from '@/components/ui/skeleton';
 import LoadingScreen from '@/components/common/LoadingScreen';
 import { YoutubeEmbed } from '@/components/common/YoutubeEmbed';
+import { MemberBenefitModal } from '@/components/tools/MemberBenefitModal';
 
 const ToolDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -140,10 +140,16 @@ const ToolDetails = () => {
           </div>
         </div>
         
-        <Button className="bg-[#0ABAB5] hover:bg-[#0ABAB5]/90" onClick={() => window.open(tool.official_url, '_blank')}>
-          <ExternalLink className="mr-2 h-4 w-4" />
-          Visitar website
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          {tool.has_member_benefit && tool.benefit_link && (
+            <MemberBenefitModal tool={tool} />
+          )}
+          
+          <Button className="bg-[#0ABAB5] hover:bg-[#0ABAB5]/90" onClick={() => window.open(tool.official_url, '_blank')}>
+            <ExternalLink className="mr-2 h-4 w-4" />
+            Visitar website
+          </Button>
+        </div>
       </div>
       
       {/* Conteúdo principal */}
@@ -154,6 +160,18 @@ const ToolDetails = () => {
             <CardContent className="pt-6">
               <h2 className="text-xl font-semibold mb-4">Sobre a ferramenta</h2>
               <p className="text-gray-700 whitespace-pre-line">{tool.description}</p>
+              
+              {/* Exibir benefício de forma destacada se existir */}
+              {tool.has_member_benefit && (
+                <div className="mt-6 p-4 bg-[#10b981]/10 rounded-lg border border-[#10b981]/30">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Badge className="bg-[#10b981]">Benefício Exclusivo</Badge>
+                    <h3 className="font-medium">{tool.benefit_title}</h3>
+                  </div>
+                  <p className="text-sm mb-3">{tool.benefit_description}</p>
+                  <MemberBenefitModal tool={tool} size="sm" variant="outline" />
+                </div>
+              )}
             </CardContent>
           </Card>
           

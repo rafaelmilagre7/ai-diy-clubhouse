@@ -81,6 +81,38 @@ export type Database = {
         }
         Relationships: []
       }
+      benefit_clicks: {
+        Row: {
+          benefit_link: string
+          clicked_at: string | null
+          id: string
+          tool_id: string
+          user_id: string
+        }
+        Insert: {
+          benefit_link: string
+          clicked_at?: string | null
+          id?: string
+          tool_id: string
+          user_id: string
+        }
+        Update: {
+          benefit_link?: string
+          clicked_at?: string | null
+          id?: string
+          tool_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "benefit_clicks_tool_id_fkey"
+            columns: ["tool_id"]
+            isOneToOne: false
+            referencedRelation: "tools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       implementation_checkpoints: {
         Row: {
           checkpoint_order: number
@@ -462,9 +494,15 @@ export type Database = {
       }
       tools: {
         Row: {
+          benefit_badge_url: string | null
+          benefit_clicks: number | null
+          benefit_description: string | null
+          benefit_link: string | null
+          benefit_title: string | null
           category: string
           created_at: string
           description: string
+          has_member_benefit: boolean | null
           id: string
           logo_url: string | null
           name: string
@@ -477,9 +515,15 @@ export type Database = {
           video_url: string | null
         }
         Insert: {
+          benefit_badge_url?: string | null
+          benefit_clicks?: number | null
+          benefit_description?: string | null
+          benefit_link?: string | null
+          benefit_title?: string | null
           category: string
           created_at?: string
           description: string
+          has_member_benefit?: boolean | null
           id?: string
           logo_url?: string | null
           name: string
@@ -492,9 +536,15 @@ export type Database = {
           video_url?: string | null
         }
         Update: {
+          benefit_badge_url?: string | null
+          benefit_clicks?: number | null
+          benefit_description?: string | null
+          benefit_link?: string | null
+          benefit_title?: string | null
           category?: string
           created_at?: string
           description?: string
+          has_member_benefit?: boolean | null
           id?: string
           logo_url?: string | null
           name?: string
