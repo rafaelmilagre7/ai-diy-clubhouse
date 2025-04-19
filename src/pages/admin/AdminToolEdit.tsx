@@ -16,7 +16,6 @@ const AdminToolEdit = () => {
   const [tool, setTool] = useState<Tool | null>(null);
   const isNew = !id || id === 'new';
 
-  // Uso correto de useEffect em vez de useState com callback
   useEffect(() => {
     console.log('AdminToolEdit montado', { id, isNew });
     
