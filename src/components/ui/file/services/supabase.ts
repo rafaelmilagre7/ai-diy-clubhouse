@@ -51,3 +51,4 @@ export const uploadFileToSupabase = async (
     throw error;
   }
 };
+

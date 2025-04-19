@@ -44,3 +44,4 @@ export const uploadImageToImgBB = async (
     throw error;
   }
 };
+

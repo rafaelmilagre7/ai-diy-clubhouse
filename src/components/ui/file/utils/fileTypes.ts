@@ -10,3 +10,4 @@ export const sanitizeFileName = (fileName: string): string => {
 export const getFileExtension = (fileName: string): string => {
   return fileName.split('.').pop() || '';
 };
+
