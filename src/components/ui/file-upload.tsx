@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Upload, Check, AlertCircle } from 'lucide-react';
@@ -31,6 +31,13 @@ export const FileUpload: React.FC<FileUploadProps> = ({
   const [fileName, setFileName] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
+
+  // Atualizar estado local quando initialFileUrl mudar
+  useEffect(() => {
+    if (initialFileUrl !== uploadedFileUrl) {
+      setUploadedFileUrl(initialFileUrl || null);
+    }
+  }, [initialFileUrl]);
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
@@ -84,10 +91,12 @@ export const FileUpload: React.FC<FileUploadProps> = ({
       // Atualizar o estado local
       setUploadedFileUrl(publicURL);
       
-      // Garantir que onUploadComplete seja chamado após a conclusão
-      setTimeout(() => {
-        onUploadComplete(publicURL, file.name, file.size);
-      }, 100);
+      // Chamar o callback onUploadComplete de forma síncrona
+      onUploadComplete(publicURL, file.name, file.size);
+      
+      // Emitir evento de mudança para o DOM
+      const changeEvent = new Event('change', { bubbles: true });
+      event.target.dispatchEvent(changeEvent);
       
       toast({
         title: 'Upload concluído',

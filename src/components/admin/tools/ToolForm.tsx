@@ -16,6 +16,7 @@ export const ToolForm = ({ initialData, onSubmit, isSubmitting }: ToolFormProps)
   // Garantir que benefit_type seja sempre um dos valores válidos
   const defaultBenefitType = initialData?.benefit_type as BenefitType | undefined;
   const [formChanged, setFormChanged] = useState(false);
+  const [logoUrlChanged, setLogoUrlChanged] = useState(false);
 
   const form = useForm<ToolFormValues>({
     resolver: zodResolver(toolFormSchema),
@@ -37,59 +38,109 @@ export const ToolForm = ({ initialData, onSubmit, isSubmitting }: ToolFormProps)
     }
   });
 
+  // Verificador de mudanças diretas no logo_url
+  useEffect(() => {
+    const subscription = form.watch((values, { name }) => {
+      if (name === 'logo_url') {
+        const currentLogoUrl = form.getValues('logo_url');
+        const initialLogoUrl = initialData?.logo_url || '';
+        
+        if (currentLogoUrl !== initialLogoUrl) {
+          console.log('Logo URL mudou:', { currentLogoUrl, initialLogoUrl });
+          setLogoUrlChanged(true);
+        }
+      }
+    });
+    
+    return () => subscription.unsubscribe();
+  }, [form, initialData]);
+
   // Monitorar o estado do formulário para detectar mudanças
   useEffect(() => {
-    console.log('Configurando monitor de formulário');
-    
-    const subscription = form.watch((values) => {
+    const subscription = form.watch(() => {
       // Se não houver dados iniciais, o formulário é novo e deve estar sempre habilitado
       if (!initialData) {
         setFormChanged(true);
         return;
       }
       
-      // Comparar diretamente o valor do logo_url atual com o inicial
-      const currentLogoUrl = form.getValues('logo_url');
-      console.log('Comparando logos:', { 
-        current: currentLogoUrl, 
-        initial: initialData.logo_url,
-        different: currentLogoUrl !== initialData.logo_url
-      });
-      
       // Verificar explicitamente se algum campo foi alterado
       let hasChanges = false;
       
-      if (form.getValues('name') !== initialData.name) hasChanges = true;
-      if (form.getValues('description') !== initialData.description) hasChanges = true;
-      if (form.getValues('official_url') !== initialData.official_url) hasChanges = true;
-      if (form.getValues('category') !== initialData.category) hasChanges = true;
-      if (form.getValues('status') !== initialData.status) hasChanges = true;
-      if (currentLogoUrl !== initialData.logo_url) hasChanges = true;
+      if (form.getValues('name') !== initialData.name) {
+        console.log('Nome mudou');
+        hasChanges = true;
+      }
+      if (form.getValues('description') !== initialData.description) {
+        console.log('Descrição mudou');
+        hasChanges = true;
+      }
+      if (form.getValues('official_url') !== initialData.official_url) {
+        console.log('URL oficial mudou');
+        hasChanges = true;
+      }
+      if (form.getValues('category') !== initialData.category) {
+        console.log('Categoria mudou');
+        hasChanges = true;
+      }
+      if (form.getValues('status') !== initialData.status) {
+        console.log('Status mudou');
+        hasChanges = true;
+      }
+      
+      // Verificar logo_url explicitamente
+      const currentLogoUrl = form.getValues('logo_url');
+      const initialLogoUrl = initialData.logo_url || '';
+      if (currentLogoUrl !== initialLogoUrl) {
+        console.log('Logo URL mudou:', { currentLogoUrl, initialLogoUrl });
+        hasChanges = true;
+      }
       
       // Verificar se há diferença nos arrays
       const currentTags = form.getValues('tags');
       const initialTags = initialData.tags || [];
       if (currentTags.length !== initialTags.length || 
           currentTags.some((tag, i) => tag !== initialTags[i])) {
+        console.log('Tags mudaram');
         hasChanges = true;
       }
       
-      // Verificar também se o formulário está marcado como dirty pelo react-hook-form
-      if (form.formState.isDirty) {
-        hasChanges = true;
-      }
+      // Verificar se o formulário foi alterado ou se o logo mudou
+      setFormChanged(hasChanges || logoUrlChanged || form.formState.isDirty);
       
       console.log('Estado do formulário:', { 
         hasChanges, 
+        logoUrlChanged,
         isDirty: form.formState.isDirty,
-        dirtyFields: form.formState.dirtyFields
+        formChanged: hasChanges || logoUrlChanged || form.formState.isDirty
       });
-      
-      setFormChanged(hasChanges);
     });
     
+    // Verificação inicial
+    const currentLogoUrl = form.getValues('logo_url');
+    const initialLogoUrl = initialData?.logo_url || '';
+    if (currentLogoUrl !== initialLogoUrl) {
+      console.log('Logo URL diferente na inicialização:', { currentLogoUrl, initialLogoUrl });
+      setLogoUrlChanged(true);
+      setFormChanged(true);
+    }
+    
     return () => subscription.unsubscribe();
-  }, [form, initialData]);
+  }, [form, initialData, logoUrlChanged]);
+
+  // Adicionar listener para evento customizado
+  useEffect(() => {
+    const handleLogoChange = () => {
+      console.log('Evento de mudança de logo detectado');
+      setLogoUrlChanged(true);
+      setFormChanged(true);
+    };
+    
+    document.addEventListener('logoChanged', handleLogoChange);
+    return () => {
+      document.removeEventListener('logoChanged', handleLogoChange);
+    };
+  }, []);
 
   const handleFormSubmit = (data: ToolFormValues) => {
     console.log("Formulário enviado:", data);
@@ -118,6 +169,11 @@ export const ToolForm = ({ initialData, onSubmit, isSubmitting }: ToolFormProps)
           {(!formChanged && initialData) && (
             <p className="text-sm text-muted-foreground text-center mt-2">
               Faça alterações no formulário para salvar
+            </p>
+          )}
+          {(formChanged && initialData) && (
+            <p className="text-sm text-primary text-center mt-2">
+              Alterações detectadas - clique para salvar
             </p>
           )}
         </div>

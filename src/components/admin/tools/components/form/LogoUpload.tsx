@@ -13,19 +13,10 @@ interface LogoUploadProps {
 export const LogoUpload = ({ form }: LogoUploadProps) => {
   const [logoUrl, setLogoUrl] = useState<string | undefined>(form.getValues('logo_url'));
 
-  // Atualizar o estado local quando o valor do formulário mudar
-  useEffect(() => {
-    const subscription = form.watch((value, { name }) => {
-      if (name === 'logo_url' && value.logo_url !== logoUrl) {
-        setLogoUrl(value.logo_url as string);
-      }
-    });
-    
-    return () => subscription.unsubscribe();
-  }, [form, logoUrl]);
-
   // Função para atualizar o logo no formulário
   const handleUploadComplete = (url: string) => {
+    console.log('Logo upload completo, URL:', url);
+    
     // Verifica se o URL é diferente antes de atualizar
     if (url !== form.getValues('logo_url')) {
       console.log('Atualizando logo_url para:', url);
@@ -37,19 +28,16 @@ export const LogoUpload = ({ form }: LogoUploadProps) => {
         shouldValidate: true 
       });
       
-      // Forçar o formulário a reconhecer a mudança
-      form.trigger('logo_url');
-      
       // Atualizar o estado local
       setLogoUrl(url);
       
-      // Forçar a atualização do estado do formulário
+      // Disparar evento de mudança para garantir que o formulário detecte a alteração
+      const event = new Event('input', { bubbles: true });
+      document.dispatchEvent(event);
+      
+      // Forçar renderização do formulário marcando-o explicitamente como dirty
       setTimeout(() => {
-        const updatedFormState = form.formState;
-        console.log('Estado do formulário após upload:', { 
-          isDirty: updatedFormState.isDirty, 
-          touchedFields: updatedFormState.touchedFields 
-        });
+        console.log('FormState após upload:', form.formState);
       }, 100);
     }
   };

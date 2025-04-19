@@ -88,24 +88,28 @@ const AdminToolEdit = () => {
           description: 'A ferramenta foi criada com sucesso.',
         });
       } else {
-        const { error } = await supabase
+        const { data: updatedData, error } = await supabase
           .from('tools')
           .update(toolData)
-          .eq('id', id);
+          .eq('id', id)
+          .select();
           
         if (error) throw error;
         
-        console.log('Ferramenta atualizada com sucesso');
+        console.log('Ferramenta atualizada com sucesso:', updatedData);
         toast({
           title: 'Ferramenta atualizada',
           description: 'As alterações foram salvas com sucesso.',
         });
+        
+        // Atualizar o estado local com os dados atualizados
+        setTool(updatedData[0] as Tool);
       }
       
       // Aguardar um momento para a notificação ser exibida antes do redirecionamento
       setTimeout(() => {
         navigate('/admin/tools');
-      }, 1000);
+      }, 1500);
       
     } catch (error: any) {
       console.error('Erro ao salvar ferramenta:', error);
