@@ -53,7 +53,7 @@ export const useSuggestions = (categoryId?: string) => {
       }
 
       console.log('Sugestões encontradas:', data?.length, data);
-      return data;
+      return data || [];
     },
     refetchOnWindowFocus: false,
     staleTime: 1000 * 60 * 1, // 1 minuto
@@ -75,7 +75,7 @@ export const useSuggestions = (categoryId?: string) => {
         throw error;
       }
 
-      return data;
+      return data || [];
     },
   });
 
@@ -98,14 +98,34 @@ export const useSuggestions = (categoryId?: string) => {
           ...values,
           user_id: user.id,
           status: 'new',
-          upvotes: 0,
+          upvotes: 1, // Começa com um upvote do próprio criador
           downvotes: 0,
           is_hidden: false
         })
         .select();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Erro ao criar sugestão:", error);
+        throw error;
+      }
+      
       console.log("Sugestão criada com sucesso:", data);
+      
+      // Registrar o voto automático do criador
+      if (data && data.length > 0) {
+        const { error: voteError } = await supabase
+          .from('suggestion_votes')
+          .insert({
+            suggestion_id: data[0].id,
+            user_id: user.id,
+            vote_type: 'upvote'
+          });
+          
+        if (voteError) {
+          console.error("Erro ao registrar voto do criador:", voteError);
+        }
+      }
+      
       return data;
     },
     onSuccess: () => {
@@ -124,29 +144,64 @@ export const useSuggestions = (categoryId?: string) => {
         throw new Error("Você precisa estar logado para votar.");
       }
 
-      const { data, error } = await supabase
+      // Verificar se o usuário já votou nesta sugestão
+      const { data: existingVote, error: checkError } = await supabase
+        .from('suggestion_votes')
+        .select('vote_type')
+        .eq('suggestion_id', suggestionId)
+        .eq('user_id', user.id)
+        .maybeSingle();
+        
+      if (checkError) {
+        console.error("Erro ao verificar voto existente:", checkError);
+        throw checkError;
+      }
+      
+      // Inserir ou atualizar o voto
+      const { error: voteError } = await supabase
         .from('suggestion_votes')
         .upsert({
           suggestion_id: suggestionId,
           user_id: user.id,
-          vote_type: voteType
+          vote_type: voteType,
+          updated_at: new Date().toISOString()
         }, {
           onConflict: 'suggestion_id,user_id'
         });
 
-      if (error) throw error;
-      
-      // Atualizando contagem de votos na tabela suggestions
-      if (voteType === 'upvote') {
-        await supabase.rpc('increment_suggestion_upvote', { suggestion_id: suggestionId });
-      } else {
-        await supabase.rpc('increment_suggestion_downvote', { suggestion_id: suggestionId });
+      if (voteError) {
+        console.error("Erro ao registrar voto:", voteError);
+        throw voteError;
       }
       
-      return data;
+      // Atualizar contagem de votos na tabela suggestions
+      let updates: any = {};
+      
+      if (!existingVote) {
+        // Novo voto
+        if (voteType === 'upvote') {
+          updates.upvotes = supabase.rpc('increment', { row_id: suggestionId, table: 'suggestions', column: 'upvotes' });
+        } else {
+          updates.downvotes = supabase.rpc('increment', { row_id: suggestionId, table: 'suggestions', column: 'downvotes' });
+        }
+      } else if (existingVote.vote_type !== voteType) {
+        // Mudança de voto
+        if (voteType === 'upvote') {
+          // Mudou de downvote para upvote
+          await supabase.rpc('increment', { row_id: suggestionId, table: 'suggestions', column: 'upvotes' });
+          await supabase.rpc('decrement', { row_id: suggestionId, table: 'suggestions', column: 'downvotes' });
+        } else {
+          // Mudou de upvote para downvote
+          await supabase.rpc('increment', { row_id: suggestionId, table: 'suggestions', column: 'downvotes' });
+          await supabase.rpc('decrement', { row_id: suggestionId, table: 'suggestions', column: 'upvotes' });
+        }
+      }
+      
+      return { success: true };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['suggestions'] });
+      toast.success("Seu voto foi registrado!");
     },
     onError: (error: any) => {
       console.error('Erro ao votar:', error);

@@ -29,6 +29,8 @@ interface SuggestionContentProps {
   onSubmitComment: (e: React.FormEvent) => void;
   onVote: (voteType: 'upvote' | 'downvote') => Promise<void>;
   isOwner?: boolean;
+  userVote?: { id: string; vote_type: 'upvote' | 'downvote' } | null;
+  voteLoading?: boolean;
 }
 
 const statusMap = {
@@ -49,7 +51,9 @@ const SuggestionContent = ({
   onCommentChange,
   onSubmitComment,
   onVote,
-  isOwner = false
+  isOwner = false,
+  userVote,
+  voteLoading = false
 }: SuggestionContentProps) => {
   const status = statusMap[suggestion.status] || { label: 'Desconhecido', color: 'bg-gray-500' };
   const formattedDate = format(new Date(suggestion.created_at), "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
@@ -84,6 +88,8 @@ const SuggestionContent = ({
 
         <SuggestionVoting
           suggestion={suggestion}
+          userVote={userVote}
+          voteLoading={voteLoading}
           onVote={onVote}
         />
 

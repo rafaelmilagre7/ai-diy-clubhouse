@@ -1,5 +1,5 @@
 
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { User, LogOut } from "lucide-react";
@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useState } from "react";
+import { toast } from "sonner";
 
 interface MemberUserMenuProps {
   sidebarOpen: boolean;
@@ -32,17 +33,26 @@ export const MemberUserMenu = ({
   signOut
 }: MemberUserMenuProps) => {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const navigate = useNavigate();
   
   const handleSignOut = async (e: Event) => {
     e.preventDefault();
     
     try {
       setIsLoggingOut(true);
+      // Limpar token do localStorage para garantir logout
+      localStorage.removeItem('sb-zotzvtepvpnkcoobdubt-auth-token');
+      
+      // Usar o signOut do contexto de autenticação
       await signOut();
+      
+      // Redirecionamento forçado para a página de autenticação
+      toast.success("Logout realizado com sucesso");
+      navigate('/auth', { replace: true });
     } catch (error) {
       console.error("Erro ao fazer logout:", error);
       // Força redirecionamento para login em caso de falha
-      window.location.href = '/login';
+      window.location.href = '/auth';
     } finally {
       setIsLoggingOut(false);
     }

@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { 
@@ -20,6 +20,7 @@ import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AdminSidebarNav } from "./AdminSidebarNav";
 import { useAuth } from "@/contexts/auth";
+import { toast } from "sonner";
 
 interface AdminSidebarProps {
   sidebarOpen: boolean;
@@ -29,7 +30,7 @@ interface AdminSidebarProps {
 export const AdminSidebar = ({ sidebarOpen, setSidebarOpen }: AdminSidebarProps) => {
   const { profile, signOut } = useAuth();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-  const location = useLocation();
+  const navigate = useNavigate();
   
   const getInitials = (name: string | null) => {
     if (!name) return "U";
@@ -41,14 +42,24 @@ export const AdminSidebar = ({ sidebarOpen, setSidebarOpen }: AdminSidebarProps)
       .substring(0, 2);
   };
 
-  const handleSignOut = async () => {
+  const handleSignOut = async (e: Event) => {
+    e.preventDefault();
+    
     try {
       setIsLoggingOut(true);
+      // Limpar token do localStorage para garantir logout
+      localStorage.removeItem('sb-zotzvtepvpnkcoobdubt-auth-token');
+      
+      // Usar o signOut do contexto de autenticação
       await signOut();
+      
+      // Redirecionamento forçado para a página de autenticação
+      toast.success("Logout realizado com sucesso");
+      navigate('/auth', { replace: true });
     } catch (error) {
       console.error("Erro ao fazer logout:", error);
       // Força redirecionamento para login em caso de falha
-      window.location.href = '/login';
+      window.location.href = '/auth';
     } finally {
       setIsLoggingOut(false);
     }
