@@ -142,5 +142,6 @@ export const useSuggestionDetails = () => {
     userVote,
     voteLoading,
     handleVote,
+    refetch, // Adicionando a função refetch ao objeto retornado
   };
 };
