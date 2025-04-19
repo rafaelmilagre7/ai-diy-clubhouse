@@ -26,7 +26,7 @@ export const ToolForm = ({ initialData, onSubmit, isSubmitting }: ToolFormProps)
       name: initialData?.name || '',
       description: initialData?.description || '',
       official_url: initialData?.official_url || '',
-      category: initialData?.category || ('Modelos de IA e Interfaces' as ToolCategory), // Valor padrão para evitar string vazia
+      category: initialData?.category || 'Modelos de IA e Interfaces',
       status: initialData?.status ?? true,
       logo_url: initialData?.logo_url || '',
       tags: initialData?.tags || [],

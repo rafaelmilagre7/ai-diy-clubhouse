@@ -1,12 +1,13 @@
 
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { VideoTutorialsList } from './video-tutorials/VideoTutorialsList';
-import { AddTutorialButton } from './video-tutorials/AddTutorialButton';
+import { VideoTutorialsList, VideoTutorialsListProps } from './video-tutorials/VideoTutorialsList';
+import { AddTutorialButton, AddTutorialButtonProps } from './video-tutorials/AddTutorialButton';
 import { UseFormReturn } from 'react-hook-form';
-import { ToolFormValues, VideoTutorial } from '../types/toolFormTypes';
+import { ToolFormValues } from '../types/toolFormTypes';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
+import { VideoTutorial } from '@/types/toolTypes';
 
 interface VideoTutorialsProps {
   form: UseFormReturn<ToolFormValues>;

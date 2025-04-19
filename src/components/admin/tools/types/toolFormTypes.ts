@@ -1,5 +1,5 @@
 
-import { Tool, BenefitType, ToolCategory } from '@/types/toolTypes';
+import { Tool, BenefitType, ToolCategory, VideoTutorial } from '@/types/toolTypes';
 
 export interface ToolFormProps {
   initialData?: Tool;
@@ -23,10 +23,4 @@ export interface ToolFormValues {
   benefit_link?: string | null;
   benefit_badge_url?: string | null;
   formModified?: boolean; // Campo auxiliar para rastrear modificações no formulário
-}
-
-export interface VideoTutorial {
-  title: string;
-  url: string;
-  type: 'youtube' | 'upload';
 }

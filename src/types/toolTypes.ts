@@ -1,3 +1,4 @@
+
 export type ToolCategory = 
   | 'Modelos de IA e Interfaces'
   | 'Geração de Conteúdo Visual'

@@ -1,8 +1,8 @@
 
 import { VideoTutorialItem } from './VideoTutorialItem';
-import { VideoTutorial } from '../../types/toolFormTypes';
+import { VideoTutorial } from '@/types/toolTypes';
 
-interface VideoTutorialsListProps {
+export interface VideoTutorialsListProps {
   tutorials: VideoTutorial[];
   onDelete: (index: number) => void;
 }

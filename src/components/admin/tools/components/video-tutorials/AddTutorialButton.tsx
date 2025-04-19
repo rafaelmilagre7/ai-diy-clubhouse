@@ -3,9 +3,9 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Plus, X } from 'lucide-react';
-import { VideoTutorial } from '../../types/toolFormTypes';
+import { VideoTutorial } from '@/types/toolTypes';
 
-interface AddTutorialButtonProps {
+export interface AddTutorialButtonProps {
   onAdd: (tutorial: VideoTutorial) => void;
   onCancel: () => void;
 }
