@@ -1,18 +1,16 @@
 
-import { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabase";
-import { useToast } from "@/hooks/use-toast";
-import { UserProfile } from "@/lib/supabase";
+import { useState, useEffect } from 'react';
+import { supabase, UserProfile } from '@/lib/supabase';
+import { useToast } from '@/hooks/use-toast';
 
 export const useUsers = () => {
   const { toast } = useToast();
   const [users, setUsers] = useState<UserProfile[]>([]);
-  const [filteredUsers, setFilteredUsers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
   const [editRoleOpen, setEditRoleOpen] = useState(false);
-  const [newRole, setNewRole] = useState<string>("");
+  const [newRole, setNewRole] = useState<'admin' | 'member'>('member');
   const [saving, setSaving] = useState(false);
 
   const fetchUsers = async () => {
@@ -28,8 +26,7 @@ export const useUsers = () => {
         throw error;
       }
       
-      setUsers(data || []);
-      setFilteredUsers(data || []);
+      setUsers(data as UserProfile[]);
     } catch (error: any) {
       console.error("Erro ao buscar usuários:", error.message);
       toast({
@@ -41,27 +38,6 @@ export const useUsers = () => {
       setLoading(false);
     }
   };
-
-  useEffect(() => {
-    fetchUsers();
-  }, [toast]);
-
-  useEffect(() => {
-    if (!searchQuery.trim()) {
-      setFilteredUsers(users);
-      return;
-    }
-    
-    const query = searchQuery.toLowerCase();
-    const filtered = users.filter(user => 
-      (user.name || "").toLowerCase().includes(query) ||
-      user.email.toLowerCase().includes(query) ||
-      (user.company_name || "").toLowerCase().includes(query) ||
-      (user.industry || "").toLowerCase().includes(query)
-    );
-    
-    setFilteredUsers(filtered);
-  }, [searchQuery, users]);
 
   const handleUpdateRole = async () => {
     if (!selectedUser || !newRole || newRole === selectedUser.role) {
@@ -89,10 +65,6 @@ export const useUsers = () => {
         title: "Função atualizada",
         description: `A função do usuário ${selectedUser.name || selectedUser.email} foi atualizada para ${newRole === "admin" ? "Administrador" : "Membro"}.`,
       });
-      
-      await supabase.auth.admin.updateUserById(selectedUser.id, {
-        user_metadata: { role: newRole }
-      });
     } catch (error: any) {
       console.error("Erro ao atualizar função:", error.message);
       toast({
@@ -106,8 +78,12 @@ export const useUsers = () => {
     }
   };
 
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
   return {
-    users: filteredUsers,
+    users,
     loading,
     searchQuery,
     setSearchQuery,

@@ -6,6 +6,7 @@ import { useUsers } from "@/hooks/admin/useUsers";
 import { UsersHeader } from "@/components/admin/users/UsersHeader";
 import { UsersTable } from "@/components/admin/users/UsersTable";
 import { UserRoleDialog } from "@/components/admin/users/UserRoleDialog";
+import { UserProfile } from "@/lib/supabase";
 
 const AdminUsers = () => {
   const { user } = useAuth();
