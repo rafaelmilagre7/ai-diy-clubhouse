@@ -7,17 +7,19 @@ import LoadingScreen from "@/components/common/LoadingScreen";
 interface ProtectedRouteProps {
   children: React.ReactNode;
   requireAdmin?: boolean;
+  requiredRole?: string; // Adicionando suporte para requiredRole também
 }
 
 const ProtectedRoute = ({ 
   children, 
-  requireAdmin = false 
+  requireAdmin = false,
+  requiredRole
 }: ProtectedRouteProps) => {
   const { user, isAdmin, isLoading } = useAuth();
   const location = useLocation();
   
   // Adicionando mais informações de debug
-  console.log("ProtectedRoute:", { user, isAdmin, isLoading, requireAdmin, path: location.pathname });
+  console.log("ProtectedRoute:", { user, isAdmin, isLoading, requireAdmin, requiredRole, path: location.pathname });
   
   // Show loading screen during the loading state
   if (isLoading) {
@@ -29,8 +31,8 @@ const ProtectedRoute = ({
     return <Navigate to="/auth" state={{ from: location }} replace />;
   }
   
-  // Redirect to dashboard if trying to access admin route without admin permissions
-  if (requireAdmin && !isAdmin) {
+  // Verificar com base em requiredRole ou requireAdmin
+  if ((requiredRole === 'admin' || requireAdmin) && !isAdmin) {
     console.log("Usuário não é admin, redirecionando para dashboard");
     return <Navigate to="/dashboard" replace />;
   }

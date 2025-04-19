@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -10,20 +9,19 @@ import { toast } from 'sonner';
 
 interface MemberBenefitModalProps {
   tool: Tool;
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'sm' | 'lg' | 'default' | 'icon';
   variant?: 'default' | 'outline';
 }
 
 export const MemberBenefitModal = ({ 
   tool, 
-  size = 'md', 
+  size = 'default', 
   variant = 'default' 
 }: MemberBenefitModalProps) => {
   const [open, setOpen] = useState(false);
   const { registerBenefitClick, isProcessing } = useBenefitClick();
   const [copied, setCopied] = useState(false);
 
-  // Verifica se há código promocional na descrição do benefício
   const hasPromoCode = tool.benefit_description?.includes('CÓDIGO:') || 
                       tool.benefit_description?.includes('CUPOM:') ||
                       tool.benefit_description?.includes('PROMO:');

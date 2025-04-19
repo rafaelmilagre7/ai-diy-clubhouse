@@ -1,4 +1,3 @@
-
 import React, { lazy, Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/auth';
@@ -58,7 +57,7 @@ const AppRoutes = () => {
         
         {/* Admin routes */}
         <Route path="/admin" element={
-          <ProtectedRoute requiredRole="admin">
+          <ProtectedRoute requireAdmin={true}>
             <AdminLayout />
           </ProtectedRoute>
         }>
