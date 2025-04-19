@@ -30,16 +30,9 @@ export const SuggestionCard = ({
     navigate(`/suggestions/${suggestion.id}`);
   };
 
-  // Extrai informações do perfil, lidando com estruturas diferentes
-  const profileName = suggestion.profiles?.name || 
-                     (suggestion.profiles && suggestion.profiles[0]?.name) || 
-                     'Usuário';
-  
-  const profileAvatar = suggestion.profiles?.avatar_url || 
-                       (suggestion.profiles && suggestion.profiles[0]?.avatar_url) || 
-                       '';
-
-  console.log('Rendering suggestion card:', suggestion);
+  // Obter o nome e avatar do usuário diretamente dos campos da view
+  const profileName = suggestion.user_name || 'Usuário';
+  const profileAvatar = suggestion.user_avatar || '';
 
   return (
     <Card key={suggestion.id} className="h-full flex flex-col hover:shadow-md transition-shadow cursor-pointer" onClick={handleClick}>

@@ -14,19 +14,18 @@ export const useSuggestions = (categoryId?: string) => {
     refetch 
   } = useSuggestionsList(categoryId, filter);
 
-  // Aplicar filtros
-  const suggestions = filterSuggestions(rawSuggestions);
+  // Aplicar filtros somente se houver sugestões
+  const suggestions = rawSuggestions ? filterSuggestions(rawSuggestions) : [];
 
-  // Forçar refetch quando o componente montar
+  // Forçar refetch quando o componente montar ou o filtro/categoria mudar
   useEffect(() => {
     console.log("useSuggestions hook: forçando refetch inicial...");
     refetch().catch(error => {
       console.error("Erro ao fazer refetch inicial:", error);
     });
     
-    // Não incluir refetch na lista de dependências para evitar loop infinito
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filter, categoryId]); // Refazer a busca quando o filtro ou categoria mudar
+  }, [filter, categoryId]); 
 
   return {
     suggestions,

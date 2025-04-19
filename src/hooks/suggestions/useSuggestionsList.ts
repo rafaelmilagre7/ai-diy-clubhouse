@@ -14,38 +14,40 @@ export const useSuggestionsList = (categoryId?: string, filter: 'popular' | 'rec
     queryFn: async () => {
       console.log('Buscando sugestões...', { categoryId, filter });
       
-      let query = supabase
-        .from('suggestions')
-        .select(`
-          *,
-          profiles:profiles(name, avatar_url),
-          category:category_id(name)
-        `)
-        .eq('is_hidden', false); // Apenas sugestões não ocultas
+      try {
+        // Usamos a view suggestions_with_profiles que já conecta os dados de perfil
+        let query = supabase
+          .from('suggestions_with_profiles')
+          .select('*')
+          .eq('is_hidden', false); // Apenas sugestões não ocultas
 
-      if (categoryId) {
-        query = query.eq('category_id', categoryId);
-      }
+        if (categoryId) {
+          query = query.eq('category_id', categoryId);
+        }
 
-      if (filter === 'popular') {
-        query = query.order('upvotes', { ascending: false });
-      } else {
-        query = query.order('created_at', { ascending: false });
-      }
+        if (filter === 'popular') {
+          query = query.order('upvotes', { ascending: false });
+        } else {
+          query = query.order('created_at', { ascending: false });
+        }
 
-      const { data, error } = await query;
+        const { data, error } = await query;
 
-      if (error) {
-        console.error('Erro ao buscar sugestões:', error);
+        if (error) {
+          console.error('Erro ao buscar sugestões:', error);
+          throw error;
+        }
+
+        console.log('Sugestões encontradas:', data?.length, data);
+        return data || [];
+      } catch (error) {
+        console.error('Erro na consulta de sugestões:', error);
         throw error;
       }
-
-      console.log('Sugestões encontradas:', data?.length, data);
-      return data || [];
     },
     refetchOnWindowFocus: false,
     staleTime: 1000 * 60 * 1, // 1 minuto
-    refetchOnMount: true, // Garante que os dados sejam buscados quando o componente montar
+    refetchOnMount: true,
   });
 
   return {

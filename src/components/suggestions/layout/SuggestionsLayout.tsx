@@ -6,6 +6,9 @@ import { SuggestionsContent } from './SuggestionsContent';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card } from '@/components/ui/card';
 import { toast } from 'sonner';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { AlertCircle, RefreshCw } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 const SuggestionsLayout = () => {
   const {
@@ -19,20 +22,18 @@ const SuggestionsLayout = () => {
     error
   } = useSuggestions();
 
+  // Tentativa automática de busca de dados quando o componente monta
   React.useEffect(() => {
     console.log("Componente SuggestionsLayout montado, buscando sugestões...");
     refetch().catch(error => {
       console.error("Erro ao buscar sugestões:", error);
-      toast.error("Erro ao carregar sugestões. Tente novamente.");
     });
   }, [refetch]);
 
-  React.useEffect(() => {
-    if (error) {
-      console.error("Erro ao buscar sugestões:", error);
-      toast.error("Erro ao carregar sugestões. Por favor, tente novamente.");
-    }
-  }, [error]);
+  const handleRetry = () => {
+    toast.info("Tentando buscar sugestões novamente...");
+    refetch();
+  };
 
   React.useEffect(() => {
     console.log("Quantidade de sugestões carregadas:", suggestions?.length || 0);
@@ -78,10 +79,25 @@ const SuggestionsLayout = () => {
         filter={filter}
         onFilterChange={setFilter}
       />
-      <SuggestionsContent 
-        suggestions={filteredSuggestions} 
-        searchQuery={searchQuery}
-      />
+      
+      {error ? (
+        <Alert variant="destructive" className="mb-4">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Erro ao carregar sugestões</AlertTitle>
+          <AlertDescription className="flex flex-col gap-2">
+            <p>Não foi possível carregar as sugestões. Por favor, tente novamente.</p>
+            <Button variant="outline" size="sm" onClick={handleRetry} className="gap-2 w-fit">
+              <RefreshCw size={14} />
+              Tentar novamente
+            </Button>
+          </AlertDescription>
+        </Alert>
+      ) : (
+        <SuggestionsContent 
+          suggestions={filteredSuggestions} 
+          searchQuery={searchQuery}
+        />
+      )}
     </div>
   );
 };
