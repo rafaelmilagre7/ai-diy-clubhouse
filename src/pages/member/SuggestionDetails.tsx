@@ -20,6 +20,7 @@ interface Suggestion {
   upvotes: number;
   downvotes: number;
   created_at: string;
+  user_id: string;
   category: { name: string };
   user: {
     id: string;
@@ -62,6 +63,7 @@ const SuggestionDetailsPage = () => {
         .single();
 
       if (error) throw error;
+      console.log("Sugestão carregada:", data);
       return data as Suggestion;
     },
   });
@@ -73,7 +75,8 @@ const SuggestionDetailsPage = () => {
     }
 
     try {
-      await supabase
+      console.log("Votando:", { voteType, suggestionId: id, userId: user.id });
+      const { data, error } = await supabase
         .from('suggestion_votes')
         .upsert({
           suggestion_id: id,
@@ -83,6 +86,16 @@ const SuggestionDetailsPage = () => {
           onConflict: 'suggestion_id,user_id'
         });
       
+      if (error) throw error;
+      
+      // Atualizando contagem de votos na tabela suggestions
+      if (voteType === 'upvote') {
+        await supabase.rpc('increment_suggestion_upvote', { suggestion_id: id });
+      } else {
+        await supabase.rpc('increment_suggestion_downvote', { suggestion_id: id });
+      }
+      
+      toast.success(`Seu voto foi registrado!`);
       refetch();
     } catch (error: any) {
       console.error('Erro ao votar:', error);
@@ -110,6 +123,10 @@ const SuggestionDetailsPage = () => {
     );
   }
 
+  // Verificar se o usuário é o criador da sugestão
+  const isOwner = user && user.id === suggestion.user_id;
+  console.log("Verificação de propriedade:", { isOwner, userId: user?.id, suggestionUserId: suggestion.user_id });
+
   return (
     <div className="container py-6 space-y-6">
       <SuggestionHeader />
@@ -122,6 +139,7 @@ const SuggestionDetailsPage = () => {
         onCommentChange={setComment}
         onSubmitComment={handleSubmitComment}
         onVote={handleVote}
+        isOwner={isOwner}
       />
     </div>
   );

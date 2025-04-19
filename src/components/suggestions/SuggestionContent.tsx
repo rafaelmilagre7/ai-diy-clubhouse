@@ -19,6 +19,7 @@ interface SuggestionContentProps {
     category?: { name: string };
     upvotes: number;
     downvotes: number;
+    user_id?: string;
   };
   comment: string;
   comments: any[];
@@ -27,6 +28,7 @@ interface SuggestionContentProps {
   onCommentChange: (value: string) => void;
   onSubmitComment: (e: React.FormEvent) => void;
   onVote: (voteType: 'upvote' | 'downvote') => Promise<void>;
+  isOwner?: boolean;
 }
 
 const statusMap = {
@@ -46,7 +48,8 @@ const SuggestionContent = ({
   commentsLoading,
   onCommentChange,
   onSubmitComment,
-  onVote
+  onVote,
+  isOwner = false
 }: SuggestionContentProps) => {
   const status = statusMap[suggestion.status] || { label: 'Desconhecido', color: 'bg-gray-500' };
   const formattedDate = format(new Date(suggestion.created_at), "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
@@ -65,6 +68,9 @@ const SuggestionContent = ({
                 <Calendar size={14} />
                 {formattedDate}
               </span>
+              {isOwner && (
+                <Badge variant="secondary" className="ml-2">Sua sugestão</Badge>
+              )}
             </CardDescription>
           </div>
           <Badge className={`${status.color} text-white`}>{status.label}</Badge>

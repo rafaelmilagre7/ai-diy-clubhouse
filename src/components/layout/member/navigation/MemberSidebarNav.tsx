@@ -1,7 +1,7 @@
 
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
-import { Home, GraduationCap, Users, Settings, HelpCircle, PencilLine } from "lucide-react";
+import { Home, GraduationCap, Settings, HelpCircle, PencilLine, Wrench } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
@@ -38,14 +38,14 @@ export const MemberSidebarNav = ({ sidebarOpen }: { sidebarOpen: boolean }) => {
         </Button>
 
         <Button
-          variant={location.pathname === "/community" ? "default" : "ghost"}
+          variant={location.pathname.startsWith("/tools") ? "default" : "ghost"}
           asChild
           className="w-full justify-start"
         >
-          <Link to="/community">
-            <Users className="h-5 w-5 mr-2" />
+          <Link to="/tools">
+            <Wrench className="h-5 w-5 mr-2" />
             <span className={cn("flex-1", !sidebarOpen && "hidden")}>
-              Comunidade
+              Ferramentas
             </span>
           </Link>
         </Button>

@@ -28,9 +28,13 @@ export const useSuggestions = (categoryId?: string) => {
           *,
           profiles:user_id(name, avatar_url),
           category:category_id(name)
-        `)
-        .eq('is_hidden', false);
+        `);
 
+      // Se o usuário não estiver logado ou não for admin, mostre apenas sugestões públicas
+      if (!user) {
+        query = query.eq('is_hidden', false);
+      }
+      
       if (categoryId) {
         query = query.eq('category_id', categoryId);
       }
@@ -48,11 +52,11 @@ export const useSuggestions = (categoryId?: string) => {
         throw error;
       }
 
-      console.log('Sugestões encontradas:', data);
+      console.log('Sugestões encontradas:', data?.length, data);
       return data;
     },
     refetchOnWindowFocus: false,
-    staleTime: 1000 * 60 * 5, // 5 minutos
+    staleTime: 1000 * 60 * 1, // 1 minuto
   });
 
   const {
@@ -86,24 +90,31 @@ export const useSuggestions = (categoryId?: string) => {
         throw new Error("Você precisa estar logado para criar uma sugestão.");
       }
 
+      console.log("Enviando sugestão:", values);
+
       const { data, error } = await supabase
         .from('suggestions')
         .insert({
           ...values,
-          user_id: user.id
+          user_id: user.id,
+          status: 'new',
+          upvotes: 0,
+          downvotes: 0,
+          is_hidden: false
         })
         .select();
 
       if (error) throw error;
+      console.log("Sugestão criada com sucesso:", data);
       return data;
     },
     onSuccess: () => {
-      toast("Sugestão criada com sucesso!");
+      toast.success("Sugestão criada com sucesso!");
       queryClient.invalidateQueries({ queryKey: ['suggestions'] });
     },
     onError: (error: any) => {
       console.error('Erro ao criar sugestão:', error);
-      toast(`Erro ao criar sugestão: ${error.message}`);
+      toast.error(`Erro ao criar sugestão: ${error.message}`);
     }
   });
 
@@ -124,6 +135,14 @@ export const useSuggestions = (categoryId?: string) => {
         });
 
       if (error) throw error;
+      
+      // Atualizando contagem de votos na tabela suggestions
+      if (voteType === 'upvote') {
+        await supabase.rpc('increment_suggestion_upvote', { suggestion_id: suggestionId });
+      } else {
+        await supabase.rpc('increment_suggestion_downvote', { suggestion_id: suggestionId });
+      }
+      
       return data;
     },
     onSuccess: () => {
@@ -131,7 +150,7 @@ export const useSuggestions = (categoryId?: string) => {
     },
     onError: (error: any) => {
       console.error('Erro ao votar:', error);
-      toast(`Erro ao votar: ${error.message}`);
+      toast.error(`Erro ao votar: ${error.message}`);
     }
   });
 
@@ -147,6 +166,11 @@ export const useSuggestions = (categoryId?: string) => {
   const vote = async (suggestionId: string, voteType: 'upvote' | 'downvote') => {
     return voteMutation.mutateAsync({ suggestionId, voteType });
   };
+
+  // Forçar refetch quando o componente montar
+  useEffect(() => {
+    refetch().catch(console.error);
+  }, [refetch]);
 
   return {
     suggestions,

@@ -17,6 +17,8 @@ import SolutionDetails from '@/pages/member/SolutionDetails';
 import SuggestionsPage from '@/pages/member/Suggestions';
 import NewSuggestionPage from '@/pages/member/NewSuggestion';
 import SuggestionDetailsPage from '@/pages/member/SuggestionDetails';
+import Tools from '@/pages/member/Tools';
+import ToolDetails from '@/pages/member/ToolDetails';
 
 const AppRoutes = () => {
   return (
@@ -38,6 +40,10 @@ const AppRoutes = () => {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/solutions" element={<Solutions />} />
         <Route path="/solutions/:id" element={<SolutionDetails />} />
+        
+        {/* Ferramentas */}
+        <Route path="/tools" element={<Tools />} />
+        <Route path="/tools/:id" element={<ToolDetails />} />
         
         {/* Sugestões */}
         <Route path="/suggestions" element={<SuggestionsPage />} />
