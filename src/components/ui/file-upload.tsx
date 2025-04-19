@@ -8,12 +8,13 @@ import { useToast } from '@/hooks/use-toast';
 
 interface FileUploadProps {
   bucketName: string;
-  onUploadComplete: (url: string) => void;
+  onUploadComplete: (url: string, fileName?: string, fileSize?: number) => void;
   accept?: string;
-  maxSize?: number; // em MB
+  maxSize?: number;
   buttonText?: string;
   fieldLabel?: string;
   initialFileUrl?: string;
+  folder?: string;
 }
 
 export const FileUpload: React.FC<FileUploadProps> = ({

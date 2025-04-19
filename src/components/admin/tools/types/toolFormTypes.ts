@@ -13,7 +13,7 @@ export interface ToolFormValues {
   official_url: string;
   category: string;
   status: boolean;
-  logo_url?: string;
+  logo_url: string;
   tags: string[];
   video_tutorials: VideoTutorial[];
 }
