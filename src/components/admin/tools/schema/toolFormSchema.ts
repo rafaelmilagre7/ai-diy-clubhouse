@@ -17,6 +17,7 @@ export const toolFormSchema = z.object({
     })
   ).default([]),
   has_member_benefit: z.boolean().default(false),
+  benefit_type: z.enum(['discount', 'exclusive', 'free', 'trial', 'other']).optional(),
   benefit_title: z.string().optional(),
   benefit_description: z.string().optional(),
   benefit_link: z.string().url('URL inválida').optional(),

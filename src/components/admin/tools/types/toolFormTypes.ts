@@ -17,6 +17,7 @@ export interface ToolFormValues {
   tags: string[];
   video_tutorials: VideoTutorial[];
   has_member_benefit?: boolean;
+  benefit_type?: 'discount' | 'exclusive' | 'free' | 'trial' | 'other';
   benefit_title?: string;
   benefit_description?: string;
   benefit_link?: string;

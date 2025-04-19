@@ -1,10 +1,10 @@
-
 import { Tool } from '@/types/toolTypes';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ExternalLink, Gift } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { BenefitBadge } from './BenefitBadge';
 
 interface ToolGridProps {
   tools: Tool[];
@@ -55,11 +55,8 @@ const ToolCard = ({ tool }: ToolCardProps) => {
             <Badge variant="outline" className="bg-[#0ABAB5]/10 text-[#0ABAB5]">
               {tool.category}
             </Badge>
-            {tool.has_member_benefit && (
-              <Badge className="bg-[#10b981] hover:bg-[#10b981]/90">
-                <Gift className="h-3 w-3 mr-1" />
-                Benefício Membro
-              </Badge>
+            {tool.has_member_benefit && tool.benefit_type && (
+              <BenefitBadge type={tool.benefit_type} />
             )}
           </div>
         </div>

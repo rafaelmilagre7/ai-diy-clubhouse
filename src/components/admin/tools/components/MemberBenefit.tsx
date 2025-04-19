@@ -1,202 +1,151 @@
+import { useFormContext } from "react-hook-form";
+import { FormField, FormItem, FormLabel, FormControl, FormDescription } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { BenefitType } from "@/types/toolTypes";
+import { BenefitBadge } from "@/components/tools/BenefitBadge";
 
-import { useEffect } from 'react';
-import { UseFormReturn } from 'react-hook-form';
-import { FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
-import { Button } from '@/components/ui/button';
-import { FileUpload } from '@/components/ui/file-upload';
-import { Badge, Gift } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
-import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip';
-import { ToolFormValues } from '../types/toolFormTypes';
-
-interface MemberBenefitProps {
-  form: UseFormReturn<ToolFormValues>;
-}
-
-export const MemberBenefit = ({ form }: MemberBenefitProps) => {
-  const hasBenefit = form.watch('has_member_benefit');
-
-  useEffect(() => {
-    // Quando o usuário desativa o benefício, limpa os campos relacionados
-    if (!hasBenefit) {
-      form.setValue('benefit_title', '');
-      form.setValue('benefit_description', '');
-      form.setValue('benefit_link', '');
-      // Não limpa a imagem do badge para evitar perda de dados acidental
-    }
-  }, [hasBenefit, form]);
-
-  // Renderização condicional do preview
-  const renderPreview = () => {
-    const benefitTitle = form.watch('benefit_title') || 'Título do Benefício';
-    const benefitDescription = form.watch('benefit_description') || 'Descrição detalhada do benefício exclusivo para membros do VIVER DE IA Club.';
-    const benefitBadgeUrl = form.watch('benefit_badge_url');
-
-    return (
-      <Card className="border-2 border-[#10b981]/30 mt-4">
-        <CardContent className="p-4">
-          <div className="flex items-start space-x-4">
-            <div className="flex-shrink-0 w-12 h-12 rounded-full bg-[#10b981]/10 flex items-center justify-center">
-              {benefitBadgeUrl ? (
-                <img src={benefitBadgeUrl} alt="Badge" className="w-8 h-8 object-contain" />
-              ) : (
-                <Gift className="h-6 w-6 text-[#10b981]" />
-              )}
-            </div>
-            <div className="flex-1">
-              <div className="flex items-center mb-1">
-                <Badge className="mr-2 bg-[#10b981] hover:bg-[#10b981]/90">Benefício Membro</Badge>
-                <h3 className="font-semibold">{benefitTitle}</h3>
-              </div>
-              <p className="text-sm text-muted-foreground">{benefitDescription}</p>
-              <Button 
-                size="sm" 
-                className="mt-2 bg-[#10b981] hover:bg-[#10b981]/90"
-              >
-                <Gift className="mr-2 h-4 w-4" />
-                Acessar benefício
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  };
+export const MemberBenefit = () => {
+  const form = useFormContext();
+  const hasBenefit = form.watch("has_member_benefit");
 
   return (
-    <div className="space-y-6">
-      <h2 className="text-lg font-medium border-b pb-2">Benefício para Membros</h2>
+    <div className="space-y-4 border rounded-lg p-4">
+      <h3 className="text-lg font-medium">Benefício para Membros</h3>
       
       <FormField
         control={form.control}
         name="has_member_benefit"
         render={({ field }) => (
-          <FormItem className="flex flex-row items-center justify-between p-4 rounded-lg border">
-            <div className="space-y-0.5">
-              <FormLabel>Esta ferramenta oferece benefício exclusivo</FormLabel>
+          <FormItem className="flex items-center justify-between">
+            <div>
+              <FormLabel>Oferecer benefício exclusivo</FormLabel>
               <FormDescription>
-                Ative para adicionar vantagens exclusivas para membros do VIVER DE IA Club
+                Ative para configurar um benefício especial para membros
               </FormDescription>
             </div>
             <FormControl>
-              <Switch
-                checked={field.value}
+              <Switch 
+                checked={field.value} 
                 onCheckedChange={field.onChange}
               />
             </FormControl>
           </FormItem>
         )}
       />
-      
+
       {hasBenefit && (
-        <div className="space-y-4 pl-4 border-l-2 border-[#10b981]/30">
+        <div className="space-y-4">
+          <FormField
+            control={form.control}
+            name="benefit_type"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Tipo de Benefício</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o tipo de benefício" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="discount">
+                      <div className="flex items-center gap-2">
+                        <BenefitBadge type="discount" />
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="exclusive">
+                      <div className="flex items-center gap-2">
+                        <BenefitBadge type="exclusive" />
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="free">
+                      <div className="flex items-center gap-2">
+                        <BenefitBadge type="free" />
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="trial">
+                      <div className="flex items-center gap-2">
+                        <BenefitBadge type="trial" />
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="other">
+                      <div className="flex items-center gap-2">
+                        <BenefitBadge type="other" />
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </FormItem>
+            )}
+          />
+
           <FormField
             control={form.control}
             name="benefit_title"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Título do Benefício*</FormLabel>
+                <FormLabel>Título do Benefício</FormLabel>
                 <FormControl>
-                  <Input placeholder="Ex: 15% de desconto, 1 mês grátis" {...field} />
+                  <Input placeholder="Ex: 15% de desconto" {...field} />
                 </FormControl>
-                <FormDescription>
-                  Um título curto e direto da vantagem oferecida
-                </FormDescription>
-                <FormMessage />
               </FormItem>
             )}
           />
-          
+
           <FormField
             control={form.control}
             name="benefit_description"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Descrição do Benefício*</FormLabel>
+                <FormLabel>Descrição do Benefício</FormLabel>
                 <FormControl>
-                  <Textarea 
-                    placeholder="Descreva detalhadamente o benefício oferecido aos membros..." 
-                    {...field} 
+                  <Textarea
+                    placeholder="Descreva detalhadamente o benefício para os membros."
+                    className="resize-none"
+                    {...field}
                   />
                 </FormControl>
-                <FormDescription>
-                  Detalhe como funciona o benefício, validade, eventuais restrições
-                </FormDescription>
-                <FormMessage />
+                {/* <FormDescription>
+                  Escreva uma descrição detalhada do benefício que os membros receberão.
+                </FormDescription> */}
               </FormItem>
             )}
           />
-          
+
           <FormField
             control={form.control}
             name="benefit_link"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Link de Afiliado/Benefício*</FormLabel>
+                <FormLabel>Link do Benefício</FormLabel>
                 <FormControl>
-                  <Input placeholder="https://www.exemplo.com/oferta-especial" {...field} />
+                  <Input placeholder="https://seusite.com/beneficio" {...field} />
                 </FormControl>
-                <FormDescription>
-                  URL para a página com a oferta exclusiva
-                </FormDescription>
-                <FormMessage />
+                {/* <FormDescription>
+                  Adicione o link direto para o benefício.
+                </FormDescription> */}
               </FormItem>
             )}
           />
-          
+
           <FormField
             control={form.control}
             name="benefit_badge_url"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Badge do Benefício (opcional)</FormLabel>
+                <FormLabel>URL do Badge Personalizado</FormLabel>
                 <FormControl>
-                  <FileUpload
-                    bucketName="tool_badges"
-                    onUploadComplete={(url) => form.setValue('benefit_badge_url', url)}
-                    accept="image/*"
-                    maxSize={1}
-                    buttonText="Upload do Badge"
-                    fieldLabel="Selecione uma imagem para o badge"
-                  />
+                  <Input placeholder="https://seusite.com/badge.png" {...field} />
                 </FormControl>
-                <FormDescription>
-                  Imagem ou ícone que representa visualmente o benefício
-                </FormDescription>
-                <FormMessage />
+                {/* <FormDescription>
+                  Opcional: Adicione um link para um badge personalizado.
+                </FormDescription> */}
               </FormItem>
             )}
           />
-          
-          <div className="pt-2">
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <span className="block">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      className="mt-2"
-                      onClick={(e) => e.preventDefault()}
-                    >
-                      <Badge className="mr-2 h-4 w-4" />
-                      Visualizar
-                    </Button>
-                  </span>
-                </TooltipTrigger>
-                <TooltipContent>
-                  Preview do benefício como será exibido aos membros
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-            
-            {renderPreview()}
-          </div>
         </div>
       )}
     </div>

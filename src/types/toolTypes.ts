@@ -1,6 +1,8 @@
 
 export type ToolCategory = 'IA' | 'Automação' | 'No-Code' | 'Integração' | 'Produtividade' | 'Outro';
 
+export type BenefitType = 'discount' | 'exclusive' | 'free' | 'trial' | 'other';
+
 export interface VideoTutorial {
   title: string;
   url: string;
@@ -27,4 +29,5 @@ export interface Tool {
   benefit_link?: string;
   benefit_badge_url?: string;
   benefit_clicks?: number;
+  benefit_type?: BenefitType;
 }
