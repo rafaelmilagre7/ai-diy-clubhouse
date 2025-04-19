@@ -10,6 +10,8 @@ export const useAdminSuggestions = () => {
   const removeSuggestion = async (suggestionId: string) => {
     try {
       setLoading(true);
+      console.log('Removendo sugestão:', suggestionId);
+      
       const { error } = await supabase
         .from('suggestions')
         .delete()
@@ -31,6 +33,8 @@ export const useAdminSuggestions = () => {
   const updateSuggestionStatus = async (suggestionId: string, status: string) => {
     try {
       setLoading(true);
+      console.log('Atualizando status da sugestão:', suggestionId, status);
+      
       const { error } = await supabase
         .from('suggestions')
         .update({ status })
@@ -38,7 +42,7 @@ export const useAdminSuggestions = () => {
 
       if (error) throw error;
 
-      toast.success(`Sugestão marcada como ${status}`);
+      toast.success(`Sugestão marcada como ${status === 'in_development' ? 'Em Desenvolvimento' : status}`);
       return true;
     } catch (error: any) {
       console.error('Erro ao atualizar status da sugestão:', error);

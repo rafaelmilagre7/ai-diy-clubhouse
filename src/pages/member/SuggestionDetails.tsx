@@ -7,11 +7,33 @@ import SuggestionLoadingState from '@/components/suggestions/states/SuggestionLo
 import SuggestionErrorState from '@/components/suggestions/states/SuggestionErrorState';
 import { useComments } from '@/hooks/suggestions/useComments';
 import { useSuggestionDetails } from '@/hooks/suggestions/useSuggestionDetails';
-import { useParams } from 'react-router-dom';
+import { useAdminSuggestions } from '@/hooks/suggestions/useAdminSuggestions';
+import { useParams, useNavigate } from 'react-router-dom';
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger 
+} from '@/components/ui/dropdown-menu';
+import { 
+  AlertDialog, 
+  AlertDialogAction, 
+  AlertDialogCancel, 
+  AlertDialogContent, 
+  AlertDialogDescription, 
+  AlertDialogFooter, 
+  AlertDialogHeader, 
+  AlertDialogTitle 
+} from '@/components/ui/alert-dialog';
+import { Button } from '@/components/ui/button';
+import { MoreVertical, Trash2, Play } from 'lucide-react';
+import { useState } from 'react';
 
 const SuggestionDetailsPage = () => {
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   
   const {
     suggestion,
@@ -19,8 +41,11 @@ const SuggestionDetailsPage = () => {
     error,
     userVote,
     voteLoading,
-    handleVote
+    handleVote,
+    refetch
   } = useSuggestionDetails();
+
+  const { removeSuggestion, updateSuggestionStatus } = useAdminSuggestions();
 
   // Adicionando logs para debug
   useEffect(() => {
@@ -28,7 +53,8 @@ const SuggestionDetailsPage = () => {
     console.log('SuggestionDetailsPage - Dados da sugestão:', suggestion);
     console.log('SuggestionDetailsPage - Estado de carregamento:', isLoading);
     console.log('SuggestionDetailsPage - Erro:', error);
-  }, [id, suggestion, isLoading, error]);
+    console.log('SuggestionDetailsPage - O usuário é admin?', isAdmin);
+  }, [id, suggestion, isLoading, error, isAdmin]);
 
   const { 
     comment, 
@@ -39,6 +65,24 @@ const SuggestionDetailsPage = () => {
     handleSubmitComment,
     refetchComments
   } = useComments({ suggestionId: suggestion?.id || '' });
+
+  const handleRemoveSuggestion = async () => {
+    if (suggestion?.id) {
+      const success = await removeSuggestion(suggestion.id);
+      if (success) {
+        navigate('/suggestions');
+      }
+    }
+  };
+
+  const handleUpdateStatus = async (status: string) => {
+    if (suggestion?.id) {
+      const success = await updateSuggestionStatus(suggestion.id, status);
+      if (success) {
+        refetch();
+      }
+    }
+  };
 
   if (isLoading) {
     return <SuggestionLoadingState />;
@@ -54,7 +98,36 @@ const SuggestionDetailsPage = () => {
 
   return (
     <div className="container py-6 space-y-6">
-      <SuggestionHeader />
+      <div className="flex justify-between items-center">
+        <SuggestionHeader />
+        
+        {isAdmin && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm">
+                <MoreVertical className="h-4 w-4 mr-2" />
+                Ações de Admin
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem 
+                onClick={() => handleUpdateStatus('in_development')}
+              >
+                <Play className="mr-2 h-4 w-4" />
+                Marcar como Em Desenvolvimento
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={() => setDeleteDialogOpen(true)}
+                className="text-destructive"
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Remover Sugestão
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
+      </div>
+
       <SuggestionContent
         suggestion={suggestion}
         comment={comment}
@@ -68,6 +141,23 @@ const SuggestionDetailsPage = () => {
         userVote={userVote}
         voteLoading={voteLoading}
       />
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remover Sugestão</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja remover esta sugestão? Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleRemoveSuggestion} className="bg-destructive text-destructive-foreground">
+              Remover
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
