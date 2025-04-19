@@ -1,13 +1,11 @@
 
 import React from 'react';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
-import { Calendar, MessageCircle } from 'lucide-react';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import SuggestionTitle from './content/SuggestionTitle';
+import SuggestionDescription from './content/SuggestionDescription';
 import SuggestionVoting from './SuggestionVoting';
-import CommentForm from './CommentForm';
-import CommentsList from './CommentsList';
+import CommentsSection from './content/CommentsSection';
 
 interface SuggestionContentProps {
   suggestion: {
@@ -56,35 +54,23 @@ const SuggestionContent = ({
   voteLoading = false
 }: SuggestionContentProps) => {
   const status = statusMap[suggestion.status] || { label: 'Desconhecido', color: 'bg-gray-500' };
-  const formattedDate = format(new Date(suggestion.created_at), "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
 
   return (
     <Card>
       <CardHeader>
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-          <div>
-            <CardTitle className="text-2xl">{suggestion.title}</CardTitle>
-            <CardDescription>
-              {suggestion.category?.name && (
-                <Badge variant="outline" className="mr-2">{suggestion.category.name}</Badge>
-              )}
-              <span className="flex items-center gap-1 text-sm text-muted-foreground">
-                <Calendar size={14} />
-                {formattedDate}
-              </span>
-              {isOwner && (
-                <Badge variant="secondary" className="ml-2">Sua sugestão</Badge>
-              )}
-            </CardDescription>
-          </div>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+          <SuggestionTitle
+            title={suggestion.title}
+            category={suggestion.category}
+            createdAt={suggestion.created_at}
+            isOwner={isOwner}
+          />
           <Badge className={`${status.color} text-white`}>{status.label}</Badge>
         </div>
       </CardHeader>
       
       <CardContent className="space-y-6">
-        <div className="prose max-w-none dark:prose-invert">
-          <p className="whitespace-pre-line">{suggestion.description}</p>
-        </div>
+        <SuggestionDescription description={suggestion.description} />
 
         <SuggestionVoting
           suggestion={suggestion}
@@ -93,27 +79,18 @@ const SuggestionContent = ({
           onVote={onVote}
         />
 
-        <div>
-          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-            <MessageCircle size={18} />
-            Comentários ({comments.length})
-          </h3>
-
-          <CommentForm
-            comment={comment}
-            isSubmitting={isSubmitting}
-            onCommentChange={onCommentChange}
-            onSubmit={onSubmitComment}
-          />
-
-          <CommentsList
-            comments={comments}
-            isLoading={commentsLoading}
-          />
-        </div>
+        <CommentsSection
+          comment={comment}
+          comments={comments}
+          isSubmitting={isSubmitting}
+          commentsLoading={commentsLoading}
+          onCommentChange={onCommentChange}
+          onSubmitComment={onSubmitComment}
+        />
       </CardContent>
     </Card>
   );
 };
 
 export default SuggestionContent;
+
