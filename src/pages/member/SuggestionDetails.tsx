@@ -1,20 +1,39 @@
-import React, { useState } from 'react';
+
+import React from 'react';
 import { useParams } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/contexts/auth';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Calendar } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
-import { useAuth } from '@/contexts/auth';
+import { Calendar, MessageCircle } from 'lucide-react';
 import { toast } from 'sonner';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 
 import SuggestionHeader from '@/components/suggestions/SuggestionHeader';
 import SuggestionVoting from '@/components/suggestions/SuggestionVoting';
 import CommentForm from '@/components/suggestions/CommentForm';
 import CommentsList from '@/components/suggestions/CommentsList';
+import { useComments } from '@/hooks/useComments';
+import { Skeleton } from '@/components/ui/skeleton';
+
+interface Suggestion {
+  id: string;
+  title: string;
+  description: string;
+  status: 'new' | 'under_review' | 'approved' | 'in_development' | 'implemented' | 'rejected';
+  upvotes: number;
+  downvotes: number;
+  created_at: string;
+  category: { name: string };
+  user: {
+    id: string;
+    email: string;
+    name: string;
+    avatar_url: string;
+  };
+}
 
 const statusMap = {
   new: { label: 'Nova', color: 'bg-blue-500' },
@@ -28,8 +47,14 @@ const statusMap = {
 const SuggestionDetailsPage = () => {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
-  const [comment, setComment] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { 
+    comment, 
+    setComment, 
+    comments, 
+    commentsLoading, 
+    isSubmitting, 
+    handleSubmitComment 
+  } = useComments({ suggestionId: id || '' });
 
   const {
     data: suggestion,
@@ -52,146 +77,31 @@ const SuggestionDetailsPage = () => {
         .single();
 
       if (error) throw error;
-      return data as Suggestion & { 
-        category: { name: string },
-        user: { id: string, email: string, name: string, avatar_url: string }
-      };
+      return data as Suggestion;
     },
-  });
-
-  const {
-    data: comments = [],
-    isLoading: commentsLoading,
-    refetch: refetchComments
-  } = useQuery({
-    queryKey: ['suggestion-comments', id],
-    queryFn: async () => {
-      if (!id) return [];
-      
-      const { data, error } = await supabase
-        .from('suggestion_comments')
-        .select(`
-          *,
-          user:user_id(id, email, name, avatar_url)
-        `)
-        .eq('suggestion_id', id)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      return data as (SuggestionComment & {
-        user: { id: string, email: string, name: string, avatar_url: string }
-      })[];
-    },
-  });
-
-  const {
-    data: userVote,
-    isLoading: voteLoading
-  } = useQuery({
-    queryKey: ['suggestion-vote', id, user?.id],
-    queryFn: async () => {
-      if (!id || !user) return null;
-      
-      const { data, error } = await supabase
-        .from('suggestion_votes')
-        .select('*')
-        .eq('suggestion_id', id)
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!user && !!id,
   });
 
   const handleVote = async (voteType: 'upvote' | 'downvote') => {
     if (!user) {
-      toast({
-        title: "Erro ao votar",
-        description: "Você precisa estar logado para votar.",
-        variant: "destructive"
-      });
+      toast.error("Você precisa estar logado para votar.");
       return;
     }
-
-    try {
-      if (userVote && userVote.vote_type === voteType) {
-        await supabase
-          .from('suggestion_votes')
-          .delete()
-          .eq('id', userVote.id);
-      } else {
-        await supabase
-          .from('suggestion_votes')
-          .upsert({
-            suggestion_id: id,
-            user_id: user.id,
-            vote_type: voteType
-          }, {
-            onConflict: 'suggestion_id,user_id'
-          });
-      }
-      refetch();
-    } catch (error: any) {
-      console.error('Erro ao votar:', error);
-      toast({
-        title: "Erro ao votar",
-        description: error.message || "Ocorreu um erro ao registrar seu voto.",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const handleSubmitComment = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!user) {
-      toast({
-        title: "Erro ao comentar",
-        description: "Você precisa estar logado para comentar.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    if (!comment.trim()) {
-      toast({
-        title: "Erro ao comentar",
-        description: "O comentário não pode estar vazio.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setIsSubmitting(true);
 
     try {
       await supabase
-        .from('suggestion_comments')
-        .insert({
+        .from('suggestion_votes')
+        .upsert({
           suggestion_id: id,
           user_id: user.id,
-          content: comment.trim()
+          vote_type: voteType
+        }, {
+          onConflict: 'suggestion_id,user_id'
         });
-
-      setComment('');
-      refetchComments();
-      refetch();
       
-      toast({
-        title: "Comentário enviado",
-        description: "Seu comentário foi publicado com sucesso!"
-      });
+      refetch();
     } catch (error: any) {
-      console.error('Erro ao comentar:', error);
-      toast({
-        title: "Erro ao comentar",
-        description: error.message || "Ocorreu um erro ao enviar seu comentário.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsSubmitting(false);
+      console.error('Erro ao votar:', error);
+      toast.error(error.message || "Ocorreu um erro ao registrar seu voto.");
     }
   };
 
@@ -263,25 +173,10 @@ const SuggestionDetailsPage = () => {
             <p className="whitespace-pre-line">{suggestion.description}</p>
           </div>
 
-          <div className="flex items-center justify-between border-t border-b py-4">
-            <div className="flex items-center space-x-4">
-              <Avatar>
-                <AvatarImage src={suggestion.user?.avatar_url || ''} />
-                <AvatarFallback>{suggestion.user?.name?.charAt(0) || '?'}</AvatarFallback>
-              </Avatar>
-              <div>
-                <p className="text-sm font-medium">{suggestion.user?.name || 'Usuário'}</p>
-                <p className="text-xs text-muted-foreground">Autor da sugestão</p>
-              </div>
-            </div>
-
-            <SuggestionVoting
-              suggestion={suggestion}
-              userVote={userVote}
-              voteLoading={voteLoading}
-              onVote={handleVote}
-            />
-          </div>
+          <SuggestionVoting
+            suggestion={suggestion}
+            onVote={handleVote}
+          />
 
           <div>
             <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
