@@ -21,7 +21,7 @@ export const useToolForm = (toolId: string) => {
         official_url: data.official_url,
         category: data.category,
         status: data.status,
-        logo_url: data.logo_url || null,
+        logo_url: data.logo_url,
         tags: data.tags || [],
         video_tutorials: data.video_tutorials || [],
         has_member_benefit: data.has_member_benefit || false,
@@ -53,7 +53,6 @@ export const useToolForm = (toolId: string) => {
         description: "As alterações foram salvas com sucesso",
       });
 
-      // Retornar true para indicar sucesso
       return true;
     } catch (error: any) {
       console.error('Erro ao salvar ferramenta:', error);

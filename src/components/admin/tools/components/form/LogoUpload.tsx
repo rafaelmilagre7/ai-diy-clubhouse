@@ -13,12 +13,10 @@ interface LogoUploadProps {
 export const LogoUpload = ({ form }: LogoUploadProps) => {
   const [logoUrl, setLogoUrl] = useState<string | undefined>(form.getValues('logo_url'));
   
-  // Garantir que o logoUrl seja atualizado quando o valor do formulário mudar
   useEffect(() => {
     setLogoUrl(form.getValues('logo_url'));
   }, [form]);
   
-  // Função para atualizar o logo no formulário quando o upload for concluído
   const handleUploadComplete = (url: string) => {
     console.log('Logo enviado com sucesso:', url);
     
@@ -31,6 +29,9 @@ export const LogoUpload = ({ form }: LogoUploadProps) => {
       shouldTouch: true,
       shouldValidate: true 
     });
+    
+    // Marcar o formulário como modificado
+    form.setValue('formModified', true);
     
     // Notificar o formulário que houve mudança
     form.trigger('logo_url');
