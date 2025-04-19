@@ -1,64 +1,97 @@
 
-import { useState } from 'react';
-import { FormLabel } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Plus, X } from 'lucide-react';
-import { UseFormReturn } from 'react-hook-form';
-import { ToolFormValues } from '../types/toolFormTypes';
+import { useState } from "react";
+import { FormField, FormItem, FormLabel, FormControl, FormDescription } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Plus, X } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
-interface TagManagerProps {
-  form: UseFormReturn<ToolFormValues>;
-}
-
-export const TagManager = ({ form }: TagManagerProps) => {
-  const [tagInput, setTagInput] = useState('');
-
-  const addTag = () => {
-    const normalizedTag = tagInput.trim().toLowerCase();
-    if (normalizedTag && !form.getValues('tags').includes(normalizedTag)) {
-      form.setValue('tags', [...form.getValues('tags'), normalizedTag]);
-      setTagInput('');
+export const TagManager = ({ form }: any) => {
+  const [newTag, setNewTag] = useState("");
+  
+  const handleAddTag = () => {
+    if (newTag.trim() === "") return;
+    
+    const currentTags = form.getValues("tags") || [];
+    const lowercaseNewTag = newTag.toLowerCase().trim();
+    
+    if (!currentTags.includes(lowercaseNewTag)) {
+      form.setValue("tags", [...currentTags, lowercaseNewTag]);
+      setNewTag("");
     }
   };
-
-  const removeTag = (index: number) => {
-    const currentTags = form.getValues('tags');
-    form.setValue('tags', currentTags.filter((_, i) => i !== index));
+  
+  const handleRemoveTag = (tag: string) => {
+    const currentTags = form.getValues("tags") || [];
+    form.setValue(
+      "tags",
+      currentTags.filter((t: string) => t !== tag)
+    );
   };
-
+  
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleAddTag();
+    }
+  };
+  
   return (
-    <div className="space-y-4">
-      <FormLabel>Tags</FormLabel>
-      <div className="flex flex-wrap gap-2 mb-2">
-        {form.watch('tags').map((tag, index) => (
-          <Badge key={index} variant="secondary">
-            {tag}
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="ml-2 h-4 w-4 p-0 hover:bg-transparent"
-              onClick={() => removeTag(index)}
-            >
-              <X className="h-3 w-3" />
-            </Button>
-          </Badge>
-        ))}
-      </div>
-      <div className="flex gap-2">
-        <Input
-          value={tagInput}
-          onChange={(e) => setTagInput(e.target.value)}
-          placeholder="Adicione tags..."
-          onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
-        />
-        <Button type="button" onClick={addTag} variant="outline">
-          <Plus className="h-4 w-4 mr-2" />
-          Adicionar Tag
-        </Button>
-      </div>
+    <div className="space-y-6">
+      <h2 className="text-lg font-medium border-b pb-2">Tags</h2>
+      
+      <FormField
+        control={form.control}
+        name="tags"
+        render={() => (
+          <FormItem>
+            <FormLabel>Tags da Ferramenta</FormLabel>
+            <div className="flex flex-wrap items-center gap-2 mb-3">
+              {form.watch("tags")?.map((tag: string) => (
+                <Badge key={tag} variant="secondary" className="pl-2 pr-1 py-1 flex items-center gap-1">
+                  {tag}
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-4 w-4 rounded-full"
+                    onClick={() => handleRemoveTag(tag)}
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                </Badge>
+              ))}
+              {(!form.watch("tags") || form.watch("tags").length === 0) && (
+                <span className="text-sm text-muted-foreground">
+                  Nenhuma tag adicionada
+                </span>
+              )}
+            </div>
+            
+            <div className="flex gap-2">
+              <FormControl>
+                <Input
+                  placeholder="Nova tag"
+                  value={newTag}
+                  onChange={(e) => setNewTag(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                />
+              </FormControl>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleAddTag}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Adicionar
+              </Button>
+            </div>
+            <FormDescription>
+              Adicione tags para facilitar a busca e categorização da ferramenta
+            </FormDescription>
+          </FormItem>
+        )}
+      />
     </div>
   );
 };
