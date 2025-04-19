@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Upload, Check, AlertCircle } from 'lucide-react';
@@ -31,6 +31,10 @@ export const FileUpload: React.FC<FileUploadProps> = ({
   const [fileName, setFileName] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
+  
+  // Ref para controlar chamadas duplicadas
+  const isUploadingRef = useRef(false);
+  const lastUploadedUrlRef = useRef<string | null>(null);
 
   // Atualizar estado local quando initialFileUrl mudar
   useEffect(() => {
@@ -42,6 +46,12 @@ export const FileUpload: React.FC<FileUploadProps> = ({
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (!files || files.length === 0) return;
+    
+    // Prevenir uploads duplicados
+    if (isUploadingRef.current) {
+      console.log('Upload já em andamento, ignorando nova solicitação');
+      return;
+    }
     
     const file = files[0];
     
@@ -57,6 +67,9 @@ export const FileUpload: React.FC<FileUploadProps> = ({
     }
     
     try {
+      // Marcar que um upload está em andamento
+      isUploadingRef.current = true;
+      
       setError(null);
       setUploading(true);
       setFileName(file.name);
@@ -88,20 +101,22 @@ export const FileUpload: React.FC<FileUploadProps> = ({
       const publicURL = publicURLData.publicUrl;
       console.log('URL pública do arquivo:', publicURL);
       
-      // Atualizar o estado local
-      setUploadedFileUrl(publicURL);
-      
-      // Chamar o callback onUploadComplete de forma síncrona
-      onUploadComplete(publicURL, file.name, file.size);
-      
-      // Emitir evento de mudança para o DOM
-      const changeEvent = new Event('change', { bubbles: true });
-      event.target.dispatchEvent(changeEvent);
-      
-      toast({
-        title: 'Upload concluído',
-        description: 'O arquivo foi enviado com sucesso.',
-      });
+      // Prevenir chamadas duplicadas de callback verificando se a URL é a mesma
+      if (publicURL !== lastUploadedUrlRef.current) {
+        lastUploadedUrlRef.current = publicURL;
+        
+        // Atualizar o estado local
+        setUploadedFileUrl(publicURL);
+        
+        // Chamar o callback onUploadComplete uma única vez
+        onUploadComplete(publicURL, file.name, file.size);
+        
+        // Mostrar toast apenas uma vez
+        toast({
+          title: 'Upload concluído',
+          description: 'O arquivo foi enviado com sucesso.',
+        });
+      }
     } catch (error: any) {
       console.error('Erro no upload:', error);
       setError(error.message || 'Erro ao fazer upload do arquivo');
@@ -112,6 +127,10 @@ export const FileUpload: React.FC<FileUploadProps> = ({
       });
     } finally {
       setUploading(false);
+      // Resetar o flag de upload em andamento após um breve delay
+      setTimeout(() => {
+        isUploadingRef.current = false;
+      }, 300);
     }
   };
 

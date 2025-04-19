@@ -10,13 +10,14 @@ import { MemberBenefit } from './components/MemberBenefit';
 import { toolFormSchema } from './schema/toolFormSchema';
 import { ToolFormProps, ToolFormValues } from './types/toolFormTypes';
 import { BenefitType } from '@/types/toolTypes';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 
 export const ToolForm = ({ initialData, onSubmit, isSubmitting }: ToolFormProps) => {
   // Garantir que benefit_type seja sempre um dos valores válidos
   const defaultBenefitType = initialData?.benefit_type as BenefitType | undefined;
   const [formChanged, setFormChanged] = useState(false);
   const [logoUrlChanged, setLogoUrlChanged] = useState(false);
+  const formMountedRef = useRef(false);
 
   const form = useForm<ToolFormValues>({
     resolver: zodResolver(toolFormSchema),
@@ -38,6 +39,40 @@ export const ToolForm = ({ initialData, onSubmit, isSubmitting }: ToolFormProps)
     }
   });
 
+  // Realizar verificação inicial logo após o formulário ser montado
+  useEffect(() => {
+    if (!formMountedRef.current) {
+      formMountedRef.current = true;
+      
+      // Verificação inicial do logo_url
+      const currentLogoUrl = form.getValues('logo_url');
+      const initialLogoUrl = initialData?.logo_url || '';
+      
+      if (currentLogoUrl !== initialLogoUrl) {
+        console.log('Logo URL diferente na inicialização:', { currentLogoUrl, initialLogoUrl });
+        setLogoUrlChanged(true);
+        setFormChanged(true);
+      }
+    }
+  }, []);
+
+  // Monitorar o logoChanged via evento customizado
+  useEffect(() => {
+    const handleLogoChange = (event: CustomEvent) => {
+      console.log('Evento de mudança de logo detectado', event.detail);
+      setLogoUrlChanged(true);
+      setFormChanged(true);
+      
+      // Forçar validação do formulário para atualizar o estado
+      form.trigger();
+    };
+    
+    document.addEventListener('logoChanged', handleLogoChange as EventListener);
+    return () => {
+      document.removeEventListener('logoChanged', handleLogoChange as EventListener);
+    };
+  }, [form]);
+
   // Verificador de mudanças diretas no logo_url
   useEffect(() => {
     const subscription = form.watch((values, { name }) => {
@@ -46,8 +81,9 @@ export const ToolForm = ({ initialData, onSubmit, isSubmitting }: ToolFormProps)
         const initialLogoUrl = initialData?.logo_url || '';
         
         if (currentLogoUrl !== initialLogoUrl) {
-          console.log('Logo URL mudou:', { currentLogoUrl, initialLogoUrl });
+          console.log('Logo URL mudou via watch:', { currentLogoUrl, initialLogoUrl });
           setLogoUrlChanged(true);
+          setFormChanged(true);
         }
       }
     });
@@ -68,23 +104,18 @@ export const ToolForm = ({ initialData, onSubmit, isSubmitting }: ToolFormProps)
       let hasChanges = false;
       
       if (form.getValues('name') !== initialData.name) {
-        console.log('Nome mudou');
         hasChanges = true;
       }
       if (form.getValues('description') !== initialData.description) {
-        console.log('Descrição mudou');
         hasChanges = true;
       }
       if (form.getValues('official_url') !== initialData.official_url) {
-        console.log('URL oficial mudou');
         hasChanges = true;
       }
       if (form.getValues('category') !== initialData.category) {
-        console.log('Categoria mudou');
         hasChanges = true;
       }
       if (form.getValues('status') !== initialData.status) {
-        console.log('Status mudou');
         hasChanges = true;
       }
       
@@ -92,7 +123,6 @@ export const ToolForm = ({ initialData, onSubmit, isSubmitting }: ToolFormProps)
       const currentLogoUrl = form.getValues('logo_url');
       const initialLogoUrl = initialData.logo_url || '';
       if (currentLogoUrl !== initialLogoUrl) {
-        console.log('Logo URL mudou:', { currentLogoUrl, initialLogoUrl });
         hasChanges = true;
       }
       
@@ -101,7 +131,6 @@ export const ToolForm = ({ initialData, onSubmit, isSubmitting }: ToolFormProps)
       const initialTags = initialData.tags || [];
       if (currentTags.length !== initialTags.length || 
           currentTags.some((tag, i) => tag !== initialTags[i])) {
-        console.log('Tags mudaram');
         hasChanges = true;
       }
       
@@ -116,31 +145,8 @@ export const ToolForm = ({ initialData, onSubmit, isSubmitting }: ToolFormProps)
       });
     });
     
-    // Verificação inicial
-    const currentLogoUrl = form.getValues('logo_url');
-    const initialLogoUrl = initialData?.logo_url || '';
-    if (currentLogoUrl !== initialLogoUrl) {
-      console.log('Logo URL diferente na inicialização:', { currentLogoUrl, initialLogoUrl });
-      setLogoUrlChanged(true);
-      setFormChanged(true);
-    }
-    
     return () => subscription.unsubscribe();
   }, [form, initialData, logoUrlChanged]);
-
-  // Adicionar listener para evento customizado
-  useEffect(() => {
-    const handleLogoChange = () => {
-      console.log('Evento de mudança de logo detectado');
-      setLogoUrlChanged(true);
-      setFormChanged(true);
-    };
-    
-    document.addEventListener('logoChanged', handleLogoChange);
-    return () => {
-      document.removeEventListener('logoChanged', handleLogoChange);
-    };
-  }, []);
 
   const handleFormSubmit = (data: ToolFormValues) => {
     console.log("Formulário enviado:", data);

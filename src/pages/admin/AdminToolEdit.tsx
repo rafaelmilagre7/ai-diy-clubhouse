@@ -14,6 +14,7 @@ const AdminToolEdit = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [tool, setTool] = useState<Tool | null>(null);
+  const [redirectInProgress, setRedirectInProgress] = useState(false);
   const isNew = !id || id === 'new';
 
   useEffect(() => {
@@ -57,6 +58,11 @@ const AdminToolEdit = () => {
 
   const handleSubmit = async (data: any) => {
     try {
+      if (redirectInProgress) {
+        console.log('Salvamento já em andamento, ignorando nova solicitação');
+        return;
+      }
+      
       setSaving(true);
       console.log('Salvando ferramenta:', data);
       
@@ -103,8 +109,13 @@ const AdminToolEdit = () => {
         });
         
         // Atualizar o estado local com os dados atualizados
-        setTool(updatedData[0] as Tool);
+        if (updatedData && updatedData.length > 0) {
+          setTool(updatedData[0] as Tool);
+        }
       }
+      
+      // Marcar que o redirecionamento está em andamento
+      setRedirectInProgress(true);
       
       // Aguardar um momento para a notificação ser exibida antes do redirecionamento
       setTimeout(() => {
@@ -119,6 +130,7 @@ const AdminToolEdit = () => {
         variant: 'destructive',
       });
       setSaving(false);
+      setRedirectInProgress(false);
     }
   };
 
