@@ -1,11 +1,11 @@
-
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { 
   LayoutDashboard, 
   BookOpen, 
   Award,
-  User
+  User,
+  Wrench
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -17,7 +17,6 @@ interface MemberSidebarNavProps {
 export const MemberSidebarNav = ({ sidebarOpen }: MemberSidebarNavProps) => {
   const location = useLocation();
 
-  // Define the navigation items
   const navItems = [
     {
       title: "Dashboard",
@@ -43,10 +42,15 @@ export const MemberSidebarNav = ({ sidebarOpen }: MemberSidebarNavProps) => {
       icon: User,
       path: "/profile",
       id: "profile"
+    },
+    {
+      title: "Ferramentas",
+      icon: Wrench,
+      path: "/tools",
+      id: "tools"
     }
   ];
 
-  // Improved isActive function for more reliable route detection
   const isActive = (path: string) => {
     const currentPath = location.pathname;
     

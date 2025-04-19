@@ -1,4 +1,3 @@
-
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { 
@@ -8,6 +7,7 @@ import {
   Users as UsersIcon,
   Settings,
   BarChart,
+  Wrench
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -62,6 +62,14 @@ export const AdminSidebarNav = ({ sidebarOpen }: AdminSidebarNavProps) => {
       path: "/admin/settings",
       exact: false,
       id: "admin-settings"
+    },
+    {
+      title: "Ferramentas",
+      icon: Wrench,
+      path: "/admin/tools",
+      exact: false,
+      badge: "Gerenciar",
+      id: "admin-tools"
     },
   ];
 

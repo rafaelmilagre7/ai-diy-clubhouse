@@ -373,6 +373,42 @@ export type Database = {
           },
         ]
       }
+      solution_tools_reference: {
+        Row: {
+          created_at: string
+          id: string
+          solution_id: string | null
+          tool_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          solution_id?: string | null
+          tool_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          solution_id?: string | null
+          tool_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "solution_tools_reference_solution_id_fkey"
+            columns: ["solution_id"]
+            isOneToOne: false
+            referencedRelation: "solutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "solution_tools_reference_tool_id_fkey"
+            columns: ["tool_id"]
+            isOneToOne: false
+            referencedRelation: "tools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       solutions: {
         Row: {
           category: string
@@ -421,6 +457,48 @@ export type Database = {
           thumbnail_url?: string | null
           title?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      tools: {
+        Row: {
+          category: string
+          created_at: string
+          description: string
+          id: string
+          logo_url: string | null
+          name: string
+          official_url: string
+          status: boolean | null
+          tags: string[] | null
+          updated_at: string
+          video_tutorials: Json | null
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          description: string
+          id?: string
+          logo_url?: string | null
+          name: string
+          official_url: string
+          status?: boolean | null
+          tags?: string[] | null
+          updated_at?: string
+          video_tutorials?: Json | null
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string
+          id?: string
+          logo_url?: string | null
+          name?: string
+          official_url?: string
+          status?: boolean | null
+          tags?: string[] | null
+          updated_at?: string
+          video_tutorials?: Json | null
         }
         Relationships: []
       }
