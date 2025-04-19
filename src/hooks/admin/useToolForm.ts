@@ -14,28 +14,39 @@ export const useToolForm = (toolId: string) => {
       setIsSubmitting(true);
       console.log('Salvando ferramenta:', data);
 
-      const { error } = await supabase
-        .from('tools')
-        .update({
-          name: data.name,
-          description: data.description,
-          official_url: data.official_url,
-          category: data.category,
-          status: data.status,
-          logo_url: data.logo_url,
-          tags: data.tags,
-          video_tutorials: data.video_tutorials,
-          has_member_benefit: data.has_member_benefit,
-          benefit_type: data.benefit_type,
-          benefit_title: data.benefit_title,
-          benefit_description: data.benefit_description,
-          benefit_link: data.benefit_link,
-          benefit_badge_url: data.benefit_badge_url,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', toolId);
+      // Garantir que todos os campos esperados estejam presentes
+      const toolData = {
+        name: data.name,
+        description: data.description,
+        official_url: data.official_url,
+        category: data.category,
+        status: data.status,
+        logo_url: data.logo_url || null,
+        tags: data.tags || [],
+        video_tutorials: data.video_tutorials || [],
+        has_member_benefit: data.has_member_benefit || false,
+        benefit_type: data.benefit_type || null,
+        benefit_title: data.benefit_title || null,
+        benefit_description: data.benefit_description || null,
+        benefit_link: data.benefit_link || null,
+        benefit_badge_url: data.benefit_badge_url || null,
+        updated_at: new Date().toISOString()
+      };
 
-      if (error) throw error;
+      console.log('Dados formatados para salvar:', toolData);
+
+      const { error, data: responseData } = await supabase
+        .from('tools')
+        .update(toolData)
+        .eq('id', toolId)
+        .select();
+
+      if (error) {
+        console.error('Erro do Supabase:', error);
+        throw error;
+      }
+
+      console.log('Resposta do Supabase:', responseData);
 
       toast({
         title: "Ferramenta atualizada",

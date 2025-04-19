@@ -15,19 +15,24 @@ export const VideoTutorials = ({ form }: any) => {
     name: "video_tutorials",
   });
 
-  // Garantir que qualquer mudança nos vídeos force uma reavaliação do estado do formulário
-  useEffect(() => {
-    // Marcar o formulário como modificado explicitamente se houver alterações nos vídeos
-    console.log("Video tutorials atualizados:", fields);
-    form.setValue("formModified", true, { shouldDirty: true });
-  }, [fields.length]);
-
   const handleAddVideo = () => {
     append({ title: "", url: "", type: "youtube" });
-    // Importante: Marcar formulário como modificado após adicionar vídeo
+    // Marcar o formulário como modificado após adicionar vídeo
     form.setValue("formModified", true, { shouldDirty: true });
     console.log("Vídeo adicionado, formModified =", true);
   };
+
+  // Detectar mudanças nos campos de vídeo
+  useEffect(() => {
+    const subscription = form.watch((value, { name, type }) => {
+      if (name?.startsWith('video_tutorials')) {
+        form.setValue("formModified", true, { shouldDirty: true });
+        console.log("Video tutorial modificado, formModified =", true);
+      }
+    });
+    
+    return () => subscription.unsubscribe();
+  }, [form]);
 
   return (
     <div className="space-y-6">
@@ -81,7 +86,6 @@ export const VideoTutorials = ({ form }: any) => {
                               field.onChange(e);
                               // Marcar que houve mudança
                               form.setValue("formModified", true, { shouldDirty: true });
-                              console.log("Título alterado, formModified =", true);
                             }}
                           />
                         </FormControl>
@@ -102,7 +106,6 @@ export const VideoTutorials = ({ form }: any) => {
                             field.onChange(value);
                             // Marcar que houve mudança
                             form.setValue("formModified", true, { shouldDirty: true });
-                            console.log("Tipo alterado, formModified =", true);
                           }}
                         >
                           <FormControl>
@@ -138,7 +141,6 @@ export const VideoTutorials = ({ form }: any) => {
                                   field.onChange(url);
                                   // Marcar que houve mudança após upload
                                   form.setValue("formModified", true, { shouldDirty: true });
-                                  console.log("URL alterada (upload), formModified =", true);
                                 }}
                                 accept="video/*"
                                 maxSize={100}
@@ -150,10 +152,9 @@ export const VideoTutorials = ({ form }: any) => {
                                 placeholder="https://www.youtube.com/watch?v=..." 
                                 value={fieldValue}
                                 onChange={(e) => {
-                                  field.onChange(e);
+                                  field.onChange(e.target.value);
                                   // Marcar que houve mudança
                                   form.setValue("formModified", true, { shouldDirty: true });
-                                  console.log("URL alterada, formModified =", true);
                                 }}
                               />
                             )}
@@ -179,7 +180,6 @@ export const VideoTutorials = ({ form }: any) => {
                     remove(index);
                     // Marcar que houve mudança após remoção
                     form.setValue("formModified", true, { shouldDirty: true });
-                    console.log("Vídeo removido, formModified =", true);
                   }}
                 >
                   <Trash className="h-4 w-4" />

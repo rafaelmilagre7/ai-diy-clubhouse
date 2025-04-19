@@ -7,6 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import { ToolForm } from '@/components/admin/tools/ToolForm';
 import LoadingScreen from '@/components/common/LoadingScreen';
 import { useToolForm } from '@/hooks/admin/useToolForm';
+import { ToolFormValues } from '@/components/admin/tools/types/toolFormTypes';
 
 const AdminToolEdit = () => {
   const { id } = useParams<{ id: string }>();
@@ -55,11 +56,16 @@ const AdminToolEdit = () => {
     }
   };
 
-  const onSubmit = async (data: any) => {
+  const onSubmit = async (data: ToolFormValues) => {
+    console.log('Formulário enviado para processo de salvamento:', data);
     const success = await handleSubmit(data);
+    
     if (success) {
+      console.log('Ferramenta atualizada com sucesso, redirecionando...');
       // Aguardar um momento para mostrar o feedback antes de redirecionar
       setTimeout(() => navigate('/admin/tools'), 1500);
+    } else {
+      console.log('Erro ao atualizar ferramenta, permanecendo na página');
     }
   };
 

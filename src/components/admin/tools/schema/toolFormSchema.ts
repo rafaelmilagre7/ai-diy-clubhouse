@@ -18,11 +18,11 @@ export const toolFormSchema = z.object({
     })
   ).default([]),
   has_member_benefit: z.boolean().default(false),
-  benefit_type: z.enum(['discount', 'exclusive', 'free', 'trial', 'other'] as const).optional(),
-  benefit_title: z.string().optional(),
-  benefit_description: z.string().optional(),
-  benefit_link: z.string().url('URL inválida').optional().or(z.literal('')),
-  benefit_badge_url: z.string().optional(),
+  benefit_type: z.enum(['discount', 'exclusive', 'free', 'trial', 'other'] as const).optional().nullable(),
+  benefit_title: z.string().optional().nullable(),
+  benefit_description: z.string().optional().nullable(),
+  benefit_link: z.string().url('URL inválida').optional().nullable().or(z.literal('')),
+  benefit_badge_url: z.string().optional().nullable(),
   formModified: z.boolean().default(false)
 }).refine((data) => {
   // Se has_member_benefit for true, os campos de benefício são obrigatórios

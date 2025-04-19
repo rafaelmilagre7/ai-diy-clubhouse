@@ -10,15 +10,16 @@ import { MemberBenefit } from './components/MemberBenefit';
 import { toolFormSchema } from './schema/toolFormSchema';
 import { ToolFormProps, ToolFormValues } from './types/toolFormTypes';
 import { BenefitType } from '@/types/toolTypes';
-import { useEffect, useState, useRef } from 'react';
-import { toast } from '@/hooks/use-toast';
+import { useEffect, useState } from 'react';
+import { useToast } from '@/hooks/use-toast';
 
 export const ToolForm = ({ initialData, onSubmit, isSubmitting }: ToolFormProps) => {
   // Garantir que benefit_type seja sempre um dos valores válidos
   const defaultBenefitType = initialData?.benefit_type as BenefitType | undefined;
   const [formChanged, setFormChanged] = useState(false);
-  const formMountedRef = useRef(false);
+  const { toast } = useToast();
 
+  // Inicializa o formulário com valores padrão ou existentes
   const form = useForm<ToolFormValues>({
     resolver: zodResolver(toolFormSchema),
     defaultValues: {
@@ -40,27 +41,19 @@ export const ToolForm = ({ initialData, onSubmit, isSubmitting }: ToolFormProps)
     }
   });
 
-  // Realizar verificação inicial logo após o formulário ser montado
+  // Se for um novo formulário (sem initialData), marcar como modificado para habilitar o botão de salvar
   useEffect(() => {
-    if (!formMountedRef.current) {
-      formMountedRef.current = true;
-      console.log('Formulário montado com valores iniciais:', form.getValues());
-      
-      // Se for um novo formulário (sem initialData), marcar como modificado para habilitar o botão de salvar
-      if (!initialData) {
-        setFormChanged(true);
-      }
+    if (!initialData) {
+      setFormChanged(true);
     }
   }, [initialData]);
 
   // Monitorar o estado do formulário para detectar mudanças
   useEffect(() => {
-    const subscription = form.watch((values, { name, type }) => {
-      console.log(`Campo alterado: ${name}, tipo: ${type}`);
-      
-      // Verificar se o formulário foi explicitamente marcado como modificado
+    const subscription = form.watch((values) => {
+      // Verificar se o formulário foi explicitamente marcado como modificado via field
       if (form.getValues('formModified')) {
-        console.log('Formulário marcado como modificado explicitamente');
+        console.log('Formulário marcado como modificado via formModified field');
         setFormChanged(true);
         return;
       }
@@ -71,60 +64,32 @@ export const ToolForm = ({ initialData, onSubmit, isSubmitting }: ToolFormProps)
         return;
       }
       
-      // Verificar se os valores atuais do formulário são diferentes dos valores iniciais
+      // Verificar se o formulário está "dirty" segundo o React Hook Form
       const isDirty = form.formState.isDirty;
-      
-      // Verificar explicitamente o logo_url, já que pode ser alterado via upload
-      const logoChanged = form.getValues('logo_url') !== initialData.logo_url;
-      
-      // Verificar explicitamente arrays (tags e video_tutorials)
-      const tagsChanged = JSON.stringify(form.getValues('tags')) !== JSON.stringify(initialData.tags || []);
-      
-      // Verificação especial para video_tutorials - comparação mais detalhada
-      const currentVideos = form.getValues('video_tutorials') || [];
-      const initialVideos = initialData.video_tutorials || [];
-      
-      // Considerar mudança se o número de vídeos for diferente
-      let videosChanged = currentVideos.length !== initialVideos.length;
-      
-      // Se o número de vídeos for igual, verificar cada vídeo individualmente
-      if (!videosChanged && currentVideos.length > 0) {
-        videosChanged = JSON.stringify(currentVideos) !== JSON.stringify(initialVideos);
-      }
-      
-      console.log('Verificação de mudanças:', { 
-        isDirty, 
-        logoChanged, 
-        tagsChanged, 
-        videosChanged,
-        currentVideos: currentVideos.length,
-        initialVideos: initialVideos.length
-      });
-      
-      if (isDirty || logoChanged || tagsChanged || videosChanged) {
-        console.log('Formulário modificado');
+      if (isDirty) {
+        console.log('Formulário marcado como dirty pelo React Hook Form');
         setFormChanged(true);
-      } else {
-        setFormChanged(false);
+        return;
       }
     });
     
     return () => subscription.unsubscribe();
   }, [form, initialData]);
 
-  const handleFormSubmit = (data: ToolFormValues) => {
+  const handleFormSubmit = async (data: ToolFormValues) => {
     try {
       console.log("Formulário enviado:", data);
       
       // Remover campos auxiliares antes de enviar para o backend
       const { formModified, ...submitData } = data;
       
-      onSubmit(submitData);
+      const success = await onSubmit(submitData);
       
-      toast({
-        title: "Formulário enviado",
-        description: "Salvando alterações...",
-      });
+      if (success) {
+        // Reset o estado do formulário após salvar com sucesso
+        setFormChanged(false);
+        form.setValue("formModified", false);
+      }
     } catch (error) {
       console.error("Erro ao enviar formulário:", error);
       toast({

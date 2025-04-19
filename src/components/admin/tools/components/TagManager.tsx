@@ -16,7 +16,7 @@ export const TagManager = ({ form }: any) => {
     const lowercaseNewTag = newTag.toLowerCase().trim();
     
     if (!currentTags.includes(lowercaseNewTag)) {
-      form.setValue("tags", [...currentTags, lowercaseNewTag]);
+      form.setValue("tags", [...currentTags, lowercaseNewTag], { shouldDirty: true });
       form.setValue("formModified", true, { shouldDirty: true });
       console.log("Tag adicionada, formModified =", true);
       setNewTag("");
@@ -27,7 +27,8 @@ export const TagManager = ({ form }: any) => {
     const currentTags = form.getValues("tags") || [];
     form.setValue(
       "tags",
-      currentTags.filter((t: string) => t !== tag)
+      currentTags.filter((t: string) => t !== tag),
+      { shouldDirty: true }
     );
     form.setValue("formModified", true, { shouldDirty: true });
     console.log("Tag removida, formModified =", true);
