@@ -4,9 +4,9 @@ import { supabase } from '@/lib/supabase';
 import { Tool } from '@/types/toolTypes';
 
 export const useTools = () => {
-  return useQuery({
+  return useQuery<Tool[], Error>({
     queryKey: ['tools'],
-    queryFn: async (): Promise<Tool[]> => {
+    queryFn: async () => {
       const { data, error } = await supabase
         .from('tools')
         .select('*')
@@ -16,7 +16,7 @@ export const useTools = () => {
         throw error;
       }
 
-      return data;
+      return data as Tool[];
     }
   });
 };
