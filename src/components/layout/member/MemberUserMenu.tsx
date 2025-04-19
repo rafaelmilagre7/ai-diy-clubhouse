@@ -40,15 +40,21 @@ export const MemberUserMenu = ({
     
     try {
       setIsLoggingOut(true);
+      console.log("Iniciando processo de logout via MemberUserMenu");
+      
       // Limpar token do localStorage para garantir logout
       localStorage.removeItem('sb-zotzvtepvpnkcoobdubt-auth-token');
+      localStorage.removeItem('supabase.auth.token');
       
       // Usar o signOut do contexto de autenticação
       await signOut();
       
       // Redirecionamento forçado para a página de autenticação
       toast.success("Logout realizado com sucesso");
-      navigate('/auth', { replace: true });
+      console.log("Redirecionando para /auth");
+      
+      // Forçar redirecionamento via location.href para garantir reset completo da aplicação
+      window.location.href = '/auth';
     } catch (error) {
       console.error("Erro ao fazer logout:", error);
       // Força redirecionamento para login em caso de falha

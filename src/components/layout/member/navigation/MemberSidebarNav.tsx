@@ -63,6 +63,20 @@ export const MemberSidebarNav = ({ sidebarOpen }: { sidebarOpen: boolean }) => {
           </Link>
         </Button>
 
+        {/* Item de menu Sugestões - Agora visível para todos os usuários (membros e admin) */}
+        <Button
+          variant={location.pathname.startsWith("/suggestions") ? "default" : "ghost"}
+          asChild
+          className="w-full justify-start"
+        >
+          <Link to="/suggestions">
+            <PencilLine className="h-5 w-5 mr-2" />
+            <span className={cn("flex-1", !sidebarOpen && "hidden")}>
+              Sugestões
+            </span>
+          </Link>
+        </Button>
+
         <Button
           variant={location.pathname === "/settings" ? "default" : "ghost"}
           asChild
@@ -85,19 +99,6 @@ export const MemberSidebarNav = ({ sidebarOpen }: { sidebarOpen: boolean }) => {
             <HelpCircle className="h-5 w-5 mr-2" />
             <span className={cn("flex-1", !sidebarOpen && "hidden")}>
               Ajuda
-            </span>
-          </Link>
-        </Button>
-
-        <Button
-          variant={location.pathname.startsWith("/suggestions") ? "default" : "ghost"}
-          asChild
-          className="w-full justify-start"
-        >
-          <Link to="/suggestions">
-            <PencilLine className="h-5 w-5 mr-2" />
-            <span className={cn("flex-1", !sidebarOpen && "hidden")}>
-              Sugestões
             </span>
           </Link>
         </Button>
