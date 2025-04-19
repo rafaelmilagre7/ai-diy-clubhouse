@@ -102,7 +102,7 @@ const AdminToolEdit = () => {
         });
       }
       
-      // Garantir que o navegador complete o redirecionamento
+      // Garantir que o navegador complete o redirecionamento após salvar
       setTimeout(() => {
         navigate('/admin/tools');
       }, 500);

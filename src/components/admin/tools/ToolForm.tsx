@@ -40,6 +40,7 @@ export const ToolForm = ({ initialData, onSubmit, isSubmitting }: ToolFormProps)
   // Monitorar o estado do formulário para detectar mudanças
   useEffect(() => {
     const subscription = form.watch(() => {
+      // Verificar se o formulário está marcado como "dirty" (com alterações)
       setFormChanged(form.formState.isDirty);
     });
     
@@ -51,7 +52,7 @@ export const ToolForm = ({ initialData, onSubmit, isSubmitting }: ToolFormProps)
     onSubmit(data);
   };
 
-  // Corrigindo a linha problemática - verificamos corretamente se initialData existe e se formChanged é falso
+  // Verificação melhorada para garantir que o botão de salvar seja habilitado corretamente
   const isSaveDisabled = isSubmitting || (!formChanged && initialData !== undefined);
 
   return (

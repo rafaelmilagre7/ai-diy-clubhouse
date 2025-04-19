@@ -31,6 +31,18 @@ export const LogoUpload = ({ form }: LogoUploadProps) => {
       shouldTouch: true,
       shouldValidate: true 
     });
+    
+    // Força o formulário a ser marcado como "dirty" para ativar o botão de salvar
+    if (form.formState.isDirty === false) {
+      // Se o formulário ainda não estiver marcado como dirty, definimos manualmente
+      Object.defineProperty(form.formState, 'isDirty', {
+        get: () => true
+      });
+      
+      // Notifica os ouvintes sobre a mudança de estado do formulário
+      form.trigger();
+    }
+    
     setLogoUrl(url);
   };
 
