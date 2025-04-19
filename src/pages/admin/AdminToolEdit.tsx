@@ -14,7 +14,6 @@ const AdminToolEdit = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [tool, setTool] = useState<Tool | null>(null);
-  const [redirectInProgress, setRedirectInProgress] = useState(false);
   const isNew = !id || id === 'new';
 
   useEffect(() => {
@@ -58,11 +57,6 @@ const AdminToolEdit = () => {
 
   const handleSubmit = async (data: any) => {
     try {
-      if (redirectInProgress) {
-        console.log('Salvamento já em andamento, ignorando nova solicitação');
-        return;
-      }
-      
       setSaving(true);
       console.log('Salvando ferramenta:', data);
       
@@ -93,6 +87,9 @@ const AdminToolEdit = () => {
           title: 'Ferramenta criada',
           description: 'A ferramenta foi criada com sucesso.',
         });
+        
+        // Redirecionar após a criação ser concluída
+        setTimeout(() => navigate('/admin/tools'), 1000);
       } else {
         const { data: updatedData, error } = await supabase
           .from('tools')
@@ -112,16 +109,10 @@ const AdminToolEdit = () => {
         if (updatedData && updatedData.length > 0) {
           setTool(updatedData[0] as Tool);
         }
+        
+        // Redirecionar após um breve atraso para exibir a mensagem de sucesso
+        setTimeout(() => navigate('/admin/tools'), 1000);
       }
-      
-      // Marcar que o redirecionamento está em andamento
-      setRedirectInProgress(true);
-      
-      // Aguardar um momento para a notificação ser exibida antes do redirecionamento
-      setTimeout(() => {
-        navigate('/admin/tools');
-      }, 1500);
-      
     } catch (error: any) {
       console.error('Erro ao salvar ferramenta:', error);
       toast({
@@ -129,8 +120,8 @@ const AdminToolEdit = () => {
         description: error.message || 'Ocorreu um erro ao tentar salvar a ferramenta.',
         variant: 'destructive',
       });
+    } finally {
       setSaving(false);
-      setRedirectInProgress(false);
     }
   };
 

@@ -13,26 +13,27 @@ interface LogoUploadProps {
 export const LogoUpload = ({ form }: LogoUploadProps) => {
   const [logoUrl, setLogoUrl] = useState<string | undefined>(form.getValues('logo_url'));
   
-  // Função para atualizar o logo no formulário - com controle para evitar chamadas duplicadas
+  // Garantir que o logoUrl seja atualizado quando o valor do formulário mudar
+  useEffect(() => {
+    setLogoUrl(form.getValues('logo_url'));
+  }, [form]);
+  
+  // Função para atualizar o logo no formulário quando o upload for concluído
   const handleUploadComplete = (url: string) => {
-    // Verifica se o URL é diferente antes de atualizar
-    if (url !== form.getValues('logo_url')) {
-      console.log('Atualizando logo_url para:', url);
-      
-      // Atualizar o estado local primeiro
-      setLogoUrl(url);
-      
-      // Usar setValue com as flags adequadas
-      form.setValue('logo_url', url, { 
-        shouldDirty: true,
-        shouldTouch: true,
-        shouldValidate: true 
-      });
-      
-      // Disparar um evento customizado para notificar outros componentes da mudança de logo
-      const logoChangeEvent = new CustomEvent('logoChanged', { detail: { url } });
-      document.dispatchEvent(logoChangeEvent);
-    }
+    console.log('Logo enviado com sucesso:', url);
+    
+    // Atualizar o estado local
+    setLogoUrl(url);
+    
+    // Atualizar o valor no formulário
+    form.setValue('logo_url', url, { 
+      shouldDirty: true,
+      shouldTouch: true,
+      shouldValidate: true 
+    });
+    
+    // Notificar o formulário que houve mudança
+    form.trigger('logo_url');
   };
 
   return (

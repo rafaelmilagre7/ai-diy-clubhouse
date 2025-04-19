@@ -34,7 +34,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
   
   // Ref para controlar chamadas duplicadas
   const isUploadingRef = useRef(false);
-  const lastUploadedUrlRef = useRef<string | null>(null);
+  const toastShownRef = useRef(false);
 
   // Atualizar estado local quando initialFileUrl mudar
   useEffect(() => {
@@ -67,6 +67,9 @@ export const FileUpload: React.FC<FileUploadProps> = ({
     }
     
     try {
+      // Resetar o toast para garantir que será mostrado apenas uma vez
+      toastShownRef.current = false;
+      
       // Marcar que um upload está em andamento
       isUploadingRef.current = true;
       
@@ -86,7 +89,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
         .from(bucketName)
         .upload(filePath, file, {
           cacheControl: '3600',
-          upsert: false
+          upsert: true // Alterado para true para permitir substituição
         });
       
       if (error) throw error;
@@ -101,21 +104,19 @@ export const FileUpload: React.FC<FileUploadProps> = ({
       const publicURL = publicURLData.publicUrl;
       console.log('URL pública do arquivo:', publicURL);
       
-      // Prevenir chamadas duplicadas de callback verificando se a URL é a mesma
-      if (publicURL !== lastUploadedUrlRef.current) {
-        lastUploadedUrlRef.current = publicURL;
-        
-        // Atualizar o estado local
-        setUploadedFileUrl(publicURL);
-        
-        // Chamar o callback onUploadComplete uma única vez
-        onUploadComplete(publicURL, file.name, file.size);
-        
-        // Mostrar toast apenas uma vez
+      // Atualizar o estado local
+      setUploadedFileUrl(publicURL);
+      
+      // Chamar o callback onUploadComplete com a URL pública
+      onUploadComplete(publicURL, file.name, file.size);
+      
+      // Mostrar toast apenas uma vez
+      if (!toastShownRef.current) {
         toast({
           title: 'Upload concluído',
           description: 'O arquivo foi enviado com sucesso.',
         });
+        toastShownRef.current = true;
       }
     } catch (error: any) {
       console.error('Erro no upload:', error);

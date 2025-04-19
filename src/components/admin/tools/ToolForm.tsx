@@ -16,7 +16,6 @@ export const ToolForm = ({ initialData, onSubmit, isSubmitting }: ToolFormProps)
   // Garantir que benefit_type seja sempre um dos valores válidos
   const defaultBenefitType = initialData?.benefit_type as BenefitType | undefined;
   const [formChanged, setFormChanged] = useState(false);
-  const [logoUrlChanged, setLogoUrlChanged] = useState(false);
   const formMountedRef = useRef(false);
 
   const form = useForm<ToolFormValues>({
@@ -43,117 +42,44 @@ export const ToolForm = ({ initialData, onSubmit, isSubmitting }: ToolFormProps)
   useEffect(() => {
     if (!formMountedRef.current) {
       formMountedRef.current = true;
-      
-      // Verificação inicial do logo_url
-      const currentLogoUrl = form.getValues('logo_url');
-      const initialLogoUrl = initialData?.logo_url || '';
-      
-      if (currentLogoUrl !== initialLogoUrl) {
-        console.log('Logo URL diferente na inicialização:', { currentLogoUrl, initialLogoUrl });
-        setLogoUrlChanged(true);
-        setFormChanged(true);
-      }
+      console.log('Formulário montado com valores iniciais:', form.getValues());
     }
   }, []);
 
-  // Monitorar o logoChanged via evento customizado
-  useEffect(() => {
-    const handleLogoChange = (event: CustomEvent) => {
-      console.log('Evento de mudança de logo detectado', event.detail);
-      setLogoUrlChanged(true);
-      setFormChanged(true);
-      
-      // Forçar validação do formulário para atualizar o estado
-      form.trigger();
-    };
-    
-    document.addEventListener('logoChanged', handleLogoChange as EventListener);
-    return () => {
-      document.removeEventListener('logoChanged', handleLogoChange as EventListener);
-    };
-  }, [form]);
-
-  // Verificador de mudanças diretas no logo_url
-  useEffect(() => {
-    const subscription = form.watch((values, { name }) => {
-      if (name === 'logo_url') {
-        const currentLogoUrl = form.getValues('logo_url');
-        const initialLogoUrl = initialData?.logo_url || '';
-        
-        if (currentLogoUrl !== initialLogoUrl) {
-          console.log('Logo URL mudou via watch:', { currentLogoUrl, initialLogoUrl });
-          setLogoUrlChanged(true);
-          setFormChanged(true);
-        }
-      }
-    });
-    
-    return () => subscription.unsubscribe();
-  }, [form, initialData]);
-
   // Monitorar o estado do formulário para detectar mudanças
   useEffect(() => {
-    const subscription = form.watch(() => {
+    const subscription = form.watch((values, { name, type }) => {
+      console.log(`Campo alterado: ${name}, tipo: ${type}`);
+      
       // Se não houver dados iniciais, o formulário é novo e deve estar sempre habilitado
       if (!initialData) {
         setFormChanged(true);
         return;
       }
       
-      // Verificar explicitamente se algum campo foi alterado
-      let hasChanges = false;
+      // Verificar se os valores atuais do formulário são diferentes dos valores iniciais
+      const isDirty = form.formState.isDirty;
       
-      if (form.getValues('name') !== initialData.name) {
-        hasChanges = true;
-      }
-      if (form.getValues('description') !== initialData.description) {
-        hasChanges = true;
-      }
-      if (form.getValues('official_url') !== initialData.official_url) {
-        hasChanges = true;
-      }
-      if (form.getValues('category') !== initialData.category) {
-        hasChanges = true;
-      }
-      if (form.getValues('status') !== initialData.status) {
-        hasChanges = true;
-      }
+      // Verificar explicitamente o logo_url
+      const logoChanged = initialData.logo_url !== form.getValues('logo_url');
       
-      // Verificar logo_url explicitamente
-      const currentLogoUrl = form.getValues('logo_url');
-      const initialLogoUrl = initialData.logo_url || '';
-      if (currentLogoUrl !== initialLogoUrl) {
-        hasChanges = true;
+      if (isDirty || logoChanged) {
+        console.log('Formulário modificado:', { isDirty, logoChanged });
+        setFormChanged(true);
+      } else {
+        setFormChanged(false);
       }
-      
-      // Verificar se há diferença nos arrays
-      const currentTags = form.getValues('tags');
-      const initialTags = initialData.tags || [];
-      if (currentTags.length !== initialTags.length || 
-          currentTags.some((tag, i) => tag !== initialTags[i])) {
-        hasChanges = true;
-      }
-      
-      // Verificar se o formulário foi alterado ou se o logo mudou
-      setFormChanged(hasChanges || logoUrlChanged || form.formState.isDirty);
-      
-      console.log('Estado do formulário:', { 
-        hasChanges, 
-        logoUrlChanged,
-        isDirty: form.formState.isDirty,
-        formChanged: hasChanges || logoUrlChanged || form.formState.isDirty
-      });
     });
     
     return () => subscription.unsubscribe();
-  }, [form, initialData, logoUrlChanged]);
+  }, [form, initialData]);
 
   const handleFormSubmit = (data: ToolFormValues) => {
     console.log("Formulário enviado:", data);
     onSubmit(data);
   };
 
-  // Verificação melhorada para garantir que o botão de salvar seja habilitado corretamente
+  // Garantir que o botão de salvar seja habilitado quando houver mudanças
   const isSaveDisabled = isSubmitting || (!formChanged && initialData !== undefined);
 
   return (
