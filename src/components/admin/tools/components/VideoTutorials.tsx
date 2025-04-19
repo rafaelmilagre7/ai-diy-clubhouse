@@ -5,6 +5,8 @@ import { VideoTutorialsList } from './video-tutorials/VideoTutorialsList';
 import { AddTutorialButton } from './video-tutorials/AddTutorialButton';
 import { UseFormReturn } from 'react-hook-form';
 import { ToolFormValues, VideoTutorial } from '../types/toolFormTypes';
+import { Button } from '@/components/ui/button';
+import { Plus } from 'lucide-react';
 
 interface VideoTutorialsProps {
   form: UseFormReturn<ToolFormValues>;
@@ -51,10 +53,12 @@ export const VideoTutorials = ({ form }: VideoTutorialsProps) => {
         <CardTitle className="text-xl">Tutoriais em Vídeo</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <VideoTutorialsList 
-          tutorials={videoTutorials}
-          onDelete={handleDeleteTutorial}
-        />
+        {videoTutorials.length > 0 && (
+          <VideoTutorialsList 
+            tutorials={videoTutorials}
+            onDelete={handleDeleteTutorial}
+          />
+        )}
         
         {showAddForm ? (
           <AddTutorialButton 
@@ -62,13 +66,15 @@ export const VideoTutorials = ({ form }: VideoTutorialsProps) => {
             onCancel={() => setShowAddForm(false)}
           />
         ) : (
-          <button
+          <Button
             type="button"
+            variant="outline"
             className="w-full py-2 border-2 border-dashed border-gray-300 rounded-md flex items-center justify-center text-gray-500 hover:text-gray-700 hover:border-gray-400 transition-colors"
             onClick={() => setShowAddForm(true)}
           >
+            <Plus className="h-4 w-4 mr-2" />
             Adicionar tutorial em vídeo
-          </button>
+          </Button>
         )}
       </CardContent>
     </Card>

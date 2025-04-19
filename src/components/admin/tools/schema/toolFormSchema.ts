@@ -6,7 +6,9 @@ export const toolFormSchema = z.object({
   name: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres'),
   description: z.string().min(10, 'Descrição deve ter pelo menos 10 caracteres'),
   official_url: z.string().url('URL inválida'),
-  category: z.string(),
+  category: z.nativeEnum(ToolCategory, {
+    errorMap: () => ({ message: 'Categoria é obrigatória' })
+  }),
   status: z.boolean().default(true),
   logo_url: z.string().optional().nullable(),
   tags: z.array(z.string()).default([]),

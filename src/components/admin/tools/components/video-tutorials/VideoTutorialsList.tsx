@@ -1,22 +1,24 @@
 
 import { VideoTutorialItem } from './VideoTutorialItem';
-import { VideoTutorial } from '@/types/toolTypes';
+import { VideoTutorial } from '../../types/toolFormTypes';
 
 interface VideoTutorialsListProps {
-  videoTutorials: VideoTutorial[];
-  onUpdate: (index: number, field: 'title' | 'url', value: string) => void;
-  onRemove: (index: number) => void;
+  tutorials: VideoTutorial[];
+  onDelete: (index: number) => void;
 }
 
-export const VideoTutorialsList = ({ videoTutorials, onUpdate, onRemove }: VideoTutorialsListProps) => {
+export const VideoTutorialsList = ({ tutorials, onDelete }: VideoTutorialsListProps) => {
   return (
     <div className="space-y-4">
-      {videoTutorials.map((tutorial, index) => (
+      {tutorials.map((tutorial, index) => (
         <VideoTutorialItem
           key={index}
           tutorial={tutorial}
-          onUpdate={(field, value) => onUpdate(index, field, value)}
-          onRemove={() => onRemove(index)}
+          onUpdate={(field, value) => {
+            // No-op para agora - implementação futura se necessário
+            console.log(`Update tutorial ${index}, field ${field} to ${value}`);
+          }}
+          onRemove={() => onDelete(index)}
         />
       ))}
     </div>

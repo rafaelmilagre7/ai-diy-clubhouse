@@ -9,7 +9,7 @@ import { VideoTutorials } from './components/VideoTutorials';
 import { MemberBenefit } from './components/MemberBenefit';
 import { toolFormSchema } from './schema/toolFormSchema';
 import { ToolFormProps, ToolFormValues } from './types/toolFormTypes';
-import { BenefitType } from '@/types/toolTypes';
+import { BenefitType, ToolCategory } from '@/types/toolTypes';
 import { useEffect, useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -19,14 +19,14 @@ export const ToolForm = ({ initialData, onSubmit, isSubmitting }: ToolFormProps)
   const [formChanged, setFormChanged] = useState(false);
   const { toast } = useToast();
 
-  // Inicializa o formulário com valores padrão ou existentes
+  // Inicializa o formulário com valores padrão ou existentes, garantindo que category nunca seja string vazia
   const form = useForm<ToolFormValues>({
     resolver: zodResolver(toolFormSchema),
     defaultValues: {
       name: initialData?.name || '',
       description: initialData?.description || '',
       official_url: initialData?.official_url || '',
-      category: initialData?.category || '',
+      category: initialData?.category || ('Modelos de IA e Interfaces' as ToolCategory), // Valor padrão para evitar string vazia
       status: initialData?.status ?? true,
       logo_url: initialData?.logo_url || '',
       tags: initialData?.tags || [],
