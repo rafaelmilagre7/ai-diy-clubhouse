@@ -36,7 +36,7 @@ export const ToolForm = ({ initialData, onSubmit, isSubmitting }: ToolFormProps)
       benefit_description: initialData?.benefit_description || '',
       benefit_link: initialData?.benefit_link || '',
       benefit_badge_url: initialData?.benefit_badge_url || '',
-      formModified: false // Novo campo para controle de mudanças
+      formModified: initialData ? false : true // Novos formulários começam como modificados
     }
   });
 
@@ -45,23 +45,28 @@ export const ToolForm = ({ initialData, onSubmit, isSubmitting }: ToolFormProps)
     if (!formMountedRef.current) {
       formMountedRef.current = true;
       console.log('Formulário montado com valores iniciais:', form.getValues());
+      
+      // Se for um novo formulário (sem initialData), marcar como modificado para habilitar o botão de salvar
+      if (!initialData) {
+        setFormChanged(true);
+      }
     }
-  }, []);
+  }, [initialData]);
 
   // Monitorar o estado do formulário para detectar mudanças
   useEffect(() => {
     const subscription = form.watch((values, { name, type }) => {
       console.log(`Campo alterado: ${name}, tipo: ${type}`);
       
-      // Se não houver dados iniciais, o formulário é novo e deve estar sempre habilitado
-      if (!initialData) {
+      // Verificar se o formulário foi explicitamente marcado como modificado
+      if (form.getValues('formModified')) {
+        console.log('Formulário marcado como modificado explicitamente');
         setFormChanged(true);
         return;
       }
       
-      // Verificar se o formulário foi explicitamente marcado como modificado
-      if (form.getValues('formModified')) {
-        console.log('Formulário marcado como modificado explicitamente');
+      // Se não houver dados iniciais, o formulário é novo e deve estar sempre habilitado
+      if (!initialData) {
         setFormChanged(true);
         return;
       }
@@ -74,11 +79,30 @@ export const ToolForm = ({ initialData, onSubmit, isSubmitting }: ToolFormProps)
       
       // Verificar explicitamente arrays (tags e video_tutorials)
       const tagsChanged = JSON.stringify(form.getValues('tags')) !== JSON.stringify(initialData.tags || []);
-      const videosChanged = JSON.stringify(form.getValues('video_tutorials')) !== 
-                           JSON.stringify(initialData.video_tutorials || []);
+      
+      // Verificação especial para video_tutorials - comparação mais detalhada
+      const currentVideos = form.getValues('video_tutorials') || [];
+      const initialVideos = initialData.video_tutorials || [];
+      
+      // Considerar mudança se o número de vídeos for diferente
+      let videosChanged = currentVideos.length !== initialVideos.length;
+      
+      // Se o número de vídeos for igual, verificar cada vídeo individualmente
+      if (!videosChanged && currentVideos.length > 0) {
+        videosChanged = JSON.stringify(currentVideos) !== JSON.stringify(initialVideos);
+      }
+      
+      console.log('Verificação de mudanças:', { 
+        isDirty, 
+        logoChanged, 
+        tagsChanged, 
+        videosChanged,
+        currentVideos: currentVideos.length,
+        initialVideos: initialVideos.length
+      });
       
       if (isDirty || logoChanged || tagsChanged || videosChanged) {
-        console.log('Formulário modificado:', { isDirty, logoChanged, tagsChanged, videosChanged });
+        console.log('Formulário modificado');
         setFormChanged(true);
       } else {
         setFormChanged(false);
@@ -111,7 +135,7 @@ export const ToolForm = ({ initialData, onSubmit, isSubmitting }: ToolFormProps)
     }
   };
 
-  // Garantir que o botão de salvar seja habilitado quando houver mudanças
+  // Garantir que o botão de salvar seja habilitado quando houver mudanças ou for um novo formulário
   const isSaveDisabled = isSubmitting || (!formChanged && initialData !== undefined);
 
   return (
@@ -119,7 +143,7 @@ export const ToolForm = ({ initialData, onSubmit, isSubmitting }: ToolFormProps)
       <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-8">
         <BasicInfo form={form} />
         <TagManager form={form} />
-        <MemberBenefit className="mt-6" />
+        <MemberBenefit className="mt-6" form={form} />
         <VideoTutorials form={form} />
         
         <div className="pt-4 border-t">
@@ -138,6 +162,11 @@ export const ToolForm = ({ initialData, onSubmit, isSubmitting }: ToolFormProps)
           {(formChanged && initialData) && (
             <p className="text-sm text-primary text-center mt-2">
               Alterações detectadas - clique para salvar
+            </p>
+          )}
+          {(!initialData) && (
+            <p className="text-sm text-primary text-center mt-2">
+              Preencha os campos e clique para criar a ferramenta
             </p>
           )}
         </div>

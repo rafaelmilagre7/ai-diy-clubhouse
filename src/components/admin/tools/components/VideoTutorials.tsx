@@ -17,15 +17,16 @@ export const VideoTutorials = ({ form }: any) => {
 
   // Garantir que qualquer mudança nos vídeos force uma reavaliação do estado do formulário
   useEffect(() => {
-    if (fields.length > 0) {
-      form.trigger("video_tutorials");
-    }
-  }, [fields, form]);
+    // Marcar o formulário como modificado explicitamente se houver alterações nos vídeos
+    console.log("Video tutorials atualizados:", fields);
+    form.setValue("formModified", true, { shouldDirty: true });
+  }, [fields.length]);
 
   const handleAddVideo = () => {
     append({ title: "", url: "", type: "youtube" });
     // Importante: Marcar formulário como modificado após adicionar vídeo
     form.setValue("formModified", true, { shouldDirty: true });
+    console.log("Vídeo adicionado, formModified =", true);
   };
 
   return (
@@ -80,6 +81,7 @@ export const VideoTutorials = ({ form }: any) => {
                               field.onChange(e);
                               // Marcar que houve mudança
                               form.setValue("formModified", true, { shouldDirty: true });
+                              console.log("Título alterado, formModified =", true);
                             }}
                           />
                         </FormControl>
@@ -100,6 +102,7 @@ export const VideoTutorials = ({ form }: any) => {
                             field.onChange(value);
                             // Marcar que houve mudança
                             form.setValue("formModified", true, { shouldDirty: true });
+                            console.log("Tipo alterado, formModified =", true);
                           }}
                         >
                           <FormControl>
@@ -135,6 +138,7 @@ export const VideoTutorials = ({ form }: any) => {
                                   field.onChange(url);
                                   // Marcar que houve mudança após upload
                                   form.setValue("formModified", true, { shouldDirty: true });
+                                  console.log("URL alterada (upload), formModified =", true);
                                 }}
                                 accept="video/*"
                                 maxSize={100}
@@ -149,6 +153,7 @@ export const VideoTutorials = ({ form }: any) => {
                                   field.onChange(e);
                                   // Marcar que houve mudança
                                   form.setValue("formModified", true, { shouldDirty: true });
+                                  console.log("URL alterada, formModified =", true);
                                 }}
                               />
                             )}
@@ -174,6 +179,7 @@ export const VideoTutorials = ({ form }: any) => {
                     remove(index);
                     // Marcar que houve mudança após remoção
                     form.setValue("formModified", true, { shouldDirty: true });
+                    console.log("Vídeo removido, formModified =", true);
                   }}
                 >
                   <Trash className="h-4 w-4" />

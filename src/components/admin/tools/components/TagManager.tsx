@@ -17,6 +17,8 @@ export const TagManager = ({ form }: any) => {
     
     if (!currentTags.includes(lowercaseNewTag)) {
       form.setValue("tags", [...currentTags, lowercaseNewTag]);
+      form.setValue("formModified", true, { shouldDirty: true });
+      console.log("Tag adicionada, formModified =", true);
       setNewTag("");
     }
   };
@@ -27,6 +29,8 @@ export const TagManager = ({ form }: any) => {
       "tags",
       currentTags.filter((t: string) => t !== tag)
     );
+    form.setValue("formModified", true, { shouldDirty: true });
+    console.log("Tag removida, formModified =", true);
   };
   
   const handleKeyDown = (e: React.KeyboardEvent) => {
