@@ -1,4 +1,3 @@
-
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { 
@@ -69,7 +68,15 @@ export const AdminSidebarNav = ({ sidebarOpen }: AdminSidebarNavProps) => {
       icon: Wrench,
       path: "/admin/tools",
       exact: false,
+      badge: "Gerenciar",
       id: "admin-tools"
+    },
+    {
+      title: "Nova Ferramenta",
+      icon: Plus,
+      path: "/admin/tools/new",
+      exact: true,
+      id: "admin-new-tool"
     },
   ];
 

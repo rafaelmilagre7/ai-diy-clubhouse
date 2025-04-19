@@ -45,12 +45,10 @@ const AdminTools = () => {
     );
   }
 
-  const filteredTools = tools.filter(tool => 
+  const filteredTools = tools?.filter(tool => 
     tool.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    tool.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
-
-  console.log('Ferramentas filtradas:', filteredTools);
+    tool.tags?.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
+  ) || [];
 
   return (
     <div className="space-y-6">
