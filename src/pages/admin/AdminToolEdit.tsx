@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { Tool } from '@/types/toolTypes';
@@ -16,7 +16,8 @@ const AdminToolEdit = () => {
   const [tool, setTool] = useState<Tool | null>(null);
   const isNew = !id || id === 'new';
 
-  useState(() => {
+  // Uso correto de useEffect em vez de useState com callback
+  useEffect(() => {
     if (!isNew) {
       fetchTool();
     } else {
