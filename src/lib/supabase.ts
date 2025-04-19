@@ -19,7 +19,7 @@ export interface UserProfile {
   created_at: string;
 }
 
-// Definições de tipos para as soluções e módulos que estão sendo usadas em outros componentes
+// Interface expandida para incluir todas as propriedades utilizadas no código
 export interface Solution {
   id: string;
   title: string;
@@ -27,6 +27,7 @@ export interface Solution {
   difficulty: string;
   category: string;
   image_url?: string;
+  thumbnail_url?: string;
   author_id: string;
   created_at: string;
   updated_at: string;
@@ -34,6 +35,13 @@ export interface Solution {
   slug: string;
   status?: string;
   completion_percentage?: number;
+  overview?: string;
+  estimated_time?: number;
+  success_rate?: number;
+  tags?: string[];
+  videos?: any[];
+  checklist?: any[];
+  module_order?: number;
 }
 
 export interface Module {
@@ -42,9 +50,32 @@ export interface Module {
   title: string;
   description?: string;
   order: number;
+  module_order?: number; // Algumas partes do código usam essa propriedade ao invés de order
   type: string;
   content?: any;
   created_at: string;
   updated_at: string;
   completed?: boolean;
+}
+
+// Adicionando interfaces faltantes
+export interface Progress {
+  id: string;
+  user_id: string;
+  solution_id: string;
+  current_module: number;
+  is_completed: boolean;
+  completed_modules: number[];
+  completed_at?: string;
+  last_activity: string;
+  created_at: string;
+}
+
+export interface UserChecklist {
+  id: string;
+  user_id: string;
+  solution_id: string;
+  checked_items: Record<string, boolean>;
+  created_at: string;
+  updated_at: string;
 }

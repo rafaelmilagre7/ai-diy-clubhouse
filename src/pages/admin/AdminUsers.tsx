@@ -1,5 +1,5 @@
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/auth";
 import { isSuperAdmin } from "@/contexts/auth/utils/profileUtils/roleValidation";
 import { useUsers } from "@/hooks/admin/useUsers";
@@ -36,7 +36,7 @@ const AdminUsers = () => {
 
   const handleEditRole = (user: UserProfile) => {
     setSelectedUser(user);
-    setNewRole(user.role);
+    setNewRole(user.role as 'admin' | 'member');
     setEditRoleOpen(true);
   };
 
@@ -63,7 +63,7 @@ const AdminUsers = () => {
         onOpenChange={setEditRoleOpen}
         selectedUser={selectedUser}
         newRole={newRole}
-        onRoleChange={setNewRole}
+        onRoleChange={(value) => setNewRole(value as 'admin' | 'member')}
         onUpdateRole={handleUpdateRole}
         saving={saving}
       />
