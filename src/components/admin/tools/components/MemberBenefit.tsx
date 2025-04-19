@@ -1,3 +1,4 @@
+
 import { useFormContext } from "react-hook-form";
 import { FormField, FormItem, FormLabel, FormControl, FormDescription } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -7,12 +8,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { BenefitType } from "@/types/toolTypes";
 import { BenefitBadge } from "@/components/tools/BenefitBadge";
 
-export const MemberBenefit = () => {
+interface MemberBenefitProps {
+  className?: string;
+}
+
+export const MemberBenefit = ({ className }: MemberBenefitProps) => {
   const form = useFormContext();
   const hasBenefit = form.watch("has_member_benefit");
 
   return (
-    <div className="space-y-4 border rounded-lg p-4">
+    <div className={`space-y-4 border rounded-lg p-4 ${className}`}>
       <h3 className="text-lg font-medium">Benefício para Membros</h3>
       
       <FormField
@@ -108,9 +113,6 @@ export const MemberBenefit = () => {
                     {...field}
                   />
                 </FormControl>
-                {/* <FormDescription>
-                  Escreva uma descrição detalhada do benefício que os membros receberão.
-                </FormDescription> */}
               </FormItem>
             )}
           />
@@ -124,25 +126,6 @@ export const MemberBenefit = () => {
                 <FormControl>
                   <Input placeholder="https://seusite.com/beneficio" {...field} />
                 </FormControl>
-                {/* <FormDescription>
-                  Adicione o link direto para o benefício.
-                </FormDescription> */}
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="benefit_badge_url"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>URL do Badge Personalizado</FormLabel>
-                <FormControl>
-                  <Input placeholder="https://seusite.com/badge.png" {...field} />
-                </FormControl>
-                {/* <FormDescription>
-                  Opcional: Adicione um link para um badge personalizado.
-                </FormDescription> */}
               </FormItem>
             )}
           />
