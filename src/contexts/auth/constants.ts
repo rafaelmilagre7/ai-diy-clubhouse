@@ -1,3 +1,10 @@
 
-// Re-export test user constants from the new structure
-export { TEST_MEMBER, TEST_ADMIN } from './utils/testAuth';
+export const TEST_ADMIN = {
+  email: 'admin@example.com',
+  password: 'senha123',
+};
+
+export const TEST_MEMBER = {
+  email: 'membro@example.com',
+  password: 'senha123',
+};

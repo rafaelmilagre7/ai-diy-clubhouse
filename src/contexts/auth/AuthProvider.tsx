@@ -6,9 +6,11 @@ import { useAuthMethods } from './hooks/useAuthMethods';
 import { AuthContextType } from './types';
 import { supabase } from '@/lib/supabase';
 
+// Criação do contexto com valor padrão undefined
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  // Movendo os hooks para dentro do corpo do componente funcional
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
