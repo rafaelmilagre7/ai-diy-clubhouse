@@ -1,6 +1,6 @@
 
 import { z } from 'zod';
-import { BenefitType } from '@/types/toolTypes';
+import { BenefitType, ToolCategory } from '@/types/toolTypes';
 
 export const toolFormSchema = z.object({
   name: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres'),
@@ -8,7 +8,7 @@ export const toolFormSchema = z.object({
   official_url: z.string().url('URL inválida'),
   category: z.string(),
   status: z.boolean().default(true),
-  logo_url: z.string().optional(),
+  logo_url: z.string().optional().nullable(),
   tags: z.array(z.string()).default([]),
   video_tutorials: z.array(
     z.object({

@@ -1,12 +1,27 @@
 
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { UseFormReturn } from "react-hook-form";
+import { ToolFormValues } from "../../types/toolFormTypes";
+import { ToolCategory } from "@/types/toolTypes";
 
 interface CategoryInputProps {
-  form: any;
+  form: UseFormReturn<ToolFormValues>;
 }
 
 export const CategoryInput = ({ form }: CategoryInputProps) => {
+  const handleCategoryChange = (value: string) => {
+    // Atualiza o valor no formulário
+    form.setValue('category', value as ToolCategory, { 
+      shouldDirty: true, 
+      shouldTouch: true,
+      shouldValidate: true 
+    });
+    
+    // Marca o formulário como modificado
+    form.setValue('formModified', true);
+  };
+
   return (
     <FormField
       control={form.control}
@@ -16,7 +31,7 @@ export const CategoryInput = ({ form }: CategoryInputProps) => {
           <FormLabel>Categoria*</FormLabel>
           <Select 
             value={field.value} 
-            onValueChange={field.onChange}
+            onValueChange={handleCategoryChange}
           >
             <FormControl>
               <SelectTrigger>

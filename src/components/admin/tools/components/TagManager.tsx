@@ -1,102 +1,104 @@
 
-import { useState } from "react";
-import { FormField, FormItem, FormLabel, FormControl, FormDescription } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Plus, X } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { X } from 'lucide-react';
+import { UseFormReturn } from 'react-hook-form';
+import { ToolFormValues } from '../types/toolFormTypes';
 
-export const TagManager = ({ form }: any) => {
-  const [newTag, setNewTag] = useState("");
-  
+interface TagManagerProps {
+  form: UseFormReturn<ToolFormValues>;
+}
+
+export const TagManager = ({ form }: TagManagerProps) => {
+  const [tagInput, setTagInput] = useState('');
+  const tags = form.watch('tags') || [];
+
   const handleAddTag = () => {
-    if (newTag.trim() === "") return;
+    if (tagInput.trim() === '') return;
     
-    const currentTags = form.getValues("tags") || [];
-    const lowercaseNewTag = newTag.toLowerCase().trim();
-    
-    if (!currentTags.includes(lowercaseNewTag)) {
-      form.setValue("tags", [...currentTags, lowercaseNewTag], { shouldDirty: true });
-      form.setValue("formModified", true, { shouldDirty: true });
-      console.log("Tag adicionada, formModified =", true);
-      setNewTag("");
+    // Verificar se a tag já existe
+    if (tags.includes(tagInput.trim().toLowerCase())) {
+      setTagInput('');
+      return;
     }
+    
+    // Adicionar a nova tag
+    const updatedTags = [...tags, tagInput.trim().toLowerCase()];
+    
+    // Atualizar o valor no formulário
+    form.setValue('tags', updatedTags, { 
+      shouldDirty: true,
+      shouldTouch: true,
+      shouldValidate: true 
+    });
+    
+    // Marcar o formulário como modificado
+    form.setValue('formModified', true);
+    
+    // Limpar o input
+    setTagInput('');
   };
-  
-  const handleRemoveTag = (tag: string) => {
-    const currentTags = form.getValues("tags") || [];
-    form.setValue(
-      "tags",
-      currentTags.filter((t: string) => t !== tag),
-      { shouldDirty: true }
-    );
-    form.setValue("formModified", true, { shouldDirty: true });
-    console.log("Tag removida, formModified =", true);
-  };
-  
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
+    if (e.key === 'Enter') {
       e.preventDefault();
       handleAddTag();
     }
   };
-  
+
+  const handleRemoveTag = (tagToRemove: string) => {
+    const updatedTags = tags.filter(tag => tag !== tagToRemove);
+    
+    // Atualizar o valor no formulário
+    form.setValue('tags', updatedTags, { 
+      shouldDirty: true,
+      shouldTouch: true,
+      shouldValidate: true 
+    });
+    
+    // Marcar o formulário como modificado
+    form.setValue('formModified', true);
+  };
+
   return (
-    <div className="space-y-6">
-      <h2 className="text-lg font-medium border-b pb-2">Tags</h2>
-      
-      <FormField
-        control={form.control}
-        name="tags"
-        render={() => (
-          <FormItem>
-            <FormLabel>Tags da Ferramenta</FormLabel>
-            <div className="flex flex-wrap items-center gap-2 mb-3">
-              {form.watch("tags")?.map((tag: string) => (
-                <Badge key={tag} variant="secondary" className="pl-2 pr-1 py-1 flex items-center gap-1">
-                  {tag}
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="h-4 w-4 rounded-full"
-                    onClick={() => handleRemoveTag(tag)}
-                  >
-                    <X className="h-3 w-3" />
-                  </Button>
-                </Badge>
-              ))}
-              {(!form.watch("tags") || form.watch("tags").length === 0) && (
-                <span className="text-sm text-muted-foreground">
-                  Nenhuma tag adicionada
-                </span>
-              )}
-            </div>
-            
-            <div className="flex gap-2">
-              <FormControl>
-                <Input
-                  placeholder="Nova tag"
-                  value={newTag}
-                  onChange={(e) => setNewTag(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                />
-              </FormControl>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleAddTag}
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Adicionar
-              </Button>
-            </div>
-            <FormDescription>
-              Adicione tags para facilitar a busca e categorização da ferramenta
-            </FormDescription>
-          </FormItem>
-        )}
-      />
-    </div>
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-xl">Tags</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          <div className="flex space-x-2">
+            <Input
+              placeholder="Adicionar tag"
+              value={tagInput}
+              onChange={(e) => setTagInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+            />
+            <Button onClick={handleAddTag} type="button">Adicionar</Button>
+          </div>
+          
+          <div className="flex flex-wrap gap-2">
+            {tags.map((tag, index) => (
+              <Badge key={index} variant="secondary" className="text-sm">
+                {tag}
+                <button
+                  type="button"
+                  className="ml-1 hover:text-destructive"
+                  onClick={() => handleRemoveTag(tag)}
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </Badge>
+            ))}
+            {tags.length === 0 && (
+              <p className="text-sm text-muted-foreground">Nenhuma tag adicionada</p>
+            )}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 };

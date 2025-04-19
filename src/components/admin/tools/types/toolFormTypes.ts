@@ -1,5 +1,5 @@
 
-import { Tool, BenefitType } from '@/types/toolTypes';
+import { Tool, BenefitType, ToolCategory } from '@/types/toolTypes';
 
 export interface ToolFormProps {
   initialData?: Tool;
@@ -11,7 +11,7 @@ export interface ToolFormValues {
   name: string;
   description: string;
   official_url: string;
-  category: string;
+  category: ToolCategory;
   status: boolean;
   logo_url?: string | null;
   tags: string[];

@@ -7,7 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import { ToolForm } from '@/components/admin/tools/ToolForm';
 import LoadingScreen from '@/components/common/LoadingScreen';
 import { useToolForm } from '@/hooks/admin/useToolForm';
-import { ToolFormValues } from '@/components/admin/tools/types/toolFormValues';
+import { ToolFormValues } from '@/components/admin/tools/types/toolFormTypes';
 
 const AdminToolEdit = () => {
   const { id } = useParams<{ id: string }>();
