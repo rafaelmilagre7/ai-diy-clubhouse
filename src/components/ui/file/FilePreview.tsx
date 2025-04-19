@@ -1,28 +1,22 @@
 
-import React from "react";
-import { CheckCircle } from "lucide-react";
+import React from 'react';
+import { Check } from 'lucide-react';
 
 interface FilePreviewProps {
-  filePreview: string;
-  uploadProgress: number;
+  url: string;
 }
 
-export const FilePreview: React.FC<FilePreviewProps> = ({ 
-  filePreview, 
-  uploadProgress 
-}) => {
+export const FilePreview = ({ url }: FilePreviewProps) => {
   return (
-    <div className="mt-2 relative w-full max-w-xs">
-      <img 
-        src={filePreview} 
-        alt="Preview" 
-        className="rounded border max-h-40 object-contain" 
+    <div className="mt-2 relative">
+      <img
+        src={url}
+        alt="Preview"
+        className="h-20 w-20 object-contain border rounded"
       />
-      {uploadProgress === 100 && (
-        <div className="absolute top-2 right-2 bg-green-500 text-white rounded-full p-1">
-          <CheckCircle className="h-4 w-4" />
-        </div>
-      )}
+      <div className="absolute top-1 right-1 bg-green-500 text-white rounded-full p-1">
+        <Check className="h-4 w-4" />
+      </div>
     </div>
   );
 };
