@@ -60,11 +60,16 @@ export const ToolForm = ({ initialData, onSubmit, isSubmitting }: ToolFormProps)
       // Verificar se os valores atuais do formulário são diferentes dos valores iniciais
       const isDirty = form.formState.isDirty;
       
-      // Verificar explicitamente o logo_url
-      const logoChanged = initialData.logo_url !== form.getValues('logo_url');
+      // Verificar explicitamente o logo_url, já que pode ser alterado via upload
+      const logoChanged = form.getValues('logo_url') !== initialData.logo_url;
       
-      if (isDirty || logoChanged) {
-        console.log('Formulário modificado:', { isDirty, logoChanged });
+      // Verificar explicitamente arrays (tags e video_tutorials)
+      const tagsChanged = JSON.stringify(form.getValues('tags')) !== JSON.stringify(initialData.tags || []);
+      const videosChanged = JSON.stringify(form.getValues('video_tutorials')) !== 
+                           JSON.stringify(initialData.video_tutorials || []);
+      
+      if (isDirty || logoChanged || tagsChanged || videosChanged) {
+        console.log('Formulário modificado:', { isDirty, logoChanged, tagsChanged, videosChanged });
         setFormChanged(true);
       } else {
         setFormChanged(false);
