@@ -26,24 +26,21 @@ export const LogoUpload = ({ form }: LogoUploadProps) => {
 
   // Função para atualizar o logo no formulário
   const handleUploadComplete = (url: string) => {
-    form.setValue('logo_url', url, { 
-      shouldDirty: true,
-      shouldTouch: true,
-      shouldValidate: true 
-    });
-    
-    // Força o formulário a ser marcado como "dirty" para ativar o botão de salvar
-    if (form.formState.isDirty === false) {
-      // Se o formulário ainda não estiver marcado como dirty, definimos manualmente
-      Object.defineProperty(form.formState, 'isDirty', {
-        get: () => true
+    // Verifica se o URL é diferente antes de atualizar
+    if (url !== form.getValues('logo_url')) {
+      form.setValue('logo_url', url, { 
+        shouldDirty: true,
+        shouldTouch: true,
+        shouldValidate: true 
       });
       
-      // Notifica os ouvintes sobre a mudança de estado do formulário
+      // Notificar os ouvintes sobre as alterações - sem tentar redefinir a propriedade isDirty
       form.trigger();
+      
+      // Em vez de tentar modificar diretamente o objeto formState,
+      // vamos forçar uma mudança de estado que o React Hook Form detectará
+      setLogoUrl(url);
     }
-    
-    setLogoUrl(url);
   };
 
   return (

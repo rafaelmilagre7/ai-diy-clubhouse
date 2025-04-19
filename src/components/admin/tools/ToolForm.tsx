@@ -40,12 +40,32 @@ export const ToolForm = ({ initialData, onSubmit, isSubmitting }: ToolFormProps)
   // Monitorar o estado do formulário para detectar mudanças
   useEffect(() => {
     const subscription = form.watch(() => {
-      // Verificar se o formulário está marcado como "dirty" (com alterações)
-      setFormChanged(form.formState.isDirty);
+      // Verificar explicitamente se algum campo foi alterado
+      const formValues = form.getValues();
+      let hasChanges = false;
+      
+      // Se não houver dados iniciais, o formulário é novo e deve estar sempre habilitado
+      if (!initialData) {
+        setFormChanged(true);
+        return;
+      }
+      
+      // Comparar os valores atuais com os valores iniciais
+      if (formValues.name !== initialData.name) hasChanges = true;
+      if (formValues.description !== initialData.description) hasChanges = true;
+      if (formValues.official_url !== initialData.official_url) hasChanges = true;
+      if (formValues.category !== initialData.category) hasChanges = true;
+      if (formValues.status !== initialData.status) hasChanges = true;
+      if (formValues.logo_url !== initialData.logo_url) hasChanges = true;
+      
+      // Verificar também se o formulário está marcado como dirty pelo react-hook-form
+      if (form.formState.isDirty) hasChanges = true;
+      
+      setFormChanged(hasChanges);
     });
     
     return () => subscription.unsubscribe();
-  }, [form, form.formState]);
+  }, [form, initialData]);
 
   const handleFormSubmit = (data: ToolFormValues) => {
     console.log("Formulário enviado:", data);
