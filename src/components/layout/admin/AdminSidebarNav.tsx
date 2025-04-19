@@ -69,7 +69,6 @@ export const AdminSidebarNav = ({ sidebarOpen }: AdminSidebarNavProps) => {
       icon: Wrench,
       path: "/admin/tools",
       exact: false,
-      badge: "Gerenciar",
       id: "admin-tools"
     },
   ];

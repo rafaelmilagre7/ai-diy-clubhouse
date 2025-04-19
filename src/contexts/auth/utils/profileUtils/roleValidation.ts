@@ -8,8 +8,10 @@ import { supabase } from '@/lib/supabase';
 export const determineRoleFromEmail = (email: string | undefined | null): UserRole => {
   if (!email) return 'member';
   
+  // Lista de emails administrativos
   const isAdminEmail = email === 'admin@teste.com' || 
                         email === 'admin@viverdeia.ai' || 
+                        email === 'rafael@viverdeia.ai' ||
                         email?.endsWith('@viverdeia.ai');
                         
   return isAdminEmail ? 'admin' : 'member';
@@ -23,7 +25,7 @@ export const validateUserRole = async (profileId: string, currentRole: UserRole,
   
   const correctRole = determineRoleFromEmail(email);
   
-  // If role doesn't match email, update in database
+  // Se role não corresponde ao email, atualizar no banco de dados
   if (currentRole !== correctRole) {
     console.log(`Atualizando papel de ${currentRole} para ${correctRole}...`);
     
@@ -35,18 +37,18 @@ export const validateUserRole = async (profileId: string, currentRole: UserRole,
       
       if (error) {
         console.error(`Erro ao atualizar papel para ${correctRole}:`, error);
-        return currentRole; // Keep existing role on error
+        return currentRole; // Manter papel existente em caso de erro
       }
       
       console.log(`Papel atualizado para ${correctRole} no banco de dados`);
       
-      // Also update user metadata
+      // Também atualizar metadados do usuário
       await updateUserMetadata(correctRole);
       
       return correctRole;
     } catch (error) {
       console.error(`Erro ao atualizar papel para ${correctRole}:`, error);
-      return currentRole; // Keep existing role on error
+      return currentRole; // Manter papel existente em caso de erro
     }
   }
   
