@@ -87,12 +87,12 @@ export const useSolutionData = (id: string | undefined) => {
         } else {
           log("Nenhuma solução encontrada com ID", { id });
           setError("Solução não encontrada");
+          // Não redirecionamos automaticamente para dar chance ao usuário de ver a mensagem
           toast({
             title: "Solução não encontrada",
             description: "Não foi possível encontrar a solução solicitada.",
             variant: "destructive"
           });
-          navigate("/solutions");
         }
       } catch (error: any) {
         logError("Erro em useSolutionData:", error);
@@ -102,7 +102,6 @@ export const useSolutionData = (id: string | undefined) => {
           description: error.message || "Não foi possível carregar os dados da solução.",
           variant: "destructive"
         });
-        navigate("/solutions");
       } finally {
         setLoading(false);
       }

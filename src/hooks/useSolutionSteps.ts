@@ -1,56 +1,50 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
-export const useSolutionSteps = (initialStep = 0) => {
+export const useSolutionSteps = (initialStep: number = 0) => {
   const [currentStep, setCurrentStep] = useState(initialStep);
-  const [activeTab, setActiveTab] = useState("basic");
+  const [activeTab, setActiveTab] = useState(getDefaultTabForStep(initialStep));
 
-  // Define the step titles for each step in the solution editor
+  const totalSteps = 7; // Número total de etapas no fluxo
+  
   const stepTitles = [
     "Informações Básicas",
-    "Ferramentas",
-    "Recursos",
-    "Vídeos e Lições",
+    "Ferramentas Necessárias",
+    "Materiais de Apoio",
+    "Vídeo-aulas",
+    "Módulos de Conteúdo",
     "Checklist de Implementação",
     "Publicação"
   ];
 
-  // Map step to active tab
-  const stepToTabMap = [
-    "basic",      // Step 0: Basic Info
-    "tools",      // Step 1: Tools
-    "resources",  // Step 2: Resources
-    "video",      // Step 3: Video
-    "checklist",  // Step 4: Checklist
-    "publish"     // Step 5: Publish
-  ];
-
-  // Effect to update the active tab when the step changes
-  useEffect(() => {
-    if (currentStep >= 0 && currentStep < stepToTabMap.length) {
-      setActiveTab(stepToTabMap[currentStep]);
+  // Função auxiliar para determinar a aba padrão para cada etapa
+  function getDefaultTabForStep(step: number): string {
+    switch (step) {
+      case 0: return "basic";
+      case 1: return "tools";
+      case 2: return "resources";
+      case 3: return "video";
+      case 4: return "modules";
+      case 5: return "checklist";
+      case 6: return "publish";
+      default: return "basic";
     }
-  }, [currentStep]);
+  }
 
-  // Function to update the step when the tab changes
-  const updateStepFromActiveTab = (tab: string) => {
-    const stepIndex = stepToTabMap.findIndex(t => t === tab);
-    if (stepIndex !== -1) {
-      setCurrentStep(stepIndex);
-    }
+  // Atualizar a aba ativa quando o passo mudar
+  const updateStepAndTab = (newStep: number) => {
+    setCurrentStep(newStep);
+    setActiveTab(getDefaultTabForStep(newStep));
   };
-
-  // Effect to update the step when the active tab changes
-  useEffect(() => {
-    updateStepFromActiveTab(activeTab);
-  }, [activeTab]);
 
   return {
     currentStep,
-    setCurrentStep,
+    setCurrentStep: updateStepAndTab,
     activeTab,
     setActiveTab,
-    totalSteps: stepTitles.length,
+    totalSteps,
     stepTitles
   };
 };
+
+export default useSolutionSteps;

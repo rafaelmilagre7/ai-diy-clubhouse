@@ -28,6 +28,7 @@ export const AdminRoutes = ({ children }: AdminRoutesProps) => {
         <Route path="solutions/new" element={<AdminSolutionEdit />} />
         <Route path="solutions/:id" element={<AdminSolutionEdit />} />
         <Route path="solutions/:id/editor" element={<SolutionEditor />} />
+        <Route path="solution/:id" element={<AdminSolutionEdit />} />
         <Route path="analytics" element={<AdminAnalytics />} />
         <Route path="tools" element={<AdminTools />} />
         <Route path="tools/new" element={<AdminToolEdit />} />

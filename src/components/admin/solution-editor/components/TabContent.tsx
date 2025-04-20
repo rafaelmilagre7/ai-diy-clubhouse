@@ -9,6 +9,7 @@ import ToolsTab from "../tabs/ToolsTab";
 import VideoTab from "../tabs/VideoTab";
 import ChecklistTab from "../tabs/ChecklistTab";
 import PublishTab from "../tabs/PublishTab";
+import ModulesTab from "../tabs/ModulesTab";
 
 interface TabContentProps {
   activeTab: string;
@@ -86,6 +87,17 @@ const TabContent: React.FC<TabContentProps> = ({
           );
         }
         break;
+      case "modules":
+        if (isValid) {
+          return (
+            <ModulesTab
+              solutionId={solution?.id || null}
+              onSave={() => onSubmit(currentValues)}
+              saving={saving}
+            />
+          );
+        }
+        break;
       case "checklist":
         if (isValid) {
           return (
@@ -142,6 +154,15 @@ const TabContent: React.FC<TabContentProps> = ({
       
       case 4:
         return (
+          <ModulesTab
+            solutionId={solution?.id || null}
+            onSave={() => onSubmit(currentValues)}
+            saving={saving}
+          />
+        );
+      
+      case 5:
+        return (
           <ChecklistTab 
             solutionId={solution?.id || null} 
             onSave={() => onSubmit(currentValues)} 
@@ -149,7 +170,7 @@ const TabContent: React.FC<TabContentProps> = ({
           />
         );
       
-      case 5:
+      case 6:
         return (
           <PublishTab 
             solutionId={solution?.id || null}

@@ -1,79 +1,55 @@
 
-import React from "react";
-import {
-  Tabs,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
-import { FileText, Wrench, FileSymlink, Video, ClipboardCheck, Globe } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { 
+  CircleInfo, 
+  FileSpreadsheet, 
+  Film, 
+  Folder, 
+  ListChecks, 
+  Package, 
+  Send 
+} from "lucide-react";
 
 interface TabNavProps {
   activeTab: string;
   setActiveTab: (value: string) => void;
 }
 
-const TabNav: React.FC<TabNavProps> = ({ activeTab, setActiveTab }) => {
-  // Função para lidar com o clique em uma aba
-  const handleTabClick = (tabValue: string) => {
-    console.log("Navegando para a aba:", tabValue);
-    setActiveTab(tabValue);
-  };
+const TabNav = ({ activeTab, setActiveTab }: TabNavProps) => {
+  const tabs = [
+    { id: "basic", label: "Informações", icon: <CircleInfo className="h-4 w-4" /> },
+    { id: "tools", label: "Ferramentas", icon: <Package className="h-4 w-4" /> },
+    { id: "resources", label: "Materiais", icon: <FileSpreadsheet className="h-4 w-4" /> },
+    { id: "video", label: "Vídeos", icon: <Film className="h-4 w-4" /> },
+    { id: "modules", label: "Módulos", icon: <Folder className="h-4 w-4" /> },
+    { id: "checklist", label: "Checklist", icon: <ListChecks className="h-4 w-4" /> },
+    { id: "publish", label: "Publicar", icon: <Send className="h-4 w-4" /> },
+  ];
 
   return (
-    <TabsList className="grid grid-cols-6 w-full bg-muted/50 mx-6 rounded-md overflow-x-auto">
-      <TabsTrigger 
-        value="basic" 
-        onClick={() => handleTabClick("basic")} 
-        className="flex items-center gap-1.5"
-      >
-        <FileText className="h-4 w-4" />
-        <span className="hidden sm:inline">Informações</span>
-      </TabsTrigger>
-      
-      <TabsTrigger 
-        value="tools" 
-        onClick={() => handleTabClick("tools")} 
-        className="flex items-center gap-1.5"
-      >
-        <Wrench className="h-4 w-4" />
-        <span className="hidden sm:inline">Ferramentas</span>
-      </TabsTrigger>
-      
-      <TabsTrigger 
-        value="resources" 
-        onClick={() => handleTabClick("resources")} 
-        className="flex items-center gap-1.5"
-      >
-        <FileSymlink className="h-4 w-4" />
-        <span className="hidden sm:inline">Materiais</span>
-      </TabsTrigger>
-      
-      <TabsTrigger 
-        value="video" 
-        onClick={() => handleTabClick("video")} 
-        className="flex items-center gap-1.5"
-      >
-        <Video className="h-4 w-4" />
-        <span className="hidden sm:inline">Vídeos</span>
-      </TabsTrigger>
-      
-      <TabsTrigger 
-        value="checklist" 
-        onClick={() => handleTabClick("checklist")} 
-        className="flex items-center gap-1.5"
-      >
-        <ClipboardCheck className="h-4 w-4" />
-        <span className="hidden sm:inline">Checklist</span>
-      </TabsTrigger>
-      
-      <TabsTrigger 
-        value="publish" 
-        onClick={() => handleTabClick("publish")} 
-        className="flex items-center gap-1.5"
-      >
-        <Globe className="h-4 w-4" />
-        <span className="hidden sm:inline">Publicar</span>
-      </TabsTrigger>
+    <TabsList className="grid grid-cols-7 w-full">
+      {tabs.map((tab) => (
+        <TooltipProvider key={tab.id}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <TabsTrigger
+                value={tab.id}
+                className={`flex items-center gap-2 ${
+                  activeTab === tab.id ? "bg-[#0ABAB5]/10 text-[#0ABAB5]" : ""
+                }`}
+                onClick={() => setActiveTab(tab.id)}
+              >
+                {tab.icon}
+                <span className="hidden sm:inline">{tab.label}</span>
+              </TabsTrigger>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>{tab.label}</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      ))}
     </TabsList>
   );
 };
