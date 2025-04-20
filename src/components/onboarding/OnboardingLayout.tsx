@@ -11,6 +11,7 @@ interface OnboardingLayoutProps {
   currentStep: number;
   title: string;
   backUrl?: string;
+  onStepClick?: (step: number) => void;
 }
 
 export const OnboardingLayout = ({
@@ -18,8 +19,12 @@ export const OnboardingLayout = ({
   currentStep,
   title,
   backUrl = "/onboarding",
+  onStepClick,
 }: OnboardingLayoutProps) => {
   const { navigateToStep } = useOnboardingSteps();
+  
+  // Função para lidar com o clique no passo
+  const handleStepClick = onStepClick || navigateToStep;
   
   return (
     <div className="container max-w-screen-lg py-8">
@@ -42,7 +47,7 @@ export const OnboardingLayout = ({
       <EtapasProgresso 
         currentStep={currentStep} 
         totalSteps={8} 
-        onStepClick={navigateToStep}
+        onStepClick={handleStepClick}
       />
 
       <div className="mt-6 mb-4">

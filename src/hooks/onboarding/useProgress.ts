@@ -13,6 +13,7 @@ export interface OnboardingProgress {
   is_completed: boolean;
   personal_info?: OnboardingData['personal_info'];
   professional_info?: OnboardingData['professional_info'];
+  business_context?: OnboardingData['business_context'];
   business_goals?: OnboardingData['business_goals'];
   ai_experience?: OnboardingData['ai_experience'];
   industry_focus?: OnboardingData['industry_focus'];
