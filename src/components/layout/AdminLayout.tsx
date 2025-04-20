@@ -18,9 +18,9 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
 
   return (
     <div className="min-h-screen flex bg-background">
-      <AdminSidebar sidebarOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
+      <AdminSidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
       <div className="flex-1 flex flex-col">
-        <AdminHeader sidebarOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
+        <AdminHeader sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
         <AdminContent>
           {children || <Outlet />}
         </AdminContent>
