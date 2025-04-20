@@ -46,7 +46,19 @@ export const useAddModuleComment = (solutionId: string, moduleId: string) => {
       
       log('Comentário adicionado com sucesso');
       toast.success(parentId ? 'Resposta enviada com sucesso!' : 'Comentário enviado com sucesso!');
-      queryClient.invalidateQueries({ queryKey: ['solution-comments', solutionId, moduleId] });
+      
+      // Invalidar o cache para atualizar a lista
+      queryClient.invalidateQueries({ 
+        queryKey: ['solution-comments', solutionId, moduleId] 
+      });
+      
+      // Garantir que a atualização em tempo real funcione como backup
+      setTimeout(() => {
+        queryClient.invalidateQueries({ 
+          queryKey: ['solution-comments', solutionId, moduleId] 
+        });
+      }, 300);
+      
       return true;
     } catch (error: any) {
       logError('Erro ao adicionar comentário', error);

@@ -31,11 +31,15 @@ export const useRealtimeComments = (
         log('Mudança detectada em comentários', { 
           event: payload.eventType, 
           solutionId, 
-          moduleId,
-          new: payload.new,
-          old: payload.old
+          moduleId
         });
-        queryClient.invalidateQueries({ queryKey: ['solution-comments', solutionId, moduleId] });
+        
+        // Invalida o cache e força uma nova busca
+        setTimeout(() => {
+          queryClient.invalidateQueries({ 
+            queryKey: ['solution-comments', solutionId, moduleId] 
+          });
+        }, 200);
       })
       .subscribe((status) => {
         if (status === 'SUBSCRIBED') {
@@ -54,7 +58,9 @@ export const useRealtimeComments = (
         table: 'tool_comment_likes'
       }, () => {
         log('Curtida modificada, invalidando queries', { solutionId, moduleId });
-        queryClient.invalidateQueries({ queryKey: ['solution-comments', solutionId, moduleId] });
+        queryClient.invalidateQueries({ 
+          queryKey: ['solution-comments', solutionId, moduleId] 
+        });
       })
       .subscribe();
     

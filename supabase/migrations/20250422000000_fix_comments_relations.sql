@@ -11,31 +11,7 @@ CREATE INDEX IF NOT EXISTS idx_tool_comments_tool_id ON tool_comments(tool_id);
 CREATE INDEX IF NOT EXISTS idx_tool_comments_user_id ON tool_comments(user_id);
 CREATE INDEX IF NOT EXISTS idx_tool_comments_parent_id ON tool_comments(parent_id);
 
--- Função para carregar perfil de usuário junto com comentário
-CREATE OR REPLACE FUNCTION get_comment_with_profile(comment_id uuid)
-RETURNS json AS $$
-DECLARE
-  result json;
-BEGIN
-  SELECT 
-    json_build_object(
-      'id', tc.id,
-      'content', tc.content,
-      'created_at', tc.created_at,
-      'likes_count', tc.likes_count,
-      'user_id', tc.user_id,
-      'tool_id', tc.tool_id,
-      'parent_id', tc.parent_id,
-      'profiles', json_build_object(
-        'name', p.name,
-        'avatar_url', p.avatar_url,
-        'role', p.role
-      )
-    ) INTO result
-  FROM tool_comments tc
-  LEFT JOIN profiles p ON tc.user_id = p.id
-  WHERE tc.id = comment_id;
-  
-  RETURN result;
-END;
-$$ LANGUAGE plpgsql;
+-- Habilitar replicação para funcionalidade em tempo real
+ALTER TABLE tool_comments REPLICA IDENTITY FULL;
+ALTER PUBLICATION supabase_realtime ADD TABLE tool_comments;
+ALTER PUBLICATION supabase_realtime ADD TABLE tool_comment_likes;

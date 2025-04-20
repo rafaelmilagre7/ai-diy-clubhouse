@@ -40,13 +40,16 @@ const SolutionImplementation = () => {
     setCompletedModules: () => {}
   });
   
-  // Importante: Use flags para controlar o comportamento do hook de comentários em tempo real
+  // Importante: Ativar escuta de comentários em tempo real
   const solutionId = solution?.id || "";
   const moduleId = currentModule?.id || "";
-  const shouldEnableRealtimeComments = !!solution && !!currentModule;
   
-  // Ativar escuta de comentários em tempo real
-  useRealtimeComments(solutionId, moduleId, shouldEnableRealtimeComments);
+  // Ativar escuta de comentários em tempo real apenas na aba de comentários
+  const enableRealtimeComments = !!solution && 
+                                !!currentModule && 
+                                activeTab === "comments";
+  
+  useRealtimeComments(solutionId, moduleId, enableRealtimeComments);
   
   // Definindo a função onComplete que estava faltando
   const onComplete = async () => {

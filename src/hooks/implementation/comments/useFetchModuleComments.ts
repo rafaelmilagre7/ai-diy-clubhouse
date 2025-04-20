@@ -15,11 +15,10 @@ export const useFetchModuleComments = (solutionId: string, moduleId: string) => 
       try {
         log('Buscando comentários da solução', { solutionId, moduleId });
         
-        // Buscar comentários principais com sintaxe simplificada para evitar 
-        // problemas de relacionamento não encontrado
+        // Buscar comentários principais de forma direta (sem join automático)
         const { data: parentComments, error: parentError } = await supabase
           .from('tool_comments')
-          .select('*, profiles:profiles(name, avatar_url, role)')
+          .select('*')
           .eq('tool_id', solutionId)
           .is('parent_id', null)
           .order('created_at', { ascending: false });
@@ -29,10 +28,27 @@ export const useFetchModuleComments = (solutionId: string, moduleId: string) => 
           throw parentError;
         }
 
+        // Buscar perfis dos usuários que fizeram os comentários
+        const userIds = [...new Set(parentComments.map((c: any) => c.user_id))];
+        const { data: userProfiles, error: profilesError } = await supabase
+          .from('profiles')
+          .select('id, name, avatar_url, role')
+          .in('id', userIds);
+          
+        if (profilesError) {
+          logError('Erro ao buscar perfis dos usuários', profilesError);
+        }
+        
+        // Mapear perfis por ID para fácil acesso
+        const profilesMap = (userProfiles || []).reduce((acc: Record<string, any>, profile: any) => {
+          acc[profile.id] = profile;
+          return acc;
+        }, {});
+
         // Buscar respostas (replies)
         const { data: replies, error: repliesError } = await supabase
           .from('tool_comments')
-          .select('*, profiles:profiles(name, avatar_url, role)')
+          .select('*')
           .eq('tool_id', solutionId)
           .not('parent_id', 'is', null)
           .order('created_at', { ascending: true });
@@ -40,6 +56,25 @@ export const useFetchModuleComments = (solutionId: string, moduleId: string) => 
         if (repliesError) {
           logError('Erro ao buscar respostas', repliesError);
           throw repliesError;
+        }
+        
+        // Adicionar IDs de usuários de respostas ao conjunto de IDs
+        const replyUserIds = [...new Set(replies.map((r: any) => r.user_id))];
+        
+        // Buscar perfis adicionais se necessário
+        if (replyUserIds.some(id => !profilesMap[id])) {
+          const missingIds = replyUserIds.filter(id => !profilesMap[id]);
+          
+          const { data: additionalProfiles } = await supabase
+            .from('profiles')
+            .select('id, name, avatar_url, role')
+            .in('id', missingIds);
+            
+          if (additionalProfiles) {
+            additionalProfiles.forEach((profile: any) => {
+              profilesMap[profile.id] = profile;
+            });
+          }
         }
 
         // Verificar curtidas do usuário atual
@@ -57,14 +92,16 @@ export const useFetchModuleComments = (solutionId: string, moduleId: string) => 
           }, {});
         }
 
-        // Organizar comentários com respostas
-        const organizedComments = (parentComments || []).map((comment: any) => ({
+        // Organizar comentários com respostas e perfis
+        const organizedComments = parentComments.map((comment: any) => ({
           ...comment,
+          profiles: profilesMap[comment.user_id] || null,
           user_has_liked: !!likesMap[comment.id],
           replies: (replies || [])
             .filter((reply: any) => reply.parent_id === comment.id)
             .map((reply: any) => ({
               ...reply,
+              profiles: profilesMap[reply.user_id] || null,
               user_has_liked: !!likesMap[reply.id]
             }))
         }));
@@ -76,10 +113,11 @@ export const useFetchModuleComments = (solutionId: string, moduleId: string) => 
         return organizedComments;
       } catch (error) {
         logError('Erro ao buscar comentários', error);
-        return [];
+        throw error;
       }
     },
     staleTime: 30000,
-    enabled: !!solutionId && !!moduleId
+    enabled: !!solutionId && !!moduleId,
+    retry: 1
   });
 };
