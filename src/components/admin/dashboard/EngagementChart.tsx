@@ -36,9 +36,9 @@ export const EngagementChart = ({ data }: EngagementChartProps) => {
             colors={["#0ABAB5"]}
             valueFormatter={valueFormatter}
             yAxisWidth={60}
-            showAnimation={true}
             showLegend={false}
-            curveType="monotone"
+            // Removida a propriedade showAnimation que não existe no componente
+            // Removida a propriedade curveType que não existe no componente
           />
         </div>
       </CardContent>

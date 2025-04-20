@@ -4,11 +4,10 @@ import { Link, useLocation } from "react-router-dom";
 import { 
   LayoutDashboard, 
   FileText, 
-  Tool, 
+  Settings, 
   MessageSquare, 
   Users, 
-  BarChart, 
-  Settings 
+  BarChart 
 } from "lucide-react";
 
 interface AdminSidebarNavProps {
@@ -32,7 +31,7 @@ export const AdminSidebarNav = ({ sidebarOpen }: AdminSidebarNavProps) => {
   const navItems = [
     { name: "Dashboard", path: "/admin", icon: LayoutDashboard },
     { name: "Soluções", path: "/admin/solutions", icon: FileText },
-    { name: "Ferramentas", path: "/admin/tools", icon: Tool },
+    { name: "Ferramentas", path: "/admin/tools", icon: Settings },
     { name: "Sugestões", path: "/admin/suggestions", icon: MessageSquare },
     { name: "Usuários", path: "/admin/users", icon: Users },
     { name: "Métricas", path: "/admin/analytics", icon: BarChart },
