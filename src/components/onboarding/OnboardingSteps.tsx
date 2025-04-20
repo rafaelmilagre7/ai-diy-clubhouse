@@ -53,7 +53,7 @@ export const OnboardingSteps = () => {
       };
     }
     const sectionKey = currentStep.section as keyof OnboardingData;
-    return progress[sectionKey];
+    return progress[sectionKey as keyof typeof progress];
   };
 
   return (

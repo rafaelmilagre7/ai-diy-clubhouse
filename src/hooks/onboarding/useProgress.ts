@@ -12,6 +12,7 @@ export interface OnboardingProgress {
   current_step: string;
   is_completed: boolean;
   personal_info?: OnboardingData['personal_info'];
+  professional_info?: OnboardingData['professional_info'];
   business_goals?: OnboardingData['business_goals'];
   ai_experience?: OnboardingData['ai_experience'];
   industry_focus?: OnboardingData['industry_focus'];
@@ -23,6 +24,12 @@ export interface OnboardingProgress {
   ai_knowledge_level?: string;
   goals?: string[];
   training_needs?: string[];
+  company_name?: string;
+  company_size?: string;
+  company_sector?: string;
+  company_website?: string;
+  current_position?: string;
+  annual_revenue?: string;
 }
 
 export const useProgress = () => {
