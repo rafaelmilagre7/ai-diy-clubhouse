@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Tool } from '@/types/toolTypes';
 import { Link } from 'react-router-dom';
@@ -19,13 +18,23 @@ import {
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/lib/supabase';
+import { useAdminTools } from '@/hooks/useAdminTools';
+import { AdminToolsFilters } from './AdminToolsFilters';
 
 interface AdminToolListProps {
   tools: Tool[];
-  refreshTrigger?: number; // Adicionando a propriedade refreshTrigger como opcional
+  refreshTrigger?: number;
 }
 
-export const AdminToolList = ({ tools, refreshTrigger }: AdminToolListProps) => {
+export const AdminToolList = ({ refreshTrigger }: AdminToolListProps) => {
+  const { 
+    tools, 
+    isLoading, 
+    selectedCategory, 
+    setSelectedCategory, 
+    searchQuery, 
+    setSearchQuery 
+  } = useAdminTools();
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const { toast } = useToast();
 
@@ -57,10 +66,18 @@ export const AdminToolList = ({ tools, refreshTrigger }: AdminToolListProps) => 
     }
   };
 
+  if (isLoading) {
+    return (
+      <div className="text-center py-8">
+        <p className="text-muted-foreground">Carregando ferramentas...</p>
+      </div>
+    );
+  }
+
   if (tools.length === 0) {
     return (
       <div className="text-center py-12 space-y-6">
-        <p className="text-muted-foreground">Nenhuma ferramenta cadastrada.</p>
+        <p className="text-muted-foreground">Nenhuma ferramenta encontrada.</p>
         <Link to="/admin/tools/new">
           <Button className="bg-[#0ABAB5] hover:bg-[#0ABAB5]/90">
             <Plus className="mr-2 h-4 w-4" />
@@ -73,6 +90,13 @@ export const AdminToolList = ({ tools, refreshTrigger }: AdminToolListProps) => 
 
   return (
     <div className="space-y-6">
+      <AdminToolsFilters
+        selectedCategory={selectedCategory}
+        onCategoryChange={setSelectedCategory}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+      />
+      
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {tools.map((tool) => (
           <Card key={tool.id} className="flex flex-col h-full border overflow-hidden">
