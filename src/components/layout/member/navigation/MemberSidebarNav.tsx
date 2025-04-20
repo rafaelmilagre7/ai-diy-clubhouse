@@ -1,7 +1,7 @@
 
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
-import { Home, GraduationCap, Settings, HelpCircle, PencilLine, Wrench, Gift } from "lucide-react";
+import { Home, GraduationCap, Trophy, Wrench, Gift, PencilLine } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
@@ -63,7 +63,19 @@ export const MemberSidebarNav = ({ sidebarOpen }: { sidebarOpen: boolean }) => {
           </Link>
         </Button>
 
-        {/* Item de menu Sugestões - Exibido para todos os usuários */}
+        <Button
+          variant={location.pathname.startsWith("/achievements") ? "default" : "ghost"}
+          asChild
+          className="w-full justify-start"
+        >
+          <Link to="/achievements">
+            <Trophy className="h-5 w-5 mr-2" />
+            <span className={cn("flex-1", !sidebarOpen && "hidden")}>
+              Conquistas
+            </span>
+          </Link>
+        </Button>
+
         <Button
           variant={location.pathname.startsWith("/suggestions") ? "default" : "ghost"}
           asChild
@@ -73,32 +85,6 @@ export const MemberSidebarNav = ({ sidebarOpen }: { sidebarOpen: boolean }) => {
             <PencilLine className="h-5 w-5 mr-2" />
             <span className={cn("flex-1", !sidebarOpen && "hidden")}>
               Sugestões
-            </span>
-          </Link>
-        </Button>
-
-        <Button
-          variant={location.pathname === "/settings" ? "default" : "ghost"}
-          asChild
-          className="w-full justify-start"
-        >
-          <Link to="/settings">
-            <Settings className="h-5 w-5 mr-2" />
-            <span className={cn("flex-1", !sidebarOpen && "hidden")}>
-              Configurações
-            </span>
-          </Link>
-        </Button>
-
-        <Button
-          variant={location.pathname === "/help" ? "default" : "ghost"}
-          asChild
-          className="w-full justify-start"
-        >
-          <Link to="/help">
-            <HelpCircle className="h-5 w-5 mr-2" />
-            <span className={cn("flex-1", !sidebarOpen && "hidden")}>
-              Ajuda
             </span>
           </Link>
         </Button>

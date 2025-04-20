@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSolutionsData } from '@/hooks/useSolutionsData';
 import { SolutionCard } from '@/components/solution/SolutionCard';
 import { Button } from '@/components/ui/button';
@@ -8,8 +8,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Search, Filter } from 'lucide-react';
 import LoadingScreen from '@/components/common/LoadingScreen';
 import { Solution } from '@/lib/supabase';
+import { useToolsData } from '@/hooks/useToolsData';
 
 const Solutions = () => {
+  // Garantir que as ferramentas estejam corretamente configuradas
+  const { isFixing } = useToolsData();
+  
   const { 
     filteredSolutions, 
     loading, 
@@ -26,7 +30,8 @@ const Solutions = () => {
     { id: 'strategy', name: 'Estratégia' }
   ];
 
-  if (loading) {
+  // Se estiver corrigindo as ferramentas, mostrar também carregando
+  if (loading || isFixing) {
     return <LoadingScreen message="Carregando soluções..." />;
   }
 

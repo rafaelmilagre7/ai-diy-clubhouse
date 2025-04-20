@@ -1,7 +1,6 @@
 
 import React, { useEffect } from "react";
 import { Module, supabase } from "@/lib/supabase";
-import { useLogging } from "@/hooks/useLogging";
 import { ToolsLoading } from "./tools/ToolsLoading";
 import { ToolsEmptyState } from "./tools/ToolsEmptyState";
 import { ToolItem } from "./tools/ToolItem";
@@ -14,15 +13,13 @@ interface ModuleContentToolsProps {
 }
 
 export const ModuleContentTools = ({ module }: ModuleContentToolsProps) => {
-  const { log, logError } = useLogging();
-  
   // Garantir que os dados das ferramentas estejam corretos
   const { isFixing: toolsDataFixing } = useToolsData();
 
   const { data: tools, isLoading, error } = useQuery({
     queryKey: ['solution-tools', module.solution_id],
     queryFn: async () => {
-      log("Buscando ferramentas da solução", { solution_id: module.solution_id });
+      console.log("Buscando ferramentas da solução", { solution_id: module.solution_id });
       
       const { data, error } = await supabase
         .from("solution_tools")
@@ -30,11 +27,11 @@ export const ModuleContentTools = ({ module }: ModuleContentToolsProps) => {
         .eq("solution_id", module.solution_id);
       
       if (error) {
-        logError("Erro ao buscar ferramentas da solução", error);
+        console.error("Erro ao buscar ferramentas da solução", error);
         throw error;
       }
       
-      log("Ferramentas da solução recuperadas", { 
+      console.log("Ferramentas da solução recuperadas", { 
         count: data?.length || 0, 
         tools: data?.map(t => t.tool_name) 
       });
@@ -47,7 +44,7 @@ export const ModuleContentTools = ({ module }: ModuleContentToolsProps) => {
   // Log adicional após a consulta ser concluída
   useEffect(() => {
     if (tools && tools.length > 0) {
-      log("Ferramentas disponíveis para renderização", {
+      console.log("Ferramentas disponíveis para renderização", {
         solution_id: module.solution_id,
         tools: tools.map(t => ({
           name: t.tool_name,
@@ -56,10 +53,10 @@ export const ModuleContentTools = ({ module }: ModuleContentToolsProps) => {
         }))
       });
     }
-  }, [tools, module.solution_id, log]);
+  }, [tools, module.solution_id]);
 
   if (error) {
-    logError("Erro ao exibir ferramentas", error);
+    console.error("Erro ao exibir ferramentas", error);
     return null;
   }
 
@@ -73,7 +70,7 @@ export const ModuleContentTools = ({ module }: ModuleContentToolsProps) => {
   }
 
   if (!tools || tools.length === 0) {
-    log("Nenhuma ferramenta encontrada para esta solução", { solution_id: module.solution_id });
+    console.log("Nenhuma ferramenta encontrada para esta solução", { solution_id: module.solution_id });
     return null;
   }
 

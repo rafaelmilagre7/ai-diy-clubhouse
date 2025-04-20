@@ -1,7 +1,6 @@
 
 import React, { useState } from "react";
 import { Tool } from "@/types/toolTypes";
-import { useLogging } from "@/hooks/useLogging";
 
 interface ToolImageProps {
   tool: Tool;
@@ -9,7 +8,6 @@ interface ToolImageProps {
 }
 
 export const ToolImage: React.FC<ToolImageProps> = ({ tool, size = "medium" }) => {
-  const { logError } = useLogging();
   const [imageError, setImageError] = useState(false);
   const sizeClasses = size === "small" ? "h-10 w-10" : "h-12 w-12";
 
@@ -25,7 +23,7 @@ export const ToolImage: React.FC<ToolImageProps> = ({ tool, size = "medium" }) =
           alt={tool.name}
           className="h-full w-full object-contain"
           onError={(e) => {
-            logError("Erro ao carregar imagem da ferramenta", {
+            console.error("Erro ao carregar imagem da ferramenta", {
               tool: tool.name,
               logo_url: tool.logo_url,
             });

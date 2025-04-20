@@ -30,6 +30,7 @@ import ToolDetails from '@/pages/member/ToolDetails';
 import Benefits from '@/pages/member/Benefits';
 import SuggestionsPage from '@/pages/member/Suggestions';
 import NewSuggestionPage from '@/pages/member/NewSuggestion';
+import Achievements from '@/pages/member/Achievements';
 
 const AppRoutes = () => {
   return (
@@ -63,6 +64,7 @@ const AppRoutes = () => {
         <Route path="/tools" element={<Tools />} />
         <Route path="/tools/:id" element={<ToolDetails />} />
         <Route path="/benefits" element={<Benefits />} />
+        <Route path="/achievements" element={<Achievements />} />
         <Route path="/suggestions" element={<SuggestionsPage />} />
         <Route path="/suggestions/new" element={<NewSuggestionPage />} />
         <Route path="/suggestions/:id" element={<SuggestionDetailsPage />} />

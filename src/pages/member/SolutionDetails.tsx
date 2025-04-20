@@ -10,13 +10,11 @@ import { SolutionSidebar } from "@/components/solution/SolutionSidebar";
 import { SolutionMobileActions } from "@/components/solution/SolutionMobileActions";
 import { SolutionNotFound } from "@/components/solution/SolutionNotFound";
 import { useEffect } from "react";
-import { useLogging } from "@/hooks/useLogging";
 import { useToolsData } from "@/hooks/useToolsData";
 
 const SolutionDetails = () => {
   const { id } = useParams<{ id: string }>();
   const location = useLocation();
-  const { log } = useLogging();
   
   // Garantir que os dados das ferramentas estejam corretos
   const { isFixing: toolsDataFixing } = useToolsData();
@@ -33,16 +31,16 @@ const SolutionDetails = () => {
     downloadMaterials 
   } = useSolutionInteractions(id, progress);
   
-  // Log page visit and troubleshooting info
+  // Log page visit
   useEffect(() => {
     if (solution) {
-      log("Solution details page visited", { 
+      console.log("Solution details page visited", { 
         solution_id: solution.id, 
         solution_title: solution.title,
         path: location.pathname
       });
     }
-  }, [solution, location.pathname, log]);
+  }, [solution, location.pathname]);
   
   if (loading || toolsDataFixing) {
     return <LoadingScreen message="Carregando detalhes da solução..." />;

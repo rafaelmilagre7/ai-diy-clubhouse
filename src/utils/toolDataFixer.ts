@@ -1,12 +1,10 @@
 
 import { supabase } from "@/lib/supabase";
-import { useLogging } from "@/hooks/useLogging";
 
+// Versão corrigida sem usar hooks dentro da função
 export const fixToolsData = async () => {
-  const { log, logError } = useLogging();
-  
   try {
-    log("Iniciando correção de dados das ferramentas...");
+    console.log("Iniciando correção de dados das ferramentas...");
     
     // Ferramentas para garantir que existem e têm informações corretas
     const toolsToFix = [
@@ -45,7 +43,7 @@ export const fixToolsData = async () => {
         .single();
       
       if (findError && findError.code !== 'PGRST116') {
-        logError(`Erro ao verificar existência da ferramenta ${tool.name}`, findError);
+        console.error(`Erro ao verificar existência da ferramenta ${tool.name}`, findError);
         continue;
       }
       
@@ -63,9 +61,9 @@ export const fixToolsData = async () => {
             .eq('id', existingTool.id);
             
           if (updateError) {
-            logError(`Erro ao atualizar ferramenta ${tool.name}`, updateError);
+            console.error(`Erro ao atualizar ferramenta ${tool.name}`, updateError);
           } else {
-            log(`Ferramenta ${tool.name} atualizada com sucesso`);
+            console.log(`Ferramenta ${tool.name} atualizada com sucesso`);
           }
         }
       } else {
@@ -75,17 +73,17 @@ export const fixToolsData = async () => {
           .insert(tool);
           
         if (insertError) {
-          logError(`Erro ao inserir ferramenta ${tool.name}`, insertError);
+          console.error(`Erro ao inserir ferramenta ${tool.name}`, insertError);
         } else {
-          log(`Ferramenta ${tool.name} inserida com sucesso`);
+          console.log(`Ferramenta ${tool.name} inserida com sucesso`);
         }
       }
     }
     
-    log("Correção de dados das ferramentas concluída");
+    console.log("Correção de dados das ferramentas concluída");
     return true;
   } catch (error) {
-    logError("Erro durante a correção de dados das ferramentas", error);
+    console.error("Erro durante a correção de dados das ferramentas", error);
     return false;
   }
 };
