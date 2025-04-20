@@ -2,7 +2,7 @@
 import { Solution as BaseSolution } from "@/lib/supabase";
 
 // Estender o tipo Solution para incluir a propriedade modules
-export interface Solution extends BaseSolution {
+export interface Solution extends Omit<BaseSolution, 'author_id'> {
   modules?: {
     id: string;
     title: string;

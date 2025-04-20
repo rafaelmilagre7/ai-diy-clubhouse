@@ -25,7 +25,7 @@ export const CommentItem = ({
   isReply = false
 }: CommentItemProps) => {
   const isAuthor = currentUserId === comment.user_id;
-  const isAdmin = comment.profile?.role === 'admin';
+  const isAdmin = comment.profiles?.role === 'admin';
   const hasLiked = comment.user_has_liked;
   
   // Função para formatar a data de criação
@@ -58,18 +58,18 @@ export const CommentItem = ({
     )}>
       <div className="flex gap-3">
         <Avatar className="h-10 w-10">
-          {comment.profile?.avatar_url ? (
-            <AvatarImage src={comment.profile.avatar_url} alt={comment.profile?.name || 'Usuário'} />
+          {comment.profiles?.avatar_url ? (
+            <AvatarImage src={comment.profiles.avatar_url} alt={comment.profiles?.name || 'Usuário'} />
           ) : (
             <AvatarFallback className="bg-[#0ABAB5]/10 text-[#0ABAB5]">
-              {getInitials(comment.profile?.name || 'Usuário')}
+              {getInitials(comment.profiles?.name || 'Usuário')}
             </AvatarFallback>
           )}
         </Avatar>
         
         <div className="flex-1">
           <div className="flex items-center gap-2">
-            <span className="font-medium">{comment.profile?.name || 'Usuário'}</span>
+            <span className="font-medium">{comment.profiles?.name || 'Usuário'}</span>
             
             {isAdmin && (
               <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-[#0ABAB5]/10 text-[#0ABAB5]">

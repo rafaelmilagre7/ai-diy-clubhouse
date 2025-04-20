@@ -19,7 +19,7 @@ const AppRoutes = ({ children }: { children: ReactNode }) => {
         path="/admin/*" 
         element={
           <AdminProtectedRoutes>
-            <AdminRoutes />
+            <AdminRoutes>{children}</AdminRoutes>
           </AdminProtectedRoutes>
         } 
       />
@@ -29,12 +29,10 @@ const AppRoutes = ({ children }: { children: ReactNode }) => {
         path="*" 
         element={
           <AuthProtectedRoutes>
-            <MemberRoutes />
+            <MemberRoutes>{children}</MemberRoutes>
           </AuthProtectedRoutes>
         } 
       />
-      
-      {children}
     </Routes>
   );
 };

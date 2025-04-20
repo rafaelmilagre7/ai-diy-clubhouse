@@ -15,7 +15,7 @@ export const ReplyHeader = ({ replyTo, onCancelReply }: ReplyHeaderProps) => {
   return (
     <div className="mb-3 flex items-center justify-between bg-gray-50 p-2 rounded">
       <div className="text-sm">
-        Respondendo a <span className="font-medium">{replyTo.profile?.name}</span>
+        Respondendo a <span className="font-medium">{replyTo.profiles?.name}</span>
       </div>
       <Button 
         type="button" 

@@ -1,5 +1,5 @@
 
-import { Suspense, lazy } from "react";
+import { Suspense, lazy, ReactNode } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -31,8 +31,8 @@ const SuggestionDetails = lazy(() => import("@/pages/member/SuggestionDetails"))
 const NewSuggestion = lazy(() => import("@/pages/member/NewSuggestion"));
 const Achievements = lazy(() => import("@/pages/member/Achievements"));
 
-// Admin Routes
-const AdminRoutes = lazy(() => import("@/components/routing/AppRoutes"));
+// Admin Routes - Adicionando children como propriedade
+const AdminRoutesComponent = lazy(() => import("@/components/routing/AppRoutes"));
 
 // Create a client
 const queryClient = new QueryClient({
@@ -119,10 +119,12 @@ function App() {
                   </Suspense>
                 } />
                 
-                {/* Admin Routes */}
+                {/* Admin Routes - Corrigindo para passar children */}
                 <Route path="/admin/*" element={
                   <Suspense fallback={<LoadingScreen />}>
-                    <AdminRoutes />
+                    <AdminRoutesComponent>
+                      {/* Conteúdo para as rotas de administrador */}
+                    </AdminRoutesComponent>
                   </Suspense>
                 } />
 
