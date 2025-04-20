@@ -27,11 +27,11 @@ const Onboarding = () => {
 
   return (
     <OnboardingLayout>
-      <div className="max-w-3xl mx-auto space-y-5">
+      <div className="max-w-4xl mx-auto space-y-6">
         <div className="flex items-center mb-1">
           <Button
             variant="ghost"
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 text-gray-600"
             onClick={() => navigate(-1)}
           >
             <ArrowLeft className="h-4 w-4" />
@@ -45,7 +45,8 @@ const Onboarding = () => {
           <EtapasProgresso currentStep={1} totalSteps={7} />
         </div>
 
-        <div className="mt-8 bg-white rounded-xl shadow-lg p-8">
+        <div className="mt-8 bg-gray-50/50 backdrop-blur-sm rounded-xl shadow-sm border border-gray-100 p-8">
+          <h2 className="text-xl font-semibold text-gray-800 mb-6">Dados Pessoais</h2>
           <PersonalInfoFormFull />
         </div>
       </div>
