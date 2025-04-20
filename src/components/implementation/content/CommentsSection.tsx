@@ -1,7 +1,8 @@
 
+import React from 'react';
 import { useSolutionComments } from '@/hooks/implementation/useSolutionComments';
-import { CommentForm } from './comments/CommentForm';
-import { CommentList } from './comments/CommentList';
+import { CommentForm } from '@/components/implementation/content/tool-comments/CommentForm';
+import { CommentList } from '@/components/implementation/content/tool-comments/CommentList';
 import { Separator } from '@/components/ui/separator';
 
 interface CommentsSectionProps {
