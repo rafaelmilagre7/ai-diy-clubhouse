@@ -5,10 +5,11 @@ import { Label } from "@/components/ui/label";
 interface EmailInputProps {
   value: string;
   onChange: (value: string) => void;
-  disabled: boolean;
+  disabled?: boolean;
+  readOnly?: boolean;
 }
 
-export const EmailInput = ({ value, onChange, disabled }: EmailInputProps) => (
+export const EmailInput = ({ value, onChange, disabled, readOnly }: EmailInputProps) => (
   <div>
     <Label htmlFor="email">E-mail</Label>
     <Input
@@ -16,9 +17,11 @@ export const EmailInput = ({ value, onChange, disabled }: EmailInputProps) => (
       type="email"
       value={value}
       disabled={disabled}
+      readOnly={readOnly}
       onChange={e => onChange(e.target.value)}
       required
       placeholder="exemplo@dominio.com"
+      className={readOnly ? "bg-gray-100" : ""}
     />
   </div>
 );

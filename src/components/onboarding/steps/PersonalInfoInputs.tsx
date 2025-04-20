@@ -22,13 +22,24 @@ interface PersonalInfoInputsProps {
   };
   onChange: (field: string, value: string) => void;
   disabled: boolean;
+  readOnly?: boolean;
 }
 
-export const PersonalInfoInputs = ({ formData, onChange, disabled }: PersonalInfoInputsProps) => {
+export const PersonalInfoInputs = ({ formData, onChange, disabled, readOnly }: PersonalInfoInputsProps) => {
   return (
     <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-      <NameInput value={formData.name} onChange={v => onChange("name", v)} disabled={disabled} />
-      <EmailInput value={formData.email} onChange={v => onChange("email", v)} disabled={disabled} />
+      <NameInput
+        value={formData.name}
+        onChange={v => onChange("name", v)}
+        disabled={true}
+        readOnly={true}
+      />
+      <EmailInput
+        value={formData.email}
+        onChange={v => onChange("email", v)}
+        disabled={true}
+        readOnly={true}
+      />
       <PhoneInput
         ddi={formData.ddi || "+55"}
         phone={formData.phone}

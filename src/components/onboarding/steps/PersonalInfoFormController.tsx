@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { useProgress } from "@/hooks/onboarding/useProgress";
+import { useAuth } from "@/contexts/auth";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { PersonalInfoInputs } from "./PersonalInfoInputs";
@@ -8,12 +9,14 @@ import { NavigationButtons } from "./NavigationButtons";
 
 export const PersonalInfoFormController = () => {
   const { progress, updateProgress } = useProgress();
+  const { profile } = useAuth();
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Preencher nome e email do perfil (e proteger contra edição)
   const [formData, setFormData] = useState({
-    name: progress?.personal_info?.name || "",
-    email: progress?.personal_info?.email || "",
+    name: profile?.name || progress?.personal_info?.name || "",
+    email: profile?.email || progress?.personal_info?.email || "",
     phone: progress?.personal_info?.phone || "",
     ddi: progress?.personal_info?.ddi || "+55",
     linkedin: progress?.personal_info?.linkedin || "",
@@ -24,20 +27,26 @@ export const PersonalInfoFormController = () => {
     timezone: progress?.personal_info?.timezone || "GMT-3",
   });
 
-  // Atualiza o estado inicial quando o progress for carregado
   useEffect(() => {
-    if (progress?.personal_info) {
-      setFormData(prev => ({
-        ...prev,
-        ...progress.personal_info,
-        ddi: progress.personal_info.ddi || "+55",
-        country: progress.personal_info.country || "Brasil",
-        timezone: progress.personal_info.timezone || "GMT-3"
-      }));
-    }
-  }, [progress]);
+    setFormData(prev => ({
+      ...prev,
+      name: profile?.name || progress?.personal_info?.name || "",
+      email: profile?.email || progress?.personal_info?.email || "",
+      phone: progress?.personal_info?.phone || "",
+      ddi: progress?.personal_info?.ddi || "+55",
+      linkedin: progress?.personal_info?.linkedin || "",
+      instagram: progress?.personal_info?.instagram || "",
+      country: progress?.personal_info?.country || "Brasil",
+      state: progress?.personal_info?.state || "",
+      city: progress?.personal_info?.city || "",
+      timezone: progress?.personal_info?.timezone || "GMT-3",
+    }))
+    // eslint-disable-next-line
+  }, [progress?.personal_info, profile]);
 
   const handleChange = (field: string, value: string) => {
+    // Impede edição em nome e e-mail (proteção extra contra tentativa de edição)
+    if (field === "name" || field === "email") return;
     setFormData((prev) => {
       const newData = {
         ...prev,
@@ -65,7 +74,11 @@ export const PersonalInfoFormController = () => {
 
     try {
       await updateProgress({
-        personal_info: formData,
+        personal_info: {
+          ...formData,
+          name: profile?.name || formData.name,
+          email: profile?.email || formData.email,
+        },
         current_step: "business_goals",
         completed_steps: [...(progress?.completed_steps || []), "personal_info"],
       });
@@ -82,7 +95,7 @@ export const PersonalInfoFormController = () => {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6" autoComplete="off">
-      <PersonalInfoInputs formData={formData} onChange={handleChange} disabled={isSubmitting} />
+      <PersonalInfoInputs formData={formData} onChange={handleChange} disabled={isSubmitting} readOnly />
       <NavigationButtons isSubmitting={isSubmitting} />
     </form>
   );

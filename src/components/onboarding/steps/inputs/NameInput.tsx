@@ -5,10 +5,11 @@ import { Label } from "@/components/ui/label";
 interface NameInputProps {
   value: string;
   onChange: (value: string) => void;
-  disabled: boolean;
+  disabled?: boolean;
+  readOnly?: boolean;
 }
 
-export const NameInput = ({ value, onChange, disabled }: NameInputProps) => (
+export const NameInput = ({ value, onChange, disabled, readOnly }: NameInputProps) => (
   <div>
     <Label htmlFor="name">Nome Completo</Label>
     <Input
@@ -16,9 +17,11 @@ export const NameInput = ({ value, onChange, disabled }: NameInputProps) => (
       type="text"
       value={value}
       disabled={disabled}
+      readOnly={readOnly}
       onChange={e => onChange(e.target.value)}
       required
       placeholder="Seu nome completo"
+      className={readOnly ? "bg-gray-100" : ""}
     />
   </div>
 );

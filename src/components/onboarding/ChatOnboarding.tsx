@@ -15,43 +15,33 @@ export const ChatOnboarding = () => {
   const [fullText, setFullText] = useState('');
   const [hasInitialized, setHasInitialized] = useState(false);
 
-  // Mensagem inicial do Milagrinho, gerada localmente para não duplicar o envio para backend
+  // Mensagem inicial Milagrinho - local, nunca duplica no backend
   const nome = progress?.personal_info?.name || '';
   const initialMessage = `E aí${nome ? ` ${nome}` : ""}! Eu sou o Milagrinho, seu assistente de IA do VIVER DE IA Club. Vamos começar conhecendo um pouco sobre você. Estas informações vão me ajudar a personalizar sua experiência, onde você vai encontrar uma comunidade incrível de pessoas transformando negócios com IA.`;
 
+  // Só adiciona a mensagem inicial localmente para não duplicar na lista real do chat
   useEffect(() => {
     if (!hasInitialized && messages.length === 0) {
-      // Insere a mensagem inicial diretamente no estado local para evitar envio duplicado
-      // A mensagem inicial estará no chat, sem duplicar no backend e sem enviar mensagem para o servidor
-      // Como não temos um setter do state messages, podemos simular essa mensagem "assistente" adicionando um item localmente para renderizar só.
       setHasInitialized(true);
-      // Injetamos essa mensagem virtualmente via setState do hook ou você pode usar uma abordagem interna local:
-      // Como o hook não expõe setMessages, precisamos renderizar essa mensagem na UI separadamente:
     }
   }, [hasInitialized, messages.length]);
 
-  // Separar as mensagens da API dos locais - para inicial inicial, combinar o initialMessage
-  // Concatenar a mensagem inicial com as mensagens existentes para renderizar sem duplicar
-  const renderedMessages = hasInitialized ? [
-    { role: 'assistant', content: initialMessage },
-    ...messages,
-  ] : messages;
+  // Renderizar só a mensagem inicial + chat real, sem duplicatas
+  const renderedMessages = hasInitialized
+    ? [{ role: 'assistant', content: initialMessage }, ...messages]
+    : messages;
 
+  // Controla a digitação só para a ÚLTIMA mensagem assistant exibida
   useEffect(() => {
-    // Animar digitação só na última mensagem do assistant em mensagens api (excluindo a inicial)
-    const apiAssistantMessages = messages.filter(m => m.role === 'assistant');
-    if (apiAssistantMessages.length > 0) {
-      const lastMessage = apiAssistantMessages[apiAssistantMessages.length - 1].content;
-      setFullText(lastMessage);
-      setDisplayedText('');
-      setTyping(true);
-    } else if (hasInitialized && messages.length === 0) {
-      // Caso chat vazio mas inicial já setada, anima a mensagem inicial local
-      setFullText(initialMessage);
+    // Detecta qual mensagem deve ser animada
+    const assistantOnly = renderedMessages.filter(m => m.role === 'assistant');
+    if (assistantOnly.length > 0) {
+      const lastMsg = assistantOnly[assistantOnly.length - 1].content;
+      setFullText(lastMsg);
       setDisplayedText('');
       setTyping(true);
     }
-  }, [messages, hasInitialized, initialMessage]);
+  }, [renderedMessages]);
 
   useEffect(() => {
     if (typing && displayedText.length < fullText.length) {
@@ -66,10 +56,18 @@ export const ChatOnboarding = () => {
 
   return (
     <div className="w-full bg-white rounded-xl shadow-sm border border-gray-100 px-5 py-4 mb-6">
+      {/* Só mostra o Milagrinho centralizado no topo antes das mensagens */}
+      <div className="flex justify-center mb-2">
+        <div
+          className="w-12 h-12 rounded-full flex items-center justify-center shadow-lg"
+          style={{ background: MILAGRINHO_BG }}
+        >
+          <User className="h-7 w-7 text-white" />
+        </div>
+      </div>
       {renderedMessages.map((message, index) => (
         <div key={index} className="flex items-start gap-3 mb-4 last:mb-0">
           <div className="flex-shrink-0">
-            {/* Avatar fixo azul Milagrinho para assistant, sempre igual */}
             {message.role === 'assistant' ? (
               <div
                 className="w-8 h-8 rounded-full flex items-center justify-center"
