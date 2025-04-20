@@ -1,5 +1,5 @@
 
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useProgress } from "@/hooks/onboarding/useProgress";
 import { useAuth } from "@/contexts/auth";
@@ -13,15 +13,27 @@ const Onboarding = () => {
   const { user } = useAuth();
   const { progress, isLoading } = useProgress();
   const navigate = useNavigate();
+  const [checkComplete, setCheckComplete] = useState(false);
 
   useEffect(() => {
-    if (!isLoading && progress?.is_completed) {
+    // Só verificamos se já completou após carregar e apenas uma vez
+    if (!isLoading && progress?.is_completed && !checkComplete) {
+      setCheckComplete(true);
       toast.info("Você já completou o onboarding!");
-      navigate("/dashboard");
+      navigate("/dashboard", { replace: true });
     }
-  }, [isLoading, progress, navigate]);
+  }, [isLoading, progress, navigate, checkComplete]);
 
-  if (!user || isLoading) return null;
+  if (!user) return null;
+  
+  // Mostra tela de carregamento apenas na primeira carga
+  if (isLoading && !checkComplete) return (
+    <OnboardingLayout currentStep={1} title="Carregando...">
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#0ABAB5]"></div>
+      </div>
+    </OnboardingLayout>
+  );
 
   return (
     <OnboardingLayout 

@@ -1,5 +1,6 @@
+
 import { ReactNode } from "react";
-import { Route, Routes } from "react-router-dom";
+import { Route, Routes, Navigate } from "react-router-dom";
 import MemberLayout from "@/components/layout/MemberLayout";
 import Dashboard from "@/pages/member/Dashboard";
 import Solutions from "@/pages/member/Solutions";
@@ -14,9 +15,17 @@ import SuggestionDetails from "@/pages/member/SuggestionDetails";
 import NewSuggestion from "@/pages/member/NewSuggestion";
 import Achievements from "@/pages/member/Achievements";
 import Benefits from "@/pages/member/Benefits";
-import { lazy } from "react";
+import { lazy, Suspense } from "react";
+import LoadingScreen from "@/components/common/LoadingScreen";
 
+// Importar com lazy loading para reduzir o tamanho inicial do bundle
 const Onboarding = lazy(() => import("@/pages/onboarding/Onboarding"));
+const OnboardingBusinessGoals = lazy(() => import("@/pages/onboarding/steps/BusinessGoals"));
+const OnboardingAIExperience = lazy(() => import("@/pages/onboarding/steps/AIExperience"));
+const OnboardingIndustryFocus = lazy(() => import("@/pages/onboarding/steps/IndustryFocus"));
+const OnboardingResourcesNeeds = lazy(() => import("@/pages/onboarding/steps/ResourcesNeeds"));
+const OnboardingTeamInfo = lazy(() => import("@/pages/onboarding/steps/TeamInfo"));
+const OnboardingPreferences = lazy(() => import("@/pages/onboarding/steps/Preferences"));
 
 interface MemberRoutesProps {
   children?: ReactNode;
@@ -29,8 +38,52 @@ const MemberRoutes = ({ children }: MemberRoutesProps) => {
   return (
     <Routes>
       <Route path="/" element={<MemberLayout>{children}</MemberLayout>}>
-        <Route index element={<Dashboard />} />
-        <Route path="/onboarding" element={<Onboarding />} />
+        <Route index element={<Navigate to="/dashboard" replace />} />
+        
+        {/* Onboarding Routes - com suspense para carregamento lazy */}
+        <Route path="onboarding" element={
+          <Suspense fallback={<LoadingScreen message="Carregando onboarding..." />}>
+            <Onboarding />
+          </Suspense>
+        } />
+        
+        <Route path="onboarding/business-goals" element={
+          <Suspense fallback={<LoadingScreen message="Carregando próxima etapa..." />}>
+            <OnboardingBusinessGoals />
+          </Suspense>
+        } />
+        
+        <Route path="onboarding/ai-experience" element={
+          <Suspense fallback={<LoadingScreen message="Carregando próxima etapa..." />}>
+            <OnboardingAIExperience />
+          </Suspense>
+        } />
+        
+        <Route path="onboarding/industry-focus" element={
+          <Suspense fallback={<LoadingScreen message="Carregando próxima etapa..." />}>
+            <OnboardingIndustryFocus />
+          </Suspense>
+        } />
+        
+        <Route path="onboarding/resources-needs" element={
+          <Suspense fallback={<LoadingScreen message="Carregando próxima etapa..." />}>
+            <OnboardingResourcesNeeds />
+          </Suspense>
+        } />
+        
+        <Route path="onboarding/team-info" element={
+          <Suspense fallback={<LoadingScreen message="Carregando próxima etapa..." />}>
+            <OnboardingTeamInfo />
+          </Suspense>
+        } />
+        
+        <Route path="onboarding/preferences" element={
+          <Suspense fallback={<LoadingScreen message="Carregando próxima etapa..." />}>
+            <OnboardingPreferences />
+          </Suspense>
+        } />
+
+        {/* Outras rotas */}
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="solutions" element={<Solutions />} />
         <Route path="solution/:id" element={<SolutionDetails />} />

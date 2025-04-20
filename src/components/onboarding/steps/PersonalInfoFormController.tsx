@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useProgress } from "@/hooks/onboarding/useProgress";
 import { useAuth } from "@/contexts/auth";
 import { toast } from "sonner";
@@ -27,22 +27,28 @@ export const PersonalInfoFormController = () => {
     timezone: progress?.personal_info?.timezone || "GMT-3",
   });
 
+  // Usando useCallback para evitar recriações desnecessárias
+  const updateFormData = useCallback(() => {
+    if (profile || progress?.personal_info) {
+      setFormData(prev => ({
+        ...prev,
+        name: profile?.name || progress?.personal_info?.name || "",
+        email: profile?.email || progress?.personal_info?.email || "",
+        phone: progress?.personal_info?.phone || "",
+        ddi: progress?.personal_info?.ddi || "+55",
+        linkedin: progress?.personal_info?.linkedin || "",
+        instagram: progress?.personal_info?.instagram || "",
+        country: progress?.personal_info?.country || "Brasil",
+        state: progress?.personal_info?.state || "",
+        city: progress?.personal_info?.city || "",
+        timezone: progress?.personal_info?.timezone || "GMT-3",
+      }));
+    }
+  }, [profile, progress?.personal_info]);
+
   useEffect(() => {
-    setFormData(prev => ({
-      ...prev,
-      name: profile?.name || progress?.personal_info?.name || "",
-      email: profile?.email || progress?.personal_info?.email || "",
-      phone: progress?.personal_info?.phone || "",
-      ddi: progress?.personal_info?.ddi || "+55",
-      linkedin: progress?.personal_info?.linkedin || "",
-      instagram: progress?.personal_info?.instagram || "",
-      country: progress?.personal_info?.country || "Brasil",
-      state: progress?.personal_info?.state || "",
-      city: progress?.personal_info?.city || "",
-      timezone: progress?.personal_info?.timezone || "GMT-3",
-    }))
-    // eslint-disable-next-line
-  }, [progress?.personal_info, profile]);
+    updateFormData();
+  }, [updateFormData]);
 
   const handleChange = (field: string, value: string) => {
     // Impede edição em nome e e-mail (proteção extra contra tentativa de edição)
@@ -70,6 +76,9 @@ export const PersonalInfoFormController = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (isSubmitting) return;
+    
     setIsSubmitting(true);
 
     try {
@@ -84,7 +93,7 @@ export const PersonalInfoFormController = () => {
       });
 
       toast.success("Dados salvos com sucesso!");
-      navigate("/onboarding/business-goals");
+      navigate("/onboarding/business-goals", { replace: true });
     } catch (error) {
       console.error("Erro ao salvar dados:", error);
       toast.error("Erro ao salvar dados. Tente novamente.");

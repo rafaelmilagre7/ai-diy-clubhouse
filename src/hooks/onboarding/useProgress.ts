@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/auth";
 import { OnboardingData } from "@/types/onboarding";
@@ -29,9 +29,10 @@ export const useProgress = () => {
   const { user } = useAuth();
   const [progress, setProgress] = useState<OnboardingProgress | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const hasInitialized = useRef(false);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user || hasInitialized.current) return;
 
     const fetchProgress = async () => {
       try {
@@ -57,6 +58,7 @@ export const useProgress = () => {
         console.error("Erro ao carregar progresso:", error);
       } finally {
         setIsLoading(false);
+        hasInitialized.current = true;
       }
     };
 
@@ -92,6 +94,11 @@ export const useProgress = () => {
     };
 
     fetchProgress();
+
+    // Cleanup function
+    return () => {
+      hasInitialized.current = false;
+    };
   }, [user]);
 
   const updateProgress = async (updates: Partial<OnboardingProgress>) => {
