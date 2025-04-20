@@ -24,7 +24,7 @@ export const SolutionMobileActions = ({
   // Handler para o botão de implementação
   const handleImplementation = () => {
     if (progress?.is_completed) {
-      navigate(`/implementation/${solutionId}/completed`);
+      navigate(`/implement/${solutionId}/0`);
     } else if (progress) {
       console.log("Mobile: Chamando continueImplementation");
       continueImplementation();
@@ -37,13 +37,23 @@ export const SolutionMobileActions = ({
   return (
     <div className="mt-8 sm:hidden">
       {progress?.is_completed ? (
-        <Button 
-          className="w-full bg-green-600 hover:bg-green-700" 
-          onClick={() => navigate(`/implementation/${solutionId}/completed`)}
-        >
-          <CheckCircle className="mr-2 h-5 w-5" />
-          Solução Implementada com Sucesso!
-        </Button>
+        <div className="space-y-3">
+          <Button 
+            className="w-full bg-green-600 hover:bg-green-700" 
+            onClick={() => navigate(`/implementation/${solutionId}/completed`)}
+          >
+            <Award className="mr-2 h-5 w-5" />
+            Ver Certificado
+          </Button>
+          <Button 
+            className="w-full"
+            variant="outline" 
+            onClick={handleImplementation}
+          >
+            <PlayCircle className="mr-2 h-5 w-5" />
+            Revisar Implementação
+          </Button>
+        </div>
       ) : (
         <Button 
           className="w-full" 
