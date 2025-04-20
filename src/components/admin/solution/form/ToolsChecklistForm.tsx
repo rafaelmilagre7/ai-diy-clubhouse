@@ -3,7 +3,7 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Save, Loader2 } from "lucide-react";
-import { ToolSelector } from "./components/ToolSelector";
+import { ToolSelector } from "@/components/admin/solution/form/ToolSelector";
 import { ToolsLoading } from "./components/ToolsLoading";
 import { useToolsChecklist } from "@/hooks/useToolsChecklist";
 
