@@ -54,8 +54,11 @@ const SolutionDetails = () => {
   }
   
   // Log para depuração
-  log("Renderizando SolutionDetails com solução:", solution.id, solution.title);
-  log("Progresso atual:", progress);
+  log("Renderizando SolutionDetails com solução", { 
+    solutionId: solution.id, 
+    solutionTitle: solution.title,
+    progress
+  });
   
   return (
     <div className="max-w-5xl mx-auto pb-12 animate-fade-in">

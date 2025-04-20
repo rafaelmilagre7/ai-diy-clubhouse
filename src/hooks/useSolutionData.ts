@@ -26,7 +26,7 @@ export const useSolutionData = (id: string | undefined) => {
       
       try {
         setLoading(true);
-        log(`Buscando solução com ID: ${id}`);
+        log(`Buscando solução com ID`, { id });
         
         let query = supabase
           .from("solutions")
@@ -38,7 +38,7 @@ export const useSolutionData = (id: string | undefined) => {
           query = query.eq("published", true);
         }
         
-        const { data, error: fetchError } = await query.single();
+        const { data, error: fetchError } = await query.maybeSingle();
         
         if (fetchError) {
           logError("Erro ao buscar solução:", fetchError);
@@ -59,7 +59,7 @@ export const useSolutionData = (id: string | undefined) => {
         }
         
         if (data) {
-          log("Dados da solução encontrados:", data);
+          log("Dados da solução encontrados:", { solution: data });
           setSolution(data as Solution);
           
           // Fetch progress for this solution and user if user is authenticated
@@ -76,16 +76,16 @@ export const useSolutionData = (id: string | undefined) => {
                 logError("Erro ao buscar progresso:", progressError);
               } else if (progressData) {
                 setProgress(progressData);
-                log("Dados de progresso encontrados:", progressData);
+                log("Dados de progresso encontrados:", { progress: progressData });
               } else {
-                log("Nenhum progresso encontrado para esta solução");
+                log("Nenhum progresso encontrado para esta solução", { solutionId: id, userId: user.id });
               }
             } catch (progressFetchError) {
               logError("Erro ao buscar progresso:", progressFetchError);
             }
           }
         } else {
-          log("Nenhuma solução encontrada com ID:", id);
+          log("Nenhuma solução encontrada com ID", { id });
           setError("Solução não encontrada");
           toast({
             title: "Solução não encontrada",

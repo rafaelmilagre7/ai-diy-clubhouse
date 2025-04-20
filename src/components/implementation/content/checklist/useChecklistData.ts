@@ -36,7 +36,7 @@ export const useChecklistData = (module: Module) => {
         }
         
         if (!data) {
-          log("No solution found with id:", module.solution_id);
+          log("No solution found with id", { id: module.solution_id });
           setLoading(false);
           return;
         }
@@ -67,7 +67,7 @@ export const useChecklistData = (module: Module) => {
             
             setChecklist(checkpointChecklist);
           } else {
-            log("No checklist or implementation_checkpoints found", solutionData);
+            log("No checklist or implementation_checkpoints found", { solutionId: solutionData.id });
             setChecklist([]);
           }
         } else {

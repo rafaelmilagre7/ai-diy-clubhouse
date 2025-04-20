@@ -60,7 +60,7 @@ export const useModuleImplementation = () => {
         }
         
         setSolution(solutionData as Solution);
-        log("Solução encontrada:", solutionData);
+        log("Solução encontrada:", { solution: solutionData });
         
         // Fetch modules for this solution
         const { data: modulesData, error: modulesError } = await supabase
@@ -81,19 +81,19 @@ export const useModuleImplementation = () => {
         
         if (modulesData && modulesData.length > 0) {
           setModules(modulesData as Module[]);
-          log("Módulos encontrados:", modulesData.length);
+          log("Módulos encontrados:", { count: modulesData.length });
           
           // Set current module based on moduleIdx
           if (moduleIdx < modulesData.length) {
             setCurrentModule(modulesData[moduleIdx] as Module);
-            log("Módulo atual definido:", modulesData[moduleIdx]);
+            log("Módulo atual definido:", { moduleId: modulesData[moduleIdx].id });
           } else {
             // If moduleIdx is out of bounds, set to first module
             setCurrentModule(modulesData[0] as Module);
-            log("Índice de módulo fora dos limites, usando o primeiro módulo");
+            log("Índice de módulo fora dos limites, usando o primeiro módulo", { requestedIdx: moduleIdx, maxIdx: modulesData.length - 1 });
           }
         } else {
-          log("Nenhum módulo encontrado, criando placeholder");
+          log("Nenhum módulo encontrado, criando placeholder", { solutionId: id });
           
           // Create placeholder module if no modules exist
           const placeholderModule = {
@@ -126,7 +126,7 @@ export const useModuleImplementation = () => {
               logError("Erro ao buscar progresso:", progressError);
             } else if (progressData) {
               setProgress(progressData);
-              log("Progresso encontrado:", progressData);
+              log("Progresso encontrado:", { progress: progressData });
               
               // Update current module index in progress if different
               if (progressData.current_module !== moduleIdx) {
@@ -146,12 +146,12 @@ export const useModuleImplementation = () => {
               // Set completed modules
               if (progressData.completed_modules && Array.isArray(progressData.completed_modules)) {
                 setCompletedModules(progressData.completed_modules);
-                log("Módulos completados:", progressData.completed_modules);
+                log("Módulos completados:", { completedModules: progressData.completed_modules });
               } else {
                 setCompletedModules([]);
               }
             } else {
-              log("Nenhum progresso encontrado, criando novo registro");
+              log("Nenhum progresso encontrado, criando novo registro", { userId: user.id, solutionId: id });
               
               // Create progress record if it doesn't exist
               const { data: newProgress, error: createError } = await supabase
@@ -171,7 +171,7 @@ export const useModuleImplementation = () => {
                 logError("Erro ao criar progresso:", createError);
               } else {
                 setProgress(newProgress);
-                log("Novo progresso criado:", newProgress);
+                log("Novo progresso criado:", { progress: newProgress });
               }
             }
           } catch (progressError) {
