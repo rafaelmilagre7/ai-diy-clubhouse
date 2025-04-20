@@ -15,31 +15,31 @@ export const useFetchModuleComments = (solutionId: string, moduleId: string) => 
       try {
         log('Buscando comentários da solução', { solutionId, moduleId });
         
-        // Buscar comentários principais
+        // Buscar comentários principais de forma simplificada
         const { data: parentComments, error: parentError } = await supabase
           .from('tool_comments')
-          .select(`
-            *,
-            profiles:user_id(name, avatar_url, role)
-          `)
+          .select('*, profiles:profiles!user_id(*)')
           .eq('tool_id', solutionId)
           .is('parent_id', null)
           .order('created_at', { ascending: false });
 
-        if (parentError) throw parentError;
+        if (parentError) {
+          logError('Erro ao buscar comentários principais', parentError);
+          throw parentError;
+        }
 
         // Buscar respostas
         const { data: replies, error: repliesError } = await supabase
           .from('tool_comments')
-          .select(`
-            *,
-            profiles:user_id(name, avatar_url, role)
-          `)
+          .select('*, profiles:profiles!user_id(*)')
           .eq('tool_id', solutionId)
           .not('parent_id', 'is', null)
           .order('created_at', { ascending: true });
 
-        if (repliesError) throw repliesError;
+        if (repliesError) {
+          logError('Erro ao buscar respostas', repliesError);
+          throw repliesError;
+        }
         
         // Verificar curtidas do usuário
         let userLikes: Record<string, boolean> = {};

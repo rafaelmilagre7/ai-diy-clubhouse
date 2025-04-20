@@ -11,8 +11,8 @@ import { ModuleContentVideos } from "@/components/implementation/content/ModuleC
 import { ModuleContentTools } from "@/components/implementation/content/ModuleContentTools";
 import { ModuleContentChecklist } from "@/components/implementation/content/ModuleContentChecklist";
 import { ImplementationComplete } from "@/components/implementation/content/ImplementationComplete";
+import { CommentsSection } from "@/components/implementation/content/tool-comments/CommentsSection";
 import { useSolutionCompletion } from "@/hooks/implementation/useSolutionCompletion";
-import { CommentsSection } from "@/components/implementation/content/CommentsSection";
 import { useRealtimeComments } from "@/hooks/implementation/useRealtimeComments";
 
 const SolutionImplementation = () => {
