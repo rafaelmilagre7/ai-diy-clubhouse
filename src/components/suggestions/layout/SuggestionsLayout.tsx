@@ -42,11 +42,6 @@ const SuggestionsLayout = () => {
     }
   }, [suggestions]);
 
-  const filteredSuggestions = suggestions.filter(suggestion => 
-    suggestion.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    suggestion.description.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
   if (isLoading) {
     return (
       <div className="container py-6 space-y-6">
@@ -94,7 +89,7 @@ const SuggestionsLayout = () => {
         </Alert>
       ) : (
         <SuggestionsContent 
-          suggestions={filteredSuggestions} 
+          suggestions={suggestions} 
           searchQuery={searchQuery}
         />
       )}
