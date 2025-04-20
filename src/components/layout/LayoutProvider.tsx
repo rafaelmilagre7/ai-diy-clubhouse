@@ -1,6 +1,6 @@
 
 import { Navigate, useNavigate } from "react-router-dom";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, ReactNode } from "react";
 import { useAuth } from "@/contexts/auth";
 import LoadingScreen from "@/components/common/LoadingScreen";
 import MemberLayout from "./MemberLayout";
@@ -10,7 +10,7 @@ import { toast } from "sonner";
  * LayoutProvider handles authentication checks and role-based routing
  * before rendering the appropriate layout component
  */
-const LayoutProvider = () => {
+const LayoutProvider = ({ children }: { children: ReactNode }) => {
   const {
     user,
     profile,
@@ -67,7 +67,7 @@ const LayoutProvider = () => {
 
   // Fast path for members - If we have user and profile, render immediately
   if (user && profile && !isAdmin) {
-    return <MemberLayout />;
+    return <MemberLayout>{children}</MemberLayout>;
   }
 
   // Show loading screen while checking the session (but only if timeout not exceeded)
@@ -86,7 +86,7 @@ const LayoutProvider = () => {
   }
 
   // Default case: Render the member layout
-  return <MemberLayout />;
+  return <MemberLayout>{children}</MemberLayout>;
 };
 
 export default LayoutProvider;

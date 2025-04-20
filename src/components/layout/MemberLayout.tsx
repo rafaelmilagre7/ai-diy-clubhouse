@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, ReactNode } from "react";
 import { useAuth } from "@/contexts/auth";
 import { MemberSidebar } from "./member/MemberSidebar";
 import { MemberContent } from "./member/MemberContent";
@@ -8,7 +8,7 @@ import { MemberContent } from "./member/MemberContent";
  * MemberLayout renders the layout structure for member users
  * This includes the sidebar and content area
  */
-const MemberLayout = ({ children }: { children: React.ReactNode }) => {
+const MemberLayout = ({ children }: { children: ReactNode }) => {
   const { profile, signOut } = useAuth();
   // Default to showing sidebar on desktop, hiding on mobile
   const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 768);

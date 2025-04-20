@@ -1,5 +1,16 @@
 
-import { Solution } from "@/lib/supabase";
+import { Solution as BaseSolution } from "@/lib/supabase";
+
+// Estender o tipo Solution para incluir a propriedade modules
+export interface Solution extends BaseSolution {
+  modules?: {
+    id: string;
+    title: string;
+    type: string;
+    module_order: number;
+    content?: any;
+  }[];
+}
 
 export interface UserProgress {
   [solutionId: string]: {

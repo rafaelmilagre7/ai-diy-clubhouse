@@ -1,7 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { Dashboard } from "./types";
-import { Solution } from "@/lib/supabase";
+import { Dashboard, Solution } from "./types";
 import { useDashboardData } from "./useDashboardData";
 import { useLogging } from "@/contexts/logging";
 
@@ -31,7 +30,9 @@ const fallbackSolutionsData: Solution[] = [
     category: 'Aumento de Receita',
     difficulty: 'beginner',
     published: true,
-    modules: []
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    slug: 'chatgpt-atendimento'
   },
   {
     id: 'fallback-2',
@@ -40,7 +41,9 @@ const fallbackSolutionsData: Solution[] = [
     category: 'Aumento de Receita',
     difficulty: 'intermediate',
     published: true,
-    modules: []
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    slug: 'automacao-email-marketing'
   },
   {
     id: 'fallback-3',
@@ -49,7 +52,9 @@ const fallbackSolutionsData: Solution[] = [
     category: 'Otimização Operacional',
     difficulty: 'beginner',
     published: true,
-    modules: []
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    slug: 'otimizacao-processos'
   }
 ];
 
