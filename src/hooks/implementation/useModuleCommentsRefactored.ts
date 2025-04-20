@@ -10,7 +10,7 @@ import { useLogging } from '@/hooks/useLogging';
 export const useModuleCommentsRefactored = (solutionId: string, moduleId: string) => {
   const [comment, setComment] = useState('');
   const [replyTo, setReplyTo] = useState<Comment | null>(null);
-  const { log } = useLogging();
+  const { log, logError } = useLogging();
   
   // Log para diagnosticar possíveis problemas
   log('Inicializando hook de comentários', { solutionId, moduleId });
@@ -22,7 +22,7 @@ export const useModuleCommentsRefactored = (solutionId: string, moduleId: string
 
   // Log para diagnosticar possíveis problemas com os dados carregados
   if (error) {
-    log('Erro ao carregar comentários', { error, solutionId, moduleId });
+    logError('Erro ao carregar comentários', { error, solutionId, moduleId });
   } else {
     log('Comentários carregados', { count: comments.length, solutionId, moduleId });
   }

@@ -28,7 +28,13 @@ export const useRealtimeComments = (
         table: 'tool_comments',
         filter: `tool_id=eq.${solutionId}`
       }, (payload) => {
-        log('Mudança detectada em comentários', { event: payload.eventType, solutionId, moduleId });
+        log('Mudança detectada em comentários', { 
+          event: payload.eventType, 
+          solutionId, 
+          moduleId,
+          new: payload.new,
+          old: payload.old
+        });
         queryClient.invalidateQueries({ queryKey: ['solution-comments', solutionId, moduleId] });
       })
       .subscribe((status) => {
@@ -55,8 +61,8 @@ export const useRealtimeComments = (
     // Cancelar inscrição ao desmontar
     return () => {
       log('Cancelando escuta de comentários', { solutionId, moduleId });
-      commentChannel.unsubscribe();
-      likesChannel.unsubscribe();
+      supabase.removeChannel(commentChannel);
+      supabase.removeChannel(likesChannel);
     };
   }, [solutionId, moduleId, queryClient, isEnabled, log, logError]);
 };

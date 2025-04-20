@@ -2,12 +2,12 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { Comment } from '@/types/commentTypes';
-import { useAuth } from '@/contexts/auth';
 import { useLogging } from '@/hooks/useLogging';
+import { useAuth } from '@/contexts/auth';
 
 export const useFetchModuleComments = (solutionId: string, moduleId: string) => {
-  const { user } = useAuth();
   const { log, logError } = useLogging();
+  const { user } = useAuth();
 
   return useQuery({
     queryKey: ['solution-comments', solutionId, moduleId],
@@ -15,12 +15,22 @@ export const useFetchModuleComments = (solutionId: string, moduleId: string) => 
       try {
         log('Buscando comentários da solução', { solutionId, moduleId });
         
-        // Buscar comentários principais (usando sintaxe correta para join)
+        // Buscar comentários principais com sintaxe correta para relacionamentos
         const { data: parentComments, error: parentError } = await supabase
           .from('tool_comments')
           .select(`
-            *,
-            profiles(name, avatar_url, role)
+            id,
+            tool_id,
+            user_id,
+            content,
+            likes_count,
+            created_at,
+            updated_at,
+            profiles:user_id (
+              name, 
+              avatar_url, 
+              role
+            )
           `)
           .eq('tool_id', solutionId)
           .is('parent_id', null)
@@ -31,12 +41,23 @@ export const useFetchModuleComments = (solutionId: string, moduleId: string) => 
           throw parentError;
         }
 
-        // Buscar respostas (usando sintaxe correta para join)
+        // Buscar respostas (replies) com sintaxe correta para relacionamentos
         const { data: replies, error: repliesError } = await supabase
           .from('tool_comments')
           .select(`
-            *,
-            profiles(name, avatar_url, role)
+            id,
+            tool_id,
+            user_id,
+            content,
+            parent_id,
+            likes_count,
+            created_at,
+            updated_at,
+            profiles:user_id (
+              name, 
+              avatar_url, 
+              role
+            )
           `)
           .eq('tool_id', solutionId)
           .not('parent_id', 'is', null)
@@ -46,30 +67,31 @@ export const useFetchModuleComments = (solutionId: string, moduleId: string) => 
           logError('Erro ao buscar respostas', repliesError);
           throw repliesError;
         }
+
+        // Verificar curtidas do usuário atual
+        let likesMap: Record<string, boolean> = {};
         
-        // Verificar curtidas do usuário
-        let userLikes: Record<string, boolean> = {};
         if (user) {
-          const { data: likes } = await supabase
+          const { data: userLikes } = await supabase
             .from('tool_comment_likes')
             .select('comment_id')
             .eq('user_id', user.id);
-            
-          userLikes = (likes || []).reduce((acc: Record<string, boolean>, like) => {
+
+          likesMap = (userLikes || []).reduce((acc: Record<string, boolean>, like) => {
             acc[like.comment_id] = true;
             return acc;
           }, {});
         }
-        
-        // Organizar comentários em estrutura hierárquica
+
+        // Organizar comentários com respostas
         const organizedComments = (parentComments || []).map((comment: any) => ({
           ...comment,
-          user_has_liked: !!userLikes[comment.id],
+          user_has_liked: !!likesMap[comment.id],
           replies: (replies || [])
             .filter((reply: any) => reply.parent_id === comment.id)
             .map((reply: any) => ({
               ...reply,
-              user_has_liked: !!userLikes[reply.id]
+              user_has_liked: !!likesMap[reply.id]
             }))
         }));
 
@@ -80,7 +102,6 @@ export const useFetchModuleComments = (solutionId: string, moduleId: string) => 
         return organizedComments;
       } catch (error) {
         logError('Erro ao buscar comentários', error);
-        // Retornar array vazio em caso de erro para não quebrar a interface
         return [];
       }
     },

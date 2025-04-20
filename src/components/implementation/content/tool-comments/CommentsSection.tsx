@@ -5,6 +5,7 @@ import { CommentForm } from './CommentForm';
 import { CommentList } from './CommentList';
 import { Separator } from '@/components/ui/separator';
 import { useLogging } from '@/hooks/useLogging';
+import { useRealtimeComments } from '@/hooks/implementation/useRealtimeComments';
 
 interface CommentsSectionProps {
   solutionId: string;
@@ -13,6 +14,9 @@ interface CommentsSectionProps {
 
 export const CommentsSection = ({ solutionId, moduleId }: CommentsSectionProps) => {
   const { log } = useLogging();
+  
+  // Ativar atualizações em tempo real dos comentários
+  useRealtimeComments(solutionId, moduleId, true);
   
   // Log para diagnosticar possíveis problemas
   log('Renderizando seção de comentários', { solutionId, moduleId });
