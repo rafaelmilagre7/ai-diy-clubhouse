@@ -4,7 +4,6 @@ import { CompanyInputs } from "./business/CompanyInputs";
 import { OnboardingData } from "@/types/onboarding";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
-import { MilagrinhoMessage } from "@/components/onboarding/MilagrinhoMessage";
 
 interface BusinessGoalsStepProps {
   onSubmit: (stepId: string, data: Partial<OnboardingData>) => void;
@@ -19,7 +18,6 @@ export const BusinessGoalsStep = ({
   onSubmit,
   isSubmitting,
   initialData,
-  personalInfo,
 }: BusinessGoalsStepProps) => {
   // Estados para cada campo
   const [companyName, setCompanyName] = useState(initialData?.company_name || "");
@@ -58,13 +56,6 @@ export const BusinessGoalsStep = ({
 
   return (
     <div className="space-y-6">
-      <div className="mb-4">
-        <MilagrinhoMessage 
-          userName={personalInfo?.name} 
-          message="Para personalizar sua experiência, conte um pouco sobre a empresa onde você trabalha. Estas informações são essenciais para recomendar as melhores soluções para seu negócio."
-        />
-      </div>
-
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="bg-white rounded-lg border border-gray-100 p-6 shadow-sm">
           <h2 className="text-xl font-semibold text-[#15192C] mb-6">

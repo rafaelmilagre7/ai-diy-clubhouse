@@ -54,7 +54,6 @@ const BusinessGoals = () => {
         <MilagrinhoMessage 
           userName={firstName}
           message="Para personalizar sua experiência, conte um pouco sobre a empresa onde você trabalha. Estas informações são essenciais para recomendar as melhores soluções para seu negócio."
-          variant="compact"
         />
         
         <BusinessGoalsStep 
