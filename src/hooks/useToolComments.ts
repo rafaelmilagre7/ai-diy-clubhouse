@@ -1,4 +1,5 @@
 
+import { Comment } from '@/types/commentTypes';
 import { useCommentsData } from './comments/useCommentsData';
 import { useCommentForm } from './comments/useCommentForm';
 import { useCommentActions } from './comments/useCommentActions';
@@ -17,8 +18,8 @@ export const useToolComments = (toolId: string) => {
 
   const { likeComment, deleteComment } = useCommentActions(refetch);
 
-  const startReply = (comment: Comment) => {
-    setReplyTo(comment);
+  const startReply = (commentObj: Comment) => {
+    setReplyTo(commentObj);
     document.getElementById('comment-input')?.focus();
   };
 

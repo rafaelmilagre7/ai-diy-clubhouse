@@ -5,6 +5,7 @@ import { CommentList } from './CommentList';
 import { CommentForm } from './CommentForm';
 import { useToolComments } from '@/hooks/useToolComments';
 import { MessageSquare } from 'lucide-react';
+import { Comment } from '@/types/commentTypes';
 
 interface CommentsSectionProps {
   toolId: string;
