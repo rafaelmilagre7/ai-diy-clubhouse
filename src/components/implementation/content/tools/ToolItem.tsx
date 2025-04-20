@@ -1,11 +1,12 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, Wrench } from "lucide-react";
 import { useLogging } from "@/hooks/useLogging";
 import { Tool } from "@/types/toolTypes";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
+import { Badge } from "@/components/ui/badge";
 
 interface ToolItemProps {
   toolId: string;
@@ -43,10 +44,17 @@ export const ToolItem: React.FC<ToolItemProps> = ({ toolId, isRequired }) => {
   return (
     <div className="flex items-start p-4 border rounded-md">
       <div className="bg-blue-100 p-2 rounded mr-4">
-        <div className={`h-5 w-5 ${isRequired ? "text-blue-600" : "text-yellow-600"}`} />
+        <Wrench className={`h-5 w-5 ${isRequired ? "text-blue-600" : "text-yellow-600"}`} />
       </div>
       <div className="flex-1">
-        <h4 className="font-medium">{tool.name}</h4>
+        <div className="flex items-center gap-2">
+          <h4 className="font-medium">{tool.name}</h4>
+          {isRequired && (
+            <Badge variant="default" className="bg-[#0ABAB5] hover:bg-[#0ABAB5]/90 text-xs">
+              Obrigatória
+            </Badge>
+          )}
+        </div>
         <p className="text-sm text-muted-foreground mt-1">
           {tool.description}
         </p>
@@ -69,4 +77,3 @@ export const ToolItem: React.FC<ToolItemProps> = ({ toolId, isRequired }) => {
     </div>
   );
 };
-

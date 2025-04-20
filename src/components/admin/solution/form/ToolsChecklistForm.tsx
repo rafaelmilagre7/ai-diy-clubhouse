@@ -6,6 +6,8 @@ import { Save, Loader2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 import { ToolSelector, SelectedTool } from "./ToolSelector";
+import { useQuery } from "@tanstack/react-query";
+import { Tool } from "@/types/toolTypes";
 
 interface ToolsChecklistFormProps {
   solutionId: string | null;
@@ -22,6 +24,20 @@ const ToolsChecklistForm: React.FC<ToolsChecklistFormProps> = ({
   const [loading, setLoading] = useState(true);
   const [savingTools, setSavingTools] = useState(false);
   const { toast } = useToast();
+
+  // Buscar ferramentas da solução e combinar com as ferramentas disponíveis
+  const { data: availableTools = [] } = useQuery({
+    queryKey: ['tools'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('tools')
+        .select('*')
+        .eq('status', true);
+        
+      if (error) throw error;
+      return data as Tool[];
+    }
+  });
 
   useEffect(() => {
     if (solutionId) {
@@ -43,16 +59,22 @@ const ToolsChecklistForm: React.FC<ToolsChecklistFormProps> = ({
       if (error) throw error;
       
       if (data && data.length > 0) {
-        // Converter os dados do banco para o formato esperado pelo seletor
-        const selectedTools = data.map(item => ({
-          id: item.tool_name.toLowerCase().replace(/\s+/g, "-"),
-          name: item.tool_name,
-          url: item.tool_url || "",
-          description: "",
-          is_required: item.is_required
-        }));
+        // Para cada ferramenta na solução, buscar os dados completos da ferramenta
+        const solutionToolsData: SelectedTool[] = [];
         
-        setTools(selectedTools);
+        for (const solutionTool of data) {
+          // Buscar a ferramenta correspondente no availableTools
+          const fullTool = availableTools.find(t => t.id === solutionTool.tool_id);
+          
+          if (fullTool) {
+            solutionToolsData.push({
+              ...fullTool,
+              is_required: solutionTool.is_required
+            });
+          }
+        }
+        
+        setTools(solutionToolsData);
       }
     } catch (error) {
       console.error("Erro ao carregar ferramentas:", error);
@@ -97,8 +119,7 @@ const ToolsChecklistForm: React.FC<ToolsChecklistFormProps> = ({
       // Depois, inserir as novas ferramentas
       const toolsToInsert = tools.map(tool => ({
         solution_id: solutionId,
-        tool_name: tool.name,
-        tool_url: tool.url || null,
+        tool_id: tool.id,
         is_required: tool.is_required
       }));
       

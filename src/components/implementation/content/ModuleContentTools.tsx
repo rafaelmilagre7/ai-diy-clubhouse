@@ -1,11 +1,12 @@
 
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { Module, supabase } from "@/lib/supabase";
 import { useLogging } from "@/hooks/useLogging";
 import { ToolsLoading } from "./tools/ToolsLoading";
 import { ToolsEmptyState } from "./tools/ToolsEmptyState";
 import { ToolItem } from "./tools/ToolItem";
 import { useQuery } from "@tanstack/react-query";
+import { SolutionTool } from "@/types/toolTypes";
 
 interface ModuleContentToolsProps {
   module: Module;
@@ -30,7 +31,7 @@ export const ModuleContentTools = ({ module }: ModuleContentToolsProps) => {
       }
       
       log("Tools fetched successfully", { count: data?.length || 0 });
-      return data;
+      return data as SolutionTool[];
     }
   });
 

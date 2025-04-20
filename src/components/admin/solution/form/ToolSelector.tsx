@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
-import { Check, Info, Link2, Plus } from "lucide-react";
+import { Check, Info, Link2, Plus, Wrench } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -123,7 +123,7 @@ export const ToolSelector: React.FC<ToolSelectorProps> = ({ value = [], onChange
                           className="flex items-start py-2"
                         >
                           <div className="flex items-center mr-2 mt-0.5">
-                            <Icons.Tool className="h-4 w-4" />
+                            <Wrench className="h-4 w-4" />
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="font-medium">{tool.name}</div>
@@ -150,7 +150,7 @@ export const ToolSelector: React.FC<ToolSelectorProps> = ({ value = [], onChange
                   <div key={tool.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 bg-muted/30 rounded-md">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <Icons.Tool className="h-5 w-5 text-blue-600" />
+                        <Wrench className="h-5 w-5 text-blue-600" />
                         <span className="font-medium">{tool.name}</span>
                         {tool.is_required && (
                           <Badge variant="default" className="bg-[#0ABAB5] hover:bg-[#0ABAB5]/90">
