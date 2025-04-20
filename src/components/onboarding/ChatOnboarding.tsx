@@ -13,32 +13,45 @@ export const ChatOnboarding = () => {
   const [typing, setTyping] = useState(false);
   const [displayedText, setDisplayedText] = useState('');
   const [fullText, setFullText] = useState('');
-  const [alreadySentInitial, setAlreadySentInitial] = useState(false);
+  const [hasInitialized, setHasInitialized] = useState(false);
 
-  // Só dispara a mensagem inicial se ainda não mandou
+  // Mensagem inicial do Milagrinho, gerada localmente para não duplicar o envio para backend
+  const nome = progress?.personal_info?.name || '';
+  const initialMessage = `E aí${nome ? ` ${nome}` : ""}! Eu sou o Milagrinho, seu assistente de IA do VIVER DE IA Club. Vamos começar conhecendo um pouco sobre você. Estas informações vão me ajudar a personalizar sua experiência, onde você vai encontrar uma comunidade incrível de pessoas transformando negócios com IA.`;
+
   useEffect(() => {
-    if (
-      messages.length === 0 &&
-      !alreadySentInitial
-    ) {
-      const nome = progress?.personal_info?.name || '';
-      const mensagem = `E aí${nome ? ` ${nome}` : ""}! Eu sou o Milagrinho, seu assistente de IA do VIVER DE IA Club. Vamos começar conhecendo um pouco sobre você. Estas informações vão me ajudar a personalizar sua experiência, onde você vai encontrar uma comunidade incrível de pessoas transformando negócios com IA.`;
-      sendMessage(mensagem);
-      setAlreadySentInitial(true);
+    if (!hasInitialized && messages.length === 0) {
+      // Insere a mensagem inicial diretamente no estado local para evitar envio duplicado
+      // A mensagem inicial estará no chat, sem duplicar no backend e sem enviar mensagem para o servidor
+      // Como não temos um setter do state messages, podemos simular essa mensagem "assistente" adicionando um item localmente para renderizar só.
+      setHasInitialized(true);
+      // Injetamos essa mensagem virtualmente via setState do hook ou você pode usar uma abordagem interna local:
+      // Como o hook não expõe setMessages, precisamos renderizar essa mensagem na UI separadamente:
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [progress?.personal_info?.name, alreadySentInitial, messages.length]);
+  }, [hasInitialized, messages.length]);
+
+  // Separar as mensagens da API dos locais - para inicial inicial, combinar o initialMessage
+  // Concatenar a mensagem inicial com as mensagens existentes para renderizar sem duplicar
+  const renderedMessages = hasInitialized ? [
+    { role: 'assistant', content: initialMessage },
+    ...messages,
+  ] : messages;
 
   useEffect(() => {
-    // Animar digitação só na última mensagem do assistant
-    const assistantMessages = messages.filter(m => m.role === 'assistant');
-    if (assistantMessages.length > 0) {
-      const lastMessage = assistantMessages[assistantMessages.length - 1].content;
+    // Animar digitação só na última mensagem do assistant em mensagens api (excluindo a inicial)
+    const apiAssistantMessages = messages.filter(m => m.role === 'assistant');
+    if (apiAssistantMessages.length > 0) {
+      const lastMessage = apiAssistantMessages[apiAssistantMessages.length - 1].content;
       setFullText(lastMessage);
       setDisplayedText('');
       setTyping(true);
+    } else if (hasInitialized && messages.length === 0) {
+      // Caso chat vazio mas inicial já setada, anima a mensagem inicial local
+      setFullText(initialMessage);
+      setDisplayedText('');
+      setTyping(true);
     }
-  }, [messages]);
+  }, [messages, hasInitialized, initialMessage]);
 
   useEffect(() => {
     if (typing && displayedText.length < fullText.length) {
@@ -53,7 +66,7 @@ export const ChatOnboarding = () => {
 
   return (
     <div className="w-full bg-white rounded-xl shadow-sm border border-gray-100 px-5 py-4 mb-6">
-      {messages.map((message, index) => (
+      {renderedMessages.map((message, index) => (
         <div key={index} className="flex items-start gap-3 mb-4 last:mb-0">
           <div className="flex-shrink-0">
             {/* Avatar fixo azul Milagrinho para assistant, sempre igual */}
@@ -71,10 +84,10 @@ export const ChatOnboarding = () => {
             )}
           </div>
           <div className={`flex-1 text-sm ${message.role === 'assistant' ? 'text-gray-700' : 'text-gray-600'}`}>
-            {message.role === 'assistant' && index === messages.length - 1 && typing
+            {message.role === 'assistant' && index === renderedMessages.length - 1 && typing
               ? displayedText
               : message.content}
-            {isLoading && index === messages.length - 1 && message.role === 'user' && (
+            {isLoading && index === renderedMessages.length - 1 && message.role === 'user' && (
               <span className="ml-2 animate-pulse">...</span>
             )}
           </div>
