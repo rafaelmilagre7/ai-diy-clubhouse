@@ -10,6 +10,7 @@ interface OnboardingLayoutProps {
   currentStep: number;
   title: string;
   backUrl?: string;
+  onStepClick?: (step: number) => void;
 }
 
 export const OnboardingLayout = ({
@@ -17,6 +18,7 @@ export const OnboardingLayout = ({
   currentStep,
   title,
   backUrl = "/onboarding",
+  onStepClick,
 }: OnboardingLayoutProps) => {
   return (
     <div className="container max-w-screen-lg py-8">
@@ -36,7 +38,11 @@ export const OnboardingLayout = ({
         </div>
       </div>
 
-      <EtapasProgresso currentStep={currentStep} totalSteps={7} />
+      <EtapasProgresso 
+        currentStep={currentStep} 
+        totalSteps={7} 
+        onStepClick={onStepClick}
+      />
 
       <div className="mt-6 mb-4">
         <h1 className="text-2xl font-bold text-gray-900">{title}</h1>

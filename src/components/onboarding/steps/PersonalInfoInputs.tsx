@@ -24,9 +24,16 @@ interface PersonalInfoInputsProps {
   onChange: (field: string, value: string) => void;
   disabled: boolean;
   readOnly?: boolean;
+  errors?: Record<string, string>;
 }
 
-export const PersonalInfoInputs = ({ formData, onChange, disabled, readOnly }: PersonalInfoInputsProps) => {
+export const PersonalInfoInputs = ({ 
+  formData, 
+  onChange, 
+  disabled, 
+  readOnly, 
+  errors = {} 
+}: PersonalInfoInputsProps) => {
   const { user } = useAuth();
   
   // Usar os valores do usuário autenticado como fallback
@@ -53,6 +60,7 @@ export const PersonalInfoInputs = ({ formData, onChange, disabled, readOnly }: P
         onChangeDDI={v => onChange("ddi", v)}
         onChangePhone={v => onChange("phone", v)}
         disabled={disabled}
+        error={errors.phone}
       />
       <SocialInputs
         linkedin={formData.linkedin}
@@ -60,6 +68,10 @@ export const PersonalInfoInputs = ({ formData, onChange, disabled, readOnly }: P
         onChangeLinkedin={v => onChange("linkedin", v)}
         onChangeInstagram={v => onChange("instagram", v)}
         disabled={disabled}
+        errors={{
+          linkedin: errors.linkedin,
+          instagram: errors.instagram
+        }}
       />
       <LocationInputs
         country={formData.country}
@@ -69,6 +81,10 @@ export const PersonalInfoInputs = ({ formData, onChange, disabled, readOnly }: P
         onChangeState={v => onChange("state", v)}
         onChangeCity={v => onChange("city", v)}
         disabled={disabled}
+        errors={{
+          state: errors.state,
+          city: errors.city
+        }}
       />
       <TimezoneInput value={formData.timezone} onChange={v => onChange("timezone", v)} disabled={disabled} />
     </div>

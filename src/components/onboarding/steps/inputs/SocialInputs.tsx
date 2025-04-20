@@ -8,6 +8,10 @@ interface SocialInputsProps {
   onChangeLinkedin: (value: string) => void;
   onChangeInstagram: (value: string) => void;
   disabled: boolean;
+  errors?: {
+    linkedin?: string;
+    instagram?: string;
+  };
 }
 
 export const SocialInputs = ({
@@ -16,10 +20,11 @@ export const SocialInputs = ({
   onChangeLinkedin,
   onChangeInstagram,
   disabled,
+  errors = {},
 }: SocialInputsProps) => (
   <>
-    <div>
-      <Label htmlFor="linkedin">LinkedIn</Label>
+    <div className="space-y-1">
+      <Label htmlFor="linkedin">LinkedIn (opcional)</Label>
       <Input
         id="linkedin"
         type="url"
@@ -27,10 +32,12 @@ export const SocialInputs = ({
         disabled={disabled}
         onChange={e => onChangeLinkedin(e.target.value)}
         placeholder="https://linkedin.com/in/seunome"
+        className={errors.linkedin ? 'border-red-500' : ''}
       />
+      {errors.linkedin && <p className="text-sm text-red-500 mt-1">{errors.linkedin}</p>}
     </div>
-    <div>
-      <Label htmlFor="instagram">Instagram</Label>
+    <div className="space-y-1">
+      <Label htmlFor="instagram">Instagram (opcional)</Label>
       <Input
         id="instagram"
         type="url"
@@ -38,7 +45,9 @@ export const SocialInputs = ({
         disabled={disabled}
         onChange={e => onChangeInstagram(e.target.value)}
         placeholder="https://instagram.com/seunome"
+        className={errors.instagram ? 'border-red-500' : ''}
       />
+      {errors.instagram && <p className="text-sm text-red-500 mt-1">{errors.instagram}</p>}
     </div>
   </>
 );

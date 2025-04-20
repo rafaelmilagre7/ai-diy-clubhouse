@@ -23,6 +23,7 @@ interface PhoneInputProps {
   onChangeDDI: (value: string) => void;
   onChangePhone: (value: string) => void;
   disabled: boolean;
+  error?: string;
 }
 
 export const PhoneInput = ({
@@ -31,8 +32,9 @@ export const PhoneInput = ({
   onChangeDDI,
   onChangePhone,
   disabled,
+  error,
 }: PhoneInputProps) => (
-  <div>
+  <div className="space-y-1">
     <Label htmlFor="phone">Telefone</Label>
     <div className="flex gap-2 items-center">
       <Select
@@ -61,8 +63,9 @@ export const PhoneInput = ({
         disabled={disabled}
         onChange={e => onChangePhone(e.target.value)}
         placeholder="(XX) XXXXX-XXXX"
-        className="flex-1"
+        className={`flex-1 ${error ? 'border-red-500' : ''}`}
       />
     </div>
+    {error && <p className="text-sm text-red-500 mt-1">{error}</p>}
   </div>
 );

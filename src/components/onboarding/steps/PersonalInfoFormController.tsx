@@ -12,6 +12,7 @@ export const PersonalInfoFormController = () => {
   const { profile, user } = useAuth();
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
   // Preencher nome e email do perfil e dados já salvos
   const [formData, setFormData] = useState({
@@ -56,6 +57,7 @@ export const PersonalInfoFormController = () => {
   const handleChange = (field: string, value: string) => {
     // Impede edição em nome e e-mail (proteção extra contra tentativa de edição)
     if (field === "name" || field === "email") return;
+    
     setFormData((prev) => {
       const newData = {
         ...prev,
@@ -75,12 +77,54 @@ export const PersonalInfoFormController = () => {
 
       return newData;
     });
+    
+    // Limpar erro do campo quando o usuário digitar novamente nele
+    if (formErrors[field]) {
+      setFormErrors(prev => ({ ...prev, [field]: "" }));
+    }
+  };
+
+  const validateForm = () => {
+    const errors: Record<string, string> = {};
+    
+    // Validar telefone (obrigatório e formato correto)
+    if (!formData.phone.trim()) {
+      errors.phone = "O telefone é obrigatório";
+    } else if (!/^[0-9]{8,15}$/.test(formData.phone.replace(/\D/g, ""))) {
+      errors.phone = "Formato de telefone inválido";
+    }
+    
+    // Cidade e estado são obrigatórios
+    if (!formData.state.trim()) {
+      errors.state = "O estado é obrigatório";
+    }
+    
+    if (!formData.city.trim()) {
+      errors.city = "A cidade é obrigatória";
+    }
+    
+    // LinkedIn e Instagram são opcionais, mas se preenchidos devem ter formato válido
+    if (formData.linkedin && !formData.linkedin.includes("linkedin.com")) {
+      errors.linkedin = "URL do LinkedIn inválida";
+    }
+    
+    if (formData.instagram && !formData.instagram.includes("instagram.com")) {
+      errors.instagram = "URL do Instagram inválida";
+    }
+    
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (isSubmitting) return;
+    
+    if (!validateForm()) {
+      toast.error("Por favor, corrija os erros no formulário");
+      return;
+    }
     
     setIsSubmitting(true);
 
@@ -120,7 +164,13 @@ export const PersonalInfoFormController = () => {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6" autoComplete="off">
-      <PersonalInfoInputs formData={formData} onChange={handleChange} disabled={isSubmitting} readOnly />
+      <PersonalInfoInputs 
+        formData={formData} 
+        onChange={handleChange} 
+        disabled={isSubmitting}
+        readOnly 
+        errors={formErrors}
+      />
       <NavigationButtons isSubmitting={isSubmitting} />
     </form>
   );

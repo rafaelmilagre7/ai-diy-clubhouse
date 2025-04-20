@@ -27,7 +27,7 @@ const BusinessGoals = () => {
 
   // Mostra tela de carregamento enquanto busca os dados
   if (isLoading) return (
-    <OnboardingLayout currentStep={2} title="Carregando..." backUrl="/onboarding">
+    <OnboardingLayout currentStep={2} title="Carregando..." backUrl="/onboarding" onStepClick={() => {}}>
       <div className="flex justify-center items-center h-64">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#0ABAB5]"></div>
       </div>
@@ -44,6 +44,11 @@ const BusinessGoals = () => {
       currentStep={2} 
       title="Dados Profissionais"
       backUrl="/onboarding"
+      onStepClick={(step) => {
+        if (step === 1) {
+          navigate("/onboarding", { replace: true });
+        }
+      }}
     >
       <div className="max-w-4xl mx-auto space-y-6">
         <MilagrinhoMessage 
