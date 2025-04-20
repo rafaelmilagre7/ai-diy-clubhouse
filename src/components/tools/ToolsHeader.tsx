@@ -1,10 +1,10 @@
 
 import { Search } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ToolCategory } from '@/types/toolTypes';
+import { Button } from '@/components/ui/button';
+import { CategoryGrid } from './CategoryGrid';
+import { motion } from 'framer-motion';
 
 interface ToolsHeaderProps {
   searchQuery: string;
@@ -13,22 +13,6 @@ interface ToolsHeaderProps {
   onCategoryChange: (category: string | null) => void;
 }
 
-const categories: { value: string | null; label: string }[] = [
-  { value: null, label: 'Todas' },
-  { value: 'Modelos de IA e Interfaces', label: 'Modelos de IA e Interfaces' },
-  { value: 'Geração de Conteúdo Visual', label: 'Geração de Conteúdo Visual' },
-  { value: 'Geração e Processamento de Áudio', label: 'Geração e Processamento de Áudio' },
-  { value: 'Automação e Integrações', label: 'Automação e Integrações' },
-  { value: 'Comunicação e Atendimento', label: 'Comunicação e Atendimento' },
-  { value: 'Captura e Análise de Dados', label: 'Captura e Análise de Dados' },
-  { value: 'Pesquisa e Síntese de Informações', label: 'Pesquisa e Síntese de Informações' },
-  { value: 'Gestão de Documentos e Conteúdo', label: 'Gestão de Documentos e Conteúdo' },
-  { value: 'Marketing e CRM', label: 'Marketing e CRM' },
-  { value: 'Produtividade e Organização', label: 'Produtividade e Organização' },
-  { value: 'Desenvolvimento e Código', label: 'Desenvolvimento e Código' },
-  { value: 'Plataformas de Mídia', label: 'Plataformas de Mídia' },
-];
-
 export const ToolsHeader = ({
   searchQuery,
   onSearchChange,
@@ -36,7 +20,7 @@ export const ToolsHeader = ({
   onCategoryChange,
 }: ToolsHeaderProps) => {
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold">Ferramentas</h1>
@@ -56,26 +40,18 @@ export const ToolsHeader = ({
         </div>
       </div>
 
-      <Tabs
-        defaultValue={selectedCategory || 'all'}
-        className="w-full"
-        onValueChange={(value) => onCategoryChange(value === 'all' ? null : value)}
-      >
-        <TabsList className="w-full h-auto flex flex-wrap">
-          {categories.map((category) => (
-            <TabsTrigger
-              key={category.value || 'all'}
-              value={category.value || 'all'}
-              className="flex-grow data-[state=active]:bg-[#0ABAB5]/10 data-[state=active]:text-[#0ABAB5] data-[state=active]:shadow-none"
-            >
-              {category.label}
-            </TabsTrigger>
-          ))}
-        </TabsList>
-      </Tabs>
+      <CategoryGrid 
+        selectedCategory={selectedCategory} 
+        onCategoryChange={onCategoryChange} 
+      />
 
       {selectedCategory && (
-        <div className="flex items-center">
+        <motion.div 
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.2 }}
+          className="flex items-center"
+        >
           <span className="text-sm mr-2">Filtro ativo:</span>
           <Badge 
             variant="outline" 
@@ -91,7 +67,7 @@ export const ToolsHeader = ({
               ×
             </Button>
           </Badge>
-        </div>
+        </motion.div>
       )}
     </div>
   );

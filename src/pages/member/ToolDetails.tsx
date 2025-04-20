@@ -12,12 +12,15 @@ import { Separator } from '@/components/ui/separator';
 import LoadingScreen from '@/components/common/LoadingScreen';
 import { YoutubeEmbed } from '@/components/common/YoutubeEmbed';
 import { MemberBenefitModal } from '@/components/tools/MemberBenefitModal';
+import { CommentsSection } from '@/components/tools/comments/CommentsSection';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const ToolDetails = () => {
   const { id } = useParams<{ id: string }>();
   const [tool, setTool] = useState<Tool | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<string>('about');
 
   useEffect(() => {
     const fetchTool = async () => {
@@ -155,33 +158,51 @@ const ToolDetails = () => {
       {/* Conteúdo principal */}
       <div className="grid md:grid-cols-3 gap-8">
         <div className="md:col-span-2 space-y-8">
-          {/* Sobre a ferramenta */}
-          <Card>
-            <CardContent className="pt-6">
-              <h2 className="text-xl font-semibold mb-4">Sobre a ferramenta</h2>
-              <p className="text-gray-700 whitespace-pre-line">{tool.description}</p>
-              
-              {/* Exibir benefício de forma destacada se existir */}
-              {tool.has_member_benefit && (
-                <div className="mt-6 p-4 bg-[#10b981]/10 rounded-lg border border-[#10b981]/30">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Badge className="bg-[#10b981]">Benefício Exclusivo</Badge>
-                    <h3 className="font-medium">{tool.benefit_title}</h3>
-                  </div>
-                  <p className="text-sm mb-3">{tool.benefit_description}</p>
-                  <MemberBenefitModal tool={tool} size="sm" variant="outline" />
-                </div>
-              )}
-            </CardContent>
-          </Card>
-          
-          {/* Tutoriais em vídeo */}
-          <Card>
-            <CardContent className="pt-6">
-              <h2 className="text-xl font-semibold mb-4">Tutoriais em vídeo</h2>
-              {renderVideoTutorials()}
-            </CardContent>
-          </Card>
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="w-full grid grid-cols-3">
+              <TabsTrigger value="about">Sobre</TabsTrigger>
+              <TabsTrigger value="tutorials">Tutoriais</TabsTrigger>
+              <TabsTrigger value="comments">Comentários</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="about" className="mt-6">
+              <Card>
+                <CardContent className="pt-6">
+                  <h2 className="text-xl font-semibold mb-4">Sobre a ferramenta</h2>
+                  <p className="text-gray-700 whitespace-pre-line">{tool.description}</p>
+                  
+                  {/* Exibir benefício de forma destacada se existir */}
+                  {tool.has_member_benefit && (
+                    <div className="mt-6 p-4 bg-[#10b981]/10 rounded-lg border border-[#10b981]/30">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Badge className="bg-[#10b981]">Benefício Exclusivo</Badge>
+                        <h3 className="font-medium">{tool.benefit_title}</h3>
+                      </div>
+                      <p className="text-sm mb-3">{tool.benefit_description}</p>
+                      <MemberBenefitModal tool={tool} size="sm" variant="outline" />
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+            
+            <TabsContent value="tutorials" className="mt-6">
+              <Card>
+                <CardContent className="pt-6">
+                  <h2 className="text-xl font-semibold mb-4">Tutoriais em vídeo</h2>
+                  {renderVideoTutorials()}
+                </CardContent>
+              </Card>
+            </TabsContent>
+            
+            <TabsContent value="comments" className="mt-6">
+              <Card>
+                <CardContent className="pt-6">
+                  <CommentsSection toolId={id} />
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
         </div>
         
         <div className="space-y-6">
