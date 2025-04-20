@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useIBGELocations } from "@/hooks/useIBGELocations";
 
 // Lista de DDI principais (10 países mais prováveis)
 const ddis = [
@@ -32,68 +33,6 @@ const countries = [
   { name: "Argentina", code: "AR", flag: "🇦🇷" }
 ];
 
-// Lista dos estados do Brasil com nomes completos
-const estadosBR = [
-  { uf: "AC", nome: "Acre" },
-  { uf: "AL", nome: "Alagoas" },
-  { uf: "AP", nome: "Amapá" },
-  { uf: "AM", nome: "Amazonas" },
-  { uf: "BA", nome: "Bahia" },
-  { uf: "CE", nome: "Ceará" },
-  { uf: "DF", nome: "Distrito Federal" },
-  { uf: "ES", nome: "Espírito Santo" },
-  { uf: "GO", nome: "Goiás" },
-  { uf: "MA", nome: "Maranhão" },
-  { uf: "MT", nome: "Mato Grosso" },
-  { uf: "MS", nome: "Mato Grosso do Sul" },
-  { uf: "MG", nome: "Minas Gerais" },
-  { uf: "PA", nome: "Pará" },
-  { uf: "PB", nome: "Paraíba" },
-  { uf: "PR", nome: "Paraná" },
-  { uf: "PE", nome: "Pernambuco" },
-  { uf: "PI", nome: "Piauí" },
-  { uf: "RJ", nome: "Rio de Janeiro" },
-  { uf: "RN", nome: "Rio Grande do Norte" },
-  { uf: "RS", nome: "Rio Grande do Sul" },
-  { uf: "RO", nome: "Rondônia" },
-  { uf: "RR", nome: "Roraima" },
-  { uf: "SC", nome: "Santa Catarina" },
-  { uf: "SP", nome: "São Paulo" },
-  { uf: "SE", nome: "Sergipe" },
-  { uf: "TO", nome: "Tocantins" }
-];
-
-// Lista de cidades por estado
-const cidadesPorEstado: Record<string, string[]> = {
-  "AC": ["Rio Branco", "Cruzeiro do Sul", "Sena Madureira"],
-  "AL": ["Maceió", "Arapiraca", "Palmeira dos Índios"],
-  "AP": ["Macapá", "Santana", "Laranjal do Jari"],
-  "AM": ["Manaus", "Parintins", "Itacoatiara"],
-  "BA": ["Salvador", "Feira de Santana", "Vitória da Conquista"],
-  "CE": ["Fortaleza", "Caucaia", "Juazeiro do Norte"],
-  "DF": ["Brasília", "Ceilândia", "Taguatinga"],
-  "ES": ["Vitória", "Vila Velha", "Serra"],
-  "GO": ["Goiânia", "Aparecida de Goiânia", "Anápolis"],
-  "MA": ["São Luís", "Imperatriz", "Timon"],
-  "MT": ["Cuiabá", "Várzea Grande", "Rondonópolis"],
-  "MS": ["Campo Grande", "Dourados", "Três Lagoas"],
-  "MG": ["Belo Horizonte", "Uberlândia", "Contagem"],
-  "PA": ["Belém", "Ananindeua", "Santarém"],
-  "PB": ["João Pessoa", "Campina Grande", "Santa Rita"],
-  "PR": ["Curitiba", "Londrina", "Maringá"],
-  "PE": ["Recife", "Jaboatão dos Guararapes", "Olinda"],
-  "PI": ["Teresina", "Parnaíba", "Picos"],
-  "RJ": ["Rio de Janeiro", "São Gonçalo", "Duque de Caxias"],
-  "RN": ["Natal", "Mossoró", "Parnamirim"],
-  "RS": ["Porto Alegre", "Caxias do Sul", "Pelotas"],
-  "RO": ["Porto Velho", "Ji-Paraná", "Ariquemes"],
-  "RR": ["Boa Vista", "Rorainópolis", "Caracaraí"],
-  "SC": ["Florianópolis", "Joinville", "Blumenau"],
-  "SP": ["São Paulo", "Guarulhos", "Campinas"],
-  "SE": ["Aracaju", "Nossa Senhora do Socorro", "Lagarto"],
-  "TO": ["Palmas", "Araguaína", "Gurupi"]
-};
-
 // Lista de fusos horários GMT
 const timezones = [
   "GMT-12", "GMT-11", "GMT-10", "GMT-9", "GMT-8", "GMT-7", "GMT-6", "GMT-5", "GMT-4", "GMT-3",
@@ -120,25 +59,23 @@ interface PersonalInfoInputsProps {
 
 export const PersonalInfoInputs = ({ formData, onChange, disabled }: PersonalInfoInputsProps) => {
   const [availableCities, setAvailableCities] = useState<string[]>([]);
-  const [availableStates, setAvailableStates] = useState<{uf: string, nome: string}[]>([]);
-
-  // Atualiza estados disponíveis com base no país selecionado
-  useEffect(() => {
-    if (formData.country === "Brasil") {
-      setAvailableStates(estadosBR);
-    } else {
-      setAvailableStates([]);
-    }
-  }, [formData.country]);
+  const { estados, cidadesPorEstado, isLoading } = useIBGELocations();
 
   // Atualiza cidades disponíveis com base no estado selecionado
   useEffect(() => {
     if (formData.country === "Brasil" && formData.state) {
-      setAvailableCities(cidadesPorEstado[formData.state] || []);
+      if (cidadesPorEstado[formData.state]) {
+        const cidadesOrdenadas = cidadesPorEstado[formData.state]
+          .map(cidade => cidade.name)
+          .sort((a, b) => a.localeCompare(b));
+        setAvailableCities(cidadesOrdenadas);
+      } else {
+        setAvailableCities([]);
+      }
     } else {
       setAvailableCities([]);
     }
-  }, [formData.country, formData.state]);
+  }, [formData.country, formData.state, cidadesPorEstado]);
 
   return (
     <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
@@ -242,19 +179,19 @@ export const PersonalInfoInputs = ({ formData, onChange, disabled }: PersonalInf
       </div>
       <div>
         <Label htmlFor="state">Estado</Label>
-        {formData.country === "Brasil" && availableStates.length > 0 ? (
+        {formData.country === "Brasil" ? (
           <Select
             value={formData.state}
             onValueChange={(v) => onChange("state", v)}
-            disabled={disabled}
+            disabled={disabled || isLoading}
           >
             <SelectTrigger>
               <SelectValue placeholder="Selecione o estado" />
             </SelectTrigger>
             <SelectContent>
-              {availableStates.map(estado => (
-                <SelectItem key={estado.uf} value={estado.uf}>
-                  {estado.nome}
+              {estados.map(estado => (
+                <SelectItem key={estado.code} value={estado.code}>
+                  {estado.name}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -276,12 +213,12 @@ export const PersonalInfoInputs = ({ formData, onChange, disabled }: PersonalInf
           <Select
             value={formData.city}
             onValueChange={(v) => onChange("city", v)}
-            disabled={disabled}
+            disabled={disabled || isLoading}
           >
             <SelectTrigger>
               <SelectValue placeholder="Selecione a cidade" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="max-h-[200px]">
               {availableCities.map(cidade => (
                 <SelectItem key={cidade} value={cidade}>
                   {cidade}
