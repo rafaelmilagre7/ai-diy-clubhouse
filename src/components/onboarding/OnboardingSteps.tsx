@@ -32,15 +32,26 @@ export const OnboardingSteps = () => {
   };
 
   const CurrentStepComponent = stepComponents[currentStep.id as keyof typeof stepComponents];
-
   if (!CurrentStepComponent) return null;
 
   const progressPercentage = ((currentStepIndex + 1) / steps.length) * 100;
 
-  // Determinando os dados iniciais corretos para o componente atual
+  // Determinar os dados iniciais para o componente atual
   const getInitialDataForCurrentStep = () => {
     if (!progress) return undefined;
-    
+    // Para o passo "goals" prioriza os campos profissionais
+    if (currentStep.id === "goals") {
+      return {
+        ...progress,
+        company_name: progress.company_name,
+        company_size: progress.company_size,
+        company_sector: progress.company_sector,
+        company_website: progress.company_website,
+        current_position: progress.current_position,
+        annual_revenue: progress.annual_revenue,
+        personal_info: progress.personal_info,
+      };
+    }
     const sectionKey = currentStep.section as keyof OnboardingData;
     return progress[sectionKey];
   };
@@ -69,6 +80,7 @@ export const OnboardingSteps = () => {
           isLastStep={currentStepIndex === steps.length - 1}
           onComplete={completeOnboarding}
           initialData={getInitialDataForCurrentStep()}
+          personalInfo={progress?.personal_info} // Só para a etapa goals será usado
         />
       </div>
     </div>

@@ -297,12 +297,18 @@ export type Database = {
         Row: {
           ai_experience: Json | null
           ai_knowledge_level: string | null
+          annual_revenue: string | null
           budget_range: string | null
           business_data: Json | null
           business_goals: Json | null
           company_data: Json | null
+          company_name: string | null
+          company_sector: string | null
+          company_size: string | null
+          company_website: string | null
           completed_steps: string[] | null
           created_at: string | null
+          current_position: string | null
           current_step: string | null
           decision_makers: string[] | null
           goals: string[] | null
@@ -313,6 +319,7 @@ export type Database = {
           is_completed: boolean | null
           personal_info: Json | null
           priority_areas: string[] | null
+          professional_info: Json | null
           resources_needs: Json | null
           support_level: string | null
           target_market: string | null
@@ -327,12 +334,18 @@ export type Database = {
         Insert: {
           ai_experience?: Json | null
           ai_knowledge_level?: string | null
+          annual_revenue?: string | null
           budget_range?: string | null
           business_data?: Json | null
           business_goals?: Json | null
           company_data?: Json | null
+          company_name?: string | null
+          company_sector?: string | null
+          company_size?: string | null
+          company_website?: string | null
           completed_steps?: string[] | null
           created_at?: string | null
+          current_position?: string | null
           current_step?: string | null
           decision_makers?: string[] | null
           goals?: string[] | null
@@ -343,6 +356,7 @@ export type Database = {
           is_completed?: boolean | null
           personal_info?: Json | null
           priority_areas?: string[] | null
+          professional_info?: Json | null
           resources_needs?: Json | null
           support_level?: string | null
           target_market?: string | null
@@ -357,12 +371,18 @@ export type Database = {
         Update: {
           ai_experience?: Json | null
           ai_knowledge_level?: string | null
+          annual_revenue?: string | null
           budget_range?: string | null
           business_data?: Json | null
           business_goals?: Json | null
           company_data?: Json | null
+          company_name?: string | null
+          company_sector?: string | null
+          company_size?: string | null
+          company_website?: string | null
           completed_steps?: string[] | null
           created_at?: string | null
+          current_position?: string | null
           current_step?: string | null
           decision_makers?: string[] | null
           goals?: string[] | null
@@ -373,6 +393,7 @@ export type Database = {
           is_completed?: boolean | null
           personal_info?: Json | null
           priority_areas?: string[] | null
+          professional_info?: Json | null
           resources_needs?: Json | null
           support_level?: string | null
           target_market?: string | null

@@ -12,7 +12,7 @@ export const useOnboardingSteps = () => {
 
   const steps = [
     { id: 'personal', title: 'Informações Pessoais', section: 'personal_info' },
-    { id: 'goals', title: 'Objetivos do Negócio', section: 'business_goals' },
+    { id: 'goals', title: 'Dados Profissionais', section: 'professional_info' },
     { id: 'ai_exp', title: 'Experiência com IA', section: 'ai_experience' },
     { id: 'industry', title: 'Foco da Indústria', section: 'industry_focus' },
     { id: 'resources', title: 'Recursos Necessários', section: 'resources_needs' },
@@ -32,24 +32,30 @@ export const useOnboardingSteps = () => {
       setCurrentStepIndex(Math.min(lastCompletedIndex + 1, steps.length - 1));
     }
   }, [progress?.completed_steps]);
-
+  
   const saveStepData = async (
     stepId: string, 
     data: Partial<OnboardingData>
   ) => {
     if (!progress?.id) return;
-    
     setIsSubmitting(true);
     try {
-      const sectionKey = steps.find(s => s.id === stepId)?.section as keyof OnboardingData;
-      if (!sectionKey) throw new Error('Seção inválida');
-
-      await updateProgress({
-        [sectionKey]: data[sectionKey],
-        completed_steps: [...(progress.completed_steps || []), stepId],
-        current_step: steps[Math.min(currentStepIndex + 1, steps.length - 1)].id,
-      });
-
+      // Ajuste: para dados profissionais, salvar tanto como professional_info quanto nos campos simples
+      if (stepId === "goals") {
+        await updateProgress({
+          ...data,
+          completed_steps: [...(progress.completed_steps || []), stepId],
+          current_step: steps[Math.min(currentStepIndex + 1, steps.length - 1)].id,
+        });
+      } else {
+        const sectionKey = steps.find(s => s.id === stepId)?.section as keyof OnboardingData;
+        if (!sectionKey) throw new Error('Seção inválida');
+        await updateProgress({
+          [sectionKey]: data[sectionKey],
+          completed_steps: [...(progress.completed_steps || []), stepId],
+          current_step: steps[Math.min(currentStepIndex + 1, steps.length - 1)].id,
+        });
+      }
       toast.success('Progresso salvo com sucesso!');
       setCurrentStepIndex(prev => Math.min(prev + 1, steps.length - 1));
     } catch (error) {
