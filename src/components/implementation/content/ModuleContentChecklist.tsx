@@ -56,7 +56,10 @@ export const ModuleContentChecklist = ({ module }: ModuleContentChecklistProps) 
         {checklist.map((item) => (
           <ChecklistItem
             key={item.id}
-            item={item}
+            item={{
+              id: item.id,
+              description: item.title || item.description || "Item sem descrição"
+            }}
             isChecked={userChecklist[item.id] || false}
             onChange={(checked) => onToggleItem(item.id, checked)}
             disabled={saving}

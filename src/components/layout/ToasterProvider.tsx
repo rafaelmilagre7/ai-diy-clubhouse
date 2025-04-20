@@ -12,9 +12,8 @@ export const ToasterProvider = () => {
         // Configurações específicas para cada tipo de toast
         // Estas opções são suportadas pela API do Toaster
         style: {
-          error: {
-            duration: 8000,
-          }
+          background: 'white',
+          color: 'black',
         }
       }}
     />

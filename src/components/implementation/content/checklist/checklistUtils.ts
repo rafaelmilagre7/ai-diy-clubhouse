@@ -4,7 +4,7 @@ import { toast } from "sonner";
 
 export interface ChecklistItem {
   id: string;
-  title: string;
+  title?: string;
   description?: string;
   checked: boolean;
 }
