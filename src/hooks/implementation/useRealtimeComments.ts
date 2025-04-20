@@ -27,13 +27,15 @@ export const useRealtimeComments = (
         schema: 'public', 
         table: 'tool_comments',
         filter: `tool_id=eq.${solutionId}`
-      }, () => {
-        log('Comentário modificado, invalidando queries', { solutionId, moduleId });
+      }, (payload) => {
+        log('Mudança detectada em comentários', { event: payload.eventType, solutionId, moduleId });
         queryClient.invalidateQueries({ queryKey: ['solution-comments', solutionId, moduleId] });
       })
       .subscribe((status) => {
         if (status === 'SUBSCRIBED') {
           log('Escuta de comentários ativada com sucesso', { solutionId, moduleId });
+        } else {
+          logError('Erro ao ativar escuta de comentários', { status, solutionId, moduleId });
         }
       });
       

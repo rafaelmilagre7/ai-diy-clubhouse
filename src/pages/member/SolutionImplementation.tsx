@@ -40,12 +40,12 @@ const SolutionImplementation = () => {
     setCompletedModules: () => {}
   });
   
-  // Importante: Movemos o hook para fora de blocos condicionais
-  // e usamos flags para controlar o comportamento
+  // Importante: Use flags para controlar o comportamento do hook de comentários em tempo real
   const solutionId = solution?.id || "";
   const moduleId = currentModule?.id || "";
   const shouldEnableRealtimeComments = !!solution && !!currentModule;
   
+  // Ativar escuta de comentários em tempo real
   useRealtimeComments(solutionId, moduleId, shouldEnableRealtimeComments);
   
   // Definindo a função onComplete que estava faltando

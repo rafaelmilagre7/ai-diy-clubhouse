@@ -4,6 +4,7 @@ import { useModuleCommentsRefactored } from '@/hooks/implementation/useModuleCom
 import { CommentForm } from './CommentForm';
 import { CommentList } from './CommentList';
 import { Separator } from '@/components/ui/separator';
+import { useLogging } from '@/hooks/useLogging';
 
 interface CommentsSectionProps {
   solutionId: string;
@@ -11,6 +12,11 @@ interface CommentsSectionProps {
 }
 
 export const CommentsSection = ({ solutionId, moduleId }: CommentsSectionProps) => {
+  const { log } = useLogging();
+  
+  // Log para diagnosticar possíveis problemas
+  log('Renderizando seção de comentários', { solutionId, moduleId });
+  
   const {
     comments,
     isLoading,

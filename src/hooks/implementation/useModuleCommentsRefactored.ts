@@ -5,15 +5,27 @@ import { useFetchModuleComments } from './comments/useFetchModuleComments';
 import { useAddModuleComment } from './comments/useAddModuleComment';
 import { useLikeModuleComment } from './comments/useLikeModuleComment';
 import { useDeleteModuleComment } from './comments/useDeleteModuleComment';
+import { useLogging } from '@/hooks/useLogging';
 
 export const useModuleCommentsRefactored = (solutionId: string, moduleId: string) => {
   const [comment, setComment] = useState('');
   const [replyTo, setReplyTo] = useState<Comment | null>(null);
+  const { log } = useLogging();
   
-  const { data: comments = [], isLoading } = useFetchModuleComments(solutionId, moduleId);
+  // Log para diagnosticar possíveis problemas
+  log('Inicializando hook de comentários', { solutionId, moduleId });
+  
+  const { data: comments = [], isLoading, error } = useFetchModuleComments(solutionId, moduleId);
   const { addComment, isSubmitting } = useAddModuleComment(solutionId, moduleId);
   const { likeComment } = useLikeModuleComment(solutionId, moduleId);
   const { deleteComment } = useDeleteModuleComment(solutionId, moduleId);
+
+  // Log para diagnosticar possíveis problemas com os dados carregados
+  if (error) {
+    log('Erro ao carregar comentários', { error, solutionId, moduleId });
+  } else {
+    log('Comentários carregados', { count: comments.length, solutionId, moduleId });
+  }
 
   const handleSubmitComment = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();

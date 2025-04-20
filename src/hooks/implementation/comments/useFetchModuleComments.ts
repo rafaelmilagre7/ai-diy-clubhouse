@@ -15,10 +15,13 @@ export const useFetchModuleComments = (solutionId: string, moduleId: string) => 
       try {
         log('Buscando comentários da solução', { solutionId, moduleId });
         
-        // Buscar comentários principais de forma simplificada
+        // Buscar comentários principais (usando sintaxe correta para join)
         const { data: parentComments, error: parentError } = await supabase
           .from('tool_comments')
-          .select('*, profiles:profiles!user_id(*)')
+          .select(`
+            *,
+            profiles(name, avatar_url, role)
+          `)
           .eq('tool_id', solutionId)
           .is('parent_id', null)
           .order('created_at', { ascending: false });
@@ -28,10 +31,13 @@ export const useFetchModuleComments = (solutionId: string, moduleId: string) => 
           throw parentError;
         }
 
-        // Buscar respostas
+        // Buscar respostas (usando sintaxe correta para join)
         const { data: replies, error: repliesError } = await supabase
           .from('tool_comments')
-          .select('*, profiles:profiles!user_id(*)')
+          .select(`
+            *,
+            profiles(name, avatar_url, role)
+          `)
           .eq('tool_id', solutionId)
           .not('parent_id', 'is', null)
           .order('created_at', { ascending: true });
@@ -55,13 +61,13 @@ export const useFetchModuleComments = (solutionId: string, moduleId: string) => 
           }, {});
         }
         
-        // Organizar comentários
-        const organizedComments = (parentComments || []).map((comment: Comment) => ({
+        // Organizar comentários em estrutura hierárquica
+        const organizedComments = (parentComments || []).map((comment: any) => ({
           ...comment,
           user_has_liked: !!userLikes[comment.id],
           replies: (replies || [])
-            .filter((reply: Comment) => reply.parent_id === comment.id)
-            .map((reply: Comment) => ({
+            .filter((reply: any) => reply.parent_id === comment.id)
+            .map((reply: any) => ({
               ...reply,
               user_has_liked: !!userLikes[reply.id]
             }))
@@ -74,6 +80,7 @@ export const useFetchModuleComments = (solutionId: string, moduleId: string) => 
         return organizedComments;
       } catch (error) {
         logError('Erro ao buscar comentários', error);
+        // Retornar array vazio em caso de erro para não quebrar a interface
         return [];
       }
     },
