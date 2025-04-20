@@ -4,6 +4,14 @@ export interface OnboardingData {
     name?: string;
     role?: string;
     company_size?: string;
+    email?: string;
+    phone?: string;
+    linkedin?: string;
+    instagram?: string;
+    country?: string;
+    state?: string;
+    city?: string;
+    timezone?: string;
   };
   business_goals: {
     primary_goal?: string;
