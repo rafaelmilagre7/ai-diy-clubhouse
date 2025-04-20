@@ -13,20 +13,20 @@ export const useToolsData = () => {
     const runFixer = async () => {
       try {
         setIsFixing(true);
-        log("Iniciando verificação/correção dos dados das ferramentas");
+        log("Iniciando verificação de ferramentas duplicadas");
         
         const result = await fixToolsData();
         
         if (result) {
-          log("Correção dos dados das ferramentas concluída com sucesso");
+          log("Limpeza de ferramentas duplicadas concluída com sucesso");
           setIsFixed(true);
         } else {
-          log("Correção dos dados das ferramentas concluída com avisos");
+          log("Limpeza de ferramentas duplicadas concluída com avisos");
           setIsFixed(true);
         }
       } catch (err) {
         const error = err instanceof Error ? err : new Error("Erro desconhecido");
-        logError("Erro ao corrigir dados das ferramentas:", error);
+        logError("Erro ao limpar ferramentas duplicadas:", error);
         setError(error);
       } finally {
         setIsFixing(false);

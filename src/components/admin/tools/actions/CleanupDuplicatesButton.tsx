@@ -1,68 +1,71 @@
 
-import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Loader2, Check, Trash2 } from 'lucide-react';
-import { toast } from 'sonner';
-import { fixToolsData } from '@/utils/toolDataFixer';
+import React, { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { supabase } from "@/lib/supabase";
+import { useToast } from "@/hooks/use-toast";
+import { Loader2, Broom } from "lucide-react";
+import { fixToolsData } from "@/utils/toolDataFixer";
 
 interface CleanupDuplicatesButtonProps {
   onCleanupComplete?: () => void;
 }
 
 export const CleanupDuplicatesButton = ({ onCleanupComplete }: CleanupDuplicatesButtonProps) => {
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [isComplete, setIsComplete] = useState(false);
+  const [isRunning, setIsRunning] = useState(false);
+  const { toast } = useToast();
 
-  const handleCleanup = async () => {
-    if (isProcessing || isComplete) return;
-    
+  const handleCleanupClick = async () => {
     try {
-      setIsProcessing(true);
-      
-      toast.info('Iniciando limpeza de ferramentas duplicadas...');
-      
+      setIsRunning(true);
+      console.log("Iniciando limpeza de ferramentas duplicadas");
+
       const result = await fixToolsData();
-      
+
       if (result) {
-        toast.success('Limpeza de duplicatas concluída com sucesso!');
-        setIsComplete(true);
-        
-        if (onCleanupComplete) {
-          onCleanupComplete();
-        }
+        toast({
+          title: "Limpeza concluída",
+          description: "Ferramentas duplicadas foram removidas com sucesso",
+        });
       } else {
-        toast.warning('Limpeza concluída com alguns avisos. Veja o console para detalhes.');
-        setIsComplete(true);
+        toast({
+          title: "Limpeza concluída com avisos",
+          description: "Verifique o console para mais detalhes",
+          variant: "destructive",
+        });
+      }
+
+      // Notificar o componente pai (se necessário)
+      if (onCleanupComplete) {
+        onCleanupComplete();
       }
     } catch (error) {
-      console.error('Erro durante a limpeza de duplicatas:', error);
-      toast.error('Erro ao limpar duplicatas. Veja o console para detalhes.');
+      console.error("Erro ao limpar ferramentas duplicadas:", error);
+      toast({
+        title: "Erro na limpeza",
+        description: "Não foi possível completar a limpeza de duplicatas",
+        variant: "destructive",
+      });
     } finally {
-      setIsProcessing(false);
+      setIsRunning(false);
     }
   };
 
   return (
     <Button
       variant="outline"
-      onClick={handleCleanup}
-      disabled={isProcessing || isComplete}
-      className="min-w-32"
+      size="sm"
+      onClick={handleCleanupClick}
+      disabled={isRunning}
     >
-      {isProcessing ? (
+      {isRunning ? (
         <>
-          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           Limpando...
-        </>
-      ) : isComplete ? (
-        <>
-          <Check className="h-4 w-4 mr-2 text-green-500" />
-          Limpeza concluída
         </>
       ) : (
         <>
-          <Trash2 className="h-4 w-4 mr-2" />
-          Limpar duplicatas
+          <Broom className="mr-2 h-4 w-4" />
+          Remover Duplicatas
         </>
       )}
     </Button>
