@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from "@/contexts/auth";
 import LoadingScreen from "@/components/common/LoadingScreen";
@@ -22,10 +22,17 @@ const ProtectedRoute = ({
   const timeoutRef = React.useRef<number | null>(null);
   
   // Debug logs
-  console.log("ProtectedRoute:", { user, isAdmin, isLoading, requireAdmin, requiredRole, path: location.pathname });
+  console.log("ProtectedRoute:", { 
+    user, 
+    isAdmin, 
+    isLoading, 
+    requireAdmin, 
+    requiredRole, 
+    path: location.pathname 
+  });
   
   // Configurar timeout para não ficar preso em carregamento infinito
-  React.useEffect(() => {
+  useEffect(() => {
     if (isLoading && !loadingTimeout) {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
@@ -35,7 +42,7 @@ const ProtectedRoute = ({
         console.log("ProtectedRoute: Loading timeout exceeded");
         setLoadingTimeout(true);
         toast("Tempo limite de carregamento excedido, redirecionando para login");
-      }, 3000); // Reduzir para 3 segundos
+      }, 3000); // 3 segundos de timeout
     }
     
     return () => {
@@ -45,12 +52,12 @@ const ProtectedRoute = ({
     };
   }, [isLoading, loadingTimeout]);
 
-  // Show loading screen during the loading state (but only if timeout not exceeded)
+  // Se estiver carregando, mostra tela de loading (mas só se o timeout não foi excedido)
   if (isLoading && !loadingTimeout) {
     return <LoadingScreen message="Verificando sua autenticação..." />;
   }
 
-  // Redirect to auth if no user
+  // Se não houver usuário autenticado, redireciona para login
   if (!user) {
     console.log("ProtectedRoute: No user, redirecting to login");
     return <Navigate to="/login" state={{ from: location }} replace />;
@@ -59,10 +66,11 @@ const ProtectedRoute = ({
   // Verificar com base em requiredRole ou requireAdmin
   if ((requiredRole === 'admin' || requireAdmin) && !isAdmin) {
     console.log("Usuário não é admin, redirecionando para dashboard");
+    toast.error("Você não tem permissão para acessar esta área");
     return <Navigate to="/dashboard" replace />;
   }
 
-  // User is authenticated, render children
+  // Usuário está autenticado, renderiza os filhos
   return <>{children}</>;
 };
 

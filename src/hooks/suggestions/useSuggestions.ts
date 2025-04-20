@@ -1,41 +1,41 @@
 
-import { useEffect } from 'react';
-import { useCategories } from './useCategories';
-import { useFilters } from './useFilters';
-import { useSuggestionsList } from './useSuggestionsList';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/lib/supabase';
+import { Suggestion } from '@/types/suggestionTypes';
 
-export const useSuggestions = (categoryId?: string) => {
-  const { categories, isLoading: categoriesLoading } = useCategories();
-  const { filter, setFilter, searchQuery, setSearchQuery, filterSuggestions } = useFilters();
-  const { 
-    suggestions: rawSuggestions, 
-    isLoading: suggestionsLoading, 
-    error,
-    refetch 
-  } = useSuggestionsList(categoryId, filter);
-
-  // Aplicar filtros somente se houver sugestões
-  const suggestions = rawSuggestions ? filterSuggestions(rawSuggestions) : [];
-
-  // Forçar refetch quando o componente montar ou o filtro/categoria mudar
-  useEffect(() => {
-    console.log("useSuggestions hook: forçando refetch inicial...");
-    refetch().catch(error => {
-      console.error("Erro ao fazer refetch inicial:", error);
-    });
+export const useSuggestions = () => {
+  const fetchSuggestions = async (): Promise<Suggestion[]> => {
+    console.log('Buscando sugestões...');
     
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filter, categoryId]); 
+    try {
+      const { data, error } = await supabase
+        .from('suggestions_with_profiles')
+        .select('*')
+        .order('created_at', { ascending: false });
+        
+      if (error) {
+        console.error('Erro ao buscar sugestões:', error);
+        throw new Error(`Erro ao buscar sugestões: ${error.message}`);
+      }
+      
+      console.log('Sugestões carregadas:', data?.length || 0);
+      return data as Suggestion[];
+    } catch (error: any) {
+      console.error('Erro não esperado ao buscar sugestões:', error);
+      throw error;
+    }
+  };
+
+  const { data = [], isLoading, error, refetch } = useQuery({
+    queryKey: ['suggestions'],
+    queryFn: fetchSuggestions,
+    staleTime: 1000 * 60 * 5, // 5 minutos
+  });
 
   return {
-    suggestions,
-    categories,
-    isLoading: suggestionsLoading || categoriesLoading,
+    suggestions: data,
+    isLoading,
     error,
-    filter,
-    setFilter,
-    searchQuery,
-    setSearchQuery,
     refetch
   };
 };

@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { 
   Table, 
@@ -32,16 +32,34 @@ import { MoreVertical, Trash2, Play, Eye } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import LoadingScreen from '@/components/common/LoadingScreen';
 
 const AdminSuggestionsPage = () => {
-  const { suggestions, refetch } = useSuggestions();
+  console.log('Renderizando AdminSuggestionsPage');
+  const { suggestions, refetch, isLoading: suggestionsLoading, error } = useSuggestions();
   const { removeSuggestion, updateSuggestionStatus, loading } = useAdminSuggestions();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedSuggestion, setSelectedSuggestion] = useState<string | null>(null);
   const navigate = useNavigate();
 
+  // Log para debug
+  useEffect(() => {
+    console.log('AdminSuggestionsPage montado');
+    console.log('Sugestões:', suggestions);
+    console.log('Estado de carregamento:', suggestionsLoading);
+    console.log('Erro:', error);
+    
+    // Efetuar refetch ao montar o componente
+    refetch();
+    
+    return () => {
+      console.log('AdminSuggestionsPage desmontado');
+    };
+  }, []);
+
   const handleRemoveSuggestion = async () => {
     if (selectedSuggestion) {
+      console.log('Removendo sugestão:', selectedSuggestion);
       const success = await removeSuggestion(selectedSuggestion);
       if (success) {
         toast.success('Sugestão removida com sucesso');
@@ -66,6 +84,7 @@ const AdminSuggestionsPage = () => {
   const handleUpdateStatus = async (status: string, suggestionId: string) => {
     try {
       setSelectedSuggestion(suggestionId);
+      console.log('Atualizando status da sugestão:', suggestionId, status);
       const success = await updateSuggestionStatus(suggestionId, status);
       if (success) {
         toast.success(`Sugestão marcada como ${status === 'in_development' ? 'Em Desenvolvimento' : status}`);
@@ -82,71 +101,100 @@ const AdminSuggestionsPage = () => {
     navigate(`/admin/suggestions/${suggestionId}`);
   };
 
+  if (suggestionsLoading) {
+    return <LoadingScreen message="Carregando sugestões..." />;
+  }
+
+  if (error) {
+    return (
+      <div className="container py-6">
+        <h1 className="text-2xl font-bold mb-4">Gerenciar Sugestões</h1>
+        <div className="p-4 bg-red-50 border border-red-300 rounded-md text-red-700">
+          <h3 className="text-lg font-medium">Erro ao carregar sugestões</h3>
+          <p className="mt-2">{error.message || 'Ocorreu um erro inesperado ao carregar as sugestões'}</p>
+          <Button onClick={() => refetch()} className="mt-4" variant="outline">
+            Tentar novamente
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="container py-6">
       <h1 className="text-2xl font-bold mb-6">Gerenciar Sugestões</h1>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Título</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Votos</TableHead>
-            <TableHead className="text-right">Ações</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {suggestions.map((suggestion) => (
-            <TableRow key={suggestion.id}>
-              <TableCell>{suggestion.title}</TableCell>
-              <TableCell>
-                <Badge className={getStatusColor(suggestion.status)}>
-                  {getStatusLabel(suggestion.status)}
-                </Badge>
-              </TableCell>
-              <TableCell>
-                {suggestion.upvotes - suggestion.downvotes}
-              </TableCell>
-              <TableCell className="text-right">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon">
-                      <MoreVertical className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem 
-                      onClick={() => viewSuggestionDetails(suggestion.id)}
-                    >
-                      <Eye className="mr-2 h-4 w-4" />
-                      Ver Detalhes
-                    </DropdownMenuItem>
-                    <DropdownMenuItem 
-                      onClick={() => handleUpdateStatus('in_development', suggestion.id)}
-                      disabled={suggestion.status === 'in_development' || loading}
-                    >
-                      <Play className="mr-2 h-4 w-4" />
-                      {suggestion.status === 'in_development' 
-                        ? 'Já em Desenvolvimento' 
-                        : 'Marcar como Em Desenvolvimento'}
-                    </DropdownMenuItem>
-                    <DropdownMenuItem 
-                      onClick={() => {
-                        setSelectedSuggestion(suggestion.id);
-                        setDeleteDialogOpen(true);
-                      }}
-                      className="text-destructive"
-                      disabled={loading}
-                    >
-                      <Trash2 className="mr-2 h-4 w-4" />
-                      Remover Sugestão
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </TableCell>
+      
+      {suggestions.length === 0 ? (
+        <div className="p-8 text-center border rounded-md">
+          <h3 className="text-lg font-medium">Nenhuma sugestão encontrada</h3>
+          <p className="text-muted-foreground mt-2">
+            Não há sugestões registradas no sistema no momento.
+          </p>
+        </div>
+      ) : (
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Título</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Votos</TableHead>
+              <TableHead className="text-right">Ações</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {suggestions.map((suggestion) => (
+              <TableRow key={suggestion.id}>
+                <TableCell>{suggestion.title}</TableCell>
+                <TableCell>
+                  <Badge className={getStatusColor(suggestion.status)}>
+                    {getStatusLabel(suggestion.status)}
+                  </Badge>
+                </TableCell>
+                <TableCell>
+                  {suggestion.upvotes - suggestion.downvotes}
+                </TableCell>
+                <TableCell className="text-right">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon">
+                        <MoreVertical className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem 
+                        onClick={() => viewSuggestionDetails(suggestion.id)}
+                      >
+                        <Eye className="mr-2 h-4 w-4" />
+                        Ver Detalhes
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        onClick={() => handleUpdateStatus('in_development', suggestion.id)}
+                        disabled={suggestion.status === 'in_development' || loading}
+                      >
+                        <Play className="mr-2 h-4 w-4" />
+                        {suggestion.status === 'in_development' 
+                          ? 'Já em Desenvolvimento' 
+                          : 'Marcar como Em Desenvolvimento'}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        onClick={() => {
+                          setSelectedSuggestion(suggestion.id);
+                          setDeleteDialogOpen(true);
+                        }}
+                        className="text-destructive"
+                        disabled={loading}
+                      >
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Remover Sugestão
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      )}
 
       <AlertDialog 
         open={deleteDialogOpen} 
