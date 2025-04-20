@@ -10,8 +10,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { ArrowLeft } from "lucide-react";
 import { OnboardingData } from "@/types/onboarding";
-import MilagrinhoAssistant from "./MilagrinhoAssistant";
 
 // Opções de setor, tamanho e faturamento
 const sectorOptions = [
@@ -61,6 +61,7 @@ interface BusinessGoalsStepProps {
   onComplete: () => void;
   initialData?: any;
   personalInfo?: OnboardingData["personal_info"];
+  onPrevious?: () => void; // nova prop!
 }
 
 export const BusinessGoalsStep = ({
@@ -68,8 +69,9 @@ export const BusinessGoalsStep = ({
   isSubmitting,
   initialData,
   personalInfo,
+  onPrevious, // nova prop
 }: BusinessGoalsStepProps) => {
-  // Valores prévios carregados (pré-preenchimento)
+  // Pré-preenchimento dos dados
   const [companyName, setCompanyName] = useState(initialData?.company_name || "");
   const [companySize, setCompanySize] = useState(initialData?.company_size || "");
   const [companySector, setCompanySector] = useState(initialData?.company_sector || "");
@@ -79,6 +81,7 @@ export const BusinessGoalsStep = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    // A tipagem correta é professional_info
     const professionalData: Partial<OnboardingData> = {
       professional_info: {
         company_name: companyName,
@@ -94,30 +97,52 @@ export const BusinessGoalsStep = ({
 
   return (
     <div className="flex flex-col items-center min-h-[calc(100vh-170px)] py-8 sm:py-16 bg-[#f6f6f7]">
-      <div
-        className="
-          w-full max-w-2xl p-0 sm:p-0
-          flex flex-col items-center
-        "
-      >
-        <div className="w-full">
-          <MilagrinhoAssistant userName={personalInfo?.name} />
+      <div className="w-full max-w-2xl p-0 sm:p-0 flex flex-col items-center">
+
+        {/* TOPO: Botão voltar e mensagem assistente - idêntico ao print e primeira página */}
+        <div className="w-full flex items-center justify-between mb-4">
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={onPrevious}
+            className="flex items-center gap-2 text-[#0ABAB5] hover:bg-[#eafaf9] px-3 py-1 rounded-lg"
+            style={{ fontWeight: 500 }}
+          >
+            <ArrowLeft className="h-5 w-5 mr-1" />
+            Voltar
+          </Button>
+          {/* Espaço para manter balanceado - pode colocar logo ou similar se quiser */}
+          <div />
         </div>
 
+        <div className="w-full mb-4">
+          <div className="rounded-xl bg-white border border-[#0ABAB5]/15 p-5 flex items-center gap-3 shadow-sm">
+            <span className="bg-[#eafaf9] rounded-full p-2">
+              <svg width={26} height={26} viewBox="0 0 26 26" fill="none"><circle cx="13" cy="13" r="13" fill="#0ABAB5"/><text x="13" y="18" textAnchor="middle" fill="white" fontSize="16" fontFamily="Arial" fontWeight="bold">🤖</text></svg>
+            </span>
+            <div>
+              <span className="block text-[#0ABAB5] font-semibold mb-1" style={{ fontSize: 16 }}>
+                {personalInfo?.name ? `E aí ${personalInfo.name}!` : "Olá!"}
+              </span>
+              <span className="text-[#1a1a1a] text-base">Sou o Milagrinho, seu assistente de IA do VIVER DE IA Club.<br className="hidden sm:block"/>
+              Vamos começar conhecendo um pouco sobre você.<br className="hidden sm:block"/>
+              Essas informações vão me ajudar a personalizar sua experiência!</span>
+            </div>
+          </div>
+        </div>
+
+        {/* FORMULÁRIO PRINCIPAL */}
         <form
           onSubmit={handleSubmit}
-          className="
-            w-full 
-            bg-white rounded-2xl shadow-lg
-            p-5 sm:p-8
-            border border-gray-100
-            flex flex-col gap-6
-            animate-fade-in
-          "
-          style={{
-            minWidth: 0,
-          }}
+          className="w-full bg-white rounded-2xl shadow-lg p-5 sm:p-8 border border-gray-100 flex flex-col gap-6 animate-fade-in"
+          style={{ minWidth: 0 }}
         >
+          {/* Banner teal com mensagem secundária do print (não repetitiva) */}
+          <div className="w-full rounded-lg bg-gradient-to-br from-[#0ABAB5] to-[#67e0d8] text-white text-base font-medium flex items-center px-5 py-4 mb-2 shadow-md">
+            <span className="mr-3 text-2xl">🤖</span>
+            Para te recomendar as melhores trilhas e soluções, me conta um pouco da empresa onde você trabalha!
+          </div>
+
           <div className="flex flex-col gap-4">
             <div>
               <Label htmlFor="company_name" className="text-[#222] font-medium">
