@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Check, Info, Link2, Plus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -10,10 +10,13 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-import { availableTools, ToolItem } from "./toolsData";
 import * as Icons from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/lib/supabase";
+import { Tool } from "@/types/toolTypes";
+import { useToast } from "@/hooks/use-toast";
 
-export interface SelectedTool extends ToolItem {
+export interface SelectedTool extends Tool {
   is_required: boolean;
 }
 
@@ -26,13 +29,35 @@ interface ToolSelectorProps {
 export const ToolSelector: React.FC<ToolSelectorProps> = ({ value = [], onChange, className }) => {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
+  const { toast } = useToast();
 
-  const handleSelectTool = (tool: ToolItem) => {
-    // Verificar se a ferramenta já está selecionada
+  // Buscar todas as ferramentas ativas
+  const { data: availableTools = [], isLoading } = useQuery({
+    queryKey: ['tools'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('tools')
+        .select('*')
+        .eq('status', true)
+        .order('name');
+
+      if (error) {
+        toast({
+          title: "Erro ao carregar ferramentas",
+          description: error.message,
+          variant: "destructive",
+        });
+        throw error;
+      }
+
+      return data as Tool[];
+    }
+  });
+
+  const handleSelectTool = (tool: Tool) => {
     const toolIndex = value.findIndex(t => t.id === tool.id);
     
     if (toolIndex === -1) {
-      // Adicionar ferramenta com is_required true por padrão
       onChange([...value, { ...tool, is_required: true }]);
     }
     
@@ -83,27 +108,32 @@ export const ToolSelector: React.FC<ToolSelectorProps> = ({ value = [], onChange
               <CommandEmpty>Nenhuma ferramenta encontrada</CommandEmpty>
               <CommandGroup heading="Ferramentas disponíveis">
                 <ScrollArea className="h-[300px]">
-                  {availableTools
-                    .filter(tool => !value.some(t => t.id === tool.id))
-                    .map(tool => (
-                      <CommandItem
-                        key={tool.id}
-                        value={`${tool.name} ${tool.description}`}
-                        onSelect={() => handleSelectTool(tool)}
-                        className="flex items-start py-2"
-                      >
-                        <div className="flex items-center mr-2 mt-0.5">
-                          {renderIcon(tool.icon)}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="font-medium">{tool.name}</div>
-                          <div className="text-xs text-muted-foreground line-clamp-2">
-                            {tool.description}
+                  {isLoading ? (
+                    <div className="p-4 text-center text-sm text-muted-foreground">
+                      Carregando ferramentas...
+                    </div>
+                  ) : (
+                    availableTools
+                      .filter(tool => !value.some(t => t.id === tool.id))
+                      .map(tool => (
+                        <CommandItem
+                          key={tool.id}
+                          value={`${tool.name} ${tool.description}`}
+                          onSelect={() => handleSelectTool(tool)}
+                          className="flex items-start py-2"
+                        >
+                          <div className="flex items-center mr-2 mt-0.5">
+                            <Icons.Tool className="h-4 w-4" />
                           </div>
-                        </div>
-                      </CommandItem>
-                    ))
-                  }
+                          <div className="flex-1 min-w-0">
+                            <div className="font-medium">{tool.name}</div>
+                            <div className="text-xs text-muted-foreground line-clamp-2">
+                              {tool.description}
+                            </div>
+                          </div>
+                        </CommandItem>
+                      ))
+                  )}
                 </ScrollArea>
               </CommandGroup>
             </CommandList>
@@ -120,7 +150,7 @@ export const ToolSelector: React.FC<ToolSelectorProps> = ({ value = [], onChange
                   <div key={tool.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 bg-muted/30 rounded-md">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        {renderIcon(tool.icon)}
+                        <Icons.Tool className="h-5 w-5 text-blue-600" />
                         <span className="font-medium">{tool.name}</span>
                         {tool.is_required && (
                           <Badge variant="default" className="bg-[#0ABAB5] hover:bg-[#0ABAB5]/90">
@@ -128,15 +158,15 @@ export const ToolSelector: React.FC<ToolSelectorProps> = ({ value = [], onChange
                           </Badge>
                         )}
                       </div>
-                      <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
+                      <div className="flex items-center gap-2 mt-1">
                         <a 
-                          href={tool.url} 
+                          href={tool.official_url} 
                           target="_blank" 
                           rel="noopener noreferrer" 
                           className="flex items-center text-xs text-blue-500 hover:underline truncate"
                         >
                           <Link2 className="h-3 w-3 mr-1" /> 
-                          {tool.url}
+                          {tool.official_url}
                         </a>
                       </div>
                     </div>

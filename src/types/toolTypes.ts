@@ -1,4 +1,3 @@
-
 export type ToolCategory = 
   | 'Modelos de IA e Interfaces'
   | 'Geração de Conteúdo Visual'
@@ -42,4 +41,12 @@ export interface Tool {
   benefit_badge_url?: string;
   benefit_clicks?: number;
   benefit_type?: BenefitType;
+}
+
+export interface SolutionTool {
+  id: string;
+  solution_id: string;
+  tool_id: string;
+  is_required: boolean;
+  created_at?: string;
 }

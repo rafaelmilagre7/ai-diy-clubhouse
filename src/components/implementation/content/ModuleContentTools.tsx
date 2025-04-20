@@ -4,45 +4,42 @@ import { Module, supabase } from "@/lib/supabase";
 import { useLogging } from "@/hooks/useLogging";
 import { ToolsLoading } from "./tools/ToolsLoading";
 import { ToolsEmptyState } from "./tools/ToolsEmptyState";
-import { ToolItem, Tool } from "./tools/ToolItem";
+import { ToolItem } from "./tools/ToolItem";
+import { useQuery } from "@tanstack/react-query";
 
 interface ModuleContentToolsProps {
   module: Module;
 }
 
 export const ModuleContentTools = ({ module }: ModuleContentToolsProps) => {
-  const [tools, setTools] = useState<Tool[]>([]);
-  const [loading, setLoading] = useState(true);
   const { log, logError } = useLogging();
 
-  useEffect(() => {
-    const fetchTools = async () => {
-      try {
-        setLoading(true);
-        log("Fetching tools", { solution_id: module.solution_id, module_id: module.id });
-        
-        const { data, error } = await supabase
-          .from("solution_tools")
-          .select("*")
-          .eq("solution_id", module.solution_id);
-        
-        if (error) {
-          throw error;
-        }
-        
-        log("Tools fetched successfully", { count: data?.length || 0 });
-        setTools(data || []);
-      } catch (err) {
-        logError("Error fetching tools", err);
-      } finally {
-        setLoading(false);
+  const { data: tools, isLoading, error } = useQuery({
+    queryKey: ['solution-tools', module.solution_id],
+    queryFn: async () => {
+      log("Fetching tools", { solution_id: module.solution_id });
+      
+      const { data, error } = await supabase
+        .from("solution_tools")
+        .select("*")
+        .eq("solution_id", module.solution_id);
+      
+      if (error) {
+        logError("Error fetching tools", error);
+        throw error;
       }
-    };
+      
+      log("Tools fetched successfully", { count: data?.length || 0 });
+      return data;
+    }
+  });
 
-    fetchTools();
-  }, [module.solution_id, module.id, log, logError]);
+  if (error) {
+    logError("Error displaying tools", error);
+    return null;
+  }
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="space-y-4 mt-8">
         <h3 className="text-lg font-semibold">Ferramentas Necessárias</h3>
@@ -51,7 +48,7 @@ export const ModuleContentTools = ({ module }: ModuleContentToolsProps) => {
     );
   }
 
-  if (tools.length === 0) {
+  if (!tools || tools.length === 0) {
     log("No tools found for this solution", { solution_id: module.solution_id });
     return null;
   }
@@ -65,7 +62,11 @@ export const ModuleContentTools = ({ module }: ModuleContentToolsProps) => {
       
       <div className="space-y-3 mt-4">
         {tools.map((tool) => (
-          <ToolItem key={tool.id} tool={tool} />
+          <ToolItem 
+            key={tool.id} 
+            toolId={tool.tool_id} 
+            isRequired={tool.is_required} 
+          />
         ))}
       </div>
     </div>
