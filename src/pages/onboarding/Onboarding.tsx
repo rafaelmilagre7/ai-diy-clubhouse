@@ -10,12 +10,12 @@ import { MilagrinhoMessage } from "@/components/onboarding/MilagrinhoMessage";
 
 const Onboarding = () => {
   const { user } = useAuth();
-  const { progress, isLoading, updateProgress } = useProgress();
+  const { progress, isLoading } = useProgress();
   const navigate = useNavigate();
   const [checkComplete, setCheckComplete] = useState(false);
 
+  // Se já completou, redirecionar para dashboard
   useEffect(() => {
-    // Só verificamos se já completou após carregar e apenas uma vez
     if (!isLoading && progress?.is_completed && !checkComplete) {
       setCheckComplete(true);
       toast.info("Você já completou o onboarding!");
@@ -38,12 +38,20 @@ const Onboarding = () => {
     </OnboardingLayout>
   );
 
+  // Extrair primeiro nome para mensagem de boas-vindas
+  const firstName = user?.user_metadata?.name?.split(' ')[0] || user?.email?.split('@')[0] || '';
+
   return (
     <OnboardingLayout 
       currentStep={1} 
       title="Dados Pessoais"
     >
       <div className="max-w-4xl mx-auto space-y-6">
+        <MilagrinhoMessage 
+          userName={firstName}
+          message="Eu sou o Milagrinho, seu assistente de IA do VIVER DE IA Club. Vamos começar conhecendo um pouco sobre você. Estas informações vão me ajudar a personalizar sua experiência, onde você vai encontrar uma comunidade incrível de pessoas transformando negócios com IA."
+        />
+        
         <div className="mt-8">
           <PersonalInfoFormFull />
         </div>

@@ -8,7 +8,7 @@ import { PersonalInfoInputs } from "./PersonalInfoInputs";
 import { NavigationButtons } from "./NavigationButtons";
 
 export const PersonalInfoFormController = () => {
-  const { progress, updateProgress } = useProgress();
+  const { progress, updateProgress, isLoading } = useProgress();
   const { profile, user } = useAuth();
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -29,7 +29,7 @@ export const PersonalInfoFormController = () => {
 
   // Usar useCallback para evitar recriações desnecessárias
   const updateFormData = useCallback(() => {
-    if (profile || progress?.personal_info) {
+    if (!isLoading && (profile || progress?.personal_info)) {
       setFormData(prev => ({
         ...prev,
         name: profile?.name || progress?.personal_info?.name || user?.user_metadata?.name || "",
@@ -44,11 +44,14 @@ export const PersonalInfoFormController = () => {
         timezone: progress?.personal_info?.timezone || "GMT-3",
       }));
     }
-  }, [profile, progress?.personal_info, user]);
+  }, [profile, progress?.personal_info, user, isLoading]);
 
   useEffect(() => {
-    updateFormData();
-  }, [updateFormData]);
+    // Só atualizamos os dados quando eles estiverem carregados
+    if (!isLoading) {
+      updateFormData();
+    }
+  }, [updateFormData, isLoading, progress]);
 
   const handleChange = (field: string, value: string) => {
     // Impede edição em nome e e-mail (proteção extra contra tentativa de edição)
@@ -105,6 +108,15 @@ export const PersonalInfoFormController = () => {
       setIsSubmitting(false);
     }
   };
+
+  // Se estiver carregando, mostramos um indicador
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-24">
+        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#0ABAB5]"></div>
+      </div>
+    );
+  }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6" autoComplete="off">

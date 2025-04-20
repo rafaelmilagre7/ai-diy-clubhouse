@@ -59,6 +59,7 @@ export const useProgress = () => {
             console.error("Erro ao carregar progresso:", error);
           }
         } else {
+          console.log("Progresso carregado com sucesso:", data);
           setProgress(data);
         }
       } catch (error) {
@@ -93,6 +94,7 @@ export const useProgress = () => {
           .single();
 
         if (error) throw error;
+        console.log("Progresso inicial criado:", data);
         setProgress(data);
       } catch (error) {
         console.error("Erro ao criar progresso inicial:", error);
@@ -115,13 +117,17 @@ export const useProgress = () => {
     }
 
     try {
+      console.log("Atualizando progresso:", updates);
       const { error } = await supabase
         .from("onboarding_progress")
         .update(updates)
         .eq("id", progress.id);
 
       if (error) throw error;
+      
+      // Atualizamos o estado local para refletir as mudanças imediatamente
       setProgress({ ...progress, ...updates });
+      console.log("Progresso atualizado com sucesso");
     } catch (error) {
       console.error("Erro ao atualizar progresso:", error);
       throw error;
