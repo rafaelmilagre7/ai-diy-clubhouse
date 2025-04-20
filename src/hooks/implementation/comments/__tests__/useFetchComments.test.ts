@@ -2,7 +2,6 @@
 import { renderHook, waitFor } from '@testing-library/react';
 import { useFetchComments } from '../useFetchComments';
 import { supabase } from '@/lib/supabase';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { vi } from 'vitest';
 import { wrapper } from './testUtils';
 

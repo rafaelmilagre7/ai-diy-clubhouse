@@ -12,7 +12,7 @@ export const createWrapper = () => {
     },
   });
 
-  return ({ children }: PropsWithChildren<{}>) => (
+  return ({ children }: PropsWithChildren) => (
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   );
 };
