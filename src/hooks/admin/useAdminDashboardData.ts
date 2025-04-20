@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
-import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/lib/supabase';
+import { useState, useEffect } from "react";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/lib/supabase";
 
 export const useAdminDashboardData = (timeRange: string) => {
   const { toast } = useToast();
@@ -166,12 +166,12 @@ export const useAdminDashboardData = (timeRange: string) => {
         setEngagementData(engagementDataArray);
         setCompletionRateData(completionRateDataArray);
 
-      } catch (error) {
+      } catch (error: any) {
         console.error("Erro ao carregar dados do dashboard:", error);
         toast({
-          title: "Erro ao carregar dashboard",
-          description: "Não foi possível carregar os dados do dashboard.",
-          variant: "destructive"
+          title: "Erro ao carregar dados",
+          description: "Ocorreu um erro ao carregar os dados do dashboard.",
+          variant: "destructive",
         });
       } finally {
         setLoading(false);
