@@ -5,7 +5,11 @@ import { useAuth } from "@/contexts/auth";
 import LoadingScreen from "@/components/common/LoadingScreen";
 import { toast } from "sonner";
 
-export const ProtectedRoutes = ({ children }: { children?: React.ReactNode }) => {
+interface ProtectedRoutesProps {
+  children?: React.ReactNode;
+}
+
+export const ProtectedRoutes = ({ children }: ProtectedRoutesProps) => {
   const { user, isLoading } = useAuth();
   const location = useLocation();
   const [loadingTimeout, setLoadingTimeout] = useState(false);

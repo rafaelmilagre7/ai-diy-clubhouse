@@ -23,11 +23,11 @@ const RootRedirect = () => {
     
     if (isLoading && !timeoutExceeded) {
       timeoutRef.current = window.setTimeout(() => {
-        console.log("RootRedirect: Loading timeout exceeded, redirecting to /auth");
+        console.log("RootRedirect: Loading timeout exceeded, redirecting to /login");
         setTimeoutExceeded(true);
         toast("Tempo de carregamento excedido, redirecionando para tela de login");
         navigate('/login', { replace: true });
-      }, 3000); // Reduzir para 3 segundos o timeout
+      }, 3000); // 3 segundos de timeout
     }
     
     return () => {

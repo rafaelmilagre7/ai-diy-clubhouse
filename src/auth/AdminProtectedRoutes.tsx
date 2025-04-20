@@ -5,7 +5,11 @@ import { useAuth } from "@/contexts/auth";
 import LoadingScreen from "@/components/common/LoadingScreen";
 import { toast } from "sonner";
 
-export const AdminProtectedRoutes = ({ children }: { children?: React.ReactNode }) => {
+interface AdminProtectedRoutesProps {
+  children?: React.ReactNode;
+}
+
+export const AdminProtectedRoutes = ({ children }: AdminProtectedRoutesProps) => {
   const { user, isAdmin, isLoading } = useAuth();
   const location = useLocation();
   const [loadingTimeout, setLoadingTimeout] = useState(false);

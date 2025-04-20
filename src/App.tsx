@@ -4,11 +4,12 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { ToasterProvider } from "@/components/layout/ToasterProvider";
+import { ProtectedRoutes } from "@/auth/ProtectedRoutes";
+import { AdminProtectedRoutes } from "@/auth/AdminProtectedRoutes";
 import { AuthProvider } from "@/contexts/auth";
 import { LoggingProvider } from "@/contexts/logging";
 import LoadingScreen from "@/components/common/LoadingScreen";
-import { ProtectedRoutes } from "@/auth/ProtectedRoutes";
-import { AdminProtectedRoutes } from "@/auth/AdminProtectedRoutes";
+import RootRedirect from "@/components/routing/RootRedirect";
 
 // Lazy-loaded components
 const Login = lazy(() => import("@/pages/auth/Login"));
@@ -39,7 +40,6 @@ const AdminSuggestionDetails = lazy(() => import("@/pages/admin/AdminSuggestionD
 const SolutionEditor = lazy(() => import("@/pages/admin/SolutionEditor"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
 const Index = lazy(() => import("@/pages/Index"));
-const RootRedirect = lazy(() => import("@/components/routing/RootRedirect"));
 
 // Create a client
 const queryClient = new QueryClient({

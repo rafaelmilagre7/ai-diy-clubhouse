@@ -13,19 +13,6 @@ export const ToasterProvider = () => {
         style: {
           background: 'white',
           color: 'black',
-        },
-        // Configurações específicas para tipos de toast
-        success: {
-          duration: 2000, // 2 segundos para sucesso
-        },
-        error: {
-          duration: 5000, // 5 segundos para erros
-        },
-        warning: {
-          duration: 4000, // 4 segundos para avisos
-        },
-        info: {
-          duration: 3000, // 3 segundos para informações
         }
       }}
     />
