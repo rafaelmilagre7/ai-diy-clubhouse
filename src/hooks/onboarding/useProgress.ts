@@ -39,78 +39,79 @@ export const useProgress = () => {
   const hasInitialized = useRef(false);
   const progressId = useRef<string | null>(null);
 
-  useEffect(() => {
-    if (!user || hasInitialized.current) return;
+  const fetchProgress = async () => {
+    if (!user) return;
+    
+    try {
+      setIsLoading(true);
+      
+      // Buscamos primeiro por progressos já existentes para evitar duplicação
+      const { data, error } = await supabase
+        .from("onboarding_progress")
+        .select("*")
+        .eq("user_id", user.id)
+        .order('created_at', { ascending: false }) // Pegar o mais recente primeiro
+        .limit(1)
+        .single();
 
-    const fetchProgress = async () => {
-      try {
-        setIsLoading(true);
-        
-        // Buscamos primeiro por progressos já existentes para evitar duplicação
-        const { data, error } = await supabase
-          .from("onboarding_progress")
-          .select("*")
-          .eq("user_id", user.id)
-          .order('created_at', { ascending: false }) // Pegar o mais recente primeiro
-          .limit(1)
-          .single();
-
-        if (error) {
-          if (error.code === 'PGRST116') {
-            // Não encontrou registro, vamos criar um novo
-            console.log("Criando novo registro de progresso para o usuário");
-            await createInitialProgress();
-          } else {
-            console.error("Erro ao carregar progresso:", error);
-          }
+      if (error) {
+        if (error.code === 'PGRST116') {
+          // Não encontrou registro, vamos criar um novo
+          console.log("Criando novo registro de progresso para o usuário");
+          await createInitialProgress();
         } else {
-          console.log("Progresso carregado com sucesso:", data);
-          setProgress(data);
-          progressId.current = data.id;
+          console.error("Erro ao carregar progresso:", error);
         }
-      } catch (error) {
-        console.error("Erro ao carregar progresso:", error);
-      } finally {
-        setIsLoading(false);
-        hasInitialized.current = true;
-      }
-    };
-
-    const createInitialProgress = async () => {
-      try {
-        // Obter metadados do usuário da autenticação
-        const userName = user.user_metadata?.name || '';
-        const userEmail = user.email || '';
-
-        const initialData = {
-          user_id: user.id,
-          completed_steps: [],
-          current_step: 'personal',
-          is_completed: false,
-          personal_info: {
-            name: userName,
-            email: userEmail
-          }
-        };
-
-        const { data, error } = await supabase
-          .from("onboarding_progress")
-          .insert(initialData)
-          .select()
-          .single();
-
-        if (error) throw error;
-        console.log("Progresso inicial criado:", data);
+      } else {
+        console.log("Progresso carregado com sucesso:", data);
         setProgress(data);
         progressId.current = data.id;
-      } catch (error) {
-        console.error("Erro ao criar progresso inicial:", error);
-        toast.error("Não foi possível iniciar seu progresso. Tente novamente mais tarde.");
       }
-    };
+    } catch (error) {
+      console.error("Erro ao carregar progresso:", error);
+    } finally {
+      setIsLoading(false);
+      hasInitialized.current = true;
+    }
+  };
 
+  const createInitialProgress = async () => {
+    try {
+      // Obter metadados do usuário da autenticação
+      const userName = user?.user_metadata?.name || '';
+      const userEmail = user?.email || '';
+
+      const initialData = {
+        user_id: user?.id,
+        completed_steps: [],
+        current_step: 'personal',
+        is_completed: false,
+        personal_info: {
+          name: userName,
+          email: userEmail
+        }
+      };
+
+      const { data, error } = await supabase
+        .from("onboarding_progress")
+        .insert(initialData)
+        .select()
+        .single();
+
+      if (error) throw error;
+      console.log("Progresso inicial criado:", data);
+      setProgress(data);
+      progressId.current = data.id;
+    } catch (error) {
+      console.error("Erro ao criar progresso inicial:", error);
+      toast.error("Não foi possível iniciar seu progresso. Tente novamente mais tarde.");
+    }
+  };
+
+  useEffect(() => {
+    if (!user || hasInitialized.current) return;
     fetchProgress();
-
+    
     // Cleanup function
     return () => {
       // Não resetamos hasInitialized aqui para evitar múltiplas inicializações
@@ -135,9 +136,6 @@ export const useProgress = () => {
       // Atualizamos o estado local para refletir as mudanças imediatamente
       setProgress(prev => prev ? { ...prev, ...updates } : null);
       console.log("Progresso atualizado com sucesso");
-      
-      // Se quisermos ter certeza de que temos os dados mais atualizados, podemos recarregá-los
-      await refreshProgress();
     } catch (error) {
       console.error("Erro ao atualizar progresso:", error);
       throw error;
@@ -159,8 +157,10 @@ export const useProgress = () => {
       
       setProgress(data);
       console.log("Progresso recarregado com sucesso:", data);
+      return data;
     } catch (error) {
       console.error("Erro ao recarregar progresso:", error);
+      return null;
     }
   };
 
@@ -169,5 +169,6 @@ export const useProgress = () => {
     isLoading,
     updateProgress,
     refreshProgress,
+    fetchProgress
   };
 };

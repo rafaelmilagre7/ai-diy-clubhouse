@@ -133,12 +133,17 @@ export const PersonalInfoFormController = () => {
       const fullName = profile?.name || user?.user_metadata?.name || formData.name;
       const email = profile?.email || user?.email || formData.email;
 
+      // Incluímos todos os campos no objeto pessoal_info
+      const personalInfo = {
+        ...formData,
+        name: fullName,
+        email: email,
+      };
+      
+      console.log("Dados pessoais sendo salvos:", personalInfo);
+
       await updateProgress({
-        personal_info: {
-          ...formData,
-          name: fullName,
-          email: email,
-        },
+        personal_info: personalInfo,
         current_step: "business_goals",
         completed_steps: [...(progress?.completed_steps || []), "personal_info"],
       });

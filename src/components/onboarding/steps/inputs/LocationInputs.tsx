@@ -31,6 +31,15 @@ export const LocationInputs = ({
   const { estados, cidadesPorEstado, isLoading } = useIBGELocations();
   const [availableCities, setAvailableCities] = useState<string[]>([]);
 
+  // Debug logs
+  useEffect(() => {
+    console.log("Estado selecionado:", state);
+    console.log("Cidade selecionada:", city);
+    if (state && cidadesPorEstado[state]) {
+      console.log("Cidades disponíveis para", state, ":", cidadesPorEstado[state].map(city => city.name));
+    }
+  }, [state, city, cidadesPorEstado]);
+
   // Atualizar cidades disponíveis quando o estado mudar
   useEffect(() => {
     if (state && cidadesPorEstado[state]) {

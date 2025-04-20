@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 import { OnboardingData } from '@/types/onboarding';
 
 export const useOnboardingSteps = () => {
-  const { progress, updateProgress } = useProgress();
+  const { progress, updateProgress, refreshProgress } = useProgress();
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -23,12 +23,15 @@ export const useOnboardingSteps = () => {
 
   useEffect(() => {
     if (progress?.completed_steps) {
+      console.log("Etapas completadas:", progress.completed_steps);
+      
       const lastCompletedIndex = Math.max(
         ...progress.completed_steps.map(step => 
           steps.findIndex(s => s.id === step)
         ).filter(index => index !== -1), // Filtra índices inválidos (-1)
         -1 // Fallback para -1 se o array estiver vazio
       );
+      
       // Se o lastCompletedIndex for -1, manteremos o currentStepIndex como 0
       setCurrentStepIndex(lastCompletedIndex !== -1 ? Math.min(lastCompletedIndex + 1, steps.length - 1) : 0);
     }
@@ -41,9 +44,19 @@ export const useOnboardingSteps = () => {
     if (!progress?.id) return;
     setIsSubmitting(true);
     try {
+      console.log(`Salvando dados da etapa ${stepId}:`, data);
+      
       // Etapa específica para dados profissionais
       if (stepId === "goals") {
         const professionalInfo = data.professional_info || {};
+        
+        // Verificamos se todos os campos obrigatórios estão preenchidos
+        if (!professionalInfo.company_name || !professionalInfo.company_size || 
+            !professionalInfo.company_sector || !professionalInfo.current_position) {
+          toast.error("Por favor, preencha todos os campos obrigatórios");
+          setIsSubmitting(false);
+          return;
+        }
         
         // Atualizamos tanto o objeto professional_info quanto os campos específicos
         await updateProgress({
@@ -61,12 +74,17 @@ export const useOnboardingSteps = () => {
       } else {
         const sectionKey = steps.find(s => s.id === stepId)?.section as keyof OnboardingData;
         if (!sectionKey) throw new Error('Seção inválida');
+        
         await updateProgress({
           [sectionKey]: data[sectionKey],
           completed_steps: [...(progress.completed_steps || []), stepId],
           current_step: steps[Math.min(currentStepIndex + 1, steps.length - 1)].id,
         });
       }
+      
+      // Recarregar os dados do servidor para garantir que temos os dados mais atualizados
+      await refreshProgress();
+      
       toast.success('Progresso salvo com sucesso!');
       setCurrentStepIndex(prev => Math.min(prev + 1, steps.length - 1));
     } catch (error) {
@@ -86,6 +104,9 @@ export const useOnboardingSteps = () => {
         is_completed: true,
         completed_steps: steps.map(s => s.id),
       });
+
+      // Recarregar os dados do servidor
+      await refreshProgress();
 
       toast.success('Onboarding concluído com sucesso!');
     } catch (error) {

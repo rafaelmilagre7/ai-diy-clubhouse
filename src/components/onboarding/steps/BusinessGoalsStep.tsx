@@ -30,17 +30,31 @@ export const BusinessGoalsStep = ({
   useEffect(() => {
     // Atualizar os estados quando os dados iniciais mudarem
     if (initialData) {
-      setCompanyName(initialData.company_name || "");
-      setCompanySize(initialData.company_size || "");
-      setCompanySector(initialData.company_sector || "");
-      setCompanyWebsite(initialData.company_website || "");
-      setCurrentPosition(initialData.current_position || "");
-      setAnnualRevenue(initialData.annual_revenue || "");
+      console.log("Dados iniciais de empresa:", initialData);
+      
+      if (initialData.professional_info) {
+        // Se dados existirem no objeto professional_info
+        setCompanyName(initialData.professional_info.company_name || "");
+        setCompanySize(initialData.professional_info.company_size || "");
+        setCompanySector(initialData.professional_info.company_sector || "");
+        setCompanyWebsite(initialData.professional_info.company_website || "");
+        setCurrentPosition(initialData.professional_info.current_position || "");
+        setAnnualRevenue(initialData.professional_info.annual_revenue || "");
+      } else {
+        // Se dados estiverem nos campos raiz
+        setCompanyName(initialData.company_name || "");
+        setCompanySize(initialData.company_size || "");
+        setCompanySector(initialData.company_sector || "");
+        setCompanyWebsite(initialData.company_website || "");
+        setCurrentPosition(initialData.current_position || "");
+        setAnnualRevenue(initialData.annual_revenue || "");
+      }
     }
   }, [initialData]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
     const professionalData: Partial<OnboardingData> = {
       professional_info: {
         company_name: companyName,
@@ -51,6 +65,8 @@ export const BusinessGoalsStep = ({
         annual_revenue: annualRevenue,
       },
     };
+    
+    console.log("Enviando dados profissionais:", professionalData);
     onSubmit("goals", professionalData);
   };
 
