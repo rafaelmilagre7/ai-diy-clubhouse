@@ -7,7 +7,7 @@ export { AuthRoutes, MemberRoutes, AdminRoutes };
 
 // Centralized route configuration for easy importing
 export const AppRoutes = {
-  Auth: () => <AuthRoutes />,
-  Member: () => <MemberRoutes />,
-  Admin: () => <AdminRoutes />
+  Auth: () => AuthRoutes(),
+  Member: () => MemberRoutes(),
+  Admin: () => AdminRoutes()
 };
