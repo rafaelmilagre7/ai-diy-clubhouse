@@ -8,7 +8,7 @@ import { Link } from "react-router-dom";
 
 interface OnboardingLayoutProps {
   children: React.ReactNode;
-  currentStep: string;
+  currentStep: number; // Alterado de string para number
   title: string;
   backUrl?: string;
 }
@@ -37,7 +37,7 @@ export const OnboardingLayout = ({
         </div>
       </div>
 
-      <EtapasProgresso currentStep={currentStep} />
+      <EtapasProgresso currentStep={currentStep} totalSteps={7} />
 
       <div className="mt-6 mb-4">
         <h1 className="text-2xl font-bold text-gray-900">{title}</h1>

@@ -1,6 +1,17 @@
 
 import { useState, useEffect } from 'react';
-import { getAllCities, getAllStates, State, City } from '@brazilian-utils/brazilian-utils';
+import { getCities, getStates } from '@brazilian-utils/brazilian-utils';
+
+// Criando interfaces já que a biblioteca não as exporta
+interface State {
+  code: string;
+  name: string;
+}
+
+interface City {
+  name: string;
+  code: string;
+}
 
 export const useIBGELocations = () => {
   const [estados, setEstados] = useState<State[]>([]);
@@ -10,13 +21,13 @@ export const useIBGELocations = () => {
   useEffect(() => {
     try {
       // Carrega todos os estados
-      const todosEstados = getAllStates();
+      const todosEstados = getStates();
       setEstados(todosEstados);
 
       // Cria um objeto com todas as cidades por estado
       const todasCidades: Record<string, City[]> = {};
       todosEstados.forEach(estado => {
-        todasCidades[estado.code] = getAllCities(estado.code);
+        todasCidades[estado.code] = getCities(estado.code);
       });
       
       setCidadesPorEstado(todasCidades);
