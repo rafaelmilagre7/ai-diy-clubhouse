@@ -23,6 +23,7 @@ export const useLogging = (): LoggingContextType => {
   // Adapta a interface para manter compatibilidade com o código existente
   return {
     log: (message: string, data: LogData = {}, category: string = "general") => {
+      // Agora passamos category dentro do objeto data
       loggingHook.log(message, { ...data, category });
     },
     error: (message: string, data: LogData = {}) => {
@@ -32,7 +33,8 @@ export const useLogging = (): LoggingContextType => {
       loggingHook.logWarning(message, data);
     },
     info: (message: string, data: LogData = {}) => {
-      loggingHook.log(message, data, "info");
+      // Substitui terceiro argumento por propriedade no objeto
+      loggingHook.log(message, { ...data, category: "info" });
     }
   };
 };

@@ -8,7 +8,7 @@ import { Search, Filter } from 'lucide-react';
 import LoadingScreen from '@/components/common/LoadingScreen';
 import { Solution } from '@/lib/supabase';
 import { useToolsData } from '@/hooks/useToolsData';
-import { useLogging } from '@/hooks/useLogging';
+import { useLogging } from '@/contexts/logging';
 
 const Solutions = () => {
   // Logger para depuração
