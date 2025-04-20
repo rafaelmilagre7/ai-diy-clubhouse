@@ -60,7 +60,8 @@ const SuggestionDetailsPage = () => {
     console.log('SuggestionDetailsPage - O usuário é admin?', isAdmin);
     console.log('SuggestionDetailsPage - Está na visualização de admin?', isAdminView);
     console.log('SuggestionDetailsPage - Localização atual:', location.pathname);
-  }, [id, suggestion, isLoading, error, isAdmin, isAdminView, location.pathname]);
+    console.log('SuggestionDetailsPage - userVote:', userVote);
+  }, [id, suggestion, isLoading, error, isAdmin, isAdminView, location.pathname, userVote]);
 
   const { 
     comment, 
@@ -169,7 +170,7 @@ const SuggestionDetailsPage = () => {
         onSubmitComment={handleSubmitComment}
         onVote={handleVote}
         isOwner={isOwner}
-        userVote={userVote as UserVote}
+        userVote={userVote as UserVote | null}
         voteLoading={voteLoading}
       />
 

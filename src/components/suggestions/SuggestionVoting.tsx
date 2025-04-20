@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { ThumbsUp, ThumbsDown } from 'lucide-react';
 import { useAuth } from '@/contexts/auth';
 import { toast } from 'sonner';
+import { UserVote } from '@/types/suggestionTypes';
 
 interface SuggestionVotingProps {
   suggestion: {
@@ -11,7 +12,7 @@ interface SuggestionVotingProps {
     upvotes: number;
     downvotes: number;
   };
-  userVote?: { id: string; vote_type: 'upvote' | 'downvote' } | null;
+  userVote?: UserVote | null;
   voteLoading?: boolean;
   onVote: (voteType: 'upvote' | 'downvote') => Promise<void>;
   voteBalance: number;

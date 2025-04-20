@@ -5,6 +5,7 @@ import SuggestionTitle from './content/SuggestionTitle';
 import SuggestionDescription from './content/SuggestionDescription';
 import SuggestionVoting from './SuggestionVoting';
 import CommentsSection from './content/CommentsSection';
+import { UserVote } from '@/types/suggestionTypes';
 
 interface SuggestionContentProps {
   suggestion: {
@@ -29,7 +30,7 @@ interface SuggestionContentProps {
   onSubmitComment: (e: React.FormEvent) => void;
   onVote: (voteType: 'upvote' | 'downvote') => Promise<void>;
   isOwner?: boolean;
-  userVote?: { id: string; vote_type: 'upvote' | 'downvote' } | null;
+  userVote?: UserVote | null;
   voteLoading?: boolean;
 }
 

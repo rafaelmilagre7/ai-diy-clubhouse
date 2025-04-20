@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
-import { Suggestion } from '@/types/suggestionTypes';
+import { Suggestion, UserVote, VoteType } from '@/types/suggestionTypes';
 import { useAuth } from '@/contexts/auth';
 import { toast } from 'sonner';
 
@@ -12,7 +12,7 @@ export const useSuggestionDetails = () => {
   const [suggestion, setSuggestion] = useState<Suggestion | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
-  const [userVote, setUserVote] = useState<'upvote' | 'downvote' | null>(null);
+  const [userVote, setUserVote] = useState<UserVote | null>(null);
   const [voteLoading, setVoteLoading] = useState(false);
 
   const fetchSuggestion = async () => {
@@ -40,13 +40,15 @@ export const useSuggestionDetails = () => {
       if (user) {
         const { data: voteData, error: voteError } = await supabase
           .from('suggestion_votes')
-          .select('vote_type')
+          .select('id, vote_type')
           .eq('suggestion_id', id)
           .eq('user_id', user.id)
           .single();
         
         if (!voteError && voteData) {
-          setUserVote(voteData.vote_type as 'upvote' | 'downvote');
+          setUserVote(voteData as UserVote);
+        } else {
+          setUserVote(null);
         }
       }
     } catch (err: any) {
@@ -57,7 +59,7 @@ export const useSuggestionDetails = () => {
     }
   };
 
-  const handleVote = async (voteType: 'upvote' | 'downvote') => {
+  const handleVote = async (voteType: VoteType) => {
     if (!user || !suggestion) {
       toast.error('Você precisa estar logado para votar');
       return;
@@ -67,7 +69,7 @@ export const useSuggestionDetails = () => {
       setVoteLoading(true);
       
       // Se o usuário já votou do mesmo tipo, remover o voto
-      if (userVote === voteType) {
+      if (userVote?.vote_type === voteType) {
         const { error } = await supabase
           .from('suggestion_votes')
           .delete()
@@ -92,11 +94,13 @@ export const useSuggestionDetails = () => {
       } else {
         // Se o usuário já votou, mas de outro tipo, atualizar o voto
         if (userVote) {
-          const { error } = await supabase
+          const { data, error } = await supabase
             .from('suggestion_votes')
             .update({ vote_type: voteType })
             .eq('suggestion_id', suggestion.id)
-            .eq('user_id', user.id);
+            .eq('user_id', user.id)
+            .select('id, vote_type')
+            .single();
           
           if (error) throw error;
           
@@ -105,21 +109,25 @@ export const useSuggestionDetails = () => {
             if (!prev) return null;
             return {
               ...prev,
-              [userVote === 'upvote' ? 'upvotes' : 'downvotes']: 
-                (prev[userVote === 'upvote' ? 'upvotes' : 'downvotes'] || 0) - 1,
+              [userVote.vote_type === 'upvote' ? 'upvotes' : 'downvotes']: 
+                (prev[userVote.vote_type === 'upvote' ? 'upvotes' : 'downvotes'] || 0) - 1,
               [voteType === 'upvote' ? 'upvotes' : 'downvotes']: 
                 (prev[voteType === 'upvote' ? 'upvotes' : 'downvotes'] || 0) + 1
             };
           });
+          
+          setUserVote(data as UserVote);
         } else {
           // Se o usuário ainda não votou, inserir novo voto
-          const { error } = await supabase
+          const { data, error } = await supabase
             .from('suggestion_votes')
             .insert({
               suggestion_id: suggestion.id,
               user_id: user.id,
               vote_type: voteType
-            });
+            })
+            .select('id, vote_type')
+            .single();
           
           if (error) throw error;
           
@@ -132,9 +140,10 @@ export const useSuggestionDetails = () => {
                 (prev[voteType === 'upvote' ? 'upvotes' : 'downvotes'] || 0) + 1
             };
           });
+          
+          setUserVote(data as UserVote);
         }
         
-        setUserVote(voteType);
         toast.success(`Você ${voteType === 'upvote' ? 'gostou' : 'não gostou'} desta sugestão`);
       }
     } catch (err: any) {
