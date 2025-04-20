@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import EmailPasswordForm from "./login/EmailPasswordForm";
 import GoogleLoginButton from "./login/GoogleLoginButton";
@@ -18,6 +18,7 @@ const LoginForm = () => {
   // Redirect if already logged in
   useEffect(() => {
     if (user) {
+      console.log("Usuário já está logado, redirecionando para dashboard");
       navigate('/dashboard', { replace: true });
     }
   }, [user, navigate]);
@@ -25,16 +26,13 @@ const LoginForm = () => {
   const handleGoogleSignIn = async () => {
     try {
       setIsLoading(true);
+      toast.info("Iniciando login com Google...");
       // Call signIn without arguments for Google auth
       await signIn();
       // Navigation is handled by auth state change listeners
     } catch (error) {
       console.error("Erro ao fazer login com Google:", error);
-      toast({
-        title: "Erro de autenticação",
-        description: "Não foi possível fazer login com o Google. Tente novamente.",
-        variant: "destructive",
-      });
+      toast.error("Não foi possível fazer login com o Google. Tente novamente.");
     } finally {
       setIsLoading(false);
     }
@@ -44,11 +42,7 @@ const LoginForm = () => {
     e.preventDefault();
     
     if (!email || !password) {
-      toast({
-        title: "Campos obrigatórios",
-        description: "Por favor, preencha todos os campos.",
-        variant: "destructive",
-      });
+      toast.error("Por favor, preencha todos os campos.");
       return;
     }
     
@@ -56,10 +50,7 @@ const LoginForm = () => {
       setIsLoading(true);
       
       // Show immediate feedback toast
-      toast({
-        title: "Entrando...",
-        description: "Autenticando sua conta.",
-      });
+      toast.info("Entrando...");
       
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -69,20 +60,17 @@ const LoginForm = () => {
       if (error) throw error;
       
       if (data.user) {
-        toast({
-          title: "Login bem-sucedido",
-          description: "Bem-vindo de volta ao VIVER DE IA Club!",
-        });
+        toast.success("Login bem-sucedido! Redirecionando...");
+        console.log("Login bem-sucedido, redirecionando para dashboard");
         
-        // Leave redirect handling to auth state change listeners
+        // Forçar redirecionamento após autenticação bem-sucedida
+        setTimeout(() => {
+          navigate('/dashboard', { replace: true });
+        }, 500);
       }
     } catch (error: any) {
       console.error("Erro ao fazer login:", error);
-      toast({
-        title: "Erro de autenticação",
-        description: error.message || "Não foi possível fazer login. Verifique suas credenciais.",
-        variant: "destructive",
-      });
+      toast.error(error.message || "Não foi possível fazer login. Verifique suas credenciais.");
     } finally {
       setIsLoading(false);
     }

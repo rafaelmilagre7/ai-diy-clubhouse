@@ -31,7 +31,7 @@ export const MemberSidebar = ({
         sidebarOpen ? "w-64" : "w-0 md:w-[70px]"
       )}
     >
-      <div className={cn("flex flex-col h-full", !sidebarOpen && "md:flex hidden")}>
+      <div className={cn("flex flex-col h-full", !sidebarOpen && "md:flex")}>
         {/* Logo area */}
         <SidebarLogo sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
         

@@ -25,6 +25,8 @@ const MemberLayout = ({ children }: { children: ReactNode }) => {
 
     window.addEventListener('resize', handleResize);
     handleResize(); // Chamar imediatamente para definir o estado inicial correto
+    
+    // Cleanup
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
@@ -37,6 +39,13 @@ const MemberLayout = ({ children }: { children: ReactNode }) => {
       .toUpperCase()
       .substring(0, 2);
   };
+
+  // Adicionando log para depuração
+  console.log("MemberLayout renderizado:", { 
+    profileName: profile?.name,
+    profileEmail: profile?.email,
+    sidebarOpen 
+  });
 
   return (
     <div className="flex min-h-screen bg-background">
