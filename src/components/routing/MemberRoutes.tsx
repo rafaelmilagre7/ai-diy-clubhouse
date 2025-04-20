@@ -1,4 +1,3 @@
-
 import { ReactNode } from "react";
 import { Route, Routes } from "react-router-dom";
 import MemberLayout from "@/components/layout/MemberLayout";
@@ -15,6 +14,9 @@ import SuggestionDetails from "@/pages/member/SuggestionDetails";
 import NewSuggestion from "@/pages/member/NewSuggestion";
 import Achievements from "@/pages/member/Achievements";
 import Benefits from "@/pages/member/Benefits";
+import { lazy } from "react";
+
+const Onboarding = lazy(() => import("@/pages/onboarding/Onboarding"));
 
 interface MemberRoutesProps {
   children?: ReactNode;
@@ -28,6 +30,7 @@ const MemberRoutes = ({ children }: MemberRoutesProps) => {
     <Routes>
       <Route path="/" element={<MemberLayout>{children}</MemberLayout>}>
         <Route index element={<Dashboard />} />
+        <Route path="/onboarding" element={<Onboarding />} />
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="solutions" element={<Solutions />} />
         <Route path="solution/:id" element={<SolutionDetails />} />

@@ -195,6 +195,48 @@ export type Database = {
           },
         ]
       }
+      onboarding_progress: {
+        Row: {
+          ai_knowledge_level: string | null
+          business_data: Json | null
+          company_data: Json | null
+          completed_steps: string[] | null
+          created_at: string | null
+          current_step: string | null
+          goals: string[] | null
+          id: string
+          is_completed: boolean | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          ai_knowledge_level?: string | null
+          business_data?: Json | null
+          company_data?: Json | null
+          completed_steps?: string[] | null
+          created_at?: string | null
+          current_step?: string | null
+          goals?: string[] | null
+          id?: string
+          is_completed?: boolean | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          ai_knowledge_level?: string | null
+          business_data?: Json | null
+          company_data?: Json | null
+          completed_steps?: string[] | null
+          created_at?: string | null
+          current_step?: string | null
+          goals?: string[] | null
+          id?: string
+          is_completed?: boolean | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
