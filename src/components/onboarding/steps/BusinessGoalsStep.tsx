@@ -81,8 +81,8 @@ export const BusinessGoalsStep = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Enviar para Supabase os campos individuais + objeto "professional_info" para histórico/futuro
-    onSubmit("goals", {
+    // Estruturar os dados corretamente conforme o tipo OnboardingData
+    const professionalData: Partial<OnboardingData> = {
       professional_info: {
         company_name: companyName,
         company_size: companySize,
@@ -90,15 +90,11 @@ export const BusinessGoalsStep = ({
         company_website: companyWebsite,
         current_position: currentPosition,
         annual_revenue: annualRevenue
-      },
-      // Atualizar colunas diretas para fácil acesso SEO/dashboard:
-      company_name: companyName,
-      company_size: companySize,
-      company_sector: companySector,
-      company_website: companyWebsite,
-      current_position: currentPosition,
-      annual_revenue: annualRevenue
-    });
+      }
+    };
+
+    // Enviar para o hook de atualização
+    onSubmit("goals", professionalData);
   };
 
   return (

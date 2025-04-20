@@ -40,11 +40,20 @@ export const useOnboardingSteps = () => {
     if (!progress?.id) return;
     setIsSubmitting(true);
     try {
-      // Ajuste: para dados profissionais, salvar tanto como professional_info quanto nos campos simples
+      // Etapa específica para dados profissionais
       if (stepId === "goals") {
+        const professionalInfo = data.professional_info || {};
+        
+        // Atualizamos tanto o objeto professional_info quanto os campos específicos
         await updateProgress({
-          ...data,
-          professional_info: data.professional_info,
+          professional_info: professionalInfo,
+          // Extrair os valores para campos individuais para fácil acesso
+          company_name: professionalInfo.company_name,
+          company_size: professionalInfo.company_size,
+          company_sector: professionalInfo.company_sector,
+          company_website: professionalInfo.company_website,
+          current_position: professionalInfo.current_position,
+          annual_revenue: professionalInfo.annual_revenue,
           completed_steps: [...(progress.completed_steps || []), stepId],
           current_step: steps[Math.min(currentStepIndex + 1, steps.length - 1)].id,
         });
