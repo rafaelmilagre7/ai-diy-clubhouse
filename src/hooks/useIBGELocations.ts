@@ -3,12 +3,12 @@ import { useState, useEffect } from 'react';
 import { getCities, getStates } from '@brazilian-utils/brazilian-utils';
 
 // Criando interfaces já que a biblioteca não as exporta
-interface State {
+export interface State {
   code: string;
   name: string;
 }
 
-interface City {
+export interface City {
   name: string;
   code: string;
 }

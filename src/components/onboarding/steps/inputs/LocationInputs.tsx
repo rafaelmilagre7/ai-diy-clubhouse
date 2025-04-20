@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useIBGELocations } from "@/hooks/useIBGELocations";
+import { useIBGELocations, City } from "@/hooks/useIBGELocations";
 
 // Lista de países principais
 const countries = [
@@ -39,14 +39,14 @@ export const LocationInputs = ({
   disabled,
 }: LocationInputsProps) => {
   const { estados, cidadesPorEstado, isLoading } = useIBGELocations();
-  const [availableCities, setAvailableCities] = useState<string[]>([]);
+  const [availableCities, setAvailableCities] = useState<City[]>([]);
 
   useEffect(() => {
     if (country === "Brasil" && state) {
       if (cidadesPorEstado[state]) {
-        const cidadesOrdenadas = cidadesPorEstado[state]
-          .map(cidade => cidade.name)
-          .sort((a, b) => a.localeCompare(b));
+        const cidadesOrdenadas = [...cidadesPorEstado[state]].sort((a, b) => 
+          a.name.localeCompare(b.name)
+        );
         setAvailableCities(cidadesOrdenadas);
       } else {
         setAvailableCities([]);
@@ -120,8 +120,8 @@ export const LocationInputs = ({
             </SelectTrigger>
             <SelectContent className="max-h-[200px]">
               {availableCities.map(cidade => (
-                <SelectItem key={cidade} value={cidade}>
-                  {cidade}
+                <SelectItem key={cidade.code} value={cidade.name}>
+                  {cidade.name}
                 </SelectItem>
               ))}
             </SelectContent>
