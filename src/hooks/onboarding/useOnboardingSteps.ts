@@ -59,7 +59,8 @@ export const useOnboardingSteps = () => {
         
         // Verificamos se todos os campos obrigatórios estão preenchidos
         if (!professionalInfo.company_name || !professionalInfo.company_size || 
-            !professionalInfo.company_sector || !professionalInfo.current_position) {
+            !professionalInfo.company_sector || !professionalInfo.current_position ||
+            !professionalInfo.annual_revenue) {
           toast.error("Por favor, preencha todos os campos obrigatórios");
           setIsSubmitting(false);
           return;
@@ -101,7 +102,11 @@ export const useOnboardingSteps = () => {
       // Navegar para a próxima página se estivermos avançando
       const nextStep = steps[nextStepIndex];
       if (nextStep && nextStep.path) {
-        navigate(nextStep.path);
+        console.log(`Navegando para ${nextStep.path}`);
+        // Adicionando um pequeno delay para a navegação para garantir que o estado foi atualizado
+        setTimeout(() => {
+          navigate(nextStep.path);
+        }, 100);
       }
     } catch (error) {
       console.error('Erro ao salvar dados:', error);
