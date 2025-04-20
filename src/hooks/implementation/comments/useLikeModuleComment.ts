@@ -1,70 +1,82 @@
 
-import { useQueryClient } from '@tanstack/react-query';
+import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Comment } from '@/types/commentTypes';
 import { useAuth } from '@/contexts/auth';
+import { Comment } from '@/types/commentTypes';
+import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { useLogging } from '@/hooks/useLogging';
 
 export const useLikeModuleComment = (solutionId: string, moduleId: string) => {
+  const [isProcessing, setIsProcessing] = useState(false);
   const { user } = useAuth();
-  const { logError } = useLogging();
   const queryClient = useQueryClient();
+  const { logError, log } = useLogging();
 
-  const likeComment = async (commentObj: Comment) => {
+  const likeComment = async (comment: Comment) => {
     if (!user) {
       toast.error('Você precisa estar logado para curtir comentários');
       return;
     }
 
+    if (isProcessing) return;
+
     try {
-      const tableName = 'tool_comment_likes';
-      const alreadyLiked = commentObj.user_has_liked;
+      setIsProcessing(true);
+      log('Processando curtida', { commentId: comment.id });
       
-      if (alreadyLiked) {
+      if (comment.user_has_liked) {
         // Remover curtida
-        const { error } = await supabase
-          .from(tableName)
+        const { error: deleteError } = await supabase
+          .from('tool_comment_likes')
           .delete()
-          .eq('comment_id', commentObj.id)
-          .eq('user_id', user.id);
+          .match({ 
+            user_id: user.id,
+            comment_id: comment.id
+          });
           
-        if (error) throw error;
+        if (deleteError) throw deleteError;
         
         // Decrementar contador
-        await supabase
-          .rpc('decrement', { 
-            row_id: commentObj.id, 
-            table_name: 'tool_comments', 
-            column_name: 'likes_count'
-          });
-          
+        const { error: decrementError } = await supabase.rpc('decrement', {
+          row_id: comment.id,
+          table_name: 'tool_comments',
+          column_name: 'likes_count'
+        });
+        
+        if (decrementError) throw decrementError;
+        
       } else {
         // Adicionar curtida
-        const { error } = await supabase
-          .from(tableName)
+        const { error: insertError } = await supabase
+          .from('tool_comment_likes')
           .insert({
-            comment_id: commentObj.id,
-            user_id: user.id
+            user_id: user.id,
+            comment_id: comment.id
           });
           
-        if (error) throw error;
+        if (insertError) throw insertError;
         
         // Incrementar contador
-        await supabase
-          .rpc('increment', { 
-            row_id: commentObj.id, 
-            table_name: 'tool_comments', 
-            column_name: 'likes_count'
-          });
+        const { error: incrementError } = await supabase.rpc('increment', {
+          row_id: comment.id,
+          table_name: 'tool_comments',
+          column_name: 'likes_count'
+        });
+        
+        if (incrementError) throw incrementError;
       }
       
+      // Atualizar a query
       queryClient.invalidateQueries({ queryKey: ['solution-comments', solutionId, moduleId] });
-    } catch (error: any) {
-      logError('Erro ao curtir comentário', error);
-      toast.error(`Erro ao curtir comentário: ${error.message}`);
+      
+    } catch (error) {
+      logError('Erro ao processar curtida', error);
+      toast.error('Não foi possível processar sua curtida. Tente novamente.');
+    } finally {
+      setIsProcessing(false);
     }
   };
 
-  return { likeComment };
+  return { likeComment, isProcessing };
 };

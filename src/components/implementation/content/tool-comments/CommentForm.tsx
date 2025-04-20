@@ -22,8 +22,16 @@ export const CommentForm = ({
   onSubmit,
   isSubmitting
 }: CommentFormProps) => {
+  
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (comment.trim()) {
+      onSubmit(e);
+    }
+  };
+  
   return (
-    <form onSubmit={onSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-4">
       {replyTo && (
         <div className="flex items-center justify-between p-3 bg-muted/50 rounded-md">
           <div className="flex items-center gap-2">

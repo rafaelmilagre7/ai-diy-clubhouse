@@ -9,7 +9,7 @@ import { useLogging } from '@/hooks/useLogging';
 export const useAddModuleComment = (solutionId: string, moduleId: string) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { user } = useAuth();
-  const { logError } = useLogging();
+  const { logError, log } = useLogging();
   const queryClient = useQueryClient();
 
   const addComment = async (content: string, parentId: string | null = null) => {
@@ -25,6 +25,7 @@ export const useAddModuleComment = (solutionId: string, moduleId: string) => {
     
     try {
       setIsSubmitting(true);
+      log('Adicionando comentário', { solutionId, moduleId, parentId });
       
       const commentData = {
         tool_id: solutionId,

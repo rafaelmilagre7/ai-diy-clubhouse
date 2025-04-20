@@ -36,11 +36,25 @@ export const useRealtimeComments = (
           log('Escuta de comentários ativada com sucesso', { solutionId, moduleId });
         }
       });
+      
+    // Inscrever-se em mudanças na tabela de curtidas
+    const likesChannel = supabase
+      .channel('tool-comment-likes-changes')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'tool_comment_likes'
+      }, () => {
+        log('Curtida modificada, invalidando queries', { solutionId, moduleId });
+        queryClient.invalidateQueries({ queryKey: ['solution-comments', solutionId, moduleId] });
+      })
+      .subscribe();
     
     // Cancelar inscrição ao desmontar
     return () => {
       log('Cancelando escuta de comentários', { solutionId, moduleId });
       commentChannel.unsubscribe();
+      likesChannel.unsubscribe();
     };
   }, [solutionId, moduleId, queryClient, isEnabled, log, logError]);
 };

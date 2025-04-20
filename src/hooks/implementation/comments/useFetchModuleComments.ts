@@ -15,17 +15,14 @@ export const useFetchModuleComments = (solutionId: string, moduleId: string) => 
       try {
         log('Buscando comentários da solução', { solutionId, moduleId });
         
-        const tableName = 'tool_comments';
-        const idField = 'tool_id';
-        
         // Buscar comentários principais
         const { data: parentComments, error: parentError } = await supabase
-          .from(tableName)
+          .from('tool_comments')
           .select(`
             *,
             profiles:user_id(name, avatar_url, role)
           `)
-          .eq(idField, solutionId)
+          .eq('tool_id', solutionId)
           .is('parent_id', null)
           .order('created_at', { ascending: false });
 
@@ -33,12 +30,12 @@ export const useFetchModuleComments = (solutionId: string, moduleId: string) => 
 
         // Buscar respostas
         const { data: replies, error: repliesError } = await supabase
-          .from(tableName)
+          .from('tool_comments')
           .select(`
             *,
             profiles:user_id(name, avatar_url, role)
           `)
-          .eq(idField, solutionId)
+          .eq('tool_id', solutionId)
           .not('parent_id', 'is', null)
           .order('created_at', { ascending: true });
 
