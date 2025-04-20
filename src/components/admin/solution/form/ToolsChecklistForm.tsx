@@ -45,7 +45,7 @@ const ToolsChecklistForm: React.FC<ToolsChecklistFormProps> = ({
     } else {
       setLoading(false);
     }
-  }, [solutionId]);
+  }, [solutionId, availableTools]);
 
   const fetchTools = async () => {
     try {

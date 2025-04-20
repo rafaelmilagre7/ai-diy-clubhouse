@@ -8,6 +8,7 @@ import AdminLayout from '@/components/layout/AdminLayout';
 // Admin pages
 import AdminDashboard from '@/pages/admin/Dashboard';
 import AdminSolutions from '@/pages/admin/AdminSolutions';
+import SolutionEditor from '@/pages/admin/SolutionEditor';
 import AdminTools from '@/pages/admin/AdminTools';
 import AdminToolEdit from '@/pages/admin/AdminToolEdit';
 import AdminUsers from '@/pages/admin/AdminUsers';
@@ -39,7 +40,9 @@ const AppRoutes = () => {
       {/* Admin Routes */}
       <Route path="/admin" element={<AdminLayout />}>
         <Route index element={<AdminDashboard />} />
-        <Route path="solutions/*" element={<AdminSolutions />} />
+        <Route path="solutions" element={<AdminSolutions />} />
+        <Route path="solutions/new" element={<SolutionEditor />} />
+        <Route path="solution/:id" element={<SolutionEditor />} />
         <Route path="tools" element={<AdminTools />} />
         <Route path="tools/:id" element={<AdminToolEdit />} />
         <Route path="users" element={<AdminUsers />} />

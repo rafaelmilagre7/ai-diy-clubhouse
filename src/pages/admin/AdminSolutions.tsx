@@ -212,7 +212,7 @@ const AdminSolutions = () => {
                           size="sm"
                           onClick={() => {
                             console.log("Navigating to solution edit:", solution.id);
-                            navigate(`/admin/solutions/${solution.id}`);
+                            navigate(`/admin/solution/${solution.id}`);
                           }}
                         >
                           <Edit className="h-4 w-4" />

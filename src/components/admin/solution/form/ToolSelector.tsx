@@ -1,20 +1,12 @@
 
 import React, { useState, useEffect } from "react";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
-import { Check, Info, Link2, Plus, Wrench } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Card, CardContent } from "@/components/ui/card";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { cn } from "@/lib/utils";
-import * as Icons from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Search, Wrench } from "lucide-react";
+import { Tool, SolutionTool } from "@/types/toolTypes";
 import { supabase } from "@/lib/supabase";
-import { Tool } from "@/types/toolTypes";
-import { useToast } from "@/hooks/use-toast";
+import { useLogging } from "@/hooks/useLogging";
 
 export interface SelectedTool extends Tool {
   is_required: boolean;
@@ -23,181 +15,214 @@ export interface SelectedTool extends Tool {
 interface ToolSelectorProps {
   value: SelectedTool[];
   onChange: (tools: SelectedTool[]) => void;
-  className?: string;
 }
 
-export const ToolSelector: React.FC<ToolSelectorProps> = ({ value = [], onChange, className }) => {
-  const [open, setOpen] = useState(false);
-  const [search, setSearch] = useState("");
-  const { toast } = useToast();
+export const ToolSelector: React.FC<ToolSelectorProps> = ({ value, onChange }) => {
+  const { log, logError } = useLogging();
+  const [availableTools, setAvailableTools] = useState<Tool[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [loading, setLoading] = useState(true);
 
-  // Buscar todas as ferramentas ativas
-  const { data: availableTools = [], isLoading } = useQuery({
-    queryKey: ['tools'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('tools')
-        .select('*')
-        .eq('status', true)
-        .order('name');
+  // Carregar ferramentas disponíveis
+  useEffect(() => {
+    const fetchTools = async () => {
+      try {
+        setLoading(true);
+        const { data, error } = await supabase
+          .from("tools")
+          .select("*")
+          .eq("status", true)
+          .order("name");
 
-      if (error) {
-        toast({
-          title: "Erro ao carregar ferramentas",
-          description: error.message,
-          variant: "destructive",
-        });
-        throw error;
+        if (error) {
+          logError("Erro ao carregar ferramentas", error);
+          throw error;
+        }
+
+        setAvailableTools(data as Tool[]);
+        log("Ferramentas carregadas com sucesso", { count: data.length });
+      } catch (error) {
+        console.error("Erro ao carregar ferramentas:", error);
+      } finally {
+        setLoading(false);
       }
+    };
 
-      return data as Tool[];
-    }
-  });
+    fetchTools();
+  }, [log, logError]);
 
-  const handleSelectTool = (tool: Tool) => {
-    const toolIndex = value.findIndex(t => t.id === tool.id);
-    
-    if (toolIndex === -1) {
-      onChange([...value, { ...tool, is_required: true }]);
-    }
-    
-    setOpen(false);
-    setSearch("");
+  // Filtrar ferramentas com base na pesquisa
+  const filteredTools = availableTools.filter((tool) =>
+    tool.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  // Verificar se uma ferramenta já está selecionada
+  const isSelected = (id: string) => {
+    return value.some((tool) => tool.id === id);
   };
 
-  const handleRemoveTool = (id: string) => {
-    onChange(value.filter(tool => tool.id !== id));
+  // Adicionar uma ferramenta à seleção
+  const addTool = (tool: Tool, isRequired: boolean = true) => {
+    if (!isSelected(tool.id)) {
+      onChange([...value, { ...tool, is_required: isRequired }]);
+    }
   };
 
-  const handleToggleRequired = (id: string, isRequired: boolean) => {
+  // Remover uma ferramenta da seleção
+  const removeTool = (id: string) => {
+    onChange(value.filter((tool) => tool.id !== id));
+  };
+
+  // Alternar o status de "obrigatório" de uma ferramenta
+  const toggleRequired = (id: string) => {
     onChange(
-      value.map(tool => 
-        tool.id === id ? { ...tool, is_required: isRequired } : tool
+      value.map((tool) =>
+        tool.id === id ? { ...tool, is_required: !tool.is_required } : tool
       )
     );
   };
 
-  const renderIcon = (iconName?: keyof typeof Icons) => {
-    if (!iconName) return null;
-    
-    const IconComponent = Icons[iconName] as React.ElementType;
-    return IconComponent ? <IconComponent className="h-4 w-4 mr-2 flex-shrink-0" /> : null;
-  };
-
   return (
-    <div className={cn("space-y-4", className)}>
-      <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>
-          <Button 
-            variant="outline" 
-            className="w-full justify-start border-dashed"
-            onClick={() => setOpen(true)}
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Adicionar ferramenta
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="p-0" align="start" side="bottom" sideOffset={8} width={500}>
-          <Command className="w-full">
-            <CommandInput 
-              placeholder="Buscar ferramenta..." 
-              value={search}
-              onValueChange={setSearch}
-            />
-            <CommandList>
-              <CommandEmpty>Nenhuma ferramenta encontrada</CommandEmpty>
-              <CommandGroup heading="Ferramentas disponíveis">
-                <ScrollArea className="h-[300px]">
-                  {isLoading ? (
-                    <div className="p-4 text-center text-sm text-muted-foreground">
-                      Carregando ferramentas...
-                    </div>
-                  ) : (
-                    availableTools
-                      .filter(tool => !value.some(t => t.id === tool.id))
-                      .map(tool => (
-                        <CommandItem
-                          key={tool.id}
-                          value={`${tool.name} ${tool.description}`}
-                          onSelect={() => handleSelectTool(tool)}
-                          className="flex items-start py-2"
-                        >
-                          <div className="flex items-center mr-2 mt-0.5">
-                            <Wrench className="h-4 w-4" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="font-medium">{tool.name}</div>
-                            <div className="text-xs text-muted-foreground line-clamp-2">
-                              {tool.description}
-                            </div>
-                          </div>
-                        </CommandItem>
-                      ))
-                  )}
-                </ScrollArea>
-              </CommandGroup>
-            </CommandList>
-          </Command>
-        </PopoverContent>
-      </Popover>
-
+    <div className="space-y-6">
+      {/* Lista de ferramentas selecionadas */}
       {value.length > 0 && (
-        <Card className="border-border">
-          <CardContent className="p-4">
-            <ScrollArea className={cn("h-auto", value.length > 5 && "h-[300px]")}>
-              <div className="space-y-3">
-                {value.map((tool) => (
-                  <div key={tool.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 bg-muted/30 rounded-md">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <Wrench className="h-5 w-5 text-blue-600" />
-                        <span className="font-medium">{tool.name}</span>
-                        {tool.is_required && (
-                          <Badge variant="default" className="bg-[#0ABAB5] hover:bg-[#0ABAB5]/90">
-                            Obrigatória
-                          </Badge>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-2 mt-1">
-                        <a 
-                          href={tool.official_url} 
-                          target="_blank" 
-                          rel="noopener noreferrer" 
-                          className="flex items-center text-xs text-blue-500 hover:underline truncate"
-                        >
-                          <Link2 className="h-3 w-3 mr-1" /> 
-                          {tool.official_url}
-                        </a>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3 mt-2 sm:mt-0">
-                      <div className="flex items-center gap-2">
-                        <Switch
-                          id={`required-${tool.id}`}
-                          checked={tool.is_required}
-                          onCheckedChange={(checked) => handleToggleRequired(tool.id, checked)}
-                        />
-                        <Label htmlFor={`required-${tool.id}`} className="text-sm cursor-pointer">
-                          Obrigatória
-                        </Label>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleRemoveTool(tool.id)}
-                        className="h-8 w-8 p-0"
-                      >
-                        <span className="sr-only">Remover</span>
-                        <Icons.X className="h-4 w-4" />
-                      </Button>
-                    </div>
+        <div className="space-y-3">
+          <h3 className="text-sm font-medium">Ferramentas selecionadas</h3>
+          <div className="space-y-2">
+            {value.map((tool) => (
+              <div
+                key={tool.id}
+                className="flex items-start p-3 border rounded-md bg-gray-50"
+              >
+                <div className="flex items-center min-w-0 flex-1 gap-x-4">
+                  <div className="bg-blue-100 p-1.5 rounded">
+                    <Wrench className="h-4 w-4 text-blue-600" />
                   </div>
-                ))}
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium text-gray-900 truncate">
+                      {tool.name}
+                    </p>
+                    <p className="text-xs text-gray-500 truncate mt-1">
+                      {tool.description.substring(0, 100)}
+                      {tool.description.length > 100 ? "..." : ""}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 ml-4">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`required-${tool.id}`}
+                      checked={tool.is_required}
+                      onCheckedChange={() => toggleRequired(tool.id)}
+                    />
+                    <label
+                      htmlFor={`required-${tool.id}`}
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                    >
+                      Obrigatória
+                    </label>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => removeTool(tool.id)}
+                  >
+                    Remover
+                  </Button>
+                </div>
               </div>
-            </ScrollArea>
-          </CardContent>
-        </Card>
+            ))}
+          </div>
+        </div>
       )}
+
+      {/* Caixa de pesquisa */}
+      <div className="relative">
+        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+        <Input
+          type="search"
+          placeholder="Pesquisar ferramentas..."
+          className="pl-8"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
+      </div>
+
+      {/* Lista de ferramentas disponíveis */}
+      <div className="border rounded-md divide-y">
+        {loading ? (
+          <div className="p-4 text-center">Carregando ferramentas...</div>
+        ) : filteredTools.length === 0 ? (
+          <div className="p-4 text-center text-muted-foreground">
+            {searchQuery
+              ? "Nenhuma ferramenta encontrada para esta pesquisa."
+              : "Nenhuma ferramenta disponível."}
+          </div>
+        ) : (
+          filteredTools.map((tool) => (
+            <div
+              key={tool.id}
+              className={`p-3 flex items-start ${
+                isSelected(tool.id) ? "bg-blue-50" : "hover:bg-gray-50"
+              }`}
+            >
+              <div className="flex items-center min-w-0 flex-1 gap-x-4">
+                <div className="bg-blue-100 p-1.5 rounded">
+                  <Wrench className="h-4 w-4 text-blue-600" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium text-gray-900 truncate">
+                    {tool.name}
+                  </p>
+                  <p className="text-xs text-gray-500 truncate mt-1">
+                    {tool.description.substring(0, 100)}
+                    {tool.description.length > 100 ? "..." : ""}
+                  </p>
+                </div>
+              </div>
+              <div>
+                <Button
+                  variant={isSelected(tool.id) ? "secondary" : "ghost"}
+                  size="sm"
+                  onClick={() => {
+                    isSelected(tool.id)
+                      ? removeTool(tool.id)
+                      : addTool(tool, true);
+                  }}
+                >
+                  {isSelected(tool.id) ? "Selecionada" : "Adicionar"}
+                </Button>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
     </div>
+  );
+};
+
+// Component auxiliar Button para evitar o erro de importação
+const Button = ({
+  children,
+  variant,
+  size,
+  onClick,
+}: {
+  children: React.ReactNode;
+  variant?: "ghost" | "secondary";
+  size?: "sm";
+  onClick?: () => void;
+}) => {
+  return (
+    <button
+      onClick={onClick}
+      className={`px-3 py-1 rounded text-sm ${
+        variant === "ghost"
+          ? "text-gray-700 hover:bg-gray-100"
+          : "bg-gray-200 text-gray-800"
+      } ${size === "sm" ? "text-xs" : ""}`}
+    >
+      {children}
+    </button>
   );
 };
