@@ -1,6 +1,6 @@
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { SolutionsGrid } from "./SolutionsGrid";
+import { ReactNode } from "react";
 import { Solution } from "@/lib/supabase";
 
 interface CategoryTabsProps {
@@ -8,6 +8,7 @@ interface CategoryTabsProps {
   onCategoryChange: (category: string) => void;
   filteredSolutions: Solution[];
   onSelectSolution: (id: string) => void;
+  children?: ReactNode;
 }
 
 export const CategoryTabs = ({
@@ -15,6 +16,7 @@ export const CategoryTabs = ({
   onCategoryChange,
   filteredSolutions,
   onSelectSolution,
+  children,
 }: CategoryTabsProps) => {
   return (
     <Tabs defaultValue={activeCategory} onValueChange={onCategoryChange}>
@@ -56,6 +58,8 @@ export const CategoryTabs = ({
           onSelectSolution={onSelectSolution}
         />
       </TabsContent>
+      
+      {children}
     </Tabs>
   );
 };
