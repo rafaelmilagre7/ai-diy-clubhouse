@@ -1,23 +1,21 @@
 
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { formatDistanceToNow } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Edit, BarChart2, Trash2, Eye } from 'lucide-react';
 import { Solution } from '@/types/solutionTypes';
 import { SolutionDifficultyBadge } from './SolutionDifficultyBadge';
+import { TableActions } from './TableActions';
+import { PublishStatus } from './PublishStatus';
+import { formatDateDistance } from './utils/dateFormatter';
 
 interface SolutionsTableProps {
   solutions: Solution[];
   onDeleteClick: (id: string) => void;
 }
 
-export const SolutionsTable: React.FC<SolutionsTableProps> = ({ solutions, onDeleteClick }) => {
-  const navigate = useNavigate();
-
+export const SolutionsTable: React.FC<SolutionsTableProps> = ({ 
+  solutions, 
+  onDeleteClick 
+}) => {
   const getCategoryText = (category: string) => {
     switch (category) {
       case 'revenue': return 'Aumento de Receita';
@@ -48,49 +46,14 @@ export const SolutionsTable: React.FC<SolutionsTableProps> = ({ solutions, onDel
               <SolutionDifficultyBadge difficulty={solution.difficulty} />
             </TableCell>
             <TableCell>
-              {solution.published ? (
-                <Badge className="bg-green-100 text-green-800">Publicada</Badge>
-              ) : (
-                <Badge variant="outline">Rascunho</Badge>
-              )}
+              <PublishStatus published={solution.published} />
             </TableCell>
-            <TableCell>
-              {formatDistanceToNow(new Date(solution.created_at), {
-                addSuffix: true,
-                locale: ptBR,
-              })}
-            </TableCell>
+            <TableCell>{formatDateDistance(solution.created_at)}</TableCell>
             <TableCell className="text-right">
-              <div className="flex justify-end space-x-2">
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => navigate(`/solution/${solution.id}`)}
-                >
-                  <Eye className="h-4 w-4" />
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => navigate(`/admin/solution/${solution.id}`)}
-                >
-                  <Edit className="h-4 w-4" />
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => navigate(`/admin/metrics/${solution.id}`)}
-                >
-                  <BarChart2 className="h-4 w-4" />
-                </Button>
-                <Button 
-                  variant="destructive" 
-                  size="sm"
-                  onClick={() => onDeleteClick(solution.id)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
+              <TableActions 
+                solutionId={solution.id} 
+                onDeleteClick={onDeleteClick} 
+              />
             </TableCell>
           </TableRow>
         ))}
