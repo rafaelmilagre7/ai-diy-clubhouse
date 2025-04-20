@@ -1,10 +1,6 @@
 
 import React from 'react';
-import { Card, CardHeader, CardContent } from '@/components/ui/card';
-import SuggestionTitle from './content/SuggestionTitle';
-import SuggestionDescription from './content/SuggestionDescription';
-import SuggestionVoting from './SuggestionVoting';
-import CommentsSection from './content/CommentsSection';
+import SuggestionContainer from './content/SuggestionContainer';
 import { UserVote } from '@/types/suggestionTypes';
 
 interface SuggestionContentProps {
@@ -47,46 +43,20 @@ const SuggestionContent = ({
   userVote,
   voteLoading = false
 }: SuggestionContentProps) => {
-  // Calcular o saldo de votos
-  const voteBalance = suggestion.upvotes - suggestion.downvotes;
-
-  // Garantir que possamos exibir dados de category vindos de diferentes estruturas de dados
-  const categoryName = suggestion.category?.name || '';
-
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-          <SuggestionTitle
-            title={suggestion.title}
-            category={{ name: categoryName }}
-            createdAt={suggestion.created_at}
-            isOwner={isOwner}
-          />
-        </div>
-      </CardHeader>
-      
-      <CardContent className="space-y-6">
-        <SuggestionDescription description={suggestion.description} />
-
-        <SuggestionVoting
-          suggestion={suggestion}
-          userVote={userVote}
-          voteLoading={voteLoading}
-          onVote={onVote}
-          voteBalance={voteBalance}
-        />
-
-        <CommentsSection
-          comment={comment}
-          comments={comments}
-          isSubmitting={isSubmitting}
-          commentsLoading={commentsLoading}
-          onCommentChange={onCommentChange}
-          onSubmitComment={onSubmitComment}
-        />
-      </CardContent>
-    </Card>
+    <SuggestionContainer
+      suggestion={suggestion}
+      comment={comment}
+      comments={comments}
+      isSubmitting={isSubmitting}
+      commentsLoading={commentsLoading}
+      onCommentChange={onCommentChange}
+      onSubmitComment={onSubmitComment}
+      onVote={onVote}
+      isOwner={isOwner}
+      userVote={userVote}
+      voteLoading={voteLoading}
+    />
   );
 };
 
