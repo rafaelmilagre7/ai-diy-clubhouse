@@ -4,13 +4,13 @@ import { EtapasProgresso } from "./EtapasProgresso";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { useOnboardingSteps } from "@/hooks/onboarding/useOnboardingSteps";
 
 interface OnboardingLayoutProps {
   children: React.ReactNode;
   currentStep: number;
   title: string;
   backUrl?: string;
-  onStepClick?: (step: number) => void;
 }
 
 export const OnboardingLayout = ({
@@ -18,8 +18,9 @@ export const OnboardingLayout = ({
   currentStep,
   title,
   backUrl = "/onboarding",
-  onStepClick,
 }: OnboardingLayoutProps) => {
+  const { navigateToStep } = useOnboardingSteps();
+  
   return (
     <div className="container max-w-screen-lg py-8">
       <div className="relative mb-4">
@@ -40,8 +41,8 @@ export const OnboardingLayout = ({
 
       <EtapasProgresso 
         currentStep={currentStep} 
-        totalSteps={7} 
-        onStepClick={onStepClick}
+        totalSteps={8} 
+        onStepClick={navigateToStep}
       />
 
       <div className="mt-6 mb-4">

@@ -14,6 +14,7 @@ export const useOnboardingSteps = () => {
   const steps = [
     { id: 'personal', title: 'Informações Pessoais', section: 'personal_info', path: '/onboarding' },
     { id: 'goals', title: 'Dados Profissionais', section: 'professional_info', path: '/onboarding/business-goals' },
+    { id: 'business_context', title: 'Contexto do Negócio', section: 'business_context', path: '/onboarding/business-context' },
     { id: 'ai_exp', title: 'Experiência com IA', section: 'ai_experience', path: '/onboarding/ai-experience' },
     { id: 'industry', title: 'Foco da Indústria', section: 'industry_focus', path: '/onboarding/industry-focus' },
     { id: 'resources', title: 'Recursos Necessários', section: 'resources_needs', path: '/onboarding/resources-needs' },
@@ -43,6 +44,15 @@ export const useOnboardingSteps = () => {
     
     loadProgress();
   }, [refreshProgress]);
+
+  // Detecta mudanças na URL para atualizar o índice atual
+  useEffect(() => {
+    const path = window.location.pathname;
+    const index = steps.findIndex(step => step.path === path);
+    if (index !== -1) {
+      setCurrentStepIndex(index);
+    }
+  }, []);
   
   const saveStepData = async (
     stepId: string, 
@@ -79,7 +89,26 @@ export const useOnboardingSteps = () => {
           completed_steps: [...(progress.completed_steps || []), stepId],
           current_step: steps[Math.min(currentStepIndex + 1, steps.length - 1)].id,
         });
-      } else {
+      } 
+      // Etapa específica para contexto do negócio
+      else if (stepId === "business_context") {
+        const businessContext = data.business_context || {};
+        
+        // Verificamos se todos os campos obrigatórios estão preenchidos
+        if (!businessContext.business_model || !businessContext.business_challenges || 
+            !businessContext.short_term_goals || !businessContext.important_kpis) {
+          toast.error("Por favor, preencha todos os campos obrigatórios");
+          setIsSubmitting(false);
+          return;
+        }
+        
+        await updateProgress({
+          business_context: businessContext,
+          completed_steps: [...(progress.completed_steps || []), stepId],
+          current_step: steps[Math.min(currentStepIndex + 1, steps.length - 1)].id,
+        });
+      }
+      else {
         const sectionKey = steps.find(s => s.id === stepId)?.section as keyof OnboardingData;
         if (!sectionKey) throw new Error('Seção inválida');
         
@@ -103,10 +132,10 @@ export const useOnboardingSteps = () => {
       const nextStep = steps[nextStepIndex];
       if (nextStep && nextStep.path) {
         console.log(`Navegando para ${nextStep.path}`);
-        // Adicionando um pequeno delay para a navegação para garantir que o estado foi atualizado
+        // Adicionando um delay para a navegação para garantir que o estado foi atualizado
         setTimeout(() => {
           navigate(nextStep.path);
-        }, 100);
+        }, 300);
       }
     } catch (error) {
       console.error('Erro ao salvar dados:', error);
@@ -140,10 +169,27 @@ export const useOnboardingSteps = () => {
 
   // Função para navegar diretamente para uma etapa específica
   const navigateToStep = (stepIndex: number) => {
+    // Validar se podemos navegar para esta etapa
     if (stepIndex >= 0 && stepIndex < steps.length) {
-      const targetStep = steps[stepIndex];
-      if (targetStep && targetStep.path) {
-        navigate(targetStep.path);
+      // Verificar se é uma etapa anterior ou atual (pode navegar)
+      // Ou se é a próxima etapa permitida (última completa + 1)
+      const lastCompletedIndex = Math.max(
+        ...(progress?.completed_steps || []).map(step => 
+          steps.findIndex(s => s.id === step)
+        ).filter(index => index !== -1),
+        -1
+      );
+      
+      const maxAllowedIndex = lastCompletedIndex + 1;
+      
+      if (stepIndex <= maxAllowedIndex) {
+        const targetStep = steps[stepIndex];
+        if (targetStep && targetStep.path) {
+          setCurrentStepIndex(stepIndex);
+          navigate(targetStep.path);
+        }
+      } else {
+        toast.error("Complete as etapas anteriores primeiro.");
       }
     }
   };

@@ -1,5 +1,6 @@
 
 import React from "react";
+import { CheckCircle, Circle } from "lucide-react";
 
 interface EtapasProgressoProps {
   currentStep: number;
@@ -7,52 +8,48 @@ interface EtapasProgressoProps {
   onStepClick?: (step: number) => void;
 }
 
-export const EtapasProgresso: React.FC<EtapasProgressoProps> = ({
-  currentStep,
-  totalSteps,
-  onStepClick
-}) => {
-  const steps = Array.from({ length: totalSteps }, (_, i) => ({
-    number: i + 1,
-    status: i + 1 < currentStep ? "completed" : i + 1 === currentStep ? "current" : "pending",
-  }));
+export const EtapasProgresso = ({ 
+  currentStep, 
+  totalSteps, 
+  onStepClick 
+}: EtapasProgressoProps) => {
+  const steps = Array.from({ length: totalSteps }, (_, i) => i + 1);
 
   return (
-    <div className="w-full flex justify-center mb-6">
-      <div className="flex items-center">
-        {steps.map((step, index) => (
-          <React.Fragment key={step.number}>
-            <div 
-              className={`flex items-center justify-center rounded-full w-8 h-8 ${
-                step.status === "completed" 
-                  ? "bg-[#0ABAB5] text-white cursor-pointer" 
-                  : step.status === "current" 
-                  ? "bg-[#0ABAB5] text-white"
-                  : "bg-gray-200 text-gray-500"
-              }`}
-              onClick={() => {
-                if (step.status === "completed" && onStepClick) {
-                  onStepClick(step.number);
-                }
-              }}
-            >
-              {step.status === "completed" ? (
-                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
-                </svg>
+    <div className="w-full">
+      <div className="flex justify-between items-center w-full relative">
+        {/* Linha de progresso */}
+        <div className="absolute h-1 bg-gray-200 top-1/2 left-0 -translate-y-1/2 w-full z-0"></div>
+        <div 
+          className="absolute h-1 bg-[#0ABAB5] top-1/2 left-0 -translate-y-1/2 z-0"
+          style={{ width: `${((currentStep - 1) / (totalSteps - 1)) * 100}%` }}
+        ></div>
+
+        {/* Indicadores de etapas */}
+        {steps.map((step) => (
+          <div 
+            key={step} 
+            onClick={() => onStepClick && onStepClick(step - 1)}
+            className={`relative z-10 flex flex-col items-center ${
+              onStepClick ? "cursor-pointer" : ""
+            }`}
+          >
+            <div className={`rounded-full flex items-center justify-center w-8 h-8 
+              ${step <= currentStep 
+                ? "bg-[#0ABAB5] text-white" 
+                : "bg-white border-2 border-gray-200 text-gray-400"}`}>
+              {step < currentStep ? (
+                <CheckCircle size={18} />
               ) : (
-                step.number
+                <span className="text-sm font-medium">{step}</span>
               )}
             </div>
-            
-            {index < steps.length - 1 && (
-              <div 
-                className={`h-1 w-10 ${
-                  step.status === "completed" ? "bg-[#0ABAB5]" : "bg-gray-200"
-                }`}
-              ></div>
-            )}
-          </React.Fragment>
+            <span className={`text-xs mt-1 ${
+              step <= currentStep ? "text-[#0ABAB5] font-medium" : "text-gray-400"
+            }`}>
+              Etapa {step}
+            </span>
+          </div>
         ))}
       </div>
     </div>

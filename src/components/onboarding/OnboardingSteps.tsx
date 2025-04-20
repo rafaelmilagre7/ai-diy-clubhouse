@@ -2,6 +2,7 @@
 import { useOnboardingSteps } from "@/hooks/onboarding/useOnboardingSteps";
 import { PersonalInfoStep } from "./steps/PersonalInfoStep";
 import { BusinessGoalsStep } from "./steps/BusinessGoalsStep";
+import { BusinessContextStep } from "./steps/BusinessContextStep";
 import { AIExperienceStep } from "./steps/AIExperienceStep";
 import { IndustryFocusStep } from "./steps/IndustryFocusStep";
 import { ResourcesNeedsStep } from "./steps/ResourcesNeedsStep";
@@ -24,6 +25,7 @@ export const OnboardingSteps = () => {
   const stepComponents = {
     personal: PersonalInfoStep,
     goals: BusinessGoalsStep,
+    business_context: BusinessContextStep,
     ai_exp: AIExperienceStep,
     industry: IndustryFocusStep,
     resources: ResourcesNeedsStep,

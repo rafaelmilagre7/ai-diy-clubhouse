@@ -22,6 +22,12 @@ export interface OnboardingData {
     current_position?: string;
     annual_revenue?: string;
   };
+  business_context: {
+    business_model?: string;
+    business_challenges?: string[];
+    short_term_goals?: string[];
+    important_kpis?: string[];
+  };
   business_goals: {
     primary_goal?: string;
     expected_outcomes?: string[];
@@ -62,6 +68,7 @@ export interface OnboardingProgress {
   is_completed: boolean;
   personal_info: OnboardingData['personal_info'];
   professional_info: OnboardingData['professional_info'];
+  business_context: OnboardingData['business_context'];
   business_goals: OnboardingData['business_goals'];
   ai_experience: OnboardingData['ai_experience'];
   industry_focus: OnboardingData['industry_focus'];
