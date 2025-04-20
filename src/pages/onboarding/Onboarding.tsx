@@ -45,7 +45,7 @@ const Onboarding = () => {
           <EtapasProgresso currentStep={1} totalSteps={7} />
         </div>
 
-        <div className="mt-8 bg-gray-50/50 backdrop-blur-sm rounded-xl shadow-sm border border-gray-100 p-8">
+        <div className="mt-8 bg-white rounded-xl shadow-sm border border-gray-100 p-8">
           <h2 className="text-xl font-semibold text-gray-800 mb-6">Dados Pessoais</h2>
           <PersonalInfoFormFull />
         </div>

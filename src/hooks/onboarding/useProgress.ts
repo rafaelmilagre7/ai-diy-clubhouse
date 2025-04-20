@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/auth";
+import { OnboardingData } from "@/types/onboarding";
 
 export interface OnboardingProgress {
   id: string;
@@ -9,10 +10,18 @@ export interface OnboardingProgress {
   completed_steps: string[];
   current_step: string;
   is_completed: boolean;
-  company_data: Record<string, any>;
-  business_data: Record<string, any>;
-  ai_knowledge_level: string;
-  goals: string[];
+  personal_info?: OnboardingData['personal_info'];
+  business_goals?: OnboardingData['business_goals'];
+  ai_experience?: OnboardingData['ai_experience'];
+  industry_focus?: OnboardingData['industry_focus'];
+  resources_needs?: OnboardingData['resources_needs'];
+  team_info?: OnboardingData['team_info'];
+  implementation_preferences?: OnboardingData['implementation_preferences'];
+  company_data?: Record<string, any>;
+  business_data?: Record<string, any>;
+  ai_knowledge_level?: string;
+  goals?: string[];
+  training_needs?: string[];
 }
 
 export const useProgress = () => {

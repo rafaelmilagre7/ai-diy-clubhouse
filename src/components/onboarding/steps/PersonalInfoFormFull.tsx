@@ -124,6 +124,9 @@ export const PersonalInfoFormFull = () => {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="Brasil">Brasil</SelectItem>
+              <SelectItem value="Portugal">Portugal</SelectItem>
+              <SelectItem value="Estados Unidos">Estados Unidos</SelectItem>
+              <SelectItem value="Outro">Outro</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -168,6 +171,8 @@ export const PersonalInfoFormFull = () => {
               <SelectItem value="Fernando de Noronha (GMT-2)">Fernando de Noronha (GMT-2)</SelectItem>
               <SelectItem value="Manaus (GMT-4)">Manaus (GMT-4)</SelectItem>
               <SelectItem value="Acre (GMT-5)">Acre (GMT-5)</SelectItem>
+              <SelectItem value="Horário de Lisboa (GMT+0)">Horário de Lisboa (GMT+0)</SelectItem>
+              <SelectItem value="Outro">Outro</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -179,7 +184,7 @@ export const PersonalInfoFormFull = () => {
         </Button>
         <Button 
           type="submit" 
-          className="min-w-[120px] bg-viverblue hover:bg-viverblue/90"
+          className="min-w-[120px] bg-[#0ABAB5] hover:bg-[#0ABAB5]/90"
           disabled={isSubmitting}
         >
           {isSubmitting ? "Salvando..." : (

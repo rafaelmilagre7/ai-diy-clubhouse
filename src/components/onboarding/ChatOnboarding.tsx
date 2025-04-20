@@ -24,7 +24,7 @@ export const ChatOnboarding = () => {
         <div key={index} className="flex items-start gap-3 mb-4 last:mb-0">
           <div className="flex-shrink-0">
             {message.role === 'assistant' ? (
-              <div className="w-8 h-8 rounded-full bg-viverblue flex items-center justify-center">
+              <div className="w-8 h-8 rounded-full bg-[#0ABAB5] flex items-center justify-center">
                 <User className="h-5 w-5 text-white" />
               </div>
             ) : (

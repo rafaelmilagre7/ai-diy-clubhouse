@@ -15,7 +15,7 @@ export const OnboardingLayout = ({ children }: OnboardingLayoutProps) => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black">
+    <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         <img
           src="https://milagredigital.com/wp-content/uploads/2025/04/viverdeiaclub.avif"
