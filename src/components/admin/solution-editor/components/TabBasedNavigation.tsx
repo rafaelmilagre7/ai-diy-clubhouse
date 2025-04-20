@@ -25,7 +25,9 @@ const TabBasedNavigation: React.FC<TabBasedNavigationProps> = ({
 }) => {
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-6">
-      <TabNav activeTab={activeTab} setActiveTab={setActiveTab} />
+      <div className="mx-6">
+        <TabNav activeTab={activeTab} setActiveTab={setActiveTab} />
+      </div>
       
       <TabsContent value={activeTab} className="space-y-6 mt-6 px-6 pb-6">
         <TabContent
