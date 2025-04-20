@@ -6,7 +6,7 @@ import LoadingScreen from "@/components/common/LoadingScreen";
 import { toast } from "sonner";
 
 interface AdminProtectedRoutesProps {
-  children?: ReactNode;
+  children: ReactNode;
 }
 
 export const AdminProtectedRoutes = ({ children }: AdminProtectedRoutesProps) => {
@@ -56,5 +56,5 @@ export const AdminProtectedRoutes = ({ children }: AdminProtectedRoutesProps) =>
   }
 
   // Usuário é administrador, renderiza as rotas protegidas
-  return children ? <>{children}</> : <Outlet />;
+  return <>{children}</>;
 };

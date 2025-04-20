@@ -6,7 +6,7 @@ import LoadingScreen from "@/components/common/LoadingScreen";
 import { toast } from "sonner";
 
 interface ProtectedRoutesProps {
-  children?: ReactNode;
+  children: ReactNode;
 }
 
 export const ProtectedRoutes = ({ children }: ProtectedRoutesProps) => {
@@ -50,5 +50,5 @@ export const ProtectedRoutes = ({ children }: ProtectedRoutesProps) => {
   }
 
   // Usuário está autenticado, renderizar as rotas protegidas
-  return children ? <>{children}</> : <Outlet />;
+  return <>{children}</>;
 };
