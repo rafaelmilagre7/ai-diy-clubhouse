@@ -84,7 +84,8 @@ export const useSolutionComments = (solutionId: string, moduleId: string) => {
         logError('Erro ao buscar comentários', error);
         throw error;
       }
-    }
+    },
+    staleTime: 1000 // Reduzido para 1 segundo para melhor experiência em tempo real
   });
 
   const handleSubmitComment = async (e?: React.FormEvent) => {

@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useModuleImplementation } from "@/hooks/useModuleImplementation";
 import LoadingScreen from "@/components/common/LoadingScreen";
@@ -12,7 +11,8 @@ import { ModuleContentTools } from "@/components/implementation/content/ModuleCo
 import { ModuleContentChecklist } from "@/components/implementation/content/ModuleContentChecklist";
 import { ImplementationComplete } from "@/components/implementation/content/ImplementationComplete";
 import { useSolutionCompletion } from "@/hooks/implementation/useSolutionCompletion";
-import { CommentsSection } from "@/components/implementation/content/tool-comments/CommentsSection";
+import { CommentsSection } from "@/components/implementation/content/CommentsSection";
+import { useRealtimeComments } from "@/hooks/implementation/useRealtimeComments";
 
 const SolutionImplementation = () => {
   const {
@@ -36,8 +36,12 @@ const SolutionImplementation = () => {
     solutionId: solution?.id,
     moduleIdx: 0,
     completedModules: completedModules,
-    setCompletedModules: () => {} // We're not using this anymore
+    setCompletedModules: () => {}
   });
+  
+  if (solution && currentModule) {
+    useRealtimeComments(solution.id, currentModule.id);
+  }
   
   const onComplete = async () => {
     const success = await handleConfirmImplementation();
@@ -46,7 +50,6 @@ const SolutionImplementation = () => {
     }
   };
   
-  // Log module data when it changes
   useEffect(() => {
     if (currentModule && solution) {
       log("Module loaded", { 
@@ -73,10 +76,8 @@ const SolutionImplementation = () => {
   
   return (
     <div className="pb-20 min-h-screen bg-slate-50">
-      {/* Header section */}
       <ImplementationHeader solution={solution} />
       
-      {/* Module content */}
       <div className="container mt-6 bg-white p-6 rounded-lg shadow-sm">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="w-full grid grid-cols-6 mb-6">
