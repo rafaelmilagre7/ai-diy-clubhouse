@@ -8,6 +8,7 @@ import { AuthProvider } from "@/contexts/auth";
 import { LoggingProvider } from "@/contexts/logging";
 import LoadingScreen from "@/components/common/LoadingScreen";
 import RootRedirect from "@/components/routing/RootRedirect";
+import AppRoutes from "@/components/routing/AppRoutes";
 
 const NotFound = lazy(() => import("@/pages/NotFound"));
 const Index = lazy(() => import("@/pages/Index"));
