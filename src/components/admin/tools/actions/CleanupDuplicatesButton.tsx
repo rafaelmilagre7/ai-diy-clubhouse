@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Broom } from "lucide-react";
+import { Loader2, Broom as BroomIcon } from "lucide-react";
 import { fixToolsData } from "@/utils/toolDataFixer";
 
 interface CleanupDuplicatesButtonProps {
@@ -64,7 +64,7 @@ export const CleanupDuplicatesButton = ({ onCleanupComplete }: CleanupDuplicates
         </>
       ) : (
         <>
-          <Broom className="mr-2 h-4 w-4" />
+          <BroomIcon className="mr-2 h-4 w-4" />
           Remover Duplicatas
         </>
       )}
