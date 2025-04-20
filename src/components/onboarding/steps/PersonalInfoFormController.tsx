@@ -9,11 +9,11 @@ import { NavigationButtons } from "./NavigationButtons";
 
 export const PersonalInfoFormController = () => {
   const { progress, updateProgress } = useProgress();
-  const { profile } = useAuth();
+  const { profile, user } = useAuth();
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Preencher nome e email do perfil (e proteger contra edição)
+  // Preencher nome e email do perfil e dados já salvos
   const [formData, setFormData] = useState({
     name: profile?.name || progress?.personal_info?.name || "",
     email: profile?.email || progress?.personal_info?.email || "",
@@ -27,13 +27,13 @@ export const PersonalInfoFormController = () => {
     timezone: progress?.personal_info?.timezone || "GMT-3",
   });
 
-  // Usando useCallback para evitar recriações desnecessárias
+  // Usar useCallback para evitar recriações desnecessárias
   const updateFormData = useCallback(() => {
     if (profile || progress?.personal_info) {
       setFormData(prev => ({
         ...prev,
-        name: profile?.name || progress?.personal_info?.name || "",
-        email: profile?.email || progress?.personal_info?.email || "",
+        name: profile?.name || progress?.personal_info?.name || user?.user_metadata?.name || "",
+        email: profile?.email || progress?.personal_info?.email || user?.email || "",
         phone: progress?.personal_info?.phone || "",
         ddi: progress?.personal_info?.ddi || "+55",
         linkedin: progress?.personal_info?.linkedin || "",
@@ -44,7 +44,7 @@ export const PersonalInfoFormController = () => {
         timezone: progress?.personal_info?.timezone || "GMT-3",
       }));
     }
-  }, [profile, progress?.personal_info]);
+  }, [profile, progress?.personal_info, user]);
 
   useEffect(() => {
     updateFormData();
@@ -82,11 +82,15 @@ export const PersonalInfoFormController = () => {
     setIsSubmitting(true);
 
     try {
+      // Garantir que utilizamos o nome e email corretos
+      const fullName = profile?.name || user?.user_metadata?.name || formData.name;
+      const email = profile?.email || user?.email || formData.email;
+
       await updateProgress({
         personal_info: {
           ...formData,
-          name: profile?.name || formData.name,
-          email: profile?.email || formData.email,
+          name: fullName,
+          email: email,
         },
         current_step: "business_goals",
         completed_steps: [...(progress?.completed_steps || []), "personal_info"],

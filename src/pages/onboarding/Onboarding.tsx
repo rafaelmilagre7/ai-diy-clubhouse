@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useProgress } from "@/hooks/onboarding/useProgress";
@@ -5,12 +6,11 @@ import { useAuth } from "@/contexts/auth";
 import { toast } from "sonner";
 import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
 import { PersonalInfoFormFull } from "@/components/onboarding/steps/PersonalInfoFormFull";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { MilagrinhoMessage } from "@/components/onboarding/MilagrinhoMessage";
 
 const Onboarding = () => {
   const { user } = useAuth();
-  const { progress, isLoading } = useProgress();
+  const { progress, isLoading, updateProgress } = useProgress();
   const navigate = useNavigate();
   const [checkComplete, setCheckComplete] = useState(false);
 

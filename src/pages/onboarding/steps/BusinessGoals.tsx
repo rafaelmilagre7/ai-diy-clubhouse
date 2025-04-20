@@ -2,6 +2,7 @@
 import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
 import { BusinessGoalsStep } from "@/components/onboarding/steps/BusinessGoalsStep";
 import { useOnboardingSteps } from "@/hooks/onboarding/useOnboardingSteps";
+import { useProgress } from "@/hooks/onboarding/useProgress";
 import { useNavigate } from "react-router-dom";
 
 const BusinessGoals = () => {
@@ -9,15 +10,11 @@ const BusinessGoals = () => {
     saveStepData, 
     isSubmitting, 
     currentStepIndex,
-    steps,
-    progress
+    steps
   } = useOnboardingSteps();
   
+  const { progress } = useProgress();
   const navigate = useNavigate();
-  
-  const handlePrevious = () => {
-    navigate("/onboarding");
-  };
 
   return (
     <OnboardingLayout 

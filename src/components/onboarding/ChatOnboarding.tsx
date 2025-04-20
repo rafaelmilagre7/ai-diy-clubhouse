@@ -4,22 +4,25 @@ import { User } from 'lucide-react';
 import { useOnboardingChat } from '@/hooks/onboarding/useOnboardingChat';
 import { useProgress } from '@/hooks/onboarding/useProgress';
 import { useAuth } from '@/contexts/auth';
+import { MilagrinhoMessage } from './MilagrinhoMessage';
 
 // Cor azul principal do VIVER DE IA Club
 const MILAGRINHO_BG = "#0ABAB5";
 
 export const ChatOnboarding = () => {
   const { progress } = useProgress();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { messages, sendMessage, isLoading } = useOnboardingChat('personal_info');
   const [typing, setTyping] = useState(false);
   const [displayedText, setDisplayedText] = useState('');
   const [fullText, setFullText] = useState('');
   const [hasInitialized, setHasInitialized] = useState(false);
 
+  // Obter o nome completo do usuário
+  const userName = profile?.name || user?.user_metadata?.name || progress?.personal_info?.name || '';
+  
   // Mensagem inicial Milagrinho - local, nunca duplica no backend
-  const nome = user?.user_metadata?.name || progress?.personal_info?.name || '';
-  const initialMessage = `E aí${nome ? ` ${nome}` : ""}! Eu sou o Milagrinho, seu assistente de IA do VIVER DE IA Club. Vamos começar conhecendo um pouco sobre você. Estas informações vão me ajudar a personalizar sua experiência, onde você vai encontrar uma comunidade incrível de pessoas transformando negócios com IA.`;
+  const initialMessage = `Eu sou o Milagrinho, seu assistente de IA do VIVER DE IA Club. Vamos começar conhecendo um pouco sobre você. Estas informações vão me ajudar a personalizar sua experiência, onde você vai encontrar uma comunidade incrível de pessoas transformando negócios com IA.`;
 
   // Só adiciona a mensagem inicial localmente para não duplicar na lista real do chat
   useEffect(() => {
@@ -98,7 +101,6 @@ export const ChatOnboarding = () => {
 
   return (
     <div className="w-full bg-white rounded-xl shadow-sm border border-gray-100 px-5 py-4 mb-6">
-      {/* Removido o Milagrinho centralizado no topo antes das mensagens - era esse o ícone duplicado */}
       <div className="space-y-4">
         {renderMessages()}
       </div>
