@@ -1,7 +1,6 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
@@ -82,7 +81,7 @@ export const ResetPasswordForm = () => {
             type="button"
             variant="outline"
             onClick={() => navigate("/login")}
-            className="w-full text-white border-gray-600 hover:bg-gray-700"
+            className="w-full text-white bg-gray-700 hover:bg-gray-600 border-gray-600"
           >
             Voltar para login
           </Button>
@@ -138,7 +137,7 @@ export const ResetPasswordForm = () => {
             type="button"
             variant="outline"
             onClick={() => navigate("/login")}
-            className="w-full text-white border-gray-600 hover:bg-gray-700"
+            className="w-full text-white bg-gray-700 hover:bg-gray-600 border-gray-600"
             disabled={isLoading}
           >
             Voltar para login

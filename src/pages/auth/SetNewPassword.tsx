@@ -2,6 +2,8 @@
 import React from 'react';
 import { SetNewPasswordForm } from '@/components/auth/SetNewPasswordForm';
 import { motion } from "framer-motion";
+import { ArrowLeft } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const SetNewPassword = () => {
   return (
@@ -26,6 +28,13 @@ const SetNewPassword = () => {
 
         <div className="bg-gray-800 border border-gray-700 rounded-lg shadow-xl p-6">
           <SetNewPasswordForm />
+        </div>
+        
+        <div className="mt-4 text-center">
+          <Link to="/login" className="text-viverblue hover:text-viverblue/80 inline-flex items-center text-sm">
+            <ArrowLeft className="mr-1 h-4 w-4" />
+            Voltar para página de login
+          </Link>
         </div>
       </motion.div>
     </div>

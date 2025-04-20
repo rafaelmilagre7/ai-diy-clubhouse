@@ -1,7 +1,6 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
@@ -90,7 +89,7 @@ export const SetNewPasswordForm = () => {
           <Button
             type="button"
             onClick={() => navigate("/login")}
-            className="w-full bg-viverblue hover:bg-viverblue/90"
+            className="w-full bg-viverblue hover:bg-viverblue/90 text-white"
           >
             Ir para login
           </Button>
