@@ -3,59 +3,71 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Comment } from '@/types/commentTypes';
-import { X } from 'lucide-react';
+import { Loader2, MessageSquare, X } from 'lucide-react';
 
 interface CommentFormProps {
   comment: string;
-  setComment: (value: string) => void;
+  setComment: (comment: string) => void;
   replyTo: Comment | null;
   cancelReply: () => void;
-  onSubmit: (e: React.FormEvent) => void;
+  onSubmit: (e?: React.FormEvent) => Promise<void>;
   isSubmitting: boolean;
 }
 
-export const CommentForm = ({ 
-  comment, 
-  setComment, 
-  replyTo, 
-  cancelReply, 
-  onSubmit, 
-  isSubmitting 
+export const CommentForm = ({
+  comment,
+  setComment,
+  replyTo,
+  cancelReply,
+  onSubmit,
+  isSubmitting
 }: CommentFormProps) => {
   return (
     <form onSubmit={onSubmit} className="space-y-4">
       {replyTo && (
-        <div className="bg-muted p-3 rounded-md relative">
-          <button
-            type="button"
-            onClick={cancelReply}
-            className="absolute top-1 right-1 text-muted-foreground hover:text-foreground"
-            aria-label="Cancelar resposta"
+        <div className="flex items-center justify-between p-3 bg-muted/50 rounded-md">
+          <div className="flex items-center gap-2">
+            <MessageSquare className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm font-medium">
+              Respondendo para {replyTo.profiles?.name || 'Usuário'}
+            </span>
+          </div>
+          <Button 
+            type="button" 
+            variant="ghost" 
+            size="sm" 
+            onClick={cancelReply} 
+            className="h-6 w-6 p-0"
           >
             <X className="h-4 w-4" />
-          </button>
-          <p className="text-sm text-muted-foreground">
-            Respondendo para{' '}
-            <span className="font-medium text-foreground">
-              {replyTo.profile?.name || 'Usuário'}
-            </span>
-          </p>
-          <p className="text-sm line-clamp-1">{replyTo.content}</p>
+          </Button>
         </div>
       )}
       
       <Textarea
         id="comment-input"
-        placeholder={replyTo ? "Escreva sua resposta..." : "Compartilhe sua experiência ou dúvida sobre esta solução..."}
         value={comment}
         onChange={(e) => setComment(e.target.value)}
-        rows={3}
-        className="resize-none"
+        placeholder="Escreva seu comentário ou dúvida sobre esta solução..."
+        className="min-h-24 resize-y"
       />
       
       <div className="flex justify-end">
-        <Button type="submit" disabled={isSubmitting || !comment.trim()}>
-          {isSubmitting ? 'Enviando...' : replyTo ? 'Responder' : 'Comentar'}
+        <Button 
+          type="submit"
+          disabled={!comment.trim() || isSubmitting}
+          className="bg-[#0ABAB5] hover:bg-[#0ABAB5]/90"
+        >
+          {isSubmitting ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Enviando...
+            </>
+          ) : (
+            <>
+              {replyTo ? 'Responder' : 'Enviar Comentário'}
+            </>
+          )}
         </Button>
       </div>
     </form>

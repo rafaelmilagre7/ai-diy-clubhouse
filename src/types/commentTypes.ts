@@ -10,7 +10,7 @@ export interface Comment {
   parent_id?: string | null;
   user_has_liked?: boolean;
   // Informações do perfil do usuário que fez o comentário
-  profile?: {
+  profiles?: {
     name: string;
     avatar_url?: string;
     role?: string;

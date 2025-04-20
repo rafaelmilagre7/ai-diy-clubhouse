@@ -3,10 +3,10 @@ import React from 'react';
 import { Comment } from '@/types/commentTypes';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { MessageSquare, ThumbsUp, Trash2 } from 'lucide-react';
-import { useAuth } from '@/contexts/auth';
-import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
+import { MessageSquare, ThumbsUp, Trash } from 'lucide-react';
+import { useAuth } from '@/contexts/auth';
 
 interface CommentItemProps {
   comment: Comment;
@@ -17,96 +17,96 @@ interface CommentItemProps {
 
 export const CommentItem = ({ comment, onReply, onLike, onDelete }: CommentItemProps) => {
   const { user } = useAuth();
-  const isCommentAuthor = user?.id === comment.user_id;
-  const userName = comment.profile?.name || 'Usuário';
-  const createdAt = new Date(comment.created_at);
-  const timeAgo = formatDistanceToNow(createdAt, { 
-    addSuffix: true, 
-    locale: ptBR 
-  });
+  const isAuthor = user?.id === comment.user_id;
   
-  // Obter as iniciais do nome do usuário para o fallback do avatar
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map(part => part.charAt(0))
-      .join('')
-      .toUpperCase()
-      .substring(0, 2);
+  const formatDate = (dateString: string) => {
+    try {
+      return formatDistanceToNow(new Date(dateString), {
+        addSuffix: true,
+        locale: ptBR
+      });
+    } catch (error) {
+      return 'data desconhecida';
+    }
+  };
+  
+  const getInitials = (name: string | undefined) => {
+    if (!name) return 'U';
+    return name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
   };
 
   return (
-    <div className="flex gap-3 group">
-      <Avatar className="h-8 w-8">
-        <AvatarImage src={comment.profile?.avatar_url || ''} alt={userName} />
-        <AvatarFallback>{getInitials(userName)}</AvatarFallback>
-      </Avatar>
-      
-      <div className="flex-1 space-y-1">
-        <div className="flex items-center gap-2">
-          <span className="font-medium text-sm">
-            {userName}
-            {comment.profile?.role === 'admin' && (
-              <span className="ml-1 text-xs bg-[#0ABAB5] text-white px-1.5 py-0.5 rounded-full">
-                Admin
-              </span>
+    <div className="space-y-4">
+      <div className="flex gap-4">
+        <Avatar className="h-10 w-10">
+          <AvatarImage src={comment.profiles?.avatar_url} alt={comment.profiles?.name || 'Usuário'} />
+          <AvatarFallback>{getInitials(comment.profiles?.name)}</AvatarFallback>
+        </Avatar>
+        
+        <div className="flex-1 space-y-2">
+          <div className="flex justify-between">
+            <div>
+              <span className="font-medium">{comment.profiles?.name || 'Usuário'}</span>
+              <span className="text-muted-foreground text-sm ml-2">{formatDate(comment.created_at)}</span>
+              {comment.profiles?.role === 'admin' && (
+                <span className="bg-[#0ABAB5]/10 text-[#0ABAB5] text-xs px-2 py-0.5 rounded ml-2">
+                  ADMIN
+                </span>
+              )}
+            </div>
+            
+            {isAuthor && (
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => onDelete(comment)}
+                className="h-8 w-8 p-0"
+              >
+                <Trash className="h-4 w-4 text-muted-foreground" />
+              </Button>
             )}
-          </span>
-          <span className="text-xs text-muted-foreground">{timeAgo}</span>
-        </div>
-        
-        <p className="text-sm whitespace-pre-line">{comment.content}</p>
-        
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className="h-auto p-1 text-xs gap-1"
-            onClick={() => onLike(comment)}
-          >
-            <ThumbsUp 
-              className={`h-3.5 w-3.5 ${comment.user_has_liked ? 'text-[#0ABAB5] fill-[#0ABAB5]' : ''}`} 
-            />
-            {comment.likes_count > 0 && <span>{comment.likes_count}</span>}
-          </Button>
+          </div>
           
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className="h-auto p-1 text-xs gap-1"
-            onClick={() => onReply(comment)}
-          >
-            <MessageSquare className="h-3.5 w-3.5" />
-            <span>Responder</span>
-          </Button>
+          <div className="text-sm">
+            {comment.content}
+          </div>
           
-          {isCommentAuthor && (
+          <div className="flex gap-2">
             <Button 
               variant="ghost" 
               size="sm" 
-              className="h-auto p-1 text-xs gap-1 text-destructive"
-              onClick={() => onDelete(comment)}
+              onClick={() => onLike(comment)}
+              className={`text-xs ${comment.user_has_liked ? 'text-[#0ABAB5]' : 'text-muted-foreground'}`}
             >
-              <Trash2 className="h-3.5 w-3.5" />
-              <span>Excluir</span>
+              <ThumbsUp className="h-3.5 w-3.5 mr-1" />
+              {comment.likes_count || 0}
             </Button>
+            
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => onReply(comment)}
+              className="text-xs text-muted-foreground"
+            >
+              <MessageSquare className="h-3.5 w-3.5 mr-1" />
+              Responder
+            </Button>
+          </div>
+          
+          {comment.replies && comment.replies.length > 0 && (
+            <div className="space-y-4 mt-4 pl-6 border-l-2 border-muted">
+              {comment.replies.map(reply => (
+                <CommentItem 
+                  key={reply.id} 
+                  comment={reply} 
+                  onReply={onReply} 
+                  onLike={onLike} 
+                  onDelete={onDelete}
+                />
+              ))}
+            </div>
           )}
         </div>
-        
-        {/* Respostas ao comentário */}
-        {comment.replies && comment.replies.length > 0 && (
-          <div className="mt-3 pl-3 border-l-2 border-muted space-y-3">
-            {comment.replies.map((reply) => (
-              <CommentItem
-                key={reply.id}
-                comment={reply}
-                onReply={onReply}
-                onLike={onLike}
-                onDelete={onDelete}
-              />
-            ))}
-          </div>
-        )}
       </div>
     </div>
   );

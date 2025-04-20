@@ -10,6 +10,7 @@ export interface Solution extends BaseSolution {
     module_order: number;
     content?: any;
   }[];
+  author_id?: string; // Tornando o campo opcional para compatibilidade
 }
 
 export interface UserProgress {

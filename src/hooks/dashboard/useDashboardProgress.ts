@@ -32,7 +32,8 @@ const fallbackSolutionsData: Solution[] = [
     published: true,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
-    slug: 'chatgpt-atendimento'
+    slug: 'chatgpt-atendimento',
+    author_id: 'system'
   },
   {
     id: 'fallback-2',
@@ -43,7 +44,8 @@ const fallbackSolutionsData: Solution[] = [
     published: true,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
-    slug: 'automacao-email-marketing'
+    slug: 'automacao-email-marketing',
+    author_id: 'system'
   },
   {
     id: 'fallback-3',
@@ -54,7 +56,8 @@ const fallbackSolutionsData: Solution[] = [
     published: true,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
-    slug: 'otimizacao-processos'
+    slug: 'otimizacao-processos',
+    author_id: 'system'
   }
 ];
 

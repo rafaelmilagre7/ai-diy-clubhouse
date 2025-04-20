@@ -1,77 +1,93 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Module } from "@/lib/supabase";
-import { useChecklistData } from "./checklist/useChecklistData";
-import { useChecklistInteractions } from "./checklist/useChecklistInteractions";
-import { ChecklistItem } from "./checklist/ChecklistItem";
-import { ChecklistProgress } from "./checklist/ChecklistProgress";
-import { ChecklistLoading } from "./checklist/ChecklistLoading";
+import { Checkbox } from "@/components/ui/checkbox";
+import { 
+  Card, 
+  CardContent, 
+  CardHeader, 
+  CardTitle, 
+  CardDescription 
+} from "@/components/ui/card";
+import { CheckCircle2 } from "lucide-react";
 
 interface ModuleContentChecklistProps {
   module: Module;
 }
 
 export const ModuleContentChecklist = ({ module }: ModuleContentChecklistProps) => {
-  const {
-    solution,
-    checklist,
-    userChecklist,
-    setUserChecklist,
-    loading
-  } = useChecklistData(module);
+  const checklist = module.content?.checklist || [];
+  const [checked, setChecked] = useState<string[]>([]);
 
-  const {
-    saving,
-    handleCheckChange
-  } = useChecklistInteractions(solution);
-
-  // Handle item toggle
-  const onToggleItem = (itemId: string, checked: boolean) => {
-    handleCheckChange(itemId, checked, userChecklist, setUserChecklist);
+  const handleCheck = (id: string) => {
+    setChecked(prev => {
+      if (prev.includes(id)) {
+        return prev.filter(item => item !== id);
+      } else {
+        return [...prev, id];
+      }
+    });
   };
 
-  // Calculate completed items
-  const completedItemsCount = Object.values(userChecklist).filter(Boolean).length;
-
-  if (loading) {
-    return <ChecklistLoading />;
-  }
-
-  if (checklist.length === 0) {
+  if (!checklist.length) {
     return (
-      <div className="text-center py-12">
-        <p className="text-muted-foreground">Nenhum checklist disponível para esta solução.</p>
+      <div className="flex flex-col items-center justify-center py-12 text-center">
+        <CheckCircle2 className="h-12 w-12 text-muted-foreground/50 mb-4" />
+        <h3 className="text-lg font-medium mb-2">Sem itens de verificação</h3>
+        <p className="text-muted-foreground max-w-md">
+          Esta solução não possui uma lista de verificação definida.
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-4 mt-8">
-      <h3 className="text-lg font-semibold">Checklist de Implementação</h3>
-      <p className="text-muted-foreground">
-        Verifique se você completou todos os requisitos para implementar esta solução:
-      </p>
-      
-      <div className="space-y-3 mt-4">
-        {checklist.map((item) => (
-          <ChecklistItem
-            key={item.id}
-            item={{
-              id: item.id,
-              description: item.title || item.description || "Item sem descrição"
-            }}
-            isChecked={userChecklist[item.id] || false}
-            onChange={(checked) => onToggleItem(item.id, checked)}
-            disabled={saving}
-          />
-        ))}
+    <div className="space-y-8">
+      <div>
+        <h3 className="text-lg font-semibold mb-2">Lista de Verificação</h3>
+        <p className="text-muted-foreground">
+          Use esta lista para verificar se você implementou todos os passos necessários.
+        </p>
       </div>
-      
-      {/* Progresso do checklist */}
-      <ChecklistProgress 
-        completedItems={completedItemsCount} 
-        totalItems={checklist.length} 
-      />
+
+      <Card className="border bg-card">
+        <CardHeader className="pb-3">
+          <CardTitle>Antes de continuar, verifique:</CardTitle>
+          <CardDescription>
+            Marque os itens conforme você os completa
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {checklist.map((item: any, index: number) => (
+              <div 
+                key={item.id || index}
+                className="flex gap-3 items-start p-3 rounded-md transition-colors border border-transparent hover:bg-muted/50"
+              >
+                <Checkbox 
+                  id={`checklist-${index}`}
+                  checked={checked.includes(item.id || `item-${index}`)}
+                  onCheckedChange={() => handleCheck(item.id || `item-${index}`)}
+                  className="mt-1"
+                />
+                <div>
+                  <label 
+                    htmlFor={`checklist-${index}`} 
+                    className={`font-medium ${checked.includes(item.id || `item-${index}`) ? 'text-muted-foreground line-through' : ''}`}
+                  >
+                    {item.title}
+                  </label>
+                  {item.description && (
+                    <p className={`text-sm text-muted-foreground mt-1 ${checked.includes(item.id || `item-${index}`) ? 'line-through' : ''}`}>
+                      {item.description}
+                    </p>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
