@@ -48,6 +48,14 @@ const SolutionImplementation = () => {
   
   useRealtimeComments(solutionId, moduleId, shouldEnableRealtimeComments);
   
+  // Definindo a função onComplete que estava faltando
+  const onComplete = async () => {
+    const success = await handleConfirmImplementation();
+    if (success) {
+      log("Implementation completed successfully", { solution_id: solution?.id });
+    }
+  };
+  
   useEffect(() => {
     if (currentModule && solution) {
       log("Module loaded", { 
