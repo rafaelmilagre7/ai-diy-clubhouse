@@ -8,10 +8,15 @@ import { AuthProvider } from "@/contexts/auth";
 import { LoggingProvider } from "@/contexts/logging";
 import LoadingScreen from "@/components/common/LoadingScreen";
 import RootRedirect from "@/components/routing/RootRedirect";
-import { AuthRoutes, MemberRoutes, AdminRoutes } from "@/routes";
 
 const NotFound = lazy(() => import("@/pages/NotFound"));
 const Index = lazy(() => import("@/pages/Index"));
+
+// Auth Routes
+const Login = lazy(() => import("@/pages/auth/Login"));
+const Register = lazy(() => import("@/pages/auth/Register"));
+const ResetPassword = lazy(() => import("@/pages/auth/ResetPassword"));
+const SetNewPassword = lazy(() => import("@/pages/auth/SetNewPassword"));
 
 // Create a client
 const queryClient = new QueryClient({
@@ -36,13 +41,26 @@ function App() {
                 <Route path="/index" element={<Index />} />
                 
                 {/* Auth Routes */}
-                <AuthRoutes />
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
+                <Route path="/reset-password/update" element={<SetNewPassword />} />
                 
-                {/* Protected Member Routes */}
-                <MemberRoutes />
+                {/* Member Routes - Importando diretamente */}
+                <Route path="/dashboard/*" element={<Suspense fallback={<LoadingScreen />}><lazy(() => import("@/pages/member/Dashboard")).default /></Suspense>} />
+                <Route path="/solutions/*" element={<Suspense fallback={<LoadingScreen />}><lazy(() => import("@/pages/member/Solutions")).default /></Suspense>} />
+                <Route path="/solutions/:id" element={<Suspense fallback={<LoadingScreen />}><lazy(() => import("@/pages/member/SolutionDetails")).default /></Suspense>} />
+                <Route path="/implement/:id/:moduleIdx" element={<Suspense fallback={<LoadingScreen />}><lazy(() => import("@/pages/member/SolutionImplementation")).default /></Suspense>} />
+                <Route path="/profile" element={<Suspense fallback={<LoadingScreen />}><lazy(() => import("@/pages/member/Profile")).default /></Suspense>} />
+                <Route path="/tools" element={<Suspense fallback={<LoadingScreen />}><lazy(() => import("@/pages/member/Tools")).default /></Suspense>} />
+                <Route path="/tools/:id" element={<Suspense fallback={<LoadingScreen />}><lazy(() => import("@/pages/member/ToolDetails")).default /></Suspense>} />
+                <Route path="/suggestions" element={<Suspense fallback={<LoadingScreen />}><lazy(() => import("@/pages/member/Suggestions")).default /></Suspense>} />
+                <Route path="/suggestions/:id" element={<Suspense fallback={<LoadingScreen />}><lazy(() => import("@/pages/member/SuggestionDetails")).default /></Suspense>} />
+                <Route path="/suggestions/new" element={<Suspense fallback={<LoadingScreen />}><lazy(() => import("@/pages/member/NewSuggestion")).default /></Suspense>} />
+                <Route path="/achievements" element={<Suspense fallback={<LoadingScreen />}><lazy(() => import("@/pages/member/Achievements")).default /></Suspense>} />
                 
-                {/* Protected Admin Routes */}
-                <AdminRoutes />
+                {/* Admin Routes - Usando AdminRoutes */}
+                <Route path="/admin/*" element={<Suspense fallback={<LoadingScreen />}><lazy(() => import("@/components/routing/AppRoutes")).default /></Suspense>} />
 
                 {/* 404 Route */}
                 <Route path="*" element={<NotFound />} />
