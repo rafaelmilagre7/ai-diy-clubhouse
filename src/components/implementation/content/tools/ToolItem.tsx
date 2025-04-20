@@ -15,7 +15,22 @@ export const ToolItem = ({ toolName, toolUrl, isRequired }: ToolItemProps) => {
   return (
     <div className="bg-card p-4 rounded-lg border flex flex-col h-full">
       <div className="flex items-center gap-3 mb-3">
-        <ToolImage tool={{ name: toolName, logo_url: '' }} size="small" />
+        <ToolImage 
+          tool={{ 
+            id: `tool-${toolName}`, // Gerar um ID temporário
+            name: toolName,
+            logo_url: '',
+            description: '',
+            official_url: toolUrl,
+            category: 'Outros',
+            video_tutorials: [],
+            tags: [],
+            status: true,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          }} 
+          size="small" 
+        />
         <div>
           <h4 className="font-medium">{toolName}</h4>
           {isRequired ? (
