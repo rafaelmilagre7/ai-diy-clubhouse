@@ -51,6 +51,19 @@ const ToolsChecklistForm: React.FC<ToolsChecklistFormProps> = ({
     try {
       setLoading(true);
       
+      // Verificar a estrutura da tabela para determinar quais colunas estão disponíveis
+      const { data: tableInfo, error: tableError } = await supabase
+        .from("solution_tools")
+        .select("*")
+        .limit(1);
+      
+      if (tableError) {
+        console.error("Erro ao verificar estrutura da tabela:", tableError);
+      }
+      
+      console.log("Estrutura da tabela solution_tools:", tableInfo);
+      
+      // Buscar ferramentas associadas à solução
       const { data, error } = await supabase
         .from("solution_tools")
         .select("*")
@@ -59,18 +72,50 @@ const ToolsChecklistForm: React.FC<ToolsChecklistFormProps> = ({
       if (error) throw error;
       
       if (data && data.length > 0) {
+        // Determinar se estamos usando tool_id ou tool_name para referência
+        const useToolId = data[0].hasOwnProperty('tool_id');
+        console.log("Usando tool_id para referência:", useToolId);
+        
         // Para cada ferramenta na solução, buscar os dados completos da ferramenta
         const solutionToolsData: SelectedTool[] = [];
         
         for (const solutionTool of data) {
-          // Buscar a ferramenta correspondente no availableTools
-          const fullTool = availableTools.find(t => t.id === solutionTool.tool_id);
-          
-          if (fullTool) {
-            solutionToolsData.push({
-              ...fullTool,
-              is_required: solutionTool.is_required
-            });
+          if (useToolId && solutionTool.tool_id) {
+            // Buscar a ferramenta correspondente no availableTools pelo ID
+            const fullTool = availableTools.find(t => t.id === solutionTool.tool_id);
+            
+            if (fullTool) {
+              solutionToolsData.push({
+                ...fullTool,
+                is_required: solutionTool.is_required
+              });
+            }
+          } else if (solutionTool.tool_name) {
+            // Buscar a ferramenta correspondente no availableTools pelo nome
+            const fullTool = availableTools.find(t => t.name === solutionTool.tool_name);
+            
+            if (fullTool) {
+              solutionToolsData.push({
+                ...fullTool,
+                is_required: solutionTool.is_required
+              });
+            } else {
+              // Criar uma ferramenta básica a partir dos dados disponíveis
+              solutionToolsData.push({
+                id: solutionTool.id,
+                name: solutionTool.tool_name,
+                description: "Ferramenta associada à solução",
+                official_url: solutionTool.tool_url || "",
+                logo_url: null,
+                category: "Outros",
+                tags: [],
+                status: true,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
+                video_tutorials: [],
+                is_required: solutionTool.is_required
+              });
+            }
           }
         }
         
@@ -107,18 +152,37 @@ const ToolsChecklistForm: React.FC<ToolsChecklistFormProps> = ({
       if (deleteError) throw deleteError;
       
       if (tools.length > 0) {
-        // Depois, inserir as novas ferramentas
-        const toolsToInsert = tools.map(tool => ({
-          solution_id: solutionId,
-          tool_id: tool.id,
-          is_required: tool.is_required
-        }));
-        
-        const { error: insertError } = await supabase
+        // Verificar se a tabela solution_tools tem a coluna tool_id
+        const { data: tableInfo, error: tableError } = await supabase
           .from("solution_tools")
-          .insert(toolsToInsert);
+          .select("*")
+          .limit(1);
+        
+        console.log("Verificando estrutura da tabela antes de inserir:", tableInfo);
+        
+        // Preparar os dados para inserção com base na estrutura da tabela
+        const toolsToInsert = tools.map(tool => {
+          // Versão básica que funciona com tool_name (estrutura atual)
+          const insertData: any = {
+            solution_id: solutionId,
+            tool_name: tool.name,
+            tool_url: tool.official_url,
+            is_required: tool.is_required
+          };
+          
+          return insertData;
+        });
+        
+        console.log("Inserindo ferramentas:", toolsToInsert);
+        
+        const { error: insertError, data: insertedData } = await supabase
+          .from("solution_tools")
+          .insert(toolsToInsert)
+          .select();
           
         if (insertError) throw insertError;
+        
+        console.log("Ferramentas inseridas com sucesso:", insertedData);
       }
       
       toast({

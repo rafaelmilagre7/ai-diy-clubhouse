@@ -11,7 +11,8 @@ export type ToolCategory =
   | 'Marketing e CRM'
   | 'Produtividade e Organização'
   | 'Desenvolvimento e Código'
-  | 'Plataformas de Mídia';
+  | 'Plataformas de Mídia'
+  | 'Outros';
 
 export type BenefitType = 'discount' | 'exclusive' | 'free' | 'trial' | 'other';
 
@@ -47,7 +48,8 @@ export interface Tool {
 export interface SolutionTool {
   id: string;
   solution_id: string;
-  tool_id: string;
+  tool_name: string;
+  tool_url?: string;
   is_required: boolean;
   created_at?: string;
 }

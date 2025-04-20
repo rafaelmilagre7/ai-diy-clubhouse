@@ -65,7 +65,8 @@ export const ModuleContentTools = ({ module }: ModuleContentToolsProps) => {
         {tools.map((tool) => (
           <ToolItem 
             key={tool.id} 
-            toolId={tool.tool_id} 
+            toolName={tool.tool_name}
+            toolUrl={tool.tool_url}
             isRequired={tool.is_required} 
           />
         ))}
