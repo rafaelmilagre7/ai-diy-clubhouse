@@ -98,16 +98,10 @@ export const ChatOnboarding = () => {
 
   return (
     <div className="w-full bg-white rounded-xl shadow-sm border border-gray-100 px-5 py-4 mb-6">
-      {/* Só mostra o Milagrinho centralizado no topo antes das mensagens */}
-      <div className="flex justify-center mb-2">
-        <div
-          className="w-12 h-12 rounded-full flex items-center justify-center shadow-lg"
-          style={{ background: MILAGRINHO_BG }}
-        >
-          <User className="h-7 w-7 text-white" />
-        </div>
+      {/* Removido o Milagrinho centralizado no topo antes das mensagens - era esse o ícone duplicado */}
+      <div className="space-y-4">
+        {renderMessages()}
       </div>
-      {renderMessages()}
     </div>
   );
 };

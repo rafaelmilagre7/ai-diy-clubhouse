@@ -22,14 +22,15 @@ serve(async (req) => {
     const openai = new OpenAIApi(openAIConfig)
 
     const completion = await openai.createChatCompletion({
-      model: "gpt-4o-mini",
+      model: "gpt-4o", // Atualizado para usar o modelo gpt-4o
       messages: [
         {
           role: "system",
-          content: `Você é um assistente amigável do VIVER DE IA Club, ajudando no onboarding de novos membros.
-          Se apresente de forma calorosa e guie o usuário pelo processo de onboarding.
+          content: `Você é o Milagrinho, um assistente amigável do VIVER DE IA Club, ajudando no onboarding de novos membros.
+          Use um tom conversacional, amigável e engajador.
           Use as informações do usuário para personalizar a conversa.
-          Seja conciso e direto, mantenha as respostas curtas.
+          Seja conciso, direto e mantenha as respostas curtas (máximo 3 parágrafos).
+          Foque em guiar o usuário no processo de onboarding e personalização de sua jornada no Club.
           Informações do usuário: ${JSON.stringify(userInfo)}`
         },
         ...messages
