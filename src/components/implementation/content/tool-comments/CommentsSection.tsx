@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { useModuleComments } from '@/hooks/implementation/useModuleComments';
+import { useModuleCommentsRefactored } from '@/hooks/implementation/useModuleCommentsRefactored';
 import { CommentForm } from './CommentForm';
 import { CommentList } from './CommentList';
 import { Separator } from '@/components/ui/separator';
@@ -23,7 +23,7 @@ export const CommentsSection = ({ solutionId, moduleId }: CommentsSectionProps) 
     cancelReply,
     likeComment,
     deleteComment
-  } = useModuleComments(solutionId, moduleId);
+  } = useModuleCommentsRefactored(solutionId, moduleId);
 
   return (
     <div className="space-y-6 mt-8">
