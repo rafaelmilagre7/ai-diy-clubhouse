@@ -10,6 +10,7 @@ const Solutions = lazy(() => import("@/pages/member/Solutions"));
 const SolutionDetails = lazy(() => import("@/pages/member/SolutionDetails"));
 const SolutionImplementation = lazy(() => import("@/pages/member/SolutionImplementation"));
 const Profile = lazy(() => import("@/pages/member/Profile"));
+const EditProfile = lazy(() => import("@/pages/member/EditProfile"));
 const Tools = lazy(() => import("@/pages/member/Tools"));
 const ToolDetails = lazy(() => import("@/pages/member/ToolDetails"));
 const Suggestions = lazy(() => import("@/pages/member/Suggestions"));
@@ -66,6 +67,16 @@ export const MemberRoutes = () => {
           <ProtectedRoute>
             <MemberLayout>
               <Profile />
+            </MemberLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/profile/edit"
+        element={
+          <ProtectedRoute>
+            <MemberLayout>
+              <EditProfile />
             </MemberLayout>
           </ProtectedRoute>
         }

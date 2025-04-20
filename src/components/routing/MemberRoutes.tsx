@@ -7,6 +7,7 @@ import Solutions from "@/pages/member/Solutions";
 import SolutionDetails from "@/pages/member/SolutionDetails";
 import SolutionImplementation from "@/pages/member/SolutionImplementation";
 import Profile from "@/pages/member/Profile";
+import EditProfile from "@/pages/member/EditProfile";
 import Tools from "@/pages/member/Tools";
 import ToolDetails from "@/pages/member/ToolDetails";
 import Suggestions from "@/pages/member/Suggestions";
@@ -32,6 +33,7 @@ const MemberRoutes = ({ children }: MemberRoutesProps) => {
         <Route path="solution/:id" element={<SolutionDetails />} />
         <Route path="implement/:id/:moduleIdx" element={<SolutionImplementation />} />
         <Route path="profile" element={<Profile />} />
+        <Route path="profile/edit" element={<EditProfile />} />
         <Route path="tools" element={<Tools />} />
         <Route path="tools/:id" element={<ToolDetails />} />
         <Route path="benefits" element={<Benefits />} />

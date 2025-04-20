@@ -10,14 +10,13 @@ import LoadingScreen from "@/components/common/LoadingScreen";
 import RootRedirect from "@/components/routing/RootRedirect";
 import Auth from "@/pages/Auth";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
-import MemberLayout from "@/components/layout/MemberLayout";
 
 // Lazy loading de páginas
 const NotFound = lazy(() => import("@/pages/NotFound"));
 const Index = lazy(() => import("@/pages/Index"));
+const EditProfile = lazy(() => import("@/pages/member/EditProfile"));
 
 // Admin Routes
-// Importação direta do arquivo AdminRoutes.tsx para evitar problemas de importação
 const AdminRoutes = lazy(() => import("@/components/routing/AdminRoutes").then(module => ({
   default: module.AdminRoutes
 })));

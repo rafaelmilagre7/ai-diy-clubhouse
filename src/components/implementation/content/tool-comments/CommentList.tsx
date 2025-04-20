@@ -4,11 +4,13 @@ import { Comment } from '@/types/commentTypes';
 import { CommentItem } from './CommentItem';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card } from '@/components/ui/card';
-import { MessageSquare } from 'lucide-react';
+import { AlertTriangle, MessageSquare } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface CommentListProps {
   comments: Comment[];
   isLoading: boolean;
+  error?: Error | null;
   onReply: (comment: Comment) => void;
   onLike: (comment: Comment) => void;
   onDelete: (comment: Comment) => void;
@@ -17,10 +19,22 @@ interface CommentListProps {
 export const CommentList = ({
   comments,
   isLoading,
+  error,
   onReply,
   onLike,
   onDelete
 }: CommentListProps) => {
+  if (error) {
+    return (
+      <Alert variant="destructive" className="bg-red-50 border-red-200">
+        <AlertTriangle className="h-4 w-4 text-red-600" />
+        <AlertDescription className="text-red-700">
+          Erro ao carregar comentários: {error.message || "Ocorreu um erro inesperado"}
+        </AlertDescription>
+      </Alert>
+    );
+  }
+  
   if (isLoading) {
     return (
       <div className="space-y-6">
