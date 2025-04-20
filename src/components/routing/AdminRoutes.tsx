@@ -24,7 +24,7 @@ const AdminRoutes = ({ children }: AdminRoutesProps) => {
   // Implementação das rotas de administrador
   return (
     <Routes>
-      <Route path="/" element={<AdminLayout />}>
+      <Route path="/" element={<AdminLayout>{children}</AdminLayout>}>
         <Route index element={<AdminDashboard />} />
         <Route path="solutions" element={<AdminSolutions />} />
         <Route path="tools" element={<AdminTools />} />

@@ -1,104 +1,78 @@
 
 import { useState, useEffect } from "react";
-import { supabase, Solution } from "@/lib/supabase";
-import { useToast } from "@/hooks/use-toast";
-import { useLogging } from "@/contexts/logging";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/lib/supabase";
+import { Solution } from "@/lib/supabase";
 
-export const useSolutionsData = (initialCategory: string | null) => {
-  const { toast } = useToast();
-  const { log, error: logError } = useLogging();
+export const useSolutionsData = (initialCategory = "all") => {
+  const [loading, setLoading] = useState(true);
   const [solutions, setSolutions] = useState<Solution[]>([]);
   const [filteredSolutions, setFilteredSolutions] = useState<Solution[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [activeCategory, setActiveCategory] = useState(initialCategory);
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeCategory, setActiveCategory] = useState<string>(initialCategory || "all");
-  const [error, setError] = useState<string | null>(null);
-  
-  // Fetch solutions
+  const navigate = useNavigate();
+
   useEffect(() => {
     const fetchSolutions = async () => {
       try {
         setLoading(true);
-        log("Buscando soluções publicadas", {});
         
-        const { data, error: fetchError } = await supabase
+        // Buscar todas as soluções publicadas
+        const { data, error } = await supabase
           .from("solutions")
           .select("*")
-          .eq("published", true); // Apenas soluções publicadas
+          .eq("published", true);
         
-        if (fetchError) {
-          logError("Erro ao buscar soluções:", fetchError);
-          throw fetchError;
+        if (error) {
+          throw error;
         }
         
-        if (data && data.length > 0) {
-          log(`Encontradas ${data.length} soluções publicadas`, {});
-          setSolutions(data as Solution[]);
-          setFilteredSolutions(data as Solution[]);
-        } else {
-          log("Nenhuma solução publicada encontrada", {});
-          setSolutions([]);
-          setFilteredSolutions([]);
-        }
+        console.log("Soluções carregadas:", data ? data.length : 0);
+        setSolutions(data || []);
       } catch (error) {
-        logError("Erro ao buscar soluções:", error);
-        setError("Não foi possível carregar as soluções");
-        toast({
-          title: "Erro ao carregar soluções",
-          description: "Não foi possível carregar as soluções disponíveis.",
-          variant: "destructive"
-        });
+        console.error("Erro ao buscar soluções:", error);
       } finally {
         setLoading(false);
       }
     };
     
     fetchSolutions();
-  }, [toast, log, logError]);
+  }, []);
   
-  // Filter solutions when category or search changes
+  // Filtrar soluções baseado na categoria e busca
   useEffect(() => {
-    let filtered = [...solutions];
+    let result = [...solutions];
     
-    // Filter by category
-    if (activeCategory && activeCategory !== "all") {
-      filtered = filtered.filter((solution) => solution.category === activeCategory);
-      log(`Filtrando soluções por categoria: ${activeCategory}`, { 
-        count: filtered.length,
-        totalSolutions: solutions.length
-      });
+    // Aplicar filtro de categoria se não for "all"
+    if (activeCategory !== "all") {
+      result = result.filter(solution => solution.category === activeCategory);
     }
     
-    // Filter by search query
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase().trim();
-      filtered = filtered.filter(
-        (solution) => {
-          const titleMatch = solution.title?.toLowerCase().includes(query) || false;
-          const descMatch = solution.description?.toLowerCase().includes(query) || false;
-          const tagMatch = solution.tags?.some(tag => tag.toLowerCase().includes(query)) || false;
-          
-          return titleMatch || descMatch || tagMatch;
-        }
+    // Aplicar filtro de busca se houver
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      result = result.filter(solution => 
+        solution.title?.toLowerCase().includes(query) || 
+        solution.description?.toLowerCase().includes(query)
       );
-      
-      log(`Filtrando soluções por busca: "${searchQuery}"`, { 
-        count: filtered.length,
-        activeCategory
-      });
     }
     
-    setFilteredSolutions(filtered);
-  }, [activeCategory, searchQuery, solutions, log]);
-
+    setFilteredSolutions(result);
+  }, [solutions, activeCategory, searchQuery]);
+  
+  // Função de navegação para detalhes
+  const navigateToSolutionDetails = (id: string) => {
+    navigate(`/solution/${id}`);
+  };
+  
   return {
+    loading,
     solutions,
     filteredSolutions,
-    loading,
-    error,
+    activeCategory,
+    setActiveCategory,
     searchQuery,
     setSearchQuery,
-    activeCategory,
-    setActiveCategory
+    navigateToSolutionDetails
   };
 };

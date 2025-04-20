@@ -28,11 +28,12 @@ const NewSuggestion = lazy(() => import("@/pages/member/NewSuggestion"));
 const Achievements = lazy(() => import("@/pages/member/Achievements"));
 
 // Admin Routes
-const AdminDashboard = lazy(() => import("@/pages/admin/Dashboard"));
+const AdminDashboard = lazy(() => import("@/pages/admin/AdminDashboard"));
 
 // Importação de arquivos de rotas
 import AppRoutes from "@/components/routing/AppRoutes";
 import { AdminRoutes } from "@/components/routing/AdminRoutes";
+import { MemberRoutes } from "@/components/routing/MemberRoutes";
 
 // Create a client
 const queryClient = new QueryClient({
@@ -71,7 +72,64 @@ function App() {
                 } />
                 
                 {/* Member Routes */}
-                <Route path="*" element={<AppRoutes />} />
+                <Route path="/dashboard" element={
+                  <Suspense fallback={<LoadingScreen />}>
+                    <Dashboard />
+                  </Suspense>
+                } />
+                <Route path="/solutions" element={
+                  <Suspense fallback={<LoadingScreen />}>
+                    <Solutions />
+                  </Suspense>
+                } />
+                <Route path="/solution/:id" element={
+                  <Suspense fallback={<LoadingScreen />}>
+                    <SolutionDetails />
+                  </Suspense>
+                } />
+                <Route path="/implement/:id/:moduleIdx" element={
+                  <Suspense fallback={<LoadingScreen />}>
+                    <SolutionImplementation />
+                  </Suspense>
+                } />
+                <Route path="/profile" element={
+                  <Suspense fallback={<LoadingScreen />}>
+                    <Profile />
+                  </Suspense>
+                } />
+                <Route path="/tools" element={
+                  <Suspense fallback={<LoadingScreen />}>
+                    <Tools />
+                  </Suspense>
+                } />
+                <Route path="/tools/:id" element={
+                  <Suspense fallback={<LoadingScreen />}>
+                    <ToolDetails />
+                  </Suspense>
+                } />
+                <Route path="/suggestions" element={
+                  <Suspense fallback={<LoadingScreen />}>
+                    <Suggestions />
+                  </Suspense>
+                } />
+                <Route path="/suggestions/:id" element={
+                  <Suspense fallback={<LoadingScreen />}>
+                    <SuggestionDetails />
+                  </Suspense>
+                } />
+                <Route path="/suggestions/new" element={
+                  <Suspense fallback={<LoadingScreen />}>
+                    <NewSuggestion />
+                  </Suspense>
+                } />
+                <Route path="/achievements" element={
+                  <Suspense fallback={<LoadingScreen />}>
+                    <Achievements />
+                  </Suspense>
+                } />
+                
+                {/* Fallback route */}
+                <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>
           </Router>
