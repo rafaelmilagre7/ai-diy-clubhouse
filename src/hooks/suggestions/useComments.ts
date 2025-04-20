@@ -1,35 +1,28 @@
 
-import { useState, useEffect } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/auth';
 import { toast } from 'sonner';
 
-export const useComments = ({ suggestionId }: { suggestionId: string }) => {
+interface UseCommentsProps {
+  suggestionId: string;
+}
+
+export const useComments = ({ suggestionId }: UseCommentsProps) => {
+  const { user } = useAuth();
   const [comment, setComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { user } = useAuth();
-  const queryClient = useQueryClient();
 
-  // Limpar o campo de comentário quando mudar a sugestão
-  useEffect(() => {
-    setComment('');
-  }, [suggestionId]);
+  const fetchComments = async () => {
+    if (!suggestionId) {
+      return [];
+    }
 
-  const {
-    data: comments = [],
-    isLoading: commentsLoading,
-    refetch: refetchComments
-  } = useQuery({
-    queryKey: ['suggestion-comments', suggestionId],
-    queryFn: async () => {
-      if (!suggestionId) {
-        console.log('ID da sugestão não fornecido para buscar comentários');
-        return [];
-      }
-
-      console.log('Buscando comentários para a sugestão:', suggestionId);
-
+    try {
+      console.log('Buscando comentários para sugestão:', suggestionId);
+      
+      // Buscar comentários principais primeiro
       const { data, error } = await supabase
         .from('suggestion_comments')
         .select(`
@@ -37,78 +30,96 @@ export const useComments = ({ suggestionId }: { suggestionId: string }) => {
           profiles:user_id(name, avatar_url)
         `)
         .eq('suggestion_id', suggestionId)
-        .order('created_at', { ascending: true });
-
+        .is('parent_id', null)
+        .order('created_at', { ascending: false });
+      
       if (error) {
         console.error('Erro ao buscar comentários:', error);
-        throw error;
+        throw new Error(`Erro ao buscar comentários: ${error.message}`);
       }
+      
+      const commentsWithReplies = await Promise.all(
+        data.map(async (comment) => {
+          // Buscar respostas para cada comentário
+          const { data: replies, error: repliesError } = await supabase
+            .from('suggestion_comments')
+            .select(`
+              *,
+              profiles:user_id(name, avatar_url)
+            `)
+            .eq('parent_id', comment.id)
+            .order('created_at', { ascending: true });
+          
+          if (repliesError) {
+            console.error('Erro ao buscar respostas:', repliesError);
+            return { ...comment, replies: [] };
+          }
+          
+          return { ...comment, replies: replies || [] };
+        })
+      );
+      
+      return commentsWithReplies;
+    } catch (error: any) {
+      console.error('Erro não esperado ao buscar comentários:', error);
+      throw error;
+    }
+  };
 
-      console.log('Comentários encontrados:', data?.length);
-      return data || [];
-    },
-    enabled: !!suggestionId
+  const { data: comments = [], isLoading: commentsLoading, refetch: refetchComments } = useQuery({
+    queryKey: ['suggestion-comments', suggestionId],
+    queryFn: fetchComments,
+    enabled: !!suggestionId,
+    staleTime: 1000 * 60 // 1 minuto
   });
 
-  const handleSubmitComment = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
+  const handleSubmitComment = async (e?: React.FormEvent) => {
+    if (e) {
+      e.preventDefault();
+    }
+
     if (!user) {
-      toast.error("Você precisa estar logado para comentar.");
+      toast.error('Você precisa estar logado para comentar');
       return;
     }
-    
+
     if (!comment.trim()) {
-      toast.error("O comentário não pode estar vazio.");
+      toast.error('O comentário não pode estar vazio');
       return;
     }
-    
-    if (!suggestionId) {
-      toast.error("ID da sugestão não encontrado.");
-      return;
-    }
-    
+
     try {
       setIsSubmitting(true);
+      console.log('Enviando comentário para sugestão:', suggestionId);
       
-      console.log('Enviando comentário para a sugestão:', suggestionId);
-      
-      // Inserir comentário
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('suggestion_comments')
         .insert({
           suggestion_id: suggestionId,
           user_id: user.id,
-          content: comment.trim(),
-          is_official: false,
-          is_hidden: false
-        })
-        .select();
-        
-      if (error) throw error;
+          content: comment.trim()
+        });
       
-      // Incrementar contador de comentários na sugestão
-      const { error: updateError } = await supabase
-        .from('suggestions')
-        .update({ comment_count: supabase.rpc('increment', { 
-          row_id: suggestionId, 
-          table: 'suggestions', 
-          column: 'comment_count' 
-        }) })
-        .eq('id', suggestionId);
-        
-      if (updateError) {
-        console.error("Erro ao atualizar contagem de comentários:", updateError);
+      if (error) {
+        console.error('Erro ao enviar comentário:', error);
+        toast.error(`Erro ao enviar comentário: ${error.message}`);
+        return;
       }
       
-      toast.success("Comentário adicionado com sucesso!");
-      setComment('');
-      refetchComments();
-      queryClient.invalidateQueries({ queryKey: ['suggestions'] });
+      // Incrementar contagem de comentários na sugestão
+      await supabase
+        .from('suggestions')
+        .update({ comment_count: supabase.rpc('increment', { row_id: suggestionId, table_name: 'suggestions', column_name: 'comment_count' }) })
+        .eq('id', suggestionId);
       
+      setComment('');
+      toast.success('Comentário enviado com sucesso');
+      
+      // Recarregar comentários
+      refetchComments();
     } catch (error: any) {
-      console.error('Erro ao adicionar comentário:', error);
-      toast.error(`Erro ao adicionar comentário: ${error.message}`);
+      console.error('Erro não esperado ao enviar comentário:', error);
+      toast.error('Erro ao enviar comentário');
     } finally {
       setIsSubmitting(false);
     }

@@ -2,66 +2,37 @@
 import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
-import { Suggestion } from '@/types/suggestionTypes';
 
 export const useAdminSuggestions = () => {
   const [loading, setLoading] = useState(false);
 
-  const removeSuggestion = async (suggestionId: string) => {
+  const removeSuggestion = async (suggestionId: string): Promise<boolean> => {
     try {
       setLoading(true);
       console.log('Removendo sugestão:', suggestionId);
       
-      // Primeiro removemos os votos associados à sugestão
-      const { error: votesError } = await supabase
-        .from('suggestion_votes')
-        .delete()
-        .eq('suggestion_id', suggestionId);
-      
-      if (votesError) {
-        console.error('Erro ao remover votos da sugestão:', votesError);
-      }
-      
-      // Depois removemos os comentários associados à sugestão
-      const { error: commentsError } = await supabase
-        .from('suggestion_comments')
-        .delete()
-        .eq('suggestion_id', suggestionId);
-      
-      if (commentsError) {
-        console.error('Erro ao remover comentários da sugestão:', commentsError);
-      }
-      
-      // Por fim, removemos a sugestão
       const { error } = await supabase
         .from('suggestions')
         .delete()
         .eq('id', suggestionId);
-
-      if (error) throw error;
-
-      // Garantir que o loading state é liberado mesmo em caso de sucesso
-      setLoading(false);
       
-      // Restaurar o pointer-events para garantir que a interface continue responsiva
-      document.body.style.pointerEvents = 'auto';
+      if (error) {
+        console.error('Erro ao remover sugestão:', error);
+        toast.error('Erro ao remover sugestão: ' + error.message);
+        return false;
+      }
       
       return true;
     } catch (error: any) {
-      console.error('Erro ao remover sugestão:', error);
-      toast.error('Não foi possível remover a sugestão');
-      
-      // Garantir que o loading state é liberado mesmo em caso de erro
-      setLoading(false);
-      
-      // Restaurar o pointer-events para garantir que a interface continue responsiva
-      document.body.style.pointerEvents = 'auto';
-      
+      console.error('Erro não esperado ao remover sugestão:', error);
+      toast.error('Erro ao remover sugestão: ' + error.message);
       return false;
+    } finally {
+      setLoading(false);
     }
   };
 
-  const updateSuggestionStatus = async (suggestionId: string, status: string) => {
+  const updateSuggestionStatus = async (suggestionId: string, status: string): Promise<boolean> => {
     try {
       setLoading(true);
       console.log('Atualizando status da sugestão:', suggestionId, status);
@@ -70,13 +41,18 @@ export const useAdminSuggestions = () => {
         .from('suggestions')
         .update({ status })
         .eq('id', suggestionId);
-
-      if (error) throw error;
-
+      
+      if (error) {
+        console.error('Erro ao atualizar status da sugestão:', error);
+        toast.error('Erro ao atualizar status da sugestão: ' + error.message);
+        return false;
+      }
+      
+      toast.success(`Status da sugestão atualizado para ${status}`);
       return true;
     } catch (error: any) {
-      console.error('Erro ao atualizar status da sugestão:', error);
-      toast.error('Não foi possível atualizar o status');
+      console.error('Erro não esperado ao atualizar status da sugestão:', error);
+      toast.error('Erro ao atualizar status da sugestão: ' + error.message);
       return false;
     } finally {
       setLoading(false);
@@ -84,8 +60,8 @@ export const useAdminSuggestions = () => {
   };
 
   return {
+    loading,
     removeSuggestion,
-    updateSuggestionStatus,
-    loading
+    updateSuggestionStatus
   };
 };

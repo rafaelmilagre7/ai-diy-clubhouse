@@ -28,7 +28,7 @@ export const AdminProtectedRoutes = ({ children }: AdminProtectedRoutesProps) =>
       timeoutRef.current = window.setTimeout(() => {
         console.log("AdminProtectedRoutes: Loading timeout exceeded");
         setLoadingTimeout(true);
-      }, 3000); // 3 segundos
+      }, 5000); // 5 segundos para maior tolerância
     }
     
     return () => {
@@ -45,13 +45,13 @@ export const AdminProtectedRoutes = ({ children }: AdminProtectedRoutesProps) =>
 
   // Se o usuário não estiver autenticado, redireciona para a página de login
   if (!user) {
-    toast("Por favor, faça login para acessar esta página");
+    toast.error("Por favor, faça login para acessar esta página");
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
   // Se o usuário não for administrador, redireciona para o dashboard
   if (!isAdmin) {
-    toast("Você não tem permissão para acessar esta área");
+    toast.error("Você não tem permissão para acessar esta área");
     return <Navigate to="/dashboard" replace />;
   }
 
