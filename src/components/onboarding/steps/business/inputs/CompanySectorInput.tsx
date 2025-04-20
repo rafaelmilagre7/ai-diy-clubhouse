@@ -34,9 +34,10 @@ export const sectorOptions = [
 interface CompanySectorInputProps {
   value: string;
   onChange: (value: string) => void;
+  error?: string;
 }
 
-export const CompanySectorInput: React.FC<CompanySectorInputProps> = ({ value, onChange }) => (
+export const CompanySectorInput: React.FC<CompanySectorInputProps> = ({ value, onChange, error }) => (
   <div>
     <Label htmlFor="company_sector" className="text-[#222] font-medium mb-1 block">
       Setor de atuação<span className="text-[#0ABAB5] ml-1">*</span>
@@ -44,7 +45,9 @@ export const CompanySectorInput: React.FC<CompanySectorInputProps> = ({ value, o
     <Select value={value} onValueChange={onChange} required>
       <SelectTrigger
         id="company_sector"
-        className="mt-1 bg-[#f6f8fa] border-[1.4px] border-[#eaeaea] focus:border-[#0ABAB5] text-[#232323] placeholder:text-gray-400"
+        className={`mt-1 bg-[#f6f8fa] border-[1.4px] ${
+          error ? "border-red-500" : "border-[#eaeaea]"
+        } focus:border-[#0ABAB5] text-[#232323] placeholder:text-gray-400`}
       >
         <SelectValue placeholder="Selecione o setor" />
       </SelectTrigger>
@@ -56,5 +59,6 @@ export const CompanySectorInput: React.FC<CompanySectorInputProps> = ({ value, o
         ))}
       </SelectContent>
     </Select>
+    {error && <p className="text-sm text-red-500 mt-1">{error}</p>}
   </div>
 );

@@ -3,20 +3,22 @@ import { useEffect, useState } from 'react';
 import { useProgress } from './useProgress';
 import { toast } from 'sonner';
 import { OnboardingData } from '@/types/onboarding';
+import { useNavigate } from 'react-router-dom';
 
 export const useOnboardingSteps = () => {
   const { progress, updateProgress, refreshProgress } = useProgress();
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const navigate = useNavigate();
 
   const steps = [
-    { id: 'personal', title: 'Informações Pessoais', section: 'personal_info' },
-    { id: 'goals', title: 'Dados Profissionais', section: 'professional_info' },
-    { id: 'ai_exp', title: 'Experiência com IA', section: 'ai_experience' },
-    { id: 'industry', title: 'Foco da Indústria', section: 'industry_focus' },
-    { id: 'resources', title: 'Recursos Necessários', section: 'resources_needs' },
-    { id: 'team', title: 'Informações da Equipe', section: 'team_info' },
-    { id: 'preferences', title: 'Preferências', section: 'implementation_preferences' }
+    { id: 'personal', title: 'Informações Pessoais', section: 'personal_info', path: '/onboarding' },
+    { id: 'goals', title: 'Dados Profissionais', section: 'professional_info', path: '/onboarding/business-goals' },
+    { id: 'ai_exp', title: 'Experiência com IA', section: 'ai_experience', path: '/onboarding/ai-experience' },
+    { id: 'industry', title: 'Foco da Indústria', section: 'industry_focus', path: '/onboarding/industry-focus' },
+    { id: 'resources', title: 'Recursos Necessários', section: 'resources_needs', path: '/onboarding/resources-needs' },
+    { id: 'team', title: 'Informações da Equipe', section: 'team_info', path: '/onboarding/team-info' },
+    { id: 'preferences', title: 'Preferências', section: 'implementation_preferences', path: '/onboarding/preferences' }
   ];
 
   const currentStep = steps[currentStepIndex];
@@ -91,7 +93,16 @@ export const useOnboardingSteps = () => {
       await refreshProgress();
       
       toast.success('Progresso salvo com sucesso!');
-      setCurrentStepIndex(prev => Math.min(prev + 1, steps.length - 1));
+      
+      // Atualizar o índice da etapa atual
+      const nextStepIndex = Math.min(currentStepIndex + 1, steps.length - 1);
+      setCurrentStepIndex(nextStepIndex);
+      
+      // Navegar para a próxima página se estivermos avançando
+      const nextStep = steps[nextStepIndex];
+      if (nextStep && nextStep.path) {
+        navigate(nextStep.path);
+      }
     } catch (error) {
       console.error('Erro ao salvar dados:', error);
       toast.error('Erro ao salvar dados. Tente novamente.');
@@ -122,6 +133,16 @@ export const useOnboardingSteps = () => {
     }
   };
 
+  // Função para navegar diretamente para uma etapa específica
+  const navigateToStep = (stepIndex: number) => {
+    if (stepIndex >= 0 && stepIndex < steps.length) {
+      const targetStep = steps[stepIndex];
+      if (targetStep && targetStep.path) {
+        navigate(targetStep.path);
+      }
+    }
+  };
+
   return {
     steps,
     currentStep,
@@ -129,6 +150,7 @@ export const useOnboardingSteps = () => {
     isSubmitting,
     saveStepData,
     completeOnboarding,
-    progress
+    progress,
+    navigateToStep
   };
 };

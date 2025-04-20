@@ -12,6 +12,7 @@ import {
 interface CurrentPositionInputProps {
   value: string;
   onChange: (value: string) => void;
+  error?: string;
 }
 
 // Lista de cargos comuns
@@ -31,7 +32,7 @@ const CARGOS = [
   "Outro"
 ];
 
-export const CurrentPositionInput: React.FC<CurrentPositionInputProps> = ({ value, onChange }) => (
+export const CurrentPositionInput: React.FC<CurrentPositionInputProps> = ({ value, onChange, error }) => (
   <div>
     <Label htmlFor="current_position" className="text-[#222] font-medium mb-1 block">
       Seu cargo atual<span className="text-[#0ABAB5] ml-1">*</span>
@@ -43,7 +44,9 @@ export const CurrentPositionInput: React.FC<CurrentPositionInputProps> = ({ valu
     >
       <SelectTrigger 
         id="current_position"
-        className="mt-1 bg-[#f6f8fa] border-[1.4px] border-[#eaeaea] focus:border-[#0ABAB5] text-[#232323] w-full"
+        className={`mt-1 bg-[#f6f8fa] border-[1.4px] ${
+          error ? "border-red-500" : "border-[#eaeaea]"
+        } focus:border-[#0ABAB5] text-[#232323] w-full`}
       >
         <SelectValue placeholder="Selecione seu cargo" />
       </SelectTrigger>
@@ -55,5 +58,6 @@ export const CurrentPositionInput: React.FC<CurrentPositionInputProps> = ({ valu
         ))}
       </SelectContent>
     </Select>
+    {error && <p className="text-sm text-red-500 mt-1">{error}</p>}
   </div>
 );

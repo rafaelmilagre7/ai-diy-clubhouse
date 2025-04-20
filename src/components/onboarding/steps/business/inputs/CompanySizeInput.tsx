@@ -22,9 +22,10 @@ export const sizeOptions = [
 interface CompanySizeInputProps {
   value: string;
   onChange: (value: string) => void;
+  error?: string;
 }
 
-export const CompanySizeInput: React.FC<CompanySizeInputProps> = ({ value, onChange }) => (
+export const CompanySizeInput: React.FC<CompanySizeInputProps> = ({ value, onChange, error }) => (
   <div>
     <Label htmlFor="company_size" className="text-[#222] font-medium mb-1 block">
       Tamanho da empresa<span className="text-[#0ABAB5] ml-1">*</span>
@@ -32,7 +33,9 @@ export const CompanySizeInput: React.FC<CompanySizeInputProps> = ({ value, onCha
     <Select value={value} onValueChange={onChange} required>
       <SelectTrigger
         id="company_size"
-        className="mt-1 bg-[#f6f8fa] border-[1.4px] border-[#eaeaea] focus:border-[#0ABAB5] text-[#232323] placeholder:text-gray-400"
+        className={`mt-1 bg-[#f6f8fa] border-[1.4px] ${
+          error ? "border-red-500" : "border-[#eaeaea]"
+        } focus:border-[#0ABAB5] text-[#232323] placeholder:text-gray-400`}
       >
         <SelectValue placeholder="Selecione o porte" />
       </SelectTrigger>
@@ -44,5 +47,6 @@ export const CompanySizeInput: React.FC<CompanySizeInputProps> = ({ value, onCha
         ))}
       </SelectContent>
     </Select>
+    {error && <p className="text-sm text-red-500 mt-1">{error}</p>}
   </div>
 );

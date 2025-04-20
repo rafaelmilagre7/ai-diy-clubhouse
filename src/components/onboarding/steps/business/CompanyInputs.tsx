@@ -1,5 +1,4 @@
 
-// Refatorado! Agora cada campo virou um componente.
 import React from "react";
 import { CompanyNameInput } from "./inputs/CompanyNameInput";
 import { CompanySizeInput } from "./inputs/CompanySizeInput";
@@ -21,6 +20,7 @@ interface CompanyInputsProps {
   setCurrentPosition: (value: string) => void;
   annualRevenue: string;
   setAnnualRevenue: (value: string) => void;
+  errors?: {[key: string]: string};
 }
 
 export const CompanyInputs: React.FC<CompanyInputsProps> = ({
@@ -36,15 +36,36 @@ export const CompanyInputs: React.FC<CompanyInputsProps> = ({
   setCurrentPosition,
   annualRevenue,
   setAnnualRevenue,
+  errors = {},
 }) => {
   return (
     <div className="flex flex-col gap-5">
-      <CompanyNameInput value={companyName} onChange={setCompanyName} />
-      <CompanySizeInput value={companySize} onChange={setCompanySize} />
-      <CompanySectorInput value={companySector} onChange={setCompanySector} />
+      <CompanyNameInput 
+        value={companyName} 
+        onChange={setCompanyName}
+        error={errors.companyName} 
+      />
+      <CompanySizeInput 
+        value={companySize} 
+        onChange={setCompanySize}
+        error={errors.companySize}
+      />
+      <CompanySectorInput 
+        value={companySector} 
+        onChange={setCompanySector}
+        error={errors.companySector}
+      />
       <CompanyWebsiteInput value={companyWebsite} onChange={setCompanyWebsite} />
-      <CurrentPositionInput value={currentPosition} onChange={setCurrentPosition} />
-      <AnnualRevenueInput value={annualRevenue} onChange={setAnnualRevenue} />
+      <CurrentPositionInput 
+        value={currentPosition} 
+        onChange={setCurrentPosition}
+        error={errors.currentPosition}
+      />
+      <AnnualRevenueInput 
+        value={annualRevenue} 
+        onChange={setAnnualRevenue}
+        error={errors.annualRevenue}
+      />
     </div>
   );
 };

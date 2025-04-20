@@ -1,16 +1,70 @@
 
 import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
 import { AIExperienceStep } from "@/components/onboarding/steps/AIExperienceStep";
+import { useOnboardingSteps } from "@/hooks/onboarding/useOnboardingSteps";
+import { useProgress } from "@/hooks/onboarding/useProgress";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/auth";
+import { MilagrinhoMessage } from "@/components/onboarding/MilagrinhoMessage";
 
 const AIExperience = () => {
+  const { 
+    saveStepData, 
+    isSubmitting, 
+    currentStepIndex,
+    steps,
+    navigateToStep
+  } = useOnboardingSteps();
+  
+  const { progress, isLoading } = useProgress();
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
+  // Se o usuário não estiver autenticado, redirecionamos para login
+  if (!user) {
+    navigate("/login", { replace: true });
+    return null;
+  }
+
+  // Mostra tela de carregamento enquanto busca os dados
+  if (isLoading) return (
+    <OnboardingLayout currentStep={3} title="Carregando..." backUrl="/onboarding/business-goals" onStepClick={() => {}}>
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#0ABAB5]"></div>
+      </div>
+    </OnboardingLayout>
+  );
+
+  // Extrair primeiro nome do usuário para personalização
+  const firstName = user?.user_metadata?.name?.split(' ')[0] || 
+                   progress?.personal_info?.name?.split(' ')[0] || 
+                   user?.email?.split('@')[0] || '';
+
   return (
-    <OnboardingLayout currentStep={3} title="Experiência com IA">
-      <div className="max-w-4xl mx-auto">
+    <OnboardingLayout 
+      currentStep={3} 
+      title="Experiência com IA"
+      backUrl="/onboarding/business-goals"
+      onStepClick={(step) => {
+        if (step === 1) {
+          navigateToStep(0);
+        } else if (step === 2) {
+          navigateToStep(1);
+        }
+      }}
+    >
+      <div className="max-w-4xl mx-auto space-y-6">
+        <MilagrinhoMessage 
+          userName={firstName}
+          message="Conte-nos sobre sua experiência com IA. Estas informações nos ajudarão a personalizar as recomendações de soluções para o seu nível de conhecimento."
+        />
+        
         <AIExperienceStep 
-          onSubmit={() => {}}
-          isSubmitting={false}
-          isLastStep={false}
+          onSubmit={saveStepData}
+          isSubmitting={isSubmitting}
+          isLastStep={currentStepIndex === steps.length - 1}
           onComplete={() => {}}
+          initialData={progress?.ai_experience}
         />
       </div>
     </OnboardingLayout>

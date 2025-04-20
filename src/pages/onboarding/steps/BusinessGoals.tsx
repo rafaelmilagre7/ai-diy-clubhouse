@@ -12,7 +12,8 @@ const BusinessGoals = () => {
     saveStepData, 
     isSubmitting, 
     currentStepIndex,
-    steps
+    steps,
+    navigateToStep
   } = useOnboardingSteps();
   
   const { progress, isLoading } = useProgress();
@@ -46,7 +47,7 @@ const BusinessGoals = () => {
       backUrl="/onboarding"
       onStepClick={(step) => {
         if (step === 1) {
-          navigate("/onboarding", { replace: true });
+          navigateToStep(0);
         }
       }}
     >

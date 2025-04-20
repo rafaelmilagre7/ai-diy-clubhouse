@@ -26,6 +26,7 @@ export const BusinessGoalsStep = ({
   const [companyWebsite, setCompanyWebsite] = useState(initialData?.company_website || "");
   const [currentPosition, setCurrentPosition] = useState(initialData?.current_position || "");
   const [annualRevenue, setAnnualRevenue] = useState(initialData?.annual_revenue || "");
+  const [formErrors, setFormErrors] = useState<{[key: string]: string}>({});
 
   useEffect(() => {
     // Atualizar os estados quando os dados iniciais mudarem
@@ -52,8 +53,39 @@ export const BusinessGoalsStep = ({
     }
   }, [initialData]);
 
+  const validateForm = () => {
+    const errors: {[key: string]: string} = {};
+    
+    if (!companyName.trim()) {
+      errors.companyName = "Nome da empresa é obrigatório";
+    }
+    
+    if (!companySize) {
+      errors.companySize = "Tamanho da empresa é obrigatório";
+    }
+    
+    if (!companySector) {
+      errors.companySector = "Setor de atuação é obrigatório";
+    }
+    
+    if (!currentPosition) {
+      errors.currentPosition = "Cargo atual é obrigatório";
+    }
+    
+    if (!annualRevenue) {
+      errors.annualRevenue = "Faturamento anual é obrigatório";
+    }
+    
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!validateForm()) {
+      return;
+    }
     
     const professionalData: Partial<OnboardingData> = {
       professional_info: {
@@ -91,6 +123,7 @@ export const BusinessGoalsStep = ({
             setCurrentPosition={setCurrentPosition}
             annualRevenue={annualRevenue}
             setAnnualRevenue={setAnnualRevenue}
+            errors={formErrors}
           />
           
           <div className="flex justify-end mt-8">

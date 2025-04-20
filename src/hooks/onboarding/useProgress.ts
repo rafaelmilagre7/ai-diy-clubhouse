@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/auth";
 import { OnboardingData } from "@/types/onboarding";
@@ -39,8 +39,8 @@ export const useProgress = () => {
   const hasInitialized = useRef(false);
   const progressId = useRef<string | null>(null);
 
-  const fetchProgress = async () => {
-    if (!user) return;
+  const fetchProgress = useCallback(async () => {
+    if (!user) return null;
     
     try {
       setIsLoading(true);
@@ -58,24 +58,29 @@ export const useProgress = () => {
         if (error.code === 'PGRST116') {
           // Não encontrou registro, vamos criar um novo
           console.log("Criando novo registro de progresso para o usuário");
-          await createInitialProgress();
+          return await createInitialProgress();
         } else {
           console.error("Erro ao carregar progresso:", error);
+          return null;
         }
       } else {
         console.log("Progresso carregado com sucesso:", data);
         setProgress(data);
         progressId.current = data.id;
+        return data;
       }
     } catch (error) {
       console.error("Erro ao carregar progresso:", error);
+      return null;
     } finally {
       setIsLoading(false);
       hasInitialized.current = true;
     }
-  };
+  }, [user]);
 
   const createInitialProgress = async () => {
+    if (!user) return null;
+    
     try {
       // Obter metadados do usuário da autenticação
       const userName = user?.user_metadata?.name || '';
@@ -102,9 +107,11 @@ export const useProgress = () => {
       console.log("Progresso inicial criado:", data);
       setProgress(data);
       progressId.current = data.id;
+      return data;
     } catch (error) {
       console.error("Erro ao criar progresso inicial:", error);
       toast.error("Não foi possível iniciar seu progresso. Tente novamente mais tarde.");
+      return null;
     }
   };
 
@@ -116,26 +123,30 @@ export const useProgress = () => {
     return () => {
       // Não resetamos hasInitialized aqui para evitar múltiplas inicializações
     };
-  }, [user]);
+  }, [user, fetchProgress]);
 
   const updateProgress = async (updates: Partial<OnboardingProgress>) => {
     if (!user || !progress) {
       console.error("Usuário ou progresso não disponível");
-      return;
+      return null;
     }
 
     try {
       console.log("Atualizando progresso:", updates);
-      const { error } = await supabase
+      const { error, data } = await supabase
         .from("onboarding_progress")
         .update(updates)
-        .eq("id", progress.id);
+        .eq("id", progress.id)
+        .select()
+        .single();
 
       if (error) throw error;
       
       // Atualizamos o estado local para refletir as mudanças imediatamente
-      setProgress(prev => prev ? { ...prev, ...updates } : null);
-      console.log("Progresso atualizado com sucesso");
+      const updatedProgress = { ...progress, ...updates };
+      setProgress(updatedProgress);
+      console.log("Progresso atualizado com sucesso:", updatedProgress);
+      return updatedProgress;
     } catch (error) {
       console.error("Erro ao atualizar progresso:", error);
       throw error;
@@ -143,12 +154,11 @@ export const useProgress = () => {
   };
   
   // Função para recarregar os dados do progresso do servidor
-  const refreshProgress = async () => {
-    if (!user || !progressId.current) {
-      if (user && !progressId.current) {
-        return await fetchProgress();
-      }
-      return null;
+  const refreshProgress = useCallback(async () => {
+    if (!user) return null;
+    
+    if (!progressId.current) {
+      return await fetchProgress();
     }
     
     try {
@@ -163,14 +173,14 @@ export const useProgress = () => {
       
       console.log("Progresso recarregado com sucesso:", data);
       setProgress(data);
-      setIsLoading(false);
       return data;
     } catch (error) {
       console.error("Erro ao recarregar progresso:", error);
-      setIsLoading(false);
       return null;
+    } finally {
+      setIsLoading(false);
     }
-  };
+  }, [user, fetchProgress]);
 
   return {
     progress,
