@@ -1,5 +1,6 @@
 
 import { createContext, useContext, ReactNode } from "react";
+import { useLogging as useLoggingHook } from "@/hooks/useLogging";
 
 export type LogData = {
   [key: string]: any;
@@ -14,34 +15,30 @@ interface LoggingContextType {
 
 const LoggingContext = createContext<LoggingContextType | undefined>(undefined);
 
+// Redireciona para a implementação principal em hooks/useLogging
 export const useLogging = (): LoggingContextType => {
-  const context = useContext(LoggingContext);
-  if (!context) {
-    throw new Error("useLogging must be used within a LoggingProvider");
-  }
-  return context;
+  // Usa a implementação de useLogging do hooks/useLogging.tsx
+  const loggingHook = useLoggingHook();
+  
+  // Adapta a interface para manter compatibilidade com o código existente
+  return {
+    log: (message: string, data: LogData = {}, category: string = "general") => {
+      loggingHook.log(message, { ...data, category });
+    },
+    error: (message: string, data: LogData = {}) => {
+      loggingHook.logError(message, { ...data, message });
+    },
+    warn: (message: string, data: LogData = {}) => {
+      loggingHook.logWarning(message, data);
+    },
+    info: (message: string, data: LogData = {}) => {
+      loggingHook.log(message, data, "info");
+    }
+  };
 };
 
+// Implementação do provider redirecionada para o hooks/useLogging.tsx
 export const LoggingProvider = ({ children }: { children: ReactNode }) => {
-  const log = (message: string, data: LogData = {}, category: string = "general") => {
-    console.log(`[${category}] ${message}`, data);
-  };
-
-  const error = (message: string, data: LogData = {}) => {
-    console.error(`[ERROR] ${message}`, data);
-  };
-
-  const warn = (message: string, data: LogData = {}) => {
-    console.warn(`[WARN] ${message}`, data);
-  };
-
-  const info = (message: string, data: LogData = {}) => {
-    console.info(`[INFO] ${message}`, data);
-  };
-
-  return (
-    <LoggingContext.Provider value={{ log, error, warn, info }}>
-      {children}
-    </LoggingContext.Provider>
-  );
+  // Apenas repassa o children, já que o verdadeiro provider está em App.tsx
+  return <>{children}</>;
 };
