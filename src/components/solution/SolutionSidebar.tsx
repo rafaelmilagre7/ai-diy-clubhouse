@@ -1,7 +1,7 @@
 
 import { Solution } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
-import { PlayCircle, CheckCircle } from "lucide-react";
+import { PlayCircle, CheckCircle, Award } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 interface SolutionSidebarProps {
