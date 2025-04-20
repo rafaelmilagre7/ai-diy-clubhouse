@@ -18,7 +18,7 @@ const SolutionDetails = () => {
   const location = useLocation();
   const { log, logError } = useLogging();
   
-  // Garantir que os dados das ferramentas estejam corretos
+  // Garantir que os dados das ferramentas estejam corretos, mas ignorar erros
   const { isLoading: toolsDataLoading } = useToolsData();
   
   // Fetch solution data with the updated hook that includes progress
@@ -44,7 +44,7 @@ const SolutionDetails = () => {
     }
   }, [solution, location.pathname, log]);
   
-  if (loading || toolsDataLoading) {
+  if (loading) {
     return <LoadingScreen message="Carregando detalhes da solução..." />;
   }
   

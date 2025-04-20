@@ -19,7 +19,7 @@ export const useSolutionsData = (initialCategory: string | null) => {
     const fetchSolutions = async () => {
       try {
         setLoading(true);
-        log("Buscando soluções publicadas");
+        log("Buscando soluções publicadas", {});
         
         const { data, error: fetchError } = await supabase
           .from("solutions")
@@ -32,11 +32,11 @@ export const useSolutionsData = (initialCategory: string | null) => {
         }
         
         if (data && data.length > 0) {
-          log(`Encontradas ${data.length} soluções publicadas`);
+          log(`Encontradas ${data.length} soluções publicadas`, {});
           setSolutions(data as Solution[]);
           setFilteredSolutions(data as Solution[]);
         } else {
-          log("Nenhuma solução publicada encontrada");
+          log("Nenhuma solução publicada encontrada", {});
           setSolutions([]);
           setFilteredSolutions([]);
         }

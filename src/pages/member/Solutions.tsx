@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useSolutionsData } from '@/hooks/useSolutionsData';
 import { SolutionCard } from '@/components/solution/SolutionCard';
 import { Input } from '@/components/ui/input';
@@ -12,9 +12,9 @@ import { useLogging } from '@/hooks/useLogging';
 
 const Solutions = () => {
   // Logger para depuração
-  const { log, logError } = useLogging();
+  const { log } = useLogging();
   
-  // Garantir que as ferramentas estejam corretamente configuradas
+  // Garantir que as ferramentas estejam corretamente configuradas, mas ignorar erros
   const { isLoading: toolsDataLoading } = useToolsData();
   
   const { 
@@ -40,8 +40,9 @@ const Solutions = () => {
     { id: 'strategy', name: 'Estratégia' }
   ];
 
-  // Se estiver carregando as ferramentas, mostrar também carregando
-  if (loading || toolsDataLoading) {
+  // Se estiver carregando as soluções, mostrar tela de carregamento
+  // Mas não bloquear se apenas as ferramentas estiverem carregando
+  if (loading) {
     return <LoadingScreen message="Carregando soluções..." />;
   }
 
