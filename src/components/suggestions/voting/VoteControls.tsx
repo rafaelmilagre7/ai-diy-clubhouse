@@ -17,10 +17,11 @@ const VoteControls = ({ userVote, voteLoading = false, onVote }: VoteControlsPro
         variant="outline"
         size="sm"
         className={`flex items-center gap-1 ${
-          userVote?.vote_type === 'upvote' ? 'bg-green-50 text-green-600 border-green-200' : ''
+          userVote?.vote_type === 'upvote' ? 'bg-green-50 text-green-600 border-green-200 hover:bg-green-100' : ''
         }`}
         disabled={voteLoading}
         onClick={() => onVote('upvote')}
+        aria-label="Apoiar"
       >
         <ThumbsUp size={16} />
         <span>Apoiar</span>
@@ -30,10 +31,11 @@ const VoteControls = ({ userVote, voteLoading = false, onVote }: VoteControlsPro
         variant="outline"
         size="sm"
         className={`flex items-center gap-1 ${
-          userVote?.vote_type === 'downvote' ? 'bg-red-50 text-red-600 border-red-200' : ''
+          userVote?.vote_type === 'downvote' ? 'bg-red-50 text-red-600 border-red-200 hover:bg-red-100' : ''
         }`}
         disabled={voteLoading}
         onClick={() => onVote('downvote')}
+        aria-label="Não apoiar"
       >
         <ThumbsDown size={16} />
         <span>Não apoiar</span>

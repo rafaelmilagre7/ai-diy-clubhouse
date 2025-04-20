@@ -9,11 +9,11 @@ interface AdminHeaderProps {
 
 export const AdminHeader = ({ sidebarOpen, setSidebarOpen }: AdminHeaderProps) => {
   return (
-    <header className="sticky top-0 z-10 flex h-16 items-center border-b bg-background px-6">
+    <header className="sticky top-0 z-10 flex h-16 items-center border-b bg-background px-4 md:px-6">
       <Button 
         variant="ghost" 
         size="icon" 
-        className="md:hidden" 
+        className="md:hidden mr-2" 
         onClick={() => setSidebarOpen(!sidebarOpen)}
       >
         <Menu className="h-5 w-5" />

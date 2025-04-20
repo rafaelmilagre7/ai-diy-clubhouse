@@ -74,7 +74,7 @@ export const AdminSidebar = ({ sidebarOpen, setSidebarOpen }: AdminSidebarProps)
   return (
     <aside
       className={cn(
-        "fixed inset-y-0 left-0 z-50 flex h-full flex-col border-r bg-white shadow-sm transition-all duration-300 ease-in-out",
+        "fixed inset-y-0 left-0 z-20 flex h-full flex-col border-r bg-white shadow-sm transition-all duration-300 ease-in-out",
         sidebarOpen ? "w-64" : "w-0 md:w-20"
       )}
     >
