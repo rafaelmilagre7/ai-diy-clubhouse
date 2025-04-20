@@ -37,8 +37,6 @@ export const EngagementChart = ({ data }: EngagementChartProps) => {
             valueFormatter={valueFormatter}
             yAxisWidth={60}
             showLegend={false}
-            // Removida a propriedade showAnimation que não existe no componente
-            // Removida a propriedade curveType que não existe no componente
           />
         </div>
       </CardContent>
