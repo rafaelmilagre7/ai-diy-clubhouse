@@ -25,6 +25,25 @@ export const ToolSelector: React.FC<ToolSelectorProps> = ({ value, onChange }) =
   const { tools: availableTools, isLoading } = useTools();
   const [searchQuery, setSearchQuery] = useState("");
 
+  // Log para depuração dos logos das ferramentas
+  useEffect(() => {
+    if (availableTools && availableTools.length > 0) {
+      const toolsWithLogos = availableTools.filter(tool => tool.logo_url);
+      const toolsWithoutLogos = availableTools.filter(tool => !tool.logo_url);
+      
+      log('Ferramentas disponíveis para seleção', {
+        total: availableTools.length,
+        comLogos: toolsWithLogos.length,
+        semLogos: toolsWithoutLogos.length,
+        exemplosComLogo: toolsWithLogos.slice(0, 3).map(t => ({ 
+          nome: t.name, 
+          logo: t.logo_url 
+        })),
+        exemplosSemLogo: toolsWithoutLogos.slice(0, 3).map(t => t.name)
+      });
+    }
+  }, [availableTools, log]);
+
   // Filtrar ferramentas com base na pesquisa
   const filteredTools = availableTools.filter((tool) =>
     tool.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -56,6 +75,36 @@ export const ToolSelector: React.FC<ToolSelectorProps> = ({ value, onChange }) =
     );
   };
 
+  // Renderizar imagem da ferramenta com tratamento de erros
+  const renderToolImage = (tool: Tool) => {
+    return tool.logo_url ? (
+      <img 
+        src={tool.logo_url} 
+        alt={tool.name} 
+        className="h-full w-full object-contain" 
+        onError={(e) => {
+          logError("Erro ao carregar imagem da ferramenta", { 
+            tool: tool.name, 
+            logo_url: tool.logo_url 
+          });
+          // Fallback para as iniciais
+          e.currentTarget.style.display = 'none';
+          const parent = e.currentTarget.parentElement;
+          if (parent) {
+            const fallback = document.createElement('div');
+            fallback.className = 'text-xl font-bold text-[#0ABAB5]';
+            fallback.textContent = tool.name.substring(0, 2).toUpperCase();
+            parent.appendChild(fallback);
+          }
+        }}
+      />
+    ) : (
+      <div className="text-xl font-bold text-[#0ABAB5]">
+        {tool.name.substring(0, 2).toUpperCase()}
+      </div>
+    );
+  };
+
   return (
     <div className="space-y-6">
       {/* Lista de ferramentas selecionadas */}
@@ -67,17 +116,7 @@ export const ToolSelector: React.FC<ToolSelectorProps> = ({ value, onChange }) =
               <Card key={tool.id} className="border overflow-hidden">
                 <CardHeader className="pb-3 pt-4 px-4 flex-row items-center gap-3">
                   <div className="h-10 w-10 rounded-lg bg-gray-100 border flex items-center justify-center overflow-hidden flex-shrink-0">
-                    {tool.logo_url ? (
-                      <img 
-                        src={tool.logo_url} 
-                        alt={tool.name} 
-                        className="h-full w-full object-contain" 
-                      />
-                    ) : (
-                      <div className="text-xl font-bold text-[#0ABAB5]">
-                        {tool.name.substring(0, 2).toUpperCase()}
-                      </div>
-                    )}
+                    {renderToolImage(tool)}
                   </div>
                   <div>
                     <h3 className="font-medium text-sm line-clamp-1">{tool.name}</h3>
@@ -154,17 +193,7 @@ export const ToolSelector: React.FC<ToolSelectorProps> = ({ value, onChange }) =
               >
                 <CardHeader className="pb-3 pt-4 px-4 flex-row items-center gap-3">
                   <div className="h-10 w-10 rounded-lg bg-gray-100 border flex items-center justify-center overflow-hidden flex-shrink-0">
-                    {tool.logo_url ? (
-                      <img 
-                        src={tool.logo_url} 
-                        alt={tool.name} 
-                        className="h-full w-full object-contain" 
-                      />
-                    ) : (
-                      <div className="text-xl font-bold text-[#0ABAB5]">
-                        {tool.name.substring(0, 2).toUpperCase()}
-                      </div>
-                    )}
+                    {renderToolImage(tool)}
                   </div>
                   <div>
                     <h3 className="font-medium text-sm line-clamp-1">{tool.name}</h3>

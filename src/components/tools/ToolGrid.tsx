@@ -1,3 +1,5 @@
+
+import React from 'react';
 import { Tool } from '@/types/toolTypes';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
@@ -33,6 +35,12 @@ interface ToolCardProps {
 }
 
 const ToolCard = ({ tool }: ToolCardProps) => {
+  console.log("Renderizando ToolCard", { 
+    name: tool.name, 
+    logo: tool.logo_url, 
+    has_logo: !!tool.logo_url 
+  });
+  
   return (
     <Card className="flex flex-col h-full border overflow-hidden hover:shadow-md transition-shadow">
       <CardHeader className="pb-3 pt-6 px-6 flex-row items-center gap-4 relative">
@@ -42,6 +50,16 @@ const ToolCard = ({ tool }: ToolCardProps) => {
               src={tool.logo_url} 
               alt={tool.name} 
               className="h-full w-full object-contain" 
+              onError={(e) => {
+                console.error(`Erro ao carregar logo: ${tool.logo_url}`);
+                e.currentTarget.src = "";
+                e.currentTarget.classList.add("hidden");
+                // Mostrar o elemento pai para que o fallback seja exibido
+                const parent = e.currentTarget.parentElement;
+                if (parent) {
+                  parent.innerHTML = `<div class="text-xl font-bold text-[#0ABAB5]">${tool.name.substring(0, 2).toUpperCase()}</div>`;
+                }
+              }}
             />
           ) : (
             <div className="text-xl font-bold text-[#0ABAB5]">
@@ -81,3 +99,5 @@ const ToolCard = ({ tool }: ToolCardProps) => {
     </Card>
   );
 };
+
+export { ToolCard };

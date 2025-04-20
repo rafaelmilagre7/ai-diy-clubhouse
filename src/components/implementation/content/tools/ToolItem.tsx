@@ -23,12 +23,13 @@ export const ToolItem: React.FC<ToolItemProps> = ({
 }) => {
   const { log, logError } = useLogging();
 
-  // Se tivermos um toolId, buscar detalhes da ferramenta pelo ID
+  // Buscar detalhes da ferramenta pelo ID ou nome
   const { data: tool, isLoading } = useQuery({
     queryKey: ['tool', toolId, toolName],
     queryFn: async () => {
-      // Se tivermos um toolId, buscar pelo ID
+      // Primeiro, tente buscar a ferramenta pelo ID se disponível
       if (toolId) {
+        log("Buscando ferramenta pelo ID", { toolId });
         const { data, error } = await supabase
           .from('tools')
           .select('*')
@@ -36,38 +37,41 @@ export const ToolItem: React.FC<ToolItemProps> = ({
           .single();
         
         if (error) {
-          logError("Error fetching tool by ID", error);
-          return null;
-        }
-        
-        return data as Tool;
-      }
-      
-      // Se não tivermos um toolId mas tivermos um toolName, buscar pelo nome
-      if (toolName) {
-        const { data, error } = await supabase
-          .from('tools')
-          .select('*')
-          .eq('name', toolName)
-          .single();
-        
-        if (error && error.code !== 'PGRST116') { // PGRST116 é "nenhum resultado encontrado"
-          logError("Error fetching tool by name", error);
-        }
-        
-        if (data) {
+          logError("Erro ao buscar ferramenta pelo ID", error);
+        } else if (data) {
+          log("Ferramenta encontrada pelo ID", { toolId, name: data.name });
           return data as Tool;
         }
       }
       
-      // Se não encontrarmos a ferramenta no banco de dados, criar um objeto básico
-      return {
+      // Se não encontrou pelo ID ou se o ID não está disponível, tente pelo nome
+      if (toolName) {
+        log("Buscando ferramenta pelo nome", { toolName });
+        const { data, error } = await supabase
+          .from('tools')
+          .select('*')
+          .ilike('name', toolName)
+          .single();
+        
+        if (error && error.code !== 'PGRST116') { // PGRST116 é "nenhum resultado encontrado"
+          logError("Erro ao buscar ferramenta pelo nome", error);
+        } else if (data) {
+          log("Ferramenta encontrada pelo nome", { name: data.name, logo: data.logo_url });
+          return data as Tool;
+        }
+      }
+      
+      // Se não encontrou no banco de dados, criar um objeto básico com as informações disponíveis
+      const defaultTool = {
         name: toolName || "Ferramenta",
-        description: "Ferramenta necessária para a implementação desta solução",
+        description: "Ferramenta necessária para implementação desta solução",
         official_url: toolUrl || "",
         category: "Outros",
         logo_url: null
       } as Tool;
+      
+      log("Usando ferramenta padrão, não encontrada na base", { defaultTool });
+      return defaultTool;
     },
     enabled: !!toolId || !!toolName
   });
@@ -86,6 +90,13 @@ export const ToolItem: React.FC<ToolItemProps> = ({
     );
   }
 
+  // Utilizar logs para depuração da exibição das logos
+  console.log("Renderizando ferramenta", {
+    nome: tool?.name,
+    logo_url: tool?.logo_url,
+    fallback: tool?.name ? tool.name.substring(0, 2).toUpperCase() : "??"
+  });
+
   return (
     <Card className="border overflow-hidden h-full flex flex-col">
       <CardHeader className="pb-3 pt-4 px-4 flex-row items-center gap-3">
@@ -93,8 +104,17 @@ export const ToolItem: React.FC<ToolItemProps> = ({
           {tool?.logo_url ? (
             <img 
               src={tool.logo_url} 
-              alt={tool?.name} 
-              className="h-full w-full object-contain" 
+              alt={tool?.name || toolName} 
+              className="h-full w-full object-contain"
+              onError={(e) => {
+                console.error(`Erro ao carregar imagem: ${tool.logo_url}`);
+                // Remover src para evitar múltiplas tentativas de carregamento
+                e.currentTarget.src = "";
+                // Adicionar uma classe para mostrar um fallback
+                e.currentTarget.classList.add("hidden");
+                // Mostrar o elemento pai para que o fallback seja exibido
+                e.currentTarget.parentElement?.classList.add("fallback-active");
+              }}
             />
           ) : (
             <div className="text-xl font-bold text-[#0ABAB5]">
