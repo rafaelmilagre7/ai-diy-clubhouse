@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/auth";
 import { FcGoogle } from "react-icons/fc";
@@ -13,7 +12,6 @@ const Login = () => {
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
   
-  // Redirect if already authenticated
   useEffect(() => {
     if (user) {
       navigate('/', { replace: true });
@@ -24,9 +22,7 @@ const Login = () => {
     try {
       setIsLoading(true);
       setError(null);
-      // Call signIn without arguments for Google auth
       await signIn();
-      // Redirecionamento acontece dentro da função signIn
     } catch (err) {
       console.error("Erro ao fazer login:", err);
       setError("Ocorreu um erro durante o login. Por favor, tente novamente.");
@@ -40,7 +36,6 @@ const Login = () => {
       setIsLoading(true);
       setError(null);
       await loginFn();
-      // Redirecionamento acontece dentro das funções de login
     } catch (err: any) {
       console.error(`Erro ao fazer login como ${userType}:`, err);
       setError(err?.message || `Ocorreu um erro ao fazer login como ${userType}.`);
@@ -86,7 +81,6 @@ const Login = () => {
               {isLoading ? "Carregando..." : "Entrar com Google"}
             </Button>
             
-            {/* Test login buttons */}
             <Button 
               className="w-full py-6 text-base bg-blue-600 hover:bg-blue-700"
               onClick={() => handleTestUserLogin(signInAsMember, "membro")}
@@ -103,10 +97,17 @@ const Login = () => {
               {isLoading ? "Carregando..." : "Login como Admin (Teste)"}
             </Button>
             
-            <div className="text-center mt-2">
+            <div className="text-center mt-2 space-y-2">
+              <Link 
+                to="/reset-password" 
+                className="text-sm text-blue-600 hover:text-blue-500 block"
+              >
+                Esqueceu sua senha?
+              </Link>
+              
               <Link 
                 to="/index" 
-                className="text-sm text-blue-600 hover:text-blue-500"
+                className="text-sm text-blue-600 hover:text-blue-500 block"
               >
                 Voltar para página inicial
               </Link>
