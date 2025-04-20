@@ -1,12 +1,11 @@
 
 import { supabase } from "@/lib/supabase";
 
-// Versão corrigida sem usar hooks dentro da função
 export const fixToolsData = async () => {
   try {
     console.log("Iniciando correção de dados das ferramentas...");
     
-    // Ferramentas para garantir que existem e têm informações corretas
+    // Passo 1: Ferramentas para garantir que existem e têm informações corretas
     const toolsToFix = [
       {
         name: "Claude",
@@ -34,22 +33,26 @@ export const fixToolsData = async () => {
       }
     ];
     
+    // Passo 2: Verificar duplicatas e removê-las
+    await removeDuplicateTools();
+    
+    // Passo 3: Garantir que as ferramentas necessárias existam
     for (const tool of toolsToFix) {
       // Verificar se a ferramenta já existe
       const { data: existingTool, error: findError } = await supabase
         .from('tools')
         .select('id, logo_url')
         .ilike('name', tool.name)
-        .single();
+        .limit(1);
       
-      if (findError && findError.code !== 'PGRST116') {
+      if (findError) {
         console.error(`Erro ao verificar existência da ferramenta ${tool.name}`, findError);
         continue;
       }
       
-      if (existingTool) {
+      if (existingTool && existingTool.length > 0) {
         // Atualizar a ferramenta existente apenas se não tiver logo
-        if (!existingTool.logo_url) {
+        if (!existingTool[0].logo_url) {
           const { error: updateError } = await supabase
             .from('tools')
             .update({
@@ -58,7 +61,7 @@ export const fixToolsData = async () => {
               category: tool.category,
               logo_url: tool.logo_url
             })
-            .eq('id', existingTool.id);
+            .eq('id', existingTool[0].id);
             
           if (updateError) {
             console.error(`Erro ao atualizar ferramenta ${tool.name}`, updateError);
@@ -87,3 +90,66 @@ export const fixToolsData = async () => {
     return false;
   }
 };
+
+// Função auxiliar para remover duplicatas baseadas no nome da ferramenta
+async function removeDuplicateTools() {
+  try {
+    console.log("Verificando ferramentas duplicadas...");
+    
+    // Buscar todas as ferramentas agrupadas por nome para encontrar duplicatas
+    const { data: duplicates, error: findError } = await supabase
+      .from('tools')
+      .select('name, count(*)')
+      .group('name')
+      .having('count(*) > 1');
+    
+    if (findError) {
+      console.error("Erro ao verificar duplicatas:", findError);
+      return;
+    }
+    
+    if (!duplicates || duplicates.length === 0) {
+      console.log("Nenhuma ferramenta duplicada encontrada");
+      return;
+    }
+    
+    console.log(`Encontradas ${duplicates.length} ferramentas com duplicatas`);
+    
+    // Para cada nome com duplicatas, manter apenas o registro mais recente
+    for (const duplicate of duplicates) {
+      const toolName = duplicate.name;
+      
+      // Buscar todos os IDs dessa ferramenta, ordenados por data de criação
+      const { data: entries, error: entriesError } = await supabase
+        .from('tools')
+        .select('id, created_at')
+        .eq('name', toolName)
+        .order('created_at', { ascending: false });
+      
+      if (entriesError || !entries || entries.length <= 1) {
+        console.error(`Erro ao buscar duplicatas para ${toolName}:`, entriesError);
+        continue;
+      }
+      
+      // Manter o primeiro (mais recente) e excluir os demais
+      const idsToRemove = entries.slice(1).map(e => e.id);
+      
+      console.log(`Removendo ${idsToRemove.length} duplicatas para "${toolName}"`);
+      
+      const { error: deleteError } = await supabase
+        .from('tools')
+        .delete()
+        .in('id', idsToRemove);
+      
+      if (deleteError) {
+        console.error(`Erro ao remover duplicatas de ${toolName}:`, deleteError);
+      } else {
+        console.log(`Duplicatas de "${toolName}" removidas com sucesso`);
+      }
+    }
+    
+    console.log("Processo de remoção de duplicatas concluído");
+  } catch (error) {
+    console.error("Erro ao remover ferramentas duplicadas:", error);
+  }
+}

@@ -1,30 +1,32 @@
 
 import { useState, useEffect } from "react";
 import { fixToolsData } from "@/utils/toolDataFixer";
+import { useLogging } from "@/hooks/useLogging";
 
 export const useToolsData = () => {
   const [isFixing, setIsFixing] = useState(false);
   const [isFixed, setIsFixed] = useState(false);
   const [error, setError] = useState<Error | null>(null);
+  const { log, logError } = useLogging();
 
   useEffect(() => {
     const runFixer = async () => {
       try {
         setIsFixing(true);
-        console.log("Iniciando verificação/correção dos dados das ferramentas");
+        log("Iniciando verificação/correção dos dados das ferramentas");
         
         const result = await fixToolsData();
         
         if (result) {
-          console.log("Correção dos dados das ferramentas concluída com sucesso");
+          log("Correção dos dados das ferramentas concluída com sucesso");
           setIsFixed(true);
         } else {
-          console.log("Correção dos dados das ferramentas concluída com avisos");
+          log("Correção dos dados das ferramentas concluída com avisos");
           setIsFixed(true);
         }
       } catch (err) {
         const error = err instanceof Error ? err : new Error("Erro desconhecido");
-        console.error("Erro ao corrigir dados das ferramentas:", error);
+        logError("Erro ao corrigir dados das ferramentas:", error);
         setError(error);
       } finally {
         setIsFixing(false);
@@ -32,7 +34,7 @@ export const useToolsData = () => {
     };
 
     runFixer();
-  }, []);
+  }, [log, logError]);
 
   return { isFixing, isFixed, error };
 };

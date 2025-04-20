@@ -1,44 +1,31 @@
 
-import { Link } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Plus, Search } from 'lucide-react';
+import React from "react";
+import { Button } from "@/components/ui/button";
+import { PlusCircle } from "lucide-react";
+import { Link } from "react-router-dom";
+import { CleanupDuplicatesButton } from "./actions/CleanupDuplicatesButton";
 
 interface AdminToolsHeaderProps {
-  searchQuery: string;
-  onSearchChange: (query: string) => void;
+  onRefreshRequest?: () => void;
 }
 
-export const AdminToolsHeader = ({
-  searchQuery,
-  onSearchChange,
-}: AdminToolsHeaderProps) => {
+export const AdminToolsHeader = ({ onRefreshRequest }: AdminToolsHeaderProps) => {
   return (
-    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
       <div>
-        <h1 className="text-2xl font-bold">Gerenciar Ferramentas</h1>
+        <h1 className="text-2xl font-bold">Ferramentas</h1>
         <p className="text-muted-foreground mt-1">
-          Adicione, edite e remova ferramentas do glossário
+          Gerencie ferramentas e benefícios para membros
         </p>
       </div>
-
       <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            type="search"
-            placeholder="Buscar ferramenta..."
-            className="w-full pl-8 sm:w-64"
-            value={searchQuery}
-            onChange={(e) => onSearchChange(e.target.value)}
-          />
-        </div>
-        <Link to="/admin/tools/new">
-          <Button className="w-full sm:w-auto bg-[#0ABAB5] hover:bg-[#0ABAB5]/90">
-            <Plus className="mr-2 h-4 w-4" />
-            Nova ferramenta
-          </Button>
-        </Link>
+        <CleanupDuplicatesButton onCleanupComplete={onRefreshRequest} />
+        <Button asChild className="bg-[#0ABAB5] hover:bg-[#0ABAB5]/90">
+          <Link to="/admin/tools/new">
+            <PlusCircle className="h-4 w-4 mr-2" />
+            Nova Ferramenta
+          </Link>
+        </Button>
       </div>
     </div>
   );
