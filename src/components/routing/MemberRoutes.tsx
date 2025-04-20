@@ -13,6 +13,7 @@ import Suggestions from "@/pages/member/Suggestions";
 import SuggestionDetails from "@/pages/member/SuggestionDetails";
 import NewSuggestion from "@/pages/member/NewSuggestion";
 import Achievements from "@/pages/member/Achievements";
+import Benefits from "@/pages/member/Benefits";
 
 interface MemberRoutesProps {
   children?: ReactNode;
@@ -25,6 +26,7 @@ const MemberRoutes = ({ children }: MemberRoutesProps) => {
   return (
     <Routes>
       <Route path="/" element={<MemberLayout>{children}</MemberLayout>}>
+        <Route index element={<Dashboard />} />
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="solutions" element={<Solutions />} />
         <Route path="solution/:id" element={<SolutionDetails />} />
@@ -32,6 +34,7 @@ const MemberRoutes = ({ children }: MemberRoutesProps) => {
         <Route path="profile" element={<Profile />} />
         <Route path="tools" element={<Tools />} />
         <Route path="tools/:id" element={<ToolDetails />} />
+        <Route path="benefits" element={<Benefits />} />
         <Route path="suggestions" element={<Suggestions />} />
         <Route path="suggestions/:id" element={<SuggestionDetails />} />
         <Route path="suggestions/new" element={<NewSuggestion />} />

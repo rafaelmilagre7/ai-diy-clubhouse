@@ -1,7 +1,7 @@
 
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
-import { Home, GraduationCap, Trophy, Wrench, Gift, PencilLine } from "lucide-react";
+import { Home, GraduationCap, Trophy, Wrench, Gift, PencilLine, User } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
@@ -12,7 +12,7 @@ export const MemberSidebarNav = ({ sidebarOpen }: { sidebarOpen: boolean }) => {
     <ScrollArea className="flex-1 px-4">
       <nav className="space-y-2 py-4">
         <Button
-          variant={location.pathname === "/dashboard" ? "default" : "ghost"}
+          variant={location.pathname === "/dashboard" || location.pathname === "/" ? "default" : "ghost"}
           asChild
           className="w-full justify-start"
         >
@@ -25,7 +25,7 @@ export const MemberSidebarNav = ({ sidebarOpen }: { sidebarOpen: boolean }) => {
         </Button>
 
         <Button
-          variant={location.pathname.startsWith("/solutions") ? "default" : "ghost"}
+          variant={location.pathname.startsWith("/solutions") || location.pathname.startsWith("/solution/") ? "default" : "ghost"}
           asChild
           className="w-full justify-start"
         >
@@ -85,6 +85,19 @@ export const MemberSidebarNav = ({ sidebarOpen }: { sidebarOpen: boolean }) => {
             <PencilLine className="h-5 w-5 mr-2" />
             <span className={cn("flex-1", !sidebarOpen && "hidden")}>
               Sugestões
+            </span>
+          </Link>
+        </Button>
+        
+        <Button
+          variant={location.pathname.startsWith("/profile") ? "default" : "ghost"}
+          asChild
+          className="w-full justify-start"
+        >
+          <Link to="/profile">
+            <User className="h-5 w-5 mr-2" />
+            <span className={cn("flex-1", !sidebarOpen && "hidden")}>
+              Perfil
             </span>
           </Link>
         </Button>
