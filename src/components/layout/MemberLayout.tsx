@@ -18,10 +18,13 @@ const MemberLayout = ({ children }: { children: ReactNode }) => {
     const handleResize = () => {
       if (window.innerWidth <= 768) {
         setSidebarOpen(false);
+      } else {
+        setSidebarOpen(true); // Certifique-se de que o sidebar esteja aberto no desktop
       }
     };
 
     window.addEventListener('resize', handleResize);
+    handleResize(); // Chamar imediatamente para definir o estado inicial correto
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 

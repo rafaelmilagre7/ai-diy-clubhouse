@@ -1,280 +1,133 @@
 
-import React, { useState, useEffect } from "react";
-import { NavigationButtons } from "./NavigationButtons";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Checkbox } from "@/components/ui/checkbox";
-import { OnboardingData, OnboardingProgress } from "@/types/onboarding";
-import MilagrinhoAssistant from "./MilagrinhoAssistant";
+import { z } from "zod";
+import { toast } from "sonner";
+import MilagrinhoAssistant from "../MilagrinhoAssistant";
+import { OnboardingStepProps } from "@/types/onboarding";
 
-interface BusinessContextStepProps {
-  onSubmit: (stepId: string, data: Partial<OnboardingData>) => Promise<void>;
-  isSubmitting: boolean;
-  isLastStep: boolean;
-  onComplete?: () => Promise<void>;
-  initialData?: OnboardingProgress | any;
-}
+export const BusinessContextStep = ({ onSubmit, isSubmitting, initialData }: OnboardingStepProps) => {
+  const [businessContext, setBusinessContext] = useState({
+    business_model: initialData?.business_model || "",
+    business_challenges: initialData?.business_challenges || "",
+    short_term_goals: initialData?.short_term_goals || "",
+    important_kpis: initialData?.important_kpis || "",
+    additional_context: initialData?.additional_context || "",
+  });
 
-const businessModelOptions = [
-  "B2B - Business to Business",
-  "B2C - Business to Consumer",
-  "B2B2C - Business to Business to Consumer",
-  "D2C - Direct to Consumer",
-  "SaaS - Software as a Service",
-  "Marketplace",
-  "E-commerce",
-  "Assinatura / Recorrência",
-  "Freelancer / Autônomo",
-  "Consultoria",
-  "Agência",
-];
-
-const businessChallengesOptions = [
-  "Crescimento acelerado",
-  "Geração de leads qualificados",
-  "Automação de processos",
-  "Conversão de vendas",
-  "Retenção de clientes",
-  "Implementação eficiente de IA",
-  "Análise e uso efetivo de dados",
-  "Capacitação de equipe em IA",
-  "Otimização de custos",
-  "Desenvolvimento de novos produtos",
-];
-
-const shortTermGoalsOptions = [
-  "Implementar primeira solução de IA no negócio",
-  "Automatizar processo de atendimento",
-  "Criar assistente virtual para área comercial",
-  "Otimizar processos internos com IA",
-  "Desenvolver conteúdo com auxílio de IA",
-  "Treinar equipe em ferramentas de IA",
-  "Implementar estratégia de marketing com IA",
-  "Aumentar conversão de vendas com IA",
-  "Reduzir custos operacionais com automação",
-  "Lançar novo produto/serviço utilizando IA",
-];
-
-const kpiOptions = [
-  "Receita",
-  "Lucro",
-  "Aquisição de Clientes",
-  "Retenção de Clientes",
-  "Taxa de Churn",
-  "CAC (Custo de Aquisição de Cliente)",
-  "LTV (Valor do Tempo de Vida do Cliente)",
-  "MRR (Receita Recorrente Mensal)",
-  "Taxa de Conversão",
-  "Eficiência Operacional",
-  "NPS (Net Promoter Score)",
-];
-
-export const BusinessContextStep: React.FC<BusinessContextStepProps> = ({
-  onSubmit,
-  isSubmitting,
-  isLastStep,
-  onComplete,
-  initialData,
-}) => {
-  const [businessModel, setBusinessModel] = useState<string>("");
-  const [businessChallenges, setBusinessChallenges] = useState<string[]>([]);
-  const [shortTermGoals, setShortTermGoals] = useState<string[]>([]);
-  const [importantKpis, setImportantKpis] = useState<string[]>([]);
-  const [errors, setErrors] = useState<Record<string, string>>({});
-
-  // Carregar dados iniciais se disponíveis
-  useEffect(() => {
-    if (initialData?.business_context) {
-      const contextData = initialData.business_context;
-      if (contextData.business_model) setBusinessModel(contextData.business_model);
-      if (contextData.business_challenges) setBusinessChallenges(contextData.business_challenges);
-      if (contextData.short_term_goals) setShortTermGoals(contextData.short_term_goals);
-      if (contextData.important_kpis) setImportantKpis(contextData.important_kpis);
-    }
-  }, [initialData]);
-
-  const validateForm = () => {
-    const newErrors: Record<string, string> = {};
-
-    if (!businessModel) {
-      newErrors.businessModel = "Selecione um modelo de negócio";
-    }
-    
-    if (businessChallenges.length === 0) {
-      newErrors.businessChallenges = "Selecione pelo menos um desafio";
-    }
-
-    if (shortTermGoals.length === 0) {
-      newErrors.shortTermGoals = "Selecione pelo menos um objetivo";
-    }
-
-    if (importantKpis.length === 0) {
-      newErrors.importantKpis = "Selecione pelo menos um KPI";
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+  const handleChange = (field: string, value: string) => {
+    setBusinessContext({
+      ...businessContext,
+      [field]: value,
+    });
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const schema = z.object({
+    business_model: z.string().min(10, "Descreva pelo menos 10 caracteres"),
+    business_challenges: z.string().min(10, "Descreva pelo menos 10 caracteres"),
+    short_term_goals: z.string().min(10, "Descreva pelo menos 10 caracteres"),
+    important_kpis: z.string().min(5, "Descreva pelo menos 5 caracteres"),
+    additional_context: z.string().optional(),
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!validateForm()) {
-      return;
+    try {
+      schema.parse(businessContext);
+      onSubmit("business_context", { business_context: businessContext });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const firstError = error.errors[0];
+        toast.error(firstError.message);
+      } else {
+        toast.error("Verifique os campos e tente novamente.");
+      }
     }
-
-    const data: Partial<OnboardingData> = {
-      business_context: {
-        business_model: businessModel,
-        business_challenges: businessChallenges,
-        short_term_goals: shortTermGoals,
-        important_kpis: importantKpis,
-      },
-    };
-
-    await onSubmit("business_context", data);
-  };
-
-  const handleCheckboxChange = (
-    value: string,
-    currentValues: string[],
-    setValues: React.Dispatch<React.SetStateAction<string[]>>
-  ) => {
-    const updatedValues = currentValues.includes(value)
-      ? currentValues.filter(v => v !== value)
-      : [...currentValues, value];
-    
-    setValues(updatedValues);
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-8">
-      <MilagrinhoAssistant
-        message="Vamos conhecer um pouco mais sobre o contexto do seu negócio para personalizar as soluções de IA mais adequadas."
-        className="mb-6"
+    <div className="space-y-6">
+      <MilagrinhoAssistant 
+        message="Agora vamos entender o contexto do seu negócio para recomendar as melhores soluções de IA para você."
       />
 
-      {/* Modelo de Negócio */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <Label className="text-lg font-semibold">
-            Modelo(s) de Negócio<span className="text-[#0ABAB5] ml-1">*</span>
+      <form onSubmit={handleSubmit} className="space-y-5">
+        <div className="space-y-3">
+          <Label htmlFor="business_model">
+            Modelo de negócio
+            <span className="text-red-500">*</span>
           </Label>
-          {errors.businessModel && (
-            <p className="text-sm text-red-500">{errors.businessModel}</p>
-          )}
+          <Textarea
+            id="business_model"
+            placeholder="Descreva brevemente o modelo de negócio da sua empresa..."
+            value={businessContext.business_model}
+            onChange={(e) => handleChange("business_model", e.target.value)}
+            className="h-24"
+          />
         </div>
-        
-        <RadioGroup 
-          className="grid grid-cols-1 md:grid-cols-2 gap-3" 
-          value={businessModel}
-          onValueChange={setBusinessModel}
-        >
-          {businessModelOptions.map((model) => (
-            <div 
-              key={model}
-              className="flex items-center space-x-2 rounded-lg border border-gray-200 p-3 hover:bg-gray-50 transition-colors"
-            >
-              <RadioGroupItem value={model} id={`model-${model}`} />
-              <Label htmlFor={`model-${model}`} className="cursor-pointer font-medium">
-                {model}
-              </Label>
-            </div>
-          ))}
-        </RadioGroup>
-      </div>
 
-      {/* Principais Desafios */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <Label className="text-lg font-semibold">
-            Principais Desafios do Negócio<span className="text-[#0ABAB5] ml-1">*</span>
+        <div className="space-y-3">
+          <Label htmlFor="business_challenges">
+            Principais desafios
+            <span className="text-red-500">*</span>
           </Label>
-          {errors.businessChallenges && (
-            <p className="text-sm text-red-500">{errors.businessChallenges}</p>
-          )}
+          <Textarea
+            id="business_challenges"
+            placeholder="Quais são os principais desafios que sua empresa enfrenta atualmente?"
+            value={businessContext.business_challenges}
+            onChange={(e) => handleChange("business_challenges", e.target.value)}
+            className="h-24"
+          />
         </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {businessChallengesOptions.map((challenge) => (
-            <div 
-              key={challenge}
-              className="flex items-center space-x-2 rounded-lg border border-gray-200 p-3 hover:bg-gray-50 transition-colors"
-            >
-              <Checkbox 
-                id={`challenge-${challenge}`} 
-                checked={businessChallenges.includes(challenge)}
-                onCheckedChange={() => handleCheckboxChange(challenge, businessChallenges, setBusinessChallenges)}
-              />
-              <Label htmlFor={`challenge-${challenge}`} className="cursor-pointer font-medium">
-                {challenge}
-              </Label>
-            </div>
-          ))}
-        </div>
-      </div>
 
-      {/* Objetivos de Curto Prazo */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <Label className="text-lg font-semibold">
-            Objetivos de Curto Prazo (3-6 meses)<span className="text-[#0ABAB5] ml-1">*</span>
+        <div className="space-y-3">
+          <Label htmlFor="short_term_goals">
+            Objetivos de curto prazo
+            <span className="text-red-500">*</span>
           </Label>
-          {errors.shortTermGoals && (
-            <p className="text-sm text-red-500">{errors.shortTermGoals}</p>
-          )}
+          <Textarea
+            id="short_term_goals"
+            placeholder="Quais objetivos sua empresa deseja alcançar nos próximos 3-6 meses?"
+            value={businessContext.short_term_goals}
+            onChange={(e) => handleChange("short_term_goals", e.target.value)}
+            className="h-24"
+          />
         </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {shortTermGoalsOptions.map((goal) => (
-            <div 
-              key={goal}
-              className="flex items-center space-x-2 rounded-lg border border-gray-200 p-3 hover:bg-gray-50 transition-colors"
-            >
-              <Checkbox 
-                id={`goal-${goal}`} 
-                checked={shortTermGoals.includes(goal)}
-                onCheckedChange={() => handleCheckboxChange(goal, shortTermGoals, setShortTermGoals)}
-              />
-              <Label htmlFor={`goal-${goal}`} className="cursor-pointer font-medium">
-                {goal}
-              </Label>
-            </div>
-          ))}
-        </div>
-      </div>
 
-      {/* KPIs Importantes */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <Label className="text-lg font-semibold">
-            KPIs Mais Importantes para o Negócio<span className="text-[#0ABAB5] ml-1">*</span>
+        <div className="space-y-3">
+          <Label htmlFor="important_kpis">
+            KPIs importantes
+            <span className="text-red-500">*</span>
           </Label>
-          {errors.importantKpis && (
-            <p className="text-sm text-red-500">{errors.importantKpis}</p>
-          )}
+          <Textarea
+            id="important_kpis"
+            placeholder="Quais métricas são mais importantes para seu negócio?"
+            value={businessContext.important_kpis}
+            onChange={(e) => handleChange("important_kpis", e.target.value)}
+            className="h-24"
+          />
         </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {kpiOptions.map((kpi) => (
-            <div 
-              key={kpi}
-              className="flex items-center space-x-2 rounded-lg border border-gray-200 p-3 hover:bg-gray-50 transition-colors"
-            >
-              <Checkbox 
-                id={`kpi-${kpi}`} 
-                checked={importantKpis.includes(kpi)}
-                onCheckedChange={() => handleCheckboxChange(kpi, importantKpis, setImportantKpis)}
-              />
-              <Label htmlFor={`kpi-${kpi}`} className="cursor-pointer font-medium">
-                {kpi}
-              </Label>
-            </div>
-          ))}
-        </div>
-      </div>
 
-      <NavigationButtons isSubmitting={isSubmitting} />
-    </form>
+        <div className="space-y-3">
+          <Label htmlFor="additional_context">
+            Contexto adicional (opcional)
+          </Label>
+          <Textarea
+            id="additional_context"
+            placeholder="Algo mais que queira compartilhar sobre seu contexto de negócio..."
+            value={businessContext.additional_context}
+            onChange={(e) => handleChange("additional_context", e.target.value)}
+            className="h-24"
+          />
+        </div>
+
+        <Button type="submit" className="w-full" disabled={isSubmitting}>
+          {isSubmitting ? "Salvando..." : "Continuar"}
+        </Button>
+      </form>
+    </div>
   );
 };

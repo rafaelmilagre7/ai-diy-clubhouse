@@ -6,7 +6,7 @@ import { useProgress } from './useProgress';
 
 // Hook principal que orquestra os auxiliares para o onboarding step
 export const useOnboardingSteps = () => {
-  const { steps: stepList, currentStepIndex, setCurrentStepIndex, navigateToStep, navigate } = useStepNavigation();
+  const { currentStepIndex, setCurrentStepIndex, navigateToStep, navigate } = useStepNavigation();
   const { progress } = useProgress();
   const { saveStepData, completeOnboarding } = useStepPersistence({
     currentStepIndex,
@@ -14,10 +14,10 @@ export const useOnboardingSteps = () => {
     navigate,
   });
 
-  const currentStep = stepList[currentStepIndex];
+  const currentStep = steps[currentStepIndex];
 
   return {
-    steps: stepList,
+    steps,
     currentStep,
     currentStepIndex,
     isSubmitting: false, // Pode ser melhorado para tratar submissão concorrente — pode ser integrado pelo useStepPersistence se necessário
@@ -27,4 +27,3 @@ export const useOnboardingSteps = () => {
     navigateToStep
   };
 };
-
