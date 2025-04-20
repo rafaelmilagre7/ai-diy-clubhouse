@@ -1,7 +1,7 @@
 
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
-import { Home, GraduationCap, Trophy, Wrench, Gift, PencilLine, User } from "lucide-react";
+import { Home, GraduationCap, Trophy, Wrench, Gift, PencilLine, User, Users } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
@@ -20,6 +20,19 @@ export const MemberSidebarNav = ({ sidebarOpen }: { sidebarOpen: boolean }) => {
             <Home className="h-5 w-5 mr-2" />
             <span className={cn("flex-1", !sidebarOpen && "hidden")}>
               Dashboard
+            </span>
+          </Link>
+        </Button>
+
+        <Button
+          variant={location.pathname === "/onboarding" ? "default" : "ghost"}
+          asChild
+          className="w-full justify-start"
+        >
+          <Link to="/onboarding">
+            <Users className="h-5 w-5 mr-2" />
+            <span className={cn("flex-1", !sidebarOpen && "hidden")}>
+              Onboarding
             </span>
           </Link>
         </Button>

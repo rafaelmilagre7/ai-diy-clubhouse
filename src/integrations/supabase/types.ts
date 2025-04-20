@@ -234,60 +234,90 @@ export type Database = {
         Row: {
           ai_experience: Json | null
           ai_knowledge_level: string | null
+          budget_range: string | null
           business_data: Json | null
           business_goals: Json | null
           company_data: Json | null
           completed_steps: string[] | null
           created_at: string | null
           current_step: string | null
+          decision_makers: string[] | null
           goals: string[] | null
           id: string
           implementation_preferences: Json | null
+          implementation_speed: string | null
           industry_focus: Json | null
           is_completed: boolean | null
           personal_info: Json | null
+          priority_areas: string[] | null
           resources_needs: Json | null
+          support_level: string | null
+          target_market: string | null
           team_info: Json | null
+          team_size: string | null
+          tech_stack: string[] | null
+          technical_expertise: string | null
+          training_needs: string[] | null
           updated_at: string | null
           user_id: string
         }
         Insert: {
           ai_experience?: Json | null
           ai_knowledge_level?: string | null
+          budget_range?: string | null
           business_data?: Json | null
           business_goals?: Json | null
           company_data?: Json | null
           completed_steps?: string[] | null
           created_at?: string | null
           current_step?: string | null
+          decision_makers?: string[] | null
           goals?: string[] | null
           id?: string
           implementation_preferences?: Json | null
+          implementation_speed?: string | null
           industry_focus?: Json | null
           is_completed?: boolean | null
           personal_info?: Json | null
+          priority_areas?: string[] | null
           resources_needs?: Json | null
+          support_level?: string | null
+          target_market?: string | null
           team_info?: Json | null
+          team_size?: string | null
+          tech_stack?: string[] | null
+          technical_expertise?: string | null
+          training_needs?: string[] | null
           updated_at?: string | null
           user_id: string
         }
         Update: {
           ai_experience?: Json | null
           ai_knowledge_level?: string | null
+          budget_range?: string | null
           business_data?: Json | null
           business_goals?: Json | null
           company_data?: Json | null
           completed_steps?: string[] | null
           created_at?: string | null
           current_step?: string | null
+          decision_makers?: string[] | null
           goals?: string[] | null
           id?: string
           implementation_preferences?: Json | null
+          implementation_speed?: string | null
           industry_focus?: Json | null
           is_completed?: boolean | null
           personal_info?: Json | null
+          priority_areas?: string[] | null
           resources_needs?: Json | null
+          support_level?: string | null
+          target_market?: string | null
           team_info?: Json | null
+          team_size?: string | null
+          tech_stack?: string[] | null
+          technical_expertise?: string | null
+          training_needs?: string[] | null
           updated_at?: string | null
           user_id?: string
         }
