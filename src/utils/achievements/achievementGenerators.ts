@@ -1,5 +1,4 @@
-
-import { Achievement, ProgressData } from "@/types/achievementTypes";
+import { Achievement, ProgressData, BadgeData } from "@/types/achievementTypes";
 import { Solution } from "@/lib/supabase";
 import { SolutionCategory } from "@/lib/types/categoryTypes";
 
@@ -91,6 +90,50 @@ export const generateEngagementAchievements = (
       isUnlocked: currentStreak >= days,
       requiredCount: days,
       currentCount: currentStreak,
+    });
+  });
+
+  return achievementsList;
+};
+
+export const generateSocialAchievements = (
+  progress: ProgressData[],
+  comments: any[],
+  likes: number
+): Achievement[] => {
+  const achievementsList: Achievement[] = [];
+  
+  // Conquistas de comentários
+  const commentMilestones = [1, 5, 10, 25];
+  const totalComments = comments.length;
+  
+  commentMilestones.forEach(milestone => {
+    achievementsList.push({
+      id: `comments-${milestone}`,
+      name: `Colaborador Nível ${milestone}`,
+      description: `Fez ${milestone} comentários em soluções`,
+      category: "achievement",
+      isUnlocked: totalComments >= milestone,
+      earnedAt: totalComments >= milestone ? 
+        comments[0]?.created_at : undefined,
+      requiredCount: milestone,
+      currentCount: totalComments,
+    });
+  });
+  
+  // Conquistas de likes recebidos
+  const likeMilestones = [1, 10, 50, 100];
+  
+  likeMilestones.forEach(milestone => {
+    achievementsList.push({
+      id: `likes-${milestone}`,
+      name: `Influenciador Nível ${milestone}`,
+      description: `Recebeu ${milestone} likes em seus comentários`,
+      category: "achievement",
+      isUnlocked: likes >= milestone,
+      earnedAt: likes >= milestone ? new Date().toISOString() : undefined,
+      requiredCount: milestone,
+      currentCount: likes,
     });
   });
 

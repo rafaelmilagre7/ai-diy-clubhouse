@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Achievement } from "@/types/achievementTypes";
@@ -6,7 +5,8 @@ import { useAchievementData } from "./useAchievementData";
 import {
   generateImplementationAchievements,
   generateCategoryAchievements,
-  generateEngagementAchievements
+  generateEngagementAchievements,
+  generateSocialAchievements
 } from "@/utils/achievements/achievementGenerators";
 
 export const useAchievements = () => {
@@ -18,7 +18,9 @@ export const useAchievements = () => {
     progressData,
     solutions,
     checklistData,
-    badgesData
+    badgesData,
+    comments,
+    totalLikes
   } = useAchievementData();
 
   useEffect(() => {
@@ -28,11 +30,13 @@ export const useAchievements = () => {
       const implementationAchievements = generateImplementationAchievements(progressData, solutions);
       const categoryAchievements = generateCategoryAchievements(progressData, solutions);
       const engagementAchievements = generateEngagementAchievements(progressData, solutions);
+      const socialAchievements = generateSocialAchievements(progressData, comments, totalLikes);
 
       const allAchievements = [
         ...implementationAchievements,
         ...categoryAchievements,
-        ...engagementAchievements
+        ...engagementAchievements,
+        ...socialAchievements
       ];
 
       setAchievements(allAchievements);
@@ -45,7 +49,7 @@ export const useAchievements = () => {
         variant: "destructive",
       });
     }
-  }, [loading, error, progressData, solutions, checklistData, badgesData, toast]);
+  }, [loading, error, progressData, solutions, checklistData, badgesData, comments, totalLikes, toast]);
 
   return {
     loading,

@@ -13,6 +13,8 @@ export const useAchievementData = () => {
   const [solutions, setSolutions] = useState<Solution[]>([]);
   const [checklistData, setChecklistData] = useState<ChecklistData[]>([]);
   const [badgesData, setBadgesData] = useState<BadgeData[]>([]);
+  const [comments, setComments] = useState<any[]>([]);
+  const [totalLikes, setTotalLikes] = useState(0);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -22,7 +24,14 @@ export const useAchievementData = () => {
         setLoading(true);
         setError(null);
 
-        const [progressResult, solutionsResult, checklistResult, badgesResult] = await Promise.all([
+        const [
+          progressResult, 
+          solutionsResult, 
+          checklistResult, 
+          badgesResult,
+          commentsResult,
+          likesResult
+        ] = await Promise.all([
           supabase
             .from("progress")
             .select("*, solutions!inner(id, category)")
@@ -41,17 +50,33 @@ export const useAchievementData = () => {
           supabase
             .from("user_badges")
             .select("*, badges(*)")
+            .eq("user_id", user.id),
+            
+          supabase
+            .from("solution_comments")
+            .select("*")
+            .eq("user_id", user.id),
+            
+          supabase
+            .from("solution_comments")
+            .select("likes_count")
             .eq("user_id", user.id)
         ]);
 
         if (progressResult.error) throw progressResult.error;
         if (solutionsResult.error) throw solutionsResult.error;
         if (checklistResult.error) throw checklistResult.error;
+        if (commentsResult.error) throw commentsResult.error;
+        if (likesResult.error) throw likesResult.error;
         
         setProgressData(progressResult.data || []);
         setSolutions(solutionsResult.data || []);
         setChecklistData(checklistResult.data || []);
         setBadgesData(badgesResult.data || []);
+        setComments(commentsResult.data || []);
+        setTotalLikes(
+          likesResult.data?.reduce((acc, comment) => acc + (comment.likes_count || 0), 0) || 0
+        );
 
       } catch (error: any) {
         console.error("Error in fetching achievements data:", error);
@@ -70,6 +95,8 @@ export const useAchievementData = () => {
     progressData,
     solutions,
     checklistData,
-    badgesData
+    badgesData,
+    comments,
+    totalLikes
   };
 };
