@@ -1,9 +1,9 @@
 
 import React, { useState } from "react";
-import { BusinessInfoMessage } from "./BusinessInfoMessage";
 import { CompanyInputs } from "./business/CompanyInputs";
-import { BusinessNavButtons } from "./business/BusinessNavButtons";
 import { OnboardingData } from "@/types/onboarding";
+import { Button } from "@/components/ui/button";
+import { ArrowRight } from "lucide-react";
 
 interface BusinessGoalsStepProps {
   onSubmit: (stepId: string, data: Partial<OnboardingData>) => void;
@@ -12,7 +12,6 @@ interface BusinessGoalsStepProps {
   onComplete: () => void;
   initialData?: any;
   personalInfo?: OnboardingData["personal_info"];
-  onPrevious?: () => void;
 }
 
 export const BusinessGoalsStep = ({
@@ -20,7 +19,6 @@ export const BusinessGoalsStep = ({
   isSubmitting,
   initialData,
   personalInfo,
-  onPrevious,
 }: BusinessGoalsStepProps) => {
   // Estados para cada campo
   const [companyName, setCompanyName] = useState(initialData?.company_name || "");
@@ -46,26 +44,30 @@ export const BusinessGoalsStep = ({
   };
 
   return (
-    <div className="flex flex-col items-center min-h-[calc(100vh-170px)] py-8 sm:py-16 bg-[#f6f6f7]">
-      <div className="w-full max-w-2xl flex flex-col items-center">
-        {/* Botão voltar */}
-        <BusinessNavButtons onPrevious={onPrevious} isSubmitting={false} />
+    <div className="space-y-6">
+      <div className="mb-4">
+        <div className="flex items-center gap-3 rounded-xl bg-white border border-[#0ABAB5]/20 px-5 py-4 shadow-sm">
+          <div className="flex items-center justify-center bg-[#eafaf9] rounded-full h-11 w-11">
+            <span className="text-[#0ABAB5] text-xl">🤖</span>
+          </div>
+          <div>
+            <span className="block text-[#0ABAB5] font-semibold mb-0.5" style={{ fontSize: 16 }}>
+              {personalInfo?.name ? `E aí ${personalInfo.name}!` : "Olá!"}
+            </span>
+            <span className="text-[#1A2228] text-sm">
+              Para personalizar sua experiência, conte um pouco sobre a empresa onde você trabalha.
+              Estas informações são essenciais para recomendar as melhores soluções para seu negócio.
+            </span>
+          </div>
+        </div>
+      </div>
 
-        {/* Mensagem do Milagrinho */}
-        <BusinessInfoMessage userName={personalInfo?.name} />
-
-        {/* Card principal do formulário */}
-        <form
-          onSubmit={handleSubmit}
-          className="w-full bg-white rounded-2xl shadow-lg p-5 sm:p-8 border border-gray-100 flex flex-col gap-7"
-          style={{ minWidth: 0 }}
-        >
-          {/* Título do bloco */}
-          <h2 className="text-xl font-semibold text-[#15192C] mb-3 ml-1">
-            Objetivos do Negócio
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="bg-white rounded-lg border border-gray-100 p-6 shadow-sm">
+          <h2 className="text-xl font-semibold text-[#15192C] mb-6">
+            Dados Profissionais
           </h2>
           
-          {/* Campos do formulário */}
           <CompanyInputs 
             companyName={companyName}
             setCompanyName={setCompanyName}
@@ -81,10 +83,24 @@ export const BusinessGoalsStep = ({
             setAnnualRevenue={setAnnualRevenue}
           />
           
-          {/* Botão avançar */}
-          <BusinessNavButtons isSubmitting={isSubmitting} />
-        </form>
-      </div>
+          <div className="flex justify-end mt-8">
+            <Button
+              type="submit"
+              className="bg-[#0ABAB5] hover:bg-[#099388] text-white px-5 py-2"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                "Salvando..."
+              ) : (
+                <span className="flex items-center gap-2">
+                  Próximo
+                  <ArrowRight className="h-4 w-4" />
+                </span>
+              )}
+            </Button>
+          </div>
+        </div>
+      </form>
     </div>
   );
 };
