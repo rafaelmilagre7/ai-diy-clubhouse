@@ -7,7 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Mail } from "lucide-react";
+import { Mail, AlertTriangle } from "lucide-react";
 
 const resetPasswordSchema = z.object({
   email: z.string().email("E-mail inválido").min(1, "E-mail é obrigatório"),
@@ -18,6 +18,7 @@ type ResetPasswordForm = z.infer<typeof resetPasswordSchema>;
 export const ResetPasswordForm = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
   const {
@@ -34,17 +35,32 @@ export const ResetPasswordForm = () => {
   const onSubmit = async (data: ResetPasswordForm) => {
     try {
       setIsLoading(true);
+      setError(null);
       
       console.log("Iniciando reset de senha para:", data.email);
       
+      // Usar a URL atual com path completo para garantir redirecionamento correto
+      const currentOrigin = window.location.origin;
+      const redirectUrl = `${currentOrigin}/reset-password/update`;
+      
+      console.log("URL de redirecionamento:", redirectUrl);
+      
       const { error } = await supabase.auth.resetPasswordForEmail(data.email, {
-        redirectTo: `${window.location.origin}/reset-password/update`,
+        redirectTo: redirectUrl,
       });
 
       console.log("Resposta do Supabase:", { error });
 
       if (error) {
         console.error("Erro detalhado no reset de senha:", error);
+        
+        // Verificar se o erro está relacionado ao e-mail não verificado
+        if (error.message && error.message.includes("not verified")) {
+          setError("Erro de configuração: O e-mail de envio não está verificado. Por favor, contacte o administrador.");
+          toast.error("Erro de configuração no servidor de e-mail. Entre em contato com o suporte.");
+          return;
+        }
+        
         throw error;
       }
 
@@ -57,8 +73,13 @@ export const ResetPasswordForm = () => {
     } catch (error: any) {
       console.error("Erro completo ao solicitar reset de senha:", error);
       
+      // Não revelar se o e-mail existe ou não por segurança
+      setError(
+        "Não foi possível enviar o e-mail de recuperação. Verifique se o e-mail está correto ou tente novamente mais tarde."
+      );
+      
       toast.error(
-        error.message || "Erro ao enviar e-mail de recuperação. Tente novamente."
+        "Erro ao enviar e-mail de recuperação. Tente novamente."
       );
     } finally {
       setIsLoading(false);
@@ -102,6 +123,13 @@ export const ResetPasswordForm = () => {
           Digite seu e-mail para receber um link de recuperação
         </p>
       </div>
+
+      {error && (
+        <div className="bg-red-900/30 border border-red-600 rounded-md p-3 flex items-start gap-3">
+          <AlertTriangle className="h-5 w-5 text-red-500 shrink-0 mt-0.5" />
+          <p className="text-sm text-red-200">{error}</p>
+        </div>
+      )}
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div className="space-y-2">
