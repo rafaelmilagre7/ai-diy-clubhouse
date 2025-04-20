@@ -272,6 +272,79 @@ export type Database = {
           },
         ]
       }
+      solution_comment_likes: {
+        Row: {
+          comment_id: string
+          created_at: string | null
+          id: string
+          user_id: string
+        }
+        Insert: {
+          comment_id: string
+          created_at?: string | null
+          id?: string
+          user_id: string
+        }
+        Update: {
+          comment_id?: string
+          created_at?: string | null
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "solution_comment_likes_comment_id_fkey"
+            columns: ["comment_id"]
+            isOneToOne: false
+            referencedRelation: "solution_comments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      solution_comments: {
+        Row: {
+          content: string
+          created_at: string | null
+          id: string
+          likes_count: number
+          module_id: string | null
+          parent_id: string | null
+          solution_id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          id?: string
+          likes_count?: number
+          module_id?: string | null
+          parent_id?: string | null
+          solution_id: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          id?: string
+          likes_count?: number
+          module_id?: string | null
+          parent_id?: string | null
+          solution_id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "solution_comments_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "solution_comments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       solution_metrics: {
         Row: {
           abandonment_rates: Json | null
