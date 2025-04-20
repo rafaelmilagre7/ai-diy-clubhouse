@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { CompanyInputs } from "./business/CompanyInputs";
 import { OnboardingData } from "@/types/onboarding";
 import { Button } from "@/components/ui/button";
@@ -28,6 +28,18 @@ export const BusinessGoalsStep = ({
   const [companyWebsite, setCompanyWebsite] = useState(initialData?.company_website || "");
   const [currentPosition, setCurrentPosition] = useState(initialData?.current_position || "");
   const [annualRevenue, setAnnualRevenue] = useState(initialData?.annual_revenue || "");
+
+  useEffect(() => {
+    // Atualizar os estados quando os dados iniciais mudarem
+    if (initialData) {
+      setCompanyName(initialData.company_name || "");
+      setCompanySize(initialData.company_size || "");
+      setCompanySector(initialData.company_sector || "");
+      setCompanyWebsite(initialData.company_website || "");
+      setCurrentPosition(initialData.current_position || "");
+      setAnnualRevenue(initialData.annual_revenue || "");
+    }
+  }, [initialData]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

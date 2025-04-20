@@ -1,6 +1,5 @@
 
 import React from "react";
-import { ChatOnboarding } from "./ChatOnboarding";
 import { EtapasProgresso } from "./EtapasProgresso";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -42,8 +41,6 @@ export const OnboardingLayout = ({
       <div className="mt-6 mb-4">
         <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
       </div>
-
-      <ChatOnboarding />
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
         {children}
