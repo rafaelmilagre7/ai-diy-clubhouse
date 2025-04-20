@@ -1,12 +1,12 @@
 
 import { Navigate, Outlet, useLocation } from "react-router-dom";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, ReactNode } from "react";
 import { useAuth } from "@/contexts/auth";
 import LoadingScreen from "@/components/common/LoadingScreen";
 import { toast } from "sonner";
 
 interface ProtectedRoutesProps {
-  children?: React.ReactNode;
+  children?: ReactNode;
 }
 
 export const ProtectedRoutes = ({ children }: ProtectedRoutesProps) => {
