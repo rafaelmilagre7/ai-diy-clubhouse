@@ -6,7 +6,7 @@ export { default as ForgotPassword } from './Auth';
 export { default as ResetPassword } from './Auth';
 
 // Admin
-export { default as AdminDashboard } from './admin/Dashboard';
+export { default as AdminDashboard } from './admin/AdminDashboard';
 export { default as SolutionEditor } from './admin/SolutionEditor';
 export { default as SolutionsList } from './admin/SolutionsList';
 

@@ -2,6 +2,7 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ReactNode } from "react";
 import { Solution } from "@/lib/supabase";
+import { SolutionsGrid } from "./SolutionsGrid";
 
 interface CategoryTabsProps {
   activeCategory: string;
