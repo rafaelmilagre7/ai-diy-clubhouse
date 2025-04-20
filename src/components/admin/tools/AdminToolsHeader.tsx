@@ -3,7 +3,6 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
 import { Link } from "react-router-dom";
-import { CleanupDuplicatesButton } from "./actions/CleanupDuplicatesButton";
 
 interface AdminToolsHeaderProps {
   onRefreshRequest?: () => void;
@@ -18,15 +17,12 @@ export const AdminToolsHeader = ({ onRefreshRequest }: AdminToolsHeaderProps) =>
           Gerencie ferramentas e benefícios para membros
         </p>
       </div>
-      <div className="flex flex-col sm:flex-row gap-3">
-        <CleanupDuplicatesButton onCleanupComplete={onRefreshRequest} />
-        <Button asChild className="bg-[#0ABAB5] hover:bg-[#0ABAB5]/90">
-          <Link to="/admin/tools/new">
-            <PlusCircle className="h-4 w-4 mr-2" />
-            Nova Ferramenta
-          </Link>
-        </Button>
-      </div>
+      <Button asChild className="bg-[#0ABAB5] hover:bg-[#0ABAB5]/90">
+        <Link to="/admin/tools/new">
+          <PlusCircle className="h-4 w-4 mr-2" />
+          Nova Ferramenta
+        </Link>
+      </Button>
     </div>
   );
 };
