@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Loader2, Upload, AlertCircle } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
@@ -30,6 +30,14 @@ export const FileUpload: React.FC<FileUploadProps> = ({
   const [isUploading, setIsUploading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  const handleButtonClick = () => {
+    // Acionar o clique no input de arquivo
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
   
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -40,6 +48,11 @@ export const FileUpload: React.FC<FileUploadProps> = ({
     const fileSizeMB = file.size / (1024 * 1024);
     if (fileSizeMB > maxSize) {
       setErrorMessage(`O arquivo é muito grande. O tamanho máximo é ${maxSize}MB.`);
+      toast({
+        title: 'Arquivo muito grande',
+        description: `O tamanho máximo é ${maxSize}MB.`,
+        variant: 'destructive',
+      });
       return;
     }
     
@@ -52,6 +65,8 @@ export const FileUpload: React.FC<FileUploadProps> = ({
       const fileName = `${uuidv4()}.${fileExt}`;
       const filePath = folder ? `${folder}/${fileName}` : fileName;
       
+      console.log('Iniciando upload para:', bucketName, filePath);
+      
       // Fazer upload para o Supabase Storage
       const { data, error } = await supabase.storage
         .from(bucketName)
@@ -60,12 +75,19 @@ export const FileUpload: React.FC<FileUploadProps> = ({
           upsert: true,
         });
       
-      if (error) throw error;
+      if (error) {
+        console.error('Erro no upload para o Supabase:', error);
+        throw error;
+      }
+      
+      console.log('Upload realizado com sucesso:', data);
       
       // Obter a URL pública do arquivo
       const { data: urlData } = supabase.storage
         .from(bucketName)
         .getPublicUrl(filePath);
+      
+      console.log('URL pública obtida:', urlData.publicUrl);
       
       onUploadComplete(urlData.publicUrl, file.name, file.size);
       
@@ -92,37 +114,39 @@ export const FileUpload: React.FC<FileUploadProps> = ({
   return (
     <div className="space-y-2">
       <div className="flex flex-col">
-        <label className="text-sm text-muted-foreground mb-2">
-          {fieldLabel}
-        </label>
-        <div className="flex items-center gap-2">
-          <label className="cursor-pointer">
-            <Button
-              type="button"
-              variant="outline"
-              className={`relative ${isUploading ? 'opacity-70' : ''}`}
-              disabled={isUploading}
-            >
-              {isUploading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Enviando...
-                </>
-              ) : (
-                <>
-                  <Upload className="mr-2 h-4 w-4" />
-                  {buttonText}
-                </>
-              )}
-            </Button>
-            <input
-              type="file"
-              accept={accept}
-              onChange={handleFileChange}
-              className="hidden"
-              disabled={isUploading}
-            />
+        {fieldLabel && (
+          <label className="text-sm text-muted-foreground mb-2">
+            {fieldLabel}
           </label>
+        )}
+        <div className="flex items-center gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            className={`relative ${isUploading ? 'opacity-70' : ''}`}
+            disabled={isUploading}
+            onClick={handleButtonClick}
+          >
+            {isUploading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Enviando...
+              </>
+            ) : (
+              <>
+                <Upload className="mr-2 h-4 w-4" />
+                {buttonText}
+              </>
+            )}
+          </Button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept={accept}
+            onChange={handleFileChange}
+            className="hidden"
+            disabled={isUploading}
+          />
           
           {initialFileUrl && (
             <a

@@ -5,6 +5,8 @@ import { FileUpload } from '@/components/ui/file-upload';
 import { UseFormReturn } from 'react-hook-form';
 import { ToolFormValues } from '../../types/toolFormTypes';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
+import { X } from 'lucide-react';
 
 interface LogoUploadProps {
   form: UseFormReturn<ToolFormValues>;
@@ -37,6 +39,17 @@ export const LogoUpload = ({ form }: LogoUploadProps) => {
     form.trigger('logo_url');
   };
 
+  const handleRemoveLogo = () => {
+    setLogoUrl(undefined);
+    form.setValue('logo_url', '', { 
+      shouldDirty: true,
+      shouldTouch: true,
+      shouldValidate: true 
+    });
+    form.setValue('formModified', true);
+    form.trigger('logo_url');
+  };
+
   return (
     <FormField
       control={form.control}
@@ -47,20 +60,32 @@ export const LogoUpload = ({ form }: LogoUploadProps) => {
           <div className="space-y-4">
             {logoUrl && (
               <div className="flex items-center gap-4">
-                <Avatar className="h-16 w-16 border">
-                  <AvatarImage src={logoUrl} alt="Logo da ferramenta" />
-                  <AvatarFallback>Logo</AvatarFallback>
-                </Avatar>
+                <div className="relative">
+                  <Avatar className="h-16 w-16 border">
+                    <AvatarImage src={logoUrl} alt="Logo da ferramenta" />
+                    <AvatarFallback>Logo</AvatarFallback>
+                  </Avatar>
+                  <Button 
+                    type="button"
+                    size="icon"
+                    variant="destructive"
+                    className="absolute -top-2 -right-2 h-5 w-5 rounded-full"
+                    onClick={handleRemoveLogo}
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                </div>
                 <p className="text-sm text-muted-foreground">Logo atual</p>
               </div>
             )}
             <FormControl>
               <FileUpload
                 bucketName="tool_logos"
+                folder="logos"
                 onUploadComplete={handleUploadComplete}
                 accept="image/*"
                 maxSize={2}
-                buttonText="Upload do Logo"
+                buttonText={logoUrl ? "Trocar logo" : "Upload do Logo"}
                 fieldLabel="Selecione uma imagem para o logo"
                 initialFileUrl={logoUrl}
               />

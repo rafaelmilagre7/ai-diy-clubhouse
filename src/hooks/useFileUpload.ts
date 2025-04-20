@@ -2,7 +2,7 @@
 import { useState, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
-import { uploadFileToStorage } from '@/components/ui/file/uploadUtils';
+import { v4 as uuidv4 } from 'uuid';
 
 interface UseFileUploadProps {
   bucketName: string;
@@ -13,7 +13,7 @@ interface UseFileUploadProps {
 
 export const useFileUpload = ({ 
   bucketName, 
-  folder,
+  folder = '',
   onUploadComplete, 
   maxSize = 5 
 }: UseFileUploadProps) => {
@@ -46,17 +46,38 @@ export const useFileUpload = ({
       setUploading(true);
       setFileName(file.name);
 
-      const { publicUrl, fileName: uploadedFileName } = await uploadFileToStorage(
-        file,
-        bucketName,
-        folder || '',
-        (progress) => {
-          console.log('Upload progress:', progress);
-        }
-      );
+      // Gerar um nome único para o arquivo
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${uuidv4()}.${fileExt}`;
+      const filePath = folder ? `${folder}/${fileName}` : fileName;
+      
+      console.log('Iniciando upload para:', bucketName, filePath);
 
+      // Fazer upload para o Supabase Storage
+      const { data, error } = await supabase.storage
+        .from(bucketName)
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: true,
+        });
+
+      if (error) {
+        console.error('Erro no upload para o Supabase:', error);
+        throw error;
+      }
+      
+      console.log('Upload realizado com sucesso:', data);
+
+      // Obter a URL pública do arquivo
+      const { data: urlData } = supabase.storage
+        .from(bucketName)
+        .getPublicUrl(filePath);
+
+      console.log('URL pública obtida:', urlData.publicUrl);
+      
+      const publicUrl = urlData.publicUrl;
       setUploadedFileUrl(publicUrl);
-      onUploadComplete(publicUrl, uploadedFileName, file.size);
+      onUploadComplete(publicUrl, file.name, file.size);
 
       toast({
         title: 'Upload concluído',
