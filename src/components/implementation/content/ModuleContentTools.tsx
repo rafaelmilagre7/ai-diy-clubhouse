@@ -14,7 +14,7 @@ interface ModuleContentToolsProps {
 
 export const ModuleContentTools = ({ module }: ModuleContentToolsProps) => {
   // Garantir que os dados das ferramentas estejam corretos
-  const { isFixing: toolsDataFixing } = useToolsData();
+  const { isLoading: toolsDataLoading } = useToolsData();
 
   const { data: tools, isLoading, error } = useQuery({
     queryKey: ['solution-tools', module.solution_id],
@@ -38,7 +38,7 @@ export const ModuleContentTools = ({ module }: ModuleContentToolsProps) => {
       
       return data as SolutionTool[];
     },
-    enabled: !toolsDataFixing // Só executa a query depois que os dados estão corrigidos
+    enabled: !toolsDataLoading // Só executa a query depois que os dados estiverem prontos
   });
 
   // Log adicional após a consulta ser concluída
@@ -60,7 +60,7 @@ export const ModuleContentTools = ({ module }: ModuleContentToolsProps) => {
     return null;
   }
 
-  if (isLoading || toolsDataFixing) {
+  if (isLoading || toolsDataLoading) {
     return (
       <div className="space-y-4 mt-8">
         <h3 className="text-lg font-semibold">Ferramentas Necessárias</h3>

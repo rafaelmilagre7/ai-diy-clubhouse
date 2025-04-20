@@ -12,7 +12,7 @@ import { useToolsData } from '@/hooks/useToolsData';
 
 const Solutions = () => {
   // Garantir que as ferramentas estejam corretamente configuradas
-  const { isFixing } = useToolsData();
+  const { isLoading: toolsDataLoading } = useToolsData();
   
   const { 
     filteredSolutions, 
@@ -30,8 +30,8 @@ const Solutions = () => {
     { id: 'strategy', name: 'Estratégia' }
   ];
 
-  // Se estiver corrigindo as ferramentas, mostrar também carregando
-  if (loading || isFixing) {
+  // Se estiver carregando as ferramentas, mostrar também carregando
+  if (loading || toolsDataLoading) {
     return <LoadingScreen message="Carregando soluções..." />;
   }
 
