@@ -22,20 +22,25 @@ export const useOnboardingSteps = () => {
   const currentStep = steps[currentStepIndex];
 
   useEffect(() => {
-    if (progress?.completed_steps) {
-      console.log("Etapas completadas:", progress.completed_steps);
-      
-      const lastCompletedIndex = Math.max(
-        ...progress.completed_steps.map(step => 
-          steps.findIndex(s => s.id === step)
-        ).filter(index => index !== -1), // Filtra índices inválidos (-1)
-        -1 // Fallback para -1 se o array estiver vazio
-      );
-      
-      // Se o lastCompletedIndex for -1, manteremos o currentStepIndex como 0
-      setCurrentStepIndex(lastCompletedIndex !== -1 ? Math.min(lastCompletedIndex + 1, steps.length - 1) : 0);
-    }
-  }, [progress?.completed_steps]);
+    const loadProgress = async () => {
+      const refreshedProgress = await refreshProgress();
+      if (refreshedProgress?.completed_steps) {
+        console.log("useOnboardingSteps: Etapas completadas:", refreshedProgress.completed_steps);
+        
+        const lastCompletedIndex = Math.max(
+          ...refreshedProgress.completed_steps.map(step => 
+            steps.findIndex(s => s.id === step)
+          ).filter(index => index !== -1), // Filtra índices inválidos (-1)
+          -1 // Fallback para -1 se o array estiver vazio
+        );
+        
+        // Se o lastCompletedIndex for -1, manteremos o currentStepIndex como 0
+        setCurrentStepIndex(lastCompletedIndex !== -1 ? Math.min(lastCompletedIndex + 1, steps.length - 1) : 0);
+      }
+    };
+    
+    loadProgress();
+  }, [refreshProgress]);
   
   const saveStepData = async (
     stepId: string, 

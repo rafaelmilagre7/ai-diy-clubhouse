@@ -144,9 +144,15 @@ export const useProgress = () => {
   
   // Função para recarregar os dados do progresso do servidor
   const refreshProgress = async () => {
-    if (!user || !progressId.current) return;
+    if (!user || !progressId.current) {
+      if (user && !progressId.current) {
+        return await fetchProgress();
+      }
+      return null;
+    }
     
     try {
+      setIsLoading(true);
       const { data, error } = await supabase
         .from("onboarding_progress")
         .select("*")
@@ -155,11 +161,13 @@ export const useProgress = () => {
         
       if (error) throw error;
       
-      setProgress(data);
       console.log("Progresso recarregado com sucesso:", data);
+      setProgress(data);
+      setIsLoading(false);
       return data;
     } catch (error) {
       console.error("Erro ao recarregar progresso:", error);
+      setIsLoading(false);
       return null;
     }
   };

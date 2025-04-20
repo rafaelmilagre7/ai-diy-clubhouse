@@ -30,25 +30,39 @@ export const LocationInputs = ({
 }: LocationInputsProps) => {
   const { estados, cidadesPorEstado, isLoading } = useIBGELocations();
   const [availableCities, setAvailableCities] = useState<string[]>([]);
+  const [initialized, setInitialized] = useState(false);
 
   // Debug logs
   useEffect(() => {
-    console.log("Estado selecionado:", state);
-    console.log("Cidade selecionada:", city);
+    console.log("LocationInputs: Estado selecionado:", state);
+    console.log("LocationInputs: Cidade selecionada:", city);
     if (state && cidadesPorEstado[state]) {
-      console.log("Cidades disponíveis para", state, ":", cidadesPorEstado[state].map(city => city.name));
+      console.log("LocationInputs: Cidades disponíveis para", state, ":", cidadesPorEstado[state].map(city => city.name));
     }
   }, [state, city, cidadesPorEstado]);
 
-  // Atualizar cidades disponíveis quando o estado mudar
+  // Atualizar cidades disponíveis quando o estado mudar ou quando o componente for montado
   useEffect(() => {
-    if (state && cidadesPorEstado[state]) {
-      const cidadesDoEstado = cidadesPorEstado[state].map(city => city.name);
+    if (!isLoading && state) {
+      const cidadesDoEstado = cidadesPorEstado[state]?.map(city => city.name) || [];
       setAvailableCities(cidadesDoEstado);
-    } else {
-      setAvailableCities([]);
+      
+      // Se temos uma cidade definida mas ela não está na lista de cidades disponíveis,
+      // adicionamos ela para garantir que continue disponível na seleção
+      if (city && !cidadesDoEstado.includes(city)) {
+        setAvailableCities(prev => [...prev, city]);
+      }
+      
+      setInitialized(true);
     }
-  }, [state, cidadesPorEstado]);
+  }, [state, cidadesPorEstado, isLoading, city]);
+  
+  // Este useEffect garante que a cidade continue selecionada ao voltar para esta etapa
+  useEffect(() => {
+    if (initialized && city && !availableCities.includes(city) && availableCities.length > 0) {
+      setAvailableCities(prev => [...prev, city]);
+    }
+  }, [initialized, city, availableCities]);
 
   return (
     <>

@@ -8,11 +8,12 @@ import { PersonalInfoInputs } from "./PersonalInfoInputs";
 import { NavigationButtons } from "./NavigationButtons";
 
 export const PersonalInfoFormController = () => {
-  const { progress, updateProgress, isLoading } = useProgress();
+  const { progress, updateProgress, isLoading, refreshProgress } = useProgress();
   const { profile, user } = useAuth();
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const [formDataLoaded, setFormDataLoaded] = useState(false);
 
   // Preencher nome e email do perfil e dados já salvos
   const [formData, setFormData] = useState({
@@ -28,22 +29,37 @@ export const PersonalInfoFormController = () => {
     timezone: progress?.personal_info?.timezone || "GMT-3",
   });
 
+  // Logs para debug
+  useEffect(() => {
+    if (progress?.personal_info) {
+      console.log("PersonalInfoFormController: Dados carregados do progresso:", progress.personal_info);
+      console.log("PersonalInfoFormController: Estado:", progress.personal_info.state);
+      console.log("PersonalInfoFormController: Cidade:", progress.personal_info.city);
+    }
+  }, [progress]);
+
   // Usar useCallback para evitar recriações desnecessárias
   const updateFormData = useCallback(() => {
     if (!isLoading && (profile || progress?.personal_info)) {
-      setFormData(prev => ({
-        ...prev,
-        name: profile?.name || progress?.personal_info?.name || user?.user_metadata?.name || "",
-        email: profile?.email || progress?.personal_info?.email || user?.email || "",
-        phone: progress?.personal_info?.phone || "",
-        ddi: progress?.personal_info?.ddi || "+55",
-        linkedin: progress?.personal_info?.linkedin || "",
-        instagram: progress?.personal_info?.instagram || "",
-        country: progress?.personal_info?.country || "Brasil",
-        state: progress?.personal_info?.state || "",
-        city: progress?.personal_info?.city || "",
-        timezone: progress?.personal_info?.timezone || "GMT-3",
-      }));
+      setFormData(prev => {
+        const newData = {
+          ...prev,
+          name: profile?.name || progress?.personal_info?.name || user?.user_metadata?.name || "",
+          email: profile?.email || progress?.personal_info?.email || user?.email || "",
+          phone: progress?.personal_info?.phone || "",
+          ddi: progress?.personal_info?.ddi || "+55",
+          linkedin: progress?.personal_info?.linkedin || "",
+          instagram: progress?.personal_info?.instagram || "",
+          country: progress?.personal_info?.country || "Brasil",
+          state: progress?.personal_info?.state || "",
+          city: progress?.personal_info?.city || "",
+          timezone: progress?.personal_info?.timezone || "GMT-3",
+        };
+        
+        console.log("PersonalInfoFormController: Atualizando formData com cidade:", newData.city);
+        return newData;
+      });
+      setFormDataLoaded(true);
     }
   }, [profile, progress?.personal_info, user, isLoading]);
 
@@ -53,6 +69,17 @@ export const PersonalInfoFormController = () => {
       updateFormData();
     }
   }, [updateFormData, isLoading, progress]);
+
+  // Recarregar os dados ao montar o componente
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!isLoading && !formDataLoaded) {
+        await refreshProgress();
+      }
+    };
+    
+    fetchData();
+  }, [refreshProgress, isLoading, formDataLoaded]);
 
   const handleChange = (field: string, value: string) => {
     // Impede edição em nome e e-mail (proteção extra contra tentativa de edição)
@@ -74,7 +101,8 @@ export const PersonalInfoFormController = () => {
       if (field === "state") {
         newData.city = "";
       }
-
+      
+      console.log(`PersonalInfoFormController: Campo ${field} atualizado para ${value}`);
       return newData;
     });
     
@@ -140,11 +168,11 @@ export const PersonalInfoFormController = () => {
         email: email,
       };
       
-      console.log("Dados pessoais sendo salvos:", personalInfo);
+      console.log("PersonalInfoFormController: Dados pessoais sendo salvos:", personalInfo);
 
       await updateProgress({
         personal_info: personalInfo,
-        current_step: "business_goals",
+        current_step: "goals",
         completed_steps: [...(progress?.completed_steps || []), "personal_info"],
       });
 
