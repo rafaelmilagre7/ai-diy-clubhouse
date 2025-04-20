@@ -1,23 +1,16 @@
-
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { useAuth } from "@/contexts/auth";
 import { useState } from "react";
-import LoadingScreen from "@/components/common/LoadingScreen";
+import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { useSolutionsData } from "@/hooks/useSolutionsData";
-import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
-import { CategoryTabs } from "@/components/dashboard/CategoryTabs";
-import { ProgressSummary } from "@/components/dashboard/ProgressSummary";
 import { useDashboardProgress } from "@/hooks/useDashboardProgress";
-import { useToast } from "@/hooks/use-toast";
 import { toast } from "sonner";
 
 const Dashboard = () => {
-  const { profile } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const categoryParam = searchParams.get("category") || "all";
-  
   const [searchQuery, setSearchQuery] = useState("");
+  
   const { 
     activeSolutions, 
     completedSolutions, 
@@ -43,34 +36,40 @@ const Dashboard = () => {
     toast.success("Carregando solução...");
     navigate(`/solution/${id}`);
   };
-  
-  if (loading) {
-    return <LoadingScreen message="Carregando suas soluções..." />;
-  }
-  
+
   return (
-    <div className="space-y-6">
-      <DashboardHeader 
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-      />
-      
-      <ProgressSummary 
-        completedCount={completedCount}
-        inProgressCount={inProgressCount}
-        progressPercentage={progressPercentage}
-        totalSolutions={totalSolutions}
-      />
-      
-      <div className="space-y-4">
-        <CategoryTabs
-          activeCategory={activeCategory}
-          onCategoryChange={setActiveCategory}
-          filteredSolutions={filteredSolutions}
-          onSelectSolution={handleSelectSolution}
-        />
+    <DashboardLayout
+      loading={loading}
+      searchQuery={searchQuery}
+      onSearchChange={setSearchQuery}
+      completedCount={completedCount}
+      inProgressCount={inProgressCount}
+      progressPercentage={progressPercentage}
+      totalSolutions={totalSolutions}
+      activeCategory={activeCategory}
+      onCategoryChange={setActiveCategory}
+    >
+      <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+        {filteredSolutions.map((solution) => (
+          <div
+            key={solution.id}
+            onClick={() => handleSelectSolution(solution.id)}
+            className="cursor-pointer"
+          >
+            <div className="rounded-md border bg-card text-card-foreground shadow-sm w-full">
+              <div className="flex flex-col space-y-1.5 p-6">
+                <h3 className="text-2xl font-semibold leading-none tracking-tight">
+                  {solution.title}
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  {solution.description}
+                </p>
+              </div>
+            </div>
+          </div>
+        ))}
       </div>
-    </div>
+    </DashboardLayout>
   );
 };
 
