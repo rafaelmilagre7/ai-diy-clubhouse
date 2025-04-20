@@ -8,7 +8,7 @@ import { Link } from "react-router-dom";
 
 interface OnboardingLayoutProps {
   children: React.ReactNode;
-  currentStep: number; // Alterado de string para number
+  currentStep: number;
   title: string;
   backUrl?: string;
 }

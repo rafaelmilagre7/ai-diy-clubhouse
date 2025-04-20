@@ -2,7 +2,6 @@
 import { useEffect, useState } from 'react';
 import { useProgress } from './useProgress';
 import { toast } from 'sonner';
-import { supabase } from "@/lib/supabase";
 import { OnboardingData } from '@/types/onboarding';
 
 export const useOnboardingSteps = () => {
@@ -27,9 +26,11 @@ export const useOnboardingSteps = () => {
       const lastCompletedIndex = Math.max(
         ...progress.completed_steps.map(step => 
           steps.findIndex(s => s.id === step)
-        )
+        ).filter(index => index !== -1), // Filtra índices inválidos (-1)
+        -1 // Fallback para -1 se o array estiver vazio
       );
-      setCurrentStepIndex(Math.min(lastCompletedIndex + 1, steps.length - 1));
+      // Se o lastCompletedIndex for -1, manteremos o currentStepIndex como 0
+      setCurrentStepIndex(lastCompletedIndex !== -1 ? Math.min(lastCompletedIndex + 1, steps.length - 1) : 0);
     }
   }, [progress?.completed_steps]);
   

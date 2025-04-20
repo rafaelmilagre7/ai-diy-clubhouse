@@ -15,17 +15,17 @@ import SuggestionDetails from "@/pages/member/SuggestionDetails";
 import NewSuggestion from "@/pages/member/NewSuggestion";
 import Achievements from "@/pages/member/Achievements";
 import Benefits from "@/pages/member/Benefits";
-import { lazy, Suspense } from "react";
 import LoadingScreen from "@/components/common/LoadingScreen";
 
-// Importar com lazy loading para reduzir o tamanho inicial do bundle
-const Onboarding = lazy(() => import("@/pages/onboarding/Onboarding"));
-const OnboardingBusinessGoals = lazy(() => import("@/pages/onboarding/steps/BusinessGoals"));
-const OnboardingAIExperience = lazy(() => import("@/pages/onboarding/steps/AIExperience"));
-const OnboardingIndustryFocus = lazy(() => import("@/pages/onboarding/steps/IndustryFocus"));
-const OnboardingResourcesNeeds = lazy(() => import("@/pages/onboarding/steps/ResourcesNeeds"));
-const OnboardingTeamInfo = lazy(() => import("@/pages/onboarding/steps/TeamInfo"));
-const OnboardingPreferences = lazy(() => import("@/pages/onboarding/steps/Preferences"));
+// Importar componentes de onboarding de forma direta em vez de usar lazy loading
+// para resolver o problema de carregamento dinâmico
+import Onboarding from "@/pages/onboarding/Onboarding";
+import OnboardingBusinessGoals from "@/pages/onboarding/steps/BusinessGoals";
+import OnboardingAIExperience from "@/pages/onboarding/steps/AIExperience";
+import OnboardingIndustryFocus from "@/pages/onboarding/steps/IndustryFocus";
+import OnboardingResourcesNeeds from "@/pages/onboarding/steps/ResourcesNeeds";
+import OnboardingTeamInfo from "@/pages/onboarding/steps/TeamInfo";
+import OnboardingPreferences from "@/pages/onboarding/steps/Preferences";
 
 interface MemberRoutesProps {
   children?: ReactNode;
@@ -40,48 +40,14 @@ const MemberRoutes = ({ children }: MemberRoutesProps) => {
       <Route path="/" element={<MemberLayout>{children}</MemberLayout>}>
         <Route index element={<Navigate to="/dashboard" replace />} />
         
-        {/* Onboarding Routes - com suspense para carregamento lazy */}
-        <Route path="onboarding" element={
-          <Suspense fallback={<LoadingScreen message="Carregando onboarding..." />}>
-            <Onboarding />
-          </Suspense>
-        } />
-        
-        <Route path="onboarding/business-goals" element={
-          <Suspense fallback={<LoadingScreen message="Carregando próxima etapa..." />}>
-            <OnboardingBusinessGoals />
-          </Suspense>
-        } />
-        
-        <Route path="onboarding/ai-experience" element={
-          <Suspense fallback={<LoadingScreen message="Carregando próxima etapa..." />}>
-            <OnboardingAIExperience />
-          </Suspense>
-        } />
-        
-        <Route path="onboarding/industry-focus" element={
-          <Suspense fallback={<LoadingScreen message="Carregando próxima etapa..." />}>
-            <OnboardingIndustryFocus />
-          </Suspense>
-        } />
-        
-        <Route path="onboarding/resources-needs" element={
-          <Suspense fallback={<LoadingScreen message="Carregando próxima etapa..." />}>
-            <OnboardingResourcesNeeds />
-          </Suspense>
-        } />
-        
-        <Route path="onboarding/team-info" element={
-          <Suspense fallback={<LoadingScreen message="Carregando próxima etapa..." />}>
-            <OnboardingTeamInfo />
-          </Suspense>
-        } />
-        
-        <Route path="onboarding/preferences" element={
-          <Suspense fallback={<LoadingScreen message="Carregando próxima etapa..." />}>
-            <OnboardingPreferences />
-          </Suspense>
-        } />
+        {/* Onboarding Routes - carregando diretamente em vez de usar lazy loading */}
+        <Route path="onboarding" element={<Onboarding />} />
+        <Route path="onboarding/business-goals" element={<OnboardingBusinessGoals />} />
+        <Route path="onboarding/ai-experience" element={<OnboardingAIExperience />} />
+        <Route path="onboarding/industry-focus" element={<OnboardingIndustryFocus />} />
+        <Route path="onboarding/resources-needs" element={<OnboardingResourcesNeeds />} />
+        <Route path="onboarding/team-info" element={<OnboardingTeamInfo />} />
+        <Route path="onboarding/preferences" element={<OnboardingPreferences />} />
 
         {/* Outras rotas */}
         <Route path="dashboard" element={<Dashboard />} />
