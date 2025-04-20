@@ -56,14 +56,14 @@ export const AdminToolsFilters: React.FC<AdminToolsFiltersProps> = ({
       </div>
       
       <Select
-        value={selectedCategory || ''}
-        onValueChange={(value) => onCategoryChange(value ? value as ToolCategory : null)}
+        value={selectedCategory || 'all'}
+        onValueChange={(value) => onCategoryChange(value === 'all' ? null : value as ToolCategory)}
       >
         <SelectTrigger className="w-[200px]">
           <SelectValue placeholder="Todas as categorias" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="">Todas as categorias</SelectItem>
+          <SelectItem value="all">Todas as categorias</SelectItem>
           {categories.map((category) => (
             <SelectItem key={category} value={category}>
               {category}
