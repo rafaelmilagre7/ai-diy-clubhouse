@@ -11,10 +11,12 @@ import { SolutionMobileActions } from "@/components/solution/SolutionMobileActio
 import { SolutionNotFound } from "@/components/solution/SolutionNotFound";
 import { useEffect } from "react";
 import { useToolsData } from "@/hooks/useToolsData";
+import { useLogging } from "@/hooks/useLogging";
 
 const SolutionDetails = () => {
   const { id } = useParams<{ id: string }>();
   const location = useLocation();
+  const { log, logError } = useLogging();
   
   // Garantir que os dados das ferramentas estejam corretos
   const { isLoading: toolsDataLoading } = useToolsData();
@@ -34,25 +36,26 @@ const SolutionDetails = () => {
   // Log page visit
   useEffect(() => {
     if (solution) {
-      console.log("Solution details page visited", { 
+      log("Solution details page visited", { 
         solution_id: solution.id, 
         solution_title: solution.title,
         path: location.pathname
       });
     }
-  }, [solution, location.pathname]);
+  }, [solution, location.pathname, log]);
   
   if (loading || toolsDataLoading) {
     return <LoadingScreen message="Carregando detalhes da solução..." />;
   }
   
   if (!solution) {
+    logError("Solution not found", { id });
     return <SolutionNotFound />;
   }
   
   // Log para depuração
-  console.log("Renderizando SolutionDetails com solução:", solution.id, solution.title);
-  console.log("Progresso atual:", progress);
+  log("Renderizando SolutionDetails com solução:", solution.id, solution.title);
+  log("Progresso atual:", progress);
   
   return (
     <div className="max-w-5xl mx-auto pb-12 animate-fade-in">

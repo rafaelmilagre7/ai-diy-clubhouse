@@ -15,6 +15,11 @@ export const useChecklistData = (module: Module) => {
 
   useEffect(() => {
     const fetchData = async () => {
+      if (!module?.solution_id) {
+        setLoading(false);
+        return;
+      }
+
       try {
         setLoading(true);
         
@@ -23,10 +28,16 @@ export const useChecklistData = (module: Module) => {
           .from("solutions")
           .select("*")
           .eq("id", module.solution_id)
-          .single();
+          .maybeSingle();
         
         if (error) {
           logError("Error fetching solution:", error);
+          return;
+        }
+        
+        if (!data) {
+          log("No solution found with id:", module.solution_id);
+          setLoading(false);
           return;
         }
         
@@ -45,7 +56,9 @@ export const useChecklistData = (module: Module) => {
             .eq("solution_id", module.solution_id)
             .order("checkpoint_order", { ascending: true });
             
-          if (!checkpointError && checkpointData && checkpointData.length > 0) {
+          if (checkpointError) {
+            logError("Error fetching checkpoints:", checkpointError);
+          } else if (checkpointData && checkpointData.length > 0) {
             const checkpointChecklist: ChecklistItem[] = checkpointData.map((item: any) => ({
               id: item.id,
               title: item.description,
@@ -54,15 +67,16 @@ export const useChecklistData = (module: Module) => {
             
             setChecklist(checkpointChecklist);
           } else {
-            console.warn("No checklist or implementation_checkpoints found", solutionData);
+            log("No checklist or implementation_checkpoints found", solutionData);
             setChecklist([]);
           }
         } else {
           setChecklist(extractedChecklist);
         }
         
+        let finalChecklist = checklist.length > 0 ? checklist : extractedChecklist;
         // Initialize user checklist state
-        const initialUserChecklist = initializeUserChecklist(checklist.length > 0 ? checklist : extractedChecklist);
+        const initialUserChecklist = initializeUserChecklist(finalChecklist);
         
         // If user is logged in, fetch their specific checklist progress
         if (user) {
@@ -71,9 +85,11 @@ export const useChecklistData = (module: Module) => {
             .select("*")
             .eq("user_id", user.id)
             .eq("solution_id", module.solution_id)
-            .single();
+            .maybeSingle();
               
-          if (!userError && userData) {
+          if (userError) {
+            logError("Error fetching user checklist:", userError);
+          } else if (userData) {
             // Parse the JSON data if it's a string
             const userItems = typeof userData.checked_items === 'string' 
               ? JSON.parse(userData.checked_items) 
@@ -94,7 +110,7 @@ export const useChecklistData = (module: Module) => {
     };
 
     fetchData();
-  }, [module.solution_id, user, log, logError, checklist.length]);
+  }, [module, user, log, logError]);
 
   return {
     solution,

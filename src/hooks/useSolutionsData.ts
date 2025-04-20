@@ -2,9 +2,11 @@
 import { useState, useEffect } from "react";
 import { supabase, Solution } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
+import { useLogging } from "@/hooks/useLogging";
 
 export const useSolutionsData = (initialCategory: string | null) => {
   const { toast } = useToast();
+  const { log, logError } = useLogging();
   const [solutions, setSolutions] = useState<Solution[]>([]);
   const [filteredSolutions, setFilteredSolutions] = useState<Solution[]>([]);
   const [loading, setLoading] = useState(true);
@@ -17,6 +19,7 @@ export const useSolutionsData = (initialCategory: string | null) => {
     const fetchSolutions = async () => {
       try {
         setLoading(true);
+        log("Buscando soluções publicadas");
         
         const { data, error: fetchError } = await supabase
           .from("solutions")
@@ -24,16 +27,22 @@ export const useSolutionsData = (initialCategory: string | null) => {
           .eq("published", true); // Apenas soluções publicadas
         
         if (fetchError) {
-          console.error("Erro ao buscar soluções:", fetchError);
+          logError("Erro ao buscar soluções:", fetchError);
           throw fetchError;
         }
         
         if (data && data.length > 0) {
+          log(`Encontradas ${data.length} soluções publicadas`);
           setSolutions(data as Solution[]);
           setFilteredSolutions(data as Solution[]);
+        } else {
+          log("Nenhuma solução publicada encontrada");
+          setSolutions([]);
+          setFilteredSolutions([]);
         }
       } catch (error) {
-        console.error("Erro ao buscar soluções:", error);
+        logError("Erro ao buscar soluções:", error);
+        setError("Não foi possível carregar as soluções");
         toast({
           title: "Erro ao carregar soluções",
           description: "Não foi possível carregar as soluções disponíveis.",
@@ -45,31 +54,42 @@ export const useSolutionsData = (initialCategory: string | null) => {
     };
     
     fetchSolutions();
-  }, [toast]);
+  }, [toast, log, logError]);
   
   // Filter solutions when category or search changes
   useEffect(() => {
     let filtered = [...solutions];
     
     // Filter by category
-    if (activeCategory !== "all") {
+    if (activeCategory && activeCategory !== "all") {
       filtered = filtered.filter((solution) => solution.category === activeCategory);
+      log(`Filtrando soluções por categoria: ${activeCategory}`, { 
+        count: filtered.length,
+        totalSolutions: solutions.length
+      });
     }
     
     // Filter by search query
     if (searchQuery) {
       const query = searchQuery.toLowerCase().trim();
       filtered = filtered.filter(
-        (solution) =>
-          solution.title.toLowerCase().includes(query) ||
-          solution.description.toLowerCase().includes(query) ||
-          solution.tags?.some(tag => tag.toLowerCase().includes(query)) ||
-          false
+        (solution) => {
+          const titleMatch = solution.title?.toLowerCase().includes(query) || false;
+          const descMatch = solution.description?.toLowerCase().includes(query) || false;
+          const tagMatch = solution.tags?.some(tag => tag.toLowerCase().includes(query)) || false;
+          
+          return titleMatch || descMatch || tagMatch;
+        }
       );
+      
+      log(`Filtrando soluções por busca: "${searchQuery}"`, { 
+        count: filtered.length,
+        activeCategory
+      });
     }
     
     setFilteredSolutions(filtered);
-  }, [activeCategory, searchQuery, solutions]);
+  }, [activeCategory, searchQuery, solutions, log]);
 
   return {
     solutions,

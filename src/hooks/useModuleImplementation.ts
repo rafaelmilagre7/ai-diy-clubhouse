@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/auth";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 import { Module, Solution } from "@/lib/supabase";
+import { useLogging } from "@/hooks/useLogging";
 
 export const useModuleImplementation = () => {
   const { id, moduleIndex } = useParams<{ id: string; moduleIndex: string }>();
@@ -12,6 +13,7 @@ export const useModuleImplementation = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { log, logError } = useLogging();
   
   const [solution, setSolution] = useState<Solution | null>(null);
   const [modules, setModules] = useState<Module[]>([]);
@@ -27,17 +29,17 @@ export const useModuleImplementation = () => {
       
       try {
         setLoading(true);
-        console.log("Buscando dados da solução e módulos para implementação", { id, moduleIdx });
+        log("Buscando dados da solução e módulos para implementação", { id, moduleIdx });
         
         // Fetch solution
         const { data: solutionData, error: solutionError } = await supabase
           .from("solutions")
           .select("*")
           .eq("id", id)
-          .single();
+          .maybeSingle();
         
         if (solutionError) {
-          console.error("Erro ao buscar solução:", solutionError);
+          logError("Erro ao buscar solução:", solutionError);
           toast({
             title: "Erro ao carregar solução",
             description: "Não foi possível encontrar a solução solicitada.",
@@ -47,8 +49,18 @@ export const useModuleImplementation = () => {
           return;
         }
         
+        if (!solutionData) {
+          toast({
+            title: "Solução não encontrada",
+            description: "Não foi possível encontrar a solução solicitada.",
+            variant: "destructive"
+          });
+          navigate("/solutions");
+          return;
+        }
+        
         setSolution(solutionData as Solution);
-        console.log("Solução encontrada:", solutionData);
+        log("Solução encontrada:", solutionData);
         
         // Fetch modules for this solution
         const { data: modulesData, error: modulesError } = await supabase
@@ -58,7 +70,7 @@ export const useModuleImplementation = () => {
           .order("module_order", { ascending: true });
         
         if (modulesError) {
-          console.error("Erro ao buscar módulos:", modulesError);
+          logError("Erro ao buscar módulos:", modulesError);
           toast({
             title: "Erro ao carregar módulos",
             description: "Não foi possível carregar os módulos desta solução.",
@@ -69,19 +81,19 @@ export const useModuleImplementation = () => {
         
         if (modulesData && modulesData.length > 0) {
           setModules(modulesData as Module[]);
-          console.log("Módulos encontrados:", modulesData.length);
+          log("Módulos encontrados:", modulesData.length);
           
           // Set current module based on moduleIdx
           if (moduleIdx < modulesData.length) {
             setCurrentModule(modulesData[moduleIdx] as Module);
-            console.log("Módulo atual definido:", modulesData[moduleIdx]);
+            log("Módulo atual definido:", modulesData[moduleIdx]);
           } else {
             // If moduleIdx is out of bounds, set to first module
             setCurrentModule(modulesData[0] as Module);
-            console.log("Índice de módulo fora dos limites, usando o primeiro módulo");
+            log("Índice de módulo fora dos limites, usando o primeiro módulo");
           }
         } else {
-          console.log("Nenhum módulo encontrado, criando placeholder");
+          log("Nenhum módulo encontrado, criando placeholder");
           
           // Create placeholder module if no modules exist
           const placeholderModule = {
@@ -102,64 +114,72 @@ export const useModuleImplementation = () => {
         
         // Fetch progress for logged in user
         if (user) {
-          const { data: progressData, error: progressError } = await supabase
-            .from("progress")
-            .select("*")
-            .eq("solution_id", id)
-            .eq("user_id", user.id)
-            .single();
-          
-          if (!progressError && progressData) {
-            setProgress(progressData);
-            console.log("Progresso encontrado:", progressData);
+          try {
+            const { data: progressData, error: progressError } = await supabase
+              .from("progress")
+              .select("*")
+              .eq("solution_id", id)
+              .eq("user_id", user.id)
+              .maybeSingle();
             
-            // Update current module index in progress if different
-            if (progressData.current_module !== moduleIdx) {
-              const { error: updateError } = await supabase
+            if (progressError) {
+              logError("Erro ao buscar progresso:", progressError);
+            } else if (progressData) {
+              setProgress(progressData);
+              log("Progresso encontrado:", progressData);
+              
+              // Update current module index in progress if different
+              if (progressData.current_module !== moduleIdx) {
+                const { error: updateError } = await supabase
+                  .from("progress")
+                  .update({ 
+                    current_module: moduleIdx,
+                    last_activity: new Date().toISOString()
+                  })
+                  .eq("id", progressData.id);
+                
+                if (updateError) {
+                  logError("Erro ao atualizar progresso:", updateError);
+                }
+              }
+              
+              // Set completed modules
+              if (progressData.completed_modules && Array.isArray(progressData.completed_modules)) {
+                setCompletedModules(progressData.completed_modules);
+                log("Módulos completados:", progressData.completed_modules);
+              } else {
+                setCompletedModules([]);
+              }
+            } else {
+              log("Nenhum progresso encontrado, criando novo registro");
+              
+              // Create progress record if it doesn't exist
+              const { data: newProgress, error: createError } = await supabase
                 .from("progress")
-                .update({ 
+                .insert({
+                  user_id: user.id,
+                  solution_id: id,
                   current_module: moduleIdx,
+                  is_completed: false,
+                  completed_modules: [],
                   last_activity: new Date().toISOString()
                 })
-                .eq("id", progressData.id);
+                .select()
+                .single();
               
-              if (updateError) {
-                console.error("Erro ao atualizar progresso:", updateError);
+              if (createError) {
+                logError("Erro ao criar progresso:", createError);
+              } else {
+                setProgress(newProgress);
+                log("Novo progresso criado:", newProgress);
               }
             }
-            
-            // Set completed modules
-            if (progressData.completed_modules && Array.isArray(progressData.completed_modules)) {
-              setCompletedModules(progressData.completed_modules);
-              console.log("Módulos completados:", progressData.completed_modules);
-            }
-          } else {
-            console.log("Nenhum progresso encontrado, criando novo registro");
-            
-            // Create progress record if it doesn't exist
-            const { data: newProgress, error: createError } = await supabase
-              .from("progress")
-              .insert({
-                user_id: user.id,
-                solution_id: id,
-                current_module: moduleIdx,
-                is_completed: false,
-                completed_modules: [],
-                last_activity: new Date().toISOString()
-              })
-              .select()
-              .single();
-            
-            if (createError) {
-              console.error("Erro ao criar progresso:", createError);
-            } else {
-              setProgress(newProgress);
-              console.log("Novo progresso criado:", newProgress);
-            }
+          } catch (progressError) {
+            logError("Erro ao processar progresso:", progressError);
           }
         }
       } catch (error) {
-        console.error("Erro no useModuleImplementation:", error);
+        logError("Erro no useModuleImplementation:", error);
         toast({
           title: "Erro",
           description: "Ocorreu um erro ao carregar os dados de implementação.",
@@ -171,7 +191,7 @@ export const useModuleImplementation = () => {
     };
     
     fetchData();
-  }, [id, moduleIdx, user, toast, navigate]);
+  }, [id, moduleIdx, user, toast, navigate, log, logError]);
   
   return {
     solution,

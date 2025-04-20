@@ -1,16 +1,19 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useSolutionsData } from '@/hooks/useSolutionsData';
 import { SolutionCard } from '@/components/solution/SolutionCard';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Search, Filter } from 'lucide-react';
 import LoadingScreen from '@/components/common/LoadingScreen';
 import { Solution } from '@/lib/supabase';
 import { useToolsData } from '@/hooks/useToolsData';
+import { useLogging } from '@/hooks/useLogging';
 
 const Solutions = () => {
+  // Logger para depuração
+  const { log, logError } = useLogging();
+  
   // Garantir que as ferramentas estejam corretamente configuradas
   const { isLoading: toolsDataLoading } = useToolsData();
   
@@ -22,6 +25,13 @@ const Solutions = () => {
     activeCategory,
     setActiveCategory
   } = useSolutionsData(null);
+
+  // Log data for debugging
+  log("Solutions page loaded", { 
+    solutionsCount: filteredSolutions.length, 
+    activeCategory,
+    isLoading: loading || toolsDataLoading
+  });
 
   const categories = [
     { id: 'all', name: 'Todas' },
