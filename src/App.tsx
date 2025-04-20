@@ -1,5 +1,5 @@
 
-import { Suspense, lazy, ReactNode } from "react";
+import { Suspense, lazy } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -8,16 +8,11 @@ import { AuthProvider } from "@/contexts/auth";
 import { LoggingProvider } from "@/contexts/logging";
 import LoadingScreen from "@/components/common/LoadingScreen";
 import RootRedirect from "@/components/routing/RootRedirect";
-import AppRoutes from "@/components/routing/AppRoutes";
+import Auth from "@/pages/Auth";
 
+// Lazy loading de páginas
 const NotFound = lazy(() => import("@/pages/NotFound"));
 const Index = lazy(() => import("@/pages/Index"));
-
-// Auth Routes
-const Login = lazy(() => import("@/pages/auth/Login"));
-const Register = lazy(() => import("@/pages/auth/Register"));
-const ResetPassword = lazy(() => import("@/pages/auth/ResetPassword"));
-const SetNewPassword = lazy(() => import("@/pages/auth/SetNewPassword"));
 
 // Member Routes
 const Dashboard = lazy(() => import("@/pages/member/Dashboard"));
@@ -34,6 +29,10 @@ const Achievements = lazy(() => import("@/pages/member/Achievements"));
 
 // Admin Routes
 const AdminDashboard = lazy(() => import("@/pages/admin/Dashboard"));
+
+// Importação de arquivos de rotas
+import AppRoutes from "@/components/routing/AppRoutes";
+import { AdminRoutes } from "@/components/routing/AdminRoutes";
 
 // Create a client
 const queryClient = new QueryClient({
@@ -58,77 +57,21 @@ function App() {
                 <Route path="/index" element={<Index />} />
                 
                 {/* Auth Routes */}
-                <Route path="/login" element={<Login />} />
-                <Route path="/register" element={<Register />} />
-                <Route path="/reset-password" element={<ResetPassword />} />
-                <Route path="/reset-password/update" element={<SetNewPassword />} />
-                
-                {/* Member Routes */}
-                <Route path="/dashboard/*" element={
-                  <Suspense fallback={<LoadingScreen />}>
-                    <Dashboard />
-                  </Suspense>
-                } />
-                <Route path="/solutions/*" element={
-                  <Suspense fallback={<LoadingScreen />}>
-                    <Solutions />
-                  </Suspense>
-                } />
-                <Route path="/solutions/:id" element={
-                  <Suspense fallback={<LoadingScreen />}>
-                    <SolutionDetails />
-                  </Suspense>
-                } />
-                <Route path="/implement/:id/:moduleIdx" element={
-                  <Suspense fallback={<LoadingScreen />}>
-                    <SolutionImplementation />
-                  </Suspense>
-                } />
-                <Route path="/profile" element={
-                  <Suspense fallback={<LoadingScreen />}>
-                    <Profile />
-                  </Suspense>
-                } />
-                <Route path="/tools" element={
-                  <Suspense fallback={<LoadingScreen />}>
-                    <Tools />
-                  </Suspense>
-                } />
-                <Route path="/tools/:id" element={
-                  <Suspense fallback={<LoadingScreen />}>
-                    <ToolDetails />
-                  </Suspense>
-                } />
-                <Route path="/suggestions" element={
-                  <Suspense fallback={<LoadingScreen />}>
-                    <Suggestions />
-                  </Suspense>
-                } />
-                <Route path="/suggestions/:id" element={
-                  <Suspense fallback={<LoadingScreen />}>
-                    <SuggestionDetails />
-                  </Suspense>
-                } />
-                <Route path="/suggestions/new" element={
-                  <Suspense fallback={<LoadingScreen />}>
-                    <NewSuggestion />
-                  </Suspense>
-                } />
-                <Route path="/achievements" element={
-                  <Suspense fallback={<LoadingScreen />}>
-                    <Achievements />
-                  </Suspense>
-                } />
+                <Route path="/login" element={<Auth />} />
+                <Route path="/register" element={<Auth />} />
+                <Route path="/reset-password" element={<Auth />} />
+                <Route path="/reset-password/update" element={<Auth />} />
+                <Route path="/auth" element={<Auth />} />
                 
                 {/* Admin Routes */}
                 <Route path="/admin/*" element={
                   <Suspense fallback={<LoadingScreen />}>
-                    <AdminDashboard />
+                    <AdminRoutes />
                   </Suspense>
                 } />
-
-                {/* 404 Route */}
-                <Route path="*" element={<NotFound />} />
+                
+                {/* Member Routes */}
+                <Route path="*" element={<AppRoutes />} />
               </Routes>
             </Suspense>
           </Router>

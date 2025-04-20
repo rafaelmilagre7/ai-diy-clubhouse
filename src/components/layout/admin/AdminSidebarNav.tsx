@@ -1,18 +1,14 @@
 
-import { useLocation } from "react-router-dom";
-import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Link, useLocation } from "react-router-dom";
 import { 
   LayoutDashboard, 
-  ListTodo,
-  MessageSquare,
+  FileText, 
+  Tool, 
+  MessageSquare, 
   Users, 
-  BarChart,
-  Gift,
-  Settings,
-  Wrench
+  BarChart, 
+  Settings 
 } from "lucide-react";
 
 interface AdminSidebarNavProps {
@@ -23,85 +19,47 @@ export const AdminSidebarNav = ({ sidebarOpen }: AdminSidebarNavProps) => {
   const location = useLocation();
   const pathname = location.pathname;
 
+  const isActive = (path: string) => {
+    if (path === '/admin' && pathname === '/admin') {
+      return true;
+    }
+    if (path !== '/admin' && pathname.startsWith(path)) {
+      return true;
+    }
+    return false;
+  };
+
   const navItems = [
-    {
-      name: "Dashboard",
-      href: "/admin",
-      icon: <LayoutDashboard className="h-5 w-5" />,
-      active: pathname === "/admin" || pathname === "/admin/dashboard",
-    },
-    {
-      name: "Soluções",
-      href: "/admin/solutions",
-      icon: <ListTodo className="h-5 w-5" />,
-      active: pathname.includes("/admin/solutions"),
-    },
-    {
-      name: "Ferramentas",
-      href: "/admin/tools",
-      icon: <Wrench className="h-5 w-5" />,
-      active: pathname.includes("/admin/tools"),
-    },
-    {
-      name: "Sugestões",
-      href: "/admin/suggestions",
-      icon: <MessageSquare className="h-5 w-5" />,
-      active: pathname.includes("/admin/suggestions"),
-    },
-    {
-      name: "Usuários",
-      href: "/admin/users",
-      icon: <Users className="h-5 w-5" />,
-      active: pathname === "/admin/users",
-    },
-    {
-      name: "Métricas",
-      href: "/admin/analytics",
-      icon: <BarChart className="h-5 w-5" />,
-      active: pathname === "/admin/analytics",
-    },
-    {
-      name: "Benefícios",
-      href: "/admin/benefits",
-      icon: <Gift className="h-5 w-5" />,
-      active: pathname === "/admin/benefits",
-    },
-    {
-      name: "Configurações",
-      href: "/admin/settings",
-      icon: <Settings className="h-5 w-5" />,
-      active: pathname === "/admin/settings",
-    },
+    { name: "Dashboard", path: "/admin", icon: LayoutDashboard },
+    { name: "Soluções", path: "/admin/solutions", icon: FileText },
+    { name: "Ferramentas", path: "/admin/tools", icon: Tool },
+    { name: "Sugestões", path: "/admin/suggestions", icon: MessageSquare },
+    { name: "Usuários", path: "/admin/users", icon: Users },
+    { name: "Métricas", path: "/admin/analytics", icon: BarChart },
+    { name: "Configurações", path: "/admin/settings", icon: Settings },
   ];
 
   return (
-    <div className="flex flex-col gap-1 py-2">
-      <TooltipProvider delayDuration={0}>
+    <nav className="px-2 py-4 flex-grow overflow-y-auto">
+      <ul className="space-y-1">
         {navItems.map((item) => (
-          <Tooltip key={item.href}>
-            <TooltipTrigger asChild>
-              <Link to={item.href} className="block">
-                <Button
-                  variant={item.active ? "default" : "ghost"}
-                  size={sidebarOpen ? "default" : "icon"}
-                  className={cn(
-                    "w-full justify-start",
-                    item.active && "bg-accent text-accent-foreground"
-                  )}
-                >
-                  {item.icon}
-                  {sidebarOpen && <span className="ml-2">{item.name}</span>}
-                </Button>
-              </Link>
-            </TooltipTrigger>
-            {!sidebarOpen && (
-              <TooltipContent side="right">
-                {item.name}
-              </TooltipContent>
-            )}
-          </Tooltip>
+          <li key={item.path}>
+            <Link
+              to={item.path}
+              className={cn(
+                "flex items-center py-2 px-3 rounded-md transition-colors",
+                isActive(item.path)
+                  ? "bg-[#0ABAB5]/10 text-[#0ABAB5]"
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                !sidebarOpen && "justify-center"
+              )}
+            >
+              <item.icon className={cn("h-5 w-5", !sidebarOpen && "mx-auto")} />
+              {sidebarOpen && <span className="ml-3">{item.name}</span>}
+            </Link>
+          </li>
         ))}
-      </TooltipProvider>
-    </div>
+      </ul>
+    </nav>
   );
 };

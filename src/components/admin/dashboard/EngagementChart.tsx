@@ -11,13 +11,13 @@ export const EngagementChart = ({ data }: EngagementChartProps) => {
   // Transformar os dados para o formato esperado pelo AreaChart
   const formattedData = useMemo(() => {
     return data.map(item => ({
-      month: item.name,
-      atividade: item.value
+      mes: item.name,
+      usuarios: item.value
     }));
   }, [data]);
 
-  // Formatador de valores para o eixo Y
-  const valueFormatter = (value: number) => `${value.toLocaleString('pt-BR')} usuários`;
+  // Formatter para valores no eixo Y
+  const valueFormatter = (value: number) => `${value} usuários`;
 
   return (
     <Card>
@@ -31,11 +31,14 @@ export const EngagementChart = ({ data }: EngagementChartProps) => {
         <div className="h-80">
           <AreaChart
             data={formattedData}
-            index="month"
-            categories={["atividade"]}
+            index="mes"
+            categories={["usuarios"]}
             colors={["#0ABAB5"]}
             valueFormatter={valueFormatter}
-            yAxisWidth={70}
+            yAxisWidth={60}
+            showAnimation={true}
+            showLegend={false}
+            curveType="monotone"
           />
         </div>
       </CardContent>
