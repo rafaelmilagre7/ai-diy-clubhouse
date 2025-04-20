@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { useSolutionComments } from '@/hooks/implementation/useSolutionComments';
+import { useModuleComments } from '@/hooks/implementation/useModuleComments';
 import { CommentForm } from '@/components/implementation/content/tool-comments/CommentForm';
 import { CommentList } from '@/components/implementation/content/tool-comments/CommentList';
 import { Separator } from '@/components/ui/separator';
@@ -19,19 +19,11 @@ export const CommentsSection = ({ solutionId, moduleId }: CommentsSectionProps) 
     replyTo,
     isSubmitting,
     handleSubmitComment,
-    setReplyTo,
+    startReply,
+    cancelReply,
     likeComment,
     deleteComment
-  } = useSolutionComments(solutionId, moduleId);
-
-  const startReply = (commentObj: any) => {
-    setReplyTo(commentObj);
-    document.getElementById('comment-input')?.focus();
-  };
-
-  const cancelReply = () => {
-    setReplyTo(null);
-  };
+  } = useModuleComments(solutionId, moduleId);
 
   return (
     <div className="space-y-6 mt-8">

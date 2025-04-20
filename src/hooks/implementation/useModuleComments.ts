@@ -24,14 +24,18 @@ export const useModuleComments = (solutionId: string, moduleId: string) => {
       try {
         log('Buscando comentários da solução', { solutionId, moduleId });
         
+        // Usar sempre a tabela tool_comments
+        const tableName = 'tool_comments';
+        const idField = 'tool_id';
+        
         // Buscar todos os comentários principais (sem parent_id)
         const { data: parentComments, error: parentError } = await supabase
-          .from('tool_comments')
+          .from(tableName)
           .select(`
             *,
             profiles:user_id(name, avatar_url, role)
           `)
-          .eq('tool_id', solutionId)
+          .eq(idField, solutionId)
           .is('parent_id', null)
           .order('created_at', { ascending: false });
 
@@ -39,12 +43,12 @@ export const useModuleComments = (solutionId: string, moduleId: string) => {
 
         // Buscar todas as respostas (com parent_id)
         const { data: replies, error: repliesError } = await supabase
-          .from('tool_comments')
+          .from(tableName)
           .select(`
             *,
             profiles:user_id(name, avatar_url, role)
           `)
-          .eq('tool_id', solutionId)
+          .eq(idField, solutionId)
           .not('parent_id', 'is', null)
           .order('created_at', { ascending: true });
 
@@ -55,7 +59,7 @@ export const useModuleComments = (solutionId: string, moduleId: string) => {
         
         if (user) {
           const { data: likes, error: likesError } = await supabase
-            .from('tool_comment_likes')
+            .from(`${tableName.replace('comments', 'comment')}_likes`)
             .select('comment_id')
             .eq('user_id', user.id);
             
@@ -68,12 +72,12 @@ export const useModuleComments = (solutionId: string, moduleId: string) => {
         }
         
         // Adicionar a propriedade de curtida do usuário aos comentários
-        const commentsWithLikes = parentComments.map((comment: Comment) => ({
+        const commentsWithLikes = (parentComments || []).map((comment: Comment) => ({
           ...comment,
           user_has_liked: !!userLikes[comment.id]
         }));
         
-        const repliesWithLikes = replies.map((reply: Comment) => ({
+        const repliesWithLikes = (replies || []).map((reply: Comment) => ({
           ...reply,
           user_has_liked: !!userLikes[reply.id]
         }));
@@ -92,14 +96,14 @@ export const useModuleComments = (solutionId: string, moduleId: string) => {
 
         log('Comentários carregados com sucesso', { 
           total: organizedComments.length,
-          parentComments: parentComments.length,
-          replies: replies.length
+          parentComments: parentComments?.length || 0,
+          replies: replies?.length || 0
         });
         
         return organizedComments;
       } catch (error) {
         logError('Erro ao buscar comentários', error);
-        throw error;
+        return [];
       }
     },
     staleTime: 30000, // 30 segundos
@@ -122,15 +126,19 @@ export const useModuleComments = (solutionId: string, moduleId: string) => {
     try {
       setIsSubmitting(true);
       
+      // Usar sempre a tabela tool_comments
+      const tableName = 'tool_comments';
+      const idField = 'tool_id';
+      
       const commentData = {
-        tool_id: solutionId,
+        [idField]: solutionId,
         user_id: user.id,
         content: comment.trim(),
         parent_id: replyTo ? replyTo.id : null
       };
       
       const { error } = await supabase
-        .from('tool_comments')
+        .from(tableName)
         .insert(commentData);
         
       if (error) throw error;
@@ -164,12 +172,13 @@ export const useModuleComments = (solutionId: string, moduleId: string) => {
     }
 
     try {
+      const tableName = 'tool_comment_likes';
       const alreadyLiked = commentObj.user_has_liked;
       
       if (alreadyLiked) {
         // Remover curtida
         const { error } = await supabase
-          .from('tool_comment_likes')
+          .from(tableName)
           .delete()
           .eq('comment_id', commentObj.id)
           .eq('user_id', user.id);
@@ -187,7 +196,7 @@ export const useModuleComments = (solutionId: string, moduleId: string) => {
       } else {
         // Adicionar curtida
         const { error } = await supabase
-          .from('tool_comment_likes')
+          .from(tableName)
           .insert({
             comment_id: commentObj.id,
             user_id: user.id
