@@ -195,6 +195,69 @@ export type Database = {
           },
         ]
       }
+      onboarding_chat_messages: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_ai: boolean
+          message: string
+          step_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_ai?: boolean
+          message: string
+          step_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_ai?: boolean
+          message?: string
+          step_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      onboarding_complementary_info: {
+        Row: {
+          authorize_case_studies: boolean | null
+          authorize_testimonials: boolean | null
+          created_at: string | null
+          how_discovered: string | null
+          id: string
+          interested_in_interviews: boolean | null
+          referral_name: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          authorize_case_studies?: boolean | null
+          authorize_testimonials?: boolean | null
+          created_at?: string | null
+          how_discovered?: string | null
+          id?: string
+          interested_in_interviews?: boolean | null
+          referral_name?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          authorize_case_studies?: boolean | null
+          authorize_testimonials?: boolean | null
+          created_at?: string | null
+          how_discovered?: string | null
+          id?: string
+          interested_in_interviews?: boolean | null
+          referral_name?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       onboarding_history: {
         Row: {
           created_at: string | null

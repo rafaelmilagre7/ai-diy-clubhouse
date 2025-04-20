@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useProgress } from './useProgress';
 import { toast } from 'sonner';
-import { supabase } from '@/lib/supabase';
+import { supabase } from "@/lib/supabase";
 import { OnboardingData } from '@/types/onboarding';
 
 export const useOnboardingSteps = () => {
