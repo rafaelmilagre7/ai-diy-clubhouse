@@ -1,5 +1,6 @@
 
 import React from "react";
+import TabNav from "../TabNav";
 import TabContent from "./TabContent";
 import { Solution } from "@/lib/supabase";
 import { SolutionFormValues } from "@/components/admin/solution/form/solutionFormSchema";
@@ -22,15 +23,20 @@ const StepBasedContent: React.FC<StepBasedContentProps> = ({
   saving
 }) => {
   return (
-    <div className="px-6 pb-6 pt-4">
-      <TabContent
-        activeTab={activeTab}
-        currentStep={currentStep}
-        solution={solution}
-        currentValues={currentValues}
-        onSubmit={onSubmit}
-        saving={saving}
-      />
+    <div>
+      <div className="mx-6 mt-6">
+        <TabNav activeTab={activeTab} setActiveTab={() => {}} />
+      </div>
+      <div className="px-6 pb-6 pt-4">
+        <TabContent
+          activeTab={activeTab}
+          currentStep={currentStep}
+          solution={solution}
+          currentValues={currentValues}
+          onSubmit={onSubmit}
+          saving={saving}
+        />
+      </div>
     </div>
   );
 };

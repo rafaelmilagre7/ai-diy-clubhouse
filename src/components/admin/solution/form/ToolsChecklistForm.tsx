@@ -98,16 +98,6 @@ const ToolsChecklistForm: React.FC<ToolsChecklistFormProps> = ({
     try {
       setSavingTools(true);
       
-      if (tools.length === 0) {
-        toast({
-          title: "Nenhuma ferramenta adicionada",
-          description: "Adicione pelo menos uma ferramenta para continuar.",
-          variant: "destructive",
-        });
-        setSavingTools(false);
-        return;
-      }
-      
       // Primeiro, excluir todas as ferramentas existentes
       const { error: deleteError } = await supabase
         .from("solution_tools")
@@ -116,18 +106,20 @@ const ToolsChecklistForm: React.FC<ToolsChecklistFormProps> = ({
         
       if (deleteError) throw deleteError;
       
-      // Depois, inserir as novas ferramentas
-      const toolsToInsert = tools.map(tool => ({
-        solution_id: solutionId,
-        tool_id: tool.id,
-        is_required: tool.is_required
-      }));
-      
-      const { error: insertError } = await supabase
-        .from("solution_tools")
-        .insert(toolsToInsert);
+      if (tools.length > 0) {
+        // Depois, inserir as novas ferramentas
+        const toolsToInsert = tools.map(tool => ({
+          solution_id: solutionId,
+          tool_id: tool.id,
+          is_required: tool.is_required
+        }));
         
-      if (insertError) throw insertError;
+        const { error: insertError } = await supabase
+          .from("solution_tools")
+          .insert(toolsToInsert);
+          
+        if (insertError) throw insertError;
+      }
       
       toast({
         title: "Ferramentas salvas",

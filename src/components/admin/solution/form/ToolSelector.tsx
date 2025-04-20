@@ -3,10 +3,13 @@ import React, { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Search, Wrench } from "lucide-react";
+import { Search, Wrench, ExternalLink } from "lucide-react";
 import { Tool, SolutionTool } from "@/types/toolTypes";
 import { supabase } from "@/lib/supabase";
 import { useLogging } from "@/hooks/useLogging";
+import { useTools } from "@/hooks/useTools";
+import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 export interface SelectedTool extends Tool {
   is_required: boolean;
@@ -19,37 +22,8 @@ interface ToolSelectorProps {
 
 export const ToolSelector: React.FC<ToolSelectorProps> = ({ value, onChange }) => {
   const { log, logError } = useLogging();
-  const [availableTools, setAvailableTools] = useState<Tool[]>([]);
+  const { tools: availableTools, isLoading } = useTools();
   const [searchQuery, setSearchQuery] = useState("");
-  const [loading, setLoading] = useState(true);
-
-  // Carregar ferramentas disponíveis
-  useEffect(() => {
-    const fetchTools = async () => {
-      try {
-        setLoading(true);
-        const { data, error } = await supabase
-          .from("tools")
-          .select("*")
-          .eq("status", true)
-          .order("name");
-
-        if (error) {
-          logError("Erro ao carregar ferramentas", error);
-          throw error;
-        }
-
-        setAvailableTools(data as Tool[]);
-        log("Ferramentas carregadas com sucesso", { count: data.length });
-      } catch (error) {
-        console.error("Erro ao carregar ferramentas:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchTools();
-  }, [log, logError]);
 
   // Filtrar ferramentas com base na pesquisa
   const filteredTools = availableTools.filter((tool) =>
@@ -88,27 +62,38 @@ export const ToolSelector: React.FC<ToolSelectorProps> = ({ value, onChange }) =
       {value.length > 0 && (
         <div className="space-y-3">
           <h3 className="text-sm font-medium">Ferramentas selecionadas</h3>
-          <div className="space-y-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {value.map((tool) => (
-              <div
-                key={tool.id}
-                className="flex items-start p-3 border rounded-md bg-gray-50"
-              >
-                <div className="flex items-center min-w-0 flex-1 gap-x-4">
-                  <div className="bg-blue-100 p-1.5 rounded">
-                    <Wrench className="h-4 w-4 text-blue-600" />
+              <Card key={tool.id} className="border overflow-hidden">
+                <CardHeader className="pb-3 pt-4 px-4 flex-row items-center gap-3">
+                  <div className="h-10 w-10 rounded-lg bg-gray-100 border flex items-center justify-center overflow-hidden flex-shrink-0">
+                    {tool.logo_url ? (
+                      <img 
+                        src={tool.logo_url} 
+                        alt={tool.name} 
+                        className="h-full w-full object-contain" 
+                      />
+                    ) : (
+                      <div className="text-xl font-bold text-[#0ABAB5]">
+                        {tool.name.substring(0, 2).toUpperCase()}
+                      </div>
+                    )}
                   </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium text-gray-900 truncate">
-                      {tool.name}
-                    </p>
-                    <p className="text-xs text-gray-500 truncate mt-1">
-                      {tool.description.substring(0, 100)}
-                      {tool.description.length > 100 ? "..." : ""}
-                    </p>
+                  <div>
+                    <h3 className="font-medium text-sm line-clamp-1">{tool.name}</h3>
+                    <div className="flex gap-2 mt-1">
+                      <Badge variant="outline" className="bg-[#0ABAB5]/10 text-[#0ABAB5] text-xs">
+                        {tool.category}
+                      </Badge>
+                    </div>
                   </div>
-                </div>
-                <div className="flex items-center gap-2 ml-4">
+                </CardHeader>
+                <CardContent className="px-4 py-2">
+                  <p className="text-xs text-muted-foreground line-clamp-2">
+                    {tool.description}
+                  </p>
+                </CardContent>
+                <CardFooter className="px-4 py-3 flex justify-between border-t">
                   <div className="flex items-center space-x-2">
                     <Checkbox
                       id={`required-${tool.id}`}
@@ -117,20 +102,19 @@ export const ToolSelector: React.FC<ToolSelectorProps> = ({ value, onChange }) =
                     />
                     <label
                       htmlFor={`required-${tool.id}`}
-                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                      className="text-xs font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                     >
                       Obrigatória
                     </label>
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
+                  <button
+                    className="text-sm text-red-600 hover:text-red-800"
                     onClick={() => removeTool(tool.id)}
                   >
                     Remover
-                  </Button>
-                </div>
-              </div>
+                  </button>
+                </CardFooter>
+              </Card>
             ))}
           </div>
         </div>
@@ -149,8 +133,9 @@ export const ToolSelector: React.FC<ToolSelectorProps> = ({ value, onChange }) =
       </div>
 
       {/* Lista de ferramentas disponíveis */}
-      <div className="border rounded-md divide-y">
-        {loading ? (
+      <div className="mt-4">
+        <h3 className="text-sm font-medium mb-3">Ferramentas disponíveis</h3>
+        {isLoading ? (
           <div className="p-4 text-center">Carregando ferramentas...</div>
         ) : filteredTools.length === 0 ? (
           <div className="p-4 text-center text-muted-foreground">
@@ -159,70 +144,74 @@ export const ToolSelector: React.FC<ToolSelectorProps> = ({ value, onChange }) =
               : "Nenhuma ferramenta disponível."}
           </div>
         ) : (
-          filteredTools.map((tool) => (
-            <div
-              key={tool.id}
-              className={`p-3 flex items-start ${
-                isSelected(tool.id) ? "bg-blue-50" : "hover:bg-gray-50"
-              }`}
-            >
-              <div className="flex items-center min-w-0 flex-1 gap-x-4">
-                <div className="bg-blue-100 p-1.5 rounded">
-                  <Wrench className="h-4 w-4 text-blue-600" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium text-gray-900 truncate">
-                    {tool.name}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filteredTools.map((tool) => (
+              <Card 
+                key={tool.id} 
+                className={`flex flex-col h-full border overflow-hidden ${
+                  isSelected(tool.id) ? "border-[#0ABAB5]" : ""
+                }`}
+              >
+                <CardHeader className="pb-3 pt-4 px-4 flex-row items-center gap-3">
+                  <div className="h-10 w-10 rounded-lg bg-gray-100 border flex items-center justify-center overflow-hidden flex-shrink-0">
+                    {tool.logo_url ? (
+                      <img 
+                        src={tool.logo_url} 
+                        alt={tool.name} 
+                        className="h-full w-full object-contain" 
+                      />
+                    ) : (
+                      <div className="text-xl font-bold text-[#0ABAB5]">
+                        {tool.name.substring(0, 2).toUpperCase()}
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <h3 className="font-medium text-sm line-clamp-1">{tool.name}</h3>
+                    <div className="flex gap-2 mt-1">
+                      <Badge variant="outline" className="bg-[#0ABAB5]/10 text-[#0ABAB5] text-xs">
+                        {tool.category}
+                      </Badge>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="px-4 py-2 flex-1">
+                  <p className="text-xs text-muted-foreground line-clamp-2">
+                    {tool.description}
                   </p>
-                  <p className="text-xs text-gray-500 truncate mt-1">
-                    {tool.description.substring(0, 100)}
-                    {tool.description.length > 100 ? "..." : ""}
-                  </p>
-                </div>
-              </div>
-              <div>
-                <Button
-                  variant={isSelected(tool.id) ? "secondary" : "ghost"}
-                  size="sm"
-                  onClick={() => {
-                    isSelected(tool.id)
-                      ? removeTool(tool.id)
-                      : addTool(tool, true);
-                  }}
-                >
-                  {isSelected(tool.id) ? "Selecionada" : "Adicionar"}
-                </Button>
-              </div>
-            </div>
-          ))
+                </CardContent>
+                <CardFooter className="px-4 py-3 flex justify-between border-t">
+                  <button
+                    className={`text-sm ${
+                      isSelected(tool.id)
+                        ? "text-[#0ABAB5]"
+                        : "text-blue-600 hover:text-blue-800"
+                    }`}
+                    onClick={() => {
+                      isSelected(tool.id)
+                        ? removeTool(tool.id)
+                        : addTool(tool, true);
+                    }}
+                  >
+                    {isSelected(tool.id) ? "Remover" : "Adicionar"}
+                  </button>
+                  
+                  {tool.official_url && (
+                    <a 
+                      href={tool.official_url} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-gray-500 hover:text-gray-700"
+                    >
+                      <ExternalLink className="h-4 w-4" />
+                    </a>
+                  )}
+                </CardFooter>
+              </Card>
+            ))}
+          </div>
         )}
       </div>
     </div>
-  );
-};
-
-// Component auxiliar Button para evitar o erro de importação
-const Button = ({
-  children,
-  variant,
-  size,
-  onClick,
-}: {
-  children: React.ReactNode;
-  variant?: "ghost" | "secondary";
-  size?: "sm";
-  onClick?: () => void;
-}) => {
-  return (
-    <button
-      onClick={onClick}
-      className={`px-3 py-1 rounded text-sm ${
-        variant === "ghost"
-          ? "text-gray-700 hover:bg-gray-100"
-          : "bg-gray-200 text-gray-800"
-      } ${size === "sm" ? "text-xs" : ""}`}
-    >
-      {children}
-    </button>
   );
 };
