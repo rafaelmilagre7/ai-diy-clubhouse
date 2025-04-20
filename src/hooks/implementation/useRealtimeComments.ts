@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useQueryClient } from '@tanstack/react-query';
 import { useLogging } from '@/hooks/useLogging';
+import { toast } from 'sonner';
 
 export const useRealtimeComments = (
   solutionId: string, 
@@ -19,55 +20,97 @@ export const useRealtimeComments = (
     
     log('Iniciando escuta de comentários em tempo real', { solutionId, moduleId });
     
-    // Inscrever-se nas mudanças na tabela de comentários
-    const commentChannel = supabase
-      .channel('tool-comments-changes')
+    // A combinação de canais separados por evento oferece mais estabilidade
+    const insertChannel = supabase
+      .channel(`comments-insert-${solutionId}`)
       .on('postgres_changes', { 
-        event: '*', 
+        event: 'INSERT', 
         schema: 'public', 
         table: 'tool_comments',
         filter: `tool_id=eq.${solutionId}`
-      }, (payload) => {
-        log('Mudança detectada em comentários', { 
-          event: payload.eventType, 
-          solutionId, 
-          moduleId
-        });
-        
-        // Invalida o cache e força uma nova busca
-        setTimeout(() => {
-          queryClient.invalidateQueries({ 
-            queryKey: ['solution-comments', solutionId, moduleId] 
-          });
-        }, 200);
+      }, () => {
+        log('Novo comentário detectado', { solutionId, moduleId });
+        invalidateComments();
       })
       .subscribe((status) => {
-        if (status === 'SUBSCRIBED') {
-          log('Escuta de comentários ativada com sucesso', { solutionId, moduleId });
-        } else {
-          logError('Erro ao ativar escuta de comentários', { status, solutionId, moduleId });
-        }
+        handleSubscriptionStatus(status, 'INSERT');
+      });
+      
+    const updateChannel = supabase
+      .channel(`comments-update-${solutionId}`)
+      .on('postgres_changes', { 
+        event: 'UPDATE', 
+        schema: 'public', 
+        table: 'tool_comments',
+        filter: `tool_id=eq.${solutionId}`
+      }, () => {
+        log('Comentário atualizado', { solutionId, moduleId });
+        invalidateComments();
+      })
+      .subscribe((status) => {
+        handleSubscriptionStatus(status, 'UPDATE');
+      });
+      
+    const deleteChannel = supabase
+      .channel(`comments-delete-${solutionId}`)
+      .on('postgres_changes', { 
+        event: 'DELETE', 
+        schema: 'public', 
+        table: 'tool_comments',
+        filter: `tool_id=eq.${solutionId}`
+      }, () => {
+        log('Comentário removido', { solutionId, moduleId });
+        invalidateComments();
+      })
+      .subscribe((status) => {
+        handleSubscriptionStatus(status, 'DELETE');
       });
       
     // Inscrever-se em mudanças na tabela de curtidas
     const likesChannel = supabase
-      .channel('tool-comment-likes-changes')
+      .channel(`comment-likes-${solutionId}`)
       .on('postgres_changes', {
         event: '*',
         schema: 'public',
         table: 'tool_comment_likes'
       }, () => {
         log('Curtida modificada, invalidando queries', { solutionId, moduleId });
-        queryClient.invalidateQueries({ 
-          queryKey: ['solution-comments', solutionId, moduleId] 
-        });
+        invalidateComments();
       })
-      .subscribe();
+      .subscribe((status) => {
+        handleSubscriptionStatus(status, 'LIKES');
+      });
+    
+    const invalidateComments = () => {
+      queryClient.invalidateQueries({ 
+        queryKey: ['solution-comments', solutionId, moduleId] 
+      });
+    };
+    
+    const handleSubscriptionStatus = (status: string, channelType: string) => {
+      if (status === 'SUBSCRIBED') {
+        log(`Canal de ${channelType} conectado com sucesso`, { solutionId, moduleId });
+      } else if (status === 'CHANNEL_ERROR') {
+        // Previne múltiplas notificações de erro
+        logError(`Erro no canal de ${channelType}`, { status, solutionId, moduleId });
+        
+        // Mostra apenas um toast para evitar spam de erros
+        if (channelType === 'INSERT') {
+          toast.error("Atualizações em tempo real indisponíveis", {
+            description: "Os comentários precisarão ser atualizados manualmente.",
+            duration: 5000,
+            id: "realtime-error" // Previne múltiplos toasts do mesmo tipo
+          });
+        }
+      }
+    };
     
     // Cancelar inscrição ao desmontar
     return () => {
       log('Cancelando escuta de comentários', { solutionId, moduleId });
-      supabase.removeChannel(commentChannel);
+      supabase.removeChannel(insertChannel);
+      supabase.removeChannel(updateChannel);
+      supabase.removeChannel(deleteChannel);
       supabase.removeChannel(likesChannel);
     };
   }, [solutionId, moduleId, queryClient, isEnabled, log, logError]);

@@ -49,7 +49,18 @@ const SolutionImplementation = () => {
                                 !!currentModule && 
                                 activeTab === "comments";
   
+  // Usando o hook de comentários em tempo real
   useRealtimeComments(solutionId, moduleId, enableRealtimeComments);
+  
+  // Log quando a aba é alterada
+  useEffect(() => {
+    if (activeTab === "comments" && solution && currentModule) {
+      log("Aba de comentários ativada", { 
+        solutionId: solution.id, 
+        moduleId: currentModule.id
+      });
+    }
+  }, [activeTab, solution, currentModule, log]);
   
   // Definindo a função onComplete que estava faltando
   const onComplete = async () => {

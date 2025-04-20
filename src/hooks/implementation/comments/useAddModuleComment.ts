@@ -34,9 +34,10 @@ export const useAddModuleComment = (solutionId: string, moduleId: string) => {
         parent_id: parentId
       };
       
-      const { error } = await supabase
+      const { error, data } = await supabase
         .from('tool_comments')
-        .insert(commentData);
+        .insert(commentData)
+        .select();
         
       if (error) {
         logError('Erro ao adicionar comentário', error);
@@ -44,20 +45,21 @@ export const useAddModuleComment = (solutionId: string, moduleId: string) => {
         return false;
       }
       
-      log('Comentário adicionado com sucesso');
+      log('Comentário adicionado com sucesso', { commentId: data?.[0]?.id });
       toast.success(parentId ? 'Resposta enviada com sucesso!' : 'Comentário enviado com sucesso!');
       
-      // Invalidar o cache para atualizar a lista
+      // Invalidar o cache para atualizar a lista imediatamente
       queryClient.invalidateQueries({ 
         queryKey: ['solution-comments', solutionId, moduleId] 
       });
       
-      // Garantir que a atualização em tempo real funcione como backup
+      // Forçar uma segunda atualização após um pequeno delay
+      // para garantir que todos os dados estejam atualizados
       setTimeout(() => {
         queryClient.invalidateQueries({ 
           queryKey: ['solution-comments', solutionId, moduleId] 
         });
-      }, 300);
+      }, 500);
       
       return true;
     } catch (error: any) {
