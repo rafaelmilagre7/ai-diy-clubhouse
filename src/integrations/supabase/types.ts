@@ -844,6 +844,76 @@ export type Database = {
           },
         ]
       }
+      tool_comment_likes: {
+        Row: {
+          comment_id: string
+          created_at: string | null
+          id: string
+          user_id: string
+        }
+        Insert: {
+          comment_id: string
+          created_at?: string | null
+          id?: string
+          user_id: string
+        }
+        Update: {
+          comment_id?: string
+          created_at?: string | null
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tool_comment_likes_comment_id_fkey"
+            columns: ["comment_id"]
+            isOneToOne: false
+            referencedRelation: "tool_comments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tool_comments: {
+        Row: {
+          content: string
+          created_at: string | null
+          id: string
+          likes_count: number
+          parent_id: string | null
+          tool_id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          id?: string
+          likes_count?: number
+          parent_id?: string | null
+          tool_id: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          id?: string
+          likes_count?: number
+          parent_id?: string | null
+          tool_id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tool_comments_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "tool_comments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tools: {
         Row: {
           benefit_badge_url: string | null
@@ -1026,12 +1096,20 @@ export type Database = {
       }
     }
     Functions: {
+      decrement: {
+        Args: { row_id: string; table_name: string; column_name: string }
+        Returns: undefined
+      }
       decrement_suggestion_downvote: {
         Args: { suggestion_id: string }
         Returns: undefined
       }
       decrement_suggestion_upvote: {
         Args: { suggestion_id: string }
+        Returns: undefined
+      }
+      increment: {
+        Args: { row_id: string; table_name: string; column_name: string }
         Returns: undefined
       }
       increment_suggestion_downvote: {

@@ -2,7 +2,6 @@
 import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
-import { Comment } from '@/types/commentTypes';
 import { useAuth } from '@/contexts/auth';
 import { toast } from 'sonner';
 import { useLogging } from '@/hooks/useLogging';
