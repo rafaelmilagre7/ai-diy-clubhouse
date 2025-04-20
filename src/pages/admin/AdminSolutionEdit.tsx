@@ -36,7 +36,9 @@ const AdminSolutionEdit = () => {
     // Logging for debugging purposes
     console.log("Solution Editor loaded with ID:", id);
     console.log("Solution data:", solution);
-  }, [id, solution]);
+    console.log("Current step:", currentStep);
+    console.log("Active tab:", activeTab);
+  }, [id, solution, currentStep, activeTab]);
   
   if (loading) {
     return <LoadingScreen />;

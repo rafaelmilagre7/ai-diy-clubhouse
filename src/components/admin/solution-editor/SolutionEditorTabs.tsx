@@ -55,6 +55,7 @@ const SolutionEditorTabs = ({
           currentValues={currentValues}
           onSubmit={onSubmit}
           saving={saving}
+          setActiveTab={setActiveTab} // Passando o setter do activeTab
         />
       )}
     </div>

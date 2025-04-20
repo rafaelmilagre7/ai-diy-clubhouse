@@ -2,6 +2,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, Globe } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 interface NavigationButtonsProps {
   currentStep: number;
@@ -26,13 +27,27 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
   saving,
 }) => {
   const isLastStep = currentStep === totalSteps - 1;
+  const { toast } = useToast();
+  
+  const handleNext = () => {
+    // Primeiro salva os dados e depois avança
+    onSave();
+    // Adicionamos um pequeno delay para garantir que o salvamento ocorra antes de avançar
+    setTimeout(() => {
+      onNext();
+      toast({
+        title: "Avançando para a próxima etapa",
+        description: "Seus dados foram salvos com sucesso."
+      });
+    }, 500);
+  };
   
   return (
     <div className="flex justify-between mt-8">
       <Button
         variant="outline"
         onClick={onPrevious}
-        disabled={currentStep === 0}
+        disabled={currentStep === 0 || saving}
         className="flex items-center"
       >
         <ChevronLeft className="w-4 h-4 mr-2" />
@@ -50,8 +65,8 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
         </Button>
       ) : (
         <Button
-          onClick={onNext}
-          disabled={currentStep === totalSteps - 1}
+          onClick={handleNext}
+          disabled={saving}
           className="flex items-center bg-[#0ABAB5] hover:bg-[#0ABAB5]/90"
         >
           Próximo

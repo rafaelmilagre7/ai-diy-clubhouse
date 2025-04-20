@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export const useSolutionSteps = (initialStep = 0) => {
   const [currentStep, setCurrentStep] = useState(initialStep);
@@ -25,34 +25,31 @@ export const useSolutionSteps = (initialStep = 0) => {
     "publish"     // Step 5: Publish
   ];
 
-  // Update active tab based on current step
-  const updateActiveTabFromStep = (step: number) => {
-    if (step >= 0 && step < stepToTabMap.length) {
-      setActiveTab(stepToTabMap[step]);
-    }
-  };
-
   // Effect to update the active tab when the step changes
-  if (stepToTabMap[currentStep] !== activeTab) {
-    updateActiveTabFromStep(currentStep);
-  }
+  useEffect(() => {
+    if (currentStep >= 0 && currentStep < stepToTabMap.length) {
+      setActiveTab(stepToTabMap[currentStep]);
+    }
+  }, [currentStep]);
 
-  // Effect to update the step when the tab changes
+  // Function to update the step when the tab changes
   const updateStepFromActiveTab = (tab: string) => {
     const stepIndex = stepToTabMap.findIndex(t => t === tab);
-    if (stepIndex !== -1 && stepIndex !== currentStep) {
+    if (stepIndex !== -1) {
       setCurrentStep(stepIndex);
     }
   };
+
+  // Effect to update the step when the active tab changes
+  useEffect(() => {
+    updateStepFromActiveTab(activeTab);
+  }, [activeTab]);
 
   return {
     currentStep,
     setCurrentStep,
     activeTab,
-    setActiveTab: (tab: string) => {
-      setActiveTab(tab);
-      updateStepFromActiveTab(tab);
-    },
+    setActiveTab,
     totalSteps: stepTitles.length,
     stepTitles
   };

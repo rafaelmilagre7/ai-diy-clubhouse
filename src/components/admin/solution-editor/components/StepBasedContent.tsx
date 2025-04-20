@@ -13,6 +13,7 @@ interface StepBasedContentProps {
   currentValues: SolutionFormValues;
   onSubmit: (values: SolutionFormValues) => Promise<void>;
   saving: boolean;
+  setActiveTab: (value: string) => void; // Adicionado o prop para passar o setter
 }
 
 const StepBasedContent: React.FC<StepBasedContentProps> = ({
@@ -21,19 +22,14 @@ const StepBasedContent: React.FC<StepBasedContentProps> = ({
   solution,
   currentValues,
   onSubmit,
-  saving
+  saving,
+  setActiveTab // Recebendo o setter do componente pai
 }) => {
-  // Função para enviar o valor do tab para o componente pai
-  const handleTabChange = (value: string) => {
-    console.log(`Tab changed to ${value}`);
-    // Esta função é apenas um espaço reservado; a navegação real é controlada pelo componente pai
-  };
-
   return (
     <div>
       <div className="mx-6 mt-6">
-        <Tabs value={activeTab} onValueChange={handleTabChange}>
-          <TabNav activeTab={activeTab} setActiveTab={handleTabChange} />
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabNav activeTab={activeTab} setActiveTab={setActiveTab} />
           <TabsContent value={activeTab} className="mt-6">
             <TabContent
               activeTab={activeTab}
