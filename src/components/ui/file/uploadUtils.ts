@@ -1,4 +1,3 @@
-
 import { v4 as uuidv4 } from 'uuid';
 import { supabase } from '@/lib/supabase';
 
@@ -132,6 +131,12 @@ export const uploadFileToStorage = async (
   }
 };
 
-// Exportações para compatibilidade, mas usando imports de outros módulos para evitar redeclaração
-export { isImageFile as detectFileType } from './utils/fileTypes';
-export { getFileIcon, getFileFormatName } from './utils/fileTypes';
+// Importar as funções necessárias do arquivo fileTypes
+import { 
+  isImageFile as detectFileType,
+  getFileIcon, 
+  getFileFormatName 
+} from './utils/fileTypes';
+
+// Exportar para uso externo
+export { detectFileType, getFileIcon, getFileFormatName };
