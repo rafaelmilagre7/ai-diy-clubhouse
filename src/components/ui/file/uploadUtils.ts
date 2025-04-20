@@ -132,7 +132,6 @@ export const uploadFileToStorage = async (
   }
 };
 
-// Re-export para manter compatibilidade com código existente
-export { uploadImageToImgBB } from './services/imgbb';
-export { uploadFileToSupabase } from './services/supabase';
-export * from './utils/fileTypes';
+// Exportações para compatibilidade, mas usando imports de outros módulos para evitar redeclaração
+export { isImageFile as detectFileType } from './utils/fileTypes';
+export { getFileIcon, getFileFormatName } from './utils/fileTypes';
