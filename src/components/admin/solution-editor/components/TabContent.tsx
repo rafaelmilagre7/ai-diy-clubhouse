@@ -94,6 +94,7 @@ const TabContent: React.FC<TabContentProps> = ({
               solutionId={solution?.id || null}
               onSave={() => onSubmit(currentValues)}
               saving={saving}
+              currentModuleStep={0}
             />
           );
         }
@@ -158,6 +159,7 @@ const TabContent: React.FC<TabContentProps> = ({
             solutionId={solution?.id || null}
             onSave={() => onSubmit(currentValues)}
             saving={saving}
+            currentModuleStep={currentStep}
           />
         );
       

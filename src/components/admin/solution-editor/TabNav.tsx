@@ -2,7 +2,7 @@
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { 
-  CircleInfo, 
+  CircleHelp, 
   FileSpreadsheet, 
   Film, 
   Folder, 
@@ -18,7 +18,7 @@ interface TabNavProps {
 
 const TabNav = ({ activeTab, setActiveTab }: TabNavProps) => {
   const tabs = [
-    { id: "basic", label: "Informações", icon: <CircleInfo className="h-4 w-4" /> },
+    { id: "basic", label: "Informações", icon: <CircleHelp className="h-4 w-4" /> },
     { id: "tools", label: "Ferramentas", icon: <Package className="h-4 w-4" /> },
     { id: "resources", label: "Materiais", icon: <FileSpreadsheet className="h-4 w-4" /> },
     { id: "video", label: "Vídeos", icon: <Film className="h-4 w-4" /> },
