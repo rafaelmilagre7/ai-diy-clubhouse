@@ -3,13 +3,15 @@ import { Outlet } from "react-router-dom";
 import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { ReactNode } from "react";
 
 interface AdminContentProps {
   sidebarOpen: boolean;
   setSidebarOpen: (open: boolean) => void;
+  children?: ReactNode;
 }
 
-export const AdminContent = ({ sidebarOpen, setSidebarOpen }: AdminContentProps) => {
+export const AdminContent = ({ sidebarOpen, setSidebarOpen, children }: AdminContentProps) => {
   return (
     <main
       className={cn(
@@ -40,7 +42,7 @@ export const AdminContent = ({ sidebarOpen, setSidebarOpen }: AdminContentProps)
 
       {/* Content area */}
       <div className="container py-6 md:py-8">
-        <Outlet />
+        {children || <Outlet />}
       </div>
     </main>
   );

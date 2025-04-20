@@ -1,15 +1,19 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, ReactNode } from "react";
 import { useAuth } from "@/contexts/auth";
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { AdminSidebar } from "./admin/AdminSidebar";
 import { AdminContent } from "./admin/AdminContent";
 
+interface AdminLayoutProps {
+  children?: ReactNode;
+}
+
 /**
  * AdminLayout renders the layout structure for admin users
  * This includes the sidebar and content area
  */
-const AdminLayout = () => {
+const AdminLayout = ({ children }: AdminLayoutProps) => {
   const { profile, isAdmin, user } = useAuth();
   const location = useLocation();
   
@@ -55,7 +59,9 @@ const AdminLayout = () => {
       <AdminContent 
         sidebarOpen={sidebarOpen} 
         setSidebarOpen={setSidebarOpen} 
-      />
+      >
+        {children || <Outlet />}
+      </AdminContent>
     </div>
   );
 };
