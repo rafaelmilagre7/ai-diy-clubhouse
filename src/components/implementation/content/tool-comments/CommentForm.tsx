@@ -3,7 +3,8 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Comment } from '@/types/commentTypes';
-import { Loader2, MessageSquare, X } from 'lucide-react';
+import { Loader2, MessageSquare, Send, X } from 'lucide-react';
+import { Card } from '@/components/ui/card';
 
 interface CommentFormProps {
   comment: string;
@@ -31,53 +32,56 @@ export const CommentForm = ({
   };
   
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      {replyTo && (
-        <div className="flex items-center justify-between p-3 bg-muted/50 rounded-md">
-          <div className="flex items-center gap-2">
-            <MessageSquare className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm font-medium">
-              Respondendo para {replyTo.profiles?.name || 'Usuário'}
-            </span>
+    <Card className="p-4 bg-white shadow-sm border-viverblue/20">
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {replyTo && (
+          <div className="flex items-center justify-between p-3 bg-viverblue/5 rounded-md">
+            <div className="flex items-center gap-2">
+              <MessageSquare className="h-4 w-4 text-viverblue" />
+              <span className="text-sm font-medium text-gray-700">
+                Respondendo para {replyTo.profiles?.name || 'Usuário'}
+              </span>
+            </div>
+            <Button 
+              type="button" 
+              variant="ghost" 
+              size="sm" 
+              onClick={cancelReply} 
+              className="h-6 w-6 p-0 hover:bg-viverblue/10"
+            >
+              <X className="h-4 w-4" />
+            </Button>
           </div>
+        )}
+        
+        <Textarea
+          id="comment-input"
+          value={comment}
+          onChange={(e) => setComment(e.target.value)}
+          placeholder={replyTo ? "Escreva sua resposta..." : "Compartilhe sua experiência ou dúvida sobre esta solução..."}
+          className="min-h-24 resize-y focus-visible:ring-viverblue"
+        />
+        
+        <div className="flex justify-end">
           <Button 
-            type="button" 
-            variant="ghost" 
-            size="sm" 
-            onClick={cancelReply} 
-            className="h-6 w-6 p-0"
+            type="submit"
+            disabled={!comment.trim() || isSubmitting}
+            className="bg-viverblue hover:bg-viverblue/90 text-white"
           >
-            <X className="h-4 w-4" />
+            {isSubmitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Enviando...
+              </>
+            ) : (
+              <>
+                <Send className="mr-2 h-4 w-4" />
+                {replyTo ? 'Responder' : 'Enviar Comentário'}
+              </>
+            )}
           </Button>
         </div>
-      )}
-      
-      <Textarea
-        id="comment-input"
-        value={comment}
-        onChange={(e) => setComment(e.target.value)}
-        placeholder="Escreva seu comentário ou dúvida sobre esta solução..."
-        className="min-h-24 resize-y"
-      />
-      
-      <div className="flex justify-end">
-        <Button 
-          type="submit"
-          disabled={!comment.trim() || isSubmitting}
-          className="bg-[#0ABAB5] hover:bg-[#0ABAB5]/90"
-        >
-          {isSubmitting ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Enviando...
-            </>
-          ) : (
-            <>
-              {replyTo ? 'Responder' : 'Enviar Comentário'}
-            </>
-          )}
-        </Button>
-      </div>
-    </form>
+      </form>
+    </Card>
   );
 };

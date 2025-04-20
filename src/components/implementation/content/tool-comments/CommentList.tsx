@@ -3,6 +3,8 @@ import React from 'react';
 import { Comment } from '@/types/commentTypes';
 import { CommentItem } from './CommentItem';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Card } from '@/components/ui/card';
+import { MessageSquare } from 'lucide-react';
 
 interface CommentListProps {
   comments: Comment[];
@@ -23,17 +25,19 @@ export const CommentList = ({
     return (
       <div className="space-y-6">
         {[1, 2, 3].map(i => (
-          <div key={i} className="flex gap-4">
-            <Skeleton className="h-10 w-10 rounded-full" />
-            <div className="space-y-2 flex-1">
-              <Skeleton className="h-5 w-32" />
-              <Skeleton className="h-20 w-full" />
-              <div className="flex gap-2">
-                <Skeleton className="h-8 w-16" />
-                <Skeleton className="h-8 w-20" />
+          <Card key={i} className="p-4">
+            <div className="flex gap-4">
+              <Skeleton className="h-10 w-10 rounded-full" />
+              <div className="space-y-2 flex-1">
+                <Skeleton className="h-5 w-32" />
+                <Skeleton className="h-20 w-full" />
+                <div className="flex gap-2">
+                  <Skeleton className="h-8 w-16" />
+                  <Skeleton className="h-8 w-20" />
+                </div>
               </div>
             </div>
-          </div>
+          </Card>
         ))}
       </div>
     );
@@ -41,11 +45,12 @@ export const CommentList = ({
 
   if (comments.length === 0) {
     return (
-      <div className="text-center py-8 border rounded-lg">
+      <Card className="p-8 text-center border-dashed border-2 border-viverblue/20 bg-viverblue/5">
+        <MessageSquare className="h-12 w-12 mx-auto text-viverblue/40 mb-4" />
         <p className="text-muted-foreground">
           Nenhum comentário ainda. Seja o primeiro a compartilhar sua experiência!
         </p>
-      </div>
+      </Card>
     );
   }
 
