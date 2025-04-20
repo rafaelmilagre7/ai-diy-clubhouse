@@ -27,6 +27,7 @@ export interface OnboardingData {
     business_challenges?: string[];
     short_term_goals?: string[];
     important_kpis?: string[];
+    additional_context?: string;
   };
   business_goals: {
     primary_goal?: string;
@@ -81,4 +82,13 @@ export interface OnboardingProgress {
   company_website?: string;
   current_position?: string;
   annual_revenue?: string;
+}
+
+export interface OnboardingStepProps {
+  onSubmit: (stepId: string, data: any) => void;
+  isSubmitting: boolean;
+  isLastStep?: boolean;
+  onComplete?: () => void;
+  initialData?: any;
+  personalInfo?: OnboardingData['personal_info'];
 }

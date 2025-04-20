@@ -1,120 +1,103 @@
 
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Button } from "@/components/ui/button";
-import { Home, GraduationCap, Trophy, Wrench, Gift, PencilLine, User, Users } from "lucide-react";
-import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { 
+  LayoutDashboard, 
+  Lightbulb, 
+  Wrench, 
+  Gift, 
+  MessageCircle, 
+  Award, 
+  HelpCircle 
+} from "lucide-react";
+import { Link, useLocation } from "react-router-dom";
 
-export const MemberSidebarNav = ({ sidebarOpen }: { sidebarOpen: boolean }) => {
+interface MemberSidebarNavProps {
+  sidebarOpen: boolean;
+}
+
+export const MemberSidebarNav = ({ sidebarOpen }: MemberSidebarNavProps) => {
   const location = useLocation();
-  
+  const currentPath = location.pathname;
+
+  // Definição de itens do menu principal
+  const navItems = [
+    {
+      title: "Dashboard",
+      icon: LayoutDashboard,
+      href: "/dashboard",
+      active: currentPath === "/dashboard"
+    },
+    {
+      title: "Soluções",
+      icon: Lightbulb,
+      href: "/solutions",
+      active: currentPath.includes("/solution") || currentPath === "/solutions"
+    },
+    {
+      title: "Ferramentas",
+      icon: Wrench,
+      href: "/tools",
+      active: currentPath.includes("/tools")
+    },
+    {
+      title: "Benefícios",
+      icon: Gift,
+      href: "/benefits",
+      active: currentPath === "/benefits"
+    },
+    {
+      title: "Sugestões",
+      icon: MessageCircle,
+      href: "/suggestions",
+      active: currentPath.includes("/suggestions")
+    },
+    {
+      title: "Conquistas",
+      icon: Award,
+      href: "/achievements",
+      active: currentPath === "/achievements"
+    },
+  ];
+
+  // Item separado para suporte
+  const supportItem = {
+    title: "Suporte",
+    icon: HelpCircle,
+    href: "https://wa.me/5511999999999", // Atualizar com o número real
+    external: true
+  };
+
   return (
-    <ScrollArea className="flex-1 px-4">
-      <nav className="space-y-2 py-4">
-        <Button
-          variant={location.pathname === "/dashboard" || location.pathname === "/" ? "default" : "ghost"}
-          asChild
-          className="w-full justify-start"
-        >
-          <Link to="/dashboard">
-            <Home className="h-5 w-5 mr-2" />
-            <span className={cn("flex-1", !sidebarOpen && "hidden")}>
-              Dashboard
-            </span>
+    <div className="flex flex-col overflow-y-auto py-4 flex-1">
+      <nav className="flex flex-col gap-1 px-3">
+        {navItems.map((item) => (
+          <Link
+            key={item.title}
+            to={item.href}
+            className={cn(
+              "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
+              item.active
+                ? "bg-[#0ABAB5]/10 text-[#0ABAB5] font-medium"
+                : "text-gray-600 hover:bg-gray-100"
+            )}
+          >
+            <item.icon size={18} />
+            {sidebarOpen && <span>{item.title}</span>}
           </Link>
-        </Button>
-
-        <Button
-          variant={location.pathname === "/onboarding" ? "default" : "ghost"}
-          asChild
-          className="w-full justify-start"
-        >
-          <Link to="/onboarding">
-            <Users className="h-5 w-5 mr-2" />
-            <span className={cn("flex-1", !sidebarOpen && "hidden")}>
-              Onboarding
-            </span>
-          </Link>
-        </Button>
-
-        <Button
-          variant={location.pathname.startsWith("/solutions") || location.pathname.startsWith("/solution/") ? "default" : "ghost"}
-          asChild
-          className="w-full justify-start"
-        >
-          <Link to="/solutions">
-            <GraduationCap className="h-5 w-5 mr-2" />
-            <span className={cn("flex-1", !sidebarOpen && "hidden")}>
-              Soluções
-            </span>
-          </Link>
-        </Button>
-
-        <Button
-          variant={location.pathname.startsWith("/tools") ? "default" : "ghost"}
-          asChild
-          className="w-full justify-start"
-        >
-          <Link to="/tools">
-            <Wrench className="h-5 w-5 mr-2" />
-            <span className={cn("flex-1", !sidebarOpen && "hidden")}>
-              Ferramentas
-            </span>
-          </Link>
-        </Button>
-
-        <Button
-          variant={location.pathname.startsWith("/benefits") ? "default" : "ghost"}
-          asChild
-          className="w-full justify-start"
-        >
-          <Link to="/benefits">
-            <Gift className="h-5 w-5 mr-2" />
-            <span className={cn("flex-1", !sidebarOpen && "hidden")}>
-              Benefícios
-            </span>
-          </Link>
-        </Button>
-
-        <Button
-          variant={location.pathname.startsWith("/achievements") ? "default" : "ghost"}
-          asChild
-          className="w-full justify-start"
-        >
-          <Link to="/achievements">
-            <Trophy className="h-5 w-5 mr-2" />
-            <span className={cn("flex-1", !sidebarOpen && "hidden")}>
-              Conquistas
-            </span>
-          </Link>
-        </Button>
-
-        <Button
-          variant={location.pathname.startsWith("/suggestions") ? "default" : "ghost"}
-          asChild
-          className="w-full justify-start"
-        >
-          <Link to="/suggestions">
-            <PencilLine className="h-5 w-5 mr-2" />
-            <span className={cn("flex-1", !sidebarOpen && "hidden")}>
-              Sugestões
-            </span>
-          </Link>
-        </Button>
+        ))}
         
-        <Button
-          variant={location.pathname.startsWith("/profile") ? "default" : "ghost"}
-          asChild
-          className="w-full justify-start"
+        {/* Item de suporte */}
+        <a
+          href={supportItem.href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-3 rounded-md px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 transition-colors mt-auto"
         >
-          <Link to="/profile">
-            <User className="h-5 w-5 mr-2" />
-            <span className={cn("flex-1", !sidebarOpen && "hidden")}>
-              Perfil
-            </span>
-          </Link>
-        </Button>
+          <supportItem.icon size={18} />
+          {sidebarOpen && <span>{supportItem.title}</span>}
+        </a>
       </nav>
-    </ScrollArea>
+    </div>
   );
 };

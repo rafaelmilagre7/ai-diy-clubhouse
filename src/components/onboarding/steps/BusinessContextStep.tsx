@@ -5,8 +5,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { z } from "zod";
 import { toast } from "sonner";
-import MilagrinhoAssistant from "../MilagrinhoAssistant";
-import { OnboardingStepProps } from "@/types/onboarding";
+import { MilagrinhoMessage } from "@/components/onboarding/MilagrinhoMessage";
+
+interface OnboardingStepProps {
+  onSubmit: (stepId: string, data: any) => void;
+  isSubmitting: boolean;
+  isLastStep?: boolean;
+  onComplete?: () => void;
+  initialData?: any;
+}
 
 export const BusinessContextStep = ({ onSubmit, isSubmitting, initialData }: OnboardingStepProps) => {
   const [businessContext, setBusinessContext] = useState({
@@ -50,7 +57,7 @@ export const BusinessContextStep = ({ onSubmit, isSubmitting, initialData }: Onb
 
   return (
     <div className="space-y-6">
-      <MilagrinhoAssistant 
+      <MilagrinhoMessage 
         message="Agora vamos entender o contexto do seu negócio para recomendar as melhores soluções de IA para você."
       />
 
