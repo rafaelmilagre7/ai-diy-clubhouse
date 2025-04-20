@@ -4,11 +4,11 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { Solution } from "@/lib/supabase";
 
-export const useSolutionsData = (initialCategory = "all") => {
+export const useSolutionsData = (initialCategory: string | null = "all") => {
   const [loading, setLoading] = useState(true);
   const [solutions, setSolutions] = useState<Solution[]>([]);
   const [filteredSolutions, setFilteredSolutions] = useState<Solution[]>([]);
-  const [activeCategory, setActiveCategory] = useState(initialCategory);
+  const [activeCategory, setActiveCategory] = useState(initialCategory || "all");
   const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
 

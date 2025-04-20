@@ -8,7 +8,7 @@ import { Search, Filter } from 'lucide-react';
 import LoadingScreen from '@/components/common/LoadingScreen';
 import { Solution } from '@/lib/supabase';
 import { useToolsData } from '@/hooks/useToolsData';
-import { useLogging } from '@/hooks/useLogging';
+import { useLogging } from '@/contexts/logging';
 
 const Solutions = () => {
   // Logger para depuração
@@ -28,7 +28,7 @@ const Solutions = () => {
 
   // Log data for debugging
   log("Solutions page loaded", { 
-    solutionsCount: filteredSolutions.length, 
+    solutionsCount: filteredSolutions?.length || 0, 
     activeCategory,
     isLoading: loading || toolsDataLoading
   });
@@ -85,7 +85,7 @@ const Solutions = () => {
 
         {categories.map((category) => (
           <TabsContent key={category.id} value={category.id} className="mt-0">
-            {filteredSolutions.length === 0 ? (
+            {filteredSolutions?.length === 0 ? (
               <div className="text-center py-8 bg-white rounded-lg border border-dashed">
                 <div className="flex flex-col items-center px-4">
                   <Filter className="h-10 w-10 text-muted-foreground mb-3" />
@@ -97,7 +97,7 @@ const Solutions = () => {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredSolutions.map((solution: Solution) => (
+                {filteredSolutions?.map((solution: Solution) => (
                   <SolutionCard key={solution.id} solution={solution} />
                 ))}
               </div>

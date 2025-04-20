@@ -5,7 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { ToasterProvider } from "@/components/layout/ToasterProvider";
 import { AuthProvider } from "@/contexts/auth";
-import { LoggingProvider } from "@/contexts/logging";
+import { LoggingProvider } from "@/hooks/useLogging";
 import LoadingScreen from "@/components/common/LoadingScreen";
 import RootRedirect from "@/components/routing/RootRedirect";
 import Auth from "@/pages/Auth";
