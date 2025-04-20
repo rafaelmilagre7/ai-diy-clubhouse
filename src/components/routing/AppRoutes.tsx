@@ -7,11 +7,15 @@ import AuthProtectedRoutes from "@/components/auth/AuthProtectedRoutes";
 import AdminProtectedRoutes from "@/components/auth/AdminProtectedRoutes";
 import LoadingScreen from "@/components/common/LoadingScreen";
 
+interface AppRoutesProps {
+  children?: ReactNode;
+}
+
 /**
  * AppRoutes is responsible for setting up the main routing structure
  * It includes admin and member routes behind authentication checks
  */
-const AppRoutes = ({ children }: { children: ReactNode }) => {
+const AppRoutes = ({ children }: AppRoutesProps) => {
   return (
     <Routes>
       {/* Admin routes - protected by admin role check */}
