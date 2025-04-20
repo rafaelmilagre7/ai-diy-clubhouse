@@ -35,13 +35,19 @@ export const ResetPasswordForm = () => {
     try {
       setIsLoading(true);
       
+      console.log("Iniciando reset de senha para:", data.email);
+      
       const { error } = await supabase.auth.resetPasswordForEmail(data.email, {
         redirectTo: `${window.location.origin}/reset-password/update`,
       });
 
-      if (error) throw error;
+      console.log("Resposta do Supabase:", { error });
 
-      // Marcar como enviado mesmo se houver erro, para melhor UX
+      if (error) {
+        console.error("Erro detalhado no reset de senha:", error);
+        throw error;
+      }
+
       setSubmitted(true);
       
       toast.success(
@@ -49,15 +55,11 @@ export const ResetPasswordForm = () => {
       );
       
     } catch (error: any) {
-      console.error("Erro ao solicitar reset de senha:", error);
+      console.error("Erro completo ao solicitar reset de senha:", error);
       
-      // Não mostrar erro específico para o usuário por segurança
       toast.error(
-        "Se o e-mail estiver registrado em nossa plataforma, você receberá um link de recuperação."
+        error.message || "Erro ao enviar e-mail de recuperação. Tente novamente."
       );
-      
-      // Ainda marcamos como enviado para não revelar se o email existe ou não
-      setSubmitted(true);
     } finally {
       setIsLoading(false);
     }
