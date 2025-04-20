@@ -15,6 +15,7 @@ export const PersonalInfoFormController = () => {
     name: progress?.personal_info?.name || "",
     email: progress?.personal_info?.email || "",
     phone: progress?.personal_info?.phone || "",
+    ddi: progress?.personal_info?.ddi || "+55",
     linkedin: progress?.personal_info?.linkedin || "",
     instagram: progress?.personal_info?.instagram || "",
     country: progress?.personal_info?.country || "Brasil",
@@ -23,12 +24,9 @@ export const PersonalInfoFormController = () => {
     timezone: progress?.personal_info?.timezone || "Horário de Brasília (GMT-3)",
   });
 
-  // Placeholder for future OpenAI interaction
-  // An example function to demonstrate IA call usage
   const fetchAICompletionSuggestion = async (inputField: string, currentValue: string) => {
-    // Example: Could call edge function to get suggestion based on field and current value
-    // This is just a placeholder and can be integrated with actual OpenAI calls in backend
-    console.log(`Fetching AI suggestion for field ${inputField} with current value: ${currentValue}`);
+    // Placeholder para interações futuras com IA
+    console.log(`IA: Sugestão para ${inputField}: ${currentValue}`);
   };
 
   const handleChange = (field: string, value: string) => {
@@ -36,8 +34,6 @@ export const PersonalInfoFormController = () => {
       ...prev,
       [field]: value,
     }));
-
-    // Optionally call AI completion for specific fields
     if (field === "linkedin" || field === "instagram") {
       fetchAICompletionSuggestion(field, value);
     }
@@ -71,4 +67,3 @@ export const PersonalInfoFormController = () => {
     </form>
   );
 };
-

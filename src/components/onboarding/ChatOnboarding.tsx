@@ -10,13 +10,15 @@ export const ChatOnboarding = () => {
 
   useEffect(() => {
     if (messages.length === 0) {
-      // Envia primeira mensagem quando o componente montar
-      sendMessage("Olá!", {
-        name: progress?.personal_info?.name,
-        currentStep: progress?.current_step
-      });
+      // Mensagem inicial personalizada com o nome do usuário (Milagrinho)
+      const nome = progress?.personal_info?.name || progress?.user_id || '';
+      sendMessage(
+        `Oi${nome ? ` ${nome}` : ""}! Eu sou o Milagrinho, seu assistente de IA do VIVER DE IA Club. Vamos começar conhecendo um pouco sobre você. Estas informações vão me ajudar a personalizar sua experiência, onde você vai encontrar uma comunidade incrível de pessoas transformando negócios com IA.`
+      );
     }
-  }, []);
+  // progress?.personal_info?.name incluído no array de dependências para garantir atualização se salvar o nome antes de prosseguir
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [progress?.personal_info?.name]);
 
   return (
     <div className="w-full bg-white rounded-xl shadow-sm border border-gray-100 px-5 py-4 mb-6">
