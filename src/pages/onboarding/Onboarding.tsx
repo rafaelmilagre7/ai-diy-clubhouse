@@ -24,7 +24,11 @@ const Onboarding = () => {
     }
   }, [isLoading, progress, navigate, checkComplete]);
 
-  if (!user) return null;
+  // Se o usuário não estiver autenticado, redirecionamos para login
+  if (!user) {
+    navigate("/login", { replace: true });
+    return null;
+  }
   
   // Mostra tela de carregamento apenas na primeira carga
   if (isLoading && !checkComplete) return (

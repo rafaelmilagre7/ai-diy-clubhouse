@@ -18,15 +18,10 @@ const EditProfile = lazy(() => import("@/pages/member/EditProfile"));
 const ResetPassword = lazy(() => import("@/pages/auth/ResetPassword"));
 const SetNewPassword = lazy(() => import("@/pages/auth/SetNewPassword"));
 
-// Admin Routes
-const AdminRoutes = lazy(() => import("@/components/routing/AdminRoutes").then(module => ({
-  default: module.AdminRoutes
-})));
+// Routes
+import AppRoutes from "@/components/routing/AppRoutes";
 
-// Member Routes
-import { MemberRoutes } from "@/components/routing/MemberRoutes";
-
-// Create a client
+// Criação do cliente QueryClient
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -48,37 +43,15 @@ function App() {
                 <Route path="/" element={<RootRedirect />} />
                 <Route path="/index" element={<Index />} />
                 
-                {/* Auth Routes */}
+                {/* Rotas de Autenticação */}
                 <Route path="/login" element={<Auth />} />
                 <Route path="/register" element={<Auth />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/reset-password/update" element={<SetNewPassword />} />
                 <Route path="/auth" element={<Auth />} />
                 
-                {/* Admin Routes */}
-                <Route 
-                  path="/admin/*" 
-                  element={
-                    <ProtectedRoute requireAdmin={true}>
-                      <Suspense fallback={<LoadingScreen />}>
-                        <AdminRoutes />
-                      </Suspense>
-                    </ProtectedRoute>
-                  } 
-                />
-                
-                {/* Member Routes */}
-                <Route 
-                  path="/*" 
-                  element={
-                    <ProtectedRoute>
-                      <MemberRoutes />
-                    </ProtectedRoute>
-                  } 
-                />
-                
-                {/* Fallback route */}
-                <Route path="*" element={<NotFound />} />
+                {/* Todas as outras rotas são gerenciadas pelo AppRoutes */}
+                <Route path="*" element={<AppRoutes />} />
               </Routes>
             </Suspense>
           </Router>

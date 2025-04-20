@@ -1,10 +1,9 @@
 
 import { ReactNode } from "react";
 import { Route, Routes } from "react-router-dom";
-import AdminRoutes from "@/components/routing/AdminRoutes";
+import { AdminRoutes } from "./AdminRoutes";
 import { MemberRoutes } from "./MemberRoutes";
-import AuthProtectedRoutes from "@/components/auth/AuthProtectedRoutes";
-import AdminProtectedRoutes from "@/components/auth/AdminProtectedRoutes";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import LoadingScreen from "@/components/common/LoadingScreen";
 
 interface AppRoutesProps {
@@ -12,29 +11,29 @@ interface AppRoutesProps {
 }
 
 /**
- * AppRoutes is responsible for setting up the main routing structure
- * It includes admin and member routes behind authentication checks
+ * AppRoutes é responsável por configurar a estrutura principal de roteamento
+ * Inclui rotas de administração e de membros com verificações de autenticação
  */
 const AppRoutes = ({ children }: AppRoutesProps) => {
   return (
     <Routes>
-      {/* Admin routes - protected by admin role check */}
+      {/* Rotas de administração - protegidas por verificação de papel de administrador */}
       <Route 
         path="/admin/*" 
         element={
-          <AdminProtectedRoutes>
+          <ProtectedRoute requireAdmin={true}>
             <AdminRoutes>{children}</AdminRoutes>
-          </AdminProtectedRoutes>
+          </ProtectedRoute>
         } 
       />
 
-      {/* Member routes - protected by basic auth check */}
+      {/* Rotas de membros - protegidas por verificação básica de autenticação */}
       <Route 
         path="*" 
         element={
-          <AuthProtectedRoutes>
+          <ProtectedRoute>
             <MemberRoutes>{children}</MemberRoutes>
-          </AuthProtectedRoutes>
+          </ProtectedRoute>
         } 
       />
     </Routes>

@@ -1,5 +1,5 @@
 
-project_id = "<seu_project_id_aqui>"
+project_id = "zotzvtepvpnkcoobdubt"
 
 [functions.chat-onboarding]
 verify_jwt = true
