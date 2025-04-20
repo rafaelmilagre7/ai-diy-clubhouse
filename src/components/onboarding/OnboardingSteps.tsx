@@ -7,6 +7,7 @@ import { IndustryFocusStep } from "./steps/IndustryFocusStep";
 import { ResourcesNeedsStep } from "./steps/ResourcesNeedsStep";
 import { TeamInfoStep } from "./steps/TeamInfoStep";
 import { PreferencesStep } from "./steps/PreferencesStep";
+import { Progress } from "@/components/ui/progress";
 
 export const OnboardingSteps = () => {
   const {
@@ -33,6 +34,8 @@ export const OnboardingSteps = () => {
 
   if (!CurrentStepComponent) return null;
 
+  const progressPercentage = ((currentStepIndex + 1) / steps.length) * 100;
+
   return (
     <div className="space-y-8">
       <div className="flex justify-between items-center">
@@ -44,6 +47,10 @@ export const OnboardingSteps = () => {
             Passo {currentStepIndex + 1} de {steps.length}
           </p>
         </div>
+      </div>
+      
+      <div className="w-full">
+        <Progress value={progressPercentage} className="h-2" />
       </div>
 
       <div className="bg-gray-800 p-6 rounded-lg">
