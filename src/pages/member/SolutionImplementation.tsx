@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { useModuleImplementation } from "@/hooks/useModuleImplementation";
 import LoadingScreen from "@/components/common/LoadingScreen";
@@ -39,16 +40,13 @@ const SolutionImplementation = () => {
     setCompletedModules: () => {}
   });
   
-  if (solution && currentModule) {
-    useRealtimeComments(solution.id, currentModule.id);
-  }
+  // Importante: Movemos o hook para fora de blocos condicionais
+  // e usamos flags para controlar o comportamento
+  const solutionId = solution?.id || "";
+  const moduleId = currentModule?.id || "";
+  const shouldEnableRealtimeComments = !!solution && !!currentModule;
   
-  const onComplete = async () => {
-    const success = await handleConfirmImplementation();
-    if (success) {
-      log("Implementation completed successfully", { solution_id: solution?.id });
-    }
-  };
+  useRealtimeComments(solutionId, moduleId, shouldEnableRealtimeComments);
   
   useEffect(() => {
     if (currentModule && solution) {

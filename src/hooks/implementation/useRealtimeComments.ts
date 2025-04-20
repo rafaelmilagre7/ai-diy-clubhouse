@@ -4,56 +4,43 @@ import { supabase } from '@/lib/supabase';
 import { useQueryClient } from '@tanstack/react-query';
 import { useLogging } from '@/hooks/useLogging';
 
-export const useRealtimeComments = (solutionId: string, moduleId: string) => {
+export const useRealtimeComments = (
+  solutionId: string, 
+  moduleId: string,
+  isEnabled = true
+) => {
   const queryClient = useQueryClient();
   const { log, logError } = useLogging();
-
+  
   useEffect(() => {
-    // Configura o canal Supabase para escutar mudanças nas tabelas
-    const channel = supabase
-      .channel('solution-comments-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*', // Escuta todos os eventos (INSERT, UPDATE, DELETE)
-          schema: 'public',
-          table: 'solution_comments',
-          filter: `solution_id=eq.${solutionId}`
-        },
-        (payload) => {
-          log('Alteração em tempo real nos comentários', { 
-            event: payload.eventType, 
-            solutionId, 
-            payload 
-          });
-          
-          // Invalida a consulta para recarregar os comentários
-          queryClient.invalidateQueries({ 
-            queryKey: ['solution-comments', solutionId, moduleId] 
-          });
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'solution_comment_likes'
-        },
-        () => {
-          // Ao alterar curtidas, recarrega os comentários
-          queryClient.invalidateQueries({ 
-            queryKey: ['solution-comments', solutionId, moduleId] 
-          });
-        }
-      )
+    if (!isEnabled || !solutionId || !moduleId) {
+      return;
+    }
+    
+    log('Iniciando escuta de comentários em tempo real', { solutionId, moduleId });
+    
+    // Inscrever-se nas mudanças na tabela de comentários
+    const commentChannel = supabase
+      .channel('tool-comments-changes')
+      .on('postgres_changes', { 
+        event: '*', 
+        schema: 'public', 
+        table: 'tool_comments',
+        filter: `tool_id=eq.${solutionId}`
+      }, () => {
+        log('Comentário modificado, invalidando queries', { solutionId, moduleId });
+        queryClient.invalidateQueries({ queryKey: ['solution-comments', solutionId, moduleId] });
+      })
       .subscribe((status) => {
-        log('Status da conexão realtime de comentários', { status, solutionId });
+        if (status === 'SUBSCRIBED') {
+          log('Escuta de comentários ativada com sucesso', { solutionId, moduleId });
+        }
       });
-
-    // Limpeza do canal quando o componente for desmontado
+    
+    // Cancelar inscrição ao desmontar
     return () => {
-      supabase.removeChannel(channel);
+      log('Cancelando escuta de comentários', { solutionId, moduleId });
+      commentChannel.unsubscribe();
     };
-  }, [solutionId, moduleId, queryClient, log, logError]);
+  }, [solutionId, moduleId, queryClient, isEnabled, log, logError]);
 };
