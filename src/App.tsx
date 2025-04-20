@@ -17,6 +17,7 @@ const NotFound = lazy(() => import("@/pages/NotFound"));
 const Index = lazy(() => import("@/pages/Index"));
 
 // Admin Routes
+// Importação direta do arquivo AdminRoutes.tsx para evitar problemas de importação
 const AdminRoutes = lazy(() => import("@/components/routing/AdminRoutes").then(module => ({
   default: module.AdminRoutes
 })));

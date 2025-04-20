@@ -29,6 +29,7 @@ import { Button } from '@/components/ui/button';
 import { MoreVertical, Trash2, Play } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { UserVote } from '@/types/suggestionTypes';
 
 const SuggestionDetailsPage = () => {
   const { user, isAdmin } = useAuth();
@@ -168,7 +169,7 @@ const SuggestionDetailsPage = () => {
         onSubmitComment={handleSubmitComment}
         onVote={handleVote}
         isOwner={isOwner}
-        userVote={userVote}
+        userVote={userVote as UserVote}
         voteLoading={voteLoading}
       />
 

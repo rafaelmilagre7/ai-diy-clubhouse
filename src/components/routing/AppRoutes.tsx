@@ -1,7 +1,7 @@
 
 import { ReactNode } from "react";
 import { Route, Routes } from "react-router-dom";
-import { AdminRoutes } from "./AdminRoutes";
+import AdminRoutes from "@/components/routing/AdminRoutes";
 import { MemberRoutes } from "./MemberRoutes";
 import AuthProtectedRoutes from "@/components/auth/AuthProtectedRoutes";
 import AdminProtectedRoutes from "@/components/auth/AdminProtectedRoutes";

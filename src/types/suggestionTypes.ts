@@ -42,5 +42,39 @@ export interface SuggestionComment {
   replies?: SuggestionComment[];
 }
 
+export interface SuggestionCategory {
+  id: string;
+  name: string;
+  description?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface NotificationType {
+  id: string;
+  user_id: string;
+  suggestion_id?: string;
+  comment_id?: string;
+  type: 'upvote' | 'downvote' | 'comment' | 'reply' | 'status_change';
+  is_read: boolean;
+  created_at: string;
+  suggestion?: {
+    title: string;
+  };
+  comment?: {
+    content: string;
+  };
+  profiles?: {
+    name: string;
+    avatar_url: string;
+  };
+}
+
 export type SuggestionStatus = 'new' | 'under_review' | 'in_development' | 'completed' | 'declined';
 export type VoteType = 'upvote' | 'downvote';
+
+export interface UserVote {
+  id: string;
+  vote_type: VoteType;
+}
+
