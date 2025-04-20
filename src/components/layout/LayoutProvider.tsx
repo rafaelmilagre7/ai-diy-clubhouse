@@ -37,7 +37,7 @@ const LayoutProvider = ({ children }: { children: ReactNode }) => {
         setLoadingTimeout(true);
         toast.error("Tempo limite de carregamento excedido, redirecionando para login");
         navigate('/login', { replace: true });
-      }, 8000); // Aumentar para 8 segundos para dar mais tempo
+      }, 8000); // 8 segundos
     }
     
     return () => {
