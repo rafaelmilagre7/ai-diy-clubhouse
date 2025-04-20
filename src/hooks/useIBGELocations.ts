@@ -27,7 +27,12 @@ export const useIBGELocations = () => {
       // Cria um objeto com todas as cidades por estado
       const todasCidades: Record<string, City[]> = {};
       todosEstados.forEach(estado => {
-        todasCidades[estado.code] = getCities(estado.code);
+        // A função getCities retorna um array de strings, precisamos converter para City[]
+        const cidadesDoEstado = getCities(estado.code);
+        todasCidades[estado.code] = cidadesDoEstado.map(nomeCidade => ({
+          name: nomeCidade,
+          code: nomeCidade.replace(/\s+/g, '-').toLowerCase() // Gerando um code baseado no nome da cidade
+        }));
       });
       
       setCidadesPorEstado(todasCidades);
