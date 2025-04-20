@@ -24,6 +24,8 @@ export const MemberSidebar = ({
   getInitials,
   signOut
 }: MemberSidebarProps) => {
+  console.log("MemberSidebar renderizando com sidebarOpen:", sidebarOpen);
+  
   return (
     <aside
       className={cn(

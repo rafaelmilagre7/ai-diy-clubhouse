@@ -37,7 +37,7 @@ const LayoutProvider = ({ children }: { children: ReactNode }) => {
         setLoadingTimeout(true);
         toast.error("Tempo limite de carregamento excedido, redirecionando para login");
         navigate('/login', { replace: true });
-      }, 5000); // Aumentar para 5 segundos para dar mais tempo
+      }, 8000); // Aumentar para 8 segundos para dar mais tempo
     }
     
     return () => {
@@ -67,6 +67,7 @@ const LayoutProvider = ({ children }: { children: ReactNode }) => {
 
   // Fast path for members - If we have user and profile, render immediately
   if (user && profile && !isAdmin) {
+    console.log("LayoutProvider: Renderizando MemberLayout diretamente");
     return <MemberLayout>{children}</MemberLayout>;
   }
 

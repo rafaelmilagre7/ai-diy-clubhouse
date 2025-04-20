@@ -13,15 +13,16 @@ const MemberLayout = ({ children }: { children: ReactNode }) => {
   const { profile, signOut } = useAuth();
   
   // Default to showing sidebar on desktop, hiding on mobile
-  const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth >= 768);
+  const [sidebarOpen, setSidebarOpen] = useState(true); // Sempre começar com sidebar aberto
 
   // Handle window resize to auto-adjust sidebar visibility
   useEffect(() => {
     const handleResize = () => {
+      // Somente em dispositivos móveis o sidebar fecha por padrão
       if (window.innerWidth < 768) {
         setSidebarOpen(false);
-      } else if (window.innerWidth >= 768 && !sidebarOpen) {
-        setSidebarOpen(true); // Garantir que o sidebar esteja aberto no desktop
+      } else {
+        setSidebarOpen(true);
       }
     };
 
@@ -30,7 +31,7 @@ const MemberLayout = ({ children }: { children: ReactNode }) => {
     
     // Cleanup
     return () => window.removeEventListener('resize', handleResize);
-  }, [sidebarOpen]);
+  }, []); // Removido sidebarOpen da dependência para evitar loop
 
   const getInitials = (name: string | null) => {
     if (!name) return "U";
@@ -46,7 +47,8 @@ const MemberLayout = ({ children }: { children: ReactNode }) => {
   console.log("MemberLayout renderizado:", { 
     profileName: profile?.name,
     profileEmail: profile?.email,
-    sidebarOpen 
+    sidebarOpen,
+    windowWidth: window.innerWidth
   });
 
   if (!profile) {

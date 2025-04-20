@@ -27,7 +27,6 @@ export const SidebarLogo = ({ sidebarOpen, setSidebarOpen }: SidebarLogoProps) =
         </Link>
       )}
       
-      {/* Botão de toggle visível em todos os tamanhos de tela */}
       <Button
         variant="ghost"
         size="icon"
