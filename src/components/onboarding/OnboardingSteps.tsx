@@ -8,6 +8,7 @@ import { ResourcesNeedsStep } from "./steps/ResourcesNeedsStep";
 import { TeamInfoStep } from "./steps/TeamInfoStep";
 import { PreferencesStep } from "./steps/PreferencesStep";
 import { Progress } from "@/components/ui/progress";
+import { OnboardingData } from "@/types/onboarding";
 
 export const OnboardingSteps = () => {
   const {
@@ -36,6 +37,14 @@ export const OnboardingSteps = () => {
 
   const progressPercentage = ((currentStepIndex + 1) / steps.length) * 100;
 
+  // Determinando os dados iniciais corretos para o componente atual
+  const getInitialDataForCurrentStep = () => {
+    if (!progress) return undefined;
+    
+    const sectionKey = currentStep.section as keyof OnboardingData;
+    return progress[sectionKey];
+  };
+
   return (
     <div className="space-y-8">
       <div className="flex justify-between items-center">
@@ -59,7 +68,7 @@ export const OnboardingSteps = () => {
           isSubmitting={isSubmitting}
           isLastStep={currentStepIndex === steps.length - 1}
           onComplete={completeOnboarding}
-          initialData={progress?.[currentStep.section as keyof typeof progress]}
+          initialData={getInitialDataForCurrentStep()}
         />
       </div>
     </div>
