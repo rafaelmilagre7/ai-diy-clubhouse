@@ -8,7 +8,8 @@ import { v4 as uuidv4 } from 'uuid';
 
 interface FileUploadProps {
   bucketName: string;
-  onUploadComplete: (url: string) => void;
+  folder?: string;
+  onUploadComplete: (url: string, fileName?: string, fileSize?: number) => void;
   accept?: string;
   maxSize?: number; // Em MB
   buttonText?: string;
@@ -18,6 +19,7 @@ interface FileUploadProps {
 
 export const FileUpload: React.FC<FileUploadProps> = ({
   bucketName,
+  folder = '', // Definir um valor padrão para folder
   onUploadComplete,
   accept = '*',
   maxSize = 5, // Padrão 5MB
@@ -48,7 +50,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
       // Gerar um nome único para o arquivo
       const fileExt = file.name.split('.').pop();
       const fileName = `${uuidv4()}.${fileExt}`;
-      const filePath = `${fileName}`;
+      const filePath = folder ? `${folder}/${fileName}` : fileName;
       
       // Fazer upload para o Supabase Storage
       const { data, error } = await supabase.storage
@@ -65,7 +67,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
         .from(bucketName)
         .getPublicUrl(filePath);
       
-      onUploadComplete(urlData.publicUrl);
+      onUploadComplete(urlData.publicUrl, file.name, file.size);
       
       toast({
         title: 'Upload realizado com sucesso',
