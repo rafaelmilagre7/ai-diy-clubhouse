@@ -15,6 +15,8 @@ import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 const NotFound = lazy(() => import("@/pages/NotFound"));
 const Index = lazy(() => import("@/pages/Index"));
 const EditProfile = lazy(() => import("@/pages/member/EditProfile"));
+const ResetPassword = lazy(() => import("@/pages/auth/ResetPassword"));
+const SetNewPassword = lazy(() => import("@/pages/auth/SetNewPassword"));
 
 // Admin Routes
 const AdminRoutes = lazy(() => import("@/components/routing/AdminRoutes").then(module => ({
@@ -49,8 +51,8 @@ function App() {
                 {/* Auth Routes */}
                 <Route path="/login" element={<Auth />} />
                 <Route path="/register" element={<Auth />} />
-                <Route path="/reset-password" element={<Auth />} />
-                <Route path="/reset-password/update" element={<Auth />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
+                <Route path="/reset-password/update" element={<SetNewPassword />} />
                 <Route path="/auth" element={<Auth />} />
                 
                 {/* Admin Routes */}

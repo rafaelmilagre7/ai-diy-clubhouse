@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Eye, EyeOff, Mail, Lock } from "lucide-react";
+import { Link } from "react-router-dom";
 
 interface EmailPasswordFormProps {
   email: string;
@@ -73,6 +74,15 @@ const EmailPasswordForm = ({
             )}
           </button>
         </div>
+      </div>
+
+      <div className="flex justify-end mb-2">
+        <Link 
+          to="/reset-password"
+          className="text-sm text-viverblue hover:underline"
+        >
+          Esqueceu sua senha?
+        </Link>
       </div>
 
       <Button
