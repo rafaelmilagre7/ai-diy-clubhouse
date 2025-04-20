@@ -3,6 +3,7 @@ import { useState, useEffect, ReactNode } from "react";
 import { useAuth } from "@/contexts/auth";
 import { MemberSidebar } from "./member/MemberSidebar";
 import { MemberContent } from "./member/MemberContent";
+import { toast } from "sonner";
 
 /**
  * MemberLayout renders the layout structure for member users
@@ -10,16 +11,17 @@ import { MemberContent } from "./member/MemberContent";
  */
 const MemberLayout = ({ children }: { children: ReactNode }) => {
   const { profile, signOut } = useAuth();
+  
   // Default to showing sidebar on desktop, hiding on mobile
-  const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 768);
+  const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth >= 768);
 
   // Handle window resize to auto-adjust sidebar visibility
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth <= 768) {
+      if (window.innerWidth < 768) {
         setSidebarOpen(false);
-      } else {
-        setSidebarOpen(true); // Certifique-se de que o sidebar esteja aberto no desktop
+      } else if (window.innerWidth >= 768 && !sidebarOpen) {
+        setSidebarOpen(true); // Garantir que o sidebar esteja aberto no desktop
       }
     };
 
@@ -28,7 +30,7 @@ const MemberLayout = ({ children }: { children: ReactNode }) => {
     
     // Cleanup
     return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  }, [sidebarOpen]);
 
   const getInitials = (name: string | null) => {
     if (!name) return "U";
@@ -40,12 +42,17 @@ const MemberLayout = ({ children }: { children: ReactNode }) => {
       .substring(0, 2);
   };
 
-  // Adicionando log para depuração
+  // Log para depuração
   console.log("MemberLayout renderizado:", { 
     profileName: profile?.name,
     profileEmail: profile?.email,
     sidebarOpen 
   });
+
+  if (!profile) {
+    console.log("Perfil não encontrado no MemberLayout");
+    toast.error("Erro ao carregar perfil. Tente fazer login novamente.");
+  }
 
   return (
     <div className="flex min-h-screen bg-background">

@@ -35,9 +35,9 @@ const LayoutProvider = ({ children }: { children: ReactNode }) => {
       timeoutRef.current = window.setTimeout(() => {
         console.log("LayoutProvider: Loading timeout exceeded, redirecting to login");
         setLoadingTimeout(true);
-        toast("Tempo limite de carregamento excedido, redirecionando para login");
+        toast.error("Tempo limite de carregamento excedido, redirecionando para login");
         navigate('/login', { replace: true });
-      }, 3000); // Reduzir para 3 segundos
+      }, 5000); // Aumentar para 5 segundos para dar mais tempo
     }
     
     return () => {

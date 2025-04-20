@@ -26,11 +26,13 @@ export const SidebarLogo = ({ sidebarOpen, setSidebarOpen }: SidebarLogoProps) =
           </div>
         </Link>
       )}
+      
+      {/* Botão de toggle visível em todos os tamanhos de tela */}
       <Button
         variant="ghost"
         size="icon"
         onClick={() => setSidebarOpen(!sidebarOpen)}
-        className={sidebarOpen ? "ml-auto" : "mx-auto mt-2"}
+        className={sidebarOpen ? "ml-2" : "mx-auto mt-2"}
         aria-label={sidebarOpen ? "Colapsar menu" : "Expandir menu"}
       >
         {sidebarOpen ? <ChevronLeft size={20} /> : <Menu size={20} />}
