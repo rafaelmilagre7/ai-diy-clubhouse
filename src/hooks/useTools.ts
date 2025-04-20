@@ -22,7 +22,6 @@ export const useTools = () => {
         throw error;
       }
 
-      // Verificar quais ferramentas possuem logos válidas
       const toolsWithLogosInfo = data.map(tool => ({
         ...tool,
         has_valid_logo: !!tool.logo_url
@@ -36,8 +35,7 @@ export const useTools = () => {
 
       return data as Tool[];
     },
-    staleTime: 5 * 60 * 1000, // 5 minutos
-    cacheTime: 10 * 60 * 1000 // 10 minutos
+    staleTime: 5 * 60 * 1000 // 5 minutos
   });
 
   return {
