@@ -1,13 +1,15 @@
 
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
-import { OnboardingSteps } from "@/components/onboarding/OnboardingSteps";
 import { useProgress } from "@/hooks/onboarding/useProgress";
 import { useAuth } from "@/contexts/auth";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
+import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
+import { EtapasProgresso } from "@/components/onboarding/EtapasProgresso";
+import { ChatOnboarding } from "@/components/onboarding/ChatOnboarding";
+import { PersonalInfoFormFull } from "@/components/onboarding/steps/PersonalInfoFormFull";
 import { ArrowLeft } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const Onboarding = () => {
   const { user } = useAuth();
@@ -25,8 +27,8 @@ const Onboarding = () => {
 
   return (
     <OnboardingLayout>
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
+      <div className="max-w-3xl mx-auto space-y-5">
+        <div className="flex items-center mb-1">
           <Button
             variant="ghost"
             className="flex items-center gap-2"
@@ -37,16 +39,15 @@ const Onboarding = () => {
           </Button>
         </div>
 
-        <div className="space-y-2">
-          <h1 className="text-3xl font-bold text-white">
-            Bem-vindo ao VIVER DE IA Club!
-          </h1>
-          <p className="text-xl text-gray-300">
-            Vamos configurar seu perfil para personalizar sua experiência.
-          </p>
+        <ChatOnboarding />
+
+        <div>
+          <EtapasProgresso currentStep={1} totalSteps={7} />
         </div>
 
-        <OnboardingSteps />
+        <div className="mt-8 bg-white rounded-xl shadow-lg p-8">
+          <PersonalInfoFormFull />
+        </div>
       </div>
     </OnboardingLayout>
   );
