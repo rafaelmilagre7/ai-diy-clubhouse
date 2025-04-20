@@ -26,6 +26,23 @@ export const CommentsSection = ({ toolId }: CommentsSectionProps) => {
     deleteComment
   } = useToolComments(toolId);
 
+  // Adaptar as funções para corresponder aos tipos esperados
+  const handleLikeComment = (commentId: string) => {
+    const commentToLike = comments.find(c => c.id === commentId) || 
+                          comments.flatMap(c => c.replies || []).find(c => c.id === commentId);
+    if (commentToLike) {
+      likeComment(commentToLike);
+    }
+  };
+
+  const handleDeleteComment = (commentId: string) => {
+    const commentToDelete = comments.find(c => c.id === commentId) || 
+                            comments.flatMap(c => c.replies || []).find(c => c.id === commentId);
+    if (commentToDelete) {
+      deleteComment(commentToDelete);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-2">
@@ -48,8 +65,8 @@ export const CommentsSection = ({ toolId }: CommentsSectionProps) => {
         comments={comments}
         isLoading={isLoading}
         onReply={startReply}
-        onLike={likeComment}
-        onDelete={deleteComment}
+        onLike={handleLikeComment}
+        onDelete={handleDeleteComment}
       />
     </div>
   );

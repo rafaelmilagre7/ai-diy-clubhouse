@@ -9,9 +9,12 @@ export const ToasterProvider = () => {
       toastOptions={{
         duration: 4000,
         className: 'toast-custom-class',
-        // Duração maior para erros
-        error: {
-          duration: 8000,
+        // Configurações específicas para cada tipo de toast
+        // Estas opções são suportadas pela API do Toaster
+        style: {
+          error: {
+            duration: 8000,
+          }
         }
       }}
     />
