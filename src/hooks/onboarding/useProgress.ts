@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/auth";
 import { OnboardingData } from "@/types/onboarding";
+import { toast } from "sonner";
 
 export interface OnboardingProgress {
   id: string;
@@ -34,14 +35,24 @@ export const useProgress = () => {
 
     const fetchProgress = async () => {
       try {
+        setIsLoading(true);
         const { data, error } = await supabase
           .from("onboarding_progress")
           .select("*")
           .eq("user_id", user.id)
           .single();
 
-        if (error) throw error;
-        setProgress(data);
+        if (error) {
+          if (error.code === 'PGRST116') {
+            // Não encontrou registro, vamos criar um novo
+            console.log("Criando novo registro de progresso para o usuário");
+            await createInitialProgress();
+          } else {
+            console.error("Erro ao carregar progresso:", error);
+          }
+        } else {
+          setProgress(data);
+        }
       } catch (error) {
         console.error("Erro ao carregar progresso:", error);
       } finally {
@@ -49,11 +60,45 @@ export const useProgress = () => {
       }
     };
 
+    const createInitialProgress = async () => {
+      try {
+        // Obter metadados do usuário da autenticação
+        const userName = user.user_metadata?.name || '';
+        const userEmail = user.email || '';
+
+        const initialData = {
+          user_id: user.id,
+          completed_steps: [],
+          current_step: 'personal',
+          is_completed: false,
+          personal_info: {
+            name: userName,
+            email: userEmail
+          }
+        };
+
+        const { data, error } = await supabase
+          .from("onboarding_progress")
+          .insert(initialData)
+          .select()
+          .single();
+
+        if (error) throw error;
+        setProgress(data);
+      } catch (error) {
+        console.error("Erro ao criar progresso inicial:", error);
+        toast.error("Não foi possível iniciar seu progresso. Tente novamente mais tarde.");
+      }
+    };
+
     fetchProgress();
   }, [user]);
 
   const updateProgress = async (updates: Partial<OnboardingProgress>) => {
-    if (!user || !progress) return;
+    if (!user || !progress) {
+      console.error("Usuário ou progresso não disponível");
+      return;
+    }
 
     try {
       const { error } = await supabase

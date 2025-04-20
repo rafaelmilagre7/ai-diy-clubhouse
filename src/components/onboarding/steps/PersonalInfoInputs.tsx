@@ -6,6 +6,7 @@ import { PhoneInput } from "./inputs/PhoneInput";
 import { SocialInputs } from "./inputs/SocialInputs";
 import { LocationInputs } from "./inputs/LocationInputs";
 import { TimezoneInput } from "./inputs/TimezoneInput";
+import { useAuth } from "@/contexts/auth";
 
 interface PersonalInfoInputsProps {
   formData: {
@@ -26,16 +27,22 @@ interface PersonalInfoInputsProps {
 }
 
 export const PersonalInfoInputs = ({ formData, onChange, disabled, readOnly }: PersonalInfoInputsProps) => {
+  const { user } = useAuth();
+  
+  // Usar os valores do usuário autenticado como fallback
+  const userName = formData.name || user?.user_metadata?.name || '';
+  const userEmail = formData.email || user?.email || '';
+  
   return (
     <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
       <NameInput
-        value={formData.name}
+        value={userName}
         onChange={v => onChange("name", v)}
         disabled={true}
         readOnly={true}
       />
       <EmailInput
-        value={formData.email}
+        value={userEmail}
         onChange={v => onChange("email", v)}
         disabled={true}
         readOnly={true}
