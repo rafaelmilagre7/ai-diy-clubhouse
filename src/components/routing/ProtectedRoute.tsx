@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from "@/contexts/auth";
 import LoadingScreen from "@/components/common/LoadingScreen";
@@ -18,14 +18,14 @@ const ProtectedRoute = ({
 }: ProtectedRouteProps) => {
   const { user, isAdmin, isLoading } = useAuth();
   const location = useLocation();
-  const [loadingTimeout, setLoadingTimeout] = useState(false);
-  const timeoutRef = useRef<number | null>(null);
+  const [loadingTimeout, setLoadingTimeout] = React.useState(false);
+  const timeoutRef = React.useRef<number | null>(null);
   
   // Debug logs
   console.log("ProtectedRoute:", { user, isAdmin, isLoading, requireAdmin, requiredRole, path: location.pathname });
   
   // Configurar timeout para não ficar preso em carregamento infinito
-  useEffect(() => {
+  React.useEffect(() => {
     if (isLoading && !loadingTimeout) {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);

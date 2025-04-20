@@ -1,7 +1,7 @@
 
 import { Route } from "react-router-dom";
 import { lazy } from "react";
-import { ProtectedRoutes } from "@/auth/ProtectedRoutes";
+import ProtectedRoute from "@/components/routing/ProtectedRoute";
 import MemberLayout from "@/components/layout/MemberLayout";
 
 const MemberDashboard = lazy(() => import("@/pages/member/Dashboard"));
@@ -22,111 +22,111 @@ export const MemberRoutes = () => {
       <Route
         path="/dashboard"
         element={
-          <ProtectedRoutes>
+          <ProtectedRoute>
             <MemberLayout>
               <MemberDashboard />
             </MemberLayout>
-          </ProtectedRoutes>
+          </ProtectedRoute>
         }
       />
       <Route
         path="/solutions"
         element={
-          <ProtectedRoutes>
+          <ProtectedRoute>
             <MemberLayout>
               <Solutions />
             </MemberLayout>
-          </ProtectedRoutes>
+          </ProtectedRoute>
         }
       />
       <Route
         path="/solutions/:id"
         element={
-          <ProtectedRoutes>
+          <ProtectedRoute>
             <MemberLayout>
               <SolutionDetails />
             </MemberLayout>
-          </ProtectedRoutes>
+          </ProtectedRoute>
         }
       />
       <Route
         path="/implement/:id/:moduleIdx"
         element={
-          <ProtectedRoutes>
+          <ProtectedRoute>
             <MemberLayout>
               <SolutionImplementation />
             </MemberLayout>
-          </ProtectedRoutes>
+          </ProtectedRoute>
         }
       />
       <Route
         path="/profile"
         element={
-          <ProtectedRoutes>
+          <ProtectedRoute>
             <MemberLayout>
               <Profile />
             </MemberLayout>
-          </ProtectedRoutes>
+          </ProtectedRoute>
         }
       />
       <Route
         path="/tools"
         element={
-          <ProtectedRoutes>
+          <ProtectedRoute>
             <MemberLayout>
               <Tools />
             </MemberLayout>
-          </ProtectedRoutes>
+          </ProtectedRoute>
         }
       />
       <Route
         path="/tools/:id"
         element={
-          <ProtectedRoutes>
+          <ProtectedRoute>
             <MemberLayout>
               <ToolDetails />
             </MemberLayout>
-          </ProtectedRoutes>
+          </ProtectedRoute>
         }
       />
       <Route
         path="/suggestions"
         element={
-          <ProtectedRoutes>
+          <ProtectedRoute>
             <MemberLayout>
               <Suggestions />
             </MemberLayout>
-          </ProtectedRoutes>
+          </ProtectedRoute>
         }
       />
       <Route
         path="/suggestions/:id"
         element={
-          <ProtectedRoutes>
+          <ProtectedRoute>
             <MemberLayout>
               <SuggestionDetails />
             </MemberLayout>
-          </ProtectedRoutes>
+          </ProtectedRoute>
         }
       />
       <Route
         path="/suggestions/new"
         element={
-          <ProtectedRoutes>
+          <ProtectedRoute>
             <MemberLayout>
               <NewSuggestion />
             </MemberLayout>
-          </ProtectedRoutes>
+          </ProtectedRoute>
         }
       />
       <Route
         path="/achievements"
         element={
-          <ProtectedRoutes>
+          <ProtectedRoute>
             <MemberLayout>
               <Achievements />
             </MemberLayout>
-          </ProtectedRoutes>
+          </ProtectedRoute>
         }
       />
     </>
