@@ -1,4 +1,5 @@
 
+import { Fragment } from "react";
 import { Route } from "react-router-dom";
 import { lazy } from "react";
 import ProtectedRoute from "@/components/routing/ProtectedRoute";
@@ -18,7 +19,7 @@ const Achievements = lazy(() => import("@/pages/member/Achievements"));
 
 export const MemberRoutes = () => {
   return (
-    <>
+    <Fragment>
       <Route
         path="/dashboard"
         element={
@@ -129,6 +130,6 @@ export const MemberRoutes = () => {
           </ProtectedRoute>
         }
       />
-    </>
+    </Fragment>
   );
 };

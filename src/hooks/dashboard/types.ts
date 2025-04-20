@@ -2,11 +2,18 @@
 import { Solution } from "@/lib/supabase";
 
 export interface UserProgress {
-  solutionId: string;
-  currentModule: number;
-  isCompleted: boolean;
-  completionDate: string | null;
-  lastActivity: string;
+  [solutionId: string]: {
+    started: boolean;
+    modules: {
+      [moduleId: string]: {
+        completed: boolean;
+        lastAccessed: string;
+      }
+    };
+    lastAccessed: string;
+    completedModules: number;
+    totalModules: number;
+  }
 }
 
 export interface Dashboard {
@@ -14,6 +21,6 @@ export interface Dashboard {
   completedSolutions: Solution[];
   recommendedSolutions: Solution[];
   allSolutions: Solution[];
-  userProgress: {[key: string]: UserProgress};
+  userProgress: UserProgress;
   loading: boolean;
 }

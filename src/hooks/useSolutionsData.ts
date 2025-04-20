@@ -2,11 +2,11 @@
 import { useState, useEffect } from "react";
 import { supabase, Solution } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
-import { useLogging } from "@/hooks/useLogging";
+import { useLogging } from "@/contexts/logging";
 
 export const useSolutionsData = (initialCategory: string | null) => {
   const { toast } = useToast();
-  const { log, logError } = useLogging();
+  const { log, error: logError } = useLogging();
   const [solutions, setSolutions] = useState<Solution[]>([]);
   const [filteredSolutions, setFilteredSolutions] = useState<Solution[]>([]);
   const [loading, setLoading] = useState(true);

@@ -1,5 +1,3 @@
 
-export * from './types';
-export * from './dashboardUtils';
-export * from './useDashboardData';
-export * from './useDashboardProgress';
+export { useDashboardProgress } from './useDashboardProgress';
+export type { Dashboard } from './types';

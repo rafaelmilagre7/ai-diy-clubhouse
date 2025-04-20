@@ -8,7 +8,7 @@ import { MemberContent } from "./member/MemberContent";
  * MemberLayout renders the layout structure for member users
  * This includes the sidebar and content area
  */
-const MemberLayout = () => {
+const MemberLayout = ({ children }: { children: React.ReactNode }) => {
   const { profile, signOut } = useAuth();
   // Default to showing sidebar on desktop, hiding on mobile
   const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 768);
@@ -49,7 +49,9 @@ const MemberLayout = () => {
       <MemberContent 
         sidebarOpen={sidebarOpen} 
         setSidebarOpen={setSidebarOpen} 
-      />
+      >
+        {children}
+      </MemberContent>
     </div>
   );
 };
