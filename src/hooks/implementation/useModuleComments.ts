@@ -1,5 +1,6 @@
+
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { Comment } from '@/types/commentTypes';
 import { useAuth } from '@/contexts/auth';
@@ -12,6 +13,7 @@ export const useModuleComments = (solutionId: string, moduleId: string) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { user } = useAuth();
   const { log, logError } = useLogging();
+  const queryClient = useQueryClient();
 
   const {
     data: comments = [],
