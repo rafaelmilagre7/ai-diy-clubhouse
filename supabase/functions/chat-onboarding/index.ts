@@ -17,6 +17,7 @@ serve(async (req) => {
 
     const openAIConfig = new Configuration({
       apiKey: Deno.env.get('OPENAI_API_KEY'),
+      organization: Deno.env.get('OPENAI_ORG_ID'),
     })
     const openai = new OpenAIApi(openAIConfig)
 
