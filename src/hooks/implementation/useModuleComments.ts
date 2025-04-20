@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
@@ -126,7 +125,6 @@ export const useModuleComments = (solutionId: string, moduleId: string) => {
     try {
       setIsSubmitting(true);
       
-      // Usar sempre a tabela tool_comments
       const tableName = 'tool_comments';
       const idField = 'tool_id';
       
@@ -146,7 +144,7 @@ export const useModuleComments = (solutionId: string, moduleId: string) => {
       toast.success(replyTo ? 'Resposta enviada com sucesso!' : 'Comentário enviado com sucesso!');
       setComment('');
       setReplyTo(null);
-      refetch();
+      queryClient.invalidateQueries({ queryKey: ['solution-comments', solutionId, moduleId] });
       
     } catch (error: any) {
       logError('Erro ao adicionar comentário', error);
@@ -223,13 +221,22 @@ export const useModuleComments = (solutionId: string, moduleId: string) => {
   const deleteComment = async (commentObj: Comment) => {
     if (!user) return;
     
-    // Verificar se o usuário é o autor do comentário
-    if (commentObj.user_id !== user.id) {
-      toast.error('Você só pode excluir seus próprios comentários');
-      return;
-    }
-    
     try {
+      // Verificar se o usuário é admin
+      const { data: userProfile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single();
+      
+      const isAdmin = userProfile?.role === 'admin';
+      
+      // Permitir exclusão apenas se for o autor ou admin
+      if (commentObj.user_id !== user.id && !isAdmin) {
+        toast.error('Você só pode excluir seus próprios comentários');
+        return;
+      }
+      
       const { error } = await supabase
         .from('tool_comments')
         .delete()
@@ -238,7 +245,7 @@ export const useModuleComments = (solutionId: string, moduleId: string) => {
       if (error) throw error;
       
       toast.success('Comentário excluído com sucesso');
-      refetch();
+      queryClient.invalidateQueries({ queryKey: ['solution-comments', solutionId, moduleId] });
     } catch (error: any) {
       logError('Erro ao excluir comentário', error);
       toast.error(`Erro ao excluir comentário: ${error.message}`);
