@@ -5,24 +5,27 @@ import { UserProfile } from '@/lib/supabase';
 import { useAuthMethods } from './hooks/useAuthMethods';
 import { AuthContextType } from './types';
 import { supabase } from '@/lib/supabase';
+import { toast } from 'sonner';
 
 // Criação do contexto com valor padrão undefined
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  // Movendo os hooks para dentro do corpo do componente funcional
+  // Estado de autenticação
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [initComplete, setInitComplete] = useState(false);
 
-  // Use our extracted auth methods hook
+  // Extrair métodos de autenticação
   const { signIn, signOut, signInAsMember, signInAsAdmin } = useAuthMethods({ setIsLoading });
 
-  // Set up initial auth state on mount and handle auth state changes
+  // Configurar estado inicial de autenticação e lidar com mudanças
   useEffect(() => {
-    console.log("AuthProvider initializing");
+    console.log("AuthProvider: Initializing auth state");
     let isMounted = true;
+    let initTimeout: number;
     
     // First set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -41,27 +44,44 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     );
     
-    // Then get current session
+    // Obter sessão atual
     const initAuth = async () => {
       try {
+        console.log("AuthProvider: Getting current session");
         const { data: { session } } = await supabase.auth.getSession();
         
         if (!isMounted) return;
         
+        console.log("AuthProvider: Session retrieved", !!session);
         setSession(session);
         setUser(session?.user || null);
         
         // Se não temos sessão, não precisamos esperar pelo perfil
         if (!session) {
+          console.log("AuthProvider: No session, setting isLoading=false");
           setIsLoading(false);
         }
+        
+        // Definir que a inicialização está completa
+        setInitComplete(true);
       } catch (error) {
         console.error("Error getting initial session:", error);
         if (isMounted) {
           setIsLoading(false);
+          setInitComplete(true);
+          toast("Erro ao verificar autenticação. Tente novamente.");
         }
       }
     };
+    
+    // Configurar um timeout para garantir que isLoading não fique preso
+    initTimeout = window.setTimeout(() => {
+      if (isMounted && isLoading) {
+        console.log("AuthProvider: Init timeout, forcing isLoading=false");
+        setIsLoading(false);
+        setInitComplete(true);
+      }
+    }, 3000); // 3 segundos
     
     initAuth();
     
@@ -69,8 +89,46 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => {
       isMounted = false;
       subscription.unsubscribe();
+      clearTimeout(initTimeout);
     };
   }, []);
+
+  // Buscar perfil do usuário quando o usuário estiver disponível
+  useEffect(() => {
+    if (!user || !initComplete) return;
+    
+    const fetchProfile = async () => {
+      try {
+        console.log("AuthProvider: Fetching profile for user", user.id);
+        
+        // Buscar perfil do banco de dados
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single();
+        
+        if (error) {
+          console.error("Error fetching profile:", error);
+          setIsLoading(false);
+          return;
+        }
+        
+        if (data) {
+          console.log("AuthProvider: Profile loaded", data);
+          setProfile(data as UserProfile);
+        } else {
+          console.log("AuthProvider: No profile found, user may need to complete registration");
+        }
+      } catch (error) {
+        console.error("Error in profile fetch:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchProfile();
+  }, [user, initComplete]);
 
   // Calculate isAdmin based on profile role
   const isAdmin = profile?.role === 'admin';

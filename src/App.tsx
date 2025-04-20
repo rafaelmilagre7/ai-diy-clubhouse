@@ -1,14 +1,14 @@
 
-import { useState, Suspense, lazy } from "react";
+import { Suspense, lazy } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { ToasterProvider } from "@/components/layout/ToasterProvider";
-import { ProtectedRoutes } from "@/auth/ProtectedRoutes";
-import { AdminProtectedRoutes } from "@/auth/AdminProtectedRoutes";
 import { AuthProvider } from "@/contexts/auth";
 import { LoggingProvider } from "@/contexts/logging";
 import LoadingScreen from "@/components/common/LoadingScreen";
+import { ProtectedRoutes } from "@/auth/ProtectedRoutes";
+import { AdminProtectedRoutes } from "@/auth/AdminProtectedRoutes";
 
 // Lazy-loaded components
 const Login = lazy(() => import("@/pages/auth/Login"));
@@ -38,6 +38,8 @@ const AdminSuggestions = lazy(() => import("@/pages/admin/AdminSuggestions"));
 const AdminSuggestionDetails = lazy(() => import("@/pages/admin/AdminSuggestionDetails"));
 const SolutionEditor = lazy(() => import("@/pages/admin/SolutionEditor"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
+const Index = lazy(() => import("@/pages/Index"));
+const RootRedirect = lazy(() => import("@/components/routing/RootRedirect"));
 
 // Create a client
 const queryClient = new QueryClient({
@@ -57,6 +59,10 @@ function App() {
           <Router>
             <Suspense fallback={<LoadingScreen />}>
               <Routes>
+                {/* Landing e redirecionamento de raiz */}
+                <Route path="/" element={<RootRedirect />} />
+                <Route path="/index" element={<Index />} />
+                
                 {/* Auth Routes */}
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
@@ -64,37 +70,111 @@ function App() {
                 <Route path="/reset-password/update" element={<SetNewPassword />} />
 
                 {/* Protected Member Routes */}
-                <Route element={<ProtectedRoutes />}>
-                  <Route path="/" element={<MemberLayout />}>
-                    <Route index element={<MemberDashboard />} />
-                    <Route path="solutions" element={<Solutions />} />
-                    <Route path="solutions/:id" element={<SolutionDetails />} />
-                    <Route path="implement/:id/:moduleIdx" element={<SolutionImplementation />} />
-                    <Route path="profile" element={<Profile />} />
-                    <Route path="tools" element={<Tools />} />
-                    <Route path="tools/:id" element={<ToolDetails />} />
-                    <Route path="suggestions" element={<Suggestions />} />
-                    <Route path="suggestions/:id" element={<SuggestionDetails />} />
-                    <Route path="suggestions/new" element={<NewSuggestion />} />
-                    <Route path="achievements" element={<Achievements />} />
-                  </Route>
-                </Route>
+                <Route path="/dashboard" element={
+                  <ProtectedRoutes>
+                    <MemberLayout>
+                      <MemberDashboard />
+                    </MemberLayout>
+                  </ProtectedRoutes>
+                } />
+                
+                <Route path="/solutions" element={
+                  <ProtectedRoutes>
+                    <MemberLayout>
+                      <Solutions />
+                    </MemberLayout>
+                  </ProtectedRoutes>
+                } />
+                
+                <Route path="/solutions/:id" element={
+                  <ProtectedRoutes>
+                    <MemberLayout>
+                      <SolutionDetails />
+                    </MemberLayout>
+                  </ProtectedRoutes>
+                } />
+                
+                <Route path="/implement/:id/:moduleIdx" element={
+                  <ProtectedRoutes>
+                    <MemberLayout>
+                      <SolutionImplementation />
+                    </MemberLayout>
+                  </ProtectedRoutes>
+                } />
+                
+                <Route path="/profile" element={
+                  <ProtectedRoutes>
+                    <MemberLayout>
+                      <Profile />
+                    </MemberLayout>
+                  </ProtectedRoutes>
+                } />
+                
+                <Route path="/tools" element={
+                  <ProtectedRoutes>
+                    <MemberLayout>
+                      <Tools />
+                    </MemberLayout>
+                  </ProtectedRoutes>
+                } />
+                
+                <Route path="/tools/:id" element={
+                  <ProtectedRoutes>
+                    <MemberLayout>
+                      <ToolDetails />
+                    </MemberLayout>
+                  </ProtectedRoutes>
+                } />
+                
+                <Route path="/suggestions" element={
+                  <ProtectedRoutes>
+                    <MemberLayout>
+                      <Suggestions />
+                    </MemberLayout>
+                  </ProtectedRoutes>
+                } />
+                
+                <Route path="/suggestions/:id" element={
+                  <ProtectedRoutes>
+                    <MemberLayout>
+                      <SuggestionDetails />
+                    </MemberLayout>
+                  </ProtectedRoutes>
+                } />
+                
+                <Route path="/suggestions/new" element={
+                  <ProtectedRoutes>
+                    <MemberLayout>
+                      <NewSuggestion />
+                    </MemberLayout>
+                  </ProtectedRoutes>
+                } />
+                
+                <Route path="/achievements" element={
+                  <ProtectedRoutes>
+                    <MemberLayout>
+                      <Achievements />
+                    </MemberLayout>
+                  </ProtectedRoutes>
+                } />
 
                 {/* Protected Admin Routes */}
-                <Route element={<AdminProtectedRoutes />}>
-                  <Route path="/admin" element={<AdminLayout />}>
-                    <Route index element={<AdminDashboard />} />
-                    <Route path="solutions" element={<AdminSolutions />} />
-                    <Route path="solutions/new" element={<AdminSolutionEdit />} />
-                    <Route path="solutions/:id" element={<AdminSolutionEdit />} />
-                    <Route path="solutions/:id/editor" element={<SolutionEditor />} />
-                    <Route path="analytics" element={<AdminAnalytics />} />
-                    <Route path="tools" element={<AdminTools />} />
-                    <Route path="tools/new" element={<AdminToolEdit />} />
-                    <Route path="tools/:id" element={<AdminToolEdit />} />
-                    <Route path="suggestions" element={<AdminSuggestions />} />
-                    <Route path="suggestions/:id" element={<AdminSuggestionDetails />} />
-                  </Route>
+                <Route path="/admin" element={
+                  <AdminProtectedRoutes>
+                    <AdminLayout />
+                  </AdminProtectedRoutes>
+                }>
+                  <Route index element={<AdminDashboard />} />
+                  <Route path="solutions" element={<AdminSolutions />} />
+                  <Route path="solutions/new" element={<AdminSolutionEdit />} />
+                  <Route path="solutions/:id" element={<AdminSolutionEdit />} />
+                  <Route path="solutions/:id/editor" element={<SolutionEditor />} />
+                  <Route path="analytics" element={<AdminAnalytics />} />
+                  <Route path="tools" element={<AdminTools />} />
+                  <Route path="tools/new" element={<AdminToolEdit />} />
+                  <Route path="tools/:id" element={<AdminToolEdit />} />
+                  <Route path="suggestions" element={<AdminSuggestions />} />
+                  <Route path="suggestions/:id" element={<AdminSuggestionDetails />} />
                 </Route>
 
                 {/* 404 Route */}

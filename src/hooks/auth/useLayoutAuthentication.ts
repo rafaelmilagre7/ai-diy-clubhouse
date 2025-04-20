@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 export const useLayoutAuthentication = () => {
   const { user, profile, isAdmin, isLoading, setIsLoading } = useAuth();
@@ -15,15 +15,24 @@ export const useLayoutAuthentication = () => {
   // Setup component lifecycle
   useEffect(() => {
     isMounted.current = true;
+    
+    // Log para debug
+    console.log("useLayoutAuthentication init:", { 
+      user: !!user, 
+      profile: !!profile, 
+      isAdmin, 
+      isLoading 
+    });
+    
     return () => {
       isMounted.current = false;
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
       }
     };
-  }, []);
+  }, [user, profile, isAdmin, isLoading]);
   
-  // Setup loading timeout effect with a longer delay for better UX
+  // Setup loading timeout effect com tempo mais curto
   useEffect(() => {
     if (isLoading && isMounted.current) {
       // Clear any existing timeout
@@ -33,9 +42,12 @@ export const useLayoutAuthentication = () => {
       
       timeoutRef.current = window.setTimeout(() => {
         if (isMounted.current) {
+          console.log("useLayoutAuthentication: Loading timeout exceeded");
           setLoadingTimeout(true);
+          // Force isLoading to false to break out of loading state
+          setIsLoading(false);
         }
-      }, 2000); // Longer timeout for better UX
+      }, 3000); // Reduzir para 3 segundos
     }
     
     return () => {
@@ -43,38 +55,36 @@ export const useLayoutAuthentication = () => {
         clearTimeout(timeoutRef.current);
       }
     };
-  }, [isLoading]);
+  }, [isLoading, setIsLoading]);
   
   // Handle timeout and redirect to auth if needed
   useEffect(() => {
     if (loadingTimeout && isLoading && isMounted.current) {
-      console.log("LayoutProvider: Loading timeout exceeded, redirecting to /auth");
+      console.log("LayoutAuthentication: Loading timeout exceeded, redirecting to /login");
       setIsLoading(false);
-      navigate('/auth', { replace: true });
+      toast("Tempo limite excedido, redirecionando para login");
+      navigate('/login', { replace: true });
     }
   }, [loadingTimeout, isLoading, navigate, setIsLoading]);
 
   // Check user role when profile is loaded
   useEffect(() => {
-    if (!profile || redirectChecked || !isMounted.current) {
+    if (!profile || redirectChecked || !isMounted.current || !user) {
       return;
     }
     
     if (profile.role === 'admin') {
-      console.log("LayoutProvider: User is admin, redirecting to /admin");
+      console.log("LayoutAuthentication: User is admin, redirecting to /admin");
       
-      toast({
-        title: "Redirecionando para área admin",
-        description: "Você está sendo redirecionado para área administrativa."
-      });
+      toast("Redirecionando para área admin");
       
       navigate('/admin', { replace: true });
     } else {
-      console.log("LayoutProvider: User is member, staying on member layout");
+      console.log("LayoutAuthentication: User is member, staying on member layout");
     }
     
     setRedirectChecked(true);
-  }, [profile, navigate, redirectChecked]);
+  }, [profile, navigate, redirectChecked, user]);
 
   return {
     user,

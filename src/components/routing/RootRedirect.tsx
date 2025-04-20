@@ -3,14 +3,18 @@ import { useState, useEffect, useRef } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
 import LoadingScreen from "@/components/common/LoadingScreen";
+import { toast } from "sonner";
 
 const RootRedirect = () => {
-  const { user, profile, isAdmin, isLoading, setIsLoading } = useAuth();
+  const { user, profile, isAdmin, isLoading } = useAuth();
   const navigate = useNavigate();
   const [timeoutExceeded, setTimeoutExceeded] = useState(false);
   const timeoutRef = useRef<number | null>(null);
   
-  // Handle timing out the loading state - always runs
+  // Adicionar um debug log para ajudar a entender o estado
+  console.log("RootRedirect state:", { user, profile, isAdmin, isLoading, timeoutExceeded });
+  
+  // Handle timing out the loading state
   useEffect(() => {
     // Clear any existing timeout
     if (timeoutRef.current) {
@@ -21,9 +25,9 @@ const RootRedirect = () => {
       timeoutRef.current = window.setTimeout(() => {
         console.log("RootRedirect: Loading timeout exceeded, redirecting to /auth");
         setTimeoutExceeded(true);
-        setIsLoading(false);
-        navigate('/auth', { replace: true });
-      }, 2000); // Longer timeout for better UX
+        toast("Tempo de carregamento excedido, redirecionando para tela de login");
+        navigate('/login', { replace: true });
+      }, 3000); // Reduzir para 3 segundos o timeout
     }
     
     return () => {
@@ -31,35 +35,37 @@ const RootRedirect = () => {
         clearTimeout(timeoutRef.current);
       }
     };
-  }, [isLoading, navigate, timeoutExceeded, setIsLoading]);
+  }, [isLoading, navigate, timeoutExceeded]);
   
-  // Handle redirection based on user state - always runs
+  // Handle redirection based on user state
   useEffect(() => {
-    if (user && profile && !isLoading) {
-      console.log("RootRedirect: User and profile available, redirecting");
-      if (profile.role === 'admin') {
-        navigate('/admin', { replace: true });
-      } else {
-        navigate('/dashboard', { replace: true });
+    if (!isLoading) {
+      console.log("RootRedirect: Not loading anymore, checking user state");
+      
+      if (!user) {
+        console.log("RootRedirect: No user, redirecting to /login");
+        navigate('/login', { replace: true });
+        return;
+      }
+      
+      if (user && profile) {
+        console.log("RootRedirect: User and profile available, redirecting based on role");
+        if (profile.role === 'admin' || isAdmin) {
+          navigate('/admin', { replace: true });
+        } else {
+          navigate('/dashboard', { replace: true });
+        }
       }
     }
-  }, [user, profile, navigate, isLoading]);
+  }, [user, profile, isAdmin, navigate, isLoading]);
   
   // Show loading screen during check
   if (isLoading && !timeoutExceeded) {
     return <LoadingScreen message="Preparando sua experiência..." />;
   }
   
-  // Default redirects based on authentication state
-  if (!user) {
-    return <Navigate to="/auth" replace />;
-  }
-  
-  if (!profile) {
-    return <Navigate to="/auth" replace />;
-  }
-
-  return <Navigate to="/dashboard" replace />;
+  // Fallback redirect
+  return !user ? <Navigate to="/login" replace /> : <Navigate to="/dashboard" replace />;
 };
 
 export default RootRedirect;
