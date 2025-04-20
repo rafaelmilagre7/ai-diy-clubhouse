@@ -1,42 +1,104 @@
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-// Lista de DDI principais e países para exibir as bandeiras (pode ser expandido se precisar)
+// Lista de DDI principais (10 países mais prováveis)
 const ddis = [
   { code: "+55", country: "Brasil", flag: "🇧🇷" },
   { code: "+351", country: "Portugal", flag: "🇵🇹" },
   { code: "+1", country: "EUA", flag: "🇺🇸" },
-  { code: "+44", country: "UK", flag: "🇬🇧" },
-  // ...adicione outros se necessário
+  { code: "+44", country: "Reino Unido", flag: "🇬🇧" },
+  { code: "+34", country: "Espanha", flag: "🇪🇸" },
+  { code: "+49", country: "Alemanha", flag: "🇩🇪" },
+  { code: "+33", country: "França", flag: "🇫🇷" },
+  { code: "+39", country: "Itália", flag: "🇮🇹" },
+  { code: "+52", country: "México", flag: "🇲🇽" },
+  { code: "+54", country: "Argentina", flag: "🇦🇷" }
 ];
 
-// Lista dos estados do Brasil
+// Lista de países principais
+const countries = [
+  { name: "Brasil", code: "BR", flag: "🇧🇷" },
+  { name: "Portugal", code: "PT", flag: "🇵🇹" },
+  { name: "Estados Unidos", code: "US", flag: "🇺🇸" },
+  { name: "Reino Unido", code: "GB", flag: "🇬🇧" },
+  { name: "Espanha", code: "ES", flag: "🇪🇸" },
+  { name: "Alemanha", code: "DE", flag: "🇩🇪" },
+  { name: "França", code: "FR", flag: "🇫🇷" },
+  { name: "Itália", code: "IT", flag: "🇮🇹" },
+  { name: "México", code: "MX", flag: "🇲🇽" },
+  { name: "Argentina", code: "AR", flag: "🇦🇷" }
+];
+
+// Lista dos estados do Brasil com nomes completos
 const estadosBR = [
-  "AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES",
-  "GO", "MA", "MT", "MS", "MG", "PA", "PB", "PR",
-  "PE", "PI", "RJ", "RN", "RS", "RO", "RR", "SC", "SP", "SE", "TO"
+  { uf: "AC", nome: "Acre" },
+  { uf: "AL", nome: "Alagoas" },
+  { uf: "AP", nome: "Amapá" },
+  { uf: "AM", nome: "Amazonas" },
+  { uf: "BA", nome: "Bahia" },
+  { uf: "CE", nome: "Ceará" },
+  { uf: "DF", nome: "Distrito Federal" },
+  { uf: "ES", nome: "Espírito Santo" },
+  { uf: "GO", nome: "Goiás" },
+  { uf: "MA", nome: "Maranhão" },
+  { uf: "MT", nome: "Mato Grosso" },
+  { uf: "MS", nome: "Mato Grosso do Sul" },
+  { uf: "MG", nome: "Minas Gerais" },
+  { uf: "PA", nome: "Pará" },
+  { uf: "PB", nome: "Paraíba" },
+  { uf: "PR", nome: "Paraná" },
+  { uf: "PE", nome: "Pernambuco" },
+  { uf: "PI", nome: "Piauí" },
+  { uf: "RJ", nome: "Rio de Janeiro" },
+  { uf: "RN", nome: "Rio Grande do Norte" },
+  { uf: "RS", nome: "Rio Grande do Sul" },
+  { uf: "RO", nome: "Rondônia" },
+  { uf: "RR", nome: "Roraima" },
+  { uf: "SC", nome: "Santa Catarina" },
+  { uf: "SP", nome: "São Paulo" },
+  { uf: "SE", nome: "Sergipe" },
+  { uf: "TO", nome: "Tocantins" }
 ];
 
-// Lista de fusos horários comuns (personalize conforme necessidade)
+// Lista de cidades por estado
+const cidadesPorEstado: Record<string, string[]> = {
+  "AC": ["Rio Branco", "Cruzeiro do Sul", "Sena Madureira"],
+  "AL": ["Maceió", "Arapiraca", "Palmeira dos Índios"],
+  "AP": ["Macapá", "Santana", "Laranjal do Jari"],
+  "AM": ["Manaus", "Parintins", "Itacoatiara"],
+  "BA": ["Salvador", "Feira de Santana", "Vitória da Conquista"],
+  "CE": ["Fortaleza", "Caucaia", "Juazeiro do Norte"],
+  "DF": ["Brasília", "Ceilândia", "Taguatinga"],
+  "ES": ["Vitória", "Vila Velha", "Serra"],
+  "GO": ["Goiânia", "Aparecida de Goiânia", "Anápolis"],
+  "MA": ["São Luís", "Imperatriz", "Timon"],
+  "MT": ["Cuiabá", "Várzea Grande", "Rondonópolis"],
+  "MS": ["Campo Grande", "Dourados", "Três Lagoas"],
+  "MG": ["Belo Horizonte", "Uberlândia", "Contagem"],
+  "PA": ["Belém", "Ananindeua", "Santarém"],
+  "PB": ["João Pessoa", "Campina Grande", "Santa Rita"],
+  "PR": ["Curitiba", "Londrina", "Maringá"],
+  "PE": ["Recife", "Jaboatão dos Guararapes", "Olinda"],
+  "PI": ["Teresina", "Parnaíba", "Picos"],
+  "RJ": ["Rio de Janeiro", "São Gonçalo", "Duque de Caxias"],
+  "RN": ["Natal", "Mossoró", "Parnamirim"],
+  "RS": ["Porto Alegre", "Caxias do Sul", "Pelotas"],
+  "RO": ["Porto Velho", "Ji-Paraná", "Ariquemes"],
+  "RR": ["Boa Vista", "Rorainópolis", "Caracaraí"],
+  "SC": ["Florianópolis", "Joinville", "Blumenau"],
+  "SP": ["São Paulo", "Guarulhos", "Campinas"],
+  "SE": ["Aracaju", "Nossa Senhora do Socorro", "Lagarto"],
+  "TO": ["Palmas", "Araguaína", "Gurupi"]
+};
+
+// Lista de fusos horários GMT
 const timezones = [
-  "Horário de Brasília (GMT-3)",
-  "Horário de Manaus (GMT-4)",
-  "Horário de Fernando de Noronha (GMT-2)",
-  "Horário da Bahia (GMT-3)",
-  "Horário do Acre (GMT-5)",
-  "UTC",
-  "America/Sao_Paulo",
-  "America/Recife",
-  "America/Fortaleza",
-  "America/Belem",
-  "America/Cuiaba",
-  "America/Porto_Velho",
-  "America/Boa_Vista",
-  "America/Manaus",
-  "America/Eirunepe",
+  "GMT-12", "GMT-11", "GMT-10", "GMT-9", "GMT-8", "GMT-7", "GMT-6", "GMT-5", "GMT-4", "GMT-3",
+  "GMT-2", "GMT-1", "GMT+0", "GMT+1", "GMT+2", "GMT+3", "GMT+4", "GMT+5", "GMT+6", 
+  "GMT+7", "GMT+8", "GMT+9", "GMT+10", "GMT+11", "GMT+12", "GMT+13", "GMT+14"
 ];
 
 interface PersonalInfoInputsProps {
@@ -57,8 +119,26 @@ interface PersonalInfoInputsProps {
 }
 
 export const PersonalInfoInputs = ({ formData, onChange, disabled }: PersonalInfoInputsProps) => {
-  // Se país for Brasil, mostra estados do Brasil
-  const showEstados = formData.country.toLowerCase() === "brasil" || formData.country.toLowerCase() === "brazil";
+  const [availableCities, setAvailableCities] = useState<string[]>([]);
+  const [availableStates, setAvailableStates] = useState<{uf: string, nome: string}[]>([]);
+
+  // Atualiza estados disponíveis com base no país selecionado
+  useEffect(() => {
+    if (formData.country === "Brasil") {
+      setAvailableStates(estadosBR);
+    } else {
+      setAvailableStates([]);
+    }
+  }, [formData.country]);
+
+  // Atualiza cidades disponíveis com base no estado selecionado
+  useEffect(() => {
+    if (formData.country === "Brasil" && formData.state) {
+      setAvailableCities(cidadesPorEstado[formData.state] || []);
+    } else {
+      setAvailableCities([]);
+    }
+  }, [formData.country, formData.state]);
 
   return (
     <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
@@ -143,19 +223,26 @@ export const PersonalInfoInputs = ({ formData, onChange, disabled }: PersonalInf
       </div>
       <div>
         <Label htmlFor="country">País</Label>
-        <Input
-          id="country"
-          type="text"
+        <Select
           value={formData.country}
+          onValueChange={(v) => onChange("country", v)}
           disabled={disabled}
-          onChange={(e) => onChange("country", e.target.value)}
-          placeholder="Brasil"
-          required
-        />
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Selecione o país" />
+          </SelectTrigger>
+          <SelectContent>
+            {countries.map(country => (
+              <SelectItem key={country.code} value={country.name}>
+                {country.flag} {country.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
       <div>
         <Label htmlFor="state">Estado</Label>
-        {showEstados ? (
+        {formData.country === "Brasil" && availableStates.length > 0 ? (
           <Select
             value={formData.state}
             onValueChange={(v) => onChange("state", v)}
@@ -165,8 +252,10 @@ export const PersonalInfoInputs = ({ formData, onChange, disabled }: PersonalInf
               <SelectValue placeholder="Selecione o estado" />
             </SelectTrigger>
             <SelectContent>
-              {estadosBR.map(uf => (
-                <SelectItem key={uf} value={uf}>{uf}</SelectItem>
+              {availableStates.map(estado => (
+                <SelectItem key={estado.uf} value={estado.uf}>
+                  {estado.nome}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -183,14 +272,33 @@ export const PersonalInfoInputs = ({ formData, onChange, disabled }: PersonalInf
       </div>
       <div>
         <Label htmlFor="city">Cidade</Label>
-        <Input
-          id="city"
-          type="text"
-          value={formData.city}
-          disabled={disabled}
-          onChange={(e) => onChange("city", e.target.value)}
-          placeholder="Cidade"
-        />
+        {formData.country === "Brasil" && availableCities.length > 0 ? (
+          <Select
+            value={formData.city}
+            onValueChange={(v) => onChange("city", v)}
+            disabled={disabled}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Selecione a cidade" />
+            </SelectTrigger>
+            <SelectContent>
+              {availableCities.map(cidade => (
+                <SelectItem key={cidade} value={cidade}>
+                  {cidade}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        ) : (
+          <Input
+            id="city"
+            type="text"
+            value={formData.city}
+            disabled={disabled}
+            onChange={(e) => onChange("city", e.target.value)}
+            placeholder="Cidade"
+          />
+        )}
       </div>
       <div>
         <Label htmlFor="timezone">Fuso Horário</Label>

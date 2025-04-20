@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useProgress } from "@/hooks/onboarding/useProgress";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
@@ -21,22 +21,42 @@ export const PersonalInfoFormController = () => {
     country: progress?.personal_info?.country || "Brasil",
     state: progress?.personal_info?.state || "",
     city: progress?.personal_info?.city || "",
-    timezone: progress?.personal_info?.timezone || "Horário de Brasília (GMT-3)",
+    timezone: progress?.personal_info?.timezone || "GMT-3",
   });
 
-  const fetchAICompletionSuggestion = async (inputField: string, currentValue: string) => {
-    // Placeholder para interações futuras com IA
-    console.log(`IA: Sugestão para ${inputField}: ${currentValue}`);
-  };
+  // Atualiza o estado inicial quando o progress for carregado
+  useEffect(() => {
+    if (progress?.personal_info) {
+      setFormData(prev => ({
+        ...prev,
+        ...progress.personal_info,
+        ddi: progress.personal_info.ddi || "+55",
+        country: progress.personal_info.country || "Brasil",
+        timezone: progress.personal_info.timezone || "GMT-3"
+      }));
+    }
+  }, [progress]);
 
   const handleChange = (field: string, value: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-    if (field === "linkedin" || field === "instagram") {
-      fetchAICompletionSuggestion(field, value);
-    }
+    setFormData((prev) => {
+      const newData = {
+        ...prev,
+        [field]: value,
+      };
+
+      // Reset dependent fields when country changes
+      if (field === "country") {
+        newData.state = "";
+        newData.city = "";
+      }
+
+      // Reset city when state changes
+      if (field === "state") {
+        newData.city = "";
+      }
+
+      return newData;
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
