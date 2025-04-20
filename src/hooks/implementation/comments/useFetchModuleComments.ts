@@ -15,23 +15,11 @@ export const useFetchModuleComments = (solutionId: string, moduleId: string) => 
       try {
         log('Buscando comentários da solução', { solutionId, moduleId });
         
-        // Buscar comentários principais com sintaxe correta para relacionamentos
+        // Buscar comentários principais com sintaxe simplificada para evitar 
+        // problemas de relacionamento não encontrado
         const { data: parentComments, error: parentError } = await supabase
           .from('tool_comments')
-          .select(`
-            id,
-            tool_id,
-            user_id,
-            content,
-            likes_count,
-            created_at,
-            updated_at,
-            profiles:user_id (
-              name, 
-              avatar_url, 
-              role
-            )
-          `)
+          .select('*, profiles:profiles(name, avatar_url, role)')
           .eq('tool_id', solutionId)
           .is('parent_id', null)
           .order('created_at', { ascending: false });
@@ -41,24 +29,10 @@ export const useFetchModuleComments = (solutionId: string, moduleId: string) => 
           throw parentError;
         }
 
-        // Buscar respostas (replies) com sintaxe correta para relacionamentos
+        // Buscar respostas (replies)
         const { data: replies, error: repliesError } = await supabase
           .from('tool_comments')
-          .select(`
-            id,
-            tool_id,
-            user_id,
-            content,
-            parent_id,
-            likes_count,
-            created_at,
-            updated_at,
-            profiles:user_id (
-              name, 
-              avatar_url, 
-              role
-            )
-          `)
+          .select('*, profiles:profiles(name, avatar_url, role)')
           .eq('tool_id', solutionId)
           .not('parent_id', 'is', null)
           .order('created_at', { ascending: true });

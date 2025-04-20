@@ -34,10 +34,9 @@ export const useAddModuleComment = (solutionId: string, moduleId: string) => {
         parent_id: parentId
       };
       
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('tool_comments')
-        .insert(commentData)
-        .select();
+        .insert(commentData);
         
       if (error) {
         logError('Erro ao adicionar comentário', error);
@@ -45,7 +44,7 @@ export const useAddModuleComment = (solutionId: string, moduleId: string) => {
         return false;
       }
       
-      log('Comentário adicionado com sucesso', { data });
+      log('Comentário adicionado com sucesso');
       toast.success(parentId ? 'Resposta enviada com sucesso!' : 'Comentário enviado com sucesso!');
       queryClient.invalidateQueries({ queryKey: ['solution-comments', solutionId, moduleId] });
       return true;
