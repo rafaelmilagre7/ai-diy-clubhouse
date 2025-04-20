@@ -11,7 +11,6 @@ export const useSolutionsAdmin = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [solutionToDelete, setSolutionToDelete] = useState<string | null>(null);
 
-  // Buscar soluções ao carregar a página
   useEffect(() => {
     fetchSolutions();
   }, []);
