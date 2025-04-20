@@ -1,4 +1,3 @@
-
 import { Suspense, lazy, ReactNode } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -119,11 +118,11 @@ function App() {
                   </Suspense>
                 } />
                 
-                {/* Admin Routes - Corrigindo para passar children */}
+                {/* Admin Routes - Corrigindo o erro, passando children corretamente */}
                 <Route path="/admin/*" element={
                   <Suspense fallback={<LoadingScreen />}>
                     <AdminRoutesComponent>
-                      {/* Conteúdo para as rotas de administrador */}
+                      Admin Dashboard Content
                     </AdminRoutesComponent>
                   </Suspense>
                 } />
