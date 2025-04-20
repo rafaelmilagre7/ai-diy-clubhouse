@@ -15,32 +15,32 @@ interface TabNavProps {
 const TabNav: React.FC<TabNavProps> = ({ activeTab, setActiveTab }) => {
   return (
     <TabsList className="grid grid-cols-6 w-full bg-muted/50 mx-6 rounded-md overflow-x-auto">
-      <TabsTrigger value="basic" className="flex items-center gap-1.5">
+      <TabsTrigger value="basic" onClick={() => setActiveTab("basic")} className="flex items-center gap-1.5">
         <FileText className="h-4 w-4" />
         <span className="hidden sm:inline">Informações</span>
       </TabsTrigger>
       
-      <TabsTrigger value="tools" className="flex items-center gap-1.5">
+      <TabsTrigger value="tools" onClick={() => setActiveTab("tools")} className="flex items-center gap-1.5">
         <Wrench className="h-4 w-4" />
         <span className="hidden sm:inline">Ferramentas</span>
       </TabsTrigger>
       
-      <TabsTrigger value="resources" className="flex items-center gap-1.5">
+      <TabsTrigger value="resources" onClick={() => setActiveTab("resources")} className="flex items-center gap-1.5">
         <FileSymlink className="h-4 w-4" />
         <span className="hidden sm:inline">Materiais</span>
       </TabsTrigger>
       
-      <TabsTrigger value="video" className="flex items-center gap-1.5">
+      <TabsTrigger value="video" onClick={() => setActiveTab("video")} className="flex items-center gap-1.5">
         <Video className="h-4 w-4" />
         <span className="hidden sm:inline">Vídeos</span>
       </TabsTrigger>
       
-      <TabsTrigger value="checklist" className="flex items-center gap-1.5">
+      <TabsTrigger value="checklist" onClick={() => setActiveTab("checklist")} className="flex items-center gap-1.5">
         <ClipboardCheck className="h-4 w-4" />
         <span className="hidden sm:inline">Checklist</span>
       </TabsTrigger>
       
-      <TabsTrigger value="publish" className="flex items-center gap-1.5">
+      <TabsTrigger value="publish" onClick={() => setActiveTab("publish")} className="flex items-center gap-1.5">
         <Globe className="h-4 w-4" />
         <span className="hidden sm:inline">Publicar</span>
       </TabsTrigger>
