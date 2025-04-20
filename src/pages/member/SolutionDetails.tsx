@@ -11,11 +11,15 @@ import { SolutionMobileActions } from "@/components/solution/SolutionMobileActio
 import { SolutionNotFound } from "@/components/solution/SolutionNotFound";
 import { useEffect } from "react";
 import { useLogging } from "@/hooks/useLogging";
+import { useToolsData } from "@/hooks/useToolsData";
 
 const SolutionDetails = () => {
   const { id } = useParams<{ id: string }>();
   const location = useLocation();
   const { log } = useLogging();
+  
+  // Garantir que os dados das ferramentas estejam corretos
+  const { isFixing: toolsDataFixing } = useToolsData();
   
   // Fetch solution data with the updated hook that includes progress
   const { solution, loading, error, progress } = useSolutionData(id);
@@ -40,7 +44,7 @@ const SolutionDetails = () => {
     }
   }, [solution, location.pathname, log]);
   
-  if (loading) {
+  if (loading || toolsDataFixing) {
     return <LoadingScreen message="Carregando detalhes da solução..." />;
   }
   

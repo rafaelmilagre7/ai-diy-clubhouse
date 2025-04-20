@@ -90,12 +90,11 @@ export const ToolItem: React.FC<ToolItemProps> = ({
     );
   }
 
-  // Utilizar logs para depuração da exibição das logos
-  console.log("Renderizando ferramenta", {
-    nome: tool?.name,
-    logo_url: tool?.logo_url,
-    fallback: tool?.name ? tool.name.substring(0, 2).toUpperCase() : "??"
-  });
+  // Obter as iniciais para o fallback
+  const getInitials = () => {
+    const name = tool?.name || toolName || "??";
+    return name.substring(0, 2).toUpperCase();
+  };
 
   return (
     <Card className="border overflow-hidden h-full flex flex-col">
@@ -106,19 +105,17 @@ export const ToolItem: React.FC<ToolItemProps> = ({
               src={tool.logo_url} 
               alt={tool?.name || toolName} 
               className="h-full w-full object-contain"
-              onError={(e) => {
-                console.error(`Erro ao carregar imagem: ${tool.logo_url}`);
-                // Remover src para evitar múltiplas tentativas de carregamento
-                e.currentTarget.src = "";
-                // Adicionar uma classe para mostrar um fallback
-                e.currentTarget.classList.add("hidden");
-                // Mostrar o elemento pai para que o fallback seja exibido
-                e.currentTarget.parentElement?.classList.add("fallback-active");
+              onError={() => {
+                logError("Erro ao carregar logo da ferramenta", { 
+                  name: tool.name, 
+                  logo_url: tool.logo_url 
+                });
+                // O erro será capturado e exibirá o fallback automaticamente
               }}
             />
           ) : (
             <div className="text-xl font-bold text-[#0ABAB5]">
-              {(tool?.name || toolName || "?").substring(0, 2).toUpperCase()}
+              {getInitials()}
             </div>
           )}
         </div>
