@@ -1,4 +1,3 @@
-
 import { Suspense, lazy } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -8,9 +7,7 @@ import { AuthProvider } from "@/contexts/auth";
 import { LoggingProvider } from "@/contexts/logging";
 import LoadingScreen from "@/components/common/LoadingScreen";
 import RootRedirect from "@/components/routing/RootRedirect";
-import { AuthRoutes } from "@/routes/AuthRoutes";
-import { MemberRoutes } from "@/routes/MemberRoutes";
-import { AdminRoutes } from "@/routes/AdminRoutes";
+import { AppRoutes } from "@/routes";
 
 const NotFound = lazy(() => import("@/pages/NotFound"));
 const Index = lazy(() => import("@/pages/Index"));
@@ -38,13 +35,13 @@ function App() {
                 <Route path="/index" element={<Index />} />
                 
                 {/* Auth Routes */}
-                <AuthRoutes />
+                <AppRoutes.Auth />
                 
                 {/* Protected Member Routes */}
-                <MemberRoutes />
+                <AppRoutes.Member />
                 
                 {/* Protected Admin Routes */}
-                <AdminRoutes />
+                <AppRoutes.Admin />
 
                 {/* 404 Route */}
                 <Route path="*" element={<NotFound />} />
