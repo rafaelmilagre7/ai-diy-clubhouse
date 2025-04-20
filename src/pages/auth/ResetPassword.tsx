@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { ResetPasswordForm } from '@/components/auth/ResetPasswordForm';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { motion } from "framer-motion";
 
 const ResetPassword = () => {
@@ -25,17 +24,9 @@ const ResetPassword = () => {
           </h2>
         </div>
 
-        <Card className="w-full bg-gray-900 border-gray-800 text-white shadow-xl">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-xl text-center">Redefinir Senha</CardTitle>
-            <CardDescription className="text-gray-400 text-center">
-              Digite seu e-mail para receber um link de recuperação
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ResetPasswordForm />
-          </CardContent>
-        </Card>
+        <div className="bg-gray-800 border border-gray-700 rounded-lg shadow-xl p-6">
+          <ResetPasswordForm />
+        </div>
       </motion.div>
     </div>
   );

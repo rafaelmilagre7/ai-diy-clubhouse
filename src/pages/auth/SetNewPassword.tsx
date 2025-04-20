@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { SetNewPasswordForm } from '@/components/auth/SetNewPasswordForm';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { motion } from "framer-motion";
 
 const SetNewPassword = () => {
@@ -25,17 +24,9 @@ const SetNewPassword = () => {
           </h2>
         </div>
 
-        <Card className="w-full bg-gray-900 border-gray-800 text-white shadow-xl">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-xl text-center">Nova Senha</CardTitle>
-            <CardDescription className="text-gray-400 text-center">
-              Defina sua nova senha para continuar
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <SetNewPasswordForm />
-          </CardContent>
-        </Card>
+        <div className="bg-gray-800 border border-gray-700 rounded-lg shadow-xl p-6">
+          <SetNewPasswordForm />
+        </div>
       </motion.div>
     </div>
   );
