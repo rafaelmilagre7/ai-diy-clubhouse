@@ -23,11 +23,24 @@ export const PersonalInfoFormController = () => {
     timezone: progress?.personal_info?.timezone || "Horário de Brasília (GMT-3)",
   });
 
+  // Placeholder for future OpenAI interaction
+  // An example function to demonstrate IA call usage
+  const fetchAICompletionSuggestion = async (inputField: string, currentValue: string) => {
+    // Example: Could call edge function to get suggestion based on field and current value
+    // This is just a placeholder and can be integrated with actual OpenAI calls in backend
+    console.log(`Fetching AI suggestion for field ${inputField} with current value: ${currentValue}`);
+  };
+
   const handleChange = (field: string, value: string) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
+
+    // Optionally call AI completion for specific fields
+    if (field === "linkedin" || field === "instagram") {
+      fetchAICompletionSuggestion(field, value);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -37,8 +50,8 @@ export const PersonalInfoFormController = () => {
     try {
       await updateProgress({
         personal_info: formData,
-        current_step: 'business_goals',
-        completed_steps: [...(progress?.completed_steps || []), 'personal_info']
+        current_step: "business_goals",
+        completed_steps: [...(progress?.completed_steps || []), "personal_info"],
       });
 
       toast.success("Dados salvos com sucesso!");
@@ -58,3 +71,4 @@ export const PersonalInfoFormController = () => {
     </form>
   );
 };
+

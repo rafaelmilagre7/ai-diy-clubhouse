@@ -1,7 +1,7 @@
 
+import React from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface PersonalInfoInputsProps {
   formData: {
@@ -16,141 +16,115 @@ interface PersonalInfoInputsProps {
     timezone: string;
   };
   onChange: (field: string, value: string) => void;
-  disabled?: boolean;
+  disabled: boolean;
 }
 
-export const PersonalInfoInputs = ({
-  formData,
-  onChange,
-  disabled = false,
-}: PersonalInfoInputsProps) => (
-  <div className="grid gap-6 md:grid-cols-2">
-    <div className="space-y-2">
-      <Label htmlFor="name">Nome Completo*</Label>
-      <Input
-        type="text"
-        id="name"
-        value={formData.name}
-        onChange={e => onChange("name", e.target.value)}
-        placeholder="Seu nome completo"
-        required
-        disabled={disabled}
-        className="bg-white"
-      />
+export const PersonalInfoInputs = ({ formData, onChange, disabled }: PersonalInfoInputsProps) => {
+  return (
+    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+      <div>
+        <Label htmlFor="name">Nome Completo</Label>
+        <Input
+          id="name"
+          type="text"
+          value={formData.name}
+          disabled={disabled}
+          onChange={(e) => onChange("name", e.target.value)}
+          required
+          placeholder="Seu nome completo"
+        />
+      </div>
+      <div>
+        <Label htmlFor="email">E-mail</Label>
+        <Input
+          id="email"
+          type="email"
+          value={formData.email}
+          disabled={disabled}
+          onChange={(e) => onChange("email", e.target.value)}
+          required
+          placeholder="exemplo@dominio.com"
+        />
+      </div>
+      <div>
+        <Label htmlFor="phone">Telefone</Label>
+        <Input
+          id="phone"
+          type="tel"
+          value={formData.phone}
+          disabled={disabled}
+          onChange={(e) => onChange("phone", e.target.value)}
+          placeholder="(XX) XXXXX-XXXX"
+        />
+      </div>
+      <div>
+        <Label htmlFor="linkedin">LinkedIn</Label>
+        <Input
+          id="linkedin"
+          type="url"
+          value={formData.linkedin}
+          disabled={disabled}
+          onChange={(e) => onChange("linkedin", e.target.value)}
+          placeholder="https://linkedin.com/in/seunome"
+        />
+      </div>
+      <div>
+        <Label htmlFor="instagram">Instagram</Label>
+        <Input
+          id="instagram"
+          type="url"
+          value={formData.instagram}
+          disabled={disabled}
+          onChange={(e) => onChange("instagram", e.target.value)}
+          placeholder="https://instagram.com/seunome"
+        />
+      </div>
+      <div>
+        <Label htmlFor="country">País</Label>
+        <Input
+          id="country"
+          type="text"
+          value={formData.country}
+          disabled={disabled}
+          onChange={(e) => onChange("country", e.target.value)}
+          placeholder="Brasil"
+          required
+        />
+      </div>
+      <div>
+        <Label htmlFor="state">Estado</Label>
+        <Input
+          id="state"
+          type="text"
+          value={formData.state}
+          disabled={disabled}
+          onChange={(e) => onChange("state", e.target.value)}
+          placeholder="Estado"
+        />
+      </div>
+      <div>
+        <Label htmlFor="city">Cidade</Label>
+        <Input
+          id="city"
+          type="text"
+          value={formData.city}
+          disabled={disabled}
+          onChange={(e) => onChange("city", e.target.value)}
+          placeholder="Cidade"
+        />
+      </div>
+      <div>
+        <Label htmlFor="timezone">Fuso Horário</Label>
+        <Input
+          id="timezone"
+          type="text"
+          value={formData.timezone}
+          disabled={disabled}
+          onChange={(e) => onChange("timezone", e.target.value)}
+          placeholder="Horário de Brasília (GMT-3)"
+        />
+      </div>
     </div>
-    <div className="space-y-2">
-      <Label htmlFor="email">Email*</Label>
-      <Input
-        type="email"
-        id="email"
-        value={formData.email}
-        onChange={e => onChange("email", e.target.value)}
-        placeholder="seu.email@exemplo.com"
-        required
-        disabled={disabled}
-        className="bg-white"
-      />
-    </div>
-    <div className="space-y-2">
-      <Label htmlFor="phone">Telefone/WhatsApp*</Label>
-      <Input
-        type="tel"
-        id="phone"
-        value={formData.phone}
-        onChange={e => onChange("phone", e.target.value)}
-        placeholder="(00) 00000-0000"
-        required
-        disabled={disabled}
-        className="bg-white"
-      />
-    </div>
-    <div className="space-y-2">
-      <Label htmlFor="linkedin">LinkedIn</Label>
-      <Input
-        type="url"
-        id="linkedin"
-        value={formData.linkedin}
-        onChange={e => onChange("linkedin", e.target.value)}
-        placeholder="linkedin.com/in/seuperfil"
-        disabled={disabled}
-        className="bg-white"
-      />
-    </div>
-    <div className="space-y-2">
-      <Label htmlFor="instagram">Instagram</Label>
-      <Input
-        type="text"
-        id="instagram"
-        value={formData.instagram}
-        onChange={e => onChange("instagram", e.target.value)}
-        placeholder="@seuinstagram"
-        disabled={disabled}
-        className="bg-white"
-      />
-    </div>
-    <div className="space-y-2">
-      <Label htmlFor="country">País*</Label>
-      <Select 
-        value={formData.country} 
-        onValueChange={value => onChange("country", value)}
-        disabled={disabled}
-      >
-        <SelectTrigger id="country" className="bg-white">
-          <SelectValue placeholder="Selecione seu país" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="Brasil">Brasil</SelectItem>
-          <SelectItem value="Portugal">Portugal</SelectItem>
-          <SelectItem value="Estados Unidos">Estados Unidos</SelectItem>
-          <SelectItem value="Outro">Outro</SelectItem>
-        </SelectContent>
-      </Select>
-    </div>
-    <div className="space-y-2">
-      <Label htmlFor="state">Estado*</Label>
-      <Input
-        type="text"
-        id="state"
-        value={formData.state}
-        onChange={e => onChange("state", e.target.value)}
-        placeholder="Seu estado"
-        required
-        disabled={disabled}
-        className="bg-white"
-      />
-    </div>
-    <div className="space-y-2">
-      <Label htmlFor="city">Cidade*</Label>
-      <Input
-        type="text"
-        id="city"
-        value={formData.city}
-        onChange={e => onChange("city", e.target.value)}
-        placeholder="Sua cidade"
-        required
-        disabled={disabled}
-        className="bg-white"
-      />
-    </div>
-    <div className="space-y-2">
-      <Label htmlFor="timezone">Fuso Horário*</Label>
-      <Select 
-        value={formData.timezone} 
-        onValueChange={value => onChange("timezone", value)}
-        disabled={disabled}
-      >
-        <SelectTrigger id="timezone" className="bg-white">
-          <SelectValue placeholder="Selecione seu fuso horário" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="Horário de Brasília (GMT-3)">Horário de Brasília (GMT-3)</SelectItem>
-          <SelectItem value="Fernando de Noronha (GMT-2)">Fernando de Noronha (GMT-2)</SelectItem>
-          <SelectItem value="Manaus (GMT-4)">Manaus (GMT-4)</SelectItem>
-          <SelectItem value="Acre (GMT-5)">Acre (GMT-5)</SelectItem>
-          <SelectItem value="Horário de Lisboa (GMT+0)">Horário de Lisboa (GMT+0)</SelectItem>
-          <SelectItem value="Outro">Outro</SelectItem>
-        </SelectContent>
-      </Select>
-    </div>
-  </div>
-);
+  );
+};
+
