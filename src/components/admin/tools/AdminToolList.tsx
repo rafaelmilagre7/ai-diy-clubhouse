@@ -22,9 +22,10 @@ import { supabase } from '@/lib/supabase';
 
 interface AdminToolListProps {
   tools: Tool[];
+  refreshTrigger?: number; // Adicionando a propriedade refreshTrigger como opcional
 }
 
-export const AdminToolList = ({ tools }: AdminToolListProps) => {
+export const AdminToolList = ({ tools, refreshTrigger }: AdminToolListProps) => {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const { toast } = useToast();
 

@@ -96,19 +96,40 @@ async function removeDuplicateTools() {
   try {
     console.log("Verificando ferramentas duplicadas...");
     
-    // Buscar todas as ferramentas agrupadas por nome para encontrar duplicatas
-    const { data: duplicates, error: findError } = await supabase
+    // Buscar todas as ferramentas para encontrar duplicatas manualmente
+    const { data: allTools, error: fetchError } = await supabase
       .from('tools')
-      .select('name, count(*)')
-      .group('name')
-      .having('count(*) > 1');
+      .select('id, name, created_at');
     
-    if (findError) {
-      console.error("Erro ao verificar duplicatas:", findError);
+    if (fetchError) {
+      console.error("Erro ao buscar ferramentas:", fetchError);
       return;
     }
     
-    if (!duplicates || duplicates.length === 0) {
+    if (!allTools || allTools.length === 0) {
+      console.log("Nenhuma ferramenta encontrada");
+      return;
+    }
+    
+    // Identificar nomes duplicados
+    const toolsByName = new Map();
+    
+    allTools.forEach(tool => {
+      if (!toolsByName.has(tool.name)) {
+        toolsByName.set(tool.name, []);
+      }
+      toolsByName.get(tool.name).push(tool);
+    });
+    
+    // Identificar quais ferramentas têm duplicatas
+    const duplicates = [];
+    toolsByName.forEach((tools, name) => {
+      if (tools.length > 1) {
+        duplicates.push({ name, tools });
+      }
+    });
+    
+    if (duplicates.length === 0) {
       console.log("Nenhuma ferramenta duplicada encontrada");
       return;
     }
@@ -118,18 +139,10 @@ async function removeDuplicateTools() {
     // Para cada nome com duplicatas, manter apenas o registro mais recente
     for (const duplicate of duplicates) {
       const toolName = duplicate.name;
+      const entries = duplicate.tools;
       
-      // Buscar todos os IDs dessa ferramenta, ordenados por data de criação
-      const { data: entries, error: entriesError } = await supabase
-        .from('tools')
-        .select('id, created_at')
-        .eq('name', toolName)
-        .order('created_at', { ascending: false });
-      
-      if (entriesError || !entries || entries.length <= 1) {
-        console.error(`Erro ao buscar duplicatas para ${toolName}:`, entriesError);
-        continue;
-      }
+      // Ordenar por data de criação (mais recente primeiro)
+      entries.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
       
       // Manter o primeiro (mais recente) e excluir os demais
       const idsToRemove = entries.slice(1).map(e => e.id);
