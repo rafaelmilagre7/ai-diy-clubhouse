@@ -7,7 +7,8 @@ import {
   Gift, 
   MessageCircle, 
   Award, 
-  HelpCircle 
+  HelpCircle,
+  Compass 
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
@@ -28,6 +29,12 @@ export const MemberSidebarNav = ({ sidebarOpen }: MemberSidebarNavProps) => {
       active: currentPath === "/dashboard"
     },
     {
+      title: "Onboarding",
+      icon: Compass,
+      href: "/onboarding",
+      active: currentPath.includes("/onboarding")
+    },
+    {
       title: "Soluções",
       icon: Lightbulb,
       href: "/solutions",
@@ -46,16 +53,16 @@ export const MemberSidebarNav = ({ sidebarOpen }: MemberSidebarNavProps) => {
       active: currentPath === "/benefits"
     },
     {
-      title: "Sugestões",
-      icon: MessageCircle,
-      href: "/suggestions",
-      active: currentPath.includes("/suggestions")
-    },
-    {
       title: "Conquistas",
       icon: Award,
       href: "/achievements",
       active: currentPath === "/achievements"
+    },
+    {
+      title: "Sugestões",
+      icon: MessageCircle,
+      href: "/suggestions",
+      active: currentPath.includes("/suggestions")
     },
   ];
 

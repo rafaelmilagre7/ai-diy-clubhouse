@@ -24,15 +24,12 @@ export const MemberSidebar = ({
   getInitials,
   signOut
 }: MemberSidebarProps) => {
-  console.log("MemberSidebar renderizando com sidebarOpen:", sidebarOpen);
-  
   return (
     <aside
       className={cn(
         "fixed inset-y-0 left-0 z-50 flex h-full flex-col border-r bg-background shadow-sm transition-all duration-300 ease-in-out",
         sidebarOpen ? "w-64" : "w-0 md:w-[70px]"
       )}
-      style={{ visibility: sidebarOpen || window.innerWidth >= 768 ? "visible" : "hidden" }}
     >
       <div className="flex flex-col h-full">
         {/* Logo area */}

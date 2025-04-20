@@ -31,7 +31,7 @@ export const SidebarLogo = ({ sidebarOpen, setSidebarOpen }: SidebarLogoProps) =
         variant="ghost"
         size="icon"
         onClick={() => setSidebarOpen(!sidebarOpen)}
-        className={sidebarOpen ? "ml-2" : "mx-auto mt-2"}
+        className="hidden md:flex ml-2"
         aria-label={sidebarOpen ? "Colapsar menu" : "Expandir menu"}
       >
         {sidebarOpen ? <ChevronLeft size={20} /> : <Menu size={20} />}

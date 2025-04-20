@@ -21,7 +21,7 @@ const LayoutProvider = ({ children }: { children: ReactNode }) => {
   const [loadingTimeout, setLoadingTimeout] = useState(false);
   const timeoutRef = useRef<number | null>(null);
   
-  // Debug logs para ajudar a entender o fluxo
+  // Debug logs
   console.log("LayoutProvider state:", { user, profile, isAdmin, isLoading, loadingTimeout });
 
   // Configurar timeout de carregamento

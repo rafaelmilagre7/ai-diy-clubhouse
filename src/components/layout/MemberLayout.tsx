@@ -12,22 +12,29 @@ import { toast } from "sonner";
 const MemberLayout = ({ children }: { children: React.ReactNode }) => {
   const { profile, signOut } = useAuth();
   
-  // Estado para controlar a visibilidade do sidebar
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [isMobile, setIsMobile] = useState(false);
+  // Usar localStorage para persistir o estado do sidebar entre navegações
+  const storedSidebarState = localStorage.getItem("sidebarOpen");
+  const defaultSidebarState = storedSidebarState !== null ? 
+    storedSidebarState === "true" : 
+    window.innerWidth >= 768; // Default aberto em desktop, fechado em mobile
+  
+  const [sidebarOpen, setSidebarOpen] = useState(defaultSidebarState);
+
+  // Função para atualizar o estado do sidebar e salvar no localStorage
+  const handleSidebarToggle = (open: boolean) => {
+    setSidebarOpen(open);
+    localStorage.setItem("sidebarOpen", open.toString());
+  };
 
   // Detectar tamanho de tela e ajustar sidebar
   useEffect(() => {
     const handleResize = () => {
-      const mobile = window.innerWidth < 768;
-      setIsMobile(mobile);
+      const isMobile = window.innerWidth < 768;
       
-      // Em mobile, fecha o sidebar por padrão
-      if (mobile && sidebarOpen) {
+      // Em mobile com sidebar aberto, fechar o sidebar
+      if (isMobile && sidebarOpen) {
         setSidebarOpen(false);
-      } else if (!mobile && !sidebarOpen) {
-        // Em desktop, mantém o sidebar aberto por padrão
-        setSidebarOpen(true);
+        localStorage.setItem("sidebarOpen", "false");
       }
     };
 
@@ -39,7 +46,7 @@ const MemberLayout = ({ children }: { children: React.ReactNode }) => {
     
     // Cleanup
     return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  }, [sidebarOpen]);
 
   const getInitials = (name: string | null) => {
     if (!name) return "U";
@@ -56,7 +63,6 @@ const MemberLayout = ({ children }: { children: React.ReactNode }) => {
     profileName: profile?.name,
     profileEmail: profile?.email,
     sidebarOpen,
-    isMobile,
     windowWidth: window.innerWidth
   });
 
@@ -67,10 +73,10 @@ const MemberLayout = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <div className="flex min-h-screen bg-background overflow-hidden">
-      {/* Sidebar sempre renderizado, mas pode ter largura 0 */}
+      {/* Sidebar sempre renderizado com visibilidade garantida */}
       <MemberSidebar 
         sidebarOpen={sidebarOpen} 
-        setSidebarOpen={setSidebarOpen}
+        setSidebarOpen={handleSidebarToggle}
         profileName={profile?.name}
         profileEmail={profile?.email}
         profileAvatar={profile?.avatar_url}
@@ -81,7 +87,7 @@ const MemberLayout = ({ children }: { children: React.ReactNode }) => {
       {/* Conteúdo principal */}
       <MemberContent 
         sidebarOpen={sidebarOpen} 
-        setSidebarOpen={setSidebarOpen} 
+        setSidebarOpen={handleSidebarToggle} 
       >
         {children}
       </MemberContent>

@@ -16,8 +16,6 @@ export const MemberContent = ({
   setSidebarOpen, 
   children 
 }: MemberContentProps) => {
-  console.log("MemberContent renderizando com sidebarOpen:", sidebarOpen);
-  
   return (
     <main 
       className={cn(
