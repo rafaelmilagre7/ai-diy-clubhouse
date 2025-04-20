@@ -4,7 +4,7 @@ import { Route, Routes } from "react-router-dom";
 import AdminLayout from "@/components/layout/AdminLayout";
 
 interface AdminRoutesProps {
-  children: ReactNode;
+  children?: ReactNode;
 }
 
 /**
