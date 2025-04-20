@@ -18,6 +18,22 @@ const Register = lazy(() => import("@/pages/auth/Register"));
 const ResetPassword = lazy(() => import("@/pages/auth/ResetPassword"));
 const SetNewPassword = lazy(() => import("@/pages/auth/SetNewPassword"));
 
+// Member Routes
+const Dashboard = lazy(() => import("@/pages/member/Dashboard"));
+const Solutions = lazy(() => import("@/pages/member/Solutions"));
+const SolutionDetails = lazy(() => import("@/pages/member/SolutionDetails"));
+const SolutionImplementation = lazy(() => import("@/pages/member/SolutionImplementation"));
+const Profile = lazy(() => import("@/pages/member/Profile"));
+const Tools = lazy(() => import("@/pages/member/Tools"));
+const ToolDetails = lazy(() => import("@/pages/member/ToolDetails"));
+const Suggestions = lazy(() => import("@/pages/member/Suggestions"));
+const SuggestionDetails = lazy(() => import("@/pages/member/SuggestionDetails"));
+const NewSuggestion = lazy(() => import("@/pages/member/NewSuggestion"));
+const Achievements = lazy(() => import("@/pages/member/Achievements"));
+
+// Admin Routes
+const AdminRoutes = lazy(() => import("@/components/routing/AppRoutes"));
+
 // Create a client
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -46,21 +62,69 @@ function App() {
                 <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/reset-password/update" element={<SetNewPassword />} />
                 
-                {/* Member Routes - Importando diretamente */}
-                <Route path="/dashboard/*" element={<Suspense fallback={<LoadingScreen />}><lazy(() => import("@/pages/member/Dashboard")).default /></Suspense>} />
-                <Route path="/solutions/*" element={<Suspense fallback={<LoadingScreen />}><lazy(() => import("@/pages/member/Solutions")).default /></Suspense>} />
-                <Route path="/solutions/:id" element={<Suspense fallback={<LoadingScreen />}><lazy(() => import("@/pages/member/SolutionDetails")).default /></Suspense>} />
-                <Route path="/implement/:id/:moduleIdx" element={<Suspense fallback={<LoadingScreen />}><lazy(() => import("@/pages/member/SolutionImplementation")).default /></Suspense>} />
-                <Route path="/profile" element={<Suspense fallback={<LoadingScreen />}><lazy(() => import("@/pages/member/Profile")).default /></Suspense>} />
-                <Route path="/tools" element={<Suspense fallback={<LoadingScreen />}><lazy(() => import("@/pages/member/Tools")).default /></Suspense>} />
-                <Route path="/tools/:id" element={<Suspense fallback={<LoadingScreen />}><lazy(() => import("@/pages/member/ToolDetails")).default /></Suspense>} />
-                <Route path="/suggestions" element={<Suspense fallback={<LoadingScreen />}><lazy(() => import("@/pages/member/Suggestions")).default /></Suspense>} />
-                <Route path="/suggestions/:id" element={<Suspense fallback={<LoadingScreen />}><lazy(() => import("@/pages/member/SuggestionDetails")).default /></Suspense>} />
-                <Route path="/suggestions/new" element={<Suspense fallback={<LoadingScreen />}><lazy(() => import("@/pages/member/NewSuggestion")).default /></Suspense>} />
-                <Route path="/achievements" element={<Suspense fallback={<LoadingScreen />}><lazy(() => import("@/pages/member/Achievements")).default /></Suspense>} />
+                {/* Member Routes */}
+                <Route path="/dashboard/*" element={
+                  <Suspense fallback={<LoadingScreen />}>
+                    <Dashboard />
+                  </Suspense>
+                } />
+                <Route path="/solutions/*" element={
+                  <Suspense fallback={<LoadingScreen />}>
+                    <Solutions />
+                  </Suspense>
+                } />
+                <Route path="/solutions/:id" element={
+                  <Suspense fallback={<LoadingScreen />}>
+                    <SolutionDetails />
+                  </Suspense>
+                } />
+                <Route path="/implement/:id/:moduleIdx" element={
+                  <Suspense fallback={<LoadingScreen />}>
+                    <SolutionImplementation />
+                  </Suspense>
+                } />
+                <Route path="/profile" element={
+                  <Suspense fallback={<LoadingScreen />}>
+                    <Profile />
+                  </Suspense>
+                } />
+                <Route path="/tools" element={
+                  <Suspense fallback={<LoadingScreen />}>
+                    <Tools />
+                  </Suspense>
+                } />
+                <Route path="/tools/:id" element={
+                  <Suspense fallback={<LoadingScreen />}>
+                    <ToolDetails />
+                  </Suspense>
+                } />
+                <Route path="/suggestions" element={
+                  <Suspense fallback={<LoadingScreen />}>
+                    <Suggestions />
+                  </Suspense>
+                } />
+                <Route path="/suggestions/:id" element={
+                  <Suspense fallback={<LoadingScreen />}>
+                    <SuggestionDetails />
+                  </Suspense>
+                } />
+                <Route path="/suggestions/new" element={
+                  <Suspense fallback={<LoadingScreen />}>
+                    <NewSuggestion />
+                  </Suspense>
+                } />
+                <Route path="/achievements" element={
+                  <Suspense fallback={<LoadingScreen />}>
+                    <Achievements />
+                  </Suspense>
+                } />
                 
-                {/* Admin Routes - Usando AdminRoutes */}
-                <Route path="/admin/*" element={<Suspense fallback={<LoadingScreen />}><lazy(() => import("@/components/routing/AppRoutes")).default /></Suspense>} />
+                {/* Admin Routes */}
+                <Route path="/admin/*" element={
+                  <Suspense fallback={<LoadingScreen />}>
+                    <AdminRoutes />
+                  </Suspense>
+                } />
 
                 {/* 404 Route */}
                 <Route path="*" element={<NotFound />} />
