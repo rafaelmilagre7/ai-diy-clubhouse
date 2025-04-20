@@ -1,56 +1,52 @@
 
-import { BenefitType } from "@/types/toolTypes";
-import { Badge } from "@/components/ui/badge";
-import { Gift, Percent, Clock, Star, Tag } from "lucide-react";
+import React from 'react';
+import { Badge } from '@/components/ui/badge';
+import { BenefitType } from '@/types/toolTypes';
+import { Gift, Trophy, Clock, Percent, Star } from 'lucide-react';
 
 interface BenefitBadgeProps {
   type: BenefitType;
-  className?: string;
 }
 
-const getBenefitConfig = (type: BenefitType) => {
-  switch (type) {
-    case 'discount':
-      return {
-        icon: Percent,
-        label: 'Desconto Exclusivo',
-        className: 'bg-[#10b981] text-white'
-      };
-    case 'exclusive':
-      return {
-        icon: Star,
-        label: 'Acesso Exclusivo',
-        className: 'bg-purple-600 text-white'
-      };
-    case 'free':
-      return {
-        icon: Gift,
-        label: 'Versão Gratuita',
-        className: 'bg-blue-600 text-white'
-      };
-    case 'trial':
-      return {
-        icon: Clock,
-        label: 'Trial Estendido',
-        className: 'bg-orange-600 text-white'
-      };
-    default:
-      return {
-        icon: Tag,
-        label: 'Benefício Especial',
-        className: 'bg-gray-600 text-white'
-      };
-  }
-};
+export const BenefitBadge = ({ type }: BenefitBadgeProps) => {
+  // Configurações baseadas no tipo de benefício
+  const config = {
+    discount: {
+      text: 'Desconto',
+      icon: <Percent className="h-3 w-3 mr-1" />,
+      className: 'bg-amber-100 text-amber-700 border-amber-200 hover:bg-amber-200'
+    },
+    exclusive: {
+      text: 'Exclusivo',
+      icon: <Trophy className="h-3 w-3 mr-1" />,
+      className: 'bg-purple-100 text-purple-700 border-purple-200 hover:bg-purple-200'
+    },
+    free: {
+      text: 'Gratuito',
+      icon: <Gift className="h-3 w-3 mr-1" />,
+      className: 'bg-green-100 text-green-700 border-green-200 hover:bg-green-200'
+    },
+    trial: {
+      text: 'Trial',
+      icon: <Clock className="h-3 w-3 mr-1" />,
+      className: 'bg-blue-100 text-blue-700 border-blue-200 hover:bg-blue-200'
+    },
+    other: {
+      text: 'Benefício',
+      icon: <Star className="h-3 w-3 mr-1" />,
+      className: 'bg-gray-100 text-gray-700 border-gray-200 hover:bg-gray-200'
+    }
+  };
 
-export const BenefitBadge = ({ type, className }: BenefitBadgeProps) => {
-  const config = getBenefitConfig(type);
-  const Icon = config.icon;
+  const { text, icon, className } = config[type];
 
   return (
-    <Badge className={`flex items-center gap-1 ${config.className} ${className}`}>
-      <Icon className="h-3 w-3" />
-      <span>{config.label}</span>
+    <Badge 
+      variant="outline" 
+      className={`text-xs flex items-center ${className}`}
+    >
+      {icon}
+      {text}
     </Badge>
   );
 };

@@ -12,6 +12,7 @@ import { ModuleContentTools } from "@/components/implementation/content/ModuleCo
 import { ModuleContentChecklist } from "@/components/implementation/content/ModuleContentChecklist";
 import { ImplementationComplete } from "@/components/implementation/content/ImplementationComplete";
 import { useSolutionCompletion } from "@/hooks/implementation/useSolutionCompletion";
+import { CommentsSection } from "@/components/implementation/content/tool-comments/CommentsSection";
 
 const SolutionImplementation = () => {
   const {
@@ -65,8 +66,8 @@ const SolutionImplementation = () => {
   }
   
   if (!solution) {
-    const error = "Solution not found";
-    logError("Implementation not found", { error, solution_id: solution?.id });
+    const errorMsg = "Solution not found";
+    logError("Implementation not found", { error: errorMsg, solution_id: solution?.id });
     return <ImplementationNotFound />;
   }
   
@@ -78,11 +79,12 @@ const SolutionImplementation = () => {
       {/* Module content */}
       <div className="container mt-6 bg-white p-6 rounded-lg shadow-sm">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="w-full grid grid-cols-5 mb-6">
+          <TabsList className="w-full grid grid-cols-6 mb-6">
             <TabsTrigger value="tools">Ferramentas</TabsTrigger>
             <TabsTrigger value="materials">Materiais</TabsTrigger>
             <TabsTrigger value="videos">Vídeos</TabsTrigger>
             <TabsTrigger value="checklist">Checklist</TabsTrigger>
+            <TabsTrigger value="comments">Comentários</TabsTrigger>
             <TabsTrigger value="complete">Concluir</TabsTrigger>
           </TabsList>
           
@@ -100,6 +102,15 @@ const SolutionImplementation = () => {
           
           <TabsContent value="checklist">
             <ModuleContentChecklist module={currentModule} />
+          </TabsContent>
+          
+          <TabsContent value="comments">
+            {solution && currentModule && (
+              <CommentsSection 
+                solutionId={solution.id} 
+                moduleId={currentModule.id} 
+              />
+            )}
           </TabsContent>
           
           <TabsContent value="complete">

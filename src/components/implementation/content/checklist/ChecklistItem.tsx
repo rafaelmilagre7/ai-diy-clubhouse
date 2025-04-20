@@ -1,39 +1,41 @@
 
 import React from "react";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
-import { ChecklistItem as ChecklistItemType } from "./checklistUtils";
+import { Card } from "@/components/ui/card";
 
 interface ChecklistItemProps {
-  item: ChecklistItemType;
+  item: {
+    id: string;
+    description: string;
+  };
   isChecked: boolean;
   onChange: (checked: boolean) => void;
-  disabled: boolean;
+  disabled?: boolean;
 }
 
-export const ChecklistItem: React.FC<ChecklistItemProps> = ({ 
-  item, 
-  isChecked, 
+export const ChecklistItem = ({
+  item,
+  isChecked,
   onChange,
-  disabled
-}) => {
+  disabled = false,
+}: ChecklistItemProps) => {
   return (
-    <div key={item.id} className="flex items-start p-4 border rounded-md">
-      <Checkbox
-        id={`checklist-item-${item.id}`}
-        checked={isChecked}
-        onCheckedChange={(checked) => onChange(checked as boolean)}
-        className="mt-0.5 mr-3"
-        disabled={disabled}
-      />
-      <div>
-        <Label htmlFor={`checklist-item-${item.id}`} className="font-medium cursor-pointer">
-          {item.title}
-        </Label>
-        {item.description && (
-          <p className="text-sm text-muted-foreground mt-1">{item.description}</p>
-        )}
+    <Card className={`p-4 transition-all duration-200 ${isChecked ? 'bg-muted/50 border-[#0ABAB5]/20' : 'hover:border-[#0ABAB5]/40'}`}>
+      <div className="flex items-center gap-3">
+        <Checkbox
+          id={`checkbox-${item.id}`}
+          checked={isChecked}
+          onCheckedChange={onChange}
+          disabled={disabled}
+          className={isChecked ? "data-[state=checked]:bg-[#0ABAB5] data-[state=checked]:text-white data-[state=checked]:border-[#0ABAB5]" : ""}
+        />
+        <label
+          htmlFor={`checkbox-${item.id}`}
+          className={`text-sm cursor-pointer flex-1 ${isChecked ? "line-through text-muted-foreground" : ""}`}
+        >
+          {item.description}
+        </label>
       </div>
-    </div>
+    </Card>
   );
 };
