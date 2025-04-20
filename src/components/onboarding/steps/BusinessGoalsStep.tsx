@@ -4,6 +4,7 @@ import { CompanyInputs } from "./business/CompanyInputs";
 import { OnboardingData } from "@/types/onboarding";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
+import { MilagrinhoMessage } from "@/components/onboarding/MilagrinhoMessage";
 
 interface BusinessGoalsStepProps {
   onSubmit: (stepId: string, data: Partial<OnboardingData>) => void;
@@ -46,20 +47,10 @@ export const BusinessGoalsStep = ({
   return (
     <div className="space-y-6">
       <div className="mb-4">
-        <div className="flex items-center gap-3 rounded-xl bg-white border border-[#0ABAB5]/20 px-5 py-4 shadow-sm">
-          <div className="flex items-center justify-center bg-[#eafaf9] rounded-full h-11 w-11">
-            <span className="text-[#0ABAB5] text-xl">🤖</span>
-          </div>
-          <div>
-            <span className="block text-[#0ABAB5] font-semibold mb-0.5" style={{ fontSize: 16 }}>
-              {personalInfo?.name ? `E aí ${personalInfo.name}!` : "Olá!"}
-            </span>
-            <span className="text-[#1A2228] text-sm">
-              Para personalizar sua experiência, conte um pouco sobre a empresa onde você trabalha.
-              Estas informações são essenciais para recomendar as melhores soluções para seu negócio.
-            </span>
-          </div>
-        </div>
+        <MilagrinhoMessage 
+          userName={personalInfo?.name} 
+          message="Para personalizar sua experiência, conte um pouco sobre a empresa onde você trabalha. Estas informações são essenciais para recomendar as melhores soluções para seu negócio."
+        />
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
