@@ -6,6 +6,7 @@ export interface OnboardingData {
     company_size?: string;
     email?: string;
     phone?: string;
+    ddi?: string;
     linkedin?: string;
     instagram?: string;
     country?: string;
