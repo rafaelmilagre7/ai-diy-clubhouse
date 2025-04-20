@@ -195,43 +195,99 @@ export type Database = {
           },
         ]
       }
+      onboarding_history: {
+        Row: {
+          created_at: string | null
+          data: Json
+          id: string
+          onboarding_id: string | null
+          step_name: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          data: Json
+          id?: string
+          onboarding_id?: string | null
+          step_name: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          data?: Json
+          id?: string
+          onboarding_id?: string | null
+          step_name?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "onboarding_history_onboarding_id_fkey"
+            columns: ["onboarding_id"]
+            isOneToOne: false
+            referencedRelation: "onboarding_progress"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       onboarding_progress: {
         Row: {
+          ai_experience: Json | null
           ai_knowledge_level: string | null
           business_data: Json | null
+          business_goals: Json | null
           company_data: Json | null
           completed_steps: string[] | null
           created_at: string | null
           current_step: string | null
           goals: string[] | null
           id: string
+          implementation_preferences: Json | null
+          industry_focus: Json | null
           is_completed: boolean | null
+          personal_info: Json | null
+          resources_needs: Json | null
+          team_info: Json | null
           updated_at: string | null
           user_id: string
         }
         Insert: {
+          ai_experience?: Json | null
           ai_knowledge_level?: string | null
           business_data?: Json | null
+          business_goals?: Json | null
           company_data?: Json | null
           completed_steps?: string[] | null
           created_at?: string | null
           current_step?: string | null
           goals?: string[] | null
           id?: string
+          implementation_preferences?: Json | null
+          industry_focus?: Json | null
           is_completed?: boolean | null
+          personal_info?: Json | null
+          resources_needs?: Json | null
+          team_info?: Json | null
           updated_at?: string | null
           user_id: string
         }
         Update: {
+          ai_experience?: Json | null
           ai_knowledge_level?: string | null
           business_data?: Json | null
+          business_goals?: Json | null
           company_data?: Json | null
           completed_steps?: string[] | null
           created_at?: string | null
           current_step?: string | null
           goals?: string[] | null
           id?: string
+          implementation_preferences?: Json | null
+          industry_focus?: Json | null
           is_completed?: boolean | null
+          personal_info?: Json | null
+          resources_needs?: Json | null
+          team_info?: Json | null
           updated_at?: string | null
           user_id?: string
         }
@@ -1106,6 +1162,25 @@ export type Database = {
       }
     }
     Views: {
+      onboarding_analytics: {
+        Row: {
+          ai_experience: Json | null
+          business_goals: Json | null
+          company_name: string | null
+          current_step: string | null
+          email: string | null
+          implementation_preferences: Json | null
+          industry_focus: Json | null
+          is_completed: boolean | null
+          last_activity: string | null
+          personal_info: Json | null
+          resources_needs: Json | null
+          started_at: string | null
+          team_info: Json | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
       suggestions_with_profiles: {
         Row: {
           category_id: string | null
