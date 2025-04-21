@@ -6,8 +6,9 @@ import { Label } from "@/components/ui/label";
 import { LocationInputs } from "./inputs/LocationInputs";
 import { SocialInputs } from "./inputs/SocialInputs";
 import { NavigationButtons } from "../NavigationButtons";
-import { FormFeedback } from "@/components/ui/form-feedback";
+import { FormMessage } from "@/components/ui/form-message";
 import { useFormValidation } from "@/hooks/useFormValidation";
+import { MilagrinhoMessage } from "../MilagrinhoMessage";
 
 interface PersonalInfoStepProps {
   onSubmit: (data: any) => void;
@@ -35,7 +36,8 @@ export const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
       state: initialData?.state || "",
       city: initialData?.city || "",
       timezone: initialData?.timezone || "GMT-3"
-    }
+    },
+    mode: "onChange"
   });
 
   const validation = useFormValidation(
@@ -49,20 +51,20 @@ export const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
     {
       phone: [
         {
-          validate: (value: string) => /^\(\d{2}\) \d{4,5}-\d{4}$/.test(value),
-          message: "Formato: (00) 00000-0000"
+          validate: (value: string) => !value || /^\(\d{2}\) \d{4,5}-\d{4}$/.test(value),
+          message: "Digite no formato (00) 00000-0000"
         }
       ],
       linkedin: [
         {
           validate: (value: string) => !value || value.includes("linkedin.com"),
-          message: "URL do LinkedIn inválida"
+          message: "Insira uma URL válida do LinkedIn"
         }
       ],
       instagram: [
         {
           validate: (value: string) => !value || value.includes("instagram.com"),
-          message: "URL do Instagram inválida"
+          message: "Insira uma URL válida do Instagram"
         }
       ]
     }
@@ -79,18 +81,33 @@ export const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
 
   return (
     <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-6">
+      <MilagrinhoMessage 
+        message="Olá! Para começar, preciso de algumas informações básicas para personalizar sua experiência no VIVER DE IA Club. Vamos lá?" 
+      />
+      
       <div className="space-y-6">
-        {/* Campos básicos */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
             <Label htmlFor="name">Nome completo</Label>
             <Input
               id="name"
               placeholder="Seu nome completo"
-              className="mt-1"
-              {...register("name", { required: "Nome é obrigatório" })}
+              className={cn(
+                "transition-colors",
+                errors.name ? "border-red-500 focus:border-red-500" : "focus:border-[#0ABAB5]"
+              )}
+              {...register("name", { 
+                required: "Nome é obrigatório",
+                minLength: {
+                  value: 3,
+                  message: "Nome deve ter pelo menos 3 caracteres"
+                }
+              })}
             />
-            <FormFeedback error={errors.name?.message?.toString()} />
+            <FormMessage
+              type="error"
+              message={errors.name?.message?.toString()}
+            />
           </div>
 
           <div className="space-y-2">
@@ -99,7 +116,10 @@ export const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
               id="email"
               type="email"
               placeholder="seu.email@exemplo.com"
-              className="mt-1"
+              className={cn(
+                "transition-colors",
+                errors.email ? "border-red-500 focus:border-red-500" : "focus:border-[#0ABAB5]"
+              )}
               {...register("email", {
                 required: "E-mail é obrigatório",
                 pattern: {
@@ -108,25 +128,30 @@ export const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
                 }
               })}
             />
-            <FormFeedback error={errors.email?.message?.toString()} />
+            <FormMessage
+              type="error"
+              message={errors.email?.message?.toString()}
+            />
           </div>
         </div>
 
-        {/* Telefone e Redes Sociais */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
             <Label htmlFor="phone">Telefone</Label>
             <Input
               id="phone"
               placeholder="(00) 00000-0000"
-              className="mt-1"
+              className={cn(
+                "transition-colors",
+                validation.errors.phone ? "border-red-500 focus:border-red-500" : "focus:border-[#0ABAB5]"
+              )}
               value={validation.values.phone}
               onChange={(e) => validation.handleChange("phone", e.target.value)}
               onBlur={() => validation.handleBlur("phone")}
             />
-            <FormFeedback 
-              error={validation.errors.phone}
-              success={validation.touched.phone && !validation.errors.phone}
+            <FormMessage
+              type={validation.touched.phone && !validation.errors.phone ? "success" : "error"}
+              message={validation.touched.phone ? validation.errors.phone : undefined}
             />
           </div>
 
@@ -143,7 +168,6 @@ export const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
           />
         </div>
 
-        {/* Localização */}
         <div className="space-y-4">
           <h3 className="text-md font-medium text-gray-700 dark:text-gray-200">Localização</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -151,7 +175,7 @@ export const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
               country={initialData?.country || "Brasil"}
               state={validation.values.state}
               city={validation.values.city}
-              onChangeCountry={(v) => {/* Como o país é fixo para Brasil, não fazemos nada aqui */}}
+              onChangeCountry={(v) => {/* País fixo para Brasil */}}
               onChangeState={(v) => validation.handleChange("state", v)}
               onChangeCity={(v) => validation.handleChange("city", v)}
               disabled={isSubmitting}

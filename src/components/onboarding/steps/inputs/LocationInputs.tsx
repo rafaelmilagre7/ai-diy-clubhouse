@@ -1,9 +1,10 @@
 
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import React from "react";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useEffect, useState } from "react";
+import { FormMessage } from "@/components/ui/form-message";
+import { cn } from "@/lib/utils";
 import { useIBGELocations } from "@/hooks/useIBGELocations";
-import { FieldError, FieldErrors } from "react-hook-form";
 
 interface LocationInputsProps {
   country: string;
@@ -12,153 +13,94 @@ interface LocationInputsProps {
   onChangeCountry: (value: string) => void;
   onChangeState: (value: string) => void;
   onChangeCity: (value: string) => void;
-  disabled: boolean;
+  disabled?: boolean;
   errors?: {
-    state?: string | FieldError | FieldErrors<any>;
-    city?: string | FieldError | FieldErrors<any>;
+    state?: string;
+    city?: string;
   };
 }
 
-export const LocationInputs = ({
+export const LocationInputs: React.FC<LocationInputsProps> = ({
   country,
   state,
   city,
-  onChangeCountry,
   onChangeState,
   onChangeCity,
   disabled,
-  errors = {},
-}: LocationInputsProps) => {
+  errors = {}
+}) => {
   const { estados, cidadesPorEstado, isLoading } = useIBGELocations();
-  const [availableCities, setAvailableCities] = useState<string[]>([]);
-  const [initialized, setInitialized] = useState(false);
 
-  // Debug logs
-  useEffect(() => {
-    console.log("LocationInputs: Estado selecionado:", state);
-    console.log("LocationInputs: Cidade selecionada:", city);
-    if (state && cidadesPorEstado[state]) {
-      console.log("LocationInputs: Cidades disponíveis para", state, ":", cidadesPorEstado[state].map(city => city.name));
-    }
-  }, [state, city, cidadesPorEstado]);
-
-  // Atualizar cidades disponíveis quando o estado mudar ou quando o componente for montado
-  useEffect(() => {
-    if (!isLoading && state) {
-      console.log("Atualizando cidades disponíveis para o estado:", state);
-      const cidadesDoEstado = cidadesPorEstado[state]?.map(city => city.name) || [];
-      console.log("Cidades encontradas:", cidadesDoEstado.length);
-      
-      setAvailableCities(cidadesDoEstado);
-      
-      // Se temos uma cidade definida mas ela não está na lista de cidades disponíveis,
-      // adicionamos ela para garantir que continue disponível na seleção
-      if (city && !cidadesDoEstado.includes(city)) {
-        console.log("Adicionando cidade previamente selecionada à lista:", city);
-        setAvailableCities(prev => [...prev, city]);
-      }
-      
-      setInitialized(true);
-    }
-  }, [state, cidadesPorEstado, isLoading, city]);
-  
-  // Este useEffect garante que a cidade continue selecionada ao voltar para esta etapa
-  useEffect(() => {
-    if (initialized && city && !availableCities.includes(city) && availableCities.length > 0) {
-      console.log("Garantindo que a cidade selecionada permaneça na lista:", city);
-      setAvailableCities(prev => [...prev, city]);
-    }
-  }, [initialized, city, availableCities]);
+  const cidadesDoEstado = state ? cidadesPorEstado[state] || [] : [];
 
   return (
     <>
-      <div className="space-y-1">
+      <div className="space-y-2">
         <Label htmlFor="country">País</Label>
-        <Select
+        <Input
+          id="country"
           value={country}
-          onValueChange={onChangeCountry}
-          disabled={disabled}
-        >
-          <SelectTrigger id="country">
-            <SelectValue placeholder="Selecione o país" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="Brasil">🇧🇷 Brasil</SelectItem>
-            <SelectItem value="Portugal">🇵🇹 Portugal</SelectItem>
-            <SelectItem value="EUA">🇺🇸 Estados Unidos</SelectItem>
-            <SelectItem value="Canadá">🇨🇦 Canadá</SelectItem>
-            <SelectItem value="Reino Unido">🇬🇧 Reino Unido</SelectItem>
-          </SelectContent>
-        </Select>
+          disabled={true}
+          className="bg-gray-50"
+        />
       </div>
 
-      <div className="space-y-1">
+      <div className="space-y-2">
         <Label htmlFor="state">Estado</Label>
-        <Select
+        <select
+          id="state"
           value={state}
-          onValueChange={(value) => {
-            console.log("Estado selecionado:", value);
-            onChangeState(value);
-            // Limpar cidade ao trocar de estado
-            onChangeCity("");
-          }}
-          disabled={disabled}
+          onChange={(e) => onChangeState(e.target.value)}
+          disabled={disabled || isLoading}
+          className={cn(
+            "w-full px-3 py-2 border rounded-md",
+            "bg-white dark:bg-gray-800",
+            "text-gray-900 dark:text-gray-100",
+            "disabled:opacity-50",
+            "transition-colors",
+            errors.state ? "border-red-500 focus:border-red-500" : "border-gray-300 focus:border-[#0ABAB5]"
+          )}
         >
-          <SelectTrigger id="state" className={errors.state ? 'border-red-500' : ''}>
-            <SelectValue placeholder="Selecione o estado" />
-          </SelectTrigger>
-          <SelectContent>
-            {country === "Brasil" && !isLoading && estados.map(st => (
-              <SelectItem key={st.code} value={st.code}>
-                {st.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        {errors.state && (
-          <p className="text-sm text-red-500 mt-1">
-            {typeof errors.state === 'string' 
-              ? errors.state 
-              : 'message' in errors.state && typeof errors.state.message === 'string'
-                ? String(errors.state.message)
-                : 'Estado é obrigatório'}
-          </p>
-        )}
+          <option value="">Selecione o estado</option>
+          {estados.map((estado) => (
+            <option key={estado.code} value={estado.code}>
+              {estado.name}
+            </option>
+          ))}
+        </select>
+        <FormMessage
+          type="error"
+          message={errors.state}
+        />
       </div>
 
-      <div className="space-y-1">
+      <div className="space-y-2">
         <Label htmlFor="city">Cidade</Label>
-        <Select
+        <select
+          id="city"
           value={city}
-          onValueChange={onChangeCity}
+          onChange={(e) => onChangeCity(e.target.value)}
           disabled={disabled || !state || isLoading}
+          className={cn(
+            "w-full px-3 py-2 border rounded-md",
+            "bg-white dark:bg-gray-800",
+            "text-gray-900 dark:text-gray-100",
+            "disabled:opacity-50",
+            "transition-colors",
+            errors.city ? "border-red-500 focus:border-red-500" : "border-gray-300 focus:border-[#0ABAB5]"
+          )}
         >
-          <SelectTrigger id="city" className={errors.city ? 'border-red-500' : ''}>
-            <SelectValue placeholder={state ? "Selecione a cidade" : "Primeiro selecione o estado"} />
-          </SelectTrigger>
-          <SelectContent>
-            {isLoading ? (
-              <SelectItem value="carregando">Carregando cidades...</SelectItem>
-            ) : availableCities.length > 0 ? (
-              availableCities.map(cityName => (
-                <SelectItem key={cityName} value={cityName}>
-                  {cityName}
-                </SelectItem>
-              ))
-            ) : (
-              state && <SelectItem value="outra">Outra cidade</SelectItem>
-            )}
-          </SelectContent>
-        </Select>
-        {errors.city && (
-          <p className="text-sm text-red-500 mt-1">
-            {typeof errors.city === 'string' 
-              ? errors.city 
-              : 'message' in errors.city && typeof errors.city.message === 'string'
-                ? String(errors.city.message)
-                : 'Cidade é obrigatória'}
-          </p>
-        )}
+          <option value="">Selecione a cidade</option>
+          {cidadesDoEstado.map((cidade) => (
+            <option key={cidade.code} value={cidade.name}>
+              {cidade.name}
+            </option>
+          ))}
+        </select>
+        <FormMessage
+          type="error"
+          message={errors.city}
+        />
       </div>
     </>
   );

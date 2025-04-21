@@ -1,78 +1,69 @@
 
+import React from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Linkedin, Instagram } from "lucide-react";
-import { FieldError, FieldErrors } from "react-hook-form";
+import { FormMessage } from "@/components/ui/form-message";
+import { cn } from "@/lib/utils";
 
 interface SocialInputsProps {
   linkedin: string;
   instagram: string;
   onChangeLinkedin: (value: string) => void;
   onChangeInstagram: (value: string) => void;
-  disabled: boolean;
-  errors?: {
-    linkedin?: string | FieldError | FieldErrors<any>;
-    instagram?: string | FieldError | FieldErrors<any>;
+  disabled?: boolean;
+  errors: {
+    linkedin?: string;
+    instagram?: string;
   };
 }
 
-export const SocialInputs = ({
+export const SocialInputs: React.FC<SocialInputsProps> = ({
   linkedin,
   instagram,
   onChangeLinkedin,
   onChangeInstagram,
   disabled,
-  errors = {},
-}: SocialInputsProps) => (
-  <div className="space-y-6">
-    <div className="space-y-1">
-      <Label htmlFor="linkedin">LinkedIn (opcional)</Label>
-      <div className="relative">
-        <Linkedin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
+  errors
+}) => {
+  return (
+    <div className="space-y-4">
+      <div className="space-y-2">
+        <Label htmlFor="linkedin">LinkedIn (opcional)</Label>
         <Input
           id="linkedin"
-          type="url"
+          placeholder="https://linkedin.com/in/seu-perfil"
           value={linkedin}
+          onChange={(e) => onChangeLinkedin(e.target.value)}
           disabled={disabled}
-          onChange={e => onChangeLinkedin(e.target.value)}
-          placeholder="https://linkedin.com/in/seunome"
-          className={`pl-10 ${errors.linkedin ? 'border-red-500' : ''}`}
+          className={cn(
+            "transition-colors",
+            errors.linkedin ? "border-red-500 focus:border-red-500" : "focus:border-[#0ABAB5]"
+          )}
+        />
+        <FormMessage
+          type="error"
+          message={errors.linkedin}
         />
       </div>
-      {errors.linkedin && (
-        <p className="text-sm text-red-500 mt-1">
-          {typeof errors.linkedin === 'string' 
-            ? errors.linkedin 
-            : 'message' in errors.linkedin && typeof errors.linkedin.message === 'string'
-              ? String(errors.linkedin.message)
-              : 'LinkedIn inválido'}
-        </p>
-      )}
-    </div>
-    
-    <div className="space-y-1">
-      <Label htmlFor="instagram">Instagram (opcional)</Label>
-      <div className="relative">
-        <Instagram className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
+
+      <div className="space-y-2">
+        <Label htmlFor="instagram">Instagram (opcional)</Label>
         <Input
           id="instagram"
-          type="url"
+          placeholder="https://instagram.com/seu-perfil"
           value={instagram}
+          onChange={(e) => onChangeInstagram(e.target.value)}
           disabled={disabled}
-          onChange={e => onChangeInstagram(e.target.value)}
-          placeholder="https://instagram.com/seunome"
-          className={`pl-10 ${errors.instagram ? 'border-red-500' : ''}`}
+          className={cn(
+            "transition-colors",
+            errors.instagram ? "border-red-500 focus:border-red-500" : "focus:border-[#0ABAB5]"
+          )}
+        />
+        <FormMessage
+          type="error"
+          message={errors.instagram}
         />
       </div>
-      {errors.instagram && (
-        <p className="text-sm text-red-500 mt-1">
-          {typeof errors.instagram === 'string' 
-            ? errors.instagram 
-            : 'message' in errors.instagram && typeof errors.instagram.message === 'string'
-              ? String(errors.instagram.message)
-              : 'Instagram inválido'}
-        </p>
-      )}
     </div>
-  </div>
-);
+  );
+};
