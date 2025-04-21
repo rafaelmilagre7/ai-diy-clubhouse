@@ -1,4 +1,3 @@
-
 import { useOnboardingSteps } from "@/hooks/onboarding/useOnboardingSteps";
 import { PersonalInfoStep } from "./steps/PersonalInfoStep";
 import { BusinessGoalsStep } from "./steps/BusinessGoalsStep";
@@ -8,6 +7,7 @@ import { IndustryFocusStep } from "./steps/IndustryFocusStep";
 import { ResourcesNeedsStep } from "./steps/ResourcesNeedsStep";
 import { TeamInfoStep } from "./steps/TeamInfoStep";
 import { PreferencesStep } from "./steps/PreferencesStep";
+import { ExperiencePersonalizationStep } from "./steps/ExperiencePersonalizationStep";
 import { Progress } from "@/components/ui/progress";
 import { OnboardingData } from "@/types/onboarding";
 
@@ -31,6 +31,7 @@ export const OnboardingSteps = () => {
     resources: ResourcesNeedsStep,
     team: TeamInfoStep,
     preferences: PreferencesStep,
+    experience_personalization: ExperiencePersonalizationStep,
   };
 
   const CurrentStepComponent = stepComponents[currentStep.id as keyof typeof stepComponents];
@@ -38,10 +39,8 @@ export const OnboardingSteps = () => {
 
   const progressPercentage = ((currentStepIndex + 1) / steps.length) * 100;
 
-  // Determinar os dados iniciais para o componente atual
   const getInitialDataForCurrentStep = () => {
     if (!progress) return undefined;
-    // Para o passo "goals" prioriza os campos profissionais
     if (currentStep.id === "goals") {
       return {
         ...progress,
@@ -82,7 +81,7 @@ export const OnboardingSteps = () => {
           isLastStep={currentStepIndex === steps.length - 1}
           onComplete={completeOnboarding}
           initialData={getInitialDataForCurrentStep()}
-          personalInfo={progress?.personal_info} // Só para a etapa goals será usado
+          personalInfo={progress?.personal_info}
         />
       </div>
     </div>

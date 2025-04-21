@@ -1,4 +1,3 @@
-
 export interface OnboardingData {
   personal_info: {
     name?: string;
@@ -66,6 +65,14 @@ export interface OnboardingData {
     implementation_speed?: string;
     support_level?: string;
   };
+  experience_personalization: {
+    interests?: string[]; // interesses em IA
+    time_preference?: string; // manhã, tarde, noite
+    available_days?: string[]; // dias da semana
+    networking_availability?: number; // slider de 0 a 10
+    skills_to_share?: string[]; // habilidades do usuário
+    mentorship_topics?: string[]; // tópicos em que quer mentoria
+  };
 }
 
 export interface OnboardingProgress {
@@ -83,6 +90,7 @@ export interface OnboardingProgress {
   resources_needs: OnboardingData['resources_needs'];
   team_info: OnboardingData['team_info'];
   implementation_preferences: OnboardingData['implementation_preferences'];
+  experience_personalization: OnboardingData['experience_personalization'];
   company_name?: string;
   company_size?: string;
   company_sector?: string;

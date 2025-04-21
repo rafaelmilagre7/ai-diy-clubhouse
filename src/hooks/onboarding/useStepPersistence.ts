@@ -1,4 +1,3 @@
-
 import { toast } from 'sonner';
 import { OnboardingData } from '@/types/onboarding';
 import { useProgress } from './useProgress';
@@ -79,6 +78,23 @@ export const useStepPersistence = ({
         }
         await updateProgress({
           business_goals: businessGoals,
+          completed_steps: [...(progress.completed_steps || []), stepId],
+          current_step: steps[Math.min(currentStepIndex + 1, steps.length - 1)].id,
+        });
+      } else if (stepId === "experience_personalization") {
+        const e = data.experience_personalization || {};
+        if (!e.interests?.length ||
+            !e.time_preference ||
+            !e.available_days?.length ||
+            typeof e.networking_availability !== "number" ||
+            !e.skills_to_share?.length ||
+            !e.mentorship_topics?.length
+        ) {
+          toast.error("Por favor, preencha todos os campos obrigatórios");
+          return;
+        }
+        await updateProgress({
+          experience_personalization: e,
           completed_steps: [...(progress.completed_steps || []), stepId],
           current_step: steps[Math.min(currentStepIndex + 1, steps.length - 1)].id,
         });
