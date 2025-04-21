@@ -5,11 +5,13 @@ import { Card } from "@/components/ui/card";
 interface MilagrinhoMessageProps {
   message: string;
   type?: "info" | "success" | "warning";
+  userName?: string;
 }
 
 export const MilagrinhoMessage: React.FC<MilagrinhoMessageProps> = ({ 
   message, 
-  type = "info" 
+  type = "info",
+  userName
 }) => {
   const colors = {
     info: "bg-[#0ABAB5]/10 border-[#0ABAB5]/20 text-[#0ABAB5]",
@@ -27,7 +29,10 @@ export const MilagrinhoMessage: React.FC<MilagrinhoMessageProps> = ({
         />
       </div>
       <div className="flex-1">
-        <p className="text-gray-700">{message}</p>
+        <p className="text-gray-700">
+          {userName && <span className="font-medium">Olá, {userName}! </span>}
+          {message}
+        </p>
       </div>
     </Card>
   );
