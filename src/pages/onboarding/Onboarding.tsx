@@ -7,20 +7,27 @@ import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
 import { OnboardingHeader } from "@/components/onboarding/OnboardingHeader";
 import { OnboardingForm } from "@/components/onboarding/OnboardingForm";
 import { OnboardingCompleted } from "@/components/onboarding/OnboardingCompleted";
+import { toast } from "sonner";
 
 const Onboarding = () => {
   const { user } = useAuth();
-  const { progress, isLoading: progressLoading } = useProgress();
+  const { progress, isLoading: progressLoading, refreshProgress } = useProgress();
   const navigate = useNavigate();
+
+  // Atualizar dados ao montar o componente
+  useEffect(() => {
+    refreshProgress();
+  }, [refreshProgress]);
 
   // Redirecionar para login se não autenticado
   useEffect(() => {
     if (!user) {
+      toast.error("Você precisa estar autenticado para acessar esta página");
       navigate("/login", { replace: true });
     }
   }, [user, navigate]);
 
-  // Extrai primeiro nome do usuário
+  // Extrair primeiro nome do usuário
   const firstName =
     user?.user_metadata?.name?.split(" ")[0] ||
     user?.email?.split("@")[0] ||

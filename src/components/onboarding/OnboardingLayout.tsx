@@ -63,7 +63,7 @@ export const OnboardingLayout = ({
         <Button 
           variant="ghost" 
           size="icon" 
-          className="absolute left-0 top-0 z-10"
+          className="absolute left-0 top-0 z-10 text-gray-600 hover:text-gray-900 hover:bg-gray-100"
           onClick={handleBackClick}
         >
           <ArrowLeft className="h-5 w-5" />

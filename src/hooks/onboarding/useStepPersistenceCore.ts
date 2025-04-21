@@ -18,7 +18,7 @@ export function useStepPersistenceCore({
   const { progress, updateProgress, refreshProgress } = useProgress();
   const { logError } = useLogging();
 
-  // Simplificando a interface para aceitar apenas um objeto de dados
+  // Função principal para salvar dados de um passo específico
   const saveStepData = async (
     data: any,
     shouldNavigate: boolean = true
@@ -32,7 +32,7 @@ export function useStepPersistenceCore({
     // Identificar qual é o passo atual baseado no currentStepIndex
     const currentStep = steps[currentStepIndex]?.id || '';
     
-    console.log(`Salvando dados do passo ${currentStep}, navegação automática: ${shouldNavigate ? "SIM" : "NÃO"}`, data);
+    console.log(`Salvando dados do passo ${currentStep}, índice ${currentStepIndex}, navegação automática: ${shouldNavigate ? "SIM" : "NÃO"}`, data);
 
     try {
       // Montar objeto de atualização para a etapa
@@ -92,7 +92,7 @@ export function useStepPersistenceCore({
       
       // Atualiza dados locais
       await refreshProgress();
-      console.log("Onboarding marcado como completo, gerando trilha de implementação...");
+      console.log("Onboarding marcado como completo, preparando redirecionamento para trilha...");
       
       toast.success("Onboarding concluído com sucesso!");
       
@@ -100,9 +100,9 @@ export function useStepPersistenceCore({
       setTimeout(() => {
         try {
           // Redirecionar para a página de geração de trilha com parâmetro para iniciar automaticamente
-          navigate("/onboarding/trail-generation?autoGenerate=true");
+          navigate("/implementation-trail");
         } catch (navError) {
-          console.error("Erro ao navegar para a geração de trilha:", navError);
+          console.error("Erro ao navegar:", navError);
           logError("navigation_error", { 
             from: "completeOnboarding", 
             error: navError instanceof Error ? navError.message : String(navError) 

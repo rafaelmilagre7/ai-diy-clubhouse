@@ -1,5 +1,6 @@
 
 import React from "react";
+import { steps } from "@/hooks/onboarding/useStepDefinitions";
 import { cn } from "@/lib/utils";
 
 interface EtapasProgressoProps {
@@ -8,39 +9,63 @@ interface EtapasProgressoProps {
   onStepClick?: (step: number) => void;
 }
 
-export const EtapasProgresso: React.FC<EtapasProgressoProps> = ({
+export const EtapasProgresso = ({
   currentStep,
-  totalSteps = 9, // Atualizado para 9 etapas
+  totalSteps,
   onStepClick,
-}) => {
-  const etapas = Array.from({ length: totalSteps }, (_, i) => i + 1);
-
+}: EtapasProgressoProps) => {
+  // Filtramos os passos para excluir o passo de geração de trilha que é uma etapa diferente
+  const visibleSteps = steps.filter(step => step.id !== "trail_generation");
+  
+  // Ajustamos totalSteps para corresponder ao número de passos visíveis
+  const effectiveTotalSteps = Math.min(totalSteps, visibleSteps.length);
+  
   return (
-    <div className="w-full">
-      <div className="flex items-center justify-between">
-        {etapas.map((etapa) => (
-          <React.Fragment key={etapa}>
+    <div className="w-full mt-6">
+      <div className="flex justify-between relative">
+        {/* Linha de progresso entre os círculos */}
+        <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-gray-200 -translate-y-1/2 z-0"></div>
+        
+        {Array.from({ length: effectiveTotalSteps }).map((_, index) => {
+          const stepNumber = index + 1;
+          const isActive = stepNumber <= currentStep;
+          const isCurrent = stepNumber === currentStep;
+          
+          return (
             <div
+              key={index}
               className={cn(
-                "relative flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border transition-all",
-                currentStep >= etapa
-                  ? "border-[#0ABAB5] bg-[#0ABAB5] text-white hover:bg-[#0ABAB5]/90"
-                  : "border-gray-300 bg-white text-gray-500 hover:border-gray-400"
+                "flex flex-col items-center relative z-10 cursor-pointer transition-all duration-200",
+                onStepClick ? "cursor-pointer hover:opacity-80" : ""
               )}
-              onClick={() => onStepClick && onStepClick(etapa)}
+              onClick={() => onStepClick && onStepClick(stepNumber)}
             >
-              <span className="text-xs font-semibold">{etapa}</span>
-            </div>
-            {etapa < totalSteps && (
               <div
                 className={cn(
-                  "h-0.5 flex-1",
-                  currentStep > etapa ? "bg-[#0ABAB5]" : "bg-gray-300"
+                  "w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-all duration-300",
+                  isActive
+                    ? "bg-[#0ABAB5] text-white shadow-md"
+                    : "bg-gray-200 text-gray-600",
+                  isCurrent
+                    ? "ring-4 ring-[#0ABAB5]/20"
+                    : ""
                 )}
-              />
-            )}
-          </React.Fragment>
-        ))}
+              >
+                {stepNumber}
+              </div>
+              
+              {/* Nome do passo (visível apenas para etapa atual e concluídas) */}
+              <span
+                className={cn(
+                  "text-xs mt-2 font-medium transition-all duration-300 text-center max-w-[80px] line-clamp-2",
+                  isActive ? "text-gray-700" : "text-gray-400"
+                )}
+              >
+                {visibleSteps[index]?.title || `Passo ${stepNumber}`}
+              </span>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

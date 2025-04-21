@@ -21,6 +21,7 @@ export function buildUpdateObject(
 
   const updateObj: any = {};
 
+  // Usar funções específicas para cada tipo de etapa
   switch (stepId) {
     case "personal":
       Object.assign(updateObj, buildPersonalUpdate(data, progress));
@@ -47,7 +48,8 @@ export function buildUpdateObject(
       Object.assign(updateObj, buildGoalsUpdate(data, progress));
       break;
     default:
-      // Outras etapas (futuro)
+      console.log(`Usando lógica genérica para etapa: ${stepId}`);
+      // Lógica genérica para outras etapas (futuro)
       const sectionKey = steps.find(s => s.id === stepId)?.section as keyof OnboardingData;
       if (sectionKey && (data as any)[sectionKey]) {
         const existingData = progress[sectionKey as keyof OnboardingProgress] || {};
@@ -59,6 +61,9 @@ export function buildUpdateObject(
         } else {
           updateObj[sectionKey] = (data as any)[sectionKey];
         }
+      } else {
+        // Se não houver uma seção específica, tentar usar o próprio data
+        Object.assign(updateObj, data);
       }
   }
 
@@ -88,7 +93,9 @@ export function buildUpdateObject(
   } else if (stepId === "goals") {
     nextStep = "business_context";
   } else {
-    nextStep = steps[Math.min(currentStepIndex + 1, steps.length - 1)].id;
+    // Se não tem um mapeamento específico, tenta usar o índice para o próximo passo
+    const nextStepIndex = Math.min(currentStepIndex + 1, steps.length - 1);
+    nextStep = steps[nextStepIndex]?.id || nextStep;
   }
   updateObj.current_step = nextStep;
 

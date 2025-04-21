@@ -11,8 +11,9 @@ export function navigateAfterStep(stepId: string, currentStepIndex: number, navi
 
   let nextPath = "";
 
-  console.log(`Determinando próxima rota para o passo ${stepId}, shouldNavigate=${shouldNavigate}`);
+  console.log(`Determinando próxima rota para o passo ${stepId}, índice ${currentStepIndex}, shouldNavigate=${shouldNavigate}`);
 
+  // Navegação baseada no ID do passo atual - mais confiável do que índices
   if (stepId === "personal") {
     nextPath = "/onboarding/professional-data";
   } else if (stepId === "professional_data") {
@@ -21,7 +22,6 @@ export function navigateAfterStep(stepId: string, currentStepIndex: number, navi
     nextPath = "/onboarding/ai-experience";
   } else if (stepId === "ai_exp") {
     nextPath = "/onboarding/club-goals";
-    console.log("AI Experience completado, navegando para club-goals");
   } else if (stepId === "business_goals") {
     nextPath = "/onboarding/customization";
   } else if (stepId === "experience_personalization") {
@@ -29,15 +29,13 @@ export function navigateAfterStep(stepId: string, currentStepIndex: number, navi
   } else if (stepId === "complementary_info") {
     nextPath = "/onboarding/review";
   } else if (stepId === "review") {
-    // Direcionar diretamente para a geração da trilha após a revisão
-    nextPath = "/onboarding/trail-generation?autoGenerate=true";
-  } else if (stepId === "goals") {
-    // Caso especial para tratamento dos dados de empresa (componente reutilizado)
-    nextPath = "/onboarding/business-context";
+    // Direcionar para a página de implementação após a revisão
+    nextPath = "/implementation-trail";
   } else {
-    // fallback genérico pelo steps[]
+    // Fallback genérico usando o array de steps
     const nextStepIndex = Math.min(currentStepIndex + 1, steps.length - 1);
     nextPath = steps[nextStepIndex]?.path || "/onboarding";
+    console.log(`Usando fallback para navegação: índice ${nextStepIndex}, caminho ${nextPath}`);
   }
 
   // Faz navegação com pequeno delay para UX consistente

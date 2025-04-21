@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useProgress } from "./useProgress";
-import { useStepPersistenceCore } from "./persistence/useStepPersistenceCore";
+import { useStepPersistenceCore } from "./useStepPersistenceCore";
 import { steps } from "./useStepDefinitions";
 
 export const useOnboardingSteps = () => {
@@ -34,12 +34,16 @@ export const useOnboardingSteps = () => {
       stepIndex = findStepIndex(stepIndexOrId);
     } else {
       // Se for número, usamos diretamente como índice
-      stepIndex = stepIndexOrId - 1; // Ajuste pois os steps são numerados de 1-8 na UI, mas indexados de 0-7
+      // Verificamos se o índice está baseado em 1 (como na UI) e ajustamos
+      stepIndex = stepIndexOrId > steps.length ? stepIndexOrId - 1 : stepIndexOrId;
     }
     
     if (stepIndex !== -1 && stepIndex >= 0 && stepIndex < steps.length) {
       setCurrentStepIndex(stepIndex);
+      console.log(`Navegando para etapa: ${steps[stepIndex].path}`);
       navigate(steps[stepIndex].path);
+    } else {
+      console.warn(`Índice inválido para navegação: ${stepIndexOrId}, convertido para ${stepIndex}`);
     }
   };
   

@@ -1,19 +1,33 @@
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
 import { useOnboardingSteps } from "@/hooks/onboarding/useOnboardingSteps";
 import { ReviewStep } from "@/components/onboarding/steps/ReviewStep";
 import { useProgress } from "@/hooks/onboarding/useProgress";
+import { toast } from "sonner";
 
 const Review = () => {
   const { completeOnboarding, navigateToStep } = useOnboardingSteps();
   const { progress, isLoading, refreshProgress } = useProgress();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Efeito para carregar dados mais recentes ao entrar na página
   useEffect(() => {
     console.log("Review montado - carregando dados mais recentes");
     refreshProgress();
   }, [refreshProgress]);
+
+  const handleCompleteOnboarding = async () => {
+    try {
+      setIsSubmitting(true);
+      await completeOnboarding();
+    } catch (error) {
+      console.error("Erro ao completar onboarding:", error);
+      toast.error("Erro ao finalizar o onboarding. Tente novamente.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <OnboardingLayout
@@ -29,8 +43,8 @@ const Review = () => {
         ) : (
           <ReviewStep
             progress={progress}
-            onComplete={completeOnboarding}
-            isSubmitting={false}
+            onComplete={handleCompleteOnboarding}
+            isSubmitting={isSubmitting}
             navigateToStep={(index: number) => navigateToStep(index)}
           />
         )}

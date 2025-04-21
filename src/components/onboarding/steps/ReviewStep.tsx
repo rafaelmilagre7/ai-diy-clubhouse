@@ -1,3 +1,4 @@
+
 import React from "react";
 import { OnboardingProgress } from "@/types/onboarding";
 import { steps } from "@/hooks/onboarding/useStepDefinitions";
@@ -21,7 +22,7 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({
   if (!progress) return <div>Carregando dados...</div>;
 
   const findStepIndex = (sectionId: string) => {
-    return steps.findIndex((s) => s.id === sectionId);
+    return steps.findIndex((s) => s.id === sectionId) + 1; // Ajustado para base 1 para UI
   };
 
   return (
@@ -29,17 +30,18 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({
       <div className="bg-[#0ABAB5]/10 p-4 rounded-md border border-[#0ABAB5]/20">
         <p className="text-gray-700">
           Revise todas as informações preenchidas. Após confirmar, sua trilha personalizada será gerada automaticamente.
-          Esta trilha será única e permanente para seu perfil.
+          Esta trilha será única e adaptada para o seu perfil de negócios.
         </p>
       </div>
 
       <div className="space-y-4">
         {steps
-          .filter((step) => step.id !== "review")
+          .filter((step) => step.id !== "review" && step.id !== "trail_generation")
           .map((step) => {
             const sectionKey = step.section as keyof OnboardingProgress;
             let sectionData = progress[sectionKey];
 
+            // Tratamento especial para business_context que pode estar em business_data
             if (step.section === "business_context" && !sectionData) {
               sectionData = progress.business_data;
             }
@@ -65,9 +67,9 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({
           disabled={isSubmitting}
           className="bg-[#0ABAB5] hover:bg-[#0ABAB5]/90"
         >
-          {isSubmitting ? "Gerando trilha..." : (
+          {isSubmitting ? "Processando..." : (
             <span className="flex items-center gap-2">
-              Gerar Minha Trilha
+              Concluir e Gerar Minha Trilha
               <ArrowRight className="h-4 w-4" />
             </span>
           )}

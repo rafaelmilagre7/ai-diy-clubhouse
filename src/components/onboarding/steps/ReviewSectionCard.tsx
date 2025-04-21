@@ -26,20 +26,25 @@ export const ReviewSectionCard: React.FC<ReviewSectionCardProps> = ({
   navigateToStep,
 }) => {
   return (
-    <Card key={step.id} className="overflow-hidden">
+    <Card key={step.id} className="overflow-hidden border border-gray-200 shadow-sm">
       <CardHeader className="bg-gray-50 pb-3 pt-4 px-4 flex flex-row justify-between items-center">
-        <CardTitle className="text-base font-medium">{step.title}</CardTitle>
+        <CardTitle className="text-base font-medium text-gray-800">{step.title}</CardTitle>
         <Button
           variant="outline"
           size="sm"
-          className="h-8"
-          onClick={() => navigateToStep(stepIndex)}
+          className="h-8 text-[#0ABAB5] border-[#0ABAB5] hover:bg-[#0ABAB5]/10"
+          onClick={() => {
+            console.log(`Navegando para etapa ${stepIndex}: ${step.id}`);
+            navigateToStep(stepIndex);
+          }}
         >
           <Edit className="h-4 w-4 mr-1" /> Editar
         </Button>
       </CardHeader>
-      <CardContent className="pt-4">
-        {getSummary(step.section, sectionData, progress)}
+      <CardContent className="pt-4 pb-4">
+        {sectionData ? getSummary(step.section, sectionData, progress) : (
+          <div className="text-gray-500 italic">Nenhuma informação preenchida</div>
+        )}
       </CardContent>
     </Card>
   );

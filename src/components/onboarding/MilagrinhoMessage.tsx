@@ -1,35 +1,34 @@
 
 import React from "react";
+import { Card } from "@/components/ui/card";
 
 interface MilagrinhoMessageProps {
-  userName?: string;
   message: string;
-  variant?: "default" | "compact";
+  type?: "info" | "success" | "warning";
 }
 
 export const MilagrinhoMessage: React.FC<MilagrinhoMessageProps> = ({ 
-  userName, 
-  message,
-  variant = "default"
+  message, 
+  type = "info" 
 }) => {
-  // Extrair o primeiro nome se o username contiver espaços
-  const firstName = userName?.split(' ')[0] || "";
-  
+  const colors = {
+    info: "bg-[#0ABAB5]/10 border-[#0ABAB5]/20 text-[#0ABAB5]",
+    success: "bg-green-50 border-green-200 text-green-700",
+    warning: "bg-amber-50 border-amber-200 text-amber-700",
+  };
+
   return (
-    <div className="flex items-start gap-3 rounded-xl bg-white border border-[#0ABAB5]/20 px-5 py-4 shadow-sm">
-      <div className="flex-shrink-0 flex items-center justify-center bg-[#eafaf9] rounded-full h-11 w-11 mt-1">
-        <span className="text-[#0ABAB5] text-xl">🤖</span>
+    <Card className={`p-4 rounded-lg border ${colors[type]} flex items-start gap-3`}>
+      <div className="w-8 h-8 rounded-full bg-[#0ABAB5] flex-shrink-0 flex items-center justify-center overflow-hidden">
+        <img 
+          src="https://milagredigital.com/wp-content/uploads/2024/04/bot-avatar.webp" 
+          alt="Milagrinho" 
+          className="w-full h-full object-cover"
+        />
       </div>
       <div className="flex-1">
-        {userName && variant === "default" && (
-          <span className="block text-[#0ABAB5] font-semibold mb-1.5" style={{ fontSize: 16 }}>
-            E aí{firstName ? `, ${firstName}` : ""}!
-          </span>
-        )}
-        <span className="text-[#1A2228] text-sm">
-          {message}
-        </span>
+        <p className="text-gray-700">{message}</p>
       </div>
-    </div>
+    </Card>
   );
 };
