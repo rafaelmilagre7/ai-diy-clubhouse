@@ -20,6 +20,7 @@ export function buildUpdateObject(
   if (!progress) return {};
 
   const updateObj: any = {};
+  console.log(`Construindo objeto de atualização para o passo ${stepId} com dados:`, data);
 
   // Usar funções específicas para cada tipo de etapa
   switch (stepId) {
@@ -63,9 +64,12 @@ export function buildUpdateObject(
         }
       } else {
         // Se não houver uma seção específica, tentar usar o próprio data
+        console.log("Dados brutos recebidos:", data);
         Object.assign(updateObj, data);
       }
   }
+
+  console.log("Objeto de atualização construído:", updateObj);
 
   // Progresso: marcar etapa como concluída se ainda não estava
   if (!progress.completed_steps?.includes(stepId)) {

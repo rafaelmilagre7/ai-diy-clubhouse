@@ -24,6 +24,11 @@ export function usePersonalInfoFormData() {
 
   const updateFormData = useCallback(() => {
     if (!isLoading && (profile || progress?.personal_info)) {
+      console.log("Atualizando dados do formulário com:", {
+        profile,
+        personalInfo: progress?.personal_info
+      });
+      
       setFormData(prev => {
         const newData = {
           ...prev,
@@ -38,6 +43,7 @@ export function usePersonalInfoFormData() {
           city: progress?.personal_info?.city || "",
           timezone: progress?.personal_info?.timezone || "GMT-3",
         };
+        console.log("Novos dados do formulário:", newData);
         return newData;
       });
       setFormDataLoaded(true);
@@ -53,6 +59,7 @@ export function usePersonalInfoFormData() {
   useEffect(() => {
     const fetchData = async () => {
       if (!isLoading && !formDataLoaded) {
+        console.log("Buscando novos dados do progresso para o formulário pessoal");
         await refreshProgress();
       }
     };  

@@ -28,7 +28,9 @@ export const ReviewSectionCard: React.FC<ReviewSectionCardProps> = ({
   return (
     <Card key={step.id} className="overflow-hidden border border-gray-200 shadow-sm">
       <CardHeader className="bg-gray-50 pb-3 pt-4 px-4 flex flex-row justify-between items-center">
-        <CardTitle className="text-base font-medium text-gray-800">{step.title}</CardTitle>
+        <CardTitle className="text-base font-medium text-gray-800">
+          {step.title}
+        </CardTitle>
         <Button
           variant="outline"
           size="sm"
@@ -43,7 +45,10 @@ export const ReviewSectionCard: React.FC<ReviewSectionCardProps> = ({
       </CardHeader>
       <CardContent className="pt-4 pb-4">
         {sectionData ? getSummary(step.section, sectionData, progress) : (
-          <div className="text-gray-500 italic">Nenhuma informação preenchida</div>
+          <div className="text-gray-500 italic flex items-center space-x-2">
+            <span className="inline-block w-2 h-2 bg-amber-500 rounded-full"></span>
+            <span>Nenhuma informação preenchida. Clique em Editar para adicionar.</span>
+          </div>
         )}
       </CardContent>
     </Card>

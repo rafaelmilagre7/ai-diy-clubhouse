@@ -5,11 +5,14 @@ import { useOnboardingSteps } from "@/hooks/onboarding/useOnboardingSteps";
 import { ReviewStep } from "@/components/onboarding/steps/ReviewStep";
 import { useProgress } from "@/hooks/onboarding/useProgress";
 import { toast } from "sonner";
+import { MilagrinhoMessage } from "@/components/onboarding/MilagrinhoMessage";
+import { useAuth } from "@/contexts/auth";
 
 const Review = () => {
   const { completeOnboarding, navigateToStep } = useOnboardingSteps();
   const { progress, isLoading, refreshProgress } = useProgress();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { profile } = useAuth();
 
   // Efeito para carregar dados mais recentes ao entrar na página
   useEffect(() => {
@@ -29,13 +32,22 @@ const Review = () => {
     }
   };
 
+  // Extrair primeiro nome do perfil
+  const firstName = profile?.name?.split(" ")[0] || "Usuário";
+
   return (
     <OnboardingLayout
       currentStep={8}
       title="Revisar e Finalizar"
       backUrl="/onboarding/complementary"
     >
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-4xl mx-auto space-y-6">
+        <MilagrinhoMessage
+          userName={firstName}
+          message="Vamos revisar todas as informações que você forneceu. Verifique se está tudo correto antes de finalizar o onboarding e gerar sua trilha personalizada."
+          type="info"
+        />
+
         {isLoading ? (
           <div className="flex justify-center py-10">
             <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-[#0ABAB5]"></div>

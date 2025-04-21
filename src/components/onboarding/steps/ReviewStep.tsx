@@ -5,6 +5,7 @@ import { steps } from "@/hooks/onboarding/useStepDefinitions";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ReviewSectionCard } from "./ReviewSectionCard";
+import { Card } from "@/components/ui/card";
 
 interface ReviewStepProps {
   progress: OnboardingProgress | null;
@@ -25,14 +26,19 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({
     return steps.findIndex((s) => s.id === sectionId) + 1; // Ajustado para base 1 para UI
   };
 
+  // Verifica se todos os passos necessários foram concluídos
+  const allStepsCompleted = steps
+    .filter(step => step.id !== "review" && step.id !== "trail_generation")
+    .every(step => progress.completed_steps?.includes(step.id));
+
   return (
     <div className="space-y-6">
-      <div className="bg-[#0ABAB5]/10 p-4 rounded-md border border-[#0ABAB5]/20">
+      <Card className="bg-[#0ABAB5]/10 p-4 rounded-md border border-[#0ABAB5]/20">
         <p className="text-gray-700">
           Revise todas as informações preenchidas. Após confirmar, sua trilha personalizada será gerada automaticamente.
           Esta trilha será única e adaptada para o seu perfil de negócios.
         </p>
-      </div>
+      </Card>
 
       <div className="space-y-4">
         {steps
@@ -46,6 +52,34 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({
               sectionData = progress.business_data;
             }
 
+            // Tratamento especial para dados pessoais
+            if (step.section === "personal_info" && (!sectionData || Object.keys(sectionData).length === 0)) {
+              console.log("Dados pessoais não encontrados, verificando profile");
+              if (progress.personal_info) {
+                sectionData = progress.personal_info;
+              }
+            }
+
+            // Tratamento especial para dados profissionais
+            if (step.section === "professional_info" && (!sectionData || Object.keys(sectionData).length === 0)) {
+              // Verificar se há dados diretos no progresso
+              const directData = {
+                company_name: progress.company_name,
+                company_size: progress.company_size,
+                company_sector: progress.company_sector,
+                company_website: progress.company_website,
+                current_position: progress.current_position,
+                annual_revenue: progress.annual_revenue,
+              };
+              
+              // Se algum dos campos diretos tiver valor, usar esses dados
+              if (Object.values(directData).some(value => !!value)) {
+                sectionData = directData;
+              }
+            }
+
+            console.log(`Dados para seção ${step.section}:`, sectionData);
+            
             const stepIndex = findStepIndex(step.id);
 
             return (
@@ -60,6 +94,14 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({
             );
           })}
       </div>
+
+      {!allStepsCompleted && (
+        <Card className="bg-amber-50 p-4 border border-amber-200">
+          <p className="text-amber-700">
+            <strong>Atenção:</strong> Algumas seções ainda não foram preenchidas. Recomendamos completar todas as seções antes de prosseguir para obter a melhor experiência personalizada.
+          </p>
+        </Card>
+      )}
 
       <div className="pt-6 flex justify-end">
         <Button
