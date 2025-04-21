@@ -35,10 +35,10 @@ export function useStepPersistenceCore({
       console.log("Dados a serem enviados:", updateObj);
 
       // Atualizar no Supabase
-      await updateProgress(updateObj);
-      console.log("Dados atualizados com sucesso no banco");
+      const updatedProgress = await updateProgress(updateObj);
+      console.log("Dados atualizados com sucesso no banco:", updatedProgress);
 
-      // Forçar atualização dos dados local
+      // Forçar atualização dos dados local após salvar
       await refreshProgress();
       console.log("Dados locais atualizados após salvar");
       
@@ -51,6 +51,7 @@ export function useStepPersistenceCore({
       }
     } catch (error) {
       console.error("Erro ao salvar dados:", error);
+      throw error;
     }
   };
 

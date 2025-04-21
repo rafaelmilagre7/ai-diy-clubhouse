@@ -1,30 +1,30 @@
 
 import React from "react";
 import { Controller } from "react-hook-form";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
 
-interface Props {
+interface AdditionalContextFieldProps {
   control: any;
 }
 
-export const AdditionalContextField: React.FC<Props> = ({ control }) => (
-  <div className="space-y-3">
-    <Label htmlFor="additional_context">
-      Contexto adicional (opcional)
-    </Label>
-    <Controller
-      name="additional_context"
+export const AdditionalContextField: React.FC<AdditionalContextFieldProps> = ({ control }) => {
+  return (
+    <FormField
       control={control}
+      name="additional_context"
       render={({ field }) => (
-        <Textarea
-          id="additional_context"
-          placeholder="Algo mais que queira compartilhar sobre seu contexto de negócio..."
-          value={field.value}
-          onChange={field.onChange}
-          className="h-24"
-        />
+        <FormItem>
+          <FormLabel>Contexto adicional (opcional)</FormLabel>
+          <FormControl>
+            <Textarea
+              placeholder="Algo mais que queira compartilhar sobre seu contexto de negócio..."
+              className="min-h-[120px]"
+              {...field}
+            />
+          </FormControl>
+        </FormItem>
       )}
     />
-  </div>
-);
+  );
+};

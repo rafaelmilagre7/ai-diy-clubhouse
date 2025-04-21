@@ -52,6 +52,20 @@ export function buildUpdateObject(
     // Salvar informações complementares
     updateObj.complementary_info = data.complementary_info || {};
     console.log("Salvando complementary_info:", updateObj.complementary_info);
+  } else if (stepId === "goals") {
+    // Compatibilidade com etapa de objetivos antiga
+    if (data.professional_info) {
+      updateObj.professional_info = data.professional_info;
+      
+      // Compatibilidade dupla
+      updateObj.company_name = data.professional_info.company_name;
+      updateObj.company_size = data.professional_info.company_size;
+      updateObj.company_sector = data.professional_info.company_sector;
+      updateObj.company_website = data.professional_info.company_website;
+      updateObj.current_position = data.professional_info.current_position;
+      updateObj.annual_revenue = data.professional_info.annual_revenue;
+    }
+    console.log("Salvando dados profissionais (goals):", updateObj);
   } else {
     // Outras etapas (futuro)
     const sectionKey = steps.find(s => s.id === stepId)?.section as keyof OnboardingData;
@@ -66,15 +80,38 @@ export function buildUpdateObject(
     updateObj.completed_steps = [...(progress.completed_steps || []), stepId];
   }
 
-  // Atualiza current_step apenas se estivermos avançando (não em edições)
-  // Isso evita que ao editar uma etapa anterior, o usuário seja redirecionado à próxima etapa
+  // Atualiza current_step para a próxima etapa
   const isEditing = progress.completed_steps?.includes(stepId);
-  if (!isEditing) {
-    const nextStep = steps[Math.min(currentStepIndex + 1, steps.length - 1)].id;
-    updateObj.current_step = nextStep;
+  
+  // Definir próxima etapa de maneira mais confiável
+  let nextStep = stepId;
+  
+  if (stepId === "personal") {
+    nextStep = "professional_data";
+  } else if (stepId === "professional_data") {
+    nextStep = "business_context";
+  } else if (stepId === "business_context") {
+    nextStep = "ai_exp";
+  } else if (stepId === "ai_exp") {
+    nextStep = "business_goals";
+  } else if (stepId === "business_goals") {
+    nextStep = "experience_personalization";
+  } else if (stepId === "experience_personalization") {
+    nextStep = "complementary_info";
+  } else if (stepId === "complementary_info") {
+    nextStep = "review";
+  } else if (stepId === "review") {
+    nextStep = "completed";
+  } else if (stepId === "goals") {
+    // Compatibilidade com fluxo antigo
+    nextStep = "business_context";
   } else {
-    console.log(`Editando passo ${stepId} - mantendo current_step como ${progress.current_step}`);
+    // Fallback para código anterior
+    nextStep = steps[Math.min(currentStepIndex + 1, steps.length - 1)].id;
   }
+  
+  updateObj.current_step = nextStep;
+  console.log(`Atualizando current_step para: ${nextStep}`);
 
   console.log("Objeto final para atualização:", updateObj);
   return updateObj;

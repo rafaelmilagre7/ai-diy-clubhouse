@@ -36,5 +36,8 @@ export function navigateAfterStep(stepId: string, currentStepIndex: number, navi
 
   // Faz navegação com pequeno delay para UX consistente
   console.log(`Navegando automaticamente para: ${nextPath}`);
-  setTimeout(() => navigate(nextPath), 500);
+  setTimeout(() => {
+    console.log(`Executando navegação para: ${nextPath}`);
+    navigate(nextPath);
+  }, 800);
 }

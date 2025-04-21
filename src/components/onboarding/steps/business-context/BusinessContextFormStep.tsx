@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { useOnboardingSteps } from "@/hooks/onboarding/useOnboardingSteps";
@@ -10,6 +10,7 @@ import { BusinessChallengesField } from "./inputs/BusinessChallengesField";
 import { ShortTermGoalsField } from "./inputs/ShortTermGoalsField";
 import { MediumTermGoalsField } from "./inputs/MediumTermGoalsField";
 import { KpisField } from "./inputs/KpisField";
+import { AdditionalContextField } from "./inputs/AdditionalContextField";
 import { SubmitButton } from "./SubmitButton";
 import { NavigationButtons } from "../NavigationButtons";
 import { cn } from "@/lib/utils";
@@ -24,6 +25,7 @@ type BusinessContextFormValues = {
   short_term_goals: string[];
   medium_term_goals: string[];
   important_kpis: string[];
+  additional_context?: string;
 };
 
 export const BusinessContextFormStep: React.FC<BusinessContextFormStepProps> = ({ progress }) => {
@@ -31,22 +33,43 @@ export const BusinessContextFormStep: React.FC<BusinessContextFormStepProps> = (
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { control, handleSubmit, formState: { errors } } = useForm<BusinessContextFormValues>({
-    defaultValues: {
-      business_model: progress?.business_context?.business_model || "",
-      business_challenges: progress?.business_context?.business_challenges || [],
-      short_term_goals: progress?.business_context?.short_term_goals || [],
-      medium_term_goals: progress?.business_context?.medium_term_goals || [],
-      important_kpis: progress?.business_context?.important_kpis || [],
-    }
+  // Extrair valores iniciais de forma mais robusta
+  const initialValues = {
+    business_model: progress?.business_context?.business_model || "",
+    business_challenges: progress?.business_context?.business_challenges || [],
+    short_term_goals: progress?.business_context?.short_term_goals || [],
+    medium_term_goals: progress?.business_context?.medium_term_goals || [],
+    important_kpis: progress?.business_context?.important_kpis || [],
+    additional_context: progress?.business_context?.additional_context || "",
+  };
+
+  console.log("Valores iniciais para Business Context:", initialValues);
+
+  const { control, handleSubmit, formState: { errors }, reset } = useForm<BusinessContextFormValues>({
+    defaultValues: initialValues
   });
+
+  // Atualizar o formulário quando os dados iniciais mudarem
+  useEffect(() => {
+    if (progress?.business_context) {
+      console.log("Atualizando formulário com dados do contexto do negócio:", progress.business_context);
+      reset({
+        business_model: progress.business_context.business_model || "",
+        business_challenges: progress.business_context.business_challenges || [],
+        short_term_goals: progress.business_context.short_term_goals || [],
+        medium_term_goals: progress.business_context.medium_term_goals || [],
+        important_kpis: progress.business_context.important_kpis || [],
+        additional_context: progress.business_context.additional_context || "",
+      });
+    }
+  }, [progress, reset]);
 
   const onSubmit = async (data: BusinessContextFormValues) => {
     try {
       setIsSubmitting(true);
       console.log("Salvando dados de contexto de negócio:", data);
       
-      // Salvamos sem navegação automática para permitir controle manual
+      // Salvamos com navegação automática
       await saveStepData("business_context", {
         business_context: {
           business_model: data.business_model,
@@ -54,13 +77,16 @@ export const BusinessContextFormStep: React.FC<BusinessContextFormStepProps> = (
           short_term_goals: data.short_term_goals,
           medium_term_goals: data.medium_term_goals,
           important_kpis: data.important_kpis,
+          additional_context: data.additional_context,
         }
-      }, false);
+      }, true);
       
       toast.success("Informações salvas com sucesso!");
       
-      // Após salvar, podemos navegar manualmente
-      navigate("/onboarding/ai-experience");
+      // Garantir navegação manual
+      setTimeout(() => {
+        navigate("/onboarding/ai-experience");
+      }, 500);
     } catch (error) {
       console.error("Erro ao salvar dados:", error);
       toast.error("Erro ao salvar as informações. Tente novamente.");
@@ -104,10 +130,14 @@ export const BusinessContextFormStep: React.FC<BusinessContextFormStepProps> = (
             Indicadores de Performance
           </h2>
           <KpisField control={control} error={errors.important_kpis} />
+          <AdditionalContextField control={control} />
         </section>
 
         {/* Navegação */}
-        <NavigationButtons isSubmitting={isSubmitting} onPrevious={() => navigate("/onboarding/professional-data")} />
+        <NavigationButtons 
+          isSubmitting={isSubmitting} 
+          onPrevious={() => navigate("/onboarding/professional-data")} 
+        />
       </form>
     </div>
   );

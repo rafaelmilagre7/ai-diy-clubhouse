@@ -6,6 +6,7 @@ import { ProfessionalDataStep } from "@/components/onboarding/steps/Professional
 import { MilagrinhoMessage } from "@/components/onboarding/MilagrinhoMessage";
 import { useNavigate } from "react-router-dom";
 import { useProgress } from "@/hooks/onboarding/useProgress";
+import { toast } from "sonner";
 
 const ProfessionalData = () => {
   const { saveStepData, progress, completeOnboarding } = useOnboardingSteps();
@@ -24,13 +25,20 @@ const ProfessionalData = () => {
       setIsSubmitting(true);
       console.log("Salvando dados profissionais:", data);
       
-      // Salvar sem navegação automática - isso permite que o usuário
-      // continue na página após salvar
-      await saveStepData(stepId, data, false);
+      // Salvar e navegar automaticamente para a próxima etapa
+      await saveStepData(stepId, data, true);
       
-      console.log("Dados profissionais salvos com sucesso");
+      console.log("Dados profissionais salvos com sucesso, navegando para a próxima etapa");
+      toast.success("Informações salvas com sucesso!");
+      
+      // Navegação manual para garantir
+      setTimeout(() => {
+        navigate("/onboarding/business-context");
+      }, 500);
+      
     } catch (error) {
       console.error("Erro ao salvar dados profissionais:", error);
+      toast.error("Erro ao salvar as informações. Tente novamente.");
     } finally {
       setIsSubmitting(false);
     }
