@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { useFormValidation } from "@/hooks/useFormValidation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { validateLinkedInUrl, validateInstagramUrl, validateBrazilianPhone } from "@/utils/validationUtils";
+import { validateLinkedInUrl, validateInstagramUrl, validateBrazilianPhone, formatSocialUrl } from "@/utils/validationUtils";
 
 const personalInfoSchema = z.object({
   name: z.string().min(3, "Nome deve ter pelo menos 3 caracteres").max(100, "Nome muito longo"),

@@ -1,5 +1,5 @@
 
-import { isCellPhone } from "@brazilian-utils/brazilian-utils";
+import { isPhone } from "@brazilian-utils/brazilian-utils";
 
 export const validateLinkedInUrl = (url: string): boolean => {
   if (!url) return true; // URL opcional
@@ -16,7 +16,7 @@ export const validateInstagramUrl = (url: string): boolean => {
 export const validateBrazilianPhone = (phone: string): boolean => {
   if (!phone) return true; // Telefone opcional
   const cleanPhone = phone.replace(/\D/g, "");
-  return isCellPhone(cleanPhone);
+  return isPhone(cleanPhone); // Usando isPhone em vez de isCellPhone
 };
 
 export const formatSocialUrl = (url: string, type: "linkedin" | "instagram"): string => {
