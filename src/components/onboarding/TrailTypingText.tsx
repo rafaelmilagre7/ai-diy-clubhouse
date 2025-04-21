@@ -10,6 +10,13 @@ export const TrailTypingText = ({ text, onComplete }: TrailTypingTextProps) => {
   const [displayText, setDisplayText] = useState("");
   const [index, setIndex] = useState(0);
 
+  // Reset ao mudar o texto (quando troca a solução)
+  useEffect(() => {
+    setDisplayText("");
+    setIndex(0);
+  }, [text]);
+
+  // Efeito de digitação
   useEffect(() => {
     if (!text || index >= text.length) {
       if (index >= text.length) {
@@ -30,3 +37,4 @@ export const TrailTypingText = ({ text, onComplete }: TrailTypingTextProps) => {
     </p>
   );
 };
+

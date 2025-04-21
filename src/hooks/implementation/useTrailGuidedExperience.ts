@@ -1,5 +1,5 @@
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useImplementationTrail } from "./useImplementationTrail";
 import { useSolutionsData } from "@/hooks/useSolutionsData";
@@ -57,6 +57,13 @@ export const useTrailGuidedExperience = () => {
     solutionsList[currentStepIdx], 
     [solutionsList, currentStepIdx]
   );
+
+  // Detectar se já temos trilha ao carregar o componente
+  useEffect(() => {
+    if (!isLoading && trail && solutionsList.length > 0) {
+      setStarted(true); // Se temos uma trilha, já iniciamos
+    }
+  }, [isLoading, trail, solutionsList]);
 
   // Handler para iniciar a geração da trilha
   const handleStartGeneration = useCallback(async () => {
@@ -121,3 +128,4 @@ export const useTrailGuidedExperience = () => {
     handleTypingComplete
   };
 };
+

@@ -1,6 +1,7 @@
 
-import React, { useRef } from "react";
+import React, { useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
+import { Sphere } from "@react-three/drei";
 import * as THREE from "three";
 
 interface MagicSphereProps {
@@ -8,56 +9,80 @@ interface MagicSphereProps {
 }
 
 export function MagicSphere({ stage }: MagicSphereProps) {
-  const mesh = useRef<THREE.Mesh>(null);
-  
-  useFrame((_, delta) => {
-    if (mesh.current) {
-      mesh.current.rotation.y += 0.6 * delta + 0.2 * (stage + 1);
-      mesh.current.rotation.x += 0.1 * delta;
+  const sphereRef = useRef<THREE.Mesh>(null);
+  const particlesRef = useRef<THREE.Points>(null);
+
+  // Cores adaptadas para usar formatos que o Three.js reconhece
+  const colors = useMemo(() => [
+    { main: "#0ABAB5", glow: "#0ABAB5" },       // Turquesa VIVER DE IA
+    { main: "#0ABAB5", glow: "#87f5f3" },       // Turquesa pulsando 
+    { main: "#9b87f5", glow: "#c4b9ff" },       // Roxo para terceiro estágio
+    { main: "#4ade80", glow: "#86efac" },       // Verde para conclusão
+  ], []);
+
+  // Velocidade com base no estágio
+  const getSpeed = () => {
+    return stage === 0 ? 0.2 : stage === 1 ? 0.5 : stage === 2 ? 0.8 : 0.3;
+  };
+
+  // Animação da esfera
+  useFrame((state, delta) => {
+    if (!sphereRef.current) return;
+    
+    const speed = getSpeed();
+    // Rotação
+    sphereRef.current.rotation.y += delta * speed;
+    sphereRef.current.rotation.z += delta * speed * 0.3;
+    
+    // Escala pulsar baseada no estágio
+    if (stage === 3) {
+      // Efeito de conclusão: tamanho maior e pulsando
+      const pulse = Math.sin(state.clock.elapsedTime * 2) * 0.1 + 1.1;
+      sphereRef.current.scale.set(pulse, pulse, pulse);
+    } else {
+      // Efeito normal: pulsar leve
+      const pulse = Math.sin(state.clock.elapsedTime * 3) * 0.05 + 1;
+      sphereRef.current.scale.set(pulse, pulse, pulse);
+    }
+    
+    // Anima partículas ao redor se houver
+    if (particlesRef.current) {
+      particlesRef.current.rotation.y -= delta * speed * 0.5;
+      particlesRef.current.rotation.x += delta * speed * 0.2;
     }
   });
-  
-  const getColor = () => {
-    switch (stage) {
-      case 0: return "#ffeab7";
-      case 1: return "#0ABAB5";
-      case 2: return "#b87ff5";
-      default: return "#82e19b";
-    }
-  };
-  
-  const getEmissive = () => {
-    switch (stage) {
-      case 0: return "#ffd580";
-      case 1: return "#0ABAB5";
-      case 2: return "#9b87f599";
-      default: return "#22bb77";
-    }
-  };
-  
+
+  // Partículas ao redor da esfera
+  const particlesMaterial = useMemo(() => {
+    // Cores baseadas no estágio atual
+    const color = new THREE.Color(colors[stage].glow);
+    return new THREE.PointsMaterial({
+      size: 0.1,
+      color,
+      transparent: true,
+      opacity: 0.7,
+      blending: THREE.AdditiveBlending,
+    });
+  }, [stage, colors]);
+
   return (
-    <mesh ref={mesh} position={[0, 0, 0]} scale={1.2 + 0.2 * stage}>
-      <sphereGeometry args={[1.5, 50, 50]} />
-      <meshStandardMaterial
-        color={getColor()}
-        emissive={getEmissive()}
-        emissiveIntensity={0.5 + 0.1 * stage}
-        metalness={0.37}
-        roughness={0.25 + 0.1 * (3 - stage)}
-        transparent
-        opacity={0.92}
-      />
-      {/* Aura adicional */}
-      <mesh>
-        <sphereGeometry args={[2.1 + 0.3 * stage, 32, 32]} />
+    <group>
+      {/* Esfera principal com material personalizado pelo estágio */}
+      <Sphere ref={sphereRef} args={[1, 64, 64]}>
         <meshStandardMaterial
-          color="#fff"
-          emissive="#fff"
-          emissiveIntensity={0.07 + (stage * 0.04)}
-          transparent
-          opacity={0.08 + stage * 0.03}
+          color={colors[stage].main}
+          emissive={colors[stage].glow}
+          emissiveIntensity={0.8}
+          roughness={0.2}
+          metalness={0.8}
         />
-      </mesh>
-    </mesh>
+      </Sphere>
+
+      {/* Partículas que orbitam a esfera */}
+      <points ref={particlesRef}>
+        <sphereGeometry args={[1.5, 32, 32]} />
+        <primitive object={particlesMaterial} />
+      </points>
+    </group>
   );
 }

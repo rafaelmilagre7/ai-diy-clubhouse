@@ -78,7 +78,9 @@ export const TrailGuidedExperience = () => {
         Sua Trilha Personalizada VIVER DE IA
       </h2>
       <div className="space-y-6 border rounded-2xl p-6 bg-gradient-to-br from-[#0ABAB5]/10 to-white shadow animate-fade-in">
+        {/* Componente de texto digitado - reinicia quando muda current solution */}
         <TrailTypingText 
+          key={`solution-text-${currentStepIdx}`} 
           text={currentSolution?.justification || "Carregando recomendação..."} 
           onComplete={handleTypingComplete} 
         />
@@ -97,3 +99,4 @@ export const TrailGuidedExperience = () => {
     </div>
   );
 };
+

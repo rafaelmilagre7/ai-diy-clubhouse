@@ -61,6 +61,9 @@ export const TrailSolutionCard: React.FC<TrailSolutionCardProps> = ({ solution, 
           <Gift className="h-3 w-3 mr-1" /> Benefício exclusivo
         </Badge>
       : null;
+      
+  // Placeholder de imagem caso não haja uma imagem específica
+  const placeholderImage = "https://placehold.co/100x100/0ABAB5/FFFFFF.webp?text=VIVER+IA&font=montserrat";
 
   return (
     <div
@@ -77,14 +80,14 @@ export const TrailSolutionCard: React.FC<TrailSolutionCardProps> = ({ solution, 
       onClick={() => onClick(solution.solutionId)}
     >
       <span className="absolute left-0 top-0 rounded-bl-2xl rounded-tr-xl h-2 w-28 bg-[#0ABAB5] opacity-20 pointer-events-none" style={{display: solution.priority === 1 ? undefined : "none"}} />
-      {solution.image_url ? (
+      {solution.image_url || solution.thumbnail_url ? (
         <img
-          src={solution.image_url}
+          src={solution.image_url || solution.thumbnail_url}
           alt={solution.title || "Solução"}
           className="h-14 w-14 rounded-xl object-cover border-white border-2 shadow-sm shrink-0"
         />
       ) : (
-        <div className="h-14 w-14 rounded-xl bg-gray-200 flex items-center justify-center text-gray-500 font-bold shrink-0 text-xl">
+        <div className="h-14 w-14 rounded-xl bg-gradient-to-br from-[#0ABAB5] to-[#0ABAB5]/70 flex items-center justify-center text-white font-bold shrink-0 text-xl shadow-sm">
           IA
         </div>
       )}
@@ -101,10 +104,11 @@ export const TrailSolutionCard: React.FC<TrailSolutionCardProps> = ({ solution, 
           {solution.title || "Solução sem título"}
         </h3>
         <p className="text-sm text-muted-foreground line-clamp-2 mt-0.5">
-          {solution.justification || solution.description || "Recomendação personalizada para seu negócio"}
+          {solution.description || solution.justification || "Recomendação personalizada para seu negócio"}
         </p>
       </div>
       <ChevronRight className="h-6 w-6 text-[#0ABAB5] opacity-80 ml-2 group-hover:translate-x-1 transition-transform" />
     </div>
   );
 };
+
