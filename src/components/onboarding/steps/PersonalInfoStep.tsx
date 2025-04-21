@@ -46,6 +46,7 @@ export const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
   const validation = useFormValidation(
     {
       phone: initialData?.phone || "",
+      ddi: initialData?.ddi || "+55",
       linkedin: initialData?.linkedin || "",
       instagram: initialData?.instagram || "",
       state: initialData?.state || "",
@@ -166,6 +167,8 @@ export const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
             onChange={(v) => validation.handleChange("phone", v)}
             onBlur={() => validation.handleBlur("phone")}
             error={validation.touched.phone ? validation.errors.phone : undefined}
+            ddi={validation.values.ddi}
+            onChangeDDI={(v) => validation.handleChange("ddi", v)}
           />
 
           <SocialInputs

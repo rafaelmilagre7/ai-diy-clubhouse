@@ -55,12 +55,12 @@ export const PersonalInfoInputs = ({
         readOnly={true}
       />
       <PhoneInput
-        ddi={formData.ddi || "+55"}
-        phone={formData.phone}
-        onChangeDDI={v => onChange("ddi", v)}
-        onChangePhone={v => onChange("phone", v)}
+        value={formData.phone}
+        onChange={v => onChange("phone", v)}
         disabled={disabled}
         error={errors.phone}
+        ddi={formData.ddi || "+55"}
+        onChangeDDI={v => onChange("ddi", v)}
       />
       <SocialInputs
         linkedin={formData.linkedin}
