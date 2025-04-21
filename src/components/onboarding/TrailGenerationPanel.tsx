@@ -6,47 +6,65 @@ import { Button } from "@/components/ui/button";
 import { Edit, Loader2, RefreshCcw } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardDescription, CardTitle } from "@/components/ui/card";
+import { TrailMagicExperience } from "./TrailMagicExperience";
 
 export const TrailGenerationPanel = ({ onClose }: { onClose?: () => void }) => {
   const { trail, isLoading, generateImplementationTrail } = useImplementationTrail();
   const [regenerating, setRegenerating] = useState(false);
+  const [showMagic, setShowMagic] = useState(false);
   const navigate = useNavigate();
 
   // Montar soluções da trilha
   let solutions: any[] = [];
   if (trail) {
     // Unifica todas prioridades em lista única para o TrailCardList
-    ['priority1', 'priority2', 'priority3'].forEach((priorityLevel, idx) => {
+    ["priority1", "priority2", "priority3"].forEach((priorityLevel, idx) => {
       const items = (trail as any)[priorityLevel] || [];
-      items.forEach(item => {
+      items.forEach((item) => {
         solutions.push({
           ...item,
-          priority: idx + 1
+          priority: idx + 1,
         });
       });
     });
   }
 
+  // Nova função de geração que exibe a experiência mágica
   const handleRegenerate = async () => {
+    setShowMagic(true);
     setRegenerating(true);
     await generateImplementationTrail(); // Já busca soluções mais atuais automaticamente!
     setRegenerating(false);
+    // O TrailMagicExperience vai chamar onFinish() quando a experiência acabar (ver abaixo).
   };
 
-  if (isLoading || regenerating) {
+  // Quando terminar a mágica, esconder overlay e mostrar trilha.
+  const handleFinishMagic = () => {
+    setShowMagic(false);
+  };
+
+  if ((isLoading || regenerating) && !showMagic) {
+    // Esse estado só será mostrado se for carregamento inicial e não a experiência mágica
     return (
       <div className="flex flex-col items-center gap-4 py-8">
         <Loader2 className="h-8 w-8 text-[#0ABAB5] animate-spin" />
-        <span className="text-[#0ABAB5] font-medium">Milagrinho está gerando sua nova trilha personalizada...</span>
+        <span className="text-[#0ABAB5] font-medium">Milagrinho está preparando sua trilha personalizada...</span>
       </div>
     );
+  }
+
+  if (showMagic) {
+    return <TrailMagicExperience onFinish={handleFinishMagic} />;
   }
 
   if (!trail || solutions.length === 0) {
     return (
       <div className="flex flex-col items-center gap-6 py-12">
         <span>Nenhuma trilha personalizada foi gerada ainda.</span>
-        <Button onClick={handleRegenerate} className="bg-[#0ABAB5] text-white">
+        <Button
+          onClick={handleRegenerate}
+          className="bg-[#0ABAB5] text-white"
+        >
           Gerar Trilha Personalizada
         </Button>
       </div>
@@ -66,7 +84,7 @@ export const TrailGenerationPanel = ({ onClose }: { onClose?: () => void }) => {
       <CardContent>
         <TrailCardList
           solutions={solutions}
-          onSolutionClick={id => navigate(`/solution/${id}`)}
+          onSolutionClick={(id) => navigate(`/solution/${id}`)}
           onSeeAll={() => navigate("/solutions")}
         />
         <div className="flex justify-between mt-6">
