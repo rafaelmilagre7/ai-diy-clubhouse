@@ -1,3 +1,4 @@
+
 import { toast } from 'sonner';
 import { OnboardingData } from '@/types/onboarding';
 import { useProgress } from './useProgress';
@@ -101,7 +102,7 @@ export const useStepPersistence = ({
       } else if (stepId === "experience_personalization") {
         const e = data.experience_personalization || {};
         if (!e.interests?.length ||
-            !e.time_preference ||
+            !e.time_preference?.length ||
             !e.available_days?.length ||
             typeof e.networking_availability !== "number" ||
             !e.skills_to_share?.length ||

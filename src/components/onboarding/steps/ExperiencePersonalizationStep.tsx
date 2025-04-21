@@ -11,6 +11,7 @@ interface ExperiencePersonalizationStepProps {
   isSubmitting: boolean;
   initialData?: any;
   isLastStep?: boolean;
+  onComplete?: () => void;
 }
 
 const INTERESTS_OPTIONS = [
@@ -64,12 +65,12 @@ const MENTORSHIP_OPTIONS = [
 ];
 
 export const ExperiencePersonalizationStep: React.FC<ExperiencePersonalizationStepProps> = ({
-  onSubmit, isSubmitting, initialData = {}, isLastStep = false
+  onSubmit, isSubmitting, initialData = {}, isLastStep = false, onComplete
 }) => {
   const { control, handleSubmit, watch, setValue, formState: { errors } } = useForm({
     defaultValues: {
       interests: initialData.interests || [],
-      time_preference: initialData.time_preference || "",
+      time_preference: initialData.time_preference || [],
       available_days: initialData.available_days || [],
       networking_availability: typeof initialData.networking_availability === "number" ? initialData.networking_availability : 5,
       skills_to_share: initialData.skills_to_share || [],
@@ -82,7 +83,7 @@ export const ExperiencePersonalizationStep: React.FC<ExperiencePersonalizationSt
     const formValues = watch();
     return [
       formValues.interests && formValues.interests.length > 0,
-      formValues.time_preference,
+      formValues.time_preference && formValues.time_preference.length > 0,
       formValues.available_days && formValues.available_days.length > 0,
       formValues.skills_to_share && formValues.skills_to_share.length > 0,
       formValues.mentorship_topics && formValues.mentorship_topics.length > 0,
@@ -97,7 +98,7 @@ export const ExperiencePersonalizationStep: React.FC<ExperiencePersonalizationSt
   };
 
   // Utilitário para alternar seleções múltiplas
-  function toggleSelect(field: "interests" | "available_days" | "skills_to_share" | "mentorship_topics", value: string) {
+  function toggleSelect(field: "interests" | "available_days" | "skills_to_share" | "mentorship_topics" | "time_preference", value: string) {
     const arr = watch(field) || [];
     if (arr.includes(value)) {
       setValue(field, arr.filter((v: string) => v !== value), { shouldValidate: true });
@@ -152,11 +153,11 @@ export const ExperiencePersonalizationStep: React.FC<ExperiencePersonalizationSt
                   key={opt.value}
                   className={cn(
                     "flex items-center border px-4 py-2 rounded-lg gap-2 transition-all",
-                    field.value === opt.value
+                    (field.value || []).includes(opt.value)
                       ? "bg-[#0ABAB5] text-white border-[#0ABAB5]"
                       : "bg-white text-gray-700 border-gray-200"
                   )}
-                  onClick={() => field.onChange(opt.value)}
+                  onClick={() => toggleSelect("time_preference", opt.value)}
                 >
                   <span className="text-2xl">{opt.emoji}</span>
                   {opt.label}
@@ -165,7 +166,7 @@ export const ExperiencePersonalizationStep: React.FC<ExperiencePersonalizationSt
             </div>
           )}
         />
-        {errors.time_preference && <span className="text-xs text-red-500">Escolha um horário.</span>}
+        {errors.time_preference && <span className="text-xs text-red-500">Escolha pelo menos um horário.</span>}
       </div>
       {/* 3. Dias da Semana Disponíveis */}
       <div>

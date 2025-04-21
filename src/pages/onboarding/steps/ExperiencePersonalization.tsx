@@ -6,7 +6,7 @@ import { ExperiencePersonalizationStep } from "@/components/onboarding/steps/Exp
 import { MilagrinhoMessage } from "@/components/onboarding/MilagrinhoMessage";
 
 const ExperiencePersonalization = () => {
-  const { saveStepData, progress } = useOnboardingSteps();
+  const { saveStepData, progress, completeOnboarding } = useOnboardingSteps();
 
   return (
     <OnboardingLayout
@@ -23,6 +23,7 @@ const ExperiencePersonalization = () => {
           isSubmitting={false}
           initialData={progress?.experience_personalization}
           isLastStep={false}
+          onComplete={completeOnboarding}
         />
       </div>
     </OnboardingLayout>

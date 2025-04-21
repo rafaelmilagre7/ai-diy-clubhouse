@@ -1,4 +1,3 @@
-
 export interface OnboardingData {
   personal_info: {
     name?: string;
@@ -52,7 +51,7 @@ export interface OnboardingData {
   };
   experience_personalization: {
     interests?: string[];
-    time_preference?: string;
+    time_preference?: string[];
     available_days?: string[];
     networking_availability?: number;
     skills_to_share?: string[];
@@ -65,7 +64,6 @@ export interface OnboardingData {
     interested_in_interview?: boolean;
     priority_topics?: string[];
   };
-  // Adicionando as novas propriedades para corrigir os erros
   industry_focus?: {
     sector?: string;
     target_market?: string;
@@ -101,7 +99,6 @@ export interface OnboardingProgress {
   ai_experience: OnboardingData['ai_experience'];
   experience_personalization: OnboardingData['experience_personalization'];
   complementary_info: OnboardingData['complementary_info'];
-  // Adicionando as novas propriedades no OnboardingProgress
   industry_focus?: OnboardingData['industry_focus'];
   resources_needs?: OnboardingData['resources_needs'];
   team_info?: OnboardingData['team_info'];
