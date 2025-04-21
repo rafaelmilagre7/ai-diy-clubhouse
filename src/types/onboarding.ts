@@ -1,3 +1,4 @@
+
 export interface OnboardingData {
   personal_info: {
     name?: string;
@@ -33,6 +34,10 @@ export interface OnboardingData {
     primary_goal?: string;
     expected_outcomes?: string[];
     timeline?: string;
+    how_implement?: string;
+    week_availability?: string;
+    live_interest?: boolean;
+    content_formats?: string[];
   };
   ai_experience: {
     knowledge_level?: string;

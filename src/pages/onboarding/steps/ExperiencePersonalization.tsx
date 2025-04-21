@@ -10,7 +10,7 @@ const ExperiencePersonalization = () => {
 
   return (
     <OnboardingLayout
-      currentStep={/* ajuste com índice correto conforme fluxo, ex: 6 */ 6}
+      currentStep={6}
       title="Personalização da Experiência"
       backUrl="/onboarding/preferences"
     >

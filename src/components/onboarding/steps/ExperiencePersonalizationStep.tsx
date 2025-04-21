@@ -79,16 +79,16 @@ export const ExperiencePersonalizationStep: React.FC<ExperiencePersonalizationSt
 
   // Verificação de obrigatoriedade
   const isValid = useMemo(() => {
-    const w = watch();
+    const formValues = watch();
     return [
-      w.interests && w.interests.length > 0,
-      w.time_preference,
-      w.available_days && w.available_days.length > 0,
-      w.skills_to_share && w.skills_to_share.length > 0,
-      w.mentorship_topics && w.mentorship_topics.length > 0,
-      typeof w.networking_availability === "number"
+      formValues.interests && formValues.interests.length > 0,
+      formValues.time_preference,
+      formValues.available_days && formValues.available_days.length > 0,
+      formValues.skills_to_share && formValues.skills_to_share.length > 0,
+      formValues.mentorship_topics && formValues.mentorship_topics.length > 0,
+      typeof formValues.networking_availability === "number"
     ].every(Boolean);
-  }, [watch()]);
+  }, [watch]);
 
   const handleFormSubmit = (formData: any) => {
     // Validação final: impede submit se não estiver válido
@@ -97,7 +97,7 @@ export const ExperiencePersonalizationStep: React.FC<ExperiencePersonalizationSt
   };
 
   // Utilitário para alternar seleções múltiplas
-  function toggleSelect(field: string, value: string) {
+  function toggleSelect(field: "interests" | "available_days" | "skills_to_share" | "mentorship_topics", value: string) {
     const arr = watch(field) || [];
     if (arr.includes(value)) {
       setValue(field, arr.filter((v: string) => v !== value), { shouldValidate: true });

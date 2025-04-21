@@ -1,3 +1,4 @@
+
 import { toast } from 'sonner';
 import { OnboardingData } from '@/types/onboarding';
 import { useProgress } from './useProgress';
@@ -71,8 +72,7 @@ export const useStepPersistence = ({
       } else if (stepId === "business_goals") {
         const businessGoals = data.business_goals || {};
         if (!businessGoals.primary_goal || !businessGoals.expected_outcomes?.length || 
-            !businessGoals.how_implement || !businessGoals.week_availability || 
-            businessGoals.live_interest === undefined || !businessGoals.content_formats?.length) {
+            !businessGoals.timeline) {
           toast.error("Por favor, preencha todos os campos obrigatórios");
           return;
         }
