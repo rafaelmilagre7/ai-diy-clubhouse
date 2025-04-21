@@ -33,7 +33,7 @@ export interface OnboardingData {
   business_goals: {
     primary_goal?: string;
     expected_outcomes?: string[];
-    expected_outcome_30days?: string; // Campo individual adicionado
+    expected_outcome_30days?: string; // Campo individual para verificação
     timeline?: string;
     priority_solution_type?: string;
     how_implement?: string;

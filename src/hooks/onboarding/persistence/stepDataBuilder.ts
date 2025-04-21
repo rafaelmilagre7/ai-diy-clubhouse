@@ -129,14 +129,16 @@ export function buildUpdateObject(
       };
     } else if (typeof data === 'object' && data !== null) {
       // Se recebemos diretamente um objeto de dados
+      const receivedData = data as any; // Usando any para evitar erros de tipagem aqui
+      
       updateObj.business_goals = {
         ...existingBusinessGoals,
-        ...data
+        ...receivedData
       };
       
       // Garantir que expected_outcomes seja um array se tivermos expected_outcome_30days
-      if (data.expected_outcome_30days && !data.expected_outcomes) {
-        updateObj.business_goals.expected_outcomes = [data.expected_outcome_30days];
+      if (receivedData.expected_outcome_30days && !receivedData.expected_outcomes) {
+        updateObj.business_goals.expected_outcomes = [receivedData.expected_outcome_30days];
       }
     }
     
