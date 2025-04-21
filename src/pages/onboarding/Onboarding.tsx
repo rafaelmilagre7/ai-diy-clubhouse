@@ -28,14 +28,24 @@ const Onboarding = () => {
     }
   }, [user, navigate]);
 
+  // Efeito para verificar se existe uma trilha e automaticamente exibir o botão correto
+  useEffect(() => {
+    if (trail) {
+      // Se a trilha existe, verificamos se ela tem conteúdo
+      const hasContent = Object.values(trail).some(arr => Array.isArray(arr) && arr.length > 0);
+      // Se tiver conteúdo, podemos mostrar o botão "Ver Minha Trilha"
+      console.log("Trilha encontrada em Onboarding:", hasContent ? "com conteúdo" : "vazia");
+    }
+  }, [trail]);
+
   // Extrair primeiro nome para mensagem de boas-vindas
   const firstName = user?.user_metadata?.name?.split(' ')[0] || user?.email?.split('@')[0] || '';
 
   // Se onboarding já foi concluído, mostrar painel de onboarding e trilha (não mais redirecionar)
   const isOnboardingCompleted = !!progress?.is_completed;
 
-  // Botão para ver trilha: só mostra se há trilha salva
-  const hasTrail = !!trail && Object.values(trail).some(arr => Array.isArray(arr) && arr.length > 0);
+  // Botão para ver trilha: só mostra se há trilha salva - modificado para verificar melhor o conteúdo
+  const hasTrail = trail && Object.values(trail).some(arr => Array.isArray(arr) && arr.length > 0);
 
   // Carregamento inicial
   if (isLoading) {

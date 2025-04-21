@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useImplementationTrail } from "@/hooks/implementation/useImplementationTrail";
 import { TrailCardList } from "@/components/dashboard/TrailCardList";
 import { Button } from "@/components/ui/button";
@@ -7,6 +7,7 @@ import { Edit, Loader2, RefreshCcw } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { TrailMagicExperience } from "./TrailMagicExperience";
 import { useSolutionsData } from "@/hooks/useSolutionsData";
+import { toast } from "sonner";
 
 export const TrailGenerationPanel = ({ onClose }: { onClose?: () => void }) => {
   const { trail, isLoading, generateImplementationTrail } = useImplementationTrail();
@@ -14,6 +15,17 @@ export const TrailGenerationPanel = ({ onClose }: { onClose?: () => void }) => {
   const [regenerating, setRegenerating] = useState(false);
   const [showMagic, setShowMagic] = useState(false);
   const navigate = useNavigate();
+
+  // Depurando: verificar se a trilha foi carregada
+  useEffect(() => {
+    if (trail) {
+      console.log("TrailGenerationPanel: Trilha carregada:", trail);
+      const hasContent = Object.values(trail).some(arr => Array.isArray(arr) && arr.length > 0);
+      console.log("TrailGenerationPanel: Trilha tem conteúdo:", hasContent);
+    } else {
+      console.log("TrailGenerationPanel: Nenhuma trilha disponível ainda");
+    }
+  }, [trail]);
 
   // Montar soluções da trilha com dados completos
   const solutions = useMemo(() => {
@@ -24,7 +36,7 @@ export const TrailGenerationPanel = ({ onClose }: { onClose?: () => void }) => {
     ["priority1", "priority2", "priority3"].forEach((priorityLevel, idx) => {
       const items = (trail as any)[priorityLevel] || [];
       
-      items.forEach((item) => {
+      items.forEach((item: any) => {
         // Encontra a solução completa pelo ID
         const fullSolution = allSolutions.find(s => s.id === item.solutionId);
         
@@ -52,16 +64,22 @@ export const TrailGenerationPanel = ({ onClose }: { onClose?: () => void }) => {
       });
     });
     
-    console.log("Lista de soluções montada em TrailGenerationPanel:", result);
+    console.log("Lista de soluções montada em TrailGenerationPanel:", result.length, "soluções");
     return result;
   }, [trail, allSolutions]);
 
   // Nova função de geração que exibe a experiência mágica
   const handleRegenerate = async () => {
-    setShowMagic(true);
-    setRegenerating(true);
-    await generateImplementationTrail(); // Já busca soluções mais atuais automaticamente!
-    setRegenerating(false);
+    try {
+      setShowMagic(true);
+      setRegenerating(true);
+      await generateImplementationTrail(); // Já busca soluções mais atuais automaticamente!
+    } catch (error) {
+      console.error("Erro ao gerar trilha:", error);
+      toast.error("Não foi possível gerar sua trilha. Tente novamente.");
+    } finally {
+      setRegenerating(false);
+    }
   };
 
   const handleFinishMagic = () => {
@@ -81,10 +99,13 @@ export const TrailGenerationPanel = ({ onClose }: { onClose?: () => void }) => {
     return <TrailMagicExperience onFinish={handleFinishMagic} />;
   }
 
-  if (!trail || solutions.length === 0) {
+  // Verificação adicional para garantir que temos dados
+  const hasValidTrail = trail && solutions.length > 0;
+
+  if (!hasValidTrail) {
     return (
       <div className="flex flex-col items-center gap-6 py-12">
-        <span>Nenhuma trilha personalizada foi gerada ainda.</span>
+        <span className="text-gray-600">Nenhuma trilha personalizada foi gerada ainda.</span>
         <Button
           onClick={handleRegenerate}
           className="bg-[#0ABAB5] text-white"

@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/contexts/auth";
@@ -21,13 +21,53 @@ export const useImplementationTrail = () => {
   const { progress } = useProgress();
   const { toast } = useToast();
   const [trail, setTrail] = useState<ImplementationTrail | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true); // Iniciar com loading
   const [error, setError] = useState<string | null>(null);
+
+  // Função para carregar a trilha do banco de dados
+  const loadExistingTrail = useCallback(async () => {
+    if (!user) {
+      setIsLoading(false);
+      return null;
+    }
+
+    try {
+      setIsLoading(true);
+      console.log("Carregando trilha existente para usuário:", user.id);
+      
+      const { data, error: loadError } = await supabase
+        .from("implementation_trails")
+        .select("*")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (loadError) {
+        console.error("Erro ao carregar trilha:", loadError);
+        throw loadError;
+      }
+
+      if (data && data.trail_data) {
+        console.log("Trilha encontrada no banco:", data.updated_at);
+        const trailData = data.trail_data as ImplementationTrail;
+        setTrail(trailData);
+        return trailData;
+      } else {
+        console.log("Nenhuma trilha encontrada para o usuário");
+        setTrail(null);
+        return null;
+      }
+    } catch (error) {
+      console.error("Erro ao carregar trilha existente:", error);
+      return null;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [user]);
 
   const generateImplementationTrail = async (onboardingData: any = null) => {
     if (!user) {
       setError("Usuário não autenticado");
-      return;
+      return null;
     }
 
     try {
@@ -108,6 +148,7 @@ export const useImplementationTrail = () => {
 
       if (existingTrail) {
         // Atualizar trilha existente
+        console.log("Atualizando trilha existente");
         await supabase
           .from("implementation_trails")
           .update({
@@ -117,6 +158,7 @@ export const useImplementationTrail = () => {
           .eq("id", existingTrail.id);
       } else {
         // Criar nova trilha
+        console.log("Criando nova trilha");
         await supabase
           .from("implementation_trails")
           .insert({
@@ -130,39 +172,21 @@ export const useImplementationTrail = () => {
     }
   };
 
+  // Expor uma função para recarregar a trilha diretamente
+  const refreshTrail = useCallback(async () => {
+    return await loadExistingTrail();
+  }, [loadExistingTrail]);
+
   // Carregar trilha existente ao montar o componente
   useEffect(() => {
-    const loadExistingTrail = async () => {
-      if (!user) return;
-
-      try {
-        setIsLoading(true);
-        const { data, error: loadError } = await supabase
-          .from("implementation_trails")
-          .select("*")
-          .eq("user_id", user.id)
-          .maybeSingle();
-
-        if (loadError) throw loadError;
-
-        if (data && data.trail_data) {
-          setTrail(data.trail_data as ImplementationTrail);
-        }
-      } catch (error) {
-        console.error("Erro ao carregar trilha existente:", error);
-        // Não exibir erro para o usuário, apenas no console
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     loadExistingTrail();
-  }, [user]);
+  }, [loadExistingTrail]);
 
   return {
     trail,
     isLoading,
     error,
     generateImplementationTrail,
+    refreshTrail,
   };
 };
