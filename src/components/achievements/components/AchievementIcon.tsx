@@ -1,26 +1,15 @@
 
 import { cn } from "@/lib/utils";
 import { Achievement } from "@/types/achievementTypes";
-import { Award, Trophy, MessageSquare, Star, Target, Flame } from "lucide-react";
+import { getAchievementIcon } from "../utils/achievementUtils";
 
 interface AchievementIconProps {
   achievement: Achievement;
 }
 
 export const AchievementIcon = ({ achievement }: AchievementIconProps) => {
-  const getIcon = () => {
-    if (!achievement.isUnlocked) return Trophy;
-    
-    if (achievement.id.includes('comments')) return MessageSquare;
-    if (achievement.id.includes('likes')) return Star;
-    if (achievement.id.includes('streak')) return Flame;
-    if (achievement.id.includes('implementation')) return Target;
-    
-    return Award;
-  };
-  
-  const Icon = getIcon();
-  
+  const Icon = getAchievementIcon(achievement);
+
   return (
     <div className={cn(
       "relative group",
@@ -45,7 +34,6 @@ export const AchievementIcon = ({ achievement }: AchievementIconProps) => {
           achievement.category === "achievement" && "from-viverblue/30 via-transparent to-transparent"
         ]
       )} />
-      
       <Icon className={cn(
         "h-10 w-10 relative z-10 transition-transform duration-300 group-hover:scale-110",
         achievement.isUnlocked ? [
