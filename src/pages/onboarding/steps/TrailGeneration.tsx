@@ -2,6 +2,7 @@
 import { TrailGuidedExperience } from "@/components/onboarding/TrailGuidedExperience";
 import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
 import { useEffect } from "react";
+import * as THREE from "three"; // Importação correta do Three.js
 
 const TrailGeneration = () => {
   // Adicionar logs para debug
@@ -9,7 +10,7 @@ const TrailGeneration = () => {
     console.log("Componente TrailGeneration montado");
     // Verificar se temos o Three.js carregado
     if (typeof THREE !== 'undefined') {
-      console.log("Three.js está carregado corretamente");
+      console.log("Three.js está carregado corretamente", THREE.REVISION);
     } else {
       console.warn("Three.js não está definido! Isso pode causar problemas na experiência 3D");
     }

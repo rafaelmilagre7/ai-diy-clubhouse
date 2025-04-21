@@ -90,13 +90,23 @@ function MagicSphere({ stage }: { stage: number }) {
 export function TrailMagicExperience({ onFinish, onStep }: TrailMagicExperienceProps) {
   const [currStep, setCurrStep] = useState(0);
   const [isVisible, setIsVisible] = useState(false);
+  const [canvasLoaded, setCanvasLoaded] = useState(false);
 
   // Efeito para iniciar animação ao montar o componente
   useEffect(() => {
+    console.log("TrailMagicExperience montado");
     // Dar tempo para o componente montar antes de mostrar
     const timer = setTimeout(() => {
       setIsVisible(true);
+      console.log("TrailMagicExperience agora é visível");
     }, 100);
+    
+    // Verificar se o Three.js está disponível
+    if (typeof THREE !== 'undefined') {
+      console.log("THREE está disponível no TrailMagicExperience", THREE.REVISION);
+    } else {
+      console.warn("THREE não está disponível no TrailMagicExperience!");
+    }
     
     return () => clearTimeout(timer);
   }, []);
@@ -114,7 +124,16 @@ export function TrailMagicExperience({ onFinish, onStep }: TrailMagicExperienceP
     }
   };
 
-  if (!isVisible) return null;
+  // Adicionar manipulador para Canvas carregada
+  const handleCanvasCreated = () => {
+    console.log("Canvas React Three Fiber carregada com sucesso");
+    setCanvasLoaded(true);
+  };
+
+  if (!isVisible) {
+    console.log("TrailMagicExperience não visível ainda");
+    return null;
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70 animate-fade-in">
@@ -127,7 +146,11 @@ export function TrailMagicExperience({ onFinish, onStep }: TrailMagicExperienceP
         </div>
         <div className="w-full flex flex-col items-center">
           <div className="w-64 h-64 flex items-center justify-center mb-8 drop-shadow-lg">
-            <Canvas shadows camera={{ position: [0, 0, 7], fov: 60 }}>
+            <Canvas 
+              shadows 
+              camera={{ position: [0, 0, 7], fov: 60 }}
+              onCreated={handleCanvasCreated}
+            >
               <ambientLight intensity={0.45} />
               <directionalLight position={[2, 10, 5]} intensity={1.7} />
               <pointLight position={[-10, -10, -10]} intensity={1.1} />
