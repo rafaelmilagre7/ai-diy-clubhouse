@@ -35,7 +35,10 @@ export function buildUpdateObject(
   } else if (stepId === "business_context") {
     // Salvar dados de contexto de negócio
     if (data.business_context) {
-      updateObj.business_context = data.business_context;
+      updateObj.business_context = {
+        ...progress.business_context,  // Manter dados existentes
+        ...data.business_context       // Adicionar/atualizar novos dados
+      };
       
       // Adicionar log detalhado para debugging
       console.log("Salvando business_context com valores:", {
@@ -51,19 +54,31 @@ export function buildUpdateObject(
     }
   } else if (stepId === "ai_exp") {
     // Salvar dados de experiência com IA
-    updateObj.ai_experience = data.ai_experience || {};
+    updateObj.ai_experience = {
+      ...progress.ai_experience,  // Manter dados existentes
+      ...data.ai_experience || {} // Adicionar/atualizar novos dados
+    };
     console.log("Salvando ai_experience:", updateObj.ai_experience);
   } else if (stepId === "business_goals") {
     // Salvar dados de objetivos de negócio
-    updateObj.business_goals = data.business_goals || {};
+    updateObj.business_goals = {
+      ...progress.business_goals, // Manter dados existentes
+      ...data.business_goals || {} // Adicionar/atualizar novos dados
+    };
     console.log("Salvando business_goals:", updateObj.business_goals);
   } else if (stepId === "experience_personalization") {
     // Salvar dados de personalização de experiência
-    updateObj.experience_personalization = data.experience_personalization || {};
+    updateObj.experience_personalization = {
+      ...progress.experience_personalization, // Manter dados existentes
+      ...data.experience_personalization || {} // Adicionar/atualizar novos dados
+    };
     console.log("Salvando experience_personalization:", updateObj.experience_personalization);
   } else if (stepId === "complementary_info") {
     // Salvar informações complementares
-    updateObj.complementary_info = data.complementary_info || {};
+    updateObj.complementary_info = {
+      ...progress.complementary_info, // Manter dados existentes
+      ...data.complementary_info || {} // Adicionar/atualizar novos dados
+    };
     console.log("Salvando complementary_info:", updateObj.complementary_info);
   } else if (stepId === "goals") {
     // Compatibilidade com etapa de objetivos antiga
@@ -83,7 +98,10 @@ export function buildUpdateObject(
     // Outras etapas (futuro)
     const sectionKey = steps.find(s => s.id === stepId)?.section as keyof OnboardingData;
     if (sectionKey && data[sectionKey]) {
-      updateObj[sectionKey] = data[sectionKey];
+      updateObj[sectionKey] = {
+        ...progress[sectionKey as keyof OnboardingProgress], // Manter dados existentes
+        ...data[sectionKey] // Adicionar/atualizar novos dados
+      };
       console.log(`Salvando ${sectionKey}:`, data[sectionKey]);
     }
   }

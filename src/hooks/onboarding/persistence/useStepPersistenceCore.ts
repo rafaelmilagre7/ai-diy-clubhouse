@@ -3,6 +3,7 @@ import { useProgress } from "../useProgress";
 import { buildUpdateObject } from "./stepDataBuilder";
 import { navigateAfterStep } from "./stepNavigator";
 import { steps } from "../useStepDefinitions";
+import { toast } from "sonner";
 
 export function useStepPersistenceCore({
   currentStepIndex,
@@ -22,6 +23,7 @@ export function useStepPersistenceCore({
   ) => {
     if (!progress?.id) {
       console.error("Não foi possível salvar dados: ID de progresso não encontrado");
+      toast.error("Erro ao salvar dados: ID de progresso não encontrado");
       return;
     }
 
@@ -45,6 +47,9 @@ export function useStepPersistenceCore({
       await refreshProgress();
       console.log("Dados locais atualizados após salvar");
       
+      // Notificar usuário do salvamento
+      toast.success("Dados salvos com sucesso!");
+      
       // Navegar para a próxima etapa apenas se solicitado
       if (shouldNavigate) {
         console.log(`Iniciando navegação automática após salvar o passo ${stepId}`);
@@ -56,6 +61,7 @@ export function useStepPersistenceCore({
       return updatedProgress;
     } catch (error) {
       console.error("Erro ao salvar dados:", error);
+      toast.error("Erro ao salvar dados. Por favor, tente novamente.");
       throw error;
     }
   };
@@ -71,11 +77,13 @@ export function useStepPersistenceCore({
       });
       await refreshProgress();
       console.log("Onboarding marcado como completo, redirecionando para dashboard...");
+      toast.success("Onboarding concluído com sucesso!");
       setTimeout(() => {
         navigate("/dashboard");
       }, 500);
     } catch (error) {
       console.error("Erro ao completar onboarding:", error);
+      toast.error("Erro ao finalizar onboarding. Por favor, tente novamente.");
     }
   };
 

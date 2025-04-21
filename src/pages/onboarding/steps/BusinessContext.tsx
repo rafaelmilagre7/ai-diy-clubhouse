@@ -12,6 +12,7 @@ const BusinessContext = () => {
   const { saveStepData } = useOnboardingSteps();
   const [localLoading, setLocalLoading] = useState(true);
   const [loadError, setLoadError] = useState<Error | null>(null);
+  const [refreshCount, setRefreshCount] = useState(0);
 
   // Efeito para carregar dados mais recentes ao entrar na página
   useEffect(() => {
@@ -31,7 +32,13 @@ const BusinessContext = () => {
     };
     
     loadData();
-  }, [refreshProgress]);
+  }, [refreshProgress, refreshCount]);
+
+  // Função para tentar recarregar dados
+  const handleRetryLoading = () => {
+    setLocalLoading(true);
+    setRefreshCount(prev => prev + 1);
+  };
 
   if (isLoading || localLoading) {
     return <BusinessContextLoading step={3} />;
@@ -50,14 +57,17 @@ const BusinessContext = () => {
             Ocorreu um erro ao carregar seus dados. Por favor, tente novamente ou continue preenchendo as informações.
           </p>
           <button 
-            onClick={() => window.location.reload()}
+            onClick={handleRetryLoading}
             className="mt-4 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
           >
-            Recarregar página
+            Tentar novamente
           </button>
         </div>
       ) : (
-        <BusinessContextFormStep progress={progress} />
+        <BusinessContextFormStep 
+          progress={progress} 
+          onSave={(data) => saveStepData("business_context", data, false)}
+        />
       )}
     </OnboardingLayout>
   );

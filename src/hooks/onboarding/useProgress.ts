@@ -3,6 +3,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/auth";
 import { OnboardingData, OnboardingProgress } from "@/types/onboarding";
+import { toast } from "sonner";
 
 export const useProgress = () => {
   const { user } = useAuth();
@@ -10,6 +11,15 @@ export const useProgress = () => {
   const [isLoading, setIsLoading] = useState(true);
   const hasInitialized = useRef(false);
   const progressId = useRef<string | null>(null);
+  const isMounted = useRef(true);
+
+  // Efeito para gerenciar o estado montado/desmontado
+  useEffect(() => {
+    isMounted.current = true;
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
 
   const fetchProgress = useCallback(async () => {
     if (!user) return null;
@@ -26,6 +36,8 @@ export const useProgress = () => {
         .limit(1)
         .single();
 
+      if (!isMounted.current) return null;
+
       if (error) {
         if (error.code === 'PGRST116') {
           // Não encontrou registro, vamos criar um novo
@@ -33,6 +45,7 @@ export const useProgress = () => {
           return await createInitialProgress();
         } else {
           console.error("Erro ao carregar progresso:", error);
+          toast.error("Erro ao carregar seu progresso. Algumas funcionalidades podem estar limitadas.");
           return null;
         }
       } else {
@@ -43,10 +56,15 @@ export const useProgress = () => {
       }
     } catch (error) {
       console.error("Erro ao carregar progresso:", error);
+      if (isMounted.current) {
+        toast.error("Erro ao carregar seu progresso. Algumas funcionalidades podem estar limitadas.");
+      }
       return null;
     } finally {
-      setIsLoading(false);
-      hasInitialized.current = true;
+      if (isMounted.current) {
+        setIsLoading(false);
+        hasInitialized.current = true;
+      }
     }
   }, [user]);
 
@@ -81,13 +99,23 @@ export const useProgress = () => {
         .select()
         .single();
 
-      if (error) throw error;
+      if (!isMounted.current) return null;
+
+      if (error) {
+        console.error("Erro ao criar progresso inicial:", error);
+        toast.error("Erro ao inicializar seu progresso. Por favor, recarregue a página.");
+        throw error;
+      }
+      
       console.log("Progresso inicial criado:", data);
       setProgress(data);
       progressId.current = data.id;
       return data;
     } catch (error) {
       console.error("Erro ao criar progresso inicial:", error);
+      if (isMounted.current) {
+        toast.error("Erro ao inicializar seu progresso. Por favor, recarregue a página.");
+      }
       return null;
     }
   };
@@ -117,8 +145,11 @@ export const useProgress = () => {
         .select()
         .single();
 
+      if (!isMounted.current) return null;
+
       if (error) {
         console.error("Erro ao atualizar dados:", error);
+        toast.error("Erro ao salvar seu progresso.");
         throw error;
       }
       
@@ -129,6 +160,9 @@ export const useProgress = () => {
       return updatedProgress;
     } catch (error) {
       console.error("Erro ao atualizar progresso:", error);
+      if (isMounted.current) {
+        toast.error("Erro ao salvar seu progresso.");
+      }
       throw error;
     }
   };
@@ -149,8 +183,11 @@ export const useProgress = () => {
         .eq("id", progressId.current)
         .single();
         
+      if (!isMounted.current) return null;
+
       if (error) {
         console.error("Erro ao recarregar progresso:", error);
+        toast.error("Erro ao atualizar dados. Tente recarregar a página.");
         throw error;
       }
       
@@ -159,9 +196,14 @@ export const useProgress = () => {
       return data;
     } catch (error) {
       console.error("Erro ao recarregar progresso:", error);
+      if (isMounted.current) {
+        toast.error("Erro ao atualizar dados. Tente recarregar a página.");
+      }
       return null;
     } finally {
-      setIsLoading(false);
+      if (isMounted.current) {
+        setIsLoading(false);
+      }
     }
   }, [user, fetchProgress]);
 

@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 
 interface BusinessContextFormStepProps {
   progress: any;
+  onSave?: (data: any) => void;
 }
 
 type BusinessContextFormValues = {
@@ -27,10 +28,11 @@ type BusinessContextFormValues = {
   additional_context?: string;
 };
 
-export const BusinessContextFormStep: React.FC<BusinessContextFormStepProps> = ({ progress }) => {
+export const BusinessContextFormStep: React.FC<BusinessContextFormStepProps> = ({ progress, onSave }) => {
   const { saveStepData } = useOnboardingSteps();
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [lastAutoSave, setLastAutoSave] = useState<Date | null>(null);
 
   // Extrair valores iniciais de forma mais robusta
   const initialValues = {
@@ -49,7 +51,13 @@ export const BusinessContextFormStep: React.FC<BusinessContextFormStepProps> = (
     mode: "onSubmit"
   });
   
-  const { control, handleSubmit, formState: { errors }, reset, getValues } = methods;
+  const { control, handleSubmit, formState: { errors, isDirty }, reset, getValues, watch } = methods;
+
+  // Monitorar alterações no formulário para debug
+  const formValues = watch();
+  useEffect(() => {
+    console.log("Valores atuais do formulário:", formValues);
+  }, [formValues]);
 
   // Atualizar o formulário quando os dados iniciais mudarem
   useEffect(() => {
@@ -70,42 +78,68 @@ export const BusinessContextFormStep: React.FC<BusinessContextFormStepProps> = (
   useEffect(() => {
     // Salvar a cada 30 segundos se houver dados modificados
     const interval = setInterval(() => {
-      const currentValues = getValues();
-      // Verificar se há dados para salvar
-      if (currentValues.business_model || 
-          currentValues.business_challenges.length > 0 || 
-          currentValues.short_term_goals.length > 0 || 
-          currentValues.medium_term_goals.length > 0 || 
-          currentValues.important_kpis.length > 0) {
-        
-        console.log("Auto-salvando dados do formulário:", currentValues);
-        saveStepData("business_context", {
-          business_context: currentValues
-        }, false).catch(err => 
-          console.error("Erro no auto-save:", err)
-        );
+      if (isDirty) {
+        const currentValues = getValues();
+        // Verificar se há dados para salvar
+        if (currentValues.business_model || 
+            currentValues.business_challenges.length > 0 || 
+            currentValues.short_term_goals.length > 0 || 
+            currentValues.medium_term_goals.length > 0 || 
+            currentValues.important_kpis.length > 0) {
+          
+          console.log("Auto-salvando dados do formulário:", currentValues);
+          
+          // Usar o callback de salvamento customizado se fornecido
+          if (onSave) {
+            onSave({
+              business_context: currentValues
+            });
+          } else {
+            saveStepData("business_context", {
+              business_context: currentValues
+            }, false).catch(err => 
+              console.error("Erro no auto-save:", err)
+            );
+          }
+          
+          setLastAutoSave(new Date());
+        }
       }
     }, 30000); // A cada 30 segundos
     
     return () => clearInterval(interval);
-  }, [getValues, saveStepData]);
+  }, [getValues, saveStepData, isDirty, onSave]);
 
   const onSubmit = async (data: BusinessContextFormValues) => {
     try {
       setIsSubmitting(true);
       console.log("Salvando dados de contexto de negócio:", data);
       
-      // Salvamos com navegação automática
-      await saveStepData("business_context", {
-        business_context: {
-          business_model: data.business_model,
-          business_challenges: data.business_challenges,
-          short_term_goals: data.short_term_goals,
-          medium_term_goals: data.medium_term_goals,
-          important_kpis: data.important_kpis,
-          additional_context: data.additional_context,
-        }
-      }, true);
+      // Usar o callback de salvamento customizado se fornecido
+      if (onSave) {
+        await onSave({
+          business_context: {
+            business_model: data.business_model,
+            business_challenges: data.business_challenges,
+            short_term_goals: data.short_term_goals,
+            medium_term_goals: data.medium_term_goals,
+            important_kpis: data.important_kpis,
+            additional_context: data.additional_context,
+          }
+        });
+      } else {
+        // Salvamos com navegação automática
+        await saveStepData("business_context", {
+          business_context: {
+            business_model: data.business_model,
+            business_challenges: data.business_challenges,
+            short_term_goals: data.short_term_goals,
+            medium_term_goals: data.medium_term_goals,
+            important_kpis: data.important_kpis,
+            additional_context: data.additional_context,
+          }
+        }, true);
+      }
       
       toast.success("Informações salvas com sucesso!");
     } catch (error) {
@@ -119,8 +153,14 @@ export const BusinessContextFormStep: React.FC<BusinessContextFormStepProps> = (
   return (
     <div className={cn("max-w-4xl mx-auto space-y-10", isSubmitting ? "opacity-60 pointer-events-none" : "")}>
       <MilagrinhoMessage
-        message="Beleza, agora precisamos conhecer melhor o contexto do seu negócio no Vivendo de IA. 😊 Isso vai me ajudar a identificar quais soluções de IA farão mais sentido para você. Como CEO, você vai adorar os conteúdos que temos específicos para sua área de atuação."
+        message="Beleza, agora precisamos conhecer melhor o contexto do seu negócio no VIVER DE IA. 😊 Isso vai me ajudar a identificar quais soluções de IA farão mais sentido para você. Como CEO, você vai adorar os conteúdos que temos específicos para sua área de atuação."
       />
+
+      {lastAutoSave && (
+        <div className="text-xs text-gray-500 italic">
+          Último salvamento automático: {lastAutoSave.toLocaleTimeString()}
+        </div>
+      )}
 
       <FormProvider {...methods}>
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-8">
