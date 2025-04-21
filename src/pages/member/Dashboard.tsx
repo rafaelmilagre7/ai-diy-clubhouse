@@ -70,7 +70,7 @@ const Dashboard = () => {
             </Card>
           ) : (
             <SolutionsGrid 
-              solutions={activeSolutions as Solution[]} 
+              solutions={activeSolutions} 
               onSolutionClick={handleSelectSolution}
               category="inProgress"
             />
@@ -85,7 +85,7 @@ const Dashboard = () => {
             </Card>
           ) : (
             <SolutionsGrid 
-              solutions={recommendedSolutions as Solution[]} 
+              solutions={recommendedSolutions} 
               onSolutionClick={handleSelectSolution}
               category="recommended"
             />
