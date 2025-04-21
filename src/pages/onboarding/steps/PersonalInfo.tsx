@@ -14,7 +14,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 const PersonalInfo = () => {
   const { saveStepData, progress, completeOnboarding, navigateToStep } = useOnboardingSteps();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { isLoading, refreshProgress, error } = useProgress();
+  const { isLoading, refreshProgress, lastError } = useProgress();
   const navigate = useNavigate();
   const [formErrors, setFormErrors] = useState<string[]>([]);
 
@@ -68,11 +68,11 @@ const PersonalInfo = () => {
           message="Bem-vindo ao onboarding do VIVER DE IA Club! Vamos começar coletando algumas informações pessoais para personalizar sua experiência."
         />
         
-        {error && (
+        {lastError && (
           <Alert variant="destructive" className="animate-fade-in">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
-              {error.message || "Erro ao carregar dados. Tente novamente."}
+              {lastError.message || "Erro ao carregar dados. Tente novamente."}
             </AlertDescription>
           </Alert>
         )}
@@ -90,7 +90,7 @@ const PersonalInfo = () => {
         
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-10 space-y-4">
-            <LoadingSpinner className="h-10 w-10 text-[#0ABAB5]" />
+            <LoadingSpinner size={10} />
             <p className="text-gray-500 animate-pulse">Carregando seus dados...</p>
           </div>
         ) : (
