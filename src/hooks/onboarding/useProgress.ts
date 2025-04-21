@@ -23,10 +23,10 @@ export const useProgress = () => {
 
   const fetchProgress = useCallback(async () => {
     if (!user) return null;
-    
+
     try {
       setIsLoading(true);
-      
+
       // Buscamos primeiro por progressos já existentes para evitar duplicação
       const { data, error } = await supabase
         .from("onboarding_progress")
@@ -34,12 +34,12 @@ export const useProgress = () => {
         .eq("user_id", user.id)
         .order('created_at', { ascending: false }) // Pegar o mais recente primeiro
         .limit(1)
-        .single();
+        .maybeSingle(); // Correção para evitar erro caso não encontre
 
       if (!isMounted.current) return null;
 
       if (error) {
-        if (error.code === 'PGRST116') {
+        if (error.code === 'PGRST116' || error.message.includes("Results contain 0 rows")) {
           // Não encontrou registro, vamos criar um novo
           console.log("Criando novo registro de progresso para o usuário");
           return await createInitialProgress();
@@ -48,13 +48,16 @@ export const useProgress = () => {
           toast.error("Erro ao carregar seu progresso. Algumas funcionalidades podem estar limitadas.");
           return null;
         }
+      } else if (!data) {
+        console.log("Nenhum progresso encontrado, criando novo registro.");
+        return await createInitialProgress();
       } else {
         console.log("Progresso carregado com sucesso:", data);
         setProgress(data);
         progressId.current = data.id;
         return data;
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erro ao carregar progresso:", error);
       if (isMounted.current) {
         toast.error("Erro ao carregar seu progresso. Algumas funcionalidades podem estar limitadas.");
@@ -70,12 +73,13 @@ export const useProgress = () => {
 
   const createInitialProgress = async () => {
     if (!user) return null;
-    
+
     try {
       // Obter metadados do usuário da autenticação
       const userName = user?.user_metadata?.name || '';
       const userEmail = user?.email || '';
 
+      // Garante que cada campo tenha valor padrão adequado
       const initialData = {
         user_id: user?.id,
         completed_steps: [],
@@ -83,14 +87,24 @@ export const useProgress = () => {
         is_completed: false,
         personal_info: {
           name: userName,
-          email: userEmail
+          email: userEmail,
         },
         professional_info: {},
-        business_data: {},  // Usando business_data em vez de business_context
+        business_data: {},
         ai_experience: {},
         business_goals: {},
         experience_personalization: {},
-        complementary_info: {}
+        complementary_info: {},
+        industry_focus: {},
+        resources_needs: {},
+        team_info: {},
+        implementation_preferences: {},
+        company_name: "",
+        company_size: "",
+        company_sector: "",
+        company_website: "",
+        current_position: "",
+        annual_revenue: ""
       };
 
       const { data, error } = await supabase
@@ -106,7 +120,7 @@ export const useProgress = () => {
         toast.error("Erro ao inicializar seu progresso. Por favor, recarregue a página.");
         throw error;
       }
-      
+
       console.log("Progresso inicial criado:", data);
       setProgress(data);
       progressId.current = data.id;
@@ -123,7 +137,7 @@ export const useProgress = () => {
   useEffect(() => {
     if (!user || hasInitialized.current) return;
     fetchProgress();
-    
+
     // Cleanup function
     return () => {
       // Não resetamos hasInitialized aqui para evitar múltiplas inicializações
@@ -152,7 +166,7 @@ export const useProgress = () => {
         toast.error("Erro ao salvar seu progresso.");
         throw error;
       }
-      
+
       // Atualizamos o estado local para refletir as mudanças imediatamente
       const updatedProgress = { ...progress, ...updates };
       setProgress(updatedProgress);
@@ -166,15 +180,15 @@ export const useProgress = () => {
       throw error;
     }
   };
-  
+
   // Função para recarregar os dados do progresso do servidor
   const refreshProgress = useCallback(async () => {
     if (!user) return null;
-    
+
     if (!progressId.current) {
       return await fetchProgress();
     }
-    
+
     try {
       setIsLoading(true);
       const { data, error } = await supabase
@@ -182,7 +196,7 @@ export const useProgress = () => {
         .select("*")
         .eq("id", progressId.current)
         .single();
-        
+
       if (!isMounted.current) return null;
 
       if (error) {
@@ -190,7 +204,7 @@ export const useProgress = () => {
         toast.error("Erro ao atualizar dados. Tente recarregar a página.");
         throw error;
       }
-      
+
       console.log("Progresso recarregado com sucesso:", data);
       setProgress(data);
       return data;

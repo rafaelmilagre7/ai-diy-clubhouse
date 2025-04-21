@@ -306,11 +306,13 @@ export type Database = {
           company_sector: string | null
           company_size: string | null
           company_website: string | null
+          complementary_info: Json | null
           completed_steps: string[] | null
           created_at: string | null
           current_position: string | null
           current_step: string | null
           decision_makers: string[] | null
+          experience_personalization: Json | null
           goals: string[] | null
           id: string
           implementation_preferences: Json | null
@@ -343,11 +345,13 @@ export type Database = {
           company_sector?: string | null
           company_size?: string | null
           company_website?: string | null
+          complementary_info?: Json | null
           completed_steps?: string[] | null
           created_at?: string | null
           current_position?: string | null
           current_step?: string | null
           decision_makers?: string[] | null
+          experience_personalization?: Json | null
           goals?: string[] | null
           id?: string
           implementation_preferences?: Json | null
@@ -380,11 +384,13 @@ export type Database = {
           company_sector?: string | null
           company_size?: string | null
           company_website?: string | null
+          complementary_info?: Json | null
           completed_steps?: string[] | null
           created_at?: string | null
           current_position?: string | null
           current_step?: string | null
           decision_makers?: string[] | null
+          experience_personalization?: Json | null
           goals?: string[] | null
           id?: string
           implementation_preferences?: Json | null
