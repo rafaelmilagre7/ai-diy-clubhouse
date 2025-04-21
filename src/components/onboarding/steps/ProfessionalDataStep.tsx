@@ -30,19 +30,10 @@ export const ProfessionalDataStep = ({
   initialData,
   onComplete,
 }: ProfessionalDataStepProps) => {
-  const [formData, setFormData] = useState<FormValues>({
-    company_name: "",
-    company_size: "",
-    company_sector: "",
-    company_website: "",
-    current_position: "",
-    annual_revenue: "",
-  });
-
-  // Função para extrair dados relevantes do objeto initialData
+  // Extrair dados iniciais de forma mais robusta
   const extractFormData = (data: any): FormValues => {
-    // Primeiro, tentamos pegar os dados do objeto principal
-    // Depois, verificamos dentro de professional_info
+    console.log("Extraindo dados profissionais de:", data);
+    
     return {
       company_name: 
         data?.company_name || 
@@ -71,21 +62,27 @@ export const ProfessionalDataStep = ({
     };
   };
 
-  useEffect(() => {
-    if (initialData) {
-      console.log("Dados iniciais recebidos:", initialData);
-      setFormData(extractFormData(initialData));
-    }
-  }, [initialData]);
-
+  // Usar useForm com defaultValues diretamente
   const { control, handleSubmit, formState: { errors }, reset } = useForm<FormValues>({
-    defaultValues: formData
+    defaultValues: initialData ? extractFormData(initialData) : {
+      company_name: "",
+      company_size: "",
+      company_sector: "",
+      company_website: "",
+      current_position: "",
+      annual_revenue: "",
+    }
   });
 
-  // Atualizar o formulário quando os dados mudarem
+  // Atualizar formulário quando dados iniciais mudarem
   useEffect(() => {
-    reset(formData);
-  }, [formData, reset]);
+    if (initialData) {
+      console.log("Atualizando formulário com dados:", initialData);
+      const extractedData = extractFormData(initialData);
+      console.log("Dados extraídos:", extractedData);
+      reset(extractedData);
+    }
+  }, [initialData, reset]);
 
   const onFormSubmit = (data: FormValues) => {
     const professionalData: Partial<OnboardingData> = {

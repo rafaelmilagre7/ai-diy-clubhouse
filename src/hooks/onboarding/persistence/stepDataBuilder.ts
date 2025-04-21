@@ -12,12 +12,18 @@ export function buildUpdateObject(
 
   const updateObj: any = {};
 
+  // Log para debug
+  console.log(`Construindo objeto de atualização para o passo ${stepId}`, data);
+
   // Dados específicos das etapas
   if (stepId === "personal") {
     updateObj.personal_info = data.personal_info || {};
   } else if (stepId === "professional_data") {
+    // Garantir que os dados profissionais sejam salvos corretamente
     updateObj.professional_info = data.professional_info || {};
-    // Compatibilidade: salvar também campos individuais
+    
+    // Compatibilidade: salvar também campos individuais para garantir
+    // que os dados sejam acessíveis de ambas as formas
     if (data.professional_info) {
       updateObj.company_name = data.professional_info.company_name;
       updateObj.company_size = data.professional_info.company_size;
@@ -49,9 +55,16 @@ export function buildUpdateObject(
     updateObj.completed_steps = [...(progress.completed_steps || []), stepId];
   }
 
-  // Atualiza current_step
-  const nextStep = steps[Math.min(currentStepIndex + 1, steps.length - 1)].id;
-  updateObj.current_step = nextStep;
+  // Atualiza current_step apenas se estivermos avançando (não em edições)
+  // Isso evita que ao editar uma etapa anterior, o usuário seja redirecionado à próxima etapa
+  const isEditing = progress.completed_steps?.includes(stepId);
+  if (!isEditing) {
+    const nextStep = steps[Math.min(currentStepIndex + 1, steps.length - 1)].id;
+    updateObj.current_step = nextStep;
+  } else {
+    console.log(`Editando passo ${stepId} - mantendo current_step como ${progress.current_step}`);
+  }
 
+  console.log("Objeto final para atualização:", updateObj);
   return updateObj;
 }

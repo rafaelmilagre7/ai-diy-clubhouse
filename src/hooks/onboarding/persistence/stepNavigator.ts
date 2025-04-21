@@ -10,6 +10,8 @@ export function navigateAfterStep(stepId: string, currentStepIndex: number, navi
 
   let nextPath = "";
 
+  console.log(`Determinando próxima rota para o passo ${stepId}`);
+
   if (stepId === "personal") {
     nextPath = "/onboarding/professional-data";
   } else if (stepId === "professional_data") {

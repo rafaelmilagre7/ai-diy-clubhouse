@@ -15,29 +15,26 @@ const ProfessionalData = () => {
 
   // Efeito para carregar dados mais recentes ao entrar na página
   useEffect(() => {
+    console.log("ProfessionalData montado - carregando dados mais recentes");
     refreshProgress();
   }, [refreshProgress]);
 
   const handleSaveData = async (stepId: string, data: any) => {
     try {
       setIsSubmitting(true);
-      await saveStepData(stepId, data);
+      console.log("Salvando dados profissionais:", data);
+      
+      // Salvar sem navegação automática - isso permite que o usuário
+      // continue na página após salvar
+      await saveStepData(stepId, data, false);
+      
+      console.log("Dados profissionais salvos com sucesso");
     } catch (error) {
       console.error("Erro ao salvar dados profissionais:", error);
     } finally {
       setIsSubmitting(false);
     }
   };
-
-  // Efeito para redirecionar se o usuário já completou essa etapa
-  useEffect(() => {
-    if (progress?.completed_steps?.includes("professional_data") && 
-        progress.current_step !== "professional_data" &&
-        window.location.pathname === "/onboarding/professional-data") {
-      // O usuário já completou esta etapa e deve continuar para a próxima
-      console.log("Usuário já completou a etapa de dados profissionais");
-    }
-  }, [progress, navigate]);
 
   return (
     <OnboardingLayout

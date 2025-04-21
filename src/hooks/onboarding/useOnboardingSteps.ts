@@ -19,6 +19,7 @@ export const useOnboardingSteps = () => {
   
   // Efeito para atualizar dados do progresso ao montar o componente
   useEffect(() => {
+    console.log("useOnboardingSteps - carregando dados mais recentes");
     refreshProgress();
   }, [refreshProgress]);
   
