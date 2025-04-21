@@ -20,11 +20,61 @@ serve(async (req) => {
     )
 
     const body = await req.json()
-    console.log('Received webhook data:', body)
+    console.log('Received complete webhook payload:', JSON.stringify(body, null, 2))
 
-    // Mapear os dados recebidos para o formato esperado pelo banco
+    // Verificar se o email está presente
+    if (!body.email) {
+      console.error('Email não fornecido no payload')
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: 'Email é obrigatório' 
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 400,
+        }
+      )
+    }
+
+    // Buscar usuário pelo email
+    const { data: userSearch, error: userSearchError } = await supabaseClient
+      .from('profiles')
+      .select('id')
+      .eq('email', body.email)
+      .single()
+
+    if (userSearchError) {
+      console.error('Erro ao buscar usuário pelo email:', userSearchError)
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: 'Erro ao processar usuário' 
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 500,
+        }
+      )
+    }
+
+    // Se não encontrar usuário, retornar erro
+    if (!userSearch) {
+      console.warn(`Usuário com email ${body.email} não encontrado`)
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: 'Usuário não encontrado' 
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 404,
+        }
+      )
+    }
+
+    const userId = userSearch.id
+
+    // Preparar dados do onboarding
     const onboardingData = {
-      user_id: body.user_id,
+      user_id: userId,
       personal_info: body.personal_info || {},
       professional_info: body.professional_info || {},
       business_goals: body.business_goals || {},
@@ -45,36 +95,35 @@ serve(async (req) => {
       current_step: 'completed'
     }
 
-    // Verificar se já existe um registro para este usuário
-    const { data: existingProgress } = await supabaseClient
+    // Atualizar registro de progresso do onboarding
+    const { data, error } = await supabaseClient
       .from('onboarding_progress')
-      .select('id')
-      .eq('user_id', body.user_id)
+      .upsert({
+        ...onboardingData,
+        user_id: userId
+      })
+      .select()
       .single()
 
-    let result
-    if (existingProgress) {
-      // Atualizar registro existente
-      result = await supabaseClient
-        .from('onboarding_progress')
-        .update(onboardingData)
-        .eq('id', existingProgress.id)
-    } else {
-      // Criar novo registro
-      result = await supabaseClient
-        .from('onboarding_progress')
-        .insert([onboardingData])
+    if (error) {
+      console.error('Erro ao salvar dados de onboarding:', error)
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: 'Erro ao salvar dados de onboarding' 
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 500,
+        }
+      )
     }
 
-    if (result.error) {
-      throw result.error
-    }
-
-    console.log('Successfully stored onboarding data')
+    console.log('Dados de onboarding processados com sucesso para usuário:', userId)
     return new Response(
       JSON.stringify({ 
         success: true, 
-        message: 'Onboarding data processed successfully' 
+        message: 'Dados de onboarding processados com sucesso',
+        userId: userId
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,
@@ -82,7 +131,7 @@ serve(async (req) => {
     )
 
   } catch (error) {
-    console.error('Error processing webhook:', error)
+    console.error('Erro no processamento do webhook:', error)
     return new Response(
       JSON.stringify({ 
         success: false, 
@@ -94,3 +143,4 @@ serve(async (req) => {
     )
   }
 })
+
