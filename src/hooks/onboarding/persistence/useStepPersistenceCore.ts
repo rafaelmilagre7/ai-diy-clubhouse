@@ -17,7 +17,8 @@ export function useStepPersistenceCore({
 
   const saveStepData = async (
     stepId: string, 
-    data: any
+    data: any,
+    shouldNavigate: boolean = true
   ) => {
     if (!progress?.id) {
       console.error("Não foi possível salvar dados: ID de progresso não encontrado");
@@ -34,10 +35,11 @@ export function useStepPersistenceCore({
 
       // Forçar atualização dos dados local
       await refreshProgress();
-
-      // Navegar para a próxima etapa apropriadamente
-      navigateAfterStep(stepId, currentStepIndex, navigate);
-
+      
+      // Navegar para a próxima etapa apenas se solicitado
+      if (shouldNavigate) {
+        navigateAfterStep(stepId, currentStepIndex, navigate);
+      }
     } catch (error) {
       console.error("Erro ao salvar dados:", error);
       // Não exibe toast deliberadamente (Requisito)

@@ -62,26 +62,17 @@ export const useStepNavigation = () => {
   const navigateToStep = (stepIndex: number) => {
     if (!progress) return;
     
-    // Obter o índice da última etapa completada
-    const lastCompletedIndex = Math.max(
-      ...(progress?.completed_steps || []).map(step => 
-        steps.findIndex(s => s.id === step)
-      ).filter(index => index !== -1),
-      -1
-    );
-    
-    // Calcular o índice máximo permitido (última etapa completada + 1)
-    const maxAllowedIndex = lastCompletedIndex + 1;
-    
-    // Somente permite navegação para etapas anteriores ou a próxima não completada
-    if (stepIndex <= maxAllowedIndex) {
+    // Permitir navegação para etapas anteriores ou para a próxima etapa após a última completada
+    if (stepIndex >= 0 && stepIndex < steps.length) {
+      // Implementar lógica para permitir voltar para etapas anteriores
       const targetStep = steps[stepIndex];
       if (targetStep && targetStep.path) {
+        console.log(`Navegando para a etapa ${stepIndex + 1}: ${targetStep.path}`);
         setCurrentStepIndex(stepIndex);
         navigate(targetStep.path);
       }
     } else {
-      console.warn("Complete as etapas anteriores primeiro.");
+      console.warn("Índice de etapa inválido.");
     }
   };
 

@@ -15,6 +15,13 @@ export const EtapasProgresso = ({
 }: EtapasProgressoProps) => {
   const steps = Array.from({ length: totalSteps }, (_, i) => i + 1);
 
+  const handleStepClick = (stepIndex: number) => {
+    if (onStepClick) {
+      // Convertemos o número da etapa (1-based) para índice (0-based)
+      onStepClick(stepIndex - 1);
+    }
+  };
+
   return (
     <div className="w-full">
       <div className="flex justify-between items-center w-full relative">
@@ -29,12 +36,8 @@ export const EtapasProgresso = ({
         {steps.map((step) => (
           <div 
             key={step} 
-            onClick={() => onStepClick && onStepClick(step - 1)}
-            className={`relative z-10 flex flex-col items-center ${
-              step <= currentStep 
-                ? onStepClick ? "cursor-pointer" : "" 
-                : "opacity-60"
-            }`}
+            onClick={() => handleStepClick(step)}
+            className={`relative z-10 flex flex-col items-center cursor-pointer`}
           >
             <div className={`rounded-full flex items-center justify-center w-8 h-8 
               ${step <= currentStep 

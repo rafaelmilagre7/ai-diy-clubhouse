@@ -10,5 +10,23 @@ export const useStepPersistence = ({
   setCurrentStepIndex: (i: number) => void;
   navigate: (path: string) => void;
 }) => {
-  return useStepPersistenceCore({ currentStepIndex, setCurrentStepIndex, navigate });
+  const { saveStepData, completeOnboarding } = useStepPersistenceCore({ 
+    currentStepIndex, 
+    setCurrentStepIndex, 
+    navigate 
+  });
+  
+  // Função wrapper que expõe o parâmetro opcional shouldNavigate
+  const saveStepDataWithNavigation = async (
+    stepId: string, 
+    data: any, 
+    shouldNavigate = true
+  ) => {
+    return await saveStepData(stepId, data, shouldNavigate);
+  };
+  
+  return {
+    saveStepData: saveStepDataWithNavigation,
+    completeOnboarding,
+  };
 };

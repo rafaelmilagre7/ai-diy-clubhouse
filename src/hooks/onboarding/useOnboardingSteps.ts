@@ -23,10 +23,10 @@ export const useOnboardingSteps = () => {
   }, [refreshProgress]);
   
   // Função wrapper para controlar estado de submissão
-  const saveStepData = async (stepId: string, data: any) => {
+  const saveStepData = async (stepId: string, data: any, shouldNavigate: boolean = true) => {
     setIsSubmitting(true);
     try {
-      await persistenceStepData(stepId, data);
+      await persistenceStepData(stepId, data, shouldNavigate);
     } catch (error) {
       console.error("Erro ao salvar dados da etapa:", error);
     } finally {

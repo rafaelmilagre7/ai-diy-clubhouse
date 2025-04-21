@@ -3,7 +3,7 @@ import React from "react";
 import { EtapasProgresso } from "./EtapasProgresso";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useOnboardingSteps } from "@/hooks/onboarding/useOnboardingSteps";
 import MemberLayout from "@/components/layout/MemberLayout";
 
@@ -22,20 +22,36 @@ export const OnboardingLayout = ({
   backUrl = "/onboarding",
   onStepClick,
 }: OnboardingLayoutProps) => {
-  const { navigateToStep } = useOnboardingSteps();
+  const { navigateToStep, steps } = useOnboardingSteps();
+  const navigate = useNavigate();
   
   // Função para lidar com o clique no passo
   const handleStepClick = onStepClick || navigateToStep;
+  
+  // Função para voltar para a etapa anterior
+  const handleBackClick = () => {
+    if (currentStep > 1) {
+      // Se não for a primeira etapa, voltar para a anterior
+      const previousStepIndex = currentStep - 2; // -1 para índice baseado em zero, -1 para voltar
+      navigateToStep(previousStepIndex);
+    } else {
+      // Caso seja a primeira, usar o backUrl padrão
+      navigate(backUrl);
+    }
+  };
   
   // Conteúdo do Onboarding
   const onboardingContent = (
     <div className="container max-w-screen-lg py-8">
       <div className="relative mb-4">
-        <Link to={backUrl}>
-          <Button variant="ghost" size="icon" className="absolute left-0 top-0 z-10">
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-        </Link>
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          className="absolute left-0 top-0 z-10"
+          onClick={handleBackClick}
+        >
+          <ArrowLeft className="h-5 w-5" />
+        </Button>
         
         <div className="flex justify-center">
           <img
