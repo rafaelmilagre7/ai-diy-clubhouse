@@ -18,12 +18,17 @@ export const TrailErrorState: React.FC<TrailErrorStateProps> = ({
 }) => (
   <div className="max-w-xl mx-auto mt-8 p-6 bg-amber-50 rounded-lg border border-amber-200 flex flex-col items-center">
     <AlertCircle className="text-amber-500 h-10 w-10 mb-3" />
+    <h3 className="text-lg font-medium text-gray-800 mb-2">
+      {loadingTimeout
+        ? "Tempo limite excedido"
+        : "Erro ao carregar trilha"}
+    </h3>
     <p className="text-gray-700 mb-4 text-center">
       {loadingTimeout
         ? "O carregamento da trilha excedeu o tempo limite. Por favor, tente novamente."
-        : "Ocorreu um erro ao carregar sua trilha. Por favor, tente novamente."}
+        : "Ocorreu um erro ao carregar sua trilha personalizada. Por favor, tente novamente."}
     </p>
-    <div className="flex justify-center gap-2">
+    <div className="flex flex-col sm:flex-row justify-center gap-2">
       <Button
         className="bg-[#0ABAB5] text-white"
         onClick={onRegenerate}

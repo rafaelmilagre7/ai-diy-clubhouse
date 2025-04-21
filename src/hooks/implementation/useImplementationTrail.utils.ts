@@ -18,20 +18,6 @@ export const hasTrailContent = (trail: any): boolean => {
     
     const hasAnySolutions = hasSolutionInPriority1 || hasSolutionInPriority2 || hasSolutionInPriority3;
     
-    // Log mais claro para depuração
-    console.log("Verificação detalhada da trilha:", { 
-      temPrioridade1: priority1,
-      solucoesPrioridade1: priority1 ? trail.priority1.length : 0,
-      temSolucoesValidasP1: hasSolutionInPriority1,
-      temPrioridade2: priority2, 
-      solucoesPrioridade2: priority2 ? trail.priority2.length : 0,
-      temSolucoesValidasP2: hasSolutionInPriority2,
-      temPrioridade3: priority3,
-      solucoesPrioridade3: priority3 ? trail.priority3.length : 0,
-      temSolucoesValidasP3: hasSolutionInPriority3,
-      temAlgumaSolucaoValida: hasAnySolutions
-    });
-    
     return hasAnySolutions;
   } catch (error) {
     console.error("Erro ao verificar conteúdo da trilha:", error);
@@ -61,9 +47,9 @@ export const countTrailSolutions = (trail: any): number => {
   try {
     let count = 0;
     
-    if (Array.isArray(trail.priority1)) count += trail.priority1.length;
-    if (Array.isArray(trail.priority2)) count += trail.priority2.length;
-    if (Array.isArray(trail.priority3)) count += trail.priority3.length;
+    if (Array.isArray(trail.priority1)) count += trail.priority1.filter((item: any) => item && item.solutionId).length;
+    if (Array.isArray(trail.priority2)) count += trail.priority2.filter((item: any) => item && item.solutionId).length;
+    if (Array.isArray(trail.priority3)) count += trail.priority3.filter((item: any) => item && item.solutionId).length;
     
     return count;
   } catch (error) {

@@ -1,15 +1,13 @@
-import { useEffect, useState, useCallback } from "react";
+
+import { useState, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
+import { TrailGenerationHeader } from "@/components/onboarding/TrailGeneration/TrailGenerationHeader";
 import { TrailGuidedExperience } from "@/components/onboarding/TrailGuidedExperience";
 import { TrailMagicExperience } from "@/components/onboarding/TrailMagicExperience";
 import { useImplementationTrail } from "@/hooks/implementation/useImplementationTrail";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Loader2, RefreshCw, AlertCircle } from "lucide-react";
-import { countTrailSolutions } from "@/hooks/implementation/useImplementationTrail.utils";
-import { TrailGenerationHeader } from "@/components/onboarding/TrailGeneration/TrailGenerationHeader";
-import { GenerationControls } from "@/components/onboarding/TrailGeneration/GenerationControls";
+import { Loader2 } from "lucide-react";
 import { TrailLoadingState } from "@/components/onboarding/TrailGeneration/TrailLoadingState";
 import { TrailErrorState } from "@/components/onboarding/TrailGeneration/TrailErrorState";
 
@@ -19,120 +17,88 @@ const TrailGeneration = () => {
     trail, 
     isLoading, 
     generateImplementationTrail, 
-    hasContent, 
     refreshTrail,
-    clearTrail 
+    clearTrail,
+    hasContent 
   } = useImplementationTrail();
   
   const [generatingTrail, setGeneratingTrail] = useState(false);
   const [showMagicExperience, setShowMagicExperience] = useState(false);
-  const [autoStartGeneration, setAutoStartGeneration] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
   const [loadingError, setLoadingError] = useState(false);
   const [loadingTimeout, setLoadingTimeout] = useState(false);
   const [attemptCount, setAttemptCount] = useState(0);
 
+  // Verificar se temos trilha ao carregar
   useEffect(() => {
-    const loadTrail = async () => {
+    const loadInitialTrail = async () => {
       try {
-        setRefreshing(true);
         setAttemptCount(prev => prev + 1);
-        
-        const trailData = await refreshTrail(true);
-        
-        if (!trailData || countTrailSolutions(trailData) === 0) {
-          console.log("Trilha não encontrada ou sem soluções válidas");
-          if (attemptCount >= 2) {
-            setLoadingError(true);
-          }
-        } else {
-          console.log("Trilha carregada com sucesso:", countTrailSolutions(trailData), "soluções");
-          setLoadingError(false);
-        }
+        await refreshTrail(true);
       } catch (error) {
-        console.error("Erro ao carregar trilha:", error);
-        if (attemptCount >= 2) {
-          setLoadingError(true);
-        }
-      } finally {
-        setRefreshing(false);
+        console.error("Erro ao carregar trilha inicial:", error);
       }
     };
     
-    loadTrail();
+    loadInitialTrail();
     
+    // Timeout para evitar espera infinita
     const timeout = setTimeout(() => {
-      if (isLoading || refreshing) {
-        console.log("Tempo limite excedido ao carregar trilha");
+      if (isLoading) {
         setLoadingTimeout(true);
-        toast.error("Tempo limite excedido ao carregar trilha");
       }
-    }, 15000);
+    }, 12000);
     
     return () => clearTimeout(timeout);
   }, [refreshTrail]);
 
-  useEffect(() => {
-    const searchParams = new URLSearchParams(window.location.search);
-    const autoGenerate = searchParams.get('autoGenerate') === 'true';
-    
-    if (autoGenerate && !generatingTrail && !hasContent) {
-      console.log("Iniciando geração automática da trilha após conclusão do onboarding");
-      startTrailGeneration();
-    }
-  }, []);
-
   const startTrailGeneration = async () => {
-    setShowMagicExperience(true);
-    setGeneratingTrail(true);
     setLoadingError(false);
     setLoadingTimeout(false);
+    setShowMagicExperience(true);
+    setGeneratingTrail(true);
     
     try {
       await generateImplementationTrail();
       toast.success("Trilha personalizada gerada com sucesso!");
     } catch (error) {
       console.error("Erro ao gerar trilha:", error);
-      toast.error("Ocorreu um erro ao gerar sua trilha. Tente novamente.");
       setLoadingError(true);
+      toast.error("Erro ao gerar trilha. Tente novamente.");
     } finally {
       setGeneratingTrail(false);
     }
   };
 
   const handleForceRefresh = useCallback(async () => {
-    setRefreshing(true);
+    setAttemptCount(prev => prev + 1);
     setLoadingError(false);
     setLoadingTimeout(false);
-    setAttemptCount(prev => prev + 1);
     
     try {
+      // Limpar trilha existente para forçar reload completo
       await clearTrail();
       
+      // Pequeno delay para garantir limpeza
       setTimeout(async () => {
         await refreshTrail(true);
         toast.success("Trilha recarregada com sucesso!");
-      }, 1000);
-      
+      }, 500);
     } catch (error) {
-      console.error("Erro ao forçar atualização da trilha:", error);
+      console.error("Erro ao recarregar trilha:", error);
       setLoadingError(true);
-      toast.error("Erro ao recarregar a trilha. Tente novamente mais tarde.");
-    } finally {
-      setRefreshing(false);
     }
   }, [clearTrail, refreshTrail]);
 
   const handleMagicFinish = () => {
     setShowMagicExperience(false);
-    setAutoStartGeneration(true);
   };
 
   const handleBackToOnboarding = () => {
     navigate("/onboarding");
   };
 
-  if (isLoading || refreshing) {
+  // Mostrar estado de carregamento
+  if (isLoading || generatingTrail) {
     return (
       <TrailGenerationHeader>
         <TrailLoadingState attemptCount={attemptCount} onForceRefresh={handleForceRefresh} />
@@ -140,6 +106,7 @@ const TrailGeneration = () => {
     );
   }
 
+  // Mostrar estado de erro
   if (loadingError || loadingTimeout) {
     return (
       <TrailGenerationHeader>
@@ -159,14 +126,27 @@ const TrailGeneration = () => {
         {showMagicExperience ? (
           <TrailMagicExperience onFinish={handleMagicFinish} />
         ) : hasContent ? (
-          <>
-            <GenerationControls
-              onGoBack={handleBackToOnboarding}
-              onRegenerate={startTrailGeneration}
-              generating={generatingTrail}
-            />
-            <TrailGuidedExperience autoStart={autoStartGeneration} />
-          </>
+          <div className="space-y-6">
+            <div className="flex justify-between items-center mb-4">
+              <Button variant="outline" onClick={handleBackToOnboarding}>
+                Voltar para Onboarding
+              </Button>
+              <Button
+                className="bg-[#0ABAB5] text-white"
+                onClick={startTrailGeneration}
+                disabled={generatingTrail}
+              >
+                {generatingTrail ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Gerando Nova Trilha...
+                  </>
+                ) : "Gerar Nova Trilha"}
+              </Button>
+            </div>
+            
+            <TrailGuidedExperience autoStart={true} />
+          </div>
         ) : (
           <div className="flex flex-col items-center justify-center space-y-6 py-12">
             <h2 className="text-2xl font-bold text-[#0ABAB5]">
