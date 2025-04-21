@@ -35,7 +35,7 @@ export function NetworkingAvailabilitySection({ control, errors, showErrors = fa
               min={0}
               max={10}
               step={1}
-              value={[field.value]}
+              value={[field.value || 0]}
               onValueChange={val => field.onChange(val[0])}
               className="w-full"
             />

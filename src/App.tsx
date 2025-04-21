@@ -50,9 +50,9 @@ function App() {
                 <Route path="*" element={<AppRoutes />} />
               </Routes>
             </Suspense>
+            <Toaster />
+            <ToasterProvider />
           </Router>
-          <Toaster />
-          <ToasterProvider />
         </QueryClientProvider>
       </LoggingProvider>
     </AuthProvider>

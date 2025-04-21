@@ -3,7 +3,7 @@ import AuthLayout from "@/components/auth/AuthLayout";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 const Auth = () => {
   const { user, profile, isAdmin, isLoading } = useAuth();
@@ -13,8 +13,7 @@ const Auth = () => {
   useEffect(() => {
     if (user) {
       // Show feedback toast
-      toast({
-        title: "Autenticado",
+      toast("Autenticado", {
         description: "Redirecionando para o dashboard...",
       });
       
