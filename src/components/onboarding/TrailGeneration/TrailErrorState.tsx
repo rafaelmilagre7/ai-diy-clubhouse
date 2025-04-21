@@ -30,14 +30,16 @@ export const TrailErrorState: React.FC<TrailErrorStateProps> = ({
     toast.info("Redirecionando para dashboard...");
     navigate("/dashboard");
   };
-
+  
+  // Mensagem personalizada com base no tipo de erro
   const errorMessage = loadingTimeout 
     ? "Tempo limite excedido ao carregar a trilha" 
     : "Erro ao carregar trilha";
   
+  // Descrição detalhada do problema
   const errorDescription = loadingTimeout
     ? "O servidor demorou muito para responder. Isso pode acontecer devido a sobrecarga momentânea ou problemas de conexão."
-    : "Não foi possível carregar sua trilha personalizada. Você pode tentar novamente ou voltar para o onboarding.";
+    : "Não foi possível carregar sua trilha personalizada. Você pode tentar novamente ou acessar o dashboard para continuar.";
 
   return (
     <div className="max-w-xl mx-auto my-8 p-6 bg-amber-50 rounded-lg border border-amber-200 flex flex-col items-center">
@@ -60,14 +62,6 @@ export const TrailErrorState: React.FC<TrailErrorStateProps> = ({
       
       <div className="flex flex-col sm:flex-row justify-center gap-3 w-full mt-2">
         <Button
-          className="bg-[#0ABAB5] text-white hover:bg-[#0ABAB5]/90"
-          onClick={onRegenerate}
-          size="lg"
-        >
-          Gerar Nova Trilha
-        </Button>
-        
-        <Button
           variant="outline"
           onClick={onForceRefresh}
           className="flex items-center gap-1"
@@ -75,37 +69,36 @@ export const TrailErrorState: React.FC<TrailErrorStateProps> = ({
           <RefreshCw className="h-4 w-4" />
           Tentar Novamente
         </Button>
+        
+        <Button
+          className="bg-[#0ABAB5] text-white hover:bg-[#0ABAB5]/90"
+          onClick={handleDashboardNavigation}
+          size="lg"
+        >
+          Acessar Dashboard
+        </Button>
       </div>
       
-      {attemptCount > 2 && onResetData && (
-        <Button
-          variant="outline"
-          onClick={onResetData}
-          className="mt-3 text-amber-700 border-amber-300 hover:bg-amber-100"
-        >
-          <RotateCcw className="h-4 w-4 mr-2" />
-          Limpar Dados e Reiniciar
-        </Button>
-      )}
-      
-      <div className="mt-4 flex flex-wrap gap-2 w-full">
+      <div className="mt-4 flex flex-wrap gap-2 w-full justify-between">
         <Button
           variant="ghost"
           onClick={onGoBack}
-          className="flex items-center gap-2 flex-1"
+          className="flex items-center gap-2"
         >
           <ArrowLeft className="h-4 w-4" />
           Voltar para Onboarding
         </Button>
         
-        <Button
-          variant="ghost"
-          onClick={handleDashboardNavigation}
-          className="flex items-center gap-2 flex-1"
-        >
-          <Home className="h-4 w-4" />
-          Ir para Dashboard
-        </Button>
+        {attemptCount > 2 && onResetData && (
+          <Button
+            variant="outline"
+            onClick={onResetData}
+            className="text-amber-700 border-amber-300 hover:bg-amber-100"
+          >
+            <RotateCcw className="h-4 w-4 mr-2" />
+            Reiniciar Dados
+          </Button>
+        )}
       </div>
     </div>
   );
