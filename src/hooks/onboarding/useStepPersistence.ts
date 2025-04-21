@@ -99,6 +99,23 @@ export const useStepPersistence = ({
           completed_steps: [...(progress.completed_steps || []), stepId],
           current_step: steps[Math.min(currentStepIndex + 1, steps.length - 1)].id,
         });
+      } else if (stepId === "complementary_info") {
+        const info = data.complementary_info || {};
+        if (!info.how_found_us || !info.priority_topics?.length) {
+          toast.error("Por favor, preencha todos os campos obrigatórios");
+          return;
+        }
+        await updateProgress({
+          complementary_info: info,
+          completed_steps: [...(progress.completed_steps || []), stepId],
+          current_step: steps[Math.min(currentStepIndex + 1, steps.length - 1)].id,
+        });
+      } else if (stepId === "review") {
+        // Na etapa de revisão, apenas marcamos como completada
+        await updateProgress({
+          completed_steps: [...(progress.completed_steps || []), stepId],
+          current_step: steps[Math.min(currentStepIndex + 1, steps.length - 1)].id,
+        });
       } else {
         // Salvamento genérico para outras etapas
         const sectionKey = steps.find(s => s.id === stepId)?.section as keyof OnboardingData;
@@ -139,6 +156,11 @@ export const useStepPersistence = ({
       });
       await refreshProgress();
       toast.success("Onboarding concluído com sucesso!");
+      
+      // Redirecionamento para o dashboard após finalização
+      setTimeout(() => {
+        navigate("/dashboard");
+      }, 1500);
     } catch (error) {
       toast.error('Erro ao completar onboarding. Tente novamente.');
     }

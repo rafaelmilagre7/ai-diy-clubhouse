@@ -1,3 +1,4 @@
+
 import { ReactNode } from "react";
 import { Route, Routes, Navigate } from "react-router-dom";
 import MemberLayout from "@/components/layout/MemberLayout";
@@ -26,6 +27,8 @@ import OnboardingPreferences from "@/pages/onboarding/steps/Preferences";
 import BusinessContext from "@/pages/onboarding/steps/BusinessContext";
 import BusinessGoalsClub from "@/pages/onboarding/steps/BusinessGoalsClub";
 import ExperiencePersonalization from "@/pages/onboarding/steps/ExperiencePersonalization";
+import ComplementaryInfo from "@/pages/onboarding/steps/ComplementaryInfo";
+import Review from "@/pages/onboarding/steps/Review";
 
 interface MemberRoutesProps {
   children?: ReactNode;
@@ -50,6 +53,8 @@ const MemberRoutes = ({ children }: MemberRoutesProps) => {
         <Route path="onboarding/team-info" element={<OnboardingTeamInfo />} />
         <Route path="onboarding/preferences" element={<OnboardingPreferences />} />
         <Route path="onboarding/experience-personalization" element={<ExperiencePersonalization />} />
+        <Route path="onboarding/complementary-info" element={<ComplementaryInfo />} />
+        <Route path="onboarding/review" element={<Review />} />
 
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="solutions" element={<Solutions />} />

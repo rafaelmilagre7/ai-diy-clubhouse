@@ -1,3 +1,4 @@
+
 import { useOnboardingSteps } from "@/hooks/onboarding/useOnboardingSteps";
 import { PersonalInfoStep } from "./steps/PersonalInfoStep";
 import { BusinessGoalsStep } from "./steps/BusinessGoalsStep";
@@ -8,6 +9,8 @@ import { ResourcesNeedsStep } from "./steps/ResourcesNeedsStep";
 import { TeamInfoStep } from "./steps/TeamInfoStep";
 import { PreferencesStep } from "./steps/PreferencesStep";
 import { ExperiencePersonalizationStep } from "./steps/ExperiencePersonalizationStep";
+import { ComplementaryInfoStep } from "./steps/ComplementaryInfoStep";
+import { ReviewStep } from "./steps/ReviewStep";
 import { Progress } from "@/components/ui/progress";
 import { OnboardingData } from "@/types/onboarding";
 
@@ -19,7 +22,8 @@ export const OnboardingSteps = () => {
     isSubmitting,
     saveStepData,
     completeOnboarding,
-    progress
+    progress,
+    navigateToStep
   } = useOnboardingSteps();
 
   const stepComponents = {
@@ -32,6 +36,15 @@ export const OnboardingSteps = () => {
     team: TeamInfoStep,
     preferences: PreferencesStep,
     experience_personalization: ExperiencePersonalizationStep,
+    complementary_info: ComplementaryInfoStep,
+    review: () => (
+      <ReviewStep 
+        progress={progress} 
+        onComplete={completeOnboarding} 
+        isSubmitting={isSubmitting}
+        navigateToStep={navigateToStep}
+      />
+    ),
   };
 
   const CurrentStepComponent = stepComponents[currentStep.id as keyof typeof stepComponents];

@@ -68,7 +68,8 @@ export const useProgress = () => {
           name: userName,
           email: userEmail
         },
-        experience_personalization: {} // Adicionando objeto vazio para a nova etapa
+        experience_personalization: {},
+        complementary_info: {}
       };
 
       const { data, error } = await supabase

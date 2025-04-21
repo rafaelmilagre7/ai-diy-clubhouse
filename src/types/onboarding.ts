@@ -78,6 +78,13 @@ export interface OnboardingData {
     skills_to_share?: string[];
     mentorship_topics?: string[];
   };
+  complementary_info: {
+    how_found_us?: string;
+    referred_by?: string;
+    authorize_case_usage?: boolean;
+    interested_in_interview?: boolean;
+    priority_topics?: string[];
+  };
 }
 
 export interface OnboardingProgress {
@@ -96,6 +103,7 @@ export interface OnboardingProgress {
   team_info: OnboardingData['team_info'];
   implementation_preferences: OnboardingData['implementation_preferences'];
   experience_personalization: OnboardingData['experience_personalization'];
+  complementary_info: OnboardingData['complementary_info'];
   company_name?: string;
   company_size?: string;
   company_sector?: string;
