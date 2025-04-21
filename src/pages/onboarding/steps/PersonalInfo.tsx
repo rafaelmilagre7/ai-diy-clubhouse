@@ -7,12 +7,16 @@ import { MilagrinhoMessage } from "@/components/onboarding/MilagrinhoMessage";
 import { useProgress } from "@/hooks/onboarding/useProgress";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { LoadingSpinner } from "@/components/common/LoadingSpinner";
+import { AlertCircle, CheckCircle } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const PersonalInfo = () => {
   const { saveStepData, progress, completeOnboarding, navigateToStep } = useOnboardingSteps();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { isLoading, refreshProgress } = useProgress();
+  const { isLoading, refreshProgress, error } = useProgress();
   const navigate = useNavigate();
+  const [formErrors, setFormErrors] = useState<string[]>([]);
 
   // Efeito para carregar dados mais recentes ao entrar na página
   useEffect(() => {
@@ -22,19 +26,30 @@ const PersonalInfo = () => {
 
   const handleSaveData = async (data: any) => {
     setIsSubmitting(true);
+    setFormErrors([]);
+    
     try {
       console.log("Salvando dados pessoais:", data);
       await saveStepData(data);
       console.log("Dados pessoais salvos com sucesso");
-      toast.success("Dados salvos com sucesso!");
+      
+      toast.success("Dados salvos com sucesso!", {
+        description: "Redirecionando para a próxima etapa...",
+        icon: <CheckCircle className="h-5 w-5 text-green-500" />
+      });
       
       // Navegar para a próxima etapa após salvar
       setTimeout(() => {
         navigate("/onboarding/professional-data");
-      }, 500);
+      }, 800);
     } catch (error) {
       console.error("Erro ao salvar dados:", error);
-      toast.error("Erro ao salvar dados. Tente novamente.");
+      setFormErrors(["Falha ao salvar dados. Verifique sua conexão."]);
+      
+      toast.error("Erro ao salvar dados", {
+        description: "Verifique sua conexão e tente novamente.",
+        icon: <AlertCircle className="h-5 w-5 text-red-500" />
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -52,9 +67,31 @@ const PersonalInfo = () => {
         <MilagrinhoMessage
           message="Bem-vindo ao onboarding do VIVER DE IA Club! Vamos começar coletando algumas informações pessoais para personalizar sua experiência."
         />
+        
+        {error && (
+          <Alert variant="destructive" className="animate-fade-in">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              {error.message || "Erro ao carregar dados. Tente novamente."}
+            </AlertDescription>
+          </Alert>
+        )}
+        
+        {formErrors.length > 0 && (
+          <Alert variant="destructive" className="animate-fade-in">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              {formErrors.map((err, i) => (
+                <div key={i}>{err}</div>
+              ))}
+            </AlertDescription>
+          </Alert>
+        )}
+        
         {isLoading ? (
-          <div className="flex justify-center py-10">
-            <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-[#0ABAB5]"></div>
+          <div className="flex flex-col items-center justify-center py-10 space-y-4">
+            <LoadingSpinner className="h-10 w-10 text-[#0ABAB5]" />
+            <p className="text-gray-500 animate-pulse">Carregando seus dados...</p>
           </div>
         ) : (
           <PersonalInfoStep

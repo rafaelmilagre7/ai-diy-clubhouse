@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { FormMessage } from "@/components/ui/form-message";
 import { cn } from "@/lib/utils";
 import InputMask from "react-input-mask";
+import { CheckCircle } from "lucide-react";
 
 interface PhoneInputProps {
   value: string;
@@ -14,6 +15,7 @@ interface PhoneInputProps {
   disabled?: boolean;
   ddi?: string;
   onChangeDDI?: (value: string) => void;
+  isValid?: boolean;
 }
 
 export const PhoneInput: React.FC<PhoneInputProps> = ({
@@ -23,15 +25,19 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({
   error,
   disabled = false,
   ddi = "+55",
-  onChangeDDI
+  onChangeDDI,
+  isValid = false
 }) => {
   return (
     <div className="space-y-2">
       <Label htmlFor="phone" className={cn(
-        "transition-colors",
+        "transition-colors flex items-center",
         error ? "text-red-500" : value ? "text-[#0ABAB5]" : ""
       )}>
         Telefone <span className="text-gray-400">(opcional)</span>
+        {isValid && value && (
+          <CheckCircle className="ml-2 h-4 w-4 text-[#0ABAB5]" />
+        )}
       </Label>
       <div className="flex">
         {onChangeDDI && (
@@ -44,7 +50,7 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({
               className={cn(
                 "transition-all duration-200",
                 error ? "border-red-500 focus:border-red-500" : 
-                value ? "border-[#0ABAB5] focus:border-[#0ABAB5]" : ""
+                value && isValid ? "border-[#0ABAB5] focus:border-[#0ABAB5]" : ""
               )}
             />
           </div>
@@ -65,7 +71,7 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({
                 className={cn(
                   "transition-all duration-200",
                   error ? "border-red-500 focus:border-red-500" : 
-                  value ? "border-[#0ABAB5] focus:border-[#0ABAB5]" : ""
+                  value && isValid ? "border-[#0ABAB5] focus:border-[#0ABAB5]" : ""
                 )}
               />
             )}
@@ -73,7 +79,7 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({
         </div>
       </div>
       <FormMessage
-        type={value && !error ? "success" : "error"}
+        type={value && isValid ? "success" : "error"}
         message={error}
       />
     </div>

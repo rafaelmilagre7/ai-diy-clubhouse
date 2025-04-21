@@ -2,9 +2,35 @@
 import { useForm } from "react-hook-form";
 import { useFormValidation } from "@/hooks/useFormValidation";
 import { toast } from "sonner";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+
+// Schema de validação com Zod
+const personalInfoSchema = z.object({
+  name: z.string().min(3, "Nome deve ter pelo menos 3 caracteres").max(100, "Nome muito longo"),
+  email: z.string().email("E-mail inválido").min(5, "E-mail inválido"),
+  phone: z.string().optional(),
+  ddi: z.string().default("+55"),
+  linkedin: z.string().optional()
+    .refine(val => !val || val.includes("linkedin.com"), {
+      message: "Insira uma URL válida do LinkedIn"
+    }),
+  instagram: z.string().optional()
+    .refine(val => !val || val.includes("instagram.com"), {
+      message: "Insira uma URL válida do Instagram"
+    }),
+  country: z.string().default("Brasil"),
+  state: z.string().min(2, "Estado é obrigatório"),
+  city: z.string().min(2, "Cidade é obrigatória"),
+  timezone: z.string().default("GMT-3")
+});
+
+export type PersonalInfoFormData = z.infer<typeof personalInfoSchema>;
 
 export const usePersonalInfoForm = (initialData: any) => {
-  const { register, handleSubmit, formState: { errors, touchedFields }, control } = useForm({
+  const { register, handleSubmit, formState: { errors, touchedFields, isValid, isDirty }, control, watch, trigger } = useForm({
+    resolver: zodResolver(personalInfoSchema),
+    mode: "onChange",
     defaultValues: {
       name: initialData?.name || "",
       email: initialData?.email || "",
@@ -16,10 +42,10 @@ export const usePersonalInfoForm = (initialData: any) => {
       state: initialData?.state || "",
       city: initialData?.city || "",
       timezone: initialData?.timezone || "GMT-3"
-    },
-    mode: "onChange"
+    }
   });
 
+  // Usar useFormValidation para campos adicionais que precisam de validação personalizada
   const validation = useFormValidation(
     {
       phone: initialData?.phone || "",
@@ -51,12 +77,24 @@ export const usePersonalInfoForm = (initialData: any) => {
     }
   );
 
+  const validateForm = async () => {
+    const isFormValid = await trigger();
+    return isFormValid && validation.isValid;
+  };
+
+  const formData = watch();
+
   return {
     register,
     handleSubmit,
     errors,
     touchedFields,
     control,
-    validation
+    validation,
+    isValid,
+    isDirty,
+    formData,
+    validateForm,
+    trigger
   };
 };

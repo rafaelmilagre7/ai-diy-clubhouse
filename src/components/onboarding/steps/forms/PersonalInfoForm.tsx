@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FormMessage } from "@/components/ui/form-message";
@@ -8,6 +8,7 @@ import { PhoneInput } from "../inputs/PhoneInput";
 import { SocialInputs } from "../inputs/SocialInputs";
 import { LocationInputs } from "../inputs/LocationInputs";
 import { cn } from "@/lib/utils";
+import { CheckCircle } from "lucide-react";
 
 interface PersonalInfoFormProps {
   validation: any;
@@ -26,6 +27,7 @@ interface PersonalInfoFormProps {
     state?: string;
     city?: string;
   };
+  formData?: any;
 }
 
 export const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({
@@ -34,17 +36,28 @@ export const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({
   errors,
   touchedFields,
   isSubmitting,
-  initialData
+  initialData,
+  formData
 }) => {
+  // Efeito para verificar se cada campo foi preenchido e validado
+  useEffect(() => {
+    if (formData) {
+      console.log("Dados do formulário atualizados:", formData);
+    }
+  }, [formData]);
+
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-2">
           <Label htmlFor="name" className={cn(
-            "transition-colors",
+            "transition-colors flex items-center",
             errors.name ? "text-red-500" : touchedFields.name ? "text-[#0ABAB5]" : ""
           )}>
             Nome completo <span className="text-red-500">*</span>
+            {touchedFields.name && !errors.name && (
+              <CheckCircle className="ml-2 h-4 w-4 text-[#0ABAB5]" />
+            )}
           </Label>
           <Input
             id="name"
@@ -54,13 +67,7 @@ export const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({
               errors.name ? "border-red-500 focus:border-red-500" : 
               touchedFields.name ? "border-[#0ABAB5] focus:border-[#0ABAB5]" : ""
             )}
-            {...register("name", { 
-              required: "Nome é obrigatório",
-              minLength: {
-                value: 3,
-                message: "Nome deve ter pelo menos 3 caracteres"
-              }
-            })}
+            {...register("name")}
           />
           <FormMessage
             type={touchedFields.name && !errors.name ? "success" : "error"}
@@ -70,10 +77,13 @@ export const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({
 
         <div className="space-y-2">
           <Label htmlFor="email" className={cn(
-            "transition-colors",
+            "transition-colors flex items-center",
             errors.email ? "text-red-500" : touchedFields.email ? "text-[#0ABAB5]" : ""
           )}>
             E-mail <span className="text-red-500">*</span>
+            {touchedFields.email && !errors.email && (
+              <CheckCircle className="ml-2 h-4 w-4 text-[#0ABAB5]" />
+            )}
           </Label>
           <Input
             id="email"
@@ -84,13 +94,7 @@ export const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({
               errors.email ? "border-red-500 focus:border-red-500" : 
               touchedFields.email ? "border-[#0ABAB5] focus:border-[#0ABAB5]" : ""
             )}
-            {...register("email", {
-              required: "E-mail é obrigatório",
-              pattern: {
-                value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                message: "E-mail inválido"
-              }
-            })}
+            {...register("email")}
           />
           <FormMessage
             type={touchedFields.email && !errors.email ? "success" : "error"}
@@ -107,6 +111,7 @@ export const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({
           error={validation.touched.phone ? validation.errors.phone : undefined}
           ddi={validation.values.ddi}
           onChangeDDI={(v) => validation.handleChange("ddi", v)}
+          isValid={validation.touched.phone && !validation.errors.phone}
         />
 
         <SocialInputs
@@ -118,6 +123,10 @@ export const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({
           errors={{
             linkedin: validation.errors.linkedin,
             instagram: validation.errors.instagram
+          }}
+          isValid={{
+            linkedin: validation.touched.linkedin && !validation.errors.linkedin,
+            instagram: validation.touched.instagram && !validation.errors.instagram
           }}
         />
       </div>
@@ -137,6 +146,10 @@ export const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({
               state: validation.errors.state,
               city: validation.errors.city
             }}
+            isValid={{
+              state: validation.touched.state && !validation.errors.state,
+              city: validation.touched.city && !validation.errors.city
+            }}
           />
         </div>
       </div>
@@ -150,4 +163,3 @@ export const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({
     </div>
   );
 };
-
