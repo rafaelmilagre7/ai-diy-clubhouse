@@ -3,7 +3,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { useEffect, useState } from "react";
 import { useIBGELocations } from "@/hooks/useIBGELocations";
-import { FieldError } from "react-hook-form";
+import { FieldError, FieldErrors } from "react-hook-form";
 
 interface LocationInputsProps {
   country: string;
@@ -14,8 +14,8 @@ interface LocationInputsProps {
   onChangeCity: (value: string) => void;
   disabled: boolean;
   errors?: {
-    state?: string | FieldError;
-    city?: string | FieldError;
+    state?: string | FieldError | FieldErrors<any>;
+    city?: string | FieldError | FieldErrors<any>;
   };
 }
 
@@ -111,7 +111,11 @@ export const LocationInputs = ({
         </Select>
         {errors.state && (
           <p className="text-sm text-red-500 mt-1">
-            {typeof errors.state === 'string' ? errors.state : errors.state.message}
+            {typeof errors.state === 'string' 
+              ? errors.state 
+              : 'message' in errors.state 
+                ? errors.state.message 
+                : 'Estado é obrigatório'}
           </p>
         )}
       </div>
@@ -142,7 +146,11 @@ export const LocationInputs = ({
         </Select>
         {errors.city && (
           <p className="text-sm text-red-500 mt-1">
-            {typeof errors.city === 'string' ? errors.city : errors.city.message}
+            {typeof errors.city === 'string' 
+              ? errors.city 
+              : 'message' in errors.city 
+                ? errors.city.message 
+                : 'Cidade é obrigatória'}
           </p>
         )}
       </div>

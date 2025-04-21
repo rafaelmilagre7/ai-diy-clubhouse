@@ -2,7 +2,7 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Linkedin, Instagram } from "lucide-react";
-import { FieldError } from "react-hook-form";
+import { FieldError, FieldErrors } from "react-hook-form";
 
 interface SocialInputsProps {
   linkedin: string;
@@ -11,8 +11,8 @@ interface SocialInputsProps {
   onChangeInstagram: (value: string) => void;
   disabled: boolean;
   errors?: {
-    linkedin?: string | FieldError;
-    instagram?: string | FieldError;
+    linkedin?: string | FieldError | FieldErrors<any>;
+    instagram?: string | FieldError | FieldErrors<any>;
   };
 }
 
@@ -41,7 +41,11 @@ export const SocialInputs = ({
       </div>
       {errors.linkedin && (
         <p className="text-sm text-red-500 mt-1">
-          {typeof errors.linkedin === 'string' ? errors.linkedin : errors.linkedin.message}
+          {typeof errors.linkedin === 'string' 
+            ? errors.linkedin 
+            : 'message' in errors.linkedin 
+              ? errors.linkedin.message 
+              : 'LinkedIn inválido'}
         </p>
       )}
     </div>
@@ -62,7 +66,11 @@ export const SocialInputs = ({
       </div>
       {errors.instagram && (
         <p className="text-sm text-red-500 mt-1">
-          {typeof errors.instagram === 'string' ? errors.instagram : errors.instagram.message}
+          {typeof errors.instagram === 'string' 
+            ? errors.instagram 
+            : 'message' in errors.instagram 
+              ? errors.instagram.message 
+              : 'Instagram inválido'}
         </p>
       )}
     </div>
