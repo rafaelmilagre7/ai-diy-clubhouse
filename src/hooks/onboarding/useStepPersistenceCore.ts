@@ -4,7 +4,7 @@ import { buildUpdateObject } from "./persistence/stepDataBuilder";
 import { navigateAfterStep } from "./persistence/stepNavigator";
 import { steps } from "./useStepDefinitions";
 import { toast } from "sonner";
-import { useLogging } from "@/hooks/useLogging";
+import { useLogging } from "@/contexts/logging";
 
 export function useStepPersistenceCore({
   currentStepIndex,
@@ -16,7 +16,7 @@ export function useStepPersistenceCore({
   navigate: (path: string) => void;
 }) {
   const { progress, updateProgress, refreshProgress } = useProgress();
-  const { logError } = useLogging();
+  const { error: logError } = useLogging();
 
   // Função principal para salvar dados de um passo específico
   const saveStepData = async (
