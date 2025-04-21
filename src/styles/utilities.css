@@ -1,0 +1,17 @@
+
+/* Utilitários extras, gradientes, animações customizadas para responsividade, glass, hover, efeitos */
+
+.bg-size-200 {
+  background-size: 200% 200%;
+}
+.bg-size-300 {
+  background-size: 300% 300%;
+}
+@layer utilities {
+  /* Responsividade para cartões glass e outros */
+  @media (max-width: 600px) {
+    .glass-card, .glassmorphism, .glass-effect {
+      @apply rounded-lg shadow;
+    }
+  }
+}

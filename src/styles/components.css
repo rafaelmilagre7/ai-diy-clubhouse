@@ -1,0 +1,107 @@
+
+/* Componentes reutilizáveis (cards, glass, badges, progress, etc) */
+
+@layer components {
+  .glass-card, .glassmorphism {
+    @apply bg-white/80 dark:bg-white/10 backdrop-blur-sm border border-white/20 dark:border-white/10 shadow-md dark:shadow-black/20;
+  }
+  .glass-effect {
+    @apply glassmorphism dark:bg-white/5 dark:backdrop-blur-xl dark:shadow-[0_4px_20px_-2px_rgba(0,0,0,0.5)];
+  }
+  .container {
+    @apply max-w-7xl mx-auto px-4 md:px-8;
+  }
+  .progress-step {
+    @apply relative flex items-center justify-center w-8 h-8 rounded-full bg-secondary text-secondary-foreground dark:bg-secondary dark:text-secondary-foreground;
+  }
+  .progress-step.active {
+    @apply bg-viverblue text-white dark:bg-viverblue dark:text-white;
+  }
+  .progress-step.completed {
+    @apply bg-green-500 text-white;
+  }
+  .progress-line {
+    @apply flex-1 h-1 bg-secondary dark:bg-muted;
+  }
+  .progress-line.completed {
+    @apply bg-green-500;
+  }
+  .solution-card {
+    @apply relative overflow-hidden rounded-xl border bg-card text-card-foreground shadow-sm transition-all duration-200 hover:shadow-md;
+  }
+  .solution-card.revenue {
+    @apply border-l-4 border-l-revenue;
+  }
+  .solution-card.operational {
+    @apply border-l-4 border-l-operational;
+  }
+  .solution-card.strategy {
+    @apply border-l-4 border-l-strategy;
+  }
+  .badge-revenue {
+    @apply bg-revenue text-white;
+  }
+  .badge-operational {
+    @apply bg-operational text-white;
+  }
+  .badge-strategy {
+    @apply bg-strategy text-white;
+  }
+  .card-hover-effect {
+    @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-1;
+  }
+  .gradient-text {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-viverblue to-viverblue-light;
+  }
+  .gradient-border {
+    @apply relative before:absolute before:inset-0 before:p-[1px] before:rounded-lg before:bg-gradient-to-r before:from-viverblue before:to-viverblue-light before:-z-10;
+  }
+  .glassmorphism {
+    @apply backdrop-blur-xl bg-white/70 dark:bg-white/10 border border-white/30 dark:border-white/10 shadow-xl;
+  }
+  .glass-effect {
+    @apply glassmorphism dark:bg-white/5 dark:backdrop-blur-xl dark:shadow-[0_4px_20px_-2px_rgba(0,0,0,0.5)];
+  }
+  .section-title {
+    @apply font-heading text-2xl md:text-3xl font-bold text-neutral-800 dark:text-neutral-100 mb-6;
+  }
+  .gradient-card {
+    @apply bg-gradient-to-br from-white to-neutral-100 dark:from-black dark:to-neutral-900 rounded-2xl shadow-md border border-neutral-200 dark:border-neutral-700;
+  }
+  .gradient-card-revenue {
+    @apply bg-gradient-to-br from-revenue-lighter to-white dark:from-revenue-darker dark:to-black rounded-2xl shadow-md border-l-4 border-l-revenue border-t border-r border-b border-neutral-200 dark:border-neutral-700;
+  }
+  .gradient-card-operational {
+    @apply bg-gradient-to-br from-operational-lighter to-white dark:from-operational-darker dark:to-black rounded-2xl shadow-md border-l-4 border-l-operational border-t border-r border-b border-neutral-200 dark:border-neutral-700;
+  }
+  .gradient-card-strategy {
+    @apply bg-gradient-to-br from-strategy-lighter to-white dark:from-strategy-darker dark:to-black rounded-2xl shadow-md border-l-4 border-l-strategy border-t border-r border-b border-neutral-200 dark:border-neutral-700;
+  }
+  .dot-bg {
+    @apply bg-dot-pattern bg-[length:20px_20px] dark:bg-none;
+  }
+  .animated-gradient {
+    @apply bg-gradient-to-r from-viverblue via-viverblue-light to-viverblue bg-size-200 animate-gradient-shift;
+  }
+  .glass-effect {
+    @apply glassmorphism dark:bg-white/5 dark:backdrop-blur-xl dark:shadow-[0_4px_20px_-2px_rgba(0,0,0,0.5)];
+  }
+  .depth-effect {
+    box-shadow: 
+      0 1px 1px rgba(0,0,0,0.01), 
+      0 2px 2px rgba(0,0,0,0.01), 
+      0 4px 4px rgba(0,0,0,0.01), 
+      0 8px 8px rgba(0,0,0,0.01),
+      0 16px 16px rgba(0,0,0,0.01);
+    transition: all 0.3s ease;
+  }
+  .depth-effect:hover {
+    box-shadow: 
+      0 1px 1px rgba(0,0,0,0.03), 
+      0 2px 2px rgba(0,0,0,0.03), 
+      0 4px 4px rgba(0,0,0,0.03), 
+      0 8px 8px rgba(0,0,0,0.03),
+      0 16px 16px rgba(0,0,0,0.03);
+    transform: translateY(-5px);
+  }
+}
