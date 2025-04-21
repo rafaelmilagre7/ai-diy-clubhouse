@@ -6,8 +6,8 @@ import { Label } from "@/components/ui/label";
 
 interface AIFormationQuestionsProps {
   control: any;
-  completedFormationError?: FieldError;
-  isMemberError?: FieldError;
+  completedFormationError?: FieldError | any; // Modificado para aceitar qualquer tipo de erro
+  isMemberError?: FieldError | any; // Modificado para aceitar qualquer tipo de erro
 }
 
 export const AIFormationQuestions: React.FC<AIFormationQuestionsProps> = ({ 
@@ -36,7 +36,10 @@ export const AIFormationQuestions: React.FC<AIFormationQuestionsProps> = ({
             </div>
             {(fieldState.error || completedFormationError) && (
               <span className="text-red-500 text-xs">
-                {fieldState.error?.message || completedFormationError?.message}
+                {fieldState.error?.message || 
+                (typeof completedFormationError === 'object' && 'message' in completedFormationError 
+                  ? completedFormationError.message 
+                  : '')}
               </span>
             )}
           </div>
@@ -63,7 +66,10 @@ export const AIFormationQuestions: React.FC<AIFormationQuestionsProps> = ({
             </div>
             {(fieldState.error || isMemberError) && (
               <span className="text-red-500 text-xs">
-                {fieldState.error?.message || isMemberError?.message}
+                {fieldState.error?.message || 
+                (typeof isMemberError === 'object' && 'message' in isMemberError 
+                  ? isMemberError.message 
+                  : '')}
               </span>
             )}
           </div>

@@ -6,7 +6,7 @@ import { FormControl, FormField, FormItem, FormLabel } from "@/components/ui/for
 
 interface AdditionalContextFieldProps {
   control: any;
-  error?: FieldError;
+  error?: FieldError | any; // Modificado para aceitar qualquer tipo de erro
 }
 
 export const AdditionalContextField: React.FC<AdditionalContextFieldProps> = ({ control, error }) => {
@@ -26,7 +26,7 @@ export const AdditionalContextField: React.FC<AdditionalContextFieldProps> = ({ 
           </FormControl>
           {(fieldState.error || error) && (
             <span className="text-red-500 text-xs">
-              {fieldState.error?.message || error?.message}
+              {fieldState.error?.message || (error?.message || '')}
             </span>
           )}
         </FormItem>

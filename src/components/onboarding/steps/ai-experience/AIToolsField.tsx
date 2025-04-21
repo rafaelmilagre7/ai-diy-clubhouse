@@ -5,7 +5,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 
 interface AIToolsFieldProps {
   control: any;
-  error?: FieldError | FieldError[];
+  error?: FieldError | FieldError[] | any; // Modificado para aceitar qualquer tipo de erro
 }
 
 const toolsOptions = [

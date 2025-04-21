@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 
 interface AIKnowledgeLevelFieldProps {
   control: any;
-  error?: FieldError;
+  error?: FieldError | any; // Modificado para aceitar qualquer tipo de erro
 }
 
 const knowledgeLevelOptions = [
@@ -40,7 +40,7 @@ export const AIKnowledgeLevelField: React.FC<AIKnowledgeLevelFieldProps> = ({ co
           ))}
           {(fieldState.error || error) && (
             <span className="text-red-500 text-xs mt-1">
-              {fieldState.error?.message || error?.message}
+              {fieldState.error?.message || (error?.message || '')}
             </span>
           )}
         </RadioGroup>

@@ -1,10 +1,11 @@
+
 import React from "react";
 import { Controller, FieldError } from "react-hook-form";
 import { Checkbox } from "@/components/ui/checkbox";
 
 interface AIDesiredSolutionsFieldProps {
   control: any;
-  error?: FieldError | FieldError[];
+  error?: FieldError | FieldError[] | any; // Modificado para aceitar qualquer tipo de erro
 }
 
 const marketingSolutions = [
