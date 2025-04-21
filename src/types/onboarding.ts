@@ -1,4 +1,3 @@
-
 export interface OnboardingData {
   personal_info: {
     name?: string;
@@ -120,4 +119,12 @@ export interface OnboardingStepProps {
   onComplete?: () => void;
   initialData?: any;
   personalInfo?: OnboardingData['personal_info'];
+}
+
+// Nova interface para definir uma etapa do onboarding
+export interface OnboardingStep {
+  id: string;
+  title: string;
+  section: string;
+  path: string;
 }
