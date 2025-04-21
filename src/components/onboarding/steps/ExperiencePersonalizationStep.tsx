@@ -26,7 +26,8 @@ export const ExperiencePersonalizationStep: React.FC<OnboardingStepProps> = ({
   useEffect(() => {
     if (initialData) {
       console.log("Dados iniciais de personalização:", initialData);
-      setFormData(initialData.experience_personalization || {});
+      const experienceData = initialData.experience_personalization || null;
+      setFormData(experienceData);
     }
   }, [initialData]);
 

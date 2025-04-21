@@ -21,15 +21,18 @@ export interface ExperienceFormData {
   mentorship_topics: string[];
 }
 
-export function useExperiencePersonalizationForm(initialData: Partial<ExperienceFormData> = {}) {
+export function useExperiencePersonalizationForm(initialData: Partial<ExperienceFormData> | null = {}) {
+  // Garantir que initialData nunca seja nulo para evitar erros ao acessar propriedades
+  const safeInitialData = initialData || {};
+  
   const form = useForm<ExperienceFormData>({
     defaultValues: {
-      interests: initialData.interests || [],
-      time_preference: initialData.time_preference || [],
-      available_days: initialData.available_days || [],
-      networking_availability: typeof initialData.networking_availability === "number" ? initialData.networking_availability : 5,
-      skills_to_share: initialData.skills_to_share || [],
-      mentorship_topics: initialData.mentorship_topics || [],
+      interests: safeInitialData.interests || [],
+      time_preference: safeInitialData.time_preference || [],
+      available_days: safeInitialData.available_days || [],
+      networking_availability: typeof safeInitialData.networking_availability === "number" ? safeInitialData.networking_availability : 5,
+      skills_to_share: safeInitialData.skills_to_share || [],
+      mentorship_topics: safeInitialData.mentorship_topics || [],
     },
     mode: "onChange"
   });
@@ -41,18 +44,18 @@ export function useExperiencePersonalizationForm(initialData: Partial<Experience
   useEffect(() => {
     // Verificar se temos dados iniciais válidos
     const hasInitialData = 
-      initialData?.interests?.length > 0 && 
-      initialData?.time_preference?.length > 0 && 
-      initialData?.available_days?.length > 0 && 
-      initialData?.skills_to_share?.length > 0 && 
-      initialData?.mentorship_topics?.length > 0 && 
-      typeof initialData?.networking_availability === 'number';
+      safeInitialData?.interests?.length > 0 && 
+      safeInitialData?.time_preference?.length > 0 && 
+      safeInitialData?.available_days?.length > 0 && 
+      safeInitialData?.skills_to_share?.length > 0 && 
+      safeInitialData?.mentorship_topics?.length > 0 && 
+      typeof safeInitialData?.networking_availability === 'number';
     
     if (hasInitialData) {
       // Forçar validação para atualizar o estado isValid
       trigger();
     }
-  }, [initialData, trigger]);
+  }, [safeInitialData, trigger]);
 
   // Função para verificar se todos os campos obrigatórios estão preenchidos
   const isValid = useMemo(() => {
@@ -102,4 +105,3 @@ export function useExperiencePersonalizationForm(initialData: Partial<Experience
     toggleSelect
   };
 }
-

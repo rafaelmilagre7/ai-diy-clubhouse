@@ -15,12 +15,23 @@ const ExperiencePersonalization = () => {
 
   // Efeito para carregar os dados mais recentes
   useEffect(() => {
-    refreshProgress();
+    const loadData = async () => {
+      try {
+        await refreshProgress();
+        console.log("Progresso recarregado no ExperiencePersonalization:", progress);
+      } catch (error) {
+        console.error("Erro ao carregar progresso:", error);
+      }
+    };
+    
+    loadData();
   }, [refreshProgress]);
 
   const handleSaveData = async (stepId: string, data: any) => {
     try {
       setSubmitting(true);
+      
+      console.log(`Enviando dados para salvar (${stepId}):`, data);
       
       // Salvamos os dados do formulário
       await saveStepData(stepId, data);
@@ -44,13 +55,16 @@ const ExperiencePersonalization = () => {
         <MilagrinhoMessage
           message="Queremos personalizar sua experiência no VIVER DE IA Club. Compartilhe seus interesses e preferências para indicarmos conteúdos, encontros e oportunidades sob medida!"
         />
-        <ExperiencePersonalizationStep
-          onSubmit={handleSaveData}
-          isSubmitting={submitting}
-          initialData={progress}
-          isLastStep={false}
-          onComplete={completeOnboarding}
-        />
+        
+        {progress && (
+          <ExperiencePersonalizationStep
+            onSubmit={handleSaveData}
+            isSubmitting={submitting}
+            initialData={progress}
+            isLastStep={false}
+            onComplete={completeOnboarding}
+          />
+        )}
       </div>
     </OnboardingLayout>
   );
