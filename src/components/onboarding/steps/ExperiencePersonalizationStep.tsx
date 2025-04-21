@@ -31,7 +31,7 @@ export const ExperiencePersonalizationStep: React.FC<ExperiencePersonalizationSt
   } = useExperiencePersonalizationForm(initialData);
 
   const handleFormSubmit = (formData: any) => {
-    if (!isValid) return;
+    console.log("Tentando enviar o formulário:", formData, "isValid:", isValid);
     onSubmit("experience_personalization", { experience_personalization: formData });
   };
 

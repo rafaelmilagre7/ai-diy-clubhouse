@@ -33,26 +33,46 @@ export function useExperiencePersonalizationForm(initialData: Partial<Experience
     }
   });
 
-  const { watch } = form;
+  const { watch, formState } = form;
+  
+  // Função corrigida para verificar validade do formulário
   const isValid = useMemo(() => {
     const formValues = watch();
-    return [
-      formValues.interests && formValues.interests.length > 0,
-      formValues.time_preference && formValues.time_preference.length > 0,
-      formValues.available_days && formValues.available_days.length > 0,
-      formValues.skills_to_share && formValues.skills_to_share.length > 0,
-      formValues.mentorship_topics && formValues.mentorship_topics.length > 0,
-      typeof formValues.networking_availability === "number"
-    ].every(Boolean);
+    
+    // Verificações mais explícitas para garantir que todos os arrays tenham pelo menos um item
+    // e que o valor de networking_availability seja um número
+    const interestsValid = Array.isArray(formValues.interests) && formValues.interests.length > 0;
+    const timePreferenceValid = Array.isArray(formValues.time_preference) && formValues.time_preference.length > 0;
+    const availableDaysValid = Array.isArray(formValues.available_days) && formValues.available_days.length > 0;
+    const skillsToShareValid = Array.isArray(formValues.skills_to_share) && formValues.skills_to_share.length > 0;
+    const mentorshipTopicsValid = Array.isArray(formValues.mentorship_topics) && formValues.mentorship_topics.length > 0;
+    const networkingAvailabilityValid = typeof formValues.networking_availability === "number";
+    
+    console.log("Validação do formulário:", {
+      interestsValid,
+      timePreferenceValid,
+      availableDaysValid,
+      skillsToShareValid,
+      mentorshipTopicsValid,
+      networkingAvailabilityValid,
+      formValues
+    });
+    
+    return interestsValid && 
+           timePreferenceValid && 
+           availableDaysValid && 
+           skillsToShareValid && 
+           mentorshipTopicsValid && 
+           networkingAvailabilityValid;
   }, [watch]);
 
   // Função corrigida para trabalhar apenas com campos do tipo array
   function toggleSelect(field: Exclude<FormFieldNames, "networking_availability">, value: string) {
     const currentValues = form.watch(field) as string[];
     if (currentValues.includes(value)) {
-      form.setValue(field, currentValues.filter((v: string) => v !== value), { shouldValidate: true });
+      form.setValue(field, currentValues.filter((v: string) => v !== value), { shouldValidate: true, shouldDirty: true });
     } else {
-      form.setValue(field, [...currentValues, value], { shouldValidate: true });
+      form.setValue(field, [...currentValues, value], { shouldValidate: true, shouldDirty: true });
     }
   }
 
