@@ -1,6 +1,7 @@
 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Linkedin, Instagram } from "lucide-react";
 
 interface SocialInputsProps {
   linkedin: string;
@@ -22,32 +23,39 @@ export const SocialInputs = ({
   disabled,
   errors = {},
 }: SocialInputsProps) => (
-  <>
+  <div className="space-y-6">
     <div className="space-y-1">
       <Label htmlFor="linkedin">LinkedIn (opcional)</Label>
-      <Input
-        id="linkedin"
-        type="url"
-        value={linkedin}
-        disabled={disabled}
-        onChange={e => onChangeLinkedin(e.target.value)}
-        placeholder="https://linkedin.com/in/seunome"
-        className={errors.linkedin ? 'border-red-500' : ''}
-      />
+      <div className="relative">
+        <Linkedin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
+        <Input
+          id="linkedin"
+          type="url"
+          value={linkedin}
+          disabled={disabled}
+          onChange={e => onChangeLinkedin(e.target.value)}
+          placeholder="https://linkedin.com/in/seunome"
+          className={`pl-10 ${errors.linkedin ? 'border-red-500' : ''}`}
+        />
+      </div>
       {errors.linkedin && <p className="text-sm text-red-500 mt-1">{errors.linkedin}</p>}
     </div>
+    
     <div className="space-y-1">
       <Label htmlFor="instagram">Instagram (opcional)</Label>
-      <Input
-        id="instagram"
-        type="url"
-        value={instagram}
-        disabled={disabled}
-        onChange={e => onChangeInstagram(e.target.value)}
-        placeholder="https://instagram.com/seunome"
-        className={errors.instagram ? 'border-red-500' : ''}
-      />
+      <div className="relative">
+        <Instagram className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
+        <Input
+          id="instagram"
+          type="url"
+          value={instagram}
+          disabled={disabled}
+          onChange={e => onChangeInstagram(e.target.value)}
+          placeholder="https://instagram.com/seunome"
+          className={`pl-10 ${errors.instagram ? 'border-red-500' : ''}`}
+        />
+      </div>
       {errors.instagram && <p className="text-sm text-red-500 mt-1">{errors.instagram}</p>}
     </div>
-  </>
+  </div>
 );

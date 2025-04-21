@@ -3,7 +3,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { EtapasProgresso } from './EtapasProgresso';
-import { theme } from '@/lib/theme';
+import MemberLayout from '@/components/layout/MemberLayout';
 
 interface OnboardingLayoutProps {
   children: React.ReactNode;
@@ -25,20 +25,20 @@ export const OnboardingLayout = ({
   hideProgress = false
 }: OnboardingLayoutProps) => {
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
-      <div className="container max-w-4xl mx-auto px-4 py-12">
+    <MemberLayout>
+      <div className="container max-w-4xl mx-auto px-4 py-8">
         <header className="mb-10">
           {backUrl && (
             <Link 
               to={backUrl}
-              className="inline-flex items-center text-gray-400 hover:text-white mb-6 transition-colors"
+              className="inline-flex items-center text-gray-600 hover:text-gray-900 mb-6 transition-colors"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
               Voltar
             </Link>
           )}
           
-          <h1 className="text-3xl font-bold mb-4">{title}</h1>
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">{title}</h1>
           
           {!hideProgress && (
             <div className="mb-6">
@@ -46,21 +46,17 @@ export const OnboardingLayout = ({
                 currentStep={currentStep}
                 totalSteps={totalSteps}
               />
-              <p className="text-gray-400 mt-2">
+              <p className="text-gray-500 mt-2">
                 Etapa {currentStep} de {totalSteps}
               </p>
             </div>
           )}
         </header>
         
-        <div className="bg-gray-800 rounded-xl p-8 shadow-lg border border-gray-700">
+        <div className="bg-white rounded-xl p-8 shadow-sm border border-gray-200">
           {children}
         </div>
-
-        <div className="mt-8 text-center text-gray-500 text-sm">
-          <p>Seus dados são protegidos e utilizados apenas para personalizar sua experiência no VIVER DE IA Club.</p>
-        </div>
       </div>
-    </div>
+    </MemberLayout>
   );
 };
