@@ -8,6 +8,7 @@ interface SkillsToShareSectionProps {
   watch: UseFormWatch<ExperienceFormData>;
   toggleSelect: (field: "skills_to_share", value: string) => void;
   errors: Record<string, any>;
+  showErrors?: boolean;
 }
 
 const SKILLS_OPTIONS = [
@@ -23,19 +24,28 @@ const SKILLS_OPTIONS = [
   { label: "Análise de dados e Business Intelligence", value: "analise_dados_bi" },
 ];
 
-export function SkillsToShareSection({ watch, toggleSelect, errors }: SkillsToShareSectionProps) {
+export function SkillsToShareSection({ watch, toggleSelect, errors, showErrors = false }: SkillsToShareSectionProps) {
+  const selectedSkills = watch("skills_to_share") || [];
+  const hasError = errors.skills_to_share && showErrors;
+
   return (
     <div>
-      <label className="font-semibold text-gray-700 mb-2 block">
+      <label className={cn(
+        "font-semibold mb-2 block",
+        hasError ? "text-red-500" : "text-gray-700"
+      )}>
         Habilidades que Você Pode Compartilhar com a Comunidade <span className="text-red-500">*</span>
       </label>
-      <div className="flex flex-wrap gap-3">
+      <div className={cn(
+        "flex flex-wrap gap-3",
+        hasError ? "border-red-500 border p-3 rounded-md" : ""
+      )}>
         {SKILLS_OPTIONS.map(opt => (
           <button key={opt.value}
             type="button"
             className={cn(
               "px-3 py-2 rounded-lg border transition-all text-sm",
-              (watch("skills_to_share") || []).includes(opt.value)
+              selectedSkills.includes(opt.value)
                 ? "bg-[#0ABAB5] text-white border-[#0ABAB5]"
                 : "bg-white text-gray-700 border-gray-200"
             )}
@@ -45,7 +55,11 @@ export function SkillsToShareSection({ watch, toggleSelect, errors }: SkillsToSh
           </button>
         ))}
       </div>
-      {errors.skills_to_share && <span className="text-xs text-red-500">Escolha pelo menos uma habilidade.</span>}
+      {hasError && (
+        <span className="text-xs text-red-500 mt-1 block">
+          Escolha pelo menos uma habilidade.
+        </span>
+      )}
     </div>
   );
 }

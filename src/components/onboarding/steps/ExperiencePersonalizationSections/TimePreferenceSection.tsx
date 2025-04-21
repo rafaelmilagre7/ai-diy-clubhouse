@@ -9,6 +9,7 @@ interface TimePreferenceSectionProps {
   watch: UseFormWatch<ExperienceFormData>;
   toggleSelect: (field: "time_preference", value: string) => void;
   errors: Record<string, any>;
+  showErrors?: boolean;
 }
 
 const TIME_OPTIONS = [
@@ -17,10 +18,16 @@ const TIME_OPTIONS = [
   { value: "noite", label: "Noite (19h–22h)", icon: "moon", emoji: "🌙" },
 ];
 
-export function TimePreferenceSection({ control, watch, toggleSelect, errors }: TimePreferenceSectionProps) {
+export function TimePreferenceSection({ control, watch, toggleSelect, errors, showErrors = false }: TimePreferenceSectionProps) {
+  const selectedTimes = watch("time_preference") || [];
+  const hasError = errors.time_preference && showErrors;
+
   return (
     <div>
-      <label className="font-semibold text-gray-700 mb-2 block">
+      <label className={cn(
+        "font-semibold mb-2 block",
+        hasError ? "text-red-500" : "text-gray-700"
+      )}>
         Preferência de Horários para Encontros Online <span className="text-red-500">*</span>
       </label>
       <Controller
@@ -28,14 +35,17 @@ export function TimePreferenceSection({ control, watch, toggleSelect, errors }: 
         control={control}
         rules={{ required: true }}
         render={({ field }) => (
-          <div className="flex gap-4">
+          <div className={cn(
+            "flex gap-4",
+            hasError ? "border-red-500 border p-3 rounded-md" : ""
+          )}>
             {TIME_OPTIONS.map(opt => (
               <button
                 type="button"
                 key={opt.value}
                 className={cn(
                   "flex items-center border px-4 py-2 rounded-lg gap-2 transition-all",
-                  (watch("time_preference") || []).includes(opt.value)
+                  selectedTimes.includes(opt.value)
                     ? "bg-[#0ABAB5] text-white border-[#0ABAB5]"
                     : "bg-white text-gray-700 border-gray-200"
                 )}
@@ -48,7 +58,11 @@ export function TimePreferenceSection({ control, watch, toggleSelect, errors }: 
           </div>
         )}
       />
-      {errors.time_preference && <span className="text-xs text-red-500">Escolha pelo menos um horário.</span>}
+      {hasError && (
+        <span className="text-xs text-red-500 mt-1 block">
+          Escolha pelo menos um horário.
+        </span>
+      )}
     </div>
   );
 }

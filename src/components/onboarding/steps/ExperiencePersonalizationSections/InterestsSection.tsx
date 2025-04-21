@@ -8,48 +8,60 @@ interface InterestsSectionProps {
   watch: UseFormWatch<ExperienceFormData>;
   toggleSelect: (field: "interests", value: string) => void;
   errors: Record<string, any>;
+  showErrors?: boolean;
 }
 
 const INTERESTS_OPTIONS = [
-  { label: "Engenharia de Prompts", value: "engenharia_prompts", icon: "code" },
-  { label: "Geração de Conteúdo com IA", value: "geracao_conteudo", icon: "file-text" },
-  { label: "Automação e Produtividade", value: "automacao_produtividade", icon: "zap" },
-  { label: "Marketing com IA", value: "marketing_ia", icon: "star" },
-  { label: "Atendimento ao Cliente com IA", value: "atendimento_cliente", icon: "handshake" },
-  { label: "Estratégia de Negócios com IA", value: "estrategia_negocios", icon: "layout-dashboard" },
-  { label: "Chatbots e Assistentes Virtuais", value: "chatbots_assistentes", icon: "message-square" },
-  { label: "Pesquisa com IA", value: "pesquisa_ia", icon: "database" },
-  { label: "Geração de Código com IA", value: "geracao_codigo", icon: "code" },
-  { label: "Vendas com IA", value: "vendas_ia", icon: "users" },
-  { label: "Análise de Dados com IA", value: "analise_dados", icon: "chart-bar" },
+  { value: "ia_generativa", label: "IA Generativa (GPT, Gemini, Claude)" },
+  { value: "automacao", label: "Automação de Processos" },
+  { value: "chatbots", label: "Chatbots e Assistentes Virtuais" },
+  { value: "analytics", label: "Analytics e Business Intelligence" },
+  { value: "computer_vision", label: "Visão Computacional" },
+  { value: "nlp", label: "Processamento de Linguagem Natural" },
+  { value: "metaverse", label: "Metaverso e Realidade Aumentada" },
+  { value: "voice_ia", label: "IA de Voz e Reconhecimento de Fala" },
+  { value: "robotica", label: "Robótica e Automação Física" },
+  { value: "blockchain_ia", label: "Blockchain e IA" },
 ];
 
-export function InterestsSection({ watch, toggleSelect, errors }: InterestsSectionProps) {
+export function InterestsSection({ watch, toggleSelect, errors, showErrors = false }: InterestsSectionProps) {
+  const selectedInterests = watch("interests") || [];
+  const hasError = errors.interests && showErrors;
+
   return (
     <div>
-      <label className="font-semibold text-gray-700 mb-2 block">
+      <label className={cn(
+        "font-semibold mb-2 block",
+        hasError ? "text-red-500" : "text-gray-700"
+      )}>
         Interesses Específicos em IA <span className="text-red-500">*</span>
       </label>
-      <div className="flex flex-wrap gap-3">
+      <div className={cn(
+        "flex flex-wrap gap-3",
+        hasError ? "border-red-500 border p-3 rounded-md" : ""
+      )}>
         {INTERESTS_OPTIONS.map(opt => (
-          <button key={opt.value}
+          <button
+            key={opt.value}
             type="button"
             className={cn(
-              "flex items-center gap-2 border rounded-lg px-3 py-2 transition-colors focus:ring-2",
-              (watch("interests") || []).includes(opt.value)
-                ? "border-[#0ABAB5] bg-[#eafaf9] text-[#0ABAB5]"
-                : "border-gray-200 bg-white text-gray-700"
+              "px-3 py-2 rounded-lg border transition-all text-sm",
+              selectedInterests.includes(opt.value)
+                ? "bg-[#0ABAB5] text-white border-[#0ABAB5]"
+                : "bg-white text-gray-700 border-gray-200",
+              hasError ? "border-red-300" : ""
             )}
             onClick={() => toggleSelect("interests", opt.value)}
           >
-            <span className="material-symbols-rounded mr-1">
-              <span className={`lucide lucide-${opt.icon}`} style={{ color: "#0ABAB5" }} />
-            </span>
             {opt.label}
           </button>
         ))}
       </div>
-      {errors.interests && <span className="text-xs text-red-500">Selecione pelo menos um interesse.</span>}
+      {hasError && (
+        <span className="text-xs text-red-500 mt-1 block">
+          Selecione pelo menos um interesse.
+        </span>
+      )}
     </div>
   );
 }
