@@ -114,7 +114,7 @@ export const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({
         <h3 className="text-md font-medium text-gray-700 dark:text-gray-200">Localização</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <LocationInputs
-            country={initialData?.country || "Brasil"}
+            country={validation.values.country || "Brasil"}
             state={validation.values.state}
             city={validation.values.city}
             onChangeCountry={() => {}}
