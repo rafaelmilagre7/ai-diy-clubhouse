@@ -1,8 +1,8 @@
 
-import { useProgress } from "../useProgress";
-import { buildUpdateObject } from "./stepDataBuilder";
-import { navigateAfterStep } from "./stepNavigator";
-import { steps } from "../useStepDefinitions";
+import { useProgress } from "./useProgress";
+import { buildUpdateObject } from "./persistence/stepDataBuilder";
+import { navigateAfterStep } from "./persistence/stepNavigator";
+import { steps } from "./useStepDefinitions";
 import { toast } from "sonner";
 import { useLogging } from "@/hooks/useLogging";
 
