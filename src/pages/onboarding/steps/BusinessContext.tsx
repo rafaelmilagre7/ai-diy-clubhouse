@@ -2,8 +2,8 @@
 import React from "react";
 import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
 import { useProgress } from "@/hooks/onboarding/useProgress";
+import { BusinessContextFormStep } from "@/components/onboarding/steps/business-context/BusinessContextFormStep";
 import { BusinessContextLoading } from "@/components/onboarding/steps/business-context/BusinessContextLoading";
-import { BusinessContextForm } from "@/components/onboarding/steps/business-context/BusinessContextForm";
 
 const BusinessContext = () => {
   const { progress, isLoading } = useProgress();
@@ -13,12 +13,12 @@ const BusinessContext = () => {
   }
 
   return (
-    <OnboardingLayout 
-      currentStep={3} 
+    <OnboardingLayout
+      currentStep={3}
       title="Contexto do Negócio"
       backUrl="/onboarding/business-goals"
     >
-      <BusinessContextForm progress={progress} />
+      <BusinessContextFormStep progress={progress} />
     </OnboardingLayout>
   );
 };
