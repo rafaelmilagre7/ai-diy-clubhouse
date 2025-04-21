@@ -1,4 +1,3 @@
-
 export interface OnboardingData {
   personal_info: {
     name?: string;
@@ -42,9 +41,8 @@ export interface OnboardingData {
   ai_experience: {
     knowledge_level?: string;
     previous_tools?: string[];
-    implemented_solutions?: string[];
-    desired_solutions?: string[];
-    previous_attempts?: string;
+    has_implemented?: string; // "sim" | "nao"
+    desired_ai_area?: string; // "vendas" | "marketing" | "rh" | "analise_dados"
     completed_formation?: boolean;
     is_member_for_month?: boolean;
     nps_score?: number;

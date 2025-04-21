@@ -1,16 +1,14 @@
 
 import React, { useState, useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { AIKnowledgeLevelField } from "./ai-experience/AIKnowledgeLevelField";
 import { AIToolsField } from "./ai-experience/AIToolsField";
-import { AIImplementedSolutionsField } from "./ai-experience/AIImplementedSolutionsField";
-import { AIDesiredSolutionsField } from "./ai-experience/AIDesiredSolutionsField";
-import { AIPreviousAttemptsField } from "./ai-experience/AIPreviousAttemptsField";
 import { AIFormationQuestions } from "./ai-experience/AIFormationQuestions";
 import { AINPSField } from "./ai-experience/AINPSField";
 import { AISuggestionsField } from "./ai-experience/AISuggestionsField";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 interface AIExperienceStepProps {
   onSubmit: (stepId: string, data: any) => void;
@@ -23,33 +21,36 @@ interface AIExperienceStepProps {
 type AIExperienceFormValues = {
   knowledge_level: string;
   previous_tools: string[];
-  implemented_solutions: string[];
-  desired_solutions: string[];
-  previous_attempts: string;
+  has_implemented: string; // "sim" ou "nao"
+  desired_ai_area: string; // "vendas" | "marketing" | "rh" | "analise_dados"
   completed_formation: boolean;
   is_member_for_month: boolean;
   nps_score: number;
   improvement_suggestions: string;
 };
 
+const desiredAreas = [
+  { value: "vendas", label: "Soluções de IA para Vendas" },
+  { value: "marketing", label: "Soluções de IA para Marketing" },
+  { value: "rh", label: "Soluções de IA para RH" },
+  { value: "analise_dados", label: "Soluções de IA para Análise de Dados" },
+];
+
 export const AIExperienceStep: React.FC<AIExperienceStepProps> = ({
   onSubmit,
   isSubmitting,
   initialData,
 }) => {
-  // Extrair valores iniciais de forma mais robusta
+  // Valores iniciais simplificados
   const getInitialValues = () => {
-    console.log("Dados iniciais para AIExperience:", initialData);
-    
     return {
       knowledge_level: initialData?.knowledge_level || "",
       previous_tools: initialData?.previous_tools || [],
-      implemented_solutions: initialData?.implemented_solutions || [],
-      desired_solutions: initialData?.desired_solutions || [],
-      previous_attempts: initialData?.previous_attempts || "",
+      has_implemented: initialData?.has_implemented || "",
+      desired_ai_area: initialData?.desired_ai_area || "",
       completed_formation: initialData?.completed_formation || false,
       is_member_for_month: initialData?.is_member_for_month || false,
-      nps_score: initialData?.nps_score || 5,
+      nps_score: initialData?.nps_score ?? 5,
       improvement_suggestions: initialData?.improvement_suggestions || "",
     };
   };
@@ -58,30 +59,24 @@ export const AIExperienceStep: React.FC<AIExperienceStepProps> = ({
     defaultValues: getInitialValues()
   });
 
-  // Atualizar formulário quando os dados iniciais mudarem
   useEffect(() => {
     if (initialData) {
-      console.log("Atualizando formulário AIExperience com dados:", initialData);
       reset(getInitialValues());
     }
   }, [initialData, reset]);
 
   const onFormSubmit = (data: AIExperienceFormValues) => {
-    console.log("Enviando dados de experiência AI:", data);
-    
-    // Certificando-se de que o formato dos dados esteja correto
-    onSubmit("ai_exp", { 
+    onSubmit("ai_exp", {
       ai_experience: {
         knowledge_level: data.knowledge_level,
         previous_tools: data.previous_tools,
-        implemented_solutions: data.implemented_solutions,
-        desired_solutions: data.desired_solutions,
-        previous_attempts: data.previous_attempts,
+        has_implemented: data.has_implemented,
+        desired_ai_area: data.desired_ai_area,
         completed_formation: data.completed_formation,
         is_member_for_month: data.is_member_for_month,
         nps_score: data.nps_score,
         improvement_suggestions: data.improvement_suggestions,
-      } 
+      }
     });
   };
 
@@ -92,21 +87,76 @@ export const AIExperienceStep: React.FC<AIExperienceStepProps> = ({
           <h2 className="text-xl font-semibold text-[#15192C] mb-6">
             Experiência com Inteligência Artificial
           </h2>
-          
           <div className="space-y-8">
             <AIKnowledgeLevelField control={control} error={errors.knowledge_level} />
             <AIToolsField control={control} error={errors.previous_tools} />
-            <AIImplementedSolutionsField control={control} error={errors.implemented_solutions} />
-            <AIDesiredSolutionsField control={control} error={errors.desired_solutions} />
-            <AIPreviousAttemptsField control={control} />
+
+            {/* Nova pergunta: Já implementou alguma solução de IA? */}
+            <div className="space-y-2 bg-gray-50 p-6 rounded-lg">
+              <h3 className="text-lg font-medium text-gray-800">
+                Você já implementou alguma solução de IA?
+              </h3>
+              <Controller
+                control={control}
+                name="has_implemented"
+                rules={{ required: "Selecione uma opção" }}
+                render={({ field, fieldState }) => (
+                  <RadioGroup
+                    onValueChange={field.onChange}
+                    value={field.value}
+                    className="flex gap-6 mt-2"
+                  >
+                    <div className="flex items-center gap-2">
+                      <RadioGroupItem value="sim" id="has_implemented_sim" />
+                      <label htmlFor="has_implemented_sim" className="text-sm">Sim</label>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <RadioGroupItem value="nao" id="has_implemented_nao" />
+                      <label htmlFor="has_implemented_nao" className="text-sm">Não</label>
+                    </div>
+                    {fieldState.error && (
+                      <span className="text-red-500 text-xs ml-4">{fieldState.error.message}</span>
+                    )}
+                  </RadioGroup>
+                )}
+              />
+            </div>
+
+            {/* Pergunta sobre áreas desejadas para implementação */}
+            <div className="space-y-2 bg-gray-50 p-6 rounded-lg">
+              <h3 className="text-lg font-medium text-gray-800">
+                Quais áreas você deseja implementar soluções de IA no seu negócio?
+              </h3>
+              <Controller
+                control={control}
+                name="desired_ai_area"
+                rules={{ required: "Selecione uma área" }}
+                render={({ field, fieldState }) => (
+                  <RadioGroup
+                    onValueChange={field.onChange}
+                    value={field.value}
+                    className="flex flex-col gap-3 mt-2"
+                  >
+                    {desiredAreas.map(opt => (
+                      <div key={opt.value} className="flex items-center gap-2">
+                        <RadioGroupItem value={opt.value} id={`area_${opt.value}`} />
+                        <label htmlFor={`area_${opt.value}`} className="text-sm">{opt.label}</label>
+                      </div>
+                    ))}
+                    {fieldState.error && (
+                      <span className="text-red-500 text-xs ml-4">{fieldState.error.message}</span>
+                    )}
+                  </RadioGroup>
+                )}
+              />
+            </div>
           </div>
         </div>
-        
+
         <div className="bg-white rounded-lg border border-gray-100 p-6 shadow-sm">
           <h2 className="text-xl font-semibold text-[#15192C] mb-6">
             Jornada no VIVER DE IA Club
           </h2>
-          
           <div className="space-y-8">
             <AIFormationQuestions 
               control={control} 
@@ -117,7 +167,6 @@ export const AIExperienceStep: React.FC<AIExperienceStepProps> = ({
             <AISuggestionsField control={control} />
           </div>
         </div>
-        
         <div className="flex justify-end mt-8">
           <Button
             type="submit"
