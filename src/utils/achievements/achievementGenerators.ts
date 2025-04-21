@@ -2,12 +2,13 @@
 import { v4 as uuidv4 } from "uuid";
 import { Achievement, ProgressData } from "@/types/achievementTypes";
 import { Solution } from "@/lib/supabase";
+import { SolutionCategory } from "@/lib/types/categoryTypes";
 
 // Helper para criar conquistas
 const createAchievement = (
   name: string, 
   description: string, 
-  category: string, 
+  category: "achievement" | SolutionCategory, 
   requiredCount: number,
   currentCount: number,
   level: number = 1
@@ -36,7 +37,7 @@ export const generateImplementationAchievements = (progress: ProgressData[], sol
     createAchievement(
       "Pioneiro Digital",
       "Completou sua primeira implementação",
-      "implementation",
+      "achievement",
       1,
       completedCount,
       1
@@ -44,7 +45,7 @@ export const generateImplementationAchievements = (progress: ProgressData[], sol
     createAchievement(
       "Implementador Consistente",
       "Completou 5 implementações",
-      "implementation",
+      "achievement",
       5,
       completedCount,
       2
@@ -52,7 +53,7 @@ export const generateImplementationAchievements = (progress: ProgressData[], sol
     createAchievement(
       "Mestre em Implementação",
       "Completou 10 implementações",
-      "implementation",
+      "achievement",
       10,
       completedCount,
       3
@@ -60,7 +61,7 @@ export const generateImplementationAchievements = (progress: ProgressData[], sol
     createAchievement(
       "Iniciando o Percurso",
       "Iniciou 3 soluções diferentes",
-      "engagement",
+      "achievement",
       3,
       inProgressCount + completedCount,
       1
@@ -109,7 +110,7 @@ export const generateCategoryAchievements = (progress: ProgressData[], solutions
     createAchievement(
       "Multi-Especialista",
       "Implementou ao menos 1 solução de cada trilha",
-      "multi",
+      "achievement",
       3,
       (revenueCompleted > 0 ? 1 : 0) + 
       (operationalCompleted > 0 ? 1 : 0) + 
@@ -134,7 +135,7 @@ export const generateEngagementAchievements = (progress: ProgressData[], solutio
     createAchievement(
       "Constância é Tudo",
       "Acessou a plataforma por 7 dias",
-      "engagement",
+      "achievement",
       7,
       activeDays,
       1
@@ -142,7 +143,7 @@ export const generateEngagementAchievements = (progress: ProgressData[], solutio
     createAchievement(
       "Membro Dedicado",
       "Acessou a plataforma por 15 dias",
-      "engagement",
+      "achievement",
       15,
       activeDays,
       2
@@ -150,7 +151,7 @@ export const generateEngagementAchievements = (progress: ProgressData[], solutio
     createAchievement(
       "Explorador Completo",
       "Interagiu com pelo menos 10 soluções diferentes",
-      "exploration",
+      "achievement",
       10,
       totalInteractions,
       2
@@ -168,7 +169,7 @@ export const generateSocialAchievements = (
     createAchievement(
       "Comentarista Iniciante",
       "Fez seu primeiro comentário em uma solução",
-      "social",
+      "achievement",
       1,
       comments.length,
       1
@@ -176,7 +177,7 @@ export const generateSocialAchievements = (
     createAchievement(
       "Comentarista Ativo",
       "Fez 5 comentários em soluções",
-      "social",
+      "achievement",
       5,
       comments.length,
       2
@@ -184,7 +185,7 @@ export const generateSocialAchievements = (
     createAchievement(
       "Conteúdo Valioso",
       "Recebeu 5 curtidas em seus comentários",
-      "social",
+      "achievement",
       5,
       totalLikes,
       2
