@@ -34,6 +34,7 @@ import BusinessGoalsClub from '@/pages/onboarding/steps/BusinessGoalsClub';
 import ExperiencePersonalization from '@/pages/onboarding/steps/ExperiencePersonalization';
 import ComplementaryInfo from '@/pages/onboarding/steps/ComplementaryInfo';
 import Review from '@/pages/onboarding/steps/Review';
+import TrailGeneration from '@/pages/onboarding/steps/TrailGeneration';
 
 const AppRoutes = () => {
   return (
@@ -66,6 +67,7 @@ const AppRoutes = () => {
       <Route path="/onboarding/customization" element={<ProtectedRoutes><ExperiencePersonalization /></ProtectedRoutes>} />
       <Route path="/onboarding/complementary" element={<ProtectedRoutes><ComplementaryInfo /></ProtectedRoutes>} />
       <Route path="/onboarding/review" element={<ProtectedRoutes><Review /></ProtectedRoutes>} />
+      <Route path="/onboarding/trail-generation" element={<ProtectedRoutes><TrailGeneration /></ProtectedRoutes>} />
       
       {/* Admin Routes */}
       <Route path="/admin" element={<AdminProtectedRoutes><AdminDashboard /></AdminProtectedRoutes>} />

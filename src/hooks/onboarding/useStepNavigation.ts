@@ -32,7 +32,7 @@ export const useStepNavigation = () => {
         
         setCurrentStepIndex(newIndex);
         
-        // Verificar se estamos na rota correta - APENAS SE NÃO PERMITIRMOS NAVEGAÇÃO LIVRE
+        // Se onboarding está completo, não redirecionar automaticamente
         if (!refreshedProgress.is_completed && !allowFreeNavigation) {
           const currentPath = window.location.pathname;
           const expectedStep = steps[newIndex];
@@ -62,7 +62,7 @@ export const useStepNavigation = () => {
   const navigateToStep = (stepIndex: number) => {
     console.log(`Solicitação para navegar para a etapa: ${stepIndex}`);
     
-    // Permitir navegação para qualquer etapa
+    // Verificar se o passo solicitado existe
     if (stepIndex >= 0 && stepIndex < steps.length) {
       const targetStep = steps[stepIndex];
       if (targetStep && targetStep.path) {
