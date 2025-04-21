@@ -18,6 +18,9 @@ const Onboarding = () => {
   const { progress, isLoading: progressLoading } = useProgress();
   const navigate = useNavigate();
   
+  // Primeiro, definimos a variável isOnboardingCompleted antes de usá-la em qualquer lugar
+  const isOnboardingCompleted = !!progress?.is_completed;
+  
   // Exibe painel da trilha se ela existir, exceto ao gerar agora
   const [showTrailPanel, setShowTrailPanel] = useState(false);
   const [isRetrying, setIsRetrying] = useState(false);
@@ -100,8 +103,6 @@ const Onboarding = () => {
 
   // Extrai primeiro nome
   const firstName = user?.user_metadata?.name?.split(' ')[0] || user?.email?.split('@')[0] || '';
-
-  const isOnboardingCompleted = !!progress?.is_completed;
 
   // Redireciona para a página de geração de trilha 
   const handleGenerateTrail = useCallback(() => {
