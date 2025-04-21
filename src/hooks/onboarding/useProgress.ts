@@ -2,36 +2,8 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/auth";
-import { OnboardingData } from "@/types/onboarding";
+import { OnboardingData, OnboardingProgress } from "@/types/onboarding";
 import { toast } from "sonner";
-
-export interface OnboardingProgress {
-  id: string;
-  user_id: string;
-  completed_steps: string[];
-  current_step: string;
-  is_completed: boolean;
-  personal_info?: OnboardingData['personal_info'];
-  professional_info?: OnboardingData['professional_info'];
-  business_context?: OnboardingData['business_context'];
-  business_goals?: OnboardingData['business_goals'];
-  ai_experience?: OnboardingData['ai_experience'];
-  industry_focus?: OnboardingData['industry_focus'];
-  resources_needs?: OnboardingData['resources_needs'];
-  team_info?: OnboardingData['team_info'];
-  implementation_preferences?: OnboardingData['implementation_preferences'];
-  company_data?: Record<string, any>;
-  business_data?: Record<string, any>;
-  ai_knowledge_level?: string;
-  goals?: string[];
-  training_needs?: string[];
-  company_name?: string;
-  company_size?: string;
-  company_sector?: string;
-  company_website?: string;
-  current_position?: string;
-  annual_revenue?: string;
-}
 
 export const useProgress = () => {
   const { user } = useAuth();
@@ -95,7 +67,8 @@ export const useProgress = () => {
         personal_info: {
           name: userName,
           email: userEmail
-        }
+        },
+        experience_personalization: {} // Adicionando objeto vazio para a nova etapa
       };
 
       const { data, error } = await supabase
