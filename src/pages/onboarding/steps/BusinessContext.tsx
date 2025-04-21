@@ -32,7 +32,7 @@ const BusinessContext = () => {
 
   // Mostra tela de carregamento enquanto busca os dados
   if (isLoading) return (
-    <OnboardingLayout currentStep={3} title="Carregando..." backUrl="/onboarding/business-goals">
+    <OnboardingLayout currentStep={3} title="Contexto do Negócio" backUrl="/onboarding/business-goals">
       <div className="flex justify-center items-center h-64">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#0ABAB5]"></div>
       </div>
@@ -62,7 +62,7 @@ const BusinessContext = () => {
           isSubmitting={isSubmitting}
           isLastStep={isLastStep}
           onComplete={completeOnboarding}
-          initialData={progress}
+          initialData={progress?.business_context}
         />
       </div>
     </OnboardingLayout>

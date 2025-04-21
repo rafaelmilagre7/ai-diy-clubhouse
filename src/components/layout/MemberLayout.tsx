@@ -3,7 +3,6 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/auth";
 import { MemberSidebar } from "./member/MemberSidebar";
 import { MemberContent } from "./member/MemberContent";
-import { toast } from "sonner";
 
 /**
  * MemberLayout renderiza a estrutura de layout para usuários membros
@@ -51,8 +50,6 @@ const MemberLayout = ({ children }: { children: React.ReactNode }) => {
       window.removeEventListener('resize', handleResize);
     };
   }, [sidebarOpen]);
-
-  console.log("MemberLayout renderizado:", { sidebarOpen });
 
   return (
     <div className="flex min-h-screen bg-background overflow-hidden">

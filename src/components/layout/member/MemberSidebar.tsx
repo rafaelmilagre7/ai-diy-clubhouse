@@ -29,9 +29,11 @@ export const MemberSidebar = ({
       className={cn(
         "fixed inset-y-0 left-0 z-50 flex h-full flex-col border-r bg-background transition-all duration-300 ease-in-out",
         sidebarOpen ? "w-64" : "w-[70px]",
-        // Garantir visibilidade em mobile (escondido apenas se for mobile E fechado)
+        // Garantir visibilidade em todos os casos
         "md:translate-x-0",
-        !sidebarOpen && window.innerWidth < 768 ? "-translate-x-full" : "translate-x-0"
+        !sidebarOpen && "md:w-[70px]",
+        // Em mobile, mostrar apenas quando aberto
+        sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
       )}
       style={{ boxShadow: "0 0 20px rgba(0,0,0,0.05)" }}
     >

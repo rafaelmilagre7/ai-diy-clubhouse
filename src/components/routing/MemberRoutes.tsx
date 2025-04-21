@@ -26,6 +26,7 @@ import OnboardingIndustryFocus from "@/pages/onboarding/steps/IndustryFocus";
 import OnboardingResourcesNeeds from "@/pages/onboarding/steps/ResourcesNeeds";
 import OnboardingTeamInfo from "@/pages/onboarding/steps/TeamInfo";
 import OnboardingPreferences from "@/pages/onboarding/steps/Preferences";
+import BusinessContext from "@/pages/onboarding/steps/BusinessContext";
 
 interface MemberRoutesProps {
   children?: ReactNode;
@@ -43,6 +44,7 @@ const MemberRoutes = ({ children }: MemberRoutesProps) => {
         {/* Onboarding Routes - carregando diretamente em vez de usar lazy loading */}
         <Route path="onboarding" element={<Onboarding />} />
         <Route path="onboarding/business-goals" element={<OnboardingBusinessGoals />} />
+        <Route path="onboarding/business-context" element={<BusinessContext />} />
         <Route path="onboarding/ai-experience" element={<OnboardingAIExperience />} />
         <Route path="onboarding/industry-focus" element={<OnboardingIndustryFocus />} />
         <Route path="onboarding/resources-needs" element={<OnboardingResourcesNeeds />} />
