@@ -22,14 +22,15 @@ export const AchievementCard = ({ achievement }: AchievementCardProps) => {
   
   const cardContent = (
     <Card className={cn(
-      "relative overflow-hidden transition-all duration-200 backdrop-blur-sm",
+      "relative overflow-hidden transition-all duration-300 hover:transform hover:scale-[1.02]",
+      "backdrop-blur-sm border-0 shadow-sm hover:shadow-md",
       achievement.isUnlocked 
-        ? "bg-gradient-to-br from-white/90 to-white/50 hover:shadow-xl cursor-pointer border-0" 
+        ? "bg-gradient-to-br from-white/90 to-white/50 cursor-pointer" 
         : "opacity-70 grayscale hover:opacity-80 bg-gray-50/80",
-      achievement.isUnlocked && achievement.category === "revenue" && "shadow-revenue/20",
-      achievement.isUnlocked && achievement.category === "operational" && "shadow-operational/20",
-      achievement.isUnlocked && achievement.category === "strategy" && "shadow-strategy/20",
-      achievement.isUnlocked && achievement.category === "achievement" && "shadow-viverblue/20"
+      achievement.isUnlocked && achievement.category === "revenue" && "shadow-revenue/10",
+      achievement.isUnlocked && achievement.category === "operational" && "shadow-operational/10",
+      achievement.isUnlocked && achievement.category === "strategy" && "shadow-strategy/10",
+      achievement.isUnlocked && achievement.category === "achievement" && "shadow-viverblue/10"
     )}>
       <div className={cn(
         "absolute inset-0 opacity-10 pointer-events-none",
@@ -51,7 +52,7 @@ export const AchievementCard = ({ achievement }: AchievementCardProps) => {
       
       <CardContent className="pt-6 pb-4 text-center flex flex-col items-center relative z-10">
         <AchievementIcon achievement={achievement} />
-        <h3 className="font-semibold text-base mt-2">{achievement.name}</h3>
+        <h3 className="font-semibold text-base mt-3">{achievement.name}</h3>
         {achievement.isUnlocked ? (
           <div className="flex items-center gap-1 mt-2">
             <div className={cn(
@@ -88,7 +89,7 @@ export const AchievementCard = ({ achievement }: AchievementCardProps) => {
         <TooltipTrigger asChild>
           {cardContent}
         </TooltipTrigger>
-        <TooltipContent>
+        <TooltipContent className="bg-slate-900 text-white border-slate-800 p-3 max-w-xs">
           <p>{achievement.description}</p>
         </TooltipContent>
       </Tooltip>

@@ -15,7 +15,7 @@ export const AchievementsProgressCard = ({ achievements }: AchievementsProgressC
     : 0;
 
   return (
-    <Card className="bg-gradient-to-br from-viverblue/10 to-viverblue/5 border border-viverblue/20">
+    <Card className="bg-gradient-to-br from-viverblue/10 to-viverblue/5 border border-viverblue/20 hover:shadow-md transition-all duration-300">
       <CardContent className="p-6">
         <div className="flex flex-col md:flex-row gap-6 items-center">
           <div className="flex-shrink-0 bg-viverblue/20 rounded-full p-5 backdrop-blur-sm">

@@ -38,13 +38,39 @@ export const AchievementsTabs = ({
       orientation={orientation === "vertical" ? "vertical" : "horizontal"}
     >
       <TabsList className={cn(
-        orientation === "vertical" && "flex flex-col h-auto space-y-1"
+        "bg-white p-1 shadow-sm",
+        orientation === "vertical" ? "flex flex-col h-auto space-y-1" : "flex space-x-1"
       )}>
-        <TabsTrigger value="all">Todas</TabsTrigger>
-        <TabsTrigger value="achievement" className="text-viverblue">Conquistas</TabsTrigger>
-        <TabsTrigger value="revenue" className="text-revenue">Receita</TabsTrigger>
-        <TabsTrigger value="operational" className="text-operational">Operacional</TabsTrigger>
-        <TabsTrigger value="strategy" className="text-strategy">Estratégia</TabsTrigger>
+        <TabsTrigger 
+          value="all" 
+          className="data-[state=active]:bg-slate-100 data-[state=active]:text-slate-900"
+        >
+          Todas
+        </TabsTrigger>
+        <TabsTrigger 
+          value="achievement" 
+          className="text-viverblue data-[state=active]:bg-viverblue/10 data-[state=active]:text-viverblue"
+        >
+          Conquistas
+        </TabsTrigger>
+        <TabsTrigger 
+          value="revenue" 
+          className="text-revenue data-[state=active]:bg-revenue/10 data-[state=active]:text-revenue"
+        >
+          Receita
+        </TabsTrigger>
+        <TabsTrigger 
+          value="operational" 
+          className="text-operational data-[state=active]:bg-operational/10 data-[state=active]:text-operational"
+        >
+          Operacional
+        </TabsTrigger>
+        <TabsTrigger 
+          value="strategy" 
+          className="text-strategy data-[state=active]:bg-strategy/10 data-[state=active]:text-strategy"
+        >
+          Estratégia
+        </TabsTrigger>
       </TabsList>
       
       <TabsContent value={activeTab} className="pt-4">

@@ -10,7 +10,7 @@ interface ErrorStateProps {
 
 export const ErrorState = ({ error, onRetry }: ErrorStateProps) => {
   return (
-    <Alert variant="destructive" className="my-4">
+    <Alert variant="destructive" className="my-4 animate-fade-in">
       <AlertTriangle className="h-4 w-4" />
       <AlertTitle>Erro ao carregar conquistas</AlertTitle>
       <AlertDescription className="space-y-4">

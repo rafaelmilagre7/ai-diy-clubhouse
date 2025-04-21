@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Achievement } from "@/types/achievementTypes";
 import { useAchievementData } from "./useAchievementData";
@@ -16,6 +16,7 @@ export const useAchievements = () => {
   const {
     loading,
     error,
+    refetch,
     progressData,
     solutions,
     checklistData,
@@ -24,7 +25,7 @@ export const useAchievements = () => {
     totalLikes
   } = useAchievementData();
 
-  useEffect(() => {
+  const generateAchievements = useCallback(() => {
     if (loading || error) return;
 
     try {
@@ -52,11 +53,16 @@ export const useAchievements = () => {
     }
   }, [loading, error, progressData, solutions, checklistData, badgesData, comments, totalLikes, toast]);
 
+  useEffect(() => {
+    generateAchievements();
+  }, [generateAchievements]);
+
   return {
     loading,
     error,
     achievements,
     userProgress: progressData,
-    solutions
+    solutions,
+    refetch
   };
 };
