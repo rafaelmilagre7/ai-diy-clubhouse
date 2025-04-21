@@ -6,7 +6,7 @@ import { useAuth } from "@/contexts/auth";
 import { useProgress } from "@/hooks/onboarding/useProgress";
 import { toast } from "sonner";
 import { saveImplementationTrail } from "./useSaveImplementationTrail";
-import { hasTrailContent } from "./useImplementationTrail.utils";
+import { hasTrailContent, extractErrorMessage } from "./useImplementationTrail.utils";
 
 export type ImplementationRecommendation = {
   solutionId: string;
@@ -31,6 +31,7 @@ export const useImplementationTrail = () => {
   const loadExistingTrail = useCallback(async (forceRefresh = false) => {
     if (!user) {
       setIsLoading(false);
+      setError("Usuário não autenticado");
       return null;
     }
 
@@ -41,6 +42,7 @@ export const useImplementationTrail = () => {
       }
 
       setIsLoading(true);
+      setError(null);
       console.log("Carregando trilha existente para usuário:", user.id);
       
       // Modificado para buscar todas as trilhas e pegar a mais recente
@@ -53,6 +55,7 @@ export const useImplementationTrail = () => {
 
       if (loadError) {
         console.error("Erro ao carregar trilha:", loadError);
+        setError(extractErrorMessage(loadError));
         throw loadError;
       }
 
@@ -67,16 +70,19 @@ export const useImplementationTrail = () => {
           return trailData;
         } else {
           console.log("Trilha encontrada mas sem conteúdo válido");
+          setError("Trilha encontrada mas sem conteúdo válido");
           setTrail(null);
           return null;
         }
       } else {
         console.log("Nenhuma trilha encontrada para o usuário");
+        setError("Nenhuma trilha encontrada para o usuário");
         setTrail(null);
         return null;
       }
     } catch (error) {
       console.error("Erro ao carregar trilha existente:", error);
+      setError(extractErrorMessage(error));
       return null;
     } finally {
       setIsLoading(false);

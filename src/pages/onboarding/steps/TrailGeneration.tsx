@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { TrailLoadingState } from "@/components/onboarding/TrailGeneration/TrailLoadingState";
 import { TrailErrorState } from "@/components/onboarding/TrailGeneration/TrailErrorState";
+import { extractErrorMessage } from "@/hooks/implementation/useImplementationTrail.utils";
 
 const TrailGeneration = () => {
   const navigate = useNavigate();
@@ -19,7 +20,8 @@ const TrailGeneration = () => {
     generateImplementationTrail, 
     refreshTrail,
     clearTrail,
-    hasContent 
+    hasContent,
+    error: trailError
   } = useImplementationTrail();
   
   const [generatingTrail, setGeneratingTrail] = useState(false);
@@ -27,45 +29,80 @@ const TrailGeneration = () => {
   const [loadingError, setLoadingError] = useState(false);
   const [loadingTimeout, setLoadingTimeout] = useState(false);
   const [attemptCount, setAttemptCount] = useState(0);
+  const [errorDetails, setErrorDetails] = useState<string | undefined>();
+  const [loadStartTime, setLoadStartTime] = useState<number | null>(null);
 
-  // Verificar se temos trilha ao carregar
+  // Verificar se temos trilha ao carregar e obter URL params
   useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const autoGenerate = urlParams.get('autoGenerate') === 'true';
+    
     const loadInitialTrail = async () => {
       try {
+        // Rastrear início do carregamento
+        setLoadStartTime(Date.now());
         setAttemptCount(prev => prev + 1);
-        await refreshTrail(true);
+        
+        const trailData = await refreshTrail(true);
+        
+        // Se não temos trilha e autoGenerate está ativado, gerar automaticamente
+        if ((!trailData || !hasContent) && autoGenerate && attemptCount === 0) {
+          startTrailGeneration();
+        }
+        
+        setLoadStartTime(null);
       } catch (error) {
         console.error("Erro ao carregar trilha inicial:", error);
+        setErrorDetails(extractErrorMessage(error));
+        setLoadingError(true);
+        setLoadStartTime(null);
       }
     };
     
     loadInitialTrail();
     
-    // Timeout para evitar espera infinita
+    // Timeout para evitar espera infinita (15 segundos)
     const timeout = setTimeout(() => {
-      if (isLoading) {
-        setLoadingTimeout(true);
+      if (isLoading && loadStartTime) {
+        const loadDuration = Date.now() - loadStartTime;
+        if (loadDuration > 15000) {
+          setLoadingTimeout(true);
+          setLoadStartTime(null);
+        }
       }
-    }, 12000);
+    }, 15000);
     
     return () => clearTimeout(timeout);
-  }, [refreshTrail]);
+  }, [refreshTrail, hasContent, attemptCount]);
+
+  // Observar mudanças de erro da implementação
+  useEffect(() => {
+    if (trailError) {
+      setErrorDetails(extractErrorMessage(trailError));
+      setLoadingError(true);
+    }
+  }, [trailError]);
 
   const startTrailGeneration = async () => {
     setLoadingError(false);
     setLoadingTimeout(false);
     setShowMagicExperience(true);
     setGeneratingTrail(true);
+    setLoadStartTime(Date.now());
+    setErrorDetails(undefined);
     
     try {
       await generateImplementationTrail();
       toast.success("Trilha personalizada gerada com sucesso!");
+      setLoadStartTime(null);
     } catch (error) {
       console.error("Erro ao gerar trilha:", error);
       setLoadingError(true);
+      setErrorDetails(extractErrorMessage(error));
       toast.error("Erro ao gerar trilha. Tente novamente.");
     } finally {
       setGeneratingTrail(false);
+      setLoadStartTime(null);
     }
   };
 
@@ -73,6 +110,8 @@ const TrailGeneration = () => {
     setAttemptCount(prev => prev + 1);
     setLoadingError(false);
     setLoadingTimeout(false);
+    setLoadStartTime(Date.now());
+    setErrorDetails(undefined);
     
     try {
       // Limpar trilha existente para forçar reload completo
@@ -80,12 +119,22 @@ const TrailGeneration = () => {
       
       // Pequeno delay para garantir limpeza
       setTimeout(async () => {
-        await refreshTrail(true);
-        toast.success("Trilha recarregada com sucesso!");
+        try {
+          await refreshTrail(true);
+          toast.success("Trilha recarregada com sucesso!");
+        } catch (error) {
+          console.error("Erro ao recarregar trilha após limpeza:", error);
+          setErrorDetails(extractErrorMessage(error));
+          setLoadingError(true);
+        } finally {
+          setLoadStartTime(null);
+        }
       }, 500);
     } catch (error) {
       console.error("Erro ao recarregar trilha:", error);
+      setErrorDetails(extractErrorMessage(error));
       setLoadingError(true);
+      setLoadStartTime(null);
     }
   }, [clearTrail, refreshTrail]);
 
@@ -95,6 +144,10 @@ const TrailGeneration = () => {
 
   const handleBackToOnboarding = () => {
     navigate("/onboarding");
+  };
+
+  const handleGoToDashboard = () => {
+    navigate("/dashboard");
   };
 
   // Mostrar estado de carregamento
@@ -115,6 +168,8 @@ const TrailGeneration = () => {
           onRegenerate={startTrailGeneration}
           onForceRefresh={handleForceRefresh}
           onGoBack={handleBackToOnboarding}
+          attemptCount={attemptCount}
+          errorDetails={errorDetails}
         />
       </TrailGenerationHeader>
     );

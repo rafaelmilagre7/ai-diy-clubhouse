@@ -18,6 +18,11 @@ export const hasTrailContent = (trail: any): boolean => {
     
     const hasAnySolutions = hasSolutionInPriority1 || hasSolutionInPriority2 || hasSolutionInPriority3;
     
+    // Verifica de forma mais detalhada o conteúdo da trilha para melhorar o diagnóstico
+    if (!hasAnySolutions) {
+      console.warn("Trilha sem soluções válidas:", trail);
+    }
+    
     return hasAnySolutions;
   } catch (error) {
     console.error("Erro ao verificar conteúdo da trilha:", error);
@@ -28,10 +33,10 @@ export const hasTrailContent = (trail: any): boolean => {
 /**
  * Verifica se uma trilha está em estado de carregamento perpétuo
  */
-export const isTrailStuck = (lastLoadTime: number | null, loadingTime = 10000): boolean => {
+export const isTrailStuck = (lastLoadTime: number | null, loadingTime = 15000): boolean => {
   if (!lastLoadTime) return false;
   
-  // Se estiver carregando há mais de X segundos (padrão 10s), consideramos travado
+  // Aumentamos o tempo limite para 15 segundos para dar mais margem para conexões lentas
   const currentTime = Date.now();
   const loadingDuration = currentTime - lastLoadTime;
   
@@ -77,6 +82,15 @@ export const sanitizeTrailData = (trail: any): any => {
     sanitized.priority2 = sanitized.priority2.filter(item => item && item.solutionId);
     sanitized.priority3 = sanitized.priority3.filter(item => item && item.solutionId);
     
+    // Verificar se ainda restam itens após a limpeza
+    const isEmpty = sanitized.priority1.length === 0 && 
+                   sanitized.priority2.length === 0 && 
+                   sanitized.priority3.length === 0;
+                   
+    if (isEmpty) {
+      console.warn("Trilha sanitizada ficou vazia");
+    }
+    
     return sanitized;
   } catch (error) {
     console.error("Erro ao sanitizar dados da trilha:", error);
@@ -86,4 +100,29 @@ export const sanitizeTrailData = (trail: any): any => {
       priority3: []
     };
   }
+};
+
+/**
+ * Verifica se a API está demorando muito para responder
+ */
+export const isApiTimeout = (startTime: number | null, timeout = 20000): boolean => {
+  if (!startTime) return false;
+  return (Date.now() - startTime) > timeout;
+};
+
+/**
+ * Extrai mensagem de erro para exibição ao usuário
+ */
+export const extractErrorMessage = (error: any): string => {
+  if (!error) return "Erro desconhecido";
+  
+  if (typeof error === 'string') return error;
+  
+  if (error.message) return error.message;
+  
+  if (error.error) return typeof error.error === 'string' 
+    ? error.error 
+    : JSON.stringify(error.error);
+  
+  return JSON.stringify(error);
 };
