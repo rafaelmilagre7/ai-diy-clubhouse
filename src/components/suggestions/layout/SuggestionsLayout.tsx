@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { useSuggestions } from '@/hooks/suggestions/useSuggestions';
+import { useSuggestions, SuggestionFilter } from '@/hooks/suggestions/useSuggestions';
 import { SuggestionsHeader } from './SuggestionsHeader';
 import { SuggestionsContent } from './SuggestionsContent';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -35,6 +35,10 @@ const SuggestionsLayout = () => {
     refetch();
   };
 
+  const handleFilterChange = (value: SuggestionFilter) => {
+    setFilter(value);
+  };
+
   React.useEffect(() => {
     console.log("Quantidade de sugestões carregadas:", suggestions?.length || 0);
     if (suggestions && suggestions.length > 0) {
@@ -49,7 +53,7 @@ const SuggestionsLayout = () => {
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
           filter={filter}
-          onFilterChange={setFilter}
+          onFilterChange={handleFilterChange}
         />
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[1, 2, 3, 4, 5, 6].map((i) => (
@@ -72,7 +76,7 @@ const SuggestionsLayout = () => {
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         filter={filter}
-        onFilterChange={setFilter}
+        onFilterChange={handleFilterChange}
       />
       
       {error ? (

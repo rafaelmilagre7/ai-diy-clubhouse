@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { Suggestion } from '@/types/suggestionTypes';
 
-type SuggestionFilter = 'all' | 'popular' | 'recent';
+export type SuggestionFilter = 'all' | 'popular' | 'recent';
 
 export const useSuggestions = () => {
   const [filter, setFilter] = useState<SuggestionFilter>('popular');

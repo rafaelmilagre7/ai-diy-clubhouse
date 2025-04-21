@@ -5,12 +5,13 @@ import { Input } from '@/components/ui/input';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Plus, Search, TrendingUp, Clock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { SuggestionFilter } from '@/hooks/suggestions/useSuggestions';
 
 interface SuggestionsHeaderProps {
   searchQuery: string;
   onSearchChange: (value: string) => void;
-  filter: string;
-  onFilterChange: (value: string) => void;
+  filter: SuggestionFilter;
+  onFilterChange: (value: SuggestionFilter) => void;
 }
 
 export const SuggestionsHeader: React.FC<SuggestionsHeaderProps> = ({
@@ -49,7 +50,7 @@ export const SuggestionsHeader: React.FC<SuggestionsHeaderProps> = ({
           type="single" 
           defaultValue={filter} 
           value={filter}
-          onValueChange={(value) => value && onFilterChange(value)}
+          onValueChange={(value) => value && onFilterChange(value as SuggestionFilter)}
           className="flex-shrink-0"
         >
           <ToggleGroupItem value="popular" className="gap-1 whitespace-nowrap">
