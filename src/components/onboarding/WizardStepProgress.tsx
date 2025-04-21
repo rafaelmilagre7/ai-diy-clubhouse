@@ -17,15 +17,14 @@ export const WizardStepProgress = ({
   stepTitles,
   onStepClick
 }: WizardStepProgressProps) => {
-  // Gerar array de etapas
   const steps = Array.from({ length: totalSteps }, (_, i) => i + 1);
   
   return (
     <TooltipProvider>
-      <div className="mb-6 px-4 py-4 rounded-lg bg-white shadow-sm border border-[#0ABAB5]/10">
+      <div className="relative px-4 py-4 rounded-lg bg-white dark:bg-gray-800 shadow-sm border border-gray-200 dark:border-gray-700">
         <div className="relative flex items-center justify-between">
           {/* Linha de progresso base */}
-          <div className="absolute left-0 top-1/2 transform -translate-y-1/2 w-full h-1 bg-gray-100 rounded-full" />
+          <div className="absolute left-0 top-1/2 transform -translate-y-1/2 w-full h-1 bg-gray-100 dark:bg-gray-700 rounded-full" />
           
           {/* Linha de progresso preenchida */}
           <div 
@@ -45,10 +44,10 @@ export const WizardStepProgress = ({
                   <div 
                     className={cn(
                       "relative z-10 flex items-center justify-center w-10 h-10 rounded-full transition-all duration-200",
-                      isClickable && "cursor-pointer",
-                      isComplete ? "bg-green-500 text-white" : 
-                      isActive ? "bg-[#0ABAB5] text-white ring-4 ring-[#0ABAB5]/20" : 
-                      "bg-white border-2 border-gray-200 text-gray-400"
+                      isClickable && "cursor-pointer hover:scale-110",
+                      isComplete ? "bg-green-500 text-white shadow-sm" : 
+                      isActive ? "bg-[#0ABAB5] text-white ring-4 ring-[#0ABAB5]/20 shadow-lg scale-110" : 
+                      "bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-600 text-gray-400"
                     )}
                     onClick={isClickable ? () => onStepClick(step) : undefined}
                   >
@@ -59,10 +58,35 @@ export const WizardStepProgress = ({
                     )}
                   </div>
                 </TooltipTrigger>
-                <TooltipContent side="bottom" className="bg-[#0ABAB5] text-white">
+                <TooltipContent 
+                  side="bottom" 
+                  className="bg-[#0ABAB5] text-white"
+                >
                   {stepTitles[step - 1]}
                 </TooltipContent>
               </Tooltip>
+            );
+          })}
+        </div>
+
+        {/* Etapas em tela pequena */}
+        <div className="mt-4 grid grid-cols-2 gap-2 md:hidden">
+          {steps.map((step) => {
+            const isComplete = step < currentStep;
+            const isActive = step === currentStep;
+            
+            return (
+              <div 
+                key={step}
+                className={cn(
+                  "text-xs px-2 py-1 rounded",
+                  isComplete ? "text-green-500" :
+                  isActive ? "text-[#0ABAB5] font-medium" :
+                  "text-gray-400"
+                )}
+              >
+                {step}. {stepTitles[step - 1]}
+              </div>
             );
           })}
         </div>

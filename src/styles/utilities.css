@@ -1,4 +1,3 @@
-
 /* Utilitários extras, gradientes, animações customizadas para responsividade, glass, hover, efeitos */
 
 .bg-size-200 {
@@ -102,4 +101,29 @@
 }
 @keyframes stat-item-enter {
   to { opacity: 1; transform: translateY(0); }
+}
+
+/* Animações e efeitos para o onboarding */
+.onboarding-step-enter {
+  animation: step-enter 0.3s ease-out;
+}
+
+@keyframes step-enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.onboarding-fade-in {
+  animation: fade-in 0.2s ease-out;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
