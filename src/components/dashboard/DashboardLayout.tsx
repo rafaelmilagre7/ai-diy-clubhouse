@@ -1,3 +1,4 @@
+
 import { FC } from "react";
 import { ActiveSolutions } from "./ActiveSolutions";
 import { CompletedSolutions } from "./CompletedSolutions";
@@ -7,6 +8,7 @@ import { Solution } from "@/lib/supabase";
 import { ModernDashboardHeader } from "./ModernDashboardHeader";
 import { KpiGrid } from "./KpiGrid";
 import { useAuth } from "@/contexts/auth";
+import { AchievementsSummary } from "./AchievementsSummary"; // Adicionando a importação do componente
 
 interface DashboardLayoutProps {
   active: Solution[];
