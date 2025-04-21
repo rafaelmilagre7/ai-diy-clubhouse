@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useModuleImplementation } from "@/hooks/useModuleImplementation";
 import LoadingScreen from "@/components/common/LoadingScreen";
@@ -14,7 +13,6 @@ import { ImplementationComplete } from "@/components/implementation/content/Impl
 import { CommentsSection } from "@/components/implementation/content/tool-comments/CommentsSection";
 import { useSolutionCompletion } from "@/hooks/implementation/useSolutionCompletion";
 import { useRealtimeComments } from "@/hooks/implementation/useRealtimeComments";
-import { WizardStepProgress } from "@/components/implementation/WizardStepProgress";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { ImplementationTabsNavigation } from "@/components/implementation/ImplementationTabsNavigation";
 
@@ -97,15 +95,6 @@ const SolutionImplementation = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#f8fdff] via-[#f0fafe] to-[#edf6fb] pb-16">
       <div className="container max-w-4xl py-4 md:py-6 animate-fade-in">
-        <WizardStepProgress
-          currentStep={currentStep}
-          totalSteps={modules.length}
-          stepTitles={[
-            "Início", "Visão Geral", "Preparação", "Implementação",
-            "Verificação", "Resultados", "Otimização", "Celebração"
-          ]}
-        />
-        
         <GlassCard className="p-0 md:p-0 transition-all duration-300 shadow-xl border border-[#0ABAB5]/10 overflow-hidden">
           <ImplementationHeader solution={solution} />
           

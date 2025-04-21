@@ -1,10 +1,24 @@
 
 import { Solution } from "@/lib/supabase";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 interface SolutionHeaderSectionProps {
   solution: Solution;
 }
+
+const getDifficultyStyles = (difficulty: string) => {
+  switch (difficulty) {
+    case "easy":
+      return "bg-green-100 text-green-800 border-green-200";
+    case "medium":
+      return "bg-yellow-100 text-yellow-800 border-yellow-200";
+    case "advanced":
+      return "bg-red-100 text-red-800 border-red-200";
+    default:
+      return "bg-gray-100 text-gray-800 border-gray-200";
+  }
+};
 
 export const SolutionHeaderSection = ({ solution }: SolutionHeaderSectionProps) => {
   return (
@@ -24,11 +38,29 @@ export const SolutionHeaderSection = ({ solution }: SolutionHeaderSectionProps) 
            "Estratégia"}
         </Badge>
         
-        <Badge variant="outline" className="px-3 py-1 rounded-full bg-gradient-to-r from-neutral-100 to-neutral-50 shadow-sm">
+        <Badge 
+          variant="outline" 
+          className={cn(
+            "px-3 py-1 rounded-full shadow-sm font-medium border",
+            getDifficultyStyles(solution.difficulty)
+          )}
+        >
           {solution.difficulty === "easy" ? "Fácil" :
            solution.difficulty === "medium" ? "Médio" :
-           "Avançado"}
+           solution.difficulty === "advanced" ? "Avançado" : solution.difficulty}
         </Badge>
+        {/* Só mostra tempo estimado se existir */}
+        {solution.estimated_time && (
+          <Badge variant="outline" className="px-2 py-1 bg-slate-50 text-slate-700 border-slate-200">
+            {solution.estimated_time} min
+          </Badge>
+        )}
+        {/* Só mostra taxa de sucesso se existir */}
+        {typeof solution.success_rate === "number" && (
+          <Badge variant="outline" className="px-2 py-1 bg-blue-50 text-blue-800 border-blue-200">
+            {solution.success_rate}% sucesso
+          </Badge>
+        )}
       </div>
       
       <h1 className="text-2xl md:text-3xl font-bold font-heading bg-clip-text text-transparent bg-gradient-to-r from-neutral-900 to-neutral-700">

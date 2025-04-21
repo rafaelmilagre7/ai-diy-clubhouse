@@ -11,6 +11,19 @@ interface SolutionCardProps {
   solution: Solution;
 }
 
+const getDifficultyBadgeStyle = (difficulty: string) => {
+  switch (difficulty) {
+    case "easy":
+      return "bg-green-100 text-green-800 border-green-200";
+    case "medium":
+      return "bg-yellow-100 text-yellow-800 border-yellow-200";
+    case "advanced":
+      return "bg-red-100 text-red-800 border-red-200";
+    default:
+      return "bg-gray-100 text-gray-800 border-gray-200";
+  }
+};
+
 export const SolutionCard: React.FC<SolutionCardProps> = ({ solution }) => {
   const getCategoryDetails = (category: string) => {
     switch (category) {
@@ -41,22 +54,6 @@ export const SolutionCard: React.FC<SolutionCardProps> = ({ solution }) => {
     }
   };
 
-  const getDifficultyDetails = (difficulty: string) => {
-    switch (difficulty) {
-      case 'easy':
-        return { name: 'Fácil', color: 'text-green-600' };
-      case 'medium':
-        return { name: 'Médio', color: 'text-yellow-600' };
-      case 'advanced':
-        return { name: 'Avançado', color: 'text-red-600' };
-      default:
-        return { name: 'Não definido', color: 'text-gray-600' };
-    }
-  };
-
-  const category = getCategoryDetails(solution.category);
-  const difficulty = getDifficultyDetails(solution.difficulty);
-  
   return (
     <Link to={`/solution/${solution.id}`} className="block">
       <Card className="h-full overflow-hidden transition-shadow hover:shadow-md">
@@ -75,11 +72,11 @@ export const SolutionCard: React.FC<SolutionCardProps> = ({ solution }) => {
             )}
             <Badge 
               variant="outline"
-              className={`absolute top-2 left-2 ${category.color}`}
+              className={`absolute top-2 left-2 ${getCategoryDetails(solution.category).color}`}
             >
               <span className="flex items-center">
-                {category.icon}
-                <span className="ml-1">{category.name}</span>
+                {getCategoryDetails(solution.category).icon}
+                <span className="ml-1">{getCategoryDetails(solution.category).name}</span>
               </span>
             </Badge>
           </div>
@@ -92,16 +89,33 @@ export const SolutionCard: React.FC<SolutionCardProps> = ({ solution }) => {
             </p>
           </ScrollArea>
         </CardContent>
-        <CardFooter className="p-4 pt-0 flex justify-between text-xs text-muted-foreground">
-          <div className="flex items-center">
-            <Clock className="h-3 w-3 mr-1" />
-            <span>{solution.estimated_time || 45} min</span>
-          </div>
-          <div className={`font-medium ${difficulty.color}`}>
-            {difficulty.name}
-          </div>
+        <CardFooter className="p-4 pt-0 flex gap-2 flex-wrap justify-between text-xs text-muted-foreground">
+          {solution.estimated_time && (
+            <div className="flex items-center">
+              <Clock className="h-3 w-3 mr-1" />
+              <span>{solution.estimated_time} min</span>
+            </div>
+          )}
+          <Badge
+            variant="outline"
+            className={`font-medium ${getDifficultyBadgeStyle(solution.difficulty)}`}
+          >
+            {solution.difficulty === "easy"
+              ? "Fácil"
+              : solution.difficulty === "medium"
+              ? "Médio"
+              : solution.difficulty === "advanced"
+              ? "Avançado"
+              : solution.difficulty}
+          </Badge>
+          {typeof solution.success_rate === "number" && (
+            <Badge variant="outline" className="bg-blue-50 text-blue-800 border-blue-200">
+              {solution.success_rate}% sucesso
+            </Badge>
+          )}
         </CardFooter>
       </Card>
     </Link>
   );
 };
+
