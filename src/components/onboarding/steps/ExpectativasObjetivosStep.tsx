@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useForm, Controller } from "react-hook-form";
 import { Button } from "@/components/ui/button";
@@ -6,7 +5,7 @@ import { Form, FormItem, FormLabel, FormMessage, FormControl, FormDescription, F
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Slider } from "@/components/ui/slider";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { Check, User, Users, Lightbulb, Rocket, TrendingUp, Handshake, Tool, Club, Video, Text, Headphones, Workshop } from "lucide-react";
+import { Check, User, Users, Lightbulb, Rocket, TrendingUp, Handshake, Wrench, ClipboardList, Video, FileText, Headphones, UserRound, Presentation } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { OnboardingStepProps } from "@/types/onboarding";
 
@@ -57,10 +56,10 @@ const IMPLEMENTATION_OPTIONS = [
 
 const FORMATO_OPTIONS = [
   { value: "video", icon: <Video />, label: "Vídeo" },
-  { value: "texto", icon: <Text />, label: "Texto" },
+  { value: "texto", icon: <FileText />, label: "Texto" },
   { value: "audio", icon: <Headphones />, label: "Áudio" },
-  { value: "ao_vivo", icon: <User />, label: "Ao vivo" },
-  { value: "workshop", icon: <Tool />, label: "Workshop prático" }
+  { value: "ao_vivo", icon: <UserRound />, label: "Ao vivo" },
+  { value: "workshop", icon: <Presentation />, label: "Workshop prático" }
 ];
 
 const MOTIVOS_OPCOES = [
@@ -69,9 +68,9 @@ const MOTIVOS_OPCOES = [
   { value: "implementar_solucoes", label: "Implementar soluções concretas", icon: <Rocket /> },
   { value: "be_atualizado", label: "Manter-me atualizado sobre IA", icon: <TrendingUp /> },
   { value: "mentoria", label: "Mentoria para implementar IA", icon: <Handshake /> },
-  { value: "aprender_ferramentas", label: "Aprender ferramentas práticas", icon: <Tool /> },
+  { value: "aprender_ferramentas", label: "Aprender ferramentas práticas", icon: <Wrench /> },
   { value: "capacitar_time", label: "Capacitar meu time em IA", icon: <User /> },
-  { value: "comunidade", label: "Fazer parte de uma comunidade de IA", icon: <Club /> }
+  { value: "comunidade", label: "Fazer parte de uma comunidade de IA", icon: <ClipboardList /> }
 ];
 
 interface ValoresForm {
@@ -83,6 +82,7 @@ interface ValoresForm {
   live_interest: number;
   content_formats: string[];
 }
+
 export const ExpectativasObjetivosStep: React.FC<OnboardingStepProps> = ({
   onSubmit,
   isSubmitting,
