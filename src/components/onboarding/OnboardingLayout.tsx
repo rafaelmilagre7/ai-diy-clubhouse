@@ -26,7 +26,13 @@ export const OnboardingLayout = ({
   const navigate = useNavigate();
   
   // Função para lidar com o clique no passo
-  const handleStepClick = onStepClick || navigateToStep;
+  const handleStepClick = (step: number) => {
+    if (onStepClick) {
+      onStepClick(step);
+    } else {
+      navigateToStep(step);
+    }
+  };
   
   // Função para voltar para a etapa anterior ou para uma URL específica
   const handleBackClick = () => {

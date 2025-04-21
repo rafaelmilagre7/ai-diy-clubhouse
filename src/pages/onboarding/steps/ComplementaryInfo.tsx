@@ -7,9 +7,9 @@ import { MilagrinhoMessage } from "@/components/onboarding/MilagrinhoMessage";
 import { useProgress } from "@/hooks/onboarding/useProgress";
 
 const ComplementaryInfo = () => {
-  const { saveStepData, progress, completeOnboarding, refreshProgress } = useOnboardingSteps();
+  const { saveStepData, progress, completeOnboarding } = useOnboardingSteps();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { isLoading } = useProgress();
+  const { isLoading, refreshProgress } = useProgress();
 
   // Efeito para carregar dados mais recentes ao entrar na página
   useEffect(() => {

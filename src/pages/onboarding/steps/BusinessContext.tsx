@@ -43,7 +43,12 @@ const BusinessContext = () => {
   // Handler para salvar dados usando o novo formato
   const handleSave = async (data: any): Promise<void> => {
     try {
-      await saveStepData({ business_context: data }, false);
+      // Formatando os dados para o formato esperado pelo saveStepData
+      const businessContextData = {
+        business_context: data
+      };
+      
+      await saveStepData(businessContextData, false);
     } catch (error) {
       console.error("Erro ao salvar dados:", error);
       toast.error("Erro ao salvar dados. Tente novamente.");

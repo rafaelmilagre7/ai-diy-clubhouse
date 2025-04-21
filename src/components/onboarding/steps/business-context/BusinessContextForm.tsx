@@ -23,19 +23,23 @@ export const BusinessContextForm: React.FC<BusinessContextFormProps> = ({ progre
 
   const { control, handleSubmit, formState: { errors, isSubmitting } } = useForm({
     defaultValues: {
-      business_model: progress?.business_context?.business_model || "",
-      business_challenges: progress?.business_context?.business_challenges || [],
-      short_term_goals: progress?.business_context?.short_term_goals || [],
-      medium_term_goals: progress?.business_context?.medium_term_goals || [],
-      important_kpis: progress?.business_context?.important_kpis || [],
-      additional_context: progress?.business_context?.additional_context || ""
+      business_model: progress?.business_context?.business_model || progress?.business_data?.business_model || "",
+      business_challenges: progress?.business_context?.business_challenges || progress?.business_data?.business_challenges || [],
+      short_term_goals: progress?.business_context?.short_term_goals || progress?.business_data?.short_term_goals || [],
+      medium_term_goals: progress?.business_context?.medium_term_goals || progress?.business_data?.medium_term_goals || [],
+      important_kpis: progress?.business_context?.important_kpis || progress?.business_data?.important_kpis || [],
+      additional_context: progress?.business_context?.additional_context || progress?.business_data?.additional_context || ""
     }
   });
 
   const onSubmit = async (data: any) => {
     try {
-      // Formatando os dados corretamente para o saveStepData
-      await saveStepData({ business_context: data });
+      // Formatando os dados para o formato esperado pelo saveStepData
+      const businessContextData = {
+        business_context: data
+      };
+      
+      await saveStepData(businessContextData);
       toast.success("Informações salvas com sucesso!");
       navigate("/onboarding/ai-experience");
     } catch (error) {

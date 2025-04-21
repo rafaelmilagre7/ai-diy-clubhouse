@@ -8,9 +8,9 @@ import { useProgress } from "@/hooks/onboarding/useProgress";
 import { toast } from "sonner";
 
 const BusinessGoalsClub = () => {
-  const { saveStepData, progress, completeOnboarding, refreshProgress } = useOnboardingSteps();
+  const { saveStepData, progress, completeOnboarding } = useOnboardingSteps();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { isLoading } = useProgress();
+  const { isLoading, refreshProgress } = useProgress();
   const [refreshCount, setRefreshCount] = useState(0);
 
   // Efeito para carregar dados mais recentes ao entrar na página

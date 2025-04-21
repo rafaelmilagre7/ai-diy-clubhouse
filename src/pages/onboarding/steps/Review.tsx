@@ -6,8 +6,8 @@ import { ReviewStep } from "@/components/onboarding/steps/ReviewStep";
 import { useProgress } from "@/hooks/onboarding/useProgress";
 
 const Review = () => {
-  const { completeOnboarding, isSubmitting, navigateToStep, progress, refreshProgress } = useOnboardingSteps();
-  const { isLoading } = useProgress();
+  const { completeOnboarding, navigateToStep } = useOnboardingSteps();
+  const { progress, isLoading, refreshProgress } = useProgress();
 
   // Efeito para carregar dados mais recentes ao entrar na página
   useEffect(() => {
@@ -30,8 +30,8 @@ const Review = () => {
           <ReviewStep
             progress={progress}
             onComplete={completeOnboarding}
-            isSubmitting={isSubmitting}
-            navigateToStep={navigateToStep}
+            isSubmitting={false}
+            navigateToStep={(index: number) => navigateToStep(index)}
           />
         )}
       </div>

@@ -9,9 +9,9 @@ import { toast } from "sonner";
 import { useLogging } from "@/hooks/useLogging";
 
 const AIExperience = () => {
-  const { saveStepData, progress, completeOnboarding, refreshProgress } = useOnboardingSteps();
+  const { saveStepData, progress, completeOnboarding } = useOnboardingSteps();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { isLoading } = useProgress();
+  const { isLoading, refreshProgress } = useProgress();
   const { log } = useLogging();
 
   // Efeito para carregar dados mais recentes ao entrar na página

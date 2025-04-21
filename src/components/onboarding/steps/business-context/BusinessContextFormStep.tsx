@@ -39,9 +39,10 @@ export const BusinessContextFormStep: React.FC<BusinessContextFormStepProps> = (
     
     // Verificar tanto business_data quanto business_context para compatibilidade
     const businessData = progress.business_data || {};
-    const businessContext = progress.business_context || {};
+    // Usar business_context se existir, caso contrário buscar de business_data
+    const businessContext = progress.business_context || businessData;
     
-    // Combinar dados de ambas as fontes, priorizando business_context
+    // Combinar dados de ambas as fontes, priorizando business_context se existir
     const combinedData = { ...businessData, ...businessContext };
     
     console.log("Dados iniciais do contexto de negócios:", combinedData);

@@ -13,8 +13,8 @@ import { ProfessionalDataStep } from "./steps/ProfessionalDataStep";
 
 export const OnboardingSteps = () => {
   const {
-    currentStep,
     currentStepIndex,
+    currentStep,
     steps,
     isSubmitting,
     saveStepData,
@@ -36,7 +36,7 @@ export const OnboardingSteps = () => {
         progress={progress} 
         onComplete={completeOnboarding} 
         isSubmitting={isSubmitting}
-        navigateToStep={navigateToStep}
+        navigateToStep={(index: number) => navigateToStep(index)}
       />
     ),
   };

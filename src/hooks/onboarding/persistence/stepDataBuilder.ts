@@ -1,3 +1,4 @@
+
 import { steps } from "../useStepDefinitions";
 import { OnboardingData, OnboardingProgress } from "@/types/onboarding";
 
@@ -34,23 +35,40 @@ export function buildUpdateObject(
   } else if (stepId === "business_context") {
     // Salvar dados de contexto de negócio em ambos os campos para compatibilidade
     if (data.business_context) {
-      // Salvar em business_context
-      const existingBusinessContext = progress.business_context || {};
-      updateObj.business_context = {
-        ...existingBusinessContext,
-        ...data.business_context
-      };
+      // Dados a serem salvos
+      const contextData = data.business_context;
       
-      // Salvar também em business_data para compatibilidade
+      // Salvar também no campo business_data para compatibilidade
       const existingBusinessData = progress.business_data || {};
       updateObj.business_data = {
         ...existingBusinessData,
-        ...data.business_context
+        ...contextData
       };
       
-      console.log("Salvando business_context em ambos os campos:", data.business_context);
+      // Também salvar em business_context para o novo padrão
+      updateObj.business_context = {
+        ...existingBusinessData, // Base nos dados antigos se existirem
+        ...contextData // Novos dados sobrescrevem os antigos
+      };
+      
+      console.log("Salvando contexto de negócio em ambos os campos:", contextData);
+    } else if (typeof data === 'object' && data !== null) {
+      // Caso estejamos recebendo apenas um objeto de dados direto sem o wrapper business_context
+      console.log("Recebendo objeto direto de dados de contexto de negócio:", data);
+      
+      // Salvar nos dois campos
+      const existingBusinessData = progress.business_data || {};
+      updateObj.business_data = {
+        ...existingBusinessData,
+        ...data
+      };
+      
+      updateObj.business_context = {
+        ...existingBusinessData,
+        ...data
+      };
     } else {
-      console.warn("business_context não encontrado nos dados enviados");
+      console.warn("Formato inesperado de dados para business_context:", data);
     }
   } else if (stepId === "ai_exp") {
     // Salvar dados de experiência com IA
@@ -73,15 +91,22 @@ export function buildUpdateObject(
       
       updateObj.ai_experience = aiData;
       console.log("Objeto final de AI Experience:", updateObj.ai_experience);
+    } else if (typeof data === 'object' && data !== null) {
+      // Caso estejamos recebendo apenas um objeto de dados direto
+      const existingAiExperience = progress.ai_experience || {};
+      updateObj.ai_experience = {
+        ...existingAiExperience,
+        ...data
+      };
     } else {
-      console.warn("ai_experience não encontrado nos dados enviados");
+      console.warn("Formato inesperado de dados para ai_experience:", data);
     }
   } else if (stepId === "business_goals") {
     // Salvar dados de objetivos de negócio
     const existingBusinessGoals = progress.business_goals || {};
     
     // Adicionar log para depuração do problema
-    console.log("Dados de objetivos recebidos:", data.business_goals);
+    console.log("Dados de objetivos recebidos:", data.business_goals || data);
     console.log("Objetivos existentes:", existingBusinessGoals);
     
     if (data.business_goals) {
@@ -95,32 +120,60 @@ export function buildUpdateObject(
           !data.business_goals.expected_outcome_30days) {
         data.business_goals.expected_outcome_30days = data.business_goals.expected_outcomes[0];
       }
+      
+      updateObj.business_goals = {
+        ...existingBusinessGoals,
+        ...data.business_goals
+      };
+    } else if (typeof data === 'object' && data !== null) {
+      // Se recebemos diretamente um objeto de dados
+      updateObj.business_goals = {
+        ...existingBusinessGoals,
+        ...data
+      };
+      
+      // Garantir que expected_outcomes seja um array se tivermos expected_outcome_30days
+      if (data.expected_outcome_30days && !data.expected_outcomes) {
+        updateObj.business_goals.expected_outcomes = [data.expected_outcome_30days];
+      }
     }
-    
-    updateObj.business_goals = {
-      ...existingBusinessGoals,
-      ...(data.business_goals || {})
-    };
     
     console.log("Salvando business_goals:", updateObj.business_goals);
   } else if (stepId === "experience_personalization") {
     // Salvar dados de personalização de experiência
     const existingExperiencePersonalization = progress.experience_personalization || {};
-    updateObj.experience_personalization = {
-      ...existingExperiencePersonalization,
-      ...(data.experience_personalization || {})
-    };
+    
+    if (data.experience_personalization) {
+      updateObj.experience_personalization = {
+        ...existingExperiencePersonalization,
+        ...data.experience_personalization
+      };
+    } else if (typeof data === 'object' && data !== null) {
+      // Se recebemos diretamente um objeto de dados
+      updateObj.experience_personalization = {
+        ...existingExperiencePersonalization,
+        ...data
+      };
+    }
+    
     console.log("Salvando experience_personalization:", updateObj.experience_personalization);
   } else if (stepId === "complementary_info") {
     // Salvar informações complementares
-    if (progress.complementary_info) {
+    const existingComplementaryInfo = progress.complementary_info || {};
+    
+    if (data.complementary_info) {
       updateObj.complementary_info = {
-        ...progress.complementary_info,
-        ...(data.complementary_info || {})
+        ...existingComplementaryInfo,
+        ...data.complementary_info
       };
-    } else {
-      updateObj.complementary_info = data.complementary_info || {};
+    } else if (typeof data === 'object' && data !== null) {
+      // Se recebemos diretamente um objeto de dados
+      updateObj.complementary_info = {
+        ...existingComplementaryInfo,
+        ...data
+      };
     }
+    
     console.log("Salvando complementary_info:", updateObj.complementary_info);
   } else if (stepId === "goals") {
     // Compatibilidade com etapa de objetivos antiga
