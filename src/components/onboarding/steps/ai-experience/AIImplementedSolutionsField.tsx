@@ -1,10 +1,11 @@
 
 import React from "react";
-import { Controller } from "react-hook-form";
+import { Controller, FieldError } from "react-hook-form";
 import { Checkbox } from "@/components/ui/checkbox";
 
 interface AIImplementedSolutionsFieldProps {
   control: any;
+  error?: FieldError | FieldError[];
 }
 
 const implementedSolutionsOptions = [
@@ -21,7 +22,7 @@ const implementedSolutionsOptions = [
   "Outro",
 ];
 
-export const AIImplementedSolutionsField: React.FC<AIImplementedSolutionsFieldProps> = ({ control }) => (
+export const AIImplementedSolutionsField: React.FC<AIImplementedSolutionsFieldProps> = ({ control, error }) => (
   <div className="space-y-4 bg-gray-50 p-6 rounded-lg">
     <h3 className="text-lg font-medium text-gray-800">Quais soluções de IA você já implementou?</h3>
     <Controller
@@ -48,9 +49,10 @@ export const AIImplementedSolutionsField: React.FC<AIImplementedSolutionsFieldPr
               <span className="text-sm">{solution}</span>
             </label>
           ))}
-          {fieldState.error && (
+          {(fieldState.error || error) && (
             <span className="text-red-500 text-xs col-span-full">
-              {fieldState.error.message}
+              {fieldState.error?.message || 
+               (typeof error === 'object' && 'message' in error ? error.message : 'Erro de validação')}
             </span>
           )}
         </div>

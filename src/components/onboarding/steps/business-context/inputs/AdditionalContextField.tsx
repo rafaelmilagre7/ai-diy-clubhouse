@@ -1,19 +1,20 @@
 
 import React from "react";
-import { Controller } from "react-hook-form";
+import { Controller, FieldError } from "react-hook-form";
 import { Textarea } from "@/components/ui/textarea";
 import { FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
 
 interface AdditionalContextFieldProps {
   control: any;
+  error?: FieldError;
 }
 
-export const AdditionalContextField: React.FC<AdditionalContextFieldProps> = ({ control }) => {
+export const AdditionalContextField: React.FC<AdditionalContextFieldProps> = ({ control, error }) => {
   return (
     <FormField
       control={control}
       name="additional_context"
-      render={({ field }) => (
+      render={({ field, fieldState }) => (
         <FormItem>
           <FormLabel>Contexto adicional (opcional)</FormLabel>
           <FormControl>
@@ -23,6 +24,11 @@ export const AdditionalContextField: React.FC<AdditionalContextFieldProps> = ({ 
               {...field}
             />
           </FormControl>
+          {(fieldState.error || error) && (
+            <span className="text-red-500 text-xs">
+              {fieldState.error?.message || error?.message}
+            </span>
+          )}
         </FormItem>
       )}
     />

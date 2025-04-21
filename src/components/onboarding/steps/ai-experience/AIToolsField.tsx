@@ -1,10 +1,11 @@
 
 import React from "react";
-import { Controller } from "react-hook-form";
+import { Controller, FieldError } from "react-hook-form";
 import { Checkbox } from "@/components/ui/checkbox";
 
 interface AIToolsFieldProps {
   control: any;
+  error?: FieldError | FieldError[];
 }
 
 const toolsOptions = [
@@ -13,7 +14,7 @@ const toolsOptions = [
   "ManyChat", "N8N", "NicoChat",
 ];
 
-export const AIToolsField: React.FC<AIToolsFieldProps> = ({ control }) => (
+export const AIToolsField: React.FC<AIToolsFieldProps> = ({ control, error }) => (
   <div className="space-y-4 bg-gray-50 p-6 rounded-lg">
     <h3 className="text-lg font-medium text-gray-800">Ferramentas de IA que já utilizou</h3>
     <Controller
@@ -40,9 +41,10 @@ export const AIToolsField: React.FC<AIToolsFieldProps> = ({ control }) => (
               <span className="text-sm">{tool}</span>
             </label>
           ))}
-          {fieldState.error && (
+          {(fieldState.error || error) && (
             <span className="text-red-500 text-xs col-span-full">
-              {fieldState.error.message}
+              {fieldState.error?.message || 
+               (typeof error === 'object' && 'message' in error ? error.message : 'Erro de validação')}
             </span>
           )}
         </div>

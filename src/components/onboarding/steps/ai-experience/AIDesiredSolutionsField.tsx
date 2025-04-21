@@ -1,10 +1,10 @@
-
 import React from "react";
-import { Controller } from "react-hook-form";
+import { Controller, FieldError } from "react-hook-form";
 import { Checkbox } from "@/components/ui/checkbox";
 
 interface AIDesiredSolutionsFieldProps {
   control: any;
+  error?: FieldError | FieldError[];
 }
 
 const marketingSolutions = [
@@ -40,7 +40,7 @@ const generalSolutions = [
   "Desenvolvimento de produtos com IA",
 ];
 
-export const AIDesiredSolutionsField: React.FC<AIDesiredSolutionsFieldProps> = ({ control }) => (
+export const AIDesiredSolutionsField: React.FC<AIDesiredSolutionsFieldProps> = ({ control, error }) => (
   <div className="space-y-6 bg-gray-50 p-6 rounded-lg">
     <h3 className="text-lg font-medium text-gray-800">Quais soluções você deseja implementar no seu negócio?</h3>
     <Controller
@@ -55,9 +55,10 @@ export const AIDesiredSolutionsField: React.FC<AIDesiredSolutionsFieldProps> = (
           <CategoryField title="Soluções de Processos com IA" solutions={processSolutions} field={field} />
           <CategoryField title="Soluções de Atendimento ao Cliente com IA" solutions={customerSolutions} field={field} />
           <CategoryField title="Soluções Gerais" solutions={generalSolutions} field={field} />
-          {fieldState.error && (
+          {(fieldState.error || error) && (
             <span className="text-red-500 text-xs block mt-2">
-              {fieldState.error.message}
+              {fieldState.error?.message || 
+               (typeof error === 'object' && 'message' in error ? error.message : 'Erro de validação')}
             </span>
           )}
         </div>
