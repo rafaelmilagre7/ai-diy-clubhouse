@@ -1,4 +1,3 @@
-
 export interface OnboardingData {
   personal_info: {
     name?: string;
@@ -113,7 +112,7 @@ export interface OnboardingProgress {
   current_position?: string;
   annual_revenue?: string;
   
-  // Adicionando as propriedades que estão faltando para a trilha
+  // Adicionando as propriedades para a trilha
   trail_solutions?: any[];
   trail_generated_at?: string;
 }
@@ -127,7 +126,6 @@ export interface OnboardingStepProps {
   personalInfo?: OnboardingData['personal_info'];
 }
 
-// Nova interface para definir uma etapa do onboarding
 export interface OnboardingStep {
   id: string;
   title: string;

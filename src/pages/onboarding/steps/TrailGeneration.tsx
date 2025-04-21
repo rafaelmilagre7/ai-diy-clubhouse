@@ -258,9 +258,7 @@ const TrailGeneration = () => {
         {generated && !generating && !error && (
           <TrailGenerationPanel 
             solutions={trailSolutions}
-            loading={false}
-            onLoadMore={() => console.log("Carregar mais soluções")}
-            progress={progress}
+            onClose={() => navigate('/dashboard')}
           />
         )}
       </div>
