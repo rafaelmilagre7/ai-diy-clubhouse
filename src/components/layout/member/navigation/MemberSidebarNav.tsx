@@ -9,7 +9,8 @@ import {
   Award, 
   HelpCircle,
   Compass,
-  User
+  User,
+  Map
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
@@ -37,6 +38,12 @@ export const MemberSidebarNav = ({ sidebarOpen }: MemberSidebarNavProps) => {
       icon: Compass,
       href: "/onboarding",
       active: currentPath.includes("/onboarding")
+    },
+    {
+      title: "Trilha de Implementação",
+      icon: Map,
+      href: "/implementation-trail",
+      active: currentPath === "/implementation-trail"
     },
     {
       title: "Soluções",

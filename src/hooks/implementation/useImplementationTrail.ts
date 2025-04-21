@@ -35,7 +35,7 @@ export const useImplementationTrail = () => {
   }, [trail]);
 
   // Carregar trilha existente
-  const loadExistingTrail = useCallback(async () => {
+  const loadExistingTrail = useCallback(async (forceRefresh = false) => {
     if (!user) {
       setIsLoading(false);
       setError("Usuário não autenticado");
@@ -43,6 +43,10 @@ export const useImplementationTrail = () => {
     }
 
     try {
+      if (!forceRefresh && trail && hasContent()) {
+        return trail;
+      }
+
       setIsLoading(true);
       setError(null);
 
@@ -51,7 +55,9 @@ export const useImplementationTrail = () => {
         .select("*")
         .eq("user_id", user.id)
         .eq("status", "completed")
-        .single();
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
 
       if (loadError) {
         console.error("Erro ao carregar trilha:", loadError);
@@ -73,15 +79,12 @@ export const useImplementationTrail = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [user]);
+  }, [user, trail, hasContent]);
 
   // Recarregar trilha (com opção de força)
   const refreshTrail = useCallback(async (forceRefresh = false) => {
-    if (forceRefresh || !trail) {
-      return loadExistingTrail();
-    }
-    return trail;
-  }, [loadExistingTrail, trail]);
+    return loadExistingTrail(forceRefresh);
+  }, [loadExistingTrail]);
 
   // Gerar nova trilha
   const generateImplementationTrail = async (onboardingData: any) => {
@@ -100,7 +103,9 @@ export const useImplementationTrail = () => {
         .select("*")
         .eq("user_id", user.id)
         .eq("status", "completed")
-        .single();
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
 
       if (existingTrail) {
         const sanitizedData = sanitizeTrailData(existingTrail.trail_data as ImplementationTrail);
@@ -174,7 +179,6 @@ export const useImplementationTrail = () => {
 
       const sanitizedData = sanitizeTrailData(recommendationsToSave);
       setTrail(sanitizedData);
-      toast.success("Trilha personalizada criada com sucesso!");
       
       return sanitizedData;
     } catch (error: any) {

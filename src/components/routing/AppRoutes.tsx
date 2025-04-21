@@ -28,6 +28,7 @@ import SuggestionDetails from '@/pages/member/SuggestionDetails';
 import NewSuggestion from '@/pages/member/NewSuggestion';
 import { Navigate } from 'react-router-dom';
 import MemberLayout from '@/components/layout/MemberLayout';
+import ImplementationTrailPage from '@/pages/member/ImplementationTrailPage';
 
 // Onboarding
 import Onboarding from '@/pages/onboarding/Onboarding';
@@ -52,6 +53,7 @@ const AppRoutes = () => {
       {/* Member Routes with Layout */}
       <Route path="/" element={<ProtectedRoutes><MemberLayout><Dashboard /></MemberLayout></ProtectedRoutes>} />
       <Route path="/dashboard" element={<ProtectedRoutes><MemberLayout><Dashboard /></MemberLayout></ProtectedRoutes>} />
+      <Route path="/implementation-trail" element={<ProtectedRoutes><MemberLayout><ImplementationTrailPage /></MemberLayout></ProtectedRoutes>} />
       <Route path="/solutions" element={<ProtectedRoutes><MemberLayout><Solutions /></MemberLayout></ProtectedRoutes>} />
       <Route path="/tools" element={<ProtectedRoutes><MemberLayout><Tools /></MemberLayout></ProtectedRoutes>} />
       <Route path="/tools/:id" element={<ProtectedRoutes><MemberLayout><ToolDetails /></MemberLayout></ProtectedRoutes>} />
