@@ -29,7 +29,8 @@ export function navigateAfterStep(stepId: string, currentStepIndex: number, navi
   } else if (stepId === "complementary_info") {
     nextPath = "/onboarding/review";
   } else if (stepId === "review") {
-    nextPath = "/onboarding/trail-generation";
+    // Direcionar diretamente para a geração da trilha após a revisão
+    nextPath = "/onboarding/trail-generation?autoGenerate=true";
   } else {
     // fallback genérico pelo steps[]
     const nextStepIndex = Math.min(currentStepIndex + 1, steps.length - 1);
