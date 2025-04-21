@@ -15,6 +15,17 @@ interface PersonalInfoFormProps {
   errors: any;
   touchedFields: any;
   isSubmitting: boolean;
+  initialData?: {
+    name?: string;
+    email?: string;
+    phone?: string;
+    ddi?: string;
+    linkedin?: string;
+    instagram?: string;
+    country?: string;
+    state?: string;
+    city?: string;
+  };
 }
 
 export const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({
@@ -22,7 +33,8 @@ export const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({
   register,
   errors,
   touchedFields,
-  isSubmitting
+  isSubmitting,
+  initialData
 }) => {
   return (
     <div className="space-y-6">
@@ -114,7 +126,7 @@ export const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({
         <h3 className="text-md font-medium text-gray-700 dark:text-gray-200">Localização</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <LocationInputs
-            country={validation.values.country || "Brasil"}
+            country={initialData?.country || validation.values.country || "Brasil"}
             state={validation.values.state}
             city={validation.values.city}
             onChangeCountry={() => {}}
@@ -138,3 +150,4 @@ export const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({
     </div>
   );
 };
+
