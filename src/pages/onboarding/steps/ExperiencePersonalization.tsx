@@ -21,8 +21,8 @@ const ExperiencePersonalization = () => {
     setIsSubmitting(true);
     try {
       console.log("Salvando dados de personalização:", data);
-      // Salvar sem navegação automática para permitir voltar manualmente
-      await saveStepData(stepId, data, false);
+      // Agora permitimos a navegação automática após salvar os dados
+      await saveStepData(stepId, data, true);
       console.log("Dados de personalização salvos com sucesso");
     } catch (error) {
       console.error("Erro ao salvar dados:", error);
