@@ -14,38 +14,42 @@ export const WizardStepProgress = ({
   totalSteps,
   stepTitles = [],
 }: WizardStepProgressProps) => {
-  // Criar array com o número de etapas
+  // Array de etapas
   const steps = Array.from({ length: totalSteps }, (_, i) => i);
 
   return (
-    <div className="mb-6 px-4 py-6 glassmorphism rounded-2xl">
-      <div className="w-full flex items-center">
+    <div className="mb-6 px-4 pt-6 pb-5 rounded-2xl shadow-lg glassmorphism bg-white/70 border border-[#0ABAB5]/10 transition-all">
+      <div className="w-full flex items-center justify-between">
         {steps.map((step, index) => (
           <React.Fragment key={step}>
             {/* Círculo do passo */}
             <div
               className={cn(
-                "relative flex items-center justify-center w-8 h-8 rounded-full transition-all duration-300",
+                "relative flex items-center justify-center w-8 h-8 rounded-full border-2 transition-all duration-300 text-base font-medium select-none",
                 index < currentStep 
-                  ? "bg-gradient-to-r from-green-500 to-green-400 text-white" 
+                  ? "bg-gradient-to-r from-green-500 to-green-400 border-green-400 text-white shadow"
                   : index === currentStep 
-                    ? "bg-gradient-to-r from-viverblue to-viverblue-light text-white shadow-lg ring-2 ring-viverblue/30" 
-                    : "bg-neutral-100 text-neutral-400 border border-neutral-200"
+                    ? "bg-gradient-to-br from-[#0ABAB5] to-[#94fbf7] border-[#0ABAB5] text-white ring-2 ring-[#0ABAB5]/20 shadow-lg scale-110 z-10"
+                    : "bg-neutral-100 border-neutral-200 text-neutral-400 shadow-none"
               )}
             >
-              {index < currentStep ? (
+              {index === 0 ? (
+                // Não exibe texto/numero no primeiro (Landing)
+                <span className={cn(
+                  "w-full h-full flex items-center justify-center opacity-60"
+                )}></span>
+              ) : index < currentStep ? (
                 <CheckIcon className="w-4 h-4" />
               ) : (
-                <span className="text-sm font-medium">{index + 1}</span>
+                <span>{index + 1}</span>
               )}
-              
-              {/* Dica do título */}
-              {stepTitles[index] && (
-                <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 whitespace-nowrap">
+              {/* Título do passo exceto o primeiro */}
+              {index !== 0 && stepTitles[index] && (
+                <div className="absolute left-1/2 -bottom-8 -translate-x-1/2 whitespace-nowrap z-10">
                   <span 
                     className={cn(
-                      "text-xs font-medium",
-                      index === currentStep ? "text-viverblue font-semibold" : "text-neutral-500"
+                      "text-xs font-medium px-2 py-0.5 rounded",
+                      index === currentStep ? "text-[#0ABAB5] bg-[#0ABAB5]/10 shadow" : "text-neutral-500"
                     )}
                   >
                     {stepTitles[index]}
@@ -53,13 +57,12 @@ export const WizardStepProgress = ({
                 </div>
               )}
             </div>
-            
             {/* Linha conectora */}
             {index < steps.length - 1 && (
               <div
                 className={cn(
-                  "flex-1 h-1 mx-1",
-                  index < currentStep ? "bg-gradient-to-r from-green-500 to-green-400" : "bg-neutral-200"
+                  "flex-1 h-1 mx-1 transition-colors duration-300 rounded-full",
+                  index < currentStep ? "bg-gradient-to-r from-green-400 to-green-200" : "bg-neutral-200"
                 )}
               />
             )}
@@ -69,4 +72,3 @@ export const WizardStepProgress = ({
     </div>
   );
 };
-

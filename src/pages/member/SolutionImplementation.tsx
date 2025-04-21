@@ -1,10 +1,11 @@
+
 import React, { useEffect, useState } from "react";
 import { useModuleImplementation } from "@/hooks/useModuleImplementation";
 import LoadingScreen from "@/components/common/LoadingScreen";
 import { ImplementationHeader } from "@/components/implementation/ImplementationHeader";
 import { ImplementationNotFound } from "@/components/implementation/ImplementationNotFound";
 import { useLogging } from "@/hooks/useLogging";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { ModuleContentMaterials } from "@/components/implementation/content/ModuleContentMaterials";
 import { ModuleContentVideos } from "@/components/implementation/content/ModuleContentVideos";
 import { ModuleContentTools } from "@/components/implementation/content/ModuleContentTools";
@@ -15,6 +16,7 @@ import { useSolutionCompletion } from "@/hooks/implementation/useSolutionComplet
 import { useRealtimeComments } from "@/hooks/implementation/useRealtimeComments";
 import { WizardStepProgress } from "@/components/implementation/WizardStepProgress";
 import { GlassCard } from "@/components/ui/GlassCard";
+import { ImplementationTabsNavigation } from "@/components/implementation/ImplementationTabsNavigation";
 
 const SolutionImplementation = () => {
   const {
@@ -99,7 +101,7 @@ const SolutionImplementation = () => {
           currentStep={currentStep}
           totalSteps={modules.length}
           stepTitles={[
-            "Landing", "Visão Geral", "Preparação", "Implementação",
+            "", "Visão Geral", "Preparação", "Implementação",
             "Verificação", "Resultados", "Otimização", "Celebração"
           ]}
         />
@@ -108,14 +110,7 @@ const SolutionImplementation = () => {
           
           <div className="mt-0 px-0 md:px-6">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="w-full grid grid-cols-6 mb-6">
-                <TabsTrigger value="tools">Ferramentas</TabsTrigger>
-                <TabsTrigger value="materials">Materiais</TabsTrigger>
-                <TabsTrigger value="videos">Vídeos</TabsTrigger>
-                <TabsTrigger value="checklist">Checklist</TabsTrigger>
-                <TabsTrigger value="comments">Comentários</TabsTrigger>
-                <TabsTrigger value="complete">Concluir</TabsTrigger>
-              </TabsList>
+              <ImplementationTabsNavigation activeTab={activeTab} setActiveTab={setActiveTab} />
               
               <TabsContent value="tools">
                 <ModuleContentTools module={currentModule} />
@@ -159,3 +154,4 @@ const SolutionImplementation = () => {
 };
 
 export default SolutionImplementation;
+
