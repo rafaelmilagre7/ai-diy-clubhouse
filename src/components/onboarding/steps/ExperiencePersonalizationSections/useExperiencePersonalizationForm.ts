@@ -1,7 +1,6 @@
 
 import { useMemo, useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { console } from 'console';
 
 // Definindo um tipo para os nomes dos campos do formulário
 export type FormFieldNames = 
@@ -103,3 +102,4 @@ export function useExperiencePersonalizationForm(initialData: Partial<Experience
     toggleSelect
   };
 }
+
