@@ -2,26 +2,26 @@
 import React from "react";
 import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
 import { useOnboardingSteps } from "@/hooks/onboarding/useOnboardingSteps";
-import { BusinessGoalsStep } from "@/components/onboarding/steps/BusinessGoalsStep";
+import { ProfessionalDataStep } from "@/components/onboarding/steps/ProfessionalDataStep";
 import { MilagrinhoMessage } from "@/components/onboarding/MilagrinhoMessage";
 
-const BusinessGoalsClub = () => {
+const ProfessionalData = () => {
   const { saveStepData, progress } = useOnboardingSteps();
 
   return (
     <OnboardingLayout
-      currentStep={5}
-      title="Expectativas e Objetivos com o Club"
-      backUrl="/onboarding/ai-experience"
+      currentStep={2}
+      title="Dados Profissionais"
+      backUrl="/onboarding"
     >
       <div className="max-w-4xl mx-auto space-y-8">
         <MilagrinhoMessage
-          message="Agora, gostaria de entender quais são suas expectativas e objetivos com o VIVER DE IA Club. Isso nos ajudará a personalizar sua experiência e garantir que você obtenha o máximo valor possível."
+          message="Agora vamos conhecer um pouco mais sobre sua empresa e sua função profissional. Essas informações nos ajudarão a personalizar as soluções mais adequadas para o seu contexto de negócio."
         />
-        <BusinessGoalsStep
+        <ProfessionalDataStep
           onSubmit={saveStepData}
           isSubmitting={false}
-          initialData={progress?.business_goals}
+          initialData={progress}
           isLastStep={false}
         />
       </div>
@@ -29,4 +29,4 @@ const BusinessGoalsClub = () => {
   );
 };
 
-export default BusinessGoalsClub;
+export default ProfessionalData;

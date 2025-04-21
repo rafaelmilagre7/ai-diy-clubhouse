@@ -9,6 +9,7 @@ import { ComplementaryInfoStep } from "./steps/ComplementaryInfoStep";
 import { ReviewStep } from "./steps/ReviewStep";
 import { Progress } from "@/components/ui/progress";
 import { OnboardingData } from "@/types/onboarding";
+import { ProfessionalDataStep } from "./steps/ProfessionalDataStep";
 
 export const OnboardingSteps = () => {
   const {
@@ -24,6 +25,7 @@ export const OnboardingSteps = () => {
 
   const stepComponents = {
     personal: PersonalInfoStep,
+    professional_data: ProfessionalDataStep,
     business_context: BusinessContextStep,
     ai_exp: AIExperienceStep,
     business_goals: BusinessGoalsStep,
@@ -46,16 +48,15 @@ export const OnboardingSteps = () => {
 
   const getInitialDataForCurrentStep = () => {
     if (!progress) return undefined;
-    if (currentStep.id === "business_goals") {
+    if (currentStep.id === "professional_data") {
       return {
         ...progress,
-        company_name: progress.company_name,
-        company_size: progress.company_size,
-        company_sector: progress.company_sector,
-        company_website: progress.company_website,
-        current_position: progress.current_position,
-        annual_revenue: progress.annual_revenue,
-        personal_info: progress.personal_info,
+        company_name: progress.company_name || progress.professional_info?.company_name || "",
+        company_size: progress.company_size || progress.professional_info?.company_size || "",
+        company_sector: progress.company_sector || progress.professional_info?.company_sector || "",
+        company_website: progress.company_website || progress.professional_info?.company_website || "",
+        current_position: progress.current_position || progress.professional_info?.current_position || "",
+        annual_revenue: progress.annual_revenue || progress.professional_info?.annual_revenue || "",
       };
     }
     const sectionKey = currentStep.section as keyof OnboardingData;

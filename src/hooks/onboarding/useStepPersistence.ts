@@ -33,6 +33,24 @@ export const useStepPersistence = ({
           completed_steps: [...(progress.completed_steps || []), stepId],
           current_step: steps[Math.min(currentStepIndex + 1, steps.length - 1)].id,
         });
+      } else if (stepId === "professional_data") {
+        const professionalInfo = data.professional_info || {};
+        if (!professionalInfo.company_name || !professionalInfo.current_position || 
+            !professionalInfo.company_sector || !professionalInfo.company_size) {
+          toast.error("Por favor, preencha todos os campos obrigatórios");
+          return;
+        }
+        await updateProgress({
+          professional_info: professionalInfo,
+          company_name: professionalInfo.company_name,
+          company_size: professionalInfo.company_size,
+          company_sector: professionalInfo.company_sector,
+          company_website: professionalInfo.company_website,
+          current_position: professionalInfo.current_position,
+          annual_revenue: professionalInfo.annual_revenue,
+          completed_steps: [...(progress.completed_steps || []), stepId],
+          current_step: steps[Math.min(currentStepIndex + 1, steps.length - 1)].id,
+        });
       } else if (stepId === "business_context") {
         const businessContext = data.business_context || {};
         if (!businessContext.business_model || !businessContext.business_challenges || 
@@ -62,10 +80,7 @@ export const useStepPersistence = ({
       } else if (stepId === "business_goals") {
         const businessGoals = data.business_goals || {};
         if (!businessGoals.primary_goal || !businessGoals.expected_outcomes?.length || 
-            !businessGoals.timeline
-            // Os campos abaixo são opcionais, não exigir, mas atualizar se vierem preenchidos:
-            // businessGoals.how_implement, businessGoals.week_availability, businessGoals.live_interest, businessGoals.content_formats
-        ) {
+            !businessGoals.timeline) {
           toast.error("Por favor, preencha todos os campos obrigatórios");
           return;
         }
