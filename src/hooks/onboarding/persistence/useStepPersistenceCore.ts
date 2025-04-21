@@ -4,6 +4,7 @@ import { buildUpdateObject } from "./stepDataBuilder";
 import { navigateAfterStep } from "./stepNavigator";
 import { steps } from "../useStepDefinitions";
 import { toast } from "sonner";
+import { supabase } from "@/lib/supabase";
 
 export function useStepPersistenceCore({
   currentStepIndex,
@@ -71,12 +72,63 @@ export function useStepPersistenceCore({
     if (!progress?.id) return;
     try {
       console.log("Completando onboarding...");
+      
+      // Marca o onboarding como concluído
       await updateProgress({
         is_completed: true,
         completed_steps: steps.map(s => s.id),
       });
-      await refreshProgress();
-      console.log("Onboarding marcado como completo, redirecionando para dashboard...");
+      
+      // Atualiza dados locais
+      const updatedProgress = await refreshProgress();
+      console.log("Onboarding marcado como completo, gerando trilha de implementação...");
+      
+      // Gerar trilha de implementação personalizada
+      try {
+        // Buscar todas as soluções publicadas
+        const { data: solutions } = await supabase
+          .from("solutions")
+          .select("*")
+          .eq("published", true);
+        
+        if (solutions && solutions.length > 0) {
+          // Chamar a função de geração de trilha
+          const { data, error: fnError } = await supabase.functions.invoke("generate-implementation-trail", {
+            body: {
+              onboardingProgress: updatedProgress,
+              availableSolutions: solutions,
+            },
+          });
+          
+          if (fnError) {
+            console.error("Erro ao gerar trilha:", fnError);
+          } else if (data && data.recommendations) {
+            console.log("Trilha gerada com sucesso:", data.recommendations);
+            
+            // Salvar trilha no banco de dados
+            const user = (await supabase.auth.getUser()).data.user;
+            if (user) {
+              try {
+                await supabase
+                  .from("implementation_trails")
+                  .insert({
+                    user_id: user.id,
+                    trail_data: data.recommendations,
+                  });
+                console.log("Trilha salva no banco de dados");
+              } catch (dbError) {
+                console.error("Erro ao salvar trilha:", dbError);
+              }
+            }
+          }
+        } else {
+          console.log("Nenhuma solução disponível para gerar trilha");
+        }
+      } catch (trailError) {
+        console.error("Erro ao tentar gerar trilha:", trailError);
+        // Não interromper o fluxo principal se a geração da trilha falhar
+      }
+      
       toast.success("Onboarding concluído com sucesso!");
       setTimeout(() => {
         navigate("/dashboard");

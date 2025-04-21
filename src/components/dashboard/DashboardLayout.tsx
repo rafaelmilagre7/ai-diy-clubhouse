@@ -1,68 +1,43 @@
 
-import { ReactNode } from "react";
-import LoadingScreen from "@/components/common/LoadingScreen";
+import { useEffect } from "react";
+import { Outlet, useLocation } from "react-router-dom";
 import { DashboardHeader } from "./DashboardHeader";
-import { CategoryTabs } from "./CategoryTabs";
-import { ProgressSummary } from "./ProgressSummary";
-import { Solution } from "@/lib/supabase";
+import { ImplementationTrail } from "./ImplementationTrail";
+import { useProgress } from "@/hooks/onboarding/useProgress";
+import { useNavigate } from "react-router-dom";
 
-interface DashboardLayoutProps {
-  loading: boolean;
-  searchQuery: string;
-  onSearchChange: (query: string) => void;
-  completedCount: number;
-  inProgressCount: number;
-  progressPercentage: number;
-  totalSolutions: number;
-  activeCategory: string;
-  onCategoryChange: (category: string) => void;
-  filteredSolutions: Solution[];
-  onSelectSolution: (id: string) => void;
-  children?: ReactNode;
-}
+export const DashboardLayout = () => {
+  const location = useLocation();
+  const { progress, isLoading } = useProgress();
+  const navigate = useNavigate();
 
-export const DashboardLayout = ({
-  loading,
-  searchQuery,
-  onSearchChange,
-  completedCount,
-  inProgressCount,
-  progressPercentage,
-  totalSolutions,
-  activeCategory,
-  onCategoryChange,
-  filteredSolutions,
-  onSelectSolution,
-  children
-}: DashboardLayoutProps) => {
-  if (loading) {
-    return <LoadingScreen message="Carregando suas soluções..." />;
-  }
+  // Verificar se o onboarding foi completado
+  useEffect(() => {
+    if (!isLoading && progress && !progress.is_completed) {
+      // Se não estiver na página de onboarding, redirecionar
+      if (!location.pathname.includes('/onboarding')) {
+        navigate('/onboarding', { replace: true });
+      }
+    }
+  }, [progress, isLoading, navigate, location.pathname]);
 
   return (
-    <div className="space-y-6">
-      <DashboardHeader 
-        searchQuery={searchQuery}
-        onSearchChange={onSearchChange}
-      />
+    <div className="flex flex-col min-h-screen">
+      <DashboardHeader />
       
-      <ProgressSummary 
-        completedCount={completedCount}
-        inProgressCount={inProgressCount}
-        progressPercentage={progressPercentage}
-        totalSolutions={totalSolutions}
-      />
-      
-      <div className="space-y-4">
-        <CategoryTabs
-          activeCategory={activeCategory}
-          onCategoryChange={onCategoryChange}
-          filteredSolutions={filteredSolutions}
-          onSelectSolution={onSelectSolution}
-        >
-          {children}
-        </CategoryTabs>
-      </div>
+      <main className="flex-1 container mx-auto px-4 py-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Conteúdo principal */}
+          <div className="md:col-span-2">
+            <Outlet />
+          </div>
+          
+          {/* Sidebar com trilha de implementação */}
+          <div className="md:col-span-1 space-y-6">
+            <ImplementationTrail />
+          </div>
+        </div>
+      </main>
     </div>
   );
 };
