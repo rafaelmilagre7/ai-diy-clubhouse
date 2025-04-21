@@ -1,11 +1,10 @@
 
 import React from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { OnboardingProgress } from "@/types/onboarding";
 import { steps } from "@/hooks/onboarding/useStepDefinitions";
-import { ArrowRight, Edit } from "lucide-react";
-import { getSummary } from "./ReviewUtils";
+import { ArrowRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { ReviewSectionCard } from "./ReviewSectionCard";
 
 interface ReviewStepProps {
   progress: OnboardingProgress | null;
@@ -50,22 +49,14 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({
             const stepIndex = findStepIndex(step.id);
 
             return (
-              <Card key={step.id} className="overflow-hidden">
-                <CardHeader className="bg-gray-50 pb-3 pt-4 px-4 flex flex-row justify-between items-center">
-                  <CardTitle className="text-base font-medium">{step.title}</CardTitle>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-8"
-                    onClick={() => navigateToStep(stepIndex)}
-                  >
-                    <Edit className="h-4 w-4 mr-1" /> Editar
-                  </Button>
-                </CardHeader>
-                <CardContent className="pt-4">
-                  {getSummary(step.section, sectionData, progress)}
-                </CardContent>
-              </Card>
+              <ReviewSectionCard
+                key={step.id}
+                step={step}
+                sectionData={sectionData}
+                progress={progress}
+                stepIndex={stepIndex}
+                navigateToStep={navigateToStep}
+              />
             );
           })}
       </div>
