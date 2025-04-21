@@ -32,7 +32,7 @@ export function useStepPersistenceCore({
     // Identificar qual é o passo atual baseado no currentStepIndex
     const currentStep = steps[currentStepIndex]?.id || '';
     
-    console.log(`Salvando dados do passo ${currentStep}, navegação automática: ${shouldNavigate ? "SIM" : "NÃO"}`, data);
+    console.log(`Salvando dados do passo ${currentStep}, índice ${currentStepIndex}, navegação automática: ${shouldNavigate ? "SIM" : "NÃO"}`, data);
 
     try {
       // Montar objeto de atualização para a etapa
@@ -54,6 +54,13 @@ export function useStepPersistenceCore({
       
       // Notificar usuário do salvamento
       toast.success("Dados salvos com sucesso!");
+      
+      // Verificar se a etapa é professional_data para garantir navegação
+      if (currentStep === "professional_data") {
+        console.log("Etapa de dados profissionais - forçando navegação para business-context");
+        setTimeout(() => navigate("/onboarding/business-context"), 300);
+        return;
+      }
       
       // Navegar para a próxima etapa apenas se solicitado
       if (shouldNavigate) {

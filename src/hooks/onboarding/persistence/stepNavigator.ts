@@ -17,6 +17,7 @@ export function navigateAfterStep(stepId: string, currentStepIndex: number, navi
     nextPath = "/onboarding/professional-data";
   } else if (stepId === "professional_data") {
     nextPath = "/onboarding/business-context";
+    console.log("Navegando de dados profissionais para contexto do negócio");
   } else if (stepId === "business_context") {
     nextPath = "/onboarding/ai-experience";
   } else if (stepId === "ai_exp") {
