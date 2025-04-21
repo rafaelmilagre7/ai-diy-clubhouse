@@ -113,13 +113,19 @@ export function buildUpdateObject(
       // Garantir que o campo expected_outcomes seja sempre um array
       const businessGoalsData = data.business_goals;
       
-      if (businessGoalsData.expected_outcome_30days && !businessGoalsData.expected_outcomes) {
+      if (
+        businessGoalsData.expected_outcome_30days &&
+        !businessGoalsData.expected_outcomes
+      ) {
         businessGoalsData.expected_outcomes = [businessGoalsData.expected_outcome_30days];
       }
       
       // Se temos apenas expected_outcomes mas não o campo individual, mantemos compatibilidade
-      if (businessGoalsData.expected_outcomes && businessGoalsData.expected_outcomes.length > 0 && 
-          !businessGoalsData.expected_outcome_30days) {
+      if (
+        businessGoalsData.expected_outcomes &&
+        businessGoalsData.expected_outcomes.length > 0 &&
+        !businessGoalsData.expected_outcome_30days
+      ) {
         businessGoalsData.expected_outcome_30days = businessGoalsData.expected_outcomes[0];
       }
       
@@ -130,15 +136,27 @@ export function buildUpdateObject(
     } else if (typeof data === 'object' && data !== null) {
       // Se recebemos diretamente um objeto de dados
       const receivedData = data as any; // Usando any para evitar erros de tipagem aqui
-      
+            
       updateObj.business_goals = {
         ...existingBusinessGoals,
         ...receivedData
       };
-      
+
       // Garantir que expected_outcomes seja um array se tivermos expected_outcome_30days
-      if (receivedData.expected_outcome_30days && !receivedData.expected_outcomes) {
+      if (
+        receivedData.expected_outcome_30days &&
+        !receivedData.expected_outcomes
+      ) {
         updateObj.business_goals.expected_outcomes = [receivedData.expected_outcome_30days];
+      }
+      // Se temos apenas expected_outcomes mas não o campo individual
+      if (
+        receivedData.expected_outcomes &&
+        Array.isArray(receivedData.expected_outcomes) &&
+        receivedData.expected_outcomes.length > 0 &&
+        !receivedData.expected_outcome_30days
+      ) {
+        updateObj.business_goals.expected_outcome_30days = receivedData.expected_outcomes[0];
       }
     }
     
