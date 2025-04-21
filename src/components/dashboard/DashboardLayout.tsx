@@ -1,11 +1,13 @@
 
 import { FC } from "react";
-import { DashboardHeader } from "./DashboardHeader";
 import { ActiveSolutions } from "./ActiveSolutions";
 import { CompletedSolutions } from "./CompletedSolutions";
 import { RecommendedSolutions } from "./RecommendedSolutions";
 import { NoSolutionsPlaceholder } from "./NoSolutionsPlaceholder";
 import { Solution } from "@/lib/supabase";
+import { ModernDashboardHeader } from "./ModernDashboardHeader";
+import { KpiGrid } from "./KpiGrid";
+import { useAuth } from "@/contexts/auth";
 
 interface DashboardLayoutProps {
   active: Solution[];
@@ -25,14 +27,18 @@ export const DashboardLayout: FC<DashboardLayoutProps> = ({
   onSolutionClick
 }) => {
   const hasNoSolutions = active.length === 0 && completed.length === 0 && recommended.length === 0;
+  const { profile } = useAuth();
 
   return (
-    <div className="space-y-8">
-      <DashboardHeader 
-        activeSolutionsCount={active.length}
-        completedSolutionsCount={completed.length}
-        category={category}
-        onCategoryChange={onCategoryChange}
+    <div className="space-y-8 md:pt-2 animate-fade-in">
+      {/* HEADER IMERSIVO */}
+      <ModernDashboardHeader userName={profile?.name?.split(" ")[0] || "Membro"} />
+
+      {/* CARDS DE PROGRESSO (KPI) */}
+      <KpiGrid 
+        completed={completed.length} 
+        inProgress={active.length}
+        total={active.length + completed.length + recommended.length}
       />
 
       {hasNoSolutions ? (
@@ -45,14 +51,12 @@ export const DashboardLayout: FC<DashboardLayoutProps> = ({
               onSolutionClick={onSolutionClick} 
             />
           )}
-          
           {completed.length > 0 && (
             <CompletedSolutions 
               solutions={completed} 
               onSolutionClick={onSolutionClick} 
             />
           )}
-          
           {recommended.length > 0 && (
             <RecommendedSolutions 
               solutions={recommended} 
