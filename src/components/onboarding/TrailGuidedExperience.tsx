@@ -6,6 +6,7 @@ import { useImplementationTrail } from "@/hooks/implementation/useImplementation
 import { useNavigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { useSolutionsData } from "@/hooks/useSolutionsData";
 
 // Componente que exibe texto estilo "typing" para a justificativa dinamicamente
 const TypingText = ({ text, onComplete }: { text: string; onComplete?: () => void }) => {
@@ -34,31 +35,51 @@ const TypingText = ({ text, onComplete }: { text: string; onComplete?: () => voi
 export const TrailGuidedExperience = () => {
   const navigate = useNavigate();
   const { trail, isLoading, generateImplementationTrail } = useImplementationTrail();
+  const { solutions: allSolutions, loading: solutionsLoading } = useSolutionsData(); // Buscamos todas as soluções disponíveis
   const [started, setStarted] = useState(false);
   const [currentStepIdx, setCurrentStepIdx] = useState(0); // passo da leitura da trilha (card atual)
   const [typingFinished, setTypingFinished] = useState(false);
   const [regenerating, setRegenerating] = useState(false);
 
-  // Montar lista de soluções ordenadas para a navegação
+  // Montar lista de soluções ordenadas para a navegação, juntando dados da recomendação com dados reais das soluções
   const solutionsList = useMemo(() => {
-    if (!trail) return [];
+    if (!trail || !allSolutions || allSolutions.length === 0) return [];
     const all: any[] = [];
+    
     ["priority1", "priority2", "priority3"].forEach((priorityKey, idx) => {
       const items = (trail as any)[priorityKey] || [];
+      
       items.forEach(item => {
-        all.push({
-          ...item,
-          priority: idx + 1,
-          title: item.title || item.solution?.title || "Solução sem título",
-          justification: item.justification || "Recomendação personalizada para seu negócio",
-          solutionId: item.solutionId || item.id || "sem-id"
-        });
+        // Procura a solução completa pelo ID para obter todos os dados
+        const fullSolution = allSolutions.find(s => s.id === item.solutionId);
+        
+        if (fullSolution) {
+          all.push({
+            ...item,
+            ...fullSolution, // Adiciona todos os dados da solução original
+            priority: idx + 1,
+            title: fullSolution.title || "Solução sem título",
+            justification: item.justification || "Recomendação personalizada para seu negócio",
+            solutionId: item.solutionId || fullSolution.id
+          });
+        } else {
+          console.warn(`Solução com ID ${item.solutionId} não encontrada no banco de dados`);
+          all.push({
+            ...item,
+            priority: idx + 1,
+            title: item.title || "Solução não encontrada",
+            justification: item.justification || "Recomendação personalizada para seu negócio",
+            solutionId: item.solutionId || item.id || "sem-id"
+          });
+        }
       });
     });
+    
     // Ordena exatamente por prioridade, depois talvez por ordem fixa (ex: título)
     all.sort((a, b) => a.priority - b.priority);
+    console.log("Lista de soluções montada:", all);
     return all;
-  }, [trail]);
+  }, [trail, allSolutions]);
 
   // Pega o card atual para mostrar justificativa de IA
   const currentSolution = solutionsList[currentStepIdx];
@@ -102,7 +123,7 @@ export const TrailGuidedExperience = () => {
     navigate(`/solution/${id}`);
   };
 
-  if (isLoading || regenerating) {
+  if (isLoading || regenerating || solutionsLoading) {
     return (
       <div className="flex flex-col items-center gap-4 py-8">
         <Loader2 className="h-8 w-8 text-[#0ABAB5] animate-spin" />
@@ -148,16 +169,20 @@ export const TrailGuidedExperience = () => {
         Sua Trilha Personalizada VIVER DE IA
       </h2>
       <div className="space-y-6 border rounded-2xl p-6 bg-gradient-to-br from-[#0ABAB5]/10 to-white shadow animate-fade-in">
-        <TypingText text={currentSolution.justification} onComplete={() => setTypingFinished(true)} />
-        <TrailSolutionCard
-          solution={{
-            ...currentSolution,
-            title: currentSolution.title || "Solução sem título",
-            justification: currentSolution.justification,
-            solutionId: currentSolution.solutionId,
-          }}
-          onClick={handleSelectSolution}
-        />
+        <TypingText text={currentSolution?.justification || "Carregando recomendação..."} onComplete={() => setTypingFinished(true)} />
+        {currentSolution && (
+          <TrailSolutionCard
+            solution={{
+              ...currentSolution,
+              title: currentSolution.title || "Solução sem título",
+              justification: currentSolution.justification,
+              solutionId: currentSolution.solutionId,
+              description: currentSolution.description,
+              priority: currentSolution.priority
+            }}
+            onClick={handleSelectSolution}
+          />
+        )}
         <div className="flex justify-between mt-4">
           <Button
             variant="outline"
@@ -171,8 +196,8 @@ export const TrailGuidedExperience = () => {
               Próximo
             </Button>
           ) : (
-            <Button onClick={() => navigate("/onboarding")}>
-              Finalizar e Voltar
+            <Button onClick={() => navigate("/dashboard")}>
+              Finalizar e Ir para Dashboard
             </Button>
           )}
         </div>

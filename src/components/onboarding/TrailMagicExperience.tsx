@@ -1,4 +1,5 @@
-import React, { useRef, useState } from "react";
+
+import React, { useRef, useState, useEffect } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { Button } from "@/components/ui/button";
@@ -35,12 +36,14 @@ const steps = [
 // Elemento 3D simples e animado (esfera mágica com aura)
 function MagicSphere({ stage }: { stage: number }) {
   const mesh = useRef<THREE.Mesh>(null);
+  
   useFrame((_, delta) => {
     if (mesh.current) {
       mesh.current.rotation.y += 0.6 * delta + 0.2 * (stage + 1);
       mesh.current.rotation.x += 0.1 * delta;
     }
   });
+  
   return (
     <mesh ref={mesh} position={[0, 0, 0]} scale={1.2 + 0.2 * stage}>
       <sphereGeometry args={[1.5, 50, 50]} />
@@ -86,6 +89,17 @@ function MagicSphere({ stage }: { stage: number }) {
 
 export function TrailMagicExperience({ onFinish, onStep }: TrailMagicExperienceProps) {
   const [currStep, setCurrStep] = useState(0);
+  const [isVisible, setIsVisible] = useState(false);
+
+  // Efeito para iniciar animação ao montar o componente
+  useEffect(() => {
+    // Dar tempo para o componente montar antes de mostrar
+    const timer = setTimeout(() => {
+      setIsVisible(true);
+    }, 100);
+    
+    return () => clearTimeout(timer);
+  }, []);
 
   // Modificado: Apenas avança com clique (sem timeout)
   const handleNext = () => {
@@ -99,6 +113,8 @@ export function TrailMagicExperience({ onFinish, onStep }: TrailMagicExperienceP
       onFinish();
     }
   };
+
+  if (!isVisible) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70 animate-fade-in">

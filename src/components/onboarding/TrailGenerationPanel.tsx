@@ -1,36 +1,60 @@
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useImplementationTrail } from "@/hooks/implementation/useImplementationTrail";
 import { TrailCardList } from "@/components/dashboard/TrailCardList";
 import { Button } from "@/components/ui/button";
 import { Edit, Loader2, RefreshCcw } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { Card, CardContent } from "@/components/ui/card";
 import { TrailMagicExperience } from "./TrailMagicExperience";
+import { useSolutionsData } from "@/hooks/useSolutionsData";
 
 export const TrailGenerationPanel = ({ onClose }: { onClose?: () => void }) => {
   const { trail, isLoading, generateImplementationTrail } = useImplementationTrail();
+  const { solutions: allSolutions, loading: solutionsLoading } = useSolutionsData();
   const [regenerating, setRegenerating] = useState(false);
   const [showMagic, setShowMagic] = useState(false);
   const navigate = useNavigate();
 
-  // Montar soluções da trilha
-  let solutions: any[] = [];
-  if (trail) {
+  // Montar soluções da trilha com dados completos
+  const solutions = useMemo(() => {
+    if (!trail || !allSolutions || allSolutions.length === 0) return [];
+    
+    const result: any[] = [];
+    
     ["priority1", "priority2", "priority3"].forEach((priorityLevel, idx) => {
       const items = (trail as any)[priorityLevel] || [];
+      
       items.forEach((item) => {
-        // Garantir que title/description existe (fallback para mostrar erro, não vazio)
-        solutions.push({
-          ...item,
-          priority: idx + 1,
-          title: item.title || (item.solution?.title) || "Solução sem título",
-          description: item.description || "Sem descrição disponível.",
-          solutionId: item.solutionId || item.id || "sem-id"
-        });
+        // Encontra a solução completa pelo ID
+        const fullSolution = allSolutions.find(s => s.id === item.solutionId);
+        
+        if (fullSolution) {
+          result.push({
+            ...item,
+            ...fullSolution,
+            priority: idx + 1,
+            title: fullSolution.title || "Solução sem título",
+            description: fullSolution.description || item.description || "Sem descrição disponível.",
+            justification: item.justification || "Recomendação personalizada",
+            solutionId: item.solutionId || fullSolution.id
+          });
+        } else {
+          console.warn(`Solução com ID ${item.solutionId} não encontrada no banco`);
+          // Fallback para garantir que pelo menos algo aparece
+          result.push({
+            ...item,
+            priority: idx + 1,
+            title: item.title || "Solução não encontrada",
+            description: item.description || "Sem descrição disponível.",
+            solutionId: item.solutionId || item.id || "sem-id"
+          });
+        }
       });
     });
-  }
+    
+    console.log("Lista de soluções montada em TrailGenerationPanel:", result);
+    return result;
+  }, [trail, allSolutions]);
 
   // Nova função de geração que exibe a experiência mágica
   const handleRegenerate = async () => {
@@ -44,7 +68,7 @@ export const TrailGenerationPanel = ({ onClose }: { onClose?: () => void }) => {
     setShowMagic(false);
   };
 
-  if ((isLoading || regenerating) && !showMagic) {
+  if ((isLoading || regenerating || solutionsLoading) && !showMagic) {
     return (
       <div className="flex flex-col items-center gap-4 py-8">
         <Loader2 className="h-8 w-8 text-[#0ABAB5] animate-spin" />
@@ -115,4 +139,3 @@ export const TrailGenerationPanel = ({ onClose }: { onClose?: () => void }) => {
     </div>
   );
 };
-
