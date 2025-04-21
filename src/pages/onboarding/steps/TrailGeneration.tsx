@@ -25,7 +25,11 @@ const TrailGeneration = () => {
   // Carregar trilha existente ao montar o componente
   useEffect(() => {
     const loadTrail = async () => {
-      await refreshTrail(true);
+      try {
+        await refreshTrail(true);
+      } catch (error) {
+        console.error("Erro ao carregar trilha:", error);
+      }
     };
     
     loadTrail();

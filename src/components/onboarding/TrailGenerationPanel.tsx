@@ -3,7 +3,6 @@ import React, { useState, useMemo, useEffect, useCallback } from "react";
 import { useImplementationTrail } from "@/hooks/implementation/useImplementationTrail";
 import { useSolutionsData } from "@/hooks/useSolutionsData";
 import { toast } from "sonner";
-import { TrailMagicExperience } from "./TrailMagicExperience";
 
 // Subcomponentes
 import { TrailPanelHeader } from "./TrailGenerationPanel/TrailPanelHeader";
@@ -65,9 +64,9 @@ export const TrailGenerationPanel = ({ onClose }: { onClose?: () => void }) => {
 
   const handleRegenerate = useCallback(async () => {
     try {
-      setShowMagic(true);
       setRegenerating(true);
       await generateImplementationTrail();
+      toast.success("Trilha regenerada com sucesso!");
     } catch (error) {
       console.error("Erro ao gerar trilha:", error);
       toast.error("Não foi possível gerar sua trilha. Tente novamente.");
@@ -75,10 +74,6 @@ export const TrailGenerationPanel = ({ onClose }: { onClose?: () => void }) => {
       setRegenerating(false);
     }
   }, [generateImplementationTrail]);
-
-  const handleFinishMagic = useCallback(() => {
-    setShowMagic(false);
-  }, []);
 
   const handleRefreshTrail = useCallback(async () => {
     setRefreshing(true);
@@ -95,10 +90,6 @@ export const TrailGenerationPanel = ({ onClose }: { onClose?: () => void }) => {
 
   const isPanelLoading = isLoading || regenerating || solutionsLoading || refreshing;
   const hasValidTrail = trail && solutions.length > 0;
-
-  if (showMagic) {
-    return <TrailMagicExperience onFinish={handleFinishMagic} />;
-  }
 
   if (!hasValidTrail) {
     return (

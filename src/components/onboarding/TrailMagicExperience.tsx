@@ -1,6 +1,5 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { MagicScene } from './three/MagicScene';
 import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ErrorBoundary } from 'react-error-boundary';
@@ -81,12 +80,14 @@ export const TrailMagicExperience: React.FC<TrailMagicExperienceProps> = ({ onFi
       return <MagicFallback onFinish={onFinish} />;
     }}>
       <div className="relative w-full h-80 flex items-center justify-center mb-4 rounded-2xl overflow-hidden">
-        {/* Cena 3D */}
-        <div className="absolute inset-0 z-0">
-          <MagicScene 
-            stage={1} 
-            isAnimating={stage === 'analysis'}
-          />
+        {/* Overlay simplificado sem a cena 3D */}
+        <div className="absolute inset-0 z-0 bg-gradient-to-br from-[#0ABAB5]/20 to-white">
+          {/* Animação simplificada */}
+          {stage === 'analysis' && (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-24 h-24 rounded-full bg-[#0ABAB5]/10 animate-ping" />
+            </div>
+          )}
         </div>
         
         {/* Overlay com mensagens */}
