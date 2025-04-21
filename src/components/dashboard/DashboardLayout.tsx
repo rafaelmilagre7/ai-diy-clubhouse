@@ -1,57 +1,66 @@
 
-import { ReactNode, useEffect } from "react";
-import { Outlet, useLocation } from "react-router-dom";
+import { FC } from "react";
 import { DashboardHeader } from "./DashboardHeader";
-import { ImplementationTrail } from "./ImplementationTrail";
-import { useProgress } from "@/hooks/onboarding/useProgress";
-import { useNavigate } from "react-router-dom";
+import { ActiveSolutions } from "./ActiveSolutions";
+import { CompletedSolutions } from "./CompletedSolutions";
+import { RecommendedSolutions } from "./RecommendedSolutions";
+import { NoSolutionsPlaceholder } from "./NoSolutionsPlaceholder";
+import { Solution } from "@/lib/supabase";
 
-// Definir as props do DashboardLayout
 interface DashboardLayoutProps {
-  searchQuery?: string;
-  onSearchChange?: (query: string) => void;
-  children?: ReactNode;
+  active: Solution[];
+  completed: Solution[];
+  recommended: Solution[];
+  category: string;
+  onCategoryChange: (category: string) => void;
+  onSolutionClick: (solution: Solution) => void;
 }
 
-export const DashboardLayout = ({ 
-  searchQuery = "", 
-  onSearchChange = () => {},
-  children
-}: DashboardLayoutProps) => {
-  const location = useLocation();
-  const { progress, isLoading } = useProgress();
-  const navigate = useNavigate();
-
-  // Verificar se o onboarding foi completado
-  useEffect(() => {
-    if (!isLoading && progress && !progress.is_completed) {
-      // Se não estiver na página de onboarding, redirecionar
-      if (!location.pathname.includes('/onboarding')) {
-        navigate('/onboarding', { replace: true });
-      }
-    }
-  }, [progress, isLoading, navigate, location.pathname]);
+export const DashboardLayout: FC<DashboardLayoutProps> = ({
+  active,
+  completed,
+  recommended,
+  category,
+  onCategoryChange,
+  onSolutionClick
+}) => {
+  const hasNoSolutions = active.length === 0 && completed.length === 0 && recommended.length === 0;
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="space-y-8">
       <DashboardHeader 
-        searchQuery={searchQuery} 
-        onSearchChange={onSearchChange} 
+        activeSolutionsCount={active.length}
+        completedSolutionsCount={completed.length}
+        category={category}
+        onCategoryChange={onCategoryChange}
       />
-      
-      <main className="flex-1 container mx-auto px-4 py-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Conteúdo principal */}
-          <div className="md:col-span-2">
-            {children || <Outlet />}
-          </div>
+
+      {hasNoSolutions ? (
+        <NoSolutionsPlaceholder />
+      ) : (
+        <>
+          {active.length > 0 && (
+            <ActiveSolutions 
+              solutions={active} 
+              onSolutionClick={onSolutionClick} 
+            />
+          )}
           
-          {/* Sidebar com trilha de implementação */}
-          <div className="md:col-span-1 space-y-6">
-            <ImplementationTrail />
-          </div>
-        </div>
-      </main>
+          {completed.length > 0 && (
+            <CompletedSolutions 
+              solutions={completed} 
+              onSolutionClick={onSolutionClick} 
+            />
+          )}
+          
+          {recommended.length > 0 && (
+            <RecommendedSolutions 
+              solutions={recommended} 
+              onSolutionClick={onSolutionClick} 
+            />
+          )}
+        </>
+      )}
     </div>
   );
 };

@@ -1,78 +1,66 @@
 
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { Solution } from "@/lib/supabase";
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/auth";
 
-export const useSolutionsData = (initialCategory: string | null = "all") => {
-  const [loading, setLoading] = useState(true);
+export const useSolutionsData = (options?: { 
+  category?: string, 
+  publishedOnly?: boolean 
+}) => {
+  const { toast } = useToast();
+  const { isAdmin } = useAuth();
   const [solutions, setSolutions] = useState<Solution[]>([]);
-  const [filteredSolutions, setFilteredSolutions] = useState<Solution[]>([]);
-  const [activeCategory, setActiveCategory] = useState(initialCategory || "all");
-  const [searchQuery, setSearchQuery] = useState("");
-  const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
     const fetchSolutions = async () => {
       try {
         setLoading(true);
         
-        // Buscar todas as soluções publicadas
-        const { data, error } = await supabase
-          .from("solutions")
-          .select("*")
-          .eq("published", true);
+        // Iniciar a consulta básica
+        let query = supabase.from("solutions").select("*");
         
-        if (error) {
-          throw error;
+        // Aplicar filtro por categoria se especificado
+        if (options?.category && options.category !== "all") {
+          query = query.eq("category", options.category);
         }
         
-        console.log("Soluções carregadas:", data ? data.length : 0);
-        setSolutions(data || []);
-      } catch (error) {
-        console.error("Erro ao buscar soluções:", error);
+        // Aplicar filtro para mostrar apenas soluções publicadas (se não for admin)
+        if ((options?.publishedOnly !== false) && !isAdmin) {
+          query = query.eq("published", true);
+        }
+        
+        // Ordenar por data de criação (mais recentes primeiro)
+        query = query.order("created_at", { ascending: false });
+        
+        const { data, error: fetchError } = await query;
+        
+        if (fetchError) throw fetchError;
+        
+        setSolutions(data as Solution[]);
+        setError(null);
+      } catch (err: any) {
+        console.error("Erro ao buscar soluções:", err);
+        setError(err);
+        toast({
+          title: "Erro ao carregar soluções",
+          description: "Não foi possível carregar as soluções. Tente novamente mais tarde.",
+          variant: "destructive",
+        });
       } finally {
         setLoading(false);
       }
     };
     
     fetchSolutions();
-  }, []);
-  
-  // Filtrar soluções baseado na categoria e busca
-  useEffect(() => {
-    let result = [...solutions];
-    
-    // Aplicar filtro de categoria se não for "all"
-    if (activeCategory !== "all") {
-      result = result.filter(solution => solution.category === activeCategory);
-    }
-    
-    // Aplicar filtro de busca se houver
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      result = result.filter(solution => 
-        solution.title?.toLowerCase().includes(query) || 
-        solution.description?.toLowerCase().includes(query)
-      );
-    }
-    
-    setFilteredSolutions(result);
-  }, [solutions, activeCategory, searchQuery]);
-  
-  // Função de navegação para detalhes
-  const navigateToSolutionDetails = (id: string) => {
-    navigate(`/solution/${id}`);
-  };
+  }, [options?.category, options?.publishedOnly, isAdmin, toast]);
   
   return {
-    loading,
     solutions,
-    filteredSolutions,
-    activeCategory,
-    setActiveCategory,
-    searchQuery,
-    setSearchQuery,
-    navigateToSolutionDetails
+    loading,
+    error,
   };
 };

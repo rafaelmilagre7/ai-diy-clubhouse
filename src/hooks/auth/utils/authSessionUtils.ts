@@ -1,63 +1,79 @@
 
-import { supabase } from '@/lib/supabase';
-import { UserProfile } from '@/lib/supabase';
+import { supabase, UserProfile } from "@/lib/supabase";
+import { createUserProfileIfNeeded, fetchUserProfile } from "@/contexts/auth/utils/profileUtils";
+import { determineRoleFromEmail, validateUserRole } from "@/contexts/auth/utils/profileUtils/roleValidation";
 
-// Process user profile with efficient profile fetching
+/**
+ * Processa o perfil do usuário durante a inicialização da sessão
+ * Busca o perfil existente ou cria um novo se necessário
+ */
 export const processUserProfile = async (
   userId: string,
-  email?: string | null,
-  name?: string | null
+  email: string | undefined | null,
+  name: string | undefined | null
 ): Promise<UserProfile | null> => {
   try {
-    console.log(`Processing profile for user: ${userId}`);
-    
-    // Fetch profile from database
-    const { data: profile, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .single();
-    
-    if (error) {
-      console.error("Error fetching profile:", error);
+    if (!userId) {
+      console.error("ID de usuário não fornecido para processamento de perfil");
       return null;
     }
     
-    if (profile) {
-      console.log("Profile found:", profile.id);
-      return profile as UserProfile;
+    // Tentar buscar perfil existente
+    let profile = await fetchUserProfile(userId);
+    
+    // Se não encontrou perfil, criar um novo
+    if (!profile) {
+      console.log("Nenhum perfil encontrado, criando novo perfil para", email);
+      profile = await createUserProfileIfNeeded(userId, email || "", name || "Usuário");
+      
+      if (!profile) {
+        console.error("Falha ao criar perfil para", email);
+        return null;
+      }
     }
     
-    // If no profile exists, create one with required fields
-    // Email is required in the profiles table, so we need to ensure it's provided
-    if (!email) {
-      console.error("Email is required to create a profile, but none was provided");
-      return null;
+    // Verificar e atualizar o papel do usuário se necessário
+    if (profile.role) {
+      const validatedRole = await validateUserRole(profile.id, profile.role, email);
+      if (validatedRole !== profile.role) {
+        profile.role = validatedRole;
+      }
     }
     
-    const defaultProfile = {
-      id: userId,
-      email: email, // This is now guaranteed to be non-null
-      name: name || 'Novo Membro',
-      role: 'member' as const,
-    };
+    return profile;
+  } catch (error) {
+    console.error("Erro ao processar perfil do usuário:", error);
+    return null;
+  }
+};
+
+/**
+ * Inicializa um novo perfil com valores padrão
+ */
+export const initializeNewProfile = async (userId: string, email: string, name: string): Promise<UserProfile | null> => {
+  try {
+    const role = determineRoleFromEmail(email);
     
-    console.log("Creating new profile:", defaultProfile);
-    
-    const { data: newProfile, error: createError } = await supabase
-      .from('profiles')
-      .insert(defaultProfile)
+    const { data, error } = await supabase
+      .from("profiles")
+      .insert({
+        id: userId,
+        email,
+        name,
+        role,
+        created_at: new Date().toISOString(),
+      })
       .select()
       .single();
     
-    if (createError) {
-      console.error("Error creating profile:", createError);
+    if (error) {
+      console.error("Erro ao inicializar novo perfil:", error);
       return null;
     }
     
-    return newProfile as UserProfile;
+    return data as UserProfile;
   } catch (error) {
-    console.error("Profile processing error:", error);
+    console.error("Erro inesperado ao inicializar perfil:", error);
     return null;
   }
 };
