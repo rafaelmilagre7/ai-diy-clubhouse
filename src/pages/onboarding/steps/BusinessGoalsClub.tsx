@@ -28,12 +28,12 @@ const BusinessGoalsClub = () => {
     loadData();
   }, [refreshProgress, refreshCount]);
 
-  const handleSaveData = async (stepId: string, data: any) => {
+  const handleSaveData = async (data: any) => {
     setIsSubmitting(true);
     try {
       console.log("Salvando dados de objetivos:", data);
-      // Salvar sem navegação automática para permitir voltar manualmente
-      await saveStepData(stepId, data, true);
+      // Modificado para usar apenas um parâmetro
+      await saveStepData(data);
       console.log("Dados de objetivos salvos com sucesso");
       toast.success("Dados salvos com sucesso!");
     } catch (error) {

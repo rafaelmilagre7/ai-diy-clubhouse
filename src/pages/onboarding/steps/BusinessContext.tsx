@@ -42,8 +42,8 @@ const BusinessContext = () => {
 
   // Manipulador para salvar dados - aqui é a modificação principal
   const handleSave = async (data: any) => {
-    // Passamos true como segundo parâmetro para permitir a navegação
-    return saveStepData("business_context", data, true);
+    // Modificado para usar apenas um parâmetro
+    return saveStepData(data);
   };
 
   if (isLoading || localLoading) {

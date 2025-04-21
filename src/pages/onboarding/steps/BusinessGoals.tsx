@@ -39,18 +39,17 @@ const BusinessGoals = () => {
   const onSubmit = async (data: FormValues) => {
     try {
       // Transformamos os dados para o formato esperado pelo saveStepData
-      const professionalData: Partial<OnboardingData> = {
-        professional_info: {
-          company_name: data.company_name,
-          company_size: data.company_size,
-          company_sector: data.company_sector,
-          company_website: data.company_website,
-          current_position: data.current_position,
-          annual_revenue: data.annual_revenue,
-        }
+      const professionalData = {
+        company_name: data.company_name,
+        company_size: data.company_size,
+        company_sector: data.company_sector,
+        company_website: data.company_website,
+        current_position: data.current_position,
+        annual_revenue: data.annual_revenue,
       };
       
-      await saveStepData("goals", professionalData);
+      // Modificado para usar apenas um parâmetro
+      await saveStepData(professionalData);
       toast.success("Informações salvas com sucesso!");
       navigate("/onboarding/business-context");
     } catch (error) {

@@ -17,12 +17,12 @@ const ComplementaryInfo = () => {
     refreshProgress();
   }, [refreshProgress]);
 
-  const handleSaveData = async (stepId: string, data: any) => {
+  const handleSaveData = async (data: any) => {
     setIsSubmitting(true);
     try {
       console.log("Salvando informações complementares:", data);
-      // Permitir navegação automática 
-      await saveStepData(stepId, data, true);
+      // Modificado para usar apenas um parâmetro
+      await saveStepData(data);
       console.log("Informações complementares salvas com sucesso");
     } catch (error) {
       console.error("Erro ao salvar dados:", error);

@@ -17,12 +17,12 @@ const ExperiencePersonalization = () => {
     refreshProgress();
   }, [refreshProgress]);
 
-  const handleSaveData = async (stepId: string, data: any) => {
+  const handleSaveData = async (data: any) => {
     setIsSubmitting(true);
     try {
       console.log("Salvando dados de personalização:", data);
-      // Agora permitimos a navegação automática após salvar os dados
-      await saveStepData(stepId, data, true);
+      // Modificado para usar apenas um parâmetro
+      await saveStepData(data);
       console.log("Dados de personalização salvos com sucesso");
     } catch (error) {
       console.error("Erro ao salvar dados:", error);

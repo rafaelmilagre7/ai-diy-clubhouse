@@ -1,5 +1,5 @@
 
-import { Solution } from "@/lib/supabase";
+import { Solution } from "@/hooks/dashboard/types";
 import { cn } from "@/lib/utils";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { CardThumbnail } from "./CardThumbnail";
@@ -9,13 +9,13 @@ import { CardFooterSection } from "./CardFooter";
 
 interface SolutionCardProps {
   solution: Solution;
-  onSelect: (id: string) => void;
+  onClick: () => void;
 }
 
-export const SolutionCard = ({ solution, onSelect }: SolutionCardProps) => {
+export const SolutionCard = ({ solution, onClick }: SolutionCardProps) => {
   const handleSelect = () => {
     console.log("Card selecionado, navegando para a solução:", solution.id);
-    onSelect(solution.id);
+    onClick();
   };
 
   return (

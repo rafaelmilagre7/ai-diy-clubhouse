@@ -20,14 +20,14 @@ const AIExperience = () => {
     refreshProgress();
   }, [refreshProgress]);
 
-  const handleSaveData = async (stepId: string, data: any) => {
+  const handleSaveData = async (data: any) => {
     setIsSubmitting(true);
     try {
       console.log("Salvando dados de experiência com IA:", data);
       log("onboarding_ai_experience_submit", { data });
       
-      // Passamos true como terceiro parâmetro para permitir a navegação automática
-      await saveStepData(stepId, data, true);
+      // Modifica para usar apenas um parâmetro
+      await saveStepData(data);
       
       console.log("Dados de experiência com IA salvos com sucesso");
       // O toast de sucesso já é mostrado pelo hook de persistência

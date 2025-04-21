@@ -68,20 +68,8 @@ export const BusinessContextFormStep: React.FC<BusinessContextFormStepProps> = (
     try {
       console.log("Enviando dados do contexto do negócio:", data);
       
-      // Preparar os dados para salvar
-      const formattedData = {
-        business_context: {
-          business_model: data.business_model,
-          business_challenges: data.business_challenges,
-          short_term_goals: data.short_term_goals,
-          medium_term_goals: data.medium_term_goals,
-          important_kpis: data.important_kpis,
-          additional_context: data.additional_context,
-        }
-      };
-      
-      // Aqui é a mudança principal: passamos true como segundo parâmetro para permitir a navegação automática
-      await onSave(formattedData);
+      // Preparar os dados para salvar - só precisa passar o objeto formValues
+      await onSave(data);
       // Não precisamos do toast aqui, pois o hook já vai mostrar um toast de sucesso
     } catch (error) {
       console.error("Erro ao salvar dados do contexto do negócio:", error);
@@ -96,19 +84,8 @@ export const BusinessContextFormStep: React.FC<BusinessContextFormStepProps> = (
         const formData = methods.getValues();
         console.log("Auto-salvando dados:", formData);
         
-        const formattedData = {
-          business_context: {
-            business_model: formData.business_model,
-            business_challenges: formData.business_challenges,
-            short_term_goals: formData.short_term_goals,
-            medium_term_goals: formData.medium_term_goals,
-            important_kpis: formData.important_kpis,
-            additional_context: formData.additional_context,
-          }
-        };
-        
-        // Aqui garantimos que o auto-save NÃO navegue automaticamente (false)
-        await onSave(formattedData);
+        // Modificado para usar apenas um parâmetro
+        await onSave(formData);
         // Sem toast para auto-save para não incomodar o usuário
       } catch (error) {
         console.error("Erro ao auto-salvar dados:", error);

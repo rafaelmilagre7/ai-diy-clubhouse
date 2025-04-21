@@ -20,13 +20,13 @@ const ProfessionalData = () => {
     refreshProgress();
   }, [refreshProgress]);
 
-  const handleSaveData = async (stepId: string, data: any) => {
+  const handleSaveData = async (data: any) => {
     try {
       setIsSubmitting(true);
       console.log("Salvando dados profissionais:", data);
       
-      // Salvar e navegar automaticamente para a próxima etapa
-      await saveStepData(stepId, data, true);
+      // Modificado para usar apenas um parâmetro
+      await saveStepData(data);
       
       console.log("Dados profissionais salvos com sucesso, navegando para a próxima etapa");
       toast.success("Informações salvas com sucesso!");
