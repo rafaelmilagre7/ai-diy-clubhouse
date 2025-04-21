@@ -18,15 +18,24 @@ export const SolutionCard = ({ solution, onClick }: SolutionCardProps) => {
     onClick();
   };
 
+  // Classes de gradiente baseadas na categoria
+  const categoryGradient = {
+    revenue: "from-revenue-lighter to-white border-l-4 border-l-revenue",
+    operational: "from-operational-lighter to-white border-l-4 border-l-operational",
+    strategy: "from-strategy-lighter to-white border-l-4 border-l-strategy"
+  };
+
   return (
     <Card 
       className={cn(
-        "solution-card transition-all duration-200 cursor-pointer hover:shadow-md hover:translate-y-[-4px]", 
-        solution.category
+        "overflow-hidden rounded-xl shadow-md transition-all duration-300 cursor-pointer depth-effect",
+        "hover:shadow-xl hover:translate-y-[-4px]",
+        "bg-gradient-to-br",
+        categoryGradient[solution.category as keyof typeof categoryGradient]
       )}
       onClick={handleSelect}
     >
-      <CardContent className="p-0">
+      <CardContent className="p-0 relative">
         <CardThumbnail thumbnailUrl={solution.thumbnail_url} />
         <div className="p-4 space-y-2">
           <CardHeader 

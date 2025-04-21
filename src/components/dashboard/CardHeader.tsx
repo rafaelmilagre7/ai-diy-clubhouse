@@ -10,9 +10,25 @@ interface CardHeaderProps {
 }
 
 export const CardHeader = ({ category, difficulty }: CardHeaderProps) => {
+  const getCategoryStyles = () => {
+    switch (category) {
+      case "revenue":
+        return "bg-gradient-to-r from-revenue to-revenue-light text-white";
+      case "operational":
+        return "bg-gradient-to-r from-operational to-operational-light text-white";
+      case "strategy":
+        return "bg-gradient-to-r from-strategy to-strategy-light text-white";
+      default:
+        return "bg-gradient-to-r from-neutral-700 to-neutral-600 text-white";
+    }
+  };
+
   return (
     <div className="flex justify-between items-start">
-      <Badge variant="outline" className={cn("badge-" + category)}>
+      <Badge variant="outline" className={cn(
+        "px-3 py-1 font-medium rounded-full border-0 shadow-sm animate-slide-in",
+        getCategoryStyles()
+      )}>
         {category === "revenue" && "Receita"}
         {category === "operational" && "Operacional"}
         {category === "strategy" && "Estratégia"}

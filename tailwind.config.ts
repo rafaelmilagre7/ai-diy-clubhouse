@@ -53,29 +53,49 @@ export default {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
 				},
-                // Custom VIVER DE IA colors
+                // VIVER DE IA colors - enhanced with more variants
                 viverblue: {
                     DEFAULT: '#0ABAB5',
                     light: '#6de2de',
+                    lighter: '#9EECEA',
                     dark: '#068d89',
+                    darker: '#046A66',
                 },
-                // Revenue track colors
+                // Revenue track colors - enhanced
                 revenue: {
                     DEFAULT: '#3949AB',
                     light: '#7986CB',
+                    lighter: '#C5CAE9',
                     dark: '#1A237E',
+                    darker: '#0D1642',
                 },
-                // Operational track colors
+                // Operational track colors - enhanced 
                 operational: {
                     DEFAULT: '#8E24AA',
                     light: '#BA68C8',
+                    lighter: '#E1BEE7',
                     dark: '#4A148C',
+                    darker: '#2A0B50',
                 },
-                // Strategy track colors
+                // Strategy track colors - enhanced
                 strategy: {
                     DEFAULT: '#00897B',
                     light: '#4DB6AC',
+                    lighter: '#B2DFDB',
                     dark: '#004D40',
+                    darker: '#002B23',
+                },
+                // New neutral palette
+                neutral: {
+                    100: '#F8FAFC',
+                    200: '#EEF2F6',
+                    300: '#E3E8EF',
+                    400: '#CDD5E0',
+                    500: '#9AA5B8',
+                    600: '#657084',
+                    700: '#47536B',
+                    800: '#2F3847',
+                    900: '#1C2536',
                 },
 			},
 			borderRadius: {
@@ -83,6 +103,11 @@ export default {
 				md: 'calc(var(--radius) - 2px)',
 				sm: 'calc(var(--radius) - 4px)'
 			},
+			fontFamily: {
+                // Adicionar Inter como fonte principal e Outfit para títulos
+                sans: ['Inter', 'system-ui', 'sans-serif'],
+                heading: ['Outfit', 'system-ui', 'sans-serif'],
+            },
 			keyframes: {
 				'accordion-down': {
 					from: {
@@ -128,6 +153,18 @@ export default {
                 'scale-in': {
                     '0%': { transform: 'scale(0.95)', opacity: '0' },
                     '100%': { transform: 'scale(1)', opacity: '1' }
+                },
+                'gradient-shift': {
+                    '0%, 100%': { 
+                        backgroundPosition: '0% 50%' 
+                    },
+                    '50%': { 
+                        backgroundPosition: '100% 50%' 
+                    }
+                },
+                'float': {
+                    '0%, 100%': { transform: 'translateY(0)' },
+                    '50%': { transform: 'translateY(-10px)' }
                 }
 			},
 			animation: {
@@ -138,8 +175,20 @@ export default {
                 'pulse-glow': 'pulse-glow 2s infinite',
                 'fade-in': 'fade-in 0.5s ease-out',
                 'slide-in': 'slide-in 0.5s ease-out',
-                'scale-in': 'scale-in 0.3s ease-out'
-			}
+                'scale-in': 'scale-in 0.3s ease-out',
+                'gradient-shift': 'gradient-shift 3s ease infinite',
+                'float': 'float 6s ease-in-out infinite'
+			},
+            backgroundImage: {
+                'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
+                'gradient-conic': 'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
+                'gradient-viver': 'linear-gradient(135deg, #0ABAB5 0%, #6de2de 100%)',
+                'gradient-revenue': 'linear-gradient(135deg, #1A237E 0%, #3949AB 100%)',
+                'gradient-operational': 'linear-gradient(135deg, #4A148C 0%, #8E24AA 100%)',
+                'gradient-strategy': 'linear-gradient(135deg, #004D40 0%, #00897B 100%)',
+                'gradient-card': 'linear-gradient(135deg, #ffffff 0%, #f5f5f5 100%)',
+                'dot-pattern': 'radial-gradient(circle, #0ABAB5 1px, transparent 1px)',
+            },
 		}
 	},
 	plugins: [require("tailwindcss-animate")],

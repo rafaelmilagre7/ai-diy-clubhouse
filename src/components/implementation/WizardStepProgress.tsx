@@ -1,84 +1,69 @@
 
-import React from "react";
 import { cn } from "@/lib/utils";
+import { CheckIcon } from "lucide-react";
 
 interface WizardStepProgressProps {
-  currentStep: number; // 0 baseado, para total de 8 módulos
-  totalSteps?: number;
+  currentStep: number;
+  totalSteps: number;
   stepTitles?: string[];
 }
 
-const defaultStepTitles = [
-  "Landing",
-  "Visão Geral",
-  "Preparação",
-  "Implementação",
-  "Verificação",
-  "Resultados",
-  "Otimização",
-  "Celebração"
-];
-
-export const WizardStepProgress: React.FC<WizardStepProgressProps> = ({
+export const WizardStepProgress = ({
   currentStep,
-  totalSteps = 8,
-  stepTitles = defaultStepTitles
-}) => {
+  totalSteps,
+  stepTitles = [],
+}: WizardStepProgressProps) => {
+  // Criar array com o número de etapas
+  const steps = Array.from({ length: totalSteps }, (_, i) => i);
+
   return (
-    <div className={cn(
-      "relative w-full py-7 px-4 flex flex-col items-center mb-8",
-      "backdrop-blur-xl bg-white/30 dark:bg-[#1A1F2C]/50 rounded-2xl shadow-lg border border-white/10",
-      "glass"
-    )}>
-      <div className="flex w-full items-center justify-between">
-        {Array.from({ length: totalSteps }).map((_, idx) => {
-          const step = idx + 1;
-          const active = idx === currentStep;
-          const completed = idx < currentStep;
-          return (
-            <React.Fragment key={step}>
+    <div className="mb-6 px-4 py-6 glassmorphism rounded-2xl">
+      <div className="w-full flex items-center">
+        {steps.map((step, index) => (
+          <React.Fragment key={step}>
+            {/* Círculo do passo */}
+            <div
+              className={cn(
+                "relative flex items-center justify-center w-8 h-8 rounded-full transition-all duration-300",
+                index < currentStep 
+                  ? "bg-gradient-to-r from-green-500 to-green-400 text-white" 
+                  : index === currentStep 
+                    ? "bg-gradient-to-r from-viverblue to-viverblue-light text-white shadow-lg ring-2 ring-viverblue/30" 
+                    : "bg-neutral-100 text-neutral-400 border border-neutral-200"
+              )}
+            >
+              {index < currentStep ? (
+                <CheckIcon className="w-4 h-4" />
+              ) : (
+                <span className="text-sm font-medium">{index + 1}</span>
+              )}
+              
+              {/* Dica do título */}
+              {stepTitles[index] && (
+                <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 whitespace-nowrap">
+                  <span 
+                    className={cn(
+                      "text-xs font-medium",
+                      index === currentStep ? "text-viverblue font-semibold" : "text-neutral-500"
+                    )}
+                  >
+                    {stepTitles[index]}
+                  </span>
+                </div>
+              )}
+            </div>
+            
+            {/* Linha conectora */}
+            {index < steps.length - 1 && (
               <div
                 className={cn(
-                  "flex flex-col items-center z-10",
-                  active
-                    ? "text-[#0ABAB5] scale-110 transition-transform duration-200 font-bold"
-                    : completed
-                    ? "text-green-600"
-                    : "text-gray-400"
+                  "flex-1 h-1 mx-1",
+                  index < currentStep ? "bg-gradient-to-r from-green-500 to-green-400" : "bg-neutral-200"
                 )}
-              >
-                <div className={cn(
-                  "rounded-full w-9 h-9 flex items-center justify-center text-lg font-semibold border-2 mb-1 shadow",
-                  active
-                    ? "border-[#0ABAB5] bg-white"
-                    : completed
-                    ? "border-green-400 bg-green-50"
-                    : "border-gray-200 bg-gray-100"
-                )}>
-                  {step}
-                </div>
-                <span className={cn(
-                  "text-xs text-center leading-tight",
-                  active ? "opacity-100" : "opacity-70"
-                )}>
-                  {stepTitles[idx]}
-                </span>
-              </div>
-              {/* Conector */}
-              {step < totalSteps && (
-                <div
-                  className={cn(
-                    "flex-1 h-1 mx-1 md:mx-2 rounded",
-                    completed
-                      ? "bg-gradient-to-r from-[#0ABAB5] to-green-300"
-                      : "bg-gray-200"
-                  )}
-                  style={{ minWidth: 16 }}
-                />
-              )}
-            </React.Fragment>
-          );
-        })}
+              />
+            )}
+          </React.Fragment>
+        ))}
       </div>
     </div>
   );

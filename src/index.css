@@ -1,4 +1,6 @@
 
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -33,7 +35,7 @@
     --input: 214.3 31.8% 91.4%;
     --ring: 179 90% 39%; /* VIVER DE IA blue for focus rings */
 
-    --radius: 0.5rem;
+    --radius: 0.75rem;
   }
 
   .dark {
@@ -73,7 +75,27 @@
   }
 
   body {
-    @apply bg-background text-foreground font-sans;
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-heading font-semibold;
+  }
+  
+  h1 {
+    @apply text-3xl md:text-4xl tracking-tight;
+  }
+  
+  h2 {
+    @apply text-2xl md:text-3xl tracking-tight;
+  }
+  
+  h3 {
+    @apply text-xl md:text-2xl;
+  }
+  
+  p {
+    @apply leading-relaxed text-neutral-700 dark:text-neutral-300;
   }
 }
 
@@ -146,4 +168,75 @@
   .glass-effect {
     @apply backdrop-blur-sm bg-white/80 border border-white/20;
   }
+  
+  /* Novas classes para o design atualizado */
+  .card-modern {
+    @apply rounded-2xl bg-white border border-neutral-200 shadow-md hover:shadow-lg transition-all duration-300;
+  }
+  
+  .btn-gradient {
+    @apply bg-gradient-viver text-white font-medium rounded-lg px-4 py-2 transition-all hover:opacity-90 hover:shadow-md;
+  }
+  
+  .glassmorphism {
+    @apply backdrop-blur-xl bg-white/70 border border-white/30 shadow-xl;
+  }
+  
+  .section-title {
+    @apply font-heading text-2xl md:text-3xl font-bold text-neutral-800 mb-6;
+  }
+  
+  .gradient-card {
+    @apply bg-gradient-to-br from-white to-neutral-100 rounded-2xl shadow-md border border-neutral-200;
+  }
+  
+  .gradient-card-revenue {
+    @apply bg-gradient-to-br from-revenue-lighter to-white rounded-2xl shadow-md border-l-4 border-l-revenue border-t border-r border-b border-neutral-200;
+  }
+  
+  .gradient-card-operational {
+    @apply bg-gradient-to-br from-operational-lighter to-white rounded-2xl shadow-md border-l-4 border-l-operational border-t border-r border-b border-neutral-200;
+  }
+  
+  .gradient-card-strategy {
+    @apply bg-gradient-to-br from-strategy-lighter to-white rounded-2xl shadow-md border-l-4 border-l-strategy border-t border-r border-b border-neutral-200;
+  }
+  
+  .dot-bg {
+    @apply bg-dot-pattern bg-[length:20px_20px];
+  }
+  
+  .animated-gradient {
+    @apply bg-gradient-to-r from-viverblue via-viverblue-light to-viverblue bg-size-200 animate-gradient-shift;
+  }
+}
+
+/* Utility para tamanhos de background nos gradientes animados */
+.bg-size-200 {
+  background-size: 200% 200%;
+}
+
+.bg-size-300 {
+  background-size: 300% 300%;
+}
+
+/* Efeito de profundidade para cartões */
+.depth-effect {
+  box-shadow: 
+    0 1px 1px rgba(0,0,0,0.01), 
+    0 2px 2px rgba(0,0,0,0.01), 
+    0 4px 4px rgba(0,0,0,0.01), 
+    0 8px 8px rgba(0,0,0,0.01),
+    0 16px 16px rgba(0,0,0,0.01);
+  transition: all 0.3s ease;
+}
+
+.depth-effect:hover {
+  box-shadow: 
+    0 1px 1px rgba(0,0,0,0.03), 
+    0 2px 2px rgba(0,0,0,0.03), 
+    0 4px 4px rgba(0,0,0,0.03), 
+    0 8px 8px rgba(0,0,0,0.03),
+    0 16px 16px rgba(0,0,0,0.03);
+  transform: translateY(-5px);
 }
