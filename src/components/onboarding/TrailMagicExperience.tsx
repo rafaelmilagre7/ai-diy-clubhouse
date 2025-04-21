@@ -1,6 +1,7 @@
 
 import React, { useRef, useState } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
+import * as THREE from "three";
 import { Button } from "@/components/ui/button";
 import { Sparkles, Rocket, WandSparkles } from "lucide-react";
 
