@@ -1,38 +1,50 @@
 
-import { SolutionCategory } from "@/lib/types/categoryTypes";
-
 export interface Achievement {
   id: string;
   name: string;
   description: string;
-  category: SolutionCategory | 'achievement';
-  isUnlocked: boolean;
-  earnedAt?: string;
+  icon?: string;
+  category: string;
   requiredCount?: number;
   currentCount?: number;
+  isUnlocked: boolean;
+  earnedAt?: string;
+  level?: number;
 }
 
-export type ProgressData = {
-  solution_id: string;
+export interface ProgressData {
+  id: string;
   user_id: string;
+  solution_id: string;
+  current_module: number;
   is_completed: boolean;
   completed_at?: string;
   created_at: string;
-  last_activity?: string;
-};
+  solutions: {
+    id: string;
+    category: string;
+  };
+}
 
-export type ChecklistData = {
+export interface ChecklistData {
+  id: string;
+  user_id: string;
+  checklist_id: string;
   solution_id: string;
-  checked_items: Record<string, boolean>;
-};
+  is_completed: boolean;
+  completed_at?: string;
+}
 
-export type BadgeData = {
+export interface BadgeData {
   id: string;
   user_id: string;
   badge_id: string;
   earned_at: string;
   badges: {
+    id: string;
     name: string;
     description: string;
+    icon: string;
+    category: string;
   };
-};
+}

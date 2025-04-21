@@ -28,18 +28,18 @@ export function AchievementsSummary() {
     )}>
       {/* Lado esquerdo: Progresso geral */}
       <div className="flex-1 flex flex-col items-center md:items-start justify-center gap-1">
-        <span className="text-xs text-white/70 font-medium mb-1">Gamificação</span>
-        <h2 className="text-lg md:text-xl font-bold text-white drop-shadow">
+        <span className="text-xs text-muted-foreground font-medium mb-1">Gamificação</span>
+        <h2 className="text-lg md:text-xl font-bold text-foreground drop-shadow">
           {unlockedCount} de {achievements.length} conquistas desbloqueadas
         </h2>
-        <div className="relative w-full h-3 bg-white/10 rounded-full mt-2 mb-1 overflow-hidden">
+        <div className="relative w-full h-3 bg-muted rounded-full mt-2 mb-1 overflow-hidden">
           <div className="absolute left-0 top-0 h-full rounded-full bg-gradient-to-r from-green-400 to-green-500 transition-all duration-700" style={{ width: `${percent}%` }} />
         </div>
-        <span className="text-xs text-white/50">{percent}% conquistado</span>
+        <span className="text-xs text-muted-foreground">{percent}% conquistado</span>
         <Button 
           variant="secondary"
           size="sm"
-          className="mt-3 md:mt-2 glassmorphism border-none bg-viverblue/80 hover:bg-viverblue/90 focus:ring-2 focus:ring-viverblue animate-fade-in"
+          className="mt-3 md:mt-2 bg-viverblue/80 hover:bg-viverblue/90 focus:ring-2 focus:ring-viverblue animate-fade-in text-white"
           onClick={() => navigate("/achievements")}
         >
           Ver todas conquistas
@@ -56,13 +56,12 @@ export function AchievementsSummary() {
                 "rounded-full border-2 border-green-300 bg-gradient-to-br from-viverblue-light via-green-100 to-white shadow-lg",
                 "w-16 h-16 flex items-center justify-center hover:scale-110 transition-transform duration-200 ease-in-out cursor-pointer animate-scale-in"
               )}
-              // Tooltip custom simples (aparecendo ao hover)
               title={badge.name + " - " + badge.description}
               tabIndex={0}
             >
               <Award className="h-8 w-8 text-green-600 drop-shadow" />
             </div>
-            <span className="text-xs text-white/90 mt-1 font-semibold hidden md:block">{badge.name}</span>
+            <span className="text-xs text-foreground mt-1 font-semibold hidden md:block">{badge.name}</span>
           </div>
         ))}
         {/* Se ainda não tem conquistas, mostre cinza */}
@@ -71,7 +70,7 @@ export function AchievementsSummary() {
             <div className="rounded-full border-2 border-gray-400 bg-gray-200 w-16 h-16 flex items-center justify-center opacity-50 animate-pulse">
               <Award className="h-8 w-8 text-gray-400" />
             </div>
-            <span className="text-xs text-gray-300 mt-1 font-semibold hidden md:block">Nenhuma conquista ainda</span>
+            <span className="text-xs text-gray-400 mt-1 font-semibold hidden md:block">Nenhuma conquista ainda</span>
           </div>
         )}
         {/* Destacar até 2 próximos badges a desbloquear */}
@@ -79,7 +78,7 @@ export function AchievementsSummary() {
           <div key={badge.id} className="group flex flex-col items-center opacity-60">
             <div
               className={cn(
-                "rounded-full border-2 border-gray-500 bg-gradient-to-br from-gray-100 via-gray-200 to-white",
+                "rounded-full border-2 border-gray-400 bg-gradient-to-br from-gray-100 via-gray-200 to-white",
                 "w-14 h-14 flex items-center justify-center hover:scale-105 transition-transform duration-200"
               )}
               title={`${badge.name}: Desbloqueie completando mais ações`}
@@ -87,7 +86,7 @@ export function AchievementsSummary() {
             >
               <Star className="h-7 w-7 text-gray-400" />
             </div>
-            <span className="text-[10px] text-white/70 mt-1 hidden md:block">{badge.name}</span>
+            <span className="text-[10px] text-muted-foreground mt-1 hidden md:block">{badge.name}</span>
           </div>
         ))}
       </div>

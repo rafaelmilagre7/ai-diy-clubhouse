@@ -38,7 +38,7 @@ export const DashboardLayout: FC<DashboardLayoutProps> = ({
       {/* NOVO: Resumo gamificação - conquistas */}
       <div className="animate-fade-in">
         {/* AchievementsSummary adiciona badges/conquistas com microinteração */}
-        {<AchievementsSummary />}
+        <AchievementsSummary />
       </div>
 
       {/* CARDS DE PROGRESSO (KPI) */}
