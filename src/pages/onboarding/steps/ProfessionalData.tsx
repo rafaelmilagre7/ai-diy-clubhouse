@@ -80,7 +80,6 @@ const ProfessionalData = () => {
       <OnboardingLayout
         currentStep={currentStepIndex + 1}
         totalSteps={steps.length}
-        progress={progressPercentage}
         title="Dados Profissionais"
         backUrl="/onboarding"
       >
@@ -96,9 +95,9 @@ const ProfessionalData = () => {
     <OnboardingLayout
       currentStep={currentStepIndex + 1}
       totalSteps={steps.length}
-      progress={progressPercentage}
       title="Dados Profissionais"
       backUrl="/onboarding"
+      progress={progressPercentage}
     >
       <ProfessionalDataStep
         onSubmit={handleSaveData}

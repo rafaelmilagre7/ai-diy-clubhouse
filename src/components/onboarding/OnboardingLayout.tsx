@@ -15,6 +15,7 @@ interface OnboardingLayoutProps {
   stepTitles?: string[];
   onStepClick?: (step: number) => void;
   hideProgress?: boolean;
+  progress?: number; // Adicionado a propriedade progress
 }
 
 export const OnboardingLayout = ({
@@ -35,7 +36,8 @@ export const OnboardingLayout = ({
     "Revisão"
   ],
   onStepClick,
-  hideProgress = false
+  hideProgress = false,
+  progress // Adicionado o parâmetro progress
 }: OnboardingLayoutProps) => {
   return (
     <MemberLayout>

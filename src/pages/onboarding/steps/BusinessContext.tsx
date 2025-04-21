@@ -40,7 +40,6 @@ const BusinessContext = () => {
       <OnboardingLayout
         currentStep={3}
         totalSteps={steps.length}
-        progress={progressPercentage}
         title="Contexto do Negócio"
       >
         <div className="flex flex-col justify-center items-center h-64 space-y-4">
@@ -55,9 +54,9 @@ const BusinessContext = () => {
     <OnboardingLayout
       currentStep={3}
       totalSteps={steps.length}
-      progress={progressPercentage}
       title="Contexto do Negócio"
       backUrl="/onboarding/professional-data"
+      progress={progressPercentage}
     >
       <BusinessContextStep
         onSubmit={handleSave}

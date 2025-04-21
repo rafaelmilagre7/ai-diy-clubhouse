@@ -32,18 +32,19 @@ const Review: React.FC = () => {
     }
   };
   
+  const progressPercentage = ((currentStepIndex + 1) / steps.length) * 100;
+  
   // Verificar se temos dados para mostrar
   if (isLoading || !progress) {
     return (
       <OnboardingLayout
         currentStep={currentStepIndex + 1}
         totalSteps={steps.length}
-        progress={((currentStepIndex + 1) / steps.length) * 100}
         title="Revisar Informações"
       >
         <div className="text-center py-8">
-          <Loader2 className="animate-spin h-8 w-8 mx-auto text-white" />
-          <p className="mt-2 text-white">Carregando seus dados...</p>
+          <Loader2 className="animate-spin h-8 w-8 mx-auto text-gray-500" />
+          <p className="mt-2 text-gray-500">Carregando seus dados...</p>
         </div>
       </OnboardingLayout>
     );
@@ -53,16 +54,16 @@ const Review: React.FC = () => {
     <OnboardingLayout
       currentStep={currentStepIndex + 1}
       totalSteps={steps.length}
-      progress={((currentStepIndex + 1) / steps.length) * 100}
       title="Revisar Informações"
       backUrl="/onboarding/complementary"
+      progress={progressPercentage}
     >
       <div className="space-y-6">
         <MilagrinhoMessage
           message="Vamos revisar as informações que você compartilhou conosco. Se algo estiver incorreto, você pode voltar às etapas anteriores e fazer os ajustes necessários."
         />
         
-        <div className="bg-gray-800 rounded-lg p-6">
+        <div className="bg-gray-50 rounded-lg p-6">
           <ReviewStep 
             progress={progress}
             onComplete={handleComplete}
