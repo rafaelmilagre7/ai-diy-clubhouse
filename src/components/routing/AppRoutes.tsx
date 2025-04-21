@@ -31,7 +31,8 @@ import MemberLayout from '@/components/layout/MemberLayout';
 import ImplementationTrailPage from '@/pages/member/ImplementationTrailPage';
 
 // Onboarding
-import Onboarding from '@/pages/onboarding/Onboarding';
+import OnboardingIntro from '@/pages/onboarding/OnboardingIntro';
+import PersonalInfo from '@/pages/onboarding/steps/PersonalInfo';
 import ProfessionalData from '@/pages/onboarding/steps/ProfessionalData';
 import BusinessContext from '@/pages/onboarding/steps/BusinessContext';
 import AIExperience from '@/pages/onboarding/steps/AIExperience';
@@ -73,7 +74,8 @@ const AppRoutes = () => {
       <Route path="/suggestions/new" element={<ProtectedRoutes><MemberLayout><NewSuggestion /></MemberLayout></ProtectedRoutes>} />
       
       {/* Onboarding Routes */}
-      <Route path="/onboarding" element={<ProtectedRoutes><Onboarding /></ProtectedRoutes>} />
+      <Route path="/onboarding" element={<ProtectedRoutes><OnboardingIntro /></ProtectedRoutes>} />
+      <Route path="/onboarding/personal-info" element={<ProtectedRoutes><PersonalInfo /></ProtectedRoutes>} />
       <Route path="/onboarding/professional-data" element={<ProtectedRoutes><ProfessionalData /></ProtectedRoutes>} />
       <Route path="/onboarding/business-context" element={<ProtectedRoutes><BusinessContext /></ProtectedRoutes>} />
       <Route path="/onboarding/ai-experience" element={<ProtectedRoutes><AIExperience /></ProtectedRoutes>} />

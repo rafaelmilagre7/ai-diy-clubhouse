@@ -34,6 +34,7 @@ const PersonalInfo = () => {
     <OnboardingLayout
       currentStep={1}
       title="Dados Pessoais"
+      backUrl="/onboarding"
     >
       <div className="max-w-4xl mx-auto space-y-8">
         <MilagrinhoMessage

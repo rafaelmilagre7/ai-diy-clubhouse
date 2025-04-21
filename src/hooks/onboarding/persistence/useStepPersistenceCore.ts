@@ -18,7 +18,7 @@ export function useStepPersistenceCore({
   const { progress, updateProgress, refreshProgress } = useProgress();
   const { logError } = useLogging();
 
-  // Simplificando a interface para aceitar apenas um objeto de dados
+  // Função principal para salvar dados de um passo específico
   const saveStepData = async (
     data: any,
     shouldNavigate: boolean = true
@@ -29,7 +29,7 @@ export function useStepPersistenceCore({
       return;
     }
 
-    // Identificar qual é o passo atual baseado no currentStepIndex
+    // Identificar qual é o passo atual
     const currentStep = steps[currentStepIndex]?.id || '';
     
     console.log(`Salvando dados do passo ${currentStep}, índice ${currentStepIndex}, navegação automática: ${shouldNavigate ? "SIM" : "NÃO"}`, data);
@@ -44,7 +44,7 @@ export function useStepPersistenceCore({
         return;
       }
 
-      console.log("Dados a serem enviados para o Supabase:", updateObj);
+      console.log("Dados a serem enviados para o banco:", updateObj);
 
       // Atualizar no Supabase
       const updatedProgress = await updateProgress(updateObj);
@@ -57,28 +57,25 @@ export function useStepPersistenceCore({
       // Notificar usuário do salvamento
       toast.success("Dados salvos com sucesso!");
       
-      // Garantir navegação adequada para cada etapa
+      // Garantir navegação adequada para próxima etapa
       if (shouldNavigate) {
-        // Mapeamento direto das etapas para navegação garantida
-        if (currentStep === "personal") {
-          setTimeout(() => navigate("/onboarding/professional-data"), 500);
-        } else if (currentStep === "professional_data") {
-          setTimeout(() => navigate("/onboarding/business-context"), 500);
-        } else if (currentStep === "business_context") {
-          setTimeout(() => navigate("/onboarding/ai-experience"), 500);
-        } else if (currentStep === "ai_exp") {
-          setTimeout(() => navigate("/onboarding/club-goals"), 500);
-        } else if (currentStep === "business_goals") {
-          setTimeout(() => navigate("/onboarding/customization"), 500);
-        } else if (currentStep === "experience_personalization") {
-          setTimeout(() => navigate("/onboarding/complementary"), 500);
-        } else if (currentStep === "complementary_info") {
-          setTimeout(() => navigate("/onboarding/review"), 500);
-        } else if (currentStep === "review") {
-          setTimeout(() => navigate("/implementation-trail"), 500);
+        // Mapeamento direto de etapas para rotas de navegação
+        const nextRouteMap: {[key: string]: string} = {
+          "personal": "/onboarding/professional-data",
+          "professional_data": "/onboarding/business-context",
+          "business_context": "/onboarding/ai-experience",
+          "ai_exp": "/onboarding/club-goals",
+          "business_goals": "/onboarding/customization",
+          "experience_personalization": "/onboarding/complementary",
+          "complementary_info": "/onboarding/review"
+        };
+        
+        if (nextRouteMap[currentStep]) {
+          setTimeout(() => {
+            navigate(nextRouteMap[currentStep]);
+          }, 500);
         } else {
-          // Usar navegador de etapas padrão como fallback
-          console.log(`Usando navegação padrão para etapa: ${currentStep}`);
+          // Fallback para navegador padrão de etapas
           navigateAfterStep(currentStep, currentStepIndex, navigate, shouldNavigate);
         }
       } else {
@@ -118,21 +115,10 @@ export function useStepPersistenceCore({
       
       toast.success("Onboarding concluído com sucesso!");
       
-      // Usar setTimeout para garantir que a navegação ocorra após a atualização do estado
+      // Redirecionar para a tela de trilha de implementação
       setTimeout(() => {
-        try {
-          // Redirecionar para a página de geração de trilha com parâmetro para iniciar automaticamente
-          navigate("/onboarding/trail-generation?autoGenerate=true");
-        } catch (navError) {
-          console.error("Erro ao navegar para a geração de trilha:", navError);
-          logError("navigation_error", { 
-            from: "completeOnboarding", 
-            error: navError instanceof Error ? navError.message : String(navError) 
-          });
-          // Fallback para dashboard em caso de erro de navegação
-          navigate("/dashboard");
-        }
-      }, 800);
+        navigate("/implementation-trail");
+      }, 1000);
     } catch (error) {
       console.error("Erro ao completar onboarding:", error);
       logError("complete_onboarding_error", { 
@@ -140,7 +126,7 @@ export function useStepPersistenceCore({
       });
       toast.error("Erro ao finalizar onboarding. Por favor, tente novamente.");
       
-      // Mesmo com erro, tentar redirecionar para o dashboard
+      // Fallback para dashboard
       setTimeout(() => {
         navigate("/dashboard");
       }, 1500);

@@ -1,68 +1,60 @@
 
-import React from "react";
-import { steps } from "@/hooks/onboarding/useStepDefinitions";
-import { cn } from "@/lib/utils";
+import React from 'react';
+import { CheckCircle, Circle } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface EtapasProgressoProps {
   currentStep: number;
   totalSteps: number;
-  onStepClick?: (step: number) => void;
+  onStepClick?: (stepIndex: number) => void;
 }
 
-export const EtapasProgresso = ({
+export const EtapasProgresso: React.FC<EtapasProgressoProps> = ({
   currentStep,
   totalSteps,
-  onStepClick,
-}: EtapasProgressoProps) => {
-  // Filtramos os passos para excluir o passo de geração de trilha que é uma etapa diferente
-  const visibleSteps = steps.filter(step => step.id !== "trail_generation");
-  
-  // Ajustamos totalSteps para corresponder ao número de passos visíveis
-  const effectiveTotalSteps = Math.min(totalSteps, visibleSteps.length);
+  onStepClick
+}) => {
+  const steps = Array.from({ length: totalSteps }, (_, i) => i + 1);
   
   return (
-    <div className="w-full mt-6">
-      <div className="flex justify-between relative">
-        {/* Linha de progresso entre os círculos */}
-        <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-gray-200 -translate-y-1/2 z-0"></div>
+    <div className="w-full">
+      <div className="relative flex justify-between items-center">
+        {/* Linha de progresso base */}
+        <div className="absolute left-0 top-1/2 transform -translate-y-1/2 w-full h-1 bg-gray-700" />
         
-        {Array.from({ length: effectiveTotalSteps }).map((_, index) => {
-          const stepNumber = index + 1;
-          const isActive = stepNumber <= currentStep;
-          const isCurrent = stepNumber === currentStep;
+        {/* Linha de progresso preenchida */}
+        <div 
+          className="absolute left-0 top-1/2 transform -translate-y-1/2 h-1 bg-[#0ABAB5] transition-all duration-300 ease-in-out"
+          style={{ width: `${(currentStep - 1) / (totalSteps - 1) * 100}%` }}
+        />
+        
+        {/* Pontos/Etapas */}
+        {steps.map((step) => {
+          const isComplete = step < currentStep;
+          const isActive = step === currentStep;
+          const isClickable = !!onStepClick;
           
           return (
-            <div
-              key={index}
+            <div 
+              key={step}
               className={cn(
-                "flex flex-col items-center relative z-10 cursor-pointer transition-all duration-200",
-                onStepClick ? "cursor-pointer hover:opacity-80" : ""
+                "relative z-10 flex flex-col items-center",
+                isClickable && "cursor-pointer"
               )}
-              onClick={() => onStepClick && onStepClick(stepNumber)}
+              onClick={isClickable ? () => onStepClick(step - 1) : undefined}
             >
-              <div
+              <div 
                 className={cn(
-                  "w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-all duration-300",
-                  isActive
-                    ? "bg-[#0ABAB5] text-white shadow-md"
-                    : "bg-gray-200 text-gray-600",
-                  isCurrent
-                    ? "ring-4 ring-[#0ABAB5]/20"
-                    : ""
+                  "flex items-center justify-center w-10 h-10 rounded-full transition-all duration-200",
+                  isComplete ? "bg-[#0ABAB5]" : isActive ? "bg-[#0ABAB5]/20 border-2 border-[#0ABAB5]" : "bg-gray-700"
                 )}
               >
-                {stepNumber}
+                {isComplete ? (
+                  <CheckCircle className="w-6 h-6 text-white" />
+                ) : (
+                  <span className="text-white font-medium">{step}</span>
+                )}
               </div>
-              
-              {/* Nome do passo (visível apenas para etapa atual e concluídas) */}
-              <span
-                className={cn(
-                  "text-xs mt-2 font-medium transition-all duration-300 text-center max-w-[80px] line-clamp-2",
-                  isActive ? "text-gray-700" : "text-gray-400"
-                )}
-              >
-                {visibleSteps[index]?.title || `Passo ${stepNumber}`}
-              </span>
             </div>
           );
         })}
