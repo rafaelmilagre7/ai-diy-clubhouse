@@ -25,6 +25,12 @@ export const ReviewSectionCard: React.FC<ReviewSectionCardProps> = ({
   stepIndex,
   navigateToStep,
 }) => {
+  const handleEditClick = () => {
+    console.log(`Navegando para etapa ${stepIndex}: ${step.id}, índice real: ${stepIndex - 1}`);
+    // Ajuste para fornecer o índice correto (baseado em zero)
+    navigateToStep(stepIndex - 1);
+  };
+
   return (
     <Card key={step.id} className="overflow-hidden border border-gray-200 shadow-sm">
       <CardHeader className="bg-gray-50 pb-3 pt-4 px-4 flex flex-row justify-between items-center">
@@ -35,10 +41,7 @@ export const ReviewSectionCard: React.FC<ReviewSectionCardProps> = ({
           variant="outline"
           size="sm"
           className="h-8 text-[#0ABAB5] border-[#0ABAB5] hover:bg-[#0ABAB5]/10"
-          onClick={() => {
-            console.log(`Navegando para etapa ${stepIndex}: ${step.id}`);
-            navigateToStep(stepIndex);
-          }}
+          onClick={handleEditClick}
         >
           <Edit className="h-4 w-4 mr-1" /> Editar
         </Button>

@@ -22,8 +22,9 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({
 }) => {
   if (!progress) return <div>Carregando dados...</div>;
 
+  // A função findStepIndex foi corrigida para retornar o índice correto (baseado em zero)
   const findStepIndex = (sectionId: string) => {
-    return steps.findIndex((s) => s.id === sectionId) + 1; // Ajustado para base 1 para UI
+    return steps.findIndex((s) => s.id === sectionId);
   };
 
   // Verifica se todos os passos necessários foram concluídos
@@ -80,7 +81,10 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({
 
             console.log(`Dados para seção ${step.section}:`, sectionData);
             
+            // Passamos o índice real (baseado em zero) para a função navigateToStep na ReviewSectionCard
             const stepIndex = findStepIndex(step.id);
+            // Mas enviamos stepIndex + 1 apenas para exibição na UI
+            const displayIndex = stepIndex + 1;
 
             return (
               <ReviewSectionCard
@@ -88,7 +92,7 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({
                 step={step}
                 sectionData={sectionData}
                 progress={progress}
-                stepIndex={stepIndex}
+                stepIndex={displayIndex}
                 navigateToStep={navigateToStep}
               />
             );

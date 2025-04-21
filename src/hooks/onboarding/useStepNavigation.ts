@@ -66,9 +66,13 @@ export const useStepNavigation = () => {
     if (stepIndex >= 0 && stepIndex < steps.length) {
       const targetStep = steps[stepIndex];
       if (targetStep && targetStep.path) {
-        console.log(`Navegando para a etapa ${stepIndex + 1}: ${targetStep.path}`);
+        console.log(`Navegando para a etapa ${stepIndex}: ${targetStep.path}`);
+        // Primeiro atualizamos o índice no estado
         setCurrentStepIndex(stepIndex);
-        navigate(targetStep.path);
+        // Depois navegamos para a rota correspondente
+        setTimeout(() => {
+          navigate(targetStep.path);
+        }, 100);
       }
     } else {
       console.warn("Índice de etapa inválido:", stepIndex);

@@ -20,6 +20,11 @@ const Review = () => {
     refreshProgress();
   }, [refreshProgress]);
 
+  const handleNavigateToStep = (index: number) => {
+    console.log(`Review page: Navegando para etapa ${index}`);
+    navigateToStep(index);
+  };
+
   const handleCompleteOnboarding = async () => {
     try {
       setIsSubmitting(true);
@@ -57,7 +62,7 @@ const Review = () => {
             progress={progress}
             onComplete={handleCompleteOnboarding}
             isSubmitting={isSubmitting}
-            navigateToStep={(index: number) => navigateToStep(index)}
+            navigateToStep={handleNavigateToStep}
           />
         )}
       </div>
