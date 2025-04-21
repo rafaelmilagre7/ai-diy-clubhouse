@@ -1,64 +1,42 @@
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
-import { TrailSolutionCard } from "@/components/dashboard/TrailSolutionCard";
 import { useImplementationTrail } from "@/hooks/implementation/useImplementationTrail";
 import { useNavigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useSolutionsData } from "@/hooks/useSolutionsData";
 import { TrailMagicExperience } from "./TrailMagicExperience";
+import { TrailTypingText } from "./TrailTypingText";
+import { TrailStepperNavigation } from "./TrailStepperNavigation";
+import { TrailCurrentSolutionCard } from "./TrailCurrentSolutionCard";
 
-// Componente que exibe texto estilo "typing" para a justificativa dinamicamente
-const TypingText = ({ text, onComplete }: { text: string; onComplete?: () => void }) => {
-  const [displayText, setDisplayText] = useState("");
-  const [index, setIndex] = useState(0);
-
-  useEffect(() => {
-    if (!text || index >= text.length) {
-      if (index >= text.length) {
-        onComplete && onComplete();
-      }
-      return;
-    }
-    const timeout = setTimeout(() => {
-      setDisplayText(text.substring(0, index + 1));
-      setIndex(index + 1);
-    }, 30);
-    return () => clearTimeout(timeout);
-  }, [index, text, onComplete]);
-
-  return (
-    <p className="text-gray-700 text-center text-base min-h-[4rem] max-w-3xl mx-auto px-4 select-text whitespace-pre-wrap">{displayText}</p>
-  );
-};
-
+// Componente principal refatorado
 export const TrailGuidedExperience = () => {
   const navigate = useNavigate();
   const { trail, isLoading, generateImplementationTrail } = useImplementationTrail();
-  const { solutions: allSolutions, loading: solutionsLoading } = useSolutionsData(); // Buscamos todas as soluções disponíveis
+  const { solutions: allSolutions, loading: solutionsLoading } = useSolutionsData();
   const [started, setStarted] = useState(false);
-  const [currentStepIdx, setCurrentStepIdx] = useState(0); // passo da leitura da trilha (card atual)
+  const [currentStepIdx, setCurrentStepIdx] = useState(0);
   const [typingFinished, setTypingFinished] = useState(false);
   const [regenerating, setRegenerating] = useState(false);
   const [showMagicExperience, setShowMagicExperience] = useState(false);
 
-  // Montar lista de soluções ordenadas para a navegação, juntando dados da recomendação com dados reais das soluções
+  // Montar lista de soluções ordenadas para a navegação
   const solutionsList = useMemo(() => {
     if (!trail || !allSolutions || allSolutions.length === 0) return [];
     const all: any[] = [];
-    
+
     ["priority1", "priority2", "priority3"].forEach((priorityKey, idx) => {
       const items = (trail as any)[priorityKey] || [];
-      
       items.forEach(item => {
-        // Procura a solução completa pelo ID para obter todos os dados
+        // Procura a solução completa pelo ID
         const fullSolution = allSolutions.find(s => s.id === item.solutionId);
-        
+
         if (fullSolution) {
           all.push({
             ...item,
-            ...fullSolution, // Adiciona todos os dados da solução original
+            ...fullSolution,
             priority: idx + 1,
             title: fullSolution.title || "Solução sem título",
             justification: item.justification || "Recomendação personalizada para seu negócio",
@@ -76,24 +54,20 @@ export const TrailGuidedExperience = () => {
         }
       });
     });
-    
-    // Ordena exatamente por prioridade, depois talvez por ordem fixa (ex: título)
+
     all.sort((a, b) => a.priority - b.priority);
-    console.log("Lista de soluções montada:", all);
     return all;
   }, [trail, allSolutions]);
 
-  // Pega o card atual para mostrar justificativa de IA
+  // Solução do step atual
   const currentSolution = solutionsList[currentStepIdx];
 
   // Handler para iniciar a geração da trilha
   const handleStartGeneration = async () => {
-    // Primeiro exibe a experiência mágica
     setShowMagicExperience(true);
     setRegenerating(true);
-    
+
     try {
-      // A geração acontece durante a animação
       await generateImplementationTrail();
       toast.success("Trilha personalizada gerada com sucesso!");
     } catch (error) {
@@ -102,9 +76,7 @@ export const TrailGuidedExperience = () => {
     }
   };
 
-  // Callback quando a experiência mágica terminar
   const handleMagicFinish = () => {
-    console.log("Experiência mágica finalizada, mostrando resultados");
     setShowMagicExperience(false);
     setStarted(true);
     setCurrentStepIdx(0);
@@ -113,10 +85,7 @@ export const TrailGuidedExperience = () => {
   };
 
   const handleNext = () => {
-    if (!typingFinished) {
-      // Se digitação não terminou, não avança ainda
-      return;
-    }
+    if (!typingFinished) return;
     if (currentStepIdx < solutionsList.length - 1) {
       setCurrentStepIdx(v => v + 1);
       setTypingFinished(false);
@@ -134,7 +103,6 @@ export const TrailGuidedExperience = () => {
     navigate(`/solution/${id}`);
   };
 
-  // Se a experiência mágica estiver visível, mostra ela em vez do conteúdo normal
   if (showMagicExperience) {
     return <TrailMagicExperience onFinish={handleMagicFinish} />;
   }
@@ -185,38 +153,15 @@ export const TrailGuidedExperience = () => {
         Sua Trilha Personalizada VIVER DE IA
       </h2>
       <div className="space-y-6 border rounded-2xl p-6 bg-gradient-to-br from-[#0ABAB5]/10 to-white shadow animate-fade-in">
-        <TypingText text={currentSolution?.justification || "Carregando recomendação..."} onComplete={() => setTypingFinished(true)} />
-        {currentSolution && (
-          <TrailSolutionCard
-            solution={{
-              ...currentSolution,
-              title: currentSolution.title || "Solução sem título",
-              justification: currentSolution.justification,
-              solutionId: currentSolution.solutionId,
-              description: currentSolution.description,
-              priority: currentSolution.priority
-            }}
-            onClick={handleSelectSolution}
-          />
-        )}
-        <div className="flex justify-between mt-4">
-          <Button
-            variant="outline"
-            onClick={handlePrevious}
-            disabled={currentStepIdx === 0}
-          >
-            Anterior
-          </Button>
-          {currentStepIdx < solutionsList.length - 1 ? (
-            <Button onClick={handleNext} disabled={!typingFinished}>
-              Próximo
-            </Button>
-          ) : (
-            <Button onClick={() => navigate("/dashboard")}>
-              Finalizar e Ir para Dashboard
-            </Button>
-          )}
-        </div>
+        <TrailTypingText text={currentSolution?.justification || "Carregando recomendação..."} onComplete={() => setTypingFinished(true)} />
+        <TrailCurrentSolutionCard solution={currentSolution} onSelect={handleSelectSolution} />
+        <TrailStepperNavigation
+          currentStepIdx={currentStepIdx}
+          stepsLength={solutionsList.length}
+          typingFinished={typingFinished}
+          onPrevious={handlePrevious}
+          onNext={handleNext}
+        />
       </div>
     </div>
   );
