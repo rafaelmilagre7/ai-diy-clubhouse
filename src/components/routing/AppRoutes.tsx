@@ -21,17 +21,18 @@ import EditProfile from '@/pages/member/EditProfile';
 import SolutionDetails from '@/pages/member/SolutionDetails';
 import SolutionImplementation from '@/pages/member/SolutionImplementation';
 import ImplementationCompleted from '@/pages/member/ImplementationCompleted';
-import Onboarding from '@/pages/onboarding/Onboarding';
-import BusinessGoals from '@/pages/onboarding/steps/BusinessGoals';
-import BusinessContext from '@/pages/onboarding/steps/BusinessContext';
-import AIExperience from '@/pages/onboarding/steps/AIExperience';
-import IndustryFocus from '@/pages/onboarding/steps/IndustryFocus';
-import ResourcesNeeds from '@/pages/onboarding/steps/ResourcesNeeds';
-import TeamInfo from '@/pages/onboarding/steps/TeamInfo';
-import Preferences from '@/pages/onboarding/steps/Preferences';
 import Benefits from '@/pages/member/Benefits';
 import { Navigate } from 'react-router-dom';
 import MemberLayout from '@/components/layout/MemberLayout';
+
+// Onboarding
+import Onboarding from '@/pages/onboarding/Onboarding';
+import BusinessContext from '@/pages/onboarding/steps/BusinessContext';
+import AIExperience from '@/pages/onboarding/steps/AIExperience';
+import BusinessGoalsClub from '@/pages/onboarding/steps/BusinessGoalsClub';
+import ExperiencePersonalization from '@/pages/onboarding/steps/ExperiencePersonalization';
+import ComplementaryInfo from '@/pages/onboarding/steps/ComplementaryInfo';
+import Review from '@/pages/onboarding/steps/Review';
 
 const AppRoutes = () => {
   return (
@@ -57,13 +58,12 @@ const AppRoutes = () => {
       
       {/* Onboarding Routes */}
       <Route path="/onboarding" element={<ProtectedRoutes><Onboarding /></ProtectedRoutes>} />
-      <Route path="/onboarding/business-goals" element={<ProtectedRoutes><BusinessGoals /></ProtectedRoutes>} />
       <Route path="/onboarding/business-context" element={<ProtectedRoutes><BusinessContext /></ProtectedRoutes>} />
       <Route path="/onboarding/ai-experience" element={<ProtectedRoutes><AIExperience /></ProtectedRoutes>} />
-      <Route path="/onboarding/industry-focus" element={<ProtectedRoutes><IndustryFocus /></ProtectedRoutes>} />
-      <Route path="/onboarding/resources-needs" element={<ProtectedRoutes><ResourcesNeeds /></ProtectedRoutes>} />
-      <Route path="/onboarding/team-info" element={<ProtectedRoutes><TeamInfo /></ProtectedRoutes>} />
-      <Route path="/onboarding/preferences" element={<ProtectedRoutes><Preferences /></ProtectedRoutes>} />
+      <Route path="/onboarding/business-goals-club" element={<ProtectedRoutes><BusinessGoalsClub /></ProtectedRoutes>} />
+      <Route path="/onboarding/experience-personalization" element={<ProtectedRoutes><ExperiencePersonalization /></ProtectedRoutes>} />
+      <Route path="/onboarding/complementary-info" element={<ProtectedRoutes><ComplementaryInfo /></ProtectedRoutes>} />
+      <Route path="/onboarding/review" element={<ProtectedRoutes><Review /></ProtectedRoutes>} />
       
       {/* Admin Routes */}
       <Route path="/admin" element={<AdminProtectedRoutes><AdminDashboard /></AdminProtectedRoutes>} />

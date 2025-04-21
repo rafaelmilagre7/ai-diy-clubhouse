@@ -10,7 +10,7 @@ const ComplementaryInfo = () => {
 
   return (
     <OnboardingLayout
-      currentStep={7}
+      currentStep={6}
       title="Informações Complementares"
       backUrl="/onboarding/experience-personalization"
     >

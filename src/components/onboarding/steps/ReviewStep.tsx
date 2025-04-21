@@ -33,16 +33,8 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({
             <p><strong>E-mail:</strong> {data.email || 'Não informado'}</p>
             <p><strong>Telefone:</strong> {data.phone ? `+${data.ddi || '55'} ${data.phone}` : 'Não informado'}</p>
             <p><strong>Localização:</strong> {[data.city, data.state, data.country].filter(Boolean).join(', ') || 'Não informada'}</p>
-          </div>
-        );
-      
-      case 'professional_info':
-        return (
-          <div className="grid grid-cols-2 gap-2 text-sm">
-            <p><strong>Empresa:</strong> {data.company_name || 'Não informada'}</p>
-            <p><strong>Cargo:</strong> {data.current_position || 'Não informado'}</p>
-            <p><strong>Tamanho da empresa:</strong> {data.company_size || 'Não informado'}</p>
-            <p><strong>Setor:</strong> {data.company_sector || 'Não informado'}</p>
+            <p><strong>LinkedIn:</strong> {data.linkedin || 'Não informado'}</p>
+            <p><strong>Instagram:</strong> {data.instagram || 'Não informado'}</p>
           </div>
         );
       
@@ -51,6 +43,8 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({
           <div className="grid grid-cols-1 gap-2 text-sm">
             <p><strong>Modelo de negócio:</strong> {data.business_model || 'Não informado'}</p>
             <p><strong>Desafios:</strong> {data.business_challenges?.join(', ') || 'Não informados'}</p>
+            <p><strong>Objetivos de curto prazo:</strong> {data.short_term_goals?.join(', ') || 'Não informados'}</p>
+            <p><strong>Objetivos de médio prazo:</strong> {data.medium_term_goals?.join(', ') || 'Não informados'}</p>
             <p><strong>KPIs importantes:</strong> {data.important_kpis?.join(', ') || 'Não informados'}</p>
           </div>
         );
@@ -60,7 +54,10 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({
           <div className="grid grid-cols-1 gap-2 text-sm">
             <p><strong>Nível de conhecimento:</strong> {data.knowledge_level || 'Não informado'}</p>
             <p><strong>Ferramentas utilizadas:</strong> {data.previous_tools?.join(', ') || 'Nenhuma'}</p>
+            <p><strong>Soluções implementadas:</strong> {data.implemented_solutions?.join(', ') || 'Nenhuma'}</p>
             <p><strong>Soluções desejadas:</strong> {data.desired_solutions?.join(', ') || 'Nenhuma'}</p>
+            <p><strong>Tentativas anteriores:</strong> {data.previous_attempts || 'Não informado'}</p>
+            <p><strong>NPS (Se já foi membro):</strong> {typeof data.nps_score === 'number' ? data.nps_score : 'Não informado'}</p>
           </div>
         );
         
@@ -70,52 +67,22 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({
             <p><strong>Objetivo primário:</strong> {data.primary_goal || 'Não informado'}</p>
             <p><strong>Resultados esperados:</strong> {data.expected_outcomes?.join(', ') || 'Não informados'}</p>
             <p><strong>Timeline:</strong> {data.timeline || 'Não informado'}</p>
+            <p><strong>Como implementar:</strong> {data.how_implement || 'Não informado'}</p>
+            <p><strong>Disponibilidade semanal:</strong> {data.week_availability || 'Não informado'}</p>
+            <p><strong>Interesse em eventos ao vivo:</strong> {data.live_interest ? 'Sim' : 'Não'}</p>
+            <p><strong>Formatos de conteúdo preferidos:</strong> {data.content_formats?.join(', ') || 'Não informados'}</p>
           </div>
         );
-        
-      case 'industry_focus':
-        return (
-          <div className="grid grid-cols-1 gap-2 text-sm">
-            <p><strong>Setor:</strong> {data.sector || 'Não informado'}</p>
-            <p><strong>Mercado-alvo:</strong> {data.target_market || 'Não informado'}</p>
-            <p><strong>Principais desafios:</strong> {data.main_challenges?.join(', ') || 'Não informados'}</p>
-          </div>
-        );
-        
-      case 'resources_needs':
-        return (
-          <div className="grid grid-cols-1 gap-2 text-sm">
-            <p><strong>Faixa de orçamento:</strong> {data.budget_range || 'Não informada'}</p>
-            <p><strong>Tamanho da equipe:</strong> {data.team_size || 'Não informado'}</p>
-            <p><strong>Stack tecnológico:</strong> {data.tech_stack?.join(', ') || 'Não informado'}</p>
-          </div>
-        );
-        
-      case 'team_info':
-        return (
-          <div className="grid grid-cols-1 gap-2 text-sm">
-            <p><strong>Tomadores de decisão:</strong> {data.decision_makers?.join(', ') || 'Não informados'}</p>
-            <p><strong>Expertise técnica:</strong> {data.technical_expertise || 'Não informada'}</p>
-            <p><strong>Necessidades de treinamento:</strong> {data.training_needs?.join(', ') || 'Não informadas'}</p>
-          </div>
-        );
-        
-      case 'implementation_preferences':
-        return (
-          <div className="grid grid-cols-1 gap-2 text-sm">
-            <p><strong>Áreas prioritárias:</strong> {data.priority_areas?.join(', ') || 'Não informadas'}</p>
-            <p><strong>Velocidade de implementação:</strong> {data.implementation_speed || 'Não informada'}</p>
-            <p><strong>Nível de suporte:</strong> {data.support_level || 'Não informado'}</p>
-          </div>
-        );
-        
+                
       case 'experience_personalization':
         return (
           <div className="grid grid-cols-1 gap-2 text-sm">
             <p><strong>Interesses:</strong> {data.interests?.join(', ') || 'Não informados'}</p>
             <p><strong>Preferência de horário:</strong> {data.time_preference || 'Não informada'}</p>
             <p><strong>Dias disponíveis:</strong> {data.available_days?.join(', ') || 'Não informados'}</p>
+            <p><strong>Disponibilidade para networking:</strong> {typeof data.networking_availability === 'number' ? `${data.networking_availability} hora(s) por semana` : 'Não informada'}</p>
             <p><strong>Habilidades para compartilhar:</strong> {data.skills_to_share?.join(', ') || 'Não informadas'}</p>
+            <p><strong>Tópicos para mentoria:</strong> {data.mentorship_topics?.join(', ') || 'Não informados'}</p>
           </div>
         );
 

@@ -15,16 +15,10 @@ import SuggestionDetails from "@/pages/member/SuggestionDetails";
 import NewSuggestion from "@/pages/member/NewSuggestion";
 import Achievements from "@/pages/member/Achievements";
 import Benefits from "@/pages/member/Benefits";
-import LoadingScreen from "@/components/common/LoadingScreen";
 
 import Onboarding from "@/pages/onboarding/Onboarding";
-import OnboardingBusinessGoals from "@/pages/onboarding/steps/BusinessGoals";
-import OnboardingAIExperience from "@/pages/onboarding/steps/AIExperience";
-import OnboardingIndustryFocus from "@/pages/onboarding/steps/IndustryFocus";
-import OnboardingResourcesNeeds from "@/pages/onboarding/steps/ResourcesNeeds";
-import OnboardingTeamInfo from "@/pages/onboarding/steps/TeamInfo";
-import OnboardingPreferences from "@/pages/onboarding/steps/Preferences";
 import BusinessContext from "@/pages/onboarding/steps/BusinessContext";
+import AIExperience from "@/pages/onboarding/steps/AIExperience";
 import BusinessGoalsClub from "@/pages/onboarding/steps/BusinessGoalsClub";
 import ExperiencePersonalization from "@/pages/onboarding/steps/ExperiencePersonalization";
 import ComplementaryInfo from "@/pages/onboarding/steps/ComplementaryInfo";
@@ -44,14 +38,9 @@ const MemberRoutes = ({ children }: MemberRoutesProps) => {
         <Route index element={<Navigate to="/dashboard" replace />} />
         
         <Route path="onboarding" element={<Onboarding />} />
-        <Route path="onboarding/business-goals" element={<OnboardingBusinessGoals />} />
         <Route path="onboarding/business-context" element={<BusinessContext />} />
-        <Route path="onboarding/ai-experience" element={<OnboardingAIExperience />} />
+        <Route path="onboarding/ai-experience" element={<AIExperience />} />
         <Route path="onboarding/business-goals-club" element={<BusinessGoalsClub />} />
-        <Route path="onboarding/industry-focus" element={<OnboardingIndustryFocus />} />
-        <Route path="onboarding/resources-needs" element={<OnboardingResourcesNeeds />} />
-        <Route path="onboarding/team-info" element={<OnboardingTeamInfo />} />
-        <Route path="onboarding/preferences" element={<OnboardingPreferences />} />
         <Route path="onboarding/experience-personalization" element={<ExperiencePersonalization />} />
         <Route path="onboarding/complementary-info" element={<ComplementaryInfo />} />
         <Route path="onboarding/review" element={<Review />} />

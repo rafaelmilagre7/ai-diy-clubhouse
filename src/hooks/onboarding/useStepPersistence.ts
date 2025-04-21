@@ -22,22 +22,14 @@ export const useStepPersistence = ({
     if (!progress?.id) return;
     try {
       // Verificações específicas para cada etapa
-      if (stepId === "goals") {
-        const professionalInfo = data.professional_info || {};
-        if (!professionalInfo.company_name || !professionalInfo.company_size || 
-            !professionalInfo.company_sector || !professionalInfo.current_position ||
-            !professionalInfo.annual_revenue) {
+      if (stepId === "personal") {
+        const personalInfo = data.personal_info || {};
+        if (!personalInfo.name || !personalInfo.email || !personalInfo.phone) {
           toast.error("Por favor, preencha todos os campos obrigatórios");
           return;
         }
         await updateProgress({
-          professional_info: professionalInfo,
-          company_name: professionalInfo.company_name,
-          company_size: professionalInfo.company_size,
-          company_sector: professionalInfo.company_sector,
-          company_website: professionalInfo.company_website,
-          current_position: professionalInfo.current_position,
-          annual_revenue: professionalInfo.annual_revenue,
+          personal_info: personalInfo,
           completed_steps: [...(progress.completed_steps || []), stepId],
           current_step: steps[Math.min(currentStepIndex + 1, steps.length - 1)].id,
         });

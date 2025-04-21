@@ -20,7 +20,7 @@ const Review = () => {
 
   return (
     <OnboardingLayout
-      currentStep={8}
+      currentStep={7}
       title="Revisar e Finalizar"
       backUrl="/onboarding/complementary-info"
     >
