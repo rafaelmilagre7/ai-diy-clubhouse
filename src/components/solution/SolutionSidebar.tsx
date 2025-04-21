@@ -92,34 +92,42 @@ export const SolutionSidebar = ({
       <div className="pt-4 border-t">
         <h3 className="font-medium mb-2">Informações</h3>
         <div className="space-y-2">
-          <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Categoria:</span>
-            <span className="font-medium">
-              {solution.category === "revenue" && "Receita"}
-              {solution.category === "operational" && "Operacional"}
-              {solution.category === "strategy" && "Estratégia"}
-            </span>
-          </div>
-          <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Dificuldade:</span>
-            <span className="font-medium">
-              {solution.difficulty === "easy" && "Fácil"}
-              {solution.difficulty === "medium" && "Médio"}
-              {solution.difficulty === "advanced" && "Avançado"}
-            </span>
-          </div>
-          <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Tempo estimado:</span>
-            <span className="font-medium">
-              {solution.estimated_time ? `${solution.estimated_time} minutos` : "45 minutos"}
-            </span>
-          </div>
-          <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Taxa de sucesso:</span>
-            <span className="font-medium">
-              {solution.success_rate ? `${solution.success_rate}%` : "92%"}
-            </span>
-          </div>
+          {solution.category && (
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Categoria:</span>
+              <span className="font-medium">
+                {solution.category === "revenue" && "Receita"}
+                {solution.category === "operational" && "Operacional"}
+                {solution.category === "strategy" && "Estratégia"}
+              </span>
+            </div>
+          )}
+          {solution.difficulty && (
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Dificuldade:</span>
+              <span className="font-medium">
+                {solution.difficulty === "easy" && "Fácil"}
+                {solution.difficulty === "medium" && "Médio"}
+                {solution.difficulty === "advanced" && "Avançado"}
+              </span>
+            </div>
+          )}
+          {solution.estimated_time && solution.estimated_time > 0 && (
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Tempo estimado:</span>
+              <span className="font-medium">
+                {solution.estimated_time} minutos
+              </span>
+            </div>
+          )}
+          {typeof solution.success_rate === "number" && solution.success_rate > 0 && (
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Taxa de sucesso:</span>
+              <span className="font-medium">
+                {solution.success_rate}%
+              </span>
+            </div>
+          )}
         </div>
       </div>
       

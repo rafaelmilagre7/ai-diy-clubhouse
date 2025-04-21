@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { useModuleImplementation } from "@/hooks/useModuleImplementation";
 import LoadingScreen from "@/components/common/LoadingScreen";
@@ -89,8 +90,6 @@ const SolutionImplementation = () => {
     logError("Implementation not found", { error: errorMsg, solution_id: solution?.id });
     return <ImplementationNotFound />;
   }
-  
-  const currentStep = modules.findIndex(m => m.id === currentModule?.id) || 0;
   
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#f8fdff] via-[#f0fafe] to-[#edf6fb] pb-16">

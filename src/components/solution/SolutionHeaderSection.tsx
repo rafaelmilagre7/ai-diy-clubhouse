@@ -49,14 +49,14 @@ export const SolutionHeaderSection = ({ solution }: SolutionHeaderSectionProps) 
            solution.difficulty === "medium" ? "Médio" :
            solution.difficulty === "advanced" ? "Avançado" : solution.difficulty}
         </Badge>
-        {/* Só mostra tempo estimado se existir */}
-        {solution.estimated_time && (
+        {/* Só mostra tempo estimado se existir e for maior que zero */}
+        {solution.estimated_time && solution.estimated_time > 0 && (
           <Badge variant="outline" className="px-2 py-1 bg-slate-50 text-slate-700 border-slate-200">
             {solution.estimated_time} min
           </Badge>
         )}
-        {/* Só mostra taxa de sucesso se existir */}
-        {typeof solution.success_rate === "number" && (
+        {/* Só mostra taxa de sucesso se existir e for maior que zero */}
+        {typeof solution.success_rate === "number" && solution.success_rate > 0 && (
           <Badge variant="outline" className="px-2 py-1 bg-blue-50 text-blue-800 border-blue-200">
             {solution.success_rate}% sucesso
           </Badge>

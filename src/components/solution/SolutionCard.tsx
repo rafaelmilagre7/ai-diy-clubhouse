@@ -90,7 +90,7 @@ export const SolutionCard: React.FC<SolutionCardProps> = ({ solution }) => {
           </ScrollArea>
         </CardContent>
         <CardFooter className="p-4 pt-0 flex gap-2 flex-wrap justify-between text-xs text-muted-foreground">
-          {solution.estimated_time && (
+          {solution.estimated_time && solution.estimated_time > 0 && (
             <div className="flex items-center">
               <Clock className="h-3 w-3 mr-1" />
               <span>{solution.estimated_time} min</span>
@@ -108,7 +108,7 @@ export const SolutionCard: React.FC<SolutionCardProps> = ({ solution }) => {
               ? "Avançado"
               : solution.difficulty}
           </Badge>
-          {typeof solution.success_rate === "number" && (
+          {typeof solution.success_rate === "number" && solution.success_rate > 0 && (
             <Badge variant="outline" className="bg-blue-50 text-blue-800 border-blue-200">
               {solution.success_rate}% sucesso
             </Badge>
@@ -118,4 +118,3 @@ export const SolutionCard: React.FC<SolutionCardProps> = ({ solution }) => {
     </Link>
   );
 };
-
