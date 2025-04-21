@@ -85,7 +85,7 @@ export const ProfessionalDataStep = ({
   }, [initialData, reset]);
 
   const onFormSubmit = (data: FormValues) => {
-    // Atualizado para formato mais simples que será tratado no useOnboardingSteps
+    // Apenas usando o formato correto de professional_info sem adicionar campos extras ao objeto principal
     const professionalData: Partial<OnboardingData> = {
       professional_info: {
         company_name: data.company_name,
@@ -94,13 +94,7 @@ export const ProfessionalDataStep = ({
         company_website: data.company_website,
         current_position: data.current_position,
         annual_revenue: data.annual_revenue,
-      },
-      company_name: data.company_name,
-      company_size: data.company_size,
-      company_sector: data.company_sector,
-      company_website: data.company_website,
-      current_position: data.current_position,
-      annual_revenue: data.annual_revenue,
+      }
     };
     
     console.log("Enviando dados profissionais para salvar:", professionalData);

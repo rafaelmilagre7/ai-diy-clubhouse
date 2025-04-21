@@ -25,7 +25,7 @@ const ProfessionalData = () => {
       setIsSubmitting(true);
       console.log("Salvando dados profissionais:", data);
       
-      // Modificação importante: usar 'professional_data' como identificador da etapa
+      // Usar o formato correto de parâmetro esperado por saveStepData
       await saveStepData({
         stepId: "professional_data",
         data: data
