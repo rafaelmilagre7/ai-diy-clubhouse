@@ -51,9 +51,12 @@ const MemberLayout = ({ children }: { children: React.ReactNode }) => {
     };
   }, [sidebarOpen]);
 
+  // Log para debugging
+  console.log("MemberLayout renderizando com sidebarOpen:", sidebarOpen);
+
   return (
     <div className="flex min-h-screen bg-background overflow-hidden">
-      {/* Barra lateral com z-index alto para garantir visibilidade */}
+      {/* Barra lateral garantida para ser renderizada sempre */}
       <MemberSidebar 
         sidebarOpen={sidebarOpen} 
         setSidebarOpen={setSidebarOpen}

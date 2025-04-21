@@ -20,6 +20,9 @@ interface MemberSidebarNavProps {
 export const MemberSidebarNav = ({ sidebarOpen }: MemberSidebarNavProps) => {
   const location = useLocation();
   const currentPath = location.pathname;
+  
+  // Debug log para verificar a rota atual
+  console.log("MemberSidebarNav renderizando, currentPath:", currentPath);
 
   // Definição de itens do menu principal
   const navItems = [

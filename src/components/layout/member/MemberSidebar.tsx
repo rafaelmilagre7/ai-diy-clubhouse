@@ -24,14 +24,16 @@ export const MemberSidebar = ({
   getInitials,
   signOut
 }: MemberSidebarProps) => {
+  // Debug log para verificar quando o componente é renderizado
+  console.log("MemberSidebar renderizando, sidebarOpen:", sidebarOpen);
+
   return (
     <aside
       className={cn(
         "fixed inset-y-0 left-0 z-50 flex h-full flex-col border-r bg-background transition-all duration-300 ease-in-out",
         sidebarOpen ? "w-64" : "w-[70px]",
-        // Garantir visibilidade em todos os casos
+        // Em desktops, sempre visível
         "md:translate-x-0",
-        !sidebarOpen && "md:w-[70px]",
         // Em mobile, mostrar apenas quando aberto
         sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
       )}

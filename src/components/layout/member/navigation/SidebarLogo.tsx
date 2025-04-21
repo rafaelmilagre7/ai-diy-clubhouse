@@ -10,6 +10,7 @@ interface SidebarLogoProps {
 
 export const SidebarLogo = ({ sidebarOpen, setSidebarOpen }: SidebarLogoProps) => {
   const toggleSidebar = () => {
+    console.log("Alternando sidebar de", sidebarOpen, "para", !sidebarOpen);
     setSidebarOpen(!sidebarOpen);
   };
 
