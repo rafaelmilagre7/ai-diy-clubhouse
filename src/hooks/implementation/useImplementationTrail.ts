@@ -1,12 +1,12 @@
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/contexts/auth";
 import { useProgress } from "@/hooks/onboarding/useProgress";
 import { toast } from "sonner";
 import { saveImplementationTrail } from "./useSaveImplementationTrail";
-import { hasTrailContent, extractErrorMessage } from "./useImplementationTrail.utils";
+import { hasTrailContent, extractErrorMessage, isApiTimeout } from "./useImplementationTrail.utils";
 
 export type ImplementationRecommendation = {
   solutionId: string;
@@ -27,6 +27,15 @@ export const useImplementationTrail = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [apiCallStartTime, setApiCallStartTime] = useState<number | null>(null);
+  const apiTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Limpar timeout de API ao desmontar
+  useEffect(() => {
+    return () => {
+      if (apiTimeoutRef.current) clearTimeout(apiTimeoutRef.current);
+    };
+  }, []);
 
   const loadExistingTrail = useCallback(async (forceRefresh = false) => {
     if (!user) {
@@ -45,6 +54,20 @@ export const useImplementationTrail = () => {
       setError(null);
       console.log("Carregando trilha existente para usuário:", user.id);
       
+      // Monitorar timeout da API
+      setApiCallStartTime(Date.now());
+      
+      // Configurar timeout de 20 segundos
+      if (apiTimeoutRef.current) clearTimeout(apiTimeoutRef.current);
+      apiTimeoutRef.current = setTimeout(() => {
+        if (isLoading && apiCallStartTime && isApiTimeout(apiCallStartTime)) {
+          console.error("Timeout ao carregar trilha após", Date.now() - apiCallStartTime, "ms");
+          setError("Tempo limite excedido ao carregar a trilha");
+          setIsLoading(false);
+          setApiCallStartTime(null);
+        }
+      }, 20000);
+      
       // Modificado para buscar todas as trilhas e pegar a mais recente
       const { data, error: loadError } = await supabase
         .from("implementation_trails")
@@ -52,6 +75,13 @@ export const useImplementationTrail = () => {
         .eq("user_id", user.id)
         .order('updated_at', { ascending: false })
         .limit(1);
+
+      // Limpar timeout
+      if (apiTimeoutRef.current) {
+        clearTimeout(apiTimeoutRef.current);
+        apiTimeoutRef.current = null;
+      }
+      setApiCallStartTime(null);
 
       if (loadError) {
         console.error("Erro ao carregar trilha:", loadError);
@@ -69,14 +99,16 @@ export const useImplementationTrail = () => {
           setLastUpdated(new Date());
           return trailData;
         } else {
-          console.log("Trilha encontrada mas sem conteúdo válido");
-          setError("Trilha encontrada mas sem conteúdo válido");
+          const err = "Trilha encontrada mas sem conteúdo válido";
+          console.error(err, trailData);
+          setError(err);
           setTrail(null);
           return null;
         }
       } else {
-        console.log("Nenhuma trilha encontrada para o usuário");
-        setError("Nenhuma trilha encontrada para o usuário");
+        const err = "Nenhuma trilha encontrada para o usuário";
+        console.log(err);
+        setError(err);
         setTrail(null);
         return null;
       }
@@ -87,7 +119,7 @@ export const useImplementationTrail = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [user, trail, lastUpdated]);
+  }, [user, trail, lastUpdated, isLoading, apiCallStartTime]);
 
   // Limpar trilhas duplicadas e manter apenas a mais recente
   const cleanupDuplicateTrails = useCallback(async () => {
@@ -135,6 +167,18 @@ export const useImplementationTrail = () => {
     try {
       setIsLoading(true);
       setError(null);
+      setApiCallStartTime(Date.now());
+
+      // Configurar timeout de 30 segundos para geração (mais longa que carregamento)
+      if (apiTimeoutRef.current) clearTimeout(apiTimeoutRef.current);
+      apiTimeoutRef.current = setTimeout(() => {
+        if (isLoading && apiCallStartTime && isApiTimeout(apiCallStartTime, 30000)) {
+          console.error("Timeout ao gerar trilha após", Date.now() - apiCallStartTime, "ms");
+          setError("Tempo limite excedido ao gerar a trilha");
+          setIsLoading(false);
+          setApiCallStartTime(null);
+        }
+      }, 30000);
 
       const { data: solutions, error: solutionsError } = await supabase
         .from("solutions")
@@ -151,7 +195,8 @@ export const useImplementationTrail = () => {
         throw new Error("Dados de onboarding não disponíveis");
       }
 
-      console.log("Gerando trilha de implementação com dados:", onboardingProgress);
+      console.log("Gerando trilha de implementação com dados:", 
+        JSON.stringify(onboardingProgress, null, 2).substring(0, 300) + "...");
 
       const { data, error: fnError } = await supabase.functions.invoke("generate-implementation-trail", {
         body: {
@@ -159,6 +204,13 @@ export const useImplementationTrail = () => {
           availableSolutions: solutions,
         },
       });
+
+      // Limpar timeout
+      if (apiTimeoutRef.current) {
+        clearTimeout(apiTimeoutRef.current);
+        apiTimeoutRef.current = null;
+      }
+      setApiCallStartTime(null);
 
       if (fnError) {
         throw fnError;
@@ -168,7 +220,8 @@ export const useImplementationTrail = () => {
         throw new Error("Resposta inválida da função de recomendação");
       }
 
-      console.log("Trilha de implementação gerada:", data.recommendations);
+      console.log("Trilha de implementação gerada:", 
+        JSON.stringify(data.recommendations, null, 2).substring(0, 300) + "...");
       
       if (hasTrailContent(data.recommendations)) {
         setTrail(data.recommendations);
@@ -185,7 +238,9 @@ export const useImplementationTrail = () => {
         
         return data.recommendations;
       } else {
-        throw new Error("A trilha gerada não contém recomendações");
+        const errorMsg = "A trilha gerada não contém recomendações";
+        console.error(errorMsg, data.recommendations);
+        throw new Error(errorMsg);
       }
     } catch (error: any) {
       console.error("Erro ao gerar trilha de implementação:", error);
@@ -198,6 +253,11 @@ export const useImplementationTrail = () => {
       return null;
     } finally {
       setIsLoading(false);
+      setApiCallStartTime(null);
+      if (apiTimeoutRef.current) {
+        clearTimeout(apiTimeoutRef.current);
+        apiTimeoutRef.current = null;
+      }
     }
   };
 

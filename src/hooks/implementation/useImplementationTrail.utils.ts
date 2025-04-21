@@ -20,7 +20,7 @@ export const hasTrailContent = (trail: any): boolean => {
     
     // Verifica de forma mais detalhada o conteúdo da trilha para melhorar o diagnóstico
     if (!hasAnySolutions) {
-      console.warn("Trilha sem soluções válidas:", trail);
+      console.error("Trilha sem soluções válidas:", JSON.stringify(trail));
     }
     
     return hasAnySolutions;
@@ -88,7 +88,7 @@ export const sanitizeTrailData = (trail: any): any => {
                    sanitized.priority3.length === 0;
                    
     if (isEmpty) {
-      console.warn("Trilha sanitizada ficou vazia");
+      console.error("Trilha sanitizada ficou vazia");
     }
     
     return sanitized;
@@ -124,5 +124,9 @@ export const extractErrorMessage = (error: any): string => {
     ? error.error 
     : JSON.stringify(error.error);
   
-  return JSON.stringify(error);
+  try {
+    return JSON.stringify(error);
+  } catch (e) {
+    return "Erro não formatável";
+  }
 };

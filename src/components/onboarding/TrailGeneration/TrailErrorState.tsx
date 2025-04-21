@@ -1,8 +1,9 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { AlertCircle, RefreshCw, ArrowLeft, Home } from "lucide-react";
+import { AlertCircle, RefreshCw, ArrowLeft, Home, AlertTriangle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 interface TrailErrorStateProps {
   loadingTimeout: boolean;
@@ -23,22 +24,60 @@ export const TrailErrorState: React.FC<TrailErrorStateProps> = ({
 }) => {
   const navigate = useNavigate();
 
+  const handleDashboardNavigation = () => {
+    toast.info("Redirecionando para dashboard...");
+    navigate("/dashboard");
+  };
+
+  const getErrorMessage = () => {
+    if (loadingTimeout) {
+      return "O carregamento da trilha excedeu o tempo limite. Isso pode ocorrer devido à sobrecarga do servidor ou problemas de conexão.";
+    } else if (errorDetails?.includes("trilha gerada não contém recomendações") || 
+               errorDetails?.includes("sem conteúdo") ||
+               errorDetails?.includes("Trilha sem soluções válidas")) {
+      return "Não foi possível gerar recomendações adequadas para sua trilha. Tente novamente com informações atualizadas no onboarding.";
+    } else {
+      return "Ocorreu um erro ao carregar sua trilha personalizada. Você pode tentar novamente ou voltar para o onboarding.";
+    }
+  };
+
+  const getErrorAction = () => {
+    if (loadingTimeout) {
+      return "Tente novamente mais tarde ou use o botão abaixo para forçar uma nova tentativa.";
+    } else if (errorDetails?.includes("trilha gerada não contém recomendações") || 
+               errorDetails?.includes("sem conteúdo") ||
+               errorDetails?.includes("Trilha sem soluções válidas")) {
+      return "Sugerimos voltar ao onboarding e verificar suas respostas ou tentar gerar uma nova trilha.";
+    } else {
+      return "Tente gerar uma nova trilha ou retorne ao dashboard para explorar outras funcionalidades.";
+    }
+  };
+
   return (
-    <div className="max-w-xl mx-auto mt-8 p-6 bg-amber-50 rounded-lg border border-amber-200 flex flex-col items-center">
-      <AlertCircle className="text-amber-500 h-12 w-12 mb-4" />
+    <div className="max-w-xl mx-auto my-8 p-6 bg-amber-50 rounded-lg border border-amber-200 flex flex-col items-center">
+      {loadingTimeout ? (
+        <AlertTriangle className="text-amber-500 h-12 w-12 mb-4" />
+      ) : (
+        <AlertCircle className="text-amber-500 h-12 w-12 mb-4" />
+      )}
+      
       <h3 className="text-xl font-medium text-gray-800 mb-2">
         {loadingTimeout
           ? "Tempo limite excedido"
           : "Erro ao carregar trilha"}
       </h3>
+      
       <p className="text-gray-700 mb-4 text-center">
-        {loadingTimeout
-          ? "O carregamento da trilha excedeu o tempo limite. Por favor, tente novamente."
-          : "Ocorreu um erro ao carregar sua trilha personalizada. Por favor, tente novamente."}
+        {getErrorMessage()}
+      </p>
+      
+      <p className="text-gray-600 mb-4 text-center text-sm">
+        {getErrorAction()}
       </p>
       
       {errorDetails && (
-        <div className="bg-white/80 p-3 rounded mb-4 w-full text-sm text-gray-600 overflow-auto max-h-32">
+        <div className="bg-white p-3 rounded mb-4 w-full text-sm text-gray-600 overflow-auto max-h-32 border border-amber-200">
+          <p className="text-xs text-amber-700 mb-1 font-medium">Detalhes do erro:</p>
           <code>{errorDetails}</code>
         </div>
       )}
@@ -74,7 +113,7 @@ export const TrailErrorState: React.FC<TrailErrorStateProps> = ({
         
         <Button
           variant="ghost"
-          onClick={() => navigate("/dashboard")}
+          onClick={handleDashboardNavigation}
           className="flex items-center gap-2"
         >
           <Home className="h-4 w-4" />
@@ -82,14 +121,15 @@ export const TrailErrorState: React.FC<TrailErrorStateProps> = ({
         </Button>
       </div>
       
-      {attemptCount > 2 && (
-        <div className="mt-5 text-xs text-gray-500 bg-white/60 p-3 rounded-md w-full">
-          <p>Dicas de solução:</p>
-          <ul className="list-disc pl-5 mt-1">
-            <li>Tente atualizar a página</li>
+      {attemptCount > 1 && (
+        <div className="mt-5 text-xs text-gray-500 bg-white p-3 rounded-md w-full border border-gray-100">
+          <p className="font-medium mb-1">Dicas de solução:</p>
+          <ul className="list-disc pl-5 mt-1 space-y-1">
             <li>Verifique sua conexão com a internet</li>
-            <li>Espere alguns minutos e tente novamente</li>
-            <li>Entre em contato com o suporte caso o problema persista</li>
+            <li>Retorne ao onboarding e revise suas respostas</li>
+            <li>Tente acessar a página do dashboard e depois voltar</li>
+            <li>Tente novamente em outro navegador ou dispositivo</li>
+            <li>Entre em contato com o suporte se o problema persistir</li>
           </ul>
         </div>
       )}
