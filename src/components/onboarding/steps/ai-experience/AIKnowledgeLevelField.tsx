@@ -3,7 +3,6 @@ import React from "react";
 import { Controller, FieldError } from "react-hook-form";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { Form } from "@/components/ui/form";
 
 interface AIKnowledgeLevelFieldProps {
   control: any;
@@ -19,14 +18,14 @@ const knowledgeLevelOptions = [
 ];
 
 export const AIKnowledgeLevelField: React.FC<AIKnowledgeLevelFieldProps> = ({ control, error }) => (
-  <Form>
-    <div className="space-y-4 bg-gray-50 p-6 rounded-lg">
-      <h3 className="text-lg font-medium text-gray-800">Nível de conhecimento em IA</h3>
-      <Controller
-        control={control}
-        name="knowledge_level"
-        rules={{ required: "Campo obrigatório" }}
-        render={({ field, fieldState }) => (
+  <div className="space-y-4 bg-gray-50 p-6 rounded-lg">
+    <h3 className="text-lg font-medium text-gray-800">Nível de conhecimento em IA</h3>
+    <Controller
+      control={control}
+      name="knowledge_level"
+      rules={{ required: "Campo obrigatório" }}
+      render={({ field, fieldState }) => (
+        <div className="space-y-3">
           <RadioGroup
             value={field.value}
             onValueChange={field.onChange}
@@ -40,14 +39,14 @@ export const AIKnowledgeLevelField: React.FC<AIKnowledgeLevelFieldProps> = ({ co
                 </Label>
               </div>
             ))}
-            {(fieldState.error || error) && (
-              <span className="text-red-500 text-xs mt-1">
-                {fieldState.error?.message || (error?.message || '')}
-              </span>
-            )}
           </RadioGroup>
-        )}
-      />
-    </div>
-  </Form>
+          {(fieldState.error || error) && (
+            <span className="text-red-500 text-xs mt-1">
+              {fieldState.error?.message || (error?.message || '')}
+            </span>
+          )}
+        </div>
+      )}
+    />
+  </div>
 );

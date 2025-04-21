@@ -14,7 +14,6 @@ import { AdditionalContextField } from "./inputs/AdditionalContextField";
 import { SubmitButton } from "./SubmitButton";
 import { NavigationButtons } from "../NavigationButtons";
 import { cn } from "@/lib/utils";
-import { Form } from "@/components/ui/form";
 
 interface BusinessContextFormStepProps {
   progress: any;
