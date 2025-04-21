@@ -32,8 +32,6 @@ const ProfessionalData = () => {
       });
       
       console.log("Dados profissionais salvos com sucesso");
-      
-      // Navegação será feita automaticamente pelo hook saveStepData
     } catch (error) {
       console.error("Erro ao salvar dados profissionais:", error);
     } finally {

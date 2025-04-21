@@ -1,3 +1,4 @@
+
 import { steps } from "../useStepDefinitions";
 import { OnboardingData, OnboardingProgress } from "@/types/onboarding";
 import { buildPersonalUpdate } from "./stepBuilders/personalBuilder";
@@ -12,7 +13,14 @@ import { buildGoalsUpdate } from "./stepBuilders/goalsBuilder";
 // Função principal modularizada
 export function buildUpdateObject(
   stepId: string,
-  data: Partial<OnboardingData>,
+  data: Partial<OnboardingData> & {
+    company_name?: string;
+    company_size?: string;
+    company_sector?: string;
+    company_website?: string;
+    current_position?: string;
+    annual_revenue?: string;
+  },
   progress: OnboardingProgress | null,
   currentStepIndex: number
 ) {
@@ -27,20 +35,8 @@ export function buildUpdateObject(
       Object.assign(updateObj, buildPersonalUpdate(data, progress));
       break;
     case "professional_data":
-      // Processar dados profissionais
-      const professionalInfo = data.professional_info || {};
-      updateObj.professional_info = {
-        ...(progress.professional_info || {}),
-        ...professionalInfo
-      };
-      
-      // Atualizar campos diretos para compatibilidade
-      if (data.company_name) updateObj.company_name = data.company_name;
-      if (data.company_size) updateObj.company_size = data.company_size;
-      if (data.company_sector) updateObj.company_sector = data.company_sector;
-      if (data.company_website) updateObj.company_website = data.company_website;
-      if (data.current_position) updateObj.current_position = data.current_position;
-      if (data.annual_revenue) updateObj.annual_revenue = data.annual_revenue;
+      // Use a função específica para este tipo de dados
+      Object.assign(updateObj, buildProfessionalDataUpdate(data, progress));
       break;
     case "business_context":
       Object.assign(updateObj, buildBusinessContextUpdate(data, progress));
