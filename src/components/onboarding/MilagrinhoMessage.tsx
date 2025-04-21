@@ -14,7 +14,7 @@ export const MilagrinhoMessage: React.FC<MilagrinhoMessageProps> = ({ message })
         </div>
       </div>
       <div className="flex-1">
-        <p className="text-white">{message}</p>
+        <p className="text-gray-700 dark:text-gray-200">{message}</p>
       </div>
     </div>
   );

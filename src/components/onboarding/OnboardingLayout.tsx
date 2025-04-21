@@ -49,7 +49,7 @@ export const OnboardingLayout = ({
             {backUrl && (
               <Link 
                 to={backUrl}
-                className="inline-flex items-center text-gray-600 hover:text-gray-900 transition-colors group"
+                className="inline-flex items-center text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200 transition-colors group"
               >
                 <ArrowLeft className="w-4 h-4 mr-2 transition-transform group-hover:-translate-x-1" />
                 Voltar
@@ -59,7 +59,7 @@ export const OnboardingLayout = ({
             <div className="space-y-2">
               <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">{title}</h1>
               {description && (
-                <p className="text-gray-500 dark:text-gray-400 text-base md:text-lg">{description}</p>
+                <p className="text-gray-600 dark:text-gray-400 text-base md:text-lg">{description}</p>
               )}
             </div>
             
@@ -75,7 +75,7 @@ export const OnboardingLayout = ({
                 {progress !== undefined && (
                   <div className="space-y-2">
                     <Progress value={progress} className="h-2" />
-                    <p className="text-sm text-gray-500 dark:text-gray-400 text-center">
+                    <p className="text-sm text-gray-600 dark:text-gray-400 text-center">
                       {progress}% completo
                     </p>
                   </div>
@@ -95,4 +95,3 @@ export const OnboardingLayout = ({
     </MemberLayout>
   );
 };
-

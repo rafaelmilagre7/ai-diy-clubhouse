@@ -60,7 +60,7 @@ export const WizardStepProgress = ({
                 </TooltipTrigger>
                 <TooltipContent 
                   side="bottom" 
-                  className="bg-[#0ABAB5] text-white"
+                  className="bg-[#0ABAB5] text-white font-medium border-none"
                 >
                   {stepTitles[step - 1]}
                 </TooltipContent>
@@ -80,9 +80,9 @@ export const WizardStepProgress = ({
                 key={step}
                 className={cn(
                   "text-xs px-2 py-1 rounded",
-                  isComplete ? "text-green-500" :
+                  isComplete ? "text-green-600 dark:text-green-400" :
                   isActive ? "text-[#0ABAB5] font-medium" :
-                  "text-gray-400"
+                  "text-gray-500 dark:text-gray-400"
                 )}
               >
                 {step}. {stepTitles[step - 1]}

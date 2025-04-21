@@ -45,12 +45,16 @@ export const LocationInputs = ({
   // Atualizar cidades disponíveis quando o estado mudar ou quando o componente for montado
   useEffect(() => {
     if (!isLoading && state) {
+      console.log("Atualizando cidades disponíveis para o estado:", state);
       const cidadesDoEstado = cidadesPorEstado[state]?.map(city => city.name) || [];
+      console.log("Cidades encontradas:", cidadesDoEstado.length);
+      
       setAvailableCities(cidadesDoEstado);
       
       // Se temos uma cidade definida mas ela não está na lista de cidades disponíveis,
       // adicionamos ela para garantir que continue disponível na seleção
       if (city && !cidadesDoEstado.includes(city)) {
+        console.log("Adicionando cidade previamente selecionada à lista:", city);
         setAvailableCities(prev => [...prev, city]);
       }
       
@@ -61,6 +65,7 @@ export const LocationInputs = ({
   // Este useEffect garante que a cidade continue selecionada ao voltar para esta etapa
   useEffect(() => {
     if (initialized && city && !availableCities.includes(city) && availableCities.length > 0) {
+      console.log("Garantindo que a cidade selecionada permaneça na lista:", city);
       setAvailableCities(prev => [...prev, city]);
     }
   }, [initialized, city, availableCities]);
@@ -92,6 +97,7 @@ export const LocationInputs = ({
         <Select
           value={state}
           onValueChange={(value) => {
+            console.log("Estado selecionado:", value);
             onChangeState(value);
             // Limpar cidade ao trocar de estado
             onChangeCity("");
@@ -132,7 +138,7 @@ export const LocationInputs = ({
           </SelectTrigger>
           <SelectContent>
             {isLoading ? (
-              <SelectItem value="">Carregando cidades...</SelectItem>
+              <SelectItem value="carregando">Carregando cidades...</SelectItem>
             ) : availableCities.length > 0 ? (
               availableCities.map(cityName => (
                 <SelectItem key={cityName} value={cityName}>
@@ -140,7 +146,7 @@ export const LocationInputs = ({
                 </SelectItem>
               ))
             ) : (
-              state && <SelectItem value="Outra">Outra cidade</SelectItem>
+              state && <SelectItem value="outra">Outra cidade</SelectItem>
             )}
           </SelectContent>
         </Select>
