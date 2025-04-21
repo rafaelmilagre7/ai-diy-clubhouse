@@ -1,3 +1,4 @@
+
 import { steps } from "../useStepDefinitions";
 import { OnboardingData, OnboardingProgress } from "@/types/onboarding";
 
@@ -62,11 +63,17 @@ export function buildUpdateObject(
       const existingAiExperience = progress.ai_experience || {};
       // Corrige para aceitar campo array desired_ai_areas e retrocompatibilidade
       let aiData = { ...existingAiExperience, ...data.ai_experience };
+      
       // Corrigir se alguém enviou desired_ai_area como string (legado)
-      if (typeof aiData.desired_ai_area === "string") {
-        aiData.desired_ai_areas = [aiData.desired_ai_area];
-        delete aiData.desired_ai_area;
+      if (typeof aiData.desired_ai_areas === "string") {
+        aiData.desired_ai_areas = [aiData.desired_ai_areas];
       }
+      
+      // Para compatibilidade com código legado que ainda possa usar desired_ai_area
+      if (aiData.desired_ai_areas && !Array.isArray(aiData.desired_ai_areas)) {
+        aiData.desired_ai_areas = [aiData.desired_ai_areas];
+      }
+      
       updateObj.ai_experience = aiData;
       console.log("Objeto final de AI Experience:", updateObj.ai_experience);
     } else {
