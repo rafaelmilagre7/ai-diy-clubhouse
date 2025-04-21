@@ -26,9 +26,9 @@ export const ReviewSectionCard: React.FC<ReviewSectionCardProps> = ({
   navigateToStep,
 }) => {
   const handleEditClick = () => {
-    console.log(`Navegando para etapa ${stepIndex}: ${step.id}, índice real: ${stepIndex - 1}`);
-    // Ajuste para fornecer o índice correto (baseado em zero)
-    navigateToStep(stepIndex - 1);
+    console.log(`Navegando para etapa ${step.id}, índice na árvore: ${stepIndex}`);
+    // Usar o índice correto para navegação (índice começa em 0)
+    navigateToStep(stepIndex);
   };
 
   return (

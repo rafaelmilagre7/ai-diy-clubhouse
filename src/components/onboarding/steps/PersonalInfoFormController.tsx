@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { PersonalInfoInputs } from "./PersonalInfoInputs";
@@ -10,30 +10,43 @@ import { LoadingSpinner } from "@/components/common/LoadingSpinner";
 
 export const PersonalInfoFormController = () => {
   const {
-    formData, setFormData,
-    formErrors, setFormErrors,
+    formData, 
+    setFormData,
+    formErrors, 
+    setFormErrors,
     formDataLoaded,
-    updateProgress, progress, profile, user, isLoading
+    updateProgress, 
+    progress, 
+    profile, 
+    user, 
+    isLoading,
+    handleFormChange
   } = usePersonalInfoFormData();
 
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const handleChange = (field: string, value: string) => {
-    if (field === "name" || field === "email") return;
-    setFormData((prev) => {
-      const newData = { ...prev, [field]: value };
-      if (field === "country") {
-        newData.state = "";
-        newData.city = "";
-      }
-      if (field === "state") {
-        newData.city = "";
-      }
-      return newData;
-    });
-    if (formErrors[field]) setFormErrors({ ...formErrors, [field]: "" });
-  };
+  
+  // Salvamento automático no carregamento inicial para garantir persistência
+  useEffect(() => {
+    if (formDataLoaded && progress?.id && !isSubmitting) {
+      const saveInitialData = async () => {
+        try {
+          const fullName = profile?.name || user?.user_metadata?.name || formData.name;
+          const email = profile?.email || user?.email || formData.email;
+          const personalInfo = { ...formData, name: fullName, email: email };
+          
+          await updateProgress({
+            personal_info: personalInfo,
+          });
+          console.log("Dados iniciais salvos no carregamento");
+        } catch (error) {
+          console.error("Erro ao salvar dados iniciais:", error);
+        }
+      };
+      
+      saveInitialData();
+    }
+  }, [formDataLoaded, progress?.id]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -77,7 +90,7 @@ export const PersonalInfoFormController = () => {
     <form onSubmit={handleSubmit} className="space-y-6" autoComplete="off">
       <PersonalInfoInputs 
         formData={formData} 
-        onChange={handleChange} 
+        onChange={handleFormChange} 
         disabled={isSubmitting}
         readOnly 
         errors={formErrors}

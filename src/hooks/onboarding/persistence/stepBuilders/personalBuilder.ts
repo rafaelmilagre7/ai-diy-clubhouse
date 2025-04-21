@@ -22,9 +22,21 @@ export function buildPersonalUpdate(data: Partial<OnboardingData>, progress: Onb
 
   // Mescla os dados existentes com os novos para evitar perder informações
   const existingPersonalInfo = progress?.personal_info || {};
+  
+  // Verificar se cada campo existe antes de mesclar
   const updatedPersonalInfo = {
     ...existingPersonalInfo,
-    ...personalInfo
+    ...personalInfo,
+    name: personalInfo.name || existingPersonalInfo.name,
+    email: personalInfo.email || existingPersonalInfo.email,
+    phone: personalInfo.phone || existingPersonalInfo.phone || "",
+    ddi: personalInfo.ddi || existingPersonalInfo.ddi || "+55",
+    linkedin: personalInfo.linkedin || existingPersonalInfo.linkedin || "",
+    instagram: personalInfo.instagram || existingPersonalInfo.instagram || "",
+    country: personalInfo.country || existingPersonalInfo.country || "Brasil",
+    state: personalInfo.state || existingPersonalInfo.state || "",
+    city: personalInfo.city || existingPersonalInfo.city || "",
+    timezone: personalInfo.timezone || existingPersonalInfo.timezone || "GMT-3",
   };
 
   console.log("Dados pessoais mesclados:", updatedPersonalInfo);
