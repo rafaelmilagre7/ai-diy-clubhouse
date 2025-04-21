@@ -27,6 +27,7 @@ import MemberLayout from '@/components/layout/MemberLayout';
 
 // Onboarding
 import Onboarding from '@/pages/onboarding/Onboarding';
+import ProfessionalData from '@/pages/onboarding/steps/ProfessionalData';
 import BusinessContext from '@/pages/onboarding/steps/BusinessContext';
 import AIExperience from '@/pages/onboarding/steps/AIExperience';
 import BusinessGoalsClub from '@/pages/onboarding/steps/BusinessGoalsClub';
@@ -58,11 +59,12 @@ const AppRoutes = () => {
       
       {/* Onboarding Routes */}
       <Route path="/onboarding" element={<ProtectedRoutes><Onboarding /></ProtectedRoutes>} />
+      <Route path="/onboarding/professional-data" element={<ProtectedRoutes><ProfessionalData /></ProtectedRoutes>} />
       <Route path="/onboarding/business-context" element={<ProtectedRoutes><BusinessContext /></ProtectedRoutes>} />
       <Route path="/onboarding/ai-experience" element={<ProtectedRoutes><AIExperience /></ProtectedRoutes>} />
-      <Route path="/onboarding/business-goals-club" element={<ProtectedRoutes><BusinessGoalsClub /></ProtectedRoutes>} />
-      <Route path="/onboarding/experience-personalization" element={<ProtectedRoutes><ExperiencePersonalization /></ProtectedRoutes>} />
-      <Route path="/onboarding/complementary-info" element={<ProtectedRoutes><ComplementaryInfo /></ProtectedRoutes>} />
+      <Route path="/onboarding/club-goals" element={<ProtectedRoutes><BusinessGoalsClub /></ProtectedRoutes>} />
+      <Route path="/onboarding/customization" element={<ProtectedRoutes><ExperiencePersonalization /></ProtectedRoutes>} />
+      <Route path="/onboarding/complementary" element={<ProtectedRoutes><ComplementaryInfo /></ProtectedRoutes>} />
       <Route path="/onboarding/review" element={<ProtectedRoutes><Review /></ProtectedRoutes>} />
       
       {/* Admin Routes */}

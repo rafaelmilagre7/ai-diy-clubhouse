@@ -172,12 +172,12 @@ export const PersonalInfoFormController = () => {
 
       await updateProgress({
         personal_info: personalInfo,
-        current_step: "goals",
-        completed_steps: [...(progress?.completed_steps || []), "personal_info"],
+        current_step: "professional_data",
+        completed_steps: [...(progress?.completed_steps || []), "personal"],
       });
 
       toast.success("Dados salvos com sucesso!");
-      navigate("/onboarding/business-goals", { replace: true });
+      navigate("/onboarding/professional-data", { replace: true });
     } catch (error) {
       console.error("Erro ao salvar dados:", error);
       toast.error("Erro ao salvar dados. Tente novamente.");

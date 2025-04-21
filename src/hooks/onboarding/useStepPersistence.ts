@@ -1,4 +1,3 @@
-
 import { toast } from 'sonner';
 import { OnboardingData } from '@/types/onboarding';
 import { useProgress } from './useProgress';
@@ -33,6 +32,11 @@ export const useStepPersistence = ({
           completed_steps: [...(progress.completed_steps || []), stepId],
           current_step: steps[Math.min(currentStepIndex + 1, steps.length - 1)].id,
         });
+        
+        // Após salvar, navega para a próxima etapa com atraso para garantir fluidez
+        setTimeout(() => {
+          navigate("/onboarding/professional-data");
+        }, 300);
       } else if (stepId === "professional_data") {
         const professionalInfo = data.professional_info || {};
         if (!professionalInfo.company_name || !professionalInfo.current_position || 
@@ -51,6 +55,11 @@ export const useStepPersistence = ({
           completed_steps: [...(progress.completed_steps || []), stepId],
           current_step: steps[Math.min(currentStepIndex + 1, steps.length - 1)].id,
         });
+        
+        // Após salvar, navega para a próxima etapa
+        setTimeout(() => {
+          navigate("/onboarding/business-context");
+        }, 300);
       } else if (stepId === "business_context") {
         const businessContext = data.business_context || {};
         if (!businessContext.business_model || !businessContext.business_challenges || 
@@ -140,13 +149,16 @@ export const useStepPersistence = ({
       toast.success("Progresso salvo com sucesso!");
       
       // Navega para a próxima etapa com atraso para garantir fluidez
-      const nextStepIndex = Math.min(currentStepIndex + 1, steps.length - 1);
-      setCurrentStepIndex(nextStepIndex);
-      const nextStep = steps[nextStepIndex];
-      if (nextStep && nextStep.path) {
-        setTimeout(() => {
-          navigate(nextStep.path);
-        }, 300);
+      // Esta navegação genérica só é usada para as etapas que não têm tratamento específico acima
+      if (stepId !== "personal" && stepId !== "professional_data") {
+        const nextStepIndex = Math.min(currentStepIndex + 1, steps.length - 1);
+        setCurrentStepIndex(nextStepIndex);
+        const nextStep = steps[nextStepIndex];
+        if (nextStep && nextStep.path) {
+          setTimeout(() => {
+            navigate(nextStep.path);
+          }, 300);
+        }
       }
     } catch (error) {
       console.error("Erro ao salvar dados:", error);
