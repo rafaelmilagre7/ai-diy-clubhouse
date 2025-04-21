@@ -1,9 +1,14 @@
 
 import React from "react";
-import { Controller } from "react-hook-form";
+import { Controller, Control } from "react-hook-form";
 import { Slider } from "@/components/ui/slider";
 
-export function NetworkingAvailabilitySection({ control, errors }: any) {
+interface NetworkingAvailabilitySectionProps {
+  control: Control<any>;
+  errors: Record<string, any>;
+}
+
+export function NetworkingAvailabilitySection({ control, errors }: NetworkingAvailabilitySectionProps) {
   return (
     <div>
       <label className="font-semibold text-gray-700 mb-2 block">

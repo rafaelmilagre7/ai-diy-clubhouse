@@ -1,7 +1,14 @@
 
 import React from "react";
-import { Controller } from "react-hook-form";
+import { Controller, Control, UseFormWatch } from "react-hook-form";
 import { cn } from "@/lib/utils";
+
+interface TimePreferenceSectionProps {
+  control: Control<any>;
+  watch: UseFormWatch<any>;
+  toggleSelect: (field: "time_preference", value: string) => void;
+  errors: Record<string, any>;
+}
 
 const TIME_OPTIONS = [
   { value: "manha", label: "Manhã (8h–12h)", icon: "sun", emoji: "☀️" },
@@ -9,7 +16,7 @@ const TIME_OPTIONS = [
   { value: "noite", label: "Noite (19h–22h)", icon: "moon", emoji: "🌙" },
 ];
 
-export function TimePreferenceSection({ control, watch, toggleSelect, errors }: any) {
+export function TimePreferenceSection({ control, watch, toggleSelect, errors }: TimePreferenceSectionProps) {
   return (
     <div>
       <label className="font-semibold text-gray-700 mb-2 block">

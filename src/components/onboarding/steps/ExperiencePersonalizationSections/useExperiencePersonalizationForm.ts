@@ -2,8 +2,27 @@
 import { useMemo } from "react";
 import { useForm } from "react-hook-form";
 
-export function useExperiencePersonalizationForm(initialData: any = {}) {
-  const form = useForm({
+// Definindo um tipo para os nomes dos campos do formulário
+type FormFieldNames = 
+  | "interests" 
+  | "time_preference" 
+  | "available_days" 
+  | "networking_availability" 
+  | "skills_to_share" 
+  | "mentorship_topics";
+
+// Interface para o tipo de dados que o formulário vai gerenciar
+interface ExperienceFormData {
+  interests: string[];
+  time_preference: string[];
+  available_days: string[];
+  networking_availability: number;
+  skills_to_share: string[];
+  mentorship_topics: string[];
+}
+
+export function useExperiencePersonalizationForm(initialData: Partial<ExperienceFormData> = {}) {
+  const form = useForm<ExperienceFormData>({
     defaultValues: {
       interests: initialData.interests || [],
       time_preference: initialData.time_preference || [],
@@ -27,7 +46,7 @@ export function useExperiencePersonalizationForm(initialData: any = {}) {
     ].every(Boolean);
   }, [watch]);
 
-  function toggleSelect(field: string, value: string) {
+  function toggleSelect(field: FormFieldNames, value: string) {
     const arr = form.watch(field) || [];
     if (arr.includes(value)) {
       form.setValue(field, arr.filter((v: string) => v !== value), { shouldValidate: true });

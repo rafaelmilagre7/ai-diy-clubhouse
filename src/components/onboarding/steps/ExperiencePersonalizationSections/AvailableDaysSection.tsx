@@ -1,12 +1,19 @@
 
 import React from "react";
 import { cn } from "@/lib/utils";
+import { UseFormWatch } from "react-hook-form";
+
+interface AvailableDaysSectionProps {
+  watch: UseFormWatch<any>;
+  toggleSelect: (field: "available_days", value: string) => void;
+  errors: Record<string, any>;
+}
 
 const DAYS_OPTIONS = [
   "Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado", "Domingo",
 ];
 
-export function AvailableDaysSection({ watch, toggleSelect, errors }: any) {
+export function AvailableDaysSection({ watch, toggleSelect, errors }: AvailableDaysSectionProps) {
   return (
     <div>
       <label className="font-semibold text-gray-700 mb-2 block">

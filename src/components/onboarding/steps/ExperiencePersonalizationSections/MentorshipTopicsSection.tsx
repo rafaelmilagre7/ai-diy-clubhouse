@@ -1,6 +1,13 @@
 
 import React from "react";
 import { cn } from "@/lib/utils";
+import { UseFormWatch } from "react-hook-form";
+
+interface MentorshipTopicsSectionProps {
+  watch: UseFormWatch<any>;
+  toggleSelect: (field: "mentorship_topics", value: string) => void;
+  errors: Record<string, any>;
+}
 
 const MENTORSHIP_OPTIONS = [
   { label: "Implementação prática de IA no negócio", value: "implementacao_pratica" },
@@ -15,7 +22,7 @@ const MENTORSHIP_OPTIONS = [
   { label: "Criação de conteúdo estratégico com IA", value: "conteudo_estrategico_ia" },
 ];
 
-export function MentorshipTopicsSection({ watch, toggleSelect, errors }: any) {
+export function MentorshipTopicsSection({ watch, toggleSelect, errors }: MentorshipTopicsSectionProps) {
   return (
     <div>
       <label className="font-semibold text-gray-700 mb-2 block">

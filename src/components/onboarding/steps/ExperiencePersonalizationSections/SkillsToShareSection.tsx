@@ -1,6 +1,13 @@
 
 import React from "react";
 import { cn } from "@/lib/utils";
+import { UseFormWatch } from "react-hook-form";
+
+interface SkillsToShareSectionProps {
+  watch: UseFormWatch<any>;
+  toggleSelect: (field: "skills_to_share", value: string) => void;
+  errors: Record<string, any>;
+}
 
 const SKILLS_OPTIONS = [
   { label: "Engenharia de prompts", value: "engenharia_prompts" },
@@ -15,7 +22,7 @@ const SKILLS_OPTIONS = [
   { label: "Análise de dados e Business Intelligence", value: "analise_dados_bi" },
 ];
 
-export function SkillsToShareSection({ watch, toggleSelect, errors }: any) {
+export function SkillsToShareSection({ watch, toggleSelect, errors }: SkillsToShareSectionProps) {
   return (
     <div>
       <label className="font-semibold text-gray-700 mb-2 block">

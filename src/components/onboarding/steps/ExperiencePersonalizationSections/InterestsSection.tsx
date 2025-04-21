@@ -1,6 +1,13 @@
 
 import React from "react";
 import { cn } from "@/lib/utils";
+import { UseFormWatch } from "react-hook-form";
+
+interface InterestsSectionProps {
+  watch: UseFormWatch<any>;
+  toggleSelect: (field: "interests", value: string) => void;
+  errors: Record<string, any>;
+}
 
 const INTERESTS_OPTIONS = [
   { label: "Engenharia de Prompts", value: "engenharia_prompts", icon: "code" },
@@ -16,7 +23,7 @@ const INTERESTS_OPTIONS = [
   { label: "Análise de Dados com IA", value: "analise_dados", icon: "chart-bar" },
 ];
 
-export function InterestsSection({ watch, toggleSelect, errors }: any) {
+export function InterestsSection({ watch, toggleSelect, errors }: InterestsSectionProps) {
   return (
     <div>
       <label className="font-semibold text-gray-700 mb-2 block">

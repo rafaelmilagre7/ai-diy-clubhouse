@@ -25,7 +25,6 @@ export const ExperiencePersonalizationStep: React.FC<ExperiencePersonalizationSt
     control,
     handleSubmit,
     watch,
-    setValue,
     formState: { errors },
     isValid,
     toggleSelect
@@ -63,4 +62,3 @@ export const ExperiencePersonalizationStep: React.FC<ExperiencePersonalizationSt
     </form>
   );
 };
-
