@@ -148,21 +148,30 @@ export type Database = {
       implementation_trails: {
         Row: {
           created_at: string
+          error_message: string | null
+          generation_attempts: number
           id: string
+          status: string
           trail_data: Json
           updated_at: string
           user_id: string
         }
         Insert: {
           created_at?: string
+          error_message?: string | null
+          generation_attempts?: number
           id?: string
+          status?: string
           trail_data?: Json
           updated_at?: string
           user_id: string
         }
         Update: {
           created_at?: string
+          error_message?: string | null
+          generation_attempts?: number
           id?: string
+          status?: string
           trail_data?: Json
           updated_at?: string
           user_id?: string

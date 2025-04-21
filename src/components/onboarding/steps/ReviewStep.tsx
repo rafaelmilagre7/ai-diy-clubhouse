@@ -1,4 +1,3 @@
-
 import React from "react";
 import { OnboardingProgress } from "@/types/onboarding";
 import { steps } from "@/hooks/onboarding/useStepDefinitions";
@@ -21,7 +20,6 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({
 }) => {
   if (!progress) return <div>Carregando dados...</div>;
 
-  // Encontra o índice de cada etapa para navegação
   const findStepIndex = (sectionId: string) => {
     return steps.findIndex((s) => s.id === sectionId);
   };
@@ -30,7 +28,8 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({
     <div className="space-y-6">
       <div className="bg-[#0ABAB5]/10 p-4 rounded-md border border-[#0ABAB5]/20">
         <p className="text-gray-700">
-          Revise todas as informações preenchidas no seu onboarding. Caso algo esteja incorreto, clique no botão "Editar" ao lado da seção correspondente.
+          Revise todas as informações preenchidas. Após confirmar, sua trilha personalizada será gerada automaticamente.
+          Esta trilha será única e permanente para seu perfil.
         </p>
       </div>
 
@@ -41,7 +40,6 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({
             const sectionKey = step.section as keyof OnboardingProgress;
             let sectionData = progress[sectionKey];
 
-            // Correção para business_context/business_data
             if (step.section === "business_context" && !sectionData) {
               sectionData = progress.business_data;
             }
@@ -67,9 +65,9 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({
           disabled={isSubmitting}
           className="bg-[#0ABAB5] hover:bg-[#0ABAB5]/90"
         >
-          {isSubmitting ? "Processando..." : (
+          {isSubmitting ? "Gerando trilha..." : (
             <span className="flex items-center gap-2">
-              Concluir Onboarding
+              Gerar Minha Trilha
               <ArrowRight className="h-4 w-4" />
             </span>
           )}

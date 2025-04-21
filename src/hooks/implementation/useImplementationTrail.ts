@@ -1,11 +1,8 @@
 
 import { useState, useEffect, useCallback } from "react";
-import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/auth";
-import { useProgress } from "@/hooks/onboarding/useProgress";
+import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
-import { saveImplementationTrail } from "./useSaveImplementationTrail";
-import { hasTrailContent, extractErrorMessage, isApiTimeout } from "./useImplementationTrail.utils";
 
 export type ImplementationRecommendation = {
   solutionId: string;
@@ -20,14 +17,12 @@ export type ImplementationTrail = {
 
 export const useImplementationTrail = () => {
   const { user } = useAuth();
-  const { progress } = useProgress();
   const [trail, setTrail] = useState<ImplementationTrail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
-  const [apiCallStartTime, setApiCallStartTime] = useState<number | null>(null);
 
-  const loadExistingTrail = useCallback(async (forceRefresh = false) => {
+  // Carregar trilha existente
+  const loadExistingTrail = useCallback(async () => {
     if (!user) {
       setIsLoading(false);
       setError("Usuário não autenticado");
@@ -35,98 +30,39 @@ export const useImplementationTrail = () => {
     }
 
     try {
-      if (!forceRefresh && trail && hasTrailContent(trail) && lastUpdated) {
-        console.log("Usando trilha em cache:", lastUpdated);
-        return trail;
-      }
-
       setIsLoading(true);
       setError(null);
-      console.log("Carregando trilha existente para usuário:", user.id);
-      
-      setApiCallStartTime(Date.now());
-      
+
       const { data, error: loadError } = await supabase
         .from("implementation_trails")
         .select("*")
         .eq("user_id", user.id)
-        .order('updated_at', { ascending: false })
-        .limit(1);
-
-      setApiCallStartTime(null);
+        .eq("status", "completed")
+        .single();
 
       if (loadError) {
         console.error("Erro ao carregar trilha:", loadError);
-        setError(extractErrorMessage(loadError));
-        throw loadError;
-      }
-
-      if (data && data.length > 0 && data[0].trail_data) {
-        console.log("Trilha encontrada no banco:", data[0].updated_at);
-        const trailData = data[0].trail_data as ImplementationTrail;
-        
-        if (hasTrailContent(trailData)) {
-          console.log("Trilha com conteúdo válido encontrada");
-          setTrail(trailData);
-          setLastUpdated(new Date());
-          return trailData;
-        } else {
-          const err = "Trilha encontrada mas sem conteúdo válido";
-          console.error(err, trailData);
-          setError(err);
-          setTrail(null);
-          return null;
-        }
-      } else {
-        const err = "Nenhuma trilha encontrada para o usuário";
-        console.log(err);
-        setError(err);
-        setTrail(null);
+        setError("Erro ao carregar sua trilha");
         return null;
       }
+
+      if (data?.trail_data) {
+        setTrail(data.trail_data as ImplementationTrail);
+        return data.trail_data;
+      }
+
+      return null;
     } catch (error) {
-      console.error("Erro ao carregar trilha existente:", error);
-      setError(extractErrorMessage(error));
+      console.error("Erro ao carregar trilha:", error);
+      setError("Erro ao carregar sua trilha");
       return null;
     } finally {
       setIsLoading(false);
     }
-  }, [user, trail, lastUpdated]);
-
-  const cleanupDuplicateTrails = useCallback(async () => {
-    if (!user) return;
-
-    try {
-      console.log("Verificando trilhas duplicadas...");
-      
-      const { data, error } = await supabase
-        .from("implementation_trails")
-        .select("*")
-        .eq("user_id", user.id)
-        .order('updated_at', { ascending: false });
-        
-      if (error) throw error;
-      
-      if (data && data.length > 1) {
-        console.log(`Encontradas ${data.length} trilhas. Removendo duplicatas...`);
-        
-        const trailsToDelete = data.slice(1).map(t => t.id);
-        
-        const { error: deleteError } = await supabase
-          .from("implementation_trails")
-          .delete()
-          .in("id", trailsToDelete);
-          
-        if (deleteError) throw deleteError;
-        
-        console.log(`${trailsToDelete.length} trilhas duplicadas removidas com sucesso.`);
-      }
-    } catch (err) {
-      console.error("Erro ao limpar trilhas duplicadas:", err);
-    }
   }, [user]);
 
-  const generateImplementationTrail = async () => {
+  // Gerar nova trilha
+  const generateImplementationTrail = async (onboardingData: any) => {
     if (!user) {
       setError("Usuário não autenticado");
       return null;
@@ -135,112 +71,90 @@ export const useImplementationTrail = () => {
     try {
       setIsLoading(true);
       setError(null);
-      setApiCallStartTime(Date.now());
 
-      const { data: solutions, error: solutionsError } = await supabase
-        .from("solutions")
+      // Buscar trilha existente
+      const { data: existingTrail } = await supabase
+        .from("implementation_trails")
         .select("*")
-        .eq("published", true);
+        .eq("user_id", user.id)
+        .eq("status", "completed")
+        .single();
 
-      if (solutionsError) {
-        throw solutionsError;
+      if (existingTrail) {
+        setTrail(existingTrail.trail_data as ImplementationTrail);
+        return existingTrail.trail_data;
       }
 
-      // Usar dados do onboarding
-      if (!progress) {
-        throw new Error("Dados de onboarding não disponíveis");
-      }
-
-      console.log("Gerando trilha de implementação com dados do onboarding");
-
-      const { data, error: fnError } = await supabase.functions.invoke("generate-implementation-trail", {
-        body: {
-          onboardingProgress: progress,
-          availableSolutions: solutions,
-        },
-      });
-
-      setApiCallStartTime(null);
-
-      if (fnError) {
-        throw fnError;
-      }
-
-      if (!data || !data.recommendations) {
-        throw new Error("Resposta inválida da função de recomendação");
-      }
-
-      console.log("Trilha de implementação gerada");
-      
-      if (hasTrailContent(data.recommendations)) {
-        setTrail(data.recommendations);
-        setLastUpdated(new Date());
-        
-        await cleanupDuplicateTrails();
-        await saveImplementationTrail(user.id, data.recommendations);
-        
-        toast.success("Trilha Personalizada Criada", {
-          description: "Sua trilha de implementação foi gerada com sucesso!"
+      // Iniciar processo de geração
+      const { error: updateError } = await supabase
+        .from("implementation_trails")
+        .insert({
+          user_id: user.id,
+          status: "pending",
+          generation_attempts: 1
         });
-        
-        return data.recommendations;
-      } else {
-        const errorMsg = "A trilha gerada não contém recomendações";
-        console.error(errorMsg, data.recommendations);
-        throw new Error(errorMsg);
-      }
+
+      if (updateError) throw updateError;
+
+      // Chamar função de geração
+      const { data: generatedData, error: fnError } = await supabase.functions.invoke(
+        "generate-implementation-trail",
+        {
+          body: {
+            onboardingData
+          },
+        }
+      );
+
+      if (fnError) throw fnError;
+
+      // Salvar trilha gerada
+      const { error: saveError } = await supabase
+        .from("implementation_trails")
+        .update({
+          trail_data: generatedData.recommendations,
+          status: "completed",
+          updated_at: new Date().toISOString()
+        })
+        .eq("user_id", user.id)
+        .eq("status", "pending");
+
+      if (saveError) throw saveError;
+
+      setTrail(generatedData.recommendations);
+      toast.success("Trilha personalizada criada com sucesso!");
+      
+      return generatedData.recommendations;
     } catch (error: any) {
-      console.error("Erro ao gerar trilha de implementação:", error);
-      setError(error.message || "Erro ao gerar trilha de implementação");
+      console.error("Erro ao gerar trilha:", error);
+      setError(error.message || "Erro ao gerar trilha");
       
-      toast.error("Erro", {
-        description: "Não foi possível gerar sua trilha personalizada. Tente novamente mais tarde."
-      });
-      
+      // Registrar erro
+      await supabase
+        .from("implementation_trails")
+        .update({
+          status: "error",
+          error_message: error.message,
+        })
+        .eq("user_id", user.id)
+        .eq("status", "pending");
+
+      toast.error("Não foi possível gerar sua trilha");
       return null;
     } finally {
       setIsLoading(false);
-      setApiCallStartTime(null);
     }
   };
 
-  const refreshTrail = useCallback(async (forceRefresh = true) => {
-    return await loadExistingTrail(forceRefresh);
-  }, [loadExistingTrail]);
-
-  const clearTrail = useCallback(async () => {
-    if (!user) return false;
-    
-    try {
-      const { error } = await supabase
-        .from("implementation_trails")
-        .delete()
-        .eq("user_id", user.id);
-        
-      if (error) throw error;
-      
-      setTrail(null);
-      setLastUpdated(null);
-      console.log("Trilha removida com sucesso");
-      return true;
-    } catch (error) {
-      console.error("Erro ao remover trilha:", error);
-      return false;
-    }
-  }, [user]);
-
+  // Carregar trilha ao montar o componente
   useEffect(() => {
     loadExistingTrail();
-    cleanupDuplicateTrails();
-  }, [loadExistingTrail, cleanupDuplicateTrails]);
+  }, [loadExistingTrail]);
 
   return {
     trail,
     isLoading,
     error,
     generateImplementationTrail,
-    refreshTrail,
-    clearTrail,
-    hasContent: trail ? hasTrailContent(trail) : false
   };
 };

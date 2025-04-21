@@ -1,187 +1,80 @@
 
-import React, { useState, useMemo, useEffect } from "react";
+import React from "react";
 import { useImplementationTrail } from "@/hooks/implementation/useImplementationTrail";
 import { useSolutionsData } from "@/hooks/useSolutionsData";
-import { toast } from "sonner";
-import { isTrailStuck, countTrailSolutions, sanitizeTrailData } from "@/hooks/implementation/useImplementationTrail.utils";
-
-import { TrailPanelState } from "./TrailGenerationPanel/TrailPanelState";
-import { TrailLoadingPanel } from "./TrailGeneration/TrailLoadingPanel";
-import { TrailContentPanel } from "./TrailGeneration/TrailContentPanel";
+import { Loader2 } from "lucide-react";
+import { TrailSolutions } from "./TrailGeneration/TrailSolutions";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 
 interface TrailGenerationPanelProps {
-  onClose?: () => void;
-  solutions?: any[];
-  loading?: boolean;
-  onLoadMore?: () => void;
-  progress?: any;
+  onboardingData?: any;
 }
 
-export const TrailGenerationPanel: React.FC<TrailGenerationPanelProps> = ({ 
-  onClose, 
-  solutions: initialSolutions, 
-  loading: externalLoading,
-  onLoadMore,
-  progress 
-}) => {
-  const { trail, isLoading, generateImplementationTrail, refreshTrail, hasContent, clearTrail } = useImplementationTrail();
+export const TrailGenerationPanel: React.FC<TrailGenerationPanelProps> = ({ onboardingData }) => {
+  const navigate = useNavigate();
+  const { trail, isLoading, error } = useImplementationTrail();
   const { solutions: allSolutions, loading: solutionsLoading } = useSolutionsData();
-  const [regenerating, setRegenerating] = useState(false);
-  const [showMagic, setShowMagic] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
-  const [loadStartTime, setLoadStartTime] = useState<number | null>(null);
-  const [loadingFailed, setLoadingFailed] = useState(false);
-  const [loadingTimeout, setLoadingTimeout] = useState(false);
-  const [attemptCount, setAttemptCount] = useState(0);
 
-  // Usar soluções fornecidas ou carregar do trail
-  const [solutions, setSolutions] = useState<any[]>(initialSolutions || []);
+  // Processar soluções da trilha
+  const processedSolutions = React.useMemo(() => {
+    if (!trail || !allSolutions?.length) return [];
 
-  // Efeito para controle de carregamento inicial
-  useEffect(() => {
-    if (initialSolutions && initialSolutions.length > 0) {
-      setSolutions(initialSolutions);
-      return;
-    }
-
-    const loadFreshData = async () => {
-      setRefreshing(true);
-      setLoadStartTime(Date.now());
-      setAttemptCount(prev => prev + 1);
-      
-      try {
-        const trailData = await refreshTrail(true);
-        if (!trailData || countTrailSolutions(trailData) === 0) {
-          setLoadingFailed(attemptCount >= 2);
-        } else {
-          setLoadingFailed(false);
-        }
-      } catch (error) {
-        console.error("Erro ao recarregar trilha:", error);
-        setLoadingFailed(attemptCount >= 2);
-      } finally {
-        setRefreshing(false);
-        setLoadStartTime(null);
-      }
-    };
+    const result = [];
     
-    loadFreshData();
-    
-    const timeoutId = setTimeout(() => {
-      if (refreshing && loadStartTime) {
-        if (isTrailStuck(trail, loadStartTime)) {
-          setRefreshing(false);
-          setLoadingTimeout(true);
-          toast.error("Tempo limite de carregamento excedido. Tente novamente.");
-        }
-      }
-    }, 12000);
-    
-    return () => clearTimeout(timeoutId);
-  }, [refreshTrail, trail, attemptCount, initialSolutions]);
-
-  // Mapeamento de soluções
-  useEffect(() => {
-    if (!initialSolutions && trail && allSolutions?.length) {
-      try {
-        const sanitizedTrail = sanitizeTrailData(trail);
-        if (!sanitizedTrail) return;
-        
-        const result: any[] = [];
-        ["priority1", "priority2", "priority3"].forEach((priorityLevel, idx) => {
-          const items = Array.isArray((sanitizedTrail as any)[priorityLevel]) 
-            ? (sanitizedTrail as any)[priorityLevel] 
-            : [];
-          
-          items.forEach((item: any) => {
-            if (!item?.solutionId) return;
-            
-            const fullSolution = allSolutions.find(s => s.id === item.solutionId);
-            if (fullSolution) {
-              result.push({
-                ...item,
-                ...fullSolution,
-                priority: idx + 1,
-                title: fullSolution.title || "Solução sem título",
-                description: fullSolution.description || item.description || "Sem descrição disponível.",
-                justification: item.justification || "Recomendação personalizada",
-                solutionId: item.solutionId
-              });
-            }
+    ["priority1", "priority2", "priority3"].forEach((priority, idx) => {
+      const items = (trail as any)[priority] || [];
+      items.forEach((item: any) => {
+        const solution = allSolutions.find(s => s.id === item.solutionId);
+        if (solution) {
+          result.push({
+            ...solution,
+            ...item,
+            priority: idx + 1
           });
-        });
-        
-        setSolutions(result);
-      } catch (error) {
-        console.error("Erro ao processar soluções da trilha:", error);
-      }
-    }
-  }, [trail, allSolutions, initialSolutions]);
+        }
+      });
+    });
 
-  const handleRegenerate = async () => {
-    try {
-      setRegenerating(true);
-      setLoadingFailed(false);
-      setLoadingTimeout(false);
-      setLoadStartTime(Date.now());
-      
-      await clearTrail();
-      await generateImplementationTrail();
-      toast.success("Trilha regenerada com sucesso!");
-    } catch (error) {
-      console.error("Erro ao gerar trilha:", error);
-      toast.error("Não foi possível gerar sua trilha. Tente novamente.");
-      setLoadingFailed(true);
-    } finally {
-      setRegenerating(false);
-      setLoadStartTime(null);
-    }
-  };
+    return result;
+  }, [trail, allSolutions]);
 
-  const handleRefreshTrail = () => {
-    setRefreshing(true);
-    setAttemptCount(prev => prev + 1);
-    refreshTrail(true);
-  };
-
-  const isPanelLoading = externalLoading || isLoading || regenerating || solutionsLoading || refreshing;
-  const hasValidTrail = (trail && solutions.length > 0) || (initialSolutions && initialSolutions.length > 0);
-  const showEmptyState = (!hasValidTrail && !isPanelLoading) || loadingFailed || loadingTimeout;
-
-  if (showEmptyState) {
+  if (isLoading || solutionsLoading) {
     return (
-      <TrailPanelState
-        isLoading={isLoading}
-        regenerating={regenerating}
-        solutionsLoading={solutionsLoading}
-        refreshing={refreshing}
-        showMagic={showMagic}
-        loadingFailed={loadingFailed}
-        loadingTimeout={loadingTimeout}
-        onRegenerate={handleRegenerate}
-        onRefresh={handleRefreshTrail}
-        attemptCount={attemptCount}
-      />
+      <div className="flex flex-col items-center gap-4 py-8">
+        <Loader2 className="h-8 w-8 text-[#0ABAB5] animate-spin" />
+        <span className="text-[#0ABAB5] font-medium">
+          Carregando sua trilha personalizada...
+        </span>
+      </div>
     );
   }
 
-  if (isPanelLoading) {
+  if (error) {
     return (
-      <TrailLoadingPanel
-        regenerating={regenerating}
-        refreshing={refreshing}
-        attemptCount={attemptCount}
-        onRefreshTrail={handleRefreshTrail}
-      />
+      <Alert variant="destructive">
+        <AlertTitle>Erro ao carregar trilha</AlertTitle>
+        <AlertDescription>
+          <p>Não foi possível carregar sua trilha personalizada. Por favor, entre em contato com o suporte.</p>
+          <Button 
+            variant="outline" 
+            onClick={() => navigate('/dashboard')}
+            className="mt-4"
+          >
+            Ir para Dashboard
+          </Button>
+        </AlertDescription>
+      </Alert>
     );
   }
 
   return (
-    <TrailContentPanel
-      solutions={solutions}
-      generatingTrail={regenerating}
-      onBackToOnboarding={onClose || (() => {})}
-      onStartTrailGeneration={handleRegenerate}
-    />
+    <div className="max-w-4xl mx-auto space-y-8">
+      <h2 className="text-3xl font-extrabold text-[#0ABAB5] text-center">
+        Sua Trilha Personalizada VIVER DE IA
+      </h2>
+      <TrailSolutions solutions={processedSolutions} />
+    </div>
   );
 };
