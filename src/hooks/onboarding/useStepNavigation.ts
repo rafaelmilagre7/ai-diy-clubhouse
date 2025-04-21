@@ -8,6 +8,7 @@ export const useStepNavigation = () => {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const { progress, refreshProgress } = useProgress();
   const navigate = useNavigate();
+  const [allowFreeNavigation, setAllowFreeNavigation] = useState(true);
 
   // Efeito para configurar o passo atual com base no progresso salvo
   useEffect(() => {
@@ -31,22 +32,21 @@ export const useStepNavigation = () => {
         
         setCurrentStepIndex(newIndex);
         
-        // Verificar se estamos na rota correta
-        const currentPath = window.location.pathname;
-        const expectedStep = steps[newIndex];
-        
-        // Se não estivermos no path esperado e não tivermos completado o onboarding
-        if (!refreshedProgress.is_completed && 
-            expectedStep && expectedStep.path && 
-            currentPath !== expectedStep.path) {
-          console.log(`Redirecionando para o passo esperado: ${expectedStep.path}`);
-          navigate(expectedStep.path);
+        // Verificar se estamos na rota correta - APENAS SE NÃO PERMITIRMOS NAVEGAÇÃO LIVRE
+        if (!refreshedProgress.is_completed && !allowFreeNavigation) {
+          const currentPath = window.location.pathname;
+          const expectedStep = steps[newIndex];
+          
+          if (expectedStep && expectedStep.path && currentPath !== expectedStep.path) {
+            console.log(`Redirecionando para o passo esperado: ${expectedStep.path}`);
+            navigate(expectedStep.path);
+          }
         }
       }
     };
     
     loadProgress();
-  }, [refreshProgress, navigate]);
+  }, [refreshProgress, navigate, allowFreeNavigation]);
 
   // Efeito para atualizar o índice do passo atual com base na URL
   useEffect(() => {
@@ -60,11 +60,10 @@ export const useStepNavigation = () => {
 
   // Função para navegar para um passo específico
   const navigateToStep = (stepIndex: number) => {
-    if (!progress) return;
+    console.log(`Solicitação para navegar para a etapa: ${stepIndex}`);
     
-    // Permitir navegação para etapas anteriores ou para a próxima etapa após a última completada
+    // Permitir navegação para qualquer etapa
     if (stepIndex >= 0 && stepIndex < steps.length) {
-      // Implementar lógica para permitir voltar para etapas anteriores
       const targetStep = steps[stepIndex];
       if (targetStep && targetStep.path) {
         console.log(`Navegando para a etapa ${stepIndex + 1}: ${targetStep.path}`);
@@ -72,7 +71,7 @@ export const useStepNavigation = () => {
         navigate(targetStep.path);
       }
     } else {
-      console.warn("Índice de etapa inválido.");
+      console.warn("Índice de etapa inválido:", stepIndex);
     }
   };
 
@@ -81,6 +80,8 @@ export const useStepNavigation = () => {
     currentStepIndex,
     setCurrentStepIndex,
     navigateToStep,
-    navigate
+    navigate,
+    allowFreeNavigation,
+    setAllowFreeNavigation
   };
 };

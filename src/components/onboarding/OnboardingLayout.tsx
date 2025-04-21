@@ -28,15 +28,23 @@ export const OnboardingLayout = ({
   // Função para lidar com o clique no passo
   const handleStepClick = onStepClick || navigateToStep;
   
-  // Função para voltar para a etapa anterior
+  // Função para voltar para a etapa anterior ou para uma URL específica
   const handleBackClick = () => {
+    console.log(`Tentando voltar da etapa ${currentStep}`);
+    
     if (currentStep > 1) {
       // Se não for a primeira etapa, voltar para a anterior
       const previousStepIndex = currentStep - 2; // -1 para índice baseado em zero, -1 para voltar
+      console.log(`Navegando para etapa anterior: ${previousStepIndex}`);
       navigateToStep(previousStepIndex);
-    } else {
-      // Caso seja a primeira, usar o backUrl padrão
+    } else if (backUrl) {
+      // Se for a primeira etapa e temos um backUrl definido
+      console.log(`Navegando para backUrl: ${backUrl}`);
       navigate(backUrl);
+    } else {
+      // Caso seja a primeira etapa e não tenhamos backUrl, ir para a etapa 1 (onboarding)
+      console.log(`Navegando para primeira etapa: /onboarding`);
+      navigate("/onboarding", { replace: true });
     }
   };
   

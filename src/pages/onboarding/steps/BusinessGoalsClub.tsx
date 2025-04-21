@@ -12,7 +12,8 @@ const BusinessGoalsClub = () => {
   const handleSaveData = async (stepId: string, data: any) => {
     setIsSubmitting(true);
     try {
-      await saveStepData(stepId, data);
+      // Salvar sem navegação automática para permitir voltar manualmente
+      await saveStepData(stepId, data, false);
     } catch (error) {
       console.error("Erro ao salvar dados:", error);
     } finally {

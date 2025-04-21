@@ -25,20 +25,29 @@ export function useStepPersistenceCore({
       return;
     }
 
+    console.log(`Salvando dados do passo ${stepId}, navegação automática: ${shouldNavigate ? "SIM" : "NÃO"}`);
+
     try {
       // Montar objeto de atualização para a etapa
       const updateObj = buildUpdateObject(stepId, data, progress, currentStepIndex);
       if (Object.keys(updateObj).length === 0) return;
 
+      console.log("Dados a serem enviados:", updateObj);
+
       // Atualizar no Supabase
       await updateProgress(updateObj);
+      console.log("Dados atualizados com sucesso no banco");
 
       // Forçar atualização dos dados local
       await refreshProgress();
+      console.log("Dados locais atualizados após salvar");
       
       // Navegar para a próxima etapa apenas se solicitado
       if (shouldNavigate) {
-        navigateAfterStep(stepId, currentStepIndex, navigate);
+        console.log(`Iniciando navegação automática após salvar o passo ${stepId}`);
+        navigateAfterStep(stepId, currentStepIndex, navigate, shouldNavigate);
+      } else {
+        console.log("Navegação automática desativada, permanecendo na página atual");
       }
     } catch (error) {
       console.error("Erro ao salvar dados:", error);
@@ -50,11 +59,13 @@ export function useStepPersistenceCore({
   const completeOnboarding = async () => {
     if (!progress?.id) return;
     try {
+      console.log("Completando onboarding...");
       await updateProgress({
         is_completed: true,
         completed_steps: steps.map(s => s.id),
       });
       await refreshProgress();
+      console.log("Onboarding marcado como completo, redirecionando para dashboard...");
       setTimeout(() => {
         navigate("/dashboard");
       }, 500);

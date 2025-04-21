@@ -1,7 +1,13 @@
 
 import { steps } from "../useStepDefinitions";
 
-export function navigateAfterStep(stepId: string, currentStepIndex: number, navigate: (path: string) => void) {
+export function navigateAfterStep(stepId: string, currentStepIndex: number, navigate: (path: string) => void, shouldNavigate: boolean = true) {
+  // Se não devemos navegar automaticamente, retornar imediatamente
+  if (!shouldNavigate) {
+    console.log("Navegação automática desativada, permanecendo na página atual");
+    return;
+  }
+
   let nextPath = "";
 
   if (stepId === "personal") {
@@ -27,5 +33,6 @@ export function navigateAfterStep(stepId: string, currentStepIndex: number, navi
   }
 
   // Faz navegação com pequeno delay para UX consistente
+  console.log(`Navegando automaticamente para: ${nextPath}`);
   setTimeout(() => navigate(nextPath), 500);
 }
