@@ -13,6 +13,7 @@ import AdminSolutions from '@/pages/admin/AdminSolutions';
 import AdminTools from '@/pages/admin/AdminTools';
 import AdminSuggestions from '@/pages/admin/AdminSuggestions';
 import Dashboard from '@/pages/member/Dashboard';
+import Solutions from '@/pages/member/Solutions';
 import Tools from '@/pages/member/Tools';
 import ToolDetails from '@/pages/member/ToolDetails';
 import Profile from '@/pages/member/Profile';
@@ -30,6 +31,7 @@ import TeamInfo from '@/pages/onboarding/steps/TeamInfo';
 import Preferences from '@/pages/onboarding/steps/Preferences';
 import Benefits from '@/pages/member/Benefits';
 import { Navigate } from 'react-router-dom';
+import MemberLayout from '@/components/layout/MemberLayout';
 
 const AppRoutes = () => {
   return (
@@ -39,6 +41,19 @@ const AppRoutes = () => {
       <Route path="/register" element={<Register />} />
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/set-new-password" element={<SetNewPassword />} />
+      
+      {/* Member Routes with Layout */}
+      <Route path="/" element={<ProtectedRoutes><MemberLayout><Dashboard /></MemberLayout></ProtectedRoutes>} />
+      <Route path="/dashboard" element={<ProtectedRoutes><MemberLayout><Dashboard /></MemberLayout></ProtectedRoutes>} />
+      <Route path="/solutions" element={<ProtectedRoutes><MemberLayout><Solutions /></MemberLayout></ProtectedRoutes>} />
+      <Route path="/tools" element={<ProtectedRoutes><MemberLayout><Tools /></MemberLayout></ProtectedRoutes>} />
+      <Route path="/tools/:id" element={<ProtectedRoutes><MemberLayout><ToolDetails /></MemberLayout></ProtectedRoutes>} />
+      <Route path="/profile" element={<ProtectedRoutes><MemberLayout><Profile /></MemberLayout></ProtectedRoutes>} />
+      <Route path="/profile/edit" element={<ProtectedRoutes><MemberLayout><EditProfile /></MemberLayout></ProtectedRoutes>} />
+      <Route path="/solution/:id" element={<ProtectedRoutes><MemberLayout><SolutionDetails /></MemberLayout></ProtectedRoutes>} />
+      <Route path="/implementation/:id" element={<ProtectedRoutes><MemberLayout><SolutionImplementation /></MemberLayout></ProtectedRoutes>} />
+      <Route path="/implementation/completed/:id" element={<ProtectedRoutes><MemberLayout><ImplementationCompleted /></MemberLayout></ProtectedRoutes>} />
+      <Route path="/benefits" element={<ProtectedRoutes><MemberLayout><Benefits /></MemberLayout></ProtectedRoutes>} />
       
       {/* Onboarding Routes */}
       <Route path="/onboarding" element={<ProtectedRoutes><Onboarding /></ProtectedRoutes>} />
@@ -57,18 +72,7 @@ const AppRoutes = () => {
       <Route path="/admin/tools" element={<AdminProtectedRoutes><AdminTools /></AdminProtectedRoutes>} />
       <Route path="/admin/suggestions" element={<AdminProtectedRoutes><AdminSuggestions /></AdminProtectedRoutes>} />
       
-      {/* Member Routes */}
-      <Route path="/dashboard" element={<ProtectedRoutes><Dashboard /></ProtectedRoutes>} />
-      <Route path="/tools" element={<ProtectedRoutes><Tools /></ProtectedRoutes>} />
-      <Route path="/tools/:id" element={<ProtectedRoutes><ToolDetails /></ProtectedRoutes>} />
-      <Route path="/profile" element={<ProtectedRoutes><Profile /></ProtectedRoutes>} />
-      <Route path="/profile/edit" element={<ProtectedRoutes><EditProfile /></ProtectedRoutes>} />
-      <Route path="/solutions/:id" element={<ProtectedRoutes><SolutionDetails /></ProtectedRoutes>} />
-      <Route path="/implementation/:id" element={<ProtectedRoutes><SolutionImplementation /></ProtectedRoutes>} />
-      <Route path="/implementation/completed/:id" element={<ProtectedRoutes><ImplementationCompleted /></ProtectedRoutes>} />
-      <Route path="/benefits" element={<ProtectedRoutes><Benefits /></ProtectedRoutes>} />
-      
-      <Route path="/" element={<Navigate to="/dashboard" replace />} />
+      {/* Fallback route */}
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

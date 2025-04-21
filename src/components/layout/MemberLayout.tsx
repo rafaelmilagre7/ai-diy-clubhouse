@@ -15,11 +15,13 @@ const MemberLayout = ({ children }: { children: React.ReactNode }) => {
   const [sidebarOpen, setSidebarOpen] = useState(() => {
     // Recuperar estado do localStorage, padrão é aberto em desktop
     const savedState = localStorage.getItem("sidebarOpen");
+    console.log("Estado inicial da sidebar recuperado:", savedState);
     return savedState !== null ? savedState === "true" : window.innerWidth >= 768;
   });
 
   // Efeito para persistir o estado da barra lateral
   useEffect(() => {
+    console.log("Persistindo estado da sidebar:", sidebarOpen);
     localStorage.setItem("sidebarOpen", String(sidebarOpen));
   }, [sidebarOpen]);
 
@@ -37,7 +39,10 @@ const MemberLayout = ({ children }: { children: React.ReactNode }) => {
   // Detectar tamanho de tela e ajustar barra lateral em dispositivos móveis
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth < 768 && sidebarOpen) {
+      const isMobile = window.innerWidth < 768;
+      console.log("Detectado redimensionamento:", { isMobile, width: window.innerWidth });
+      
+      if (isMobile && sidebarOpen) {
         setSidebarOpen(false);
       }
     };
@@ -53,6 +58,7 @@ const MemberLayout = ({ children }: { children: React.ReactNode }) => {
 
   // Log para debugging
   console.log("MemberLayout renderizando com sidebarOpen:", sidebarOpen);
+  console.log("Perfil do usuário:", profile);
 
   return (
     <div className="flex min-h-screen bg-background overflow-hidden">

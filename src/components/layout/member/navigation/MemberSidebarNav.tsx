@@ -42,7 +42,7 @@ export const MemberSidebarNav = ({ sidebarOpen }: MemberSidebarNavProps) => {
       title: "Soluções",
       icon: Lightbulb,
       href: "/solutions",
-      active: currentPath.includes("/solution") || currentPath === "/solutions"
+      active: currentPath === "/solutions" || currentPath.includes("/solution")
     },
     {
       title: "Ferramentas",
