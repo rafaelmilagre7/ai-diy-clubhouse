@@ -1,3 +1,4 @@
+
 export interface OnboardingData {
   personal_info: {
     name?: string;
@@ -85,6 +86,13 @@ export interface OnboardingData {
     implementation_speed?: string;
     support_level?: string;
   };
+  // Adicionando campos diretos para compatibilidade com o banco de dados
+  company_name?: string;
+  company_size?: string;
+  company_sector?: string;
+  company_website?: string;
+  current_position?: string;
+  annual_revenue?: string;
 }
 
 export interface OnboardingProgress {
@@ -115,6 +123,8 @@ export interface OnboardingProgress {
   // Adicionando as propriedades para a trilha
   trail_solutions?: any[];
   trail_generated_at?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface OnboardingStepProps {

@@ -10,17 +10,20 @@ import { buildExperiencePersonalizationUpdate } from "./stepBuilders/experienceP
 import { buildComplementaryInfoUpdate } from "./stepBuilders/complementaryInfoBuilder";
 import { buildGoalsUpdate } from "./stepBuilders/goalsBuilder";
 
+// Definindo um tipo mais amplo para aceitar todos os campos necessários
+type ExpandedDataInput = Partial<OnboardingData> & {
+  company_name?: string;
+  company_size?: string;
+  company_sector?: string;
+  company_website?: string;
+  current_position?: string;
+  annual_revenue?: string;
+};
+
 // Função principal modularizada
 export function buildUpdateObject(
   stepId: string,
-  data: Partial<OnboardingData> & {
-    company_name?: string;
-    company_size?: string;
-    company_sector?: string;
-    company_website?: string;
-    current_position?: string;
-    annual_revenue?: string;
-  },
+  data: ExpandedDataInput,
   progress: OnboardingProgress | null,
   currentStepIndex: number
 ) {
