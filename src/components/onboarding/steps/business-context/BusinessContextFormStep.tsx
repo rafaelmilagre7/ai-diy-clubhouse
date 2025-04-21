@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, FormProvider } from "react-hook-form";
 import { toast } from "sonner";
 import { useOnboardingSteps } from "@/hooks/onboarding/useOnboardingSteps";
 import { useNavigate } from "react-router-dom";
@@ -14,6 +14,7 @@ import { AdditionalContextField } from "./inputs/AdditionalContextField";
 import { SubmitButton } from "./SubmitButton";
 import { NavigationButtons } from "../NavigationButtons";
 import { cn } from "@/lib/utils";
+import { Form } from "@/components/ui/form";
 
 interface BusinessContextFormStepProps {
   progress: any;
@@ -45,9 +46,11 @@ export const BusinessContextFormStep: React.FC<BusinessContextFormStepProps> = (
 
   console.log("Valores iniciais para Business Context:", initialValues);
 
-  const { control, handleSubmit, formState: { errors }, reset } = useForm<BusinessContextFormValues>({
+  const methods = useForm<BusinessContextFormValues>({
     defaultValues: initialValues
   });
+  
+  const { control, handleSubmit, formState: { errors }, reset } = methods;
 
   // Atualizar o formulário quando os dados iniciais mudarem
   useEffect(() => {
@@ -101,44 +104,46 @@ export const BusinessContextFormStep: React.FC<BusinessContextFormStepProps> = (
         message="Beleza, agora precisamos conhecer melhor o contexto do seu negócio no Vivendo de IA. 😊 Isso vai me ajudar a identificar quais soluções de IA farão mais sentido para você. Como CEO, você vai adorar os conteúdos que temos específicos para sua área de atuação."
       />
 
-      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-8">
+      <FormProvider {...methods}>
+        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-8">
 
-        {/* Contexto do Negócio */}
-        <section className="bg-white rounded-lg shadow p-6 space-y-4">
-          <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
-            <span className="inline-block text-[#0ABAB5]">📋</span>
-            Contexto do Negócio
-          </h2>
-          <BusinessModelField control={control} error={errors.business_model} />
-        </section>
+          {/* Contexto do Negócio */}
+          <section className="bg-white rounded-lg shadow p-6 space-y-4">
+            <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+              <span className="inline-block text-[#0ABAB5]">📋</span>
+              Contexto do Negócio
+            </h2>
+            <BusinessModelField control={control} error={errors.business_model} />
+          </section>
 
-        {/* Desafios e Objetivos */}
-        <section className="bg-white rounded-lg shadow p-6 space-y-4">
-          <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
-            <span className="inline-block text-[#0ABAB5]">🎯</span>
-            Desafios e Objetivos
-          </h2>
-          <BusinessChallengesField control={control} error={errors.business_challenges} />
-          <ShortTermGoalsField control={control} error={errors.short_term_goals} />
-          <MediumTermGoalsField control={control} error={errors.medium_term_goals} />
-        </section>
+          {/* Desafios e Objetivos */}
+          <section className="bg-white rounded-lg shadow p-6 space-y-4">
+            <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+              <span className="inline-block text-[#0ABAB5]">🎯</span>
+              Desafios e Objetivos
+            </h2>
+            <BusinessChallengesField control={control} error={errors.business_challenges} />
+            <ShortTermGoalsField control={control} error={errors.short_term_goals} />
+            <MediumTermGoalsField control={control} error={errors.medium_term_goals} />
+          </section>
 
-        {/* KPIs */}
-        <section className="bg-white rounded-lg shadow p-6 space-y-4">
-          <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
-            <span className="inline-block text-[#0ABAB5]">📈</span>
-            Indicadores de Performance
-          </h2>
-          <KpisField control={control} error={errors.important_kpis} />
-          <AdditionalContextField control={control} />
-        </section>
+          {/* KPIs */}
+          <section className="bg-white rounded-lg shadow p-6 space-y-4">
+            <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+              <span className="inline-block text-[#0ABAB5]">📈</span>
+              Indicadores de Performance
+            </h2>
+            <KpisField control={control} error={errors.important_kpis} />
+            <AdditionalContextField control={control} />
+          </section>
 
-        {/* Navegação */}
-        <NavigationButtons 
-          isSubmitting={isSubmitting} 
-          onPrevious={() => navigate("/onboarding/professional-data")} 
-        />
-      </form>
+          {/* Navegação */}
+          <NavigationButtons 
+            isSubmitting={isSubmitting} 
+            onPrevious={() => navigate("/onboarding/professional-data")} 
+          />
+        </form>
+      </FormProvider>
     </div>
   );
 };
