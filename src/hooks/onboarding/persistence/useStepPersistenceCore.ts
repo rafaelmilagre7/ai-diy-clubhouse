@@ -67,7 +67,7 @@ export function useStepPersistenceCore({
     }
   };
 
-  // Finaliza onboarding (marca como completo e leva ao dashboard)
+  // Finaliza onboarding (marca como completo e leva à tela de trilha)
   const completeOnboarding = async () => {
     if (!progress?.id) return;
     try {
@@ -83,55 +83,13 @@ export function useStepPersistenceCore({
       const updatedProgress = await refreshProgress();
       console.log("Onboarding marcado como completo, gerando trilha de implementação...");
       
-      // Gerar trilha de implementação personalizada
-      try {
-        // Buscar todas as soluções publicadas
-        const { data: solutions } = await supabase
-          .from("solutions")
-          .select("*")
-          .eq("published", true);
-        
-        if (solutions && solutions.length > 0) {
-          // Chamar a função de geração de trilha
-          const { data, error: fnError } = await supabase.functions.invoke("generate-implementation-trail", {
-            body: {
-              onboardingProgress: updatedProgress,
-              availableSolutions: solutions,
-            },
-          });
-          
-          if (fnError) {
-            console.error("Erro ao gerar trilha:", fnError);
-          } else if (data && data.recommendations) {
-            console.log("Trilha gerada com sucesso:", data.recommendations);
-            
-            // Salvar trilha no banco de dados
-            const user = (await supabase.auth.getUser()).data.user;
-            if (user) {
-              try {
-                await supabase
-                  .from("implementation_trails")
-                  .insert({
-                    user_id: user.id,
-                    trail_data: data.recommendations,
-                  });
-                console.log("Trilha salva no banco de dados");
-              } catch (dbError) {
-                console.error("Erro ao salvar trilha:", dbError);
-              }
-            }
-          }
-        } else {
-          console.log("Nenhuma solução disponível para gerar trilha");
-        }
-      } catch (trailError) {
-        console.error("Erro ao tentar gerar trilha:", trailError);
-        // Não interromper o fluxo principal se a geração da trilha falhar
-      }
+      // Gerar trilha de implementação personalizada acontecerá na página de trilha
+      // Apenas navegamos para lá, onde a geração ocorrerá com feedback visual
       
       toast.success("Onboarding concluído com sucesso!");
       setTimeout(() => {
-        navigate("/dashboard");
+        // Redirecionar para a página de geração de trilha em vez do dashboard
+        navigate("/onboarding/trail-generation");
       }, 500);
     } catch (error) {
       console.error("Erro ao completar onboarding:", error);

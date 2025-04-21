@@ -24,6 +24,7 @@ import BusinessGoalsClub from "@/pages/onboarding/steps/BusinessGoalsClub";
 import ExperiencePersonalization from "@/pages/onboarding/steps/ExperiencePersonalization";
 import ComplementaryInfo from "@/pages/onboarding/steps/ComplementaryInfo";
 import Review from "@/pages/onboarding/steps/Review";
+import TrailGeneration from "@/pages/onboarding/steps/TrailGeneration";
 
 interface MemberRoutesProps {
   children?: ReactNode;
@@ -46,6 +47,7 @@ const MemberRoutes = ({ children }: MemberRoutesProps) => {
         <Route path="onboarding/customization" element={<ExperiencePersonalization />} />
         <Route path="onboarding/complementary" element={<ComplementaryInfo />} />
         <Route path="onboarding/review" element={<Review />} />
+        <Route path="onboarding/trail-generation" element={<TrailGeneration />} />
 
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="solutions" element={<Solutions />} />

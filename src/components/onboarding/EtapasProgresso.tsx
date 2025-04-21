@@ -1,6 +1,6 @@
 
 import React from "react";
-import { CheckCircle, Circle } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface EtapasProgressoProps {
   currentStep: number;
@@ -8,53 +8,38 @@ interface EtapasProgressoProps {
   onStepClick?: (step: number) => void;
 }
 
-export const EtapasProgresso = ({ 
-  currentStep, 
-  totalSteps, 
-  onStepClick 
-}: EtapasProgressoProps) => {
-  const steps = Array.from({ length: totalSteps }, (_, i) => i + 1);
-
-  const handleStepClick = (stepIndex: number) => {
-    if (onStepClick) {
-      // Convertemos o número da etapa (1-based) para índice (0-based)
-      onStepClick(stepIndex - 1);
-    }
-  };
+export const EtapasProgresso: React.FC<EtapasProgressoProps> = ({
+  currentStep,
+  totalSteps = 9, // Atualizado para 9 etapas
+  onStepClick,
+}) => {
+  const etapas = Array.from({ length: totalSteps }, (_, i) => i + 1);
 
   return (
     <div className="w-full">
-      <div className="flex justify-between items-center w-full relative">
-        {/* Linha de progresso */}
-        <div className="absolute h-1 bg-gray-200 top-1/2 left-0 -translate-y-1/2 w-full z-0"></div>
-        <div 
-          className="absolute h-1 bg-[#0ABAB5] top-1/2 left-0 -translate-y-1/2 z-0"
-          style={{ width: `${((currentStep - 1) / (totalSteps - 1)) * 100}%` }}
-        ></div>
-
-        {/* Indicadores de etapas */}
-        {steps.map((step) => (
-          <div 
-            key={step} 
-            onClick={() => handleStepClick(step)}
-            className={`relative z-10 flex flex-col items-center cursor-pointer`}
-          >
-            <div className={`rounded-full flex items-center justify-center w-8 h-8 
-              ${step <= currentStep 
-                ? "bg-[#0ABAB5] text-white" 
-                : "bg-white border-2 border-gray-200 text-gray-400"}`}>
-              {step < currentStep ? (
-                <CheckCircle size={18} />
-              ) : (
-                <span className="text-sm font-medium">{step}</span>
+      <div className="flex items-center justify-between">
+        {etapas.map((etapa) => (
+          <React.Fragment key={etapa}>
+            <div
+              className={cn(
+                "relative flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border transition-all",
+                currentStep >= etapa
+                  ? "border-[#0ABAB5] bg-[#0ABAB5] text-white hover:bg-[#0ABAB5]/90"
+                  : "border-gray-300 bg-white text-gray-500 hover:border-gray-400"
               )}
+              onClick={() => onStepClick && onStepClick(etapa)}
+            >
+              <span className="text-xs font-semibold">{etapa}</span>
             </div>
-            <span className={`text-xs mt-1 ${
-              step <= currentStep ? "text-[#0ABAB5] font-medium" : "text-gray-400"
-            }`}>
-              Etapa {step}
-            </span>
-          </div>
+            {etapa < totalSteps && (
+              <div
+                className={cn(
+                  "h-0.5 flex-1",
+                  currentStep > etapa ? "bg-[#0ABAB5]" : "bg-gray-300"
+                )}
+              />
+            )}
+          </React.Fragment>
         ))}
       </div>
     </div>
