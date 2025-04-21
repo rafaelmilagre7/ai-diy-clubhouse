@@ -6,13 +6,15 @@ import { BusinessContextFormStep } from "@/components/onboarding/steps/business-
 import { BusinessContextLoading } from "@/components/onboarding/steps/business-context/BusinessContextLoading";
 import { useOnboardingSteps } from "@/hooks/onboarding/useOnboardingSteps";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 const BusinessContext = () => {
   const { progress, isLoading, refreshProgress } = useProgress();
-  const { saveStepData } = useOnboardingSteps();
+  const { saveStepData, currentStepIndex, steps } = useOnboardingSteps();
   const [localLoading, setLocalLoading] = useState(true);
   const [loadError, setLoadError] = useState<Error | null>(null);
   const [refreshCount, setRefreshCount] = useState(0);
+  const navigate = useNavigate();
 
   // Efeito para carregar dados mais recentes ao entrar na página
   useEffect(() => {
@@ -40,7 +42,7 @@ const BusinessContext = () => {
     setRefreshCount(prev => prev + 1);
   };
 
-  // Handler para salvar dados usando o novo formato
+  // Handler para salvar dados e garantir navegação
   const handleSave = async (data: any): Promise<void> => {
     try {
       // Formatando os dados para o formato esperado pelo saveStepData
@@ -48,13 +50,25 @@ const BusinessContext = () => {
         business_context: data
       };
       
-      await saveStepData(businessContextData, false);
+      await saveStepData(businessContextData, true);
+      
+      // Verificar se a navegação automática funcionou
+      setTimeout(() => {
+        const currentPath = window.location.pathname;
+        if (currentPath === "/onboarding/business-context") {
+          console.log("Navegação não ocorreu automaticamente, forçando redirecionamento");
+          navigate("/onboarding/ai-experience");
+        }
+      }, 500);
     } catch (error) {
       console.error("Erro ao salvar dados:", error);
       toast.error("Erro ao salvar dados. Tente novamente.");
       throw error;
     }
   };
+
+  // Calcular progresso para exibição
+  const progressPercentage = Math.round(((currentStepIndex + 1) / steps.length) * 100);
 
   if (isLoading || localLoading) {
     return <BusinessContextLoading step={3} />;
@@ -63,6 +77,8 @@ const BusinessContext = () => {
   return (
     <OnboardingLayout
       currentStep={3}
+      totalSteps={steps.length}
+      progress={progressPercentage}
       title="Contexto do Negócio"
       backUrl="/onboarding/professional-data"
     >

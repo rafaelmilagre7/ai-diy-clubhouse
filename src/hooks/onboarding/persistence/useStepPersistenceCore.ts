@@ -55,14 +55,32 @@ export function useStepPersistenceCore({
       // Notificar usuário do salvamento
       toast.success("Dados salvos com sucesso!");
       
-      // Verificar se a etapa é professional_data para garantir navegação
-      if (currentStep === "professional_data") {
-        console.log("Etapa de dados profissionais - forçando navegação para business-context");
+      // Verificar qual etapa estamos e garantir navegação específica quando necessário
+      // Mapeamento de navegação forçada para cada etapa
+      if (currentStep === "personal") {
+        setTimeout(() => navigate("/onboarding/professional-data"), 300);
+        return;
+      } else if (currentStep === "professional_data") {
         setTimeout(() => navigate("/onboarding/business-context"), 300);
+        return;
+      } else if (currentStep === "business_context") {
+        setTimeout(() => navigate("/onboarding/ai-experience"), 300);
+        return;
+      } else if (currentStep === "ai_exp") {
+        setTimeout(() => navigate("/onboarding/club-goals"), 300);
+        return;
+      } else if (currentStep === "business_goals") {
+        setTimeout(() => navigate("/onboarding/customization"), 300);
+        return;
+      } else if (currentStep === "experience_personalization") {
+        setTimeout(() => navigate("/onboarding/complementary"), 300);
+        return;
+      } else if (currentStep === "complementary_info") {
+        setTimeout(() => navigate("/onboarding/review"), 300);
         return;
       }
       
-      // Navegar para a próxima etapa apenas se solicitado
+      // Caso não seja uma etapa específica, usar a navegação padrão
       if (shouldNavigate) {
         console.log(`Iniciando navegação automática após salvar o passo ${currentStep}`);
         navigateAfterStep(currentStep, currentStepIndex, navigate, shouldNavigate);

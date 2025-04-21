@@ -41,7 +41,17 @@ export const BusinessContextForm: React.FC<BusinessContextFormProps> = ({ progre
       
       await saveStepData(businessContextData);
       toast.success("Informações salvas com sucesso!");
-      navigate("/onboarding/ai-experience");
+      
+      // Forçar navegação para a próxima tela após sucesso
+      setTimeout(() => {
+        console.log("Verificando navegação após envio do contexto de negócio...");
+        const currentPath = window.location.pathname;
+        
+        if (currentPath === "/onboarding/business-context") {
+          console.log("Navegação não ocorreu automaticamente, forçando redirecionamento para experiência com IA");
+          navigate("/onboarding/ai-experience");
+        }
+      }, 500);
     } catch (error) {
       console.error("Erro ao salvar dados:", error);
       toast.error("Erro ao salvar as informações. Tente novamente.");

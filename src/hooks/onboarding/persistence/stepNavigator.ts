@@ -15,22 +15,29 @@ export function navigateAfterStep(stepId: string, currentStepIndex: number, navi
   // Navegação baseada no ID do passo atual - mais confiável do que índices
   if (stepId === "personal") {
     nextPath = "/onboarding/professional-data";
+    console.log("Navegando de dados pessoais para dados profissionais");
   } else if (stepId === "professional_data") {
     nextPath = "/onboarding/business-context";
     console.log("Navegando de dados profissionais para contexto do negócio");
   } else if (stepId === "business_context") {
     nextPath = "/onboarding/ai-experience";
+    console.log("Navegando de contexto do negócio para experiência com IA");
   } else if (stepId === "ai_exp") {
     nextPath = "/onboarding/club-goals";
+    console.log("Navegando de experiência com IA para objetivos do club");
   } else if (stepId === "business_goals") {
     nextPath = "/onboarding/customization";
+    console.log("Navegando de objetivos do negócio para personalização");
   } else if (stepId === "experience_personalization") {
     nextPath = "/onboarding/complementary";
+    console.log("Navegando de personalização para informações complementares");
   } else if (stepId === "complementary_info") {
     nextPath = "/onboarding/review";
+    console.log("Navegando de informações complementares para revisão");
   } else if (stepId === "review") {
     // Direcionar para a página de implementação após a revisão
     nextPath = "/implementation-trail";
+    console.log("Navegando de revisão para trilha de implementação");
   } else {
     // Fallback genérico usando o array de steps
     const nextStepIndex = Math.min(currentStepIndex + 1, steps.length - 1);
