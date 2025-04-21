@@ -24,6 +24,8 @@ export const useStepPersistence = ({
     shouldNavigate = true
   ) => {
     console.log(`[useStepPersistence] Iniciando salvamento de dados para etapa ${stepId}`, data);
+    console.log(`[useStepPersistence] shouldNavigate: ${shouldNavigate}`);
+    
     try {
       const result = await saveStepData(stepId, data, shouldNavigate);
       console.log(`[useStepPersistence] Dados salvos com sucesso para ${stepId}`);

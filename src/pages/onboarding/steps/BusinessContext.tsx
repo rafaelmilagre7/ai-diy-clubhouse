@@ -40,6 +40,12 @@ const BusinessContext = () => {
     setRefreshCount(prev => prev + 1);
   };
 
+  // Manipulador para salvar dados - aqui é a modificação principal
+  const handleSave = async (data: any) => {
+    // Passamos true como segundo parâmetro para permitir a navegação
+    return saveStepData("business_context", data, true);
+  };
+
   if (isLoading || localLoading) {
     return <BusinessContextLoading step={3} />;
   }
@@ -66,7 +72,7 @@ const BusinessContext = () => {
       ) : (
         <BusinessContextFormStep 
           progress={progress} 
-          onSave={(data) => saveStepData("business_context", data, false)}
+          onSave={handleSave}
         />
       )}
     </OnboardingLayout>

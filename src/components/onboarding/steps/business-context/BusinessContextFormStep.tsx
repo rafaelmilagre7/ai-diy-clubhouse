@@ -80,8 +80,9 @@ export const BusinessContextFormStep: React.FC<BusinessContextFormStepProps> = (
         }
       };
       
+      // Aqui é a mudança principal: passamos true como segundo parâmetro para permitir a navegação automática
       await onSave(formattedData);
-      toast.success("Dados salvos com sucesso!");
+      // Não precisamos do toast aqui, pois o hook já vai mostrar um toast de sucesso
     } catch (error) {
       console.error("Erro ao salvar dados do contexto do negócio:", error);
       toast.error("Erro ao salvar dados. Tente novamente.");
@@ -106,6 +107,7 @@ export const BusinessContextFormStep: React.FC<BusinessContextFormStepProps> = (
           }
         };
         
+        // Aqui garantimos que o auto-save NÃO navegue automaticamente (false)
         await onSave(formattedData);
         // Sem toast para auto-save para não incomodar o usuário
       } catch (error) {
