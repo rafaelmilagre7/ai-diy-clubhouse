@@ -1,21 +1,15 @@
+
 import React from "react";
 import { useForm, Controller } from "react-hook-form";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
-import { Slider } from "@/components/ui/slider";
 import { OnboardingData } from "@/types/onboarding";
 import { AIKnowledgeLevelField } from "./ai-experience/AIKnowledgeLevelField";
 import { AIToolsField } from "./ai-experience/AIToolsField";
-import { AIImplementedSolutionsField } from "./ai-experience/AIImplementedSolutionsField";
-import { AIDesiredSolutionsField } from "./ai-experience/AIDesiredSolutionsField";
-import { AIPreviousAttemptsField } from "./ai-experience/AIPreviousAttemptsField";
 import { AIFormationQuestions } from "./ai-experience/AIFormationQuestions";
 import { AINPSField } from "./ai-experience/AINPSField";
 import { AISuggestionsField } from "./ai-experience/AISuggestionsField";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 
 interface AIExperienceFormStepProps {
   initialData?: OnboardingData["ai_experience"];
@@ -25,6 +19,13 @@ interface AIExperienceFormStepProps {
   onComplete?: () => void;
 }
 
+const desiredAreas = [
+  { value: "vendas", label: "Soluções de IA para Vendas" },
+  { value: "marketing", label: "Soluções de IA para Marketing" },
+  { value: "rh", label: "Soluções de IA para RH" },
+  { value: "analise_dados", label: "Soluções de IA para Análise de Dados" },
+];
+
 export const AIExperienceFormStep: React.FC<AIExperienceFormStepProps> = ({
   initialData,
   onSubmit,
@@ -32,13 +33,12 @@ export const AIExperienceFormStep: React.FC<AIExperienceFormStepProps> = ({
   isLastStep,
   onComplete,
 }) => {
-  const { control, handleSubmit, watch } = useForm({
+  const { control, handleSubmit } = useForm({
     defaultValues: {
       knowledge_level: initialData?.knowledge_level || "",
       previous_tools: initialData?.previous_tools || [],
-      implemented_solutions: initialData?.implemented_solutions || [],
-      desired_solutions: initialData?.desired_solutions || [],
-      previous_attempts: initialData?.previous_attempts || "",
+      has_implemented: initialData?.has_implemented || "",
+      desired_ai_area: initialData?.desired_ai_area || "",
       completed_formation: initialData?.completed_formation || false,
       is_member_for_month: initialData?.is_member_for_month || false,
       nps_score: initialData?.nps_score || 5,
@@ -55,9 +55,67 @@ export const AIExperienceFormStep: React.FC<AIExperienceFormStepProps> = ({
     >
       <AIKnowledgeLevelField control={control} />
       <AIToolsField control={control} />
-      <AIImplementedSolutionsField control={control} />
-      <AIDesiredSolutionsField control={control} />
-      <AIPreviousAttemptsField control={control} />
+
+      {/* Pergunta: Você já implementou alguma solução de IA? */}
+      <div className="space-y-4 bg-gray-50 p-6 rounded-lg">
+        <h3 className="text-lg font-medium text-gray-800">
+          Você já implementou alguma solução de IA?
+        </h3>
+        <Controller
+          control={control}
+          name="has_implemented"
+          rules={{ required: "Selecione uma opção" }}
+          render={({ field, fieldState }) => (
+            <RadioGroup
+              onValueChange={field.onChange}
+              value={field.value}
+              className="flex gap-6 mt-2"
+            >
+              <div className="flex items-center gap-2">
+                <RadioGroupItem value="sim" id="has_implemented_sim" />
+                <label htmlFor="has_implemented_sim" className="text-sm">Sim</label>
+              </div>
+              <div className="flex items-center gap-2">
+                <RadioGroupItem value="nao" id="has_implemented_nao" />
+                <label htmlFor="has_implemented_nao" className="text-sm">Não</label>
+              </div>
+              {fieldState.error && (
+                <span className="text-red-500 text-xs ml-4">{fieldState.error.message}</span>
+              )}
+            </RadioGroup>
+          )}
+        />
+      </div>
+
+      {/* Pergunta: Quais áreas você deseja implementar soluções de IA no seu negócio? */}
+      <div className="space-y-4 bg-gray-50 p-6 rounded-lg">
+        <h3 className="text-lg font-medium text-gray-800">
+          Quais áreas você deseja implementar soluções de IA no seu negócio?
+        </h3>
+        <Controller
+          control={control}
+          name="desired_ai_area"
+          rules={{ required: "Selecione uma área" }}
+          render={({ field, fieldState }) => (
+            <RadioGroup
+              onValueChange={field.onChange}
+              value={field.value}
+              className="flex flex-col gap-3 mt-2"
+            >
+              {desiredAreas.map(opt => (
+                <div key={opt.value} className="flex items-center gap-2">
+                  <RadioGroupItem value={opt.value} id={`area_${opt.value}`} />
+                  <label htmlFor={`area_${opt.value}`} className="text-sm">{opt.label}</label>
+                </div>
+              ))}
+              {fieldState.error && (
+                <span className="text-red-500 text-xs ml-4">{fieldState.error.message}</span>
+              )}
+            </RadioGroup>
+          )}
+        />
+      </div>
+      
       <AIFormationQuestions control={control} />
       <AINPSField control={control} />
       <AISuggestionsField control={control} />
