@@ -9,13 +9,19 @@ interface OnboardingLayoutProps {
   currentStep: number;
   title: string;
   backUrl?: string;
+  totalSteps?: number;
+  progress?: number;
+  hideProgress?: boolean;
 }
 
 export const OnboardingLayout = ({
   children,
   currentStep,
   title,
-  backUrl
+  backUrl,
+  totalSteps = 8,
+  progress,
+  hideProgress = false
 }: OnboardingLayoutProps) => {
   return (
     <div className="min-h-screen bg-gray-900 text-white">
@@ -33,10 +39,12 @@ export const OnboardingLayout = ({
           
           <h1 className="text-3xl font-bold mb-2">{title}</h1>
           
-          <EtapasProgresso
-            currentStep={currentStep}
-            totalSteps={8}
-          />
+          {!hideProgress && (
+            <EtapasProgresso
+              currentStep={currentStep}
+              totalSteps={totalSteps}
+            />
+          )}
         </div>
         
         <div className="bg-gray-800 rounded-lg p-6 shadow-lg">

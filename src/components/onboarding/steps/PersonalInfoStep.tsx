@@ -1,88 +1,117 @@
 
-import { useState } from "react";
+import React from "react";
+import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { OnboardingData } from "@/types/onboarding";
+import { ArrowRight } from "lucide-react";
 
 interface PersonalInfoStepProps {
-  onSubmit: (stepId: string, data: Partial<OnboardingData>) => void;
+  onSubmit: (data: any) => void;
   isSubmitting: boolean;
   isLastStep: boolean;
   onComplete: () => void;
-  initialData?: OnboardingData['personal_info'];
+  initialData?: any;
+  personalInfo?: any;
 }
 
-export const PersonalInfoStep = ({
+export const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
   onSubmit,
   isSubmitting,
-  initialData,
-}: PersonalInfoStepProps) => {
-  const [name, setName] = useState(initialData?.name || '');
-  const [role, setRole] = useState(initialData?.role || '');
-  const [companySize, setCompanySize] = useState(initialData?.company_size || '');
+  initialData
+}) => {
+  const { register, handleSubmit, formState: { errors } } = useForm({
+    defaultValues: {
+      name: initialData?.name || "",
+      email: initialData?.email || "",
+      phone: initialData?.phone || "",
+    }
+  });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSubmit('personal', {
+  const onFormSubmit = (data: any) => {
+    // Estruturando os dados para o formato esperado pelo backend
+    const formattedData = {
       personal_info: {
-        name,
-        role,
-        company_size: companySize,
-      },
-    });
+        name: data.name,
+        email: data.email,
+        phone: data.phone,
+      }
+    };
+    
+    onSubmit(formattedData);
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="name">Nome Completo</Label>
+    <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-6">
+      <div className="bg-gray-700 rounded-lg p-6 space-y-4">
+        <div>
+          <Label htmlFor="name" className="text-white">Nome completo</Label>
           <Input
             id="name"
             placeholder="Seu nome completo"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
+            className="bg-gray-600 border-gray-500 text-white mt-1"
+            {...register("name", { required: "Nome é obrigatório" })}
           />
+          {errors.name && (
+            <p className="text-red-400 text-sm mt-1">{errors.name.message?.toString()}</p>
+          )}
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="role">Sua função na empresa</Label>
+        <div>
+          <Label htmlFor="email" className="text-white">E-mail</Label>
           <Input
-            id="role"
-            placeholder="Ex: CEO, Diretor de Marketing, etc."
-            value={role}
-            onChange={(e) => setRole(e.target.value)}
-            required
+            id="email"
+            type="email"
+            placeholder="seu.email@exemplo.com"
+            className="bg-gray-600 border-gray-500 text-white mt-1"
+            {...register("email", {
+              required: "E-mail é obrigatório",
+              pattern: {
+                value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                message: "Endereço de e-mail inválido"
+              }
+            })}
           />
+          {errors.email && (
+            <p className="text-red-400 text-sm mt-1">{errors.email.message?.toString()}</p>
+          )}
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="company-size">Tamanho da empresa</Label>
-          <Select
-            value={companySize}
-            onValueChange={setCompanySize}
-            required
-          >
-            <SelectTrigger id="company-size">
-              <SelectValue placeholder="Selecione o tamanho da empresa" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="1-10">1-10 funcionários</SelectItem>
-              <SelectItem value="11-50">11-50 funcionários</SelectItem>
-              <SelectItem value="51-200">51-200 funcionários</SelectItem>
-              <SelectItem value="201-500">201-500 funcionários</SelectItem>
-              <SelectItem value="500+">500+ funcionários</SelectItem>
-            </SelectContent>
-          </Select>
+        <div>
+          <Label htmlFor="phone" className="text-white">Telefone</Label>
+          <Input
+            id="phone"
+            placeholder="(00) 00000-0000"
+            className="bg-gray-600 border-gray-500 text-white mt-1"
+            {...register("phone", {
+              pattern: {
+                value: /^\(\d{2}\) \d{4,5}-\d{4}$/,
+                message: "Formato: (00) 00000-0000"
+              }
+            })}
+          />
+          {errors.phone && (
+            <p className="text-red-400 text-sm mt-1">{errors.phone.message?.toString()}</p>
+          )}
         </div>
       </div>
 
-      <Button type="submit" className="w-full" disabled={isSubmitting}>
-        {isSubmitting ? "Salvando..." : "Continuar"}
-      </Button>
+      <div className="flex justify-end">
+        <Button
+          type="submit"
+          className="bg-[#0ABAB5] hover:bg-[#099388] text-white"
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? (
+            "Salvando..."
+          ) : (
+            <span className="flex items-center gap-2">
+              Próximo
+              <ArrowRight className="h-4 w-4" />
+            </span>
+          )}
+        </Button>
+      </div>
     </form>
   );
 };
