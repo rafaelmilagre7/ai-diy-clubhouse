@@ -10,6 +10,8 @@ import MemberLayout from "@/components/layout/MemberLayout";
 interface OnboardingLayoutProps {
   children: React.ReactNode;
   currentStep: number;
+  totalSteps?: number;
+  progress?: number;
   title: string;
   backUrl?: string;
   onStepClick?: (step: number) => void;
@@ -19,6 +21,8 @@ interface OnboardingLayoutProps {
 export const OnboardingLayout = ({
   children,
   currentStep,
+  totalSteps,
+  progress,
   title,
   backUrl = "/onboarding",
   onStepClick,
@@ -81,7 +85,7 @@ export const OnboardingLayout = ({
       {!hideProgress && (
         <EtapasProgresso 
           currentStep={currentStep} 
-          totalSteps={8} 
+          totalSteps={totalSteps || 8} 
           onStepClick={handleStepClick}
         />
       )}
