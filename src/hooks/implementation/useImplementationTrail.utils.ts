@@ -10,5 +10,12 @@ export const hasTrailContent = (trail: any): boolean => {
   const priority2 = Array.isArray(trail.priority2) && trail.priority2.length > 0;
   const priority3 = Array.isArray(trail.priority3) && trail.priority3.length > 0;
   
+  // Log para debug
+  console.log("Verificando conteúdo da trilha:", { 
+    temPrioridade1: priority1, 
+    temPrioridade2: priority2, 
+    temPrioridade3: priority3 
+  });
+  
   return priority1 || priority2 || priority3;
 };

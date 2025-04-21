@@ -21,6 +21,7 @@ const TrailGeneration = () => {
   
   const [generatingTrail, setGeneratingTrail] = useState(false);
   const [showMagicExperience, setShowMagicExperience] = useState(false);
+  const [autoStartGeneration, setAutoStartGeneration] = useState(false);
 
   // Carregar trilha existente ao montar o componente
   useEffect(() => {
@@ -55,6 +56,7 @@ const TrailGeneration = () => {
   // Quando a animação terminar, permanecer na página atual mostrando a trilha
   const handleMagicFinish = () => {
     setShowMagicExperience(false);
+    setAutoStartGeneration(false);
   };
 
   // Voltar para a página de onboarding

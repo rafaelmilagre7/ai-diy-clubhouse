@@ -7,7 +7,7 @@ import { toast } from "sonner";
 
 export const useTrailGuidedExperience = () => {
   const navigate = useNavigate();
-  const { trail, isLoading, generateImplementationTrail } = useImplementationTrail();
+  const { trail, isLoading, generateImplementationTrail, refreshTrail } = useImplementationTrail();
   const { solutions: allSolutions, loading: solutionsLoading } = useSolutionsData();
   const [started, setStarted] = useState(false);
   const [currentStepIdx, setCurrentStepIdx] = useState(0);
@@ -60,10 +60,26 @@ export const useTrailGuidedExperience = () => {
 
   // Detectar se já temos trilha ao carregar o componente
   useEffect(() => {
-    if (!isLoading && trail && solutionsList.length > 0) {
-      setStarted(true); // Se temos uma trilha, já iniciamos
-    }
-  }, [isLoading, trail, solutionsList]);
+    const checkExistingTrail = async () => {
+      try {
+        // Se estiver carregando, aguardar
+        if (isLoading) return;
+        
+        // Se já temos soluções carregadas, marcar como iniciado
+        if (solutionsList.length > 0) {
+          console.log("Trilha já existe com", solutionsList.length, "soluções");
+          setStarted(true);
+        } else {
+          console.log("Não há trilha iniciada ainda");
+          setStarted(false);
+        }
+      } catch (error) {
+        console.error("Erro ao verificar trilha existente:", error);
+      }
+    };
+    
+    checkExistingTrail();
+  }, [isLoading, solutionsList.length]);
 
   // Handler para iniciar a geração da trilha
   const handleStartGeneration = useCallback(async () => {
@@ -71,20 +87,26 @@ export const useTrailGuidedExperience = () => {
     setRegenerating(true);
 
     try {
+      // Tentar obter a trilha novamente do servidor antes de gerar
+      await refreshTrail(true);
+      
+      // Verificar se a trilha já existe e, caso não exista, gerar uma nova
       await generateImplementationTrail();
       toast.success("Trilha personalizada gerada com sucesso!");
+      setStarted(true);
     } catch (error) {
       console.error("Erro ao gerar a trilha:", error);
       toast.error("Erro ao gerar a trilha personalizada.");
+    } finally {
+      setRegenerating(false);
     }
-  }, [generateImplementationTrail]);
+  }, [generateImplementationTrail, refreshTrail]);
 
   const handleMagicFinish = useCallback(() => {
     setShowMagicExperience(false);
     setStarted(true);
     setCurrentStepIdx(0);
     setTypingFinished(false);
-    setRegenerating(false);
   }, []);
 
   const handleNext = useCallback(() => {
@@ -128,4 +150,3 @@ export const useTrailGuidedExperience = () => {
     handleTypingComplete
   };
 };
-

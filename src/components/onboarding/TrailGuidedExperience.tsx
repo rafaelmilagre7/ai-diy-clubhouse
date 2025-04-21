@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { TrailMagicExperience } from "./TrailMagicExperience";
@@ -9,7 +9,7 @@ import { TrailCurrentSolutionCard } from "./TrailCurrentSolutionCard";
 import { useTrailGuidedExperience } from "@/hooks/implementation/useTrailGuidedExperience";
 
 // Componente principal refatorado
-export const TrailGuidedExperience = () => {
+export const TrailGuidedExperience = ({ autoStart = false }) => {
   const {
     isLoading,
     regenerating,
@@ -27,6 +27,14 @@ export const TrailGuidedExperience = () => {
     handleSelectSolution,
     handleTypingComplete
   } = useTrailGuidedExperience();
+
+  // Iniciar geração automaticamente se autoStart for true
+  useEffect(() => {
+    if (autoStart && !started && !isLoading && !regenerating && !showMagicExperience) {
+      console.log("Iniciando geração automática da trilha");
+      handleStartGeneration();
+    }
+  }, [autoStart, started, isLoading, regenerating, showMagicExperience, handleStartGeneration]);
 
   if (showMagicExperience) {
     return <TrailMagicExperience onFinish={handleMagicFinish} />;
@@ -99,4 +107,3 @@ export const TrailGuidedExperience = () => {
     </div>
   );
 };
-
