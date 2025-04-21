@@ -6,7 +6,7 @@ import { ProfessionalDataStep } from "@/components/onboarding/steps/Professional
 import { MilagrinhoMessage } from "@/components/onboarding/MilagrinhoMessage";
 
 const ProfessionalData = () => {
-  const { saveStepData, progress } = useOnboardingSteps();
+  const { saveStepData, progress, completeOnboarding } = useOnboardingSteps();
 
   return (
     <OnboardingLayout
@@ -23,6 +23,7 @@ const ProfessionalData = () => {
           isSubmitting={false}
           initialData={progress}
           isLastStep={false}
+          onComplete={completeOnboarding}
         />
       </div>
     </OnboardingLayout>

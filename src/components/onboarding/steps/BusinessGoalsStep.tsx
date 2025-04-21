@@ -28,6 +28,7 @@ export const BusinessGoalsStep = ({
   onSubmit,
   isSubmitting,
   initialData,
+  onComplete,
 }: BusinessGoalsStepProps) => {
   const { control, handleSubmit, formState: { errors } } = useForm<FormValues>({
     defaultValues: {

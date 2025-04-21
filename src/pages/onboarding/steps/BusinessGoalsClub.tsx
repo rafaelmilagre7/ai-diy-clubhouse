@@ -6,7 +6,7 @@ import { BusinessGoalsStep } from "@/components/onboarding/steps/BusinessGoalsSt
 import { MilagrinhoMessage } from "@/components/onboarding/MilagrinhoMessage";
 
 const BusinessGoalsClub = () => {
-  const { saveStepData, progress } = useOnboardingSteps();
+  const { saveStepData, progress, completeOnboarding } = useOnboardingSteps();
 
   return (
     <OnboardingLayout
@@ -23,6 +23,7 @@ const BusinessGoalsClub = () => {
           isSubmitting={false}
           initialData={progress?.business_goals}
           isLastStep={false}
+          onComplete={completeOnboarding}
         />
       </div>
     </OnboardingLayout>

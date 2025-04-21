@@ -28,6 +28,7 @@ export const ProfessionalDataStep = ({
   onSubmit,
   isSubmitting,
   initialData,
+  onComplete,
 }: ProfessionalDataStepProps) => {
   const { control, handleSubmit, formState: { errors } } = useForm<FormValues>({
     defaultValues: {
