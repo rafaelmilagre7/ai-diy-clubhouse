@@ -30,11 +30,20 @@ export const TrailGuidedExperience = ({ autoStart = false }) => {
 
   // Iniciar geração automaticamente se autoStart for true
   useEffect(() => {
-    if (autoStart && !started && !isLoading && !regenerating && !showMagicExperience) {
+    if (autoStart && !started && !isLoading && !regenerating && !showMagicExperience && solutionsList.length === 0) {
       console.log("Iniciando geração automática da trilha");
       handleStartGeneration();
     }
-  }, [autoStart, started, isLoading, regenerating, showMagicExperience, handleStartGeneration]);
+  }, [autoStart, started, isLoading, regenerating, showMagicExperience, solutionsList.length, handleStartGeneration]);
+
+  // Se já temos soluções mas não iniciou, auto-iniciar a visualização
+  useEffect(() => {
+    if (solutionsList.length > 0 && !started && !isLoading && !regenerating && !showMagicExperience) {
+      console.log("Iniciando visualização automática da trilha existente");
+      // Setamos started = true diretamente no componente
+      handleStartGeneration(false); // false indica que não precisamos regenerar
+    }
+  }, [solutionsList, started, isLoading, regenerating, showMagicExperience, handleStartGeneration]);
 
   if (showMagicExperience) {
     return <TrailMagicExperience onFinish={handleMagicFinish} />;

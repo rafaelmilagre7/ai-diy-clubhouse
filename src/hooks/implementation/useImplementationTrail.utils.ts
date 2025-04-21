@@ -14,7 +14,8 @@ export const hasTrailContent = (trail: any): boolean => {
   console.log("Verificando conteúdo da trilha:", { 
     temPrioridade1: priority1, 
     temPrioridade2: priority2, 
-    temPrioridade3: priority3 
+    temPrioridade3: priority3,
+    trail 
   });
   
   return priority1 || priority2 || priority3;

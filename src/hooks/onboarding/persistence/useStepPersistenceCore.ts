@@ -85,9 +85,9 @@ export function useStepPersistenceCore({
       
       toast.success("Onboarding concluído com sucesso!");
       setTimeout(() => {
-        // Redirecionar para a página de geração de trilha em vez do dashboard
-        navigate("/onboarding/trail-generation");
-      }, 500);
+        // Redirecionar para a página de geração de trilha com parâmetro para iniciar automaticamente
+        navigate("/onboarding/trail-generation?autoGenerate=true");
+      }, 800);
     } catch (error) {
       console.error("Erro ao completar onboarding:", error);
       toast.error("Erro ao finalizar onboarding. Por favor, tente novamente.");

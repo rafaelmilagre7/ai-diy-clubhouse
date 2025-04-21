@@ -37,7 +37,18 @@ const TrailGeneration = () => {
     console.log("Componente TrailGeneration montado");
   }, [refreshTrail]);
 
-  // Função para iniciar a experiência mágica e gerar a trilha
+  // Auto-iniciar geração se chegou da página de onboarding "concluído"
+  useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+    const autoGenerate = searchParams.get('autoGenerate') === 'true';
+    
+    if (autoGenerate && !generatingTrail && !hasContent) {
+      console.log("Iniciando geração automática da trilha após conclusão do onboarding");
+      startTrailGeneration();
+    }
+  }, []);
+
+  // Função para iniciar a experiência mágica e gerar a trilha diretamente
   const startTrailGeneration = async () => {
     setShowMagicExperience(true);
     setGeneratingTrail(true);
@@ -53,10 +64,10 @@ const TrailGeneration = () => {
     }
   };
 
-  // Quando a animação terminar, permanecer na página atual mostrando a trilha
+  // Quando a animação terminar, mostrar a trilha gerada
   const handleMagicFinish = () => {
     setShowMagicExperience(false);
-    setAutoStartGeneration(false);
+    setAutoStartGeneration(true);
   };
 
   // Voltar para a página de onboarding
@@ -110,7 +121,7 @@ const TrailGeneration = () => {
                 ) : "Gerar Nova Trilha"}
               </Button>
             </div>
-            <TrailGuidedExperience />
+            <TrailGuidedExperience autoStart={autoStartGeneration} />
           </>
         ) : (
           <div className="flex flex-col items-center justify-center space-y-6 py-12">

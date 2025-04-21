@@ -43,20 +43,22 @@ export const useImplementationTrail = () => {
       setIsLoading(true);
       console.log("Carregando trilha existente para usuário:", user.id);
       
+      // Modificado para buscar todas as trilhas e pegar a mais recente
       const { data, error: loadError } = await supabase
         .from("implementation_trails")
         .select("*")
         .eq("user_id", user.id)
-        .maybeSingle();
+        .order('updated_at', { ascending: false })
+        .limit(1);
 
       if (loadError) {
         console.error("Erro ao carregar trilha:", loadError);
         throw loadError;
       }
 
-      if (data && data.trail_data) {
-        console.log("Trilha encontrada no banco:", data.updated_at);
-        const trailData = data.trail_data as ImplementationTrail;
+      if (data && data.length > 0 && data[0].trail_data) {
+        console.log("Trilha encontrada no banco:", data[0].updated_at);
+        const trailData = data[0].trail_data as ImplementationTrail;
         
         if (hasTrailContent(trailData)) {
           console.log("Trilha com conteúdo válido encontrada");
@@ -80,6 +82,43 @@ export const useImplementationTrail = () => {
       setIsLoading(false);
     }
   }, [user, trail, lastUpdated]);
+
+  // Limpar trilhas duplicadas e manter apenas a mais recente
+  const cleanupDuplicateTrails = useCallback(async () => {
+    if (!user) return;
+
+    try {
+      console.log("Verificando trilhas duplicadas...");
+      
+      // Buscar todas as trilhas do usuário
+      const { data, error } = await supabase
+        .from("implementation_trails")
+        .select("*")
+        .eq("user_id", user.id)
+        .order('updated_at', { ascending: false });
+        
+      if (error) throw error;
+      
+      // Se tiver mais de uma trilha, remover as duplicatas mantendo a mais recente
+      if (data && data.length > 1) {
+        console.log(`Encontradas ${data.length} trilhas. Removendo duplicatas...`);
+        
+        // Pular a primeira (mais recente) e deletar as demais
+        const trailsToDelete = data.slice(1).map(t => t.id);
+        
+        const { error: deleteError } = await supabase
+          .from("implementation_trails")
+          .delete()
+          .in("id", trailsToDelete);
+          
+        if (deleteError) throw deleteError;
+        
+        console.log(`${trailsToDelete.length} trilhas duplicadas removidas com sucesso.`);
+      }
+    } catch (err) {
+      console.error("Erro ao limpar trilhas duplicadas:", err);
+    }
+  }, [user]);
 
   const generateImplementationTrail = async (onboardingData: any = null) => {
     if (!user) {
@@ -128,6 +167,9 @@ export const useImplementationTrail = () => {
       if (hasTrailContent(data.recommendations)) {
         setTrail(data.recommendations);
         setLastUpdated(new Date());
+        
+        // Limpar trilhas duplicadas antes de salvar nova
+        await cleanupDuplicateTrails();
         
         await saveImplementationTrail(user.id, data.recommendations);
         
@@ -180,7 +222,10 @@ export const useImplementationTrail = () => {
 
   useEffect(() => {
     loadExistingTrail();
-  }, [loadExistingTrail]);
+    
+    // Limpar trilhas duplicadas ao inicializar o hook
+    cleanupDuplicateTrails();
+  }, [loadExistingTrail, cleanupDuplicateTrails]);
 
   return {
     trail,

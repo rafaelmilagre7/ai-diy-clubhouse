@@ -82,7 +82,13 @@ export const useTrailGuidedExperience = () => {
   }, [isLoading, solutionsList.length]);
 
   // Handler para iniciar a geração da trilha
-  const handleStartGeneration = useCallback(async () => {
+  const handleStartGeneration = useCallback(async (shouldRegenerate = true) => {
+    // Se não devemos regenerar, apenas iniciar a visualização
+    if (!shouldRegenerate) {
+      setStarted(true);
+      return;
+    }
+    
     setShowMagicExperience(true);
     setRegenerating(true);
 
@@ -91,8 +97,11 @@ export const useTrailGuidedExperience = () => {
       await refreshTrail(true);
       
       // Verificar se a trilha já existe e, caso não exista, gerar uma nova
-      await generateImplementationTrail();
-      toast.success("Trilha personalizada gerada com sucesso!");
+      if (shouldRegenerate) {
+        await generateImplementationTrail();
+        toast.success("Trilha personalizada gerada com sucesso!");
+      }
+      
       setStarted(true);
     } catch (error) {
       console.error("Erro ao gerar a trilha:", error);

@@ -60,9 +60,8 @@ const Onboarding = () => {
   }, [isOnboardingCompleted, hasContent, trailLoading]);
 
   // Redireciona para a página de geração de trilha 
-  // e passa o comando para iniciar a geração automaticamente
   const handleGenerateTrail = useCallback(() => {
-    navigate("/onboarding/trail-generation");
+    navigate("/onboarding/trail-generation?autoGenerate=true");
   }, [navigate]);
 
   // Carregamento inicial
