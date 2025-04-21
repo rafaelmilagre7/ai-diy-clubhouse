@@ -16,6 +16,7 @@ const Onboarding = () => {
   const { user } = useAuth();
   const { progress, isLoading: progressLoading } = useProgress();
   const navigate = useNavigate();
+  
   // Exibe painel da trilha se ela existir, exceto ao gerar agora
   const [showTrailPanel, setShowTrailPanel] = useState(false);
 
@@ -23,7 +24,6 @@ const Onboarding = () => {
   const { 
     trail, 
     isLoading: trailLoading, 
-    generateImplementationTrail,
     refreshTrail,
     hasContent
   } = useImplementationTrail();
@@ -55,19 +55,10 @@ const Onboarding = () => {
     }
   }, [isOnboardingCompleted, hasContent, trailLoading]);
 
-  // Função para gerar trilha com feedback aprimorado
-  const handleGenerateTrail = useCallback(async () => {
-    try {
-      toast.loading("Gerando sua trilha personalizada...");
-      await generateImplementationTrail();
-      toast.dismiss();
-      setShowTrailPanel(true);
-    } catch (error) {
-      toast.dismiss();
-      console.error("Erro ao gerar trilha:", error);
-      toast.error("Ocorreu um erro ao gerar sua trilha. Tente novamente.");
-    }
-  }, [generateImplementationTrail]);
+  // Redireciona para a página de geração de trilha
+  const handleGenerateTrail = useCallback(() => {
+    navigate("/onboarding/trail-generation");
+  }, [navigate]);
 
   // Carregamento inicial
   if (progressLoading) {
@@ -107,13 +98,14 @@ const Onboarding = () => {
                   Onboarding Completo!
                 </h3>
                 <p className="text-gray-600 text-sm">
-                  Edite suas respostas sempre que precisar. Você pode acessar sua trilha já gerada ou atualizar para uma nova a qualquer momento!
+                  Edite suas respostas sempre que precisar. Você pode acessar sua trilha já gerada ou gerar uma nova a qualquer momento!
                 </p>
               </div>
               <div className="flex gap-2">
                 <Button variant="outline" onClick={() => navigate("/onboarding/review")}>
                   Revisar/Editar Respostas
                 </Button>
+                
                 {/* Exibe botões com base na existência da trilha */}
                 {trailLoading ? (
                   <Button disabled className="bg-gray-200 text-gray-500">
@@ -131,29 +123,30 @@ const Onboarding = () => {
                   <Button
                     className="bg-[#0ABAB5] text-white hover:bg-[#09a19c]"
                     onClick={handleGenerateTrail}
-                    disabled={trailLoading}
                   >
                     Gerar Trilha Personalizada
                   </Button>
                 )}
+                
                 {hasContent && (
                   <Button
                     variant="secondary"
                     className="border-[#0ABAB5] text-[#0ABAB5]"
                     onClick={handleGenerateTrail}
-                    disabled={trailLoading}
                   >
                     Gerar Nova Trilha
                   </Button>
                 )}
               </div>
             </div>
+            
             {/* Exibe painel da trilha já carregada logo abaixo do header quando a trilha existe e não está carregando */}
             {showTrailPanel && hasContent && !trailLoading && (
               <div className="mt-8">
                 <TrailGenerationPanel onClose={() => setShowTrailPanel(false)} />
               </div>
             )}
+            
             {/* Em loading */}
             {showTrailPanel && trailLoading && (
               <div className="flex flex-col items-center gap-4 py-8 mt-8">
@@ -161,6 +154,7 @@ const Onboarding = () => {
                 <span className="text-[#0ABAB5] font-medium">Carregando sua trilha personalizada...</span>
               </div>
             )}
+            
             {/* Caso não haja trilha após abertura do painel */}
             {showTrailPanel && !hasContent && !trailLoading && (
               <div className="text-center mt-8 p-6 bg-gray-50 rounded-lg border border-gray-100">

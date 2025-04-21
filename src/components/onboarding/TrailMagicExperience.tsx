@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { MagicScene } from './three/MagicScene';
 import { Loader2 } from 'lucide-react';
