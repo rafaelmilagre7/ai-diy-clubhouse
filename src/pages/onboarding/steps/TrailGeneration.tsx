@@ -52,7 +52,7 @@ const TrailGeneration = () => {
     }
   };
 
-  // Quando a animação terminar, mostrar a experiência guiada
+  // Quando a animação terminar, permanecer na página atual mostrando a trilha
   const handleMagicFinish = () => {
     setShowMagicExperience(false);
   };

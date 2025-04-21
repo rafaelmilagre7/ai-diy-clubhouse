@@ -1,13 +1,14 @@
 
 /**
- * Funções utilitárias para useImplementationTrail
+ * Verifica se a trilha de implementação contém dados válidos
  */
-
-import { ImplementationTrail } from "./useImplementationTrail";
-
-export const hasTrailContent = (trailData: ImplementationTrail | null): boolean => {
-  if (!trailData) return false;
-  return Object.values(trailData).some(
-    arr => Array.isArray(arr) && arr.length > 0
-  );
+export const hasTrailContent = (trail: any): boolean => {
+  if (!trail) return false;
+  
+  // Verificar se pelo menos uma das prioridades tem conteúdo
+  const priority1 = Array.isArray(trail.priority1) && trail.priority1.length > 0;
+  const priority2 = Array.isArray(trail.priority2) && trail.priority2.length > 0;
+  const priority3 = Array.isArray(trail.priority3) && trail.priority3.length > 0;
+  
+  return priority1 || priority2 || priority3;
 };

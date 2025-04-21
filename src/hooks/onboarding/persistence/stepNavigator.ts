@@ -29,7 +29,7 @@ export function navigateAfterStep(stepId: string, currentStepIndex: number, navi
   } else if (stepId === "complementary_info") {
     nextPath = "/onboarding/review";
   } else if (stepId === "review") {
-    nextPath = "/dashboard";
+    nextPath = "/onboarding/trail-generation";
   } else {
     // fallback genérico pelo steps[]
     const nextStepIndex = Math.min(currentStepIndex + 1, steps.length - 1);

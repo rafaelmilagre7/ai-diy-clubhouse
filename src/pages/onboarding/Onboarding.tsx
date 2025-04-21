@@ -38,7 +38,11 @@ const Onboarding = () => {
   // Carregar trilha ao montar ou ao progredir onboarding
   useEffect(() => {
     const loadTrail = async () => {
-      await refreshTrail(true);
+      try {
+        await refreshTrail(true);
+      } catch (error) {
+        console.error("Erro ao carregar trilha:", error);
+      }
     };
     loadTrail();
   }, [refreshTrail]);
