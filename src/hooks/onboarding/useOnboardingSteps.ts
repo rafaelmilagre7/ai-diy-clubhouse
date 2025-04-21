@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useProgress } from "./useProgress";
-import { useStepPersistenceCore } from "./persistence/useStepPersistenceCore";
+import { useStepPersistenceCore } from "./useStepPersistenceCore";
 import { steps } from "./useStepDefinitions";
 
 export const useOnboardingSteps = () => {

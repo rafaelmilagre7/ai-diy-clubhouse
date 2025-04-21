@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/auth';
 import { steps } from '@/hooks/onboarding/useStepDefinitions';
+import { OnboardingSteps } from './OnboardingSteps';
 
 interface OnboardingFormData {
   name: string;
@@ -75,29 +76,15 @@ export const UnifiedOnboardingForm: React.FC = () => {
     }
   };
 
-  // Renderizar as etapas do onboarding seguindo o fluxo de 8 etapas
-  const renderStepContent = () => {
-    // Aqui você pode implementar a lógica para renderizar cada etapa
-    switch(currentStep) {
-      case 0:
-        return <div>Etapa 1: Dados Pessoais</div>;
-      case 1:
-        return <div>Etapa 2: Dados Profissionais</div>;
-      // ... implementar as demais etapas
-      default:
-        return <div>Etapa não encontrada</div>;
-    }
-  };
-
   return (
     <div className="space-y-8">
-      <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-xl font-semibold mb-4">Onboarding do VIVER DE IA Club</h2>
-        <p className="text-gray-600 mb-6">
+      <div className="bg-gray-800 rounded-lg shadow p-6">
+        <h2 className="text-xl font-semibold mb-4 text-white">Onboarding do VIVER DE IA Club</h2>
+        <p className="text-gray-400 mb-6">
           Etapa {currentStep + 1} de {steps.length}
         </p>
         
-        {renderStepContent()}
+        <OnboardingSteps />
         
         <div className="flex justify-between mt-8">
           <Button
@@ -117,6 +104,7 @@ export const UnifiedOnboardingForm: React.FC = () => {
               }
             }}
             disabled={isSubmitting}
+            className="bg-[#0ABAB5] hover:bg-[#0ABAB5]/90"
           >
             {currentStep < steps.length - 1 ? 'Próximo' : 'Finalizar'}
           </Button>
