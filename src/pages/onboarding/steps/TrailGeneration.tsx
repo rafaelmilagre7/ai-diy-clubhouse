@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
@@ -15,13 +14,11 @@ const TrailGeneration = () => {
   const navigate = useNavigate();
   const [isCompleting, setIsCompleting] = useState(false);
   
-  // Extrair primeiro nome para mensagem de boas-vindas
   const firstName = user?.user_metadata?.name?.split(' ')[0] || user?.email?.split('@')[0] || '';
   
   const handleComplete = async () => {
     setIsCompleting(true);
     try {
-      // Já estamos na página final, apenas navegar para o dashboard
       toast.success("Onboarding concluído com sucesso!");
       navigate("/dashboard", { replace: true });
     } catch (error) {
@@ -45,13 +42,12 @@ const TrailGeneration = () => {
             Parabéns, {firstName}!
           </h2>
           <p className="text-gray-600 mt-2">
-            Com base nas suas informações, criamos uma trilha personalizada de soluções de IA para seu negócio.
-            Estas soluções foram cuidadosamente selecionadas para maximizar os resultados com base no seu contexto.
+            Com base nas suas respostas, criamos uma trilha personalizada de soluções de IA para seu negócio.
+            <br />
+            <span className="font-semibold text-[#0ABAB5]">Aproveite nossa recomendação IA e clique para começar a implementar a solução ideal para você!</span>
           </p>
         </div>
-
         <TrailGenerationPanel />
-
         <div className="flex justify-between mt-8">
           <Button 
             variant="outline" 
@@ -60,7 +56,6 @@ const TrailGeneration = () => {
           >
             <ArrowLeft className="h-4 w-4" /> Voltar para Revisão
           </Button>
-          
           <Button 
             className="bg-[#0ABAB5] hover:bg-[#09a29d] text-white"
             onClick={handleComplete}

@@ -1,4 +1,3 @@
-
 import React, { useRef, useState } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import * as THREE from "three";
@@ -88,7 +87,7 @@ function MagicSphere({ stage }: { stage: number }) {
 export function TrailMagicExperience({ onFinish, onStep }: TrailMagicExperienceProps) {
   const [currStep, setCurrStep] = useState(0);
 
-  // Avança etapas com clique ou timeout auto (exceto última etapa)
+  // Modificado: Apenas avança com clique (sem timeout)
   const handleNext = () => {
     if (currStep < steps.length - 1) {
       setCurrStep((s) => {
@@ -100,14 +99,6 @@ export function TrailMagicExperience({ onFinish, onStep }: TrailMagicExperienceP
       onFinish();
     }
   };
-
-  // Avançar automaticamente se não clicar
-  React.useEffect(() => {
-    if (currStep < steps.length - 1) {
-      const tm = setTimeout(() => handleNext(), 2100 + currStep * 650);
-      return () => clearTimeout(tm);
-    }
-  }, [currStep]);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70 animate-fade-in">
@@ -131,25 +122,16 @@ export function TrailMagicExperience({ onFinish, onStep }: TrailMagicExperienceP
             <div>{steps[currStep].icon}</div>
             <h2 className="text-2xl font-bold mt-2 text-[#0ABAB5]">{steps[currStep].title}</h2>
             <p className="mt-2 text-base text-gray-700">{steps[currStep].description}</p>
-            {currStep < steps.length - 1 ? (
-              <Button
-                onClick={handleNext}
-                className="mt-8 bg-[#0ABAB5] text-white text-lg px-6 py-2 rounded-full hover:bg-[#099d94] animate-fade-in"
-              >
-                {currStep === 0
+            <Button
+              onClick={handleNext}
+              className="mt-8 bg-[#0ABAB5] text-white text-lg px-6 py-2 rounded-full hover:bg-[#099d94] animate-fade-in"
+            >
+              {currStep < steps.length - 1
+                ? currStep === 0
                   ? "Começar"
-                  : currStep === 1
-                  ? "Avançar"
-                  : "Ver Minha Trilha"}
-              </Button>
-            ) : (
-              <Button
-                onClick={onFinish}
-                className="mt-8 bg-[#0ABAB5] text-white text-lg px-6 py-2 rounded-full hover:bg-[#099d94] animate-fade-in"
-              >
-                Ver Minha Trilha
-              </Button>
-            )}
+                  : "Avançar"
+                : "Ver Minha Trilha"}
+            </Button>
           </div>
         </div>
       </div>

@@ -18,6 +18,12 @@ export function TrailCardList({ solutions, onSolutionClick, onSeeAll }: TrailCar
   const priority2 = sortedSolutions.filter(s => s.priority === 2);
   const priority3 = sortedSolutions.filter(s => s.priority === 3);
 
+  // Corrigir bug: garantir título sempre visível (fallback)
+  const safeGetTitle = (solution: any) => 
+    solution.title && typeof solution.title === "string"
+      ? solution.title
+      : "Solução sem título";
+
   // Renderizar grupo visual para cada prioridade com divisória moderna
   const renderPriorityGroup = (title: string, solutions: any[], color: string, border?: boolean) => {
     if (solutions.length === 0) return null;
@@ -34,7 +40,7 @@ export function TrailCardList({ solutions, onSolutionClick, onSeeAll }: TrailCar
           {solutions.map(solution => (
             <TrailSolutionCard
               key={solution.solutionId}
-              solution={solution}
+              solution={{ ...solution, title: safeGetTitle(solution) }}
               onClick={onSolutionClick}
             />
           ))}

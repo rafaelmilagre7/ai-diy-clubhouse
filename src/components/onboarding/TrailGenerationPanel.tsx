@@ -17,13 +17,16 @@ export const TrailGenerationPanel = ({ onClose }: { onClose?: () => void }) => {
   // Montar soluções da trilha
   let solutions: any[] = [];
   if (trail) {
-    // Unifica todas prioridades em lista única para o TrailCardList
     ["priority1", "priority2", "priority3"].forEach((priorityLevel, idx) => {
       const items = (trail as any)[priorityLevel] || [];
       items.forEach((item) => {
+        // Garantir que title/description existe (fallback para mostrar erro, não vazio)
         solutions.push({
           ...item,
           priority: idx + 1,
+          title: item.title || "Solução sem título",
+          description: item.description || "Sem descrição disponível.",
+          solutionId: item.solutionId || item.id || "sem-id"
         });
       });
     });
@@ -44,7 +47,6 @@ export const TrailGenerationPanel = ({ onClose }: { onClose?: () => void }) => {
   };
 
   if ((isLoading || regenerating) && !showMagic) {
-    // Esse estado só será mostrado se for carregamento inicial e não a experiência mágica
     return (
       <div className="flex flex-col items-center gap-4 py-8">
         <Loader2 className="h-8 w-8 text-[#0ABAB5] animate-spin" />
@@ -72,16 +74,26 @@ export const TrailGenerationPanel = ({ onClose }: { onClose?: () => void }) => {
   }
 
   return (
-    <Card className="w-full bg-gradient-to-br from-[#0ABAB5]/10 to-white border-[#0ABAB5]/15">
-      <CardHeader>
-        <CardTitle className="text-2xl text-[#0ABAB5]">
-          Sua Trilha Personalizada
-        </CardTitle>
-        <CardDescription>
-          Estas são as soluções que vão gerar mais resultado de acordo com seu perfil!
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
+    <div>
+      {/* Painel GRANDE com orientação IA e a trilha exibida */}
+      <div className="w-full bg-gradient-to-br from-[#0ABAB5]/5 to-white border-[#0ABAB5]/15 rounded-2xl shadow p-8 mb-4 animate-fade-in">
+        <div className="mb-6">
+          <h2 className="text-3xl font-extrabold text-[#0ABAB5] mb-2 text-center">
+            Pronto! Sua jornada está aqui ✨
+          </h2>
+          <div className="text-lg text-gray-700 max-w-2xl mx-auto text-center">
+            <span className="font-semibold">Recomendação IA Milagrinho:</span> <br />
+            <span>
+              Com base em tudo que você compartilhou, estas são as{" "}
+              <span className="text-[#0ABAB5] font-bold">soluções mais alinhadas</span> ao momento da sua empresa.
+              <br />
+              <span className="font-medium">
+                * Escolha a que faz mais sentido, aprofunde na justificativa indicada e clique para começar a implementar, focando no resultado! *
+              </span>
+            </span>
+          </div>
+        </div>
+
         <TrailCardList
           solutions={solutions}
           onSolutionClick={(id) => navigate(`/solution/${id}`)}
@@ -101,7 +113,7 @@ export const TrailGenerationPanel = ({ onClose }: { onClose?: () => void }) => {
             </Button>
           )}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
