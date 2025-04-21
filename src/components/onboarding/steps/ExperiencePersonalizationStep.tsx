@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import { useExperiencePersonalizationForm } from "./ExperiencePersonalizationSections/useExperiencePersonalizationForm";
@@ -42,22 +42,16 @@ export const ExperiencePersonalizationStep: React.FC<ExperiencePersonalizationSt
     }
   };
 
-  // Força uma nova verificação de validação quando o componente monta
-  React.useEffect(() => {
-    // Verifica se os dados iniciais existem e preenchem os requisitos
-    if (initialData?.interests?.length && 
-        initialData?.time_preference?.length && 
-        initialData?.available_days?.length && 
-        initialData?.skills_to_share?.length && 
-        initialData?.mentorship_topics?.length) {
-      // Se tiver dados iniciais válidos, força uma marcação como "dirty"
-      // Isso ajuda a ativar o botão quando há dados preenchidos
-    }
-  }, [initialData]);
-
   // Esta variável determina se mostramos os erros de validação
   // Mostraremos se o usuário tentou enviar o formulário OU se algum campo já foi modificado
-  const showValidationErrors = attemptedSubmit || isDirty;
+  const showValidationErrors = attemptedSubmit;
+
+  // Logs para depuração
+  useEffect(() => {
+    console.log("isValid:", isValid);
+    console.log("initialData:", initialData);
+    console.log("Current form values:", watch());
+  }, [isValid, initialData, watch]);
 
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-8">
@@ -116,7 +110,7 @@ export const ExperiencePersonalizationStep: React.FC<ExperiencePersonalizationSt
         <Button
           type="submit"
           className="min-w-[120px] bg-[#0ABAB5] hover:bg-[#0ABAB5]/90"
-          disabled={isSubmitting}
+          disabled={isSubmitting || (!isValid && attemptedSubmit)}
         >
           {isSubmitting ? (
             "Salvando..."

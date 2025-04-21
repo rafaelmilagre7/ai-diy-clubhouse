@@ -1,6 +1,7 @@
 
-import { useMemo } from "react";
+import { useMemo, useEffect } from "react";
 import { useForm } from "react-hook-form";
+import { console } from 'console';
 
 // Definindo um tipo para os nomes dos campos do formulário
 export type FormFieldNames = 
@@ -31,21 +32,37 @@ export function useExperiencePersonalizationForm(initialData: Partial<Experience
       skills_to_share: initialData.skills_to_share || [],
       mentorship_topics: initialData.mentorship_topics || [],
     },
-    mode: "onChange" // Mudando para validar em tempo real
+    mode: "onChange"
   });
 
-  const { watch, setValue, formState } = form;
+  const { watch, setValue, trigger, formState } = form;
+  const formValues = watch();
 
-  // Função simplificada que verifica se todos os campos obrigatórios estão preenchidos
-  const isValid = useMemo(() => {
-    const formValues = watch();
+  // Efeito para forçar validação quando o componente é montado
+  useEffect(() => {
+    // Verificar se temos dados iniciais válidos
+    const hasInitialData = 
+      initialData?.interests?.length > 0 && 
+      initialData?.time_preference?.length > 0 && 
+      initialData?.available_days?.length > 0 && 
+      initialData?.skills_to_share?.length > 0 && 
+      initialData?.mentorship_topics?.length > 0 && 
+      typeof initialData?.networking_availability === 'number';
     
+    if (hasInitialData) {
+      // Forçar validação para atualizar o estado isValid
+      trigger();
+    }
+  }, [initialData, trigger]);
+
+  // Função para verificar se todos os campos obrigatórios estão preenchidos
+  const isValid = useMemo(() => {
     // Verifica se todos os arrays têm pelo menos um item
-    const hasInterests = formValues.interests.length > 0;
-    const hasTimePreference = formValues.time_preference.length > 0;
-    const hasAvailableDays = formValues.available_days.length > 0;
-    const hasSkillsToShare = formValues.skills_to_share.length > 0;
-    const hasMentorshipTopics = formValues.mentorship_topics.length > 0;
+    const hasInterests = formValues.interests?.length > 0;
+    const hasTimePreference = formValues.time_preference?.length > 0;
+    const hasAvailableDays = formValues.available_days?.length > 0;
+    const hasSkillsToShare = formValues.skills_to_share?.length > 0;
+    const hasMentorshipTopics = formValues.mentorship_topics?.length > 0;
     
     // Networking availability é um número, então apenas verificamos se existe
     const hasNetworkingAvailability = typeof formValues.networking_availability === "number";
@@ -59,7 +76,7 @@ export function useExperiencePersonalizationForm(initialData: Partial<Experience
       hasNetworkingAvailability;
     
     return allFieldsValid;
-  }, [watch]);
+  }, [formValues]);
 
   // Função para trabalhar apenas com campos do tipo array
   function toggleSelect(field: Exclude<FormFieldNames, "networking_availability">, value: string) {

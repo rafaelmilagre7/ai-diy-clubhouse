@@ -5,11 +5,13 @@ import { useOnboardingSteps } from "@/hooks/onboarding/useOnboardingSteps";
 import { ExperiencePersonalizationStep } from "@/components/onboarding/steps/ExperiencePersonalizationStep";
 import { MilagrinhoMessage } from "@/components/onboarding/MilagrinhoMessage";
 import { useNavigate } from "react-router-dom";
+import { useProgress } from "@/hooks/onboarding/useProgress";
 
 const ExperiencePersonalization = () => {
   const { saveStepData, progress, completeOnboarding } = useOnboardingSteps();
   const [submitting, setSubmitting] = useState(false);
   const navigate = useNavigate();
+  const { refreshProgress } = useProgress();
 
   const handleSaveData = async (stepId: string, data: any) => {
     try {
@@ -18,14 +20,14 @@ const ExperiencePersonalization = () => {
       // Salva os dados do formulário
       await saveStepData(stepId, data);
       
-      // Navega para a próxima etapa após salvar com sucesso
-      setTimeout(() => {
-        navigate("/onboarding/complementary");
-      }, 300);
+      // Força um refresh dos dados após o salvamento
+      await refreshProgress();
       
+      // Navega para a próxima etapa após salvar com sucesso
+      navigate("/onboarding/complementary");
     } catch (error) {
       console.error("Erro ao salvar dados:", error);
-      // Não usamos toast aqui para evitar notificações indesejadas
+      // Mantemos apenas mensagens contextuais no formulário
     } finally {
       setSubmitting(false);
     }
@@ -34,10 +36,12 @@ const ExperiencePersonalization = () => {
   // Efeito para verificar se já temos dados salvos
   useEffect(() => {
     if (progress?.completed_steps?.includes("experience_personalization")) {
-      // Se essa etapa já foi concluída, podemos redirecionar para a próxima
-      // Mas não faremos isso automaticamente, permitindo que o usuário revise
+      console.log("Etapa já foi concluída anteriormente", progress.experience_personalization);
     }
-  }, [progress]);
+    
+    // Forçar um refresh dos dados ao entrar na página
+    refreshProgress();
+  }, [progress, refreshProgress]);
 
   return (
     <OnboardingLayout

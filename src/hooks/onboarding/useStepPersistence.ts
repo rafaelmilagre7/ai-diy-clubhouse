@@ -21,11 +21,13 @@ export const useStepPersistence = ({
   ) => {
     if (!progress?.id) return;
     try {
+      console.log(`Salvando dados da etapa: ${stepId}`, data);
+      
       // Verificações específicas para cada etapa
       if (stepId === "personal") {
         const personalInfo = data.personal_info || {};
         if (!personalInfo.name || !personalInfo.email || !personalInfo.phone) {
-          toast.error("Por favor, preencha todos os campos obrigatórios");
+          console.error("Campos obrigatórios não preenchidos");
           return;
         }
         await updateProgress({
@@ -42,7 +44,7 @@ export const useStepPersistence = ({
         const professionalInfo = data.professional_info || {};
         if (!professionalInfo.company_name || !professionalInfo.current_position || 
             !professionalInfo.company_sector || !professionalInfo.company_size) {
-          toast.error("Por favor, preencha todos os campos obrigatórios");
+          console.error("Campos obrigatórios não preenchidos");
           return;
         }
         await updateProgress({
@@ -66,7 +68,7 @@ export const useStepPersistence = ({
         if (!businessContext.business_model || !businessContext.business_challenges || 
             !businessContext.short_term_goals || !businessContext.medium_term_goals || 
             !businessContext.important_kpis) {
-          toast.error("Por favor, preencha todos os campos obrigatórios");
+          console.error("Campos obrigatórios não preenchidos");
           return;
         }
         await updateProgress({
@@ -74,12 +76,17 @@ export const useStepPersistence = ({
           completed_steps: [...(progress.completed_steps || []), stepId],
           current_step: steps[Math.min(currentStepIndex + 1, steps.length - 1)].id,
         });
+        
+        // Navega para a próxima etapa
+        setTimeout(() => {
+          navigate("/onboarding/ai-experience");
+        }, 300);
       } else if (stepId === "ai_exp") {
         const aiExperience = data.ai_experience || {};
         if (!aiExperience.knowledge_level || !aiExperience.previous_tools?.length || 
             !aiExperience.implemented_solutions?.length || !aiExperience.desired_solutions?.length ||
             aiExperience.nps_score === undefined) {
-          toast.error("Por favor, preencha todos os campos obrigatórios");
+          console.error("Campos obrigatórios não preenchidos");
           return;
         }
         await updateProgress({
@@ -87,11 +94,16 @@ export const useStepPersistence = ({
           completed_steps: [...(progress.completed_steps || []), stepId],
           current_step: steps[Math.min(currentStepIndex + 1, steps.length - 1)].id,
         });
+        
+        // Navega para a próxima etapa
+        setTimeout(() => {
+          navigate("/onboarding/club-goals");
+        }, 300);
       } else if (stepId === "business_goals") {
         const businessGoals = data.business_goals || {};
         if (!businessGoals.primary_goal || !businessGoals.expected_outcomes?.length || 
             !businessGoals.timeline) {
-          toast.error("Por favor, preencha todos os campos obrigatórios");
+          console.error("Campos obrigatórios não preenchidos");
           return;
         }
         await updateProgress({
@@ -99,8 +111,15 @@ export const useStepPersistence = ({
           completed_steps: [...(progress.completed_steps || []), stepId],
           current_step: steps[Math.min(currentStepIndex + 1, steps.length - 1)].id,
         });
+        
+        // Navega para a próxima etapa
+        setTimeout(() => {
+          navigate("/onboarding/customization");
+        }, 300);
       } else if (stepId === "experience_personalization") {
         const e = data.experience_personalization || {};
+        console.log("Validando dados de personalização:", e);
+        
         if (!e.interests?.length ||
             !e.time_preference?.length ||
             !e.available_days?.length ||
@@ -108,18 +127,24 @@ export const useStepPersistence = ({
             !e.skills_to_share?.length ||
             !e.mentorship_topics?.length
         ) {
-          toast.error("Por favor, preencha todos os campos obrigatórios");
+          console.error("Campos obrigatórios não preenchidos:", e);
           return;
         }
+        
         await updateProgress({
           experience_personalization: e,
           completed_steps: [...(progress.completed_steps || []), stepId],
           current_step: steps[Math.min(currentStepIndex + 1, steps.length - 1)].id,
         });
+        
+        // Navega para a próxima etapa
+        setTimeout(() => {
+          navigate("/onboarding/complementary");
+        }, 300);
       } else if (stepId === "complementary_info") {
         const info = data.complementary_info || {};
         if (!info.how_found_us || !info.priority_topics?.length) {
-          toast.error("Por favor, preencha todos os campos obrigatórios");
+          console.error("Campos obrigatórios não preenchidos");
           return;
         }
         await updateProgress({
@@ -127,12 +152,22 @@ export const useStepPersistence = ({
           completed_steps: [...(progress.completed_steps || []), stepId],
           current_step: steps[Math.min(currentStepIndex + 1, steps.length - 1)].id,
         });
+        
+        // Navega para a página de revisão
+        setTimeout(() => {
+          navigate("/onboarding/review");
+        }, 300);
       } else if (stepId === "review") {
         // Na etapa de revisão, apenas marcamos como completada
         await updateProgress({
           completed_steps: [...(progress.completed_steps || []), stepId],
           current_step: steps[Math.min(currentStepIndex + 1, steps.length - 1)].id,
         });
+        
+        // Redireciona para o dashboard após a revisão
+        setTimeout(() => {
+          navigate("/dashboard");
+        }, 300);
       } else {
         // Salvamento genérico para outras etapas
         const sectionKey = steps.find(s => s.id === stepId)?.section as keyof OnboardingData;
@@ -147,11 +182,13 @@ export const useStepPersistence = ({
       
       // Atualiza o progresso após salvar
       await refreshProgress();
-      toast.success("Progresso salvo com sucesso!");
       
       // Navega para a próxima etapa com atraso para garantir fluidez
       // Esta navegação genérica só é usada para as etapas que não têm tratamento específico acima
-      if (stepId !== "personal" && stepId !== "professional_data") {
+      if (stepId !== "personal" && stepId !== "professional_data" && 
+          stepId !== "business_context" && stepId !== "ai_exp" && 
+          stepId !== "business_goals" && stepId !== "experience_personalization" && 
+          stepId !== "complementary_info" && stepId !== "review") {
         const nextStepIndex = Math.min(currentStepIndex + 1, steps.length - 1);
         setCurrentStepIndex(nextStepIndex);
         const nextStep = steps[nextStepIndex];
@@ -163,7 +200,6 @@ export const useStepPersistence = ({
       }
     } catch (error) {
       console.error("Erro ao salvar dados:", error);
-      toast.error("Erro ao salvar dados. Tente novamente.");
     }
   };
 
@@ -175,14 +211,13 @@ export const useStepPersistence = ({
         completed_steps: steps.map(s => s.id),
       });
       await refreshProgress();
-      toast.success("Onboarding concluído com sucesso!");
       
       // Redirecionamento para o dashboard após finalização
       setTimeout(() => {
         navigate("/dashboard");
       }, 1500);
     } catch (error) {
-      toast.error('Erro ao completar onboarding. Tente novamente.');
+      console.error('Erro ao completar onboarding:', error);
     }
   };
 
