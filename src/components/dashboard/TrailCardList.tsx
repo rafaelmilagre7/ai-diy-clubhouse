@@ -12,25 +12,26 @@ interface TrailCardListProps {
 export function TrailCardList({ solutions, onSolutionClick, onSeeAll }: TrailCardListProps) {
   // Ordenar soluções por prioridade
   const sortedSolutions = [...solutions].sort((a, b) => a.priority - b.priority);
-  
-  // Separar soluções por prioridade
+
+  // Separar por prioridade
   const priority1 = sortedSolutions.filter(s => s.priority === 1);
   const priority2 = sortedSolutions.filter(s => s.priority === 2);
   const priority3 = sortedSolutions.filter(s => s.priority === 3);
-  
-  // Função para renderizar um grupo de prioridade
-  const renderPriorityGroup = (title: string, solutions: any[], color: string) => {
+
+  // Renderizar grupo visual para cada prioridade com divisória moderna
+  const renderPriorityGroup = (title: string, solutions: any[], color: string, border?: boolean) => {
     if (solutions.length === 0) return null;
-    
+
     return (
-      <div className="mb-6">
-        <div className="flex items-center mb-3">
-          <Badge className={`${color} text-white mr-2`}>
+      <div className={`mb-8`}>
+        <div className="flex items-center gap-2 mb-4">
+          <Badge className={`${color} text-white font-medium px-3 py-1 rounded-full text-sm shadow`} variant="outline">
             {title}
           </Badge>
+          <span className="flex-1 border-t border-[#0ABAB5]/10"></span>
         </div>
         <div className="space-y-4">
-          {solutions.map((solution) => (
+          {solutions.map(solution => (
             <TrailSolutionCard
               key={solution.solutionId}
               solution={solution}
@@ -41,18 +42,18 @@ export function TrailCardList({ solutions, onSolutionClick, onSeeAll }: TrailCar
       </div>
     );
   };
-  
+
   return (
     <div className="space-y-2">
       {renderPriorityGroup("Alta Prioridade", priority1, "bg-[#0ABAB5]")}
       {renderPriorityGroup("Prioridade Média", priority2, "bg-amber-500")}
       {renderPriorityGroup("Complementar", priority3, "bg-gray-500")}
-      
-      <div className="mt-6 text-center">
+
+      <div className="mt-8 text-center">
         <Button
           variant="outline"
           onClick={onSeeAll}
-          className="text-[#0ABAB5] border-[#0ABAB5] hover:bg-[#0ABAB5]/10"
+          className="text-[#0ABAB5] border-[#0ABAB5] hover:bg-[#0ABAB5]/10 hover:scale-105 transition-all"
         >
           Ver todas as soluções
         </Button>
