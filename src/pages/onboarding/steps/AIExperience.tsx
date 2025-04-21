@@ -6,11 +6,13 @@ import { AIExperienceStep } from "@/components/onboarding/steps/AIExperienceStep
 import { MilagrinhoMessage } from "@/components/onboarding/MilagrinhoMessage";
 import { useProgress } from "@/hooks/onboarding/useProgress";
 import { toast } from "sonner";
+import { useLogging } from "@/hooks/useLogging";
 
 const AIExperience = () => {
   const { saveStepData, progress, completeOnboarding, refreshProgress } = useOnboardingSteps();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { isLoading } = useProgress();
+  const { log } = useLogging();
 
   // Efeito para carregar dados mais recentes ao entrar na página
   useEffect(() => {
@@ -22,6 +24,7 @@ const AIExperience = () => {
     setIsSubmitting(true);
     try {
       console.log("Salvando dados de experiência com IA:", data);
+      log("onboarding_ai_experience_submit", { data });
       
       // Passamos true como terceiro parâmetro para permitir a navegação automática
       await saveStepData(stepId, data, true);
@@ -30,6 +33,7 @@ const AIExperience = () => {
       // O toast de sucesso já é mostrado pelo hook de persistência
     } catch (error) {
       console.error("Erro ao salvar dados:", error);
+      log("onboarding_ai_experience_error", { error });
       toast.error("Erro ao salvar as informações. Tente novamente.");
     } finally {
       setIsSubmitting(false);

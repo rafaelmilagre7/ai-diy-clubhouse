@@ -68,6 +68,8 @@ export const AIExperienceStep: React.FC<AIExperienceStepProps> = ({
 
   const onFormSubmit = (data: AIExperienceFormValues) => {
     console.log("Enviando dados de experiência AI:", data);
+    
+    // Certificando-se de que o formato dos dados esteja correto
     onSubmit("ai_exp", { 
       ai_experience: {
         knowledge_level: data.knowledge_level,

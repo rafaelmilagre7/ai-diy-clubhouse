@@ -21,6 +21,7 @@ export function navigateAfterStep(stepId: string, currentStepIndex: number, navi
     nextPath = "/onboarding/ai-experience";
   } else if (stepId === "ai_exp") {
     nextPath = "/onboarding/club-goals";
+    console.log("AI Experience completado, navegando para club-goals");
   } else if (stepId === "business_goals") {
     nextPath = "/onboarding/customization";
   } else if (stepId === "experience_personalization") {
