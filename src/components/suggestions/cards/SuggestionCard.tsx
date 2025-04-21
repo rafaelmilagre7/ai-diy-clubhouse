@@ -1,13 +1,10 @@
 
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { Card, CardContent, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ThumbsUp, MessageSquare, Clock } from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { ThumbsUp, ThumbsDown, MessageSquare } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { Suggestion } from '@/types/suggestionTypes';
-import { useAuth } from '@/contexts/auth';
 
 interface SuggestionCardProps {
   suggestion: Suggestion;
@@ -18,52 +15,54 @@ interface SuggestionCardProps {
 export const SuggestionCard: React.FC<SuggestionCardProps> = ({
   suggestion,
   getStatusLabel,
-  getStatusColor,
+  getStatusColor
 }) => {
-  const { isAdmin } = useAuth();
-  const voteBalance = suggestion.upvotes - suggestion.downvotes;
+  const navigate = useNavigate();
   
-  // Determinar o link de navegação com base no tipo de usuário
-  // Administradores vão para um caminho específico para admin
-  const linkPath = isAdmin 
-    ? `/admin/suggestions/${suggestion.id}` 
-    : `/suggestions/${suggestion.id}`;
+  const handleCardClick = () => {
+    navigate(`/suggestions/${suggestion.id}`);
+  };
   
   return (
-    <Link to={linkPath} className="block h-full">
-      <Card className="h-full hover:shadow-md transition-shadow">
-        <CardContent className="p-4 space-y-2">
-          <div className="flex items-center justify-between">
-            <Badge className={getStatusColor(suggestion.status)}>
-              {getStatusLabel(suggestion.status)}
-            </Badge>
-            <div className="text-xs text-muted-foreground flex items-center">
-              <Clock className="h-3 w-3 mr-1" />
-              {formatDistanceToNow(new Date(suggestion.created_at), {
-                addSuffix: true,
-                locale: ptBR,
-              })}
+    <Card 
+      className="h-full cursor-pointer transition-shadow hover:shadow-md"
+      onClick={handleCardClick}
+    >
+      <CardHeader className="pb-2">
+        <div className="flex justify-between items-start">
+          <div className="space-y-1">
+            <h3 className="font-semibold text-lg line-clamp-2">{suggestion.title}</h3>
+            <div className="flex items-center gap-2">
+              <Badge className={getStatusColor(suggestion.status)}>
+                {getStatusLabel(suggestion.status)}
+              </Badge>
             </div>
           </div>
-          
-          <h3 className="font-medium text-base">{suggestion.title}</h3>
-          <p className="text-sm text-muted-foreground line-clamp-3">
-            {suggestion.description}
-          </p>
-        </CardContent>
-
-        <CardFooter className="px-4 py-3 border-t flex justify-between text-xs text-muted-foreground">
-          <div className="flex items-center">
-            <ThumbsUp className="h-3 w-3 mr-1" />
-            <span>{voteBalance}</span>
+        </div>
+      </CardHeader>
+      
+      <CardContent className="pb-2">
+        <p className="text-muted-foreground line-clamp-3">{suggestion.description}</p>
+      </CardContent>
+      
+      <CardFooter className="pt-2 flex justify-between text-sm text-muted-foreground">
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-1">
+            <ThumbsUp className="h-4 w-4" />
+            <span>{suggestion.upvotes}</span>
           </div>
           
-          <div className="flex items-center">
-            <MessageSquare className="h-3 w-3 mr-1" />
-            <span>{suggestion.comment_count} comentários</span>
+          <div className="flex items-center gap-1">
+            <ThumbsDown className="h-4 w-4" />
+            <span>{suggestion.downvotes}</span>
           </div>
-        </CardFooter>
-      </Card>
-    </Link>
+        </div>
+        
+        <div className="flex items-center gap-1">
+          <MessageSquare className="h-4 w-4" />
+          <span>{suggestion.comment_count || 0}</span>
+        </div>
+      </CardFooter>
+    </Card>
   );
 };

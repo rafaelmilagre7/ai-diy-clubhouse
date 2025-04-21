@@ -23,6 +23,9 @@ import SolutionImplementation from '@/pages/member/SolutionImplementation';
 import ImplementationCompleted from '@/pages/member/ImplementationCompleted';
 import Benefits from '@/pages/member/Benefits';
 import Achievements from '@/pages/member/Achievements';
+import Suggestions from '@/pages/member/Suggestions';
+import SuggestionDetails from '@/pages/member/SuggestionDetails';
+import NewSuggestion from '@/pages/member/NewSuggestion';
 import { Navigate } from 'react-router-dom';
 import MemberLayout from '@/components/layout/MemberLayout';
 
@@ -61,6 +64,11 @@ const AppRoutes = () => {
       <Route path="/implementation/completed/:id" element={<ProtectedRoutes><MemberLayout><ImplementationCompleted /></MemberLayout></ProtectedRoutes>} />
       <Route path="/benefits" element={<ProtectedRoutes><MemberLayout><Benefits /></MemberLayout></ProtectedRoutes>} />
       <Route path="/achievements" element={<ProtectedRoutes><MemberLayout><Achievements /></MemberLayout></ProtectedRoutes>} />
+      
+      {/* Sugestões Routes */}
+      <Route path="/suggestions" element={<ProtectedRoutes><MemberLayout><Suggestions /></MemberLayout></ProtectedRoutes>} />
+      <Route path="/suggestions/:id" element={<ProtectedRoutes><MemberLayout><SuggestionDetails /></MemberLayout></ProtectedRoutes>} />
+      <Route path="/suggestions/new" element={<ProtectedRoutes><MemberLayout><NewSuggestion /></MemberLayout></ProtectedRoutes>} />
       
       {/* Onboarding Routes */}
       <Route path="/onboarding" element={<ProtectedRoutes><Onboarding /></ProtectedRoutes>} />

@@ -1,61 +1,67 @@
 
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus } from 'lucide-react';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { Plus, Search, TrendingUp, Clock } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 interface SuggestionsHeaderProps {
   searchQuery: string;
   onSearchChange: (value: string) => void;
-  filter: 'popular' | 'recent';
-  onFilterChange: (value: 'popular' | 'recent') => void;
+  filter: string;
+  onFilterChange: (value: string) => void;
 }
 
-export const SuggestionsHeader = ({
+export const SuggestionsHeader: React.FC<SuggestionsHeaderProps> = ({
   searchQuery,
   onSearchChange,
   filter,
   onFilterChange
-}: SuggestionsHeaderProps) => {
+}) => {
   const navigate = useNavigate();
 
   return (
-    <>
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-2xl font-bold">Sugestões</h1>
-          <p className="text-muted-foreground">
-            Compartilhe suas ideias para melhorar a plataforma
-          </p>
-        </div>
-
+    <div className="flex flex-col space-y-4">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold">Sugestões</h1>
         <Button 
-          onClick={() => navigate('/suggestions/new')} 
-          size="lg"
-          className="w-full sm:w-auto"
+          onClick={() => navigate('/suggestions/new')}
+          className="gap-2"
         >
-          <Plus className="w-4 h-4 mr-2" />
+          <Plus size={16} />
           Nova Sugestão
         </Button>
       </div>
-
-      <div className="flex flex-col sm:flex-row gap-4">
-        <Input
-          placeholder="Buscar sugestões..."
-          value={searchQuery}
-          onChange={(e) => onSearchChange(e.target.value)}
-          className="sm:max-w-[300px]"
-        />
-
-        <Tabs value={filter} onValueChange={(value: 'popular' | 'recent') => onFilterChange(value)}>
-          <TabsList>
-            <TabsTrigger value="popular">Mais Populares</TabsTrigger>
-            <TabsTrigger value="recent">Mais Recentes</TabsTrigger>
-          </TabsList>
-        </Tabs>
+      
+      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+        <div className="relative w-full sm:w-auto flex-1">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+          <Input
+            placeholder="Buscar sugestões..."
+            value={searchQuery}
+            onChange={(e) => onSearchChange(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+        
+        <ToggleGroup 
+          type="single" 
+          defaultValue={filter} 
+          value={filter}
+          onValueChange={(value) => value && onFilterChange(value)}
+          className="flex-shrink-0"
+        >
+          <ToggleGroupItem value="popular" className="gap-1 whitespace-nowrap">
+            <TrendingUp className="h-4 w-4" />
+            <span className="hidden md:inline">Populares</span>
+          </ToggleGroupItem>
+          <ToggleGroupItem value="recent" className="gap-1 whitespace-nowrap">
+            <Clock className="h-4 w-4" />
+            <span className="hidden md:inline">Recentes</span>
+          </ToggleGroupItem>
+        </ToggleGroup>
       </div>
-    </>
+    </div>
   );
 };
