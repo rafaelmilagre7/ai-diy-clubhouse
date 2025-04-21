@@ -10,6 +10,42 @@ interface AchievementIconProps {
 export const AchievementIcon = ({ achievement }: AchievementIconProps) => {
   const Icon = getAchievementIcon(achievement);
 
+  // Aplica cores específicas baseadas na categoria
+  const getIconColor = () => {
+    if (!achievement.isUnlocked) return "text-gray-400";
+    
+    switch (achievement.category) {
+      case "revenue":
+        return "text-revenue";
+      case "operational":
+        return "text-operational";
+      case "strategy":
+        return "text-strategy";
+      case "achievement":
+        return "text-viverblue";
+      default:
+        return "text-viverblue";
+    }
+  };
+
+  // Aplica gradientes específicos baseados na categoria
+  const getGradientClass = () => {
+    if (!achievement.isUnlocked) return "bg-gray-100";
+    
+    switch (achievement.category) {
+      case "revenue":
+        return "from-revenue/20 to-revenue/10 shadow-revenue/20";
+      case "operational":
+        return "from-operational/20 to-operational/10 shadow-operational/20";
+      case "strategy":
+        return "from-strategy/20 to-strategy/10 shadow-strategy/20";
+      case "achievement":
+        return "from-viverblue/20 to-viverblue/10 shadow-viverblue/20";
+      default:
+        return "from-viverblue/20 to-viverblue/10 shadow-viverblue/20";
+    }
+  };
+
   return (
     <div className={cn(
       "relative group",
@@ -17,10 +53,7 @@ export const AchievementIcon = ({ achievement }: AchievementIconProps) => {
       "transition-all duration-300 transform hover:scale-105",
       achievement.isUnlocked && [
         "bg-gradient-to-br shadow-lg",
-        achievement.category === "revenue" && "from-revenue/20 to-revenue/10 shadow-revenue/20",
-        achievement.category === "operational" && "from-operational/20 to-operational/10 shadow-operational/20",
-        achievement.category === "strategy" && "from-strategy/20 to-strategy/10 shadow-strategy/20",
-        achievement.category === "achievement" && "from-viverblue/20 to-viverblue/10 shadow-viverblue/20"
+        getGradientClass()
       ],
       !achievement.isUnlocked && "bg-gray-100"
     )}>
@@ -36,12 +69,7 @@ export const AchievementIcon = ({ achievement }: AchievementIconProps) => {
       )} />
       <Icon className={cn(
         "h-10 w-10 relative z-10 transition-transform duration-300 group-hover:scale-110",
-        achievement.isUnlocked ? [
-          achievement.category === "revenue" && "text-revenue",
-          achievement.category === "operational" && "text-operational",
-          achievement.category === "strategy" && "text-strategy",
-          achievement.category === "achievement" && "text-viverblue"
-        ] : "text-gray-400"
+        getIconColor()
       )} />
     </div>
   );

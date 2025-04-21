@@ -51,6 +51,14 @@ export function AchievementsSummary() {
         {/* Principais conquistas desbloqueadas */}
         {unlocked.map((badge) => {
           const Icon = getAchievementIcon(badge);
+          let iconColor = "text-green-600";
+          
+          // Determina a cor com base na categoria
+          if (badge.category === "revenue") iconColor = "text-revenue";
+          else if (badge.category === "operational") iconColor = "text-operational";
+          else if (badge.category === "strategy") iconColor = "text-strategy";
+          else if (badge.category === "achievement") iconColor = "text-viverblue";
+          
           return (
             <div key={badge.id} className="group flex flex-col items-center">
               <div 
@@ -61,7 +69,7 @@ export function AchievementsSummary() {
                 title={badge.name + " - " + badge.description}
                 tabIndex={0}
               >
-                <Icon className="h-8 w-8 text-green-600 drop-shadow" />
+                <Icon className={`h-8 w-8 ${iconColor} drop-shadow`} />
               </div>
               <span className="text-xs text-foreground mt-1 font-semibold hidden md:block">{badge.name}</span>
             </div>
@@ -103,4 +111,3 @@ export function AchievementsSummary() {
     </Card>
   );
 }
-
