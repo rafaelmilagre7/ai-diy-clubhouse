@@ -10,9 +10,10 @@ import { useNavigate } from "react-router-dom";
 
 interface TrailGenerationPanelProps {
   onboardingData?: any;
+  onClose?: () => void;
 }
 
-export const TrailGenerationPanel: React.FC<TrailGenerationPanelProps> = ({ onboardingData }) => {
+export const TrailGenerationPanel: React.FC<TrailGenerationPanelProps> = ({ onboardingData, onClose }) => {
   const navigate = useNavigate();
   const { trail, isLoading, error } = useImplementationTrail();
   const { solutions: allSolutions, loading: solutionsLoading } = useSolutionsData();
@@ -74,7 +75,11 @@ export const TrailGenerationPanel: React.FC<TrailGenerationPanelProps> = ({ onbo
       <h2 className="text-3xl font-extrabold text-[#0ABAB5] text-center">
         Sua Trilha Personalizada VIVER DE IA
       </h2>
-      <TrailSolutions solutions={processedSolutions} />
+      <TrailSolutions 
+        solutions={processedSolutions} 
+        onRegenerate={() => {}} 
+        onClose={onClose} 
+      />
     </div>
   );
 };

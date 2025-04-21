@@ -21,6 +21,18 @@ export const useImplementationTrail = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Verificar se a trilha tem conteúdo
+  const hasContent = useCallback(() => {
+    if (!trail) return false;
+    
+    const totalItems = 
+      (trail.priority1?.length || 0) + 
+      (trail.priority2?.length || 0) + 
+      (trail.priority3?.length || 0);
+    
+    return totalItems > 0;
+  }, [trail]);
+
   // Carregar trilha existente
   const loadExistingTrail = useCallback(async () => {
     if (!user) {
@@ -61,8 +73,16 @@ export const useImplementationTrail = () => {
     }
   }, [user]);
 
+  // Recarregar trilha (com opção de força)
+  const refreshTrail = useCallback(async (forceRefresh = false) => {
+    if (forceRefresh || !trail) {
+      return loadExistingTrail();
+    }
+    return trail;
+  }, [loadExistingTrail, trail]);
+
   // Gerar nova trilha
-  const generateImplementationTrail = async (onboardingData: any) => {
+  const generateImplementationTrail = async (onboardingData = null) => {
     if (!user) {
       setError("Usuário não autenticado");
       return null;
@@ -155,6 +175,8 @@ export const useImplementationTrail = () => {
     trail,
     isLoading,
     error,
+    hasContent: hasContent(),
+    refreshTrail,
     generateImplementationTrail,
   };
 };

@@ -8,7 +8,7 @@ import { sanitizeTrailData } from "./useImplementationTrail.utils";
 
 export const useTrailGuidedExperience = () => {
   const navigate = useNavigate();
-  const { trail, isLoading, generateImplementationTrail, refreshTrail, hasContent } = useImplementationTrail();
+  const { trail, isLoading, generateImplementationTrail } = useImplementationTrail();
   const { solutions: allSolutions, loading: solutionsLoading } = useSolutionsData();
   const [started, setStarted] = useState(false);
   const [currentStepIdx, setCurrentStepIdx] = useState(0);
@@ -16,6 +16,19 @@ export const useTrailGuidedExperience = () => {
   const [regenerating, setRegenerating] = useState(false);
   const [showMagicExperience, setShowMagicExperience] = useState(false);
   const [loadingError, setLoadingError] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+
+  // Verificar se a trilha tem conteúdo
+  const hasContent = useMemo(() => {
+    if (!trail) return false;
+    
+    const totalItems = 
+      (trail.priority1?.length || 0) + 
+      (trail.priority2?.length || 0) + 
+      (trail.priority3?.length || 0);
+    
+    return totalItems > 0;
+  }, [trail]);
 
   // Montar lista de soluções ordenadas para a navegação
   const solutionsList = useMemo(() => {
@@ -65,14 +78,17 @@ export const useTrailGuidedExperience = () => {
   // Function para tentar recarregar dados da trilha
   const refreshTrailData = useCallback(async () => {
     setLoadingError(false);
+    setRefreshing(true);
     
     try {
-      await refreshTrail(true);
+      window.location.reload();
     } catch (error) {
       console.error("Erro ao atualizar dados da trilha:", error);
       setLoadingError(true);
+    } finally {
+      setRefreshing(false);
     }
-  }, [refreshTrail]);
+  }, []);
 
   // Handler para iniciar a geração da trilha
   const handleStartGeneration = useCallback(async (shouldRegenerate = true) => {
@@ -88,7 +104,8 @@ export const useTrailGuidedExperience = () => {
 
     try {
       if (shouldRegenerate) {
-        await generateImplementationTrail();
+        // Passamos um objeto vazio como parâmetro para atender à assinatura da função
+        await generateImplementationTrail({});
         toast.success("Trilha personalizada gerada com sucesso!");
       }
       
@@ -136,6 +153,7 @@ export const useTrailGuidedExperience = () => {
     isLoading,
     regenerating,
     solutionsLoading,
+    refreshing,
     started,
     showMagicExperience,
     currentStepIdx,
@@ -143,6 +161,7 @@ export const useTrailGuidedExperience = () => {
     solutionsList,
     currentSolution,
     loadingError,
+    hasContent,
     handleStartGeneration,
     handleMagicFinish,
     handleNext,

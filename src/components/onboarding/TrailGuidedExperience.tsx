@@ -14,9 +14,7 @@ export const TrailGuidedExperience = ({ autoStart = false }) => {
   const {
     trail,
     isLoading: trailLoading,
-    refreshTrail,
     generateImplementationTrail,
-    hasContent
   } = useImplementationTrail();
   const { solutions, loading: solutionsLoading } = useSolutionsData();
   
@@ -27,6 +25,21 @@ export const TrailGuidedExperience = ({ autoStart = false }) => {
   const [showMagicExperience, setShowMagicExperience] = useState(false);
   const [loadingError, setLoadingError] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
+  const [hasContent, setHasContent] = useState(false);
+
+  // Verificar se a trilha tem conteúdo
+  useEffect(() => {
+    if (trail) {
+      const totalItems = 
+        (trail.priority1?.length || 0) + 
+        (trail.priority2?.length || 0) + 
+        (trail.priority3?.length || 0);
+      
+      setHasContent(totalItems > 0);
+    } else {
+      setHasContent(false);
+    }
+  }, [trail]);
 
   // Processar soluções da trilha
   const solutionsList = React.useMemo(() => {
@@ -127,7 +140,8 @@ export const TrailGuidedExperience = ({ autoStart = false }) => {
     setShowMagicExperience(true);
     setRegenerating(true);
     try {
-      await generateImplementationTrail();
+      // Passamos um objeto vazio como parâmetro para atender à assinatura da função
+      await generateImplementationTrail({});
       toast.success("Trilha gerada com sucesso!");
       setStarted(true);
       setCurrentStepIdx(0);
@@ -143,7 +157,8 @@ export const TrailGuidedExperience = ({ autoStart = false }) => {
 
   const handleRetry = () => {
     setRetryCount(prev => prev + 1);
-    refreshTrail(true);
+    // Recarregar a página para tentar novamente
+    window.location.reload();
   };
 
   const handleMagicFinish = () => {

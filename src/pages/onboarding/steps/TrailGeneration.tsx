@@ -257,7 +257,7 @@ const TrailGeneration = () => {
         
         {generated && !generating && !error && (
           <TrailGenerationPanel 
-            solutions={trailSolutions}
+            onboardingData={progress}
             onClose={() => navigate('/dashboard')}
           />
         )}
