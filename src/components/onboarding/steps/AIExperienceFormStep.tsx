@@ -24,6 +24,11 @@ const desiredAreas = [
   { value: "marketing", label: "Soluções de IA para Marketing" },
   { value: "rh", label: "Soluções de IA para RH" },
   { value: "analise_dados", label: "Soluções de IA para Análise de Dados" },
+  { value: "financeiro", label: "Soluções de IA para Financeiro" },
+  { value: "operacoes", label: "Soluções de IA para Operações" },
+  { value: "suporte_cliente", label: "Soluções de IA para Suporte ao Cliente" },
+  { value: "logistica", label: "Soluções de IA para Logística" },
+  { value: "outros", label: "Outros" }
 ];
 
 export const AIExperienceFormStep: React.FC<AIExperienceFormStepProps> = ({
@@ -38,7 +43,7 @@ export const AIExperienceFormStep: React.FC<AIExperienceFormStepProps> = ({
       knowledge_level: initialData?.knowledge_level || "",
       previous_tools: initialData?.previous_tools || [],
       has_implemented: initialData?.has_implemented || "",
-      desired_ai_area: initialData?.desired_ai_area || "",
+      desired_ai_areas: initialData?.desired_ai_areas || [], // agora array!
       completed_formation: initialData?.completed_formation || false,
       is_member_for_month: initialData?.is_member_for_month || false,
       nps_score: initialData?.nps_score || 5,
@@ -49,7 +54,13 @@ export const AIExperienceFormStep: React.FC<AIExperienceFormStepProps> = ({
   return (
     <form
       onSubmit={handleSubmit((data) =>
-        onSubmit("ai_exp", { ai_experience: data })
+        onSubmit("ai_exp", {
+          ai_experience: {
+            ...data,
+            // garantir compatibilidade com campo array
+            desired_ai_areas: data.desired_ai_areas || [],
+          }
+        })
       )}
       className="space-y-10"
     >
@@ -59,7 +70,7 @@ export const AIExperienceFormStep: React.FC<AIExperienceFormStepProps> = ({
       {/* Ferramentas de IA já utilizadas */}
       <AIToolsField control={control} />
 
-      {/* Nova Pergunta: Já implementou alguma solução de IA? */}
+      {/* Pergunta: Já implementou alguma solução de IA? */}
       <div className="space-y-4 bg-gray-50 p-6 rounded-lg">
         <h3 className="text-lg font-medium text-gray-800">
           Você já implementou alguma solução de IA?
@@ -90,31 +101,45 @@ export const AIExperienceFormStep: React.FC<AIExperienceFormStepProps> = ({
         />
       </div>
 
-      {/* Pergunta: Em quais áreas deseja implementar soluções de IA? */}
+      {/* Pergunta: Em quais áreas você deseja implementar soluções de IA no seu negócio? (agora múltipla escolha) */}
       <div className="space-y-4 bg-gray-50 p-6 rounded-lg">
         <h3 className="text-lg font-medium text-gray-800">
           Em quais áreas você deseja implementar soluções de IA no seu negócio?
         </h3>
         <Controller
           control={control}
-          name="desired_ai_area"
-          rules={{ required: "Selecione uma área" }}
+          name="desired_ai_areas"
+          rules={{
+            validate: (value) =>
+              value && value.length > 0 ? true : "Selecione pelo menos uma área",
+          }}
           render={({ field, fieldState }) => (
-            <RadioGroup
-              onValueChange={field.onChange}
-              value={field.value}
-              className="flex flex-col gap-3 mt-2"
-            >
+            <div className="flex flex-wrap gap-3 mt-2">
               {desiredAreas.map(opt => (
-                <div key={opt.value} className="flex items-center gap-2">
-                  <RadioGroupItem value={opt.value} id={`area_${opt.value}`} />
-                  <label htmlFor={`area_${opt.value}`} className="text-sm">{opt.label}</label>
-                </div>
+                <button
+                  key={opt.value}
+                  type="button"
+                  className={`px-3 py-2 rounded-lg border transition-all text-sm
+                    ${field.value?.includes(opt.value)
+                      ? "bg-[#0ABAB5] text-white border-[#0ABAB5]"
+                      : "bg-white text-gray-700 border-gray-200"}
+                  `}
+                  onClick={() => {
+                    const current = field.value || [];
+                    if (current.includes(opt.value)) {
+                      field.onChange(current.filter((v: string) => v !== opt.value));
+                    } else {
+                      field.onChange([...current, opt.value]);
+                    }
+                  }}
+                >
+                  {opt.label}
+                </button>
               ))}
               {fieldState.error && (
-                <span className="text-red-500 text-xs ml-4">{fieldState.error.message}</span>
+                <span className="text-red-500 text-xs block w-full mt-1">{fieldState.error.message}</span>
               )}
-            </RadioGroup>
+            </div>
           )}
         />
       </div>

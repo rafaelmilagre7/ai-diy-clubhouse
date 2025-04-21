@@ -15,13 +15,8 @@ const INTERESTS_OPTIONS = [
   { value: "ia_generativa", label: "IA Generativa (GPT, Gemini, Claude)" },
   { value: "automacao", label: "Automação de Processos" },
   { value: "chatbots", label: "Chatbots e Assistentes Virtuais" },
-  { value: "analytics", label: "Analytics e Business Intelligence" },
-  { value: "computer_vision", label: "Visão Computacional" },
-  { value: "nlp", label: "Processamento de Linguagem Natural" },
-  { value: "metaverse", label: "Metaverso e Realidade Aumentada" },
   { value: "voice_ia", label: "IA de Voz e Reconhecimento de Fala" },
-  { value: "robotica", label: "Robótica e Automação Física" },
-  { value: "blockchain_ia", label: "Blockchain e IA" },
+  { value: "analise_ia", label: "Análise de dados com IA" },
 ];
 
 export function InterestsSection({ watch, toggleSelect, errors, showErrors = false }: InterestsSectionProps) {

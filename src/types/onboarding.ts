@@ -42,7 +42,7 @@ export interface OnboardingData {
     knowledge_level?: string;
     previous_tools?: string[];
     has_implemented?: string; // "sim" | "nao"
-    desired_ai_area?: string; // "vendas" | "marketing" | "rh" | "analise_dados"
+    desired_ai_areas?: string[]; // agora array de áreas!
     completed_formation?: boolean;
     is_member_for_month?: boolean;
     nps_score?: number;

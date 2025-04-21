@@ -1,4 +1,3 @@
-
 import { steps } from "../useStepDefinitions";
 import { OnboardingData, OnboardingProgress } from "@/types/onboarding";
 
@@ -58,15 +57,17 @@ export function buildUpdateObject(
   } else if (stepId === "ai_exp") {
     // Salvar dados de experiência com IA
     console.log("Construindo objeto de atualização para AI Experience:", data.ai_experience);
-    
+
     if (data.ai_experience) {
       const existingAiExperience = progress.ai_experience || {};
-      updateObj.ai_experience = {
-        ...existingAiExperience,
-        ...data.ai_experience
-      };
-      
-      // Log detalhado dos dados de AI Experience 
+      // Corrige para aceitar campo array desired_ai_areas e retrocompatibilidade
+      let aiData = { ...existingAiExperience, ...data.ai_experience };
+      // Corrigir se alguém enviou desired_ai_area como string (legado)
+      if (typeof aiData.desired_ai_area === "string") {
+        aiData.desired_ai_areas = [aiData.desired_ai_area];
+        delete aiData.desired_ai_area;
+      }
+      updateObj.ai_experience = aiData;
       console.log("Objeto final de AI Experience:", updateObj.ai_experience);
     } else {
       console.warn("ai_experience não encontrado nos dados enviados");
