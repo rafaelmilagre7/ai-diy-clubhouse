@@ -111,19 +111,21 @@ export function buildUpdateObject(
     
     if (data.business_goals) {
       // Garantir que o campo expected_outcomes seja sempre um array
-      if (data.business_goals.expected_outcome_30days && !data.business_goals.expected_outcomes) {
-        data.business_goals.expected_outcomes = [data.business_goals.expected_outcome_30days];
+      const businessGoalsData = data.business_goals;
+      
+      if (businessGoalsData.expected_outcome_30days && !businessGoalsData.expected_outcomes) {
+        businessGoalsData.expected_outcomes = [businessGoalsData.expected_outcome_30days];
       }
       
       // Se temos apenas expected_outcomes mas não o campo individual, mantemos compatibilidade
-      if (data.business_goals.expected_outcomes && data.business_goals.expected_outcomes.length > 0 && 
-          !data.business_goals.expected_outcome_30days) {
-        data.business_goals.expected_outcome_30days = data.business_goals.expected_outcomes[0];
+      if (businessGoalsData.expected_outcomes && businessGoalsData.expected_outcomes.length > 0 && 
+          !businessGoalsData.expected_outcome_30days) {
+        businessGoalsData.expected_outcome_30days = businessGoalsData.expected_outcomes[0];
       }
       
       updateObj.business_goals = {
         ...existingBusinessGoals,
-        ...data.business_goals
+        ...businessGoalsData
       };
     } else if (typeof data === 'object' && data !== null) {
       // Se recebemos diretamente um objeto de dados
