@@ -27,6 +27,22 @@ export const isApiTimeout = (startTime: number | null, timeout = 15000): boolean
 };
 
 /**
+ * Verifica se passou tempo suficiente para considerar um timeout crítico
+ */
+export const isCriticalTimeout = (startTime: number | null, timeout = 30000): boolean => {
+  if (!startTime) return false;
+  return (Date.now() - startTime) > timeout;
+};
+
+/**
+ * Verifica se é seguro abortar uma operação em andamento
+ */
+export const isSafeToAbort = (startTime: number | null): boolean => {
+  if (!startTime) return true;
+  return (Date.now() - startTime) > 1000; // Pelo menos 1 segundo de execução
+};
+
+/**
  * Extrai mensagem de erro para exibição ao usuário
  */
 export const extractErrorMessage = (error: any): string => {
@@ -88,4 +104,50 @@ export const countTrailSolutions = (trail: any): number => {
     console.error("Erro ao contar soluções da trilha:", error);
     return 0;
   }
+};
+
+/**
+ * Detecta possíveis problemas na trilha
+ */
+export const detectTrailIssue = (trail: any): string | null => {
+  if (!trail) return "Trilha não encontrada";
+  
+  try {
+    // Verificar estrutura básica
+    if (!Array.isArray(trail.priority1) && !Array.isArray(trail.priority2) && !Array.isArray(trail.priority3)) {
+      return "Estrutura da trilha inválida";
+    }
+    
+    // Verificar se há pelo menos uma solução
+    const count = countTrailSolutions(trail);
+    if (count === 0) {
+      return "Nenhuma solução encontrada na trilha";
+    }
+    
+    return null;
+  } catch (error) {
+    console.error("Erro ao detectar problemas na trilha:", error);
+    return "Erro ao validar trilha";
+  }
+};
+
+/**
+ * Verifica se a trilha está travada em estado inconsistente
+ */
+export const isTrailStuck = (trail: any, loadStartTime: number | null): boolean => {
+  if (loadStartTime && (Date.now() - loadStartTime) > 20000) {
+    return true;
+  }
+  
+  return false;
+};
+
+/**
+ * Reset do estado da trilha
+ */
+export const resetTrailState = (clearTrailFn: () => Promise<boolean>): Promise<boolean> => {
+  return clearTrailFn().catch(err => {
+    console.error("Erro ao resetar estado da trilha:", err);
+    return false;
+  });
 };

@@ -82,7 +82,7 @@ const TrailGeneration = () => {
         if (autoGenerate && progress && firstLoad) {
           isFirstLoadRef.current = false;
           console.log("Auto-gerando trilha com dados do onboarding:", progress);
-          await startTrailGeneration(progress);
+          await startTrailGeneration();
         } else {
           log("loading_trail_data", { attemptCount: attemptCount + 1 });
           
@@ -197,7 +197,7 @@ const TrailGeneration = () => {
     }
   }, [generatingTrail, loadStartTime]);
 
-  const startTrailGeneration = async (onboardingData = null) => {
+  const startTrailGeneration = async () => {
     // Cancelar qualquer operação anterior ainda em andamento
     if (abortControllerRef.current && isSafeToAbort(loadStartTime)) {
       console.log("Abortando operação anterior antes de gerar trilha");
@@ -218,10 +218,10 @@ const TrailGeneration = () => {
       // Limpar qualquer trilha existente para evitar dados parciais
       await clearTrail(); 
       
-      log("starting_trail_generation", { hasOnboardingData: !!onboardingData });
+      log("starting_trail_generation", { hasOnboardingData: !!progress });
       console.log("Iniciando geração da trilha");
       
-      await generateImplementationTrail(onboardingData);
+      await generateImplementationTrail();
       
       toast.success("Trilha personalizada gerada com sucesso!");
       log("trail_generation_success", {});
