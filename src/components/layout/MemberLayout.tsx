@@ -6,48 +6,25 @@ import { MemberContent } from "./member/MemberContent";
 import { toast } from "sonner";
 
 /**
- * MemberLayout renders the layout structure for member users
- * This includes the sidebar and content area
+ * MemberLayout renderiza a estrutura de layout para usuários membros
+ * Isso inclui a barra lateral e a área de conteúdo
  */
 const MemberLayout = ({ children }: { children: React.ReactNode }) => {
   const { profile, signOut } = useAuth();
   
-  // Usar localStorage para persistir o estado do sidebar entre navegações
-  const storedSidebarState = localStorage.getItem("sidebarOpen");
-  const defaultSidebarState = storedSidebarState !== null ? 
-    storedSidebarState === "true" : 
-    window.innerWidth >= 768; // Default aberto em desktop, fechado em mobile
-  
-  const [sidebarOpen, setSidebarOpen] = useState(defaultSidebarState);
+  // Estado para controlar a visibilidade da barra lateral
+  const [sidebarOpen, setSidebarOpen] = useState(() => {
+    // Recuperar estado do localStorage, padrão é aberto em desktop
+    const savedState = localStorage.getItem("sidebarOpen");
+    return savedState !== null ? savedState === "true" : window.innerWidth >= 768;
+  });
 
-  // Função para atualizar o estado do sidebar e salvar no localStorage
-  const handleSidebarToggle = (open: boolean) => {
-    setSidebarOpen(open);
-    localStorage.setItem("sidebarOpen", open.toString());
-  };
-
-  // Detectar tamanho de tela e ajustar sidebar
+  // Efeito para persistir o estado da barra lateral
   useEffect(() => {
-    const handleResize = () => {
-      const isMobile = window.innerWidth < 768;
-      
-      // Em mobile com sidebar aberto, fechar o sidebar
-      if (isMobile && sidebarOpen) {
-        setSidebarOpen(false);
-        localStorage.setItem("sidebarOpen", "false");
-      }
-    };
-
-    // Executar na montagem
-    handleResize();
-    
-    // Adicionar listener para resize
-    window.addEventListener('resize', handleResize);
-    
-    // Cleanup
-    return () => window.removeEventListener('resize', handleResize);
+    localStorage.setItem("sidebarOpen", String(sidebarOpen));
   }, [sidebarOpen]);
 
+  // Função para obter iniciais do nome do usuário
   const getInitials = (name: string | null) => {
     if (!name) return "U";
     return name
@@ -58,27 +35,33 @@ const MemberLayout = ({ children }: { children: React.ReactNode }) => {
       .substring(0, 2);
   };
 
-  // Log para depuração
-  console.log("MemberLayout renderizado:", { 
-    profileName: profile?.name,
-    profileEmail: profile?.email,
-    sidebarOpen,
-    windowWidth: window.innerWidth
-  });
+  // Detectar tamanho de tela e ajustar barra lateral em dispositivos móveis
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 768 && sidebarOpen) {
+        setSidebarOpen(false);
+      }
+    };
 
-  if (!profile) {
-    console.log("Perfil não encontrado no MemberLayout");
-    toast.error("Erro ao carregar perfil. Tente fazer login novamente.");
-  }
+    window.addEventListener('resize', handleResize);
+    // Executar verificação inicial
+    handleResize();
+    
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [sidebarOpen]);
+
+  console.log("MemberLayout renderizado:", { sidebarOpen });
 
   return (
     <div className="flex min-h-screen bg-background overflow-hidden">
-      {/* Sidebar sempre renderizado com visibilidade garantida */}
+      {/* Barra lateral com z-index alto para garantir visibilidade */}
       <MemberSidebar 
         sidebarOpen={sidebarOpen} 
-        setSidebarOpen={handleSidebarToggle}
-        profileName={profile?.name}
-        profileEmail={profile?.email}
+        setSidebarOpen={setSidebarOpen}
+        profileName={profile?.name || null}
+        profileEmail={profile?.email || null}
         profileAvatar={profile?.avatar_url}
         getInitials={getInitials}
         signOut={signOut}
@@ -87,7 +70,7 @@ const MemberLayout = ({ children }: { children: React.ReactNode }) => {
       {/* Conteúdo principal */}
       <MemberContent 
         sidebarOpen={sidebarOpen} 
-        setSidebarOpen={handleSidebarToggle} 
+        setSidebarOpen={setSidebarOpen}
       >
         {children}
       </MemberContent>

@@ -8,7 +8,8 @@ import {
   MessageCircle, 
   Award, 
   HelpCircle,
-  Compass 
+  Compass,
+  User
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
@@ -19,6 +20,8 @@ interface MemberSidebarNavProps {
 export const MemberSidebarNav = ({ sidebarOpen }: MemberSidebarNavProps) => {
   const location = useLocation();
   const currentPath = location.pathname;
+  
+  console.log("MemberSidebarNav: rota atual =", currentPath);
 
   // Definição de itens do menu principal
   const navItems = [
@@ -64,6 +67,12 @@ export const MemberSidebarNav = ({ sidebarOpen }: MemberSidebarNavProps) => {
       href: "/suggestions",
       active: currentPath.includes("/suggestions")
     },
+    {
+      title: "Perfil",
+      icon: User,
+      href: "/profile",
+      active: currentPath.includes("/profile")
+    },
   ];
 
   // Item separado para suporte
@@ -88,7 +97,7 @@ export const MemberSidebarNav = ({ sidebarOpen }: MemberSidebarNavProps) => {
                 : "text-gray-600 hover:bg-gray-100"
             )}
           >
-            <item.icon size={18} />
+            <item.icon size={18} className={item.active ? "text-[#0ABAB5]" : ""} />
             {sidebarOpen && <span>{item.title}</span>}
           </Link>
         ))}

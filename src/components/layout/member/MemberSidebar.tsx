@@ -27,20 +27,24 @@ export const MemberSidebar = ({
   return (
     <aside
       className={cn(
-        "fixed inset-y-0 left-0 z-50 flex h-full flex-col border-r bg-background shadow-sm transition-all duration-300 ease-in-out",
-        sidebarOpen ? "w-64" : "w-0 md:w-[70px]"
+        "fixed inset-y-0 left-0 z-50 flex h-full flex-col border-r bg-background transition-all duration-300 ease-in-out",
+        sidebarOpen ? "w-64" : "w-[70px]",
+        // Garantir visibilidade em mobile (escondido apenas se for mobile E fechado)
+        "md:translate-x-0",
+        !sidebarOpen && window.innerWidth < 768 ? "-translate-x-full" : "translate-x-0"
       )}
+      style={{ boxShadow: "0 0 20px rgba(0,0,0,0.05)" }}
     >
       <div className="flex flex-col h-full">
-        {/* Logo area */}
+        {/* Área do logo */}
         <SidebarLogo sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
         
         <Separator />
 
-        {/* Navigation */}
+        {/* Navegação */}
         <MemberSidebarNav sidebarOpen={sidebarOpen} />
 
-        {/* User menu at bottom of sidebar */}
+        {/* Menu do usuário no rodapé da barra lateral */}
         <div className="mt-auto">
           <Separator />
           <MemberUserMenu 

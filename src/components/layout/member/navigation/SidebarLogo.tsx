@@ -9,6 +9,11 @@ interface SidebarLogoProps {
 }
 
 export const SidebarLogo = ({ sidebarOpen, setSidebarOpen }: SidebarLogoProps) => {
+  const toggleSidebar = () => {
+    console.log("Alternando sidebar:", !sidebarOpen);
+    setSidebarOpen(!sidebarOpen);
+  };
+
   return (
     <div className="flex h-16 items-center justify-between px-3">
       {sidebarOpen ? (
@@ -30,8 +35,8 @@ export const SidebarLogo = ({ sidebarOpen, setSidebarOpen }: SidebarLogoProps) =
       <Button
         variant="ghost"
         size="icon"
-        onClick={() => setSidebarOpen(!sidebarOpen)}
-        className="hidden md:flex ml-2"
+        onClick={toggleSidebar}
+        className={sidebarOpen ? "ml-2" : "hidden md:flex mx-auto mt-2"}
         aria-label={sidebarOpen ? "Colapsar menu" : "Expandir menu"}
       >
         {sidebarOpen ? <ChevronLeft size={20} /> : <Menu size={20} />}

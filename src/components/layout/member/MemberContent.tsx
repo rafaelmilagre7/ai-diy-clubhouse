@@ -20,10 +20,13 @@ export const MemberContent = ({
     <main 
       className={cn(
         "flex-1 bg-background transition-all duration-300 ease-in-out",
-        sidebarOpen ? "md:ml-64" : "md:ml-[70px]"
+        // Ajusta o margin-left baseado no estado da barra lateral
+        sidebarOpen ? "md:ml-64" : "md:ml-[70px]",
+        // Sem margem em mobile (barra lateral sobrepõe)
+        "ml-0"
       )}
     >
-      {/* Mobile header with menu toggle */}
+      {/* Cabeçalho mobile com botão do menu */}
       <div className="sticky top-0 z-40 flex h-16 items-center border-b bg-background px-4 md:hidden">
         <Button
           variant="ghost"
@@ -41,10 +44,10 @@ export const MemberContent = ({
             className="h-8 w-auto" 
           />
         </div>
-        <div className="w-10"></div> {/* Spacer for balance */}
+        <div className="w-10"></div> {/* Espaçador para equilíbrio */}
       </div>
 
-      {/* Content area */}
+      {/* Área de conteúdo */}
       <div className="container py-6 md:py-8">
         {children || <Outlet />}
       </div>
