@@ -1,12 +1,18 @@
 
-import { useEffect } from "react";
+import { ReactNode, useEffect } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import { DashboardHeader } from "./DashboardHeader";
 import { ImplementationTrail } from "./ImplementationTrail";
 import { useProgress } from "@/hooks/onboarding/useProgress";
 import { useNavigate } from "react-router-dom";
 
-export const DashboardLayout = () => {
+// Definir as props do DashboardLayout
+interface DashboardLayoutProps {
+  searchQuery?: string;
+  onSearchChange?: (query: string) => void;
+}
+
+export const DashboardLayout = ({ searchQuery = "", onSearchChange = () => {} }: DashboardLayoutProps) => {
   const location = useLocation();
   const { progress, isLoading } = useProgress();
   const navigate = useNavigate();
@@ -23,7 +29,10 @@ export const DashboardLayout = () => {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <DashboardHeader />
+      <DashboardHeader 
+        searchQuery={searchQuery} 
+        onSearchChange={onSearchChange} 
+      />
       
       <main className="flex-1 container mx-auto px-4 py-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

@@ -145,6 +145,30 @@ export type Database = {
           },
         ]
       }
+      implementation_trails: {
+        Row: {
+          created_at: string
+          id: string
+          trail_data: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          trail_data?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          trail_data?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       modules: {
         Row: {
           certificate_template: Json | null
