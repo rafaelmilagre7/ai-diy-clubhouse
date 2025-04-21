@@ -1,14 +1,11 @@
 
-import React, { useState } from "react";
 import { useUserStats } from "@/hooks/useUserStats/useUserStats";
 import { Achievement } from "@/types/achievementTypes";
 import { AchievementsHeader } from "./AchievementsHeader";
-import { AchievementsTabs } from "./AchievementsTabs";
-import { Trophy } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
+import { AchievementsProgressCard } from "./AchievementsProgressCard";
+import { AchievementsTabsContainer } from "./AchievementsTabsContainer";
 
-// Função utilitária para mock de conquista, mantendo compatibilidade com o sistema antigo.
+// Função utilitária (mock) — manter por compatibilidade, pode ser depois substituída
 const getAchievementsList = (stats: any): Achievement[] => [
   {
     id: "beginner-1",
@@ -91,7 +88,6 @@ const getAchievementsList = (stats: any): Achievement[] => [
 
 export const AchievementsPage = () => {
   const { stats, loading } = useUserStats();
-  const [activeCategory, setActiveCategory] = useState("all");
 
   if (loading) {
     return (
@@ -102,42 +98,12 @@ export const AchievementsPage = () => {
   }
 
   const achievements: Achievement[] = getAchievementsList(stats);
-  const unlockedCount = achievements.filter(a => a.isUnlocked).length;
-  const completionPercentage = Math.round((unlockedCount / achievements.length) * 100);
 
   return (
     <div className="space-y-8 animate-fade-in">
       <AchievementsHeader />
-
-      {/* Cartão de resumo com progresso */}
-      <Card className="bg-gradient-to-br from-viverblue/10 to-viverblue/5 border border-viverblue/20">
-        <CardContent className="p-6">
-          <div className="flex flex-col md:flex-row gap-6 items-center">
-            <div className="flex-shrink-0 bg-viverblue/20 rounded-full p-5 backdrop-blur-sm">
-              <Trophy className="h-12 w-12 text-viverblue" />
-            </div>
-            <div className="flex-1 space-y-2 text-center md:text-left">
-              <h2 className="text-xl font-semibold">Progresso de Conquistas</h2>
-              <p className="text-sm text-muted-foreground">
-                Você já desbloqueou {unlockedCount} de {achievements.length} conquistas disponíveis.
-              </p>
-              <div className="w-full mt-2">
-                <div className="flex justify-between text-xs mb-1">
-                  <span>{unlockedCount} conquistadas</span>
-                  <span>{completionPercentage}%</span>
-                </div>
-                <Progress value={completionPercentage} className="h-2" />
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Tabs e grid de conquistas */}
-      <AchievementsTabs
-        achievements={achievements}
-        onCategoryChange={setActiveCategory}
-      />
+      <AchievementsProgressCard achievements={achievements} />
+      <AchievementsTabsContainer achievements={achievements} />
     </div>
   );
 };
