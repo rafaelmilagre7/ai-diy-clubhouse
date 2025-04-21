@@ -9,6 +9,7 @@ import { NavigationButtons } from "../NavigationButtons";
 import { FormMessage } from "@/components/ui/form-message";
 import { useFormValidation } from "@/hooks/useFormValidation";
 import { MilagrinhoMessage } from "../MilagrinhoMessage";
+import { cn } from "@/lib/utils";
 
 interface PersonalInfoStepProps {
   onSubmit: (data: any) => void;
