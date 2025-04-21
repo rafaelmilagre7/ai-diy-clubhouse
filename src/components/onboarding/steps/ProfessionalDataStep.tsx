@@ -34,7 +34,8 @@ export const ProfessionalDataStep = ({
   const extractFormData = (data: any): FormValues => {
     console.log("Extraindo dados profissionais de:", data);
     
-    return {
+    // Verificar onde os dados estão armazenados - podem estar em diferentes locais devido à estrutura do banco
+    const profData = {
       company_name: 
         data?.company_name || 
         data?.professional_info?.company_name || 
@@ -60,10 +61,13 @@ export const ProfessionalDataStep = ({
         data?.professional_info?.annual_revenue || 
         "",
     };
+    
+    console.log("Dados extraídos:", profData);
+    return profData;
   };
 
   // Usar useForm com defaultValues diretamente
-  const { control, handleSubmit, formState: { errors }, reset } = useForm<FormValues>({
+  const { control, handleSubmit, formState: { errors }, reset, watch } = useForm<FormValues>({
     defaultValues: initialData ? extractFormData(initialData) : {
       company_name: "",
       company_size: "",
@@ -74,17 +78,23 @@ export const ProfessionalDataStep = ({
     }
   });
 
+  // Monitorar valores do formulário para debug
+  const formValues = watch();
+  console.log("Valores atuais do formulário:", formValues);
+
   // Atualizar formulário quando dados iniciais mudarem
   useEffect(() => {
     if (initialData) {
       console.log("Atualizando formulário com dados:", initialData);
       const extractedData = extractFormData(initialData);
-      console.log("Dados extraídos:", extractedData);
+      console.log("Dados extraídos para reset do formulário:", extractedData);
       reset(extractedData);
     }
   }, [initialData, reset]);
 
   const onFormSubmit = (data: FormValues) => {
+    console.log("Formulário submetido com dados:", data);
+    
     // Estrutura correta para salvar os dados profissionais
     const professionalData: ProfessionalDataInput = {
       professional_info: {

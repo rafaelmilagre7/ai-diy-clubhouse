@@ -33,12 +33,14 @@ export function useStepPersistenceCore({
     const currentStep = steps[currentStepIndex]?.id || '';
     
     console.log(`Salvando dados do passo ${currentStep}, índice ${currentStepIndex}, navegação automática: ${shouldNavigate ? "SIM" : "NÃO"}`, data);
+    console.log("Estado atual do progresso:", progress);
 
     try {
       // Montar objeto de atualização para a etapa
       const updateObj = buildUpdateObject(currentStep, data, progress, currentStepIndex);
       if (Object.keys(updateObj).length === 0) {
         console.warn("Objeto de atualização vazio, nada para salvar");
+        toast.warning("Sem dados para salvar");
         return;
       }
 
@@ -55,35 +57,30 @@ export function useStepPersistenceCore({
       // Notificar usuário do salvamento
       toast.success("Dados salvos com sucesso!");
       
-      // Verificar qual etapa estamos e garantir navegação específica quando necessário
-      // Mapeamento de navegação forçada para cada etapa
-      if (currentStep === "personal") {
-        setTimeout(() => navigate("/onboarding/professional-data"), 300);
-        return;
-      } else if (currentStep === "professional_data") {
-        setTimeout(() => navigate("/onboarding/business-context"), 300);
-        return;
-      } else if (currentStep === "business_context") {
-        setTimeout(() => navigate("/onboarding/ai-experience"), 300);
-        return;
-      } else if (currentStep === "ai_exp") {
-        setTimeout(() => navigate("/onboarding/club-goals"), 300);
-        return;
-      } else if (currentStep === "business_goals") {
-        setTimeout(() => navigate("/onboarding/customization"), 300);
-        return;
-      } else if (currentStep === "experience_personalization") {
-        setTimeout(() => navigate("/onboarding/complementary"), 300);
-        return;
-      } else if (currentStep === "complementary_info") {
-        setTimeout(() => navigate("/onboarding/review"), 300);
-        return;
-      }
-      
-      // Caso não seja uma etapa específica, usar a navegação padrão
+      // Garantir navegação adequada para cada etapa
       if (shouldNavigate) {
-        console.log(`Iniciando navegação automática após salvar o passo ${currentStep}`);
-        navigateAfterStep(currentStep, currentStepIndex, navigate, shouldNavigate);
+        // Mapeamento direto das etapas para navegação garantida
+        if (currentStep === "personal") {
+          setTimeout(() => navigate("/onboarding/professional-data"), 500);
+        } else if (currentStep === "professional_data") {
+          setTimeout(() => navigate("/onboarding/business-context"), 500);
+        } else if (currentStep === "business_context") {
+          setTimeout(() => navigate("/onboarding/ai-experience"), 500);
+        } else if (currentStep === "ai_exp") {
+          setTimeout(() => navigate("/onboarding/club-goals"), 500);
+        } else if (currentStep === "business_goals") {
+          setTimeout(() => navigate("/onboarding/customization"), 500);
+        } else if (currentStep === "experience_personalization") {
+          setTimeout(() => navigate("/onboarding/complementary"), 500);
+        } else if (currentStep === "complementary_info") {
+          setTimeout(() => navigate("/onboarding/review"), 500);
+        } else if (currentStep === "review") {
+          setTimeout(() => navigate("/implementation-trail"), 500);
+        } else {
+          // Usar navegador de etapas padrão como fallback
+          console.log(`Usando navegação padrão para etapa: ${currentStep}`);
+          navigateAfterStep(currentStep, currentStepIndex, navigate, shouldNavigate);
+        }
       } else {
         console.log("Navegação automática desativada, permanecendo na página atual");
       }
@@ -101,7 +98,11 @@ export function useStepPersistenceCore({
 
   // Finaliza onboarding (marca como completo e leva à tela de trilha)
   const completeOnboarding = async () => {
-    if (!progress?.id) return;
+    if (!progress?.id) {
+      toast.error("Progresso não encontrado. Tente recarregar a página.");
+      return;
+    }
+    
     try {
       console.log("Completando onboarding...");
       

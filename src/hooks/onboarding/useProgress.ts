@@ -17,6 +17,7 @@ export const useProgress = () => {
   const hasInitialized = useRef(false);
   const progressId = useRef<string | null>(null);
   const isMounted = useRef(true);
+  const lastUpdateTime = useRef<number>(Date.now());
 
   useEffect(() => {
     isMounted.current = true;
@@ -30,6 +31,7 @@ export const useProgress = () => {
 
     try {
       setIsLoading(true);
+      console.log("Buscando progresso para o usuário:", user.id);
 
       const { data, error } = await fetchOnboardingProgress(user.id);
 
@@ -42,6 +44,9 @@ export const useProgress = () => {
           if (!createError && newData) {
             setProgress(newData);
             progressId.current = newData.id;
+            console.log("Novo progresso criado:", newData);
+          } else {
+            console.error("Erro ao criar novo progresso:", createError);
           }
           return newData;
         } else {
@@ -54,6 +59,9 @@ export const useProgress = () => {
         if (!createError && newData) {
           setProgress(newData);
           progressId.current = newData.id;
+          console.log("Novo progresso criado:", newData);
+        } else {
+          console.error("Erro ao criar novo progresso:", createError);
         }
         return newData;
       } else {
@@ -75,6 +83,7 @@ export const useProgress = () => {
 
   useEffect(() => {
     if (!user || hasInitialized.current) return;
+    console.log("Inicializando useProgress, buscando dados...");
     fetchProgress();
   }, [user, fetchProgress]);
 
@@ -86,6 +95,8 @@ export const useProgress = () => {
 
     try {
       console.log("Atualizando progresso:", updates);
+      lastUpdateTime.current = Date.now();
+      
       const { data, error } = await updateOnboardingProgress(progress.id, updates);
 
       if (!isMounted.current) return null;
@@ -109,11 +120,14 @@ export const useProgress = () => {
     if (!user) return null;
 
     if (!progressId.current) {
+      console.log("ID de progresso não disponível, buscando dados iniciais");
       return await fetchProgress();
     }
 
     try {
       setIsLoading(true);
+      console.log("Atualizando dados do progresso:", progressId.current);
+      
       const { data, error } = await refreshOnboardingProgress(progressId.current);
 
       if (!isMounted.current) return null;
@@ -135,6 +149,24 @@ export const useProgress = () => {
       }
     }
   }, [user, fetchProgress]);
+
+  // Adicionar efeito para atualização periódica
+  useEffect(() => {
+    if (!user || !progressId.current) return;
+    
+    const checkForUpdates = async () => {
+      // Se passou mais de 10 segundos desde a última atualização manual, refrescar
+      if (Date.now() - lastUpdateTime.current > 10000) {
+        console.log("Verificando atualizações no servidor...");
+        await refreshProgress();
+      }
+    };
+    
+    // Verificar a cada 15 segundos
+    const interval = setInterval(checkForUpdates, 15000);
+    
+    return () => clearInterval(interval);
+  }, [user, refreshProgress]);
 
   return {
     progress,
