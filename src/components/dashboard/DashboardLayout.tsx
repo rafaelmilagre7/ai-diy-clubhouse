@@ -1,4 +1,3 @@
-
 import { FC } from "react";
 import { ActiveSolutions } from "./ActiveSolutions";
 import { CompletedSolutions } from "./CompletedSolutions";
@@ -33,6 +32,12 @@ export const DashboardLayout: FC<DashboardLayoutProps> = ({
     <div className="space-y-8 md:pt-2 animate-fade-in">
       {/* HEADER IMERSIVO */}
       <ModernDashboardHeader userName={profile?.name?.split(" ")[0] || "Membro"} />
+
+      {/* NOVO: Resumo gamificação - conquistas */}
+      <div className="animate-fade-in">
+        {/* AchievementsSummary adiciona badges/conquistas com microinteração */}
+        {<AchievementsSummary />}
+      </div>
 
       {/* CARDS DE PROGRESSO (KPI) */}
       <KpiGrid 
