@@ -31,7 +31,9 @@ export const EtapasProgresso = ({
             key={step} 
             onClick={() => onStepClick && onStepClick(step - 1)}
             className={`relative z-10 flex flex-col items-center ${
-              onStepClick ? "cursor-pointer" : ""
+              step <= currentStep 
+                ? onStepClick ? "cursor-pointer" : "" 
+                : "opacity-60"
             }`}
           >
             <div className={`rounded-full flex items-center justify-center w-8 h-8 

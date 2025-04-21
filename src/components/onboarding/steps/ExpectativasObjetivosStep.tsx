@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useForm, Controller } from "react-hook-form";
 import { Button } from "@/components/ui/button";
@@ -139,15 +140,24 @@ export const ExpectativasObjetivosStep: React.FC<OnboardingStepProps> = ({
                 className="flex flex-col gap-3"
               >
                 {MOTIVOS_OPCOES.map(opt => (
-                  <RadioGroupItem
+                  <div 
                     key={opt.value}
-                    value={opt.value}
-                    className={cn("flex items-center gap-2 p-3 border border-gray-200 rounded-lg", field.value === opt.value && "bg-[#0ABAB5]/10 border-[#0ABAB5]")}
+                    className={cn(
+                      "flex items-center gap-2 p-3 border rounded-lg cursor-pointer transition-all",
+                      field.value === opt.value 
+                        ? "border-[#0ABAB5] bg-[#0ABAB5]/10" 
+                        : "border-gray-200 bg-white"
+                    )}
+                    onClick={() => field.onChange(opt.value)}
                   >
+                    <RadioGroupItem value={opt.value} id={opt.value} className="sr-only" />
                     <span className="flex items-center gap-2">
                       {opt.icon}<span>{opt.label}</span>
                     </span>
-                  </RadioGroupItem>
+                    {field.value === opt.value && (
+                      <Check className="ml-auto text-[#0ABAB5]" />
+                    )}
+                  </div>
                 ))}
               </RadioGroup>
               <FormMessage />
@@ -307,7 +317,12 @@ export const ExpectativasObjetivosStep: React.FC<OnboardingStepProps> = ({
                 type="multiple"
                 value={field.value}
                 className="flex flex-wrap gap-2"
-                onValueChange={(val: string[]) => field.onChange(val)}
+                onValueChange={(val: string[]) => {
+                  // Garante que pelo menos um formato está selecionado
+                  if (val.length > 0) {
+                    field.onChange(val);
+                  }
+                }}
               >
                 {FORMATO_OPTIONS.map((f) => (
                   <ToggleGroupItem
@@ -330,8 +345,12 @@ export const ExpectativasObjetivosStep: React.FC<OnboardingStepProps> = ({
           )}
         />
 
-        <Button disabled={isSubmitting} type="submit" className="w-full bg-[#0ABAB5] mt-6">
-          {isLastStep ? "Finalizar" : "Próximo"}
+        <Button 
+          disabled={isSubmitting} 
+          type="submit" 
+          className="w-full bg-[#0ABAB5] hover:bg-[#099388] mt-6"
+        >
+          {isSubmitting ? "Salvando..." : (isLastStep ? "Finalizar" : "Próximo")}
         </Button>
       </form>
     </Form>

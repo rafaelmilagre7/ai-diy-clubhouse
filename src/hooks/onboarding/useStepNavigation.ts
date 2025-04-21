@@ -36,23 +36,27 @@ export const useStepNavigation = () => {
 
   const navigateToStep = (stepIndex: number) => {
     if (!progress) return;
-    if (stepIndex >= 0 && stepIndex < steps.length) {
-      const lastCompletedIndex = Math.max(
-        ...(progress?.completed_steps || []).map(step => 
-          steps.findIndex(s => s.id === step)
-        ).filter(index => index !== -1),
-        -1
-      );
-      const maxAllowedIndex = lastCompletedIndex + 1;
-      if (stepIndex <= maxAllowedIndex) {
-        const targetStep = steps[stepIndex];
-        if (targetStep && targetStep.path) {
-          setCurrentStepIndex(stepIndex);
-          navigate(targetStep.path);
-        }
-      } else {
-        toast.error("Complete as etapas anteriores primeiro.");
+    
+    // Obtém o índice da última etapa completada
+    const lastCompletedIndex = Math.max(
+      ...(progress?.completed_steps || []).map(step => 
+        steps.findIndex(s => s.id === step)
+      ).filter(index => index !== -1),
+      -1
+    );
+    
+    // Calcula o índice máximo permitido (última etapa completada + 1)
+    const maxAllowedIndex = lastCompletedIndex + 1;
+    
+    // Somente permite navegação para etapas anteriores ou a próxima não completada
+    if (stepIndex <= maxAllowedIndex) {
+      const targetStep = steps[stepIndex];
+      if (targetStep && targetStep.path) {
+        setCurrentStepIndex(stepIndex);
+        navigate(targetStep.path);
       }
+    } else {
+      toast.error("Complete as etapas anteriores primeiro.");
     }
   };
 

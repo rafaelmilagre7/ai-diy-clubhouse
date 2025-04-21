@@ -21,6 +21,8 @@ export const useStepPersistence = ({
   ) => {
     if (!progress?.id) return;
     try {
+      // Verificações específicas para cada etapa
+      
       // Etapa específica para dados profissionais
       if (stepId === "goals") {
         const professionalInfo = data.professional_info || {};
@@ -67,17 +69,36 @@ export const useStepPersistence = ({
           completed_steps: [...(progress.completed_steps || []), stepId],
           current_step: steps[Math.min(currentStepIndex + 1, steps.length - 1)].id,
         });
+      } else if (stepId === "business_goals") {
+        const businessGoals = data.business_goals || {};
+        if (!businessGoals.primary_goal || !businessGoals.expected_outcomes?.length || 
+            !businessGoals.how_implement || !businessGoals.week_availability || 
+            businessGoals.live_interest === undefined || !businessGoals.content_formats?.length) {
+          toast.error("Por favor, preencha todos os campos obrigatórios");
+          return;
+        }
+        await updateProgress({
+          business_goals: businessGoals,
+          completed_steps: [...(progress.completed_steps || []), stepId],
+          current_step: steps[Math.min(currentStepIndex + 1, steps.length - 1)].id,
+        });
       } else {
+        // Salvamento genérico para outras etapas
         const sectionKey = steps.find(s => s.id === stepId)?.section as keyof OnboardingData;
         if (!sectionKey) throw new Error('Seção inválida');
+        
         await updateProgress({
           [sectionKey]: data[sectionKey],
           completed_steps: [...(progress.completed_steps || []), stepId],
           current_step: steps[Math.min(currentStepIndex + 1, steps.length - 1)].id,
         });
       }
+      
+      // Atualiza o progresso após salvar
       await refreshProgress();
       toast.success("Progresso salvo com sucesso!");
+      
+      // Navega para a próxima etapa com atraso para garantir fluidez
       const nextStepIndex = Math.min(currentStepIndex + 1, steps.length - 1);
       setCurrentStepIndex(nextStepIndex);
       const nextStep = steps[nextStepIndex];
@@ -87,6 +108,7 @@ export const useStepPersistence = ({
         }, 300);
       }
     } catch (error) {
+      console.error("Erro ao salvar dados:", error);
       toast.error("Erro ao salvar dados. Tente novamente.");
     }
   };
