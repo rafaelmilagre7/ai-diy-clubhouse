@@ -9,6 +9,29 @@ interface CompanySectorInputProps {
   error?: FieldError | Record<string, any>;
 }
 
+const SECTORES = [
+  "Inteligência Artificial",
+  "Tecnologia / TI",
+  "Educação",
+  "Saúde",
+  "Financeiro",
+  "E-commerce / Varejo",
+  "Serviços Profissionais",
+  "Marketing / Publicidade",
+  "Manufatura / Indústria",
+  "Alimentação",
+  "Construção Civil",
+  "Imobiliário",
+  "Transporte / Logística",
+  "Agronegócio",
+  "Energia / Sustentabilidade",
+  "Jurídico",
+  "Recursos Humanos / Recrutamento",
+  "Consultoria",
+  "Governo / Setor Público",
+  "Outro"
+];
+
 export const CompanySectorInput: React.FC<CompanySectorInputProps> = ({ control, error }) => {
   return (
     <div className="space-y-2">
@@ -28,16 +51,11 @@ export const CompanySectorInput: React.FC<CompanySectorInputProps> = ({ control,
               <SelectValue placeholder="Selecione o setor de atuação" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="tecnologia">Tecnologia / TI</SelectItem>
-              <SelectItem value="educacao">Educação</SelectItem>
-              <SelectItem value="saude">Saúde</SelectItem>
-              <SelectItem value="financeiro">Financeiro</SelectItem>
-              <SelectItem value="ecommerce">E-commerce / Varejo</SelectItem>
-              <SelectItem value="servicos">Serviços Profissionais</SelectItem>
-              <SelectItem value="marketing">Marketing / Publicidade</SelectItem>
-              <SelectItem value="manufatura">Manufatura / Indústria</SelectItem>
-              <SelectItem value="alimentacao">Alimentação</SelectItem>
-              <SelectItem value="outro">Outro</SelectItem>
+              {SECTORES.map((sector) => (
+                <SelectItem value={sector} key={sector}>
+                  {sector}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         )}
