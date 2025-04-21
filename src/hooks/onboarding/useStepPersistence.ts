@@ -22,8 +22,6 @@ export const useStepPersistence = ({
     if (!progress?.id) return;
     try {
       // Verificações específicas para cada etapa
-      
-      // Etapa específica para dados profissionais
       if (stepId === "goals") {
         const professionalInfo = data.professional_info || {};
         if (!professionalInfo.company_name || !professionalInfo.company_size || 
@@ -72,7 +70,10 @@ export const useStepPersistence = ({
       } else if (stepId === "business_goals") {
         const businessGoals = data.business_goals || {};
         if (!businessGoals.primary_goal || !businessGoals.expected_outcomes?.length || 
-            !businessGoals.timeline) {
+            !businessGoals.timeline
+            // Os campos abaixo são opcionais, não exigir, mas atualizar se vierem preenchidos:
+            // businessGoals.how_implement, businessGoals.week_availability, businessGoals.live_interest, businessGoals.content_formats
+        ) {
           toast.error("Por favor, preencha todos os campos obrigatórios");
           return;
         }
