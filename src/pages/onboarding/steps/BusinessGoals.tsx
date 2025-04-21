@@ -1,66 +1,77 @@
 
+import React from "react";
 import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
-import { BusinessGoalsStep } from "@/components/onboarding/steps/BusinessGoalsStep";
-import { useOnboardingSteps } from "@/hooks/onboarding/useOnboardingSteps";
-import { useProgress } from "@/hooks/onboarding/useProgress";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/contexts/auth";
+import { useForm } from "react-hook-form";
+import { Button } from "@/components/ui/button";
+import { useProgress } from "@/hooks/onboarding/useProgress";
+import { useOnboardingSteps } from "@/hooks/onboarding/useOnboardingSteps";
 import { MilagrinhoMessage } from "@/components/onboarding/MilagrinhoMessage";
+import { CompanyInputs } from "@/components/onboarding/steps/business/CompanyInputs";
+import { toast } from "sonner";
 
 const BusinessGoals = () => {
-  const { 
-    saveStepData, 
-    isSubmitting, 
-    currentStepIndex,
-    steps,
-    navigateToStep
-  } = useOnboardingSteps();
-  
-  const { progress, isLoading } = useProgress();
-  const { user } = useAuth();
+  const { saveStepData } = useOnboardingSteps();
   const navigate = useNavigate();
+  const { progress, isLoading } = useProgress();
+  
+  const { control, handleSubmit, watch, formState: { errors, isSubmitting } } = useForm({
+    defaultValues: {
+      company_name: progress?.company_name || '',
+      company_size: progress?.company_size || '',
+      company_sector: progress?.company_sector || '',
+      company_website: progress?.company_website || '',
+      current_position: progress?.current_position || '',
+      annual_revenue: progress?.annual_revenue || '',
+    }
+  });
 
-  // Se o usuário não estiver autenticado, redirecionamos para login
-  if (!user) {
-    navigate("/login", { replace: true });
-    return null;
+  const onSubmit = async (data) => {
+    try {
+      await saveStepData("goals", data);
+      toast.success("Informações salvas com sucesso!");
+      navigate("/onboarding/business-context");
+    } catch (error) {
+      console.error("Erro ao salvar dados:", error);
+      toast.error("Erro ao salvar as informações. Tente novamente.");
+    }
+  };
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <OnboardingLayout currentStep={2} title="Carregando...">
+        <div className="flex justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#0ABAB5]"></div>
+        </div>
+      </OnboardingLayout>
+    );
   }
-
-  // Mostra tela de carregamento enquanto busca os dados
-  if (isLoading) return (
-    <OnboardingLayout currentStep={2} title="Carregando..." backUrl="/onboarding">
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#0ABAB5]"></div>
-      </div>
-    </OnboardingLayout>
-  );
-
-  // Extrair primeiro nome do usuário para personalização
-  const firstName = user?.user_metadata?.name?.split(' ')[0] || 
-                   progress?.personal_info?.name?.split(' ')[0] || 
-                   user?.email?.split('@')[0] || '';
 
   return (
     <OnboardingLayout 
       currentStep={2} 
       title="Dados Profissionais"
       backUrl="/onboarding"
-      onStepClick={navigateToStep}
     >
-      <div className="max-w-4xl mx-auto space-y-6">
+      <div className="max-w-4xl mx-auto space-y-8">
         <MilagrinhoMessage 
-          userName={firstName}
-          message="Para personalizar sua experiência, conte um pouco sobre a empresa onde você trabalha. Estas informações são essenciais para recomendar as melhores soluções para seu negócio."
+          message="Agora vamos conhecer um pouco sobre sua empresa e seu papel profissional. Estas informações nos ajudarão a personalizar as soluções que mais se adaptam ao seu contexto de negócio."
         />
         
-        <BusinessGoalsStep 
-          onSubmit={saveStepData}
-          isSubmitting={isSubmitting}
-          isLastStep={currentStepIndex === steps.length - 1}
-          onComplete={() => {}}
-          initialData={progress}
-          personalInfo={progress?.personal_info}
-        />
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+          <CompanyInputs 
+            control={control} 
+            errors={errors} 
+            watch={watch}
+          />
+
+          <div className="flex justify-end pt-6">
+            <Button type="submit" className="bg-[#0ABAB5] hover:bg-[#09a29d]" disabled={isSubmitting}>
+              {isSubmitting ? "Salvando..." : "Continuar"}
+            </Button>
+          </div>
+        </form>
       </div>
     </OnboardingLayout>
   );

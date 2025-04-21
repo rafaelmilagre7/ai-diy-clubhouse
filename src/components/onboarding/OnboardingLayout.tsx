@@ -5,6 +5,7 @@ import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { useOnboardingSteps } from "@/hooks/onboarding/useOnboardingSteps";
+import MemberLayout from "@/components/layout/MemberLayout";
 
 interface OnboardingLayoutProps {
   children: React.ReactNode;
@@ -26,7 +27,8 @@ export const OnboardingLayout = ({
   // Função para lidar com o clique no passo
   const handleStepClick = onStepClick || navigateToStep;
   
-  return (
+  // Conteúdo do Onboarding
+  const onboardingContent = (
     <div className="container max-w-screen-lg py-8">
       <div className="relative mb-4">
         <Link to={backUrl}>
@@ -58,5 +60,12 @@ export const OnboardingLayout = ({
         {children}
       </div>
     </div>
+  );
+  
+  // Agora envolvemos todo o conteúdo com o MemberLayout
+  return (
+    <MemberLayout>
+      {onboardingContent}
+    </MemberLayout>
   );
 };
