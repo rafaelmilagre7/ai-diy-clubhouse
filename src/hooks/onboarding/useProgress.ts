@@ -3,7 +3,6 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/auth";
 import { OnboardingData, OnboardingProgress } from "@/types/onboarding";
-import { toast } from "sonner";
 
 export const useProgress = () => {
   const { user } = useAuth();
@@ -68,6 +67,10 @@ export const useProgress = () => {
           name: userName,
           email: userEmail
         },
+        professional_info: {},
+        business_context: {},
+        ai_experience: {},
+        business_goals: {},
         experience_personalization: {},
         complementary_info: {}
       };
@@ -85,7 +88,6 @@ export const useProgress = () => {
       return data;
     } catch (error) {
       console.error("Erro ao criar progresso inicial:", error);
-      toast.error("Não foi possível iniciar seu progresso. Tente novamente mais tarde.");
       return null;
     }
   };
@@ -115,7 +117,10 @@ export const useProgress = () => {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Erro ao atualizar dados:", error);
+        throw error;
+      }
       
       // Atualizamos o estado local para refletir as mudanças imediatamente
       const updatedProgress = { ...progress, ...updates };
@@ -144,7 +149,10 @@ export const useProgress = () => {
         .eq("id", progressId.current)
         .single();
         
-      if (error) throw error;
+      if (error) {
+        console.error("Erro ao recarregar progresso:", error);
+        throw error;
+      }
       
       console.log("Progresso recarregado com sucesso:", data);
       setProgress(data);

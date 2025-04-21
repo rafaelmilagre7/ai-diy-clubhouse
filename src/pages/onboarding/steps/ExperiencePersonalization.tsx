@@ -13,35 +13,26 @@ const ExperiencePersonalization = () => {
   const navigate = useNavigate();
   const { refreshProgress } = useProgress();
 
+  // Efeito para carregar os dados mais recentes
+  useEffect(() => {
+    refreshProgress();
+  }, [refreshProgress]);
+
   const handleSaveData = async (stepId: string, data: any) => {
     try {
       setSubmitting(true);
       
-      // Salva os dados do formulário
+      // Salvamos os dados do formulário
       await saveStepData(stepId, data);
       
-      // Força um refresh dos dados após o salvamento
+      // Forçamos um refresh dos dados após o salvamento
       await refreshProgress();
-      
-      // Navega para a próxima etapa após salvar com sucesso
-      navigate("/onboarding/complementary");
     } catch (error) {
       console.error("Erro ao salvar dados:", error);
-      // Mantemos apenas mensagens contextuais no formulário
     } finally {
       setSubmitting(false);
     }
   };
-
-  // Efeito para verificar se já temos dados salvos
-  useEffect(() => {
-    if (progress?.completed_steps?.includes("experience_personalization")) {
-      console.log("Etapa já foi concluída anteriormente", progress.experience_personalization);
-    }
-    
-    // Forçar um refresh dos dados ao entrar na página
-    refreshProgress();
-  }, [progress, refreshProgress]);
 
   return (
     <OnboardingLayout
@@ -56,7 +47,7 @@ const ExperiencePersonalization = () => {
         <ExperiencePersonalizationStep
           onSubmit={handleSaveData}
           isSubmitting={submitting}
-          initialData={progress?.experience_personalization}
+          initialData={progress}
           isLastStep={false}
           onComplete={completeOnboarding}
         />

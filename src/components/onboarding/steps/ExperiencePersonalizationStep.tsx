@@ -1,127 +1,136 @@
 
-import React, { useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { ArrowRight } from "lucide-react";
-import { useExperiencePersonalizationForm } from "./ExperiencePersonalizationSections/useExperiencePersonalizationForm";
+import React, { useEffect, useState } from "react";
+import { OnboardingStepProps } from "@/types/onboarding";
 import { InterestsSection } from "./ExperiencePersonalizationSections/InterestsSection";
 import { TimePreferenceSection } from "./ExperiencePersonalizationSections/TimePreferenceSection";
 import { AvailableDaysSection } from "./ExperiencePersonalizationSections/AvailableDaysSection";
 import { NetworkingAvailabilitySection } from "./ExperiencePersonalizationSections/NetworkingAvailabilitySection";
 import { SkillsToShareSection } from "./ExperiencePersonalizationSections/SkillsToShareSection";
 import { MentorshipTopicsSection } from "./ExperiencePersonalizationSections/MentorshipTopicsSection";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { ArrowRight } from "lucide-react";
+import { useExperiencePersonalizationForm } from "./ExperiencePersonalizationSections/useExperiencePersonalizationForm";
 
-interface ExperiencePersonalizationStepProps {
-  onSubmit: (stepId: string, data: any) => void;
-  isSubmitting: boolean;
-  initialData?: any;
-  isLastStep?: boolean;
-  onComplete?: () => void;
-}
-
-export const ExperiencePersonalizationStep: React.FC<ExperiencePersonalizationStepProps> = ({
-  onSubmit, isSubmitting, initialData = {}, isLastStep = false, onComplete
+export const ExperiencePersonalizationStep: React.FC<OnboardingStepProps> = ({
+  onSubmit,
+  isSubmitting,
+  initialData,
+  isLastStep,
+  onComplete,
 }) => {
-  const {
-    control,
-    handleSubmit,
-    watch,
-    formState: { errors, isDirty },
-    isValid,
-    toggleSelect
-  } = useExperiencePersonalizationForm(initialData);
+  // Estado para controlar se o formulário foi validado com erro alguma vez
+  const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
+  const [formData, setFormData] = useState<any>(null);
 
-  const [attemptedSubmit, setAttemptedSubmit] = React.useState(false);
-
-  const handleFormSubmit = (formData: any) => {
-    if (isValid) {
-      onSubmit("experience_personalization", { experience_personalization: formData });
-    } else {
-      setAttemptedSubmit(true);
+  // Inicializar dados do formulário com base nos dados iniciais
+  useEffect(() => {
+    if (initialData) {
+      console.log("Dados iniciais de personalização:", initialData);
+      setFormData(initialData.experience_personalization || {});
     }
+  }, [initialData]);
+
+  // Hook de formulário personalizado
+  const {
+    setValue,
+    watch,
+    handleSubmit,
+    toggleSelect,
+    isValid,
+    formState: { errors }
+  } = useExperiencePersonalizationForm(formData);
+
+  // Valores atuais do formulário
+  const formValues = watch();
+
+  // Handler para envio do formulário
+  const onFormSubmit = () => {
+    setHasAttemptedSubmit(true);
+    
+    if (!isValid) {
+      console.error("Formulário inválido. Campos faltando:", formValues);
+      return;
+    }
+
+    const data = {
+      experience_personalization: {
+        interests: formValues.interests,
+        time_preference: formValues.time_preference,
+        available_days: formValues.available_days,
+        networking_availability: formValues.networking_availability,
+        skills_to_share: formValues.skills_to_share,
+        mentorship_topics: formValues.mentorship_topics,
+      },
+    };
+
+    console.log("Enviando dados de personalização:", data);
+    onSubmit("experience_personalization", data);
   };
 
-  // Esta variável determina se mostramos os erros de validação
-  // Mostraremos se o usuário tentou enviar o formulário OU se algum campo já foi modificado
-  const showValidationErrors = attemptedSubmit;
-
-  // Logs para depuração
-  useEffect(() => {
-    console.log("isValid:", isValid);
-    console.log("initialData:", initialData);
-    console.log("Current form values:", watch());
-  }, [isValid, initialData, watch]);
-
   return (
-    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-8">
-      {attemptedSubmit && !isValid && (
-        <Alert variant="destructive" className="mb-6">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            Por favor, preencha todos os campos obrigatórios para continuar.
-          </AlertDescription>
-        </Alert>
-      )}
+    <div className="space-y-6">
+      <div className="bg-white rounded-lg border border-gray-100 p-6 shadow-sm">
+        <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-8">
+          <InterestsSection
+            selected={formValues.interests}
+            onToggle={(value) => toggleSelect("interests", value)}
+            hasError={hasAttemptedSubmit && (!formValues.interests || formValues.interests.length === 0)}
+          />
 
-      <InterestsSection 
-        watch={watch} 
-        toggleSelect={toggleSelect} 
-        errors={errors} 
-        showErrors={showValidationErrors} 
-      />
-      
-      <TimePreferenceSection 
-        control={control} 
-        watch={watch} 
-        toggleSelect={toggleSelect} 
-        errors={errors} 
-        showErrors={showValidationErrors} 
-      />
-      
-      <AvailableDaysSection 
-        watch={watch} 
-        toggleSelect={toggleSelect} 
-        errors={errors} 
-        showErrors={showValidationErrors} 
-      />
-      
-      <NetworkingAvailabilitySection 
-        control={control} 
-        errors={errors} 
-        showErrors={showValidationErrors} 
-      />
-      
-      <SkillsToShareSection 
-        watch={watch} 
-        toggleSelect={toggleSelect} 
-        errors={errors} 
-        showErrors={showValidationErrors} 
-      />
-      
-      <MentorshipTopicsSection 
-        watch={watch} 
-        toggleSelect={toggleSelect} 
-        errors={errors} 
-        showErrors={showValidationErrors} 
-      />
-      
-      <div className="pt-6 flex justify-end">
-        <Button
-          type="submit"
-          className="min-w-[120px] bg-[#0ABAB5] hover:bg-[#0ABAB5]/90"
-          disabled={isSubmitting || (!isValid && attemptedSubmit)}
-        >
-          {isSubmitting ? (
-            "Salvando..."
-          ) : (
-            <span className="flex items-center gap-2">
-              {isLastStep ? "Finalizar" : "Próximo"}
-              <ArrowRight className="h-4 w-4" />
-            </span>
+          <TimePreferenceSection
+            selected={formValues.time_preference}
+            onToggle={(value) => toggleSelect("time_preference", value)}
+            hasError={hasAttemptedSubmit && (!formValues.time_preference || formValues.time_preference.length === 0)}
+          />
+
+          <AvailableDaysSection
+            selected={formValues.available_days}
+            onToggle={(value) => toggleSelect("available_days", value)}
+            hasError={hasAttemptedSubmit && (!formValues.available_days || formValues.available_days.length === 0)}
+          />
+
+          <NetworkingAvailabilitySection
+            value={formValues.networking_availability}
+            onChange={(value) => setValue("networking_availability", value, { shouldValidate: true })}
+            hasError={hasAttemptedSubmit && formValues.networking_availability === undefined}
+          />
+
+          <SkillsToShareSection
+            selected={formValues.skills_to_share}
+            onToggle={(value) => toggleSelect("skills_to_share", value)}
+            hasError={hasAttemptedSubmit && (!formValues.skills_to_share || formValues.skills_to_share.length === 0)}
+          />
+
+          <MentorshipTopicsSection
+            selected={formValues.mentorship_topics}
+            onToggle={(value) => toggleSelect("mentorship_topics", value)}
+            hasError={hasAttemptedSubmit && (!formValues.mentorship_topics || formValues.mentorship_topics.length === 0)}
+          />
+
+          {hasAttemptedSubmit && !isValid && (
+            <div className="p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">
+              Por favor, preencha todos os campos obrigatórios para continuar.
+            </div>
           )}
-        </Button>
+
+          <div className="flex justify-end">
+            <Button
+              type="submit"
+              className="bg-[#0ABAB5] hover:bg-[#099388] text-white px-5 py-2"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                "Salvando..."
+              ) : (
+                <span className="flex items-center gap-2">
+                  Próximo
+                  <ArrowRight className="h-4 w-4" />
+                </span>
+              )}
+            </Button>
+          </div>
+        </form>
       </div>
-    </form>
+    </div>
   );
 };

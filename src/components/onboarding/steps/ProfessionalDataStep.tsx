@@ -4,7 +4,7 @@ import { CompanyInputs } from "./business/CompanyInputs";
 import { OnboardingData } from "@/types/onboarding";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
-import { useForm, FieldErrors } from "react-hook-form";
+import { useForm } from "react-hook-form";
 
 interface ProfessionalDataStepProps {
   onSubmit: (stepId: string, data: Partial<OnboardingData>) => void;
@@ -30,23 +30,62 @@ export const ProfessionalDataStep = ({
   initialData,
   onComplete,
 }: ProfessionalDataStepProps) => {
-  const { control, handleSubmit, formState: { errors } } = useForm<FormValues>({
-    defaultValues: {
-      company_name: initialData?.company_name || initialData?.professional_info?.company_name || "",
-      company_size: initialData?.company_size || initialData?.professional_info?.company_size || "",
-      company_sector: initialData?.company_sector || initialData?.professional_info?.company_sector || "",
-      company_website: initialData?.company_website || initialData?.professional_info?.company_website || "",
-      current_position: initialData?.current_position || initialData?.professional_info?.current_position || "",
-      annual_revenue: initialData?.annual_revenue || initialData?.professional_info?.annual_revenue || "",
-    }
+  const [formData, setFormData] = useState<FormValues>({
+    company_name: "",
+    company_size: "",
+    company_sector: "",
+    company_website: "",
+    current_position: "",
+    annual_revenue: "",
   });
 
+  // Função para extrair dados relevantes do objeto initialData
+  const extractFormData = (data: any): FormValues => {
+    // Primeiro, tentamos pegar os dados do objeto principal
+    // Depois, verificamos dentro de professional_info
+    return {
+      company_name: 
+        data?.company_name || 
+        data?.professional_info?.company_name || 
+        "",
+      company_size: 
+        data?.company_size || 
+        data?.professional_info?.company_size || 
+        "",
+      company_sector: 
+        data?.company_sector || 
+        data?.professional_info?.company_sector || 
+        "",
+      company_website: 
+        data?.company_website || 
+        data?.professional_info?.company_website || 
+        "",
+      current_position: 
+        data?.current_position || 
+        data?.professional_info?.current_position || 
+        "",
+      annual_revenue: 
+        data?.annual_revenue || 
+        data?.professional_info?.annual_revenue || 
+        "",
+    };
+  };
+
   useEffect(() => {
-    // Atualizar os estados quando os dados iniciais mudarem
     if (initialData) {
-      console.log("Dados iniciais de empresa:", initialData);
+      console.log("Dados iniciais recebidos:", initialData);
+      setFormData(extractFormData(initialData));
     }
   }, [initialData]);
+
+  const { control, handleSubmit, formState: { errors }, reset } = useForm<FormValues>({
+    defaultValues: formData
+  });
+
+  // Atualizar o formulário quando os dados mudarem
+  useEffect(() => {
+    reset(formData);
+  }, [formData, reset]);
 
   const onFormSubmit = (data: FormValues) => {
     const professionalData: Partial<OnboardingData> = {

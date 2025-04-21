@@ -19,187 +19,93 @@ export const useStepPersistence = ({
     stepId: string, 
     data: Partial<OnboardingData>
   ) => {
-    if (!progress?.id) return;
+    if (!progress?.id) {
+      console.error("Não foi possível salvar dados: ID de progresso não encontrado");
+      return;
+    }
+    
     try {
       console.log(`Salvando dados da etapa: ${stepId}`, data);
       
-      // Verificações específicas para cada etapa
+      // Construir objeto de atualização para essa etapa específica
+      const updateObj: any = {};
+      
+      // Adicionar dados específicos da etapa
       if (stepId === "personal") {
-        const personalInfo = data.personal_info || {};
-        if (!personalInfo.name || !personalInfo.email || !personalInfo.phone) {
-          console.error("Campos obrigatórios não preenchidos");
-          return;
-        }
-        await updateProgress({
-          personal_info: personalInfo,
-          completed_steps: [...(progress.completed_steps || []), stepId],
-          current_step: steps[Math.min(currentStepIndex + 1, steps.length - 1)].id,
-        });
-        
-        // Após salvar, navega para a próxima etapa com atraso para garantir fluidez
-        setTimeout(() => {
-          navigate("/onboarding/professional-data");
-        }, 300);
+        updateObj.personal_info = data.personal_info || {};
       } else if (stepId === "professional_data") {
-        const professionalInfo = data.professional_info || {};
-        if (!professionalInfo.company_name || !professionalInfo.current_position || 
-            !professionalInfo.company_sector || !professionalInfo.company_size) {
-          console.error("Campos obrigatórios não preenchidos");
-          return;
+        updateObj.professional_info = data.professional_info || {};
+        // Também salvar campos individuais para compatibilidade
+        if (data.professional_info) {
+          updateObj.company_name = data.professional_info.company_name;
+          updateObj.company_size = data.professional_info.company_size;
+          updateObj.company_sector = data.professional_info.company_sector;
+          updateObj.company_website = data.professional_info.company_website;
+          updateObj.current_position = data.professional_info.current_position;
+          updateObj.annual_revenue = data.professional_info.annual_revenue;
         }
-        await updateProgress({
-          professional_info: professionalInfo,
-          company_name: professionalInfo.company_name,
-          company_size: professionalInfo.company_size,
-          company_sector: professionalInfo.company_sector,
-          company_website: professionalInfo.company_website,
-          current_position: professionalInfo.current_position,
-          annual_revenue: professionalInfo.annual_revenue,
-          completed_steps: [...(progress.completed_steps || []), stepId],
-          current_step: steps[Math.min(currentStepIndex + 1, steps.length - 1)].id,
-        });
-        
-        // Após salvar, navega para a próxima etapa
-        setTimeout(() => {
-          navigate("/onboarding/business-context");
-        }, 300);
       } else if (stepId === "business_context") {
-        const businessContext = data.business_context || {};
-        if (!businessContext.business_model || !businessContext.business_challenges || 
-            !businessContext.short_term_goals || !businessContext.medium_term_goals || 
-            !businessContext.important_kpis) {
-          console.error("Campos obrigatórios não preenchidos");
-          return;
-        }
-        await updateProgress({
-          business_context: businessContext,
-          completed_steps: [...(progress.completed_steps || []), stepId],
-          current_step: steps[Math.min(currentStepIndex + 1, steps.length - 1)].id,
-        });
-        
-        // Navega para a próxima etapa
-        setTimeout(() => {
-          navigate("/onboarding/ai-experience");
-        }, 300);
+        updateObj.business_context = data.business_context || {};
       } else if (stepId === "ai_exp") {
-        const aiExperience = data.ai_experience || {};
-        if (!aiExperience.knowledge_level || !aiExperience.previous_tools?.length || 
-            !aiExperience.implemented_solutions?.length || !aiExperience.desired_solutions?.length ||
-            aiExperience.nps_score === undefined) {
-          console.error("Campos obrigatórios não preenchidos");
-          return;
-        }
-        await updateProgress({
-          ai_experience: aiExperience,
-          completed_steps: [...(progress.completed_steps || []), stepId],
-          current_step: steps[Math.min(currentStepIndex + 1, steps.length - 1)].id,
-        });
-        
-        // Navega para a próxima etapa
-        setTimeout(() => {
-          navigate("/onboarding/club-goals");
-        }, 300);
+        updateObj.ai_experience = data.ai_experience || {};
       } else if (stepId === "business_goals") {
-        const businessGoals = data.business_goals || {};
-        if (!businessGoals.primary_goal || !businessGoals.expected_outcomes?.length || 
-            !businessGoals.timeline) {
-          console.error("Campos obrigatórios não preenchidos");
-          return;
-        }
-        await updateProgress({
-          business_goals: businessGoals,
-          completed_steps: [...(progress.completed_steps || []), stepId],
-          current_step: steps[Math.min(currentStepIndex + 1, steps.length - 1)].id,
-        });
-        
-        // Navega para a próxima etapa
-        setTimeout(() => {
-          navigate("/onboarding/customization");
-        }, 300);
+        updateObj.business_goals = data.business_goals || {};
       } else if (stepId === "experience_personalization") {
-        const e = data.experience_personalization || {};
-        console.log("Validando dados de personalização:", e);
-        
-        if (!e.interests?.length ||
-            !e.time_preference?.length ||
-            !e.available_days?.length ||
-            typeof e.networking_availability !== "number" ||
-            !e.skills_to_share?.length ||
-            !e.mentorship_topics?.length
-        ) {
-          console.error("Campos obrigatórios não preenchidos:", e);
-          return;
-        }
-        
-        await updateProgress({
-          experience_personalization: e,
-          completed_steps: [...(progress.completed_steps || []), stepId],
-          current_step: steps[Math.min(currentStepIndex + 1, steps.length - 1)].id,
-        });
-        
-        // Navega para a próxima etapa
-        setTimeout(() => {
-          navigate("/onboarding/complementary");
-        }, 300);
+        updateObj.experience_personalization = data.experience_personalization || {};
       } else if (stepId === "complementary_info") {
-        const info = data.complementary_info || {};
-        if (!info.how_found_us || !info.priority_topics?.length) {
-          console.error("Campos obrigatórios não preenchidos");
-          return;
-        }
-        await updateProgress({
-          complementary_info: info,
-          completed_steps: [...(progress.completed_steps || []), stepId],
-          current_step: steps[Math.min(currentStepIndex + 1, steps.length - 1)].id,
-        });
-        
-        // Navega para a página de revisão
-        setTimeout(() => {
-          navigate("/onboarding/review");
-        }, 300);
-      } else if (stepId === "review") {
-        // Na etapa de revisão, apenas marcamos como completada
-        await updateProgress({
-          completed_steps: [...(progress.completed_steps || []), stepId],
-          current_step: steps[Math.min(currentStepIndex + 1, steps.length - 1)].id,
-        });
-        
-        // Redireciona para o dashboard após a revisão
-        setTimeout(() => {
-          navigate("/dashboard");
-        }, 300);
+        updateObj.complementary_info = data.complementary_info || {};
       } else {
-        // Salvamento genérico para outras etapas
+        // Para outras etapas, use a seção correspondente
         const sectionKey = steps.find(s => s.id === stepId)?.section as keyof OnboardingData;
-        if (!sectionKey) throw new Error('Seção inválida');
-        
-        await updateProgress({
-          [sectionKey]: data[sectionKey],
-          completed_steps: [...(progress.completed_steps || []), stepId],
-          current_step: steps[Math.min(currentStepIndex + 1, steps.length - 1)].id,
-        });
+        if (sectionKey && data[sectionKey]) {
+          updateObj[sectionKey] = data[sectionKey];
+        }
       }
       
-      // Atualiza o progresso após salvar
+      // Atualizar informações de progresso
+      if (!progress.completed_steps?.includes(stepId)) {
+        updateObj.completed_steps = [...(progress.completed_steps || []), stepId];
+      }
+      
+      // Definir próxima etapa
+      const nextStep = steps[Math.min(currentStepIndex + 1, steps.length - 1)].id;
+      updateObj.current_step = nextStep;
+      
+      // Salvar tudo no banco de dados
+      console.log("Enviando atualização para o banco:", updateObj);
+      await updateProgress(updateObj);
+      
+      // Forçar atualização dos dados
       await refreshProgress();
       
-      // Navega para a próxima etapa com atraso para garantir fluidez
-      // Esta navegação genérica só é usada para as etapas que não têm tratamento específico acima
-      if (stepId !== "personal" && stepId !== "professional_data" && 
-          stepId !== "business_context" && stepId !== "ai_exp" && 
-          stepId !== "business_goals" && stepId !== "experience_personalization" && 
-          stepId !== "complementary_info" && stepId !== "review") {
+      // Determinar próxima rota com base no stepId
+      if (stepId === "personal") {
+        setTimeout(() => navigate("/onboarding/professional-data"), 500);
+      } else if (stepId === "professional_data") {
+        setTimeout(() => navigate("/onboarding/business-context"), 500);
+      } else if (stepId === "business_context") {
+        setTimeout(() => navigate("/onboarding/ai-experience"), 500);
+      } else if (stepId === "ai_exp") {
+        setTimeout(() => navigate("/onboarding/club-goals"), 500);
+      } else if (stepId === "business_goals") {
+        setTimeout(() => navigate("/onboarding/customization"), 500);
+      } else if (stepId === "experience_personalization") {
+        setTimeout(() => navigate("/onboarding/complementary"), 500);
+      } else if (stepId === "complementary_info") {
+        setTimeout(() => navigate("/onboarding/review"), 500);
+      } else if (stepId === "review") {
+        setTimeout(() => navigate("/dashboard"), 500);
+      } else {
+        // Navegação genérica
         const nextStepIndex = Math.min(currentStepIndex + 1, steps.length - 1);
-        setCurrentStepIndex(nextStepIndex);
-        const nextStep = steps[nextStepIndex];
-        if (nextStep && nextStep.path) {
-          setTimeout(() => {
-            navigate(nextStep.path);
-          }, 300);
+        const nextStepObj = steps[nextStepIndex];
+        if (nextStepObj && nextStepObj.path) {
+          setTimeout(() => navigate(nextStepObj.path), 500);
         }
       }
     } catch (error) {
       console.error("Erro ao salvar dados:", error);
+      // Não exibir toast, conforme solicitado
     }
   };
 
@@ -215,7 +121,7 @@ export const useStepPersistence = ({
       // Redirecionamento para o dashboard após finalização
       setTimeout(() => {
         navigate("/dashboard");
-      }, 1500);
+      }, 500);
     } catch (error) {
       console.error('Erro ao completar onboarding:', error);
     }
