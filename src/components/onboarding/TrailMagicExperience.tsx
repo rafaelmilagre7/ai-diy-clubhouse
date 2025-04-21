@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Sparkles, Rocket, WandSparkles } from "lucide-react";
 import { MagicScene } from "./three/MagicScene";
+import * as THREE from 'three'; // Importação explícita do Three.js
 
 interface TrailMagicExperienceProps {
   onFinish: () => void;

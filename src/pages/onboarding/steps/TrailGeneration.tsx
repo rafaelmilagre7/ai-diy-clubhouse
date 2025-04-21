@@ -2,7 +2,7 @@
 import { TrailGuidedExperience } from "@/components/onboarding/TrailGuidedExperience";
 import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
 import { useEffect } from "react";
-import * as THREE from "three"; // Importação correta do Three.js
+import * as THREE from 'three'; // Importação correta do Three.js
 
 const TrailGeneration = () => {
   // Adicionar logs para debug
