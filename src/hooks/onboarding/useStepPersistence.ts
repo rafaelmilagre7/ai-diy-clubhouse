@@ -54,6 +54,19 @@ export const useStepPersistence = ({
           completed_steps: [...(progress.completed_steps || []), stepId],
           current_step: steps[Math.min(currentStepIndex + 1, steps.length - 1)].id,
         });
+      } else if (stepId === "ai_exp") {
+        const aiExperience = data.ai_experience || {};
+        if (!aiExperience.knowledge_level || !aiExperience.previous_tools?.length || 
+            !aiExperience.implemented_solutions?.length || !aiExperience.desired_solutions?.length ||
+            aiExperience.nps_score === undefined) {
+          toast.error("Por favor, preencha todos os campos obrigatórios");
+          return;
+        }
+        await updateProgress({
+          ai_experience: aiExperience,
+          completed_steps: [...(progress.completed_steps || []), stepId],
+          current_step: steps[Math.min(currentStepIndex + 1, steps.length - 1)].id,
+        });
       } else {
         const sectionKey = steps.find(s => s.id === stepId)?.section as keyof OnboardingData;
         if (!sectionKey) throw new Error('Seção inválida');

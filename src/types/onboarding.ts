@@ -38,7 +38,13 @@ export interface OnboardingData {
   ai_experience: {
     knowledge_level?: string;
     previous_tools?: string[];
-    challenges?: string[];
+    implemented_solutions?: string[];
+    desired_solutions?: string[];
+    previous_attempts?: string;
+    completed_formation?: boolean;
+    is_member_for_month?: boolean;
+    nps_score?: number;
+    improvement_suggestions?: string;
   };
   industry_focus: {
     sector?: string;

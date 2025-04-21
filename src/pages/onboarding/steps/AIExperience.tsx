@@ -11,7 +11,7 @@ const AIExperience = () => {
     <OnboardingLayout currentStep={4} title="Experiência com IA">
       <div className="max-w-4xl mx-auto space-y-8">
         <MilagrinhoMessage
-          message="Conte pra mim um pouco sobre sua experiência com IA. Assim conseguimos personalizar melhor as recomendações de ferramentas e trilhas para sua realidade."
+          message="Conte para mim um pouco sobre sua experiência com IA. Assim conseguiremos personalizar melhor as recomendações de ferramentas e trilhas para sua realidade."
         />
         <AIExperienceFormStep
           initialData={progress?.ai_experience}
@@ -25,4 +25,3 @@ const AIExperience = () => {
 };
 
 export default AIExperience;
-
