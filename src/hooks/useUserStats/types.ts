@@ -1,10 +1,15 @@
 
 export type SolutionCategory = "revenue" | "operational" | "strategy";
 
+export interface CategoryCount {
+  total: number;
+  completed: number;
+}
+
 export interface CategoryDistribution {
-  revenue: number;
-  operational: number;
-  strategy: number;
+  revenue: CategoryCount;
+  operational: CategoryCount;
+  strategy: CategoryCount;
 }
 
 export interface UserStats {
@@ -20,4 +25,7 @@ export interface UserStats {
     action: string;
     solution?: string;
   }[];
+  totalTimeSpent?: number;
+  avgTimePerSolution?: number;
+  lastActivity?: string | null;
 }

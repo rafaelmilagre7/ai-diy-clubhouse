@@ -77,13 +77,13 @@ export const StatsTabContent = ({ stats, implementations }: StatsTabContentProps
               <div className="grid grid-cols-2 gap-4 mt-2">
                 <Card>
                   <CardContent className="p-4 text-center">
-                    <p className="text-3xl font-bold">{stats.totalTimeSpent}</p>
+                    <p className="text-3xl font-bold">{stats.totalTimeSpent || 0}</p>
                     <p className="text-xs text-muted-foreground">minutos totais</p>
                   </CardContent>
                 </Card>
                 <Card>
                   <CardContent className="p-4 text-center">
-                    <p className="text-3xl font-bold">{stats.avgTimePerSolution}</p>
+                    <p className="text-3xl font-bold">{stats.avgTimePerSolution || 0}</p>
                     <p className="text-xs text-muted-foreground">min. por solução</p>
                   </CardContent>
                 </Card>

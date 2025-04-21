@@ -41,16 +41,37 @@ export const useUserStats = () => {
       // Find latest activity date
       const lastActivity = findLatestActivity(userProgress);
 
+      // Montando os dados de atividade recente
+      const recentActivity = userProgress
+        .filter(p => p.last_activity)
+        .sort((a, b) => new Date(b.last_activity).getTime() - new Date(a.last_activity).getTime())
+        .slice(0, 5)
+        .map(p => ({
+          date: p.last_activity,
+          action: p.is_completed ? "Solução concluída" : "Solução em progresso",
+          solution: p.solution?.title
+        }));
+
+      // Calculate active days (placeholder calculation for now)
+      const activeDays = [...new Set(
+        userProgress
+          .filter(p => p.last_activity)
+          .map(p => new Date(p.last_activity).toLocaleDateString())
+      )].length;
+
       // Update stats state
       setStats({
         totalSolutions,
         completedSolutions,
         inProgressSolutions,
         completionRate,
+        averageCompletionTime: avgTimePerSolution,
+        activeDays,
+        categoryDistribution,
+        recentActivity,
         totalTimeSpent,
         avgTimePerSolution,
-        lastActivity,
-        categoryDistribution
+        lastActivity
       });
     } catch (err: any) {
       console.error("Error calculating user statistics:", err);

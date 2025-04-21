@@ -7,14 +7,17 @@ export const DEFAULT_STATS: UserStats = {
   completedSolutions: 0,
   inProgressSolutions: 0,
   completionRate: 0,
-  totalTimeSpent: 0,
-  avgTimePerSolution: 0,
-  lastActivity: null,
+  averageCompletionTime: null,
+  activeDays: 0,
   categoryDistribution: {
     revenue: { total: 0, completed: 0 },
     operational: { total: 0, completed: 0 },
     strategy: { total: 0, completed: 0 }
-  }
+  },
+  recentActivity: [],
+  totalTimeSpent: 0,
+  avgTimePerSolution: 0,
+  lastActivity: null
 };
 
 // Calculate category distribution based on solutions and progress
