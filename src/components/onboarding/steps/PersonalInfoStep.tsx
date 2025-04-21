@@ -6,6 +6,8 @@ import { Label } from "@/components/ui/label";
 import { LocationInputs } from "./inputs/LocationInputs";
 import { SocialInputs } from "./inputs/SocialInputs";
 import { NavigationButtons } from "../NavigationButtons";
+import { FormFeedback } from "@/components/ui/form-feedback";
+import { useFormValidation } from "@/hooks/useFormValidation";
 
 interface PersonalInfoStepProps {
   onSubmit: (data: any) => void;
@@ -36,7 +38,38 @@ export const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
     }
   });
 
+  const validation = useFormValidation(
+    {
+      phone: initialData?.phone || "",
+      linkedin: initialData?.linkedin || "",
+      instagram: initialData?.instagram || "",
+      state: initialData?.state || "",
+      city: initialData?.city || ""
+    },
+    {
+      phone: [
+        {
+          validate: (value: string) => /^\(\d{2}\) \d{4,5}-\d{4}$/.test(value),
+          message: "Formato: (00) 00000-0000"
+        }
+      ],
+      linkedin: [
+        {
+          validate: (value: string) => !value || value.includes("linkedin.com"),
+          message: "URL do LinkedIn inválida"
+        }
+      ],
+      instagram: [
+        {
+          validate: (value: string) => !value || value.includes("instagram.com"),
+          message: "URL do Instagram inválida"
+        }
+      ]
+    }
+  );
+
   const onFormSubmit = (data: any) => {
+    if (!validation.isValid) return;
     onSubmit({
       personal_info: {
         ...data
@@ -49,7 +82,7 @@ export const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
       <div className="space-y-6">
         {/* Campos básicos */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
+          <div className="space-y-2">
             <Label htmlFor="name">Nome completo</Label>
             <Input
               id="name"
@@ -57,12 +90,10 @@ export const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
               className="mt-1"
               {...register("name", { required: "Nome é obrigatório" })}
             />
-            {errors.name && (
-              <p className="text-red-500 text-sm mt-1">{errors.name.message?.toString()}</p>
-            )}
+            <FormFeedback error={errors.name?.message?.toString()} />
           </div>
 
-          <div>
+          <div className="space-y-2">
             <Label htmlFor="email">E-mail</Label>
             <Input
               id="email"
@@ -77,61 +108,55 @@ export const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
                 }
               })}
             />
-            {errors.email && (
-              <p className="text-red-500 text-sm mt-1">{errors.email.message?.toString()}</p>
-            )}
+            <FormFeedback error={errors.email?.message?.toString()} />
           </div>
         </div>
 
         {/* Telefone e Redes Sociais */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
+          <div className="space-y-2">
             <Label htmlFor="phone">Telefone</Label>
             <Input
               id="phone"
               placeholder="(00) 00000-0000"
               className="mt-1"
-              {...register("phone", {
-                required: "Telefone é obrigatório",
-                pattern: {
-                  value: /^\(\d{2}\) \d{4,5}-\d{4}$/,
-                  message: "Formato: (00) 00000-0000"
-                }
-              })}
+              value={validation.values.phone}
+              onChange={(e) => validation.handleChange("phone", e.target.value)}
+              onBlur={() => validation.handleBlur("phone")}
             />
-            {errors.phone && (
-              <p className="text-red-500 text-sm mt-1">{errors.phone.message?.toString()}</p>
-            )}
+            <FormFeedback 
+              error={validation.errors.phone}
+              success={validation.touched.phone && !validation.errors.phone}
+            />
           </div>
 
           <SocialInputs
-            linkedin={initialData?.linkedin || ""}
-            instagram={initialData?.instagram || ""}
-            onChangeLinkedin={(v) => register("linkedin").onChange({ target: { value: v } })}
-            onChangeInstagram={(v) => register("instagram").onChange({ target: { value: v } })}
+            linkedin={validation.values.linkedin}
+            instagram={validation.values.instagram}
+            onChangeLinkedin={(v) => validation.handleChange("linkedin", v)}
+            onChangeInstagram={(v) => validation.handleChange("instagram", v)}
             disabled={isSubmitting}
             errors={{
-              linkedin: errors.linkedin,
-              instagram: errors.instagram
+              linkedin: validation.errors.linkedin,
+              instagram: validation.errors.instagram
             }}
           />
         </div>
 
         {/* Localização */}
         <div className="space-y-4">
-          <h3 className="text-md font-medium text-gray-700">Localização</h3>
+          <h3 className="text-md font-medium text-gray-700 dark:text-gray-200">Localização</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <LocationInputs
               country={initialData?.country || "Brasil"}
-              state={initialData?.state || ""}
-              city={initialData?.city || ""}
-              onChangeCountry={(v) => register("country").onChange({ target: { value: v } })}
-              onChangeState={(v) => register("state").onChange({ target: { value: v } })}
-              onChangeCity={(v) => register("city").onChange({ target: { value: v } })}
+              state={validation.values.state}
+              city={validation.values.city}
+              onChangeState={(v) => validation.handleChange("state", v)}
+              onChangeCity={(v) => validation.handleChange("city", v)}
               disabled={isSubmitting}
               errors={{
-                state: errors.state,
-                city: errors.city
+                state: validation.errors.state,
+                city: validation.errors.city
               }}
             />
           </div>
