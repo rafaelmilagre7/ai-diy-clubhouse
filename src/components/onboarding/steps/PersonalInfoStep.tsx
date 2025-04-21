@@ -3,12 +3,12 @@ import React from "react";
 import { MilagrinhoMessage } from "../MilagrinhoMessage";
 import { PersonalInfoForm } from "./forms/PersonalInfoForm";
 import { usePersonalInfoForm } from "@/hooks/onboarding/usePersonalInfoForm";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 interface PersonalInfoStepProps {
   onSubmit: (data: any) => void;
   isSubmitting: boolean;
-  isLastStep: boolean;
-  onComplete: () => void;
   initialData?: any;
 }
 
@@ -17,19 +17,35 @@ export const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
   isSubmitting,
   initialData
 }) => {
+  const navigate = useNavigate();
   const {
     register,
     handleSubmit,
-    onFormSubmit,
     errors,
     touchedFields,
     validation
-  } = usePersonalInfoForm(initialData, onSubmit);
+  } = usePersonalInfoForm(initialData);
+
+  const onFormSubmit = async (data: any) => {
+    try {
+      await onSubmit({
+        personal_info: {
+          ...data,
+          ...validation.values
+        }
+      });
+      toast.success("Dados pessoais salvos com sucesso!");
+      navigate("/onboarding/professional-data");
+    } catch (error) {
+      console.error("Erro ao salvar dados:", error);
+      toast.error("Erro ao salvar os dados. Tente novamente.");
+    }
+  };
 
   return (
     <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-6 animate-fade-in">
       <MilagrinhoMessage 
-        message="Bem-vindo ao VIVER DE IA Club! Vamos começar coletando algumas informações pessoais para personalizar sua experiência. Não se preocupe, seus dados estão seguros conosco." 
+        message="Para começar, vou precisar de algumas informações pessoais para personalizar sua experiência no VIVER DE IA Club." 
       />
       
       <PersonalInfoForm
@@ -38,6 +54,7 @@ export const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
         errors={errors}
         touchedFields={touchedFields}
         isSubmitting={isSubmitting}
+        initialData={initialData}
       />
     </form>
   );
