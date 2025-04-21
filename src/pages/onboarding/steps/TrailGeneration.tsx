@@ -1,4 +1,3 @@
-
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
@@ -9,6 +8,10 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Loader2, RefreshCw, AlertCircle } from "lucide-react";
 import { countTrailSolutions } from "@/hooks/implementation/useImplementationTrail.utils";
+import { TrailGenerationHeader } from "@/components/onboarding/TrailGeneration/TrailGenerationHeader";
+import { GenerationControls } from "@/components/onboarding/TrailGeneration/GenerationControls";
+import { TrailLoadingState } from "@/components/onboarding/TrailGeneration/TrailLoadingState";
+import { TrailErrorState } from "@/components/onboarding/TrailGeneration/TrailErrorState";
 
 const TrailGeneration = () => {
   const navigate = useNavigate();
@@ -29,7 +32,6 @@ const TrailGeneration = () => {
   const [loadingTimeout, setLoadingTimeout] = useState(false);
   const [attemptCount, setAttemptCount] = useState(0);
 
-  // Carregar trilha existente ao montar o componente
   useEffect(() => {
     const loadTrail = async () => {
       try {
@@ -59,20 +61,17 @@ const TrailGeneration = () => {
     
     loadTrail();
     
-    // Timeout para evitar carregamento infinito
     const timeout = setTimeout(() => {
       if (isLoading || refreshing) {
         console.log("Tempo limite excedido ao carregar trilha");
         setLoadingTimeout(true);
         toast.error("Tempo limite excedido ao carregar trilha");
       }
-    }, 15000); // 15 segundos
+    }, 15000);
     
     return () => clearTimeout(timeout);
-    
   }, [refreshTrail]);
 
-  // Auto-iniciar geração se chegou da página de onboarding "concluído"
   useEffect(() => {
     const searchParams = new URLSearchParams(window.location.search);
     const autoGenerate = searchParams.get('autoGenerate') === 'true';
@@ -83,7 +82,6 @@ const TrailGeneration = () => {
     }
   }, []);
 
-  // Função para iniciar a experiência mágica e gerar a trilha diretamente
   const startTrailGeneration = async () => {
     setShowMagicExperience(true);
     setGeneratingTrail(true);
@@ -102,7 +100,6 @@ const TrailGeneration = () => {
     }
   };
 
-  // Recarregar a trilha forçadamente
   const handleForceRefresh = useCallback(async () => {
     setRefreshing(true);
     setLoadingError(false);
@@ -110,10 +107,8 @@ const TrailGeneration = () => {
     setAttemptCount(prev => prev + 1);
     
     try {
-      // Tentar limpar a trilha existente primeiro
       await clearTrail();
       
-      // Aguardar um momento para garantir que a limpeza seja processada
       setTimeout(async () => {
         await refreshTrail(true);
         toast.success("Trilha recarregada com sucesso!");
@@ -128,119 +123,48 @@ const TrailGeneration = () => {
     }
   }, [clearTrail, refreshTrail]);
 
-  // Quando a animação terminar, mostrar a trilha gerada
   const handleMagicFinish = () => {
     setShowMagicExperience(false);
     setAutoStartGeneration(true);
   };
 
-  // Voltar para a página de onboarding
   const handleBackToOnboarding = () => {
     navigate("/onboarding");
   };
 
-  // Se estiver carregando
   if (isLoading || refreshing) {
     return (
-      <OnboardingLayout 
-        currentStep={9} 
-        title="Sua Trilha Personalizada"
-        backUrl="/onboarding"
-      >
-        <div className="flex flex-col items-center justify-center space-y-4 h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#0ABAB5]"></div>
-          <p className="text-[#0ABAB5] font-medium">Carregando sua trilha personalizada...</p>
-          {attemptCount > 2 && (
-            <Button
-              variant="outline"
-              onClick={handleForceRefresh}
-              size="sm"
-              className="mt-4"
-            >
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Forçar recarregamento
-            </Button>
-          )}
-        </div>
-      </OnboardingLayout>
+      <TrailGenerationHeader>
+        <TrailLoadingState attemptCount={attemptCount} onForceRefresh={handleForceRefresh} />
+      </TrailGenerationHeader>
     );
   }
 
-  // Se houver erro de carregamento
   if (loadingError || loadingTimeout) {
     return (
-      <OnboardingLayout 
-        currentStep={9} 
-        title="Sua Trilha Personalizada"
-        backUrl="/onboarding"
-      >
-        <div className="max-w-xl mx-auto mt-8 p-6 bg-amber-50 rounded-lg border border-amber-200 flex flex-col items-center">
-          <AlertCircle className="text-amber-500 h-10 w-10 mb-3" />
-          <p className="text-gray-700 mb-4 text-center">
-            {loadingTimeout 
-              ? "O carregamento da trilha excedeu o tempo limite. Por favor, tente novamente."
-              : "Ocorreu um erro ao carregar sua trilha. Por favor, tente novamente."}
-          </p>
-          <div className="flex justify-center gap-2">
-            <Button 
-              className="bg-[#0ABAB5] text-white" 
-              onClick={startTrailGeneration}
-            >
-              Gerar Nova Trilha
-            </Button>
-            
-            <Button
-              variant="outline"
-              onClick={handleForceRefresh}
-              className="flex items-center gap-1"
-            >
-              <RefreshCw className="h-4 w-4" />
-              Tentar Novamente
-            </Button>
-            
-            <Button 
-              variant="ghost" 
-              onClick={handleBackToOnboarding}
-            >
-              Voltar
-            </Button>
-          </div>
-        </div>
-      </OnboardingLayout>
+      <TrailGenerationHeader>
+        <TrailErrorState
+          loadingTimeout={loadingTimeout}
+          onRegenerate={startTrailGeneration}
+          onForceRefresh={handleForceRefresh}
+          onGoBack={handleBackToOnboarding}
+        />
+      </TrailGenerationHeader>
     );
   }
 
   return (
-    <OnboardingLayout 
-      currentStep={9} 
-      title="Sua Trilha Personalizada"
-      backUrl="/onboarding"
-    >
+    <TrailGenerationHeader>
       <div className="max-w-5xl mx-auto p-4">
         {showMagicExperience ? (
           <TrailMagicExperience onFinish={handleMagicFinish} />
         ) : hasContent ? (
           <>
-            <div className="mb-6 flex justify-between items-center">
-              <Button 
-                variant="outline" 
-                onClick={handleBackToOnboarding}
-              >
-                Voltar para Onboarding
-              </Button>
-              <Button 
-                className="bg-[#0ABAB5] text-white" 
-                onClick={startTrailGeneration}
-                disabled={generatingTrail}
-              >
-                {generatingTrail ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Gerando Nova Trilha...
-                  </>
-                ) : "Gerar Nova Trilha"}
-              </Button>
-            </div>
+            <GenerationControls
+              onGoBack={handleBackToOnboarding}
+              onRegenerate={startTrailGeneration}
+              generating={generatingTrail}
+            />
             <TrailGuidedExperience autoStart={autoStartGeneration} />
           </>
         ) : (
@@ -252,7 +176,7 @@ const TrailGeneration = () => {
               Com base nas informações que você forneceu, o Milagrinho irá gerar uma trilha personalizada 
               com as melhores soluções para o seu negócio.
             </p>
-            <Button 
+            <Button
               className="bg-[#0ABAB5] text-white px-8 py-6 text-lg"
               onClick={startTrailGeneration}
               disabled={generatingTrail}
@@ -268,7 +192,7 @@ const TrailGeneration = () => {
           </div>
         )}
       </div>
-    </OnboardingLayout>
+    </TrailGenerationHeader>
   );
 };
 
