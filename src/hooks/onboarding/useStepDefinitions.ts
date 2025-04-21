@@ -4,6 +4,8 @@ export const steps = [
   { id: 'goals', title: 'Dados Profissionais', section: 'professional_info', path: '/onboarding/business-goals' },
   { id: 'business_context', title: 'Contexto do Negócio', section: 'business_context', path: '/onboarding/business-context' },
   { id: 'ai_exp', title: 'Experiência com IA', section: 'ai_experience', path: '/onboarding/ai-experience' },
+  // Etapa 5: Expectativas e Objetivos
+  { id: 'business_goals', title: 'Expectativas e Objetivos com o Club', section: 'business_goals', path: '/onboarding/business-goals-club' },
   { id: 'industry', title: 'Foco da Indústria', section: 'industry_focus', path: '/onboarding/industry-focus' },
   { id: 'resources', title: 'Recursos Necessários', section: 'resources_needs', path: '/onboarding/resources-needs' },
   { id: 'team', title: 'Informações da Equipe', section: 'team_info', path: '/onboarding/team-info' },
