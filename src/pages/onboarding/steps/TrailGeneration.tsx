@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { TrailLoadingState } from "@/components/onboarding/TrailGeneration/TrailLoadingState";
 import { TrailErrorState } from "@/components/onboarding/TrailGeneration/TrailErrorState";
-import { isApiTimeout, extractErrorMessage } from "@/hooks/implementation/useImplementationTrail.utils";
+import { isApiTimeout, extractErrorMessage, isSafeToAbort } from "@/hooks/implementation/useImplementationTrail.utils";
 import { useProgress } from "@/hooks/onboarding/useProgress";
 
 const TrailGeneration = () => {
@@ -33,7 +33,9 @@ const TrailGeneration = () => {
   const [attemptCount, setAttemptCount] = useState(0);
   const [errorDetails, setErrorDetails] = useState<string | undefined>();
   const [loadStartTime, setLoadStartTime] = useState<number | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isFirstLoadRef = useRef(true);
 
   // Verificar se temos trilha ao carregar e obter URL params
   useEffect(() => {
@@ -41,19 +43,32 @@ const TrailGeneration = () => {
     const autoGenerate = urlParams.get('autoGenerate') === 'true';
     
     const loadInitialTrail = async () => {
+      // Cancelar qualquer operação anterior ainda em andamento
+      if (abortControllerRef.current && isSafeToAbort(loadStartTime)) {
+        console.log("Abortando operação anterior antes de iniciar nova");
+        abortControllerRef.current.abort();
+        abortControllerRef.current = null;
+      }
+      
+      abortControllerRef.current = new AbortController();
+      
       try {
         // Rastrear início do carregamento
         setLoadStartTime(Date.now());
+        setLoadingError(false);
+        setLoadingTimeout(false);
         setAttemptCount(prev => prev + 1);
         
-        if (autoGenerate && progress) {
+        if (autoGenerate && progress && isFirstLoadRef.current) {
+          isFirstLoadRef.current = false;
           console.log("Auto-gerando trilha com dados do onboarding:", progress);
           await startTrailGeneration(progress);
         } else {
           const trailData = await refreshTrail(true);
           
           // Se não temos trilha e autoGenerate está ativado, gerar automaticamente
-          if ((!trailData || !hasContent) && autoGenerate) {
+          if ((!trailData || !hasContent) && autoGenerate && isFirstLoadRef.current) {
+            isFirstLoadRef.current = false;
             await refreshProgress();
             console.log("Sem trilha existente, gerando nova trilha automaticamente");
             await startTrailGeneration();
@@ -62,6 +77,11 @@ const TrailGeneration = () => {
         
         setLoadStartTime(null);
       } catch (error) {
+        if (error.name === 'AbortError') {
+          console.log("Operação abortada");
+          return;
+        }
+        
         console.error("Erro ao carregar trilha inicial:", error);
         setErrorDetails(extractErrorMessage(error));
         setLoadingError(true);
@@ -73,19 +93,25 @@ const TrailGeneration = () => {
     
     // Configurar verificação de timeout
     timeoutRef.current = setTimeout(() => {
-      if (isLoading && loadStartTime) {
+      if ((isLoading || generatingTrail) && loadStartTime) {
         const loadDuration = Date.now() - loadStartTime;
-        if (loadDuration > 20000) {
+        if (loadDuration > 15000) {
           console.warn("Timeout detectado na carga de trilha após", loadDuration, "ms");
           setLoadingTimeout(true);
           setLoadStartTime(null);
+          setGeneratingTrail(false);
         }
       }
-    }, 20000);
+    }, 15000);
     
     return () => {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
+      }
+      
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+        abortControllerRef.current = null;
       }
     };
   }, [refreshTrail, hasContent, refreshProgress]);
@@ -109,6 +135,15 @@ const TrailGeneration = () => {
   }, [generatingTrail, loadStartTime]);
 
   const startTrailGeneration = async (onboardingData = null) => {
+    // Cancelar qualquer operação anterior ainda em andamento
+    if (abortControllerRef.current && isSafeToAbort(loadStartTime)) {
+      console.log("Abortando operação anterior antes de gerar trilha");
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+    
+    abortControllerRef.current = new AbortController();
+    
     setLoadingError(false);
     setLoadingTimeout(false);
     setShowMagicExperience(true);
@@ -125,6 +160,11 @@ const TrailGeneration = () => {
       toast.success("Trilha personalizada gerada com sucesso!");
       setLoadStartTime(null);
     } catch (error) {
+      if (error.name === 'AbortError') {
+        console.log("Geração de trilha abortada");
+        return;
+      }
+      
       console.error("Erro ao gerar trilha:", error);
       setLoadingError(true);
       setErrorDetails(extractErrorMessage(error));
@@ -132,10 +172,20 @@ const TrailGeneration = () => {
     } finally {
       setGeneratingTrail(false);
       setLoadStartTime(null);
+      abortControllerRef.current = null;
     }
   };
 
   const handleForceRefresh = useCallback(async () => {
+    // Cancelar qualquer operação anterior ainda em andamento
+    if (abortControllerRef.current && isSafeToAbort(loadStartTime)) {
+      console.log("Abortando operação anterior antes de forçar refresh");
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+    
+    abortControllerRef.current = new AbortController();
+    
     setAttemptCount(prev => prev + 1);
     setLoadingError(false);
     setLoadingTimeout(false);
@@ -153,14 +203,25 @@ const TrailGeneration = () => {
           await refreshTrail(true);
           toast.success("Trilha recarregada com sucesso!");
         } catch (error) {
+          if (error.name === 'AbortError') {
+            console.log("Recarga abortada");
+            return;
+          }
+          
           console.error("Erro ao recarregar trilha após limpeza:", error);
           setErrorDetails(extractErrorMessage(error));
           setLoadingError(true);
         } finally {
           setLoadStartTime(null);
+          abortControllerRef.current = null;
         }
       }, 500);
     } catch (error) {
+      if (error.name === 'AbortError') {
+        console.log("Operação de refresh abortada");
+        return;
+      }
+      
       console.error("Erro ao recarregar trilha:", error);
       setErrorDetails(extractErrorMessage(error));
       setLoadingError(true);
@@ -180,7 +241,11 @@ const TrailGeneration = () => {
   if (isLoading || generatingTrail) {
     return (
       <TrailGenerationHeader>
-        <TrailLoadingState attemptCount={attemptCount} onForceRefresh={handleForceRefresh} />
+        <TrailLoadingState 
+          attemptCount={attemptCount} 
+          onForceRefresh={handleForceRefresh} 
+          loadStartTime={loadStartTime}
+        />
       </TrailGenerationHeader>
     );
   }

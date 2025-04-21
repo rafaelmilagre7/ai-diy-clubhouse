@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { AlertCircle, RefreshCw, ArrowLeft, Home, AlertTriangle } from "lucide-react";
+import { AlertCircle, RefreshCw, ArrowLeft, Home, AlertTriangle, HelpCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
@@ -27,6 +27,12 @@ export const TrailErrorState: React.FC<TrailErrorStateProps> = ({
   const handleDashboardNavigation = () => {
     toast.info("Redirecionando para dashboard...");
     navigate("/dashboard");
+  };
+
+  const handleHelp = () => {
+    toast.info("Suporte técnico solicitado");
+    // Aqui você pode adicionar um redirecionamento para uma página de suporte
+    // ou abrir um modal de ajuda
   };
 
   const getErrorMessage = () => {
@@ -82,7 +88,7 @@ export const TrailErrorState: React.FC<TrailErrorStateProps> = ({
         </div>
       )}
       
-      <div className="flex flex-col sm:flex-row justify-center gap-3 w-full">
+      <div className="flex flex-col sm:flex-row justify-center gap-3 w-full mt-2">
         <Button
           className="bg-[#0ABAB5] text-white hover:bg-[#0ABAB5]/90"
           onClick={onRegenerate}
@@ -119,6 +125,15 @@ export const TrailErrorState: React.FC<TrailErrorStateProps> = ({
           <Home className="h-4 w-4" />
           Ir para Dashboard
         </Button>
+        
+        <Button
+          variant="ghost"
+          onClick={handleHelp}
+          className="flex items-center gap-2"
+        >
+          <HelpCircle className="h-4 w-4" />
+          Obter Ajuda
+        </Button>
       </div>
       
       {attemptCount > 1 && (
@@ -128,8 +143,8 @@ export const TrailErrorState: React.FC<TrailErrorStateProps> = ({
             <li>Verifique sua conexão com a internet</li>
             <li>Retorne ao onboarding e revise suas respostas</li>
             <li>Tente acessar a página do dashboard e depois voltar</li>
-            <li>Tente novamente em outro navegador ou dispositivo</li>
-            <li>Entre em contato com o suporte se o problema persistir</li>
+            <li>Limpe o cache do navegador e tente novamente</li>
+            <li>Se o problema persistir, entre em contato com o suporte técnico</li>
           </ul>
         </div>
       )}

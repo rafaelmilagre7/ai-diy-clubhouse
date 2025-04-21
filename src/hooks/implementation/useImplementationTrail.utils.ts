@@ -33,10 +33,10 @@ export const hasTrailContent = (trail: any): boolean => {
 /**
  * Verifica se uma trilha está em estado de carregamento perpétuo
  */
-export const isTrailStuck = (lastLoadTime: number | null, loadingTime = 15000): boolean => {
+export const isTrailStuck = (lastLoadTime: number | null, loadingTime = 10000): boolean => {
   if (!lastLoadTime) return false;
   
-  // Aumentamos o tempo limite para 15 segundos para dar mais margem para conexões lentas
+  // Reduzimos para 10 segundos para detectar problemas de carregamento mais rapidamente
   const currentTime = Date.now();
   const loadingDuration = currentTime - lastLoadTime;
   
@@ -105,7 +105,7 @@ export const sanitizeTrailData = (trail: any): any => {
 /**
  * Verifica se a API está demorando muito para responder
  */
-export const isApiTimeout = (startTime: number | null, timeout = 20000): boolean => {
+export const isApiTimeout = (startTime: number | null, timeout = 15000): boolean => {
   if (!startTime) return false;
   return (Date.now() - startTime) > timeout;
 };
@@ -130,3 +130,12 @@ export const extractErrorMessage = (error: any): string => {
     return "Erro não formatável";
   }
 };
+
+/**
+ * Verifica se é seguro abortar a operação de carregamento atual
+ */
+export const isSafeToAbort = (loadStartTime: number | null): boolean => {
+  // Se já se passaram mais de 5 segundos, é seguro abortar a operação atual
+  return isApiTimeout(loadStartTime, 5000);
+};
+
