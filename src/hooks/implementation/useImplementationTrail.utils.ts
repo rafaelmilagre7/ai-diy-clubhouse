@@ -6,27 +6,33 @@ export const hasTrailContent = (trail: any): boolean => {
   if (!trail) return false;
   
   try {
-    // Verificar se pelo menos uma das prioridades existe e tem pelo menos um item
+    // Verificações mais robustas para garantir que a trilha tenha algum conteúdo válido
     const priority1 = Array.isArray(trail.priority1) && trail.priority1.length > 0;
     const priority2 = Array.isArray(trail.priority2) && trail.priority2.length > 0;
     const priority3 = Array.isArray(trail.priority3) && trail.priority3.length > 0;
     
-    // Verificar se cada solução tem um ID (garantir que não são objetos vazios)
-    const hasSolutions = 
-      (priority1 && trail.priority1.some((item: any) => item.solutionId)) || 
-      (priority2 && trail.priority2.some((item: any) => item.solutionId)) || 
-      (priority3 && trail.priority3.some((item: any) => item.solutionId));
+    // Verificar se pelo menos uma prioridade existe e tem item com solutionId válido
+    const hasSolutionInPriority1 = priority1 && trail.priority1.some((item: any) => item && item.solutionId);
+    const hasSolutionInPriority2 = priority2 && trail.priority2.some((item: any) => item && item.solutionId);
+    const hasSolutionInPriority3 = priority3 && trail.priority3.some((item: any) => item && item.solutionId);
     
-    // Log para debug
-    console.log("Verificação da trilha:", { 
-      temPrioridade1: priority1, 
+    const hasAnySolutions = hasSolutionInPriority1 || hasSolutionInPriority2 || hasSolutionInPriority3;
+    
+    // Log mais claro para depuração
+    console.log("Verificação detalhada da trilha:", { 
+      temPrioridade1: priority1,
+      solucoesPrioridade1: priority1 ? trail.priority1.length : 0,
+      temSolucoesValidasP1: hasSolutionInPriority1,
       temPrioridade2: priority2, 
+      solucoesPrioridade2: priority2 ? trail.priority2.length : 0,
+      temSolucoesValidasP2: hasSolutionInPriority2,
       temPrioridade3: priority3,
-      temSolucoesValidas: hasSolutions,
-      trail 
+      solucoesPrioridade3: priority3 ? trail.priority3.length : 0,
+      temSolucoesValidasP3: hasSolutionInPriority3,
+      temAlgumaSolucaoValida: hasAnySolutions
     });
     
-    return (priority1 || priority2 || priority3) && hasSolutions;
+    return hasAnySolutions;
   } catch (error) {
     console.error("Erro ao verificar conteúdo da trilha:", error);
     return false;
@@ -44,4 +50,54 @@ export const isTrailStuck = (lastLoadTime: number | null, loadingTime = 10000): 
   const loadingDuration = currentTime - lastLoadTime;
   
   return loadingDuration > loadingTime;
+};
+
+/**
+ * Conta o número total de soluções em uma trilha
+ */
+export const countTrailSolutions = (trail: any): number => {
+  if (!trail) return 0;
+  
+  try {
+    let count = 0;
+    
+    if (Array.isArray(trail.priority1)) count += trail.priority1.length;
+    if (Array.isArray(trail.priority2)) count += trail.priority2.length;
+    if (Array.isArray(trail.priority3)) count += trail.priority3.length;
+    
+    return count;
+  } catch (error) {
+    console.error("Erro ao contar soluções da trilha:", error);
+    return 0;
+  }
+};
+
+/**
+ * Limpa dados da trilha para garantir um formato consistente
+ */
+export const sanitizeTrailData = (trail: any): any => {
+  if (!trail) return null;
+  
+  try {
+    // Garantir que todas as prioridades são arrays
+    const sanitized = {
+      priority1: Array.isArray(trail.priority1) ? trail.priority1 : [],
+      priority2: Array.isArray(trail.priority2) ? trail.priority2 : [],
+      priority3: Array.isArray(trail.priority3) ? trail.priority3 : []
+    };
+    
+    // Filtrar itens inválidos de cada array (sem solutionId)
+    sanitized.priority1 = sanitized.priority1.filter(item => item && item.solutionId);
+    sanitized.priority2 = sanitized.priority2.filter(item => item && item.solutionId);
+    sanitized.priority3 = sanitized.priority3.filter(item => item && item.solutionId);
+    
+    return sanitized;
+  } catch (error) {
+    console.error("Erro ao sanitizar dados da trilha:", error);
+    return {
+      priority1: [],
+      priority2: [],
+      priority3: []
+    };
+  }
 };

@@ -1,7 +1,7 @@
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
+import { Loader2, AlertCircle, RefreshCw } from "lucide-react";
 import { TrailMagicExperience } from "./TrailMagicExperience";
 import { TrailTypingText } from "./TrailTypingText";
 import { TrailStepperNavigation } from "./TrailStepperNavigation";
@@ -20,18 +20,22 @@ export const TrailGuidedExperience = ({ autoStart = false }) => {
     typingFinished,
     solutionsList,
     currentSolution,
+    loadingError,
     handleStartGeneration,
     handleMagicFinish,
     handleNext,
     handlePrevious,
     handleSelectSolution,
-    handleTypingComplete
+    handleTypingComplete,
+    refreshTrailData
   } = useTrailGuidedExperience();
+  
+  const [retryCount, setRetryCount] = useState(0);
 
   // Iniciar geração automaticamente se autoStart for true
   useEffect(() => {
     if (autoStart && !started && !isLoading && !regenerating && !showMagicExperience && solutionsList.length === 0) {
-      console.log("Iniciando geração automática da trilha");
+      console.log("Iniciando geração automática da trilha", { autoStart, started, isLoading, regenerating });
       handleStartGeneration(true);
     }
   }, [autoStart, started, isLoading, regenerating, showMagicExperience, solutionsList.length, handleStartGeneration]);
@@ -39,11 +43,16 @@ export const TrailGuidedExperience = ({ autoStart = false }) => {
   // Se já temos soluções mas não iniciou, auto-iniciar a visualização
   useEffect(() => {
     if (solutionsList.length > 0 && !started && !isLoading && !regenerating && !showMagicExperience) {
-      console.log("Iniciando visualização automática da trilha existente");
+      console.log("Iniciando visualização automática da trilha existente", { solutionsList: solutionsList.length });
       // Setamos started = true diretamente no componente
       handleStartGeneration(false); // false indica que não precisamos regenerar
     }
   }, [solutionsList, started, isLoading, regenerating, showMagicExperience, handleStartGeneration]);
+
+  const handleRetry = () => {
+    setRetryCount(prev => prev + 1);
+    refreshTrailData();
+  };
 
   if (showMagicExperience) {
     return <TrailMagicExperience onFinish={handleMagicFinish} />;
@@ -53,7 +62,58 @@ export const TrailGuidedExperience = ({ autoStart = false }) => {
     return (
       <div className="flex flex-col items-center gap-4 py-8">
         <Loader2 className="h-8 w-8 text-[#0ABAB5] animate-spin" />
-        <span className="font-medium text-[#0ABAB5]">Milagrinho está preparando sua trilha personalizada...</span>
+        <span className="font-medium text-[#0ABAB5]">
+          {regenerating 
+            ? "Milagrinho está preparando sua trilha personalizada..." 
+            : "Carregando sua trilha personalizada..."}
+        </span>
+        {retryCount > 1 && (
+          <div className="mt-3 text-center max-w-md">
+            <p className="text-sm text-gray-600 mb-2">
+              Este processo está demorando mais do que o esperado. 
+              Você pode tentar novamente ou voltar mais tarde.
+            </p>
+            <Button 
+              variant="outline"
+              onClick={handleRetry}
+              className="mt-1"
+              size="sm"
+            >
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Tentar novamente
+            </Button>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  if (loadingError) {
+    return (
+      <div className="max-w-xl mx-auto p-6 border rounded-lg bg-amber-50 border-amber-200">
+        <div className="flex flex-col items-center gap-4 text-center">
+          <AlertCircle size={32} className="text-amber-500" />
+          <h3 className="text-lg font-medium text-gray-800">Erro ao carregar trilha</h3>
+          <p className="text-gray-600">
+            Encontramos um problema ao carregar sua trilha personalizada. 
+            Por favor, tente novamente ou entre em contato com o suporte.
+          </p>
+          <div className="flex gap-3 mt-2">
+            <Button 
+              onClick={() => handleStartGeneration(true)} 
+              className="bg-[#0ABAB5] text-white"
+            >
+              Gerar Nova Trilha
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={handleRetry}
+            >
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Tentar Novamente
+            </Button>
+          </div>
+        </div>
       </div>
     );
   }
@@ -79,7 +139,8 @@ export const TrailGuidedExperience = ({ autoStart = false }) => {
   if (solutionsList.length === 0) {
     return (
       <div className="text-center text-gray-700 py-12">
-        Nenhuma solução recomendada foi encontrada. Por favor, tente regenerar a trilha.
+        <AlertCircle size={32} className="text-amber-500 mx-auto mb-3" />
+        <p className="mb-4">Nenhuma solução recomendada foi encontrada. Por favor, tente regenerar a trilha.</p>
         <div className="mt-4">
           <Button onClick={() => handleStartGeneration(true)} className="bg-[#0ABAB5] text-white">
             Regenerar Trilha

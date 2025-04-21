@@ -10,7 +10,8 @@ import { Button } from "@/components/ui/button";
 import { TrailGenerationPanel } from "@/components/onboarding/TrailGenerationPanel";
 import { useImplementationTrail } from "@/hooks/implementation/useImplementationTrail";
 import { toast } from "sonner";
-import { Loader2, RefreshCw } from "lucide-react";
+import { Loader2, RefreshCw, AlertCircle } from "lucide-react";
+import { countTrailSolutions } from "@/hooks/implementation/useImplementationTrail.utils";
 
 const Onboarding = () => {
   const { user } = useAuth();
@@ -21,6 +22,8 @@ const Onboarding = () => {
   const [showTrailPanel, setShowTrailPanel] = useState(false);
   const [isRetrying, setIsRetrying] = useState(false);
   const [loadingError, setLoadingError] = useState(false);
+  const [loadTimeout, setLoadTimeout] = useState(false);
+  const [attemptCount, setAttemptCount] = useState(0);
 
   // Hook da trilha
   const { 
@@ -39,26 +42,38 @@ const Onboarding = () => {
   }, [user, navigate]);
 
   // Função para carregar a trilha com controle de erro
-  const loadTrailData = useCallback(async () => {
+  const loadTrailData = useCallback(async (forceRefresh = true) => {
     try {
       setIsRetrying(true);
       setLoadingError(false);
-      const trailData = await refreshTrail(true);
+      setLoadTimeout(false);
+      setAttemptCount(prev => prev + 1);
       
-      // Verificar se a trilha foi carregada corretamente
-      if (!trailData && hasContent === false) {
-        setLoadingError(true);
+      const startTime = Date.now();
+      const trailData = await refreshTrail(forceRefresh);
+      
+      // Verificar explicitamente se há soluções na trilha
+      if (!trailData || countTrailSolutions(trailData) === 0) {
+        console.log("Trilha não encontrada ou sem soluções válidas após carregamento");
+        if (attemptCount >= 2) {
+          setLoadingError(true);
+        }
+      } else {
+        console.log("Trilha carregada com sucesso:", countTrailSolutions(trailData), "soluções");
+        setLoadingError(false);
       }
       
       return trailData;
     } catch (error) {
       console.error("Erro ao carregar trilha:", error);
-      setLoadingError(true);
+      if (attemptCount >= 2) {
+        setLoadingError(true);
+      }
       return null;
     } finally {
       setIsRetrying(false);
     }
-  }, [refreshTrail, hasContent]);
+  }, [refreshTrail, attemptCount]);
 
   // Carregar trilha ao montar ou ao progredir onboarding
   useEffect(() => {
@@ -66,8 +81,9 @@ const Onboarding = () => {
     
     // Adicionar um timeout para evitar loading infinito
     const timeout = setTimeout(() => {
-      if (trailLoading) {
-        setLoadingError(true);
+      if (trailLoading || isRetrying) {
+        console.log("Tempo limite excedido ao carregar trilha");
+        setLoadTimeout(true);
         toast.error("Tempo limite excedido ao carregar trilha");
       }
     }, 15000); // 15 segundos
@@ -75,17 +91,17 @@ const Onboarding = () => {
     return () => clearTimeout(timeout);
   }, [loadTrailData]);
 
+  // Abrir painel da trilha após completar onboarding se a trilha existir
+  useEffect(() => {
+    if (isOnboardingCompleted && hasContent && !trailLoading && !isRetrying) {
+      setShowTrailPanel(true);
+    }
+  }, [isOnboardingCompleted, hasContent, trailLoading, isRetrying]);
+
   // Extrai primeiro nome
   const firstName = user?.user_metadata?.name?.split(' ')[0] || user?.email?.split('@')[0] || '';
 
   const isOnboardingCompleted = !!progress?.is_completed;
-
-  // Mostrar painel da trilha automaticamente após onboarding completo e a trilha existir
-  useEffect(() => {
-    if (isOnboardingCompleted && hasContent && !trailLoading) {
-      setShowTrailPanel(true);
-    }
-  }, [isOnboardingCompleted, hasContent, trailLoading]);
 
   // Redireciona para a página de geração de trilha 
   const handleGenerateTrail = useCallback(() => {
@@ -96,6 +112,7 @@ const Onboarding = () => {
   const handleForceRefresh = useCallback(async () => {
     setIsRetrying(true);
     setLoadingError(false);
+    setLoadTimeout(false);
     
     try {
       // Tentar limpar a trilha existente primeiro
@@ -104,7 +121,7 @@ const Onboarding = () => {
       
       // Aguardar um momento para garantir que a limpeza seja processada
       setTimeout(async () => {
-        await loadTrailData();
+        await loadTrailData(true);
         setShowTrailPanel(true);
       }, 1000);
       
@@ -195,7 +212,7 @@ const Onboarding = () => {
                   </Button>
                 )}
                 
-                {loadingError && (
+                {(loadingError || loadTimeout) && (
                   <Button
                     variant="outline"
                     onClick={handleForceRefresh}
@@ -220,16 +237,27 @@ const Onboarding = () => {
               <div className="flex flex-col items-center gap-4 py-8 mt-8">
                 <div className="w-12 h-12 border-4 border-t-[#0ABAB5] border-r-[#0ABAB5]/30 border-b-[#0ABAB5]/10 border-l-[#0ABAB5]/30 rounded-full animate-spin"></div>
                 <span className="text-[#0ABAB5] font-medium">Carregando sua trilha personalizada...</span>
+                {attemptCount > 2 && (
+                  <button 
+                    onClick={handleForceRefresh}
+                    className="mt-2 text-sm text-gray-500 hover:text-[#0ABAB5] underline"
+                  >
+                    Este processo está demorando. Clique para tentar novamente.
+                  </button>
+                )}
               </div>
             )}
             
             {/* Caso não haja trilha após abertura do painel ou erro */}
-            {showTrailPanel && (!hasContent || loadingError) && !trailLoading && !isRetrying && (
-              <div className="text-center mt-8 p-6 bg-gray-50 rounded-lg border border-gray-100">
-                <p className="text-gray-600 mb-4">
+            {showTrailPanel && (!hasContent || loadingError || loadTimeout) && !trailLoading && !isRetrying && (
+              <div className="mt-8 p-6 bg-amber-50 rounded-lg border border-amber-200 flex flex-col items-center">
+                <AlertCircle className="text-amber-500 h-10 w-10 mb-3" />
+                <p className="text-gray-700 mb-4 text-center max-w-lg">
                   {loadingError 
                     ? "Ocorreu um erro ao carregar sua trilha. Por favor, tente novamente."
-                    : "Nenhuma trilha personalizada foi encontrada. Vamos criar uma agora!"}
+                    : loadTimeout
+                      ? "O carregamento da trilha excedeu o tempo limite. Por favor, tente novamente."
+                      : "Nenhuma trilha personalizada foi encontrada. Vamos criar uma agora para você começar!"}
                 </p>
                 <div className="flex justify-center gap-2">
                   <Button 
@@ -239,7 +267,7 @@ const Onboarding = () => {
                     Gerar Trilha Personalizada
                   </Button>
                   
-                  {loadingError && (
+                  {(loadingError || loadTimeout) && (
                     <Button
                       variant="outline"
                       onClick={handleForceRefresh}

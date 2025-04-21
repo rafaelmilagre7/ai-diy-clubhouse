@@ -3,7 +3,7 @@ import React, { useState, useMemo, useEffect, useCallback } from "react";
 import { useImplementationTrail } from "@/hooks/implementation/useImplementationTrail";
 import { useSolutionsData } from "@/hooks/useSolutionsData";
 import { toast } from "sonner";
-import { isTrailStuck } from "@/hooks/implementation/useImplementationTrail.utils";
+import { isTrailStuck, countTrailSolutions, sanitizeTrailData } from "@/hooks/implementation/useImplementationTrail.utils";
 
 // Subcomponentes
 import { TrailPanelHeader } from "./TrailGenerationPanel/TrailPanelHeader";
@@ -12,30 +12,40 @@ import { TrailPanelSolutions } from "./TrailGenerationPanel/TrailPanelSolutions"
 import { TrailPanelActions } from "./TrailGenerationPanel/TrailPanelActions";
 
 export const TrailGenerationPanel = ({ onClose }: { onClose?: () => void }) => {
-  const { trail, isLoading, generateImplementationTrail, refreshTrail, hasContent } = useImplementationTrail();
+  const { trail, isLoading, generateImplementationTrail, refreshTrail, hasContent, clearTrail } = useImplementationTrail();
   const { solutions: allSolutions, loading: solutionsLoading } = useSolutionsData();
   const [regenerating, setRegenerating] = useState(false);
   const [showMagic, setShowMagic] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [loadStartTime, setLoadStartTime] = useState<number | null>(null);
   const [loadingFailed, setLoadingFailed] = useState(false);
+  const [loadingTimeout, setLoadingTimeout] = useState(false);
+  const [attemptCount, setAttemptCount] = useState(0);
 
   // Iniciar carregamento com controle de tempo
   useEffect(() => {
     const loadFreshData = async () => {
       setRefreshing(true);
       setLoadStartTime(Date.now());
+      setAttemptCount(prev => prev + 1);
       
       try {
         const trailData = await refreshTrail(true);
         
-        if (!trailData) {
-          console.log("Nenhuma trilha encontrada ou erro ao carregar");
-          setLoadingFailed(true);
+        if (!trailData || countTrailSolutions(trailData) === 0) {
+          console.log("Nenhuma trilha encontrada ou sem soluções válidas");
+          if (attemptCount >= 2) {
+            setLoadingFailed(true);
+          }
+        } else {
+          console.log("Trilha carregada com", countTrailSolutions(trailData), "soluções");
+          setLoadingFailed(false);
         }
       } catch (error) {
         console.error("Erro ao recarregar trilha:", error);
-        setLoadingFailed(true);
+        if (attemptCount >= 2) {
+          setLoadingFailed(true);
+        }
       } finally {
         setRefreshing(false);
         setLoadStartTime(null);
@@ -49,7 +59,7 @@ export const TrailGenerationPanel = ({ onClose }: { onClose?: () => void }) => {
       if (refreshing && loadStartTime && isTrailStuck(loadStartTime)) {
         console.log("Carregamento da trilha excedeu o tempo limite");
         setRefreshing(false);
-        setLoadingFailed(true);
+        setLoadingTimeout(true);
         toast.error("Tempo limite de carregamento excedido. Tente novamente.");
       }
     }, 12000); // 12 segundos de timeout
@@ -62,9 +72,12 @@ export const TrailGenerationPanel = ({ onClose }: { onClose?: () => void }) => {
     if (!trail || !allSolutions || allSolutions.length === 0) return [];
     
     try {
+      const sanitizedTrail = sanitizeTrailData(trail);
+      if (!sanitizedTrail) return [];
+      
       const result: any[] = [];
       ["priority1", "priority2", "priority3"].forEach((priorityLevel, idx) => {
-        const items = Array.isArray((trail as any)[priorityLevel]) ? (trail as any)[priorityLevel] : [];
+        const items = Array.isArray((sanitizedTrail as any)[priorityLevel]) ? (sanitizedTrail as any)[priorityLevel] : [];
         
         items.forEach((item: any) => {
           if (!item || typeof item !== 'object') return;
@@ -107,6 +120,13 @@ export const TrailGenerationPanel = ({ onClose }: { onClose?: () => void }) => {
     try {
       setRegenerating(true);
       setLoadingFailed(false);
+      setLoadingTimeout(false);
+      setLoadStartTime(Date.now());
+      
+      // Limpar a trilha anterior antes de gerar uma nova
+      await clearTrail();
+      
+      // Gerar nova trilha
       await generateImplementationTrail();
       toast.success("Trilha regenerada com sucesso!");
     } catch (error) {
@@ -115,17 +135,29 @@ export const TrailGenerationPanel = ({ onClose }: { onClose?: () => void }) => {
       setLoadingFailed(true);
     } finally {
       setRegenerating(false);
+      setLoadStartTime(null);
     }
-  }, [generateImplementationTrail]);
+  }, [generateImplementationTrail, clearTrail]);
 
   const handleRefreshTrail = useCallback(async () => {
     setRefreshing(true);
     setLoadingFailed(false);
+    setLoadingTimeout(false);
     setLoadStartTime(Date.now());
+    setAttemptCount(prev => prev + 1);
     
     try {
-      await refreshTrail(true);
-      toast.success("Trilha atualizada com sucesso!");
+      const data = await refreshTrail(true);
+      if (data && countTrailSolutions(data) > 0) {
+        toast.success("Trilha atualizada com sucesso!");
+        setLoadingFailed(false);
+      } else {
+        console.log("Trilha recarregada, mas sem soluções válidas");
+        if (attemptCount >= 2) {
+          setLoadingFailed(true);
+          toast.error("A trilha parece estar vazia ou corrompida. Tente gerar uma nova.");
+        }
+      }
     } catch (error) {
       console.error("Erro ao atualizar trilha:", error);
       toast.error("Erro ao atualizar trilha");
@@ -134,11 +166,28 @@ export const TrailGenerationPanel = ({ onClose }: { onClose?: () => void }) => {
       setRefreshing(false);
       setLoadStartTime(null);
     }
-  }, [refreshTrail]);
+  }, [refreshTrail, attemptCount]);
+
+  // Timeout para detectar operações que demoram demais
+  useEffect(() => {
+    if (!loadStartTime) return;
+    
+    const timeoutId = setTimeout(() => {
+      if (loadStartTime && (refreshing || regenerating)) {
+        console.warn("Operação excedeu o tempo limite");
+        setLoadingTimeout(true);
+        setRegenerating(false);
+        setRefreshing(false);
+        setLoadStartTime(null);
+      }
+    }, 30000); // 30 segundos
+    
+    return () => clearTimeout(timeoutId);
+  }, [loadStartTime, refreshing, regenerating]);
 
   const isPanelLoading = isLoading || regenerating || solutionsLoading || refreshing;
   const hasValidTrail = trail && solutions.length > 0;
-  const showEmptyState = (!hasValidTrail && !isPanelLoading) || loadingFailed;
+  const showEmptyState = (!hasValidTrail && !isPanelLoading) || loadingFailed || loadingTimeout;
 
   if (showEmptyState) {
     return (
@@ -149,8 +198,10 @@ export const TrailGenerationPanel = ({ onClose }: { onClose?: () => void }) => {
         refreshing={refreshing}
         showMagic={showMagic}
         loadingFailed={loadingFailed}
+        loadingTimeout={loadingTimeout}
         onRegenerate={handleRegenerate}
         onRefresh={handleRefreshTrail}
+        attemptCount={attemptCount}
       />
     );
   }
@@ -162,8 +213,20 @@ export const TrailGenerationPanel = ({ onClose }: { onClose?: () => void }) => {
           <div className="flex flex-col items-center">
             <div className="w-10 h-10 border-4 border-t-[#0ABAB5] border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin mb-3"></div>
             <p className="text-[#0ABAB5] font-medium">
-              {regenerating ? "Gerando nova trilha..." : "Carregando trilha personalizada..."}
+              {regenerating 
+                ? "Gerando nova trilha..." 
+                : refreshing 
+                  ? "Atualizando trilha personalizada..." 
+                  : "Carregando trilha personalizada..."}
             </p>
+            {attemptCount > 2 && (
+              <button 
+                onClick={handleRefreshTrail}
+                className="mt-4 text-sm text-gray-500 hover:text-[#0ABAB5] underline"
+              >
+                Este processo está demorando. Clique para tentar novamente.
+              </button>
+            )}
           </div>
         </div>
       </div>

@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useImplementationTrail } from "./useImplementationTrail";
 import { useSolutionsData } from "@/hooks/useSolutionsData";
 import { toast } from "sonner";
+import { countTrailSolutions, sanitizeTrailData } from "./useImplementationTrail.utils";
 
 export const useTrailGuidedExperience = () => {
   const navigate = useNavigate();
@@ -16,16 +17,21 @@ export const useTrailGuidedExperience = () => {
   const [showMagicExperience, setShowMagicExperience] = useState(false);
   const [loadStartTime, setLoadStartTime] = useState<number | null>(null);
   const [loadAttempts, setLoadAttempts] = useState(0);
+  const [loadingError, setLoadingError] = useState(false);
+  const [loadingTimeout, setLoadingTimeout] = useState(false);
 
   // Montar lista de soluções ordenadas para a navegação com validação aprimorada
   const solutionsList = useMemo(() => {
     if (!trail || !allSolutions || allSolutions.length === 0) return [];
     
     try {
+      const sanitizedTrail = sanitizeTrailData(trail);
+      if (!sanitizedTrail) return [];
+      
       const all: any[] = [];
 
       ["priority1", "priority2", "priority3"].forEach((priorityKey, idx) => {
-        const items = Array.isArray((trail as any)[priorityKey]) ? (trail as any)[priorityKey] : [];
+        const items = Array.isArray((sanitizedTrail as any)[priorityKey]) ? (sanitizedTrail as any)[priorityKey] : [];
         
         items.forEach((item: any) => {
           if (!item || !item.solutionId) return;
@@ -87,6 +93,7 @@ export const useTrailGuidedExperience = () => {
         if (solutionsList.length > 0) {
           console.log("Trilha já existe com", solutionsList.length, "soluções");
           setStarted(true);
+          setLoadingError(false);
           return;
         }
         
@@ -97,25 +104,59 @@ export const useTrailGuidedExperience = () => {
           setLoadStartTime(Date.now());
           
           try {
-            await refreshTrail(true);
+            const trailData = await refreshTrail(true);
+            
+            // Verificar explicitamente se temos soluções
+            if (trailData && countTrailSolutions(trailData) > 0) {
+              console.log("Trilha carregada com sucesso:", countTrailSolutions(trailData), "soluções");
+              setLoadingError(false);
+            } else {
+              console.log("Trilha carregada, mas sem soluções válidas");
+              if (loadAttempts >= 2) {
+                setLoadingError(true);
+              }
+            }
           } catch (error) {
             console.error("Erro ao tentar carregar trilha:", error);
+            if (loadAttempts >= 2) {
+              setLoadingError(true);
+            }
           } finally {
             setLoadStartTime(null);
           }
           return;
         }
         
-        console.log("Não há trilha iniciada após tentativas de carregamento");
-        setStarted(false);
+        if (loadAttempts >= 3 && solutionsList.length === 0) {
+          console.log("Número máximo de tentativas excedido e sem soluções");
+          setLoadingError(true);
+        }
       } catch (error) {
         console.error("Erro ao verificar trilha existente:", error);
-        setStarted(false);
+        if (loadAttempts >= 2) {
+          setLoadingError(true);
+        }
       }
     };
     
     checkExistingTrail();
   }, [isLoading, solutionsList.length, refreshTrail, loadAttempts, regenerating]);
+
+  // Function para tentar recarregar dados da trilha
+  const refreshTrailData = useCallback(async () => {
+    setLoadingError(false);
+    setLoadingTimeout(false);
+    setLoadStartTime(Date.now());
+    
+    try {
+      await refreshTrail(true);
+    } catch (error) {
+      console.error("Erro ao atualizar dados da trilha:", error);
+      setLoadingError(true);
+    } finally {
+      setLoadStartTime(null);
+    }
+  }, [refreshTrail]);
 
   // Handler para iniciar a geração da trilha
   const handleStartGeneration = useCallback(async (shouldRegenerate = true) => {
@@ -127,6 +168,8 @@ export const useTrailGuidedExperience = () => {
     
     setShowMagicExperience(true);
     setRegenerating(true);
+    setLoadingError(false);
+    setLoadingTimeout(false);
     setLoadStartTime(Date.now());
 
     try {
@@ -145,6 +188,7 @@ export const useTrailGuidedExperience = () => {
     } catch (error) {
       console.error("Erro ao gerar a trilha:", error);
       toast.error("Erro ao gerar a trilha personalizada.");
+      setLoadingError(true);
     } finally {
       setRegenerating(false);
       setLoadStartTime(null);
@@ -188,19 +232,21 @@ export const useTrailGuidedExperience = () => {
 
   // Timeout para evitar carregamento infinito
   useEffect(() => {
-    if (!loadStartTime || !regenerating) return;
+    if (!loadStartTime) return;
     
     const timeoutId = setTimeout(() => {
-      if (regenerating) {
-        console.warn("Geração da trilha excedeu o tempo limite");
+      if (loadStartTime) {
+        console.warn("Operação excedeu o tempo limite");
+        setLoadingTimeout(true);
         setRegenerating(false);
         setShowMagicExperience(false);
-        toast.error("A geração da trilha está demorando mais que o esperado. Tente novamente mais tarde.");
+        setLoadStartTime(null);
+        toast.error("A operação está demorando mais que o esperado. Tente novamente mais tarde.");
       }
     }, 30000); // 30 segundos
     
     return () => clearTimeout(timeoutId);
-  }, [loadStartTime, regenerating]);
+  }, [loadStartTime]);
 
   return {
     isLoading,
@@ -212,11 +258,14 @@ export const useTrailGuidedExperience = () => {
     typingFinished,
     solutionsList,
     currentSolution,
+    loadingError,
+    loadingTimeout,
     handleStartGeneration,
     handleMagicFinish,
     handleNext,
     handlePrevious,
     handleSelectSolution,
-    handleTypingComplete
+    handleTypingComplete,
+    refreshTrailData
   };
 };
