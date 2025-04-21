@@ -21,6 +21,18 @@ export function navigateAfterStep(stepId: string, currentStepIndex: number, navi
     "review": "/implementation-trail"
   };
 
+  // Mapeamento inverso para navegação manual (quando clicamos nos links do menu)
+  const pathToStepMap: {[key: string]: string} = {
+    "/onboarding": "personal",
+    "/onboarding/professional-data": "professional_data",
+    "/onboarding/business-context": "business_context",
+    "/onboarding/ai-experience": "ai_exp",
+    "/onboarding/club-goals": "business_goals",
+    "/onboarding/customization": "experience_personalization",
+    "/onboarding/complementary": "complementary_info",
+    "/onboarding/review": "review"
+  };
+
   // Verificar se temos um mapeamento direto para esta etapa
   if (stepToRouteMap[stepId]) {
     const nextPath = stepToRouteMap[stepId];
@@ -43,4 +55,23 @@ export function navigateAfterStep(stepId: string, currentStepIndex: number, navi
       navigate(nextPath);
     }, 800);
   }
+}
+
+// Função auxiliar para navegar manualmente para uma etapa específica pelo seu ID
+export function navigateToStepById(stepId: string, navigate: (path: string) => void) {
+  const stepIndex = steps.findIndex(step => step.id === stepId);
+  if (stepIndex >= 0) {
+    const path = steps[stepIndex].path;
+    console.log(`Navegando manualmente para etapa ${stepId} com caminho ${path}`);
+    navigate(path);
+  } else {
+    console.warn(`Etapa ${stepId} não encontrada para navegação manual`);
+    navigate("/onboarding"); // Fallback para a primeira etapa
+  }
+}
+
+// Função auxiliar para navegar diretamente para uma rota e atualizar o estado atual
+export function directNavigateToPath(path: string, navigate: (path: string) => void) {
+  console.log(`Navegação direta para caminho: ${path}`);
+  navigate(path);
 }

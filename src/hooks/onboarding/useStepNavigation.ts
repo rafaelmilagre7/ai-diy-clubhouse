@@ -2,13 +2,26 @@
 import { useEffect, useState } from "react";
 import { steps } from "./useStepDefinitions";
 import { useProgress } from "./useProgress";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "sonner";
 
 export const useStepNavigation = () => {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const { progress, refreshProgress, isLoading } = useProgress();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Mapear caminhos para IDs de etapas
+  const pathToStepId = {
+    "/onboarding": "personal",
+    "/onboarding/professional-data": "professional_data",
+    "/onboarding/business-context": "business_context",
+    "/onboarding/ai-experience": "ai_exp",
+    "/onboarding/club-goals": "business_goals",
+    "/onboarding/customization": "experience_personalization",
+    "/onboarding/complementary": "complementary_info",
+    "/onboarding/review": "review"
+  };
 
   // Efeito para sincronizar a navegação com o progresso do onboarding
   useEffect(() => {
@@ -17,8 +30,20 @@ export const useStepNavigation = () => {
       
       const refreshedProgress = await refreshProgress();
       
-      if (refreshedProgress?.current_step) {
-        // Encontrar o índice da etapa atual no array de steps
+      // Determinar etapa atual baseada na rota atual
+      const currentPath = location.pathname;
+      const currentStepId = pathToStepId[currentPath as keyof typeof pathToStepId];
+      
+      if (currentStepId) {
+        // Encontrar o índice da etapa atual pela URL atual
+        const stepIndexByPath = steps.findIndex(step => step.id === currentStepId);
+        
+        if (stepIndexByPath !== -1) {
+          console.log(`Definindo etapa atual baseada na URL: ${currentStepId} (índice ${stepIndexByPath})`);
+          setCurrentStepIndex(stepIndexByPath);
+        }
+      } else if (refreshedProgress?.current_step) {
+        // Usar current_step do progresso como fallback
         const stepIndex = steps.findIndex(step => step.id === refreshedProgress.current_step);
         
         if (stepIndex !== -1) {
@@ -26,7 +51,6 @@ export const useStepNavigation = () => {
           setCurrentStepIndex(stepIndex);
           
           // Se a URL atual não corresponde à etapa correta, redirecionar
-          const currentPath = window.location.pathname;
           const correctPath = steps[stepIndex].path;
           
           if (currentPath !== correctPath) {
@@ -47,13 +71,24 @@ export const useStepNavigation = () => {
     };
     
     loadProgress();
-  }, [navigate, refreshProgress, isLoading]);
+  }, [navigate, refreshProgress, isLoading, location.pathname]);
 
   // Função para navegar manualmente para uma etapa específica
   const navigateToStep = (stepIndex: number) => {
     if (stepIndex >= 0 && stepIndex < steps.length) {
+      console.log(`Navegando manualmente para etapa índice ${stepIndex}: ${steps[stepIndex].id} (${steps[stepIndex].path})`);
       setCurrentStepIndex(stepIndex);
       navigate(steps[stepIndex].path);
+    }
+  };
+
+  // Função para navegar para uma etapa pelo seu ID
+  const navigateToStepById = (stepId: string) => {
+    const index = steps.findIndex(step => step.id === stepId);
+    if (index !== -1) {
+      console.log(`Navegando para etapa ID ${stepId} (índice ${index}): ${steps[index].path}`);
+      setCurrentStepIndex(index);
+      navigate(steps[index].path);
     }
   };
 
@@ -62,6 +97,7 @@ export const useStepNavigation = () => {
     setCurrentStepIndex,
     progress,
     navigateToStep,
+    navigateToStepById,
     isLoading,
     currentStep: steps[currentStepIndex] || steps[0]
   };

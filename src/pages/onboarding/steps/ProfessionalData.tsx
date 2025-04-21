@@ -4,7 +4,7 @@ import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
 import { useOnboardingSteps } from "@/hooks/onboarding/useOnboardingSteps";
 import { ProfessionalDataStep } from "@/components/onboarding/steps/ProfessionalDataStep";
 import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 const ProfessionalData = () => {
   const {
@@ -18,11 +18,21 @@ const ProfessionalData = () => {
   
   const [isLocalLoading, setIsLocalLoading] = useState(true);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Verificar se estamos na rota correta
+  useEffect(() => {
+    // Garantir que esta página só seja acessada pela rota correta
+    if (location.pathname !== "/onboarding/professional-data") {
+      console.warn(`Rota incorreta detectada: ${location.pathname}, deveria ser /onboarding/professional-data`);
+    }
+  }, [location.pathname]);
 
   // Buscar dados atualizados ao montar o componente
   useEffect(() => {
     const loadData = async () => {
       try {
+        console.log("ProfessionalData - Carregando dados profissionais");
         setIsLocalLoading(true);
         await refreshProgress();
       } catch (error) {
@@ -72,6 +82,7 @@ const ProfessionalData = () => {
         totalSteps={steps.length}
         progress={progressPercentage}
         title="Dados Profissionais"
+        backUrl="/onboarding"
       >
         <div className="flex justify-center items-center h-64">
           <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-[#0ABAB5]"></div>

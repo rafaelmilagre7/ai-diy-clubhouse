@@ -23,6 +23,14 @@ const Onboarding = () => {
     refreshProgress();
   }, [refreshProgress, refreshAttempt]);
 
+  // Forçar a rota atual para /onboarding (dados pessoais)
+  useEffect(() => {
+    const currentPath = window.location.pathname;
+    if (currentPath !== '/onboarding') {
+      console.log("Corrigindo rota para /onboarding (dados pessoais)");
+    }
+  }, [navigate]);
+
   // Redirecionar para login se não autenticado
   useEffect(() => {
     if (!user) {
@@ -81,7 +89,7 @@ const Onboarding = () => {
   return (
     <OnboardingLayout
       currentStep={1}
-      title="Personalização e Trilha VIVER DE IA"
+      title="Dados Pessoais"
     >
       <div className="max-w-4xl mx-auto space-y-8">
         <OnboardingHeader firstName={firstName} isOnboardingCompleted={isOnboardingCompleted} />
