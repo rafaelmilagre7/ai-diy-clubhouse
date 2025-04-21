@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { AlertCircle, RefreshCw, ArrowLeft, Home, AlertTriangle, HelpCircle } from "lucide-react";
+import { AlertCircle, RefreshCw, ArrowLeft, Home, AlertTriangle, HelpCircle, RotateCcw } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
@@ -10,6 +10,7 @@ interface TrailErrorStateProps {
   onRegenerate: () => void;
   onForceRefresh: () => void;
   onGoBack: () => void;
+  onResetData?: () => void;
   attemptCount?: number;
   errorDetails?: string;
 }
@@ -19,6 +20,7 @@ export const TrailErrorState: React.FC<TrailErrorStateProps> = ({
   onRegenerate,
   onForceRefresh,
   onGoBack,
+  onResetData,
   attemptCount = 0,
   errorDetails,
 }) => {
@@ -31,8 +33,14 @@ export const TrailErrorState: React.FC<TrailErrorStateProps> = ({
 
   const handleHelp = () => {
     toast.info("Suporte técnico solicitado");
-    // Aqui você pode adicionar um redirecionamento para uma página de suporte
-    // ou abrir um modal de ajuda
+    // Redirecionamento para suporte ou abrir modal de ajuda
+  };
+
+  const handleResetData = () => {
+    if (onResetData) {
+      toast.info("Limpando dados e reiniciando...");
+      onResetData();
+    }
   };
 
   const getErrorMessage = () => {
@@ -107,11 +115,11 @@ export const TrailErrorState: React.FC<TrailErrorStateProps> = ({
         </Button>
       </div>
       
-      <div className="mt-4 flex flex-col sm:flex-row gap-2 w-full">
+      <div className="mt-4 flex flex-wrap gap-2 w-full">
         <Button
           variant="ghost"
           onClick={onGoBack}
-          className="flex items-center gap-2"
+          className="flex items-center gap-2 flex-1"
         >
           <ArrowLeft className="h-4 w-4" />
           Voltar para Onboarding
@@ -120,16 +128,27 @@ export const TrailErrorState: React.FC<TrailErrorStateProps> = ({
         <Button
           variant="ghost"
           onClick={handleDashboardNavigation}
-          className="flex items-center gap-2"
+          className="flex items-center gap-2 flex-1"
         >
           <Home className="h-4 w-4" />
           Ir para Dashboard
         </Button>
         
+        {onResetData && (
+          <Button
+            variant="ghost"
+            onClick={handleResetData}
+            className="flex items-center gap-2 flex-1"
+          >
+            <RotateCcw className="h-4 w-4" />
+            Reiniciar Dados
+          </Button>
+        )}
+        
         <Button
           variant="ghost"
           onClick={handleHelp}
-          className="flex items-center gap-2"
+          className="flex items-center gap-2 flex-1"
         >
           <HelpCircle className="h-4 w-4" />
           Obter Ajuda

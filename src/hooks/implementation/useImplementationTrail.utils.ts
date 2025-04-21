@@ -139,3 +139,50 @@ export const isSafeToAbort = (loadStartTime: number | null): boolean => {
   return isApiTimeout(loadStartTime, 5000);
 };
 
+/**
+ * Verifica se a tela está em estado de carregamento por tempo excessivo
+ */
+export const isCriticalTimeout = (startTime: number | null): boolean => {
+  // Considera-se timeout crítico após 20 segundos
+  return isApiTimeout(startTime, 20000);
+};
+
+/**
+ * Limpa a trilha e reinicia o processo
+ */
+export const resetTrailState = async (clearTrailFn: Function, refreshTrailFn: Function): Promise<boolean> => {
+  try {
+    // Limpar a trilha existente
+    await clearTrailFn();
+    
+    // Pequeno delay para garantir que a limpeza seja processada
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    // Tentar recarregar a trilha
+    await refreshTrailFn(true);
+    
+    return true;
+  } catch (error) {
+    console.error("Erro ao resetar estado da trilha:", error);
+    return false;
+  }
+};
+
+/**
+ * Detecta problemas comuns na geração da trilha
+ */
+export const detectTrailIssue = (error: any, trail: any): string => {
+  if (!trail || !hasTrailContent(trail)) {
+    return "Trilha vazia ou sem soluções válidas. Tente gerar novamente.";
+  }
+  
+  if (error?.message?.includes("timeout") || error?.message?.includes("tempo limite")) {
+    return "Tempo limite excedido. O servidor pode estar sobrecarregado.";
+  }
+  
+  if (error?.message?.includes("network") || error?.message?.includes("rede")) {
+    return "Problema de conexão. Verifique sua internet e tente novamente.";
+  }
+  
+  return "Erro ao processar trilha. Tente novamente mais tarde.";
+};
