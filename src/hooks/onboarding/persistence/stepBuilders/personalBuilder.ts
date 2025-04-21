@@ -11,9 +11,9 @@ export function buildPersonalUpdate(data: Partial<OnboardingData>, progress: Onb
   console.log("Construindo atualização para dados pessoais:", data);
 
   // Verificar se temos dados pessoais no objeto recebido
-  const personalInfo = data.personal_info || data;
+  const personalInfo = data.personal_info || {};
   
-  if (!personalInfo || Object.keys(personalInfo).length === 0) {
+  if (Object.keys(personalInfo).length === 0) {
     console.warn("Dados pessoais vazios ou incompletos recebidos");
     return {};
   }
@@ -23,20 +23,10 @@ export function buildPersonalUpdate(data: Partial<OnboardingData>, progress: Onb
   // Mescla os dados existentes com os novos para evitar perder informações
   const existingPersonalInfo = progress?.personal_info || {};
   
-  // Verificar se cada campo existe antes de mesclar
-  const updatedPersonalInfo = {
+  // Criar um objeto atualizado com tipagem segura
+  const updatedPersonalInfo: OnboardingData['personal_info'] = {
     ...existingPersonalInfo,
     ...personalInfo,
-    name: personalInfo.name || existingPersonalInfo.name,
-    email: personalInfo.email || existingPersonalInfo.email,
-    phone: personalInfo.phone || existingPersonalInfo.phone || "",
-    ddi: personalInfo.ddi || existingPersonalInfo.ddi || "+55",
-    linkedin: personalInfo.linkedin || existingPersonalInfo.linkedin || "",
-    instagram: personalInfo.instagram || existingPersonalInfo.instagram || "",
-    country: personalInfo.country || existingPersonalInfo.country || "Brasil",
-    state: personalInfo.state || existingPersonalInfo.state || "",
-    city: personalInfo.city || existingPersonalInfo.city || "",
-    timezone: personalInfo.timezone || existingPersonalInfo.timezone || "GMT-3",
   };
 
   console.log("Dados pessoais mesclados:", updatedPersonalInfo);
