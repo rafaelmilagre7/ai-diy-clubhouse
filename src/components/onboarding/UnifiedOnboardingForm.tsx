@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/auth';
+import { steps } from '@/hooks/onboarding/useStepDefinitions';
 
 interface OnboardingFormData {
   name: string;
@@ -22,6 +23,7 @@ export const UnifiedOnboardingForm: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [currentStep, setCurrentStep] = useState(0);
 
   const { register, handleSubmit, formState: { errors } } = useForm<OnboardingFormData>();
 
@@ -73,5 +75,53 @@ export const UnifiedOnboardingForm: React.FC = () => {
     }
   };
 
-  return null;
+  // Renderizar as etapas do onboarding seguindo o fluxo de 8 etapas
+  const renderStepContent = () => {
+    // Aqui você pode implementar a lógica para renderizar cada etapa
+    switch(currentStep) {
+      case 0:
+        return <div>Etapa 1: Dados Pessoais</div>;
+      case 1:
+        return <div>Etapa 2: Dados Profissionais</div>;
+      // ... implementar as demais etapas
+      default:
+        return <div>Etapa não encontrada</div>;
+    }
+  };
+
+  return (
+    <div className="space-y-8">
+      <div className="bg-white rounded-lg shadow p-6">
+        <h2 className="text-xl font-semibold mb-4">Onboarding do VIVER DE IA Club</h2>
+        <p className="text-gray-600 mb-6">
+          Etapa {currentStep + 1} de {steps.length}
+        </p>
+        
+        {renderStepContent()}
+        
+        <div className="flex justify-between mt-8">
+          <Button
+            variant="outline"
+            onClick={() => setCurrentStep(Math.max(0, currentStep - 1))}
+            disabled={currentStep === 0 || isSubmitting}
+          >
+            Voltar
+          </Button>
+          
+          <Button
+            onClick={() => {
+              if (currentStep < steps.length - 1) {
+                setCurrentStep(currentStep + 1);
+              } else {
+                handleSubmit(onSubmit)();
+              }
+            }}
+            disabled={isSubmitting}
+          >
+            {currentStep < steps.length - 1 ? 'Próximo' : 'Finalizar'}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
 };
