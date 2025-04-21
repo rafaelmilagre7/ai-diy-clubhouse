@@ -56,4 +56,50 @@
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
+  
+  /* Novas animações */
+  .tab-slide-in {
+    animation: tab-slide-in 0.4s ease-out forwards;
+  }
+  @keyframes tab-slide-in {
+    0% { opacity: 0; transform: translateY(10px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+  
+  .tab-fade-in {
+    animation: tab-fade-in 0.3s ease-out forwards;
+  }
+  @keyframes tab-fade-in {
+    0% { opacity: 0; }
+    100% { opacity: 1; }
+  }
+  
+  /* Efeito de pulso suave */
+  .pulse-subtle {
+    animation: pulse-subtle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+  @keyframes pulse-subtle {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+  }
+}
+
+/* Efeitos para estados de interação */
+.hover-lift {
+  transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+}
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* Animação de entrada para as estatísticas na tela de conclusão */
+.stat-item-enter {
+  opacity: 0;
+  transform: translateY(20px);
+  animation: stat-item-enter 0.5s forwards;
+  animation-delay: calc(var(--delay, 0) * 0.1s);
+}
+@keyframes stat-item-enter {
+  to { opacity: 1; transform: translateY(0); }
 }

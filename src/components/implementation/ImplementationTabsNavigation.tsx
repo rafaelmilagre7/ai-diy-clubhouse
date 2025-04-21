@@ -12,6 +12,7 @@ import {
   MessageCircle, 
   Award 
 } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface ImplementationTabsNavigationProps {
   activeTab: string;
@@ -31,21 +32,33 @@ export const ImplementationTabsNavigation = ({
   activeTab,
   setActiveTab
 }: ImplementationTabsNavigationProps) => (
-  <TabsList className="w-full bg-white/70 rounded-lg shadow flex mb-6 p-1 border border-[#0ABAB5]/10 gap-1 overflow-x-auto scrollbar-hide">
-    {tabs.map((tab) => (
-      <TabsTrigger
-        key={tab.value}
-        value={tab.value}
-        onClick={() => setActiveTab(tab.value)}
-        className={`
-          flex items-center gap-2 px-4 py-2 rounded-md font-semibold transition-all relative hover:bg-[#0ABAB5]/10
-          ${activeTab === tab.value ? "bg-[#0ABAB5]/20 text-[#0ABAB5] scale-105 shadow-sm after:absolute after:-bottom-1 after:left-2 after:right-2 after:h-1 after:bg-gradient-to-r after:from-[#0ABAB5] after:to-[#8ee4e1] after:rounded-full after:animate-enter" : "text-neutral-700" }
-        `}
-        tabIndex={0}
-      >
-        {tab.icon}
-        <span className="hidden md:inline">{tab.label}</span>
-      </TabsTrigger>
-    ))}
-  </TabsList>
+  <TooltipProvider delayDuration={300}>
+    <TabsList className="w-full bg-white/70 rounded-lg shadow-md mb-6 p-1 border border-[#0ABAB5]/20 gap-1 overflow-x-auto scrollbar-hide flex justify-between">
+      {tabs.map((tab) => (
+        <Tooltip key={tab.value}>
+          <TooltipTrigger asChild>
+            <TabsTrigger
+              value={tab.value}
+              onClick={() => setActiveTab(tab.value)}
+              className={`
+                flex items-center gap-2 px-3 py-2 rounded-md transition-all relative flex-1 min-w-0
+                ${activeTab === tab.value 
+                  ? "bg-[#0ABAB5]/20 text-[#0ABAB5] shadow-sm after:absolute after:-bottom-1 after:left-2 after:right-2 after:h-1 after:bg-[#0ABAB5] after:rounded-full after:animate-enter" 
+                  : "text-neutral-700 hover:bg-[#0ABAB5]/10"}
+              `}
+              tabIndex={0}
+            >
+              <span className="flex items-center justify-center">
+                {tab.icon}
+                <span className="hidden sm:inline-block ml-2 text-sm font-medium truncate">{tab.label}</span>
+              </span>
+            </TabsTrigger>
+          </TooltipTrigger>
+          <TooltipContent side="bottom" className="bg-[#0ABAB5] text-white">
+            {tab.label}
+          </TooltipContent>
+        </Tooltip>
+      ))}
+    </TabsList>
+  </TooltipProvider>
 );

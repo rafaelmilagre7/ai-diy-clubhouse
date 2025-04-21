@@ -95,56 +95,59 @@ const SolutionImplementation = () => {
   const currentStep = modules.findIndex(m => m.id === currentModule?.id) || 0;
   
   return (
-    <div className="pb-20 min-h-screen bg-gradient-to-br from-[#f6fdff] via-[#ecfafe] to-[#e7f4fb]">
-      <div className="container max-w-3xl animate-fade-in">
+    <div className="min-h-screen bg-gradient-to-br from-[#f8fdff] via-[#f0fafe] to-[#edf6fb] pb-16">
+      <div className="container max-w-4xl py-4 md:py-6 animate-fade-in">
         <WizardStepProgress
           currentStep={currentStep}
           totalSteps={modules.length}
           stepTitles={[
-            "", "Visão Geral", "Preparação", "Implementação",
+            "Início", "Visão Geral", "Preparação", "Implementação",
             "Verificação", "Resultados", "Otimização", "Celebração"
           ]}
         />
-        <GlassCard className="p-0 md:p-0 transition-all duration-300 shadow-2xl ring-2 ring-[#0ABAB5]/10">
+        
+        <GlassCard className="p-0 md:p-0 transition-all duration-300 shadow-xl border border-[#0ABAB5]/10 overflow-hidden">
           <ImplementationHeader solution={solution} />
           
-          <div className="mt-0 px-0 md:px-6">
+          <div className="mt-0 px-4 md:px-6 pb-6">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <ImplementationTabsNavigation activeTab={activeTab} setActiveTab={setActiveTab} />
               
-              <TabsContent value="tools">
-                <ModuleContentTools module={currentModule} />
-              </TabsContent>
-              
-              <TabsContent value="materials">
-                <ModuleContentMaterials module={currentModule} />
-              </TabsContent>
-              
-              <TabsContent value="videos">
-                <ModuleContentVideos module={currentModule} />
-              </TabsContent>
-              
-              <TabsContent value="checklist">
-                <ModuleContentChecklist module={currentModule} />
-              </TabsContent>
-              
-              <TabsContent value="comments">
-                {solution && currentModule && (
-                  <CommentsSection 
-                    solutionId={solution.id} 
-                    moduleId={currentModule.id} 
+              <div className="bg-white/50 rounded-xl p-4 md:p-6 border border-[#0ABAB5]/5 min-h-[30vh]">
+                <TabsContent value="tools" className="mt-0">
+                  <ModuleContentTools module={currentModule} />
+                </TabsContent>
+                
+                <TabsContent value="materials" className="mt-0">
+                  <ModuleContentMaterials module={currentModule} />
+                </TabsContent>
+                
+                <TabsContent value="videos" className="mt-0">
+                  <ModuleContentVideos module={currentModule} />
+                </TabsContent>
+                
+                <TabsContent value="checklist" className="mt-0">
+                  <ModuleContentChecklist module={currentModule} />
+                </TabsContent>
+                
+                <TabsContent value="comments" className="mt-0">
+                  {solution && currentModule && (
+                    <CommentsSection 
+                      solutionId={solution.id} 
+                      moduleId={currentModule.id} 
+                    />
+                  )}
+                </TabsContent>
+                
+                <TabsContent value="complete" className="mt-0">
+                  <ImplementationComplete 
+                    solution={solution} 
+                    onComplete={onComplete} 
+                    isCompleting={isCompleting}
+                    isCompleted={isCompleted}
                   />
-                )}
-              </TabsContent>
-              
-              <TabsContent value="complete">
-                <ImplementationComplete 
-                  solution={solution} 
-                  onComplete={onComplete} 
-                  isCompleting={isCompleting}
-                  isCompleted={isCompleted}
-                />
-              </TabsContent>
+                </TabsContent>
+              </div>
             </Tabs>
           </div>
         </GlassCard>
@@ -154,4 +157,3 @@ const SolutionImplementation = () => {
 };
 
 export default SolutionImplementation;
-
