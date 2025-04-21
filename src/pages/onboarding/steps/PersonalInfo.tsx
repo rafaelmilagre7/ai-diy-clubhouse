@@ -5,11 +5,14 @@ import { useOnboardingSteps } from "@/hooks/onboarding/useOnboardingSteps";
 import { PersonalInfoStep } from "@/components/onboarding/steps/PersonalInfoStep";
 import { MilagrinhoMessage } from "@/components/onboarding/MilagrinhoMessage";
 import { useProgress } from "@/hooks/onboarding/useProgress";
+import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 const PersonalInfo = () => {
-  const { saveStepData, progress, completeOnboarding } = useOnboardingSteps();
+  const { saveStepData, progress, completeOnboarding, navigateToStep } = useOnboardingSteps();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { isLoading, refreshProgress } = useProgress();
+  const navigate = useNavigate();
 
   // Efeito para carregar dados mais recentes ao entrar na página
   useEffect(() => {
@@ -23,8 +26,15 @@ const PersonalInfo = () => {
       console.log("Salvando dados pessoais:", data);
       await saveStepData(data);
       console.log("Dados pessoais salvos com sucesso");
+      toast.success("Dados salvos com sucesso!");
+      
+      // Navegar para a próxima etapa após salvar
+      setTimeout(() => {
+        navigate("/onboarding/professional-data");
+      }, 500);
     } catch (error) {
       console.error("Erro ao salvar dados:", error);
+      toast.error("Erro ao salvar dados. Tente novamente.");
     } finally {
       setIsSubmitting(false);
     }
@@ -34,7 +44,9 @@ const PersonalInfo = () => {
     <OnboardingLayout
       currentStep={1}
       title="Dados Pessoais"
+      description="Vamos conhecer um pouco mais sobre você para personalizar sua experiência no VIVER DE IA Club."
       backUrl="/onboarding"
+      onStepClick={(step) => navigateToStep(step - 1)}
     >
       <div className="max-w-4xl mx-auto space-y-8">
         <MilagrinhoMessage

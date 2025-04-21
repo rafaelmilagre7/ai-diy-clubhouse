@@ -1,12 +1,11 @@
 
 import React from "react";
 import { useForm } from "react-hook-form";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowRight } from "lucide-react";
 import { LocationInputs } from "./inputs/LocationInputs";
 import { SocialInputs } from "./inputs/SocialInputs";
+import { NavigationButtons } from "../NavigationButtons";
 
 interface PersonalInfoStepProps {
   onSubmit: (data: any) => void;
@@ -93,6 +92,7 @@ export const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
               placeholder="(00) 00000-0000"
               className="mt-1"
               {...register("phone", {
+                required: "Telefone é obrigatório",
                 pattern: {
                   value: /^\(\d{2}\) \d{4,5}-\d{4}$/,
                   message: "Formato: (00) 00000-0000"
@@ -118,37 +118,32 @@ export const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
         </div>
 
         {/* Localização */}
-        <LocationInputs
-          country={initialData?.country || "Brasil"}
-          state={initialData?.state || ""}
-          city={initialData?.city || ""}
-          onChangeCountry={(v) => register("country").onChange({ target: { value: v } })}
-          onChangeState={(v) => register("state").onChange({ target: { value: v } })}
-          onChangeCity={(v) => register("city").onChange({ target: { value: v } })}
-          disabled={isSubmitting}
-          errors={{
-            state: errors.state,
-            city: errors.city
-          }}
-        />
+        <div className="space-y-4">
+          <h3 className="text-md font-medium text-gray-700">Localização</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <LocationInputs
+              country={initialData?.country || "Brasil"}
+              state={initialData?.state || ""}
+              city={initialData?.city || ""}
+              onChangeCountry={(v) => register("country").onChange({ target: { value: v } })}
+              onChangeState={(v) => register("state").onChange({ target: { value: v } })}
+              onChangeCity={(v) => register("city").onChange({ target: { value: v } })}
+              disabled={isSubmitting}
+              errors={{
+                state: errors.state,
+                city: errors.city
+              }}
+            />
+          </div>
+        </div>
       </div>
 
-      <div className="flex justify-end pt-6">
-        <Button
-          type="submit"
-          className="bg-[#0ABAB5] hover:bg-[#0ABAB5]/90 text-white"
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? (
-            "Salvando..."
-          ) : (
-            <span className="flex items-center gap-2">
-              Próximo
-              <ArrowRight className="h-4 w-4" />
-            </span>
-          )}
-        </Button>
-      </div>
+      <NavigationButtons 
+        isSubmitting={isSubmitting} 
+        showPrevious={false}
+        submitText="Salvar e Continuar"
+        loadingText="Salvando..." 
+      />
     </form>
   );
 };
