@@ -4,7 +4,6 @@ import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Flag, Linkedin, Instagram, MapPin } from "lucide-react";
 import { ArrowRight } from "lucide-react";
 import { LocationInputs } from "./inputs/LocationInputs";
 import { SocialInputs } from "./inputs/SocialInputs";
@@ -111,7 +110,10 @@ export const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
             onChangeLinkedin={(v) => register("linkedin").onChange({ target: { value: v } })}
             onChangeInstagram={(v) => register("instagram").onChange({ target: { value: v } })}
             disabled={isSubmitting}
-            errors={errors}
+            errors={{
+              linkedin: errors.linkedin,
+              instagram: errors.instagram
+            }}
           />
         </div>
 
@@ -124,7 +126,10 @@ export const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
           onChangeState={(v) => register("state").onChange({ target: { value: v } })}
           onChangeCity={(v) => register("city").onChange({ target: { value: v } })}
           disabled={isSubmitting}
-          errors={errors}
+          errors={{
+            state: errors.state,
+            city: errors.city
+          }}
         />
       </div>
 
