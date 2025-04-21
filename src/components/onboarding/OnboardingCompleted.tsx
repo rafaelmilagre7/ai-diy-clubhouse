@@ -1,17 +1,25 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Confetti } from "@/components/ui/confetti";
 import { CheckCircle2, Edit, Map } from "lucide-react";
+import confetti from "canvas-confetti";
 
 export const OnboardingCompleted = () => {
   const navigate = useNavigate();
+
+  useEffect(() => {
+    // Trigger confetti effect when component mounts
+    confetti({
+      particleCount: 100,
+      spread: 70,
+      origin: { y: 0.6 },
+      colors: ['#0ABAB5', '#6de2de', '#9EECEA']
+    });
+  }, []);
   
   return (
     <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-sm p-8 text-center space-y-6">
-      <Confetti />
-      
       <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mx-auto">
         <CheckCircle2 className="h-10 w-10 text-green-600" />
       </div>
