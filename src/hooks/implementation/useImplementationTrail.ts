@@ -1,10 +1,11 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/contexts/auth";
 import { useProgress } from "@/hooks/onboarding/useProgress";
 import { toast } from "sonner";
+import { saveImplementationTrail } from "./useSaveImplementationTrail";
+import { hasTrailContent } from "./useImplementationTrail.utils";
 
 export type ImplementationRecommendation = {
   solutionId: string;
@@ -25,14 +26,6 @@ export const useImplementationTrail = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
-
-  const hasTrailContent = useCallback((trailData: ImplementationTrail | null): boolean => {
-    if (!trailData) return false;
-    
-    return Object.values(trailData).some(
-      arr => Array.isArray(arr) && arr.length > 0
-    );
-  }, []);
 
   const loadExistingTrail = useCallback(async (forceRefresh = false) => {
     if (!user) {
@@ -85,7 +78,7 @@ export const useImplementationTrail = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [user, trail, lastUpdated, hasTrailContent]);
+  }, [user, trail, lastUpdated]);
 
   const generateImplementationTrail = async (onboardingData: any = null) => {
     if (!user) {
@@ -156,35 +149,6 @@ export const useImplementationTrail = () => {
       return null;
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const saveImplementationTrail = async (userId: string, trailData: ImplementationTrail) => {
-    try {
-      const { data: existingTrail } = await supabase
-        .from("implementation_trails")
-        .select("id")
-        .eq("user_id", userId)
-        .maybeSingle();
-
-      if (existingTrail) {
-        await supabase
-          .from("implementation_trails")
-          .update({
-            trail_data: trailData,
-            updated_at: new Date().toISOString(),
-          })
-          .eq("id", existingTrail.id);
-      } else {
-        await supabase
-          .from("implementation_trails")
-          .insert({
-            user_id: userId,
-            trail_data: trailData,
-          });
-      }
-    } catch (error) {
-      console.error("Erro ao salvar trilha no banco de dados:", error);
     }
   };
 
