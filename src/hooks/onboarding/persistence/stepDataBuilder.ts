@@ -109,11 +109,17 @@ export function buildUpdateObject(
     const sectionKey = steps.find(s => s.id === stepId)?.section as keyof OnboardingData;
     if (sectionKey && data[sectionKey]) {
       const existingData = progress[sectionKey as keyof OnboardingProgress] || {};
-      updateObj[sectionKey] = {
-        ...existingData,
-        ...data[sectionKey]
-      };
-      console.log(`Salvando ${sectionKey}:`, data[sectionKey]);
+      if (typeof existingData === 'object') {
+        updateObj[sectionKey] = {
+          ...existingData,
+          ...(data[sectionKey] as object)
+        };
+        console.log(`Salvando ${sectionKey}:`, data[sectionKey]);
+      } else {
+        // Se não for um objeto, simplesmente atribuir o valor
+        updateObj[sectionKey] = data[sectionKey];
+        console.log(`Salvando ${sectionKey} (valor direto):`, data[sectionKey]);
+      }
     }
   }
 
