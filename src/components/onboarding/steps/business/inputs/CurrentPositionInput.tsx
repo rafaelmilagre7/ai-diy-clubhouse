@@ -6,7 +6,7 @@ import { Control, Controller, FieldError } from "react-hook-form";
 
 interface CurrentPositionInputProps {
   control: Control<any>;
-  error?: FieldError;
+  error?: FieldError | Record<string, any>;
 }
 
 export const CurrentPositionInput: React.FC<CurrentPositionInputProps> = ({ control, error }) => {
@@ -28,7 +28,7 @@ export const CurrentPositionInput: React.FC<CurrentPositionInputProps> = ({ cont
           />
         )}
       />
-      {error && <p className="text-red-500 text-sm">{error.message}</p>}
+      {error && <p className="text-red-500 text-sm">{error.message as string}</p>}
     </div>
   );
 };

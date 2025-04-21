@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 interface CompanySectorInputProps {
   control: Control<any>;
-  error?: FieldError;
+  error?: FieldError | Record<string, any>;
 }
 
 export const CompanySectorInput: React.FC<CompanySectorInputProps> = ({ control, error }) => {
@@ -42,7 +42,7 @@ export const CompanySectorInput: React.FC<CompanySectorInputProps> = ({ control,
           </Select>
         )}
       />
-      {error && <p className="text-red-500 text-sm">{error.message}</p>}
+      {error && <p className="text-red-500 text-sm">{error.message as string}</p>}
     </div>
   );
 };

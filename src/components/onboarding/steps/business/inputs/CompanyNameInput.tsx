@@ -6,7 +6,7 @@ import { Control, Controller, FieldError } from "react-hook-form";
 
 interface CompanyNameInputProps {
   control: Control<any>;
-  error?: FieldError;
+  error?: FieldError | Record<string, any>;
 }
 
 export const CompanyNameInput: React.FC<CompanyNameInputProps> = ({ control, error }) => {
@@ -28,7 +28,7 @@ export const CompanyNameInput: React.FC<CompanyNameInputProps> = ({ control, err
           />
         )}
       />
-      {error && <p className="text-red-500 text-sm">{error.message}</p>}
+      {error && <p className="text-red-500 text-sm">{error.message as string}</p>}
     </div>
   );
 };

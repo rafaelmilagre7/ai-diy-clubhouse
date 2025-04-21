@@ -4,6 +4,7 @@ import { CompanyInputs } from "./business/CompanyInputs";
 import { OnboardingData } from "@/types/onboarding";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
+import { useForm, FieldErrors } from "react-hook-form";
 
 interface BusinessGoalsStepProps {
   onSubmit: (stepId: string, data: Partial<OnboardingData>) => void;
@@ -14,87 +15,47 @@ interface BusinessGoalsStepProps {
   personalInfo?: OnboardingData["personal_info"];
 }
 
+type FormValues = {
+  company_name: string;
+  company_size: string;
+  company_sector: string;
+  company_website: string;
+  current_position: string;
+  annual_revenue: string;
+};
+
 export const BusinessGoalsStep = ({
   onSubmit,
   isSubmitting,
   initialData,
 }: BusinessGoalsStepProps) => {
-  // Estados para cada campo
-  const [companyName, setCompanyName] = useState(initialData?.company_name || "");
-  const [companySize, setCompanySize] = useState(initialData?.company_size || "");
-  const [companySector, setCompanySector] = useState(initialData?.company_sector || "");
-  const [companyWebsite, setCompanyWebsite] = useState(initialData?.company_website || "");
-  const [currentPosition, setCurrentPosition] = useState(initialData?.current_position || "");
-  const [annualRevenue, setAnnualRevenue] = useState(initialData?.annual_revenue || "");
-  const [formErrors, setFormErrors] = useState<{[key: string]: string}>({});
+  const { control, handleSubmit, formState: { errors } } = useForm<FormValues>({
+    defaultValues: {
+      company_name: initialData?.company_name || initialData?.professional_info?.company_name || "",
+      company_size: initialData?.company_size || initialData?.professional_info?.company_size || "",
+      company_sector: initialData?.company_sector || initialData?.professional_info?.company_sector || "",
+      company_website: initialData?.company_website || initialData?.professional_info?.company_website || "",
+      current_position: initialData?.current_position || initialData?.professional_info?.current_position || "",
+      annual_revenue: initialData?.annual_revenue || initialData?.professional_info?.annual_revenue || "",
+    }
+  });
 
   useEffect(() => {
     // Atualizar os estados quando os dados iniciais mudarem
     if (initialData) {
       console.log("Dados iniciais de empresa:", initialData);
-      
-      if (initialData.professional_info) {
-        // Se dados existirem no objeto professional_info
-        setCompanyName(initialData.professional_info.company_name || "");
-        setCompanySize(initialData.professional_info.company_size || "");
-        setCompanySector(initialData.professional_info.company_sector || "");
-        setCompanyWebsite(initialData.professional_info.company_website || "");
-        setCurrentPosition(initialData.professional_info.current_position || "");
-        setAnnualRevenue(initialData.professional_info.annual_revenue || "");
-      } else {
-        // Se dados estiverem nos campos raiz
-        setCompanyName(initialData.company_name || "");
-        setCompanySize(initialData.company_size || "");
-        setCompanySector(initialData.company_sector || "");
-        setCompanyWebsite(initialData.company_website || "");
-        setCurrentPosition(initialData.current_position || "");
-        setAnnualRevenue(initialData.annual_revenue || "");
-      }
     }
   }, [initialData]);
 
-  const validateForm = () => {
-    const errors: {[key: string]: string} = {};
-    
-    if (!companyName.trim()) {
-      errors.companyName = "Nome da empresa é obrigatório";
-    }
-    
-    if (!companySize) {
-      errors.companySize = "Tamanho da empresa é obrigatório";
-    }
-    
-    if (!companySector) {
-      errors.companySector = "Setor de atuação é obrigatório";
-    }
-    
-    if (!currentPosition) {
-      errors.currentPosition = "Cargo atual é obrigatório";
-    }
-    
-    if (!annualRevenue) {
-      errors.annualRevenue = "Faturamento anual é obrigatório";
-    }
-    
-    setFormErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!validateForm()) {
-      return;
-    }
-    
+  const onFormSubmit = (data: FormValues) => {
     const professionalData: Partial<OnboardingData> = {
       professional_info: {
-        company_name: companyName,
-        company_size: companySize,
-        company_sector: companySector,
-        company_website: companyWebsite,
-        current_position: currentPosition,
-        annual_revenue: annualRevenue,
+        company_name: data.company_name,
+        company_size: data.company_size,
+        company_sector: data.company_sector,
+        company_website: data.company_website,
+        current_position: data.current_position,
+        annual_revenue: data.annual_revenue,
       },
     };
     
@@ -104,26 +65,15 @@ export const BusinessGoalsStep = ({
 
   return (
     <div className="space-y-6">
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-6">
         <div className="bg-white rounded-lg border border-gray-100 p-6 shadow-sm">
           <h2 className="text-xl font-semibold text-[#15192C] mb-6">
             Dados Profissionais
           </h2>
           
           <CompanyInputs 
-            companyName={companyName}
-            setCompanyName={setCompanyName}
-            companySize={companySize}
-            setCompanySize={setCompanySize}
-            companySector={companySector}
-            setCompanySector={setCompanySector}
-            companyWebsite={companyWebsite}
-            setCompanyWebsite={setCompanyWebsite}
-            currentPosition={currentPosition}
-            setCurrentPosition={setCurrentPosition}
-            annualRevenue={annualRevenue}
-            setAnnualRevenue={setAnnualRevenue}
-            errors={formErrors}
+            control={control}
+            errors={errors}
           />
           
           <div className="flex justify-end mt-8">

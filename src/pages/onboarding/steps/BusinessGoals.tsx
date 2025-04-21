@@ -9,6 +9,7 @@ import { useOnboardingSteps } from "@/hooks/onboarding/useOnboardingSteps";
 import { MilagrinhoMessage } from "@/components/onboarding/MilagrinhoMessage";
 import { CompanyInputs } from "@/components/onboarding/steps/business/CompanyInputs";
 import { toast } from "sonner";
+import { OnboardingData } from "@/types/onboarding";
 
 type FormValues = {
   company_name: string;
@@ -37,7 +38,19 @@ const BusinessGoals = () => {
 
   const onSubmit = async (data: FormValues) => {
     try {
-      await saveStepData("goals", data);
+      // Transformamos os dados para o formato esperado pelo saveStepData
+      const professionalData: Partial<OnboardingData> = {
+        professional_info: {
+          company_name: data.company_name,
+          company_size: data.company_size,
+          company_sector: data.company_sector,
+          company_website: data.company_website,
+          current_position: data.current_position,
+          annual_revenue: data.annual_revenue,
+        }
+      };
+      
+      await saveStepData("goals", professionalData);
       toast.success("Informações salvas com sucesso!");
       navigate("/onboarding/business-context");
     } catch (error) {
