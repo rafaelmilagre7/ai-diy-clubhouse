@@ -8,6 +8,7 @@ import { MilagrinhoMessage } from "@/components/onboarding/MilagrinhoMessage";
 import { BusinessModelField } from "./inputs/BusinessModelField";
 import { BusinessChallengesField } from "./inputs/BusinessChallengesField";
 import { ShortTermGoalsField } from "./inputs/ShortTermGoalsField";
+import { MediumTermGoalsField } from "./inputs/MediumTermGoalsField";
 import { KpisField } from "./inputs/KpisField";
 import { AdditionalContextField } from "./inputs/AdditionalContextField";
 import { SubmitButton } from "./SubmitButton";
@@ -25,6 +26,7 @@ export const BusinessContextForm: React.FC<BusinessContextFormProps> = ({ progre
       business_model: progress?.business_context?.business_model || "",
       business_challenges: progress?.business_context?.business_challenges || [],
       short_term_goals: progress?.business_context?.short_term_goals || [],
+      medium_term_goals: progress?.business_context?.medium_term_goals || [],
       important_kpis: progress?.business_context?.important_kpis || [],
       additional_context: progress?.business_context?.additional_context || ""
     }
@@ -51,6 +53,7 @@ export const BusinessContextForm: React.FC<BusinessContextFormProps> = ({ progre
         <BusinessModelField control={control} error={errors.business_model} />
         <BusinessChallengesField control={control} error={errors.business_challenges} />
         <ShortTermGoalsField control={control} error={errors.short_term_goals} />
+        <MediumTermGoalsField control={control} error={errors.medium_term_goals} />
         <KpisField control={control} error={errors.important_kpis} />
         <AdditionalContextField control={control} />
         <SubmitButton isSubmitting={isSubmitting} />

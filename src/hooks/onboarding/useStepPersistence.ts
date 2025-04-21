@@ -44,7 +44,8 @@ export const useStepPersistence = ({
       } else if (stepId === "business_context") {
         const businessContext = data.business_context || {};
         if (!businessContext.business_model || !businessContext.business_challenges || 
-            !businessContext.short_term_goals || !businessContext.important_kpis) {
+            !businessContext.short_term_goals || !businessContext.medium_term_goals || 
+            !businessContext.important_kpis) {
           toast.error("Por favor, preencha todos os campos obrigatórios");
           return;
         }

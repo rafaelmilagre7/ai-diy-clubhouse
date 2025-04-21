@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -21,6 +20,7 @@ export const BusinessContextStep = ({ onSubmit, isSubmitting, initialData }: Onb
   const [businessModel, setBusinessModel] = useState(initialData?.business_model || "");
   const [businessChallenges, setBusinessChallenges] = useState(initialData?.business_challenges || []);
   const [shortTermGoals, setShortTermGoals] = useState(initialData?.short_term_goals || []);
+  const [mediumTermGoals, setMediumTermGoals] = useState(initialData?.medium_term_goals || []);
   const [importantKpis, setImportantKpis] = useState(initialData?.important_kpis || []);
   const [additionalContext, setAdditionalContext] = useState(initialData?.additional_context || "");
 
@@ -64,6 +64,19 @@ export const BusinessContextStep = ({ onSubmit, isSubmitting, initialData }: Onb
     { id: "new-product", label: "Lançar novo produto/serviço utilizando IA" }
   ];
 
+  const mediumTermGoalsOptions = [
+    { id: "scale_ai", label: "Escalar soluções de IA implementadas" },
+    { id: "create_internal_department", label: "Criar departamento interno focado em IA" },
+    { id: "measure_roi", label: "Mensurar e otimizar ROI das soluções de IA" },
+    { id: "expand_markets", label: "Expandir para novos mercados utilizando IA" },
+    { id: "omnichannel", label: "Implementar estratégia omnichannel com IA" },
+    { id: "develop_services", label: "Desenvolver oferta de serviços baseados em IA" },
+    { id: "integrate_ai", label: "Integrar múltiplas soluções de IA nos processos" },
+    { id: "advanced_data_analysis", label: "Implementar análise avançada de dados com IA" },
+    { id: "product_with_ai", label: "Desenvolver produto próprio com base em IA" },
+    { id: "market_reference", label: "Tornar-se referência no seu setor em uso de IA" },
+  ];
+
   const kpiOptions = [
     { id: "revenue", label: "Receita" },
     { id: "profit", label: "Lucro" },
@@ -94,6 +107,14 @@ export const BusinessContextStep = ({ onSubmit, isSubmitting, initialData }: Onb
     );
   };
 
+  const toggleMediumTermGoal = (id: string) => {
+    setMediumTermGoals(prev => 
+      prev.includes(id) 
+        ? prev.filter(item => item !== id) 
+        : [...prev, id]
+    );
+  };
+
   const toggleKpi = (id: string) => {
     setImportantKpis(prev => 
       prev.includes(id) 
@@ -106,6 +127,7 @@ export const BusinessContextStep = ({ onSubmit, isSubmitting, initialData }: Onb
     business_model: z.string().min(1, "Selecione um modelo de negócio"),
     business_challenges: z.array(z.string()).min(1, "Selecione pelo menos um desafio"),
     short_term_goals: z.array(z.string()).min(1, "Selecione pelo menos um objetivo"),
+    medium_term_goals: z.array(z.string()).min(1, "Selecione pelo menos um objetivo de médio prazo"),
     important_kpis: z.array(z.string()).min(1, "Selecione pelo menos um KPI"),
     additional_context: z.string().optional(),
   });
@@ -117,6 +139,7 @@ export const BusinessContextStep = ({ onSubmit, isSubmitting, initialData }: Onb
       business_model: businessModel,
       business_challenges: businessChallenges,
       short_term_goals: shortTermGoals,
+      medium_term_goals: mediumTermGoals,
       important_kpis: importantKpis,
       additional_context: additionalContext,
     };
@@ -193,6 +216,27 @@ export const BusinessContextStep = ({ onSubmit, isSubmitting, initialData }: Onb
                   onCheckedChange={() => toggleShortTermGoal(option.id)}
                 />
                 <Label htmlFor={`goal-${option.id}`} className="cursor-pointer">
+                  {option.label}
+                </Label>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <Label className="text-base font-medium">
+            Objetivos de Médio Prazo (6-12 meses)
+            <span className="text-red-500">*</span>
+          </Label>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+            {mediumTermGoalsOptions.map((option) => (
+              <div key={option.id} className="flex items-center space-x-2">
+                <Checkbox 
+                  id={`medium-goal-${option.id}`} 
+                  checked={mediumTermGoals.includes(option.id)}
+                  onCheckedChange={() => toggleMediumTermGoal(option.id)}
+                />
+                <Label htmlFor={`medium-goal-${option.id}`} className="cursor-pointer">
                   {option.label}
                 </Label>
               </div>

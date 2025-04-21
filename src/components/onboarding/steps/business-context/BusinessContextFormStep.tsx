@@ -1,6 +1,6 @@
 
 import React from "react";
-import { useForm, FieldErrors } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { useOnboardingSteps } from "@/hooks/onboarding/useOnboardingSteps";
 import { useNavigate } from "react-router-dom";

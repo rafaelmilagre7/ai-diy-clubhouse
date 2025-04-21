@@ -26,6 +26,7 @@ export interface OnboardingData {
     business_model?: string;
     business_challenges?: string[];
     short_term_goals?: string[];
+    medium_term_goals?: string[]; // Adicionamos este campo
     important_kpis?: string[];
     additional_context?: string;
   };
