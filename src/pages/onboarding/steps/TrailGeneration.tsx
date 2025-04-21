@@ -237,7 +237,10 @@ const TrailGeneration = () => {
         )}
         
         {generating && !error && (
-          <TrailLoadingState attemptCount={attemptCount} />
+          <TrailLoadingState 
+            attemptCount={attemptCount}
+            onForceRefresh={handleForceRefresh}
+          />
         )}
         
         {error && (

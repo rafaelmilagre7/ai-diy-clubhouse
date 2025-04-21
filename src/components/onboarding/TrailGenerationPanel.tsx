@@ -9,7 +9,21 @@ import { TrailPanelState } from "./TrailGenerationPanel/TrailPanelState";
 import { TrailLoadingPanel } from "./TrailGeneration/TrailLoadingPanel";
 import { TrailContentPanel } from "./TrailGeneration/TrailContentPanel";
 
-export const TrailGenerationPanel = ({ onClose }: { onClose?: () => void }) => {
+interface TrailGenerationPanelProps {
+  onClose?: () => void;
+  solutions?: any[];
+  loading?: boolean;
+  onLoadMore?: () => void;
+  progress?: any;
+}
+
+export const TrailGenerationPanel: React.FC<TrailGenerationPanelProps> = ({ 
+  onClose, 
+  solutions: initialSolutions, 
+  loading: externalLoading,
+  onLoadMore,
+  progress 
+}) => {
   const { trail, isLoading, generateImplementationTrail, refreshTrail, hasContent, clearTrail } = useImplementationTrail();
   const { solutions: allSolutions, loading: solutionsLoading } = useSolutionsData();
   const [regenerating, setRegenerating] = useState(false);
@@ -20,8 +34,16 @@ export const TrailGenerationPanel = ({ onClose }: { onClose?: () => void }) => {
   const [loadingTimeout, setLoadingTimeout] = useState(false);
   const [attemptCount, setAttemptCount] = useState(0);
 
+  // Usar soluções fornecidas ou carregar do trail
+  const [solutions, setSolutions] = useState<any[]>(initialSolutions || []);
+
   // Efeito para controle de carregamento inicial
   useEffect(() => {
+    if (initialSolutions && initialSolutions.length > 0) {
+      setSolutions(initialSolutions);
+      return;
+    }
+
     const loadFreshData = async () => {
       setRefreshing(true);
       setLoadStartTime(Date.now());
@@ -56,46 +78,45 @@ export const TrailGenerationPanel = ({ onClose }: { onClose?: () => void }) => {
     }, 12000);
     
     return () => clearTimeout(timeoutId);
-  }, [refreshTrail, trail, attemptCount]);
+  }, [refreshTrail, trail, attemptCount, initialSolutions]);
 
   // Mapeamento de soluções
-  const solutions = useMemo(() => {
-    if (!trail || !allSolutions?.length) return [];
-    
-    try {
-      const sanitizedTrail = sanitizeTrailData(trail);
-      if (!sanitizedTrail) return [];
-      
-      const result: any[] = [];
-      ["priority1", "priority2", "priority3"].forEach((priorityLevel, idx) => {
-        const items = Array.isArray((sanitizedTrail as any)[priorityLevel]) 
-          ? (sanitizedTrail as any)[priorityLevel] 
-          : [];
+  useEffect(() => {
+    if (!initialSolutions && trail && allSolutions?.length) {
+      try {
+        const sanitizedTrail = sanitizeTrailData(trail);
+        if (!sanitizedTrail) return;
         
-        items.forEach((item: any) => {
-          if (!item?.solutionId) return;
+        const result: any[] = [];
+        ["priority1", "priority2", "priority3"].forEach((priorityLevel, idx) => {
+          const items = Array.isArray((sanitizedTrail as any)[priorityLevel]) 
+            ? (sanitizedTrail as any)[priorityLevel] 
+            : [];
           
-          const fullSolution = allSolutions.find(s => s.id === item.solutionId);
-          if (fullSolution) {
-            result.push({
-              ...item,
-              ...fullSolution,
-              priority: idx + 1,
-              title: fullSolution.title || "Solução sem título",
-              description: fullSolution.description || item.description || "Sem descrição disponível.",
-              justification: item.justification || "Recomendação personalizada",
-              solutionId: item.solutionId
-            });
-          }
+          items.forEach((item: any) => {
+            if (!item?.solutionId) return;
+            
+            const fullSolution = allSolutions.find(s => s.id === item.solutionId);
+            if (fullSolution) {
+              result.push({
+                ...item,
+                ...fullSolution,
+                priority: idx + 1,
+                title: fullSolution.title || "Solução sem título",
+                description: fullSolution.description || item.description || "Sem descrição disponível.",
+                justification: item.justification || "Recomendação personalizada",
+                solutionId: item.solutionId
+              });
+            }
+          });
         });
-      });
-      
-      return result;
-    } catch (error) {
-      console.error("Erro ao processar soluções da trilha:", error);
-      return [];
+        
+        setSolutions(result);
+      } catch (error) {
+        console.error("Erro ao processar soluções da trilha:", error);
+      }
     }
-  }, [trail, allSolutions]);
+  }, [trail, allSolutions, initialSolutions]);
 
   const handleRegenerate = async () => {
     try {
@@ -123,8 +144,8 @@ export const TrailGenerationPanel = ({ onClose }: { onClose?: () => void }) => {
     refreshTrail(true);
   };
 
-  const isPanelLoading = isLoading || regenerating || solutionsLoading || refreshing;
-  const hasValidTrail = trail && solutions.length > 0;
+  const isPanelLoading = externalLoading || isLoading || regenerating || solutionsLoading || refreshing;
+  const hasValidTrail = (trail && solutions.length > 0) || (initialSolutions && initialSolutions.length > 0);
   const showEmptyState = (!hasValidTrail && !isPanelLoading) || loadingFailed || loadingTimeout;
 
   if (showEmptyState) {

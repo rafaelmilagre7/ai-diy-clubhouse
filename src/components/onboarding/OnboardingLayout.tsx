@@ -13,6 +13,7 @@ interface OnboardingLayoutProps {
   title: string;
   backUrl?: string;
   onStepClick?: (step: number) => void;
+  hideProgress?: boolean;
 }
 
 export const OnboardingLayout = ({
@@ -21,6 +22,7 @@ export const OnboardingLayout = ({
   title,
   backUrl = "/onboarding",
   onStepClick,
+  hideProgress = false,
 }: OnboardingLayoutProps) => {
   const { navigateToStep, steps } = useOnboardingSteps();
   const navigate = useNavigate();
@@ -76,11 +78,13 @@ export const OnboardingLayout = ({
         </div>
       </div>
 
-      <EtapasProgresso 
-        currentStep={currentStep} 
-        totalSteps={8} 
-        onStepClick={handleStepClick}
-      />
+      {!hideProgress && (
+        <EtapasProgresso 
+          currentStep={currentStep} 
+          totalSteps={8} 
+          onStepClick={handleStepClick}
+        />
+      )}
 
       <div className="mt-6 mb-4">
         <h1 className="text-2xl font-bold text-gray-900">{title}</h1>

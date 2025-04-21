@@ -112,6 +112,10 @@ export interface OnboardingProgress {
   company_website?: string;
   current_position?: string;
   annual_revenue?: string;
+  
+  // Adicionando as propriedades que estão faltando para a trilha
+  trail_solutions?: any[];
+  trail_generated_at?: string;
 }
 
 export interface OnboardingStepProps {
