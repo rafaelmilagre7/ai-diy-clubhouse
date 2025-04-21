@@ -8,8 +8,16 @@ import { Module, Solution } from "@/lib/supabase";
 import { useLogging } from "@/hooks/useLogging";
 
 export const useModuleImplementation = () => {
-  const { id, moduleIndex } = useParams<{ id: string; moduleIndex: string }>();
-  const moduleIdx = moduleIndex ? parseInt(moduleIndex) : 0;
+  const { id, moduleIndex, moduleIdx } = useParams<{ 
+    id: string; 
+    moduleIndex: string;
+    moduleIdx: string; 
+  }>();
+  
+  // Compatibilidade entre URLs /implement/:id/:moduleIdx e /implementation/:id/:moduleIdx
+  const currentModuleIdx = moduleIndex || moduleIdx || "0";
+  const moduleIdxNumber = parseInt(currentModuleIdx);
+  
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -29,7 +37,7 @@ export const useModuleImplementation = () => {
       
       try {
         setLoading(true);
-        log("Buscando dados da solução e módulos para implementação", { id, moduleIdx });
+        log("Buscando dados da solução e módulos para implementação", { id, moduleIdx: moduleIdxNumber });
         
         // Fetch solution
         const { data: solutionData, error: solutionError } = await supabase
@@ -84,13 +92,13 @@ export const useModuleImplementation = () => {
           log("Módulos encontrados:", { count: modulesData.length });
           
           // Set current module based on moduleIdx
-          if (moduleIdx < modulesData.length) {
-            setCurrentModule(modulesData[moduleIdx] as Module);
-            log("Módulo atual definido:", { moduleId: modulesData[moduleIdx].id });
+          if (moduleIdxNumber < modulesData.length) {
+            setCurrentModule(modulesData[moduleIdxNumber] as Module);
+            log("Módulo atual definido:", { moduleId: modulesData[moduleIdxNumber].id });
           } else {
             // If moduleIdx is out of bounds, set to first module
             setCurrentModule(modulesData[0] as Module);
-            log("Índice de módulo fora dos limites, usando o primeiro módulo", { requestedIdx: moduleIdx, maxIdx: modulesData.length - 1 });
+            log("Índice de módulo fora dos limites, usando o primeiro módulo", { requestedIdx: moduleIdxNumber, maxIdx: modulesData.length - 1 });
           }
         } else {
           log("Nenhum módulo encontrado, criando placeholder", { solutionId: id });
@@ -129,11 +137,11 @@ export const useModuleImplementation = () => {
               log("Progresso encontrado:", { progress: progressData });
               
               // Update current module index in progress if different
-              if (progressData.current_module !== moduleIdx) {
+              if (progressData.current_module !== moduleIdxNumber) {
                 const { error: updateError } = await supabase
                   .from("progress")
                   .update({ 
-                    current_module: moduleIdx,
+                    current_module: moduleIdxNumber,
                     last_activity: new Date().toISOString()
                   })
                   .eq("id", progressData.id);
@@ -159,7 +167,7 @@ export const useModuleImplementation = () => {
                 .insert({
                   user_id: user.id,
                   solution_id: id,
-                  current_module: moduleIdx,
+                  current_module: moduleIdxNumber,
                   is_completed: false,
                   completed_modules: [],
                   last_activity: new Date().toISOString()
@@ -191,7 +199,7 @@ export const useModuleImplementation = () => {
     };
     
     fetchData();
-  }, [id, moduleIdx, user, toast, navigate, log, logError]);
+  }, [id, moduleIdxNumber, user, toast, navigate, log, logError]);
   
   return {
     solution,
