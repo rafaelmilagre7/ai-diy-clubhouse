@@ -111,16 +111,40 @@ export function TrailMagicExperience({ onFinish, onStep }: TrailMagicExperienceP
     return () => clearTimeout(timer);
   }, []);
 
-  // Modificado: Apenas avança com clique (sem timeout)
-  const handleNext = () => {
-    if (currStep < steps.length - 1) {
-      setCurrStep((s) => {
+  // Modificado: avança automaticamente após um tempo em cada etapa
+  useEffect(() => {
+    if (!isVisible || currStep >= steps.length - 1) return;
+    
+    // Avançar automaticamente após 2.5 segundos em cada passo
+    const autoAdvanceTimer = setTimeout(() => {
+      setCurrStep(s => {
         const next = s + 1;
         onStep && onStep(next);
         return next;
       });
-    } else {
+    }, 2500);
+    
+    return () => clearTimeout(autoAdvanceTimer);
+  }, [currStep, isVisible, onStep]);
+
+  // Adicionado: finaliza a experiência automaticamente 2.5s após o último passo
+  useEffect(() => {
+    if (currStep === steps.length - 1) {
+      const finishTimer = setTimeout(() => {
+        onFinish();
+      }, 2500);
+      
+      return () => clearTimeout(finishTimer);
+    }
+  }, [currStep, onFinish]);
+
+  // Manipulador manual para finalizar
+  const handleFinish = () => {
+    if (currStep === steps.length - 1) {
       onFinish();
+    } else {
+      // Se clicar antes de completar, avança para o último passo
+      setCurrStep(steps.length - 1);
     }
   };
 
@@ -139,10 +163,10 @@ export function TrailMagicExperience({ onFinish, onStep }: TrailMagicExperienceP
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70 animate-fade-in">
       <div className="max-w-xl mx-auto bg-white rounded-2xl shadow-2xl p-8 relative flex flex-col items-center animate-scale-in border-2 border-[#0ABAB5]/40">
         <div className="absolute top-2 right-3">
-          {/* Só permite fechar depois do último passo */}
-          {currStep === steps.length - 1 && (
-            <Button variant="ghost" size="sm" onClick={onFinish} className="text-[#0ABAB5] font-medium">Ver Minha Trilha</Button>
-          )}
+          {/* Permitir pular a animação */}
+          <Button variant="ghost" size="sm" onClick={handleFinish} className="text-[#0ABAB5] font-medium">
+            {currStep === steps.length - 1 ? "Ver Minha Trilha" : "Pular"}
+          </Button>
         </div>
         <div className="w-full flex flex-col items-center">
           <div className="w-64 h-64 flex items-center justify-center mb-8 drop-shadow-lg">
@@ -161,16 +185,6 @@ export function TrailMagicExperience({ onFinish, onStep }: TrailMagicExperienceP
             <div>{steps[currStep].icon}</div>
             <h2 className="text-2xl font-bold mt-2 text-[#0ABAB5]">{steps[currStep].title}</h2>
             <p className="mt-2 text-base text-gray-700">{steps[currStep].description}</p>
-            <Button
-              onClick={handleNext}
-              className="mt-8 bg-[#0ABAB5] text-white text-lg px-6 py-2 rounded-full hover:bg-[#099d94] animate-fade-in"
-            >
-              {currStep < steps.length - 1
-                ? currStep === 0
-                  ? "Começar"
-                  : "Avançar"
-                : "Ver Minha Trilha"}
-            </Button>
           </div>
         </div>
       </div>

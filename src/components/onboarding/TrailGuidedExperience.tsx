@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useSolutionsData } from "@/hooks/useSolutionsData";
+import { TrailMagicExperience } from "./TrailMagicExperience";
 
 // Componente que exibe texto estilo "typing" para a justificativa dinamicamente
 const TypingText = ({ text, onComplete }: { text: string; onComplete?: () => void }) => {
@@ -40,6 +41,7 @@ export const TrailGuidedExperience = () => {
   const [currentStepIdx, setCurrentStepIdx] = useState(0); // passo da leitura da trilha (card atual)
   const [typingFinished, setTypingFinished] = useState(false);
   const [regenerating, setRegenerating] = useState(false);
+  const [showMagicExperience, setShowMagicExperience] = useState(false);
 
   // Montar lista de soluções ordenadas para a navegação, juntando dados da recomendação com dados reais das soluções
   const solutionsList = useMemo(() => {
@@ -86,19 +88,28 @@ export const TrailGuidedExperience = () => {
 
   // Handler para iniciar a geração da trilha
   const handleStartGeneration = async () => {
+    // Primeiro exibe a experiência mágica
+    setShowMagicExperience(true);
     setRegenerating(true);
+    
     try {
+      // A geração acontece durante a animação
       await generateImplementationTrail();
-      setStarted(true);
-      setCurrentStepIdx(0);
-      setTypingFinished(false);
       toast.success("Trilha personalizada gerada com sucesso!");
     } catch (error) {
       console.error("Erro ao gerar a trilha:", error);
       toast.error("Erro ao gerar a trilha personalizada.");
-    } finally {
-      setRegenerating(false);
     }
+  };
+
+  // Callback quando a experiência mágica terminar
+  const handleMagicFinish = () => {
+    console.log("Experiência mágica finalizada, mostrando resultados");
+    setShowMagicExperience(false);
+    setStarted(true);
+    setCurrentStepIdx(0);
+    setTypingFinished(false);
+    setRegenerating(false);
   };
 
   const handleNext = () => {
@@ -122,6 +133,11 @@ export const TrailGuidedExperience = () => {
   const handleSelectSolution = (id: string) => {
     navigate(`/solution/${id}`);
   };
+
+  // Se a experiência mágica estiver visível, mostra ela em vez do conteúdo normal
+  if (showMagicExperience) {
+    return <TrailMagicExperience onFinish={handleMagicFinish} />;
+  }
 
   if (isLoading || regenerating || solutionsLoading) {
     return (
