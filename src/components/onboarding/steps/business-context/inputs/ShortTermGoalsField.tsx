@@ -16,12 +16,13 @@ const shortTermGoals = [
   { id: "launch_product", label: "Lançar novo produto/serviço utilizando IA" }
 ];
 
-interface Props {
+export interface Props {
   control: any;
   error?: any;
+  onChange?: () => void;
 }
 
-export const ShortTermGoalsField: React.FC<Props> = ({ control, error }) => (
+export const ShortTermGoalsField: React.FC<Props> = ({ control, error, onChange }) => (
   <div className="space-y-4">
     <h3 className="text-lg font-medium">Objetivos de Curto Prazo (3-6 meses)<span className="text-red-500">*</span></h3>
     <p className="text-sm text-gray-500">Selecione até 3 opções</p>
@@ -42,9 +43,10 @@ export const ShortTermGoalsField: React.FC<Props> = ({ control, error }) => (
                   checked={field.value?.includes(goal.id)}
                   onCheckedChange={(checked) => {
                     const updatedValue = checked 
-                      ? [...field.value, goal.id]
-                      : field.value.filter((v: string) => v !== goal.id);
+                      ? [...(field.value || []), goal.id]
+                      : (field.value || []).filter((v: string) => v !== goal.id);
                     field.onChange(updatedValue);
+                    if (onChange) onChange();
                   }}
                 />
                 <label 

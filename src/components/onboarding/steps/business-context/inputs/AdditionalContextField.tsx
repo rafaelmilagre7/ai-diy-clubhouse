@@ -4,12 +4,13 @@ import { Controller } from "react-hook-form";
 import { Textarea } from "@/components/ui/textarea";
 import { FormControl, FormDescription, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 
-interface AdditionalContextFieldProps {
+export interface AdditionalContextFieldProps {
   control: any;
   error?: any;
+  onBlur?: () => void;
 }
 
-export const AdditionalContextField: React.FC<AdditionalContextFieldProps> = ({ control, error }) => {
+export const AdditionalContextField: React.FC<AdditionalContextFieldProps> = ({ control, error, onBlur }) => {
   return (
     <Controller
       control={control}
@@ -28,6 +29,10 @@ export const AdditionalContextField: React.FC<AdditionalContextFieldProps> = ({ 
               placeholder="Algo mais que queira compartilhar sobre seu contexto de negócio..."
               className="min-h-[120px]"
               {...field}
+              onBlur={(e) => {
+                field.onBlur();
+                if (onBlur) onBlur();
+              }}
             />
           </FormControl>
           {(fieldState.error || error) && (

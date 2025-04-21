@@ -16,12 +16,13 @@ const mediumTermGoals = [
   { id: "market_reference", label: "Tornar-se referência no seu setor em uso de IA" },
 ];
 
-interface Props {
+export interface Props {
   control: any;
   error?: any;
+  onChange?: () => void;
 }
 
-export const MediumTermGoalsField: React.FC<Props> = ({ control, error }) => (
+export const MediumTermGoalsField: React.FC<Props> = ({ control, error, onChange }) => (
   <div className="space-y-4">
     <h3 className="text-lg font-medium">
       Objetivos de Médio Prazo (6-12 meses)<span className="text-red-500">*</span>
@@ -44,9 +45,10 @@ export const MediumTermGoalsField: React.FC<Props> = ({ control, error }) => (
                   checked={field.value?.includes(goal.id)}
                   onCheckedChange={(checked) => {
                     const updatedValue = checked
-                      ? [...field.value, goal.id]
-                      : field.value.filter((v: string) => v !== goal.id);
+                      ? [...(field.value || []), goal.id]
+                      : (field.value || []).filter((v: string) => v !== goal.id);
                     field.onChange(updatedValue);
+                    if (onChange) onChange();
                   }}
                 />
                 <label

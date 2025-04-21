@@ -17,12 +17,13 @@ const importantKpis = [
   { id: "nps", label: "NPS (Net Promoter Score)" }
 ];
 
-interface Props {
+export interface Props {
   control: any;
   error?: any;
+  onChange?: () => void;
 }
 
-export const KpisField: React.FC<Props> = ({ control, error }) => (
+export const KpisField: React.FC<Props> = ({ control, error, onChange }) => (
   <div className="space-y-4">
     <h3 className="text-lg font-medium">KPIs Mais Importantes para o Negócio<span className="text-red-500">*</span></h3>
     <p className="text-sm text-gray-500">Selecione até 5 opções</p>
@@ -43,9 +44,10 @@ export const KpisField: React.FC<Props> = ({ control, error }) => (
                   checked={field.value?.includes(kpi.id)}
                   onCheckedChange={(checked) => {
                     const updatedValue = checked 
-                      ? [...field.value, kpi.id]
-                      : field.value.filter((v: string) => v !== kpi.id);
+                      ? [...(field.value || []), kpi.id]
+                      : (field.value || []).filter((v: string) => v !== kpi.id);
                     field.onChange(updatedValue);
+                    if (onChange) onChange();
                   }}
                 />
                 <label 

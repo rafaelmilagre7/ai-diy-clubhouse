@@ -35,11 +35,11 @@ export function buildUpdateObject(
   } else if (stepId === "business_context") {
     // Salvar dados de contexto de negócio
     if (data.business_context) {
-      // Verificar se business_context existe no progress para evitar erros
-      const existingBusinessContext = progress.business_context || {};
+      // Verificar se business_data existe no progress para evitar erros
+      const existingBusinessData = progress.business_data || {};
       
       updateObj.business_data = {
-        ...existingBusinessContext,
+        ...existingBusinessData,
         ...data.business_context
       };
       
@@ -81,11 +81,14 @@ export function buildUpdateObject(
     console.log("Salvando experience_personalization:", updateObj.experience_personalization);
   } else if (stepId === "complementary_info") {
     // Salvar informações complementares
-    const existingComplementaryInfo = progress.complementary_info || {};
-    updateObj.complementary_info = {
-      ...existingComplementaryInfo,
-      ...(data.complementary_info || {})
-    };
+    if (progress.complementary_info) {
+      updateObj.complementary_info = {
+        ...progress.complementary_info,
+        ...(data.complementary_info || {})
+      };
+    } else {
+      updateObj.complementary_info = data.complementary_info || {};
+    }
     console.log("Salvando complementary_info:", updateObj.complementary_info);
   } else if (stepId === "goals") {
     // Compatibilidade com etapa de objetivos antiga

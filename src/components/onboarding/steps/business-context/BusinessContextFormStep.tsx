@@ -16,10 +16,26 @@ interface BusinessContextFormStepProps {
   onSave: (data: any) => Promise<void>;
 }
 
+interface FormValues {
+  business_model: string;
+  business_challenges: string[];
+  short_term_goals: string[];
+  medium_term_goals: string[];
+  important_kpis: string[];
+  additional_context: string;
+}
+
 export const BusinessContextFormStep: React.FC<BusinessContextFormStepProps> = ({ progress, onSave }) => {
   // Obter dados iniciais do contexto de negócios
-  const getInitialData = () => {
-    if (!progress) return {};
+  const getInitialData = (): FormValues => {
+    if (!progress) return {
+      business_model: "",
+      business_challenges: [],
+      short_term_goals: [],
+      medium_term_goals: [],
+      important_kpis: [],
+      additional_context: ""
+    };
     
     // Usando business_data ao invés de business_context
     const businessData = progress.business_data || {};
@@ -36,7 +52,7 @@ export const BusinessContextFormStep: React.FC<BusinessContextFormStepProps> = (
     };
   };
   
-  const methods = useForm({
+  const methods = useForm<FormValues>({
     defaultValues: getInitialData(),
   });
   
@@ -48,7 +64,7 @@ export const BusinessContextFormStep: React.FC<BusinessContextFormStepProps> = (
     }
   }, [progress]);
 
-  const handleSubmit = async (data: any) => {
+  const handleSubmit = async (data: FormValues) => {
     try {
       console.log("Enviando dados do contexto do negócio:", data);
       
@@ -74,7 +90,7 @@ export const BusinessContextFormStep: React.FC<BusinessContextFormStepProps> = (
 
   // Funções para auto-save dos campos de texto
   const debouncedSave = React.useCallback(
-    async (data: any) => {
+    async () => {
       try {
         const formData = methods.getValues();
         console.log("Auto-salvando dados:", formData);
@@ -107,37 +123,37 @@ export const BusinessContextFormStep: React.FC<BusinessContextFormStepProps> = (
           <BusinessModelField 
             control={methods.control} 
             error={methods.formState.errors.business_model}
-            onBlur={() => debouncedSave(methods.getValues())}
+            onBlur={debouncedSave}
           />
           
           <BusinessChallengesField 
             control={methods.control} 
             error={methods.formState.errors.business_challenges}
-            onChange={() => debouncedSave(methods.getValues())}
+            onChange={debouncedSave}
           />
           
           <ShortTermGoalsField 
             control={methods.control} 
             error={methods.formState.errors.short_term_goals}
-            onChange={() => debouncedSave(methods.getValues())}
+            onChange={debouncedSave}
           />
           
           <MediumTermGoalsField 
             control={methods.control} 
             error={methods.formState.errors.medium_term_goals}
-            onChange={() => debouncedSave(methods.getValues())}
+            onChange={debouncedSave}
           />
           
           <KpisField 
             control={methods.control} 
             error={methods.formState.errors.important_kpis}
-            onChange={() => debouncedSave(methods.getValues())}
+            onChange={debouncedSave}
           />
           
           <AdditionalContextField 
             control={methods.control} 
             error={methods.formState.errors.additional_context}
-            onBlur={() => debouncedSave(methods.getValues())}
+            onBlur={debouncedSave}
           />
           
           <SubmitButton isSubmitting={methods.formState.isSubmitting} />

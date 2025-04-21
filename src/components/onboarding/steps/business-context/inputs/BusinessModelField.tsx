@@ -18,12 +18,13 @@ const businessModels = [
   { id: "agency", label: "Agência" },
 ];
 
-interface Props {
+export interface Props {
   control: any;
   error?: any;
+  onBlur?: () => void;
 }
 
-export const BusinessModelField: React.FC<Props> = ({ control, error }) => (
+export const BusinessModelField: React.FC<Props> = ({ control, error, onBlur }) => (
   <div className="space-y-4">
     <h3 className="text-lg font-medium">
       Modelo(s) de Negócio<span className="text-red-500">*</span>
@@ -34,7 +35,10 @@ export const BusinessModelField: React.FC<Props> = ({ control, error }) => (
       rules={{ required: "Por favor, selecione um modelo de negócio" }}
       render={({ field }) => (
         <RadioGroup
-          onValueChange={field.onChange}
+          onValueChange={(value) => {
+            field.onChange(value);
+            if (onBlur) onBlur();
+          }}
           value={field.value}
           className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2"
         >
