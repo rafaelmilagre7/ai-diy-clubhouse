@@ -1,71 +1,58 @@
 
+import React from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
-
-// Lista de DDI principais (10 países mais prováveis)
-const ddis = [
-  { code: "+55", country: "Brasil", flag: "🇧🇷" },
-  { code: "+351", country: "Portugal", flag: "🇵🇹" },
-  { code: "+1", country: "EUA", flag: "🇺🇸" },
-  { code: "+44", country: "Reino Unido", flag: "🇬🇧" },
-  { code: "+34", country: "Espanha", flag: "🇪🇸" },
-  { code: "+49", country: "Alemanha", flag: "🇩🇪" },
-  { code: "+33", country: "França", flag: "🇫🇷" },
-  { code: "+39", country: "Itália", flag: "🇮🇹" },
-  { code: "+52", country: "México", flag: "🇲🇽" },
-  { code: "+54", country: "Argentina", flag: "🇦🇷" },
-];
+import { FormMessage } from "@/components/ui/form-message";
+import { cn } from "@/lib/utils";
+import InputMask from "react-input-mask";
 
 interface PhoneInputProps {
-  ddi: string;
-  phone: string;
-  onChangeDDI: (value: string) => void;
-  onChangePhone: (value: string) => void;
-  disabled: boolean;
+  value: string;
+  onChange: (value: string) => void;
+  onBlur: () => void;
   error?: string;
+  disabled?: boolean;
 }
 
-export const PhoneInput = ({
-  ddi,
-  phone,
-  onChangeDDI,
-  onChangePhone,
-  disabled,
+export const PhoneInput: React.FC<PhoneInputProps> = ({
+  value,
+  onChange,
+  onBlur,
   error,
-}: PhoneInputProps) => (
-  <div className="space-y-1">
-    <Label htmlFor="phone">Telefone</Label>
-    <div className="flex gap-2 items-center">
-      <Select
-        value={ddi || "+55"}
-        onValueChange={onChangeDDI}
+  disabled = false
+}) => {
+  return (
+    <div className="space-y-2">
+      <Label htmlFor="phone" className={cn(
+        "transition-colors",
+        error ? "text-red-500" : value ? "text-[#0ABAB5]" : ""
+      )}>
+        Telefone <span className="text-gray-400">(opcional)</span>
+      </Label>
+      <InputMask
+        mask="(99) 99999-9999"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        onBlur={onBlur}
         disabled={disabled}
       >
-        <SelectTrigger className="max-w-[90px]">
-          <span>
-            {ddis.find(d => d.code === (ddi || "+55"))?.flag || "🏳️"}{" "}
-            {ddi || "+55"}
-          </span>
-        </SelectTrigger>
-        <SelectContent>
-          {ddis.map(ddiItem => (
-            <SelectItem key={ddiItem.code} value={ddiItem.code}>
-              {ddiItem.flag} {ddiItem.code} {ddiItem.country}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-      <Input
-        id="phone"
-        type="tel"
-        value={phone}
-        disabled={disabled}
-        onChange={e => onChangePhone(e.target.value)}
-        placeholder="(XX) XXXXX-XXXX"
-        className={`flex-1 ${error ? 'border-red-500' : ''}`}
+        {(inputProps: any) => (
+          <Input
+            {...inputProps}
+            id="phone"
+            placeholder="(00) 00000-0000"
+            className={cn(
+              "transition-all duration-200",
+              error ? "border-red-500 focus:border-red-500" : 
+              value ? "border-[#0ABAB5] focus:border-[#0ABAB5]" : ""
+            )}
+          />
+        )}
+      </InputMask>
+      <FormMessage
+        type={value && !error ? "success" : "error"}
+        message={error}
       />
     </div>
-    {error && <p className="text-sm text-red-500 mt-1">{error}</p>}
-  </div>
-);
+  );
+};

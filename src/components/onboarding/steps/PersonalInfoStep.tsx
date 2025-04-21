@@ -10,6 +10,8 @@ import { FormMessage } from "@/components/ui/form-message";
 import { useFormValidation } from "@/hooks/useFormValidation";
 import { MilagrinhoMessage } from "../MilagrinhoMessage";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
+import { PhoneInput } from "./inputs/PhoneInput";
 
 interface PersonalInfoStepProps {
   onSubmit: (data: any) => void;
@@ -25,7 +27,7 @@ export const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
   isSubmitting,
   initialData
 }) => {
-  const { register, handleSubmit, formState: { errors }, control } = useForm({
+  const { register, handleSubmit, formState: { errors, touchedFields }, control } = useForm({
     defaultValues: {
       name: initialData?.name || "",
       email: initialData?.email || "",
@@ -71,31 +73,47 @@ export const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
     }
   );
 
-  const onFormSubmit = (data: any) => {
-    if (!validation.isValid) return;
-    onSubmit({
-      personal_info: {
-        ...data
-      }
-    });
+  const onFormSubmit = async (data: any) => {
+    if (!validation.isValid) {
+      toast.error("Por favor, corrija os erros antes de continuar");
+      return;
+    }
+    
+    try {
+      await onSubmit({
+        personal_info: {
+          ...data
+        }
+      });
+      toast.success("Dados salvos com sucesso!");
+    } catch (error) {
+      console.error("Erro ao salvar:", error);
+      toast.error("Erro ao salvar os dados. Tente novamente.");
+    }
   };
 
   return (
-    <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-6">
+    <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-6 animate-fade-in">
       <MilagrinhoMessage 
-        message="Olá! Para começar, preciso de algumas informações básicas para personalizar sua experiência no VIVER DE IA Club. Vamos lá?" 
+        message="Bem-vindo ao VIVER DE IA Club! Vamos começar coletando algumas informações pessoais para personalizar sua experiência. Não se preocupe, seus dados estão seguros conosco." 
       />
       
       <div className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
-            <Label htmlFor="name">Nome completo</Label>
+            <Label htmlFor="name" className={cn(
+              "transition-colors",
+              errors.name ? "text-red-500" : touchedFields.name ? "text-[#0ABAB5]" : ""
+            )}>
+              Nome completo <span className="text-red-500">*</span>
+            </Label>
             <Input
               id="name"
               placeholder="Seu nome completo"
               className={cn(
-                "transition-colors",
-                errors.name ? "border-red-500 focus:border-red-500" : "focus:border-[#0ABAB5]"
+                "transition-all duration-200",
+                errors.name ? "border-red-500 focus:border-red-500" : 
+                touchedFields.name ? "border-[#0ABAB5] focus:border-[#0ABAB5]" : ""
               )}
               {...register("name", { 
                 required: "Nome é obrigatório",
@@ -106,20 +124,26 @@ export const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
               })}
             />
             <FormMessage
-              type="error"
+              type={touchedFields.name && !errors.name ? "success" : "error"}
               message={errors.name?.message?.toString()}
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="email">E-mail</Label>
+            <Label htmlFor="email" className={cn(
+              "transition-colors",
+              errors.email ? "text-red-500" : touchedFields.email ? "text-[#0ABAB5]" : ""
+            )}>
+              E-mail <span className="text-red-500">*</span>
+            </Label>
             <Input
               id="email"
               type="email"
               placeholder="seu.email@exemplo.com"
               className={cn(
-                "transition-colors",
-                errors.email ? "border-red-500 focus:border-red-500" : "focus:border-[#0ABAB5]"
+                "transition-all duration-200",
+                errors.email ? "border-red-500 focus:border-red-500" : 
+                touchedFields.email ? "border-[#0ABAB5] focus:border-[#0ABAB5]" : ""
               )}
               {...register("email", {
                 required: "E-mail é obrigatório",
@@ -130,31 +154,19 @@ export const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
               })}
             />
             <FormMessage
-              type="error"
+              type={touchedFields.email && !errors.email ? "success" : "error"}
               message={errors.email?.message?.toString()}
             />
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-2">
-            <Label htmlFor="phone">Telefone</Label>
-            <Input
-              id="phone"
-              placeholder="(00) 00000-0000"
-              className={cn(
-                "transition-colors",
-                validation.errors.phone ? "border-red-500 focus:border-red-500" : "focus:border-[#0ABAB5]"
-              )}
-              value={validation.values.phone}
-              onChange={(e) => validation.handleChange("phone", e.target.value)}
-              onBlur={() => validation.handleBlur("phone")}
-            />
-            <FormMessage
-              type={validation.touched.phone && !validation.errors.phone ? "success" : "error"}
-              message={validation.touched.phone ? validation.errors.phone : undefined}
-            />
-          </div>
+          <PhoneInput
+            value={validation.values.phone}
+            onChange={(v) => validation.handleChange("phone", v)}
+            onBlur={() => validation.handleBlur("phone")}
+            error={validation.touched.phone ? validation.errors.phone : undefined}
+          />
 
           <SocialInputs
             linkedin={validation.values.linkedin}
@@ -176,7 +188,7 @@ export const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
               country={initialData?.country || "Brasil"}
               state={validation.values.state}
               city={validation.values.city}
-              onChangeCountry={(v) => {/* País fixo para Brasil */}}
+              onChangeCountry={() => {}}
               onChangeState={(v) => validation.handleChange("state", v)}
               onChangeCity={(v) => validation.handleChange("city", v)}
               disabled={isSubmitting}
