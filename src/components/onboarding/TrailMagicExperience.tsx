@@ -34,7 +34,7 @@ const steps = [
 
 // Elemento 3D simples e animado (esfera mágica com aura)
 function MagicSphere({ stage }: { stage: number }) {
-  const mesh = useRef<any>();
+  const mesh = useRef<THREE.Mesh>(null);
   useFrame((_, delta) => {
     if (mesh.current) {
       mesh.current.rotation.y += 0.6 * delta + 0.2 * (stage + 1);
