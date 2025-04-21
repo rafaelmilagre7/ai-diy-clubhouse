@@ -4,9 +4,7 @@ import { useState } from "react";
 import { useSolutionsData } from "@/hooks/useSolutionsData";
 import { useDashboardProgress } from "@/hooks/useDashboardProgress";
 import { toast } from "sonner";
-import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
-import { Outlet } from "react-router-dom";
-import { ImplementationTrail } from "@/components/dashboard/ImplementationTrail";
+import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -41,26 +39,10 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <DashboardHeader 
-        searchQuery={searchQuery} 
-        onSearchChange={setSearchQuery} 
-      />
-      
-      <main className="flex-1 container mx-auto px-4 py-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Conteúdo principal */}
-          <div className="md:col-span-2">
-            <Outlet />
-          </div>
-          
-          {/* Sidebar com trilha de implementação */}
-          <div className="md:col-span-1 space-y-6">
-            <ImplementationTrail />
-          </div>
-        </div>
-      </main>
-    </div>
+    <DashboardLayout
+      searchQuery={searchQuery}
+      onSearchChange={setSearchQuery}
+    />
   );
 };
 
