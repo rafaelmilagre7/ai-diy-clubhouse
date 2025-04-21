@@ -1,10 +1,12 @@
 
+import { SolutionCategory } from "@/lib/types/categoryTypes";
+
 export interface Achievement {
   id: string;
   name: string;
   description: string;
   icon?: string;
-  category: string;
+  category: "achievement" | SolutionCategory;
   requiredCount?: number;
   currentCount?: number;
   isUnlocked: boolean;

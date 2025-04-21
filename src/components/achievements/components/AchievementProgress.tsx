@@ -5,7 +5,7 @@ import { SolutionCategory } from "@/lib/types/categoryTypes";
 interface AchievementProgressProps {
   currentCount?: number;
   requiredCount: number;
-  category: SolutionCategory | 'achievement';
+  category: "achievement" | SolutionCategory;
 }
 
 export const AchievementProgress = ({ 

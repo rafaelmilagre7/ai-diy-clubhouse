@@ -9,17 +9,8 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useIsMobile } from "@/hooks/use-mobile";
-
-export interface Achievement {
-  id: string;
-  name: string;
-  description: string;
-  category: 'revenue' | 'operational' | 'strategy' | 'achievement';
-  isUnlocked: boolean;
-  earnedAt?: string;
-  requiredCount?: number;
-  currentCount?: number;
-}
+import { Achievement } from "@/types/achievementTypes";
+import { SolutionCategory } from "@/lib/types/categoryTypes";
 
 interface AchievementGridProps {
   achievements: Achievement[];

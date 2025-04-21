@@ -1,8 +1,9 @@
 
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AchievementGrid, Achievement } from "@/components/achievements/AchievementGrid";
+import { AchievementGrid } from "@/components/achievements/AchievementGrid";
 import { cn } from "@/lib/utils";
+import { Achievement } from "@/types/achievementTypes";
 
 interface AchievementsTabsProps {
   achievements: Achievement[];
