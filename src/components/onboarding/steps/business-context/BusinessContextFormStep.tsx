@@ -1,4 +1,3 @@
-
 import React, { useEffect } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { BusinessModelField } from "./inputs/BusinessModelField";
@@ -68,7 +67,7 @@ export const BusinessContextFormStep: React.FC<BusinessContextFormStepProps> = (
     try {
       console.log("Enviando dados do contexto do negócio:", data);
       
-      // Preparar os dados para salvar - só precisa passar o objeto formValues
+      // Chamando a função onSave com os dados como único parâmetro
       await onSave(data);
       // Não precisamos do toast aqui, pois o hook já vai mostrar um toast de sucesso
     } catch (error) {

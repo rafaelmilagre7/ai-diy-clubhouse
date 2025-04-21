@@ -40,10 +40,16 @@ const BusinessContext = () => {
     setRefreshCount(prev => prev + 1);
   };
 
-  // Manipulador para salvar dados - aqui é a modificação principal
-  const handleSave = async (data: any) => {
-    // Modificado para usar apenas um parâmetro
-    return saveStepData(data);
+  // Modificado para corrigir o tipo de retorno
+  const handleSave = async (data: any): Promise<void> => {
+    try {
+      // Chamando saveStepData e ignorando o valor de retorno
+      await saveStepData(data);
+    } catch (error) {
+      console.error("Erro ao salvar dados:", error);
+      toast.error("Erro ao salvar dados. Tente novamente.");
+      throw error;
+    }
   };
 
   if (isLoading || localLoading) {
