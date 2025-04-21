@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useProgress } from "@/hooks/onboarding/useProgress";
 import { useAuth } from "@/contexts/auth";
@@ -10,16 +10,22 @@ import { Button } from "@/components/ui/button";
 import { TrailGenerationPanel } from "@/components/onboarding/TrailGenerationPanel";
 import { useImplementationTrail } from "@/hooks/implementation/useImplementationTrail";
 import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
 
-// Adicionado: hook para pegar trilha armazenada
 const Onboarding = () => {
   const { user } = useAuth();
-  const { progress, isLoading } = useProgress();
+  const { progress, isLoading: progressLoading } = useProgress();
   const navigate = useNavigate();
   const [showTrailPanel, setShowTrailPanel] = useState(false);
 
-  // Hook para garantir que pegamos a trilha existente do banco ao abrir
-  const { trail, isLoading: trailLoading, generateImplementationTrail } = useImplementationTrail();
+  // Hook para trilha com força refresh ao montar
+  const { 
+    trail, 
+    isLoading: trailLoading, 
+    generateImplementationTrail,
+    refreshTrail,
+    hasContent
+  } = useImplementationTrail();
 
   // Se o usuário não estiver autenticado, redireciona para login
   useEffect(() => {
@@ -28,27 +34,38 @@ const Onboarding = () => {
     }
   }, [user, navigate]);
 
-  // Efeito para verificar se existe uma trilha e automaticamente exibir o botão correto
+  // Forçar carregamento da trilha ao montar
   useEffect(() => {
-    if (trail) {
-      // Se a trilha existe, verificamos se ela tem conteúdo
-      const hasContent = Object.values(trail).some(arr => Array.isArray(arr) && arr.length > 0);
-      // Se tiver conteúdo, podemos mostrar o botão "Ver Minha Trilha"
-      console.log("Trilha encontrada em Onboarding:", hasContent ? "com conteúdo" : "vazia");
-    }
-  }, [trail]);
+    const loadTrail = async () => {
+      console.log("Forçando carregamento inicial da trilha");
+      await refreshTrail(true);
+    };
+    
+    loadTrail();
+  }, [refreshTrail]);
 
   // Extrair primeiro nome para mensagem de boas-vindas
   const firstName = user?.user_metadata?.name?.split(' ')[0] || user?.email?.split('@')[0] || '';
 
-  // Se onboarding já foi concluído, mostrar painel de onboarding e trilha (não mais redirecionar)
+  // Se onboarding já foi concluído, mostrar painel de onboarding e trilha
   const isOnboardingCompleted = !!progress?.is_completed;
 
-  // Botão para ver trilha: só mostra se há trilha salva - modificado para verificar melhor o conteúdo
-  const hasTrail = trail && Object.values(trail).some(arr => Array.isArray(arr) && arr.length > 0);
+  // Função para gerar trilha com feedback aprimorado
+  const handleGenerateTrail = useCallback(async () => {
+    try {
+      toast.loading("Gerando sua trilha personalizada...");
+      await generateImplementationTrail();
+      toast.dismiss();
+      setShowTrailPanel(true);
+    } catch (error) {
+      toast.dismiss();
+      console.error("Erro ao gerar trilha:", error);
+      toast.error("Ocorreu um erro ao gerar sua trilha. Tente novamente.");
+    }
+  }, [generateImplementationTrail]);
 
   // Carregamento inicial
-  if (isLoading) {
+  if (progressLoading) {
     return (
       <OnboardingLayout currentStep={1} title="Carregando...">
         <div className="flex justify-center items-center h-64">
@@ -92,34 +109,70 @@ const Onboarding = () => {
                 <Button variant="outline" onClick={() => navigate("/onboarding/review")}>
                   Revisar/Editar Respostas
                 </Button>
-                {hasTrail && (
-                  <Button className="bg-[#0ABAB5] text-white" onClick={() => setShowTrailPanel((v) => !v)}>
+                
+                {/* Exibe botões condicionalmente com base no estado da trilha e carregamento */}
+                {trailLoading ? (
+                  <Button disabled className="bg-gray-200 text-gray-500">
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Carregando trilha...
+                  </Button>
+                ) : hasContent ? (
+                  <Button 
+                    className="bg-[#0ABAB5] text-white hover:bg-[#09a19c]" 
+                    onClick={() => setShowTrailPanel((v) => !v)}
+                  >
                     {!showTrailPanel ? "Ver Minha Trilha" : "Ocultar Trilha"}
                   </Button>
+                ) : (
+                  <Button
+                    className="bg-[#0ABAB5] text-white hover:bg-[#09a19c]"
+                    onClick={handleGenerateTrail}
+                    disabled={trailLoading}
+                  >
+                    Gerar Trilha Personalizada
+                  </Button>
                 )}
-                <Button
-                  variant="secondary"
-                  className="border-[#0ABAB5] text-[#0ABAB5]"
-                  onClick={async () => {
-                    await generateImplementationTrail();
-                    setShowTrailPanel(true);
-                  }}
-                  disabled={trailLoading}
-                >
-                  {trailLoading ? "Gerando trilha..." : (hasTrail ? "Gerar Nova Trilha" : "Gerar Trilha")}
-                </Button>
+                
+                {hasContent && (
+                  <Button
+                    variant="secondary"
+                    className="border-[#0ABAB5] text-[#0ABAB5]"
+                    onClick={handleGenerateTrail}
+                    disabled={trailLoading}
+                  >
+                    Gerar Nova Trilha
+                  </Button>
+                )}
               </div>
             </div>
+            
             {/* Painel de trilha: aberto inline ou oculto por toggle */}
-            {showTrailPanel && (
+            {showTrailPanel && hasContent && (
               <div className="mt-8">
-                <TrailGenerationPanel />
+                <TrailGenerationPanel onClose={() => setShowTrailPanel(false)} />
               </div>
             )}
-            {/* Caso não tenha trilha ainda, mensagem explicativa */}
-            {!hasTrail && !trailLoading && (
-              <div className="text-center mt-8 text-gray-600 text-sm">
-                Nenhuma trilha personalizada foi gerada ainda. Clique em "Gerar Trilha" para descobrir recomendações personalizadas!
+            
+            {/* Caso esteja carregando a trilha */}
+            {showTrailPanel && trailLoading && (
+              <div className="flex flex-col items-center gap-4 py-8 mt-8">
+                <Loader2 className="h-8 w-8 text-[#0ABAB5] animate-spin" />
+                <span className="text-[#0ABAB5] font-medium">Carregando sua trilha personalizada...</span>
+              </div>
+            )}
+            
+            {/* Mensagem se não houver trilha mas o painel estiver aberto */}
+            {showTrailPanel && !hasContent && !trailLoading && (
+              <div className="text-center mt-8 p-6 bg-gray-50 rounded-lg border border-gray-100">
+                <p className="text-gray-600 mb-4">
+                  Nenhuma trilha personalizada foi encontrada. Vamos criar uma agora!
+                </p>
+                <Button 
+                  className="bg-[#0ABAB5] text-white" 
+                  onClick={handleGenerateTrail}
+                >
+                  Gerar Trilha Personalizada
+                </Button>
               </div>
             )}
           </div>

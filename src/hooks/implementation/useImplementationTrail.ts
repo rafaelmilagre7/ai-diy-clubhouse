@@ -4,6 +4,7 @@ import { supabase } from "@/lib/supabase";
 import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/contexts/auth";
 import { useProgress } from "@/hooks/onboarding/useProgress";
+import { toast } from "sonner";
 
 export type ImplementationRecommendation = {
   solutionId: string;
@@ -19,19 +20,35 @@ export type ImplementationTrail = {
 export const useImplementationTrail = () => {
   const { user } = useAuth();
   const { progress } = useProgress();
-  const { toast } = useToast();
+  const { toast: uiToast } = useToast();
   const [trail, setTrail] = useState<ImplementationTrail | null>(null);
-  const [isLoading, setIsLoading] = useState(true); // Iniciar com loading
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
-  // Função para carregar a trilha do banco de dados
-  const loadExistingTrail = useCallback(async () => {
+  // Função otimizada para verificar se uma trilha tem conteúdo
+  const hasTrailContent = useCallback((trailData: ImplementationTrail | null): boolean => {
+    if (!trailData) return false;
+    
+    return Object.values(trailData).some(
+      arr => Array.isArray(arr) && arr.length > 0
+    );
+  }, []);
+
+  // Função para carregar a trilha do banco de dados com melhor tratamento de erros
+  const loadExistingTrail = useCallback(async (forceRefresh = false) => {
     if (!user) {
       setIsLoading(false);
       return null;
     }
 
     try {
+      if (!forceRefresh && trail && hasTrailContent(trail) && lastUpdated) {
+        // Se já temos uma trilha válida carregada e não é um refresh forçado, retornar a existente
+        console.log("Usando trilha em cache:", lastUpdated);
+        return trail;
+      }
+
       setIsLoading(true);
       console.log("Carregando trilha existente para usuário:", user.id);
       
@@ -49,8 +66,18 @@ export const useImplementationTrail = () => {
       if (data && data.trail_data) {
         console.log("Trilha encontrada no banco:", data.updated_at);
         const trailData = data.trail_data as ImplementationTrail;
-        setTrail(trailData);
-        return trailData;
+        
+        // Verificar se a trilha tem conteúdo real
+        if (hasTrailContent(trailData)) {
+          console.log("Trilha com conteúdo válido encontrada");
+          setTrail(trailData);
+          setLastUpdated(new Date());
+          return trailData;
+        } else {
+          console.log("Trilha encontrada mas sem conteúdo válido");
+          setTrail(null);
+          return null;
+        }
       } else {
         console.log("Nenhuma trilha encontrada para o usuário");
         setTrail(null);
@@ -62,7 +89,7 @@ export const useImplementationTrail = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [user]);
+  }, [user, trail, lastUpdated, hasTrailContent]);
 
   const generateImplementationTrail = async (onboardingData: any = null) => {
     if (!user) {
@@ -110,17 +137,24 @@ export const useImplementationTrail = () => {
       }
 
       console.log("Trilha de implementação gerada:", data.recommendations);
-      setTrail(data.recommendations);
-
-      // Opcional: Salvar a trilha gerada no banco de dados
-      await saveImplementationTrail(user.id, data.recommendations);
-
-      toast({
-        title: "Trilha Personalizada Criada",
-        description: "Sua trilha de implementação foi gerada com sucesso!",
-      });
-
-      return data.recommendations;
+      
+      // Verificar se a trilha gerada tem conteúdo válido
+      if (hasTrailContent(data.recommendations)) {
+        setTrail(data.recommendations);
+        setLastUpdated(new Date());
+        
+        // Salvar a trilha gerada no banco de dados
+        await saveImplementationTrail(user.id, data.recommendations);
+        
+        toast({
+          title: "Trilha Personalizada Criada",
+          description: "Sua trilha de implementação foi gerada com sucesso!",
+        });
+        
+        return data.recommendations;
+      } else {
+        throw new Error("A trilha gerada não contém recomendações");
+      }
     } catch (error: any) {
       console.error("Erro ao gerar trilha de implementação:", error);
       setError(error.message || "Erro ao gerar trilha de implementação");
@@ -172,10 +206,32 @@ export const useImplementationTrail = () => {
     }
   };
 
-  // Expor uma função para recarregar a trilha diretamente
-  const refreshTrail = useCallback(async () => {
-    return await loadExistingTrail();
+  // Expor uma função para recarregar a trilha diretamente com opção de forçar atualização
+  const refreshTrail = useCallback(async (forceRefresh = true) => {
+    return await loadExistingTrail(forceRefresh);
   }, [loadExistingTrail]);
+
+  // Função para limpar a trilha existente (útil para testes)
+  const clearTrail = useCallback(async () => {
+    if (!user) return false;
+    
+    try {
+      const { error } = await supabase
+        .from("implementation_trails")
+        .delete()
+        .eq("user_id", user.id);
+        
+      if (error) throw error;
+      
+      setTrail(null);
+      setLastUpdated(null);
+      console.log("Trilha removida com sucesso");
+      return true;
+    } catch (error) {
+      console.error("Erro ao remover trilha:", error);
+      return false;
+    }
+  }, [user]);
 
   // Carregar trilha existente ao montar o componente
   useEffect(() => {
@@ -188,5 +244,7 @@ export const useImplementationTrail = () => {
     error,
     generateImplementationTrail,
     refreshTrail,
+    clearTrail,
+    hasContent: trail ? hasTrailContent(trail) : false
   };
 };

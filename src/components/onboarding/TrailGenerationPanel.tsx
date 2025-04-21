@@ -1,31 +1,37 @@
 
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useCallback } from "react";
 import { useImplementationTrail } from "@/hooks/implementation/useImplementationTrail";
 import { TrailCardList } from "@/components/dashboard/TrailCardList";
 import { Button } from "@/components/ui/button";
-import { Edit, Loader2, RefreshCcw } from "lucide-react";
+import { Edit, Loader2, RefreshCcw, AlertTriangle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { TrailMagicExperience } from "./TrailMagicExperience";
 import { useSolutionsData } from "@/hooks/useSolutionsData";
 import { toast } from "sonner";
 
 export const TrailGenerationPanel = ({ onClose }: { onClose?: () => void }) => {
-  const { trail, isLoading, generateImplementationTrail } = useImplementationTrail();
+  const { trail, isLoading, generateImplementationTrail, refreshTrail, hasContent } = useImplementationTrail();
   const { solutions: allSolutions, loading: solutionsLoading } = useSolutionsData();
   const [regenerating, setRegenerating] = useState(false);
   const [showMagic, setShowMagic] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const navigate = useNavigate();
 
-  // Depurando: verificar se a trilha foi carregada
+  // Forçar um refresh dos dados da trilha ao montar o componente
   useEffect(() => {
-    if (trail) {
-      console.log("TrailGenerationPanel: Trilha carregada:", trail);
-      const hasContent = Object.values(trail).some(arr => Array.isArray(arr) && arr.length > 0);
-      console.log("TrailGenerationPanel: Trilha tem conteúdo:", hasContent);
-    } else {
-      console.log("TrailGenerationPanel: Nenhuma trilha disponível ainda");
-    }
-  }, [trail]);
+    const loadFreshData = async () => {
+      setRefreshing(true);
+      try {
+        await refreshTrail(true);
+      } catch (error) {
+        console.error("Erro ao recarregar trilha:", error);
+      } finally {
+        setRefreshing(false);
+      }
+    };
+
+    loadFreshData();
+  }, [refreshTrail]);
 
   // Montar soluções da trilha com dados completos
   const solutions = useMemo(() => {
@@ -69,7 +75,7 @@ export const TrailGenerationPanel = ({ onClose }: { onClose?: () => void }) => {
   }, [trail, allSolutions]);
 
   // Nova função de geração que exibe a experiência mágica
-  const handleRegenerate = async () => {
+  const handleRegenerate = useCallback(async () => {
     try {
       setShowMagic(true);
       setRegenerating(true);
@@ -80,23 +86,39 @@ export const TrailGenerationPanel = ({ onClose }: { onClose?: () => void }) => {
     } finally {
       setRegenerating(false);
     }
-  };
+  }, [generateImplementationTrail]);
 
-  const handleFinishMagic = () => {
+  const handleFinishMagic = useCallback(() => {
     setShowMagic(false);
-  };
+  }, []);
 
-  if ((isLoading || regenerating || solutionsLoading) && !showMagic) {
-    return (
-      <div className="flex flex-col items-center gap-4 py-8">
-        <Loader2 className="h-8 w-8 text-[#0ABAB5] animate-spin" />
-        <span className="text-[#0ABAB5] font-medium">Milagrinho está preparando sua trilha personalizada...</span>
-      </div>
-    );
-  }
+  // Função para recarregar a trilha do banco de dados
+  const handleRefreshTrail = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await refreshTrail(true);
+      toast.success("Trilha atualizada com sucesso!");
+    } catch (error) {
+      console.error("Erro ao atualizar trilha:", error);
+      toast.error("Erro ao atualizar trilha");
+    } finally {
+      setRefreshing(false);
+    }
+  }, [refreshTrail]);
 
   if (showMagic) {
     return <TrailMagicExperience onFinish={handleFinishMagic} />;
+  }
+
+  if (isLoading || regenerating || solutionsLoading || refreshing) {
+    return (
+      <div className="flex flex-col items-center gap-4 py-8">
+        <Loader2 className="h-8 w-8 text-[#0ABAB5] animate-spin" />
+        <span className="text-[#0ABAB5] font-medium">
+          {regenerating ? "Milagrinho está preparando sua trilha personalizada..." : "Carregando dados da trilha..."}
+        </span>
+      </div>
+    );
   }
 
   // Verificação adicional para garantir que temos dados
@@ -105,12 +127,24 @@ export const TrailGenerationPanel = ({ onClose }: { onClose?: () => void }) => {
   if (!hasValidTrail) {
     return (
       <div className="flex flex-col items-center gap-6 py-12">
-        <span className="text-gray-600">Nenhuma trilha personalizada foi gerada ainda.</span>
+        <div className="text-center space-y-2">
+          <AlertTriangle className="h-10 w-10 text-amber-500 mx-auto mb-2" />
+          <span className="text-gray-600 block">Nenhuma trilha personalizada foi encontrada ou a trilha está vazia.</span>
+          <p className="text-sm text-gray-500">Isso pode acontecer se a trilha foi apagada ou se houve um problema no banco de dados.</p>
+        </div>
         <Button
           onClick={handleRegenerate}
           className="bg-[#0ABAB5] text-white"
         >
-          Gerar Trilha Personalizada
+          Gerar Nova Trilha Personalizada
+        </Button>
+        <Button
+          variant="outline"
+          onClick={handleRefreshTrail}
+          className="flex items-center gap-2"
+        >
+          <RefreshCcw className="h-4 w-4" />
+          Tentar Carregar Novamente
         </Button>
       </div>
     );
@@ -142,19 +176,30 @@ export const TrailGenerationPanel = ({ onClose }: { onClose?: () => void }) => {
           onSolutionClick={(id) => navigate(`/solution/${id}`)}
           onSeeAll={() => navigate("/solutions")}
         />
-        <div className="flex justify-between mt-6">
-          <Button variant="ghost" onClick={handleRegenerate}>
-            <RefreshCcw className="h-4 w-4 mr-2" />
+        <div className="flex flex-wrap justify-between mt-6 gap-2">
+          <Button 
+            variant="ghost" 
+            onClick={handleRegenerate}
+            className="flex items-center gap-1"
+          >
+            <RefreshCcw className="h-4 w-4 mr-1" />
             Regenerar Trilha
           </Button>
-          <Button variant="outline" onClick={() => navigate("/onboarding/review")}>
-            <Edit className="h-4 w-4 mr-2" /> Editar Onboarding
-          </Button>
-          {onClose && (
-            <Button variant="outline" onClick={onClose}>
-              Fechar
+          <div className="flex gap-2">
+            <Button 
+              variant="outline" 
+              onClick={() => navigate("/onboarding/review")}
+              className="flex items-center gap-1"
+            >
+              <Edit className="h-4 w-4 mr-1" /> 
+              Editar Onboarding
             </Button>
-          )}
+            {onClose && (
+              <Button variant="outline" onClick={onClose}>
+                Fechar
+              </Button>
+            )}
+          </div>
         </div>
       </div>
     </div>
