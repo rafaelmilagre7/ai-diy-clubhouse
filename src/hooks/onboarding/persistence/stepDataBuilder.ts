@@ -57,12 +57,20 @@ export function buildUpdateObject(
     }
   } else if (stepId === "ai_exp") {
     // Salvar dados de experiência com IA
-    const existingAiExperience = progress.ai_experience || {};
-    updateObj.ai_experience = {
-      ...existingAiExperience,
-      ...(data.ai_experience || {})
-    };
-    console.log("Salvando ai_experience:", updateObj.ai_experience);
+    console.log("Construindo objeto de atualização para AI Experience:", data.ai_experience);
+    
+    if (data.ai_experience) {
+      const existingAiExperience = progress.ai_experience || {};
+      updateObj.ai_experience = {
+        ...existingAiExperience,
+        ...data.ai_experience
+      };
+      
+      // Log detalhado dos dados de AI Experience 
+      console.log("Objeto final de AI Experience:", updateObj.ai_experience);
+    } else {
+      console.warn("ai_experience não encontrado nos dados enviados");
+    }
   } else if (stepId === "business_goals") {
     // Salvar dados de objetivos de negócio
     const existingBusinessGoals = progress.business_goals || {};

@@ -5,14 +5,12 @@ import { useOnboardingSteps } from "@/hooks/onboarding/useOnboardingSteps";
 import { AIExperienceStep } from "@/components/onboarding/steps/AIExperienceStep";
 import { MilagrinhoMessage } from "@/components/onboarding/MilagrinhoMessage";
 import { useProgress } from "@/hooks/onboarding/useProgress";
-import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
 const AIExperience = () => {
   const { saveStepData, progress, completeOnboarding, refreshProgress } = useOnboardingSteps();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { isLoading } = useProgress();
-  const navigate = useNavigate();
 
   // Efeito para carregar dados mais recentes ao entrar na página
   useEffect(() => {
@@ -25,16 +23,11 @@ const AIExperience = () => {
     try {
       console.log("Salvando dados de experiência com IA:", data);
       
-      // Salvar com navegação automática para a próxima etapa
+      // Passamos true como terceiro parâmetro para permitir a navegação automática
       await saveStepData(stepId, data, true);
       
-      console.log("Dados de experiência com IA salvos com sucesso, navegando para a próxima etapa");
-      toast.success("Informações salvas com sucesso!");
-      
-      // Garantir navegação manual
-      setTimeout(() => {
-        navigate("/onboarding/club-goals");
-      }, 500);
+      console.log("Dados de experiência com IA salvos com sucesso");
+      // O toast de sucesso já é mostrado pelo hook de persistência
     } catch (error) {
       console.error("Erro ao salvar dados:", error);
       toast.error("Erro ao salvar as informações. Tente novamente.");

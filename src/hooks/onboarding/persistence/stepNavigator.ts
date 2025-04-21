@@ -11,7 +11,7 @@ export function navigateAfterStep(stepId: string, currentStepIndex: number, navi
 
   let nextPath = "";
 
-  console.log(`Determinando próxima rota para o passo ${stepId}`);
+  console.log(`Determinando próxima rota para o passo ${stepId}, shouldNavigate=${shouldNavigate}`);
 
   if (stepId === "personal") {
     nextPath = "/onboarding/professional-data";
