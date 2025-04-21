@@ -1,4 +1,3 @@
-
 import React, { Suspense } from "react";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls, Environment } from "@react-three/drei";
@@ -7,7 +6,7 @@ import { MagicSphere } from "./MagicSphere";
 interface MagicSceneProps {
   stage?: number;
   onCanvasCreated?: () => void;
-  isAnimating?: boolean; // Adicionando a prop isAnimating
+  isAnimating?: boolean; // Corrigido: agora MagicSceneProps aceita isAnimating
 }
 
 export function MagicScene({ stage = 1, onCanvasCreated, isAnimating = false }: MagicSceneProps) {

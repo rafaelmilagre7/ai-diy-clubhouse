@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/components/ui/use-toast";
@@ -26,7 +25,6 @@ export const useImplementationTrail = () => {
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
-  // Função otimizada para verificar se uma trilha tem conteúdo
   const hasTrailContent = useCallback((trailData: ImplementationTrail | null): boolean => {
     if (!trailData) return false;
     
@@ -35,7 +33,6 @@ export const useImplementationTrail = () => {
     );
   }, []);
 
-  // Função para carregar a trilha do banco de dados com melhor tratamento de erros
   const loadExistingTrail = useCallback(async (forceRefresh = false) => {
     if (!user) {
       setIsLoading(false);
@@ -44,7 +41,6 @@ export const useImplementationTrail = () => {
 
     try {
       if (!forceRefresh && trail && hasTrailContent(trail) && lastUpdated) {
-        // Se já temos uma trilha válida carregada e não é um refresh forçado, retornar a existente
         console.log("Usando trilha em cache:", lastUpdated);
         return trail;
       }
@@ -67,7 +63,6 @@ export const useImplementationTrail = () => {
         console.log("Trilha encontrada no banco:", data.updated_at);
         const trailData = data.trail_data as ImplementationTrail;
         
-        // Verificar se a trilha tem conteúdo real
         if (hasTrailContent(trailData)) {
           console.log("Trilha com conteúdo válido encontrada");
           setTrail(trailData);
@@ -101,7 +96,6 @@ export const useImplementationTrail = () => {
       setIsLoading(true);
       setError(null);
 
-      // Buscar todas as soluções publicadas
       const { data: solutions, error: solutionsError } = await supabase
         .from("solutions")
         .select("*")
@@ -111,7 +105,6 @@ export const useImplementationTrail = () => {
         throw solutionsError;
       }
 
-      // Usar os dados de onboarding ou obter do progresso atual
       const onboardingProgress = onboardingData || progress;
 
       if (!onboardingProgress) {
@@ -120,7 +113,6 @@ export const useImplementationTrail = () => {
 
       console.log("Gerando trilha de implementação com dados:", onboardingProgress);
 
-      // Chamar a Edge Function para gerar recomendações
       const { data, error: fnError } = await supabase.functions.invoke("generate-implementation-trail", {
         body: {
           onboardingProgress,
@@ -138,12 +130,10 @@ export const useImplementationTrail = () => {
 
       console.log("Trilha de implementação gerada:", data.recommendations);
       
-      // Verificar se a trilha gerada tem conteúdo válido
       if (hasTrailContent(data.recommendations)) {
         setTrail(data.recommendations);
         setLastUpdated(new Date());
         
-        // Salvar a trilha gerada no banco de dados
         await saveImplementationTrail(user.id, data.recommendations);
         
         toast.success("Trilha Personalizada Criada", {
@@ -170,7 +160,6 @@ export const useImplementationTrail = () => {
 
   const saveImplementationTrail = async (userId: string, trailData: ImplementationTrail) => {
     try {
-      // Verificar se já existe uma trilha para este usuário
       const { data: existingTrail } = await supabase
         .from("implementation_trails")
         .select("id")
@@ -178,8 +167,6 @@ export const useImplementationTrail = () => {
         .maybeSingle();
 
       if (existingTrail) {
-        // Atualizar trilha existente
-        console.log("Atualizando trilha existente");
         await supabase
           .from("implementation_trails")
           .update({
@@ -188,8 +175,6 @@ export const useImplementationTrail = () => {
           })
           .eq("id", existingTrail.id);
       } else {
-        // Criar nova trilha
-        console.log("Criando nova trilha");
         await supabase
           .from("implementation_trails")
           .insert({
@@ -199,16 +184,13 @@ export const useImplementationTrail = () => {
       }
     } catch (error) {
       console.error("Erro ao salvar trilha no banco de dados:", error);
-      // Não interromper o fluxo se o salvamento falhar
     }
   };
 
-  // Expor uma função para recarregar a trilha diretamente com opção de forçar atualização
   const refreshTrail = useCallback(async (forceRefresh = true) => {
     return await loadExistingTrail(forceRefresh);
   }, [loadExistingTrail]);
 
-  // Função para limpar a trilha existente (útil para testes)
   const clearTrail = useCallback(async () => {
     if (!user) return false;
     
@@ -230,7 +212,6 @@ export const useImplementationTrail = () => {
     }
   }, [user]);
 
-  // Carregar trilha existente ao montar o componente
   useEffect(() => {
     loadExistingTrail();
   }, [loadExistingTrail]);

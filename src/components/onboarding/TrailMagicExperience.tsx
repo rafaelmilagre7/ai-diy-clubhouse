@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { MagicScene } from './three/MagicScene';
 import { Loader2 } from 'lucide-react';
@@ -85,7 +84,7 @@ export const TrailMagicExperience: React.FC<TrailMagicExperienceProps> = ({ onFi
         <div className="absolute inset-0 z-0">
           <MagicScene 
             stage={1} 
-            isAnimating={stage === 'analysis'} 
+            isAnimating={stage === 'analysis'}
           />
         </div>
         
