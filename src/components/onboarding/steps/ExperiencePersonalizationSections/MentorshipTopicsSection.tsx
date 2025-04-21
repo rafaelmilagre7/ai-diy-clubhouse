@@ -2,9 +2,10 @@
 import React from "react";
 import { cn } from "@/lib/utils";
 import { UseFormWatch } from "react-hook-form";
+import { ExperienceFormData } from "./useExperiencePersonalizationForm";
 
 interface MentorshipTopicsSectionProps {
-  watch: UseFormWatch<any>;
+  watch: UseFormWatch<ExperienceFormData>;
   toggleSelect: (field: "mentorship_topics", value: string) => void;
   errors: Record<string, any>;
 }

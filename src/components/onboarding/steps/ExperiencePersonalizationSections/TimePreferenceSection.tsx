@@ -2,10 +2,11 @@
 import React from "react";
 import { Controller, Control, UseFormWatch } from "react-hook-form";
 import { cn } from "@/lib/utils";
+import { ExperienceFormData } from "./useExperiencePersonalizationForm";
 
 interface TimePreferenceSectionProps {
-  control: Control<any>;
-  watch: UseFormWatch<any>;
+  control: Control<ExperienceFormData>;
+  watch: UseFormWatch<ExperienceFormData>;
   toggleSelect: (field: "time_preference", value: string) => void;
   errors: Record<string, any>;
 }

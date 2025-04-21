@@ -3,7 +3,7 @@ import { useMemo } from "react";
 import { useForm } from "react-hook-form";
 
 // Definindo um tipo para os nomes dos campos do formulário
-type FormFieldNames = 
+export type FormFieldNames = 
   | "interests" 
   | "time_preference" 
   | "available_days" 
@@ -12,7 +12,7 @@ type FormFieldNames =
   | "mentorship_topics";
 
 // Interface para o tipo de dados que o formulário vai gerenciar
-interface ExperienceFormData {
+export interface ExperienceFormData {
   interests: string[];
   time_preference: string[];
   available_days: string[];
@@ -46,12 +46,13 @@ export function useExperiencePersonalizationForm(initialData: Partial<Experience
     ].every(Boolean);
   }, [watch]);
 
-  function toggleSelect(field: FormFieldNames, value: string) {
-    const arr = form.watch(field) || [];
-    if (arr.includes(value)) {
-      form.setValue(field, arr.filter((v: string) => v !== value), { shouldValidate: true });
+  // Função corrigida para trabalhar apenas com campos do tipo array
+  function toggleSelect(field: Exclude<FormFieldNames, "networking_availability">, value: string) {
+    const currentValues = form.watch(field) as string[];
+    if (currentValues.includes(value)) {
+      form.setValue(field, currentValues.filter((v: string) => v !== value), { shouldValidate: true });
     } else {
-      form.setValue(field, [...arr, value], { shouldValidate: true });
+      form.setValue(field, [...currentValues, value], { shouldValidate: true });
     }
   }
 

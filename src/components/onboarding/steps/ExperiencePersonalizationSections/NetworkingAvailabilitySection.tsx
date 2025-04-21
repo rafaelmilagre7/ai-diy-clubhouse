@@ -2,9 +2,10 @@
 import React from "react";
 import { Controller, Control } from "react-hook-form";
 import { Slider } from "@/components/ui/slider";
+import { ExperienceFormData } from "./useExperiencePersonalizationForm";
 
 interface NetworkingAvailabilitySectionProps {
-  control: Control<any>;
+  control: Control<ExperienceFormData>;
   errors: Record<string, any>;
 }
 
