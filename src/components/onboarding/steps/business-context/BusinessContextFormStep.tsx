@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { useOnboardingSteps } from "@/hooks/onboarding/useOnboardingSteps";
@@ -29,8 +29,9 @@ type BusinessContextFormValues = {
 export const BusinessContextFormStep: React.FC<BusinessContextFormStepProps> = ({ progress }) => {
   const { saveStepData } = useOnboardingSteps();
   const navigate = useNavigate();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { control, handleSubmit, formState: { errors, isSubmitting } } = useForm<BusinessContextFormValues>({
+  const { control, handleSubmit, formState: { errors } } = useForm<BusinessContextFormValues>({
     defaultValues: {
       business_model: progress?.business_context?.business_model || "",
       business_challenges: progress?.business_context?.business_challenges || [],
@@ -42,6 +43,10 @@ export const BusinessContextFormStep: React.FC<BusinessContextFormStepProps> = (
 
   const onSubmit = async (data: BusinessContextFormValues) => {
     try {
+      setIsSubmitting(true);
+      console.log("Salvando dados de contexto de negócio:", data);
+      
+      // Salvamos sem navegação automática para permitir controle manual
       await saveStepData("business_context", {
         business_context: {
           business_model: data.business_model,
@@ -50,12 +55,17 @@ export const BusinessContextFormStep: React.FC<BusinessContextFormStepProps> = (
           medium_term_goals: data.medium_term_goals,
           important_kpis: data.important_kpis,
         }
-      });
+      }, false);
+      
       toast.success("Informações salvas com sucesso!");
+      
+      // Após salvar, podemos navegar manualmente
       navigate("/onboarding/ai-experience");
     } catch (error) {
       console.error("Erro ao salvar dados:", error);
       toast.error("Erro ao salvar as informações. Tente novamente.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -97,7 +107,7 @@ export const BusinessContextFormStep: React.FC<BusinessContextFormStepProps> = (
         </section>
 
         {/* Navegação */}
-        <NavigationButtons isSubmitting={isSubmitting} onPrevious={() => navigate("/onboarding/business-goals")} />
+        <NavigationButtons isSubmitting={isSubmitting} onPrevious={() => navigate("/onboarding/professional-data")} />
       </form>
     </div>
   );

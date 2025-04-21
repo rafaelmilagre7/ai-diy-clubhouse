@@ -1,47 +1,33 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
 import { useOnboardingSteps } from "@/hooks/onboarding/useOnboardingSteps";
 import { ExperiencePersonalizationStep } from "@/components/onboarding/steps/ExperiencePersonalizationStep";
 import { MilagrinhoMessage } from "@/components/onboarding/MilagrinhoMessage";
-import { useNavigate } from "react-router-dom";
 import { useProgress } from "@/hooks/onboarding/useProgress";
 
 const ExperiencePersonalization = () => {
-  const { saveStepData, progress, completeOnboarding } = useOnboardingSteps();
-  const [submitting, setSubmitting] = useState(false);
-  const navigate = useNavigate();
-  const { refreshProgress } = useProgress();
+  const { saveStepData, progress, completeOnboarding, refreshProgress } = useOnboardingSteps();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { isLoading } = useProgress();
 
-  // Efeito para carregar os dados mais recentes
+  // Efeito para carregar dados mais recentes ao entrar na página
   useEffect(() => {
-    const loadData = async () => {
-      try {
-        await refreshProgress();
-        console.log("Progresso recarregado no ExperiencePersonalization:", progress);
-      } catch (error) {
-        console.error("Erro ao carregar progresso:", error);
-      }
-    };
-    
-    loadData();
+    console.log("ExperiencePersonalization montado - carregando dados mais recentes");
+    refreshProgress();
   }, [refreshProgress]);
 
   const handleSaveData = async (stepId: string, data: any) => {
+    setIsSubmitting(true);
     try {
-      setSubmitting(true);
-      
-      console.log(`Enviando dados para salvar (${stepId}):`, data);
-      
-      // Salvamos os dados do formulário
-      await saveStepData(stepId, data);
-      
-      // Forçamos um refresh dos dados após o salvamento
-      await refreshProgress();
+      console.log("Salvando dados de personalização:", data);
+      // Salvar sem navegação automática para permitir voltar manualmente
+      await saveStepData(stepId, data, false);
+      console.log("Dados de personalização salvos com sucesso");
     } catch (error) {
       console.error("Erro ao salvar dados:", error);
     } finally {
-      setSubmitting(false);
+      setIsSubmitting(false);
     }
   };
 
@@ -53,14 +39,17 @@ const ExperiencePersonalization = () => {
     >
       <div className="max-w-4xl mx-auto space-y-8">
         <MilagrinhoMessage
-          message="Queremos personalizar sua experiência no VIVER DE IA Club. Compartilhe seus interesses e preferências para indicarmos conteúdos, encontros e oportunidades sob medida!"
+          message="Vamos personalizar sua experiência no VIVER DE IA Club. Suas preferências nos ajudarão a entregar conteúdo e oportunidades que sejam mais relevantes para você."
         />
-        
-        {progress && (
+        {isLoading ? (
+          <div className="flex justify-center py-10">
+            <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-[#0ABAB5]"></div>
+          </div>
+        ) : (
           <ExperiencePersonalizationStep
             onSubmit={handleSaveData}
-            isSubmitting={submitting}
-            initialData={progress}
+            isSubmitting={isSubmitting}
+            initialData={progress?.experience_personalization}
             isLastStep={false}
             onComplete={completeOnboarding}
           />

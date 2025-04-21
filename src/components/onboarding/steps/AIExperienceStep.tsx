@@ -10,10 +10,15 @@ export const AIExperienceStep: React.FC<OnboardingStepProps> = ({
   onComplete,
   initialData,
 }) => {
+  console.log("AIExperienceStep - initialData:", initialData);
+  
   return (
     <AIExperienceFormStep
       initialData={initialData}
-      onSubmit={onSubmit}
+      onSubmit={(stepId, data) => {
+        console.log("AIExperienceStep - submitting data:", data);
+        onSubmit(stepId, data);
+      }}
       isSubmitting={isSubmitting}
       isLastStep={isLastStep}
       onComplete={onComplete}

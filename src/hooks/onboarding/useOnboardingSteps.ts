@@ -9,7 +9,7 @@ import { useNavigate } from 'react-router-dom';
 // Hook principal que orquestra os auxiliares para o onboarding step
 export const useOnboardingSteps = () => {
   const { currentStepIndex, setCurrentStepIndex, navigateToStep, navigate } = useStepNavigation();
-  const { progress, refreshProgress } = useProgress();
+  const { progress, refreshProgress, isLoading } = useProgress();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { saveStepData: persistenceStepData, completeOnboarding } = useStepPersistence({
     currentStepIndex,
@@ -27,7 +27,10 @@ export const useOnboardingSteps = () => {
   const saveStepData = async (stepId: string, data: any, shouldNavigate: boolean = true) => {
     setIsSubmitting(true);
     try {
+      console.log(`useOnboardingSteps - salvando dados para etapa ${stepId}`, data);
+      console.log(`useOnboardingSteps - shouldNavigate: ${shouldNavigate}`);
       await persistenceStepData(stepId, data, shouldNavigate);
+      console.log(`useOnboardingSteps - dados salvos com sucesso para etapa ${stepId}`);
     } catch (error) {
       console.error("Erro ao salvar dados da etapa:", error);
     } finally {
@@ -42,6 +45,7 @@ export const useOnboardingSteps = () => {
     currentStep,
     currentStepIndex, 
     isSubmitting,
+    isLoading,
     saveStepData,
     completeOnboarding,
     progress,

@@ -33,20 +33,31 @@ export function buildUpdateObject(
       updateObj.annual_revenue = data.professional_info.annual_revenue;
     }
   } else if (stepId === "business_context") {
+    // Salvar dados de contexto de negócio
     updateObj.business_context = data.business_context || {};
+    console.log("Salvando business_context:", updateObj.business_context);
   } else if (stepId === "ai_exp") {
+    // Salvar dados de experiência com IA
     updateObj.ai_experience = data.ai_experience || {};
+    console.log("Salvando ai_experience:", updateObj.ai_experience);
   } else if (stepId === "business_goals") {
+    // Salvar dados de objetivos de negócio
     updateObj.business_goals = data.business_goals || {};
+    console.log("Salvando business_goals:", updateObj.business_goals);
   } else if (stepId === "experience_personalization") {
+    // Salvar dados de personalização de experiência
     updateObj.experience_personalization = data.experience_personalization || {};
+    console.log("Salvando experience_personalization:", updateObj.experience_personalization);
   } else if (stepId === "complementary_info") {
+    // Salvar informações complementares
     updateObj.complementary_info = data.complementary_info || {};
+    console.log("Salvando complementary_info:", updateObj.complementary_info);
   } else {
     // Outras etapas (futuro)
     const sectionKey = steps.find(s => s.id === stepId)?.section as keyof OnboardingData;
     if (sectionKey && data[sectionKey]) {
       updateObj[sectionKey] = data[sectionKey];
+      console.log(`Salvando ${sectionKey}:`, data[sectionKey]);
     }
   }
 

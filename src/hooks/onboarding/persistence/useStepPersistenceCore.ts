@@ -51,7 +51,6 @@ export function useStepPersistenceCore({
       }
     } catch (error) {
       console.error("Erro ao salvar dados:", error);
-      // Não exibe toast deliberadamente (Requisito)
     }
   };
 

@@ -1,40 +1,39 @@
 
-import React, { useState } from "react";
+import React, { useEffect } from "react";
 import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
 import { useOnboardingSteps } from "@/hooks/onboarding/useOnboardingSteps";
 import { ReviewStep } from "@/components/onboarding/steps/ReviewStep";
-import { MilagrinhoMessage } from "@/components/onboarding/MilagrinhoMessage";
+import { useProgress } from "@/hooks/onboarding/useProgress";
 
 const Review = () => {
-  const { completeOnboarding, progress, navigateToStep } = useOnboardingSteps();
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { completeOnboarding, isSubmitting, navigateToStep, progress, refreshProgress } = useOnboardingSteps();
+  const { isLoading } = useProgress();
 
-  const handleComplete = async () => {
-    setIsSubmitting(true);
-    try {
-      await completeOnboarding();
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+  // Efeito para carregar dados mais recentes ao entrar na página
+  useEffect(() => {
+    console.log("Review montado - carregando dados mais recentes");
+    refreshProgress();
+  }, [refreshProgress]);
 
   return (
     <OnboardingLayout
-      currentStep={7}
+      currentStep={8}
       title="Revisar e Finalizar"
-      backUrl="/onboarding/complementary-info"
+      backUrl="/onboarding/complementary"
     >
-      <div className="max-w-4xl mx-auto space-y-8">
-        <MilagrinhoMessage
-          message="Você está quase pronto! Revise os dados fornecidos e, se necessário, faça edições clicando nos botões 'Editar'. Quando estiver satisfeito, clique em 'Concluir Onboarding' para acessar sua conta."
-        />
-        
-        <ReviewStep
-          progress={progress}
-          onComplete={handleComplete}
-          isSubmitting={isSubmitting}
-          navigateToStep={navigateToStep}
-        />
+      <div className="max-w-4xl mx-auto">
+        {isLoading ? (
+          <div className="flex justify-center py-10">
+            <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-[#0ABAB5]"></div>
+          </div>
+        ) : (
+          <ReviewStep
+            progress={progress}
+            onComplete={completeOnboarding}
+            isSubmitting={isSubmitting}
+            navigateToStep={navigateToStep}
+          />
+        )}
       </div>
     </OnboardingLayout>
   );
