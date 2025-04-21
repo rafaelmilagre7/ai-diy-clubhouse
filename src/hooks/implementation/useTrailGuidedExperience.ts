@@ -8,7 +8,7 @@ import { sanitizeTrailData } from "./useImplementationTrail.utils";
 
 export const useTrailGuidedExperience = () => {
   const navigate = useNavigate();
-  const { trail, isLoading, generateImplementationTrail } = useImplementationTrail();
+  const { trail, isLoading, hasContent, refreshTrail, generateImplementationTrail } = useImplementationTrail();
   const { solutions: allSolutions, loading: solutionsLoading } = useSolutionsData();
   const [started, setStarted] = useState(false);
   const [currentStepIdx, setCurrentStepIdx] = useState(0);
@@ -17,18 +17,6 @@ export const useTrailGuidedExperience = () => {
   const [showMagicExperience, setShowMagicExperience] = useState(false);
   const [loadingError, setLoadingError] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-
-  // Verificar se a trilha tem conteúdo
-  const hasContent = useMemo(() => {
-    if (!trail) return false;
-    
-    const totalItems = 
-      (trail.priority1?.length || 0) + 
-      (trail.priority2?.length || 0) + 
-      (trail.priority3?.length || 0);
-    
-    return totalItems > 0;
-  }, [trail]);
 
   // Montar lista de soluções ordenadas para a navegação
   const solutionsList = useMemo(() => {
@@ -81,14 +69,16 @@ export const useTrailGuidedExperience = () => {
     setRefreshing(true);
     
     try {
-      window.location.reload();
+      await refreshTrail(true);
+      toast.success("Dados da trilha atualizados com sucesso!");
     } catch (error) {
       console.error("Erro ao atualizar dados da trilha:", error);
       setLoadingError(true);
+      toast.error("Não foi possível atualizar os dados da trilha");
     } finally {
       setRefreshing(false);
     }
-  }, []);
+  }, [refreshTrail]);
 
   // Handler para iniciar a geração da trilha
   const handleStartGeneration = useCallback(async (shouldRegenerate = true) => {

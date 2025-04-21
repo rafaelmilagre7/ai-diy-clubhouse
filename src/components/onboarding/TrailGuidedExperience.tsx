@@ -1,223 +1,68 @@
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Loader2, AlertCircle, RefreshCw } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useTrailGuidedExperience } from "@/hooks/implementation/useTrailGuidedExperience";
 import { TrailMagicExperience } from "./TrailMagicExperience";
 import { TrailTypingText } from "./TrailTypingText";
 import { TrailStepperNavigation } from "./TrailStepperNavigation";
 import { TrailCurrentSolutionCard } from "./TrailCurrentSolutionCard";
-import { useImplementationTrail } from "@/hooks/implementation/useImplementationTrail";
-import { useSolutionsData } from "@/hooks/useSolutionsData";
-import { toast } from "sonner";
 
 export const TrailGuidedExperience = ({ autoStart = false }) => {
+  const navigate = useNavigate();
   const {
-    trail,
-    isLoading: trailLoading,
-    generateImplementationTrail,
-  } = useImplementationTrail();
-  const { solutions, loading: solutionsLoading } = useSolutionsData();
-  
-  const [started, setStarted] = useState(false);
-  const [currentStepIdx, setCurrentStepIdx] = useState(0);
-  const [typingFinished, setTypingFinished] = useState(false);
-  const [regenerating, setRegenerating] = useState(false);
-  const [showMagicExperience, setShowMagicExperience] = useState(false);
-  const [loadingError, setLoadingError] = useState(false);
-  const [retryCount, setRetryCount] = useState(0);
-  const [hasContent, setHasContent] = useState(false);
-
-  // Verificar se a trilha tem conteúdo
-  useEffect(() => {
-    if (trail) {
-      const totalItems = 
-        (trail.priority1?.length || 0) + 
-        (trail.priority2?.length || 0) + 
-        (trail.priority3?.length || 0);
-      
-      setHasContent(totalItems > 0);
-    } else {
-      setHasContent(false);
-    }
-  }, [trail]);
-
-  // Processar soluções da trilha
-  const solutionsList = React.useMemo(() => {
-    if (!trail || !solutions || solutions.length === 0) return [];
-    
-    try {
-      const all = [];
-      
-      // Processar prioridade 1
-      if (Array.isArray(trail.priority1)) {
-        for (const item of trail.priority1) {
-          if (!item || !item.solutionId) continue;
-          
-          const solution = solutions.find(s => s.id === item.solutionId);
-          if (solution) {
-            all.push({
-              ...item,
-              ...solution,
-              priority: 1,
-              title: solution.title,
-              justification: item.justification
-            });
-          }
-        }
-      }
-      
-      // Processar prioridade 2
-      if (Array.isArray(trail.priority2)) {
-        for (const item of trail.priority2) {
-          if (!item || !item.solutionId) continue;
-          
-          const solution = solutions.find(s => s.id === item.solutionId);
-          if (solution) {
-            all.push({
-              ...item,
-              ...solution,
-              priority: 2,
-              title: solution.title,
-              justification: item.justification
-            });
-          }
-        }
-      }
-      
-      // Processar prioridade 3
-      if (Array.isArray(trail.priority3)) {
-        for (const item of trail.priority3) {
-          if (!item || !item.solutionId) continue;
-          
-          const solution = solutions.find(s => s.id === item.solutionId);
-          if (solution) {
-            all.push({
-              ...item,
-              ...solution,
-              priority: 3,
-              title: solution.title,
-              justification: item.justification
-            });
-          }
-        }
-      }
-      
-      return all;
-    } catch (error) {
-      console.error("Erro ao processar lista de soluções:", error);
-      return [];
-    }
-  }, [trail, solutions]);
-
-  // Solução atual
-  const currentSolution = solutionsList[currentStepIdx];
+    isLoading,
+    regenerating,
+    solutionsLoading,
+    refreshing,
+    started,
+    showMagicExperience,
+    currentStepIdx,
+    typingFinished,
+    solutionsList,
+    currentSolution,
+    loadingError,
+    hasContent,
+    handleStartGeneration,
+    handleMagicFinish,
+    handleNext,
+    handlePrevious,
+    handleSelectSolution,
+    handleTypingComplete,
+    refreshTrailData,
+  } = useTrailGuidedExperience();
 
   // Auto-iniciar se configurado
   useEffect(() => {
     if (autoStart && !started && hasContent && solutionsList.length > 0) {
       console.log("Auto-iniciando visualização da trilha");
-      setStarted(true);
+      handleStartGeneration(false);
     }
-  }, [autoStart, started, hasContent, solutionsList.length]);
+  }, [autoStart, started, hasContent, solutionsList.length, handleStartGeneration]);
 
   // Carregar trilha e começar quando tudo estiver pronto
   useEffect(() => {
-    if (!started && !trailLoading && !solutionsLoading && hasContent) {
-      setStarted(true);
+    if (!started && !isLoading && !solutionsLoading && hasContent) {
+      handleStartGeneration(false);
     }
-  }, [started, trailLoading, solutionsLoading, hasContent]);
-
-  // Lidar com trilha vazia ou erro
-  useEffect(() => {
-    if (started && !trailLoading && !solutionsLoading && solutionsList.length === 0) {
-      setLoadingError(true);
-    } else {
-      setLoadingError(false);
-    }
-  }, [started, trailLoading, solutionsLoading, solutionsList.length]);
-
-  const handleStartGeneration = async () => {
-    setShowMagicExperience(true);
-    setRegenerating(true);
-    try {
-      // Passamos um objeto vazio como parâmetro para atender à assinatura da função
-      await generateImplementationTrail({});
-      toast.success("Trilha gerada com sucesso!");
-      setStarted(true);
-      setCurrentStepIdx(0);
-      setTypingFinished(false);
-    } catch (error) {
-      console.error("Erro ao gerar trilha:", error);
-      toast.error("Erro ao gerar trilha personalizada");
-      setLoadingError(true);
-    } finally {
-      setRegenerating(false);
-    }
-  };
-
-  const handleRetry = () => {
-    setRetryCount(prev => prev + 1);
-    // Recarregar a página para tentar novamente
-    window.location.reload();
-  };
-
-  const handleMagicFinish = () => {
-    setShowMagicExperience(false);
-    setStarted(true);
-  };
-
-  const handleNext = () => {
-    if (currentStepIdx < solutionsList.length - 1) {
-      setCurrentStepIdx(v => v + 1);
-      setTypingFinished(false);
-    }
-  };
-
-  const handlePrevious = () => {
-    if (currentStepIdx > 0) {
-      setCurrentStepIdx(v => v - 1);
-      setTypingFinished(false);
-    }
-  };
-
-  const handleSelectSolution = (id) => {
-    window.location.href = `/solution/${id}`;
-  };
-
-  const handleTypingComplete = () => {
-    setTypingFinished(true);
-  };
+  }, [started, isLoading, solutionsLoading, hasContent, handleStartGeneration]);
 
   if (showMagicExperience) {
     return <TrailMagicExperience onFinish={handleMagicFinish} />;
   }
 
-  if (trailLoading || solutionsLoading || regenerating) {
+  if (isLoading || solutionsLoading || regenerating || refreshing) {
     return (
       <div className="flex flex-col items-center gap-4 py-8">
         <Loader2 className="h-8 w-8 text-[#0ABAB5] animate-spin" />
         <span className="font-medium text-[#0ABAB5]">
           {regenerating 
             ? "Milagrinho está preparando sua trilha personalizada..." 
-            : "Carregando sua trilha personalizada..."}
+            : refreshing
+              ? "Atualizando dados da trilha..."
+              : "Carregando sua trilha personalizada..."}
         </span>
-        {retryCount > 1 && (
-          <div className="mt-3 text-center max-w-md">
-            <p className="text-sm text-gray-600 mb-2">
-              Este processo está demorando mais do que o esperado. 
-              Você pode tentar novamente ou voltar mais tarde.
-            </p>
-            <Button 
-              variant="outline"
-              onClick={handleRetry}
-              className="mt-1"
-              size="sm"
-            >
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Tentar novamente
-            </Button>
-          </div>
-        )}
       </div>
     );
   }
@@ -234,14 +79,14 @@ export const TrailGuidedExperience = ({ autoStart = false }) => {
           </p>
           <div className="flex gap-3 mt-2">
             <Button 
-              onClick={handleStartGeneration} 
+              onClick={() => handleStartGeneration(true)} 
               className="bg-[#0ABAB5] text-white"
             >
               Gerar Nova Trilha
             </Button>
             <Button 
               variant="outline" 
-              onClick={handleRetry}
+              onClick={refreshTrailData}
             >
               <RefreshCw className="h-4 w-4 mr-2" />
               Tentar Novamente
@@ -261,7 +106,7 @@ export const TrailGuidedExperience = ({ autoStart = false }) => {
         </p>
         <Button
           className="bg-[#0ABAB5] text-white px-8 py-3 text-lg"
-          onClick={handleStartGeneration}
+          onClick={() => handleStartGeneration(true)}
           disabled={regenerating}
         >
           {regenerating ? "Gerando trilha..." : "Gerar Trilha VIVER DE IA"}
@@ -276,7 +121,7 @@ export const TrailGuidedExperience = ({ autoStart = false }) => {
         <AlertCircle size={32} className="text-amber-500 mx-auto mb-3" />
         <p className="mb-4">Nenhuma solução recomendada foi encontrada. Por favor, tente regenerar a trilha.</p>
         <div className="mt-4">
-          <Button onClick={handleStartGeneration} className="bg-[#0ABAB5] text-white">
+          <Button onClick={() => handleStartGeneration(true)} className="bg-[#0ABAB5] text-white">
             Regenerar Trilha
           </Button>
         </div>

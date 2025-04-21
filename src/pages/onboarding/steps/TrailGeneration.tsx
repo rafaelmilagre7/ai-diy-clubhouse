@@ -3,6 +3,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { OnboardingLayout } from '@/components/onboarding/OnboardingLayout';
 import { useProgress } from '@/hooks/onboarding/useProgress';
 import { useLogging } from '@/hooks/useLogging';
+import { useImplementationTrail } from '@/hooks/implementation/useImplementationTrail';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { TrailGenerationHeader } from '@/components/onboarding/TrailGeneration/TrailGenerationHeader';
 import { TrailLoadingState } from '@/components/onboarding/TrailGeneration/TrailLoadingState';
@@ -14,6 +15,7 @@ import { toast } from 'sonner';
 // Componente principal para geração de trilha
 const TrailGeneration = () => {
   const { progress, refreshProgress, updateProgress } = useProgress();
+  const { trail, isLoading: trailLoading, error: trailError, generateImplementationTrail } = useImplementationTrail();
   const { log, logError } = useLogging();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -21,7 +23,6 @@ const TrailGeneration = () => {
   // Estados para gerenciar o fluxo de geração da trilha
   const [generating, setGenerating] = useState(false);
   const [generated, setGenerated] = useState(false);
-  const [trailSolutions, setTrailSolutions] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [autoGenerateTriggered, setAutoGenerateTriggered] = useState(false);
   const [loadingTimeout, setLoadingTimeout] = useState(false);
@@ -33,28 +34,29 @@ const TrailGeneration = () => {
   // Tempo limite de carregamento em milissegundos (20 segundos)
   const LOADING_TIMEOUT = 20000;
 
+  // Verificar se a trilha já existe
+  useEffect(() => {
+    if (trail && !generating) {
+      setGenerated(true);
+    }
+  }, [trail, generating]);
+
   // Função para carregar a trilha inicial
   const loadInitialTrail = useCallback(async () => {
     if (!progress) return;
     
-    // Verificar se já temos soluções na trilha salvas
-    if (progress.trail_solutions && progress.trail_solutions.length > 0) {
-      try {
-        setTrailSolutions(progress.trail_solutions);
-        setGenerated(true);
-        log('trail_loaded_from_storage', { count: progress.trail_solutions.length });
-      } catch (e) {
-        console.error("Erro ao carregar trilha do armazenamento:", e);
-        // Se houver erro ao processar as soluções armazenadas, continuar com geração automática
-        if (autoGenerate && !autoGenerateTriggered) {
-          await startTrailGeneration();
-        }
-      }
-    } else if (autoGenerate && !autoGenerateTriggered) {
-      // Iniciar geração automática se solicitado
+    // Se já temos uma trilha, marcar como gerada
+    if (trail) {
+      setGenerated(true);
+      log('trail_loaded_from_storage', { success: true });
+      return;
+    }
+    
+    // Iniciar geração automática se solicitado
+    if (autoGenerate && !autoGenerateTriggered && !generated) {
       await startTrailGeneration();
     }
-  }, [progress, autoGenerate, autoGenerateTriggered]);
+  }, [progress, trail, autoGenerate, autoGenerateTriggered, generated]);
 
   // Efeito para inicializar a trilha quando os dados estiverem disponíveis
   useEffect(() => {
@@ -82,7 +84,7 @@ const TrailGeneration = () => {
     return () => {
       if (timeoutId) clearTimeout(timeoutId);
     };
-  }, [generating, generated, attemptCount]);
+  }, [generating, generated, attemptCount, logError]);
 
   // Função para iniciar a geração da trilha
   const startTrailGeneration = async () => {
@@ -97,50 +99,8 @@ const TrailGeneration = () => {
       
       log('trail_generation_started', { attempt: attemptCount + 1 });
       
-      // Simular a geração da trilha (isso deve ser substituído pela chamada real)
-      // Aqui normalmente chamaríamos uma função externa como:
-      // const result = await generateImplementationTrail(progress);
-      
-      // Para fins de demonstração, estamos criando uma trilha simulada
-      // Em produção, esta seção seria substituída por sua implementação real
-      const mockSolutions = [
-        {
-          id: 'mock-solution-1',
-          title: 'Assistente Virtual para Atendimento',
-          description: 'Implemente um assistente virtual baseado em IA para automatizar o atendimento ao cliente.',
-          category: 'Aumento de Receita',
-          difficulty: 'média',
-          estimated_time: 2,
-          thumbnail_url: 'https://via.placeholder.com/300x200/0ABAB5/FFFFFF?text=Assistente+Virtual'
-        },
-        {
-          id: 'mock-solution-2',
-          title: 'Automação de Emails Marketing',
-          description: 'Configure um sistema de automação de emails para aumentar engajamento e conversões.',
-          category: 'Otimização Operacional',
-          difficulty: 'fácil',
-          estimated_time: 1,
-          thumbnail_url: 'https://via.placeholder.com/300x200/0ABAB5/FFFFFF?text=Email+Marketing'
-        },
-        {
-          id: 'mock-solution-3',
-          title: 'Dashboard de Métricas de Negócio',
-          description: 'Crie um dashboard com as principais métricas do seu negócio para decisões estratégicas.',
-          category: 'Gestão Estratégica',
-          difficulty: 'avançada',
-          estimated_time: 3,
-          thumbnail_url: 'https://via.placeholder.com/300x200/0ABAB5/FFFFFF?text=Dashboard'
-        }
-      ];
-      
-      // Definir as soluções da trilha
-      setTrailSolutions(mockSolutions);
-      
-      // Salvar as soluções no progresso do usuário
-      await updateProgress({
-        trail_solutions: mockSolutions,
-        trail_generated_at: new Date().toISOString()
-      });
+      // Gerar a trilha de implementação
+      await generateImplementationTrail(progress);
       
       log('trail_generation_success', {});
       toast.success("Trilha personalizada gerada com sucesso!");
@@ -148,7 +108,7 @@ const TrailGeneration = () => {
       // Marcar como gerado
       setGenerating(false);
       setGenerated(true);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erro ao gerar trilha de implementação:", error);
       
       logError("trail_generation_error", {
@@ -190,19 +150,12 @@ const TrailGeneration = () => {
     try {
       if (!progress?.id) return;
       
-      // Limpar dados da trilha
-      await updateProgress({
-        trail_solutions: null,
-        trail_generated_at: null
-      });
-      
       // Recarregar dados
       await refreshProgress();
       
       setAttemptCount(0);
       setLoadingTimeout(false);
       setError(null);
-      setTrailSolutions([]);
       setGenerated(false);
       
       toast.success("Dados limpos com sucesso. Iniciando geração...");
@@ -227,35 +180,35 @@ const TrailGeneration = () => {
         <TrailGenerationHeader 
           isGenerating={generating} 
           isGenerated={generated} 
-          hasError={!!error}
+          hasError={!!error || !!trailError}
         />
         
-        {!error && !generated && !generating && (
+        {!error && !generated && !generating && !trailLoading && (
           <MilagrinhoMessage
             message="Vamos gerar uma trilha personalizada de implementação baseada nas suas respostas. Esta trilha vai guiar você pelos primeiros passos no VIVER DE IA Club."
           />
         )}
         
-        {generating && !error && (
+        {(generating || trailLoading) && !error && !trailError && (
           <TrailLoadingState 
             attemptCount={attemptCount}
             onForceRefresh={handleForceRefresh}
           />
         )}
         
-        {error && (
+        {(error || trailError) && (
           <TrailErrorState
             onRegenerate={startTrailGeneration}
             onForceRefresh={handleForceRefresh}
             onGoBack={handleGoBack}
             onResetData={handleResetData}
-            errorDetails={error}
+            errorDetails={error || trailError || "Erro desconhecido ao gerar trilha"}
             loadingTimeout={loadingTimeout}
             attemptCount={attemptCount}
           />
         )}
         
-        {generated && !generating && !error && (
+        {generated && !generating && !error && !trailError && (
           <TrailGenerationPanel 
             onboardingData={progress}
             onClose={() => navigate('/dashboard')}

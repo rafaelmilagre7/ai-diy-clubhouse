@@ -17,7 +17,7 @@ interface TrailSolution extends Solution {
 
 export const ImplementationTrail = () => {
   const navigate = useNavigate();
-  const { trail, isLoading, generateImplementationTrail } = useImplementationTrail();
+  const { trail, isLoading, hasContent, refreshTrail, generateImplementationTrail } = useImplementationTrail();
   const [solutions, setSolutions] = useState<TrailSolution[]>([]);
   const [loadingSolutions, setLoadingSolutions] = useState(true);
 
@@ -108,7 +108,7 @@ export const ImplementationTrail = () => {
     return <TrailCardLoader />;
   }
 
-  if (!trail || solutions.length === 0) {
+  if (!hasContent || solutions.length === 0) {
     return <TrailEmptyState onRegenerate={handleRegenerateTrail} />;
   }
 

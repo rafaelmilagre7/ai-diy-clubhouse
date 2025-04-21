@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useImplementationTrail } from "@/hooks/implementation/useImplementationTrail";
 import { useSolutionsData } from "@/hooks/useSolutionsData";
 import { Loader2 } from "lucide-react";
@@ -15,31 +15,48 @@ interface TrailGenerationPanelProps {
 
 export const TrailGenerationPanel: React.FC<TrailGenerationPanelProps> = ({ onboardingData, onClose }) => {
   const navigate = useNavigate();
-  const { trail, isLoading, error } = useImplementationTrail();
+  const { trail, isLoading, error, refreshTrail, generateImplementationTrail } = useImplementationTrail();
   const { solutions: allSolutions, loading: solutionsLoading } = useSolutionsData();
+  const [processedSolutions, setProcessedSolutions] = useState<any[]>([]);
 
-  // Processar soluções da trilha
-  const processedSolutions = React.useMemo(() => {
-    if (!trail || !allSolutions?.length) return [];
+  // Processar soluções da trilha quando os dados estiverem disponíveis
+  useEffect(() => {
+    const processSolutions = () => {
+      if (!trail || !allSolutions?.length) {
+        setProcessedSolutions([]);
+        return;
+      }
 
-    const result = [];
-    
-    ["priority1", "priority2", "priority3"].forEach((priority, idx) => {
-      const items = (trail as any)[priority] || [];
-      items.forEach((item: any) => {
-        const solution = allSolutions.find(s => s.id === item.solutionId);
-        if (solution) {
-          result.push({
-            ...solution,
-            ...item,
-            priority: idx + 1
-          });
-        }
+      const result = [];
+      
+      ["priority1", "priority2", "priority3"].forEach((priority, idx) => {
+        const items = (trail as any)[priority] || [];
+        items.forEach((item: any) => {
+          const solution = allSolutions.find(s => s.id === item.solutionId);
+          if (solution) {
+            result.push({
+              ...solution,
+              ...item,
+              priority: idx + 1
+            });
+          }
+        });
       });
-    });
 
-    return result;
+      setProcessedSolutions(result);
+    };
+
+    processSolutions();
   }, [trail, allSolutions]);
+
+  // Função para regenerar a trilha
+  const handleRegenerate = async () => {
+    try {
+      await generateImplementationTrail(onboardingData || {});
+    } catch (error) {
+      console.error("Erro ao regenerar trilha:", error);
+    }
+  };
 
   if (isLoading || solutionsLoading) {
     return (
@@ -77,7 +94,7 @@ export const TrailGenerationPanel: React.FC<TrailGenerationPanelProps> = ({ onbo
       </h2>
       <TrailSolutions 
         solutions={processedSolutions} 
-        onRegenerate={() => {}} 
+        onRegenerate={handleRegenerate} 
         onClose={onClose} 
       />
     </div>

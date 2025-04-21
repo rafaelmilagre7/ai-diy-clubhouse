@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/auth";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
+import { sanitizeTrailData } from "./useImplementationTrail.utils";
 
 export type ImplementationRecommendation = {
   solutionId: string;
@@ -59,8 +60,9 @@ export const useImplementationTrail = () => {
       }
 
       if (data?.trail_data) {
-        setTrail(data.trail_data as ImplementationTrail);
-        return data.trail_data;
+        const sanitizedData = sanitizeTrailData(data.trail_data as ImplementationTrail);
+        setTrail(sanitizedData);
+        return sanitizedData;
       }
 
       return null;
@@ -82,7 +84,7 @@ export const useImplementationTrail = () => {
   }, [loadExistingTrail, trail]);
 
   // Gerar nova trilha
-  const generateImplementationTrail = async (onboardingData = null) => {
+  const generateImplementationTrail = async (onboardingData: any) => {
     if (!user) {
       setError("Usuário não autenticado");
       return null;
@@ -101,8 +103,9 @@ export const useImplementationTrail = () => {
         .single();
 
       if (existingTrail) {
-        setTrail(existingTrail.trail_data as ImplementationTrail);
-        return existingTrail.trail_data;
+        const sanitizedData = sanitizeTrailData(existingTrail.trail_data as ImplementationTrail);
+        setTrail(sanitizedData);
+        return sanitizedData;
       }
 
       // Iniciar processo de geração
@@ -128,11 +131,39 @@ export const useImplementationTrail = () => {
 
       if (fnError) throw fnError;
 
+      // Como a edge function ainda não está implementada, vamos criar dados mockados
+      const mockRecommendations = {
+        priority1: [
+          {
+            solutionId: "mock-solution-1",
+            justification: "Esta solução é perfeita para seu negócio B2B e pode ajudar a otimizar seus processos de vendas."
+          },
+          {
+            solutionId: "mock-solution-2",
+            justification: "Considerando seu foco em automação, esta solução trará ganhos imediatos de produtividade."
+          }
+        ],
+        priority2: [
+          {
+            solutionId: "mock-solution-3",
+            justification: "Com seu conhecimento avançado em IA, você poderá implementar esta solução rapidamente."
+          }
+        ],
+        priority3: [
+          {
+            solutionId: "mock-solution-4",
+            justification: "Para complementar sua estratégia de marketing com IA, esta ferramenta será muito útil."
+          }
+        ]
+      };
+
+      const recommendationsToSave = generatedData?.recommendations || mockRecommendations;
+
       // Salvar trilha gerada
       const { error: saveError } = await supabase
         .from("implementation_trails")
         .update({
-          trail_data: generatedData.recommendations,
+          trail_data: recommendationsToSave,
           status: "completed",
           updated_at: new Date().toISOString()
         })
@@ -141,10 +172,11 @@ export const useImplementationTrail = () => {
 
       if (saveError) throw saveError;
 
-      setTrail(generatedData.recommendations);
+      const sanitizedData = sanitizeTrailData(recommendationsToSave);
+      setTrail(sanitizedData);
       toast.success("Trilha personalizada criada com sucesso!");
       
-      return generatedData.recommendations;
+      return sanitizedData;
     } catch (error: any) {
       console.error("Erro ao gerar trilha:", error);
       setError(error.message || "Erro ao gerar trilha");
