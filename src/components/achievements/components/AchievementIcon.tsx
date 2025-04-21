@@ -1,7 +1,7 @@
-
 import { cn } from "@/lib/utils";
 import { Achievement } from "@/types/achievementTypes";
 import { getAchievementIcon } from "../utils/achievementUtils";
+import React, { useEffect, useRef } from "react";
 
 interface AchievementIconProps {
   achievement: Achievement;
@@ -9,8 +9,15 @@ interface AchievementIconProps {
 
 export const AchievementIcon = ({ achievement }: AchievementIconProps) => {
   const Icon = getAchievementIcon(achievement);
+  const iconRef = useRef<SVGSVGElement>(null);
 
-  // Aplica cores específicas baseadas na categoria
+  useEffect(() => {
+    if (achievement.isUnlocked && iconRef.current) {
+      iconRef.current.classList.add("item-pop");
+      setTimeout(() => iconRef.current?.classList.remove("item-pop"), 650);
+    }
+  }, [achievement.isUnlocked]);
+
   const getIconColor = () => {
     if (!achievement.isUnlocked) return "text-gray-400";
     
@@ -28,7 +35,6 @@ export const AchievementIcon = ({ achievement }: AchievementIconProps) => {
     }
   };
 
-  // Aplica gradientes específicos baseados na categoria
   const getGradientClass = () => {
     if (!achievement.isUnlocked) return "bg-gray-100";
     
@@ -67,7 +73,7 @@ export const AchievementIcon = ({ achievement }: AchievementIconProps) => {
           achievement.category === "achievement" && "from-viverblue/30 via-transparent to-transparent"
         ]
       )} />
-      <Icon className={cn(
+      <Icon ref={iconRef} className={cn(
         "h-10 w-10 relative z-10 transition-transform duration-300 group-hover:scale-110",
         getIconColor()
       )} />

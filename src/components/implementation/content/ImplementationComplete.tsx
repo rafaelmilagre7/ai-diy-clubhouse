@@ -1,5 +1,4 @@
-
-import React from "react";
+import React, { useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Solution } from "@/lib/supabase";
 import { CheckCircle, Loader2 } from "lucide-react";
@@ -18,10 +17,20 @@ export const ImplementationComplete: React.FC<ImplementationCompleteProps> = ({
   isCompleting,
   isCompleted = false
 }) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (isCompleted && containerRef.current) {
+      containerRef.current.classList.add("highlight-flash");
+      setTimeout(() => {
+        containerRef.current?.classList.remove("highlight-flash");
+      }, 1200);
+    }
+  }, [isCompleted]);
+
   const handleComplete = async () => {
     await onComplete();
     
-    // Trigger confetti after successful completion
     confetti({
       particleCount: 100,
       spread: 70,
@@ -31,7 +40,7 @@ export const ImplementationComplete: React.FC<ImplementationCompleteProps> = ({
   
   if (isCompleted) {
     return (
-      <div className="text-center py-12 space-y-6">
+      <div ref={containerRef} className="text-center py-12 space-y-6 animate-fade-in">
         <div className="bg-green-50 p-6 rounded-lg border border-green-100 mx-auto max-w-xl">
           <CheckCircle className="mx-auto h-16 w-16 text-green-500 mb-4" />
           <h2 className="text-2xl font-bold text-green-800 mb-2">Parabéns!</h2>
@@ -51,7 +60,7 @@ export const ImplementationComplete: React.FC<ImplementationCompleteProps> = ({
   }
   
   return (
-    <div className="py-6 space-y-6">
+    <div className="py-6 space-y-6 animate-fade-in">
       <div className="bg-blue-50 p-6 rounded-lg border border-blue-100">
         <h3 className="text-xl font-semibold text-blue-800 mb-2">Conclusão da Implementação</h3>
         <p className="text-blue-700 mb-4">

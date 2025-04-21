@@ -1,4 +1,3 @@
-
 /* Componentes reutilizáveis (cards, glass, badges, progress, etc) */
 
 @layer components {
@@ -103,5 +102,22 @@
       0 8px 8px rgba(0,0,0,0.03),
       0 16px 16px rgba(0,0,0,0.03);
     transform: translateY(-5px);
+  }
+
+  /* Destaque extra para badges e cards desbloqueados recentemente */
+  .badge-highlight {
+    @apply shadow-lg ring-2 ring-amber-400/60;
+    animation: highlight-flash 1.3s cubic-bezier(0.24,0.7,0.75,0.67);
+  }
+
+  .achievement-flash {
+    @apply ring-2 ring-viverblue/50 shadow-viverblue/20;
+    animation: highlight-flash 1.2s linear;
+  }
+
+  /* Feedback visual para conquista/implementação */
+  .badge-pop {
+    @apply scale-105 z-10 border-2 border-amber-300;
+    animation: item-pop 0.7s cubic-bezier(0.21,0.67,0.71,0.85);
   }
 }

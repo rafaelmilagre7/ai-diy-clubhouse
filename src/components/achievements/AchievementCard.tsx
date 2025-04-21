@@ -1,4 +1,3 @@
-
 import { cn } from "@/lib/utils";
 import { Achievement } from "@/types/achievementTypes";
 import { Card, CardContent } from "@/components/ui/card";
@@ -12,6 +11,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { AchievementProgress } from "./components/AchievementProgress";
 import { AchievementIcon } from "./components/AchievementIcon";
 import { formatDate } from "./utils/achievementUtils";
+import React, { useEffect, useRef } from "react";
 
 interface AchievementCardProps {
   achievement: Achievement;
@@ -19,9 +19,19 @@ interface AchievementCardProps {
 
 export const AchievementCard = ({ achievement }: AchievementCardProps) => {
   const isMobile = useIsMobile();
-  
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (achievement.isUnlocked && cardRef.current) {
+      cardRef.current.classList.add("highlight-flash");
+      setTimeout(() => {
+        cardRef.current?.classList.remove("highlight-flash");
+      }, 1200);
+    }
+  }, [achievement.isUnlocked]);
+
   const cardContent = (
-    <Card className={cn(
+    <Card ref={cardRef} className={cn(
       "relative overflow-hidden transition-all duration-300 hover:transform hover:scale-[1.02]",
       "backdrop-blur-sm border-0 shadow-sm hover:shadow-md",
       achievement.isUnlocked 
@@ -89,7 +99,7 @@ export const AchievementCard = ({ achievement }: AchievementCardProps) => {
         <TooltipTrigger asChild>
           {cardContent}
         </TooltipTrigger>
-        <TooltipContent className="bg-slate-900 text-white border-slate-800 p-3 max-w-xs">
+        <TooltipContent className="bg-slate-900 text-white border-slate-800 p-3 max-w-xs animate-fade-in">
           <p>{achievement.description}</p>
         </TooltipContent>
       </Tooltip>
