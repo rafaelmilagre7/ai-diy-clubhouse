@@ -40,11 +40,10 @@ const BusinessContext = () => {
     setRefreshCount(prev => prev + 1);
   };
 
-  // Modificado para corrigir o tipo de retorno
+  // Handler para salvar dados usando o novo formato
   const handleSave = async (data: any): Promise<void> => {
     try {
-      // Chamando saveStepData e ignorando o valor de retorno
-      await saveStepData(data);
+      await saveStepData({ business_context: data }, false);
     } catch (error) {
       console.error("Erro ao salvar dados:", error);
       toast.error("Erro ao salvar dados. Tente novamente.");

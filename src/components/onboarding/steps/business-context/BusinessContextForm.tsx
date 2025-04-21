@@ -34,7 +34,7 @@ export const BusinessContextForm: React.FC<BusinessContextFormProps> = ({ progre
 
   const onSubmit = async (data: any) => {
     try {
-      // Modificado para passar apenas um objeto
+      // Formatando os dados corretamente para o saveStepData
       await saveStepData({ business_context: data });
       toast.success("Informações salvas com sucesso!");
       navigate("/onboarding/ai-experience");

@@ -1,3 +1,4 @@
+
 import React, { useEffect } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { BusinessModelField } from "./inputs/BusinessModelField";
@@ -36,18 +37,22 @@ export const BusinessContextFormStep: React.FC<BusinessContextFormStepProps> = (
       additional_context: ""
     };
     
-    // Usando business_data ao invés de business_context
+    // Verificar tanto business_data quanto business_context para compatibilidade
     const businessData = progress.business_data || {};
+    const businessContext = progress.business_context || {};
     
-    console.log("Dados iniciais do contexto de negócios:", businessData);
+    // Combinar dados de ambas as fontes, priorizando business_context
+    const combinedData = { ...businessData, ...businessContext };
+    
+    console.log("Dados iniciais do contexto de negócios:", combinedData);
     
     return {
-      business_model: businessData.business_model || "",
-      business_challenges: businessData.business_challenges || [],
-      short_term_goals: businessData.short_term_goals || [],
-      medium_term_goals: businessData.medium_term_goals || [],
-      important_kpis: businessData.important_kpis || [],
-      additional_context: businessData.additional_context || "",
+      business_model: combinedData.business_model || "",
+      business_challenges: combinedData.business_challenges || [],
+      short_term_goals: combinedData.short_term_goals || [],
+      medium_term_goals: combinedData.medium_term_goals || [],
+      important_kpis: combinedData.important_kpis || [],
+      additional_context: combinedData.additional_context || "",
     };
   };
   
@@ -67,9 +72,8 @@ export const BusinessContextFormStep: React.FC<BusinessContextFormStepProps> = (
     try {
       console.log("Enviando dados do contexto do negócio:", data);
       
-      // Chamando a função onSave com os dados como único parâmetro
+      // Chamar onSave com os dados
       await onSave(data);
-      // Não precisamos do toast aqui, pois o hook já vai mostrar um toast de sucesso
     } catch (error) {
       console.error("Erro ao salvar dados do contexto do negócio:", error);
       toast.error("Erro ao salvar dados. Tente novamente.");
@@ -83,12 +87,9 @@ export const BusinessContextFormStep: React.FC<BusinessContextFormStepProps> = (
         const formData = methods.getValues();
         console.log("Auto-salvando dados:", formData);
         
-        // Modificado para usar apenas um parâmetro
         await onSave(formData);
-        // Sem toast para auto-save para não incomodar o usuário
       } catch (error) {
         console.error("Erro ao auto-salvar dados:", error);
-        // Sem toast para erros de auto-save para não incomodar o usuário
       }
     },
     [methods, onSave]

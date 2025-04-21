@@ -4,7 +4,6 @@ import { buildUpdateObject } from "./stepDataBuilder";
 import { navigateAfterStep } from "./stepNavigator";
 import { steps } from "../useStepDefinitions";
 import { toast } from "sonner";
-import { supabase } from "@/lib/supabase";
 
 export function useStepPersistenceCore({
   currentStepIndex,
@@ -17,22 +16,25 @@ export function useStepPersistenceCore({
 }) {
   const { progress, updateProgress, refreshProgress } = useProgress();
 
+  // Simplificando a interface para aceitar apenas um objeto de dados
   const saveStepData = async (
-    stepId: string, 
     data: any,
     shouldNavigate: boolean = true
-  ) => {
+  ): Promise<void> => {
     if (!progress?.id) {
       console.error("Não foi possível salvar dados: ID de progresso não encontrado");
       toast.error("Erro ao salvar dados: ID de progresso não encontrado");
       return;
     }
 
-    console.log(`Salvando dados do passo ${stepId}, navegação automática: ${shouldNavigate ? "SIM" : "NÃO"}`, data);
+    // Identificar qual é o passo atual baseado no currentStepIndex
+    const currentStep = steps[currentStepIndex]?.id || '';
+    
+    console.log(`Salvando dados do passo ${currentStep}, navegação automática: ${shouldNavigate ? "SIM" : "NÃO"}`, data);
 
     try {
       // Montar objeto de atualização para a etapa
-      const updateObj = buildUpdateObject(stepId, data, progress, currentStepIndex);
+      const updateObj = buildUpdateObject(currentStep, data, progress, currentStepIndex);
       if (Object.keys(updateObj).length === 0) {
         console.warn("Objeto de atualização vazio, nada para salvar");
         return;
@@ -53,13 +55,11 @@ export function useStepPersistenceCore({
       
       // Navegar para a próxima etapa apenas se solicitado
       if (shouldNavigate) {
-        console.log(`Iniciando navegação automática após salvar o passo ${stepId}`);
-        navigateAfterStep(stepId, currentStepIndex, navigate, shouldNavigate);
+        console.log(`Iniciando navegação automática após salvar o passo ${currentStep}`);
+        navigateAfterStep(currentStep, currentStepIndex, navigate, shouldNavigate);
       } else {
         console.log("Navegação automática desativada, permanecendo na página atual");
       }
-      
-      return updatedProgress;
     } catch (error) {
       console.error("Erro ao salvar dados:", error);
       toast.error("Erro ao salvar dados. Por favor, tente novamente.");
@@ -80,11 +80,8 @@ export function useStepPersistenceCore({
       });
       
       // Atualiza dados locais
-      const updatedProgress = await refreshProgress();
+      await refreshProgress();
       console.log("Onboarding marcado como completo, gerando trilha de implementação...");
-      
-      // Gerar trilha de implementação personalizada acontecerá na página de trilha
-      // Apenas navegamos para lá, onde a geração ocorrerá com feedback visual
       
       toast.success("Onboarding concluído com sucesso!");
       setTimeout(() => {

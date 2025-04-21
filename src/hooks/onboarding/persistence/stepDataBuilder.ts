@@ -1,4 +1,3 @@
-
 import { steps } from "../useStepDefinitions";
 import { OnboardingData, OnboardingProgress } from "@/types/onboarding";
 
@@ -33,25 +32,23 @@ export function buildUpdateObject(
       updateObj.annual_revenue = data.professional_info.annual_revenue;
     }
   } else if (stepId === "business_context") {
-    // Salvar dados de contexto de negócio
+    // Salvar dados de contexto de negócio em ambos os campos para compatibilidade
     if (data.business_context) {
-      // Verificar se business_data existe no progress para evitar erros
-      const existingBusinessData = progress.business_data || {};
+      // Salvar em business_context
+      const existingBusinessContext = progress.business_context || {};
+      updateObj.business_context = {
+        ...existingBusinessContext,
+        ...data.business_context
+      };
       
+      // Salvar também em business_data para compatibilidade
+      const existingBusinessData = progress.business_data || {};
       updateObj.business_data = {
         ...existingBusinessData,
         ...data.business_context
       };
       
-      // Adicionar log detalhado para debugging
-      console.log("Salvando business_context com valores:", {
-        business_model: data.business_context.business_model,
-        business_challenges: data.business_context.business_challenges?.length || 0,
-        short_term_goals: data.business_context.short_term_goals?.length || 0,
-        medium_term_goals: data.business_context.medium_term_goals?.length || 0,
-        important_kpis: data.business_context.important_kpis?.length || 0,
-        additional_context: data.business_context.additional_context?.length || 0,
-      });
+      console.log("Salvando business_context em ambos os campos:", data.business_context);
     } else {
       console.warn("business_context não encontrado nos dados enviados");
     }
