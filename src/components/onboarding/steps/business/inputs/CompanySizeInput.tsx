@@ -1,52 +1,44 @@
 
 import React from "react";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-
-export const sizeOptions = [
-  "Autônomo/MEI",
-  "1-10 colaboradores",
-  "11-50 colaboradores",
-  "51-200 colaboradores",
-  "201-500 colaboradores",
-  "501-1000 colaboradores",
-  "Mais de 1000",
-];
+import { Control, Controller, FieldError } from "react-hook-form";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface CompanySizeInputProps {
-  value: string;
-  onChange: (value: string) => void;
-  error?: string;
+  control: Control<any>;
+  error?: FieldError;
 }
 
-export const CompanySizeInput: React.FC<CompanySizeInputProps> = ({ value, onChange, error }) => (
-  <div>
-    <Label htmlFor="company_size" className="text-[#222] font-medium mb-1 block">
-      Tamanho da empresa<span className="text-[#0ABAB5] ml-1">*</span>
-    </Label>
-    <Select value={value} onValueChange={onChange} required>
-      <SelectTrigger
-        id="company_size"
-        className={`mt-1 bg-[#f6f8fa] border-[1.4px] ${
-          error ? "border-red-500" : "border-[#eaeaea]"
-        } focus:border-[#0ABAB5] text-[#232323] placeholder:text-gray-400`}
-      >
-        <SelectValue placeholder="Selecione o porte" />
-      </SelectTrigger>
-      <SelectContent className="bg-white text-[#121212] shadow-lg z-50">
-        {sizeOptions.map((size) => (
-          <SelectItem key={size} value={size}>
-            {size}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
-    {error && <p className="text-sm text-red-500 mt-1">{error}</p>}
-  </div>
-);
+export const CompanySizeInput: React.FC<CompanySizeInputProps> = ({ control, error }) => {
+  return (
+    <div className="space-y-2">
+      <Label htmlFor="company_size">
+        Tamanho da Empresa <span className="text-red-500">*</span>
+      </Label>
+      <Controller
+        name="company_size"
+        control={control}
+        rules={{ required: "Selecione o tamanho da empresa" }}
+        render={({ field }) => (
+          <Select 
+            onValueChange={field.onChange} 
+            defaultValue={field.value}
+          >
+            <SelectTrigger id="company_size" className={error ? "border-red-500" : ""}>
+              <SelectValue placeholder="Selecione o tamanho da empresa" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="1-10">1-10 funcionários</SelectItem>
+              <SelectItem value="11-50">11-50 funcionários</SelectItem>
+              <SelectItem value="51-200">51-200 funcionários</SelectItem>
+              <SelectItem value="201-500">201-500 funcionários</SelectItem>
+              <SelectItem value="501-1000">501-1000 funcionários</SelectItem>
+              <SelectItem value="1001+">Mais de 1000 funcionários</SelectItem>
+            </SelectContent>
+          </Select>
+        )}
+      />
+      {error && <p className="text-red-500 text-sm">{error.message}</p>}
+    </div>
+  );
+};

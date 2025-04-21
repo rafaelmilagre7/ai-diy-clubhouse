@@ -1,63 +1,34 @@
 
 import React from "react";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue 
-} from "@/components/ui/select";
+import { Control, Controller, FieldError } from "react-hook-form";
 
 interface CurrentPositionInputProps {
-  value: string;
-  onChange: (value: string) => void;
-  error?: string;
+  control: Control<any>;
+  error?: FieldError;
 }
 
-// Lista de cargos comuns
-const CARGOS = [
-  "CEO / Diretor Executivo",
-  "Diretor / C-Level",
-  "Gerente",
-  "Coordenador",
-  "Especialista",
-  "Analista",
-  "Assistente",
-  "Consultor",
-  "Empreendedor / Proprietário",
-  "Desenvolvedor / Programador",
-  "Marketing / Vendas",
-  "Estudante",
-  "Outro"
-];
-
-export const CurrentPositionInput: React.FC<CurrentPositionInputProps> = ({ value, onChange, error }) => (
-  <div>
-    <Label htmlFor="current_position" className="text-[#222] font-medium mb-1 block">
-      Seu cargo atual<span className="text-[#0ABAB5] ml-1">*</span>
-    </Label>
-    <Select 
-      value={value} 
-      onValueChange={onChange}
-      required
-    >
-      <SelectTrigger 
-        id="current_position"
-        className={`mt-1 bg-[#f6f8fa] border-[1.4px] ${
-          error ? "border-red-500" : "border-[#eaeaea]"
-        } focus:border-[#0ABAB5] text-[#232323] w-full`}
-      >
-        <SelectValue placeholder="Selecione seu cargo" />
-      </SelectTrigger>
-      <SelectContent className="bg-white">
-        {CARGOS.map((cargo) => (
-          <SelectItem key={cargo} value={cargo}>
-            {cargo}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
-    {error && <p className="text-sm text-red-500 mt-1">{error}</p>}
-  </div>
-);
+export const CurrentPositionInput: React.FC<CurrentPositionInputProps> = ({ control, error }) => {
+  return (
+    <div className="space-y-2">
+      <Label htmlFor="current_position">
+        Cargo Atual <span className="text-red-500">*</span>
+      </Label>
+      <Controller
+        name="current_position"
+        control={control}
+        rules={{ required: "O cargo atual é obrigatório" }}
+        render={({ field }) => (
+          <Input
+            id="current_position"
+            {...field}
+            placeholder="Seu cargo na empresa"
+            className={error ? "border-red-500" : ""}
+          />
+        )}
+      />
+      {error && <p className="text-red-500 text-sm">{error.message}</p>}
+    </div>
+  );
+};

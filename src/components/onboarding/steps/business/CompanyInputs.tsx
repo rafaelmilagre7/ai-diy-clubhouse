@@ -6,65 +6,44 @@ import { CompanySectorInput } from "./inputs/CompanySectorInput";
 import { CompanyWebsiteInput } from "./inputs/CompanyWebsiteInput";
 import { CurrentPositionInput } from "./inputs/CurrentPositionInput";
 import { AnnualRevenueInput } from "./inputs/AnnualRevenueInput";
+import { Control, FieldErrors } from "react-hook-form";
 
 interface CompanyInputsProps {
-  companyName: string;
-  setCompanyName: (value: string) => void;
-  companySize: string;
-  setCompanySize: (value: string) => void;
-  companySector: string;
-  setCompanySector: (value: string) => void;
-  companyWebsite: string;
-  setCompanyWebsite: (value: string) => void;
-  currentPosition: string;
-  setCurrentPosition: (value: string) => void;
-  annualRevenue: string;
-  setAnnualRevenue: (value: string) => void;
-  errors?: {[key: string]: string};
+  control: Control<any>;
+  errors: FieldErrors<any>;
+  watch?: (name?: string) => any;
 }
 
 export const CompanyInputs: React.FC<CompanyInputsProps> = ({
-  companyName,
-  setCompanyName,
-  companySize,
-  setCompanySize,
-  companySector,
-  setCompanySector,
-  companyWebsite,
-  setCompanyWebsite,
-  currentPosition,
-  setCurrentPosition,
-  annualRevenue,
-  setAnnualRevenue,
-  errors = {},
+  control,
+  errors,
+  watch,
 }) => {
   return (
     <div className="flex flex-col gap-5">
       <CompanyNameInput 
-        value={companyName} 
-        onChange={setCompanyName}
-        error={errors.companyName} 
+        control={control}
+        error={errors.company_name} 
       />
       <CompanySizeInput 
-        value={companySize} 
-        onChange={setCompanySize}
-        error={errors.companySize}
+        control={control}
+        error={errors.company_size}
       />
       <CompanySectorInput 
-        value={companySector} 
-        onChange={setCompanySector}
-        error={errors.companySector}
+        control={control}
+        error={errors.company_sector}
       />
-      <CompanyWebsiteInput value={companyWebsite} onChange={setCompanyWebsite} />
+      <CompanyWebsiteInput 
+        control={control}
+        error={errors.company_website} 
+      />
       <CurrentPositionInput 
-        value={currentPosition} 
-        onChange={setCurrentPosition}
-        error={errors.currentPosition}
+        control={control}
+        error={errors.current_position}
       />
       <AnnualRevenueInput 
-        value={annualRevenue} 
-        onChange={setAnnualRevenue}
-        error={errors.annualRevenue}
+        control={control}
+        error={errors.annual_revenue}
       />
     </div>
   );

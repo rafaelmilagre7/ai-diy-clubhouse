@@ -10,12 +10,21 @@ import { MilagrinhoMessage } from "@/components/onboarding/MilagrinhoMessage";
 import { CompanyInputs } from "@/components/onboarding/steps/business/CompanyInputs";
 import { toast } from "sonner";
 
+type FormValues = {
+  company_name: string;
+  company_size: string;
+  company_sector: string;
+  company_website: string;
+  current_position: string;
+  annual_revenue: string;
+};
+
 const BusinessGoals = () => {
   const { saveStepData } = useOnboardingSteps();
   const navigate = useNavigate();
   const { progress, isLoading } = useProgress();
   
-  const { control, handleSubmit, watch, formState: { errors, isSubmitting } } = useForm({
+  const { control, handleSubmit, watch, formState: { errors, isSubmitting } } = useForm<FormValues>({
     defaultValues: {
       company_name: progress?.company_name || '',
       company_size: progress?.company_size || '',
@@ -26,7 +35,7 @@ const BusinessGoals = () => {
     }
   });
 
-  const onSubmit = async (data) => {
+  const onSubmit = async (data: FormValues) => {
     try {
       await saveStepData("goals", data);
       toast.success("Informações salvas com sucesso!");
