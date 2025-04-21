@@ -83,7 +83,10 @@ export const TrailMagicExperience: React.FC<TrailMagicExperienceProps> = ({ onFi
       <div className="relative w-full h-80 flex items-center justify-center mb-4 rounded-2xl overflow-hidden">
         {/* Cena 3D */}
         <div className="absolute inset-0 z-0">
-          <MagicScene isAnimating={stage === 'analysis'} />
+          <MagicScene 
+            stage={1} 
+            isAnimating={stage === 'analysis'} 
+          />
         </div>
         
         {/* Overlay com mensagens */}

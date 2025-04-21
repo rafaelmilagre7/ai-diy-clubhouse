@@ -146,9 +146,8 @@ export const useImplementationTrail = () => {
         // Salvar a trilha gerada no banco de dados
         await saveImplementationTrail(user.id, data.recommendations);
         
-        toast({
-          title: "Trilha Personalizada Criada",
-          description: "Sua trilha de implementação foi gerada com sucesso!",
+        toast.success("Trilha Personalizada Criada", {
+          description: "Sua trilha de implementação foi gerada com sucesso!"
         });
         
         return data.recommendations;
@@ -159,10 +158,8 @@ export const useImplementationTrail = () => {
       console.error("Erro ao gerar trilha de implementação:", error);
       setError(error.message || "Erro ao gerar trilha de implementação");
       
-      toast({
-        title: "Erro",
-        description: "Não foi possível gerar sua trilha personalizada. Tente novamente mais tarde.",
-        variant: "destructive",
+      toast.error("Erro", {
+        description: "Não foi possível gerar sua trilha personalizada. Tente novamente mais tarde."
       });
       
       return null;

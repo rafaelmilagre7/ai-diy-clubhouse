@@ -5,11 +5,12 @@ import { OrbitControls, Environment } from "@react-three/drei";
 import { MagicSphere } from "./MagicSphere";
 
 interface MagicSceneProps {
-  stage: number;
+  stage?: number;
   onCanvasCreated?: () => void;
+  isAnimating?: boolean; // Adicionando a prop isAnimating
 }
 
-export function MagicScene({ stage, onCanvasCreated }: MagicSceneProps) {
+export function MagicScene({ stage = 1, onCanvasCreated, isAnimating = false }: MagicSceneProps) {
   return (
     <Canvas 
       shadows 
@@ -25,7 +26,7 @@ export function MagicScene({ stage, onCanvasCreated }: MagicSceneProps) {
       <Suspense fallback={null}>
         <ambientLight intensity={0.5} />
         <spotLight position={[10, 10, 10]} angle={0.15} penumbra={1} />
-        <MagicSphere stage={stage} />
+        <MagicSphere stage={stage} isAnimating={isAnimating} />
         <Environment preset="city" />
         <OrbitControls 
           enablePan={false} 
