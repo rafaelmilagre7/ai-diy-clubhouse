@@ -5,7 +5,7 @@ import { TrailCardList } from "@/components/dashboard/TrailCardList";
 import { Button } from "@/components/ui/button";
 import { Edit, Loader2, RefreshCcw } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { Card, CardContent, CardHeader, CardDescription, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { TrailMagicExperience } from "./TrailMagicExperience";
 
 export const TrailGenerationPanel = ({ onClose }: { onClose?: () => void }) => {
@@ -24,7 +24,7 @@ export const TrailGenerationPanel = ({ onClose }: { onClose?: () => void }) => {
         solutions.push({
           ...item,
           priority: idx + 1,
-          title: item.title || "Solução sem título",
+          title: item.title || (item.solution?.title) || "Solução sem título",
           description: item.description || "Sem descrição disponível.",
           solutionId: item.solutionId || item.id || "sem-id"
         });
@@ -38,10 +38,8 @@ export const TrailGenerationPanel = ({ onClose }: { onClose?: () => void }) => {
     setRegenerating(true);
     await generateImplementationTrail(); // Já busca soluções mais atuais automaticamente!
     setRegenerating(false);
-    // O TrailMagicExperience vai chamar onFinish() quando a experiência acabar (ver abaixo).
   };
 
-  // Quando terminar a mágica, esconder overlay e mostrar trilha.
   const handleFinishMagic = () => {
     setShowMagic(false);
   };
@@ -117,3 +115,4 @@ export const TrailGenerationPanel = ({ onClose }: { onClose?: () => void }) => {
     </div>
   );
 };
+
