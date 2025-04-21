@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { useFormValidation } from "@/hooks/useFormValidation";
 import { toast } from "sonner";
 
-export const usePersonalInfoForm = (initialData: any, onSubmit: (data: any) => void) => {
+export const usePersonalInfoForm = (initialData: any) => {
   const { register, handleSubmit, formState: { errors, touchedFields }, control } = useForm({
     defaultValues: {
       name: initialData?.name || "",
@@ -51,29 +51,9 @@ export const usePersonalInfoForm = (initialData: any, onSubmit: (data: any) => v
     }
   );
 
-  const onFormSubmit = async (data: any) => {
-    if (!validation.isValid) {
-      toast.error("Por favor, corrija os erros antes de continuar");
-      return;
-    }
-    
-    try {
-      await onSubmit({
-        personal_info: {
-          ...data
-        }
-      });
-      toast.success("Dados salvos com sucesso!");
-    } catch (error) {
-      console.error("Erro ao salvar:", error);
-      toast.error("Erro ao salvar os dados. Tente novamente.");
-    }
-  };
-
   return {
     register,
     handleSubmit,
-    onFormSubmit,
     errors,
     touchedFields,
     control,

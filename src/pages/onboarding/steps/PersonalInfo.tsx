@@ -61,8 +61,6 @@ const PersonalInfo = () => {
             onSubmit={handleSaveData}
             isSubmitting={isSubmitting}
             initialData={progress?.personal_info}
-            isLastStep={false}
-            onComplete={completeOnboarding}
           />
         )}
       </div>
