@@ -14,10 +14,10 @@ export function MagicSphere({ stage }: MagicSphereProps) {
 
   // Cores adaptadas para usar formatos que o Three.js reconhece
   const colors = useMemo(() => [
-    { main: "#0ABAB5", glow: "#0ABAB5" },       // Turquesa VIVER DE IA
-    { main: "#0ABAB5", glow: "#87f5f3" },       // Turquesa pulsando 
-    { main: "#9b87f5", glow: "#c4b9ff" },       // Roxo para terceiro estágio
-    { main: "#4ade80", glow: "#86efac" },       // Verde para conclusão
+    { main: new THREE.Color("#0ABAB5"), glow: new THREE.Color("#0ABAB5") },       // Turquesa VIVER DE IA
+    { main: new THREE.Color("#0ABAB5"), glow: new THREE.Color("#87f5f3") },       // Turquesa pulsando 
+    { main: new THREE.Color("#9b87f5"), glow: new THREE.Color("#c4b9ff") },       // Roxo para terceiro estágio
+    { main: new THREE.Color("#4ade80"), glow: new THREE.Color("#86efac") },       // Verde para conclusão
   ], []);
 
   // Velocidade com base no estágio
@@ -55,7 +55,7 @@ export function MagicSphere({ stage }: MagicSphereProps) {
   // Partículas ao redor da esfera
   const particlesMaterial = useMemo(() => {
     // Cores baseadas no estágio atual
-    const color = new THREE.Color(colors[stage].glow);
+    const color = colors[stage].glow;
     return new THREE.PointsMaterial({
       size: 0.1,
       color,

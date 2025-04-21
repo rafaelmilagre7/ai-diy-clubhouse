@@ -1,9 +1,9 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Sparkles, Rocket, WandSparkles } from "lucide-react";
 import { MagicScene } from "./three/MagicScene";
-import * as THREE from 'three'; // Importação explícita do Three.js
+import { ErrorBoundary } from "react-error-boundary";
 
 interface TrailMagicExperienceProps {
   onFinish: () => void;
@@ -33,10 +33,20 @@ const steps = [
   },
 ];
 
+// Componente fallback para erros na cena 3D
+const FallbackScene = () => (
+  <div className="w-64 h-64 rounded-full bg-gradient-to-br from-[#0ABAB5]/30 to-purple-300/30 flex items-center justify-center">
+    <div className="text-[#0ABAB5] rotate-12 transform scale-150">
+      <Sparkles size={64} />
+    </div>
+  </div>
+);
+
 export function TrailMagicExperience({ onFinish, onStep }: TrailMagicExperienceProps) {
   const [currStep, setCurrStep] = useState(0);
   const [isVisible, setIsVisible] = useState(false);
   const [canvasLoaded, setCanvasLoaded] = useState(false);
+  const [render3D, setRender3D] = useState(true);
 
   // Efeito para iniciar animação ao montar o componente
   useEffect(() => {
@@ -46,13 +56,6 @@ export function TrailMagicExperience({ onFinish, onStep }: TrailMagicExperienceP
       setIsVisible(true);
       console.log("TrailMagicExperience agora é visível");
     }, 100);
-    
-    // Verificar se o Three.js está disponível
-    if (typeof THREE !== 'undefined') {
-      console.log("THREE está disponível no TrailMagicExperience", THREE.REVISION);
-    } else {
-      console.warn("THREE não está disponível no TrailMagicExperience!");
-    }
     
     return () => clearTimeout(timer);
   }, []);
@@ -85,20 +88,26 @@ export function TrailMagicExperience({ onFinish, onStep }: TrailMagicExperienceP
   }, [currStep, onFinish]);
 
   // Manipulador manual para finalizar
-  const handleFinish = () => {
+  const handleFinish = useCallback(() => {
     if (currStep === steps.length - 1) {
       onFinish();
     } else {
       // Se clicar antes de completar, avança para o último passo
       setCurrStep(steps.length - 1);
     }
-  };
+  }, [currStep, onFinish]);
+
+  // Handler para erros de renderização 3D
+  const handleRenderError = useCallback((error: Error) => {
+    console.error("Erro na renderização 3D:", error);
+    setRender3D(false);
+  }, []);
 
   // Adicionar manipulador para Canvas carregada
-  const handleCanvasCreated = () => {
+  const handleCanvasCreated = useCallback(() => {
     console.log("Canvas React Three Fiber carregada com sucesso");
     setCanvasLoaded(true);
-  };
+  }, []);
 
   if (!isVisible) {
     console.log("TrailMagicExperience não visível ainda");
@@ -116,10 +125,16 @@ export function TrailMagicExperience({ onFinish, onStep }: TrailMagicExperienceP
         </div>
         <div className="w-full flex flex-col items-center">
           <div className="w-64 h-64 flex items-center justify-center mb-8 drop-shadow-lg">
-            <MagicScene 
-              stage={currStep} 
-              onCanvasCreated={handleCanvasCreated}
-            />
+            <ErrorBoundary FallbackComponent={() => <FallbackScene />} onError={handleRenderError}>
+              {render3D ? (
+                <MagicScene 
+                  stage={currStep} 
+                  onCanvasCreated={handleCanvasCreated}
+                />
+              ) : (
+                <FallbackScene />
+              )}
+            </ErrorBoundary>
           </div>
           <div className="w-full text-center mt-2 px-3">
             <div>{steps[currStep].icon}</div>

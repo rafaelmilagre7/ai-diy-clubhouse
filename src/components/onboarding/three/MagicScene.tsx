@@ -1,6 +1,7 @@
 
-import React from "react";
+import React, { Suspense } from "react";
 import { Canvas } from "@react-three/fiber";
+import { OrbitControls, Environment } from "@react-three/drei";
 import { MagicSphere } from "./MagicSphere";
 
 interface MagicSceneProps {
@@ -10,15 +11,30 @@ interface MagicSceneProps {
 
 export function MagicScene({ stage, onCanvasCreated }: MagicSceneProps) {
   return (
-    <Canvas
-      shadows
-      camera={{ position: [0, 0, 7], fov: 60 }}
-      onCreated={onCanvasCreated}
+    <Canvas 
+      shadows 
+      dpr={[1, 2]} 
+      camera={{ position: [0, 0, 5], fov: 50 }}
+      onCreated={() => {
+        if (onCanvasCreated) {
+          onCanvasCreated();
+        }
+      }}
+      style={{ background: 'transparent' }}
     >
-      <ambientLight intensity={0.45} />
-      <directionalLight position={[2, 10, 5]} intensity={1.7} />
-      <pointLight position={[-10, -10, -10]} intensity={1.1} />
-      <MagicSphere stage={stage} />
+      <Suspense fallback={null}>
+        <ambientLight intensity={0.5} />
+        <spotLight position={[10, 10, 10]} angle={0.15} penumbra={1} />
+        <MagicSphere stage={stage} />
+        <Environment preset="city" />
+        <OrbitControls 
+          enablePan={false} 
+          enableZoom={false} 
+          rotateSpeed={0.5}
+          autoRotate 
+          autoRotateSpeed={0.5} 
+        />
+      </Suspense>
     </Canvas>
   );
 }
