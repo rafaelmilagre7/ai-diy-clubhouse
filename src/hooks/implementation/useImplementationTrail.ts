@@ -1,7 +1,6 @@
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
-import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/contexts/auth";
 import { useProgress } from "@/hooks/onboarding/useProgress";
 import { toast } from "sonner";
@@ -22,20 +21,11 @@ export type ImplementationTrail = {
 export const useImplementationTrail = () => {
   const { user } = useAuth();
   const { progress } = useProgress();
-  const { toast: uiToast } = useToast();
   const [trail, setTrail] = useState<ImplementationTrail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [apiCallStartTime, setApiCallStartTime] = useState<number | null>(null);
-  const apiTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Limpar timeout de API ao desmontar
-  useEffect(() => {
-    return () => {
-      if (apiTimeoutRef.current) clearTimeout(apiTimeoutRef.current);
-    };
-  }, []);
 
   const loadExistingTrail = useCallback(async (forceRefresh = false) => {
     if (!user) {
@@ -54,21 +44,8 @@ export const useImplementationTrail = () => {
       setError(null);
       console.log("Carregando trilha existente para usuário:", user.id);
       
-      // Monitorar timeout da API
       setApiCallStartTime(Date.now());
       
-      // Configurar timeout de 20 segundos
-      if (apiTimeoutRef.current) clearTimeout(apiTimeoutRef.current);
-      apiTimeoutRef.current = setTimeout(() => {
-        if (isLoading && apiCallStartTime && isApiTimeout(apiCallStartTime)) {
-          console.error("Timeout ao carregar trilha após", Date.now() - apiCallStartTime, "ms");
-          setError("Tempo limite excedido ao carregar a trilha");
-          setIsLoading(false);
-          setApiCallStartTime(null);
-        }
-      }, 20000);
-      
-      // Modificado para buscar todas as trilhas e pegar a mais recente
       const { data, error: loadError } = await supabase
         .from("implementation_trails")
         .select("*")
@@ -76,11 +53,6 @@ export const useImplementationTrail = () => {
         .order('updated_at', { ascending: false })
         .limit(1);
 
-      // Limpar timeout
-      if (apiTimeoutRef.current) {
-        clearTimeout(apiTimeoutRef.current);
-        apiTimeoutRef.current = null;
-      }
       setApiCallStartTime(null);
 
       if (loadError) {
@@ -119,16 +91,14 @@ export const useImplementationTrail = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [user, trail, lastUpdated, isLoading, apiCallStartTime]);
+  }, [user, trail, lastUpdated]);
 
-  // Limpar trilhas duplicadas e manter apenas a mais recente
   const cleanupDuplicateTrails = useCallback(async () => {
     if (!user) return;
 
     try {
       console.log("Verificando trilhas duplicadas...");
       
-      // Buscar todas as trilhas do usuário
       const { data, error } = await supabase
         .from("implementation_trails")
         .select("*")
@@ -137,11 +107,9 @@ export const useImplementationTrail = () => {
         
       if (error) throw error;
       
-      // Se tiver mais de uma trilha, remover as duplicatas mantendo a mais recente
       if (data && data.length > 1) {
         console.log(`Encontradas ${data.length} trilhas. Removendo duplicatas...`);
         
-        // Pular a primeira (mais recente) e deletar as demais
         const trailsToDelete = data.slice(1).map(t => t.id);
         
         const { error: deleteError } = await supabase
@@ -158,7 +126,7 @@ export const useImplementationTrail = () => {
     }
   }, [user]);
 
-  const generateImplementationTrail = async (onboardingData: any = null) => {
+  const generateImplementationTrail = async () => {
     if (!user) {
       setError("Usuário não autenticado");
       return null;
@@ -169,17 +137,6 @@ export const useImplementationTrail = () => {
       setError(null);
       setApiCallStartTime(Date.now());
 
-      // Configurar timeout de 30 segundos para geração (mais longa que carregamento)
-      if (apiTimeoutRef.current) clearTimeout(apiTimeoutRef.current);
-      apiTimeoutRef.current = setTimeout(() => {
-        if (isLoading && apiCallStartTime && isApiTimeout(apiCallStartTime, 30000)) {
-          console.error("Timeout ao gerar trilha após", Date.now() - apiCallStartTime, "ms");
-          setError("Tempo limite excedido ao gerar a trilha");
-          setIsLoading(false);
-          setApiCallStartTime(null);
-        }
-      }, 30000);
-
       const { data: solutions, error: solutionsError } = await supabase
         .from("solutions")
         .select("*")
@@ -189,27 +146,20 @@ export const useImplementationTrail = () => {
         throw solutionsError;
       }
 
-      const onboardingProgress = onboardingData || progress;
-
-      if (!onboardingProgress) {
+      // Usar dados do onboarding
+      if (!progress) {
         throw new Error("Dados de onboarding não disponíveis");
       }
 
-      console.log("Gerando trilha de implementação com dados:", 
-        JSON.stringify(onboardingProgress, null, 2).substring(0, 300) + "...");
+      console.log("Gerando trilha de implementação com dados do onboarding");
 
       const { data, error: fnError } = await supabase.functions.invoke("generate-implementation-trail", {
         body: {
-          onboardingProgress,
+          onboardingProgress: progress,
           availableSolutions: solutions,
         },
       });
 
-      // Limpar timeout
-      if (apiTimeoutRef.current) {
-        clearTimeout(apiTimeoutRef.current);
-        apiTimeoutRef.current = null;
-      }
       setApiCallStartTime(null);
 
       if (fnError) {
@@ -220,16 +170,13 @@ export const useImplementationTrail = () => {
         throw new Error("Resposta inválida da função de recomendação");
       }
 
-      console.log("Trilha de implementação gerada:", 
-        JSON.stringify(data.recommendations, null, 2).substring(0, 300) + "...");
+      console.log("Trilha de implementação gerada");
       
       if (hasTrailContent(data.recommendations)) {
         setTrail(data.recommendations);
         setLastUpdated(new Date());
         
-        // Limpar trilhas duplicadas antes de salvar nova
         await cleanupDuplicateTrails();
-        
         await saveImplementationTrail(user.id, data.recommendations);
         
         toast.success("Trilha Personalizada Criada", {
@@ -254,10 +201,6 @@ export const useImplementationTrail = () => {
     } finally {
       setIsLoading(false);
       setApiCallStartTime(null);
-      if (apiTimeoutRef.current) {
-        clearTimeout(apiTimeoutRef.current);
-        apiTimeoutRef.current = null;
-      }
     }
   };
 
@@ -288,8 +231,6 @@ export const useImplementationTrail = () => {
 
   useEffect(() => {
     loadExistingTrail();
-    
-    // Limpar trilhas duplicadas ao inicializar o hook
     cleanupDuplicateTrails();
   }, [loadExistingTrail, cleanupDuplicateTrails]);
 

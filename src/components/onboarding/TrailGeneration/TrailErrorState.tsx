@@ -1,27 +1,21 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { AlertCircle, RefreshCw, ArrowLeft, Home, AlertTriangle, HelpCircle, RotateCcw } from "lucide-react";
+import { AlertCircle, RefreshCw, ArrowLeft, Home } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
 interface TrailErrorStateProps {
-  loadingTimeout: boolean;
   onRegenerate: () => void;
   onForceRefresh: () => void;
   onGoBack: () => void;
-  onResetData?: () => void;
-  attemptCount?: number;
   errorDetails?: string;
 }
 
 export const TrailErrorState: React.FC<TrailErrorStateProps> = ({
-  loadingTimeout,
   onRegenerate,
   onForceRefresh,
   onGoBack,
-  onResetData,
-  attemptCount = 0,
   errorDetails,
 }) => {
   const navigate = useNavigate();
@@ -31,62 +25,16 @@ export const TrailErrorState: React.FC<TrailErrorStateProps> = ({
     navigate("/dashboard");
   };
 
-  const handleHelp = () => {
-    toast.info("Suporte técnico solicitado");
-    // Redirecionamento para suporte ou abrir modal de ajuda
-  };
-
-  const handleResetData = () => {
-    if (onResetData) {
-      toast.info("Limpando dados e reiniciando...");
-      onResetData();
-    }
-  };
-
-  const getErrorMessage = () => {
-    if (loadingTimeout) {
-      return "O carregamento da trilha excedeu o tempo limite. Isso pode ocorrer devido à sobrecarga do servidor ou problemas de conexão.";
-    } else if (errorDetails?.includes("trilha gerada não contém recomendações") || 
-               errorDetails?.includes("sem conteúdo") ||
-               errorDetails?.includes("Trilha sem soluções válidas")) {
-      return "Não foi possível gerar recomendações adequadas para sua trilha. Tente novamente com informações atualizadas no onboarding.";
-    } else {
-      return "Ocorreu um erro ao carregar sua trilha personalizada. Você pode tentar novamente ou voltar para o onboarding.";
-    }
-  };
-
-  const getErrorAction = () => {
-    if (loadingTimeout) {
-      return "Tente novamente mais tarde ou use o botão abaixo para forçar uma nova tentativa.";
-    } else if (errorDetails?.includes("trilha gerada não contém recomendações") || 
-               errorDetails?.includes("sem conteúdo") ||
-               errorDetails?.includes("Trilha sem soluções válidas")) {
-      return "Sugerimos voltar ao onboarding e verificar suas respostas ou tentar gerar uma nova trilha.";
-    } else {
-      return "Tente gerar uma nova trilha ou retorne ao dashboard para explorar outras funcionalidades.";
-    }
-  };
-
   return (
     <div className="max-w-xl mx-auto my-8 p-6 bg-amber-50 rounded-lg border border-amber-200 flex flex-col items-center">
-      {loadingTimeout ? (
-        <AlertTriangle className="text-amber-500 h-12 w-12 mb-4" />
-      ) : (
-        <AlertCircle className="text-amber-500 h-12 w-12 mb-4" />
-      )}
+      <AlertCircle className="text-amber-500 h-12 w-12 mb-4" />
       
       <h3 className="text-xl font-medium text-gray-800 mb-2">
-        {loadingTimeout
-          ? "Tempo limite excedido"
-          : "Erro ao carregar trilha"}
+        Erro ao carregar trilha
       </h3>
       
       <p className="text-gray-700 mb-4 text-center">
-        {getErrorMessage()}
-      </p>
-      
-      <p className="text-gray-600 mb-4 text-center text-sm">
-        {getErrorAction()}
+        Não foi possível carregar sua trilha personalizada. Você pode tentar novamente ou voltar para o onboarding.
       </p>
       
       {errorDetails && (
@@ -133,40 +81,7 @@ export const TrailErrorState: React.FC<TrailErrorStateProps> = ({
           <Home className="h-4 w-4" />
           Ir para Dashboard
         </Button>
-        
-        {onResetData && (
-          <Button
-            variant="ghost"
-            onClick={handleResetData}
-            className="flex items-center gap-2 flex-1"
-          >
-            <RotateCcw className="h-4 w-4" />
-            Reiniciar Dados
-          </Button>
-        )}
-        
-        <Button
-          variant="ghost"
-          onClick={handleHelp}
-          className="flex items-center gap-2 flex-1"
-        >
-          <HelpCircle className="h-4 w-4" />
-          Obter Ajuda
-        </Button>
       </div>
-      
-      {attemptCount > 1 && (
-        <div className="mt-5 text-xs text-gray-500 bg-white p-3 rounded-md w-full border border-gray-100">
-          <p className="font-medium mb-1">Dicas de solução:</p>
-          <ul className="list-disc pl-5 mt-1 space-y-1">
-            <li>Verifique sua conexão com a internet</li>
-            <li>Retorne ao onboarding e revise suas respostas</li>
-            <li>Tente acessar a página do dashboard e depois voltar</li>
-            <li>Limpe o cache do navegador e tente novamente</li>
-            <li>Se o problema persistir, entre em contato com o suporte técnico</li>
-          </ul>
-        </div>
-      )}
     </div>
   );
 };

@@ -22,33 +22,21 @@ serve(async (req) => {
       throw new Error("OpenAI API Key não está configurada");
     }
 
-    if (!onboardingProgress || !availableSolutions) {
-      throw new Error("Dados de onboarding ou soluções disponíveis não fornecidos");
+    if (!onboardingProgress) {
+      throw new Error("Dados de onboarding não fornecidos");
     }
 
-    // Validar soluções disponíveis
-    if (!Array.isArray(availableSolutions) || availableSolutions.length === 0) {
+    if (!availableSolutions || !Array.isArray(availableSolutions) || availableSolutions.length === 0) {
       throw new Error("Lista de soluções disponíveis vazia ou inválida");
     }
 
-    // Criar um sumário dos dados de onboarding que são relevantes para recomendações
-    const userProfile = {
-      businessGoals: onboardingProgress.business_goals,
-      businessContext: onboardingProgress.business_data,
-      aiExperience: onboardingProgress.ai_experience,
-      implementationPreferences: onboardingProgress.implementation_preferences,
-      professionalInfo: onboardingProgress.professional_info,
-    };
-
-    console.log("Gerando recomendações para:", JSON.stringify(userProfile));
-    console.log("Soluções disponíveis:", JSON.stringify(availableSolutions.slice(0, 3))); // Log das primeiras 3 soluções
-
-    // Definir um timeout para a chamada da API
+    // Simplificação: usar um modelo mais simples para recomendações
+    // e com timeout reduzido para evitar problemas
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 25000); // 25 segundos de timeout
-
+    const timeoutId = setTimeout(() => controller.abort(), 15000); // reduzido para 15 segundos
+    
     try {
-      // Chamar a OpenAI API para gerar recomendações
+      // Chamar a OpenAI API para gerar recomendações com prompt simplificado
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: {
@@ -56,42 +44,36 @@ serve(async (req) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'gpt-4o-mini',
+          model: 'gpt-3.5-turbo', // Usando modelo mais rápido
           messages: [
             {
               role: 'system',
-              content: `Você é um especialista em implementação de IA em negócios. Sua tarefa é analisar o perfil do usuário e criar uma trilha personalizada de implementação baseada nas soluções disponíveis. 
-              Priorize as soluções com base nas necessidades e objetivos do negócio do usuário, nível de conhecimento em IA, desafios e metas.
-              Organize em três níveis de prioridade: 1 (alta prioridade/começar aqui), 2 (prioridade média), 3 (pode ser implementado depois).
-              Para cada solução, inclua uma breve justificativa customizada sobre por que esta solução específica se encaixa no perfil do usuário.
-              IMPORTANTE: Sua resposta DEVE ser em formato JSON válido sem nenhum texto adicional.`
+              content: `Você é um especialista em implementação de IA em negócios. Crie uma trilha personalizada organizada em três níveis de prioridade (1, 2, 3) com uma breve justificativa para cada solução.`
             },
             {
               role: 'user',
-              content: `Perfil do usuário: ${JSON.stringify(userProfile)}
+              content: `Perfil do usuário: ${JSON.stringify(onboardingProgress)}
               
               Soluções disponíveis: ${JSON.stringify(availableSolutions.map(s => ({
                 id: s.id,
                 title: s.title,
                 description: s.description, 
                 category: s.category,
-                difficulty: s.difficulty,
-                tags: s.tags || []
               })))}
               
-              Crie uma trilha de implementação com estas soluções organizadas por prioridade (1, 2 e 3) com justificativas customizadas.
-              Responda APENAS em formato JSON, seguindo esta estrutura:
+              Crie uma trilha de implementação com as soluções organizadas por prioridade (1, 2 e 3).
+              Responda APENAS em formato JSON:
               {
                 "priority1": [
-                  { "solutionId": "id-da-solucao", "justification": "Justificativa específica para o perfil" }
+                  { "solutionId": "id-da-solucao", "justification": "Justificativa específica" }
                 ],
                 "priority2": [...],
                 "priority3": [...]
               }`
             }
           ],
-          temperature: 0.7,
-          max_tokens: 2000,
+          temperature: 0.5,
+          max_tokens: 1500,
         }),
         signal: controller.signal,
       });
@@ -101,41 +83,39 @@ serve(async (req) => {
       const data = await response.json();
       
       if (!data.choices || !data.choices[0] || !data.choices[0].message) {
-        console.error("Resposta inválida da OpenAI API:", data);
         throw new Error("Resposta inválida da OpenAI API");
       }
 
-      const assistantResponse = data.choices[0].message.content;
-      console.log("Resposta da OpenAI (primeiros 100 caracteres):", assistantResponse.substring(0, 100));
-      
-      // Extrair o JSON da resposta do assistente
+      // Extrair e validar as recomendações
       let recommendations;
       try {
-        recommendations = JSON.parse(assistantResponse);
-      } catch (error) {
-        // Se não for possível extrair JSON diretamente, tentar remover texto ao redor
-        console.error("Erro ao parsear resposta:", error);
-        const jsonMatch = assistantResponse.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
-          recommendations = JSON.parse(jsonMatch[0]);
-        } else {
-          throw new Error("Não foi possível extrair recomendações no formato JSON");
-        }
-      }
-
-      // Verificar se o JSON tem a estrutura esperada
-      if (!recommendations.priority1 || !Array.isArray(recommendations.priority1)) {
-        throw new Error("Formato de recomendações inválido: priority1 ausente ou não é um array");
-      }
-
-      // Validar que temos pelo menos uma recomendação
-      const totalRecommendations = 
-        (Array.isArray(recommendations.priority1) ? recommendations.priority1.length : 0) +
-        (Array.isArray(recommendations.priority2) ? recommendations.priority2.length : 0) +
-        (Array.isArray(recommendations.priority3) ? recommendations.priority3.length : 0);
+        recommendations = JSON.parse(data.choices[0].message.content);
         
-      if (totalRecommendations === 0) {
-        throw new Error("Nenhuma recomendação foi gerada");
+        // Validação básica da estrutura
+        if (!recommendations.priority1 || !Array.isArray(recommendations.priority1)) {
+          throw new Error("Formato de recomendações inválido");
+        }
+        
+        // Garantir que temos pelo menos uma recomendação
+        const totalRecommendations = 
+          (recommendations.priority1?.length || 0) +
+          (recommendations.priority2?.length || 0) +
+          (recommendations.priority3?.length || 0);
+          
+        if (totalRecommendations === 0) {
+          throw new Error("Nenhuma recomendação foi gerada");
+        }
+        
+        // Normalizar a estrutura para garantir consistência
+        recommendations = {
+          priority1: Array.isArray(recommendations.priority1) ? recommendations.priority1 : [],
+          priority2: Array.isArray(recommendations.priority2) ? recommendations.priority2 : [],
+          priority3: Array.isArray(recommendations.priority3) ? recommendations.priority3 : []
+        };
+        
+      } catch (parseError) {
+        console.error("Erro ao analisar resposta:", parseError);
+        throw new Error("Não foi possível processar as recomendações");
       }
 
       return new Response(JSON.stringify({ recommendations }), {

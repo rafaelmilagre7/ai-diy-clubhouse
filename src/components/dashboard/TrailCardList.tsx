@@ -10,6 +10,22 @@ interface TrailCardListProps {
 }
 
 export function TrailCardList({ solutions, onSolutionClick, onSeeAll }: TrailCardListProps) {
+  // Verificar se temos soluções
+  if (!solutions || solutions.length === 0) {
+    return (
+      <div className="text-center py-4">
+        <p className="text-gray-500">Nenhuma solução encontrada em sua trilha.</p>
+        <Button 
+          onClick={onSeeAll}
+          variant="outline"
+          className="mt-4"
+        >
+          Ver todas as soluções disponíveis
+        </Button>
+      </div>
+    );
+  }
+
   // Ordenar soluções por prioridade
   const sortedSolutions = [...solutions].sort((a, b) => a.priority - b.priority);
 
@@ -18,20 +34,14 @@ export function TrailCardList({ solutions, onSolutionClick, onSeeAll }: TrailCar
   const priority2 = sortedSolutions.filter(s => s.priority === 2);
   const priority3 = sortedSolutions.filter(s => s.priority === 3);
 
-  // Corrigir bug: garantir título sempre visível (fallback)
-  const safeGetTitle = (solution: any) => 
-    solution.title && typeof solution.title === "string"
-      ? solution.title
-      : "Solução sem título";
-
-  // Renderizar grupo visual para cada prioridade com divisória moderna
-  const renderPriorityGroup = (title: string, solutions: any[], color: string, border?: boolean) => {
+  // Renderizar grupo visual para cada prioridade
+  const renderPriorityGroup = (title: string, solutions: any[], color: string) => {
     if (solutions.length === 0) return null;
 
     return (
-      <div className={`mb-8`}>
+      <div className="mb-8">
         <div className="flex items-center gap-2 mb-4">
-          <Badge className={`${color} text-white font-medium px-3 py-1 rounded-full text-sm shadow`} variant="outline">
+          <Badge className={`${color} text-white font-medium px-3 py-1 rounded-full text-sm`} variant="outline">
             {title}
           </Badge>
           <span className="flex-1 border-t border-[#0ABAB5]/10"></span>
@@ -40,7 +50,7 @@ export function TrailCardList({ solutions, onSolutionClick, onSeeAll }: TrailCar
           {solutions.map(solution => (
             <TrailSolutionCard
               key={solution.solutionId}
-              solution={{ ...solution, title: safeGetTitle(solution) }}
+              solution={solution}
               onClick={onSolutionClick}
             />
           ))}
@@ -59,7 +69,7 @@ export function TrailCardList({ solutions, onSolutionClick, onSeeAll }: TrailCar
         <Button
           variant="outline"
           onClick={onSeeAll}
-          className="text-[#0ABAB5] border-[#0ABAB5] hover:bg-[#0ABAB5]/10 hover:scale-105 transition-all"
+          className="text-[#0ABAB5] border-[#0ABAB5] hover:bg-[#0ABAB5]/10"
         >
           Ver todas as soluções
         </Button>
