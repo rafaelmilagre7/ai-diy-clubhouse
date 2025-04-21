@@ -10,9 +10,14 @@ import { useNavigate } from "react-router-dom";
 interface DashboardLayoutProps {
   searchQuery?: string;
   onSearchChange?: (query: string) => void;
+  children?: ReactNode;
 }
 
-export const DashboardLayout = ({ searchQuery = "", onSearchChange = () => {} }: DashboardLayoutProps) => {
+export const DashboardLayout = ({ 
+  searchQuery = "", 
+  onSearchChange = () => {},
+  children
+}: DashboardLayoutProps) => {
   const location = useLocation();
   const { progress, isLoading } = useProgress();
   const navigate = useNavigate();
@@ -38,7 +43,7 @@ export const DashboardLayout = ({ searchQuery = "", onSearchChange = () => {} }:
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Conteúdo principal */}
           <div className="md:col-span-2">
-            <Outlet />
+            {children || <Outlet />}
           </div>
           
           {/* Sidebar com trilha de implementação */}

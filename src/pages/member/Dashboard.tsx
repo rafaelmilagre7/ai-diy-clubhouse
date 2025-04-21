@@ -9,6 +9,7 @@ import { SolutionsGrid } from "@/components/dashboard/SolutionsGrid";
 import { CategoryTabs } from "@/components/dashboard/CategoryTabs";
 import { Card } from "@/components/ui/card";
 import { ProgressSummary } from "@/components/dashboard/ProgressSummary";
+import { Solution } from "@/hooks/dashboard/types";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -69,7 +70,7 @@ const Dashboard = () => {
             </Card>
           ) : (
             <SolutionsGrid 
-              solutions={activeSolutions} 
+              solutions={activeSolutions as Solution[]} 
               onSolutionClick={handleSelectSolution}
               category="inProgress"
             />
@@ -84,7 +85,7 @@ const Dashboard = () => {
             </Card>
           ) : (
             <SolutionsGrid 
-              solutions={recommendedSolutions} 
+              solutions={recommendedSolutions as Solution[]} 
               onSolutionClick={handleSelectSolution}
               category="recommended"
             />

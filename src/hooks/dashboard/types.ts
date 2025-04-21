@@ -1,27 +1,20 @@
 
-import { Solution as BaseSolution } from "@/lib/supabase";
+import { Solution as SupabaseSolution } from "@/lib/supabase";
 
-// Estender o tipo Solution para incluir a propriedade modules
-export interface Solution extends Omit<BaseSolution, 'author_id'> {
-  modules?: {
-    id: string;
-    title: string;
-    type: string;
-    module_order: number;
-    content?: any;
-  }[];
-  author_id?: string; // Tornando o campo opcional para compatibilidade
+// Definir tipo Solution que estende a SupabaseSolution mas torna author_id opcional
+export interface Solution extends Omit<SupabaseSolution, 'author_id'> {
+  author_id?: string;
+  difficulty?: string;
+  modules?: any[];
 }
 
 export interface UserProgress {
-  [solutionId: string]: {
+  [key: string]: {
     started: boolean;
-    modules: {
-      [moduleId: string]: {
-        completed: boolean;
-        lastAccessed: string;
-      }
-    };
+    modules: Record<string, {
+      completed: boolean;
+      lastAccessed: string;
+    }>;
     lastAccessed: string;
     completedModules: number;
     totalModules: number;

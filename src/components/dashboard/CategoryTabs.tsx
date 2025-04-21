@@ -1,66 +1,38 @@
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ReactNode } from "react";
-import { Solution } from "@/lib/supabase";
-import { SolutionsGrid } from "./SolutionsGrid";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
-interface CategoryTabsProps {
+export interface CategoryTabsProps {
   activeCategory: string;
-  onCategoryChange: (category: string) => void;
-  filteredSolutions: Solution[];
-  onSelectSolution: (id: string) => void;
-  children?: ReactNode;
+  setActiveCategory: (category: string) => void;
 }
 
-export const CategoryTabs = ({
-  activeCategory,
-  onCategoryChange,
-  filteredSolutions,
-  onSelectSolution,
-  children,
-}: CategoryTabsProps) => {
+export const CategoryTabs = ({ activeCategory, setActiveCategory }: CategoryTabsProps) => {
+  const categories = [
+    { id: "all", name: "Todas" },
+    { id: "revenue", name: "Aumento de Receita" },
+    { id: "operational", name: "Otimização Operacional" },
+    { id: "strategic", name: "Gestão Estratégica" }
+  ];
+
   return (
-    <Tabs defaultValue={activeCategory} onValueChange={onCategoryChange}>
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-semibold">Soluções disponíveis</h2>
-        
-        <TabsList>
-          <TabsTrigger value="all">Todas</TabsTrigger>
-          <TabsTrigger value="revenue" className="text-revenue">Receita</TabsTrigger>
-          <TabsTrigger value="operational" className="text-operational">Operacional</TabsTrigger>
-          <TabsTrigger value="strategy" className="text-strategy">Estratégia</TabsTrigger>
-        </TabsList>
-      </div>
-      
-      <TabsContent value="all" className="mt-6">
-        <SolutionsGrid 
-          solutions={filteredSolutions}
-          onSelectSolution={onSelectSolution}
-        />
-      </TabsContent>
-      
-      <TabsContent value="revenue" className="mt-6">
-        <SolutionsGrid 
-          solutions={filteredSolutions.filter(s => s.category === "revenue")}
-          onSelectSolution={onSelectSolution}
-        />
-      </TabsContent>
-      
-      <TabsContent value="operational" className="mt-6">
-        <SolutionsGrid 
-          solutions={filteredSolutions.filter(s => s.category === "operational")}
-          onSelectSolution={onSelectSolution}
-        />
-      </TabsContent>
-      
-      <TabsContent value="strategy" className="mt-6">
-        <SolutionsGrid 
-          solutions={filteredSolutions.filter(s => s.category === "strategy")}
-          onSelectSolution={onSelectSolution}
-        />
-      </TabsContent>
-      
-      {children}
-    </Tabs>
+    <div className="flex space-x-2 overflow-x-auto pb-2 md:pb-0">
+      {categories.map((category) => (
+        <Button
+          key={category.id}
+          onClick={() => setActiveCategory(category.id)}
+          variant="ghost"
+          size="sm"
+          className={cn(
+            "text-sm whitespace-nowrap",
+            activeCategory === category.id
+              ? "bg-[#0ABAB5]/10 text-[#0ABAB5] hover:bg-[#0ABAB5]/20 hover:text-[#0ABAB5]"
+              : "text-gray-600 hover:text-gray-900"
+          )}
+        >
+          {category.name}
+        </Button>
+      ))}
+    </div>
   );
 };
