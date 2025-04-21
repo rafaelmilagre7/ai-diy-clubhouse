@@ -31,6 +31,9 @@ export function navigateAfterStep(stepId: string, currentStepIndex: number, navi
   } else if (stepId === "review") {
     // Direcionar diretamente para a geração da trilha após a revisão
     nextPath = "/onboarding/trail-generation?autoGenerate=true";
+  } else if (stepId === "goals") {
+    // Caso especial para tratamento dos dados de empresa (componente reutilizado)
+    nextPath = "/onboarding/business-context";
   } else {
     // fallback genérico pelo steps[]
     const nextStepIndex = Math.min(currentStepIndex + 1, steps.length - 1);

@@ -25,17 +25,16 @@ const ProfessionalData = () => {
       setIsSubmitting(true);
       console.log("Salvando dados profissionais:", data);
       
-      // Modificado para usar apenas um parâmetro
-      await saveStepData(data);
+      // Modificação importante: usar 'professional_data' como identificador da etapa
+      await saveStepData({
+        stepId: "professional_data",
+        data: data
+      });
       
       console.log("Dados profissionais salvos com sucesso, navegando para a próxima etapa");
       toast.success("Informações salvas com sucesso!");
       
-      // Navegação manual para garantir
-      setTimeout(() => {
-        navigate("/onboarding/business-context");
-      }, 500);
-      
+      // Não vamos mais navegar manualmente - a função saveStepData já fará isso
     } catch (error) {
       console.error("Erro ao salvar dados profissionais:", error);
       toast.error("Erro ao salvar as informações. Tente novamente.");

@@ -7,7 +7,7 @@ import { ArrowRight } from "lucide-react";
 import { useForm } from "react-hook-form";
 
 interface ProfessionalDataStepProps {
-  onSubmit: (stepId: string, data: Partial<OnboardingData>) => void;
+  onSubmit: (data: Partial<OnboardingData>) => void;
   isSubmitting: boolean;
   isLastStep: boolean;
   onComplete: () => void;
@@ -85,6 +85,7 @@ export const ProfessionalDataStep = ({
   }, [initialData, reset]);
 
   const onFormSubmit = (data: FormValues) => {
+    // Atualizado para formato mais simples que será tratado no useOnboardingSteps
     const professionalData: Partial<OnboardingData> = {
       professional_info: {
         company_name: data.company_name,
@@ -94,10 +95,16 @@ export const ProfessionalDataStep = ({
         current_position: data.current_position,
         annual_revenue: data.annual_revenue,
       },
+      company_name: data.company_name,
+      company_size: data.company_size,
+      company_sector: data.company_sector,
+      company_website: data.company_website,
+      current_position: data.current_position,
+      annual_revenue: data.annual_revenue,
     };
     
-    console.log("Enviando dados profissionais:", professionalData);
-    onSubmit("professional_data", professionalData);
+    console.log("Enviando dados profissionais para salvar:", professionalData);
+    onSubmit(professionalData);
   };
 
   return (
