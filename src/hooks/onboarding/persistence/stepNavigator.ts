@@ -1,6 +1,5 @@
 
 import { steps } from "../useStepDefinitions";
-import { toast } from "sonner";
 
 export function navigateAfterStep(stepId: string, currentStepIndex: number, navigate: (path: string) => void, shouldNavigate: boolean = true) {
   // Se não devemos navegar automaticamente, retornar imediatamente
@@ -40,9 +39,9 @@ export function navigateAfterStep(stepId: string, currentStepIndex: number, navi
 
   // Faz navegação com pequeno delay para UX consistente
   console.log(`Navegando automaticamente para: ${nextPath}`);
-  toast.success("Etapa concluída! Avançando...");
+  
   setTimeout(() => {
     console.log(`Executando navegação para: ${nextPath}`);
     navigate(nextPath);
-  }, 800);
+  }, 300);
 }

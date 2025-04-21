@@ -1,4 +1,3 @@
-
 import { steps } from "../useStepDefinitions";
 import { OnboardingData, OnboardingProgress } from "@/types/onboarding";
 import { buildPersonalUpdate } from "./stepBuilders/personalBuilder";
@@ -28,7 +27,20 @@ export function buildUpdateObject(
       Object.assign(updateObj, buildPersonalUpdate(data, progress));
       break;
     case "professional_data":
-      Object.assign(updateObj, buildProfessionalDataUpdate(data, progress));
+      // Processar dados profissionais
+      const professionalInfo = data.professional_info || {};
+      updateObj.professional_info = {
+        ...(progress.professional_info || {}),
+        ...professionalInfo
+      };
+      
+      // Atualizar campos diretos para compatibilidade
+      if (data.company_name) updateObj.company_name = data.company_name;
+      if (data.company_size) updateObj.company_size = data.company_size;
+      if (data.company_sector) updateObj.company_sector = data.company_sector;
+      if (data.company_website) updateObj.company_website = data.company_website;
+      if (data.current_position) updateObj.current_position = data.current_position;
+      if (data.annual_revenue) updateObj.annual_revenue = data.annual_revenue;
       break;
     case "business_context":
       Object.assign(updateObj, buildBusinessContextUpdate(data, progress));
@@ -50,7 +62,7 @@ export function buildUpdateObject(
       break;
     default:
       console.log(`Usando lógica genérica para etapa: ${stepId}`);
-      // Lógica genérica para outras etapas (futuro)
+      // Lógica genérica para outras etapas
       const sectionKey = steps.find(s => s.id === stepId)?.section as keyof OnboardingData;
       if (sectionKey && (data as any)[sectionKey]) {
         const existingData = progress[sectionKey as keyof OnboardingProgress] || {};

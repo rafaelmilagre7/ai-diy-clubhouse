@@ -6,7 +6,7 @@ import { ProfessionalDataStep } from "@/components/onboarding/steps/Professional
 import { MilagrinhoMessage } from "@/components/onboarding/MilagrinhoMessage";
 import { useNavigate } from "react-router-dom";
 import { useProgress } from "@/hooks/onboarding/useProgress";
-import { toast } from "sonner";
+import { LoadingSpinner } from "@/components/common/LoadingSpinner";
 
 const ProfessionalData = () => {
   const { saveStepData, progress, completeOnboarding } = useOnboardingSteps();
@@ -25,19 +25,17 @@ const ProfessionalData = () => {
       setIsSubmitting(true);
       console.log("Salvando dados profissionais:", data);
       
-      // Usar o formato correto de parâmetro esperado por saveStepData
+      // Adicionar o ID da etapa para garantir navegação correta
       await saveStepData({
         stepId: "professional_data",
         data: data
       });
       
-      console.log("Dados profissionais salvos com sucesso, navegando para a próxima etapa");
-      toast.success("Informações salvas com sucesso!");
+      console.log("Dados profissionais salvos com sucesso");
       
-      // Não vamos mais navegar manualmente - a função saveStepData já fará isso
+      // Navegação será feita automaticamente pelo hook saveStepData
     } catch (error) {
       console.error("Erro ao salvar dados profissionais:", error);
-      toast.error("Erro ao salvar as informações. Tente novamente.");
     } finally {
       setIsSubmitting(false);
     }

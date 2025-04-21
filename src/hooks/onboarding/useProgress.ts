@@ -10,7 +10,6 @@ import {
   refreshOnboardingProgress,
 } from "./persistence/progressPersistence";
 
-// HOOK REFACTORIZADO
 export const useProgress = () => {
   const { user } = useAuth();
   const [progress, setProgress] = useState<OnboardingProgress | null>(null);
@@ -47,7 +46,6 @@ export const useProgress = () => {
           return newData;
         } else {
           console.error("Erro ao carregar progresso:", error);
-          toast.error("Erro ao carregar seu progresso. Algumas funcionalidades podem estar limitadas.");
           return null;
         }
       } else if (!data) {
@@ -66,9 +64,6 @@ export const useProgress = () => {
       }
     } catch (error: any) {
       console.error("Erro ao carregar progresso:", error);
-      if (isMounted.current) {
-        toast.error("Erro ao carregar seu progresso. Algumas funcionalidades podem estar limitadas.");
-      }
       return null;
     } finally {
       if (isMounted.current) {
@@ -81,7 +76,6 @@ export const useProgress = () => {
   useEffect(() => {
     if (!user || hasInitialized.current) return;
     fetchProgress();
-    // Não resetamos hasInitialized aqui para evitar múltiplas inicializações
   }, [user, fetchProgress]);
 
   const updateProgress = async (updates: Partial<OnboardingProgress>) => {
@@ -98,7 +92,6 @@ export const useProgress = () => {
 
       if (error) {
         console.error("Erro ao atualizar dados:", error);
-        toast.error("Erro ao salvar seu progresso.");
         throw error;
       }
 
@@ -108,9 +101,6 @@ export const useProgress = () => {
       return updatedProgress;
     } catch (error) {
       console.error("Erro ao atualizar progresso:", error);
-      if (isMounted.current) {
-        toast.error("Erro ao salvar seu progresso.");
-      }
       throw error;
     }
   };
@@ -130,7 +120,6 @@ export const useProgress = () => {
 
       if (error) {
         console.error("Erro ao recarregar progresso:", error);
-        toast.error("Erro ao atualizar dados. Tente recarregar a página.");
         throw error;
       }
 
@@ -139,9 +128,6 @@ export const useProgress = () => {
       return data;
     } catch (error) {
       console.error("Erro ao recarregar progresso:", error);
-      if (isMounted.current) {
-        toast.error("Erro ao atualizar dados. Tente recarregar a página.");
-      }
       return null;
     } finally {
       if (isMounted.current) {
