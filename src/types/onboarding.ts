@@ -65,6 +65,27 @@ export interface OnboardingData {
     interested_in_interview?: boolean;
     priority_topics?: string[];
   };
+  // Adicionando as novas propriedades para corrigir os erros
+  industry_focus?: {
+    sector?: string;
+    target_market?: string;
+    main_challenges?: string[];
+  };
+  resources_needs?: {
+    budget_range?: string;
+    team_size?: string;
+    tech_stack?: string[];
+  };
+  team_info?: {
+    decision_makers?: string[];
+    technical_expertise?: string;
+    training_needs?: string[];
+  };
+  implementation_preferences?: {
+    priority_areas?: string[];
+    implementation_speed?: string;
+    support_level?: string;
+  };
 }
 
 export interface OnboardingProgress {
@@ -80,6 +101,11 @@ export interface OnboardingProgress {
   ai_experience: OnboardingData['ai_experience'];
   experience_personalization: OnboardingData['experience_personalization'];
   complementary_info: OnboardingData['complementary_info'];
+  // Adicionando as novas propriedades no OnboardingProgress
+  industry_focus?: OnboardingData['industry_focus'];
+  resources_needs?: OnboardingData['resources_needs'];
+  team_info?: OnboardingData['team_info'];
+  implementation_preferences?: OnboardingData['implementation_preferences'];
   company_name?: string;
   company_size?: string;
   company_sector?: string;

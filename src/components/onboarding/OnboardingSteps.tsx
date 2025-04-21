@@ -4,10 +4,6 @@ import { PersonalInfoStep } from "./steps/PersonalInfoStep";
 import { BusinessGoalsStep } from "./steps/BusinessGoalsStep";
 import { BusinessContextStep } from "./steps/BusinessContextStep";
 import { AIExperienceStep } from "./steps/AIExperienceStep";
-import { IndustryFocusStep } from "./steps/IndustryFocusStep";
-import { ResourcesNeedsStep } from "./steps/ResourcesNeedsStep";
-import { TeamInfoStep } from "./steps/TeamInfoStep";
-import { PreferencesStep } from "./steps/PreferencesStep";
 import { ExperiencePersonalizationStep } from "./steps/ExperiencePersonalizationStep";
 import { ComplementaryInfoStep } from "./steps/ComplementaryInfoStep";
 import { ReviewStep } from "./steps/ReviewStep";
@@ -28,13 +24,9 @@ export const OnboardingSteps = () => {
 
   const stepComponents = {
     personal: PersonalInfoStep,
-    goals: BusinessGoalsStep,
     business_context: BusinessContextStep,
     ai_exp: AIExperienceStep,
-    industry: IndustryFocusStep,
-    resources: ResourcesNeedsStep,
-    team: TeamInfoStep,
-    preferences: PreferencesStep,
+    business_goals: BusinessGoalsStep,
     experience_personalization: ExperiencePersonalizationStep,
     complementary_info: ComplementaryInfoStep,
     review: () => (
@@ -54,7 +46,7 @@ export const OnboardingSteps = () => {
 
   const getInitialDataForCurrentStep = () => {
     if (!progress) return undefined;
-    if (currentStep.id === "goals") {
+    if (currentStep.id === "business_goals") {
       return {
         ...progress,
         company_name: progress.company_name,
