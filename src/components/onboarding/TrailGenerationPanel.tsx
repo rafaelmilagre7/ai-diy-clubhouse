@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useEffect, useCallback } from "react";
 import { useImplementationTrail } from "@/hooks/implementation/useImplementationTrail";
 import { useSolutionsData } from "@/hooks/useSolutionsData";
@@ -56,16 +55,18 @@ export const TrailGenerationPanel = ({ onClose }: { onClose?: () => void }) => {
     
     // Adicionar um timeout para evitar carregamento infinito
     const timeoutId = setTimeout(() => {
-      if (refreshing && loadStartTime && isTrailStuck(loadStartTime)) {
-        console.log("Carregamento da trilha excedeu o tempo limite");
-        setRefreshing(false);
-        setLoadingTimeout(true);
-        toast.error("Tempo limite de carregamento excedido. Tente novamente.");
+      if (refreshing && loadStartTime) {
+        if (isTrailStuck(trail, loadStartTime)) {
+          console.log("Carregamento da trilha excedeu o tempo limite");
+          setRefreshing(false);
+          setLoadingTimeout(true);
+          toast.error("Tempo limite de carregamento excedido. Tente novamente.");
+        }
       }
     }, 12000); // 12 segundos de timeout
     
     return () => clearTimeout(timeoutId);
-  }, [refreshTrail]);
+  }, [refreshTrail, trail]);
 
   // Mapeamento de soluções com tratamento de erros aprimorado
   const solutions = useMemo(() => {
