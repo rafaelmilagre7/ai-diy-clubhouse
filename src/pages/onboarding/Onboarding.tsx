@@ -8,13 +8,18 @@ import { PersonalInfoFormFull } from "@/components/onboarding/steps/PersonalInfo
 import { MilagrinhoMessage } from "@/components/onboarding/MilagrinhoMessage";
 import { Button } from "@/components/ui/button";
 import { TrailGenerationPanel } from "@/components/onboarding/TrailGenerationPanel";
+import { useImplementationTrail } from "@/hooks/implementation/useImplementationTrail";
 import { toast } from "sonner";
 
+// Adicionado: hook para pegar trilha armazenada
 const Onboarding = () => {
   const { user } = useAuth();
   const { progress, isLoading } = useProgress();
   const navigate = useNavigate();
   const [showTrailPanel, setShowTrailPanel] = useState(false);
+
+  // Hook para garantir que pegamos a trilha existente do banco ao abrir
+  const { trail, isLoading: trailLoading, generateImplementationTrail } = useImplementationTrail();
 
   // Se o usuário não estiver autenticado, redireciona para login
   useEffect(() => {
@@ -28,6 +33,9 @@ const Onboarding = () => {
 
   // Se onboarding já foi concluído, mostrar painel de onboarding e trilha (não mais redirecionar)
   const isOnboardingCompleted = !!progress?.is_completed;
+
+  // Botão para ver trilha: só mostra se há trilha salva
+  const hasTrail = !!trail && Object.values(trail).some(arr => Array.isArray(arr) && arr.length > 0);
 
   // Carregamento inicial
   if (isLoading) {
@@ -50,7 +58,7 @@ const Onboarding = () => {
           userName={firstName}
           message={!isOnboardingCompleted 
             ? "Eu sou o Milagrinho, seu assistente de IA do VIVER DE IA Club. Vamos começar conhecendo um pouco sobre você. Estas informações vão me ajudar a personalizar sua experiência, onde você vai encontrar uma comunidade incrível transformando negócios com IA."
-            : "Parabéns! Você concluiu o onboarding. Aqui você pode editar suas informações e gerar uma nova trilha personalizada quando quiser!"
+            : "Parabéns! Você concluiu o onboarding. Aqui você pode editar suas informações e consultar ou gerar uma nova trilha personalizada sempre que quiser!"
           }
         />
 
@@ -67,15 +75,28 @@ const Onboarding = () => {
                   Onboarding Completo!
                 </h3>
                 <p className="text-gray-600 text-sm">
-                  Edite suas respostas sempre que precisar. E sempre que atualizar, pode regenerar sua trilha personalizada.
+                  Edite suas respostas sempre que precisar. Você pode acessar sua trilha já gerada ou atualizar para uma nova a qualquer momento!
                 </p>
               </div>
               <div className="flex gap-2">
                 <Button variant="outline" onClick={() => navigate("/onboarding/review")}>
                   Revisar/Editar Respostas
                 </Button>
-                <Button className="bg-[#0ABAB5] text-white" onClick={() => setShowTrailPanel((v) => !v)}>
-                  {!showTrailPanel ? "Ver Minha Trilha" : "Ocultar Trilha"}
+                {hasTrail && (
+                  <Button className="bg-[#0ABAB5] text-white" onClick={() => setShowTrailPanel((v) => !v)}>
+                    {!showTrailPanel ? "Ver Minha Trilha" : "Ocultar Trilha"}
+                  </Button>
+                )}
+                <Button
+                  variant="secondary"
+                  className="border-[#0ABAB5] text-[#0ABAB5]"
+                  onClick={async () => {
+                    await generateImplementationTrail();
+                    setShowTrailPanel(true);
+                  }}
+                  disabled={trailLoading}
+                >
+                  {trailLoading ? "Gerando trilha..." : (hasTrail ? "Gerar Nova Trilha" : "Gerar Trilha")}
                 </Button>
               </div>
             </div>
@@ -83,6 +104,12 @@ const Onboarding = () => {
             {showTrailPanel && (
               <div className="mt-8">
                 <TrailGenerationPanel />
+              </div>
+            )}
+            {/* Caso não tenha trilha ainda, mensagem explicativa */}
+            {!hasTrail && !trailLoading && (
+              <div className="text-center mt-8 text-gray-600 text-sm">
+                Nenhuma trilha personalizada foi gerada ainda. Clique em "Gerar Trilha" para descobrir recomendações personalizadas!
               </div>
             )}
           </div>
