@@ -32,6 +32,7 @@ export const ExperiencePersonalizationStep: React.FC<OnboardingStepProps> = ({
 
   // Hook de formulário personalizado
   const {
+    control,
     setValue,
     watch,
     handleSubmit,
@@ -72,39 +73,45 @@ export const ExperiencePersonalizationStep: React.FC<OnboardingStepProps> = ({
       <div className="bg-white rounded-lg border border-gray-100 p-6 shadow-sm">
         <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-8">
           <InterestsSection
-            selected={formValues.interests}
-            onToggle={(value) => toggleSelect("interests", value)}
-            hasError={hasAttemptedSubmit && (!formValues.interests || formValues.interests.length === 0)}
+            watch={watch}
+            toggleSelect={toggleSelect}
+            errors={errors}
+            showErrors={hasAttemptedSubmit}
           />
 
           <TimePreferenceSection
-            selected={formValues.time_preference}
-            onToggle={(value) => toggleSelect("time_preference", value)}
-            hasError={hasAttemptedSubmit && (!formValues.time_preference || formValues.time_preference.length === 0)}
+            control={control}
+            watch={watch}
+            toggleSelect={toggleSelect}
+            errors={errors}
+            showErrors={hasAttemptedSubmit}
           />
 
           <AvailableDaysSection
-            selected={formValues.available_days}
-            onToggle={(value) => toggleSelect("available_days", value)}
-            hasError={hasAttemptedSubmit && (!formValues.available_days || formValues.available_days.length === 0)}
+            watch={watch}
+            toggleSelect={toggleSelect}
+            errors={errors}
+            showErrors={hasAttemptedSubmit}
           />
 
           <NetworkingAvailabilitySection
-            value={formValues.networking_availability}
-            onChange={(value) => setValue("networking_availability", value, { shouldValidate: true })}
-            hasError={hasAttemptedSubmit && formValues.networking_availability === undefined}
+            control={control}
+            errors={errors}
+            showErrors={hasAttemptedSubmit}
           />
 
           <SkillsToShareSection
-            selected={formValues.skills_to_share}
-            onToggle={(value) => toggleSelect("skills_to_share", value)}
-            hasError={hasAttemptedSubmit && (!formValues.skills_to_share || formValues.skills_to_share.length === 0)}
+            watch={watch}
+            toggleSelect={toggleSelect}
+            errors={errors}
+            showErrors={hasAttemptedSubmit}
           />
 
           <MentorshipTopicsSection
-            selected={formValues.mentorship_topics}
-            onToggle={(value) => toggleSelect("mentorship_topics", value)}
-            hasError={hasAttemptedSubmit && (!formValues.mentorship_topics || formValues.mentorship_topics.length === 0)}
+            watch={watch}
+            toggleSelect={toggleSelect}
+            errors={errors}
+            showErrors={hasAttemptedSubmit}
           />
 
           {hasAttemptedSubmit && !isValid && (
