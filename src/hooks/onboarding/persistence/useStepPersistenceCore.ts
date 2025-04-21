@@ -25,14 +25,17 @@ export function useStepPersistenceCore({
       return;
     }
 
-    console.log(`Salvando dados do passo ${stepId}, navegação automática: ${shouldNavigate ? "SIM" : "NÃO"}`);
+    console.log(`Salvando dados do passo ${stepId}, navegação automática: ${shouldNavigate ? "SIM" : "NÃO"}`, data);
 
     try {
       // Montar objeto de atualização para a etapa
       const updateObj = buildUpdateObject(stepId, data, progress, currentStepIndex);
-      if (Object.keys(updateObj).length === 0) return;
+      if (Object.keys(updateObj).length === 0) {
+        console.warn("Objeto de atualização vazio, nada para salvar");
+        return;
+      }
 
-      console.log("Dados a serem enviados:", updateObj);
+      console.log("Dados a serem enviados para o Supabase:", updateObj);
 
       // Atualizar no Supabase
       const updatedProgress = await updateProgress(updateObj);
@@ -49,6 +52,8 @@ export function useStepPersistenceCore({
       } else {
         console.log("Navegação automática desativada, permanecendo na página atual");
       }
+      
+      return updatedProgress;
     } catch (error) {
       console.error("Erro ao salvar dados:", error);
       throw error;

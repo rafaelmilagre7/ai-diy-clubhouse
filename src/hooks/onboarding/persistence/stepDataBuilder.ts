@@ -34,8 +34,21 @@ export function buildUpdateObject(
     }
   } else if (stepId === "business_context") {
     // Salvar dados de contexto de negócio
-    updateObj.business_context = data.business_context || {};
-    console.log("Salvando business_context:", updateObj.business_context);
+    if (data.business_context) {
+      updateObj.business_context = data.business_context;
+      
+      // Adicionar log detalhado para debugging
+      console.log("Salvando business_context com valores:", {
+        business_model: data.business_context.business_model,
+        business_challenges: data.business_context.business_challenges?.length || 0,
+        short_term_goals: data.business_context.short_term_goals?.length || 0,
+        medium_term_goals: data.business_context.medium_term_goals?.length || 0,
+        important_kpis: data.business_context.important_kpis?.length || 0,
+        additional_context: data.business_context.additional_context?.length || 0,
+      });
+    } else {
+      console.warn("business_context não encontrado nos dados enviados");
+    }
   } else if (stepId === "ai_exp") {
     // Salvar dados de experiência com IA
     updateObj.ai_experience = data.ai_experience || {};

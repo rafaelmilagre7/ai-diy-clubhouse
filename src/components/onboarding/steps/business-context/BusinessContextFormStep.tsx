@@ -11,7 +11,6 @@ import { ShortTermGoalsField } from "./inputs/ShortTermGoalsField";
 import { MediumTermGoalsField } from "./inputs/MediumTermGoalsField";
 import { KpisField } from "./inputs/KpisField";
 import { AdditionalContextField } from "./inputs/AdditionalContextField";
-import { SubmitButton } from "./SubmitButton";
 import { NavigationButtons } from "../NavigationButtons";
 import { cn } from "@/lib/utils";
 
@@ -46,10 +45,11 @@ export const BusinessContextFormStep: React.FC<BusinessContextFormStepProps> = (
   console.log("Valores iniciais para Business Context:", initialValues);
 
   const methods = useForm<BusinessContextFormValues>({
-    defaultValues: initialValues
+    defaultValues: initialValues,
+    mode: "onSubmit"
   });
   
-  const { control, handleSubmit, formState: { errors }, reset } = methods;
+  const { control, handleSubmit, formState: { errors }, reset, getValues } = methods;
 
   // Atualizar o formulário quando os dados iniciais mudarem
   useEffect(() => {
@@ -65,6 +65,30 @@ export const BusinessContextFormStep: React.FC<BusinessContextFormStepProps> = (
       });
     }
   }, [progress, reset]);
+
+  // Adicionar função para salvar periodicamente dados do formulário
+  useEffect(() => {
+    // Salvar a cada 30 segundos se houver dados modificados
+    const interval = setInterval(() => {
+      const currentValues = getValues();
+      // Verificar se há dados para salvar
+      if (currentValues.business_model || 
+          currentValues.business_challenges.length > 0 || 
+          currentValues.short_term_goals.length > 0 || 
+          currentValues.medium_term_goals.length > 0 || 
+          currentValues.important_kpis.length > 0) {
+        
+        console.log("Auto-salvando dados do formulário:", currentValues);
+        saveStepData("business_context", {
+          business_context: currentValues
+        }, false).catch(err => 
+          console.error("Erro no auto-save:", err)
+        );
+      }
+    }, 30000); // A cada 30 segundos
+    
+    return () => clearInterval(interval);
+  }, [getValues, saveStepData]);
 
   const onSubmit = async (data: BusinessContextFormValues) => {
     try {
@@ -84,11 +108,6 @@ export const BusinessContextFormStep: React.FC<BusinessContextFormStepProps> = (
       }, true);
       
       toast.success("Informações salvas com sucesso!");
-      
-      // Garantir navegação manual
-      setTimeout(() => {
-        navigate("/onboarding/ai-experience");
-      }, 500);
     } catch (error) {
       console.error("Erro ao salvar dados:", error);
       toast.error("Erro ao salvar as informações. Tente novamente.");
