@@ -1,70 +1,121 @@
 
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
 import { useOnboardingSteps } from "@/hooks/onboarding/useOnboardingSteps";
-import { ReviewStep } from "@/components/onboarding/steps/ReviewStep";
-import { useProgress } from "@/hooks/onboarding/useProgress";
-import { toast } from "sonner";
+import { OnboardingProgress } from "@/types/onboarding";
+import { ReviewSectionCard } from "@/components/onboarding/steps/ReviewSectionCard";
+import { Button } from "@/components/ui/button";
 import { MilagrinhoMessage } from "@/components/onboarding/MilagrinhoMessage";
-import { useAuth } from "@/contexts/auth";
+import { CheckCircle, Loader2 } from "lucide-react";
 
-const Review = () => {
-  const { completeOnboarding, navigateToStep } = useOnboardingSteps();
-  const { progress, isLoading, refreshProgress } = useProgress();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const { profile } = useAuth();
+interface ReviewStepProps {
+  progress: OnboardingProgress | null;
+  onComplete: () => void;
+  isSubmitting: boolean;
+  navigateToStep: (index: number) => void;
+}
 
-  // Efeito para carregar dados mais recentes ao entrar na página
-  useEffect(() => {
-    console.log("Review montado - carregando dados mais recentes");
-    refreshProgress();
-  }, [refreshProgress]);
-
-  const handleNavigateToStep = (index: number) => {
-    console.log(`Review page: Navegando para etapa ${index}`);
-    navigateToStep(index);
-  };
-
-  const handleCompleteOnboarding = async () => {
-    try {
-      setIsSubmitting(true);
-      await completeOnboarding();
-    } catch (error) {
-      console.error("Erro ao completar onboarding:", error);
-      toast.error("Erro ao finalizar o onboarding. Tente novamente.");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  // Extrair primeiro nome do perfil
-  const firstName = profile?.name?.split(" ")[0] || "Usuário";
+const Review: React.FC<ReviewStepProps> = ({ 
+  progress,
+  onComplete,
+  isSubmitting,
+  navigateToStep
+}) => {
+  const { currentStepIndex, steps } = useOnboardingSteps();
+  
+  // Verificar se temos dados para mostrar
+  if (!progress) {
+    return (
+      <OnboardingLayout
+        currentStep={currentStepIndex + 1}
+        totalSteps={steps.length}
+        progress={((currentStepIndex + 1) / steps.length) * 100}
+        title="Revisar Informações"
+      >
+        <div className="text-center py-8">
+          <Loader2 className="animate-spin h-8 w-8 mx-auto text-white" />
+          <p className="mt-2 text-white">Carregando seus dados...</p>
+        </div>
+      </OnboardingLayout>
+    );
+  }
 
   return (
     <OnboardingLayout
-      currentStep={8}
-      title="Revisar e Finalizar"
+      currentStep={currentStepIndex + 1}
+      totalSteps={steps.length}
+      progress={((currentStepIndex + 1) / steps.length) * 100}
+      title="Revisar Informações"
       backUrl="/onboarding/complementary"
     >
-      <div className="max-w-4xl mx-auto space-y-6">
+      <div className="space-y-6">
         <MilagrinhoMessage
-          userName={firstName}
-          message="Vamos revisar todas as informações que você forneceu. Verifique se está tudo correto antes de finalizar o onboarding e gerar sua trilha personalizada."
-          type="info"
+          message="Vamos revisar as informações que você compartilhou conosco. Se algo estiver incorreto, você pode voltar às etapas anteriores e fazer os ajustes necessários."
         />
-
-        {isLoading ? (
-          <div className="flex justify-center py-10">
-            <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-[#0ABAB5]"></div>
-          </div>
-        ) : (
-          <ReviewStep
-            progress={progress}
-            onComplete={handleCompleteOnboarding}
-            isSubmitting={isSubmitting}
-            navigateToStep={handleNavigateToStep}
+        
+        <div className="bg-gray-800 rounded-lg p-6 space-y-6">
+          <ReviewSectionCard
+            title="Dados Pessoais"
+            data={progress.personal_info}
+            onEdit={() => navigateToStep(0)}
           />
-        )}
+          
+          <ReviewSectionCard
+            title="Dados Profissionais"
+            data={progress.professional_info}
+            onEdit={() => navigateToStep(1)}
+          />
+          
+          <ReviewSectionCard
+            title="Contexto do Negócio"
+            data={progress.business_context || progress.business_data}
+            onEdit={() => navigateToStep(2)}
+          />
+          
+          <ReviewSectionCard
+            title="Experiência com IA"
+            data={progress.ai_experience}
+            onEdit={() => navigateToStep(3)}
+          />
+          
+          <ReviewSectionCard
+            title="Objetivos com o Club"
+            data={progress.business_goals}
+            onEdit={() => navigateToStep(4)}
+          />
+          
+          <ReviewSectionCard
+            title="Personalização da Experiência"
+            data={progress.experience_personalization}
+            onEdit={() => navigateToStep(5)}
+          />
+          
+          <ReviewSectionCard
+            title="Informações Complementares"
+            data={progress.complementary_info}
+            onEdit={() => navigateToStep(6)}
+          />
+        </div>
+        
+        <div className="flex justify-end pt-6">
+          <Button
+            onClick={onComplete}
+            disabled={isSubmitting}
+            className="bg-[#0ABAB5] hover:bg-[#0ABAB5]/90"
+          >
+            {isSubmitting ? (
+              <span className="flex items-center gap-2">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Finalizando...
+              </span>
+            ) : (
+              <span className="flex items-center gap-2">
+                <CheckCircle className="h-4 w-4" />
+                Finalizar Onboarding
+              </span>
+            )}
+          </Button>
+        </div>
       </div>
     </OnboardingLayout>
   );
