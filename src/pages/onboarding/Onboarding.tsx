@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { TrailGenerationPanel } from "@/components/onboarding/TrailGenerationPanel";
 import { useImplementationTrail } from "@/hooks/implementation/useImplementationTrail";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { Loader2, RefreshCw } from "lucide-react";
 
 const Onboarding = () => {
   const { user } = useAuth();
@@ -19,13 +19,16 @@ const Onboarding = () => {
   
   // Exibe painel da trilha se ela existir, exceto ao gerar agora
   const [showTrailPanel, setShowTrailPanel] = useState(false);
+  const [isRetrying, setIsRetrying] = useState(false);
+  const [loadingError, setLoadingError] = useState(false);
 
   // Hook da trilha
   const { 
     trail, 
     isLoading: trailLoading, 
     refreshTrail,
-    hasContent
+    hasContent,
+    clearTrail 
   } = useImplementationTrail();
 
   // Redirecionar se não autenticado
@@ -35,17 +38,42 @@ const Onboarding = () => {
     }
   }, [user, navigate]);
 
+  // Função para carregar a trilha com controle de erro
+  const loadTrailData = useCallback(async () => {
+    try {
+      setIsRetrying(true);
+      setLoadingError(false);
+      const trailData = await refreshTrail(true);
+      
+      // Verificar se a trilha foi carregada corretamente
+      if (!trailData && hasContent === false) {
+        setLoadingError(true);
+      }
+      
+      return trailData;
+    } catch (error) {
+      console.error("Erro ao carregar trilha:", error);
+      setLoadingError(true);
+      return null;
+    } finally {
+      setIsRetrying(false);
+    }
+  }, [refreshTrail, hasContent]);
+
   // Carregar trilha ao montar ou ao progredir onboarding
   useEffect(() => {
-    const loadTrail = async () => {
-      try {
-        await refreshTrail(true);
-      } catch (error) {
-        console.error("Erro ao carregar trilha:", error);
+    loadTrailData();
+    
+    // Adicionar um timeout para evitar loading infinito
+    const timeout = setTimeout(() => {
+      if (trailLoading) {
+        setLoadingError(true);
+        toast.error("Tempo limite excedido ao carregar trilha");
       }
-    };
-    loadTrail();
-  }, [refreshTrail]);
+    }, 15000); // 15 segundos
+    
+    return () => clearTimeout(timeout);
+  }, [loadTrailData]);
 
   // Extrai primeiro nome
   const firstName = user?.user_metadata?.name?.split(' ')[0] || user?.email?.split('@')[0] || '';
@@ -63,6 +91,31 @@ const Onboarding = () => {
   const handleGenerateTrail = useCallback(() => {
     navigate("/onboarding/trail-generation?autoGenerate=true");
   }, [navigate]);
+  
+  // Limpar trilha e tentar novamente
+  const handleForceRefresh = useCallback(async () => {
+    setIsRetrying(true);
+    setLoadingError(false);
+    
+    try {
+      // Tentar limpar a trilha existente primeiro
+      await clearTrail();
+      setShowTrailPanel(false);
+      
+      // Aguardar um momento para garantir que a limpeza seja processada
+      setTimeout(async () => {
+        await loadTrailData();
+        setShowTrailPanel(true);
+      }, 1000);
+      
+    } catch (error) {
+      console.error("Erro ao forçar atualização da trilha:", error);
+      setLoadingError(true);
+      toast.error("Erro ao recarregar a trilha. Tente novamente mais tarde.");
+    } finally {
+      setIsRetrying(false);
+    }
+  }, [clearTrail, loadTrailData]);
 
   // Carregamento inicial
   if (progressLoading) {
@@ -105,13 +158,13 @@ const Onboarding = () => {
                   Edite suas respostas sempre que precisar. Você pode acessar sua trilha já gerada ou gerar uma nova a qualquer momento!
                 </p>
               </div>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <Button variant="outline" onClick={() => navigate("/onboarding/review")}>
                   Revisar/Editar Respostas
                 </Button>
                 
                 {/* Exibe botões com base na existência da trilha */}
-                {trailLoading ? (
+                {trailLoading || isRetrying ? (
                   <Button disabled className="bg-gray-200 text-gray-500">
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Carregando trilha...
@@ -141,36 +194,62 @@ const Onboarding = () => {
                     Gerar Nova Trilha
                   </Button>
                 )}
+                
+                {loadingError && (
+                  <Button
+                    variant="outline"
+                    onClick={handleForceRefresh}
+                    className="flex items-center gap-1 border-amber-500 text-amber-600"
+                  >
+                    <RefreshCw className="h-4 w-4" />
+                    Recarregar
+                  </Button>
+                )}
               </div>
             </div>
             
             {/* Exibe painel da trilha já carregada logo abaixo do header quando a trilha existe e não está carregando */}
-            {showTrailPanel && hasContent && !trailLoading && (
+            {showTrailPanel && hasContent && !trailLoading && !isRetrying && (
               <div className="mt-8">
                 <TrailGenerationPanel onClose={() => setShowTrailPanel(false)} />
               </div>
             )}
             
             {/* Em loading */}
-            {showTrailPanel && trailLoading && (
+            {(showTrailPanel && (trailLoading || isRetrying)) && (
               <div className="flex flex-col items-center gap-4 py-8 mt-8">
-                <Loader2 className="h-8 w-8 text-[#0ABAB5] animate-spin" />
+                <div className="w-12 h-12 border-4 border-t-[#0ABAB5] border-r-[#0ABAB5]/30 border-b-[#0ABAB5]/10 border-l-[#0ABAB5]/30 rounded-full animate-spin"></div>
                 <span className="text-[#0ABAB5] font-medium">Carregando sua trilha personalizada...</span>
               </div>
             )}
             
-            {/* Caso não haja trilha após abertura do painel */}
-            {showTrailPanel && !hasContent && !trailLoading && (
+            {/* Caso não haja trilha após abertura do painel ou erro */}
+            {showTrailPanel && (!hasContent || loadingError) && !trailLoading && !isRetrying && (
               <div className="text-center mt-8 p-6 bg-gray-50 rounded-lg border border-gray-100">
                 <p className="text-gray-600 mb-4">
-                  Nenhuma trilha personalizada foi encontrada. Vamos criar uma agora!
+                  {loadingError 
+                    ? "Ocorreu um erro ao carregar sua trilha. Por favor, tente novamente."
+                    : "Nenhuma trilha personalizada foi encontrada. Vamos criar uma agora!"}
                 </p>
-                <Button 
-                  className="bg-[#0ABAB5] text-white" 
-                  onClick={handleGenerateTrail}
-                >
-                  Gerar Trilha Personalizada
-                </Button>
+                <div className="flex justify-center gap-2">
+                  <Button 
+                    className="bg-[#0ABAB5] text-white" 
+                    onClick={handleGenerateTrail}
+                  >
+                    Gerar Trilha Personalizada
+                  </Button>
+                  
+                  {loadingError && (
+                    <Button
+                      variant="outline"
+                      onClick={handleForceRefresh}
+                      className="flex items-center gap-1"
+                    >
+                      <RefreshCw className="h-4 w-4" />
+                      Tentar Novamente
+                    </Button>
+                  )}
+                </div>
               </div>
             )}
           </div>

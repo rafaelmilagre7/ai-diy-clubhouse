@@ -32,7 +32,7 @@ export const TrailGuidedExperience = ({ autoStart = false }) => {
   useEffect(() => {
     if (autoStart && !started && !isLoading && !regenerating && !showMagicExperience && solutionsList.length === 0) {
       console.log("Iniciando geração automática da trilha");
-      handleStartGeneration();
+      handleStartGeneration(true);
     }
   }, [autoStart, started, isLoading, regenerating, showMagicExperience, solutionsList.length, handleStartGeneration]);
 
@@ -67,7 +67,7 @@ export const TrailGuidedExperience = ({ autoStart = false }) => {
         </p>
         <Button
           className="bg-[#0ABAB5] text-white px-8 py-3 text-lg"
-          onClick={(e) => handleStartGeneration(true)}
+          onClick={() => handleStartGeneration(true)}
           disabled={regenerating}
         >
           {regenerating ? "Gerando trilha..." : "Gerar Trilha VIVER DE IA"}
@@ -81,7 +81,7 @@ export const TrailGuidedExperience = ({ autoStart = false }) => {
       <div className="text-center text-gray-700 py-12">
         Nenhuma solução recomendada foi encontrada. Por favor, tente regenerar a trilha.
         <div className="mt-4">
-          <Button onClick={(e) => handleStartGeneration(true)} className="bg-[#0ABAB5] text-white">
+          <Button onClick={() => handleStartGeneration(true)} className="bg-[#0ABAB5] text-white">
             Regenerar Trilha
           </Button>
         </div>

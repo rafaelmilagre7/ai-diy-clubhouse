@@ -7,58 +7,76 @@ import { toast } from "sonner";
 
 export const useTrailGuidedExperience = () => {
   const navigate = useNavigate();
-  const { trail, isLoading, generateImplementationTrail, refreshTrail } = useImplementationTrail();
+  const { trail, isLoading, generateImplementationTrail, refreshTrail, hasContent } = useImplementationTrail();
   const { solutions: allSolutions, loading: solutionsLoading } = useSolutionsData();
   const [started, setStarted] = useState(false);
   const [currentStepIdx, setCurrentStepIdx] = useState(0);
   const [typingFinished, setTypingFinished] = useState(false);
   const [regenerating, setRegenerating] = useState(false);
   const [showMagicExperience, setShowMagicExperience] = useState(false);
+  const [loadStartTime, setLoadStartTime] = useState<number | null>(null);
+  const [loadAttempts, setLoadAttempts] = useState(0);
 
-  // Montar lista de soluções ordenadas para a navegação
+  // Montar lista de soluções ordenadas para a navegação com validação aprimorada
   const solutionsList = useMemo(() => {
     if (!trail || !allSolutions || allSolutions.length === 0) return [];
-    const all: any[] = [];
+    
+    try {
+      const all: any[] = [];
 
-    ["priority1", "priority2", "priority3"].forEach((priorityKey, idx) => {
-      const items = (trail as any)[priorityKey] || [];
-      items.forEach(item => {
-        // Procura a solução completa pelo ID
-        const fullSolution = allSolutions.find(s => s.id === item.solutionId);
+      ["priority1", "priority2", "priority3"].forEach((priorityKey, idx) => {
+        const items = Array.isArray((trail as any)[priorityKey]) ? (trail as any)[priorityKey] : [];
+        
+        items.forEach((item: any) => {
+          if (!item || !item.solutionId) return;
+          
+          // Procura a solução completa pelo ID
+          const fullSolution = allSolutions.find(s => s.id === item.solutionId);
 
-        if (fullSolution) {
-          all.push({
-            ...item,
-            ...fullSolution,
-            priority: idx + 1,
-            title: fullSolution.title || "Solução sem título",
-            justification: item.justification || "Recomendação personalizada para seu negócio",
-            solutionId: item.solutionId || fullSolution.id
-          });
-        } else {
-          console.warn(`Solução com ID ${item.solutionId} não encontrada no banco de dados`);
-          all.push({
-            ...item,
-            priority: idx + 1,
-            title: item.title || "Solução não encontrada",
-            justification: item.justification || "Recomendação personalizada para seu negócio",
-            solutionId: item.solutionId || item.id || "sem-id"
-          });
-        }
+          if (fullSolution) {
+            all.push({
+              ...item,
+              ...fullSolution,
+              priority: idx + 1,
+              title: fullSolution.title || "Solução sem título",
+              justification: item.justification || "Recomendação personalizada para seu negócio",
+              solutionId: item.solutionId
+            });
+          } else {
+            console.warn(`Solução com ID ${item.solutionId} não encontrada no banco de dados`);
+            all.push({
+              ...item,
+              priority: idx + 1,
+              title: item.title || "Solução não encontrada",
+              justification: item.justification || "Recomendação personalizada para seu negócio",
+              solutionId: item.solutionId
+            });
+          }
+        });
       });
-    });
 
-    all.sort((a, b) => a.priority - b.priority);
-    return all;
+      // Ordenação explícita
+      all.sort((a, b) => {
+        // Primeiro por prioridade
+        if (a.priority !== b.priority) return a.priority - b.priority;
+        // Depois por título
+        return (a.title || "").localeCompare(b.title || "");
+      });
+      
+      return all;
+    } catch (error) {
+      console.error("Erro ao processar lista de soluções:", error);
+      return [];
+    }
   }, [trail, allSolutions]);
 
-  // Solução do step atual
-  const currentSolution = useMemo(() => 
-    solutionsList[currentStepIdx], 
-    [solutionsList, currentStepIdx]
-  );
+  // Solução do step atual com validação
+  const currentSolution = useMemo(() => {
+    if (!solutionsList.length || currentStepIdx >= solutionsList.length) return null;
+    return solutionsList[currentStepIdx];
+  }, [solutionsList, currentStepIdx]);
 
-  // Detectar se já temos trilha ao carregar o componente
+  // Detectar se já temos trilha ao carregar o componente, com limite de tentativas
   useEffect(() => {
     const checkExistingTrail = async () => {
       try {
@@ -69,17 +87,35 @@ export const useTrailGuidedExperience = () => {
         if (solutionsList.length > 0) {
           console.log("Trilha já existe com", solutionsList.length, "soluções");
           setStarted(true);
-        } else {
-          console.log("Não há trilha iniciada ainda");
-          setStarted(false);
+          return;
         }
+        
+        // Se não tem soluções mas temos menos de 3 tentativas, tentar carregar
+        if (solutionsList.length === 0 && loadAttempts < 3 && !regenerating) {
+          console.log(`Tentativa ${loadAttempts + 1} de carregar trilha`);
+          setLoadAttempts(prev => prev + 1);
+          setLoadStartTime(Date.now());
+          
+          try {
+            await refreshTrail(true);
+          } catch (error) {
+            console.error("Erro ao tentar carregar trilha:", error);
+          } finally {
+            setLoadStartTime(null);
+          }
+          return;
+        }
+        
+        console.log("Não há trilha iniciada após tentativas de carregamento");
+        setStarted(false);
       } catch (error) {
         console.error("Erro ao verificar trilha existente:", error);
+        setStarted(false);
       }
     };
     
     checkExistingTrail();
-  }, [isLoading, solutionsList.length]);
+  }, [isLoading, solutionsList.length, refreshTrail, loadAttempts, regenerating]);
 
   // Handler para iniciar a geração da trilha
   const handleStartGeneration = useCallback(async (shouldRegenerate = true) => {
@@ -91,6 +127,7 @@ export const useTrailGuidedExperience = () => {
     
     setShowMagicExperience(true);
     setRegenerating(true);
+    setLoadStartTime(Date.now());
 
     try {
       // Tentar obter a trilha novamente do servidor antes de gerar
@@ -103,11 +140,14 @@ export const useTrailGuidedExperience = () => {
       }
       
       setStarted(true);
+      setCurrentStepIdx(0); // Resetar para o início
+      setTypingFinished(false);
     } catch (error) {
       console.error("Erro ao gerar a trilha:", error);
       toast.error("Erro ao gerar a trilha personalizada.");
     } finally {
       setRegenerating(false);
+      setLoadStartTime(null);
     }
   }, [generateImplementationTrail, refreshTrail]);
 
@@ -134,12 +174,33 @@ export const useTrailGuidedExperience = () => {
   }, [currentStepIdx]);
 
   const handleSelectSolution = useCallback((id: string) => {
+    if (!id) {
+      console.warn("Tentativa de selecionar solução com ID inválido");
+      return;
+    }
+    
     navigate(`/solution/${id}`);
   }, [navigate]);
 
   const handleTypingComplete = useCallback(() => {
     setTypingFinished(true);
   }, []);
+
+  // Timeout para evitar carregamento infinito
+  useEffect(() => {
+    if (!loadStartTime || !regenerating) return;
+    
+    const timeoutId = setTimeout(() => {
+      if (regenerating) {
+        console.warn("Geração da trilha excedeu o tempo limite");
+        setRegenerating(false);
+        setShowMagicExperience(false);
+        toast.error("A geração da trilha está demorando mais que o esperado. Tente novamente mais tarde.");
+      }
+    }, 30000); // 30 segundos
+    
+    return () => clearTimeout(timeoutId);
+  }, [loadStartTime, regenerating]);
 
   return {
     isLoading,
