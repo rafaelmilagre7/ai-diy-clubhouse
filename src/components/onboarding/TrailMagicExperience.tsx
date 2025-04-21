@@ -1,9 +1,8 @@
 
-import React, { useRef, useState, useEffect } from "react";
-import { Canvas, useFrame } from "@react-three/fiber";
-import * as THREE from "three";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Sparkles, Rocket, WandSparkles } from "lucide-react";
+import { MagicScene } from "./three/MagicScene";
 
 interface TrailMagicExperienceProps {
   onFinish: () => void;
@@ -32,60 +31,6 @@ const steps = [
     icon: <Sparkles className="mx-auto text-green-500 animate-bounce" size={44} />,
   },
 ];
-
-// Elemento 3D simples e animado (esfera mágica com aura)
-function MagicSphere({ stage }: { stage: number }) {
-  const mesh = useRef<THREE.Mesh>(null);
-  
-  useFrame((_, delta) => {
-    if (mesh.current) {
-      mesh.current.rotation.y += 0.6 * delta + 0.2 * (stage + 1);
-      mesh.current.rotation.x += 0.1 * delta;
-    }
-  });
-  
-  return (
-    <mesh ref={mesh} position={[0, 0, 0]} scale={1.2 + 0.2 * stage}>
-      <sphereGeometry args={[1.5, 50, 50]} />
-      <meshStandardMaterial
-        color={
-          stage === 0
-            ? "#ffeab7"
-            : stage === 1
-            ? "#0ABAB5"
-            : stage === 2
-            ? "#b87ff5"
-            : "#82e19b"
-        }
-        emissive={
-          stage === 0
-            ? "#ffd580"
-            : stage === 1
-            ? "#0ABAB5"
-            : stage === 2
-            ? "#9b87f599"
-            : "#22bb77"
-        }
-        emissiveIntensity={0.5 + 0.1 * stage}
-        metalness={0.37}
-        roughness={0.25 + 0.1 * (3 - stage)}
-        transparent
-        opacity={0.92}
-      />
-      {/* Aura adicional */}
-      <mesh>
-        <sphereGeometry args={[2.1 + 0.3 * stage, 32, 32]} />
-        <meshStandardMaterial
-          color="#fff"
-          emissive="#fff"
-          emissiveIntensity={0.07 + (stage * 0.04)}
-          transparent
-          opacity={0.08 + stage * 0.03}
-        />
-      </mesh>
-    </mesh>
-  );
-}
 
 export function TrailMagicExperience({ onFinish, onStep }: TrailMagicExperienceProps) {
   const [currStep, setCurrStep] = useState(0);
@@ -170,16 +115,10 @@ export function TrailMagicExperience({ onFinish, onStep }: TrailMagicExperienceP
         </div>
         <div className="w-full flex flex-col items-center">
           <div className="w-64 h-64 flex items-center justify-center mb-8 drop-shadow-lg">
-            <Canvas 
-              shadows 
-              camera={{ position: [0, 0, 7], fov: 60 }}
-              onCreated={handleCanvasCreated}
-            >
-              <ambientLight intensity={0.45} />
-              <directionalLight position={[2, 10, 5]} intensity={1.7} />
-              <pointLight position={[-10, -10, -10]} intensity={1.1} />
-              <MagicSphere stage={currStep} />
-            </Canvas>
+            <MagicScene 
+              stage={currStep} 
+              onCanvasCreated={handleCanvasCreated}
+            />
           </div>
           <div className="w-full text-center mt-2 px-3">
             <div>{steps[currStep].icon}</div>
