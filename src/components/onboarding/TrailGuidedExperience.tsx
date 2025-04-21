@@ -67,7 +67,7 @@ export const TrailGuidedExperience = ({ autoStart = false }) => {
         </p>
         <Button
           className="bg-[#0ABAB5] text-white px-8 py-3 text-lg"
-          onClick={handleStartGeneration}
+          onClick={(e) => handleStartGeneration(true)}
           disabled={regenerating}
         >
           {regenerating ? "Gerando trilha..." : "Gerar Trilha VIVER DE IA"}
@@ -81,7 +81,7 @@ export const TrailGuidedExperience = ({ autoStart = false }) => {
       <div className="text-center text-gray-700 py-12">
         Nenhuma solução recomendada foi encontrada. Por favor, tente regenerar a trilha.
         <div className="mt-4">
-          <Button onClick={handleStartGeneration} className="bg-[#0ABAB5] text-white">
+          <Button onClick={(e) => handleStartGeneration(true)} className="bg-[#0ABAB5] text-white">
             Regenerar Trilha
           </Button>
         </div>
