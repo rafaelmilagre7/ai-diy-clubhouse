@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
 import { useOnboardingSteps } from "@/hooks/onboarding/useOnboardingSteps";
 import { OnboardingProgress } from "@/types/onboarding";
@@ -7,24 +7,34 @@ import { ReviewSectionCard } from "@/components/onboarding/steps/ReviewSectionCa
 import { Button } from "@/components/ui/button";
 import { MilagrinhoMessage } from "@/components/onboarding/MilagrinhoMessage";
 import { CheckCircle, Loader2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useProgress } from "@/hooks/onboarding/useProgress";
 
-interface ReviewStepProps {
-  progress: OnboardingProgress | null;
-  onComplete: () => void;
-  isSubmitting: boolean;
-  navigateToStep: (index: number) => void;
-}
-
-const Review: React.FC<ReviewStepProps> = ({ 
-  progress,
-  onComplete,
-  isSubmitting,
-  navigateToStep
-}) => {
-  const { currentStepIndex, steps } = useOnboardingSteps();
+const Review: React.FC = () => {
+  const navigate = useNavigate();
+  const { currentStepIndex, steps, completeOnboarding } = useOnboardingSteps();
+  const { progress, isLoading } = useProgress();
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  
+  const handleNavigateToStep = (index: number) => {
+    navigate(steps[index].path);
+  };
+  
+  const handleComplete = async () => {
+    if (!progress) return;
+    
+    try {
+      setIsSubmitting(true);
+      await completeOnboarding();
+    } catch (error) {
+      console.error("Erro ao finalizar onboarding:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
   
   // Verificar se temos dados para mostrar
-  if (!progress) {
+  if (isLoading || !progress) {
     return (
       <OnboardingLayout
         currentStep={currentStepIndex + 1}
@@ -57,49 +67,49 @@ const Review: React.FC<ReviewStepProps> = ({
           <ReviewSectionCard
             title="Dados Pessoais"
             data={progress.personal_info}
-            onEdit={() => navigateToStep(0)}
+            onEdit={() => handleNavigateToStep(0)}
           />
           
           <ReviewSectionCard
             title="Dados Profissionais"
             data={progress.professional_info}
-            onEdit={() => navigateToStep(1)}
+            onEdit={() => handleNavigateToStep(1)}
           />
           
           <ReviewSectionCard
             title="Contexto do Negócio"
             data={progress.business_context || progress.business_data}
-            onEdit={() => navigateToStep(2)}
+            onEdit={() => handleNavigateToStep(2)}
           />
           
           <ReviewSectionCard
             title="Experiência com IA"
             data={progress.ai_experience}
-            onEdit={() => navigateToStep(3)}
+            onEdit={() => handleNavigateToStep(3)}
           />
           
           <ReviewSectionCard
             title="Objetivos com o Club"
             data={progress.business_goals}
-            onEdit={() => navigateToStep(4)}
+            onEdit={() => handleNavigateToStep(4)}
           />
           
           <ReviewSectionCard
             title="Personalização da Experiência"
             data={progress.experience_personalization}
-            onEdit={() => navigateToStep(5)}
+            onEdit={() => handleNavigateToStep(5)}
           />
           
           <ReviewSectionCard
             title="Informações Complementares"
             data={progress.complementary_info}
-            onEdit={() => navigateToStep(6)}
+            onEdit={() => handleNavigateToStep(6)}
           />
         </div>
         
         <div className="flex justify-end pt-6">
           <Button
-            onClick={onComplete}
+            onClick={handleComplete}
             disabled={isSubmitting}
             className="bg-[#0ABAB5] hover:bg-[#0ABAB5]/90"
           >
