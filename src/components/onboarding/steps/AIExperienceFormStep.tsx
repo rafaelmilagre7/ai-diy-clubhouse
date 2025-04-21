@@ -9,7 +9,6 @@ import { AIFormationQuestions } from "./ai-experience/AIFormationQuestions";
 import { AINPSField } from "./ai-experience/AINPSField";
 import { AISuggestionsField } from "./ai-experience/AISuggestionsField";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
 
 interface AIExperienceFormStepProps {
   initialData?: OnboardingData["ai_experience"];
@@ -19,6 +18,7 @@ interface AIExperienceFormStepProps {
   onComplete?: () => void;
 }
 
+// Opções de área desejada
 const desiredAreas = [
   { value: "vendas", label: "Soluções de IA para Vendas" },
   { value: "marketing", label: "Soluções de IA para Marketing" },
@@ -53,10 +53,13 @@ export const AIExperienceFormStep: React.FC<AIExperienceFormStepProps> = ({
       )}
       className="space-y-10"
     >
+      {/* Nível de conhecimento em IA */}
       <AIKnowledgeLevelField control={control} />
+
+      {/* Ferramentas de IA já utilizadas */}
       <AIToolsField control={control} />
 
-      {/* Pergunta: Você já implementou alguma solução de IA? */}
+      {/* Nova Pergunta: Já implementou alguma solução de IA? */}
       <div className="space-y-4 bg-gray-50 p-6 rounded-lg">
         <h3 className="text-lg font-medium text-gray-800">
           Você já implementou alguma solução de IA?
@@ -87,10 +90,10 @@ export const AIExperienceFormStep: React.FC<AIExperienceFormStepProps> = ({
         />
       </div>
 
-      {/* Pergunta: Quais áreas você deseja implementar soluções de IA no seu negócio? */}
+      {/* Pergunta: Em quais áreas deseja implementar soluções de IA? */}
       <div className="space-y-4 bg-gray-50 p-6 rounded-lg">
         <h3 className="text-lg font-medium text-gray-800">
-          Quais áreas você deseja implementar soluções de IA no seu negócio?
+          Em quais áreas você deseja implementar soluções de IA no seu negócio?
         </h3>
         <Controller
           control={control}
@@ -115,11 +118,17 @@ export const AIExperienceFormStep: React.FC<AIExperienceFormStepProps> = ({
           )}
         />
       </div>
-      
+
+      {/* Perguntas sobre formação e tempo de clube */}
       <AIFormationQuestions control={control} />
+
+      {/* NPS Field - pergunta atualizada */}
       <AINPSField control={control} />
+
+      {/* Sugestões de melhorias */}
       <AISuggestionsField control={control} />
 
+      {/* Botão de envio */}
       <Button
         type="submit"
         className="w-full bg-[#0ABAB5] hover:bg-[#0ABAB5]/90 text-white"
