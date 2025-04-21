@@ -25,25 +25,26 @@ export function useStepPersistenceCore({
   ): Promise<void> => {
     if (!progress?.id) {
       console.error("Não foi possível salvar dados: ID de progresso não encontrado");
-      toast.error("Erro ao salvar dados");
+      toast.error("Erro ao salvar dados: ID de progresso não encontrado");
       return;
     }
 
-    // Identificar qual é o passo atual baseado no input ou currentStepIndex
-    const currentStep = typeof data.stepId === 'string' ? data.stepId : steps[currentStepIndex]?.id || '';
-    const stepData = typeof data.data === 'object' ? data.data : data;
+    // Identificar qual é o passo atual
+    const currentStep = steps[currentStepIndex]?.id || '';
     
-    console.log(`Salvando dados do passo ${currentStep}, índice ${currentStepIndex}, navegação automática: ${shouldNavigate ? "SIM" : "NÃO"}`, stepData);
+    console.log(`Salvando dados do passo ${currentStep}, índice ${currentStepIndex}, navegação automática: ${shouldNavigate ? "SIM" : "NÃO"}`, data);
+    console.log("Estado atual do progresso:", progress);
 
     try {
       // Montar objeto de atualização para a etapa
-      const updateObj = buildUpdateObject(currentStep, stepData, progress, currentStepIndex);
+      const updateObj = buildUpdateObject(currentStep, data, progress, currentStepIndex);
       if (Object.keys(updateObj).length === 0) {
         console.warn("Objeto de atualização vazio, nada para salvar");
+        toast.warning("Sem dados para salvar");
         return;
       }
 
-      console.log("Dados a serem enviados para o Supabase:", updateObj);
+      console.log("Dados a serem enviados para o banco:", updateObj);
 
       // Atualizar no Supabase
       const updatedProgress = await updateProgress(updateObj);
@@ -53,9 +54,11 @@ export function useStepPersistenceCore({
       await refreshProgress();
       console.log("Dados locais atualizados após salvar");
       
-      // Notificar usuário do salvamento - APENAS se estiver avançando de etapa
+      // Notificar usuário do salvamento
+      toast.success("Dados salvos com sucesso!");
+      
+      // Garantir navegação adequada usando o mapeamento direto
       if (shouldNavigate) {
-        console.log(`Iniciando navegação automática após salvar o passo ${currentStep}`);
         navigateAfterStep(currentStep, currentStepIndex, navigate, shouldNavigate);
       } else {
         console.log("Navegação automática desativada, permanecendo na página atual");
@@ -94,32 +97,21 @@ export function useStepPersistenceCore({
       
       toast.success("Onboarding concluído com sucesso!");
       
-      // Usar setTimeout para garantir que a navegação ocorra após a atualização do estado
+      // Redirecionamento após delay para garantir atualização do estado
       setTimeout(() => {
-        try {
-          // Redirecionar para a página de implementação
-          navigate("/implementation-trail");
-        } catch (navError) {
-          console.error("Erro ao navegar:", navError);
-          logError("navigation_error", { 
-            from: "completeOnboarding", 
-            error: navError instanceof Error ? navError.message : String(navError) 
-          });
-          // Fallback para dashboard em caso de erro de navegação
-          navigate("/dashboard");
-        }
-      }, 500);
+        navigate("/implementation-trail");
+      }, 1000);
     } catch (error) {
       console.error("Erro ao completar onboarding:", error);
       logError("complete_onboarding_error", { 
         error: error instanceof Error ? error.message : String(error) 
       });
-      toast.error("Erro ao finalizar onboarding.");
+      toast.error("Erro ao finalizar onboarding. Por favor, tente novamente.");
       
-      // Mesmo com erro, tentar redirecionar para o dashboard
+      // Fallback para dashboard
       setTimeout(() => {
         navigate("/dashboard");
-      }, 1000);
+      }, 1500);
     }
   };
 

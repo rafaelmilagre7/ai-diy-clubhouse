@@ -2,9 +2,9 @@
 import React, { useState, useEffect } from "react";
 import { CompanyInputs } from "./business/CompanyInputs";
 import { OnboardingData, ProfessionalDataInput } from "@/types/onboarding";
-import { Button } from "@/components/ui/button";
-import { ArrowRight } from "lucide-react";
 import { useForm } from "react-hook-form";
+import { NavigationButtons } from "./NavigationButtons";
+import { useNavigate } from "react-router-dom";
 
 interface ProfessionalDataStepProps {
   onSubmit: (data: ProfessionalDataInput) => void;
@@ -30,6 +30,8 @@ export const ProfessionalDataStep = ({
   initialData,
   onComplete,
 }: ProfessionalDataStepProps) => {
+  const navigate = useNavigate();
+  
   // Extrair dados iniciais de forma mais robusta
   const extractFormData = (data: any): FormValues => {
     console.log("Extraindo dados profissionais de:", data);
@@ -66,7 +68,7 @@ export const ProfessionalDataStep = ({
     return profData;
   };
 
-  // Usar useForm com defaultValues diretamente
+  // Usar useForm com defaultValues
   const { control, handleSubmit, formState: { errors }, reset, watch } = useForm<FormValues>({
     defaultValues: initialData ? extractFormData(initialData) : {
       company_name: "",
@@ -91,6 +93,11 @@ export const ProfessionalDataStep = ({
       reset(extractedData);
     }
   }, [initialData, reset]);
+
+  // Função para voltar à etapa anterior
+  const handlePreviousStep = () => {
+    navigate("/onboarding");
+  };
 
   const onFormSubmit = (data: FormValues) => {
     console.log("Formulário submetido com dados:", data);
@@ -132,20 +139,10 @@ export const ProfessionalDataStep = ({
           />
           
           <div className="flex justify-end mt-8">
-            <Button
-              type="submit"
-              className="bg-[#0ABAB5] hover:bg-[#099388] text-white px-5 py-2"
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? (
-                "Salvando..."
-              ) : (
-                <span className="flex items-center gap-2">
-                  Próximo
-                  <ArrowRight className="h-4 w-4" />
-                </span>
-              )}
-            </Button>
+            <NavigationButtons 
+              isSubmitting={isSubmitting}
+              onPrevious={handlePreviousStep}
+            />
           </div>
         </div>
       </form>

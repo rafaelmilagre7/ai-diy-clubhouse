@@ -18,6 +18,7 @@ export const useProgress = () => {
   const progressId = useRef<string | null>(null);
   const isMounted = useRef(true);
   const lastUpdateTime = useRef<number>(Date.now());
+  const lastError = useRef<Error | null>(null);
 
   useEffect(() => {
     isMounted.current = true;
@@ -31,6 +32,7 @@ export const useProgress = () => {
 
     try {
       setIsLoading(true);
+      lastError.current = null;
       console.log("Buscando progresso para o usuário:", user.id);
 
       const { data, error } = await fetchOnboardingProgress(user.id);
@@ -39,7 +41,7 @@ export const useProgress = () => {
 
       if (error) {
         if (error.code === 'PGRST116' || error.message.includes("Results contain 0 rows")) {
-          console.log("Criando novo registro de progresso para o usuário");
+          console.log("Não há progresso existente, criando novo registro para o usuário", user.id);
           const { data: newData, error: createError } = await createInitialOnboardingProgress(user);
           if (!createError && newData) {
             setProgress(newData);
@@ -47,14 +49,16 @@ export const useProgress = () => {
             console.log("Novo progresso criado:", newData);
           } else {
             console.error("Erro ao criar novo progresso:", createError);
+            lastError.current = new Error(createError?.message || "Erro ao criar progresso");
           }
           return newData;
         } else {
           console.error("Erro ao carregar progresso:", error);
+          lastError.current = new Error(error.message);
           return null;
         }
       } else if (!data) {
-        console.log("Nenhum progresso encontrado, criando novo registro.");
+        console.log("Nenhum progresso encontrado, criando novo registro para", user.id);
         const { data: newData, error: createError } = await createInitialOnboardingProgress(user);
         if (!createError && newData) {
           setProgress(newData);
@@ -62,6 +66,7 @@ export const useProgress = () => {
           console.log("Novo progresso criado:", newData);
         } else {
           console.error("Erro ao criar novo progresso:", createError);
+          lastError.current = new Error(createError?.message || "Erro ao criar progresso");
         }
         return newData;
       } else {
@@ -72,6 +77,7 @@ export const useProgress = () => {
       }
     } catch (error: any) {
       console.error("Erro ao carregar progresso:", error);
+      lastError.current = error;
       return null;
     } finally {
       if (isMounted.current) {
@@ -90,7 +96,7 @@ export const useProgress = () => {
   const updateProgress = async (updates: Partial<OnboardingProgress>) => {
     if (!user || !progress) {
       console.error("Usuário ou progresso não disponível");
-      return null;
+      throw new Error("Usuário ou progresso não disponível");
     }
 
     try {
@@ -103,6 +109,7 @@ export const useProgress = () => {
 
       if (error) {
         console.error("Erro ao atualizar dados:", error);
+        lastError.current = new Error(error.message);
         throw error;
       }
 
@@ -112,6 +119,7 @@ export const useProgress = () => {
       return updatedProgress;
     } catch (error) {
       console.error("Erro ao atualizar progresso:", error);
+      lastError.current = error instanceof Error ? error : new Error(String(error));
       throw error;
     }
   };
@@ -126,6 +134,7 @@ export const useProgress = () => {
 
     try {
       setIsLoading(true);
+      lastError.current = null;
       console.log("Atualizando dados do progresso:", progressId.current);
       
       const { data, error } = await refreshOnboardingProgress(progressId.current);
@@ -134,6 +143,7 @@ export const useProgress = () => {
 
       if (error) {
         console.error("Erro ao recarregar progresso:", error);
+        lastError.current = new Error(error.message);
         throw error;
       }
 
@@ -142,6 +152,7 @@ export const useProgress = () => {
       return data;
     } catch (error) {
       console.error("Erro ao recarregar progresso:", error);
+      lastError.current = error instanceof Error ? error : new Error(String(error));
       return null;
     } finally {
       if (isMounted.current) {
@@ -155,15 +166,15 @@ export const useProgress = () => {
     if (!user || !progressId.current) return;
     
     const checkForUpdates = async () => {
-      // Se passou mais de 10 segundos desde a última atualização manual, refrescar
-      if (Date.now() - lastUpdateTime.current > 10000) {
+      // Se passou mais de 15 segundos desde a última atualização manual, refrescar
+      if (Date.now() - lastUpdateTime.current > 15000) {
         console.log("Verificando atualizações no servidor...");
         await refreshProgress();
       }
     };
     
-    // Verificar a cada 15 segundos
-    const interval = setInterval(checkForUpdates, 15000);
+    // Verificar a cada 20 segundos
+    const interval = setInterval(checkForUpdates, 20000);
     
     return () => clearInterval(interval);
   }, [user, refreshProgress]);
@@ -173,6 +184,7 @@ export const useProgress = () => {
     isLoading,
     updateProgress,
     refreshProgress,
-    fetchProgress
+    fetchProgress,
+    lastError: lastError.current
   };
 };

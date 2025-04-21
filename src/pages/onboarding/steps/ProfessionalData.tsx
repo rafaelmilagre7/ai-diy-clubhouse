@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
 import { useOnboardingSteps } from "@/hooks/onboarding/useOnboardingSteps";
 import { ProfessionalDataStep } from "@/components/onboarding/steps/ProfessionalDataStep";
@@ -12,10 +12,29 @@ const ProfessionalData = () => {
     steps,
     isSubmitting,
     saveStepData,
-    progress
+    progress,
+    refreshProgress
   } = useOnboardingSteps();
-
+  
+  const [isLocalLoading, setIsLocalLoading] = useState(true);
   const navigate = useNavigate();
+
+  // Buscar dados atualizados ao montar o componente
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setIsLocalLoading(true);
+        await refreshProgress();
+      } catch (error) {
+        console.error("Erro ao carregar dados profissionais:", error);
+        toast.error("Erro ao carregar seus dados. Por favor, recarregue a página.");
+      } finally {
+        setIsLocalLoading(false);
+      }
+    };
+    
+    loadData();
+  }, [refreshProgress]);
 
   // Função para calcular o progresso
   const progressPercentage = Math.round(((currentStepIndex + 1) / steps.length) * 100);
@@ -28,7 +47,7 @@ const ProfessionalData = () => {
       // Usar saveStepData do hook
       await saveStepData(data);
       
-      // Verificar se a navegação automática não funcionou e forçar redirecionamento
+      // Verificar se a navegação automática funcionou e forçar redirecionamento se necessário
       setTimeout(() => {
         console.log("Verificando navegação para a próxima etapa...");
         const currentPath = window.location.pathname;
@@ -37,7 +56,7 @@ const ProfessionalData = () => {
           console.log("Navegação não ocorreu automaticamente, forçando redirecionamento para a próxima etapa");
           navigate("/onboarding/business-context");
         }
-      }, 500);
+      }, 1000);
       
     } catch (error) {
       console.error("Erro ao salvar dados profissionais:", error);
@@ -45,12 +64,30 @@ const ProfessionalData = () => {
     }
   };
 
+  // Renderizar estado de carregamento enquanto buscamos os dados
+  if (isLocalLoading) {
+    return (
+      <OnboardingLayout
+        currentStep={currentStepIndex + 1}
+        totalSteps={steps.length}
+        progress={progressPercentage}
+        title="Dados Profissionais"
+      >
+        <div className="flex justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-[#0ABAB5]"></div>
+          <span className="ml-3 text-gray-600">Carregando seus dados...</span>
+        </div>
+      </OnboardingLayout>
+    );
+  }
+
   return (
     <OnboardingLayout
       currentStep={currentStepIndex + 1}
       totalSteps={steps.length}
       progress={progressPercentage}
       title="Dados Profissionais"
+      backUrl="/onboarding"
     >
       <ProfessionalDataStep
         onSubmit={handleSaveData}

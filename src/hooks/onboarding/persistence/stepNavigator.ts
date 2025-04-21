@@ -1,5 +1,6 @@
 
 import { steps } from "../useStepDefinitions";
+import { toast } from "sonner";
 
 export function navigateAfterStep(stepId: string, currentStepIndex: number, navigate: (path: string) => void, shouldNavigate: boolean = true) {
   // Se não devemos navegar automaticamente, retornar imediatamente
@@ -8,11 +9,7 @@ export function navigateAfterStep(stepId: string, currentStepIndex: number, navi
     return;
   }
 
-  let nextPath = "";
-
-  console.log(`Determinando próxima rota para o passo ${stepId}, índice ${currentStepIndex}, shouldNavigate=${shouldNavigate}`);
-
-  // Mapeamento direto de etapas para rotas - abordagem mais robusta
+  // Mapeamento direto e explícito de etapas para rotas
   const stepToRouteMap: {[key: string]: string} = {
     "personal": "/onboarding/professional-data",
     "professional_data": "/onboarding/business-context",
@@ -26,20 +23,24 @@ export function navigateAfterStep(stepId: string, currentStepIndex: number, navi
 
   // Verificar se temos um mapeamento direto para esta etapa
   if (stepToRouteMap[stepId]) {
-    nextPath = stepToRouteMap[stepId];
-    console.log(`Usando mapeamento direto para navegar de ${stepId} para ${nextPath}`);
+    const nextPath = stepToRouteMap[stepId];
+    console.log(`Navegando de ${stepId} para ${nextPath}`);
+    
+    // Usar um delay antes da navegação para garantir que todos os estados foram atualizados
+    setTimeout(() => {
+      console.log(`Executando navegação para: ${nextPath}`);
+      navigate(nextPath);
+      toast.success("Avançando para a próxima etapa");
+    }, 800);
   } else {
     // Fallback genérico usando o array de steps
+    console.warn(`Etapa ${stepId} não encontrada no mapeamento direto, usando fallback`);
     const nextStepIndex = Math.min(currentStepIndex + 1, steps.length - 1);
-    nextPath = steps[nextStepIndex]?.path || "/onboarding";
-    console.log(`Usando fallback para navegação: índice ${nextStepIndex}, caminho ${nextPath}`);
+    const nextPath = steps[nextStepIndex]?.path || "/onboarding";
+    
+    setTimeout(() => {
+      console.log(`Executando navegação de fallback para: ${nextPath}`);
+      navigate(nextPath);
+    }, 800);
   }
-
-  // Faz navegação com pequeno delay para UX consistente
-  console.log(`Navegando automaticamente para: ${nextPath}`);
-  
-  setTimeout(() => {
-    console.log(`Executando navegação para: ${nextPath}`);
-    navigate(nextPath);
-  }, 500); // Aumentado o delay para dar mais tempo para os estados se atualizarem
 }

@@ -22,6 +22,7 @@ const BusinessContext = () => {
     const loadData = async () => {
       try {
         setLoadError(null);
+        setLocalLoading(true);
         await refreshProgress();
         console.log("Dados atualizados para BusinessContext:", progress);
       } catch (error) {
@@ -50,6 +51,7 @@ const BusinessContext = () => {
         business_context: data
       };
       
+      console.log("Salvando dados de contexto de negócio:", businessContextData);
       await saveStepData(businessContextData, true);
       
       // Verificar se a navegação automática funcionou
@@ -57,9 +59,10 @@ const BusinessContext = () => {
         const currentPath = window.location.pathname;
         if (currentPath === "/onboarding/business-context") {
           console.log("Navegação não ocorreu automaticamente, forçando redirecionamento");
+          toast.info("Avançando para a próxima etapa...");
           navigate("/onboarding/ai-experience");
         }
-      }, 500);
+      }, 1000);
     } catch (error) {
       console.error("Erro ao salvar dados:", error);
       toast.error("Erro ao salvar dados. Tente novamente.");
@@ -71,7 +74,19 @@ const BusinessContext = () => {
   const progressPercentage = Math.round(((currentStepIndex + 1) / steps.length) * 100);
 
   if (isLoading || localLoading) {
-    return <BusinessContextLoading step={3} />;
+    return (
+      <OnboardingLayout
+        currentStep={3}
+        totalSteps={steps.length}
+        progress={progressPercentage}
+        title="Contexto do Negócio"
+      >
+        <div className="flex flex-col justify-center items-center h-64 space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#0ABAB5]"></div>
+          <p className="text-gray-500">Carregando seus dados...</p>
+        </div>
+      </OnboardingLayout>
+    );
   }
 
   return (

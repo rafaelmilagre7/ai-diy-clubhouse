@@ -7,9 +7,10 @@ import { ShortTermGoalsField } from "./inputs/ShortTermGoalsField";
 import { MediumTermGoalsField } from "./inputs/MediumTermGoalsField";
 import { KpisField } from "./inputs/KpisField";
 import { AdditionalContextField } from "./inputs/AdditionalContextField";
-import { SubmitButton } from "./SubmitButton";
+import { NavigationButtons } from "@/components/onboarding/steps/NavigationButtons";
 import { OnboardingProgress } from "@/types/onboarding";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 interface BusinessContextFormStepProps {
   progress: OnboardingProgress | null;
@@ -26,6 +27,8 @@ interface FormValues {
 }
 
 export const BusinessContextFormStep: React.FC<BusinessContextFormStepProps> = ({ progress, onSave }) => {
+  const navigate = useNavigate();
+  
   // Obter dados iniciais do contexto de negócios
   const getInitialData = (): FormValues => {
     if (!progress) return {
@@ -65,6 +68,7 @@ export const BusinessContextFormStep: React.FC<BusinessContextFormStepProps> = (
   useEffect(() => {
     if (progress) {
       const initialData = getInitialData();
+      console.log("Atualizando formulário com dados iniciais:", initialData);
       methods.reset(initialData);
     }
   }, [progress]);
@@ -81,20 +85,10 @@ export const BusinessContextFormStep: React.FC<BusinessContextFormStepProps> = (
     }
   };
 
-  // Funções para auto-save dos campos de texto
-  const debouncedSave = React.useCallback(
-    async () => {
-      try {
-        const formData = methods.getValues();
-        console.log("Auto-salvando dados:", formData);
-        
-        await onSave(formData);
-      } catch (error) {
-        console.error("Erro ao auto-salvar dados:", error);
-      }
-    },
-    [methods, onSave]
-  );
+  // Função para voltar à etapa anterior
+  const handlePreviousStep = () => {
+    navigate("/onboarding/professional-data");
+  };
 
   return (
     <FormProvider {...methods}>
@@ -103,40 +97,39 @@ export const BusinessContextFormStep: React.FC<BusinessContextFormStepProps> = (
           <BusinessModelField 
             control={methods.control} 
             error={methods.formState.errors.business_model}
-            onBlur={debouncedSave}
           />
           
           <BusinessChallengesField 
             control={methods.control} 
             error={methods.formState.errors.business_challenges}
-            onChange={debouncedSave}
           />
           
           <ShortTermGoalsField 
             control={methods.control} 
             error={methods.formState.errors.short_term_goals}
-            onChange={debouncedSave}
           />
           
           <MediumTermGoalsField 
             control={methods.control} 
             error={methods.formState.errors.medium_term_goals}
-            onChange={debouncedSave}
           />
           
           <KpisField 
             control={methods.control} 
             error={methods.formState.errors.important_kpis}
-            onChange={debouncedSave}
           />
           
           <AdditionalContextField 
             control={methods.control} 
             error={methods.formState.errors.additional_context}
-            onBlur={debouncedSave}
           />
           
-          <SubmitButton isSubmitting={methods.formState.isSubmitting} />
+          <NavigationButtons 
+            isSubmitting={methods.formState.isSubmitting} 
+            onPrevious={handlePreviousStep}
+            submitText="Continuar"
+            loadingText="Salvando..."
+          />
         </div>
       </form>
     </FormProvider>
