@@ -1,4 +1,3 @@
-
 import React, { useEffect } from "react";
 import { Module } from "@/lib/supabase";
 import { LandingModule } from "./LandingModule";
@@ -32,15 +31,21 @@ export const ModuleContent = ({ module, onComplete, onError }: ModuleContentProp
   try {
     // Renderiza o conteúdo apropriado com base no tipo do módulo
     log("Rendering module content", { module_type: module.type });
-    
-    switch (module.type) {
-      case "landing":
-        return <LandingModule module={module} onComplete={onComplete} />;
-      case "celebration":
-        return <CelebrationModule module={module} onComplete={onComplete} />;
-      default:
-        return <DefaultModule module={module} onComplete={onComplete} />;
-    }
+    // Microanimação suave na troca de módulo (fade-in)
+    return (
+      <div className="animate-fade-in">
+        {(() => {
+          switch (module.type) {
+            case "landing":
+              return <LandingModule module={module} onComplete={onComplete} />;
+            case "celebration":
+              return <CelebrationModule module={module} onComplete={onComplete} />;
+            default:
+              return <DefaultModule module={module} onComplete={onComplete} />;
+          }
+        })()}
+      </div>
+    );
   } catch (error) {
     logError("Error rendering module content", error);
     if (onError) {

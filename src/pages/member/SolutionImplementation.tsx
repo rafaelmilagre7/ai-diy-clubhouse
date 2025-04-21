@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useModuleImplementation } from "@/hooks/useModuleImplementation";
 import LoadingScreen from "@/components/common/LoadingScreen";
@@ -14,6 +13,8 @@ import { ImplementationComplete } from "@/components/implementation/content/Impl
 import { CommentsSection } from "@/components/implementation/content/tool-comments/CommentsSection";
 import { useSolutionCompletion } from "@/hooks/implementation/useSolutionCompletion";
 import { useRealtimeComments } from "@/hooks/implementation/useRealtimeComments";
+import { WizardStepProgress } from "@/components/implementation/WizardStepProgress";
+import { GlassCard } from "@/components/ui/GlassCard";
 
 const SolutionImplementation = () => {
   const {
@@ -40,19 +41,15 @@ const SolutionImplementation = () => {
     setCompletedModules: () => {}
   });
   
-  // Importante: Ativar escuta de comentários em tempo real
   const solutionId = solution?.id || "";
   const moduleId = currentModule?.id || "";
   
-  // Ativar escuta de comentários em tempo real apenas na aba de comentários
   const enableRealtimeComments = !!solution && 
                                 !!currentModule && 
                                 activeTab === "comments";
   
-  // Usando o hook de comentários em tempo real
   useRealtimeComments(solutionId, moduleId, enableRealtimeComments);
   
-  // Log quando a aba é alterada
   useEffect(() => {
     if (activeTab === "comments" && solution && currentModule) {
       log("Aba de comentários ativada", { 
@@ -62,7 +59,6 @@ const SolutionImplementation = () => {
     }
   }, [activeTab, solution, currentModule, log]);
   
-  // Definindo a função onComplete que estava faltando
   const onComplete = async () => {
     const success = await handleConfirmImplementation();
     if (success) {
@@ -94,55 +90,69 @@ const SolutionImplementation = () => {
     return <ImplementationNotFound />;
   }
   
+  const currentStep = modules.findIndex(m => m.id === currentModule?.id) || 0;
+  
   return (
-    <div className="pb-20 min-h-screen bg-slate-50">
-      <ImplementationHeader solution={solution} />
-      
-      <div className="container mt-6 bg-white p-6 rounded-lg shadow-sm">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="w-full grid grid-cols-6 mb-6">
-            <TabsTrigger value="tools">Ferramentas</TabsTrigger>
-            <TabsTrigger value="materials">Materiais</TabsTrigger>
-            <TabsTrigger value="videos">Vídeos</TabsTrigger>
-            <TabsTrigger value="checklist">Checklist</TabsTrigger>
-            <TabsTrigger value="comments">Comentários</TabsTrigger>
-            <TabsTrigger value="complete">Concluir</TabsTrigger>
-          </TabsList>
+    <div className="pb-20 min-h-screen bg-gradient-to-br from-[#f6fdff] via-[#ecfafe] to-[#e7f4fb]">
+      <div className="container max-w-3xl animate-fade-in">
+        <WizardStepProgress
+          currentStep={currentStep}
+          totalSteps={modules.length}
+          stepTitles={[
+            "Landing", "Visão Geral", "Preparação", "Implementação",
+            "Verificação", "Resultados", "Otimização", "Celebração"
+          ]}
+        />
+        <GlassCard className="p-0 md:p-0 transition-all duration-300 shadow-2xl ring-2 ring-[#0ABAB5]/10">
+          <ImplementationHeader solution={solution} />
           
-          <TabsContent value="tools">
-            <ModuleContentTools module={currentModule} />
-          </TabsContent>
-          
-          <TabsContent value="materials">
-            <ModuleContentMaterials module={currentModule} />
-          </TabsContent>
-          
-          <TabsContent value="videos">
-            <ModuleContentVideos module={currentModule} />
-          </TabsContent>
-          
-          <TabsContent value="checklist">
-            <ModuleContentChecklist module={currentModule} />
-          </TabsContent>
-          
-          <TabsContent value="comments">
-            {solution && currentModule && (
-              <CommentsSection 
-                solutionId={solution.id} 
-                moduleId={currentModule.id} 
-              />
-            )}
-          </TabsContent>
-          
-          <TabsContent value="complete">
-            <ImplementationComplete 
-              solution={solution} 
-              onComplete={onComplete} 
-              isCompleting={isCompleting}
-              isCompleted={isCompleted}
-            />
-          </TabsContent>
-        </Tabs>
+          <div className="mt-0 px-0 md:px-6">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <TabsList className="w-full grid grid-cols-6 mb-6">
+                <TabsTrigger value="tools">Ferramentas</TabsTrigger>
+                <TabsTrigger value="materials">Materiais</TabsTrigger>
+                <TabsTrigger value="videos">Vídeos</TabsTrigger>
+                <TabsTrigger value="checklist">Checklist</TabsTrigger>
+                <TabsTrigger value="comments">Comentários</TabsTrigger>
+                <TabsTrigger value="complete">Concluir</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="tools">
+                <ModuleContentTools module={currentModule} />
+              </TabsContent>
+              
+              <TabsContent value="materials">
+                <ModuleContentMaterials module={currentModule} />
+              </TabsContent>
+              
+              <TabsContent value="videos">
+                <ModuleContentVideos module={currentModule} />
+              </TabsContent>
+              
+              <TabsContent value="checklist">
+                <ModuleContentChecklist module={currentModule} />
+              </TabsContent>
+              
+              <TabsContent value="comments">
+                {solution && currentModule && (
+                  <CommentsSection 
+                    solutionId={solution.id} 
+                    moduleId={currentModule.id} 
+                  />
+                )}
+              </TabsContent>
+              
+              <TabsContent value="complete">
+                <ImplementationComplete 
+                  solution={solution} 
+                  onComplete={onComplete} 
+                  isCompleting={isCompleting}
+                  isCompleted={isCompleted}
+                />
+              </TabsContent>
+            </Tabs>
+          </div>
+        </GlassCard>
       </div>
     </div>
   );
