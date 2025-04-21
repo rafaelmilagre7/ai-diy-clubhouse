@@ -94,7 +94,7 @@ export const ExpectativasObjetivosStep: React.FC<OnboardingStepProps> = ({
   const form = useForm<ValoresForm>({
     defaultValues: {
       primary_goal: initialData?.primary_goal || "",
-      expected_outcome_30days: initialData?.expected_outcome_30days || "",
+      expected_outcome_30days: initialData?.expected_outcomes?.[0] || initialData?.expected_outcome_30days || "",
       priority_solution_type: initialData?.priority_solution_type || "",
       how_implement: initialData?.how_implement || "",
       week_availability: initialData?.week_availability || "",
@@ -105,10 +105,12 @@ export const ExpectativasObjetivosStep: React.FC<OnboardingStepProps> = ({
   });
 
   function handleSubmit(data: ValoresForm) {
+    console.log("Enviando dados do formulário:", data);
     onSubmit("business_goals", {
       business_goals: {
         primary_goal: data.primary_goal,
-        expected_outcomes: [data.expected_outcome_30days],
+        expected_outcome_30days: data.expected_outcome_30days,  // Campo individual para verificação
+        expected_outcomes: [data.expected_outcome_30days],  // Array para compatibilidade
         timeline: "",
         priority_solution_type: data.priority_solution_type,
         how_implement: data.how_implement,

@@ -64,7 +64,7 @@ export function buildUpdateObject(
       // Corrige para aceitar campo array desired_ai_areas e retrocompatibilidade
       let aiData = { ...existingAiExperience, ...data.ai_experience };
       
-      // Corrigir se alguém enviou desired_ai_area como string (legado)
+      // Corrigir se alguém enviou desired_ai_areas como string (legado)
       if (typeof aiData.desired_ai_areas === "string") {
         aiData.desired_ai_areas = [aiData.desired_ai_areas];
       }
@@ -82,10 +82,29 @@ export function buildUpdateObject(
   } else if (stepId === "business_goals") {
     // Salvar dados de objetivos de negócio
     const existingBusinessGoals = progress.business_goals || {};
+    
+    // Adicionar log para depuração do problema
+    console.log("Dados de objetivos recebidos:", data.business_goals);
+    console.log("Objetivos existentes:", existingBusinessGoals);
+    
+    if (data.business_goals) {
+      // Garantir que o campo expected_outcomes seja sempre um array
+      if (data.business_goals.expected_outcome_30days && !data.business_goals.expected_outcomes) {
+        data.business_goals.expected_outcomes = [data.business_goals.expected_outcome_30days];
+      }
+      
+      // Se temos apenas expected_outcomes mas não o campo individual, mantemos compatibilidade
+      if (data.business_goals.expected_outcomes && data.business_goals.expected_outcomes.length > 0 && 
+          !data.business_goals.expected_outcome_30days) {
+        data.business_goals.expected_outcome_30days = data.business_goals.expected_outcomes[0];
+      }
+    }
+    
     updateObj.business_goals = {
       ...existingBusinessGoals,
       ...(data.business_goals || {})
     };
+    
     console.log("Salvando business_goals:", updateObj.business_goals);
   } else if (stepId === "experience_personalization") {
     // Salvar dados de personalização de experiência
