@@ -129,4 +129,21 @@
   .badge-strategy {
     @apply bg-strategy text-white;
   }
+  
+  /* Novas classes para design moderno */
+  .card-hover-effect {
+    @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-1;
+  }
+  
+  .gradient-text {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-viverblue to-viverblue-light;
+  }
+  
+  .gradient-border {
+    @apply relative before:absolute before:inset-0 before:p-[1px] before:rounded-lg before:bg-gradient-to-r before:from-viverblue before:to-viverblue-light before:-z-10;
+  }
+  
+  .glass-effect {
+    @apply backdrop-blur-sm bg-white/80 border border-white/20;
+  }
 }
