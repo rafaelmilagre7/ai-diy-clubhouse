@@ -43,8 +43,8 @@ export const SocialInputs = ({
         <p className="text-sm text-red-500 mt-1">
           {typeof errors.linkedin === 'string' 
             ? errors.linkedin 
-            : 'message' in errors.linkedin 
-              ? errors.linkedin.message 
+            : 'message' in errors.linkedin && typeof errors.linkedin.message === 'string'
+              ? String(errors.linkedin.message)
               : 'LinkedIn inválido'}
         </p>
       )}
@@ -68,8 +68,8 @@ export const SocialInputs = ({
         <p className="text-sm text-red-500 mt-1">
           {typeof errors.instagram === 'string' 
             ? errors.instagram 
-            : 'message' in errors.instagram 
-              ? errors.instagram.message 
+            : 'message' in errors.instagram && typeof errors.instagram.message === 'string'
+              ? String(errors.instagram.message)
               : 'Instagram inválido'}
         </p>
       )}

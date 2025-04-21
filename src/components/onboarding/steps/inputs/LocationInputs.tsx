@@ -113,8 +113,8 @@ export const LocationInputs = ({
           <p className="text-sm text-red-500 mt-1">
             {typeof errors.state === 'string' 
               ? errors.state 
-              : 'message' in errors.state 
-                ? errors.state.message 
+              : 'message' in errors.state && typeof errors.state.message === 'string'
+                ? String(errors.state.message)
                 : 'Estado é obrigatório'}
           </p>
         )}
@@ -148,8 +148,8 @@ export const LocationInputs = ({
           <p className="text-sm text-red-500 mt-1">
             {typeof errors.city === 'string' 
               ? errors.city 
-              : 'message' in errors.city 
-                ? errors.city.message 
+              : 'message' in errors.city && typeof errors.city.message === 'string'
+                ? String(errors.city.message)
                 : 'Cidade é obrigatória'}
           </p>
         )}
