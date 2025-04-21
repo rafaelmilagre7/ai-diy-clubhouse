@@ -1,7 +1,6 @@
 
 import React, { useEffect, useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import { useImplementationTrail } from "@/hooks/implementation/useImplementationTrail";
 import { Solution } from "@/lib/supabase";
@@ -9,6 +8,7 @@ import { supabase } from "@/lib/supabase";
 import { TrailCardLoader } from "./TrailCardLoader";
 import { TrailEmptyState } from "./TrailEmptyState";
 import { TrailCardList } from "./TrailCardList";
+import { TrailCardHeader } from "./TrailCardHeader";
 
 interface TrailSolution extends Solution {
   priority: number;
@@ -21,7 +21,6 @@ export const ImplementationTrail = () => {
   const [solutions, setSolutions] = useState<TrailSolution[]>([]);
   const [loadingSolutions, setLoadingSolutions] = useState(true);
 
-  // Carregar trilha e soluções correspondentes
   useEffect(() => {
     const fetchSolutionsForTrail = async () => {
       if (!trail) {
@@ -114,22 +113,7 @@ export const ImplementationTrail = () => {
 
   return (
     <Card className="w-full">
-      <CardHeader className="pb-4">
-        <CardTitle className="text-xl flex justify-between items-center">
-          <span>Sua Trilha de Implementação</span>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleRegenerateTrail}
-            className="text-xs text-[#0ABAB5] hover:text-[#0ABAB5]/80"
-          >
-            Atualizar
-          </Button>
-        </CardTitle>
-        <CardDescription>
-          Soluções personalizadas com base no seu perfil
-        </CardDescription>
-      </CardHeader>
+      <TrailCardHeader onUpdate={handleRegenerateTrail} />
       <CardContent>
         <TrailCardList
           solutions={solutions}
