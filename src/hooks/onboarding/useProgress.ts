@@ -1,10 +1,16 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/auth";
-import { OnboardingData, OnboardingProgress } from "@/types/onboarding";
+import { OnboardingProgress } from "@/types/onboarding";
 import { toast } from "sonner";
+import {
+  fetchOnboardingProgress,
+  createInitialOnboardingProgress,
+  updateOnboardingProgress,
+  refreshOnboardingProgress,
+} from "./persistence/progressPersistence";
 
+// HOOK REFACTORIZADO
 export const useProgress = () => {
   const { user } = useAuth();
   const [progress, setProgress] = useState<OnboardingProgress | null>(null);
@@ -13,7 +19,6 @@ export const useProgress = () => {
   const progressId = useRef<string | null>(null);
   const isMounted = useRef(true);
 
-  // Efeito para gerenciar o estado montado/desmontado
   useEffect(() => {
     isMounted.current = true;
     return () => {
@@ -27,22 +32,19 @@ export const useProgress = () => {
     try {
       setIsLoading(true);
 
-      // Buscamos primeiro por progressos já existentes para evitar duplicação
-      const { data, error } = await supabase
-        .from("onboarding_progress")
-        .select("*")
-        .eq("user_id", user.id)
-        .order('created_at', { ascending: false }) // Pegar o mais recente primeiro
-        .limit(1)
-        .maybeSingle(); // Correção para evitar erro caso não encontre
+      const { data, error } = await fetchOnboardingProgress(user.id);
 
       if (!isMounted.current) return null;
 
       if (error) {
         if (error.code === 'PGRST116' || error.message.includes("Results contain 0 rows")) {
-          // Não encontrou registro, vamos criar um novo
           console.log("Criando novo registro de progresso para o usuário");
-          return await createInitialProgress();
+          const { data: newData, error: createError } = await createInitialOnboardingProgress(user);
+          if (!createError && newData) {
+            setProgress(newData);
+            progressId.current = newData.id;
+          }
+          return newData;
         } else {
           console.error("Erro ao carregar progresso:", error);
           toast.error("Erro ao carregar seu progresso. Algumas funcionalidades podem estar limitadas.");
@@ -50,7 +52,12 @@ export const useProgress = () => {
         }
       } else if (!data) {
         console.log("Nenhum progresso encontrado, criando novo registro.");
-        return await createInitialProgress();
+        const { data: newData, error: createError } = await createInitialOnboardingProgress(user);
+        if (!createError && newData) {
+          setProgress(newData);
+          progressId.current = newData.id;
+        }
+        return newData;
       } else {
         console.log("Progresso carregado com sucesso:", data);
         setProgress(data);
@@ -71,77 +78,10 @@ export const useProgress = () => {
     }
   }, [user]);
 
-  const createInitialProgress = async () => {
-    if (!user) return null;
-
-    try {
-      // Obter metadados do usuário da autenticação
-      const userName = user?.user_metadata?.name || '';
-      const userEmail = user?.email || '';
-
-      // Garante que cada campo tenha valor padrão adequado
-      const initialData = {
-        user_id: user?.id,
-        completed_steps: [],
-        current_step: 'personal',
-        is_completed: false,
-        personal_info: {
-          name: userName,
-          email: userEmail,
-        },
-        professional_info: {},
-        business_data: {},
-        ai_experience: {},
-        business_goals: {},
-        experience_personalization: {},
-        complementary_info: {},
-        industry_focus: {},
-        resources_needs: {},
-        team_info: {},
-        implementation_preferences: {},
-        company_name: "",
-        company_size: "",
-        company_sector: "",
-        company_website: "",
-        current_position: "",
-        annual_revenue: ""
-      };
-
-      const { data, error } = await supabase
-        .from("onboarding_progress")
-        .insert(initialData)
-        .select()
-        .single();
-
-      if (!isMounted.current) return null;
-
-      if (error) {
-        console.error("Erro ao criar progresso inicial:", error);
-        toast.error("Erro ao inicializar seu progresso. Por favor, recarregue a página.");
-        throw error;
-      }
-
-      console.log("Progresso inicial criado:", data);
-      setProgress(data);
-      progressId.current = data.id;
-      return data;
-    } catch (error) {
-      console.error("Erro ao criar progresso inicial:", error);
-      if (isMounted.current) {
-        toast.error("Erro ao inicializar seu progresso. Por favor, recarregue a página.");
-      }
-      return null;
-    }
-  };
-
   useEffect(() => {
     if (!user || hasInitialized.current) return;
     fetchProgress();
-
-    // Cleanup function
-    return () => {
-      // Não resetamos hasInitialized aqui para evitar múltiplas inicializações
-    };
+    // Não resetamos hasInitialized aqui para evitar múltiplas inicializações
   }, [user, fetchProgress]);
 
   const updateProgress = async (updates: Partial<OnboardingProgress>) => {
@@ -152,12 +92,7 @@ export const useProgress = () => {
 
     try {
       console.log("Atualizando progresso:", updates);
-      const { error, data } = await supabase
-        .from("onboarding_progress")
-        .update(updates)
-        .eq("id", progress.id)
-        .select()
-        .single();
+      const { data, error } = await updateOnboardingProgress(progress.id, updates);
 
       if (!isMounted.current) return null;
 
@@ -167,7 +102,6 @@ export const useProgress = () => {
         throw error;
       }
 
-      // Atualizamos o estado local para refletir as mudanças imediatamente
       const updatedProgress = { ...progress, ...updates };
       setProgress(updatedProgress);
       console.log("Progresso atualizado com sucesso:", updatedProgress);
@@ -181,7 +115,6 @@ export const useProgress = () => {
     }
   };
 
-  // Função para recarregar os dados do progresso do servidor
   const refreshProgress = useCallback(async () => {
     if (!user) return null;
 
@@ -191,11 +124,7 @@ export const useProgress = () => {
 
     try {
       setIsLoading(true);
-      const { data, error } = await supabase
-        .from("onboarding_progress")
-        .select("*")
-        .eq("id", progressId.current)
-        .single();
+      const { data, error } = await refreshOnboardingProgress(progressId.current);
 
       if (!isMounted.current) return null;
 
