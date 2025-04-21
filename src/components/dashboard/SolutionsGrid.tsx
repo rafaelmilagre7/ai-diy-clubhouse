@@ -1,40 +1,24 @@
 
-import { Solution } from "@/hooks/dashboard/types";
+import { FC } from "react";
+import { Solution } from "@/lib/supabase";
 import { SolutionCard } from "./SolutionCard";
-import { SolutionsGridLoader } from "./SolutionsGridLoader";
 
-export interface SolutionsGridProps {
+interface SolutionsGridProps {
   solutions: Solution[];
-  onSolutionClick: (id: string) => void;
-  category?: string;
-  loading?: boolean;
+  onSolutionClick: (solution: Solution) => void;
 }
 
-export const SolutionsGrid = ({ 
+export const SolutionsGrid: FC<SolutionsGridProps> = ({ 
   solutions, 
-  onSolutionClick,
-  category = "all",
-  loading = false
-}: SolutionsGridProps) => {
-  if (loading) {
-    return <SolutionsGridLoader />;
-  }
-
-  if (solutions.length === 0) {
-    return (
-      <div className="text-center py-8">
-        <p className="text-gray-500">Nenhuma solução encontrada nesta categoria.</p>
-      </div>
-    );
-  }
-
+  onSolutionClick 
+}) => {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
       {solutions.map((solution) => (
         <SolutionCard
           key={solution.id}
           solution={solution}
-          onClick={() => onSolutionClick(solution.id)}
+          onClick={() => onSolutionClick(solution)}
         />
       ))}
     </div>

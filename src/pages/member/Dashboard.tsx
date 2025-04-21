@@ -6,7 +6,7 @@ import { useDashboardProgress } from "@/hooks/useDashboardProgress";
 import { toast } from "sonner";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { Solution } from "@/lib/supabase";
-import { LoadingScreen } from "@/components/common/LoadingScreen";
+import LoadingScreen from "@/components/common/LoadingScreen";
 
 const Dashboard = () => {
   const navigate = useNavigate();

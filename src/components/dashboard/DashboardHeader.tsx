@@ -4,24 +4,36 @@ import { Button } from "@/components/ui/button";
 import { Search, Filter, Settings } from "lucide-react";
 import { useAuth } from "@/contexts/auth";
 import { Link } from "react-router-dom";
+import { useState } from "react";
 
 interface DashboardHeaderProps {
-  searchQuery: string;
-  onSearchChange: (query: string) => void;
+  activeSolutionsCount: number;
+  completedSolutionsCount: number;
+  category: string;
+  onCategoryChange: (category: string) => void;
 }
 
 export const DashboardHeader = ({
-  searchQuery,
-  onSearchChange,
+  activeSolutionsCount,
+  completedSolutionsCount,
+  category,
+  onCategoryChange,
 }: DashboardHeaderProps) => {
   const { isAdmin, profile } = useAuth();
+  const [searchQuery, setSearchQuery] = useState("");
+  
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+    // Aqui você poderia adicionar lógica para filtrar soluções por pesquisa
+  };
   
   return (
     <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
       <div>
         <h1 className="text-3xl font-bold">Bem-vindo, {profile?.name?.split(" ")[0] || "Membro"}!</h1>
         <p className="text-muted-foreground mt-1">
-          Escolha uma solução de IA para implementar em sua empresa
+          Você tem {activeSolutionsCount} {activeSolutionsCount === 1 ? 'solução' : 'soluções'} em andamento 
+          e {completedSolutionsCount} {completedSolutionsCount === 1 ? 'solução completada' : 'soluções completadas'}
         </p>
       </div>
       <div className="flex items-center gap-2">
@@ -40,7 +52,7 @@ export const DashboardHeader = ({
             placeholder="Buscar soluções..."
             className="pl-8"
             value={searchQuery}
-            onChange={(e) => onSearchChange(e.target.value)}
+            onChange={handleSearchChange}
           />
         </div>
         <Button variant="outline" size="icon">
