@@ -151,6 +151,7 @@ export const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
               country={initialData?.country || "Brasil"}
               state={validation.values.state}
               city={validation.values.city}
+              onChangeCountry={(v) => {/* Como o país é fixo para Brasil, não fazemos nada aqui */}}
               onChangeState={(v) => validation.handleChange("state", v)}
               onChangeCity={(v) => validation.handleChange("city", v)}
               disabled={isSubmitting}
