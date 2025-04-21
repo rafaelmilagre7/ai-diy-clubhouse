@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/lib/supabase";
 import { Solution } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
@@ -14,6 +14,8 @@ export const useSolutionsData = (options?: {
   const [solutions, setSolutions] = useState<Solution[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [activeCategory, setActiveCategory] = useState(options?.category || "all");
 
   useEffect(() => {
     const fetchSolutions = async () => {
@@ -23,9 +25,10 @@ export const useSolutionsData = (options?: {
         // Iniciar a consulta básica
         let query = supabase.from("solutions").select("*");
         
-        // Aplicar filtro por categoria se especificado
-        if (options?.category && options.category !== "all") {
-          query = query.eq("category", options.category);
+        // Aplicar filtro por categoria se especificado e não for "all"
+        const categoryToFilter = activeCategory !== "all" ? activeCategory : options?.category;
+        if (categoryToFilter && categoryToFilter !== "all") {
+          query = query.eq("category", categoryToFilter);
         }
         
         // Aplicar filtro para mostrar apenas soluções publicadas (se não for admin)
@@ -56,11 +59,24 @@ export const useSolutionsData = (options?: {
     };
     
     fetchSolutions();
-  }, [options?.category, options?.publishedOnly, isAdmin, toast]);
+  }, [options?.category, options?.publishedOnly, isAdmin, toast, activeCategory]);
+  
+  // Filtramos as soluções baseado na pesquisa
+  const filteredSolutions = useMemo(() => {
+    return solutions.filter(solution =>
+      solution.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      solution.description.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [solutions, searchQuery]);
   
   return {
     solutions,
+    filteredSolutions,
     loading,
     error,
+    searchQuery,
+    setSearchQuery,
+    activeCategory,
+    setActiveCategory
   };
 };
