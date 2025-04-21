@@ -4,7 +4,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FormMessage } from "@/components/ui/form-message";
 import { cn } from "@/lib/utils";
-import { CheckCircle } from "lucide-react";
+import { CheckCircle, AlertCircle } from "lucide-react";
+import { validateLinkedInUrl, validateInstagramUrl } from "@/utils/validationUtils";
 
 interface SocialInputsProps {
   linkedin: string;
@@ -31,61 +32,72 @@ export const SocialInputs: React.FC<SocialInputsProps> = ({
   errors,
   isValid = { linkedin: false, instagram: false }
 }) => {
+  const linkedinIsValid = linkedin ? validateLinkedInUrl(linkedin) : true;
+  const instagramIsValid = instagram ? validateInstagramUrl(instagram) : true;
+
   return (
     <div className="space-y-4">
       <div className="space-y-2">
         <Label htmlFor="linkedin" className={cn(
-          "transition-colors flex items-center",
-          errors.linkedin ? "text-red-500" : linkedin && isValid.linkedin ? "text-[#0ABAB5]" : ""
+          "transition-colors flex items-center gap-2",
+          errors.linkedin ? "text-red-500" : linkedin && linkedinIsValid ? "text-[#0ABAB5]" : ""
         )}>
           LinkedIn (opcional)
-          {isValid.linkedin && linkedin && (
-            <CheckCircle className="ml-2 h-4 w-4 text-[#0ABAB5]" />
+          {linkedin && (
+            linkedinIsValid ? (
+              <CheckCircle className="h-4 w-4 text-[#0ABAB5]" />
+            ) : (
+              <AlertCircle className="h-4 w-4 text-red-500" />
+            )
           )}
         </Label>
         <Input
           id="linkedin"
-          placeholder="https://linkedin.com/in/seu-perfil"
+          placeholder="linkedin.com/in/seu-perfil"
           value={linkedin}
           onChange={(e) => onChangeLinkedin(e.target.value)}
           disabled={disabled}
           className={cn(
             "transition-colors",
             errors.linkedin ? "border-red-500 focus:border-red-500" : 
-            linkedin && isValid.linkedin ? "border-[#0ABAB5] focus:border-[#0ABAB5]" : ""
+            linkedin && linkedinIsValid ? "border-[#0ABAB5] focus:border-[#0ABAB5]" : ""
           )}
         />
         <FormMessage
-          type={linkedin && isValid.linkedin ? "success" : "error"}
-          message={errors.linkedin}
+          type={linkedin && linkedinIsValid ? "success" : "error"}
+          message={errors.linkedin || (linkedin && !linkedinIsValid ? "Digite uma URL válida do LinkedIn" : undefined)}
         />
       </div>
 
       <div className="space-y-2">
         <Label htmlFor="instagram" className={cn(
-          "transition-colors flex items-center",
-          errors.instagram ? "text-red-500" : instagram && isValid.instagram ? "text-[#0ABAB5]" : ""
+          "transition-colors flex items-center gap-2",
+          errors.instagram ? "text-red-500" : instagram && instagramIsValid ? "text-[#0ABAB5]" : ""
         )}>
           Instagram (opcional)
-          {isValid.instagram && instagram && (
-            <CheckCircle className="ml-2 h-4 w-4 text-[#0ABAB5]" />
+          {instagram && (
+            instagramIsValid ? (
+              <CheckCircle className="h-4 w-4 text-[#0ABAB5]" />
+            ) : (
+              <AlertCircle className="h-4 w-4 text-red-500" />
+            )
           )}
         </Label>
         <Input
           id="instagram"
-          placeholder="https://instagram.com/seu-perfil"
+          placeholder="instagram.com/seu-perfil"
           value={instagram}
           onChange={(e) => onChangeInstagram(e.target.value)}
           disabled={disabled}
           className={cn(
             "transition-colors",
             errors.instagram ? "border-red-500 focus:border-red-500" : 
-            instagram && isValid.instagram ? "border-[#0ABAB5] focus:border-[#0ABAB5]" : ""
+            instagram && instagramIsValid ? "border-[#0ABAB5] focus:border-[#0ABAB5]" : ""
           )}
         />
         <FormMessage
-          type={instagram && isValid.instagram ? "success" : "error"}
-          message={errors.instagram}
+          type={instagram && instagramIsValid ? "success" : "error"}
+          message={errors.instagram || (instagram && !instagramIsValid ? "Digite uma URL válida do Instagram" : undefined)}
         />
       </div>
     </div>

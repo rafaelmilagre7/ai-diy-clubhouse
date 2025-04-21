@@ -5,7 +5,8 @@ import { Label } from "@/components/ui/label";
 import { FormMessage } from "@/components/ui/form-message";
 import { cn } from "@/lib/utils";
 import InputMask from "react-input-mask";
-import { CheckCircle } from "lucide-react";
+import { CheckCircle, AlertCircle } from "lucide-react";
+import { validateBrazilianPhone } from "@/utils/validationUtils";
 
 interface PhoneInputProps {
   value: string;
@@ -28,15 +29,21 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({
   onChangeDDI,
   isValid = false
 }) => {
+  const phoneIsValid = value ? validateBrazilianPhone(value) : true;
+  
   return (
     <div className="space-y-2">
       <Label htmlFor="phone" className={cn(
-        "transition-colors flex items-center",
-        error ? "text-red-500" : value ? "text-[#0ABAB5]" : ""
+        "transition-colors flex items-center gap-2",
+        error ? "text-red-500" : value && phoneIsValid ? "text-[#0ABAB5]" : ""
       )}>
         Telefone <span className="text-gray-400">(opcional)</span>
-        {isValid && value && (
-          <CheckCircle className="ml-2 h-4 w-4 text-[#0ABAB5]" />
+        {value && (
+          phoneIsValid ? (
+            <CheckCircle className="h-4 w-4 text-[#0ABAB5]" />
+          ) : (
+            <AlertCircle className="h-4 w-4 text-red-500" />
+          )
         )}
       </Label>
       <div className="flex">
@@ -50,7 +57,7 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({
               className={cn(
                 "transition-all duration-200",
                 error ? "border-red-500 focus:border-red-500" : 
-                value && isValid ? "border-[#0ABAB5] focus:border-[#0ABAB5]" : ""
+                value && phoneIsValid ? "border-[#0ABAB5] focus:border-[#0ABAB5]" : ""
               )}
             />
           </div>
@@ -71,7 +78,7 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({
                 className={cn(
                   "transition-all duration-200",
                   error ? "border-red-500 focus:border-red-500" : 
-                  value && isValid ? "border-[#0ABAB5] focus:border-[#0ABAB5]" : ""
+                  value && phoneIsValid ? "border-[#0ABAB5] focus:border-[#0ABAB5]" : ""
                 )}
               />
             )}
@@ -79,8 +86,8 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({
         </div>
       </div>
       <FormMessage
-        type={value && isValid ? "success" : "error"}
-        message={error}
+        type={value && phoneIsValid ? "success" : "error"}
+        message={error || (value && !phoneIsValid ? "Digite um número de celular válido" : undefined)}
       />
     </div>
   );

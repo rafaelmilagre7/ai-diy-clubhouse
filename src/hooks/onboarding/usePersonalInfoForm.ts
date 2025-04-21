@@ -1,24 +1,31 @@
 
 import { useForm } from "react-hook-form";
 import { useFormValidation } from "@/hooks/useFormValidation";
-import { toast } from "sonner";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { validateLinkedInUrl, validateInstagramUrl, validateBrazilianPhone } from "@/utils/validationUtils";
 
-// Schema de validação com Zod
 const personalInfoSchema = z.object({
   name: z.string().min(3, "Nome deve ter pelo menos 3 caracteres").max(100, "Nome muito longo"),
   email: z.string().email("E-mail inválido").min(5, "E-mail inválido"),
-  phone: z.string().optional(),
+  phone: z.string()
+    .optional()
+    .refine(val => !val || validateBrazilianPhone(val), {
+      message: "Digite um número de celular válido (ex: (11) 98765-4321)"
+    }),
   ddi: z.string().default("+55"),
-  linkedin: z.string().optional()
-    .refine(val => !val || val.includes("linkedin.com"), {
-      message: "Insira uma URL válida do LinkedIn"
-    }),
-  instagram: z.string().optional()
-    .refine(val => !val || val.includes("instagram.com"), {
-      message: "Insira uma URL válida do Instagram"
-    }),
+  linkedin: z.string()
+    .optional()
+    .refine(val => !val || validateLinkedInUrl(val), {
+      message: "Digite uma URL válida do LinkedIn (ex: linkedin.com/in/seu-perfil)"
+    })
+    .transform(url => url ? formatSocialUrl(url, "linkedin") : ""),
+  instagram: z.string()
+    .optional()
+    .refine(val => !val || validateInstagramUrl(val), {
+      message: "Digite uma URL válida do Instagram (ex: instagram.com/seu-perfil)"
+    })
+    .transform(url => url ? formatSocialUrl(url, "instagram") : ""),
   country: z.string().default("Brasil"),
   state: z.string().min(2, "Estado é obrigatório"),
   city: z.string().min(2, "Cidade é obrigatória"),
