@@ -17,6 +17,7 @@ export { default as SolutionDetails } from './member/SolutionDetails';
 export { default as SolutionImplementation } from './member/SolutionImplementation';
 export { default as ImplementationConfirmation } from './member/ImplementationConfirmation';
 export { default as ImplementationCompleted } from './member/ImplementationCompleted';
+export { default as Achievements } from './member/Achievements';
 
 // Shared
 export { default as Error404 } from './NotFound';

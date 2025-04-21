@@ -1,168 +1,170 @@
-import { Achievement, ProgressData, BadgeData } from "@/types/achievementTypes";
+
 import { Solution } from "@/lib/supabase";
-import { SolutionCategory } from "@/lib/types/categoryTypes";
+import { ProgressData } from "@/types/achievementTypes";
 
-const categoryNames: Record<SolutionCategory, string> = {
-  revenue: "Receita",
-  operational: "Operacional",
-  strategy: "Estratégia",
+export const generateImplementationAchievements = (progressData: ProgressData[], solutions: Solution[]) => {
+  // Calcular conquistas baseadas em implementações
+  const completedCount = progressData.filter(p => p.is_completed).length;
+  
+  return [
+    {
+      id: "implementation-1",
+      name: "Primeiro Passo",
+      description: "Completou sua primeira solução de IA",
+      category: "achievement" as const,
+      isUnlocked: completedCount >= 1,
+      earnedAt: completedCount >= 1 ? new Date().toISOString() : undefined,
+      requiredCount: 1,
+      currentCount: completedCount
+    },
+    {
+      id: "implementation-3",
+      name: "Especialista em IA",
+      description: "Completou 3 soluções de IA",
+      category: "achievement" as const,
+      isUnlocked: completedCount >= 3,
+      earnedAt: completedCount >= 3 ? new Date().toISOString() : undefined,
+      requiredCount: 3,
+      currentCount: completedCount
+    },
+    {
+      id: "implementation-5",
+      name: "Mestre em IA",
+      description: "Completou 5 soluções de IA",
+      category: "achievement" as const,
+      isUnlocked: completedCount >= 5,
+      earnedAt: completedCount >= 5 ? new Date().toISOString() : undefined,
+      requiredCount: 5,
+      currentCount: completedCount
+    },
+    {
+      id: "implementation-10",
+      name: "Guru de IA",
+      description: "Completou 10 soluções de IA",
+      category: "achievement" as const,
+      isUnlocked: completedCount >= 10,
+      earnedAt: completedCount >= 10 ? new Date().toISOString() : undefined,
+      requiredCount: 10,
+      currentCount: completedCount
+    }
+  ];
 };
 
-export const generateImplementationAchievements = (
-  progress: ProgressData[],
-  solutions: Solution[]
-): Achievement[] => {
-  const achievementsList: Achievement[] = [];
-  const implementationMilestones = [1, 5, 10, 25];
-  const completedSolutions = progress.filter(p => p.is_completed).length;
-
-  implementationMilestones.forEach(milestone => {
-    achievementsList.push({
-      id: `implementation-${milestone}`,
-      name: `Implementador Nível ${milestone}`,
-      description: `Complete ${milestone} implementações de soluções`,
-      category: "achievement",
-      isUnlocked: completedSolutions >= milestone,
-      earnedAt: completedSolutions >= milestone ? 
-        progress.find(p => p.is_completed)?.completed_at : undefined,
-      requiredCount: milestone,
-      currentCount: completedSolutions,
-    });
-  });
-
-  return achievementsList;
-};
-
-export const generateCategoryAchievements = (
-  progress: ProgressData[],
-  solutions: Solution[]
-): Achievement[] => {
-  const achievementsList: Achievement[] = [];
-  const solutionCategories = solutions.reduce<Record<string, SolutionCategory>>((acc, solution) => {
-    acc[solution.id] = solution.category as SolutionCategory;
+export const generateCategoryAchievements = (progressData: ProgressData[], solutions: Solution[]) => {
+  // Mapear IDs das soluções para categorias
+  const solutionCategories = solutions.reduce((acc, solution) => {
+    acc[solution.id] = solution.category;
     return acc;
-  }, {});
-
-  Object.entries(categoryNames).forEach(([category, categoryName]) => {
-    const completedInCategory = progress.filter(p => {
-      const solutionCategory = solutionCategories[p.solution_id];
-      return p.is_completed && solutionCategory === category;
-    });
-
-    [1, 3, 5].forEach(count => {
-      const levelNames = {
-        1: "Iniciante",
-        3: "Intermediário",
-        5: "Especialista"
-      };
-
-      achievementsList.push({
-        id: `${category}-${count}`,
-        name: `${levelNames[count as keyof typeof levelNames]} em ${categoryName}`,
-        description: `Complete ${count} soluções na categoria ${categoryName}`,
-        category: category as SolutionCategory,
-        isUnlocked: completedInCategory.length >= count,
-        earnedAt: completedInCategory.length >= count ? 
-          completedInCategory[Math.min(count - 1, completedInCategory.length - 1)]?.completed_at : undefined,
-        requiredCount: count,
-        currentCount: completedInCategory.length,
-      });
-    });
-  });
-
-  return achievementsList;
+  }, {} as Record<string, string>);
+  
+  // Contar soluções completadas por categoria
+  const completedByCategory = progressData
+    .filter(p => p.is_completed)
+    .reduce((acc, progress) => {
+      const category = solutionCategories[progress.solution_id];
+      if (category) {
+        acc[category] = (acc[category] || 0) + 1;
+      }
+      return acc;
+    }, { revenue: 0, operational: 0, strategy: 0 } as Record<string, number>);
+  
+  return [
+    {
+      id: "category-revenue-3",
+      name: "Especialista em Receita",
+      description: "Completou 3 soluções da trilha de Receita",
+      category: "revenue" as const,
+      isUnlocked: completedByCategory.revenue >= 3,
+      earnedAt: completedByCategory.revenue >= 3 ? new Date().toISOString() : undefined,
+      requiredCount: 3,
+      currentCount: completedByCategory.revenue
+    },
+    {
+      id: "category-operational-3",
+      name: "Especialista em Operações",
+      description: "Completou 3 soluções da trilha Operacional",
+      category: "operational" as const,
+      isUnlocked: completedByCategory.operational >= 3,
+      earnedAt: completedByCategory.operational >= 3 ? new Date().toISOString() : undefined,
+      requiredCount: 3,
+      currentCount: completedByCategory.operational
+    },
+    {
+      id: "category-strategy-3",
+      name: "Estrategista de IA",
+      description: "Completou 3 soluções da trilha de Estratégia",
+      category: "strategy" as const,
+      isUnlocked: completedByCategory.strategy >= 3,
+      earnedAt: completedByCategory.strategy >= 3 ? new Date().toISOString() : undefined,
+      requiredCount: 3,
+      currentCount: completedByCategory.strategy
+    }
+  ];
 };
 
-export const generateEngagementAchievements = (
-  progress: ProgressData[],
-  solutions: Solution[]
-): Achievement[] => {
-  const achievementsList: Achievement[] = [];
-  const streakLevels = [3, 7, 14, 30];
-  const currentStreak = calculateStreak(progress);
-
-  streakLevels.forEach(days => {
-    achievementsList.push({
-      id: `streak-${days}`,
-      name: `Sequência de ${days} dias`,
-      description: `Mantenha uma sequência de implementação por ${days} dias`,
-      category: "achievement",
-      isUnlocked: currentStreak >= days,
-      requiredCount: days,
-      currentCount: currentStreak,
-    });
-  });
-
-  return achievementsList;
+export const generateEngagementAchievements = (progressData: ProgressData[], solutions: Solution[]) => {
+  // Calcular tempo total gasto em implementações (em dias)
+  const totalDaysEngaged = progressData.reduce((days, progress) => {
+    if (progress.created_at && progress.last_activity) {
+      const start = new Date(progress.created_at);
+      const end = new Date(progress.last_activity);
+      const daysDiff = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+      return days + daysDiff;
+    }
+    return days;
+  }, 0);
+  
+  return [
+    {
+      id: "engagement-7days",
+      name: "Consistente",
+      description: "Engajado por 7 dias nas implementações",
+      category: "achievement" as const,
+      isUnlocked: totalDaysEngaged >= 7,
+      earnedAt: totalDaysEngaged >= 7 ? new Date().toISOString() : undefined,
+      requiredCount: 7,
+      currentCount: totalDaysEngaged
+    },
+    {
+      id: "engagement-30days",
+      name: "Dedicado",
+      description: "Engajado por 30 dias nas implementações",
+      category: "achievement" as const,
+      isUnlocked: totalDaysEngaged >= 30,
+      earnedAt: totalDaysEngaged >= 30 ? new Date().toISOString() : undefined,
+      requiredCount: 30,
+      currentCount: totalDaysEngaged
+    }
+  ];
 };
 
 export const generateSocialAchievements = (
-  progress: ProgressData[],
-  comments: any[],
-  likes: number
-): Achievement[] => {
-  const achievementsList: Achievement[] = [];
+  progressData: ProgressData[], 
+  comments: any[] = [], 
+  totalLikes: number = 0
+) => {
+  const commentsCount = comments.length;
   
-  // Conquistas de comentários
-  const commentMilestones = [1, 5, 10, 25];
-  const totalComments = comments.length;
-  
-  commentMilestones.forEach(milestone => {
-    achievementsList.push({
-      id: `comments-${milestone}`,
-      name: `Colaborador Nível ${milestone}`,
-      description: `Fez ${milestone} comentários em soluções`,
-      category: "achievement",
-      isUnlocked: totalComments >= milestone,
-      earnedAt: totalComments >= milestone ? 
-        comments[0]?.created_at : undefined,
-      requiredCount: milestone,
-      currentCount: totalComments,
-    });
-  });
-  
-  // Conquistas de likes recebidos
-  const likeMilestones = [1, 10, 50, 100];
-  
-  likeMilestones.forEach(milestone => {
-    achievementsList.push({
-      id: `likes-${milestone}`,
-      name: `Influenciador Nível ${milestone}`,
-      description: `Recebeu ${milestone} likes em seus comentários`,
-      category: "achievement",
-      isUnlocked: likes >= milestone,
-      earnedAt: likes >= milestone ? new Date().toISOString() : undefined,
-      requiredCount: milestone,
-      currentCount: likes,
-    });
-  });
-
-  return achievementsList;
-};
-
-export const calculateStreak = (progress: ProgressData[]): number => {
-  if (!progress.length) return 0;
-
-  const dates = progress
-    .filter(p => p.last_activity)
-    .map(p => new Date(p.last_activity).toISOString().split('T')[0])
-    .sort();
-
-  let currentStreak = 1;
-  let maxStreak = 1;
-
-  for (let i = 1; i < dates.length; i++) {
-    const prevDate = new Date(dates[i - 1]);
-    const currDate = new Date(dates[i]);
-    const diffDays = Math.floor((currDate.getTime() - prevDate.getTime()) / (1000 * 60 * 60 * 24));
-
-    if (diffDays === 1) {
-      currentStreak++;
-      maxStreak = Math.max(maxStreak, currentStreak);
-    } else {
-      currentStreak = 1;
+  return [
+    {
+      id: "social-comments-5",
+      name: "Colaborador",
+      description: "Fez 5 comentários em soluções",
+      category: "achievement" as const,
+      isUnlocked: commentsCount >= 5,
+      earnedAt: commentsCount >= 5 ? new Date().toISOString() : undefined,
+      requiredCount: 5,
+      currentCount: commentsCount
+    },
+    {
+      id: "social-likes-10",
+      name: "Influenciador",
+      description: "Recebeu 10 likes em seus comentários",
+      category: "achievement" as const,
+      isUnlocked: totalLikes >= 10,
+      earnedAt: totalLikes >= 10 ? new Date().toISOString() : undefined,
+      requiredCount: 10,
+      currentCount: totalLikes
     }
-  }
-
-  return maxStreak;
+  ];
 };

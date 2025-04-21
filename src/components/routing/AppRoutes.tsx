@@ -22,6 +22,7 @@ import SolutionDetails from '@/pages/member/SolutionDetails';
 import SolutionImplementation from '@/pages/member/SolutionImplementation';
 import ImplementationCompleted from '@/pages/member/ImplementationCompleted';
 import Benefits from '@/pages/member/Benefits';
+import Achievements from '@/pages/member/Achievements';
 import { Navigate } from 'react-router-dom';
 import MemberLayout from '@/components/layout/MemberLayout';
 
@@ -57,6 +58,7 @@ const AppRoutes = () => {
       <Route path="/implementation/:id" element={<ProtectedRoutes><MemberLayout><SolutionImplementation /></MemberLayout></ProtectedRoutes>} />
       <Route path="/implementation/completed/:id" element={<ProtectedRoutes><MemberLayout><ImplementationCompleted /></MemberLayout></ProtectedRoutes>} />
       <Route path="/benefits" element={<ProtectedRoutes><MemberLayout><Benefits /></MemberLayout></ProtectedRoutes>} />
+      <Route path="/achievements" element={<ProtectedRoutes><MemberLayout><Achievements /></MemberLayout></ProtectedRoutes>} />
       
       {/* Onboarding Routes */}
       <Route path="/onboarding" element={<ProtectedRoutes><Onboarding /></ProtectedRoutes>} />

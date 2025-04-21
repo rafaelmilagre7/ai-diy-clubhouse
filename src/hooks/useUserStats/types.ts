@@ -1,22 +1,23 @@
 
-// Define solution category types for type safety
 export type SolutionCategory = "revenue" | "operational" | "strategy";
 
-// Type for category distribution metrics
 export interface CategoryDistribution {
-  revenue: { total: number; completed: number };
-  operational: { total: number; completed: number };
-  strategy: { total: number; completed: number };
+  revenue: number;
+  operational: number;
+  strategy: number;
 }
 
-// Comprehensive type for user statistics
 export interface UserStats {
   totalSolutions: number;
   completedSolutions: number;
   inProgressSolutions: number;
   completionRate: number;
-  totalTimeSpent: number;
-  avgTimePerSolution: number;
-  lastActivity: string | null;
+  averageCompletionTime: number | null;
+  activeDays: number;
   categoryDistribution: CategoryDistribution;
+  recentActivity: {
+    date: string;
+    action: string;
+    solution?: string;
+  }[];
 }
