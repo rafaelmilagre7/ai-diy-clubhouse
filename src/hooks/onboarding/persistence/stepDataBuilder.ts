@@ -1,6 +1,6 @@
 
 import { steps } from "../useStepDefinitions";
-import { OnboardingData, OnboardingProgress } from "@/types/onboarding";
+import { OnboardingData, OnboardingProgress, ProfessionalDataInput } from "@/types/onboarding";
 import { buildPersonalUpdate } from "./stepBuilders/personalBuilder";
 import { buildProfessionalDataUpdate } from "./stepBuilders/professionalDataBuilder";
 import { buildBusinessContextUpdate } from "./stepBuilders/businessContextBuilder";
@@ -10,20 +10,10 @@ import { buildExperiencePersonalizationUpdate } from "./stepBuilders/experienceP
 import { buildComplementaryInfoUpdate } from "./stepBuilders/complementaryInfoBuilder";
 import { buildGoalsUpdate } from "./stepBuilders/goalsBuilder";
 
-// Definindo um tipo mais amplo para aceitar todos os campos necessários
-type ExpandedDataInput = Partial<OnboardingData> & {
-  company_name?: string;
-  company_size?: string;
-  company_sector?: string;
-  company_website?: string;
-  current_position?: string;
-  annual_revenue?: string;
-};
-
 // Função principal modularizada
 export function buildUpdateObject(
   stepId: string,
-  data: ExpandedDataInput,
+  data: Partial<OnboardingData> | ProfessionalDataInput,
   progress: OnboardingProgress | null,
   currentStepIndex: number
 ) {
@@ -35,29 +25,29 @@ export function buildUpdateObject(
   // Usar funções específicas para cada tipo de etapa
   switch (stepId) {
     case "personal":
-      Object.assign(updateObj, buildPersonalUpdate(data, progress));
+      Object.assign(updateObj, buildPersonalUpdate(data as Partial<OnboardingData>, progress));
       break;
     case "professional_data":
       // Use a função específica para este tipo de dados
-      Object.assign(updateObj, buildProfessionalDataUpdate(data, progress));
+      Object.assign(updateObj, buildProfessionalDataUpdate(data as ProfessionalDataInput, progress));
       break;
     case "business_context":
-      Object.assign(updateObj, buildBusinessContextUpdate(data, progress));
+      Object.assign(updateObj, buildBusinessContextUpdate(data as Partial<OnboardingData>, progress));
       break;
     case "ai_exp":
-      Object.assign(updateObj, buildAiExpUpdate(data, progress));
+      Object.assign(updateObj, buildAiExpUpdate(data as Partial<OnboardingData>, progress));
       break;
     case "business_goals":
-      Object.assign(updateObj, buildBusinessGoalsUpdate(data, progress));
+      Object.assign(updateObj, buildBusinessGoalsUpdate(data as Partial<OnboardingData>, progress));
       break;
     case "experience_personalization":
-      Object.assign(updateObj, buildExperiencePersonalizationUpdate(data, progress));
+      Object.assign(updateObj, buildExperiencePersonalizationUpdate(data as Partial<OnboardingData>, progress));
       break;
     case "complementary_info":
-      Object.assign(updateObj, buildComplementaryInfoUpdate(data, progress));
+      Object.assign(updateObj, buildComplementaryInfoUpdate(data as Partial<OnboardingData>, progress));
       break;
     case "goals":
-      Object.assign(updateObj, buildGoalsUpdate(data, progress));
+      Object.assign(updateObj, buildGoalsUpdate(data as Partial<OnboardingData>, progress));
       break;
     default:
       console.log(`Usando lógica genérica para etapa: ${stepId}`);

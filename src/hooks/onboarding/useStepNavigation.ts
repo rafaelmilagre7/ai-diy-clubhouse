@@ -10,6 +10,7 @@ export const useStepNavigation = () => {
   const { progress, refreshProgress, isLoading } = useProgress();
   const navigate = useNavigate();
 
+  // Efeito para sincronizar a navegação com o progresso do onboarding
   useEffect(() => {
     const loadProgress = async () => {
       if (isLoading) return; // Evitar múltiplas chamadas durante carregamento
@@ -36,7 +37,7 @@ export const useStepNavigation = () => {
           console.warn(`Etapa não encontrada nos passos definidos: ${refreshedProgress.current_step}`);
           // Fallback para a primeira etapa se não encontrarmos a atual
           navigate(steps[0].path);
-          toast.info("Continuando o onboarding do início");
+          toast.info("Iniciando o preenchimento do onboarding");
         }
       } else if (refreshedProgress) {
         // Se não tiver current_step definido, iniciar da primeira etapa
@@ -61,6 +62,7 @@ export const useStepNavigation = () => {
     setCurrentStepIndex,
     progress,
     navigateToStep,
-    isLoading
+    isLoading,
+    currentStep: steps[currentStepIndex] || steps[0]
   };
 };

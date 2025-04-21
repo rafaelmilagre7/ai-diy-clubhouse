@@ -86,7 +86,8 @@ export interface OnboardingData {
     implementation_speed?: string;
     support_level?: string;
   };
-  // Adicionando campos diretos para compatibilidade com o banco de dados
+  
+  // Campos diretos para compatibilidade com o banco de dados e estrutura existente
   company_name?: string;
   company_size?: string;
   company_sector?: string;
@@ -103,8 +104,8 @@ export interface OnboardingProgress {
   is_completed: boolean;
   personal_info: OnboardingData['personal_info'];
   professional_info: OnboardingData['professional_info'];
-  business_data: OnboardingData['business_context']; // Mantendo compatibilidade 
-  business_context?: OnboardingData['business_context']; // Adicionando nova propriedade para clareza
+  business_data?: OnboardingData['business_context']; // Mantendo compatibilidade
+  business_context?: OnboardingData['business_context']; 
   business_goals: OnboardingData['business_goals'];
   ai_experience: OnboardingData['ai_experience'];
   experience_personalization: OnboardingData['experience_personalization'];
@@ -113,6 +114,8 @@ export interface OnboardingProgress {
   resources_needs?: OnboardingData['resources_needs'];
   team_info?: OnboardingData['team_info'];
   implementation_preferences?: OnboardingData['implementation_preferences'];
+  
+  // Campos diretos para compatibilidade com o banco de dados
   company_name?: string;
   company_size?: string;
   company_sector?: string;
@@ -120,7 +123,7 @@ export interface OnboardingProgress {
   current_position?: string;
   annual_revenue?: string;
   
-  // Adicionando as propriedades para a trilha
+  // Propriedades para a trilha
   trail_solutions?: any[];
   trail_generated_at?: string;
   created_at?: string;
@@ -142,3 +145,14 @@ export interface OnboardingStep {
   section: string;
   path: string;
 }
+
+// Novo tipo para receber entrada de dados profissionais
+export type ProfessionalDataInput = {
+  professional_info?: OnboardingData['professional_info'];
+  company_name?: string;
+  company_size?: string;
+  company_sector?: string;
+  company_website?: string;
+  current_position?: string;
+  annual_revenue?: string;
+};

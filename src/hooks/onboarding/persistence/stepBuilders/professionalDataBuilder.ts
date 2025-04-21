@@ -1,15 +1,5 @@
 
-import { OnboardingData, OnboardingProgress } from "@/types/onboarding";
-
-type ProfessionalDataInput = Partial<OnboardingData> & {
-  company_name?: string;
-  company_size?: string;
-  company_sector?: string;
-  company_website?: string;
-  current_position?: string;
-  annual_revenue?: string;
-  professional_info?: OnboardingData['professional_info'];
-};
+import { OnboardingData, OnboardingProgress, ProfessionalDataInput } from "@/types/onboarding";
 
 export function buildProfessionalDataUpdate(data: ProfessionalDataInput, progress: OnboardingProgress | null) {
   const updateObj: any = {};

@@ -1,24 +1,13 @@
 
 import React, { useState, useEffect } from "react";
 import { CompanyInputs } from "./business/CompanyInputs";
-import { OnboardingData } from "@/types/onboarding";
+import { OnboardingData, ProfessionalDataInput } from "@/types/onboarding";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import { useForm } from "react-hook-form";
 
-// Tipo específico para os dados do passo profissional para resolver problemas de tipagem
-type ProfessionalDataType = {
-  professional_info?: OnboardingData['professional_info'];
-  company_name?: string;
-  company_size?: string;
-  company_sector?: string;
-  company_website?: string;
-  current_position?: string;
-  annual_revenue?: string;
-};
-
 interface ProfessionalDataStepProps {
-  onSubmit: (data: ProfessionalDataType) => void;
+  onSubmit: (data: ProfessionalDataInput) => void;
   isSubmitting: boolean;
   isLastStep: boolean;
   onComplete: () => void;
@@ -97,7 +86,7 @@ export const ProfessionalDataStep = ({
 
   const onFormSubmit = (data: FormValues) => {
     // Estrutura correta para salvar os dados profissionais
-    const professionalData: ProfessionalDataType = {
+    const professionalData: ProfessionalDataInput = {
       professional_info: {
         company_name: data.company_name,
         company_size: data.company_size,
