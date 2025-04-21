@@ -35,9 +35,12 @@ export function buildUpdateObject(
   } else if (stepId === "business_context") {
     // Salvar dados de contexto de negócio
     if (data.business_context) {
-      updateObj.business_context = {
-        ...progress.business_context,  // Manter dados existentes
-        ...data.business_context       // Adicionar/atualizar novos dados
+      // Verificar se business_context existe no progress para evitar erros
+      const existingBusinessContext = progress.business_context || {};
+      
+      updateObj.business_data = {
+        ...existingBusinessContext,
+        ...data.business_context
       };
       
       // Adicionar log detalhado para debugging
@@ -54,30 +57,34 @@ export function buildUpdateObject(
     }
   } else if (stepId === "ai_exp") {
     // Salvar dados de experiência com IA
+    const existingAiExperience = progress.ai_experience || {};
     updateObj.ai_experience = {
-      ...progress.ai_experience,  // Manter dados existentes
-      ...data.ai_experience || {} // Adicionar/atualizar novos dados
+      ...existingAiExperience,
+      ...(data.ai_experience || {})
     };
     console.log("Salvando ai_experience:", updateObj.ai_experience);
   } else if (stepId === "business_goals") {
     // Salvar dados de objetivos de negócio
+    const existingBusinessGoals = progress.business_goals || {};
     updateObj.business_goals = {
-      ...progress.business_goals, // Manter dados existentes
-      ...data.business_goals || {} // Adicionar/atualizar novos dados
+      ...existingBusinessGoals,
+      ...(data.business_goals || {})
     };
     console.log("Salvando business_goals:", updateObj.business_goals);
   } else if (stepId === "experience_personalization") {
     // Salvar dados de personalização de experiência
+    const existingExperiencePersonalization = progress.experience_personalization || {};
     updateObj.experience_personalization = {
-      ...progress.experience_personalization, // Manter dados existentes
-      ...data.experience_personalization || {} // Adicionar/atualizar novos dados
+      ...existingExperiencePersonalization,
+      ...(data.experience_personalization || {})
     };
     console.log("Salvando experience_personalization:", updateObj.experience_personalization);
   } else if (stepId === "complementary_info") {
     // Salvar informações complementares
+    const existingComplementaryInfo = progress.complementary_info || {};
     updateObj.complementary_info = {
-      ...progress.complementary_info, // Manter dados existentes
-      ...data.complementary_info || {} // Adicionar/atualizar novos dados
+      ...existingComplementaryInfo,
+      ...(data.complementary_info || {})
     };
     console.log("Salvando complementary_info:", updateObj.complementary_info);
   } else if (stepId === "goals") {
@@ -98,9 +105,10 @@ export function buildUpdateObject(
     // Outras etapas (futuro)
     const sectionKey = steps.find(s => s.id === stepId)?.section as keyof OnboardingData;
     if (sectionKey && data[sectionKey]) {
+      const existingData = progress[sectionKey as keyof OnboardingProgress] || {};
       updateObj[sectionKey] = {
-        ...progress[sectionKey as keyof OnboardingProgress], // Manter dados existentes
-        ...data[sectionKey] // Adicionar/atualizar novos dados
+        ...existingData,
+        ...data[sectionKey]
       };
       console.log(`Salvando ${sectionKey}:`, data[sectionKey]);
     }

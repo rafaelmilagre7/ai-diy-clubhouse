@@ -59,6 +59,11 @@ export const OnboardingSteps = () => {
         annual_revenue: progress.annual_revenue || progress.professional_info?.annual_revenue || "",
       };
     }
+    if (currentStep.id === "business_context") {
+      // Mapear business_data para business_context
+      return progress.business_data;
+    }
+    
     const sectionKey = currentStep.section as keyof OnboardingData;
     return progress[sectionKey as keyof typeof progress];
   };

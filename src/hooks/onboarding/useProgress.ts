@@ -86,7 +86,7 @@ export const useProgress = () => {
           email: userEmail
         },
         professional_info: {},
-        business_context: {},
+        business_data: {},  // Usando business_data em vez de business_context
         ai_experience: {},
         business_goals: {},
         experience_personalization: {},

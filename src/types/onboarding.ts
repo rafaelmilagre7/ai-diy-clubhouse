@@ -1,3 +1,4 @@
+
 export interface OnboardingData {
   personal_info: {
     name?: string;
@@ -94,7 +95,7 @@ export interface OnboardingProgress {
   is_completed: boolean;
   personal_info: OnboardingData['personal_info'];
   professional_info: OnboardingData['professional_info'];
-  business_context: OnboardingData['business_context'];
+  business_data: OnboardingData['business_context']; // Alterado de business_context para business_data
   business_goals: OnboardingData['business_goals'];
   ai_experience: OnboardingData['ai_experience'];
   experience_personalization: OnboardingData['experience_personalization'];
