@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
@@ -9,6 +8,7 @@ import { slugify } from '@/utils/slugify';
 import BasicInfoForm from '@/components/admin/solution/form/BasicInfoForm';
 import { SolutionFormValues } from '@/components/admin/solution/form/solutionFormSchema';
 import { FileText, ArrowRight } from 'lucide-react';
+import SolutionCreateWizardSteps from "@/components/admin/solution/SolutionCreateWizardSteps";
 
 const AdminSolutionCreate = () => {
   const [saving, setSaving] = useState(false);
@@ -86,6 +86,9 @@ const AdminSolutionCreate = () => {
         </p>
       </div>
       
+      {/* Wizard visual de etapas do cadastro */}
+      <SolutionCreateWizardSteps currentStep={0} />
+
       <Card>
         <CardContent className="p-6">
           <div className="mb-6 flex items-center gap-2 text-muted-foreground">
