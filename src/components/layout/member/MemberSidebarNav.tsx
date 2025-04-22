@@ -10,7 +10,8 @@ import {
   MessageSquare,
   ShieldCheck,
   User,
-  Award
+  Award,
+  BookOpen
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "react-router-dom";
@@ -31,6 +32,11 @@ export const MemberSidebarNav = ({ sidebarOpen }: SidebarNavProps) => {
       title: "Dashboard",
       href: "/dashboard",
       icon: LayoutDashboard,
+    },
+    {
+      title: "Onboarding",
+      href: "/onboarding",
+      icon: BookOpen,
     },
     {
       title: "Soluções",

@@ -19,9 +19,6 @@ export const SidebarLogo = ({ sidebarOpen, setSidebarOpen }: SidebarLogoProps) =
           alt="VIVER DE IA Club"
           className="h-8 w-auto"
         />
-        {sidebarOpen && (
-          <span className="ml-2 text-lg font-semibold">VIVER DE IA</span>
-        )}
       </div>
       <Button
         variant="ghost"
