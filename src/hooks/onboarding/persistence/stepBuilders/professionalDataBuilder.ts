@@ -3,7 +3,7 @@ import { OnboardingData, OnboardingProgress } from "@/types/onboarding";
 import { normalizeWebsite } from "../utils/dataNormalization";
 
 export function buildProfessionalDataUpdate(data: Partial<OnboardingData>, progress: OnboardingProgress | null) {
-  // Criamos um objeto temporário que pode receber qualquer propriedade
+  // Criamos um objeto temporário com tipo explícito para evitar erros de tipagem
   const tempObj: Record<string, any> = {
     ...(progress ? { 
       id: progress.id,
@@ -47,8 +47,9 @@ export function buildProfessionalDataUpdate(data: Partial<OnboardingData>, progr
       // Atualizar no objeto professional_info
       professionalInfo[field] = value;
       
-      // Atualizar campos de nível superior - usando nosso objeto temporário
-      tempObj[field] = value;
+      // Atualizar campos de nível superior - usando o tipo correto para acesso
+      // Precisamos usar any ou desabilitar verificação de tipo para atribuir de forma dinâmica
+      (tempObj as any)[field] = value;
       
       hasUpdates = true;
     }
@@ -62,5 +63,6 @@ export function buildProfessionalDataUpdate(data: Partial<OnboardingData>, progr
   console.log("Objeto de atualização para dados profissionais:", tempObj);
   
   // Convertemos para o tipo esperado antes de retornar
+  // Usamos uma asserção de tipo para garantir compatibilidade
   return tempObj as Partial<OnboardingProgress>;
 }
