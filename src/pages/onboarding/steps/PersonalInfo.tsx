@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
 import { PersonalInfoStep } from "@/components/onboarding/steps/PersonalInfoStep";
@@ -13,6 +12,9 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertTriangle } from "lucide-react";
 import { useStepDefinitions } from "@/hooks/onboarding/useStepDefinitions";
 import { useStepNavigation } from "@/hooks/onboarding/useStepNavigation";
+import { PersonalInfoLoader } from "./PersonalInfoLoader";
+import { PersonalInfoError } from "./PersonalInfoError";
+import { PersonalInfoForceButton } from "./PersonalInfoForceButton";
 
 const PersonalInfo = () => {
   const {
@@ -118,96 +120,39 @@ const PersonalInfo = () => {
 
   if (progressLoading && !showForceButton) {
     return (
-      <OnboardingLayout
-        currentStep={1}
+      <PersonalInfoLoader
         totalSteps={totalSteps}
-        title="Dados Pessoais"
-        backUrl="/"
-        progress={progressPercentage}
+        progressPercentage={progressPercentage}
         stepTitles={stepTitles}
         onStepClick={handleStepClick}
-      >
-        <div className="flex flex-col justify-center items-center py-20 space-y-4">
-          <LoadingSpinner size={10} />
-          <p className="ml-4 text-gray-400 text-lg font-medium">
-            Carregando seus dados pessoais, por favor aguarde...
-          </p>
-          <p className="text-sm text-gray-500 text-center">
-            Você poderá navegar livremente entre as etapas ao terminar o carregamento.
-          </p>
-        </div>
-      </OnboardingLayout>
+      />
     );
   }
 
   if (hasError) {
     return (
-      <OnboardingLayout
-        currentStep={1}
+      <PersonalInfoError
         totalSteps={totalSteps}
-        title="Dados Pessoais"
-        backUrl="/"
-        progress={progressPercentage}
+        progressPercentage={progressPercentage}
         stepTitles={stepTitles}
         onStepClick={handleStepClick}
-      >
-        <div className="space-y-6">
-          <Alert variant="destructive" className="bg-red-50 border-red-200">
-            <AlertTriangle className="h-5 w-5" />
-            <AlertDescription className="ml-2">
-              {loadError || (lastError ? "Erro ao carregar dados de progresso." : "")}
-            </AlertDescription>
-          </Alert>
-          <div className="flex justify-center mt-6">
-            <button
-              onClick={() => attemptDataLoad(loadInitialData)}
-              className="px-4 py-2 bg-[#0ABAB5] text-white rounded hover:bg-[#0ABAB5]/90"
-            >
-              Tentar novamente
-            </button>
-          </div>
-        </div>
-      </OnboardingLayout>
+        loadError={loadError}
+        lastError={lastError}
+        onRetry={() => attemptDataLoad(loadInitialData)}
+      />
     );
   }
 
   if (showForceButton) {
     return (
-      <OnboardingLayout
-        currentStep={1}
+      <PersonalInfoForceButton
         totalSteps={totalSteps}
-        title="Dados Pessoais"
-        backUrl="/"
-        progress={progressPercentage}
+        progressPercentage={progressPercentage}
         stepTitles={stepTitles}
         onStepClick={handleStepClick}
-      >
-        <div className="space-y-6">
-          <Alert className="bg-yellow-50 border-yellow-200">
-            <AlertTriangle className="h-5 w-5 text-yellow-600" />
-            <AlertDescription className="ml-2 text-yellow-700">
-              Estamos tendo dificuldades para carregar seus dados. Você pode continuar mesmo assim ou tentar novamente.
-            </AlertDescription>
-          </Alert>
-          <div className="flex justify-center mt-6 space-x-4">
-            <button
-              onClick={() => {
-                toast.info("Continuando com dados padrão");
-                setLoadingAttempts(0);
-              }}
-              className="px-4 py-2 bg-[#0ABAB5] text-white rounded hover:bg-[#0ABAB5]/90"
-            >
-              Continuar mesmo assim
-            </button>
-            <button
-              onClick={() => attemptDataLoad(loadInitialData)}
-              className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50"
-            >
-              Tentar novamente
-            </button>
-          </div>
-        </div>
-      </OnboardingLayout>
+        onForceContinue={() => setLoadingAttempts(0)}
+        onRetry={() => attemptDataLoad(loadInitialData)}
+      />
     );
   }
 
