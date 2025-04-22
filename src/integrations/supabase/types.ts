@@ -228,6 +228,186 @@ export type Database = {
           },
         ]
       }
+      onboarding: {
+        Row: {
+          additional_context: string | null
+          annual_revenue: string | null
+          authorize_case_usage: boolean | null
+          available_days: string[] | null
+          business_challenges: string[] | null
+          business_model: string | null
+          city: string | null
+          company_name: string | null
+          company_sector: string | null
+          company_size: string | null
+          company_website: string | null
+          completed_formation: boolean | null
+          completed_steps: string[] | null
+          content_formats: string[] | null
+          country: string | null
+          created_at: string | null
+          current_position: string | null
+          current_step: string | null
+          ddi: string | null
+          desired_ai_areas: string[] | null
+          email: string | null
+          expected_outcome_30days: string | null
+          expected_outcomes: string[] | null
+          has_implemented: string | null
+          how_found_us: string | null
+          how_implement: string | null
+          id: string
+          important_kpis: string[] | null
+          improvement_suggestions: string | null
+          instagram: string | null
+          interested_in_interview: boolean | null
+          interests: string[] | null
+          is_completed: boolean | null
+          is_member_for_month: boolean | null
+          knowledge_level: string | null
+          linkedin: string | null
+          live_interest: number | null
+          medium_term_goals: string[] | null
+          mentorship_topics: string[] | null
+          name: string | null
+          networking_availability: number | null
+          nps_score: number | null
+          phone: string | null
+          previous_tools: string[] | null
+          primary_goal: string | null
+          priority_solution_type: string | null
+          priority_topics: string[] | null
+          referred_by: string | null
+          short_term_goals: string[] | null
+          skills_to_share: string[] | null
+          state: string | null
+          time_preference: string[] | null
+          timeline: string | null
+          timezone: string | null
+          updated_at: string | null
+          user_id: string
+          week_availability: string | null
+        }
+        Insert: {
+          additional_context?: string | null
+          annual_revenue?: string | null
+          authorize_case_usage?: boolean | null
+          available_days?: string[] | null
+          business_challenges?: string[] | null
+          business_model?: string | null
+          city?: string | null
+          company_name?: string | null
+          company_sector?: string | null
+          company_size?: string | null
+          company_website?: string | null
+          completed_formation?: boolean | null
+          completed_steps?: string[] | null
+          content_formats?: string[] | null
+          country?: string | null
+          created_at?: string | null
+          current_position?: string | null
+          current_step?: string | null
+          ddi?: string | null
+          desired_ai_areas?: string[] | null
+          email?: string | null
+          expected_outcome_30days?: string | null
+          expected_outcomes?: string[] | null
+          has_implemented?: string | null
+          how_found_us?: string | null
+          how_implement?: string | null
+          id?: string
+          important_kpis?: string[] | null
+          improvement_suggestions?: string | null
+          instagram?: string | null
+          interested_in_interview?: boolean | null
+          interests?: string[] | null
+          is_completed?: boolean | null
+          is_member_for_month?: boolean | null
+          knowledge_level?: string | null
+          linkedin?: string | null
+          live_interest?: number | null
+          medium_term_goals?: string[] | null
+          mentorship_topics?: string[] | null
+          name?: string | null
+          networking_availability?: number | null
+          nps_score?: number | null
+          phone?: string | null
+          previous_tools?: string[] | null
+          primary_goal?: string | null
+          priority_solution_type?: string | null
+          priority_topics?: string[] | null
+          referred_by?: string | null
+          short_term_goals?: string[] | null
+          skills_to_share?: string[] | null
+          state?: string | null
+          time_preference?: string[] | null
+          timeline?: string | null
+          timezone?: string | null
+          updated_at?: string | null
+          user_id: string
+          week_availability?: string | null
+        }
+        Update: {
+          additional_context?: string | null
+          annual_revenue?: string | null
+          authorize_case_usage?: boolean | null
+          available_days?: string[] | null
+          business_challenges?: string[] | null
+          business_model?: string | null
+          city?: string | null
+          company_name?: string | null
+          company_sector?: string | null
+          company_size?: string | null
+          company_website?: string | null
+          completed_formation?: boolean | null
+          completed_steps?: string[] | null
+          content_formats?: string[] | null
+          country?: string | null
+          created_at?: string | null
+          current_position?: string | null
+          current_step?: string | null
+          ddi?: string | null
+          desired_ai_areas?: string[] | null
+          email?: string | null
+          expected_outcome_30days?: string | null
+          expected_outcomes?: string[] | null
+          has_implemented?: string | null
+          how_found_us?: string | null
+          how_implement?: string | null
+          id?: string
+          important_kpis?: string[] | null
+          improvement_suggestions?: string | null
+          instagram?: string | null
+          interested_in_interview?: boolean | null
+          interests?: string[] | null
+          is_completed?: boolean | null
+          is_member_for_month?: boolean | null
+          knowledge_level?: string | null
+          linkedin?: string | null
+          live_interest?: number | null
+          medium_term_goals?: string[] | null
+          mentorship_topics?: string[] | null
+          name?: string | null
+          networking_availability?: number | null
+          nps_score?: number | null
+          phone?: string | null
+          previous_tools?: string[] | null
+          primary_goal?: string | null
+          priority_solution_type?: string | null
+          priority_topics?: string[] | null
+          referred_by?: string | null
+          short_term_goals?: string[] | null
+          skills_to_share?: string[] | null
+          state?: string | null
+          time_preference?: string[] | null
+          timeline?: string | null
+          timezone?: string | null
+          updated_at?: string | null
+          user_id?: string
+          week_availability?: string | null
+        }
+        Relationships: []
+      }
       onboarding_ai_experience: {
         Row: {
           completed_formation: boolean | null

@@ -1,112 +1,90 @@
 
 import React, { useEffect } from 'react';
-import { OnboardingSteps } from '@/components/onboarding/OnboardingSteps';
-import { OnboardingHeader } from '@/components/onboarding/OnboardingHeader';
-import { EtapasProgresso } from '@/components/onboarding/EtapasProgresso';
-import { useOnboardingSteps } from '@/hooks/onboarding/useOnboardingSteps';
-import MemberLayout from '@/components/layout/MemberLayout';
-import { toast } from 'sonner';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { useOnboarding } from '@/hooks/useOnboarding';
+import { onboardingSteps, getStepFromRoute } from '@/config/onboardingSteps';
+import OnboardingLayout from '@/components/onboarding/OnboardingLayout';
+import { Loader2 } from 'lucide-react';
+import { PersonalForm } from '@/components/onboarding/forms/PersonalForm';
+import { ProfessionalForm } from '@/components/onboarding/forms/ProfessionalForm';
+import { BusinessContextForm } from '@/components/onboarding/forms/BusinessContextForm';
+import { BusinessGoalsForm } from '@/components/onboarding/forms/BusinessGoalsForm';
+import { AIExperienceForm } from '@/components/onboarding/forms/AIExperienceForm';
+import { PersonalizationForm } from '@/components/onboarding/forms/PersonalizationForm';
+import { ComplementaryForm } from '@/components/onboarding/forms/ComplementaryForm';
+import { ReviewStep } from '@/components/onboarding/forms/ReviewStep';
+import { useAuth } from '@/contexts/auth';
 
 const Onboarding: React.FC = () => {
-  const { 
-    currentStepIndex, 
-    steps, 
-    navigateToStep, 
-    saveStepData, 
-    progress, 
-    refreshProgress 
-  } = useOnboardingSteps();
-  
+  const { user } = useAuth();
+  const { isLoading, data, currentStep, saveFormData, completeOnboarding, isSaving } = useOnboarding();
+  const location = useLocation();
   const navigate = useNavigate();
-
-  // Carregamento inicial
+  const routeStep = getStepFromRoute(location.pathname);
+  
+  // Redirecionar para o passo atual se estiver em um passo incorreto
   useEffect(() => {
-    const loadData = async () => {
-      try {
-        await refreshProgress();
-        console.log("Dados do onboarding carregados, pronto para começar");
-        
-        // Se estamos na rota /onboarding, redirecionar para a primeira etapa
-        if (window.location.pathname === '/onboarding') {
-          console.log("Redirecionando para primeira etapa do onboarding");
-          navigate('/onboarding/personal-info');
-        }
-      } catch (error) {
-        console.error("Erro ao carregar dados:", error);
-        toast.error("Erro ao carregar dados do onboarding. Tente novamente.");
-      }
-    };
-    
-    loadData();
-  }, [refreshProgress, navigate]);
+    if (!isLoading && data && currentStep !== routeStep) {
+      navigate(`/onboarding/${currentStep === 'personal' ? '' : currentStep}`);
+    }
+  }, [isLoading, data, currentStep, routeStep, navigate]);
 
-  // Função melhorada para navegação entre etapas
-  const handleStepClick = async (stepIndexDestino: number) => {
-    // Evitar recarregar a mesma etapa
-    if (stepIndexDestino === currentStepIndex) return;
+  // Verificar se o usuário está autenticado
+  useEffect(() => {
+    if (!user) {
+      navigate('/login');
+    }
+  }, [user, navigate]);
 
-    try {
-      // Salvar dados da etapa atual antes de navegar
-      const currentStep = steps[currentStepIndex];
-      const stepId = currentStep.id;
-      
-      // Extrair dados da etapa atual com base no ID
-      let data = {};
-      if (progress) {
-        switch (stepId) {
-          case 'personal':
-            data = progress?.personal_info || {};
-            break;
-          case 'professional_data':
-            data = progress?.professional_info || {};
-            break;
-          case 'business_context':
-            data = progress?.business_context || {};
-            break;
-          case 'ai_exp':
-            data = progress?.ai_experience || {};
-            break;
-          case 'business_goals':
-            data = progress?.business_goals || {};
-            break;
-          case 'experience_personalization':
-            data = progress?.experience_personalization || {};
-            break;
-          case 'complementary_info':
-            data = progress?.complementary_info || {};
-            break;
-        }
-      }
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <Loader2 className="h-12 w-12 animate-spin text-[#0ABAB5]" />
+      </div>
+    );
+  }
 
-      // Salvar dados atuais
-      await saveStepData(stepId, data, false);
-      console.log(`Navegando para etapa ${stepIndexDestino + 1}`);
-      
-      // Navegar para a etapa desejada
-      navigateToStep(stepIndexDestino);
-    } catch (e) {
-      console.error("Erro ao trocar de etapa:", e);
-      toast.error("Não foi possível trocar de etapa. Tente novamente.");
+  // Encontrar o passo atual
+  const step = onboardingSteps.find(s => s.id === routeStep) || onboardingSteps[0];
+  const stepIndex = onboardingSteps.findIndex(s => s.id === routeStep);
+  const progress = ((stepIndex + 1) / onboardingSteps.length) * 100;
+
+  // Renderizar o formulário adequado
+  const renderStepForm = () => {
+    switch (routeStep) {
+      case 'personal':
+        return <PersonalForm data={data} onSubmit={(formData) => saveFormData(formData, 'personal')} isSaving={isSaving} />;
+      case 'professional':
+        return <ProfessionalForm data={data} onSubmit={(formData) => saveFormData(formData, 'professional')} isSaving={isSaving} />;
+      case 'business-context':
+        return <BusinessContextForm data={data} onSubmit={(formData) => saveFormData(formData, 'business-context')} isSaving={isSaving} />;
+      case 'business-goals':
+        return <BusinessGoalsForm data={data} onSubmit={(formData) => saveFormData(formData, 'business-goals')} isSaving={isSaving} />;
+      case 'ai-experience':
+        return <AIExperienceForm data={data} onSubmit={(formData) => saveFormData(formData, 'ai-experience')} isSaving={isSaving} />;
+      case 'personalization':
+        return <PersonalizationForm data={data} onSubmit={(formData) => saveFormData(formData, 'personalization')} isSaving={isSaving} />;
+      case 'complementary':
+        return <ComplementaryForm data={data} onSubmit={(formData) => saveFormData(formData, 'complementary')} isSaving={isSaving} />;
+      case 'review':
+        return <ReviewStep data={data} onComplete={completeOnboarding} isSaving={isSaving} />;
+      default:
+        return <PersonalForm data={data} onSubmit={(formData) => saveFormData(formData, 'personal')} isSaving={isSaving} />;
     }
   };
 
   return (
-    <MemberLayout>
-      <div className="container max-w-screen-lg mx-auto py-8">
-        <OnboardingHeader isOnboardingCompleted={false} />
-        <div className="mt-6">
-          <EtapasProgresso
-            currentStep={currentStepIndex + 1}
-            totalSteps={steps.length}
-            onStepClick={handleStepClick}
-          />
-        </div>
-        <div className="mt-8">
-          <OnboardingSteps />
-        </div>
-      </div>
-    </MemberLayout>
+    <OnboardingLayout 
+      title={step.title}
+      description={step.description}
+      currentStep={stepIndex + 1}
+      totalSteps={onboardingSteps.length}
+      progress={progress}
+      steps={onboardingSteps}
+      activeStep={routeStep}
+    >
+      {renderStepForm()}
+    </OnboardingLayout>
   );
 };
 
