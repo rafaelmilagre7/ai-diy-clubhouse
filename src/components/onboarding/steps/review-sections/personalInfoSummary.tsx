@@ -12,8 +12,15 @@ export function getPersonalInfoSummary(data: OnboardingData['personal_info'] | u
   const formatPhone = (ddi?: string, phone?: string) => {
     if (!phone) return "Não preenchido";
     
-    // Se ddi já começa com +, não adicionar novamente
-    const formattedDDI = ddi?.startsWith('+') ? ddi : ddi ? `+${ddi}` : "+55";
+    // Garante que o DDI tenha apenas um + no início
+    let formattedDDI = "+55"; // valor padrão
+    
+    if (ddi) {
+      // Remove qualquer + existente e adiciona apenas um no início
+      formattedDDI = "+" + ddi.replace(/\+/g, '').replace(/\D/g, '');
+    }
+    
+    console.log("Telefone formatado:", formattedDDI, phone);
     return `${formattedDDI} ${phone}`;
   };
 

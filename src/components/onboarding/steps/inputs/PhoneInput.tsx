@@ -31,16 +31,18 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({
 }) => {
   const phoneIsValid = value ? validateBrazilianPhone(value) : true;
   
-  // Certifica-se de que o DDI começa com + (se tiver conteúdo)
+  // Certifica-se de que o DDI começa com + (mas apenas uma vez)
   const formatDDI = (ddiValue: string) => {
     if (!ddiValue) return "+55";
-    return ddiValue.startsWith('+') ? ddiValue : `+${ddiValue}`;
+    // Remove qualquer + existente e então adiciona um único + no início
+    return "+" + ddiValue.replace(/\+/g, '').replace(/\D/g, '');
   };
   
-  // Manipula a mudança do DDI garantindo que sempre começa com +
+  // Manipula a mudança do DDI garantindo que sempre começa com um único +
   const handleDDIChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (onChangeDDI) {
-      const newDDI = formatDDI(e.target.value.replace(/\D/g, ''));
+      const newDDI = formatDDI(e.target.value);
+      console.log("DDI formatado:", newDDI);
       onChangeDDI(newDDI);
     }
   };

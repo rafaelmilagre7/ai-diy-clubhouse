@@ -28,10 +28,22 @@ export const usePersonalInfoStep = () => {
   // Carregar dados iniciais
   useEffect(() => {
     if (progress?.personal_info) {
+      // Formatar o DDI para garantir que tenha apenas um +
+      let ddi = progress.personal_info.ddi || "+55";
+      if (ddi) {
+        ddi = "+" + ddi.replace(/\+/g, '').replace(/\D/g, '');
+      }
+      
       setFormData({
         ...formData,
         ...progress.personal_info,
+        ddi: ddi,
         timezone: progress.personal_info.timezone || "GMT-3"
+      });
+      
+      console.log("Dados carregados do progresso:", {
+        ...progress.personal_info,
+        ddi: ddi,
       });
     }
   }, [progress?.personal_info]);
@@ -42,9 +54,23 @@ export const usePersonalInfoStep = () => {
       if (!isSubmitting) {
         try {
           setIsSaving(true);
+          
+          // Formatação do DDI antes de salvar
+          const dataToSave = {
+            ...formData,
+          };
+          
+          // Garantir que o DDI está formatado corretamente antes de salvar
+          if (dataToSave.ddi) {
+            dataToSave.ddi = "+" + dataToSave.ddi.replace(/\+/g, '').replace(/\D/g, '');
+          }
+          
+          console.log("Salvando dados automáticos:", dataToSave);
+          
           await updateProgress({
-            personal_info: formData,
+            personal_info: dataToSave,
           });
+          
           setLastSaveTime(Date.now());
           console.log("Salvamento automático realizado");
         } catch (error) {
@@ -60,6 +86,12 @@ export const usePersonalInfoStep = () => {
   }, [formData, isSubmitting]);
 
   const handleChange = (field: keyof PersonalInfoData, value: string) => {
+    // Se for o campo DDI, garantir formatação adequada
+    if (field === 'ddi') {
+      // Remover + adicionais e garantir apenas um no início
+      value = "+" + value.replace(/\+/g, '').replace(/\D/g, '');
+    }
+    
     setFormData(prev => ({ ...prev, [field]: value }));
     
     // Limpar erro do campo quando ele é alterado
@@ -95,8 +127,20 @@ export const usePersonalInfoStep = () => {
 
     setIsSubmitting(true);
     try {
+      // Formatação do DDI antes de salvar
+      const dataToSubmit = {
+        ...formData,
+      };
+      
+      // Garantir que o DDI está formatado corretamente
+      if (dataToSubmit.ddi) {
+        dataToSubmit.ddi = "+" + dataToSubmit.ddi.replace(/\+/g, '').replace(/\D/g, '');
+      }
+      
+      console.log("Submetendo dados formatados:", dataToSubmit);
+      
       await updateProgress({
-        personal_info: formData,
+        personal_info: dataToSubmit,
         current_step: "professional_data",
         completed_steps: [...(progress?.completed_steps || []), "personal"],
       });
