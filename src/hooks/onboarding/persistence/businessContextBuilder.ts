@@ -25,18 +25,9 @@ export function buildBusinessContextUpdate(data: Partial<OnboardingData>, progre
       }
     });
     
-    // Salvar em business_data (coluna existente na tabela)
+    // Salvar apenas em business_data (coluna existente na tabela)
     updateObj.business_data = {
       ...baseBusinessData,
-      ...formattedData,
-    };
-    
-    // Para compatibilidade futura também mantemos em business_context
-    const existingContext = progress?.business_context || {};
-    const baseContext = typeof existingContext === 'string' ? {} : existingContext;
-    
-    updateObj.business_context = {
-      ...baseContext,
       ...formattedData,
     };
     
@@ -61,15 +52,6 @@ export function buildBusinessContextUpdate(data: Partial<OnboardingData>, progre
     
     updateObj.business_data = {
       ...baseBusinessData,
-      ...formattedData,
-    };
-    
-    // Para compatibilidade futura também mantemos em business_context
-    const existingContext = progress?.business_context || {};
-    const baseContext = typeof existingContext === 'string' ? {} : existingContext;
-    
-    updateObj.business_context = {
-      ...baseContext,
       ...formattedData,
     };
     

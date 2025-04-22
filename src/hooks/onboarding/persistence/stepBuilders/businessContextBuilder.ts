@@ -8,36 +8,44 @@ export function buildBusinessContextUpdate(data: Partial<OnboardingData>, progre
     const contextData = data.business_context;
     const existingBusinessData = progress?.business_data || {};
     
-    // Salvar tanto em business_data (coluna existente na tabela) quanto em business_context (para compatibilidade)
-    updateObj.business_data = {
-      ...existingBusinessData,
-      ...contextData,
-    };
+    // Garantir que existingBusinessData seja um objeto
+    const baseBusinessData = typeof existingBusinessData === 'string' ? {} : existingBusinessData;
     
-    // Para compatibilidade futura também mantemos em business_context, se este campo existir no banco
-    if (progress?.hasOwnProperty('business_context')) {
-      const existingContextData = progress?.business_context || {};
-      updateObj.business_context = {
-        ...existingContextData,
-        ...contextData,
-      };
-    }
+    // Garantir que arrays sejam mantidos como arrays
+    let formattedData = { ...contextData };
+    
+    // Garantir que arrays permaneçam como arrays
+    ['business_challenges', 'short_term_goals', 'medium_term_goals', 'important_kpis'].forEach(field => {
+      if (formattedData[field] && !Array.isArray(formattedData[field])) {
+        formattedData[field] = [formattedData[field]];
+      }
+    });
+    
+    // Salvar apenas em business_data (coluna existente na tabela)
+    updateObj.business_data = {
+      ...baseBusinessData,
+      ...formattedData,
+    };
   } else if (typeof data === 'object' && data !== null) {
     // Caso os dados venham diretamente sem o campo business_context
     const existingBusinessData = progress?.business_data || {};
-    updateObj.business_data = {
-      ...existingBusinessData,
-      ...data,
-    };
     
-    // Para compatibilidade futura
-    if (progress?.hasOwnProperty('business_context')) {
-      const existingContextData = progress?.business_context || {};
-      updateObj.business_context = {
-        ...existingContextData,
-        ...data,
-      };
-    }
+    // Garantir que existingBusinessData seja um objeto
+    const baseBusinessData = typeof existingBusinessData === 'string' ? {} : existingBusinessData;
+    
+    let formattedData = { ...data };
+    
+    // Garantir que arrays permaneçam como arrays
+    ['business_challenges', 'short_term_goals', 'medium_term_goals', 'important_kpis'].forEach(field => {
+      if (formattedData[field] && !Array.isArray(formattedData[field])) {
+        formattedData[field] = [formattedData[field]];
+      }
+    });
+    
+    updateObj.business_data = {
+      ...baseBusinessData,
+      ...formattedData,
+    };
   }
   
   return updateObj;
