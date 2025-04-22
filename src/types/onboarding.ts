@@ -1,4 +1,3 @@
-
 export interface OnboardingData {
   personal_info: {
     name?: string;
@@ -21,6 +20,7 @@ export interface OnboardingData {
     company_website?: string;
     current_position?: string;
     annual_revenue?: string;
+    metadata?: Record<string, any>;
   };
   business_context: {
     business_model?: string;
@@ -44,7 +44,7 @@ export interface OnboardingData {
   ai_experience: {
     knowledge_level?: string;
     previous_tools?: string[];
-    has_implemented?: string; // "sim" | "nao"
+    has_implemented?: string; // "sim" | "nao" ou "true" | "false"
     desired_ai_areas?: string[]; // agora array de áreas!
     completed_formation?: boolean;
     is_member_for_month?: boolean;
@@ -161,7 +161,15 @@ export interface OnboardingStep {
 
 // Novo tipo para receber entrada de dados profissionais
 export type ProfessionalDataInput = {
-  professional_info?: OnboardingData['professional_info'];
+  professional_info?: {
+    company_name?: string;
+    company_size?: string;
+    company_sector?: string;
+    company_website?: string;
+    current_position?: string;
+    annual_revenue?: string;
+    metadata?: Record<string, any>;
+  };
   company_name?: string;
   company_size?: string;
   company_sector?: string;

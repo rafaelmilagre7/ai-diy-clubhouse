@@ -42,9 +42,14 @@ export function buildProfessionalDataUpdate(data: ProfessionalDataInput, progres
     timestamp: new Date().toISOString()
   };
   
-  // Adicionar o metadata ao objeto professional_info se existir
+  // Criar uma versão atualizada de professional_info com metadados, se necessário
   if (processedData.professional_info) {
-    processedData.professional_info._metadata = semanticMetadata;
+    // Criar cópia para não modificar diretamente o objeto original
+    processedData.professional_info = {
+      ...processedData.professional_info,
+      // Adicionar metadados como uma propriedade separada para evitar problemas de tipagem
+      metadata: semanticMetadata
+    };
   }
   
   // Registrar transformação para depuração

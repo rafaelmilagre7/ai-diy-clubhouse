@@ -26,11 +26,15 @@ export function buildAiExpUpdate(data: Partial<OnboardingData>, progress: Onboar
     // Converter valores de string para booleanos quando apropriado
     if (aiExp.has_implemented !== undefined) {
       if (typeof aiExp.has_implemented === 'string') {
+        // Armazenar como string 'true' ou 'false' em vez de booleano
         aiExp.has_implemented = 
-          aiExp.has_implemented.toLowerCase() === 'sim' || 
+          (aiExp.has_implemented.toLowerCase() === 'sim' || 
           aiExp.has_implemented.toLowerCase() === 'yes' || 
           aiExp.has_implemented === '1' || 
-          aiExp.has_implemented.toLowerCase() === 'true';
+          aiExp.has_implemented.toLowerCase() === 'true') ? 'true' : 'false';
+      } else if (typeof aiExp.has_implemented === 'boolean') {
+        // Converter booleano para string
+        aiExp.has_implemented = aiExp.has_implemented ? 'true' : 'false';
       }
     }
     
