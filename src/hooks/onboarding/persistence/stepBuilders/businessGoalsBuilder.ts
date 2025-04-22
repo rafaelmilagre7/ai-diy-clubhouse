@@ -94,21 +94,29 @@ export function buildBusinessGoalsUpdate(data: Partial<OnboardingData>, progress
   }
 
   // Processar o objeto progress.business_goals existente, se necessário
-  const existingBusinessGoals = progress?.business_goals;
-  if (existingBusinessGoals && typeof existingBusinessGoals === 'string' && existingBusinessGoals !== '{}') {
-    try {
-      // Tentar converter string para objeto e combinar com os novos dados
-      const parsedExisting = JSON.parse(existingBusinessGoals);
+  if (progress?.business_goals) {
+    let existingBusinessGoals = progress.business_goals;
+    
+    // Converter de string para objeto, se necessário
+    if (typeof existingBusinessGoals === 'string' && existingBusinessGoals !== '{}' && existingBusinessGoals !== '') {
+      try {
+        existingBusinessGoals = JSON.parse(existingBusinessGoals);
+      } catch (e) {
+        console.error("Erro ao analisar business_goals:", e);
+        existingBusinessGoals = {};
+      }
+    }
+    
+    // Garantir que é um objeto
+    if (existingBusinessGoals && typeof existingBusinessGoals === 'object' && Object.keys(existingBusinessGoals).length > 0) {
       if (updateObj.business_goals) {
         updateObj.business_goals = {
-          ...parsedExisting,
+          ...existingBusinessGoals,
           ...updateObj.business_goals
         };
       } else {
-        updateObj.business_goals = parsedExisting;
+        updateObj.business_goals = existingBusinessGoals;
       }
-    } catch (e) {
-      console.error("Erro ao analisar business_goals:", e);
     }
   }
   

@@ -41,6 +41,17 @@ const Review: React.FC = () => {
       const validateField = (fieldName: string, value: any) => {
         if (typeof value === 'string' && fieldName !== 'current_step' && fieldName !== 'user_id' && fieldName !== 'id') {
           console.warn(`Campo ${fieldName} está como string em vez de objeto: "${value}"`);
+          
+          // Tentativa de corrigir automaticamente
+          try {
+            if (value !== "{}" && value !== "") {
+              const parsed = JSON.parse(value);
+              (progress as any)[fieldName] = parsed;
+              console.log(`Campo ${fieldName} convertido automaticamente de string para objeto:`, parsed);
+            }
+          } catch (e) {
+            console.error(`Falha ao analisar string para objeto no campo ${fieldName}:`, e);
+          }
         }
       };
       
@@ -69,13 +80,15 @@ const Review: React.FC = () => {
     }
   };
   
-  const progressPercentage = ((currentStepIndex + 1) / steps.length) * 100;
+  // Encontrar o índice correto do passo de revisão
+  const reviewStepIndex = steps.findIndex(step => step.id === "review");
+  const progressPercentage = ((reviewStepIndex + 1) / steps.length) * 100;
   
   // Verificar se temos dados para mostrar
   if (isLoading || !progress) {
     return (
       <OnboardingLayout
-        currentStep={currentStepIndex + 1}
+        currentStep={reviewStepIndex + 1}
         totalSteps={steps.length}
         title="Revisar Informações"
       >
@@ -89,7 +102,7 @@ const Review: React.FC = () => {
 
   return (
     <OnboardingLayout
-      currentStep={currentStepIndex + 1}
+      currentStep={reviewStepIndex + 1}
       totalSteps={steps.length}
       title="Revisar Informações"
       backUrl="/onboarding/complementary"

@@ -3,17 +3,17 @@ import React from "react";
 import { Badge } from "@/components/ui/badge";
 import { OnboardingData } from "@/types/onboarding";
 
-export function getBusinessGoalsSummary(data: OnboardingData['business_goals']) {
+export function getBusinessGoalsSummary(data: OnboardingData['business_goals'] | any) {
   console.log("Renderizando summary para Business Goals com dados:", data);
   
   // Verificação de dados
-  if (!data || typeof data === 'string' && data === "{}" || Object.keys(data).length === 0) {
+  if (!data) {
     return <p className="text-gray-500 italic">Seção não preenchida. Clique em Editar para preencher.</p>;
   }
 
   // Tentar converter string para objeto, se necessário
   let processedData = data;
-  if (typeof data === 'string' && data !== "{}") {
+  if (typeof data === 'string' && data !== "{}" && data !== "") {
     try {
       processedData = JSON.parse(data);
     } catch (e) {
@@ -26,6 +26,11 @@ export function getBusinessGoalsSummary(data: OnboardingData['business_goals']) 
     }
   }
 
+  // Se mesmo após processamento os dados estiverem vazios
+  if (!processedData || (typeof processedData === 'object' && Object.keys(processedData).length === 0)) {
+    return <p className="text-gray-500 italic">Seção não preenchida. Clique em Editar para preencher.</p>;
+  }
+
   // Mapeamento para exibições mais amigáveis
   const howImplementMap: Record<string, string> = {
     'delegar_time': 'Colocar pessoa do time',
@@ -33,31 +38,62 @@ export function getBusinessGoalsSummary(data: OnboardingData['business_goals']) 
     'contratar_equipe': 'Contratar equipe VIVER DE IA'
   };
 
+  // Mapeamento para exibição de motivos
+  const motivosMap: Record<string, string> = {
+    'networking': 'Networking com outros empresários',
+    'aprofundar_conhecimento': 'Aprofundar conhecimento em IA',
+    'implementar_solucoes': 'Implementar soluções concretas',
+    'be_atualizado': 'Manter-me atualizado sobre IA',
+    'mentoria': 'Mentoria para implementar IA',
+    'aprender_ferramentas': 'Aprender ferramentas práticas',
+    'capacitar_time': 'Capacitar meu time em IA',
+    'comunidade': 'Fazer parte de uma comunidade de IA'
+  };
+
+  // Mapeamento para formatação de conteúdo
+  const formatosMap: Record<string, string> = {
+    'video': 'Vídeo',
+    'texto': 'Texto',
+    'audio': 'Áudio',
+    'ao_vivo': 'Ao vivo',
+    'workshop': 'Workshop prático'
+  };
+
   return (
     <div className="space-y-2 text-sm">
-      <p>
-        <span className="font-medium">Objetivo principal:</span> {processedData.primary_goal || "Não preenchido"}
-      </p>
+      {processedData.primary_goal && (
+        <p>
+          <span className="font-medium">Objetivo principal:</span> {
+            motivosMap[processedData.primary_goal] || processedData.primary_goal
+          }
+        </p>
+      )}
       
-      <p>
-        <span className="font-medium">Resultado esperado em 30 dias:</span> {processedData.expected_outcome_30days || "Não preenchido"}
-      </p>
+      {processedData.expected_outcome_30days && (
+        <p>
+          <span className="font-medium">Resultado esperado em 30 dias:</span> {processedData.expected_outcome_30days}
+        </p>
+      )}
       
-      <p>
-        <span className="font-medium">Tipo de solução prioritária:</span> {processedData.priority_solution_type || "Não preenchido"}
-      </p>
+      {processedData.priority_solution_type && (
+        <p>
+          <span className="font-medium">Tipo de solução prioritária:</span> {processedData.priority_solution_type}
+        </p>
+      )}
       
-      <p>
-        <span className="font-medium">Como pretende implementar:</span> {
-          processedData.how_implement 
-            ? (howImplementMap[processedData.how_implement] || processedData.how_implement) 
-            : "Não preenchido"
-        }
-      </p>
+      {processedData.how_implement && (
+        <p>
+          <span className="font-medium">Como pretende implementar:</span> {
+            howImplementMap[processedData.how_implement] || processedData.how_implement
+          }
+        </p>
+      )}
       
-      <p>
-        <span className="font-medium">Disponibilidade semanal:</span> {processedData.week_availability || "Não preenchido"}
-      </p>
+      {processedData.week_availability && (
+        <p>
+          <span className="font-medium">Disponibilidade semanal:</span> {processedData.week_availability}
+        </p>
+      )}
       
       {processedData.live_interest !== undefined && (
         <p>
@@ -71,12 +107,7 @@ export function getBusinessGoalsSummary(data: OnboardingData['business_goals']) 
           <div className="flex flex-wrap gap-1 mt-1">
             {processedData.content_formats.map((format: string, index: number) => (
               <Badge key={index} variant="outline" className="bg-gray-100">{
-                format === 'video' ? 'Vídeo' :
-                format === 'texto' ? 'Texto' :
-                format === 'audio' ? 'Áudio' :
-                format === 'ao_vivo' ? 'Ao vivo' :
-                format === 'workshop' ? 'Workshop prático' :
-                format
+                formatosMap[format] || format
               }</Badge>
             ))}
           </div>

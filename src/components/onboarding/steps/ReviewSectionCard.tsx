@@ -21,15 +21,33 @@ export const ReviewSectionCard: React.FC<ReviewSectionCardProps> = ({
   stepIndex,
   navigateToStep
 }) => {
-  // Validação dos dados para efeito de log
-  React.useEffect(() => {
-    console.log(`Revisando dados para seção ${step.id}:`, sectionData);
-    if (typeof sectionData === 'string') {
-      console.warn(`Dados da seção ${step.id} estão como string:`, sectionData);
-    } else if (!sectionData || Object.keys(sectionData).length === 0) {
+  // Processa os dados da seção para garantir que estejam no formato correto
+  const processedData = React.useMemo(() => {
+    let data = sectionData;
+    
+    // Se os dados forem uma string, tentar converter para objeto
+    if (typeof data === 'string' && data !== "{}" && data !== "") {
+      try {
+        data = JSON.parse(data);
+        console.log(`Convertido dados da seção ${step.id} de string para objeto:`, data);
+      } catch (e) {
+        console.error(`Erro ao converter dados da seção ${step.id} de string para objeto:`, e);
+        data = {};
+      }
+    }
+    
+    // Verificar se os dados estão vazios
+    if (!data || (typeof data === 'object' && Object.keys(data).length === 0)) {
       console.warn(`Dados vazios para seção ${step.id}`);
     }
-  }, [step.id, sectionData]);
+    
+    return data;
+  }, [sectionData, step.id]);
+  
+  // Validação dos dados para efeito de log
+  React.useEffect(() => {
+    console.log(`Revisando dados para seção ${step.id}:`, processedData);
+  }, [step.id, processedData]);
 
   const handleEdit = () => {
     try {
@@ -58,7 +76,7 @@ export const ReviewSectionCard: React.FC<ReviewSectionCardProps> = ({
         </Button>
       </CardHeader>
       <CardContent className="pt-4 pb-4">
-        {getSummary(step.section, sectionData, progress)}
+        {getSummary(step.section, processedData, progress)}
       </CardContent>
     </Card>
   );
