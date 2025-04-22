@@ -1,3 +1,4 @@
+
 import { OnboardingProgress } from "@/types/onboarding";
 import { 
   normalizeField, 
@@ -25,9 +26,13 @@ export function normalizeOnboardingResponse(data: any): OnboardingProgress {
   normalizedData.team_info = normalizeField(data.team_info, 'team_info');
   normalizedData.implementation_preferences = normalizeField(data.implementation_preferences, 'implementation_preferences');
 
-  // ~Remover cópias antigas~ dos campos top-level. Não copiar para a raiz.
-  // Exemplo: não mapear normalizedData.company_name = ...
-  // (essa linha foi removida para evitar despadronização de dados!)
+  // Preservar campos legados para compatibilidade
+  normalizedData.company_name = data.company_name;
+  normalizedData.company_size = data.company_size;
+  normalizedData.company_sector = data.company_sector;
+  normalizedData.company_website = data.company_website;
+  normalizedData.current_position = data.current_position;
+  normalizedData.annual_revenue = data.annual_revenue;
 
   // Adicionar metadados para debugging
   normalizedData._metadata = {

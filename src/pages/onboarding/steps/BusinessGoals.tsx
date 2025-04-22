@@ -27,12 +27,12 @@ const BusinessGoals = () => {
   
   const { control, handleSubmit, watch, formState: { errors, isSubmitting } } = useForm<FormValues>({
     defaultValues: {
-      company_name: progress?.company_name || '',
-      company_size: progress?.company_size || '',
-      company_sector: progress?.company_sector || '',
-      company_website: progress?.company_website || '',
-      current_position: progress?.current_position || '',
-      annual_revenue: progress?.annual_revenue || '',
+      company_name: progress?.professional_info?.company_name || '',
+      company_size: progress?.professional_info?.company_size || '',
+      company_sector: progress?.professional_info?.company_sector || '',
+      company_website: progress?.professional_info?.company_website || '',
+      current_position: progress?.professional_info?.current_position || '',
+      annual_revenue: progress?.professional_info?.annual_revenue || '',
     }
   });
 

@@ -1,4 +1,5 @@
 
+
 export interface OnboardingData {
   // 1. Dados Pessoais
   personal_info: {
@@ -127,13 +128,15 @@ export interface OnboardingProgress {
   resources_needs?: OnboardingData['resources_needs'];
   team_info?: OnboardingData['team_info'];
   implementation_preferences?: OnboardingData['implementation_preferences'];
-  // Remover ~Campos diretos antigos do banco~
-  // company_name?: string;
-  // company_size?: string;
-  // company_sector?: string;
-  // company_website?: string;
-  // current_position?: string;
-  // annual_revenue?: string;
+  
+  // Campos legacy que precisam ser mantidos para compatibilidade
+  business_data?: any;
+  company_name?: string;
+  company_size?: string;
+  company_sector?: string;
+  company_website?: string;
+  current_position?: string;
+  annual_revenue?: string;
 
   // Propriedades para trilhas futuras
   trail_solutions?: any[];
@@ -166,3 +169,4 @@ export type ProfessionalDataInput = {
   current_position: string;
   annual_revenue: string;
 };
+

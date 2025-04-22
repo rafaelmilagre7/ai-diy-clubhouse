@@ -89,20 +89,26 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({
 
             // Tratamento especial para dados profissionais
             if (step.section === "professional_info" && (!sectionData || Object.keys(sectionData || {}).length === 0)) {
-              // Verificar se há dados diretos no progresso
-              const directData = {
-                company_name: progress.company_name || "",
-                company_size: progress.company_size || "",
-                company_sector: progress.company_sector || "",
-                company_website: progress.company_website || "",
-                current_position: progress.current_position || "",
-                annual_revenue: progress.annual_revenue || "",
-              };
-              
-              // Se algum dos campos diretos tiver valor, usar esses dados
-              if (Object.values(directData).some(value => !!value)) {
-                sectionData = directData;
-                console.log("Usando dados diretos para professional_info:", sectionData);
+              // Verificar se há dados no campo professional_info primeiro
+              if (progress.professional_info && Object.keys(progress.professional_info).length > 0) {
+                sectionData = progress.professional_info;
+              } 
+              // Verificar se há dados diretos no progresso como fallback
+              else if (progress.company_name || progress.company_size || progress.company_sector) {
+                const directData = {
+                  company_name: progress.company_name || "",
+                  company_size: progress.company_size || "",
+                  company_sector: progress.company_sector || "",
+                  company_website: progress.company_website || "",
+                  current_position: progress.current_position || "",
+                  annual_revenue: progress.annual_revenue || "",
+                };
+                
+                // Se algum dos campos diretos tiver valor, usar esses dados
+                if (Object.values(directData).some(value => !!value)) {
+                  sectionData = directData;
+                  console.log("Usando dados diretos para professional_info:", sectionData);
+                }
               }
             }
             

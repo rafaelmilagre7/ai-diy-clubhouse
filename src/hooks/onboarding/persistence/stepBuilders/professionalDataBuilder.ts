@@ -39,7 +39,12 @@ export function buildProfessionalDataUpdate(data: Partial<OnboardingData>, progr
       professionalInfo[field] = value;
       
       // Também atualizar no nível raiz para compatibilidade
-      updateObj[field] = value;
+      if (field === 'company_name') updateObj.company_name = value;
+      if (field === 'company_size') updateObj.company_size = value;
+      if (field === 'company_sector') updateObj.company_sector = value;
+      if (field === 'company_website') updateObj.company_website = value;
+      if (field === 'current_position') updateObj.current_position = value;
+      if (field === 'annual_revenue') updateObj.annual_revenue = value;
       
       hasUpdates = true;
     }

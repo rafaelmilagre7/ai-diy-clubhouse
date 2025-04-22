@@ -24,17 +24,19 @@ export function buildBusinessContextUpdate(data: Partial<OnboardingData>, progre
     
     // Garantir que arrays permaneçam como arrays
     ['business_challenges', 'short_term_goals', 'medium_term_goals', 'important_kpis'].forEach(field => {
-      if (formattedData[field] && !Array.isArray(formattedData[field])) {
-        formattedData[field] = [formattedData[field]];
+      if (formattedData[field as keyof typeof formattedData] && !Array.isArray(formattedData[field as keyof typeof formattedData])) {
+        (formattedData as any)[field] = [(formattedData as any)[field]];
       }
     });
     
     // Salvar apenas em business_data (coluna existente na tabela)
-    updateObj.business_data = {
-      ...baseBusinessData,
-      ...formattedData,
-      _last_updated: new Date().toISOString()
-    };
+    if (progress?.business_data !== undefined) {
+      updateObj.business_data = {
+        ...baseBusinessData,
+        ...formattedData,
+        _last_updated: new Date().toISOString()
+      };
+    }
     
     // Para compatibilidade, salvar explicitamente em business_context também
     updateObj.business_context = {
@@ -54,16 +56,19 @@ export function buildBusinessContextUpdate(data: Partial<OnboardingData>, progre
     
     // Garantir que arrays permaneçam como arrays
     ['business_challenges', 'short_term_goals', 'medium_term_goals', 'important_kpis'].forEach(field => {
-      if (formattedData[field] && !Array.isArray(formattedData[field])) {
-        formattedData[field] = [formattedData[field]];
+      if (formattedData[field as keyof typeof formattedData] && !Array.isArray(formattedData[field as keyof typeof formattedData])) {
+        (formattedData as any)[field] = [(formattedData as any)[field]];
       }
     });
     
-    updateObj.business_data = {
-      ...baseBusinessData,
-      ...formattedData,
-      _last_updated: new Date().toISOString()
-    };
+    // Salvar em business_data se existir no progresso
+    if (progress?.business_data !== undefined) {
+      updateObj.business_data = {
+        ...baseBusinessData,
+        ...formattedData,
+        _last_updated: new Date().toISOString()
+      };
+    }
     
     // Para compatibilidade, salvar explicitamente em business_context também
     updateObj.business_context = {
