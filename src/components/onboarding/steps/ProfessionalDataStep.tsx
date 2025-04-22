@@ -56,7 +56,7 @@ export const ProfessionalDataStep: React.FC<ProfessionalDataStepProps> = ({
       annual_revenue: validations.validateAnnualRevenue(data.annual_revenue)
     };
 
-    Object.values(validationResults).forEach(error => {
+    Object.entries(validationResults).forEach(([field, error]) => {
       if (error) errors.push(error);
     });
 
@@ -67,6 +67,9 @@ export const ProfessionalDataStep: React.FC<ProfessionalDataStepProps> = ({
     }
     
     try {
+      // Formatamos os dados para armazenamento apenas no objeto professional_info
+      // Isso deixará a estrutura mais limpa no banco, mas os campos individuais
+      // continuarão disponíveis para compatibilidade
       const professionalData = {
         professional_info: {
           company_name: data.company_name,
@@ -76,7 +79,7 @@ export const ProfessionalDataStep: React.FC<ProfessionalDataStepProps> = ({
           current_position: data.current_position,
           annual_revenue: data.annual_revenue,
         },
-        // Campos diretos para compatibilidade
+        // Campos diretos para compatibilidade com a estrutura atual
         company_name: data.company_name,
         company_size: data.company_size,
         company_sector: data.company_sector,
@@ -85,6 +88,7 @@ export const ProfessionalDataStep: React.FC<ProfessionalDataStepProps> = ({
         annual_revenue: data.annual_revenue,
       };
       
+      console.log("Enviando dados profissionais:", professionalData);
       await onSubmit("professional_data", professionalData);
       toast.success("Dados profissionais salvos com sucesso!");
     } catch (error) {

@@ -9,8 +9,19 @@ import { cn } from "@/lib/utils";
 import { validateWebsite } from "@/utils/professionalDataValidation";
 
 export const WebsiteField: React.FC = () => {
-  const { register, formState: { errors, touchedFields }, watch } = useFormContext();
+  const { register, formState: { errors, touchedFields }, watch, setValue } = useFormContext();
   const website = watch("company_website");
+
+  // Processar URL ao perder foco para garantir formato adequado
+  const handleBlur = (event: React.FocusEvent<HTMLInputElement>) => {
+    let value = event.target.value;
+    
+    if (value && !value.match(/^https?:\/\//)) {
+      // Adicionar protocolo automaticamente
+      value = `https://${value}`;
+      setValue("company_website", value, { shouldValidate: true });
+    }
+  };
 
   return (
     <div className="space-y-2">
@@ -28,9 +39,10 @@ export const WebsiteField: React.FC = () => {
         )}
       </Label>
       <Input
-        placeholder="https://www.suaempresa.com.br"
+        placeholder="www.suaempresa.com.br"
         {...register("company_website", {
-          validate: value => !value || validateWebsite(value) === undefined
+          validate: value => !value || validateWebsite(value) === undefined,
+          onBlur: handleBlur
         })}
         className={cn(
           "transition-all duration-200",

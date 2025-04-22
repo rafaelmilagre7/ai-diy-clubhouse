@@ -7,9 +7,22 @@ export const validateCompanyName = (value: string): string | undefined => {
 
 export const validateWebsite = (value: string): string | undefined => {
   if (!value) return undefined; // Website é opcional
-  const urlPattern = /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/;
-  if (!urlPattern.test(value)) return "URL inválida";
-  return undefined;
+  
+  // Verificação mais robusta para URLs
+  try {
+    // Adicionar protocolo se não existir
+    const urlString = value.match(/^https?:\/\//) ? value : `https://${value}`;
+    new URL(urlString);
+    
+    // Verificar se o domínio parece válido (tem pelo menos um ponto)
+    if (!urlString.match(/^https?:\/\/[^.]+\.[^.]+/)) {
+      return "URL deve incluir um domínio válido";
+    }
+    
+    return undefined;
+  } catch (e) {
+    return "URL inválida";
+  }
 };
 
 export const validateCompanySize = (value: string): string | undefined => {

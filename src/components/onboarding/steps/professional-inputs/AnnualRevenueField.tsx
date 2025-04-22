@@ -12,6 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { validateAnnualRevenue } from "@/utils/professionalDataValidation";
 
 export const AnnualRevenueField: React.FC = () => {
   const { setValue, watch, formState: { errors, touchedFields } } = useFormContext();
