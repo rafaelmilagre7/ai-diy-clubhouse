@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
 import { PersonalInfoStep } from "@/components/onboarding/steps/PersonalInfoStep";
@@ -40,11 +41,13 @@ const PersonalInfo = () => {
   const { personalStepIndex, totalSteps, progressPercentage } = usePersonalInfoProgress();
 
   useEffect(() => {
+    // Tentar carregar dados na montagem do componente
     attemptDataLoad(loadInitialData);
     return () => {};
   }, []);
 
   useEffect(() => {
+    // Tentar novamente se estiver carregando por muito tempo
     if (progressLoading && loadingAttempts < 3) {
       const timer = setTimeout(() => {
         attemptDataLoad(loadInitialData);
@@ -55,6 +58,8 @@ const PersonalInfo = () => {
 
   useEffect(() => {
     if (progress) {
+      // Lógica para atualizar com base no progresso, se necessário
+      console.log("[DEBUG] Progresso atualizado:", progress?.id);
     }
   }, [formData, progress]);
 
@@ -63,12 +68,14 @@ const PersonalInfo = () => {
     if (success) {
       goToNextStep();
     } else {
+      console.log("[DEBUG] Falha ao enviar formulário");
     }
   };
 
   const showForceButton = loadingAttempts >= 3 && progressLoading;
   const hasError = loadError || lastError;
 
+  // Verificar se o passo já foi concluído
   const isReadOnly = !!progress?.completed_steps?.includes("personal");
 
   if (progressLoading && !showForceButton) {
@@ -157,6 +164,7 @@ const PersonalInfo = () => {
     );
   }
 
+  // Renderização principal do formulário
   return (
     <OnboardingLayout 
       currentStep={1}

@@ -20,8 +20,9 @@ type SubmitParams = {
 };
 
 export const usePersonalInfoFormSubmit = () => {
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
+  // Inicializar explicitamente com false para garantir que o botão esteja habilitado inicialmente
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [isSaving, setIsSaving] = useState<boolean>(false);
   const [lastSaveTime, setLastSaveTime] = useState<number | null>(null);
   const { refreshProgress } = useProgress();
   const { logError } = useLogging();
