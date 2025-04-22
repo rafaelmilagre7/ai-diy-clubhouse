@@ -1,57 +1,19 @@
 
 import React from "react";
 import { useForm } from "react-hook-form";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { MultiSelect } from "@/components/ui/multi-select";
 import { ArrowRight } from "lucide-react";
 import { OnboardingStepProps } from "@/types/onboarding";
-
-const discoverOptions = [
-  { value: "google", label: "Google" },
-  { value: "social_media", label: "Redes Sociais" },
-  { value: "instagram", label: "Instagram" },
-  { value: "facebook", label: "Facebook" },
-  { value: "linkedin", label: "LinkedIn" },
-  { value: "youtube", label: "YouTube" },
-  { value: "recommendation", label: "Recomendação" },
-  { value: "event", label: "Evento" },
-  { value: "podcast", label: "Podcast" },
-  { value: "webinar", label: "Webinar" },
-  { value: "news", label: "Notícia/Blog" },
-  { value: "ads", label: "Anúncio" },
-  { value: "partner", label: "Parceiro" },
-  { value: "tiktok", label: "TikTok" },
-  { value: "other", label: "Outro" }
-];
-
-const topicOptions = [
-  { value: "ia_gerativa", label: "IA Gerativa (GPT/Claude/etc)" },
-  { value: "assistentes_ia", label: "Assistentes de IA Personalizados" },
-  { value: "automacao", label: "Automação de Processos" },
-  { value: "computer_vision", label: "Visão Computacional" },
-  { value: "dados", label: "Análise de Dados" },
-  { value: "seo", label: "SEO e Marketing Digital" },
-  { value: "atendimento", label: "Atendimento ao Cliente" },
-  { value: "vendas", label: "Vendas e Prospecção" },
-  { value: "rh", label: "RH e Recrutamento" },
-  { value: "financeiro", label: "Controle Financeiro" },
-  { value: "produto", label: "Desenvolvimento de Produto" },
-  { value: "suporte", label: "Suporte ao Cliente" },
-  { value: "marketing", label: "Marketing Digital" },
-  { value: "operacoes", label: "Operações" },
-  { value: "estrategia", label: "Estratégia de Negócios" }
-];
+import { DiscoverySourceSection } from "./complementary-info/DiscoverySourceSection";
+import { PriorityTopicsSection } from "./complementary-info/PriorityTopicsSection";
+import { PermissionsSection } from "./complementary-info/PermissionsSection";
 
 export const ComplementaryInfoStep = ({ 
   onSubmit, 
   isSubmitting, 
   initialData 
 }: OnboardingStepProps) => {
-  const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm({
+  const form = useForm({
     defaultValues: {
       how_found_us: initialData?.complementary_info?.how_found_us || initialData?.how_found_us || "",
       referred_by: initialData?.complementary_info?.referred_by || initialData?.referred_by || "",
@@ -70,111 +32,12 @@ export const ComplementaryInfoStep = ({
     });
   };
 
-  const sourceType = watch("how_found_us");
-
   return (
-    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-8">
+    <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-8">
       <div className="space-y-6">
-        {/* Como conheceu seção */}
-        <div className="bg-card p-6 rounded-lg border border-border space-y-4">
-          <Label className="text-lg font-semibold">
-            Como você conheceu o VIVER DE IA Club?
-          </Label>
-          <Select
-            defaultValue={initialData?.complementary_info?.how_found_us || initialData?.how_found_us || ""}
-            onValueChange={(value) => setValue("how_found_us", value)}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Selecione uma opção" />
-            </SelectTrigger>
-            <SelectContent>
-              {discoverOptions.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          {sourceType === "recommendation" && (
-            <div className="space-y-2">
-              <Label htmlFor="referred_by">Quem indicou você para o VIVER DE IA Club?</Label>
-              <Input
-                id="referred_by"
-                placeholder="Digite o nome da pessoa que te indicou"
-                {...register("referred_by")}
-                className="w-full"
-              />
-              <p className="text-sm text-muted-foreground">
-                Nos ajuda a agradecer quem está divulgando o VIVER DE IA Club
-              </p>
-            </div>
-          )}
-        </div>
-
-        {/* Tópicos Prioritários seção */}
-        <div className="bg-card p-6 rounded-lg border border-border space-y-4">
-          <div className="space-y-2">
-            <Label className="text-lg font-semibold">
-              Tópicos Prioritários para Você
-            </Label>
-            <p className="text-muted-foreground text-sm">
-              Selecione até 5 tópicos que são mais importantes para o seu negócio. 
-              Isso nos ajudará a personalizar sua experiência.
-            </p>
-          </div>
-          <MultiSelect
-            options={topicOptions}
-            defaultValue={initialData?.complementary_info?.priority_topics || initialData?.priority_topics || []}
-            onChange={(selected) => setValue("priority_topics", selected)}
-            placeholder="Selecione os tópicos"
-            maxItems={5}
-          />
-        </div>
-
-        {/* Autorizações seção */}
-        <div className="bg-card p-6 rounded-lg border border-border space-y-6">
-          <h3 className="text-lg font-semibold">Permissões e Interesses</h3>
-          
-          <div className="space-y-6">
-            <div className="flex items-start space-x-3">
-              <Checkbox
-                id="authorize_case_usage"
-                checked={watch("authorize_case_usage")}
-                onCheckedChange={(checked) => 
-                  setValue("authorize_case_usage", checked === true)
-                }
-              />
-              <div className="space-y-1">
-                <Label htmlFor="authorize_case_usage" className="font-medium">
-                  Autorizo o uso do meu caso como exemplo de sucesso
-                </Label>
-                <p className="text-sm text-muted-foreground">
-                  Permite que compartilhemos resultados obtidos com sua implementação 
-                  (sem dados sensíveis ou confidenciais).
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-start space-x-3">
-              <Checkbox
-                id="interested_in_interview"
-                checked={watch("interested_in_interview")}
-                onCheckedChange={(checked) => 
-                  setValue("interested_in_interview", checked === true)
-                }
-              />
-              <div className="space-y-1">
-                <Label htmlFor="interested_in_interview" className="font-medium">
-                  Tenho interesse em participar de entrevistas e cases
-                </Label>
-                <p className="text-sm text-muted-foreground">
-                  Podemos entrar em contato para entrevistas e compartilhamento de experiência.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
+        <DiscoverySourceSection form={form} />
+        <PriorityTopicsSection form={form} />
+        <PermissionsSection form={form} />
       </div>
 
       {/* Botões de navegação */}
