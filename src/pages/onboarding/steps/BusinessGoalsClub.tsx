@@ -34,13 +34,14 @@ const BusinessGoalsClub = () => {
     console.log(`Iniciando salvamento de dados para passo ${stepId}:`, data);
     setIsSubmitting(true);
     try {
-      // Garantir que estamos enviando os dados no formato correto
-      await saveStepData("business_goals", data, false); // Agora usando explicitamente "business_goals"
+      // Garantir que o stepId correto esteja sendo utilizado e os dados estejam estruturados corretamente
+      await saveStepData(stepId, data, false);
       
       toast.success("Dados salvos com sucesso!");
       
       // Forçar atualização dos dados após salvar
       await refreshProgress();
+      console.log("Após salvar, dados de progresso:", progress);
       
       // Navegar manualmente para a próxima página
       navigate("/onboarding/customization");
@@ -56,17 +57,6 @@ const BusinessGoalsClub = () => {
   const handleRetry = () => {
     setRefreshCount(prev => prev + 1);
   };
-
-  // Verificar se temos dados válidos para business_goals
-  const hasBusinessGoals = progress?.business_goals && 
-    (typeof progress.business_goals === 'object' && 
-    Object.keys(progress.business_goals).length > 0);
-
-  console.log("Estado atual dos business_goals:", {
-    hasBusinessGoals,
-    businessGoals: progress?.business_goals,
-    progressType: progress ? typeof progress.business_goals : 'undefined'
-  });
 
   return (
     <OnboardingLayout

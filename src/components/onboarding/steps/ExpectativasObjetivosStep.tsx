@@ -15,9 +15,9 @@ interface ExpectativasObjetivosStepProps {
   onSubmit: (stepId: string, data: Partial<OnboardingData>) => void;
   isSubmitting: boolean;
   isLastStep: boolean;
-  onComplete: () => void;
+  onComplete?: () => void;
   initialData?: any;
-  personalInfo?: OnboardingData["personal_info"];
+  personalInfo?: OnboardingData['personal_info'];
 }
 
 type FormValues = {
@@ -43,7 +43,7 @@ export const ExpectativasObjetivosStep = ({
   console.log("Dados iniciais para ExpectativasObjetivosStep:", initialData);
   console.log("Dados de business_goals:", businessGoalsData);
 
-  const { control, handleSubmit, setValue, watch } = useForm<FormValues>({
+  const { control, handleSubmit, setValue, watch, formState: { errors } } = useForm<FormValues>({
     defaultValues: {
       primary_goal: businessGoalsData.primary_goal || "",
       expected_outcome_30days: businessGoalsData.expected_outcome_30days || "",
@@ -89,6 +89,8 @@ export const ExpectativasObjetivosStep = ({
       },
     };
     
+    console.log("Dados formatados para envio:", businessGoalsData);
+    
     // Enviar dados com o ID da etapa correto
     onSubmit("business_goals", businessGoalsData);
   };
@@ -105,12 +107,14 @@ export const ExpectativasObjetivosStep = ({
             <Controller
               name="primary_goal"
               control={control}
+              rules={{ required: "Por favor, selecione uma opção" }}
               render={({ field }) => (
                 <div className="space-y-3">
                   <Label htmlFor="primary_goal">O que você busca principalmente ao participar do VIVER DE IA Club?</Label>
+                  {errors.primary_goal && <p className="text-red-500 text-sm">{errors.primary_goal.message}</p>}
                   <RadioGroup
                     onValueChange={field.onChange}
-                    defaultValue={field.value}
+                    value={field.value}
                     className="space-y-2"
                   >
                     <div className="flex items-center space-x-2">
@@ -169,12 +173,14 @@ export const ExpectativasObjetivosStep = ({
             <Controller
               name="priority_solution_type"
               control={control}
+              rules={{ required: "Por favor, selecione uma opção" }}
               render={({ field }) => (
                 <div className="space-y-2">
                   <Label htmlFor="priority_solution_type">Qual tipo de solução é prioritária para seu negócio agora?</Label>
+                  {errors.priority_solution_type && <p className="text-red-500 text-sm">{errors.priority_solution_type.message}</p>}
                   <RadioGroup
                     onValueChange={field.onChange}
-                    defaultValue={field.value}
+                    value={field.value}
                     className="space-y-2"
                   >
                     <div className="flex items-center space-x-2">
@@ -209,12 +215,14 @@ export const ExpectativasObjetivosStep = ({
             <Controller
               name="how_implement"
               control={control}
+              rules={{ required: "Por favor, selecione uma opção" }}
               render={({ field }) => (
                 <div className="space-y-2">
                   <Label htmlFor="how_implement">Como você pretende implementar as soluções de IA?</Label>
+                  {errors.how_implement && <p className="text-red-500 text-sm">{errors.how_implement.message}</p>}
                   <RadioGroup
                     onValueChange={field.onChange}
-                    defaultValue={field.value}
+                    value={field.value}
                     className="space-y-2"
                   >
                     <div className="flex items-center space-x-2">
@@ -237,12 +245,14 @@ export const ExpectativasObjetivosStep = ({
             <Controller
               name="week_availability"
               control={control}
+              rules={{ required: "Por favor, selecione uma opção" }}
               render={({ field }) => (
                 <div className="space-y-2">
                   <Label htmlFor="week_availability">Quantas horas por semana você tem disponíveis para implementar IA?</Label>
+                  {errors.week_availability && <p className="text-red-500 text-sm">{errors.week_availability.message}</p>}
                   <RadioGroup
                     onValueChange={field.onChange}
-                    defaultValue={field.value}
+                    value={field.value}
                     className="space-y-2"
                   >
                     <div className="flex items-center space-x-2">
