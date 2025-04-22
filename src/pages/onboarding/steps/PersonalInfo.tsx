@@ -11,7 +11,7 @@ import { LoadingSpinner } from "@/components/common/LoadingSpinner";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertTriangle } from "lucide-react";
-import { useStepDefinitions } from "@/hooks/onboarding/useStepDefinitions"; // Corrigido para o hook
+import { useStepDefinitions } from "@/hooks/onboarding/useStepDefinitions";
 import { useStepNavigation } from "@/hooks/onboarding/useStepNavigation";
 
 const PersonalInfo = () => {
@@ -41,7 +41,7 @@ const PersonalInfo = () => {
     attemptDataLoad
   } = usePersonalInfoLoad();
 
-  // Novo: obtenha os steps centralizados
+  // Agora usando o hook de definições de etapas corretamente
   const { steps } = useStepDefinitions();
 
   // Hook centralizado de navegação de etapas

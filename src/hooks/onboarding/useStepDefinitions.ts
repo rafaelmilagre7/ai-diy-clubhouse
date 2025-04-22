@@ -58,3 +58,8 @@ export const steps: OnboardingStep[] = [
     path: "/onboarding/trail-generation"
   }
 ];
+
+// Adicionando um hook simples para acessar as definições dos passos
+export function useStepDefinitions() {
+  return { steps };
+}
