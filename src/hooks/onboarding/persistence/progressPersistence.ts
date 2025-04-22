@@ -1,8 +1,6 @@
-
 import { supabase } from "@/lib/supabase";
 import { OnboardingProgress } from "@/types/onboarding";
 
-// Função para validar e normalizar dados antes de salvar
 const normalizeOnboardingData = (data: Partial<OnboardingProgress>) => {
   const normalizedData = { ...data };
   
@@ -78,13 +76,19 @@ const normalizeOnboardingData = (data: Partial<OnboardingProgress>) => {
     // Converter de string para objeto se necessário
     if (typeof aiExp === 'string') {
       try {
-        if (typeof aiExp === 'string' && aiExp.trim() !== '') {  // Verificar explicitamente se é uma string antes de usar trim()
-          (normalizedData as any).ai_experience = JSON.parse(aiExp);
+        // Use precise type checking and handle potential JSON parsing
+        if (typeof aiExp === 'string' && aiExp.trim() !== '') {
+          try {
+            (normalizedData as any).ai_experience = JSON.parse(aiExp);
+          } catch (e) {
+            console.warn("Falha ao converter ai_experience de string para objeto:", e);
+            (normalizedData as any).ai_experience = {};
+          }
         } else {
           (normalizedData as any).ai_experience = {};
         }
       } catch (e) {
-        console.warn("ai_experience é string mas não é JSON válido:", e);
+        console.warn("Erro ao processar ai_experience:", e);
         (normalizedData as any).ai_experience = {};
       }
     }
@@ -107,7 +111,6 @@ const normalizeOnboardingData = (data: Partial<OnboardingProgress>) => {
   return normalizedData;
 };
 
-// Função para normalizar dados após buscar do banco
 const normalizeOnboardingResponse = (data: OnboardingProgress): OnboardingProgress => {
   if (!data) return data;
   
@@ -184,7 +187,6 @@ const normalizeOnboardingResponse = (data: OnboardingProgress): OnboardingProgre
   return normalizedData;
 };
 
-// Buscar progresso do onboarding
 export const fetchOnboardingProgress = async (userId: string) => {
   console.log("Buscando progresso de onboarding para usuário:", userId);
   
