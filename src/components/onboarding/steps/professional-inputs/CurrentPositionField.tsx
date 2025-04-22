@@ -30,10 +30,11 @@ export const CurrentPositionField: React.FC = () => {
         {...register("current_position", { 
           required: "Cargo é obrigatório",
           minLength: { value: 2, message: "Cargo muito curto" }
+          // Removendo validação em tempo real
         })}
         className={cn(
           "transition-all duration-200",
-          errors.current_position ? "border-red-500" : 
+          errors.current_position && errors.current_position.type === "required" ? "border-red-500" : 
           touchedFields.current_position ? "border-[#0ABAB5]" : ""
         )}
       />

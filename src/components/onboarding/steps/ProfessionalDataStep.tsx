@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { CompanyNameField } from "./professional-inputs/CompanyNameField";
@@ -64,17 +63,9 @@ export const ProfessionalDataStep: React.FC<ProfessionalDataStepProps> = ({
       current_position: "",
       annual_revenue: ""
     },
-    mode: "onBlur" // Alterado de onChange para onBlur para melhorar a experiência de digitação
+    // Usando onSubmit para evitar validação durante a digitação
+    mode: "onSubmit"
   });
-  
-  // Adicionando log para debugging de estados do formulário
-  useEffect(() => {
-    const subscription = methods.watch((value, { name, type }) => {
-      console.log(`Campo ${name} foi alterado (${type}):`, value);
-    });
-    
-    return () => subscription.unsubscribe();
-  }, [methods]);
   
   // Efeito para atualizar o formulário quando os dados iniciais mudarem
   useEffect(() => {
