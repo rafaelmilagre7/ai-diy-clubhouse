@@ -16,20 +16,23 @@ export function buildAiExpUpdate(data: Partial<OnboardingData>, progress: Onboar
   if (data.ai_experience) {
     aiExperienceData = data.ai_experience;
   } 
-  // Verificar se há uma propriedade ai_exp que pode conter os dados
-  else if (data.ai_exp) {
-    aiExperienceData = data.ai_exp;
+  // Verificar se há uma propriedade ai_exp que pode conter os dados (usando type assertion)
+  else if ((data as any).ai_exp) {
+    aiExperienceData = (data as any).ai_exp;
   }
   // Se ai_experience não existe, verificar se existe alguma propriedade aninhada chamada ai_experience
   else if (data.ai_experience === undefined) {
     // Verificar se há alguma outra propriedade que possa conter ai_experience
     for (const key in data) {
       const value = data[key as keyof typeof data];
-      if (value && typeof value === 'object' && ('ai_experience' in value || 'ai_exp' in value)) {
-        aiExperienceData = 'ai_experience' in value ? 
-                          (value as any).ai_experience : 
-                          (value as any).ai_exp;
-        break;
+      if (value && typeof value === 'object') {
+        // Usar verificação segura com type assertion
+        if ('ai_experience' in value || 'ai_exp' in (value as any)) {
+          aiExperienceData = 'ai_experience' in value ? 
+                            (value as any).ai_experience : 
+                            (value as any).ai_exp;
+          break;
+        }
       }
     }
   }
