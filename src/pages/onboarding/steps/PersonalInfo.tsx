@@ -67,6 +67,14 @@ const PersonalInfo = () => {
   }, [formData, progress]);
 
   const handleSuccess = async () => {
+    // Se a etapa já foi concluída, apenas navegue para a próxima
+    if (progress?.completed_steps?.includes("personal")) {
+      console.log("[DEBUG] Etapa já concluída, apenas navegando...");
+      goToNextStep();
+      return;
+    }
+    
+    // Caso contrário, submeta o formulário normalmente
     const success = await handleSubmit();
     if (success) {
       goToNextStep();

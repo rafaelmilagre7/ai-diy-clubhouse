@@ -49,17 +49,15 @@ export const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
         </div>
       )}
       
-      {!readOnly && (
-        <div className="flex justify-end pt-4">
-          <Button
-            type="submit"
-            disabled={isSubmitting}
-            className="bg-[#0ABAB5] hover:bg-[#0ABAB5]/90"
-          >
-            {isSubmitting ? "Salvando..." : "Salvar e avançar"}
-          </Button>
-        </div>
-      )}
+      <div className="flex justify-end pt-4">
+        <Button
+          type="submit"
+          disabled={isSubmitting}
+          className="bg-[#0ABAB5] hover:bg-[#0ABAB5]/90"
+        >
+          {isSubmitting ? "Salvando..." : readOnly ? "Avançar" : "Salvar e avançar"}
+        </Button>
+      </div>
     </form>
   );
 };
