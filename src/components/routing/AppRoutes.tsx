@@ -12,6 +12,11 @@ import AdminUsers from '@/pages/admin/AdminUsers';
 import AdminSolutions from '@/pages/admin/AdminSolutions';
 import AdminTools from '@/pages/admin/AdminTools';
 import AdminSuggestions from '@/pages/admin/AdminSuggestions';
+import AdminSolutionCreate from '@/pages/admin/AdminSolutionCreate';
+import AdminSolutionEdit from '@/pages/admin/AdminSolutionEdit';
+import SolutionEditor from '@/pages/admin/SolutionEditor';
+import AdminToolEdit from '@/pages/admin/AdminToolEdit';
+import AdminSuggestionDetails from '@/pages/admin/AdminSuggestionDetails';
 import Dashboard from '@/pages/member/Dashboard';
 import Solutions from '@/pages/member/Solutions';
 import Tools from '@/pages/member/Tools';
@@ -28,6 +33,7 @@ import SuggestionDetails from '@/pages/member/SuggestionDetails';
 import NewSuggestion from '@/pages/member/NewSuggestion';
 import { Navigate } from 'react-router-dom';
 import MemberLayout from '@/components/layout/MemberLayout';
+import AdminLayout from '@/components/layout/admin/AdminLayout';
 import ImplementationTrailPage from '@/pages/member/ImplementationTrailPage';
 
 // Onboarding
@@ -43,6 +49,8 @@ import Review from '@/pages/onboarding/steps/Review';
 import TrailGeneration from '@/pages/onboarding/steps/TrailGeneration';
 
 const AppRoutes = () => {
+  console.log("Renderizando AppRoutes");
+  
   return (
     <Routes>
       {/* Auth Routes */}
@@ -85,12 +93,84 @@ const AppRoutes = () => {
       <Route path="/onboarding/review" element={<ProtectedRoutes><Review /></ProtectedRoutes>} />
       <Route path="/onboarding/trail-generation" element={<ProtectedRoutes><TrailGeneration /></ProtectedRoutes>} />
       
-      {/* Admin Routes */}
-      <Route path="/admin" element={<AdminProtectedRoutes><AdminDashboard /></AdminProtectedRoutes>} />
-      <Route path="/admin/users" element={<AdminProtectedRoutes><AdminUsers /></AdminProtectedRoutes>} />
-      <Route path="/admin/solutions" element={<AdminProtectedRoutes><AdminSolutions /></AdminProtectedRoutes>} />
-      <Route path="/admin/tools" element={<AdminProtectedRoutes><AdminTools /></AdminProtectedRoutes>} />
-      <Route path="/admin/suggestions" element={<AdminProtectedRoutes><AdminSuggestions /></AdminProtectedRoutes>} />
+      {/* Admin Routes - Corrigido para usar AdminLayout */}
+      <Route path="/admin" element={
+        <AdminProtectedRoutes>
+          <AdminLayout>
+            <AdminDashboard />
+          </AdminLayout>
+        </AdminProtectedRoutes>
+      } />
+      <Route path="/admin/users" element={
+        <AdminProtectedRoutes>
+          <AdminLayout>
+            <AdminUsers />
+          </AdminLayout>
+        </AdminProtectedRoutes>
+      } />
+      <Route path="/admin/solutions" element={
+        <AdminProtectedRoutes>
+          <AdminLayout>
+            <AdminSolutions />
+          </AdminLayout>
+        </AdminProtectedRoutes>
+      } />
+      <Route path="/admin/solutions/new" element={
+        <AdminProtectedRoutes>
+          <AdminLayout>
+            <AdminSolutionCreate />
+          </AdminLayout>
+        </AdminProtectedRoutes>
+      } />
+      <Route path="/admin/solutions/:id" element={
+        <AdminProtectedRoutes>
+          <AdminLayout>
+            <AdminSolutionEdit />
+          </AdminLayout>
+        </AdminProtectedRoutes>
+      } />
+      <Route path="/admin/solutions/:id/editor" element={
+        <AdminProtectedRoutes>
+          <AdminLayout>
+            <SolutionEditor />
+          </AdminLayout>
+        </AdminProtectedRoutes>
+      } />
+      <Route path="/admin/tools" element={
+        <AdminProtectedRoutes>
+          <AdminLayout>
+            <AdminTools />
+          </AdminLayout>
+        </AdminProtectedRoutes>
+      } />
+      <Route path="/admin/tools/new" element={
+        <AdminProtectedRoutes>
+          <AdminLayout>
+            <AdminToolEdit />
+          </AdminLayout>
+        </AdminProtectedRoutes>
+      } />
+      <Route path="/admin/tools/:id" element={
+        <AdminProtectedRoutes>
+          <AdminLayout>
+            <AdminToolEdit />
+          </AdminLayout>
+        </AdminProtectedRoutes>
+      } />
+      <Route path="/admin/suggestions" element={
+        <AdminProtectedRoutes>
+          <AdminLayout>
+            <AdminSuggestions />
+          </AdminLayout>
+        </AdminProtectedRoutes>
+      } />
+      <Route path="/admin/suggestions/:id" element={
+        <AdminProtectedRoutes>
+          <AdminLayout>
+            <AdminSuggestionDetails />
+          </AdminLayout>
+        </AdminProtectedRoutes>
+      } />
       
       {/* Fallback route */}
       <Route path="*" element={<NotFound />} />

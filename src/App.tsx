@@ -1,13 +1,11 @@
 
 import React from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter } from 'react-router-dom';
 import { Toaster } from './components/ui/sonner';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { LoggingProvider } from './hooks/useLogging';
 import { AuthProvider } from './contexts/auth';
-
-// Importações corretas para os componentes de onboarding
 import AppRoutes from './components/routing/AppRoutes';
 
 const queryClient = new QueryClient({
@@ -20,6 +18,8 @@ const queryClient = new QueryClient({
 });
 
 const App = () => {
+  console.log("Renderizando App.tsx");
+  
   return (
     <QueryClientProvider client={queryClient}>
       <LoggingProvider>

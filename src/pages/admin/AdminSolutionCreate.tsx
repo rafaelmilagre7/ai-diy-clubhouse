@@ -15,6 +15,8 @@ const AdminSolutionCreate = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
 
+  console.log("Renderizando AdminSolutionCreate");
+
   // Valores padrão para o formulário
   const defaultValues: SolutionFormValues = {
     title: "",
