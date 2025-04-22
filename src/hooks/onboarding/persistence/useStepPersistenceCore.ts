@@ -1,7 +1,8 @@
+
 import { useProgress } from "../useProgress";
-import { buildUpdateObject } from "./stepDataBuilder";
-import { navigateAfterStep } from "./stepNavigator";
-import { steps } from "../useStepDefinitions";
+import { buildUpdateObject } from "./persistence/stepDataBuilder";
+import { navigateAfterStep } from "./persistence/stepNavigator";
+import { steps } from "./useStepDefinitions";
 import { toast } from "sonner";
 import { useLogging } from "@/hooks/useLogging";
 
@@ -73,21 +74,24 @@ export function useStepPersistenceCore({
 
       console.log("Dados a serem enviados para o banco:", updateObj);
 
-      // Atualizar no Supabase - Correção aqui para tratar corretamente o retorno
-      const updatedProgress = await updateProgress(updateObj);
-
-      // Verificação se houve algum erro no retorno
-      if (!updatedProgress) {
-        console.error("Erro ao atualizar dados: retorno vazio");
+      // Atualizar no Supabase - Correção para tratar corretamente o retorno
+      const result = await updateProgress(updateObj);
+      
+      // Verificar se temos um retorno válido
+      if (!result || result.error) {
+        const errorMessage = result?.error?.message || "Erro desconhecido ao atualizar dados";
+        console.error("Erro ao atualizar dados:", errorMessage);
         logError("save_step_data_error", { 
           step: stepId, 
-          error: "Retorno vazio da atualização",
+          error: errorMessage,
           stepIndex: currentStepIndex
         });
         toast.error("Erro ao salvar dados. Por favor, tente novamente.");
         return;
       }
       
+      // Usar os dados retornados ou fallback para o objeto de progresso com as atualizações
+      const updatedProgress = result.data || { ...progress, ...updateObj };
       console.log("Progresso atualizado com sucesso:", updatedProgress);
       
       // Notificar usuário do salvamento
@@ -129,10 +133,14 @@ export function useStepPersistenceCore({
       console.log("Completando onboarding...");
       
       // Marca o onboarding como concluído
-      await updateProgress({
+      const result = await updateProgress({
         is_completed: true,
         completed_steps: steps.map(s => s.id),
       });
+      
+      if (result?.error) {
+        throw new Error(result.error.message || "Erro ao completar onboarding");
+      }
       
       // Atualiza dados locais
       await refreshProgress();
