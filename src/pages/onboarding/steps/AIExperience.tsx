@@ -25,9 +25,18 @@ const AIExperience = () => {
     if (progress) {
       console.log("Dados de AI Experience obtidos:", progress.ai_experience);
       
-      // Verificar se os dados estão em formato de string
+      // Verificar formato dos dados
       if (typeof progress.ai_experience === 'string') {
-        console.warn("Alerta: ai_experience está como string em vez de objeto:", progress.ai_experience);
+        console.warn("Atenção: ai_experience está como string:", progress.ai_experience);
+        try {
+          // Tentar converter para objeto para debug
+          const parsedData = JSON.parse(progress.ai_experience as string);
+          console.log("Dados de AI Experience após parse:", parsedData);
+        } catch (e) {
+          console.error("Erro ao fazer parse de ai_experience como string:", e);
+        }
+      } else if (!progress.ai_experience || Object.keys(progress.ai_experience).length === 0) {
+        console.warn("Dados de AI Experience vazios ou não inicializados");
       }
     }
   }, [progress]);
@@ -38,17 +47,30 @@ const AIExperience = () => {
       console.log("Salvando dados de experiência com IA:", data);
       log("onboarding_ai_experience_submit", { data });
       
-      // Garantir formato de objeto mesmo se vier como string
+      // Garantir que estamos enviando dados bem estruturados
       if (typeof data === 'string') {
         console.warn("Convertendo dados de string para objeto antes de salvar");
-        data = { ai_experience: { default: data } };
+        try {
+          data = JSON.parse(data);
+        } catch (e) {
+          console.error("Erro ao converter string para objeto:", e);
+          data = { ai_experience: { default: data } };
+        }
+      }
+      
+      // Garantir que ai_experience está presente e na estrutura correta
+      if (!data.ai_experience && typeof data === 'object') {
+        console.log("Encapsulando dados em ai_experience");
+        data = { ai_experience: data };
       }
       
       // Usar a assinatura com stepId explícito
       await saveStepData("ai_exp", data, true);
       
       console.log("Dados de experiência com IA salvos com sucesso");
-      // O toast de sucesso já é mostrado pelo hook de persistência
+      
+      // Atualizar dados locais após salvar
+      await refreshProgress();
     } catch (error) {
       console.error("Erro ao salvar dados:", error);
       log("onboarding_ai_experience_error", { error });
@@ -76,7 +98,7 @@ const AIExperience = () => {
           <AIExperienceStep
             onSubmit={handleSaveData}
             isSubmitting={isSubmitting}
-            initialData={progress?.ai_experience}
+            initialData={progress}
             isLastStep={false}
             onComplete={completeOnboarding}
           />

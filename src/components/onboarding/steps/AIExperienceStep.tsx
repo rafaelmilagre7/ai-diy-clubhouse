@@ -9,6 +9,7 @@ import { AISuggestionsField } from "./ai-experience/AISuggestionsField";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 
 interface AIExperienceStepProps {
   onSubmit: (stepId: string, data: any) => void;
@@ -41,19 +42,74 @@ export const AIExperienceStep: React.FC<AIExperienceStepProps> = ({
   isSubmitting,
   initialData,
 }) => {
-  // Verificar formato dos dados iniciais para debug
-  useEffect(() => {
-    console.log("Dados iniciais recebidos em AIExperienceStep:", initialData);
-    if (typeof initialData === 'string') {
-      console.warn("Recebido initialData como string em vez de objeto:", initialData);
+  // Extrair os dados de experiência com IA do objeto inicial
+  const extractAIExperienceData = () => {
+    console.log("Extraindo dados de AI Experience de:", initialData);
+    
+    // Se não temos dados, retornar vazio
+    if (!initialData) {
+      console.log("Sem dados iniciais, usando valores padrão");
+      return null;
     }
-  }, [initialData]);
+    
+    // Tentar obter os dados da propriedade ai_experience
+    let aiExpData = null;
+    
+    // Verificar se temos um objeto ai_experience
+    if (initialData.ai_experience) {
+      aiExpData = initialData.ai_experience;
+    } 
+    // Verificar se os dados estão na raiz
+    else if (
+      initialData.knowledge_level || 
+      initialData.previous_tools || 
+      initialData.has_implemented ||
+      initialData.desired_ai_areas
+    ) {
+      aiExpData = initialData;
+    }
+    // Verificar se é um objeto com estrutura aninhada
+    else if (typeof initialData === 'object') {
+      // Procurar em outras propriedades comuns
+      for (const key in initialData) {
+        const value = initialData[key];
+        if (
+          value && 
+          typeof value === 'object' && 
+          (
+            'knowledge_level' in value || 
+            'previous_tools' in value || 
+            'has_implemented' in value ||
+            'desired_ai_areas' in value
+          )
+        ) {
+          aiExpData = value;
+          break;
+        }
+      }
+    }
+    
+    // Se ainda é uma string, tentar fazer parse
+    if (typeof aiExpData === 'string') {
+      try {
+        aiExpData = JSON.parse(aiExpData);
+      } catch (e) {
+        console.warn("Não foi possível converter string para objeto:", e);
+        return null;
+      }
+    }
+    
+    console.log("Dados de AI Experience encontrados:", aiExpData);
+    return aiExpData;
+  };
 
-  // Valores iniciais considerando possíveis formatos
-  const getInitialValues = () => {
-    // Se initialData for string, usar objeto vazio
-    if (typeof initialData === 'string') {
-      console.warn("initialData é uma string, usando objeto vazio");
+  // Obter dados de experiência com IA
+  const aiExpData = extractAIExperienceData();
+
+  // Valores iniciais considerando os dados extraídos
+  const getInitialValues = (): AIExperienceFormValues => {
+    // Se não temos dados extraídos, usar valores padrão
+    if (!aiExpData) {
       return {
         knowledge_level: "",
         previous_tools: [],
@@ -65,33 +121,16 @@ export const AIExperienceStep: React.FC<AIExperienceStepProps> = ({
         improvement_suggestions: "",
       };
     }
-    
-    // Se não temos dados iniciais ou não é um objeto
-    if (!initialData || typeof initialData !== 'object') {
-      return {
-        knowledge_level: "",
-        previous_tools: [],
-        has_implemented: "",
-        desired_ai_areas: [],
-        completed_formation: false,
-        is_member_for_month: false,
-        nps_score: 5,
-        improvement_suggestions: "",
-      };
-    }
-    
-    console.log("Usando dados iniciais processados:", initialData);
     
     return {
-      knowledge_level: initialData.knowledge_level || "",
-      previous_tools: Array.isArray(initialData.previous_tools) ? initialData.previous_tools : [],
-      has_implemented: initialData.has_implemented || "",
-      // Sempre usar desired_ai_areas, garantindo que seja um array
-      desired_ai_areas: Array.isArray(initialData.desired_ai_areas) ? initialData.desired_ai_areas : [],
-      completed_formation: initialData.completed_formation || false,
-      is_member_for_month: initialData.is_member_for_month || false,
-      nps_score: initialData.nps_score !== undefined ? initialData.nps_score : 5,
-      improvement_suggestions: initialData.improvement_suggestions || "",
+      knowledge_level: aiExpData.knowledge_level || "",
+      previous_tools: Array.isArray(aiExpData.previous_tools) ? aiExpData.previous_tools : [],
+      has_implemented: aiExpData.has_implemented || "",
+      desired_ai_areas: Array.isArray(aiExpData.desired_ai_areas) ? aiExpData.desired_ai_areas : [],
+      completed_formation: aiExpData.completed_formation === true,
+      is_member_for_month: aiExpData.is_member_for_month === true,
+      nps_score: typeof aiExpData.nps_score === 'number' ? aiExpData.nps_score : 5,
+      improvement_suggestions: aiExpData.improvement_suggestions || "",
     };
   };
 
@@ -107,11 +146,11 @@ export const AIExperienceStep: React.FC<AIExperienceStepProps> = ({
   // Valores do formulário para logging
   const formValues = watch();
   useEffect(() => {
-    console.log("Valores atuais do formulário:", formValues);
+    console.log("Valores atuais do formulário de IA:", formValues);
   }, [formValues]);
 
   const onFormSubmit = (data: AIExperienceFormValues) => {
-    // Garantir que todos os arrays sejam sempre arrays
+    // Formatar e enviar os dados
     const formattedData = {
       knowledge_level: data.knowledge_level,
       previous_tools: Array.isArray(data.previous_tools) ? data.previous_tools : [],
@@ -159,11 +198,11 @@ export const AIExperienceStep: React.FC<AIExperienceStepProps> = ({
                   >
                     <div className="flex items-center gap-2">
                       <RadioGroupItem value="sim" id="has_implemented_sim" />
-                      <label htmlFor="has_implemented_sim" className="text-sm">Sim</label>
+                      <Label htmlFor="has_implemented_sim" className="text-sm">Sim</Label>
                     </div>
                     <div className="flex items-center gap-2">
                       <RadioGroupItem value="nao" id="has_implemented_nao" />
-                      <label htmlFor="has_implemented_nao" className="text-sm">Não</label>
+                      <Label htmlFor="has_implemented_nao" className="text-sm">Não</Label>
                     </div>
                     {fieldState.error && (
                       <span className="text-red-500 text-xs ml-4">{fieldState.error.message}</span>
