@@ -12,12 +12,16 @@ interface PersonalInfoStepProps {
   onSubmit: (data: any) => void;
   isSubmitting: boolean;
   initialData?: any;
+  isLastStep?: boolean;
+  onComplete?: () => void;
 }
 
 export const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
   onSubmit,
   isSubmitting,
-  initialData
+  initialData,
+  isLastStep,
+  onComplete
 }) => {
   const navigate = useNavigate();
   const [validationAttempted, setValidationAttempted] = useState(false);

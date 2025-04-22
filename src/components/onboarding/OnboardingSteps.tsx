@@ -98,6 +98,40 @@ export const OnboardingSteps = () => {
     return progress[sectionKey as keyof typeof progress];
   };
 
+  // Função para verificar se o componente atual aceita a prop personalInfo
+  const supportsPersonalInfo = (stepId: string) => {
+    return (
+      stepId === "professional_data" || 
+      stepId === "business_context" || 
+      stepId === "ai_exp" || 
+      stepId === "business_goals" || 
+      stepId === "experience_personalization" || 
+      stepId === "complementary_info" || 
+      stepId === "review"
+    );
+  };
+
+  // Determinar as props baseado no componente atual
+  const getPropsForCurrentStep = () => {
+    const baseProps = {
+      onSubmit: saveStepData,
+      isSubmitting: isSubmitting,
+      isLastStep: currentStepIndex === steps.length - 1,
+      onComplete: completeOnboarding,
+      initialData: getInitialDataForCurrentStep(),
+    };
+
+    // Adicionar personalInfo apenas para componentes que suportam essa prop
+    if (supportsPersonalInfo(currentPathStepId || currentStep.id)) {
+      return {
+        ...baseProps,
+        personalInfo: progress?.personal_info,
+      };
+    }
+
+    return baseProps;
+  };
+
   return (
     <div className="space-y-8">
       <div className="flex justify-between items-center">
@@ -117,12 +151,7 @@ export const OnboardingSteps = () => {
 
       <div className="bg-gray-800 p-6 rounded-lg">
         <CurrentStepComponent
-          onSubmit={saveStepData}
-          isSubmitting={isSubmitting}
-          isLastStep={currentStepIndex === steps.length - 1}
-          onComplete={completeOnboarding}
-          initialData={getInitialDataForCurrentStep()}
-          personalInfo={progress?.personal_info}
+          {...getPropsForCurrentStep()}
         />
       </div>
     </div>
