@@ -64,23 +64,36 @@ export const ProfessionalDataStep: React.FC<ProfessionalDataStepProps> = ({
       current_position: "",
       annual_revenue: ""
     },
-    mode: "onChange"
+    mode: "onBlur" // Alterado de onChange para onBlur para melhorar a experiência de digitação
   });
+  
+  // Adicionando log para debugging de estados do formulário
+  useEffect(() => {
+    const subscription = methods.watch((value, { name, type }) => {
+      console.log(`Campo ${name} foi alterado (${type}):`, value);
+    });
+    
+    return () => subscription.unsubscribe();
+  }, [methods]);
   
   // Efeito para atualizar o formulário quando os dados iniciais mudarem
   useEffect(() => {
     if (initialData) {
       console.log("Atualizando formulário com dados iniciais");
       
-      // Resetar o formulário com os valores iniciais
-      methods.reset({
+      const initialValues = {
         company_name: getInitialValue('company_name'),
         company_size: getInitialValue('company_size'),
         company_sector: getInitialValue('company_sector'),
         company_website: getInitialValue('company_website'),
         current_position: getInitialValue('current_position'),
         annual_revenue: getInitialValue('annual_revenue')
-      });
+      };
+      
+      console.log("Valores iniciais do formulário:", initialValues);
+      
+      // Resetar o formulário com os valores iniciais
+      methods.reset(initialValues);
       
       setFormInitialized(true);
     }

@@ -28,12 +28,20 @@ export const CompanyNameField: React.FC = () => {
         placeholder="Nome da sua empresa"
         {...register("company_name", { 
           required: "Nome da empresa é obrigatório",
-          minLength: { value: 2, message: "Nome muito curto" }
+          minLength: { value: 2, message: "Nome muito curto" },
+          validate: (value) => {
+            // Só validar quando o usuário terminar de digitar (campo perder o foco)
+            // ou quando houver pelo menos 2 caracteres
+            if (value.length < 2 && value.length > 0) {
+              return "Nome muito curto";
+            }
+            return true;
+          }
         })}
         className={cn(
           "transition-all duration-200",
-          errors.company_name ? "border-red-500" : 
-          touchedFields.company_name ? "border-[#0ABAB5]" : ""
+          errors.company_name && errors.company_name.type !== "validate" ? "border-red-500" : 
+          touchedFields.company_name && !errors.company_name ? "border-[#0ABAB5]" : ""
         )}
       />
       <FormMessage 
