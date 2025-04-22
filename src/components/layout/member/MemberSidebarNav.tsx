@@ -8,7 +8,9 @@ import {
   Trophy,
   Gift,
   MessageSquare,
-  ShieldCheck
+  ShieldCheck,
+  User,
+  Award
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "react-router-dom";
@@ -21,16 +23,14 @@ export const MemberSidebarNav = ({ sidebarOpen }: SidebarNavProps) => {
   const location = useLocation();
   const { isAdmin } = useAuth();
 
+  // Log para verificar se o componente está sendo renderizado
+  console.log("MemberSidebarNav renderizando, sidebarOpen:", sidebarOpen);
+
   const menuItems = [
     {
       title: "Dashboard",
       href: "/dashboard",
       icon: LayoutDashboard,
-    },
-    {
-      title: "Trilha de Implementação",
-      href: "/implementation-trail",
-      icon: Trophy,
     },
     {
       title: "Soluções",
@@ -52,6 +52,16 @@ export const MemberSidebarNav = ({ sidebarOpen }: SidebarNavProps) => {
       href: "/suggestions",
       icon: MessageSquare,
     },
+    {
+      title: "Conquistas",
+      href: "/achievements",
+      icon: Award,
+    },
+    {
+      title: "Perfil",
+      href: "/profile",
+      icon: User,
+    }
   ];
 
   const isActive = (href: string) => {

@@ -1,7 +1,6 @@
 
-import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, Menu } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface SidebarLogoProps {
   sidebarOpen: boolean;
@@ -9,37 +8,33 @@ interface SidebarLogoProps {
 }
 
 export const SidebarLogo = ({ sidebarOpen, setSidebarOpen }: SidebarLogoProps) => {
-  const toggleSidebar = () => {
-    console.log("Alternando sidebar de", sidebarOpen, "para", !sidebarOpen);
-    setSidebarOpen(!sidebarOpen);
-  };
-
+  // Log para verificar quando o componente é renderizado
+  console.log("SidebarLogo renderizando, sidebarOpen:", sidebarOpen);
+  
   return (
-    <div className="flex h-16 items-center justify-between px-3">
-      {sidebarOpen ? (
-        <Link to="/dashboard" className="flex items-center">
-          <img 
-            src="https://milagredigital.com/wp-content/uploads/2025/04/viverdeiaclub.avif" 
-            alt="VIVER DE IA Club" 
-            className="h-8 w-auto" 
-          />
-        </Link>
-      ) : (
-        <Link to="/dashboard" className="mx-auto">
-          <div className="h-8 w-8 flex items-center justify-center bg-[#0ABAB5] rounded-full text-white font-bold">
-            VI
-          </div>
-        </Link>
-      )}
-      
+    <div className="flex h-16 shrink-0 items-center justify-between px-3">
+      <div className="flex items-center">
+        <img
+          src="https://milagredigital.com/wp-content/uploads/2025/04/viverdeiaclub.avif"
+          alt="VIVER DE IA Club"
+          className="h-8 w-auto"
+        />
+        {sidebarOpen && (
+          <span className="ml-2 text-lg font-semibold">VIVER DE IA</span>
+        )}
+      </div>
       <Button
         variant="ghost"
         size="icon"
-        onClick={toggleSidebar}
-        className={sidebarOpen ? "ml-2" : "hidden md:flex mx-auto mt-2"}
-        aria-label={sidebarOpen ? "Colapsar menu" : "Expandir menu"}
+        className="hidden md:flex"
+        onClick={() => setSidebarOpen(!sidebarOpen)}
+        aria-label={sidebarOpen ? "Fechar menu" : "Abrir menu"}
       >
-        {sidebarOpen ? <ChevronLeft size={20} /> : <Menu size={20} />}
+        {sidebarOpen ? (
+          <ChevronLeft className="h-4 w-4" />
+        ) : (
+          <ChevronRight className="h-4 w-4" />
+        )}
       </Button>
     </div>
   );
