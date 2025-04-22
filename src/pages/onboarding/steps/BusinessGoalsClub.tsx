@@ -35,8 +35,7 @@ const BusinessGoalsClub = () => {
     setIsSubmitting(true);
     try {
       // Garantir que estamos enviando os dados no formato correto
-      // e que estamos incluindo o stepId corretamente
-      await saveStepData(stepId, data, false); // false para não redirecionar automaticamente
+      await saveStepData("business_goals", data, false); // Agora usando explicitamente "business_goals"
       
       toast.success("Dados salvos com sucesso!");
       

@@ -1,15 +1,23 @@
-import React, { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Check, ArrowRight } from "lucide-react";
-import { useForm, Controller } from "react-hook-form";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
-import { Slider } from "@/components/ui/slider";
-import { Checkbox } from "@/components/ui/checkbox";
-import { OnboardingData, OnboardingStepProps } from "@/types/onboarding";
 
-interface ExpectativasObjetivosStepProps extends OnboardingStepProps {
-  initialData?: OnboardingData | any;
+import React, { useState, useEffect } from "react";
+import { OnboardingData } from "@/types/onboarding";
+import { Button } from "@/components/ui/button";
+import { ArrowRight } from "lucide-react";
+import { useForm, Controller } from "react-hook-form";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Slider } from "@/components/ui/slider";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Checkbox } from "@/components/ui/checkbox";
+
+interface ExpectativasObjetivosStepProps {
+  onSubmit: (stepId: string, data: Partial<OnboardingData>) => void;
+  isSubmitting: boolean;
+  isLastStep: boolean;
+  onComplete: () => void;
+  initialData?: any;
+  personalInfo?: OnboardingData["personal_info"];
 }
 
 type FormValues = {
@@ -22,460 +30,371 @@ type FormValues = {
   content_formats: string[];
 };
 
-// Lista de possíveis motivos
-const motivos = [
-  { id: "networking", label: "Networking com outros empresários" },
-  { id: "aprofundar_conhecimento", label: "Aprofundar conhecimento em IA" },
-  { id: "implementar_solucoes", label: "Implementar soluções concretas" },
-  { id: "be_atualizado", label: "Manter-me atualizado sobre IA" },
-  { id: "mentoria", label: "Mentoria para implementar IA" },
-  { id: "aprender_ferramentas", label: "Aprender ferramentas práticas" },
-  { id: "capacitar_time", label: "Capacitar meu time em IA" },
-  { id: "comunidade", label: "Fazer parte de uma comunidade de IA" },
-];
-
-// Lista de expectativas para 30 dias
-const expectativas30Dias = [
-  "Conhecer as principais ferramentas de IA para meu negócio",
-  "Implementar pelo menos uma solução de IA",
-  "Aumentar meu conhecimento sobre IA aplicada",
-  "Melhorar um processo interno com IA",
-  "Criar uma estratégia de IA para minha empresa",
-  "Capacitar minha equipe em IA",
-  "Reduzir custos com automação de IA",
-  "Aumentar vendas/receita com IA",
-];
-
-// Lista de tipos de soluções prioritárias
-const tiposSolucoes = [
-  "Automação de processos internos",
-  "Marketing e vendas com IA",
-  "Análise de dados e insights",
-  "Atendimento ao cliente automatizado",
-  "Criação de conteúdo com IA",
-  "Desenvolvimento de produtos/serviços",
-  "Gestão estratégica assistida por IA",
-];
-
-// Opções de implementação
-const opcoesImplementacao = [
-  { id: "eu_mesmo", label: "Eu mesmo vou implementar" },
-  { id: "delegar_time", label: "Vou delegar para alguém da equipe" },
-  { id: "contratar_equipe", label: "Contratar equipe do VIVER DE IA" },
-];
-
-// Opções de disponibilidade semanal
-const disponibilidadeSemanal = [
-  "Menos de 1 hora",
-  "1-2 horas",
-  "3-5 horas",
-  "Mais de 5 horas",
-];
-
-// Opções de formatos de conteúdo
-const formatosConteudo = [
-  { id: "video", label: "Vídeos" },
-  { id: "texto", label: "Textos e guias" },
-  { id: "audio", label: "Áudios/Podcasts" },
-  { id: "ao_vivo", label: "Conteúdo ao vivo" },
-  { id: "workshop", label: "Workshops práticos" },
-];
-
 export const ExpectativasObjetivosStep = ({
   onSubmit,
   isSubmitting,
   initialData,
-  isLastStep = false,
   onComplete,
+  isLastStep,
 }: ExpectativasObjetivosStepProps) => {
-  const [liveInterest, setLiveInterest] = useState<number>(5);
+  // Extrair dados iniciais para business_goals
+  const businessGoalsData = initialData?.business_goals || {};
   
-  // Extrair os dados iniciais de business_goals, lidar com string ou objeto
-  const getInitialBusinessGoals = () => {
-    if (!initialData) return {};
-    
-    let businessGoals = initialData.business_goals;
-    
-    // Se for string, tentar converter para objeto
-    if (typeof businessGoals === 'string') {
-      try {
-        businessGoals = JSON.parse(businessGoals);
-      } catch (e) {
-        console.error("Erro ao converter business_goals de string:", e);
-        businessGoals = {};
-      }
-    }
-    
-    // Se não for objeto ou for null/undefined, usar objeto vazio
-    if (!businessGoals || typeof businessGoals !== 'object') {
-      businessGoals = {};
-    }
-    
-    console.log("Valor inicial de business_goals:", businessGoals);
-    return businessGoals;
-  };
-  
-  const businessGoals = getInitialBusinessGoals();
-  
-  const { control, handleSubmit, setValue, watch, formState: { errors } } = useForm<FormValues>({
+  console.log("Dados iniciais para ExpectativasObjetivosStep:", initialData);
+  console.log("Dados de business_goals:", businessGoalsData);
+
+  const { control, handleSubmit, setValue, watch } = useForm<FormValues>({
     defaultValues: {
-      primary_goal: businessGoals.primary_goal || "",
-      expected_outcome_30days: businessGoals.expected_outcome_30days || "",
-      priority_solution_type: businessGoals.priority_solution_type || "",
-      how_implement: businessGoals.how_implement || "",
-      week_availability: businessGoals.week_availability || "",
-      live_interest: businessGoals.live_interest || 5,
-      content_formats: businessGoals.content_formats || [],
-    }
+      primary_goal: businessGoalsData.primary_goal || "",
+      expected_outcome_30days: businessGoalsData.expected_outcome_30days || "",
+      priority_solution_type: businessGoalsData.priority_solution_type || "",
+      how_implement: businessGoalsData.how_implement || "",
+      week_availability: businessGoalsData.week_availability || "",
+      live_interest: businessGoalsData.live_interest || 5,
+      content_formats: businessGoalsData.content_formats || [],
+    },
   });
-  
-  // Inicializar o interesse em conteúdo ao vivo
+
+  // Monitore o interesse em sessões ao vivo
+  const liveInterest = watch("live_interest");
+
+  // Use efeito para inicializar dados se eles chegarem após o mount
   useEffect(() => {
-    if (businessGoals.live_interest !== undefined) {
-      setLiveInterest(Number(businessGoals.live_interest));
-      setValue("live_interest", Number(businessGoals.live_interest));
+    if (initialData?.business_goals) {
+      const data = initialData.business_goals;
+      if (data.primary_goal) setValue("primary_goal", data.primary_goal);
+      if (data.expected_outcome_30days) setValue("expected_outcome_30days", data.expected_outcome_30days);
+      if (data.priority_solution_type) setValue("priority_solution_type", data.priority_solution_type);
+      if (data.how_implement) setValue("how_implement", data.how_implement);
+      if (data.week_availability) setValue("week_availability", data.week_availability);
+      if (data.live_interest !== undefined) setValue("live_interest", data.live_interest);
+      if (data.content_formats) setValue("content_formats", data.content_formats);
     }
-  }, [businessGoals, setValue]);
-  
-  // Manipulador para submissão do formulário
+  }, [initialData, setValue]);
+
   const onFormSubmit = (data: FormValues) => {
-    console.log("Dados do formulário de expectativas:", data);
+    console.log("Enviando dados do formulário ExpectativasObjetivos:", data);
     
-    // Garantir que content_formats seja um array
-    const contentFormats = Array.isArray(data.content_formats) 
-      ? data.content_formats 
-      : [data.content_formats].filter(Boolean);
-    
-    // Preparar dados para salvar
-    const formattedData = {
+    // Estruturar dados para envio
+    const businessGoalsData: Partial<OnboardingData> = {
       business_goals: {
-        ...data,
-        content_formats: contentFormats,
-        live_interest: Number(data.live_interest)
-      }
+        primary_goal: data.primary_goal,
+        expected_outcome_30days: data.expected_outcome_30days,
+        expected_outcomes: data.expected_outcome_30days ? [data.expected_outcome_30days] : [],
+        priority_solution_type: data.priority_solution_type,
+        how_implement: data.how_implement,
+        week_availability: data.week_availability,
+        live_interest: data.live_interest,
+        content_formats: data.content_formats,
+      },
     };
     
-    console.log("Enviando dados formatados:", formattedData);
-    onSubmit("business_goals", formattedData);
+    // Enviar dados com o ID da etapa correto
+    onSubmit("business_goals", businessGoalsData);
   };
-  
+
   return (
     <div className="space-y-6">
       <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-8">
-        {/* Motivo Principal */}
-        <div className="bg-white rounded-lg border border-gray-100 p-6 shadow-sm">
-          <h2 className="text-xl font-semibold text-[#15192C] mb-6">
-            Qual seu principal objetivo com o VIVER DE IA Club?
-          </h2>
-          
-          <Controller
-            name="primary_goal"
-            control={control}
-            rules={{ required: "Por favor, selecione um objetivo principal" }}
-            render={({ field }) => (
-              <RadioGroup
-                value={field.value}
-                onValueChange={field.onChange}
-                className="grid grid-cols-1 md:grid-cols-2 gap-4"
-              >
-                {motivos.map((motivo) => (
-                  <div key={motivo.id} className="flex items-start space-x-3">
-                    <RadioGroupItem 
-                      value={motivo.id} 
-                      id={`motivo-${motivo.id}`}
-                      className="mt-1"
-                    />
-                    <Label 
-                      htmlFor={`motivo-${motivo.id}`}
-                      className="cursor-pointer font-normal"
-                    >
-                      {motivo.label}
-                    </Label>
-                  </div>
-                ))}
-              </RadioGroup>
-            )}
-          />
-          
-          {errors.primary_goal && (
-            <p className="text-red-500 text-sm mt-2">{errors.primary_goal.message}</p>
-          )}
-        </div>
-        
-        {/* Expectativa em 30 dias */}
-        <div className="bg-white rounded-lg border border-gray-100 p-6 shadow-sm">
-          <h2 className="text-xl font-semibold text-[#15192C] mb-6">
-            O que você espera alcançar nos primeiros 30 dias?
-          </h2>
-          
-          <Controller
-            name="expected_outcome_30days"
-            control={control}
-            rules={{ required: "Por favor, selecione uma expectativa" }}
-            render={({ field }) => (
-              <RadioGroup
-                value={field.value}
-                onValueChange={field.onChange}
-                className="flex flex-col space-y-3"
-              >
-                {expectativas30Dias.map((expectativa, index) => (
-                  <div key={index} className="flex items-start space-x-3">
-                    <RadioGroupItem 
-                      value={expectativa} 
-                      id={`expectativa-${index}`}
-                      className="mt-1"
-                    />
-                    <Label 
-                      htmlFor={`expectativa-${index}`}
-                      className="cursor-pointer font-normal"
-                    >
-                      {expectativa}
-                    </Label>
-                  </div>
-                ))}
-              </RadioGroup>
-            )}
-          />
-          
-          {errors.expected_outcome_30days && (
-            <p className="text-red-500 text-sm mt-2">{errors.expected_outcome_30days.message}</p>
-          )}
-        </div>
-        
-        {/* Tipo de Solução Prioritária */}
-        <div className="bg-white rounded-lg border border-gray-100 p-6 shadow-sm">
-          <h2 className="text-xl font-semibold text-[#15192C] mb-6">
-            Que tipo de solução de IA é prioritária para você?
-          </h2>
-          
-          <Controller
-            name="priority_solution_type"
-            control={control}
-            rules={{ required: "Por favor, selecione um tipo de solução prioritária" }}
-            render={({ field }) => (
-              <RadioGroup
-                value={field.value}
-                onValueChange={field.onChange}
-                className="flex flex-col space-y-3"
-              >
-                {tiposSolucoes.map((tipo, index) => (
-                  <div key={index} className="flex items-start space-x-3">
-                    <RadioGroupItem 
-                      value={tipo} 
-                      id={`solucao-${index}`}
-                      className="mt-1"
-                    />
-                    <Label 
-                      htmlFor={`solucao-${index}`}
-                      className="cursor-pointer font-normal"
-                    >
-                      {tipo}
-                    </Label>
-                  </div>
-                ))}
-              </RadioGroup>
-            )}
-          />
-          
-          {errors.priority_solution_type && (
-            <p className="text-red-500 text-sm mt-2">{errors.priority_solution_type.message}</p>
-          )}
-        </div>
-        
-        {/* Como Pretende Implementar */}
-        <div className="bg-white rounded-lg border border-gray-100 p-6 shadow-sm">
-          <h2 className="text-xl font-semibold text-[#15192C] mb-6">
-            Como você pretende implementar as soluções de IA?
-          </h2>
-          
-          <Controller
-            name="how_implement"
-            control={control}
-            rules={{ required: "Por favor, selecione como pretende implementar" }}
-            render={({ field }) => (
-              <RadioGroup
-                value={field.value}
-                onValueChange={field.onChange}
-                className="flex flex-col space-y-3"
-              >
-                {opcoesImplementacao.map((opcao) => (
-                  <div key={opcao.id} className="flex items-start space-x-3">
-                    <RadioGroupItem 
-                      value={opcao.id} 
-                      id={`implementacao-${opcao.id}`}
-                      className="mt-1"
-                    />
-                    <Label 
-                      htmlFor={`implementacao-${opcao.id}`}
-                      className="cursor-pointer font-normal"
-                    >
-                      {opcao.label}
-                    </Label>
-                  </div>
-                ))}
-              </RadioGroup>
-            )}
-          />
-          
-          {errors.how_implement && (
-            <p className="text-red-500 text-sm mt-2">{errors.how_implement.message}</p>
-          )}
-        </div>
-        
-        {/* Disponibilidade Semanal */}
-        <div className="bg-white rounded-lg border border-gray-100 p-6 shadow-sm">
-          <h2 className="text-xl font-semibold text-[#15192C] mb-6">
-            Quanto tempo por semana você tem disponível para implementar IA?
-          </h2>
-          
-          <Controller
-            name="week_availability"
-            control={control}
-            rules={{ required: "Por favor, selecione sua disponibilidade semanal" }}
-            render={({ field }) => (
-              <RadioGroup
-                value={field.value}
-                onValueChange={field.onChange}
-                className="flex flex-col space-y-3"
-              >
-                {disponibilidadeSemanal.map((disponibilidade, index) => (
-                  <div key={index} className="flex items-start space-x-3">
-                    <RadioGroupItem 
-                      value={disponibilidade} 
-                      id={`disponibilidade-${index}`}
-                      className="mt-1"
-                    />
-                    <Label 
-                      htmlFor={`disponibilidade-${index}`}
-                      className="cursor-pointer font-normal"
-                    >
-                      {disponibilidade}
-                    </Label>
-                  </div>
-                ))}
-              </RadioGroup>
-            )}
-          />
-          
-          {errors.week_availability && (
-            <p className="text-red-500 text-sm mt-2">{errors.week_availability.message}</p>
-          )}
-        </div>
-        
-        {/* Interesse em Conteúdo ao Vivo */}
         <div className="bg-white rounded-lg border border-gray-100 p-6 shadow-sm">
           <h2 className="text-xl font-semibold text-[#15192C] mb-4">
-            Qual seu interesse em sessões ao vivo?
+            Objetivo Principal com o Club
           </h2>
-          <p className="text-gray-600 mb-6">
-            Em uma escala de 0 a 10, o quanto você gostaria de participar de sessões ao vivo (implementações, Q&A, etc.)?
-          </p>
           
-          <Controller
-            name="live_interest"
-            control={control}
-            render={({ field }) => (
-              <div className="space-y-4">
-                <Slider
-                  value={[Number(field.value)]}
-                  min={0}
-                  max={10}
-                  step={1}
-                  onValueChange={(value) => {
-                    setLiveInterest(value[0]);
-                    field.onChange(value[0]);
-                  }}
-                  className="py-4"
-                />
-                
-                <div className="flex justify-between">
-                  <span className="text-sm text-gray-500">Pouco interesse (0)</span>
-                  <span className="text-center font-medium text-[#0ABAB5]">{liveInterest}</span>
-                  <span className="text-sm text-gray-500">Muito interesse (10)</span>
+          <div className="space-y-4 mb-6">
+            <Controller
+              name="primary_goal"
+              control={control}
+              render={({ field }) => (
+                <div className="space-y-3">
+                  <Label htmlFor="primary_goal">O que você busca principalmente ao participar do VIVER DE IA Club?</Label>
+                  <RadioGroup
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                    className="space-y-2"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="networking" id="networking" />
+                      <Label htmlFor="networking" className="cursor-pointer">Networking com outros empresários</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="aprofundar_conhecimento" id="aprofundar_conhecimento" />
+                      <Label htmlFor="aprofundar_conhecimento" className="cursor-pointer">Aprofundar conhecimento em IA</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="implementar_solucoes" id="implementar_solucoes" />
+                      <Label htmlFor="implementar_solucoes" className="cursor-pointer">Implementar soluções concretas de IA</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="be_atualizado" id="be_atualizado" />
+                      <Label htmlFor="be_atualizado" className="cursor-pointer">Manter-me atualizado sobre IA</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="mentoria" id="mentoria" />
+                      <Label htmlFor="mentoria" className="cursor-pointer">Mentoria para implementar IA</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="aprender_ferramentas" id="aprender_ferramentas" />
+                      <Label htmlFor="aprender_ferramentas" className="cursor-pointer">Aprender ferramentas práticas</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="capacitar_time" id="capacitar_time" />
+                      <Label htmlFor="capacitar_time" className="cursor-pointer">Capacitar meu time em IA</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="comunidade" id="comunidade" />
+                      <Label htmlFor="comunidade" className="cursor-pointer">Fazer parte de uma comunidade de IA</Label>
+                    </div>
+                  </RadioGroup>
                 </div>
-              </div>
-            )}
-          />
-        </div>
-        
-        {/* Formatos de Conteúdo */}
-        <div className="bg-white rounded-lg border border-gray-100 p-6 shadow-sm">
-          <h2 className="text-xl font-semibold text-[#15192C] mb-6">
-            Que formatos de conteúdo você prefere?
-          </h2>
-          <p className="text-gray-600 mb-6">
-            Selecione todos os formatos que você gostaria de acessar no Club.
-          </p>
-          
-          <Controller
-            name="content_formats"
-            control={control}
-            rules={{ validate: value => (value && value.length > 0) || "Por favor, selecione pelo menos um formato" }}
-            render={({ field }) => (
-              <div className="space-y-3">
-                {formatosConteudo.map((formato) => (
-                  <div key={formato.id} className="flex items-center space-x-3">
-                    <Checkbox
-                      id={`formato-${formato.id}`}
-                      checked={field.value?.includes(formato.id)}
-                      onCheckedChange={(checked) => {
-                        const updatedValue = [...(field.value || [])];
-                        
-                        if (checked) {
-                          if (!updatedValue.includes(formato.id)) {
-                            updatedValue.push(formato.id);
-                          }
-                        } else {
-                          const index = updatedValue.indexOf(formato.id);
-                          if (index !== -1) {
-                            updatedValue.splice(index, 1);
-                          }
-                        }
-                        
-                        field.onChange(updatedValue);
-                      }}
-                    />
-                    <Label 
-                      htmlFor={`formato-${formato.id}`}
-                      className="cursor-pointer font-normal"
-                    >
-                      {formato.label}
-                    </Label>
+              )}
+            />
+            
+            <Controller
+              name="expected_outcome_30days"
+              control={control}
+              render={({ field }) => (
+                <div className="space-y-2">
+                  <Label htmlFor="expected_outcome_30days">Qual resultado concreto você espera alcançar nos primeiros 30 dias?</Label>
+                  <Textarea
+                    id="expected_outcome_30days"
+                    placeholder="Exemplo: Implementar um chatbot de atendimento ou criar um fluxo de automação..."
+                    className="min-h-[100px]"
+                    {...field}
+                  />
+                </div>
+              )}
+            />
+            
+            <Controller
+              name="priority_solution_type"
+              control={control}
+              render={({ field }) => (
+                <div className="space-y-2">
+                  <Label htmlFor="priority_solution_type">Qual tipo de solução é prioritária para seu negócio agora?</Label>
+                  <RadioGroup
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                    className="space-y-2"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="aumento_vendas" id="aumento_vendas" />
+                      <Label htmlFor="aumento_vendas" className="cursor-pointer">Aumento de vendas/receita</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="reducao_custos" id="reducao_custos" />
+                      <Label htmlFor="reducao_custos" className="cursor-pointer">Redução de custos/otimização</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="automacao_processos" id="automacao_processos" />
+                      <Label htmlFor="automacao_processos" className="cursor-pointer">Automação de processos</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="melhorar_experiencia" id="melhorar_experiencia" />
+                      <Label htmlFor="melhorar_experiencia" className="cursor-pointer">Melhorar experiência do cliente</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="analitica_decisao" id="analitica_decisao" />
+                      <Label htmlFor="analitica_decisao" className="cursor-pointer">Análise de dados para decisões</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="inovacao_produtos" id="inovacao_produtos" />
+                      <Label htmlFor="inovacao_produtos" className="cursor-pointer">Inovação em produtos/serviços</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+              )}
+            />
+            
+            <Controller
+              name="how_implement"
+              control={control}
+              render={({ field }) => (
+                <div className="space-y-2">
+                  <Label htmlFor="how_implement">Como você pretende implementar as soluções de IA?</Label>
+                  <RadioGroup
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                    className="space-y-2"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="eu_mesmo" id="eu_mesmo" />
+                      <Label htmlFor="eu_mesmo" className="cursor-pointer">Eu mesmo vou implementar</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="delegar_time" id="delegar_time" />
+                      <Label htmlFor="delegar_time" className="cursor-pointer">Vou delegar para alguém da minha equipe</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="contratar_equipe" id="contratar_equipe" />
+                      <Label htmlFor="contratar_equipe" className="cursor-pointer">Pretendo contratar a equipe do VIVER DE IA</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+              )}
+            />
+            
+            <Controller
+              name="week_availability"
+              control={control}
+              render={({ field }) => (
+                <div className="space-y-2">
+                  <Label htmlFor="week_availability">Quantas horas por semana você tem disponíveis para implementar IA?</Label>
+                  <RadioGroup
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                    className="space-y-2"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="menos_1h" id="menos_1h" />
+                      <Label htmlFor="menos_1h" className="cursor-pointer">Menos de 1 hora</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="1-3h" id="1-3h" />
+                      <Label htmlFor="1-3h" className="cursor-pointer">1-3 horas</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="4-7h" id="4-7h" />
+                      <Label htmlFor="4-7h" className="cursor-pointer">4-7 horas</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="8h+" id="8h+" />
+                      <Label htmlFor="8h+" className="cursor-pointer">8+ horas</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+              )}
+            />
+            
+            <Controller
+              name="live_interest"
+              control={control}
+              render={({ field }) => (
+                <div className="space-y-4">
+                  <div className="flex justify-between">
+                    <Label htmlFor="live_interest">Interesse em sessões ao vivo (mentoria, implementação, etc.)</Label>
+                    <span className="font-medium">{liveInterest}/10</span>
                   </div>
-                ))}
-              </div>
-            )}
-          />
+                  <Slider
+                    id="live_interest"
+                    defaultValue={[field.value]}
+                    max={10}
+                    step={1}
+                    onValueChange={(vals) => field.onChange(vals[0])}
+                    className="py-4"
+                  />
+                  <div className="flex justify-between text-sm text-gray-500">
+                    <span>Baixo interesse</span>
+                    <span>Alto interesse</span>
+                  </div>
+                </div>
+              )}
+            />
+            
+            <Controller
+              name="content_formats"
+              control={control}
+              render={({ field }) => (
+                <div className="space-y-3">
+                  <Label>Quais formatos de conteúdo você prefere? (selecione todos aplicáveis)</Label>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox 
+                        id="video"
+                        checked={field.value?.includes('video')}
+                        onCheckedChange={(checked) => {
+                          const currentValue = field.value || [];
+                          if (checked) {
+                            field.onChange([...currentValue, 'video']);
+                          } else {
+                            field.onChange(currentValue.filter(v => v !== 'video'));
+                          }
+                        }}
+                      />
+                      <Label htmlFor="video" className="cursor-pointer">Vídeos</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox 
+                        id="texto"
+                        checked={field.value?.includes('texto')}
+                        onCheckedChange={(checked) => {
+                          const currentValue = field.value || [];
+                          if (checked) {
+                            field.onChange([...currentValue, 'texto']);
+                          } else {
+                            field.onChange(currentValue.filter(v => v !== 'texto'));
+                          }
+                        }}
+                      />
+                      <Label htmlFor="texto" className="cursor-pointer">Textos e guias</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox 
+                        id="audio"
+                        checked={field.value?.includes('audio')}
+                        onCheckedChange={(checked) => {
+                          const currentValue = field.value || [];
+                          if (checked) {
+                            field.onChange([...currentValue, 'audio']);
+                          } else {
+                            field.onChange(currentValue.filter(v => v !== 'audio'));
+                          }
+                        }}
+                      />
+                      <Label htmlFor="audio" className="cursor-pointer">Áudios/Podcasts</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox 
+                        id="ao_vivo"
+                        checked={field.value?.includes('ao_vivo')}
+                        onCheckedChange={(checked) => {
+                          const currentValue = field.value || [];
+                          if (checked) {
+                            field.onChange([...currentValue, 'ao_vivo']);
+                          } else {
+                            field.onChange(currentValue.filter(v => v !== 'ao_vivo'));
+                          }
+                        }}
+                      />
+                      <Label htmlFor="ao_vivo" className="cursor-pointer">Sessões ao vivo</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox 
+                        id="workshop"
+                        checked={field.value?.includes('workshop')}
+                        onCheckedChange={(checked) => {
+                          const currentValue = field.value || [];
+                          if (checked) {
+                            field.onChange([...currentValue, 'workshop']);
+                          } else {
+                            field.onChange(currentValue.filter(v => v !== 'workshop'));
+                          }
+                        }}
+                      />
+                      <Label htmlFor="workshop" className="cursor-pointer">Workshops práticos</Label>
+                    </div>
+                  </div>
+                </div>
+              )}
+            />
+          </div>
           
-          {errors.content_formats && (
-            <p className="text-red-500 text-sm mt-2">{errors.content_formats.message}</p>
-          )}
-        </div>
-        
-        {/* Botão de Envio */}
-        <div className="flex justify-end mt-8">
-          <Button
-            type="submit"
-            className="bg-[#0ABAB5] hover:bg-[#099388] text-white px-5 py-2"
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? (
-              <span className="flex items-center gap-2">
-                <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"></div>
-                Salvando...
-              </span>
-            ) : isLastStep ? (
-              <span className="flex items-center gap-2">
-                <Check className="h-4 w-4" />
-                Concluir
-              </span>
-            ) : (
-              <span className="flex items-center gap-2">
-                Próximo
-                <ArrowRight className="h-4 w-4" />
-              </span>
-            )}
-          </Button>
+          <div className="flex justify-end mt-8">
+            <Button
+              type="submit"
+              className="bg-[#0ABAB5] hover:bg-[#099388] text-white px-5 py-2"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                "Salvando..."
+              ) : (
+                <span className="flex items-center gap-2">
+                  Próximo
+                  <ArrowRight className="h-4 w-4" />
+                </span>
+              )}
+            </Button>
+          </div>
         </div>
       </form>
     </div>
