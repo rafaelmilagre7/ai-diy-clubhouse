@@ -8,11 +8,11 @@ import { WebsiteField } from "./professional-inputs/WebsiteField";
 import { CurrentPositionField } from "./professional-inputs/CurrentPositionField";
 import { AnnualRevenueField } from "./professional-inputs/AnnualRevenueField";
 import { Button } from "@/components/ui/button";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, AlertCircle, Building2 } from "lucide-react";
 import { OnboardingStepProps } from "@/types/onboarding";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
+import * as validations from "@/utils/professionalDataValidation";
 
 interface ProfessionalDataStepProps extends OnboardingStepProps {
   personalInfo?: any;
@@ -37,15 +37,36 @@ export const ProfessionalDataStep: React.FC<ProfessionalDataStepProps> = ({
       company_website: initialData?.company_website || initialData?.professional_info?.company_website || "",
       current_position: initialData?.current_position || initialData?.professional_info?.current_position || "",
       annual_revenue: initialData?.annual_revenue || initialData?.professional_info?.annual_revenue || "",
-    }
+    },
+    mode: "onChange"
   });
 
   const handleSubmit = async (data: any) => {
     setIsLoading(true);
     setValidationErrors([]);
     
+    // Validar todos os campos
+    const errors: string[] = [];
+    const validationResults = {
+      company_name: validations.validateCompanyName(data.company_name),
+      company_website: validations.validateWebsite(data.company_website),
+      company_size: validations.validateCompanySize(data.company_size),
+      company_sector: validations.validateCompanySector(data.company_sector),
+      current_position: validations.validateCurrentPosition(data.current_position),
+      annual_revenue: validations.validateAnnualRevenue(data.annual_revenue)
+    };
+
+    Object.values(validationResults).forEach(error => {
+      if (error) errors.push(error);
+    });
+
+    if (errors.length > 0) {
+      setValidationErrors(errors);
+      setIsLoading(false);
+      return;
+    }
+    
     try {
-      // Organizar os dados no formato esperado pelo servidor
       const professionalData = {
         professional_info: {
           company_name: data.company_name,
@@ -55,7 +76,7 @@ export const ProfessionalDataStep: React.FC<ProfessionalDataStepProps> = ({
           current_position: data.current_position,
           annual_revenue: data.annual_revenue,
         },
-        // Adicionar também como campos diretos para compatibilidade
+        // Campos diretos para compatibilidade
         company_name: data.company_name,
         company_size: data.company_size,
         company_sector: data.company_sector,
@@ -64,17 +85,13 @@ export const ProfessionalDataStep: React.FC<ProfessionalDataStepProps> = ({
         annual_revenue: data.annual_revenue,
       };
       
-      console.log("Enviando dados profissionais:", professionalData);
       await onSubmit("professional_data", professionalData);
-      
       toast.success("Dados profissionais salvos com sucesso!");
     } catch (error) {
       console.error("Erro ao enviar dados profissionais:", error);
       setValidationErrors(["Falha ao salvar dados. Por favor, tente novamente."]);
-      
       toast.error("Erro ao salvar dados", {
-        description: "Verifique sua conexão e tente novamente.",
-        icon: <AlertCircle className="h-5 w-5 text-red-500" />
+        description: "Verifique sua conexão e tente novamente."
       });
     } finally {
       setIsLoading(false);
@@ -83,44 +100,51 @@ export const ProfessionalDataStep: React.FC<ProfessionalDataStepProps> = ({
 
   return (
     <FormProvider {...methods}>
-      <form onSubmit={methods.handleSubmit(handleSubmit)} className="space-y-6">
-        {validationErrors.length > 0 && (
-          <Alert variant="destructive" className="animate-fade-in">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
-              {validationErrors.map((err, i) => (
-                <div key={i}>{err}</div>
-              ))}
-            </AlertDescription>
-          </Alert>
-        )}
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <CompanyNameField />
-          <CurrentPositionField />
+      <form onSubmit={methods.handleSubmit(handleSubmit)} className="space-y-8">
+        <div className="bg-white/5 backdrop-blur-sm rounded-lg p-6">
+          <div className="flex items-center gap-2 mb-6">
+            <Building2 className="h-5 w-5 text-[#0ABAB5]" />
+            <h3 className="text-lg font-semibold text-[#0ABAB5]">Dados da Empresa</h3>
+          </div>
+
+          {validationErrors.length > 0 && (
+            <Alert variant="destructive" className="mb-6">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                {validationErrors.map((err, i) => (
+                  <div key={i}>{err}</div>
+                ))}
+              </AlertDescription>
+            </Alert>
+          )}
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <CompanyNameField />
+            <CurrentPositionField />
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+            <CompanySizeField />
+            <CompanySectorField />
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+            <AnnualRevenueField />
+            <WebsiteField />
+          </div>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <CompanySizeField />
-          <CompanySectorField />
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <AnnualRevenueField />
-          <WebsiteField />
-        </div>
-        
-        <div className="flex justify-end mt-6">
+        <div className="flex justify-end">
           <Button
             type="submit"
-            className="bg-[#0ABAB5] hover:bg-[#099388] text-white px-5 py-2"
+            className="bg-[#0ABAB5] hover:bg-[#099388] text-white px-6 py-2"
             disabled={isSubmitting || isLoading}
           >
             {isSubmitting || isLoading ? (
               "Salvando..."
             ) : (
               <span className="flex items-center gap-2">
-                Salvar e Continuar
+                Próximo Passo
                 <ArrowRight className="h-4 w-4" />
               </span>
             )}

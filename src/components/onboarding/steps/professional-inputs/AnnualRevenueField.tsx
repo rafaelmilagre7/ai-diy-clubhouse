@@ -3,7 +3,7 @@ import React from "react";
 import { useFormContext } from "react-hook-form";
 import { Label } from "@/components/ui/label";
 import { FormMessage } from "@/components/ui/form-message";
-import { CheckCircle } from "lucide-react";
+import { CheckCircle, DollarSign } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   Select,
@@ -30,14 +30,15 @@ export const AnnualRevenueField: React.FC = () => {
     <div className="space-y-2">
       <Label 
         className={cn(
-          "transition-colors flex items-center",
+          "transition-colors flex items-center gap-2",
           errors.annual_revenue ? "text-red-500" : 
           touchedFields.annual_revenue ? "text-[#0ABAB5]" : ""
         )}
       >
+        <DollarSign className="h-4 w-4" />
         Faturamento Anual
         {touchedFields.annual_revenue && !errors.annual_revenue && (
-          <CheckCircle className="ml-2 h-4 w-4 text-[#0ABAB5]" />
+          <CheckCircle className="h-4 w-4 text-[#0ABAB5]" />
         )}
       </Label>
       <Select
