@@ -10,7 +10,7 @@ export function buildComplementaryInfoUpdate(data: Partial<OnboardingData>, prog
   if (typeof existingInfo === 'string') {
     try {
       // Garantir que seja uma string de fato antes de chamar trim
-      const trimmedValue = existingInfo.trim ? existingInfo.trim() : '';
+      const trimmedValue = typeof existingInfo === 'string' && existingInfo.trim ? existingInfo.trim() : existingInfo;
       if (trimmedValue !== '') {
         existingInfo = JSON.parse(trimmedValue);
       } else {

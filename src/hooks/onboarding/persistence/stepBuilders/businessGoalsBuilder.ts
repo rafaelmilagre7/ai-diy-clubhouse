@@ -10,7 +10,7 @@ export function buildBusinessGoalsUpdate(data: Partial<OnboardingData>, progress
   if (typeof existingGoals === 'string') {
     try {
       // Garantir que seja uma string de fato antes de chamar trim
-      const trimmedValue = existingGoals.trim ? existingGoals.trim() : '';
+      const trimmedValue = typeof existingGoals === 'string' && existingGoals.trim ? existingGoals.trim() : existingGoals;
       if (trimmedValue !== '') {
         existingGoals = JSON.parse(trimmedValue);
       } else {

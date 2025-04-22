@@ -10,7 +10,10 @@ export function buildExperiencePersonalizationUpdate(data: Partial<OnboardingDat
   if (typeof existingExperiencePersonalization === 'string') {
     try {
       // Garantir que seja uma string de fato antes de chamar trim
-      const trimmedValue = existingExperiencePersonalization.trim ? existingExperiencePersonalization.trim() : '';
+      const trimmedValue = typeof existingExperiencePersonalization === 'string' && existingExperiencePersonalization.trim 
+        ? existingExperiencePersonalization.trim() 
+        : existingExperiencePersonalization;
+      
       if (trimmedValue !== '') {
         updateObj.experience_personalization = JSON.parse(trimmedValue);
       } else {
