@@ -1,4 +1,3 @@
-
 import { useProgress } from "../useProgress";
 import { buildUpdateObject } from "./stepDataBuilder";
 import { navigateAfterStep } from "./stepNavigator";
@@ -74,23 +73,21 @@ export function useStepPersistenceCore({
 
       console.log("Dados a serem enviados para o banco:", updateObj);
 
-      // Atualizar no Supabase
-      const { data: updatedData, error } = await updateProgress(updateObj);
+      // Atualizar no Supabase - Correção aqui para tratar corretamente o retorno
+      const updatedProgress = await updateProgress(updateObj);
 
-      if (error) {
-        console.error("Erro ao atualizar dados:", error);
+      // Verificação se houve algum erro no retorno
+      if (!updatedProgress) {
+        console.error("Erro ao atualizar dados: retorno vazio");
         logError("save_step_data_error", { 
           step: stepId, 
-          error: error.message || JSON.stringify(error),
+          error: "Retorno vazio da atualização",
           stepIndex: currentStepIndex
         });
         toast.error("Erro ao salvar dados. Por favor, tente novamente.");
-        throw error;
+        return;
       }
-
-      // Mesmo se data for null (devido a alguma falha na conversão), vamos atualizar o estado
-      // com as atualizações enviadas para manter consistência na UI
-      const updatedProgress = updatedData || { ...progress, ...updateObj };
+      
       console.log("Progresso atualizado com sucesso:", updatedProgress);
       
       // Notificar usuário do salvamento
