@@ -4,6 +4,7 @@ import { steps } from "./useStepDefinitions";
 import { useProgress } from "./useProgress";
 import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "sonner";
+import { OnboardingProgress } from "@/types/onboarding";
 
 export const useStepNavigation = () => {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
@@ -29,8 +30,11 @@ export const useStepNavigation = () => {
       
       const refreshedProgress = await refreshProgress();
       
+      // Verificar se temos um progresso válido
+      const progressData: OnboardingProgress | null = refreshedProgress || null;
+      
       // Se não há progresso, redirecionar para o início do onboarding
-      if (!refreshedProgress) {
+      if (!progressData) {
         console.log("Nenhum progresso encontrado, redirecionando para o início do onboarding");
         
         // Se estamos na página inicial de onboarding, vamos para a primeira etapa (personal-info)
@@ -68,11 +72,11 @@ export const useStepNavigation = () => {
           console.log(`Definindo etapa atual baseada na URL: ${currentStepId} (índice ${stepIndexByPath})`);
           setCurrentStepIndex(stepIndexByPath);
         }
-      } else if (refreshedProgress?.current_step) {
-        const stepIndex = steps.findIndex(step => step.id === refreshedProgress.current_step);
+      } else if (progressData?.current_step) {
+        const stepIndex = steps.findIndex(step => step.id === progressData.current_step);
         
         if (stepIndex !== -1) {
-          console.log(`Continuando onboarding da etapa: ${refreshedProgress.current_step} (índice ${stepIndex})`);
+          console.log(`Continuando onboarding da etapa: ${progressData.current_step} (índice ${stepIndex})`);
           setCurrentStepIndex(stepIndex);
           
           const correctPath = steps[stepIndex].path;
@@ -82,11 +86,11 @@ export const useStepNavigation = () => {
             navigate(correctPath);
           }
         } else {
-          console.warn(`Etapa não encontrada nos passos definidos: ${refreshedProgress.current_step}`);
+          console.warn(`Etapa não encontrada nos passos definidos: ${progressData.current_step}`);
           navigate(steps[0].path);
           toast.info("Iniciando o preenchimento do onboarding");
         }
-      } else if (refreshedProgress) {
+      } else if (progressData) {
         console.log("Nenhuma etapa atual definida, começando do início");
         navigate(steps[0].path);
       }

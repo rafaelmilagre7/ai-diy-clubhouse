@@ -8,6 +8,7 @@ interface StepIndicatorProps {
   title: string;
   isActive: boolean;
   isCompleted: boolean;
+  onClick?: () => void;
 }
 
 export const StepIndicator: React.FC<StepIndicatorProps> = ({
@@ -15,6 +16,7 @@ export const StepIndicator: React.FC<StepIndicatorProps> = ({
   title,
   isActive,
   isCompleted,
+  onClick,
 }) => {
   return (
     <div 
@@ -22,8 +24,10 @@ export const StepIndicator: React.FC<StepIndicatorProps> = ({
         "flex items-center gap-2 px-3 py-1 rounded-full text-sm transition-colors",
         isActive ? "bg-[#0ABAB5] text-white" : 
         isCompleted ? "bg-[#0ABAB5]/20 text-[#0ABAB5]" : 
-        "bg-gray-700 text-gray-400"
+        "bg-gray-700 text-gray-400",
+        onClick ? "cursor-pointer hover:bg-opacity-90" : ""
       )}
+      onClick={onClick}
     >
       {isCompleted ? (
         <CheckCircle className="h-4 w-4" />

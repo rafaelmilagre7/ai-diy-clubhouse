@@ -17,6 +17,7 @@ export interface OnboardingLayoutProps {
   backUrl?: string;
   stepTitles?: string[];
   onStepClick?: (stepIdx: number) => void;
+  hideProgress?: boolean;
 }
 
 const OnboardingLayout: React.FC<OnboardingLayoutProps> = ({
@@ -31,6 +32,7 @@ const OnboardingLayout: React.FC<OnboardingLayoutProps> = ({
   backUrl,
   stepTitles = [],
   onStepClick,
+  hideProgress = false,
 }) => {
   return (
     <MemberLayout>
@@ -40,14 +42,18 @@ const OnboardingLayout: React.FC<OnboardingLayoutProps> = ({
             <h1 className="text-3xl font-bold text-white">{title}</h1>
             {description && <p className="text-gray-400">{description}</p>}
             
-            <div className="flex items-center justify-between mt-8">
-              <p className="text-gray-400">
-                Passo {currentStep} de {totalSteps}
-              </p>
-              <p className="text-gray-400">{Math.round(progress)}% concluído</p>
-            </div>
-            
-            <Progress value={progress} className="h-2" />
+            {!hideProgress && (
+              <>
+                <div className="flex items-center justify-between mt-8">
+                  <p className="text-gray-400">
+                    Passo {currentStep} de {totalSteps}
+                  </p>
+                  <p className="text-gray-400">{Math.round(progress)}% concluído</p>
+                </div>
+                
+                <Progress value={progress} className="h-2" />
+              </>
+            )}
             
             {stepTitles.length > 0 && (
               <div className="flex flex-wrap gap-2 mt-4">

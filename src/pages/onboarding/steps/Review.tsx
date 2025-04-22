@@ -1,13 +1,13 @@
-import React from "react";
+import React, { useEffect } from "react";
 import OnboardingLayout from "@/components/onboarding/OnboardingLayout";
 import { useOnboardingSteps } from "@/hooks/onboarding/useOnboardingSteps";
 import { MilagrinhoMessage } from "@/components/onboarding/MilagrinhoMessage";
-import { CheckCircle, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useProgress } from "@/hooks/onboarding/useProgress";
-import { Button } from "@/components/ui/button";
 import { ReviewStep } from "@/components/onboarding/steps/ReviewStep";
 import { toast } from "sonner";
+import { useStepPersistenceCore } from "@/hooks/onboarding/persistence/useStepPersistenceCore";
 
 const Review: React.FC = () => {
   const navigate = useNavigate();

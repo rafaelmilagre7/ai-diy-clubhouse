@@ -1,48 +1,96 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useProgress } from "./useProgress";
-import { useStepPersistenceCore } from "./useStepPersistenceCore";
 import { steps } from "./useStepDefinitions";
+import { useStepNavigation } from "./useStepNavigation";
+import { useStepPersistenceCore } from "./persistence/useStepPersistenceCore";
+import { OnboardingData } from "@/types/onboarding";
+import { OnboardingProgress } from "@/types/onboarding";
+import { useProgress } from "./useProgress";
 
 export const useOnboardingSteps = () => {
+  const { 
+    currentStepIndex, 
+    setCurrentStepIndex, 
+    progress, 
+    navigateToStep: navigateToStepBase, 
+    navigateToStepById,
+    isLoading, 
+    currentStep 
+  } = useStepNavigation();
+  
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
-  const [currentStepIndex, setCurrentStepIndex] = useState(0);
-  const { progress, isLoading, refreshProgress } = useProgress();
-  const { saveStepData, completeOnboarding } = useStepPersistenceCore({
+  const { updateProgress, refreshProgress } = useProgress();
+
+  const { saveStepData: saveStepDataCore } = useStepPersistenceCore({
     currentStepIndex,
     setCurrentStepIndex,
-    navigate,
+    navigate
   });
 
-  // Determinar o índice atual baseado nas etapas completadas
-  useEffect(() => {
-    if (progress?.completed_steps) {
-      const lastCompletedStep = progress.completed_steps[progress.completed_steps.length - 1];
-      const nextStepIndex = steps.findIndex(step => step.id === lastCompletedStep) + 1;
-      if (nextStepIndex < steps.length) {
-        setCurrentStepIndex(nextStepIndex);
-      }
+  const saveStepData = async (
+    stepIdOrData: string | any,
+    dataOrShouldNavigate?: any | boolean,
+    shouldNavigate?: boolean
+  ): Promise<void> => {
+    setIsSubmitting(true);
+    
+    try {
+      await saveStepDataCore(stepIdOrData, dataOrShouldNavigate, shouldNavigate);
+    } catch (error) {
+      console.error("Erro ao salvar dados:", error);
+    } finally {
+      setIsSubmitting(false);
     }
-  }, [progress?.completed_steps]);
+  };
 
   const navigateToStep = (index: number) => {
-    if (index >= 0 && index < steps.length) {
-      setCurrentStepIndex(index);
-      navigate(steps[index].path);
+    navigateToStepBase(index);
+  };
+
+  const navigateToPreviousStep = () => {
+    if (currentStepIndex > 0) {
+      navigateToStep(currentStepIndex - 1);
+    }
+  };
+
+  const completeOnboarding = async (): Promise<void> => {
+    setIsSubmitting(true);
+    
+    try {
+      if (!progress?.id) {
+        throw new Error("ID de progresso não encontrado");
+      }
+      
+      await updateProgress({
+        is_completed: true,
+        completed_steps: steps.map(step => step.id)
+      });
+      
+      await refreshProgress();
+      
+      // Navegar para a tela de geração de trilha
+      navigate('/onboarding/trail-generation');
+    } catch (error) {
+      console.error("Erro ao finalizar onboarding:", error);
+      throw error;
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return {
     currentStepIndex,
-    currentStep: steps[currentStepIndex],
-    steps,
-    isSubmitting: false,
-    saveStepData,
-    progress,
+    progress: progress as OnboardingProgress,
+    isSubmitting,
     isLoading,
-    refreshProgress,
+    steps,
+    currentStep,
+    saveStepData,
     navigateToStep,
-    completeOnboarding // Adicionando a função aqui
+    navigateToStepById,
+    navigateToPreviousStep,
+    completeOnboarding
   };
 };
