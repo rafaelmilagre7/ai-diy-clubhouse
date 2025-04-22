@@ -3,7 +3,7 @@ import React from "react";
 import { MilagrinhoMessage } from "@/components/onboarding/MilagrinhoMessage";
 import { PersonalInfoInputs } from "./PersonalInfoInputs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export const PersonalInfoForm = ({ 
@@ -11,7 +11,8 @@ export const PersonalInfoForm = ({
   errors, 
   onChange, 
   isSubmitting, 
-  onSubmit 
+  onSubmit,
+  readOnly = false
 }) => {
   const hasErrors = Object.keys(errors).length > 0;
 
@@ -37,13 +38,14 @@ export const PersonalInfoForm = ({
         formData={formData} 
         onChange={onChange} 
         disabled={isSubmitting}
+        readOnly={readOnly}
         errors={errors}
       />
       
       <div className="flex justify-end pt-4">
         <Button 
           type="submit" 
-          disabled={isSubmitting}
+          disabled={isSubmitting || readOnly}
           className="bg-[#0ABAB5] hover:bg-[#0ABAB5]/90"
         >
           {isSubmitting ? "Salvando..." : "Salvar e avançar"}
