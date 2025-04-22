@@ -3,11 +3,11 @@ import { OnboardingData, OnboardingProgress } from "@/types/onboarding";
 import { normalizeWebsite } from "../utils/dataNormalization";
 
 export function buildProfessionalDataUpdate(data: Partial<OnboardingData>, progress: OnboardingProgress | null) {
-  // Criar um objeto de atualização com tipagem explícita
-  const updateObj = {
+  // Criar um objeto de atualização usando interface explícita para o tipo
+  const updateObj: Record<string, any> = {
     ...(progress || {}),
     professional_info: { ...(progress?.professional_info || {}) }
-  } as Partial<OnboardingProgress>;
+  };
   
   // Verificar se temos dados diretos ou dentro do objeto professional_info
   const professionalData = data.professional_info || data;
@@ -42,13 +42,13 @@ export function buildProfessionalDataUpdate(data: Partial<OnboardingData>, progr
       // Atualizar no objeto principal
       professionalInfo[field] = value;
       
-      // Atualizar campos de nível superior usando type assertion
-      if (field === 'company_name') (updateObj as any).company_name = value;
-      if (field === 'company_size') (updateObj as any).company_size = value;
-      if (field === 'company_sector') (updateObj as any).company_sector = value;
-      if (field === 'company_website') (updateObj as any).company_website = value;
-      if (field === 'current_position') (updateObj as any).current_position = value;
-      if (field === 'annual_revenue') (updateObj as any).annual_revenue = value;
+      // Atualizar campos de nível superior - usando Record<string, any> evitamos o problema de tipagem
+      if (field === 'company_name') updateObj['company_name'] = value;
+      if (field === 'company_size') updateObj['company_size'] = value;
+      if (field === 'company_sector') updateObj['company_sector'] = value;
+      if (field === 'company_website') updateObj['company_website'] = value;
+      if (field === 'current_position') updateObj['current_position'] = value;
+      if (field === 'annual_revenue') updateObj['annual_revenue'] = value;
       
       hasUpdates = true;
     }
@@ -61,5 +61,6 @@ export function buildProfessionalDataUpdate(data: Partial<OnboardingData>, progr
   
   console.log("Objeto de atualização para dados profissionais:", updateObj);
   
-  return updateObj;
+  // Convertemos de volta para o tipo esperado antes de retornar
+  return updateObj as Partial<OnboardingProgress>;
 }
