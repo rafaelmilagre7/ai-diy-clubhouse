@@ -6,6 +6,10 @@ import { steps } from "../useStepDefinitions";
 import { toast } from "sonner";
 import { useLogging } from "@/hooks/useLogging";
 
+/**
+ * Hook para gerenciar a persistência de dados das etapas do onboarding
+ * Fornece funções para salvar dados e completar o onboarding
+ */
 export function useStepPersistenceCore({
   currentStepIndex,
   setCurrentStepIndex,
@@ -18,14 +22,16 @@ export function useStepPersistenceCore({
   const { progress, updateProgress, refreshProgress } = useProgress();
   const { logError } = useLogging();
 
-  // Função principal para salvar dados de um passo específico
-  // Assinatura com suporte a dois formatos:
-  // 1. saveStepData(stepId: string, data: any, shouldNavigate?: boolean)
-  // 2. saveStepData(data: any, shouldNavigate?: boolean)
+  /**
+   * Função principal para salvar dados de um passo específico
+   * Suporta dois formatos de chamada:
+   * 1. saveStepData(stepId: string, data: any, shouldNavigate?: boolean)
+   * 2. saveStepData(data: any, shouldNavigate?: boolean)
+   */
   const saveStepData = async (
     stepIdOrData: string | any,
     dataOrShouldNavigate?: any | boolean,
-    shouldNavigateParam?: boolean
+    thirdParam?: boolean
   ): Promise<void> => {
     if (!progress?.id) {
       console.error("Não foi possível salvar dados: ID de progresso não encontrado");
@@ -42,13 +48,14 @@ export function useStepPersistenceCore({
     if (typeof stepIdOrData === 'string') {
       stepId = stepIdOrData;
       data = dataOrShouldNavigate;
-      shouldNavigate = shouldNavigateParam !== undefined ? shouldNavigateParam : true;
+      shouldNavigate = thirdParam !== undefined ? thirdParam : true;
     } 
     // Caso 2: saveStepData(data: any, shouldNavigate?: boolean)
     else {
       stepId = steps[currentStepIndex]?.id || '';
       data = stepIdOrData;
-      shouldNavigate = typeof dataOrShouldNavigate === 'boolean' ? dataOrShouldNavigate : true;
+      shouldNavigate = typeof dataOrShouldNavigate === 'boolean' ? 
+                       dataOrShouldNavigate : true;
     }
     
     console.log(`Salvando dados do passo ${stepId}, índice ${currentStepIndex}, navegação automática: ${shouldNavigate ? "SIM" : "NÃO"}`, data);
@@ -112,7 +119,9 @@ export function useStepPersistenceCore({
     }
   };
 
-  // Finaliza onboarding (marca como completo e leva à tela de trilha)
+  /**
+   * Finaliza o onboarding, marca como completo e redireciona para a trilha de implementação
+   */
   const completeOnboarding = async () => {
     if (!progress?.id) {
       toast.error("Progresso não encontrado. Tente recarregar a página.");
@@ -130,11 +139,11 @@ export function useStepPersistenceCore({
       
       // Atualiza dados locais
       await refreshProgress();
-      console.log("Onboarding marcado como completo, gerando trilha de implementação...");
+      console.log("Onboarding marcado como completo, preparando redirecionamento para trilha...");
       
       toast.success("Onboarding concluído com sucesso!");
       
-      // Redirecionar para a tela de trilha de implementação
+      // Redirecionamento após delay para garantir atualização do estado
       setTimeout(() => {
         navigate("/implementation-trail");
       }, 1000);
@@ -145,7 +154,7 @@ export function useStepPersistenceCore({
       });
       toast.error("Erro ao finalizar onboarding. Por favor, tente novamente.");
       
-      // Fallback para dashboard
+      // Fallback para dashboard em caso de erro
       setTimeout(() => {
         navigate("/dashboard");
       }, 1500);

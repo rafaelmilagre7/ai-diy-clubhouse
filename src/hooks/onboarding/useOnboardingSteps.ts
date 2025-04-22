@@ -5,6 +5,10 @@ import { steps } from "./useStepDefinitions";
 import { useStepPersistenceCore } from "./persistence/useStepPersistenceCore";
 import { useProgress } from "./useProgress";
 
+/**
+ * Hook principal para controle do fluxo de onboarding
+ * Gerencia o estado atual, navegação e persistência de dados
+ */
 export const useOnboardingSteps = () => {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const navigate = useNavigate();
@@ -38,6 +42,7 @@ export const useOnboardingSteps = () => {
   const currentStep = steps[currentStepIndex];
   const isLastStep = currentStepIndex === steps.length - 1;
 
+  // Função para navegar para uma etapa específica por índice
   const navigateToStep = useCallback((index: number) => {
     if (index >= 0 && index < steps.length) {
       setCurrentStepIndex(index);
@@ -45,6 +50,16 @@ export const useOnboardingSteps = () => {
     }
   }, [navigate]);
 
+  // Função para navegar para uma etapa específica por ID
+  const navigateToStepById = useCallback((stepId: string) => {
+    const stepIndex = steps.findIndex(step => step.id === stepId);
+    if (stepIndex !== -1) {
+      setCurrentStepIndex(stepIndex);
+      navigate(steps[stepIndex].path);
+    }
+  }, [navigate]);
+
+  // Sincroniza o índice da etapa atual com a rota atual
   useEffect(() => {
     const path = location.pathname;
     const stepIndex = steps.findIndex(step => step.path === path);
@@ -59,11 +74,13 @@ export const useOnboardingSteps = () => {
     steps,
     currentStep,
     navigateToStep,
+    navigateToStepById,
     isSubmitting,
     setIsSubmitting,
     saveStepData,
     isLastStep,
     completeOnboarding,
     progress,
+    isLoading
   };
 };
