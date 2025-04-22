@@ -1,5 +1,5 @@
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useAuth } from "@/contexts/auth";
 import { useProgressState } from "./progress/useProgressState";
 import { useProgressFetch } from "./progress/useProgressFetch";
@@ -51,7 +51,7 @@ export const useProgress = () => {
     toastShownRef,
     lastError,
     refreshProgress,
-    logDebugEvent  // Adicionando o argumento logDebugEvent que faltava
+    logDebugEvent
   );
 
   // Função para forçar um reset completo do progresso do usuário

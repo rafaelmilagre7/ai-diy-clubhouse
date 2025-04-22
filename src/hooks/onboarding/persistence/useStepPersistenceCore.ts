@@ -22,6 +22,9 @@ export function useStepPersistenceCore({
 }) {
   const { progress, updateProgress, refreshProgress } = useProgress();
   const { logError } = useLogging();
+  
+  // Flag para controlar exibição de toasts
+  const toastShown = React.useRef(false);
 
   /**
    * Função principal para salvar dados de um passo específico
@@ -39,6 +42,9 @@ export function useStepPersistenceCore({
       toast.error("Erro ao salvar dados: ID de progresso não encontrado");
       return;
     }
+
+    // Resetar a flag de toast ao iniciar uma nova operação de salvamento
+    toastShown.current = false;
 
     // Determinar os parâmetros corretos com base na assinatura usada
     let stepId: string;
@@ -69,7 +75,10 @@ export function useStepPersistenceCore({
       const updateObj = buildUpdateObject(stepId, data, progress, currentStepIndex);
       if (Object.keys(updateObj).length === 0) {
         console.warn("Objeto de atualização vazio, nada para salvar");
-        toast.warning("Sem dados para salvar");
+        if (!toastShown.current) {
+          toast.warning("Sem dados para salvar");
+          toastShown.current = true;
+        }
         return;
       }
 
@@ -79,6 +88,7 @@ export function useStepPersistenceCore({
       try {
         if (stepId === 'professional_data') {
           await saveProfessionalData(progress.id, progress.user_id, data);
+          console.log("Dados profissionais salvos na tabela específica com sucesso");
         }
         // Adicionar mais casos para outras etapas conforme necessário
       } catch (serviceError) {
@@ -98,7 +108,10 @@ export function useStepPersistenceCore({
           error: errorMessage,
           stepIndex: currentStepIndex
         });
-        toast.error("Erro ao salvar dados. Por favor, tente novamente.");
+        if (!toastShown.current) {
+          toast.error("Erro ao salvar dados. Por favor, tente novamente.");
+          toastShown.current = true;
+        }
         return;
       }
       
@@ -106,8 +119,11 @@ export function useStepPersistenceCore({
       const updatedProgress = (result as any).data || { ...progress, ...updateObj };
       console.log("Progresso atualizado com sucesso:", updatedProgress);
       
-      // Notificar usuário do salvamento
-      toast.success("Dados salvos com sucesso!");
+      // Notificar usuário do salvamento (apenas uma vez)
+      if (!toastShown.current) {
+        toast.success("Dados salvos com sucesso!");
+        toastShown.current = true;
+      }
       
       // Forçar atualização dos dados local após salvar
       await refreshProgress();
@@ -116,7 +132,7 @@ export function useStepPersistenceCore({
       // Navegação para a próxima etapa
       if (shouldNavigate) {
         console.log("Tentando navegar para a próxima etapa...");
-        // Usar o módulo de navegação por etapas com modificação para usar window.location.href
+        // Usar o módulo de navegação por etapas
         navigateAfterStep(stepId, currentStepIndex, navigate, shouldNavigate);
       } else {
         console.log("Navegação automática desativada, permanecendo na página atual");
@@ -128,7 +144,10 @@ export function useStepPersistenceCore({
         error: error instanceof Error ? error.message : String(error),
         stepIndex: currentStepIndex
       });
-      toast.error("Erro ao salvar dados. Por favor, tente novamente.");
+      if (!toastShown.current) {
+        toast.error("Erro ao salvar dados. Por favor, tente novamente.");
+        toastShown.current = true;
+      }
       throw error;
     }
   };

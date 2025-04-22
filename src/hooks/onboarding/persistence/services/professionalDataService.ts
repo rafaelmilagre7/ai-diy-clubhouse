@@ -21,7 +21,7 @@ export async function saveProfessionalData(
     ? data.professional_info 
     : data as ProfessionalDataInput;
   
-  // Formatar dados
+  // Formatar dados - usar tipagem segura com as verificações adequadas
   const professionalData = {
     progress_id: progressId,
     user_id: userId,
