@@ -27,7 +27,7 @@ const LoginForm = () => {
     try {
       setIsLoading(true);
       toast.info("Iniciando login com Google...");
-      // Call signIn without arguments for Google auth
+      // Chamar signIn sem argumentos para login com Google
       await signIn();
       // Navigation is handled by auth state change listeners
     } catch (error) {
@@ -52,22 +52,16 @@ const LoginForm = () => {
       // Show immediate feedback toast
       toast.info("Entrando...");
       
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      // Usar signIn com email e senha
+      await signIn(email, password);
       
-      if (error) throw error;
+      toast.success("Login bem-sucedido! Redirecionando...");
+      console.log("Login bem-sucedido, redirecionando para dashboard");
       
-      if (data.user) {
-        toast.success("Login bem-sucedido! Redirecionando...");
-        console.log("Login bem-sucedido, redirecionando para dashboard");
-        
-        // Forçar redirecionamento após autenticação bem-sucedida
-        setTimeout(() => {
-          navigate('/dashboard', { replace: true });
-        }, 500);
-      }
+      // Forçar redirecionamento após autenticação bem-sucedida
+      setTimeout(() => {
+        navigate('/dashboard', { replace: true });
+      }, 500);
     } catch (error: any) {
       console.error("Erro ao fazer login:", error);
       toast.error(error.message || "Não foi possível fazer login. Verifique suas credenciais.");

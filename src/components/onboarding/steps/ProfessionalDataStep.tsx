@@ -1,102 +1,85 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { CompanyNameField } from "./professional-inputs/CompanyNameField";
+import { CompanySizeField } from "./professional-inputs/CompanySizeField";
+import { CompanySectorField } from "./professional-inputs/CompanySectorField";
+import { WebsiteField } from "./professional-inputs/WebsiteField";
+import { CurrentPositionField } from "./professional-inputs/CurrentPositionField";
+import { AnnualRevenueField } from "./professional-inputs/AnnualRevenueField";
 import { FormProvider } from "react-hook-form";
 import { useProfessionalDataForm } from "./professional-inputs/useProfessionalDataForm";
-import { NavigationButtons } from "@/components/onboarding/NavigationButtons";
-import { FormValidationErrors } from "./professional-inputs/FormValidationErrors";
-import { ProfessionalDataFields } from "./professional-inputs/ProfessionalDataFields";
-import { Loader2 } from "lucide-react";
-import { toast } from "sonner";
-import { OnboardingStepProps } from "@/types/onboarding";
+import { OnboardingStepProps, ProfessionalDataInput } from "@/types/onboarding";
+import { ArrowRight } from "lucide-react";
 
-interface ProfessionalDataStepProps extends OnboardingStepProps {
-  personalInfo?: any;
-  onPrevious?: () => void;
-}
-
-export const ProfessionalDataStep: React.FC<ProfessionalDataStepProps> = ({
+export const ProfessionalDataStep: React.FC<OnboardingStepProps> = ({
   onSubmit,
   isSubmitting,
   initialData,
-  isLastStep = false,
-  onComplete,
-  personalInfo,
-  onPrevious
+  isLastStep,
+  onComplete
 }) => {
-  const [isLoading, setIsLoading] = useState(false);
-  const [validationErrors, setValidationErrors] = useState<string[]>([]);
-
-  // Use o hook com dados iniciais
   const { methods, formInitialized } = useProfessionalDataForm({ initialData });
-
-  // Log dos dados iniciais
-  useEffect(() => {
-    console.log("ProfessionalDataStep - initialData:", initialData);
-  }, [initialData]);
-
-  // Quando o formulário for submetido
-  const handleSubmit = async (data: any) => {
-    console.log("Form submitted with data:", data);
-    setIsLoading(true);
-    setValidationErrors([]);
-    try {
-      // Validação manual
-      const errors: string[] = [];
-      if (!data.company_name?.trim()) errors.push("Nome da empresa é obrigatório");
-      if (!data.company_size) errors.push("Tamanho da empresa é obrigatório");
-      if (!data.company_sector) errors.push("Setor de atuação é obrigatório");
-      if (!data.current_position?.trim()) errors.push("Cargo atual é obrigatório");
-      if (!data.annual_revenue) errors.push("Faturamento anual é obrigatório");
-      
-      if (errors.length > 0) {
-        console.log("Validation errors:", errors);
-        setValidationErrors(errors);
-        setIsLoading(false);
-        return;
-      }
-      
-      console.log("Data valid, sending to backend:", data);
-      await onSubmit("professional_data", data);
-      toast.success("Dados salvos com sucesso!");
-    } catch (error) {
-      console.error("Error submitting form:", error);
-      setValidationErrors(["Falha ao salvar dados. Por favor, tente novamente."]);
-      toast.error("Erro ao salvar dados");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Monitorar mudanças nos valores do formulário
-  useEffect(() => {
-    const subscription = methods.watch((value) => {
-      console.log("Form values changed:", value);
+  
+  // Lidando com submissão do formulário
+  const handleSubmit = (data: ProfessionalDataInput) => {
+    console.log("Dados profissionais a serem enviados:", data);
+    onSubmit("professional_data", {
+      professional_info: data
     });
-    return () => subscription.unsubscribe();
-  }, [methods]);
-
-  // Se o formulário ainda não foi inicializado, mostre um loader
-  if (!formInitialized && !initialData) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-[#0ABAB5] mr-2" />
-        <span className="text-gray-300">Carregando seus dados...</span>
-      </div>
-    );
-  }
-
+  };
+  
+  // Debug para verificar os dados iniciais
+  useEffect(() => {
+    console.log("ProfessionalDataStep initialData:", initialData);
+  }, [initialData]);
+  
   return (
     <FormProvider {...methods}>
-      <form onSubmit={methods.handleSubmit(handleSubmit)} className="space-y-8">
-        <FormValidationErrors errors={validationErrors} />
-        <ProfessionalDataFields />
-        <NavigationButtons 
-          isSubmitting={isSubmitting || isLoading}
-          submitText="Próximo Passo"
-          loadingText="Salvando..."
-          showPrevious={true}
-          onPrevious={onPrevious}
-        />
+      <form onSubmit={methods.handleSubmit(handleSubmit)} className="space-y-6">
+        <div className="bg-white rounded-lg border border-gray-100 p-6 shadow-sm">
+          <h2 className="text-xl font-semibold text-[#15192C] mb-6">
+            Dados Profissionais
+          </h2>
+          
+          <div className="space-y-6">
+            <CompanyNameField />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <CompanySizeField />
+              <CompanySectorField />
+            </div>
+            <WebsiteField />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <CurrentPositionField />
+              <AnnualRevenueField />
+            </div>
+          </div>
+          
+          <div className="flex justify-between mt-8">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => window.history.back()}
+              disabled={isSubmitting}
+            >
+              Voltar
+            </Button>
+            <Button
+              type="submit"
+              className="bg-[#0ABAB5] hover:bg-[#099388] text-white"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                "Salvando..."
+              ) : (
+                <span className="flex items-center gap-2">
+                  {isLastStep ? "Finalizar" : "Próximo"}
+                  <ArrowRight className="h-4 w-4" />
+                </span>
+              )}
+            </Button>
+          </div>
+        </div>
       </form>
     </FormProvider>
   );

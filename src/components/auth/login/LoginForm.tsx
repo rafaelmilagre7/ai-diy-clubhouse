@@ -19,6 +19,7 @@ const LoginForm = () => {
     try {
       setIsLoading(true);
       toast.info("Iniciando login com Google...");
+      // Chamar signIn sem argumentos para login com Google
       await signIn();
     } catch (error) {
       console.error("Erro ao fazer login com Google:", error);
@@ -40,17 +41,12 @@ const LoginForm = () => {
       setIsLoading(true);
       toast.info("Entrando...");
       
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      // Usar signIn com email e senha
+      await signIn(email, password);
       
-      if (error) throw error;
-      
-      if (data.user) {
-        toast.success("Login bem-sucedido! Redirecionando...");
-        navigate('/dashboard', { replace: true });
-      }
+      // Navegação é tratada pelo listener de estado de autenticação
+      toast.success("Login bem-sucedido! Redirecionando...");
+      navigate('/dashboard', { replace: true });
     } catch (error: any) {
       console.error("Erro ao fazer login:", error);
       toast.error(error.message || "Não foi possível fazer login. Verifique suas credenciais.");
