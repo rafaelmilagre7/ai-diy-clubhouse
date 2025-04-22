@@ -34,15 +34,17 @@ const normalizeOnboardingData = (data: Partial<OnboardingProgress>) => {
   
   objectFields.forEach(field => {
     const value = normalizedData[field as keyof typeof normalizedData];
-    if (typeof value === 'string' && value.trim() !== '') {
-      try {
-        // Tentar converter de string JSON para objeto
-        (normalizedData as any)[field] = JSON.parse(value);
-        console.log(`Campo ${field} convertido de string JSON para objeto:`, (normalizedData as any)[field]);
-      } catch (e) {
-        // Se não for JSON válido, inicializar como objeto vazio
-        console.warn(`Campo ${field} é string mas não é JSON válido, inicializando como objeto vazio`);
-        (normalizedData as any)[field] = {};
+    if (typeof value === 'string') {
+      if (value.trim() !== '') {
+        try {
+          // Tentar converter de string JSON para objeto
+          (normalizedData as any)[field] = JSON.parse(value);
+          console.log(`Campo ${field} convertido de string JSON para objeto:`, (normalizedData as any)[field]);
+        } catch (e) {
+          // Se não for JSON válido, inicializar como objeto vazio
+          console.warn(`Campo ${field} é string mas não é JSON válido, inicializando como objeto vazio`);
+          (normalizedData as any)[field] = {};
+        }
       }
     } else if (value === null) {
       // Inicializar como objeto vazio se for null
@@ -73,9 +75,13 @@ const normalizeOnboardingData = (data: Partial<OnboardingProgress>) => {
     const aiExp = normalizedData.ai_experience;
     
     // Converter de string para objeto se necessário
-    if (typeof aiExp === 'string' && aiExp.trim() !== '') {
+    if (typeof aiExp === 'string') {
       try {
-        (normalizedData as any).ai_experience = JSON.parse(aiExp);
+        if (aiExp.trim() !== '') {
+          (normalizedData as any).ai_experience = JSON.parse(aiExp);
+        } else {
+          (normalizedData as any).ai_experience = {};
+        }
       } catch (e) {
         console.warn("ai_experience é string mas não é JSON válido:", e);
         (normalizedData as any).ai_experience = {};
