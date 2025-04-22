@@ -1,4 +1,3 @@
-
 export interface OnboardingData {
   personal_info: {
     name?: string;
@@ -94,6 +93,18 @@ export interface OnboardingData {
   company_website?: string;
   current_position?: string;
   annual_revenue?: string;
+}
+
+export interface PersonalInfoData {
+  name: string;
+  email: string;
+  phone: string;
+  ddi: string;
+  linkedin: string;
+  instagram: string;
+  country: string;
+  state: string;
+  city: string;
 }
 
 export interface OnboardingProgress {
