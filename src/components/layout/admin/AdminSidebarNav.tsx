@@ -7,6 +7,8 @@ import {
   Settings,
   MessageSquare,
   ChevronLeft,
+  BookOpen,
+  Gauge,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "react-router-dom";
@@ -46,6 +48,16 @@ export const AdminSidebarNav = ({ sidebarOpen }: AdminSidebarNavProps) => {
       title: "Sugestões",
       href: "/admin/suggestions",
       icon: MessageSquare,
+    },
+    {
+      title: "Onboarding",
+      href: "/admin/onboarding",
+      icon: BookOpen,
+    },
+    {
+      title: "Analytics",
+      href: "/admin/analytics",
+      icon: Gauge,
     },
   ];
 

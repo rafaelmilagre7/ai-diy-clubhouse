@@ -12,6 +12,8 @@ import AdminUsers from '@/pages/admin/AdminUsers';
 import AdminSolutions from '@/pages/admin/AdminSolutions';
 import AdminTools from '@/pages/admin/AdminTools';
 import AdminSuggestions from '@/pages/admin/AdminSuggestions';
+import AdminOnboarding from '@/pages/admin/AdminOnboarding';
+import AdminAnalytics from '@/pages/admin/AdminAnalytics';
 import AdminSolutionCreate from '@/pages/admin/AdminSolutionCreate';
 import AdminSolutionEdit from '@/pages/admin/AdminSolutionEdit';
 import SolutionEditor from '@/pages/admin/SolutionEditor';
@@ -168,6 +170,20 @@ const AppRoutes = () => {
         <AdminProtectedRoutes>
           <AdminLayout>
             <AdminSuggestionDetails />
+          </AdminLayout>
+        </AdminProtectedRoutes>
+      } />
+      <Route path="/admin/onboarding" element={
+        <AdminProtectedRoutes>
+          <AdminLayout>
+            <AdminOnboarding />
+          </AdminLayout>
+        </AdminProtectedRoutes>
+      } />
+      <Route path="/admin/analytics" element={
+        <AdminProtectedRoutes>
+          <AdminLayout>
+            <AdminAnalytics />
           </AdminLayout>
         </AdminProtectedRoutes>
       } />
