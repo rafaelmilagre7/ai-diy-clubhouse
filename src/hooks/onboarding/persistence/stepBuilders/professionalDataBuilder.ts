@@ -3,11 +3,11 @@ import { OnboardingData, OnboardingProgress } from "@/types/onboarding";
 import { normalizeWebsite } from "../utils/dataNormalization";
 
 export function buildProfessionalDataUpdate(data: Partial<OnboardingData>, progress: OnboardingProgress | null) {
-  // Create a mutable copy of the progress object to modify
-  const updateObj: Partial<OnboardingProgress> = {
-    ...progress,
-    professional_info: progress?.professional_info || {},
-  };
+  // Criar um objeto de atualização com tipagem explícita
+  const updateObj = {
+    ...(progress || {}),
+    professional_info: { ...(progress?.professional_info || {}) }
+  } as Partial<OnboardingProgress>;
   
   // Verificar se temos dados diretos ou dentro do objeto professional_info
   const professionalData = data.professional_info || data;
@@ -42,13 +42,13 @@ export function buildProfessionalDataUpdate(data: Partial<OnboardingData>, progr
       // Atualizar no objeto principal
       professionalInfo[field] = value;
       
-      // Atualizar campos de nível superior
-      if (field === 'company_name') updateObj.company_name = value as string;
-      if (field === 'company_size') updateObj.company_size = value as string;
-      if (field === 'company_sector') updateObj.company_sector = value as string;
-      if (field === 'company_website') updateObj.company_website = value as string;
-      if (field === 'current_position') updateObj.current_position = value as string;
-      if (field === 'annual_revenue') updateObj.annual_revenue = value as string;
+      // Atualizar campos de nível superior usando type assertion
+      if (field === 'company_name') (updateObj as any).company_name = value;
+      if (field === 'company_size') (updateObj as any).company_size = value;
+      if (field === 'company_sector') (updateObj as any).company_sector = value;
+      if (field === 'company_website') (updateObj as any).company_website = value;
+      if (field === 'current_position') (updateObj as any).current_position = value;
+      if (field === 'annual_revenue') (updateObj as any).annual_revenue = value;
       
       hasUpdates = true;
     }
