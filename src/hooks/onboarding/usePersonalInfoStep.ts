@@ -32,6 +32,9 @@ export const usePersonalInfoStep = () => {
   const { refreshProgress } = useProgress();
   const { logError } = useLogging();
 
+  // Log para diagnóstico
+  console.log("[DEBUG] usePersonalInfoStep estados:", { isSubmitting, isSaving, lastSaveTime });
+
   // Composição: handleSubmit orquestra as dependências conforme esperado pela nova função
   const handleSubmit = async () => {
     return submit({

@@ -26,6 +26,9 @@ export const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
   isSaving,
   lastSaveTime
 }) => {
+  // Adicionar log para depuração
+  console.log("[DEBUG] PersonalInfoStep props:", { isSubmitting, readOnly });
+
   return (
     <form onSubmit={e => {
       e.preventDefault();

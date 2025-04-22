@@ -27,6 +27,9 @@ export const usePersonalInfoFormSubmit = () => {
   const { refreshProgress } = useProgress();
   const { logError } = useLogging();
 
+  // Log para diagnóstico
+  console.log("[DEBUG] usePersonalInfoFormSubmit estados:", { isSubmitting, isSaving });
+
   const handleSubmit = async ({
     progress, user, formData, setValidationAttempted, setErrors
   }: Omit<SubmitParams, "logError" | "refreshProgress" | "setIsSubmitting"> & { setIsSubmitting?: (v: boolean) => void }) => {

@@ -24,6 +24,9 @@ export const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({
   readOnly = false
 }) => {
   const hasErrors = Object.keys(errors).length > 0;
+  
+  // Adicionar log para depuração
+  console.log("[DEBUG] PersonalInfoForm props:", { isSubmitting, readOnly });
 
   return (
     <form onSubmit={(e) => {

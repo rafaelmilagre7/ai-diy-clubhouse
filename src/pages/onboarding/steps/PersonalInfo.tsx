@@ -24,6 +24,9 @@ const PersonalInfo = () => {
     loadInitialData
   } = usePersonalInfoStep();
 
+  // Log para diagnóstico
+  console.log("[DEBUG] PersonalInfo valores:", { isSubmitting, isSaving });
+
   const {
     loadingAttempts,
     setLoadingAttempts,
@@ -77,6 +80,15 @@ const PersonalInfo = () => {
 
   // Verificar se o passo já foi concluído
   const isReadOnly = !!progress?.completed_steps?.includes("personal");
+  
+  // Log adicional para diagnóstico do estado
+  console.log("[DEBUG] PersonalInfo estados:", { 
+    isReadOnly, 
+    progressLoading, 
+    showForceButton, 
+    hasError,
+    completedSteps: progress?.completed_steps
+  });
 
   if (progressLoading && !showForceButton) {
     return (
