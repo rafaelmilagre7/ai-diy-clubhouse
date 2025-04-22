@@ -55,25 +55,12 @@ export function buildProfessionalDataUpdate(data: Partial<OnboardingData>, progr
       // Atualizar no objeto professional_info
       professionalInfo[field] = value;
       
-      // Atualizar campos de nível superior de forma segura usando tipagem assertiva explícita
-      if (field === 'company_name') {
-        (updateObj as any).company_name = value;
-      } 
-      else if (field === 'company_size') {
-        (updateObj as any).company_size = value;
-      }
-      else if (field === 'company_sector') {
-        (updateObj as any).company_sector = value;
-      }
-      else if (field === 'company_website') {
-        (updateObj as any).company_website = value;
-      }
-      else if (field === 'current_position') {
-        (updateObj as any).current_position = value;
-      }
-      else if (field === 'annual_revenue') {
-        (updateObj as any).annual_revenue = value;
-      }
+      // Atualizar campos de nível superior usando uma abordagem mais segura
+      // Criamos um tipo de asserção temporário para contornar a verificação de tipos
+      const tempUpdateObj: Record<string, any> = updateObj as Record<string, any>;
+      
+      // Agora podemos atribuir propriedades dinâmicas de forma segura
+      tempUpdateObj[field] = value;
       
       hasUpdates = true;
     }
