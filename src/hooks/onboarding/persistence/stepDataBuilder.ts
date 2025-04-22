@@ -1,3 +1,4 @@
+
 import { OnboardingProgress } from "@/types/onboarding";
 import { buildProfessionalDataUpdate } from "./stepBuilders/professionalDataBuilder";
 import { buildGoalsUpdate } from "./stepBuilders/goalsBuilder";
@@ -88,8 +89,7 @@ function getNextStepId(currentStepId: string): string {
     "ai_exp": "business_goals",
     "business_goals": "experience_personalization",
     "experience_personalization": "complementary_info",
-    "complementary_info": "review",
-    "review": "completed"
+    "complementary_info": "review"
   };
   
   return stepSequence[currentStepId] || currentStepId;
