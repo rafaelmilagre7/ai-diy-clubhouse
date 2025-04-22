@@ -29,7 +29,7 @@ export async function getOnboardingProgress(userId: string): Promise<OnboardingP
     
     // Processar os campos que podem estar armazenados como strings JSON
     const processedData: OnboardingProgress = {
-      ...data,
+      ...data as Partial<OnboardingProgress>,
     };
     
     // Lista de campos que podem estar armazenados como strings JSON

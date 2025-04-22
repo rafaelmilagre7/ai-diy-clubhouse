@@ -28,76 +28,80 @@ export const useStepNavigation = () => {
     const loadProgress = async () => {
       if (isLoading) return; // Evitar múltiplas chamadas durante carregamento
       
-      const refreshedProgress = await refreshProgress();
-      
-      // Verificar se temos um progresso válido
-      const progressData: OnboardingProgress | null = refreshedProgress || null;
-      
-      // Se não há progresso, redirecionar para o início do onboarding
-      if (!progressData) {
-        console.log("Nenhum progresso encontrado, redirecionando para o início do onboarding");
+      try {
+        await refreshProgress();
         
-        // Se estamos na página inicial de onboarding, vamos para a primeira etapa (personal-info)
-        if (location.pathname === '/onboarding') {
-          console.log("Redirecionando para /onboarding/personal-info");
+        // Verificar se temos um progresso válido
+        const progressData: OnboardingProgress | null = progress || null;
+        
+        // Se não há progresso, redirecionar para o início do onboarding
+        if (!progressData) {
+          console.log("Nenhum progresso encontrado, redirecionando para o início do onboarding");
+          
+          // Se estamos na página inicial de onboarding, vamos para a primeira etapa (personal-info)
+          if (location.pathname === '/onboarding') {
+            console.log("Redirecionando para /onboarding/personal-info");
+            navigate("/onboarding/personal-info");
+            setCurrentStepIndex(0);
+            return;
+          }
+          
+          // Se já estamos em uma página de etapa específica, manter
+          if (location.pathname.includes('/onboarding/')) {
+            const currentStepId = pathToStepId[location.pathname as keyof typeof pathToStepId];
+            if (currentStepId) {
+              const index = steps.findIndex(step => step.id === currentStepId);
+              if (index !== -1) {
+                setCurrentStepIndex(index);
+              }
+            }
+            return;
+          }
+          
           navigate("/onboarding/personal-info");
           setCurrentStepIndex(0);
           return;
         }
         
-        // Se já estamos em uma página de etapa específica, manter
-        if (location.pathname.includes('/onboarding/')) {
-          const currentStepId = pathToStepId[location.pathname as keyof typeof pathToStepId];
-          if (currentStepId) {
-            const index = steps.findIndex(step => step.id === currentStepId);
-            if (index !== -1) {
-              setCurrentStepIndex(index);
+        const currentPath = location.pathname;
+        const currentStepId = pathToStepId[currentPath as keyof typeof pathToStepId];
+        
+        if (currentStepId) {
+          const stepIndexByPath = steps.findIndex(step => step.id === currentStepId);
+          
+          if (stepIndexByPath !== -1) {
+            console.log(`Definindo etapa atual baseada na URL: ${currentStepId} (índice ${stepIndexByPath})`);
+            setCurrentStepIndex(stepIndexByPath);
+          }
+        } else if (progressData?.current_step) {
+          const stepIndex = steps.findIndex(step => step.id === progressData.current_step);
+          
+          if (stepIndex !== -1) {
+            console.log(`Continuando onboarding da etapa: ${progressData.current_step} (índice ${stepIndex})`);
+            setCurrentStepIndex(stepIndex);
+            
+            const correctPath = steps[stepIndex].path;
+            
+            if (currentPath !== correctPath) {
+              console.log(`Redirecionando de ${currentPath} para ${correctPath}`);
+              navigate(correctPath);
             }
+          } else {
+            console.warn(`Etapa não encontrada nos passos definidos: ${progressData.current_step}`);
+            navigate(steps[0].path);
+            toast.info("Iniciando o preenchimento do onboarding");
           }
-          return;
-        }
-        
-        navigate("/onboarding/personal-info");
-        setCurrentStepIndex(0);
-        return;
-      }
-      
-      const currentPath = location.pathname;
-      const currentStepId = pathToStepId[currentPath as keyof typeof pathToStepId];
-      
-      if (currentStepId) {
-        const stepIndexByPath = steps.findIndex(step => step.id === currentStepId);
-        
-        if (stepIndexByPath !== -1) {
-          console.log(`Definindo etapa atual baseada na URL: ${currentStepId} (índice ${stepIndexByPath})`);
-          setCurrentStepIndex(stepIndexByPath);
-        }
-      } else if (progressData?.current_step) {
-        const stepIndex = steps.findIndex(step => step.id === progressData.current_step);
-        
-        if (stepIndex !== -1) {
-          console.log(`Continuando onboarding da etapa: ${progressData.current_step} (índice ${stepIndex})`);
-          setCurrentStepIndex(stepIndex);
-          
-          const correctPath = steps[stepIndex].path;
-          
-          if (currentPath !== correctPath) {
-            console.log(`Redirecionando de ${currentPath} para ${correctPath}`);
-            navigate(correctPath);
-          }
-        } else {
-          console.warn(`Etapa não encontrada nos passos definidos: ${progressData.current_step}`);
+        } else if (progressData) {
+          console.log("Nenhuma etapa atual definida, começando do início");
           navigate(steps[0].path);
-          toast.info("Iniciando o preenchimento do onboarding");
         }
-      } else if (progressData) {
-        console.log("Nenhuma etapa atual definida, começando do início");
-        navigate(steps[0].path);
+      } catch (error) {
+        console.error("Erro ao carregar progresso:", error);
       }
     };
     
     loadProgress();
-  }, [navigate, refreshProgress, isLoading, location.pathname]);
+  }, [navigate, refreshProgress, isLoading, location.pathname, progress]);
 
   const navigateToStep = (stepIndex: number) => {
     if (stepIndex >= 0 && stepIndex < steps.length) {
