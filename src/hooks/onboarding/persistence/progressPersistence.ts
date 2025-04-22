@@ -1,4 +1,3 @@
-
 import { supabase } from "@/lib/supabase";
 import { OnboardingProgress } from "@/types/onboarding";
 import { normalizeOnboardingResponse } from "./normalizers/progressNormalizer";
@@ -20,7 +19,6 @@ export const fetchOnboardingProgress = async (userId: string) => {
       return { data: null, error };
     }
     
-    // Verificar se temos dados retornados
     if (!rawData) {
       console.log("[DEBUG] Nenhum progresso encontrado para o usuário:", userId);
       return { data: null, error: null };
@@ -28,7 +26,6 @@ export const fetchOnboardingProgress = async (userId: string) => {
     
     console.log("[DEBUG] Registro bruto de progresso encontrado:", rawData);
     
-    // Normalizar dados
     const data = normalizeOnboardingResponse(rawData);
     console.log("[DEBUG] Dados normalizados do banco:", data);
     
@@ -106,46 +103,42 @@ export const createInitialOnboardingProgress = async (user: any) => {
 export const updateOnboardingProgress = async (progressId: string, updates: Partial<OnboardingProgress>) => {
   console.log("[DEBUG] Atualizando progresso ID:", progressId);
   console.log("[DEBUG] Atualizações a serem aplicadas:", updates);
-  
+
   if (!progressId) {
     console.error("[ERRO] ID de progresso não fornecido para atualização");
     return { data: null, error: new Error("ID de progresso não fornecido") };
   }
-  
-  // Certifique-se de que o ID seja uma string válida
+
   progressId = String(progressId).trim();
-  
   if (!progressId) {
     console.error("[ERRO] ID de progresso inválido:", progressId);
     return { data: null, error: new Error("ID de progresso inválido") };
   }
-  
+
   try {
-    // Normalizar as atualizações antes do envio
-    const normalizedUpdates = normalizeOnboardingResponse(updates as OnboardingProgress);
-    
-    // Limpar metadados e campos de sistema antes de enviar para o Supabase
-    const cleanedUpdates = { ...normalizedUpdates };
-    
-    // Remover campos de metadados especiais que podem causar problemas
-    delete (cleanedUpdates as any)._metadata;
+    const cleanedUpdates = { ...updates };
+    delete (cleanedUpdates as any).company_name;
+    delete (cleanedUpdates as any).company_size;
+    delete (cleanedUpdates as any).company_sector;
+    delete (cleanedUpdates as any).company_website;
+    delete (cleanedUpdates as any).current_position;
+    delete (cleanedUpdates as any).annual_revenue;
+
     delete (cleanedUpdates as any).id;
     delete (cleanedUpdates as any).user_id;
     delete (cleanedUpdates as any).created_at;
-    
-    // Limpar metadados de objetos aninhados
+
     Object.keys(cleanedUpdates).forEach(key => {
-      if (typeof cleanedUpdates[key as keyof typeof cleanedUpdates] === 'object' && 
-          cleanedUpdates[key as keyof typeof cleanedUpdates] !== null) {
+      if (
+        typeof cleanedUpdates[key as keyof typeof cleanedUpdates] === 'object' &&
+        cleanedUpdates[key as keyof typeof cleanedUpdates] !== null
+      ) {
         const objField = cleanedUpdates[key as keyof typeof cleanedUpdates] as any;
         delete objField._metadata;
         delete objField._last_updated;
       }
     });
-    
-    console.log("[DEBUG] Dados normalizados e limpos para atualização:", cleanedUpdates);
-    
-    // Verificar registros existentes para o mesmo usuário
+
     const { data: existingProgress, error: queryError } = await supabase
       .from("onboarding_progress")
       .select("id, user_id, created_at")
@@ -159,7 +152,6 @@ export const updateOnboardingProgress = async (progressId: string, updates: Part
     
     console.log("[DEBUG] Registro existente encontrado:", existingProgress);
     
-    // Atualizar o registro existente
     const { data: rawData, error } = await supabase
       .from("onboarding_progress")
       .update(cleanedUpdates)
@@ -225,7 +217,6 @@ export const refreshOnboardingProgress = async (progressId: string) => {
   }
 };
 
-// Função para limpar e recriar o progresso de onboarding
 export const resetOnboardingProgress = async (userId: string) => {
   console.log("[DEBUG] Resetando progresso de onboarding para usuário:", userId);
   
@@ -235,7 +226,6 @@ export const resetOnboardingProgress = async (userId: string) => {
   }
   
   try {
-    // 1. Buscar o usuário para criar novo progresso
     const { data: userData, error: userError } = await supabase.auth.getUser();
     
     if (userError) {
@@ -249,7 +239,6 @@ export const resetOnboardingProgress = async (userId: string) => {
       return { success: false, error: new Error("Usuário não encontrado") };
     }
     
-    // 2. Excluir progresso existente
     const { error: deleteError } = await supabase
       .from("onboarding_progress")
       .delete()
@@ -262,7 +251,6 @@ export const resetOnboardingProgress = async (userId: string) => {
     
     console.log("[DEBUG] Progresso existente excluído com sucesso");
     
-    // 3. Criar novo progresso
     const { data: newProgress, error: createError } = await createInitialOnboardingProgress(user);
     
     if (createError) {

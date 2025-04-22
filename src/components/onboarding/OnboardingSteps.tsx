@@ -1,4 +1,3 @@
-
 import { useOnboardingSteps } from "@/hooks/onboarding/useOnboardingSteps";
 import { PersonalInfoStep } from "./steps/PersonalInfoStep";
 import { BusinessGoalsStep } from "./steps/BusinessGoalsStep";
@@ -27,7 +26,6 @@ export const OnboardingSteps = () => {
   
   const location = useLocation();
   
-  // Mapear caminhos para IDs de componentes de etapa
   const pathToStepComponent = {
     "/onboarding": "personal",
     "/onboarding/professional-data": "professional_data", 
@@ -39,11 +37,9 @@ export const OnboardingSteps = () => {
     "/onboarding/review": "review"
   };
 
-  // Identificar o componente correto com base na URL atual
   const currentPathStepId = pathToStepComponent[location.pathname as keyof typeof pathToStepComponent] || currentStep.id;
   
   useEffect(() => {
-    // Log para diagnóstico
     console.log(`Rota atual: ${location.pathname}, stepId mapeado: ${currentPathStepId}, currentStep.id: ${currentStep.id}`);
   }, [location.pathname, currentPathStepId, currentStep.id]);
 
@@ -65,7 +61,6 @@ export const OnboardingSteps = () => {
     ),
   };
 
-  // Usar o ID da etapa baseado na URL atual, se disponível, caso contrário usar o currentStep
   const CurrentStepComponent = stepComponents[currentPathStepId as keyof typeof stepComponents] || 
                               stepComponents[currentStep.id as keyof typeof stepComponents];
   
@@ -79,26 +74,15 @@ export const OnboardingSteps = () => {
   const getInitialDataForCurrentStep = () => {
     if (!progress) return undefined;
     if (currentPathStepId === "professional_data" || currentStep.id === "professional_data") {
-      return {
-        ...progress,
-        company_name: progress.company_name || progress.professional_info?.company_name || "",
-        company_size: progress.company_size || progress.professional_info?.company_size || "",
-        company_sector: progress.company_sector || progress.professional_info?.company_sector || "",
-        company_website: progress.company_website || progress.professional_info?.company_website || "",
-        current_position: progress.current_position || progress.professional_info?.current_position || "",
-        annual_revenue: progress.annual_revenue || progress.professional_info?.annual_revenue || "",
-      };
+      return progress.professional_info;
     }
     if (currentPathStepId === "business_context" || currentStep.id === "business_context") {
-      // Mapear business_data para business_context
-      return progress.business_data || progress.business_context;
+      return progress.business_context;
     }
-    
     const sectionKey = currentStep.section as keyof OnboardingData;
     return progress[sectionKey as keyof typeof progress];
   };
 
-  // Função para verificar se o componente atual aceita a prop personalInfo
   const supportsPersonalInfo = (stepId: string) => {
     return (
       stepId === "professional_data" || 
@@ -111,7 +95,6 @@ export const OnboardingSteps = () => {
     );
   };
 
-  // Determinar as props baseado no componente atual
   const getPropsForCurrentStep = () => {
     const baseProps = {
       onSubmit: saveStepData,
@@ -121,7 +104,6 @@ export const OnboardingSteps = () => {
       initialData: getInitialDataForCurrentStep(),
     };
 
-    // Adicionar personalInfo apenas para componentes que suportam essa prop
     if (supportsPersonalInfo(currentPathStepId || currentStep.id)) {
       return {
         ...baseProps,

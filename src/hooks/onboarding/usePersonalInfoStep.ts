@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { useProgress } from "./useProgress";
 import { toast } from "sonner";
@@ -30,22 +29,15 @@ export const usePersonalInfoStep = () => {
 
   // Função para carregar dados iniciais do banco
   const loadInitialData = useCallback(() => {
-    console.log("[DEBUG] loadInitialData chamado - progresso:", progress);
-    
-    // Verifica se temos o nome e email do perfil primeiro
+    // Garantir que sempre carrega só do personal_info
     const userName = profile?.name || user?.user_metadata?.name || "";
     const userEmail = profile?.email || user?.email || "";
-    
-    // Se temos dados do progresso, carregamos deles
+
     if (progress?.personal_info) {
-      console.log("[DEBUG] Dados encontrados no progresso:", progress.personal_info);
-      
-      // Formatar o DDI para garantir que tenha apenas um +
       let ddi = progress.personal_info.ddi || "+55";
       if (ddi) {
         ddi = "+" + ddi.replace(/\+/g, '').replace(/\D/g, '');
       }
-      
       setFormData({
         name: userName || progress.personal_info.name || "",
         email: userEmail || progress.personal_info.email || "",
@@ -58,22 +50,13 @@ export const usePersonalInfoStep = () => {
         city: progress.personal_info.city || "",
         timezone: progress.personal_info.timezone || "GMT-3"
       });
-      
-      console.log("[DEBUG] Dados carregados do progresso:", {
-        name: userName || progress.personal_info.name || "",
-        email: userEmail || progress.personal_info.email || ""
-      });
     } else {
-      console.log("[DEBUG] Nenhum dado de progresso encontrado, usando dados do perfil");
-      
-      // Se não houver dados no progresso, use dados do perfil
       setFormData(prev => ({
         ...prev,
         name: userName,
         email: userEmail
       }));
     }
-    
     setInitialDataLoaded(true);
   }, [progress, profile, user]);
 

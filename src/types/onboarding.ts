@@ -1,4 +1,6 @@
+
 export interface OnboardingData {
+  // 1. Dados Pessoais
   personal_info: {
     name?: string;
     role?: string;
@@ -13,6 +15,7 @@ export interface OnboardingData {
     city?: string;
     timezone?: string;
   };
+  // 2. Dados Profissionais 
   professional_info: {
     company_name?: string;
     company_size?: string;
@@ -22,6 +25,7 @@ export interface OnboardingData {
     annual_revenue?: string;
     metadata?: Record<string, any>;
   };
+  // 3. Contexto do negócio
   business_context: {
     business_model?: string;
     business_challenges?: string[];
@@ -30,6 +34,7 @@ export interface OnboardingData {
     important_kpis?: string[];
     additional_context?: string;
   };
+  // 4. Objetivos de negócio / metas
   business_goals: {
     primary_goal?: string;
     expected_outcomes?: string[];
@@ -41,16 +46,18 @@ export interface OnboardingData {
     live_interest?: number;
     content_formats?: string[];
   };
+  // 5. Experiência com IA
   ai_experience: {
     knowledge_level?: string;
     previous_tools?: string[];
     has_implemented?: string; // "sim" | "nao" ou "true" | "false"
-    desired_ai_areas?: string[]; // agora array de áreas!
+    desired_ai_areas?: string[]; // Agora array
     completed_formation?: boolean;
     is_member_for_month?: boolean;
     nps_score?: number;
     improvement_suggestions?: string;
   };
+  // 6. Personalização da experiência
   experience_personalization: {
     interests?: string[];
     time_preference?: string[];
@@ -59,6 +66,7 @@ export interface OnboardingData {
     skills_to_share?: string[];
     mentorship_topics?: string[];
   };
+  // 7. Complementares
   complementary_info: {
     how_found_us?: string;
     referred_by?: string;
@@ -66,6 +74,7 @@ export interface OnboardingData {
     interested_in_interview?: boolean;
     priority_topics?: string[];
   };
+  // Campos para novas perguntas futuras 
   industry_focus?: {
     sector?: string;
     target_market?: string;
@@ -86,14 +95,6 @@ export interface OnboardingData {
     implementation_speed?: string;
     support_level?: string;
   };
-  
-  // Campos diretos para compatibilidade com o banco de dados e estrutura existente
-  company_name?: string;
-  company_size?: string;
-  company_sector?: string;
-  company_website?: string;
-  current_position?: string;
-  annual_revenue?: string;
 }
 
 export interface PersonalInfoData {
@@ -106,7 +107,7 @@ export interface PersonalInfoData {
   country: string;
   state: string;
   city: string;
-  timezone: string; // Campo de timezone adicionado
+  timezone: string;
 }
 
 export interface OnboardingProgress {
@@ -117,8 +118,7 @@ export interface OnboardingProgress {
   is_completed: boolean;
   personal_info: OnboardingData['personal_info'];
   professional_info: OnboardingData['professional_info'];
-  business_data?: OnboardingData['business_context']; // Mantendo compatibilidade
-  business_context?: OnboardingData['business_context']; 
+  business_context?: OnboardingData['business_context'];
   business_goals: OnboardingData['business_goals'];
   ai_experience: OnboardingData['ai_experience'];
   experience_personalization: OnboardingData['experience_personalization'];
@@ -127,16 +127,15 @@ export interface OnboardingProgress {
   resources_needs?: OnboardingData['resources_needs'];
   team_info?: OnboardingData['team_info'];
   implementation_preferences?: OnboardingData['implementation_preferences'];
-  
-  // Campos diretos para compatibilidade com o banco de dados
-  company_name?: string;
-  company_size?: string;
-  company_sector?: string;
-  company_website?: string;
-  current_position?: string;
-  annual_revenue?: string;
-  
-  // Propriedades para a trilha
+  // Remover ~Campos diretos antigos do banco~
+  // company_name?: string;
+  // company_size?: string;
+  // company_sector?: string;
+  // company_website?: string;
+  // current_position?: string;
+  // annual_revenue?: string;
+
+  // Propriedades para trilhas futuras
   trail_solutions?: any[];
   trail_generated_at?: string;
   created_at?: string;
@@ -159,7 +158,6 @@ export interface OnboardingStep {
   path: string;
 }
 
-// Novo tipo para receber entrada de dados profissionais
 export type ProfessionalDataInput = {
   company_name: string;
   company_size: string;

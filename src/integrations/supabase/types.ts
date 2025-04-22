@@ -345,6 +345,7 @@ export type Database = {
           created_at: string | null
           current_position: string | null
           current_step: string | null
+          debug_logs: Json | null
           decision_makers: string[] | null
           experience_personalization: Json | null
           goals: string[] | null
@@ -353,12 +354,15 @@ export type Database = {
           implementation_speed: string | null
           industry_focus: Json | null
           is_completed: boolean | null
+          last_error: string | null
+          last_sync_at: string | null
           personal_info: Json | null
           priority_areas: string[] | null
           professional_data: Json | null
           professional_info: Json | null
           resources_needs: Json | null
           support_level: string | null
+          sync_status: string | null
           target_market: string | null
           team_info: Json | null
           team_size: string | null
@@ -386,6 +390,7 @@ export type Database = {
           created_at?: string | null
           current_position?: string | null
           current_step?: string | null
+          debug_logs?: Json | null
           decision_makers?: string[] | null
           experience_personalization?: Json | null
           goals?: string[] | null
@@ -394,12 +399,15 @@ export type Database = {
           implementation_speed?: string | null
           industry_focus?: Json | null
           is_completed?: boolean | null
+          last_error?: string | null
+          last_sync_at?: string | null
           personal_info?: Json | null
           priority_areas?: string[] | null
           professional_data?: Json | null
           professional_info?: Json | null
           resources_needs?: Json | null
           support_level?: string | null
+          sync_status?: string | null
           target_market?: string | null
           team_info?: Json | null
           team_size?: string | null
@@ -427,6 +435,7 @@ export type Database = {
           created_at?: string | null
           current_position?: string | null
           current_step?: string | null
+          debug_logs?: Json | null
           decision_makers?: string[] | null
           experience_personalization?: Json | null
           goals?: string[] | null
@@ -435,12 +444,15 @@ export type Database = {
           implementation_speed?: string | null
           industry_focus?: Json | null
           is_completed?: boolean | null
+          last_error?: string | null
+          last_sync_at?: string | null
           personal_info?: Json | null
           priority_areas?: string[] | null
           professional_data?: Json | null
           professional_info?: Json | null
           resources_needs?: Json | null
           support_level?: string | null
+          sync_status?: string | null
           target_market?: string | null
           team_info?: Json | null
           team_size?: string | null
@@ -1340,6 +1352,13 @@ export type Database = {
         }
         Relationships: []
       }
+      onboarding_status: {
+        Row: {
+          tabela: string | null
+          total_registros: number | null
+        }
+        Relationships: []
+      }
       suggestions_with_profiles: {
         Row: {
           category_id: string | null
@@ -1372,6 +1391,10 @@ export type Database = {
       }
     }
     Functions: {
+      check_onboarding_data_consistency: {
+        Args: { progress_id: string }
+        Returns: Json
+      }
       decrement: {
         Args: { row_id: string; table_name: string; column_name: string }
         Returns: undefined
@@ -1403,6 +1426,10 @@ export type Database = {
       is_admin_user: {
         Args: Record<PropertyKey, never>
         Returns: boolean
+      }
+      limpar_dados_onboarding: {
+        Args: { user_id_param?: string }
+        Returns: string
       }
       merge_json_data: {
         Args: { target: Json; source: Json }

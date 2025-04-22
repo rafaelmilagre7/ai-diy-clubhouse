@@ -1,4 +1,3 @@
-
 import { OnboardingProgress } from "@/types/onboarding";
 import { 
   normalizeField, 
@@ -8,15 +7,11 @@ import {
   normalizeWebsite
 } from "../utils/dataNormalization";
 
-/**
- * Normaliza os dados de progresso do onboarding para garantir consistência
- * Converte strings JSON para objetos, garante que campos obrigatórios existam, etc.
- */
 export function normalizeOnboardingResponse(data: any): OnboardingProgress {
-  // Criar uma cópia do objeto para não modificar o original
+  // Criar cópia
   const normalizedData = { ...data };
-  
-  // Garantir que campos críticos sejam objetos, não strings
+
+  // Normalizar todos os campos em objetos (não strings)
   normalizedData.personal_info = normalizeField(data.personal_info, 'personal_info');
   normalizedData.professional_info = normalizeField(data.professional_info, 'professional_info');
   normalizedData.business_context = normalizeField(data.business_context, 'business_context');
@@ -25,32 +20,19 @@ export function normalizeOnboardingResponse(data: any): OnboardingProgress {
   normalizedData.business_goals = normalizeBusinessGoals(data.business_goals);
   normalizedData.experience_personalization = normalizeExperiencePersonalization(data.experience_personalization);
   normalizedData.complementary_info = normalizeField(data.complementary_info, 'complementary_info');
-  
-  // Garantir que campos opcionais mais recentes existam
   normalizedData.industry_focus = normalizeField(data.industry_focus, 'industry_focus');
   normalizedData.resources_needs = normalizeField(data.resources_needs, 'resources_needs');
   normalizedData.team_info = normalizeField(data.team_info, 'team_info');
   normalizedData.implementation_preferences = normalizeField(data.implementation_preferences, 'implementation_preferences');
-  
-  // Correções para professional_info
-  if (normalizedData.professional_info) {
-    if (normalizedData.professional_info.company_website) {
-      normalizedData.professional_info.company_website = normalizeWebsite(normalizedData.professional_info.company_website);
-    }
-    
-    // Sincronização entre professional_info e campos na raiz
-    normalizedData.company_name = normalizedData.professional_info.company_name || normalizedData.company_name;
-    normalizedData.company_size = normalizedData.professional_info.company_size || normalizedData.company_size;
-    normalizedData.company_sector = normalizedData.professional_info.company_sector || normalizedData.company_sector;
-    normalizedData.company_website = normalizedData.professional_info.company_website || normalizedData.company_website;
-    normalizedData.current_position = normalizedData.professional_info.current_position || normalizedData.current_position;
-    normalizedData.annual_revenue = normalizedData.professional_info.annual_revenue || normalizedData.annual_revenue;
-  }
-  
+
+  // ~Remover cópias antigas~ dos campos top-level. Não copiar para a raiz.
+  // Exemplo: não mapear normalizedData.company_name = ...
+  // (essa linha foi removida para evitar despadronização de dados!)
+
   // Adicionar metadados para debugging
   normalizedData._metadata = {
     normalized_at: new Date().toISOString(),
   };
-  
+
   return normalizedData as OnboardingProgress;
 }

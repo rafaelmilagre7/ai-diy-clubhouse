@@ -1,10 +1,7 @@
-
 import { OnboardingData, OnboardingProgress } from "@/types/onboarding";
 
-export function buildPersonalInfoUpdate(data: Partial<OnboardingData>, progress: OnboardingProgress | null) {
+export function buildPersonalInfoUpdate(data: Partial<OnboardingData>, progress: any) {
   const updateObj: any = {};
-  
-  // Verificar se temos dados válidos
   if (data.personal_info) {
     console.log("Atualizando personal_info com dados:", data.personal_info);
     updateObj.personal_info = {
@@ -12,6 +9,5 @@ export function buildPersonalInfoUpdate(data: Partial<OnboardingData>, progress:
       ...data.personal_info
     };
   }
-  
   return updateObj;
 }
