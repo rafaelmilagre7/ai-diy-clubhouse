@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { steps } from "./useStepDefinitions";
@@ -23,7 +24,14 @@ export const useOnboardingSteps = () => {
     dataOrShouldNavigate?: any | boolean,
     shouldNavigate?: boolean
   ) => {
-    return coreSaveStepData(stepIdOrData, dataOrShouldNavigate, shouldNavigate);
+    // Se o primeiro argumento é uma string, estamos usando a assinatura com stepId explícito
+    if (typeof stepIdOrData === 'string') {
+      return coreSaveStepData(stepIdOrData, dataOrShouldNavigate, shouldNavigate);
+    } 
+    // Caso contrário, usando a assinatura simplificada (apenas com data)
+    else {
+      return coreSaveStepData(stepIdOrData, dataOrShouldNavigate);
+    }
   };
 
   const [isSubmitting, setIsSubmitting] = useState(false);

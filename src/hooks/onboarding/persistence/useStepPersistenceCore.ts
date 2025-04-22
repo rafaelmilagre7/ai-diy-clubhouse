@@ -19,9 +19,13 @@ export function useStepPersistenceCore({
   const { logError } = useLogging();
 
   // Função principal para salvar dados de um passo específico
+  // Assinatura com suporte a dois formatos:
+  // 1. saveStepData(stepId: string, data: any, shouldNavigate?: boolean)
+  // 2. saveStepData(data: any, shouldNavigate?: boolean)
   const saveStepData = async (
-    data: any,
-    shouldNavigate: boolean = true
+    stepIdOrData: string | any,
+    dataOrShouldNavigate?: any | boolean,
+    shouldNavigateParam?: boolean
   ): Promise<void> => {
     if (!progress?.id) {
       console.error("Não foi possível salvar dados: ID de progresso não encontrado");
@@ -29,15 +33,30 @@ export function useStepPersistenceCore({
       return;
     }
 
-    // Identificar qual é o passo atual
-    const currentStep = steps[currentStepIndex]?.id || '';
+    // Determinar os parâmetros corretos com base na assinatura usada
+    let stepId: string;
+    let data: any;
+    let shouldNavigate: boolean = true;
+
+    // Caso 1: saveStepData(stepId: string, data: any, shouldNavigate?: boolean)
+    if (typeof stepIdOrData === 'string') {
+      stepId = stepIdOrData;
+      data = dataOrShouldNavigate;
+      shouldNavigate = shouldNavigateParam !== undefined ? shouldNavigateParam : true;
+    } 
+    // Caso 2: saveStepData(data: any, shouldNavigate?: boolean)
+    else {
+      stepId = steps[currentStepIndex]?.id || '';
+      data = stepIdOrData;
+      shouldNavigate = typeof dataOrShouldNavigate === 'boolean' ? dataOrShouldNavigate : true;
+    }
     
-    console.log(`Salvando dados do passo ${currentStep}, índice ${currentStepIndex}, navegação automática: ${shouldNavigate ? "SIM" : "NÃO"}`, data);
+    console.log(`Salvando dados do passo ${stepId}, índice ${currentStepIndex}, navegação automática: ${shouldNavigate ? "SIM" : "NÃO"}`, data);
     console.log("Estado atual do progresso:", progress);
 
     try {
       // Montar objeto de atualização para a etapa
-      const updateObj = buildUpdateObject(currentStep, data, progress, currentStepIndex);
+      const updateObj = buildUpdateObject(stepId, data, progress, currentStepIndex);
       if (Object.keys(updateObj).length === 0) {
         console.warn("Objeto de atualização vazio, nada para salvar");
         toast.warning("Sem dados para salvar");
@@ -70,13 +89,13 @@ export function useStepPersistenceCore({
           "complementary_info": "/onboarding/review"
         };
         
-        if (nextRouteMap[currentStep]) {
+        if (nextRouteMap[stepId]) {
           setTimeout(() => {
-            navigate(nextRouteMap[currentStep]);
+            navigate(nextRouteMap[stepId]);
           }, 500);
         } else {
           // Fallback para navegador padrão de etapas
-          navigateAfterStep(currentStep, currentStepIndex, navigate, shouldNavigate);
+          navigateAfterStep(stepId, currentStepIndex, navigate, shouldNavigate);
         }
       } else {
         console.log("Navegação automática desativada, permanecendo na página atual");
@@ -84,7 +103,7 @@ export function useStepPersistenceCore({
     } catch (error) {
       console.error("Erro ao salvar dados:", error);
       logError("save_step_data_error", { 
-        step: currentStep, 
+        step: stepId, 
         error: error instanceof Error ? error.message : String(error),
         stepIndex: currentStepIndex
       });
