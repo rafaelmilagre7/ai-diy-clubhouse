@@ -9,6 +9,8 @@ import { buildBaseUpdate } from "./stepBuilders/baseBuilder";
 /**
  * Função principal buildUpdateObject que centraliza a construção
  * de objetos de atualização para cada etapa do onboarding
+ * 
+ * Estrutura os dados de forma semântica para facilitar interpretação por IA
  */
 export function buildUpdateObject(
   stepId: string, 
@@ -20,6 +22,14 @@ export function buildUpdateObject(
   
   // Objeto base para atualização
   const updateObj: any = {};
+  
+  // Metadados comuns para todas as etapas
+  const commonMetadata = {
+    timestamp: new Date().toISOString(),
+    step_id: stepId,
+    step_index: currentStepIndex,
+    data_version: "1.0"
+  };
   
   // Processar dados com base no ID da etapa usando builders específicos
   switch (stepId) {
@@ -55,7 +65,12 @@ export function buildUpdateObject(
       // Objetivos de negócio
       console.log("Processando dados de objetivos de negócio:", data);
       const businessGoalsUpdates = buildBaseUpdate("business_goals", data, progress, {
-        topLevelFields: []
+        topLevelFields: [],
+        metadata: {
+          ...commonMetadata,
+          data_type: "business_goals",
+          data_context: "strategic_planning"
+        }
       });
       Object.assign(updateObj, businessGoalsUpdates);
       break;
@@ -64,7 +79,12 @@ export function buildUpdateObject(
       // Personalização de experiência
       console.log("Processando dados de personalização:", data);
       const personalizationUpdates = buildBaseUpdate("experience_personalization", data, progress, {
-        topLevelFields: []
+        topLevelFields: [],
+        metadata: {
+          ...commonMetadata,
+          data_type: "experience_personalization",
+          data_context: "user_preferences"
+        }
       });
       Object.assign(updateObj, personalizationUpdates);
       break;
@@ -73,7 +93,12 @@ export function buildUpdateObject(
       // Informações complementares
       console.log("Processando informações complementares:", data);
       const complementaryUpdates = buildBaseUpdate("complementary_info", data, progress, {
-        topLevelFields: []
+        topLevelFields: [],
+        metadata: {
+          ...commonMetadata,
+          data_type: "complementary_info",
+          data_context: "additional_information"
+        }
       });
       Object.assign(updateObj, complementaryUpdates);
       break;
@@ -81,7 +106,13 @@ export function buildUpdateObject(
     default:
       console.warn(`Passo não reconhecido: ${stepId}. Usando builder genérico.`);
       // Usar builder genérico para passos desconhecidos
-      const genericUpdates = buildBaseUpdate(stepId, data, progress, {});
+      const genericUpdates = buildBaseUpdate(stepId, data, progress, {
+        metadata: {
+          ...commonMetadata,
+          data_type: "unknown",
+          data_context: "unspecified"
+        }
+      });
       Object.assign(updateObj, genericUpdates);
   }
 
@@ -120,6 +151,16 @@ export function buildUpdateObject(
       updateObj.current_step = steps[nextIndex];
       console.log(`Atualizando passo atual para: ${steps[nextIndex]}`);
     }
+  }
+
+  // Adicionar metadados gerais sobre a atualização
+  if (!updateObj._metadata) {
+    updateObj._metadata = {
+      last_updated: new Date().toISOString(),
+      updated_step: stepId,
+      update_version: "1.0",
+      data_structure: "enhanced_semantic"
+    };
   }
 
   console.log("Objeto de atualização final:", updateObj);

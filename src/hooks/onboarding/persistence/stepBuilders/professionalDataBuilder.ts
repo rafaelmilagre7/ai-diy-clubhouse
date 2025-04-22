@@ -1,10 +1,12 @@
 
 import { OnboardingData, OnboardingProgress, ProfessionalDataInput } from "@/types/onboarding";
 import { buildBaseUpdate } from "./baseBuilder";
+import { normalizeWebsiteUrl } from "@/utils/professionalDataValidation";
 
 /**
  * Builder específico para dados profissionais
- * Utiliza o builder base para garantir consistência e evitar duplicação
+ * Processa e normaliza os dados antes de armazená-los no Supabase
+ * Estrutura os dados de forma semântica para facilitar interpretação por IA
  */
 export function buildProfessionalDataUpdate(data: ProfessionalDataInput, progress: OnboardingProgress | null) {
   // Definir os campos que também existem no nível superior do progresso
@@ -17,13 +19,40 @@ export function buildProfessionalDataUpdate(data: ProfessionalDataInput, progres
     "annual_revenue"
   ];
 
+  // Criar cópia dos dados para manipulação
+  const processedData = { ...data };
+  
   // Processar website para garantir formato correto (antes de enviar ao builder)
-  if (data.company_website && !data.company_website.match(/^https?:\/\//)) {
-    data.company_website = `https://${data.company_website}`;
+  if (processedData.company_website) {
+    processedData.company_website = normalizeWebsiteUrl(processedData.company_website);
   }
   
-  // Usar o builder base para construir o objeto de atualização
-  return buildBaseUpdate("professional_info", data, progress, {
-    topLevelFields
+  // Se os dados vierem dentro do objeto professional_info, também normalizar
+  if (processedData.professional_info?.company_website) {
+    processedData.professional_info.company_website = normalizeWebsiteUrl(
+      processedData.professional_info.company_website
+    );
+  }
+  
+  // Adicionar metadados semânticos para facilitar interpretação por IA
+  const semanticMetadata = {
+    data_type: "professional_data",
+    data_context: "business_profile",
+    data_version: "1.0",
+    timestamp: new Date().toISOString()
+  };
+  
+  // Adicionar o metadata ao objeto professional_info se existir
+  if (processedData.professional_info) {
+    processedData.professional_info._metadata = semanticMetadata;
+  }
+  
+  // Registrar transformação para depuração
+  console.log("Dados profissionais processados e preparados para armazenamento:", processedData);
+  
+  // Usar o builder base para construir o objeto de atualização com os dados processados
+  return buildBaseUpdate("professional_info", processedData, progress, {
+    topLevelFields,
+    metadata: semanticMetadata
   });
 }

@@ -50,6 +50,34 @@ const normalizeOnboardingData = (data: Partial<OnboardingProgress>) => {
     }
   });
   
+  // Adicionar metadados para interpretação por IA se não existirem
+  objectFields.forEach(field => {
+    if (normalizedData[field as keyof typeof normalizedData] && 
+        typeof normalizedData[field as keyof typeof normalizedData] === 'object') {
+      const obj = normalizedData[field as keyof typeof normalizedData] as any;
+      
+      if (!obj._metadata) {
+        // Adicionar metadados básicos
+        obj._metadata = {
+          data_type: field,
+          timestamp: new Date().toISOString(),
+          data_version: "1.0"
+        };
+        
+        // Adicionar context específico com base no tipo de dado
+        if (field === 'personal_info') {
+          obj._metadata.data_context = "personal_identity";
+        } else if (field === 'professional_info') {
+          obj._metadata.data_context = "business_profile";
+        } else if (field === 'business_context' || field === 'business_data') {
+          obj._metadata.data_context = "business_operations";
+        } else if (field === 'ai_experience') {
+          obj._metadata.data_context = "technology_experience";
+        }
+      }
+    }
+  });
+  
   // Garantir que arrays de completed_steps estejam sempre corretamente formados
   if (normalizedData.completed_steps) {
     if (typeof normalizedData.completed_steps === 'string') {

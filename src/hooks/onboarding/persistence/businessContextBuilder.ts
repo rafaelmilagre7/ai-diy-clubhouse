@@ -1,6 +1,10 @@
 
 import { OnboardingData, OnboardingProgress } from "@/types/onboarding";
 
+/**
+ * Builder específico para dados de contexto de negócio
+ * Processa e normaliza os dados para facilitar interpretação por IA
+ */
 export function buildBusinessContextUpdate(data: Partial<OnboardingData>, progress: OnboardingProgress | null) {
   const updateObj: any = {};
   
@@ -25,10 +29,19 @@ export function buildBusinessContextUpdate(data: Partial<OnboardingData>, progre
       }
     });
     
+    // Adicionar metadados semânticos para facilitar interpretação por IA
+    const semanticMetadata = {
+      data_type: "business_context",
+      data_context: "business_operations",
+      data_version: "1.0",
+      timestamp: new Date().toISOString()
+    };
+    
     // Salvar apenas em business_data (coluna existente na tabela)
     updateObj.business_data = {
       ...baseBusinessData,
       ...formattedData,
+      _metadata: semanticMetadata
     };
     
     // Log detalhado para rastreamento
@@ -50,9 +63,18 @@ export function buildBusinessContextUpdate(data: Partial<OnboardingData>, progre
       }
     });
     
+    // Adicionar metadados semânticos para facilitar interpretação por IA
+    const semanticMetadata = {
+      data_type: "business_context",
+      data_context: "business_operations",
+      data_version: "1.0",
+      timestamp: new Date().toISOString()
+    };
+    
     updateObj.business_data = {
       ...baseBusinessData,
       ...formattedData,
+      _metadata: semanticMetadata
     };
     
     // Log detalhado para rastreamento

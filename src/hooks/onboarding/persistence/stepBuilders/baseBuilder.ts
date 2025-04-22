@@ -3,8 +3,8 @@ import { OnboardingProgress } from "@/types/onboarding";
 
 /**
  * Builder base que implementa a lógica comum para todos os builders específicos
- * Garante consistência na forma como os dados são armazenados tanto nos objetos aninhados
- * quanto em campos individuais para compatibilidade
+ * Garante consistência na forma como os dados são armazenados e estruturados
+ * Inclui suporte para metadados semânticos que facilitam interpretação por IA
  */
 export function buildBaseUpdate(
   sectionKey: string,
@@ -14,9 +14,10 @@ export function buildBaseUpdate(
     topLevelFields?: string[];
     useFieldMapping?: boolean;
     fieldMapping?: Record<string, string>;
+    metadata?: Record<string, any>;
   } = {}
 ) {
-  const { topLevelFields = [], useFieldMapping = false, fieldMapping = {} } = options;
+  const { topLevelFields = [], useFieldMapping = false, fieldMapping = {}, metadata = {} } = options;
   const updateObj: any = {};
   
   // Se não há dados ou o progresso é nulo, não há o que atualizar
@@ -63,6 +64,8 @@ export function buildBaseUpdate(
     const mergedSectionData = {
       ...baseData,
       ...nestedData,
+      // Adicionar metadados se fornecidos
+      ...(Object.keys(metadata).length > 0 ? { _metadata: metadata } : {})
     };
     
     // 5. Adicionar dados diretos no objeto da seção
@@ -74,21 +77,25 @@ export function buildBaseUpdate(
       });
     }
     
-    // 6. Atualizar o objeto da seção
+    // 6. Adicionar timestamp de última atualização para rastreabilidade
+    mergedSectionData._last_updated = new Date().toISOString();
+    
+    // 7. Atualizar o objeto da seção
     updateObj[sectionKey] = mergedSectionData;
     
-    // 7. Para compatibilidade, também atualizar campos de nível superior
+    // 8. Para compatibilidade, também atualizar campos de nível superior
     if (Object.keys(directData).length > 0) {
       Object.entries(directData).forEach(([key, value]) => {
         updateObj[key] = value;
       });
     }
     
-    // 8. Para compatibilidade reversa, copiar campos aninhados para o nível superior
+    // 9. Para compatibilidade reversa, copiar campos aninhados para o nível superior
     // se existirem no modelo de dados
     Object.entries(mergedSectionData).forEach(([key, value]) => {
-      // Verificar se é um campo que também existe no nível superior
-      if (topLevelFields.includes(key)) {
+      // Verificar se é um campo que também existe no nível superior 
+      // e não é um campo de metadados (começando com _)
+      if (topLevelFields.includes(key) && !key.startsWith('_')) {
         updateObj[key] = value;
       }
     });
