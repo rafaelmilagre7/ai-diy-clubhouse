@@ -7,7 +7,8 @@ import { validatePersonalInfoForm } from "@/utils/validatePersonalInfoForm";
 
 export const usePersonalInfoStep = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [lastSaveTime, setLastSaveTime] = useState<number>(Date.now());
+  const [isSaving, setIsSaving] = useState(false);
+  const [lastSaveTime, setLastSaveTime] = useState<number | null>(null);
   const { progress, updateProgress, refreshProgress } = useProgress();
   const [formData, setFormData] = useState<PersonalInfoData>({
     name: "",
@@ -19,7 +20,7 @@ export const usePersonalInfoStep = () => {
     country: "Brasil",
     state: "",
     city: "",
-    timezone: "GMT-3", // Valor padrão para timezone
+    timezone: "GMT-3",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -29,37 +30,39 @@ export const usePersonalInfoStep = () => {
       setFormData({
         ...formData,
         ...progress.personal_info,
-        // Garantir que timezone tenha um valor padrão se não estiver definido
         timezone: progress.personal_info.timezone || "GMT-3"
       });
     }
   }, [progress?.personal_info]);
 
-  // Salvamento automático após 3 segundos de inatividade
+  // Salvamento automático após 1.5 segundos de inatividade
   useEffect(() => {
     const autoSave = async () => {
-      if (Date.now() - lastSaveTime > 3000 && !isSubmitting) {
+      if (!isSubmitting) {
         const validationErrors = validatePersonalInfoForm(formData);
         if (Object.keys(validationErrors).length === 0) {
           try {
+            setIsSaving(true);
             await updateProgress({
               personal_info: formData,
             });
+            setLastSaveTime(Date.now());
             console.log("Salvamento automático realizado");
           } catch (error) {
             console.error("Erro no salvamento automático:", error);
+          } finally {
+            setIsSaving(false);
           }
         }
       }
     };
 
-    const timer = setTimeout(autoSave, 3000);
+    const timer = setTimeout(autoSave, 1500);
     return () => clearTimeout(timer);
-  }, [formData, lastSaveTime, isSubmitting]);
+  }, [formData, isSubmitting]);
 
   const handleChange = (field: keyof PersonalInfoData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-    setLastSaveTime(Date.now());
     
     // Limpar erro do campo quando ele é alterado
     if (errors[field]) {
@@ -89,7 +92,6 @@ export const usePersonalInfoStep = () => {
         completed_steps: [...(progress?.completed_steps || []), "personal"],
       });
 
-      toast.success("Dados salvos com sucesso!");
       return true;
     } catch (error) {
       console.error("Erro ao salvar dados:", error);
@@ -104,6 +106,8 @@ export const usePersonalInfoStep = () => {
     formData,
     errors,
     isSubmitting,
+    isSaving,
+    lastSaveTime,
     handleChange,
     handleSubmit
   };

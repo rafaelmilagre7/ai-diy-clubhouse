@@ -3,11 +3,12 @@ import React, { useState } from "react";
 import { MilagrinhoMessage } from "../MilagrinhoMessage";
 import { PersonalInfoForm } from "./forms/PersonalInfoForm";
 import { usePersonalInfoForm } from "@/hooks/onboarding/usePersonalInfoForm";
-import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, CheckCircle } from "lucide-react";
 import { OnboardingStepProps, PersonalInfoData } from "@/types/onboarding";
+import { AutoSaveFeedback } from "../AutoSaveFeedback";
+import { EtapasProgresso } from "../EtapasProgresso";
 
 export interface PersonalInfoStepProps extends Partial<OnboardingStepProps> {
   onSubmit: () => Promise<void>;
@@ -18,6 +19,8 @@ export interface PersonalInfoStepProps extends Partial<OnboardingStepProps> {
   initialData?: any;
   isLastStep?: boolean;
   onComplete?: () => void;
+  isSaving?: boolean;
+  lastSaveTime?: number | null;
 }
 
 export const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
@@ -28,9 +31,10 @@ export const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
   onComplete,
   formData,
   errors,
-  onChange
+  onChange,
+  isSaving = false,
+  lastSaveTime = null,
 }) => {
-  const navigate = useNavigate();
   const [validationAttempted, setValidationAttempted] = useState(false);
   
   const {
@@ -42,7 +46,8 @@ export const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
     validateForm,
   } = usePersonalInfoForm(initialData || formData);
 
-  const onFormSubmit = async (data: any) => {
+  const onFormSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     setValidationAttempted(true);
     
     const isFormValid = await validateForm();
@@ -50,7 +55,6 @@ export const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
     if (!isFormValid) {
       toast.error("Por favor, corrija os erros antes de continuar", {
         description: "Verifique os campos destacados em vermelho",
-        duration: 4000
       });
       return;
     }
@@ -60,26 +64,25 @@ export const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
       
       toast.success("Dados pessoais salvos com sucesso!", {
         description: "Avançando para a próxima etapa...",
-        icon: <CheckCircle className="h-5 w-5 text-green-500" />
       });
-      
-      // A navegação é feita no componente pai após o sucesso
     } catch (error) {
       console.error("Erro ao salvar dados:", error);
       toast.error("Erro ao salvar os dados", {
         description: "Verifique sua conexão e tente novamente",
-        icon: <AlertCircle className="h-5 w-5 text-red-500" />
       });
     }
   };
 
-  // Verificar se há erros de validação após a tentativa de envio
   const hasValidationErrors = validationAttempted && (
     Object.keys(errors).length > 0 || Object.keys(validation.errors).length > 0
   );
 
   return (
-    <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-6 animate-fade-in">
+    <form onSubmit={onFormSubmit} className="space-y-6 animate-fade-in">
+      <div className="mb-8">
+        <EtapasProgresso currentStep={1} totalSteps={8} />
+      </div>
+
       <MilagrinhoMessage 
         message="Para começar, vou precisar de algumas informações pessoais para personalizar sua experiência no VIVER DE IA Club." 
       />
@@ -112,6 +115,10 @@ export const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
         formData={formData}
         onChange={onChange}
       />
+
+      <div className="flex justify-between items-center pt-4">
+        <AutoSaveFeedback isSaving={isSaving} lastSaveTime={lastSaveTime} />
+      </div>
     </form>
   );
 };
