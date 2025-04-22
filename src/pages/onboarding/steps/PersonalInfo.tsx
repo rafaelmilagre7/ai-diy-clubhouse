@@ -79,7 +79,8 @@ const PersonalInfo = () => {
     const success = await handleSubmit();
     if (success) {
       console.log("[DEBUG] Formulário enviado com sucesso, navegando para próxima etapa");
-      navigate("/onboarding/professional-data");
+      // Forçar navegação direta para a página de dados profissionais
+      navigate("/onboarding/professional-data", { replace: true });
     } else {
       console.log("[DEBUG] Falha ao enviar formulário");
     }

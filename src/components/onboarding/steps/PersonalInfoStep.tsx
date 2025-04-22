@@ -2,6 +2,7 @@
 import React from "react";
 import { PersonalInfoForm } from "./forms/PersonalInfoForm";
 import { Button } from "@/components/ui/button";
+import { NavigationButtons } from "../NavigationButtons";
 
 export interface PersonalInfoStepProps {
   formData: any;
@@ -44,7 +45,7 @@ export const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
             disabled={isSubmitting}
             className="bg-[#0ABAB5] hover:bg-[#0ABAB5]/90"
           >
-            {isSubmitting ? "Salvando..." : "Salvar"}
+            {isSubmitting ? "Salvando..." : "Salvar e avançar"}
           </Button>
         </div>
       )}

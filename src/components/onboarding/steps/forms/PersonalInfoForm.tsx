@@ -11,8 +11,7 @@ export const PersonalInfoForm = ({
   errors, 
   onChange, 
   isSubmitting, 
-  onSubmit,
-  readOnly 
+  onSubmit 
 }) => {
   const hasErrors = Object.keys(errors).length > 0;
 
@@ -38,7 +37,6 @@ export const PersonalInfoForm = ({
         formData={formData} 
         onChange={onChange} 
         disabled={isSubmitting}
-        readOnly={readOnly}
         errors={errors}
       />
       
@@ -48,7 +46,7 @@ export const PersonalInfoForm = ({
           disabled={isSubmitting}
           className="bg-[#0ABAB5] hover:bg-[#0ABAB5]/90"
         >
-          {isSubmitting ? "Salvando..." : "Continuar"}
+          {isSubmitting ? "Salvando..." : "Salvar e avançar"}
         </Button>
       </div>
     </form>
