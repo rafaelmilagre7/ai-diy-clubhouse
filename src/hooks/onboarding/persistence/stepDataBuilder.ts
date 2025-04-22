@@ -1,7 +1,7 @@
 
 import { OnboardingProgress } from "@/types/onboarding";
 import { buildProfessionalDataUpdate } from "./stepBuilders/professionalDataBuilder";
-import { buildGoalsUpdate } from "./stepBuilders/goalsBuilder";
+import { buildBusinessGoalsUpdate } from "./stepBuilders/businessGoalsBuilder";
 
 export function buildUpdateObject(
   stepId: string,
@@ -50,7 +50,7 @@ export function buildUpdateObject(
       break;
       
     case "business_goals":
-      specificUpdateObj = buildGoalsUpdate(data, progress);
+      specificUpdateObj = buildBusinessGoalsUpdate(data, progress);
       break;
       
     case "experience_personalization":

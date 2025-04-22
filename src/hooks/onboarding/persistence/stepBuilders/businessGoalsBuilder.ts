@@ -5,6 +5,11 @@ export function buildBusinessGoalsUpdate(data: Partial<OnboardingData>, progress
   const updateObj: any = {};
   const existingBusinessGoals = progress?.business_goals || {};
   
+  // Garantir que temos um objeto para business_goals, não uma string
+  const businessGoalsBase = typeof existingBusinessGoals === 'string' 
+    ? {} 
+    : (existingBusinessGoals as Record<string, any>);
+  
   if ((data as any).business_goals) {
     const businessGoalsData = (data as any).business_goals;
     
@@ -21,7 +26,7 @@ export function buildBusinessGoalsUpdate(data: Partial<OnboardingData>, progress
     }
     
     updateObj.business_goals = {
-      ...existingBusinessGoals,
+      ...businessGoalsBase,
       ...businessGoalsData
     };
   } else if (typeof data === 'object' && data !== null) {
@@ -29,7 +34,7 @@ export function buildBusinessGoalsUpdate(data: Partial<OnboardingData>, progress
     const receivedData = data as any;
     
     // Inicializar com dados existentes
-    updateObj.business_goals = { ...existingBusinessGoals };
+    updateObj.business_goals = { ...businessGoalsBase };
     
     // Adicionar novos dados
     if (receivedData.primary_goal) updateObj.business_goals.primary_goal = receivedData.primary_goal;
