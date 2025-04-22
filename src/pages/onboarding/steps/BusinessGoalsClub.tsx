@@ -1,4 +1,5 @@
-import React from "react";
+
+import React, { useState, useEffect } from "react";
 import OnboardingLayout from "@/components/onboarding/OnboardingLayout";
 import { useOnboardingSteps } from "@/hooks/onboarding/useOnboardingSteps";
 import { ExpectativasObjetivosStep } from "@/components/onboarding/steps/ExpectativasObjetivosStep";
@@ -10,7 +11,7 @@ import { Loader2 } from "lucide-react";
 import { normalizeBusinessGoals } from "@/hooks/onboarding/persistence/utils/dataNormalization";
 
 const BusinessGoalsClub = () => {
-  const { saveStepData, completeOnboarding } = useOnboardingSteps();
+  const { saveStepData, completeOnboarding, steps } = useOnboardingSteps();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { progress, isLoading, refreshProgress } = useProgress();
   const [refreshCount, setRefreshCount] = useState(0);
@@ -121,11 +122,18 @@ const BusinessGoalsClub = () => {
     };
   }, [progress]);
 
+  const currentStepIndex = steps.findIndex(step => step.id === "business_goals");
+  const progressPercentage = Math.round(((currentStepIndex + 1) / steps.length) * 100);
+
   return (
     <OnboardingLayout
       currentStep={5}
+      totalSteps={steps.length}
       title="Expectativas e Objetivos com o Club"
       backUrl="/onboarding/ai-experience"
+      progress={progressPercentage}
+      steps={steps}
+      activeStep="business_goals"
     >
       <div className="max-w-4xl mx-auto space-y-8">
         <MilagrinhoMessage

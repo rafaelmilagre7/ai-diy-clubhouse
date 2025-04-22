@@ -1,4 +1,5 @@
-import React from "react";
+
+import React, { useEffect } from "react";
 import OnboardingLayout from "@/components/onboarding/OnboardingLayout";
 import { useProgress } from "@/hooks/onboarding/useProgress";
 import { BusinessContextStep } from "@/components/onboarding/steps/BusinessContextStep";
@@ -65,6 +66,9 @@ const BusinessContext = () => {
         currentStep={3}
         totalSteps={steps.length}
         title="Contexto do Negócio"
+        progress={0}
+        steps={steps}
+        activeStep="business_context"
       >
         <div className="flex flex-col justify-center items-center h-64 space-y-4">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#0ABAB5]"></div>
@@ -84,6 +88,8 @@ const BusinessContext = () => {
       title="Contexto do Negócio"
       backUrl="/onboarding/professional-data"
       progress={progressPercentage}
+      steps={steps}
+      activeStep="business_context"
     >
       <BusinessContextStep
         onSubmit={handleSave}

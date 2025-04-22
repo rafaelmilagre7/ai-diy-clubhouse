@@ -1,4 +1,5 @@
-import React from "react";
+
+import React, { useState, useEffect } from "react";
 import OnboardingLayout from "@/components/onboarding/OnboardingLayout";
 import { useOnboardingSteps } from "@/hooks/onboarding/useOnboardingSteps";
 import { AIExperienceStep } from "@/components/onboarding/steps/AIExperienceStep";
@@ -59,11 +60,19 @@ const AIExperience = () => {
     }
   };
 
+  const { steps } = useOnboardingSteps();
+  const currentStepIndex = steps.findIndex(step => step.id === "ai_exp");
+  const progressPercentage = ((currentStepIndex + 1) / steps.length) * 100;
+
   return (
     <OnboardingLayout
       currentStep={4}
+      totalSteps={steps.length}
       title="Experiência com IA"
       backUrl="/onboarding/business-context"
+      progress={progressPercentage}
+      steps={steps}
+      activeStep="ai_exp"
     >
       <div className="max-w-4xl mx-auto space-y-8">
         <MilagrinhoMessage

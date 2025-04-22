@@ -2,19 +2,21 @@
 import React from 'react';
 import { OnboardingStep } from '@/types/onboarding';
 import { Progress } from '@/components/ui/progress';
-import { Button } from '@/components/ui/button';
 import MemberLayout from '@/components/layout/MemberLayout';
 import { StepIndicator } from './StepIndicator';
 
-interface OnboardingLayoutProps {
+export interface OnboardingLayoutProps {
   children: React.ReactNode;
   title: string;
   description?: string;
   currentStep: number;
   totalSteps: number;
-  progress: number;
-  steps: OnboardingStep[];
-  activeStep: string;
+  progress?: number;
+  steps?: OnboardingStep[];
+  activeStep?: string;
+  backUrl?: string;
+  stepTitles?: string[];
+  onStepClick?: (stepIdx: number) => void;
 }
 
 const OnboardingLayout: React.FC<OnboardingLayoutProps> = ({
@@ -23,9 +25,12 @@ const OnboardingLayout: React.FC<OnboardingLayoutProps> = ({
   description,
   currentStep,
   totalSteps,
-  progress,
-  steps,
-  activeStep,
+  progress = 0,
+  steps = [],
+  activeStep = '',
+  backUrl,
+  stepTitles = [],
+  onStepClick,
 }) => {
   return (
     <MemberLayout>
@@ -44,17 +49,35 @@ const OnboardingLayout: React.FC<OnboardingLayoutProps> = ({
             
             <Progress value={progress} className="h-2" />
             
-            <div className="flex flex-wrap gap-2 mt-4">
-              {steps.map((step, index) => (
-                <StepIndicator 
-                  key={step.id}
-                  index={index + 1}
-                  title={step.title}
-                  isActive={step.id === activeStep}
-                  isCompleted={index + 1 < currentStep}
-                />
-              ))}
-            </div>
+            {stepTitles.length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-4">
+                {stepTitles.map((title, index) => (
+                  <StepIndicator 
+                    key={index}
+                    index={index + 1}
+                    title={title}
+                    isActive={index + 1 === currentStep}
+                    isCompleted={index + 1 < currentStep}
+                    onClick={onStepClick ? () => onStepClick(index) : undefined}
+                  />
+                ))}
+              </div>
+            )}
+            
+            {steps.length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-4">
+                {steps.map((step, index) => (
+                  <StepIndicator 
+                    key={step.id}
+                    index={index + 1}
+                    title={step.title}
+                    isActive={step.id === activeStep}
+                    isCompleted={index + 1 < currentStep}
+                    onClick={onStepClick ? () => onStepClick(index) : undefined}
+                  />
+                ))}
+              </div>
+            )}
           </div>
           
           <div className="bg-gray-800 p-8 rounded-lg shadow-lg">

@@ -1,3 +1,4 @@
+
 import React from "react";
 import OnboardingLayout from "@/components/onboarding/OnboardingLayout";
 import { useNavigate } from "react-router-dom";
@@ -23,6 +24,7 @@ const BusinessGoals = () => {
   const { saveStepData } = useOnboardingSteps();
   const navigate = useNavigate();
   const { progress, isLoading } = useProgress();
+  const { steps } = useOnboardingSteps();
   
   const { control, handleSubmit, watch, formState: { errors, isSubmitting } } = useForm<FormValues>({
     defaultValues: {
@@ -57,7 +59,14 @@ const BusinessGoals = () => {
 
   if (isLoading) {
     return (
-      <OnboardingLayout currentStep={2} title="Carregando...">
+      <OnboardingLayout 
+        currentStep={2} 
+        totalSteps={steps.length}
+        title="Carregando..."
+        progress={0}
+        steps={steps}
+        activeStep="professional_data"
+      >
         <div className="flex justify-center items-center h-64">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#0ABAB5]"></div>
         </div>
@@ -68,8 +77,12 @@ const BusinessGoals = () => {
   return (
     <OnboardingLayout 
       currentStep={2} 
+      totalSteps={steps.length}
       title="Dados Profissionais"
       backUrl="/onboarding"
+      progress={((2) / steps.length) * 100}
+      steps={steps}
+      activeStep="professional_data"
     >
       <div className="max-w-4xl mx-auto space-y-8">
         <MilagrinhoMessage 

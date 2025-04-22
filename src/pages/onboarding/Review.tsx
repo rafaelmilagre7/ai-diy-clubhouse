@@ -107,6 +107,9 @@ const Review: React.FC = () => {
         currentStep={reviewStepIndex + 1}
         totalSteps={steps.length}
         title="Revisar Informações"
+        progress={0}
+        steps={steps}
+        activeStep="review"
       >
         <div className="text-center py-8">
           <Loader2 className="animate-spin h-8 w-8 mx-auto text-gray-500" />
@@ -123,6 +126,8 @@ const Review: React.FC = () => {
       title="Revisar Informações"
       backUrl="/onboarding/complementary"
       progress={progressPercentage}
+      steps={steps}
+      activeStep="review"
     >
       <div className="space-y-6">
         <MilagrinhoMessage

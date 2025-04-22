@@ -1,4 +1,5 @@
-import React from "react";
+
+import React, { useState, useEffect } from "react";
 import OnboardingLayout from "@/components/onboarding/OnboardingLayout";
 import { useOnboardingSteps } from "@/hooks/onboarding/useOnboardingSteps";
 import { ComplementaryInfoStep } from "@/components/onboarding/steps/ComplementaryInfoStep";
@@ -8,7 +9,7 @@ import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 
 const ComplementaryInfo = () => {
-  const { saveStepData, progress, completeOnboarding } = useOnboardingSteps();
+  const { saveStepData, progress, completeOnboarding, steps } = useOnboardingSteps();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { isLoading, refreshProgress } = useProgress();
   const [refreshCount, setRefreshCount] = useState(0);
@@ -51,6 +52,9 @@ const ComplementaryInfo = () => {
     setRefreshCount(prev => prev + 1);
   };
   
+  const currentStepIndex = steps.findIndex(step => step.id === "complementary_info");
+  const progressPercentage = Math.round(((currentStepIndex + 1) / steps.length) * 100);
+  
   const hasComplementaryInfo = progress?.complementary_info && 
     typeof progress.complementary_info === 'object' && 
     Object.keys(progress.complementary_info).length > 0;
@@ -63,8 +67,12 @@ const ComplementaryInfo = () => {
   return (
     <OnboardingLayout
       currentStep={7}
+      totalSteps={steps.length}
       title="Informações Complementares"
       backUrl="/onboarding/customization"
+      progress={progressPercentage}
+      steps={steps}
+      activeStep="complementary_info"
     >
       <div className="max-w-4xl mx-auto space-y-8">
         <MilagrinhoMessage

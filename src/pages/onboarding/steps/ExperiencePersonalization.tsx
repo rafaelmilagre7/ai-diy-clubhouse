@@ -1,4 +1,5 @@
-import React from "react";
+
+import React, { useState, useEffect } from "react";
 import OnboardingLayout from "@/components/onboarding/OnboardingLayout";
 import { useOnboardingSteps } from "@/hooks/onboarding/useOnboardingSteps";
 import { ExperiencePersonalizationStep } from "@/components/onboarding/steps/ExperiencePersonalizationStep";
@@ -8,7 +9,7 @@ import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 
 const ExperiencePersonalization = () => {
-  const { saveStepData, progress, completeOnboarding } = useOnboardingSteps();
+  const { saveStepData, progress, completeOnboarding, steps } = useOnboardingSteps();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { isLoading, refreshProgress } = useProgress();
   const [refreshCount, setRefreshCount] = useState(0);
@@ -57,11 +58,18 @@ const ExperiencePersonalization = () => {
     setRefreshCount(prev => prev + 1);
   };
 
+  const currentStepIndex = steps.findIndex(step => step.id === "experience_personalization");
+  const progressPercentage = Math.round(((currentStepIndex + 1) / steps.length) * 100);
+
   return (
     <OnboardingLayout
       currentStep={6}
+      totalSteps={steps.length}
       title="Personalização da Experiência"
       backUrl="/onboarding/club-goals"
+      progress={progressPercentage}
+      steps={steps}
+      activeStep="experience_personalization"
     >
       <div className="max-w-4xl mx-auto space-y-8">
         <MilagrinhoMessage

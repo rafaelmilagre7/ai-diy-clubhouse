@@ -55,15 +55,15 @@ export const steps: OnboardingStep[] = [
   {
     id: "review",
     title: "Revisar e Finalizar",
-    section: "review" as any, // Casting para evitar erro, mas já adicionamos à interface
     path: "/onboarding/review",
+    section: "review" as any, // Casting para evitar erro de tipo
     fields: []
   },
   {
     id: "trail_generation",
     title: "Sua Trilha Personalizada",
-    section: "trail_generation" as any, // Casting para evitar erro, mas já adicionamos à interface
     path: "/onboarding/trail-generation",
+    section: "trail_generation" as any, // Casting para evitar erro de tipo
     fields: []
   }
 ];
