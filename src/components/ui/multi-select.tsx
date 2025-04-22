@@ -3,7 +3,6 @@ import * as React from "react";
 import { X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Command, CommandGroup, CommandItem } from "@/components/ui/command";
-import { Command as CommandPrimitive } from "cmdk";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 
@@ -31,7 +30,6 @@ export function MultiSelect({
   maxItems,
   defaultValue = [],
 }: MultiSelectProps) {
-  const inputRef = React.useRef<HTMLInputElement>(null);
   const [open, setOpen] = React.useState(false);
   const [inputValue, setInputValue] = React.useState("");
   const [selectedItems, setSelectedItems] = React.useState<string[]>(defaultValue);
@@ -63,23 +61,6 @@ export function MultiSelect({
     setInputValue("");
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
-    const { key } = e;
-    
-    // Remover o último item selecionado quando pressionar Backspace com o input vazio
-    if (key === "Backspace" && !inputValue && selectedItems.length > 0) {
-      const newSelected = [...selectedItems];
-      newSelected.pop();
-      setSelectedItems(newSelected);
-      onChange(newSelected);
-    }
-
-    // Evitar que o Escape feche o popover
-    if (key === "Escape") {
-      e.stopPropagation();
-    }
-  };
-
   // Filtra as opções com base no texto digitado
   const filteredOptions = options.filter(option => 
     option.label.toLowerCase().includes(inputValue.toLowerCase())
@@ -99,10 +80,7 @@ export function MultiSelect({
             "flex min-h-10 w-full flex-wrap items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2",
             className
           )}
-          onClick={() => {
-            setOpen(true);
-            setTimeout(() => inputRef.current?.focus(), 0);
-          }}
+          onClick={() => setOpen(true)}
         >
           <div className="flex flex-wrap gap-1.5">
             {selectedItems.length > 0 ? (
@@ -136,12 +114,24 @@ export function MultiSelect({
             ) : (
               <span className="text-muted-foreground">{placeholder}</span>
             )}
-            {/* Aqui está o problema: usar o input diretamente em vez do CommandPrimitive.Input */}
             <input
-              ref={inputRef}
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
-              onKeyDown={handleKeyDown}
+              onKeyDown={(e) => {
+                const { key } = e;
+                // Remover o último item selecionado quando pressionar Backspace com o input vazio
+                if (key === "Backspace" && !inputValue && selectedItems.length > 0) {
+                  const newSelected = [...selectedItems];
+                  newSelected.pop();
+                  setSelectedItems(newSelected);
+                  onChange(newSelected);
+                }
+                
+                // Evitar que o Escape feche o popover
+                if (key === "Escape") {
+                  e.stopPropagation();
+                }
+              }}
               className="ml-2 flex-1 bg-transparent outline-none placeholder:text-muted-foreground"
               placeholder=""
             />
