@@ -11,7 +11,8 @@ import {
   ShieldCheck,
   User,
   Award,
-  BookOpen
+  BookOpen,
+  Map
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "react-router-dom";
@@ -37,6 +38,11 @@ export const MemberSidebarNav = ({ sidebarOpen }: SidebarNavProps) => {
       title: "Onboarding",
       href: "/onboarding",
       icon: BookOpen,
+    },
+    {
+      title: "Trilha de Implementação",
+      href: "/implementation-trail",
+      icon: Map,
     },
     {
       title: "Soluções",
