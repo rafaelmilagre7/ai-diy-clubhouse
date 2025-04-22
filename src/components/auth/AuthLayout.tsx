@@ -8,7 +8,7 @@ import { AnimatePresence, motion } from "framer-motion";
 
 const AuthLayout = () => {
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-[#33C3F0] p-4">
+    <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-[#0ABAB5] via-[#33C3F0] to-[#6de2de] p-4">
       <AnimatePresence mode="wait">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -21,27 +21,38 @@ const AuthLayout = () => {
             <img
               src="https://milagredigital.com/wp-content/uploads/2025/04/viverdeiaclub.avif"
               alt="VIVER DE IA Club"
-              className="mx-auto h-20 w-auto"
+              className="mx-auto h-20 w-auto drop-shadow-xl"
             />
-            <h2 className="mt-4 text-2xl font-extrabold text-white">
-              Potencialize seu Alcance com Inteligência Artificial
+            <h2 className="mt-6 text-3xl font-heading font-bold text-white drop-shadow-md">
+              Potencialize seu Alcance com IA
             </h2>
+            <p className="mt-2 text-white/90 text-lg">
+              Transforme seu negócio com inteligência artificial
+            </p>
           </div>
 
-          <Card className="w-full bg-white bg-opacity-20 backdrop-blur-lg border-white/20 text-white shadow-xl">
+          <Card className="w-full bg-white/10 backdrop-blur-lg border-white/20 shadow-2xl">
             <CardHeader className="pb-4">
-              <CardTitle className="text-xl text-center text-white">Acesse sua conta</CardTitle>
-              <CardDescription className="text-white/80 text-center">
+              <CardTitle className="text-2xl text-center text-white font-heading">
+                Acesse sua conta
+              </CardTitle>
+              <CardDescription className="text-white/80 text-center text-base">
                 Entre para acessar suas soluções de IA
               </CardDescription>
             </CardHeader>
             <CardContent>
               <Tabs defaultValue="login" className="w-full">
-                <TabsList className="grid grid-cols-2 mb-6 bg-white/20 backdrop-blur-lg">
-                  <TabsTrigger value="login" className="text-white data-[state=active]:bg-white/30">
+                <TabsList className="grid grid-cols-2 mb-6 bg-white/10 backdrop-blur-lg">
+                  <TabsTrigger 
+                    value="login" 
+                    className="text-white data-[state=active]:bg-white/20 data-[state=active]:text-white text-white/80 transition-all"
+                  >
                     Login
                   </TabsTrigger>
-                  <TabsTrigger value="register" className="text-white data-[state=active]:bg-white/30">
+                  <TabsTrigger 
+                    value="register" 
+                    className="text-white data-[state=active]:bg-white/20 data-[state=active]:text-white text-white/80 transition-all"
+                  >
                     Cadastro
                   </TabsTrigger>
                 </TabsList>
@@ -55,15 +66,15 @@ const AuthLayout = () => {
             </CardContent>
           </Card>
 
-          <div className="mt-6 text-center text-sm text-white">
-            <p>
-              Acesso exclusivo para membros do VIVER DE IA Club.
+          <div className="mt-8 text-center text-sm text-white/90 space-y-2">
+            <p className="text-base">
+              Acesso exclusivo para membros do VIVER DE IA Club
             </p>
-            <p className="mt-2">
+            <p>
               Não é membro ainda?{" "}
               <a
                 href="https://milagredigital.com/club/"
-                className="font-medium text-white hover:text-gray-200"
+                className="font-medium text-white hover:text-white/90 underline decoration-white/30 hover:decoration-white/60 transition-all"
                 target="_blank"
                 rel="noopener noreferrer"
               >
