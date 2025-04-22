@@ -115,7 +115,11 @@ export const usePersonalInfoStep = () => {
         completed_steps: [...(progress?.completed_steps || []), "personal"],
       });
 
-      toast.success("Dados pessoais salvos com sucesso!");
+      // Única notificação de sucesso com informação combinada
+      toast.success("Dados pessoais salvos com sucesso!", {
+        description: "Avançando para a próxima etapa..."
+      });
+      
       return true;
     } catch (error) {
       console.error("Erro ao salvar dados:", error);

@@ -20,6 +20,7 @@ const PersonalInfo = () => {
   const handleSuccess = async () => {
     const success = await handleSubmit();
     if (success) {
+      // Não mostrar toast aqui, pois já é mostrado no hook usePersonalInfoStep
       navigate("/onboarding/professional-data");
     }
   };
