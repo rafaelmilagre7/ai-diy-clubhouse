@@ -116,37 +116,39 @@ export const ReviewSectionCard: React.FC<ReviewSectionCardProps> = ({
           console.warn(`Objeto vazio após conversão para seção ${step.section}`);
           return false;
         }
+        
+        // Usar o objeto convertido para verificação
+        return checkSectionCompletion(step.section, parsedData);
       } catch (e) {
         console.error(`Erro ao converter string para objeto na seção ${step.section}:`, e);
         return false;
       }
     }
     
-    // Verificação específica para cada tipo de seção
-    if (step.section === 'personal_info') {
-      const data = typeof sectionData === 'string' ? JSON.parse(sectionData) : sectionData;
+    // Para objetos, verificar diretamente
+    return checkSectionCompletion(step.section, sectionData);
+  }, [step, sectionData]);
+  
+  // Função auxiliar para verificar critérios específicos de cada seção
+  function checkSectionCompletion(section: string, data: any): boolean {
+    if (section === 'personal_info') {
       return !!data.name && !!data.email;
     }
     
-    if (step.section === 'professional_info' || step.section === 'professional_data') {
-      const data = typeof sectionData === 'string' ? JSON.parse(sectionData) : sectionData;
+    if (section === 'professional_info' || section === 'professional_data') {
       return !!data.company_name && !!data.company_size;
     }
     
-    if (step.section === 'business_context') {
-      const data = typeof sectionData === 'string' ? JSON.parse(sectionData) : sectionData;
+    if (section === 'business_context') {
       return !!data.business_model;
     }
     
-    if (step.section === 'ai_experience') {
-      const data = typeof sectionData === 'string' ? JSON.parse(sectionData) : sectionData;
+    if (section === 'ai_experience') {
       return !!data.knowledge_level;
     }
     
-    if (step.section === 'business_goals') {
+    if (section === 'business_goals') {
       // Verificação mais detalhada para business_goals
-      const data = typeof sectionData === 'string' ? JSON.parse(sectionData) : sectionData;
-      
       const requiredFields = ['primary_goal', 'priority_solution_type', 'how_implement', 'week_availability'];
       const hasAllRequired = requiredFields.every(field => !!data[field]);
       
@@ -158,22 +160,17 @@ export const ReviewSectionCard: React.FC<ReviewSectionCardProps> = ({
       return hasAllRequired;
     }
     
-    if (step.section === 'experience_personalization') {
-      const data = typeof sectionData === 'string' ? JSON.parse(sectionData) : sectionData;
+    if (section === 'experience_personalization') {
       return Array.isArray(data.interests) && data.interests.length > 0;
     }
     
-    if (step.section === 'complementary_info') {
-      const data = typeof sectionData === 'string' ? JSON.parse(sectionData) : sectionData;
+    if (section === 'complementary_info') {
       return !!data.how_found_us;
     }
     
     // Verificação genérica para outras seções
-    const data = typeof sectionData === 'string' ? JSON.parse(sectionData) : sectionData;
-    const isEmpty = !data || Object.keys(data).length === 0;
-    
-    return !isEmpty;
-  }, [step, sectionData]);
+    return Object.keys(data).length > 0;
+  }
 
   // Renderizar resumo com base na seção
   const sectionSummary = useMemo(() => {

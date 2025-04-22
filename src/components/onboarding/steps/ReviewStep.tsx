@@ -49,11 +49,42 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({
 
             // Log para depuração
             console.log(`Passo ${step.id}, seção ${step.section}, dados:`, sectionData);
+            console.log(`Tipo de dados para ${step.section}:`, typeof sectionData);
 
             // Tratamento especial para business_context que pode estar em business_data
             if (step.section === "business_context" && (!sectionData || Object.keys(sectionData || {}).length === 0)) {
               sectionData = progress.business_data;
               console.log("Usando business_data como fallback para business_context:", sectionData);
+            }
+
+            // Tratamento especial para business_goals
+            if (step.section === "business_goals" && (!sectionData || Object.keys(sectionData || {}).length === 0)) {
+              console.log("Verificando dados brutos de business_goals:", progress.business_goals);
+              
+              // Tentar converter se for string
+              if (typeof progress.business_goals === 'string') {
+                try {
+                  sectionData = JSON.parse(progress.business_goals);
+                  console.log("Business goals convertido de string:", sectionData);
+                } catch (e) {
+                  console.error("Erro ao converter business_goals:", e);
+                }
+              }
+            }
+            
+            // Tratamento especial para experience_personalization
+            if (step.section === "experience_personalization" && (!sectionData || Object.keys(sectionData || {}).length === 0)) {
+              console.log("Verificando dados brutos de experience_personalization:", progress.experience_personalization);
+              
+              // Tentar converter se for string
+              if (typeof progress.experience_personalization === 'string') {
+                try {
+                  sectionData = JSON.parse(progress.experience_personalization);
+                  console.log("Experience personalization convertido de string:", sectionData);
+                } catch (e) {
+                  console.error("Erro ao converter experience_personalization:", e);
+                }
+              }
             }
 
             // Tratamento especial para dados profissionais

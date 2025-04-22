@@ -26,7 +26,7 @@ const Review: React.FC = () => {
       try {
         console.log("Recarregando dados mais recentes para a revisão...");
         await refreshProgress();
-        console.log("Dados atualizados para revisão");
+        console.log("Dados atualizados para revisão:", progress);
       } catch (error) {
         console.error("Erro ao recarregar dados para revisão:", error);
         toast.error("Falha ao carregar dados atualizados. Tente recarregar a página.");

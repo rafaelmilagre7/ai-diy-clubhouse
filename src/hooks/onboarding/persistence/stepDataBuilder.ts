@@ -1,121 +1,88 @@
 
-import { OnboardingProgress } from "@/types/onboarding";
+// Se este arquivo já existir, adicionar a importação e a referência ao novo builder
+import { buildPersonalInfoUpdate } from "./stepBuilders/personalInfoBuilder";
 import { buildProfessionalDataUpdate } from "./stepBuilders/professionalDataBuilder";
+import { buildBusinessContextUpdate } from "./businessContextBuilder";
+import { buildAiExperienceUpdate } from "./stepBuilders/aiExperienceBuilder";
 import { buildBusinessGoalsUpdate } from "./stepBuilders/businessGoalsBuilder";
-import { buildComplementaryInfoUpdate } from "./stepBuilders/complementaryInfoBuilder";
-import { buildAiExpUpdate } from "./stepBuilders/aiExpBuilder";
 import { buildExperiencePersonalizationUpdate } from "./stepBuilders/experiencePersonalizationBuilder";
+import { buildComplementaryInfoUpdate } from "./stepBuilders/complementaryInfoBuilder";
+import { OnboardingData, OnboardingProgress } from "@/types/onboarding";
 
+/**
+ * Constrói o objeto para atualização com base no ID da etapa
+ */
 export function buildUpdateObject(
   stepId: string,
-  data: any,
+  data: Partial<OnboardingData>,
   progress: OnboardingProgress | null,
-  currentStepIndex: number = -1
-): Record<string, any> {
-  console.log(`Construindo objeto de atualização para o passo "${stepId}" com dados:`, data);
+  currentStepIndex: number
+) {
+  console.log(`Construindo objeto de atualização para passo ${stepId} com dados:`, data);
+  console.log(`Estado atual do progresso: `, progress);
   
-  // Objeto base que será atualizado com os dados específicos da etapa
-  const baseUpdateObj: Record<string, any> = {};
+  // Objeto de atualização base
+  let updateObj: any = {
+    current_step: stepId,
+  };
   
-  // Atualizar a etapa atual e as etapas concluídas
-  if (progress) {
-    baseUpdateObj.current_step = getNextStepId(stepId);
+  // Adicionar à lista de passos concluídos
+  if (progress?.completed_steps) {
+    // Garantir que é um array
+    let completedSteps = Array.isArray(progress.completed_steps) 
+      ? progress.completed_steps 
+      : progress.completed_steps ? [progress.completed_steps] : [];
     
-    const completedSteps = Array.isArray(progress.completed_steps) 
-      ? [...progress.completed_steps] 
-      : [];
-      
+    // Adicionar apenas se ainda não estiver na lista
     if (!completedSteps.includes(stepId)) {
       completedSteps.push(stepId);
-      baseUpdateObj.completed_steps = completedSteps;
     }
+    
+    updateObj.completed_steps = completedSteps;
+  } else {
+    updateObj.completed_steps = [stepId];
   }
   
-  // Verificar se temos dados para processar
-  if (!data) {
-    console.warn(`Dados vazios para o passo "${stepId}"`);
-    return baseUpdateObj;
-  }
-  
-  // Se os dados forem uma string, tentar converter para objeto
-  let processedData = data;
-  if (typeof data === 'string' && data !== "{}" && data !== "") {
-    try {
-      processedData = JSON.parse(data);
-      console.log(`Dados do passo "${stepId}" convertidos de string para objeto:`, processedData);
-    } catch (e) {
-      console.error(`Erro ao converter dados do passo "${stepId}" de string para objeto:`, e);
-      processedData = {};
-    }
-  }
-  
-  // Selecionar o builder adequado com base no ID da etapa
-  let specificUpdateObj: Record<string, any> = {};
-  
+  // Atualizar dados específicos com base na etapa
   switch (stepId) {
-    case "personal":
-      specificUpdateObj = {
-        personal_info: processedData.personal_info || processedData
-      };
+    case "personal_info":
+      Object.assign(updateObj, buildPersonalInfoUpdate(data, progress));
       break;
       
     case "professional_data":
-    case "goals":
-      specificUpdateObj = buildProfessionalDataUpdate(processedData, progress);
+      Object.assign(updateObj, buildProfessionalDataUpdate(data, progress));
       break;
       
     case "business_context":
-      specificUpdateObj = {
-        business_context: processedData.business_context || processedData,
-        business_data: processedData.business_context || processedData // Para compatibilidade
-      };
+      Object.assign(updateObj, buildBusinessContextUpdate(data, progress));
       break;
       
-    case "ai_exp":
-      specificUpdateObj = buildAiExpUpdate(processedData, progress);
+    case "ai_experience":
+      Object.assign(updateObj, buildAiExperienceUpdate(data, progress));
       break;
       
     case "business_goals":
-      // Importante: garantir que usamos o builder específico para business_goals
-      console.log("Usando buildBusinessGoalsUpdate para processar dados de negócio:", processedData);
-      specificUpdateObj = buildBusinessGoalsUpdate(processedData, progress);
+      Object.assign(updateObj, buildBusinessGoalsUpdate(data, progress));
       break;
       
     case "experience_personalization":
-      specificUpdateObj = buildExperiencePersonalizationUpdate(processedData, progress);
+      Object.assign(updateObj, buildExperiencePersonalizationUpdate(data, progress));
       break;
       
     case "complementary_info":
-      specificUpdateObj = buildComplementaryInfoUpdate(processedData, progress);
+      Object.assign(updateObj, buildComplementaryInfoUpdate(data, progress));
       break;
       
     default:
-      // Para etapas sem um builder específico, usar o campo bruto se disponível
-      if (processedData[stepId]) {
-        specificUpdateObj[stepId] = processedData[stepId];
-      } else {
-        specificUpdateObj[stepId] = processedData;
+      // Se não reconhecermos o ID, apenas adicionamos os dados ao objeto
+      console.warn(`ID de etapa não reconhecido: ${stepId}, passando dados diretos`);
+      if (Object.keys(data).length > 0) {
+        // Mesclar com objeto principal preservando estrutura
+        Object.assign(updateObj, data);
       }
   }
   
-  // Mesclar os objetos
-  const updateObj = { ...baseUpdateObj, ...specificUpdateObj };
   console.log("Objeto de atualização final:", updateObj);
   
   return updateObj;
-}
-
-function getNextStepId(currentStepId: string): string {
-  const stepSequence: Record<string, string> = {
-    "personal": "professional_data",
-    "professional_data": "business_context",
-    "business_context": "ai_exp",
-    "ai_exp": "business_goals",
-    "business_goals": "experience_personalization",
-    "experience_personalization": "complementary_info",
-    "complementary_info": "review",
-    "goals": "business_context" // Para compatibilidade com o fluxo antigo
-  };
-  
-  return stepSequence[currentStepId] || currentStepId;
 }

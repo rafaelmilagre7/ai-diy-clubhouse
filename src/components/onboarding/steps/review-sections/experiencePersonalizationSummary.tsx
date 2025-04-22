@@ -86,6 +86,7 @@ export function getExperiencePersonalizationSummary(data: any) {
   
   // Garantir que estamos trabalhando com um objeto
   const personalization = ensureObject(data);
+  console.log("Dados processados para experience_personalization:", personalization);
   
   // Se mesmo após processamento os dados estiverem vazios
   if (Object.keys(personalization).length === 0) {
