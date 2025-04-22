@@ -15,10 +15,12 @@ export function buildAiExpUpdate(data: Partial<OnboardingData>, progress: Onboar
   // Verificar se os dados já estão dentro de um objeto ai_experience
   if (data.ai_experience) {
     aiExperienceData = data.ai_experience;
+    console.log("Dados encontrados diretamente em data.ai_experience");
   } 
   // Verificar se há uma propriedade ai_exp que pode conter os dados (usando type assertion)
   else if ((data as any).ai_exp) {
     aiExperienceData = (data as any).ai_exp;
+    console.log("Dados encontrados em data.ai_exp");
   }
   // Se ai_experience não existe, verificar se existe alguma propriedade aninhada chamada ai_experience
   else if (data.ai_experience === undefined) {
@@ -31,6 +33,7 @@ export function buildAiExpUpdate(data: Partial<OnboardingData>, progress: Onboar
           aiExperienceData = 'ai_experience' in value ? 
                             (value as any).ai_experience : 
                             (value as any).ai_exp;
+          console.log(`Dados encontrados em data.${key}.ai_experience`);
           break;
         }
       }
@@ -53,6 +56,7 @@ export function buildAiExpUpdate(data: Partial<OnboardingData>, progress: Onboar
         )
       ) {
         aiExperienceData = value;
+        console.log(`Dados encontrados através de campos de assinatura em data.${key}`);
         break;
       }
     }
@@ -86,6 +90,7 @@ export function buildAiExpUpdate(data: Partial<OnboardingData>, progress: Onboar
   // Garantir que previous_tools é um array
   if (normalizedData.previous_tools && !Array.isArray(normalizedData.previous_tools)) {
     normalizedData.previous_tools = [normalizedData.previous_tools];
+    console.log("Normalizado previous_tools para array:", normalizedData.previous_tools);
   } else if (!normalizedData.previous_tools) {
     normalizedData.previous_tools = [];
   }
@@ -93,6 +98,7 @@ export function buildAiExpUpdate(data: Partial<OnboardingData>, progress: Onboar
   // Garantir que desired_ai_areas é um array
   if (normalizedData.desired_ai_areas && !Array.isArray(normalizedData.desired_ai_areas)) {
     normalizedData.desired_ai_areas = [normalizedData.desired_ai_areas];
+    console.log("Normalizado desired_ai_areas para array:", normalizedData.desired_ai_areas);
   } else if (!normalizedData.desired_ai_areas) {
     normalizedData.desired_ai_areas = [];
   }
@@ -108,6 +114,7 @@ export function buildAiExpUpdate(data: Partial<OnboardingData>, progress: Onboar
     } else if (typeof normalizedData.has_implemented === 'boolean') {
       normalizedData.has_implemented = normalizedData.has_implemented ? 'sim' : 'nao';
     }
+    console.log("has_implemented normalizado:", normalizedData.has_implemented);
   }
   
   // Garantir que os campos booleanos estão no formato correto
@@ -128,6 +135,7 @@ export function buildAiExpUpdate(data: Partial<OnboardingData>, progress: Onboar
   // Garantir que nps_score é um número
   if (normalizedData.nps_score !== undefined && typeof normalizedData.nps_score !== 'number') {
     normalizedData.nps_score = parseInt(normalizedData.nps_score, 10) || 5;
+    console.log("nps_score normalizado para número:", normalizedData.nps_score);
   }
   
   // Garantir que o nível de conhecimento seja um dos valores esperados
@@ -135,6 +143,7 @@ export function buildAiExpUpdate(data: Partial<OnboardingData>, progress: Onboar
     const validLevels = ['iniciante', 'basico', 'intermediario', 'avancado', 'especialista'];
     if (!validLevels.includes(normalizedData.knowledge_level.toLowerCase())) {
       normalizedData.knowledge_level = 'iniciante';
+      console.log("knowledge_level normalizado para valor padrão (iniciante)");
     }
   }
   

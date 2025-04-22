@@ -58,6 +58,7 @@ export const AIExperienceStep: React.FC<AIExperienceStepProps> = ({
     // Verificar se temos um objeto ai_experience
     if (initialData.ai_experience) {
       aiExpData = initialData.ai_experience;
+      console.log("Dados encontrados em initialData.ai_experience:", aiExpData);
     } 
     // Verificar se os dados estão na raiz
     else if (
@@ -67,6 +68,7 @@ export const AIExperienceStep: React.FC<AIExperienceStepProps> = ({
       initialData.desired_ai_areas
     ) {
       aiExpData = initialData;
+      console.log("Dados encontrados diretamente na raiz:", aiExpData);
     }
     // Verificar se é um objeto com estrutura aninhada
     else if (typeof initialData === 'object') {
@@ -84,6 +86,7 @@ export const AIExperienceStep: React.FC<AIExperienceStepProps> = ({
           )
         ) {
           aiExpData = value;
+          console.log(`Dados encontrados em initialData.${key}:`, aiExpData);
           break;
         }
       }
@@ -93,13 +96,13 @@ export const AIExperienceStep: React.FC<AIExperienceStepProps> = ({
     if (typeof aiExpData === 'string') {
       try {
         aiExpData = JSON.parse(aiExpData);
+        console.log("Dados convertidos de string para objeto:", aiExpData);
       } catch (e) {
         console.warn("Não foi possível converter string para objeto:", e);
         return null;
       }
     }
     
-    console.log("Dados de AI Experience encontrados:", aiExpData);
     return aiExpData;
   };
 
@@ -122,6 +125,18 @@ export const AIExperienceStep: React.FC<AIExperienceStepProps> = ({
       };
     }
     
+    // Log para debug dos valores iniciais
+    console.log("Valores iniciais extraídos:", {
+      knowledge_level: aiExpData.knowledge_level || "",
+      previous_tools: Array.isArray(aiExpData.previous_tools) ? aiExpData.previous_tools : [],
+      has_implemented: aiExpData.has_implemented || "",
+      desired_ai_areas: Array.isArray(aiExpData.desired_ai_areas) ? aiExpData.desired_ai_areas : [],
+      completed_formation: aiExpData.completed_formation === true,
+      is_member_for_month: aiExpData.is_member_for_month === true,
+      nps_score: typeof aiExpData.nps_score === 'number' ? aiExpData.nps_score : 5,
+      improvement_suggestions: aiExpData.improvement_suggestions || "",
+    });
+    
     return {
       knowledge_level: aiExpData.knowledge_level || "",
       previous_tools: Array.isArray(aiExpData.previous_tools) ? aiExpData.previous_tools : [],
@@ -140,6 +155,7 @@ export const AIExperienceStep: React.FC<AIExperienceStepProps> = ({
 
   // Atualizar valores iniciais quando os dados mudarem
   useEffect(() => {
+    console.log("initialData alterado, atualizando valores do formulário");
     reset(getInitialValues());
   }, [initialData, reset]);
 

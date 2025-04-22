@@ -1,4 +1,3 @@
-
 import { supabase } from "@/lib/supabase";
 import { OnboardingProgress } from "@/types/onboarding";
 
@@ -35,7 +34,7 @@ const normalizeOnboardingData = (data: Partial<OnboardingProgress>) => {
   
   objectFields.forEach(field => {
     const value = normalizedData[field as keyof typeof normalizedData];
-    if (typeof value === 'string') {
+    if (typeof value === 'string' && value.trim() !== '') {
       try {
         // Tentar converter de string JSON para objeto
         (normalizedData as any)[field] = JSON.parse(value);
@@ -66,6 +65,35 @@ const normalizeOnboardingData = (data: Partial<OnboardingProgress>) => {
     // Garantir que é um array
     if (!Array.isArray(normalizedData.completed_steps)) {
       normalizedData.completed_steps = [];
+    }
+  }
+  
+  // Normalizar especificamente o objeto ai_experience
+  if (normalizedData.ai_experience) {
+    const aiExp = normalizedData.ai_experience;
+    
+    // Converter de string para objeto se necessário
+    if (typeof aiExp === 'string' && aiExp.trim() !== '') {
+      try {
+        (normalizedData as any).ai_experience = JSON.parse(aiExp);
+      } catch (e) {
+        console.warn("ai_experience é string mas não é JSON válido:", e);
+        (normalizedData as any).ai_experience = {};
+      }
+    }
+    
+    // Garantir que desired_ai_areas é um array
+    if ((normalizedData.ai_experience as any).desired_ai_areas && 
+        !Array.isArray((normalizedData.ai_experience as any).desired_ai_areas)) {
+      (normalizedData.ai_experience as any).desired_ai_areas = 
+        [(normalizedData.ai_experience as any).desired_ai_areas];
+    }
+    
+    // Garantir que previous_tools é um array
+    if ((normalizedData.ai_experience as any).previous_tools && 
+        !Array.isArray((normalizedData.ai_experience as any).previous_tools)) {
+      (normalizedData.ai_experience as any).previous_tools = 
+        [(normalizedData.ai_experience as any).previous_tools];
     }
   }
   

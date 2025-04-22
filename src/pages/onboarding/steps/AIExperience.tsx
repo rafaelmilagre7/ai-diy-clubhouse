@@ -24,24 +24,10 @@ const AIExperience = () => {
   useEffect(() => {
     if (progress) {
       console.log("Dados de AI Experience obtidos:", progress.ai_experience);
-      
-      // Verificar formato dos dados
-      if (typeof progress.ai_experience === 'string') {
-        console.warn("Atenção: ai_experience está como string:", progress.ai_experience);
-        try {
-          // Tentar converter para objeto para debug
-          const parsedData = JSON.parse(progress.ai_experience as string);
-          console.log("Dados de AI Experience após parse:", parsedData);
-        } catch (e) {
-          console.error("Erro ao fazer parse de ai_experience como string:", e);
-        }
-      } else if (!progress.ai_experience || Object.keys(progress.ai_experience).length === 0) {
-        console.warn("Dados de AI Experience vazios ou não inicializados");
-      }
     }
   }, [progress]);
 
-  const handleSaveData = async (data: any) => {
+  const handleSaveData = async (stepId: string, data: any) => {
     setIsSubmitting(true);
     try {
       console.log("Salvando dados de experiência com IA:", data);
@@ -65,7 +51,7 @@ const AIExperience = () => {
       }
       
       // Usar a assinatura com stepId explícito
-      await saveStepData("ai_exp", data, true);
+      await saveStepData(stepId, data, true);
       
       console.log("Dados de experiência com IA salvos com sucesso");
       

@@ -21,6 +21,7 @@ export function getAIExperienceSummary(data: OnboardingData['ai_experience']) {
   if (typeof data === 'string') {
     try {
       processedData = JSON.parse(data);
+      console.log("Dados convertidos de string para objeto:", processedData);
     } catch (e) {
       console.error("Erro ao converter string para objeto:", e);
       return (
