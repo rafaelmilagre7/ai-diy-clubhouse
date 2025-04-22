@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
 import { PersonalInfoStep } from "@/components/onboarding/steps/PersonalInfoStep";
@@ -32,7 +31,6 @@ const PersonalInfo = () => {
     loadInitialData
   } = usePersonalInfoStep();
 
-  // Função para tentar carregar dados novamente
   const attemptDataLoad = async () => {
     try {
       setLoadError(null);
@@ -58,9 +56,7 @@ const PersonalInfo = () => {
     };
   }, []);
 
-  // Adicionar um efeito para forçar carregamento após um tempo limite
   useEffect(() => {
-    // Se ainda estiver carregando após 5 segundos, tenta novamente
     if (progressLoading && loadingAttempts < 3) {
       const timer = setTimeout(() => {
         console.log("[DEBUG] Tempo limite de carregamento atingido, tentando novamente");
@@ -88,15 +84,12 @@ const PersonalInfo = () => {
     }
   };
 
-  // Se tentou carregar 3 vezes e ainda está carregando, mostrar botão para forçar continuação
   const showForceButton = loadingAttempts >= 3 && progressLoading;
 
-  // Se houver um erro de carregamento ou erro no último progresso
   const hasError = loadError || lastError;
 
-  // Encontrar o índice correto do passo de dados pessoais
-  const personalStepIndex = 0; // Primeira etapa
-  const progressPercentage = Math.round(((personalStepIndex + 1) / 7) * 100); // 7 etapas no total
+  const personalStepIndex = 0;
+  const progressPercentage = Math.round(((personalStepIndex + 1) / 7) * 100);
 
   if (progressLoading && !showForceButton) {
     console.log("[DEBUG] Exibindo spinner de carregamento");
@@ -116,7 +109,6 @@ const PersonalInfo = () => {
     );
   }
 
-  // Se houver erro, mostramos uma mensagem de erro com opção para tentar novamente
   if (hasError) {
     return (
       <OnboardingLayout 
@@ -147,7 +139,6 @@ const PersonalInfo = () => {
     );
   }
 
-  // Se tentou várias vezes e ainda está carregando, permitir continuar mesmo assim
   if (showForceButton) {
     return (
       <OnboardingLayout 
@@ -168,7 +159,6 @@ const PersonalInfo = () => {
           <div className="flex justify-center mt-6 space-x-4">
             <button 
               onClick={() => {
-                // Forçar carregamento com dados padrão vazios
                 toast.info("Continuando com dados padrão");
                 setLoadingAttempts(0);
               }}
@@ -188,6 +178,8 @@ const PersonalInfo = () => {
     );
   }
 
+  const isReadOnly = !!progress?.completed_steps?.includes("personal");
+
   return (
     <OnboardingLayout 
       currentStep={1}
@@ -204,6 +196,7 @@ const PersonalInfo = () => {
         onChange={handleChange}
         isSaving={isSaving}
         lastSaveTime={lastSaveTime}
+        readOnly={isReadOnly}
       />
     </OnboardingLayout>
   );

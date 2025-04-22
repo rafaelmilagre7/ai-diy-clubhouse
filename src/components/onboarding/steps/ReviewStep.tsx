@@ -1,4 +1,3 @@
-
 import React from "react";
 import { OnboardingProgress } from "@/types/onboarding";
 import { steps } from "@/hooks/onboarding/useStepDefinitions";
@@ -14,7 +13,7 @@ interface ReviewStepProps {
   navigateToStep: (index: number) => void;
 }
 
-export const ReviewStep: React.FC<ReviewStepProps> = ({
+export const ReviewStep: React.FC<ReviewStepProps & { onEditStep?: (step: string, data: any) => void }> = ({
   progress,
   onComplete,
   isSubmitting,

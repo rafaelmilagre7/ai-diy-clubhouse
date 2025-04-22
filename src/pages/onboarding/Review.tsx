@@ -1,4 +1,3 @@
-
 import React, { useEffect } from "react";
 import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
 import { useOnboardingSteps } from "@/hooks/onboarding/useOnboardingSteps";
@@ -16,11 +15,9 @@ const Review: React.FC = () => {
   const { progress, isLoading, refreshProgress } = useProgress();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   
-  // Encontrar o índice correto do passo de revisão e calcular progresso arredondado
   const reviewStepIndex = steps.findIndex(step => step.id === "review");
   const progressPercentage = Math.round(((reviewStepIndex + 1) / steps.length) * 100);
   
-  // Efeito para atualizar dados ao entrar na página
   useEffect(() => {
     const loadFreshData = async () => {
       try {
@@ -36,17 +33,14 @@ const Review: React.FC = () => {
     loadFreshData();
   }, [refreshProgress]);
   
-  // Validar dados de progresso
   useEffect(() => {
     if (progress) {
       console.log("Dados de progresso na tela de revisão:", progress);
       
-      // Verificar campos que são strings em vez de objetos
       const validateField = (fieldName: string, value: any) => {
         if (typeof value === 'string' && fieldName !== 'current_step' && fieldName !== 'user_id' && fieldName !== 'id') {
           console.warn(`Campo ${fieldName} está como string em vez de objeto: "${value}"`);
           
-          // Tentativa de corrigir automaticamente
           try {
             if (value !== "{}" && value !== "") {
               const parsed = JSON.parse(value);
@@ -59,7 +53,6 @@ const Review: React.FC = () => {
         }
       };
       
-      // Verificar campos principais
       ['ai_experience', 'business_goals', 'experience_personalization', 'complementary_info', 
        'professional_info', 'business_data', 'business_context'].forEach(field => {
         validateField(field, progress[field as keyof typeof progress]);
@@ -85,7 +78,19 @@ const Review: React.FC = () => {
     }
   };
   
-  // Verificar se temos dados para mostrar
+  const handleEditStep = async (step: string, updatedData: any) => {
+    try {
+      setIsSubmitting(true);
+      await saveStepData(step, updatedData, false, true /* allowEdit */);
+      toast.success("Alteração salva com sucesso!");
+      await refreshProgress();
+    } catch (error) {
+      toast.error("Erro ao salvar alteração. Tente novamente.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+  
   if (isLoading || !progress) {
     return (
       <OnboardingLayout
@@ -111,15 +116,15 @@ const Review: React.FC = () => {
     >
       <div className="space-y-6">
         <MilagrinhoMessage
-          message="Vamos revisar as informações que você compartilhou conosco. Se algo estiver incorreto, você pode voltar às etapas anteriores e fazer os ajustes necessários."
+          message="Vamos revisar as informações que você compartilhou conosco. Se algo estiver incorreto, clique em editar e ajuste nesta tela."
         />
-        
         <div className="bg-gray-50 rounded-lg p-6">
           <ReviewStep 
             progress={progress}
             onComplete={handleComplete}
             isSubmitting={isSubmitting}
             navigateToStep={handleNavigateToStep}
+            onEditStep={handleEditStep}
           />
         </div>
       </div>

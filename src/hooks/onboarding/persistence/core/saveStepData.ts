@@ -1,4 +1,3 @@
-
 import { steps } from "../../useStepDefinitions";
 import { toast } from "sonner";
 import { buildUpdateObject } from "../stepDataBuilder";
@@ -24,16 +23,13 @@ export const createSaveStepData = ({
   navigate,
   logError,
 }: SaveStepDataParams) => {
-  // Flag global para não exibir múltiplos toasts
   const toastShown = { current: false };
 
-  /**
-   * Função principal para salvar dados de um passo específico
-   */
   const saveStepData = async (
     stepIdOrData: string | any,
     dataOrShouldNavigate?: any | boolean,
-    thirdParam?: boolean
+    thirdParam?: boolean,
+    allowEdit = false
   ): Promise<void> => {
     if (!progress?.id) {
       console.error("Não foi possível salvar dados: ID de progresso não encontrado");
@@ -50,43 +46,36 @@ export const createSaveStepData = ({
       stepId = stepIdOrData;
       data = dataOrShouldNavigate;
       shouldNavigate = thirdParam !== undefined ? thirdParam : true;
-      console.log(`saveStepData chamado com stepId='${stepId}', shouldNavigate=${shouldNavigate}`);
     } else {
       stepId = steps[currentStepIndex]?.id || '';
       data = stepIdOrData;
       shouldNavigate = typeof dataOrShouldNavigate === 'boolean' ? dataOrShouldNavigate : true;
-      console.log(`saveStepData chamado como modo indexado, stepId='${stepId}'`);
+    }
+
+    if (!allowEdit && progress?.completed_steps?.includes(stepId)) {
+      toast.warning("Esta etapa já foi salva e não pode mais ser editada. Se precisar alterar, utilize a revisão ao final.");
+      return;
     }
 
     try {
       let success = false;
       let nextStep = null;
-      
-      // Determinar a próxima etapa com base na atual
       if (currentStepIndex < steps.length - 1) {
         nextStep = steps[currentStepIndex + 1].id;
       }
-      
-      // Salvar dados com base no tipo de etapa - usando serviços específicos por tabela
+
       if (stepId === 'personal') {
-        if (!progress.user_id) {
-          throw new Error("ID de usuário não disponível");
-        }
-        
+        if (!progress.user_id) throw new Error("ID de usuário não disponível");
         const result = await savePersonalInfoData(
           progress.id,
           progress.user_id,
           data.personal_info || data,
           logError
         );
-        
         success = result.success;
-        
-        if (!success) {
-          throw new Error("Falha ao salvar dados pessoais");
-        }
-      } else {
-        // Fallback para o método antigo para outras etapas ainda não migradas
+        if (!success) throw new Error("Falha ao salvar dados pessoais");
+      } 
+      else {
         const updateObj = buildUpdateObject(stepId, data, progress, currentStepIndex);
         if (Object.keys(updateObj).length === 0) {
           if (!toastShown.current) {
@@ -95,9 +84,7 @@ export const createSaveStepData = ({
           }
           return;
         }
-        
         const result = await updateProgress(updateObj);
-        
         if (!result || (result as any).error) {
           const errorMessage = (result as any)?.error?.message || "Erro desconhecido ao atualizar dados";
           logError("save_step_data_error", {
@@ -107,21 +94,16 @@ export const createSaveStepData = ({
           });
           throw new Error(errorMessage);
         }
-        
         success = true;
       }
-      
+
       if (success) {
-        // Sempre atualizar o status de progresso geral
         await markStepAsCompleted(progress.id, stepId, nextStep, logError);
-        
         if (!toastShown.current) {
           toast.success("Dados salvos com sucesso!");
           toastShown.current = true;
         }
-        
         await refreshProgress();
-        
         if (shouldNavigate) {
           navigateAfterStep(stepId, currentStepIndex, navigate, shouldNavigate);
         }
