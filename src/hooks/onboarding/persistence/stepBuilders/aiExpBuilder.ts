@@ -18,12 +18,6 @@ export function buildAiExpUpdate(data: Partial<OnboardingData>, progress: Onboar
     // Garantir que desired_ai_areas seja sempre um array
     let updatedData = { ...baseAiExp, ...aiExpData };
     
-    // Converter desired_ai_area em desired_ai_areas se existir
-    if (updatedData.desired_ai_area && !updatedData.desired_ai_areas) {
-      updatedData.desired_ai_areas = [updatedData.desired_ai_area];
-      delete updatedData.desired_ai_area;
-    }
-    
     // Garantir que desired_ai_areas seja um array
     if (updatedData.desired_ai_areas && !Array.isArray(updatedData.desired_ai_areas)) {
       updatedData.desired_ai_areas = [updatedData.desired_ai_areas];
@@ -42,12 +36,6 @@ export function buildAiExpUpdate(data: Partial<OnboardingData>, progress: Onboar
     const baseAiExp = typeof existingAiExp === 'string' ? {} : existingAiExp;
     
     let updatedData = { ...baseAiExp, ...data };
-    
-    // Converter desired_ai_area em desired_ai_areas se existir
-    if (updatedData.desired_ai_area && !updatedData.desired_ai_areas) {
-      updatedData.desired_ai_areas = [updatedData.desired_ai_area];
-      delete updatedData.desired_ai_area;
-    }
     
     // Garantir que desired_ai_areas seja um array
     if (updatedData.desired_ai_areas && !Array.isArray(updatedData.desired_ai_areas)) {

@@ -39,16 +39,6 @@ export function getAIExperienceSummary(data: OnboardingData['ai_experience']) {
         </div>
       )}
       
-      {/* Exibir área única caso não seja array */}
-      {data.desired_ai_area && !data.desired_ai_areas && (
-        <div>
-          <span className="font-medium">Área de interesse em IA:</span>
-          <div className="flex flex-wrap gap-1 mt-1">
-            <Badge variant="outline" className="bg-gray-100">{data.desired_ai_area}</Badge>
-          </div>
-        </div>
-      )}
-      
       <p><span className="font-medium">Já implementou soluções de IA:</span> {data.has_implemented === "sim" ? "Sim" : "Não"}</p>
       
       {data.nps_score !== undefined && (

@@ -60,9 +60,8 @@ export const AIExperienceStep: React.FC<AIExperienceStepProps> = ({
       knowledge_level: data.knowledge_level || "",
       previous_tools: Array.isArray(data.previous_tools) ? data.previous_tools : [],
       has_implemented: data.has_implemented || "",
-      // Suporte para ambos os formatos de áreas desejadas
-      desired_ai_areas: Array.isArray(data.desired_ai_areas) ? data.desired_ai_areas : 
-                       data.desired_ai_area ? [data.desired_ai_area] : [],
+      // Sempre usar desired_ai_areas, garantindo que seja um array
+      desired_ai_areas: Array.isArray(data.desired_ai_areas) ? data.desired_ai_areas : [],
       completed_formation: data.completed_formation || false,
       is_member_for_month: data.is_member_for_month || false,
       nps_score: data.nps_score !== undefined ? data.nps_score : 5,
