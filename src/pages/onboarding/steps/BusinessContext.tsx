@@ -1,6 +1,5 @@
-
-import React, { useEffect } from "react";
-import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
+import React from "react";
+import OnboardingLayout from "@/components/onboarding/OnboardingLayout";
 import { useProgress } from "@/hooks/onboarding/useProgress";
 import { BusinessContextStep } from "@/components/onboarding/steps/BusinessContextStep";
 import { useOnboardingSteps } from "@/hooks/onboarding/useOnboardingSteps";
@@ -12,7 +11,6 @@ const BusinessContext = () => {
   const { saveStepData, currentStepIndex, steps } = useOnboardingSteps();
   const navigate = useNavigate();
 
-  // Carregar dados atualizados quando a página for carregada
   useEffect(() => {
     const loadData = async () => {
       console.log("Carregando dados atualizados na página de contexto de negócio");
@@ -22,18 +20,14 @@ const BusinessContext = () => {
     loadData();
   }, [refreshProgress]);
 
-  // Calcular progresso para exibição
   const progressPercentage = Math.round(((currentStepIndex + 1) / steps.length) * 100);
 
-  // Combinar dados de business_context e business_data para garantir compatibilidade
   const getInitialData = () => {
     if (!progress) return {};
     
-    // Verificar ambas as fontes de dados
     const fromContext = progress.business_context || {};
     const fromData = progress.business_data || {};
     
-    // Mesclar dados, priorizando business_context
     return {
       ...fromData,
       ...fromContext
@@ -44,18 +38,14 @@ const BusinessContext = () => {
     try {
       console.log("Salvando dados de contexto de negócio:", data);
       
-      // Evitar múltiplos salvamentos simultâneos
       setTimeout(() => {
-        // Formatar os dados com a estrutura esperada
         const formattedData = {
           business_context: data
         };
         
-        // Chamar saveStepData com o ID correto e os dados formatados
         saveStepData("business_context", formattedData, true);
       }, 100);
       
-      // Verificar se a navegação automática funcionou
       setTimeout(() => {
         const currentPath = window.location.pathname;
         if (currentPath === "/onboarding/business-context") {
@@ -84,7 +74,6 @@ const BusinessContext = () => {
     );
   }
 
-  // Obter dados combinados de todas as fontes possíveis
   const initialData = getInitialData();
   console.log("Dados iniciais para o formulário de contexto:", initialData);
 

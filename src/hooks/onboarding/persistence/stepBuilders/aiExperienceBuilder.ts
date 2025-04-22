@@ -66,3 +66,7 @@ export function buildAIExperienceUpdate(data: Partial<OnboardingData>, progress:
   
   return updateObj;
 }
+
+// Alias para compatibilidade com código existente
+export const buildAiExperienceUpdate = buildAIExperienceUpdate;
+

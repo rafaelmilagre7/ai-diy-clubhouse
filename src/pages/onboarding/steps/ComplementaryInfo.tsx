@@ -1,6 +1,5 @@
-
-import React, { useEffect, useState } from "react";
-import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
+import React from "react";
+import OnboardingLayout from "@/components/onboarding/OnboardingLayout";
 import { useOnboardingSteps } from "@/hooks/onboarding/useOnboardingSteps";
 import { ComplementaryInfoStep } from "@/components/onboarding/steps/ComplementaryInfoStep";
 import { MilagrinhoMessage } from "@/components/onboarding/MilagrinhoMessage";
@@ -15,7 +14,6 @@ const ComplementaryInfo = () => {
   const [refreshCount, setRefreshCount] = useState(0);
   const navigate = useNavigate();
 
-  // Efeito para carregar dados mais recentes ao entrar na página
   useEffect(() => {
     console.log("ComplementaryInfo montado - carregando dados mais recentes");
     const loadData = async () => {
@@ -34,15 +32,12 @@ const ComplementaryInfo = () => {
     setIsSubmitting(true);
     try {
       console.log("Salvando informações complementares:", data);
-      // Usar a assinatura com stepId explícito
       await saveStepData(stepId, data, false);
       console.log("Informações complementares salvas com sucesso");
       toast.success("Dados salvos com sucesso!");
       
-      // Forçar atualização dos dados após salvar
       await refreshProgress();
       
-      // Navegar manualmente para a página de revisão
       navigate("/onboarding/review");
     } catch (error) {
       console.error("Erro ao salvar dados:", error);
@@ -52,12 +47,10 @@ const ComplementaryInfo = () => {
     }
   };
   
-  // Função para tentar recarregar dados
   const handleRetry = () => {
     setRefreshCount(prev => prev + 1);
   };
   
-  // Verificar se temos dados válidos para complementary_info
   const hasComplementaryInfo = progress?.complementary_info && 
     typeof progress.complementary_info === 'object' && 
     Object.keys(progress.complementary_info).length > 0;

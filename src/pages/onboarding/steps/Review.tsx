@@ -1,6 +1,5 @@
-
-import React, { useEffect } from "react";
-import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
+import React from "react";
+import OnboardingLayout from "@/components/onboarding/OnboardingLayout";
 import { useOnboardingSteps } from "@/hooks/onboarding/useOnboardingSteps";
 import { MilagrinhoMessage } from "@/components/onboarding/MilagrinhoMessage";
 import { CheckCircle, Loader2 } from "lucide-react";
@@ -16,7 +15,6 @@ const Review: React.FC = () => {
   const { progress, isLoading, refreshProgress } = useProgress();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   
-  // Efeito para atualizar dados ao entrar na página
   useEffect(() => {
     const loadFreshData = async () => {
       try {
@@ -32,17 +30,14 @@ const Review: React.FC = () => {
     loadFreshData();
   }, [refreshProgress]);
   
-  // Validar dados de progresso
   useEffect(() => {
     if (progress) {
       console.log("Dados de progresso na tela de revisão:", progress);
       
-      // Verificar campos que são strings em vez de objetos
       const validateField = (fieldName: string, value: any) => {
         if (typeof value === 'string' && fieldName !== 'current_step' && fieldName !== 'user_id' && fieldName !== 'id') {
           console.warn(`Campo ${fieldName} está como string em vez de objeto: "${value}"`);
           
-          // Tentativa de corrigir automaticamente
           try {
             if (value !== "{}" && value !== "") {
               const parsed = JSON.parse(value);
@@ -55,7 +50,6 @@ const Review: React.FC = () => {
         }
       };
       
-      // Verificar campos principais
       ['ai_experience', 'business_goals', 'experience_personalization', 'complementary_info'].forEach(field => {
         validateField(field, progress[field as keyof typeof progress]);
       });
@@ -80,11 +74,9 @@ const Review: React.FC = () => {
     }
   };
   
-  // Encontrar o índice correto do passo de revisão
   const reviewStepIndex = steps.findIndex(step => step.id === "review");
   const progressPercentage = ((reviewStepIndex + 1) / steps.length) * 100;
   
-  // Verificar se temos dados para mostrar
   if (isLoading || !progress) {
     return (
       <OnboardingLayout

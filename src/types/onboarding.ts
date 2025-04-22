@@ -82,6 +82,11 @@ export interface OnboardingData extends OnboardingFormData {
   ai_experience?: AIExperience;
   experience_personalization?: ExperiencePersonalization;
   complementary_info?: ComplementaryInfo;
+  
+  // Adicionando campos para compatibilidade
+  business_data?: any;
+  review?: any;
+  trail_generation?: any;
 }
 
 export interface OnboardingProgress {
@@ -100,7 +105,9 @@ export interface OnboardingProgress {
   created_at: string;
   updated_at: string;
   
-  // Adicionando as propriedades extras que estão causando erros
+  // Adicionando campos para compatibilidade com o modelo existente
+  review?: any;
+  trail_generation?: any;
   business_data?: any;
   company_name?: string;
   company_size?: string;
@@ -127,6 +134,7 @@ export interface OnboardingStepProps {
   onComplete?: () => void;
   initialData?: any;
   personalInfo?: PersonalInfo;
+  onPrevious?: () => void;
 }
 
 // Interface para dados pessoais
@@ -142,6 +150,9 @@ export interface PersonalInfo {
   city?: string;
   timezone?: string;
 }
+
+// Alias para PersonalInfo para compatibilidade em locais que usam PersonalInfoData
+export type PersonalInfoData = PersonalInfo;
 
 // Interface para dados profissionais
 export interface ProfessionalDataInput {
@@ -206,3 +217,4 @@ export interface ComplementaryInfo {
   interested_in_interview?: boolean;
   priority_topics?: string[];
 }
+

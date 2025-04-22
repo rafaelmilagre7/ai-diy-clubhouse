@@ -6,13 +6,13 @@ import { savePersonalInfoData } from "./persistence/services/personalInfoService
 import { markStepAsCompleted } from "./persistence/services/progressService";
 import { useProgress } from "./useProgress";
 import { useLogging } from "@/hooks/useLogging";
-import { PersonalInfoData } from "@/types/onboarding";
+import { PersonalInfo } from "@/types/onboarding";
 import { useNavigate } from "react-router-dom";
 
 type SubmitParams = {
   progress: any,
   user: any,
-  formData: PersonalInfoData,
+  formData: PersonalInfo,
   logError: (event: string, data?: Record<string, any>) => void,
   refreshProgress: () => Promise<void>,
   setValidationAttempted: (value: boolean) => void,

@@ -3,7 +3,7 @@ import { OnboardingData, OnboardingProgress } from "@/types/onboarding";
 import { buildPersonalInfoUpdate } from "./stepBuilders/personalInfoBuilder";
 import { buildProfessionalDataUpdate } from "./stepBuilders/professionalDataBuilder";
 import { buildBusinessGoalsUpdate } from "./stepBuilders/businessGoalsBuilder";
-import { buildAiExperienceUpdate } from "./stepBuilders/aiExperienceBuilder";
+import { buildAIExperienceUpdate } from "./stepBuilders/aiExperienceBuilder";
 import { buildExperiencePersonalizationUpdate } from "./stepBuilders/experiencePersonalizationBuilder";
 
 /**
@@ -44,36 +44,23 @@ export function buildUpdateObject(
       break;
       
     case "ai_exp":
-      stepUpdateObj = buildAiExperienceUpdate(data, progress);
-      break;
-      
-    case "experience_personalization":
-      stepUpdateObj = buildExperiencePersonalizationUpdate(data, progress);
+      stepUpdateObj = buildAIExperienceUpdate(data, progress);
       break;
       
     // Adicionar outros casos conforme necessário
-      
+    
     default:
-      console.warn(`Builder não encontrado para stepId: ${stepId}, usando dados diretos`);
-      
-      // Fallback: usar o próprio dado se não houver builder específico
-      if (data[stepId as keyof typeof data]) {
-        stepUpdateObj = {
-          [stepId]: data[stepId as keyof typeof data]
-        };
-      } else {
-        // Se não houver dados específicos para o stepId, usar os dados completos
-        stepUpdateObj = { ...data };
-      }
+      console.log(`Nenhum builder específico para o passo ${stepId}`);
+      // Manter os dados como estão se não houver builder específico
   }
   
-  // Mesclagem dos objetos de atualização
+  // Mesclar os objetos
   updateObj = {
     ...updateObj,
     ...stepUpdateObj
   };
   
-  console.log(`Objeto de atualização construído para ${stepId}:`, updateObj);
+  console.log(`Objeto de atualização final:`, updateObj);
   
   return updateObj;
 }

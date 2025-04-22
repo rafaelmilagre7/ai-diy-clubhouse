@@ -1,6 +1,5 @@
-
-import React, { useEffect, useState } from "react";
-import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
+import React from "react";
+import OnboardingLayout from "@/components/onboarding/OnboardingLayout";
 import { useOnboardingSteps } from "@/hooks/onboarding/useOnboardingSteps";
 import { AIExperienceStep } from "@/components/onboarding/steps/AIExperienceStep";
 import { MilagrinhoMessage } from "@/components/onboarding/MilagrinhoMessage";
@@ -14,13 +13,11 @@ const AIExperience = () => {
   const { isLoading, refreshProgress } = useProgress();
   const { log } = useLogging();
 
-  // Efeito para carregar dados mais recentes ao entrar na página
   useEffect(() => {
     console.log("AIExperience montado - carregando dados mais recentes");
     refreshProgress();
   }, [refreshProgress]);
 
-  // Validar dados iniciais
   useEffect(() => {
     if (progress) {
       console.log("Dados de AI Experience obtidos:", progress.ai_experience);
@@ -33,7 +30,6 @@ const AIExperience = () => {
       console.log("Salvando dados de experiência com IA:", data);
       log("onboarding_ai_experience_submit", { data });
       
-      // Garantir que estamos enviando dados bem estruturados
       if (typeof data === 'string') {
         console.warn("Convertendo dados de string para objeto antes de salvar");
         try {
@@ -44,18 +40,15 @@ const AIExperience = () => {
         }
       }
       
-      // Garantir que ai_experience está presente e na estrutura correta
       if (!data.ai_experience && typeof data === 'object') {
         console.log("Encapsulando dados em ai_experience");
         data = { ai_experience: data };
       }
       
-      // Usar a assinatura com stepId explícito
       await saveStepData(stepId, data, true);
       
       console.log("Dados de experiência com IA salvos com sucesso");
       
-      // Atualizar dados locais após salvar
       await refreshProgress();
     } catch (error) {
       console.error("Erro ao salvar dados:", error);

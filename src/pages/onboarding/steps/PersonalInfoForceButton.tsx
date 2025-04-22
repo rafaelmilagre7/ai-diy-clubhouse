@@ -1,6 +1,5 @@
-
 import React from "react";
-import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
+import OnboardingLayout from "@/components/onboarding/OnboardingLayout";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertTriangle } from "lucide-react";
 import { toast } from "sonner";

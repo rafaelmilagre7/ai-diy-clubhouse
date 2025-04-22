@@ -1,17 +1,16 @@
-
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { PersonalInfoForm } from "@/components/onboarding/steps/forms/PersonalInfoForm";
 import { usePersonalInfoStep } from "@/hooks/onboarding/usePersonalInfoStep";
-import { usePersonalInfoLoad } from "@/hooks/onboarding/usePersonalInfoLoad";
+import { useProgress } from "@/hooks/onboarding/useProgress";
 import { useStepDefinitions } from "@/hooks/onboarding/useStepDefinitions";
-import { useStepNavigation } from "@/hooks/onboarding/useStepNavigation";
-import { usePersonalInfoNavigation } from "@/hooks/onboarding/usePersonalInfoNavigation";
-import { usePersonalInfoProgress } from "@/hooks/onboarding/usePersonalInfoProgress";
+import OnboardingLayout from "@/components/onboarding/OnboardingLayout";
 import { PersonalInfoLoaderSection } from "./PersonalInfoLoaderSection";
 import { PersonalInfoErrorSection } from "./PersonalInfoErrorSection";
 import { PersonalInfoForceSection } from "./PersonalInfoForceSection";
-import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
-import { PersonalInfoStep } from "@/components/onboarding/steps/PersonalInfoStep";
+import { useStepNavigation } from "@/hooks/onboarding/useStepNavigation";
+import { usePersonalInfoNavigation } from "@/hooks/onboarding/usePersonalInfoNavigation";
+import { usePersonalInfoProgress } from "@/hooks/onboarding/usePersonalInfoProgress";
 import { toast } from "sonner";
 
 export const PersonalInfoContainer: React.FC = () => {
@@ -36,7 +35,7 @@ export const PersonalInfoContainer: React.FC = () => {
     progress,
     lastError,
     attemptDataLoad
-  } = usePersonalInfoLoad();
+  } = useProgress();
 
   const { steps } = useStepDefinitions();
 
@@ -44,7 +43,6 @@ export const PersonalInfoContainer: React.FC = () => {
   const { goToNextStep } = usePersonalInfoNavigation();
   const { totalSteps, progressPercentage } = usePersonalInfoProgress();
 
-  // Extrair títulos para o wizard
   const stepTitles = steps.map(s => s.title);
 
   useEffect(() => {
@@ -141,7 +139,7 @@ export const PersonalInfoContainer: React.FC = () => {
       stepTitles={stepTitles}
       onStepClick={handleStepClick}
     >
-      <PersonalInfoStep
+      <PersonalInfoForm
         onSubmit={handleSuccess}
         isSubmitting={isSubmitting}
         formData={formData}

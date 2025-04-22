@@ -1,6 +1,6 @@
 
 import { supabase } from "@/lib/supabase";
-import { OnboardingProgress, PersonalInfo } from "@/types/onboarding";
+import { OnboardingProgress, PersonalInfo, PersonalInfoData } from "@/types/onboarding";
 
 export const fetchPersonalInfo = async (progressId: string) => {
   try {
@@ -22,6 +22,9 @@ export const fetchPersonalInfo = async (progressId: string) => {
   }
 };
 
+// Alias para compatibilidade com código que usa fetchPersonalInfoData
+export const fetchPersonalInfoData = fetchPersonalInfo;
+
 export const formatPersonalInfoData = (data: any): Partial<OnboardingProgress> => {
   if (!data) return {};
   
@@ -42,3 +45,35 @@ export const formatPersonalInfoData = (data: any): Partial<OnboardingProgress> =
     personal_info: personalInfo
   };
 };
+
+// Adicionando a função que estava faltando
+export const savePersonalInfoData = async (
+  progressId: string,
+  userId: string,
+  formData: PersonalInfoData,
+  logError: (event: string, data?: Record<string, any>) => void
+) => {
+  try {
+    const { error } = await supabase
+      .from("onboarding_personal_info")
+      .upsert({
+        progress_id: progressId,
+        user_id: userId,
+        ...formData
+      }, { onConflict: "progress_id" });
+
+    if (error) {
+      console.error("Erro ao salvar dados pessoais:", error);
+      logError("personal_info_save_error", { error: error.message });
+      return { success: false, error };
+    }
+
+    return { success: true };
+  } catch (err) {
+    const errorMessage = err instanceof Error ? err.message : String(err);
+    console.error("Exceção ao salvar dados pessoais:", err);
+    logError("personal_info_save_exception", { error: errorMessage });
+    return { success: false, error: err };
+  }
+};
+

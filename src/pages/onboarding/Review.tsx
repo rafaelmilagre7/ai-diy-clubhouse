@@ -1,6 +1,6 @@
 
 import React, { useEffect } from "react";
-import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
+import OnboardingLayout from "@/components/onboarding/OnboardingLayout";
 import { useOnboardingSteps } from "@/hooks/onboarding/useOnboardingSteps";
 import { MilagrinhoMessage } from "@/components/onboarding/MilagrinhoMessage";
 import { Loader2 } from "lucide-react";

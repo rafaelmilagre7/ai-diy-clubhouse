@@ -1,6 +1,5 @@
-
 import React from "react";
-import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
+import OnboardingLayout from "@/components/onboarding/OnboardingLayout";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
@@ -38,7 +37,6 @@ const BusinessGoals = () => {
 
   const onSubmit = async (data: FormValues) => {
     try {
-      // Transformamos os dados para o formato esperado pelo saveStepData
       const professionalData = {
         company_name: data.company_name,
         company_size: data.company_size,
@@ -48,7 +46,6 @@ const BusinessGoals = () => {
         annual_revenue: data.annual_revenue,
       };
       
-      // Usando assinatura com stepId explícito
       await saveStepData("professional_data", professionalData, true);
       toast.success("Informações salvas com sucesso!");
       navigate("/onboarding/business-context");
@@ -58,7 +55,6 @@ const BusinessGoals = () => {
     }
   };
 
-  // Loading state
   if (isLoading) {
     return (
       <OnboardingLayout currentStep={2} title="Carregando...">

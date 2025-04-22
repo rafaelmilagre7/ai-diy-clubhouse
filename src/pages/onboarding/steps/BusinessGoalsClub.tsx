@@ -1,6 +1,5 @@
-
-import React, { useState, useEffect } from "react";
-import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
+import React from "react";
+import OnboardingLayout from "@/components/onboarding/OnboardingLayout";
 import { useOnboardingSteps } from "@/hooks/onboarding/useOnboardingSteps";
 import { ExpectativasObjetivosStep } from "@/components/onboarding/steps/ExpectativasObjetivosStep";
 import { MilagrinhoMessage } from "@/components/onboarding/MilagrinhoMessage";
@@ -18,7 +17,6 @@ const BusinessGoalsClub = () => {
   const [localDataReady, setLocalDataReady] = useState(false);
   const navigate = useNavigate();
 
-  // Efeito para carregar dados mais recentes ao entrar na página
   useEffect(() => {
     const loadData = async () => {
       setLocalDataReady(false);
@@ -26,18 +24,16 @@ const BusinessGoalsClub = () => {
         console.log("Carregando dados atualizados para BusinessGoalsClub...");
         await refreshProgress();
         
-        // Logs detalhados para diagnóstico
         if (progress) {
           console.log("Tipo de business_goals:", typeof progress.business_goals);
           console.log("Conteúdo de business_goals:", JSON.stringify(progress.business_goals, null, 2));
         }
         
-        // Marcar dados como prontos
         setLocalDataReady(true);
       } catch (error) {
         console.error("Erro ao carregar dados:", error);
         toast.error("Erro ao carregar seus dados. Tente novamente.");
-        setLocalDataReady(true); // Mesmo com erro, permitir a renderização
+        setLocalDataReady(true);
       }
     };
     
@@ -49,7 +45,6 @@ const BusinessGoalsClub = () => {
     setIsSubmitting(true);
     
     try {
-      // Verificações detalhadas antes de salvar
       if (!data.business_goals) {
         console.error("Dados inválidos: business_goals não encontrado no objeto");
         toast.error("Erro ao salvar: dados incompletos");
@@ -57,7 +52,6 @@ const BusinessGoalsClub = () => {
         return;
       }
       
-      // Verificar campos obrigatórios
       const businessGoalsData = data.business_goals;
       
       const requiredFields = ['primary_goal', 'priority_solution_type', 'how_implement', 'week_availability'];
@@ -70,38 +64,27 @@ const BusinessGoalsClub = () => {
         return;
       }
       
-      // Formatar dados antes de salvar para garantir estrutura consistente
       const formattedData = {
         business_goals: {
           ...businessGoalsData,
-          // Garantir que expected_outcomes é um array
           expected_outcomes: Array.isArray(businessGoalsData.expected_outcomes) 
             ? businessGoalsData.expected_outcomes 
             : [],
-            
-          // Adicionar expected_outcome_30days se existir
           expected_outcome_30days: businessGoalsData.expected_outcome_30days || "",
-          
-          // Garantir que content_formats é um array
           content_formats: Array.isArray(businessGoalsData.content_formats) 
             ? businessGoalsData.content_formats 
             : [],
-            
-          // Converter live_interest para número
           live_interest: Number(businessGoalsData.live_interest || 5)
         }
       };
       
-      // Log detalhado dos dados formatados
       console.log("Dados formatados para salvar:", JSON.stringify(formattedData, null, 2));
       
-      // Salvar dados usando business_goals como stepId (importante!)
       await saveStepData("business_goals", formattedData, false);
       console.log("Dados salvos com sucesso");
       
       toast.success("Informações salvas com sucesso!");
       
-      // Navegar manualmente para a próxima página após um breve atraso
       setTimeout(() => {
         navigate("/onboarding/customization");
       }, 800);
@@ -113,13 +96,11 @@ const BusinessGoalsClub = () => {
     }
   };
 
-  // Função para tentar recarregar dados
   const handleRetry = () => {
     console.log("Tentando recarregar dados...");
     setRefreshCount(prev => prev + 1);
   };
   
-  // Processar dados para o componente
   const processedData = React.useMemo(() => {
     if (!progress) return null;
     
@@ -127,7 +108,6 @@ const BusinessGoalsClub = () => {
     
     let businessGoalsData = progress.business_goals;
     
-    // Normalizar business_goals se necessário
     if (typeof businessGoalsData === 'string' || !businessGoalsData) {
       businessGoalsData = normalizeBusinessGoals(businessGoalsData);
       console.log("business_goals normalizado:", businessGoalsData);
@@ -143,7 +123,7 @@ const BusinessGoalsClub = () => {
 
   return (
     <OnboardingLayout
-      currentStep={5} // Índice fixo para business_goals
+      currentStep={5}
       title="Expectativas e Objetivos com o Club"
       backUrl="/onboarding/ai-experience"
     >

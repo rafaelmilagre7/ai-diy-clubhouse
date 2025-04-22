@@ -6,8 +6,8 @@ export function buildBusinessContextUpdate(data: Partial<OnboardingData>, progre
   // Para backward compatibility, atualizamos tanto business_context quanto business_data
   const contextUpdate = buildBaseUpdate("business_context", data, progress, {});
   
-  // Verificar se business_data existe no progresso atual
-  const dataUpdate = progress && 'business_data' in progress 
+  // Verificar se business_data existe no progresso atual - usando um type guard para TypeScript
+  const dataUpdate = progress && ('business_data' in progress) 
     ? buildBaseUpdate("business_data", data, progress, {})
     : {};
   

@@ -1,6 +1,5 @@
-
-import React, { useEffect, useState } from "react";
-import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
+import React from "react";
+import OnboardingLayout from "@/components/onboarding/OnboardingLayout";
 import { useOnboardingSteps } from "@/hooks/onboarding/useOnboardingSteps";
 import { ExperiencePersonalizationStep } from "@/components/onboarding/steps/ExperiencePersonalizationStep";
 import { MilagrinhoMessage } from "@/components/onboarding/MilagrinhoMessage";
@@ -15,7 +14,6 @@ const ExperiencePersonalization = () => {
   const [refreshCount, setRefreshCount] = useState(0);
   const navigate = useNavigate();
 
-  // Efeito para carregar dados mais recentes ao entrar na página
   useEffect(() => {
     console.log("ExperiencePersonalization montado - carregando dados mais recentes");
     const loadData = async () => {
@@ -35,21 +33,17 @@ const ExperiencePersonalization = () => {
     try {
       console.log("Salvando dados de personalização:", data);
       
-      // Verificar se temos dados válidos
       if (!data || !data.experience_personalization) {
         throw new Error("Dados de personalização ausentes ou inválidos");
       }
       
-      // Usar a assinatura com stepId explícito para evitar problemas
       await saveStepData("experience_personalization", data, false);
       
       console.log("Dados de personalização salvos com sucesso");
       toast.success("Dados salvos com sucesso!");
       
-      // Forçar atualização dos dados após salvar
       await refreshProgress();
       
-      // Navegar manualmente para a próxima página
       navigate("/onboarding/complementary");
     } catch (error) {
       console.error("Erro ao salvar dados:", error);
@@ -59,7 +53,6 @@ const ExperiencePersonalization = () => {
     }
   };
 
-  // Função para tentar recarregar dados
   const handleRetry = () => {
     setRefreshCount(prev => prev + 1);
   };

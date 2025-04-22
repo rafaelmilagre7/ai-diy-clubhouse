@@ -2,7 +2,7 @@
 import { supabase } from "@/lib/supabase";
 import { OnboardingProgress } from "@/types/onboarding";
 import { 
-  fetchPersonalInfoData, 
+  fetchPersonalInfo, 
   formatPersonalInfoData 
 } from "./personalInfoService";
 
@@ -35,7 +35,7 @@ export const fetchAllOnboardingData = async (progressId: string): Promise<Onboar
     
     // 2. Buscar dados específicos de cada etapa
     // 2.1 Dados Pessoais
-    const personalInfoData = await fetchPersonalInfoData(progressId);
+    const personalInfoData = await fetchPersonalInfo(progressId);
     
     // Adicionar chamadas para outras tabelas aqui conforme necessário
     
@@ -62,3 +62,4 @@ export const fetchAllOnboardingData = async (progressId: string): Promise<Onboar
     return null;
   }
 };
+

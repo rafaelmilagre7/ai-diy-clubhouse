@@ -1,6 +1,5 @@
-
 import React from "react";
-import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
+import OnboardingLayout from "@/components/onboarding/OnboardingLayout";
 import { LoadingSpinner } from "@/components/common/LoadingSpinner";
 
 interface PersonalInfoLoaderProps {

@@ -53,6 +53,36 @@ export function formatProfessionalData(data: any): Partial<any> {
 }
 
 /**
+ * Salva dados profissionais do usuário
+ */
+export async function saveProfessionalData(
+  progressId: string,
+  userId: string,
+  formData: ProfessionalDataInput
+): Promise<{success: boolean, error?: any}> {
+  try {
+    // Salvar dados na tabela específica de informações profissionais
+    const { error } = await supabase
+      .from("onboarding_professional_info")
+      .upsert({
+        progress_id: progressId,
+        user_id: userId,
+        ...formData
+      }, { onConflict: "progress_id" });
+
+    if (error) {
+      console.error("Erro ao salvar dados profissionais:", error);
+      return { success: false, error };
+    }
+
+    return { success: true };
+  } catch (err) {
+    console.error("Exceção ao salvar dados profissionais:", err);
+    return { success: false, error: err };
+  }
+}
+
+/**
  * Sincroniza dados profissionais entre o progresso e a tabela específica
  */
 export async function syncProfessionalData(
@@ -153,3 +183,4 @@ export async function syncProfessionalData(
     return false;
   }
 }
+

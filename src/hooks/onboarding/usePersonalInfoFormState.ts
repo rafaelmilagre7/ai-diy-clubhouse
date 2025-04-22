@@ -1,13 +1,13 @@
 
 import { useState, useEffect, useCallback } from "react";
-import { PersonalInfoData } from "@/types/onboarding";
+import { PersonalInfo } from "@/types/onboarding";
 import { useAuth } from "@/contexts/auth";
 import { useProgress } from "./useProgress";
 
 export const usePersonalInfoFormState = () => {
   const { progress } = useProgress();
   const { user, profile } = useAuth();
-  const [formData, setFormData] = useState<PersonalInfoData>({
+  const [formData, setFormData] = useState<PersonalInfo>({
     name: "",
     email: "",
     phone: "",
@@ -93,7 +93,7 @@ export const usePersonalInfoFormState = () => {
   }, [progress, initialDataLoaded, loadInitialData]);
 
   // Handler de mudança de campo
-  const handleChange = (field: keyof PersonalInfoData, value: string) => {
+  const handleChange = (field: keyof PersonalInfo, value: string) => {
     if (field === "ddi") {
       value = "+" + value.replace(/\+/g, '').replace(/\D/g, '');
     }
