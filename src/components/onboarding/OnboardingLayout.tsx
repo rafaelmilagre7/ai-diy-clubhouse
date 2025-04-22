@@ -16,7 +16,7 @@ interface OnboardingLayoutProps {
   totalSteps?: number;
   stepTitles?: string[];
   onStepClick?: (step: number) => void;
-  hideProgress?: boolean;
+  hideProgress?: boolean; // Novo atributo para controlar a visibilidade
   progress?: number;
 }
 
@@ -38,7 +38,7 @@ export const OnboardingLayout = ({
     "Revisão"
   ],
   onStepClick,
-  hideProgress = false,
+  hideProgress = false, // Valor padrão para manter compatibilidade
   progress
 }: OnboardingLayoutProps) => {
   return (
