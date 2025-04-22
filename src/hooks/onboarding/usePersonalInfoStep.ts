@@ -1,15 +1,17 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useProgress } from "./useProgress";
 import { toast } from "sonner";
 import { PersonalInfoData } from "@/types/onboarding";
 import { validatePersonalInfoForm } from "@/utils/validatePersonalInfoForm";
+import { useAuth } from "@/contexts/auth";
 
 export const usePersonalInfoStep = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaveTime, setLastSaveTime] = useState<number | null>(null);
   const { progress, updateProgress, refreshProgress } = useProgress();
+  const { user, profile } = useAuth();
   const [formData, setFormData] = useState<PersonalInfoData>({
     name: "",
     email: "",
@@ -27,15 +29,9 @@ export const usePersonalInfoStep = () => {
   // Flag para controlar se já carregamos os dados iniciais
   const [initialDataLoaded, setInitialDataLoaded] = useState(false);
 
-  // Adicionando um useEffect para forçar o refresh de dados ao iniciar
-  useEffect(() => {
-    console.log("Forçando atualização dos dados do progresso ao iniciar");
-    refreshProgress();
-  }, [refreshProgress]);
-
-  // Carregar dados iniciais
-  useEffect(() => {
-    if (progress?.personal_info && !initialDataLoaded) {
+  // Função para carregar dados iniciais do banco
+  const loadInitialData = useCallback(() => {
+    if (progress?.personal_info) {
       // Formatar o DDI para garantir que tenha apenas um +
       let ddi = progress.personal_info.ddi || "+55";
       if (ddi) {
@@ -44,13 +40,15 @@ export const usePersonalInfoStep = () => {
       
       console.log("Dados encontrados no progresso:", progress.personal_info);
       
+      // Nome e email do perfil têm prioridade sobre os dados do progresso
+      const userName = profile?.name || user?.user_metadata?.name || progress.personal_info.name || "";
+      const userEmail = profile?.email || user?.email || progress.personal_info.email || "";
+      
       setFormData({
-        ...formData,
-        ...progress.personal_info,
-        ddi: ddi,
-        name: progress.personal_info.name || "",
-        email: progress.personal_info.email || "",
+        name: userName,
+        email: userEmail,
         phone: progress.personal_info.phone || "",
+        ddi: ddi,
         linkedin: progress.personal_info.linkedin || "",
         instagram: progress.personal_info.instagram || "",
         country: progress.personal_info.country || "Brasil",
@@ -60,15 +58,37 @@ export const usePersonalInfoStep = () => {
       });
       
       console.log("Dados carregados do progresso:", {
-        ...progress.personal_info,
+        name: userName,
+        email: userEmail,
+        phone: progress.personal_info.phone || "",
         ddi: ddi,
+        // ... outros campos
       });
       
       setInitialDataLoaded(true);
-    } else if (!progress?.personal_info && !initialDataLoaded) {
+    } else {
       console.log("Nenhum dado de progresso encontrado para personal_info");
+      
+      // Se não houver dados no progresso, use dados do perfil se disponíveis
+      if (profile || user) {
+        const userName = profile?.name || user?.user_metadata?.name || "";
+        const userEmail = profile?.email || user?.email || "";
+        
+        setFormData(prev => ({
+          ...prev,
+          name: userName,
+          email: userEmail
+        }));
+      }
     }
-  }, [progress?.personal_info, formData, initialDataLoaded]);
+  }, [progress?.personal_info, profile, user]);
+
+  // Carregar dados iniciais quando o progresso for carregado
+  useEffect(() => {
+    if (progress && !initialDataLoaded) {
+      loadInitialData();
+    }
+  }, [progress, initialDataLoaded, loadInitialData]);
 
   const handleChange = (field: keyof PersonalInfoData, value: string) => {
     // Registrar a alteração para debug
@@ -90,6 +110,8 @@ export const usePersonalInfoStep = () => {
         return newErrors;
       });
     }
+
+    // Auto-save após alteração (poderia ser implementado aqui)
   };
 
   const handleSubmit = async () => {
@@ -156,6 +178,7 @@ export const usePersonalInfoStep = () => {
     lastSaveTime,
     validationAttempted,
     handleChange,
-    handleSubmit
+    handleSubmit,
+    loadInitialData
   };
 };

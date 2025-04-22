@@ -17,14 +17,21 @@ const PersonalInfo = () => {
     handleChange,
     handleSubmit,
     isSaving,
-    lastSaveTime
+    lastSaveTime,
+    loadInitialData
   } = usePersonalInfoStep();
 
   // Forçar uma atualização dos dados ao montar o componente
   useEffect(() => {
     console.log("PersonalInfo montado - carregando dados mais recentes");
-    refreshProgress();
-  }, [refreshProgress]);
+    const fetchData = async () => {
+      await refreshProgress();
+      // Após atualizar o progresso, carrega os dados iniciais do formulário
+      loadInitialData();
+    };
+    
+    fetchData();
+  }, [refreshProgress, loadInitialData]);
 
   const handleSuccess = async () => {
     const success = await handleSubmit();
