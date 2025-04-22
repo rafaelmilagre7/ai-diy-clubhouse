@@ -1,7 +1,8 @@
+
 import React from "react";
 import { OnboardingProgress } from "@/types/onboarding";
 import { steps } from "@/hooks/onboarding/useStepDefinitions";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Edit } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ReviewSectionCard } from "./ReviewSectionCard";
 import { Card } from "@/components/ui/card";
@@ -11,13 +12,15 @@ interface ReviewStepProps {
   onComplete: () => void;
   isSubmitting: boolean;
   navigateToStep: (index: number) => void;
+  onEditStep?: (step: string, data: any) => Promise<void>;
 }
 
-export const ReviewStep: React.FC<ReviewStepProps & { onEditStep?: (step: string, data: any) => void }> = ({
+export const ReviewStep: React.FC<ReviewStepProps> = ({
   progress,
   onComplete,
   isSubmitting,
   navigateToStep,
+  onEditStep
 }) => {
   if (!progress) return <div>Carregando dados...</div>;
 
@@ -124,6 +127,7 @@ export const ReviewStep: React.FC<ReviewStepProps & { onEditStep?: (step: string
                 progress={progress}
                 stepIndex={stepIndex}
                 navigateToStep={navigateToStep}
+                onEditStep={onEditStep}
               />
             );
           })}

@@ -1,6 +1,6 @@
 
-import React, { useMemo } from "react";
-import { CheckCircle, PenSquare } from "lucide-react";
+import React, { useMemo, useState } from "react";
+import { CheckCircle, PenSquare, X } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { OnboardingStep } from "@/types/onboarding";
@@ -11,6 +11,8 @@ import { getAIExperienceSummary } from "./review-sections/aiExperienceSummary";
 import { getBusinessGoalsSummary } from "./review-sections/businessGoalsSummary";
 import { getExperiencePersonalizationSummary } from "./review-sections/experiencePersonalizationSummary";
 import { getComplementaryInfoSummary } from "./review-sections/complementaryInfoSummary";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { LoadingSpinner } from "@/components/common/LoadingSpinner";
 
 // Função para determinar o componente de resumo correto com base na seção
 const getSummaryComponent = (section: string, data: any, progress: any) => {
@@ -79,6 +81,7 @@ interface ReviewSectionCardProps {
   progress: any;
   stepIndex: number;
   navigateToStep: (index: number) => void;
+  onEditStep?: (step: string, data: any) => Promise<void>;
 }
 
 export const ReviewSectionCard: React.FC<ReviewSectionCardProps> = ({
@@ -87,7 +90,12 @@ export const ReviewSectionCard: React.FC<ReviewSectionCardProps> = ({
   progress,
   stepIndex,
   navigateToStep,
+  onEditStep
 }) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editableData, setEditableData] = useState<any>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   // Verificar se há dados válidos na seção
   const isCompleted = useMemo(() => {
     // Log dos dados da seção para verificação detalhada
@@ -172,39 +180,98 @@ export const ReviewSectionCard: React.FC<ReviewSectionCardProps> = ({
     return Object.keys(data).length > 0;
   }
 
+  // Função para abrir o modal de edição
+  const handleEditClick = () => {
+    if (onEditStep) {
+      // Se temos uma função de edição, vamos para a página
+      navigateToStep(stepIndex - 1);
+    } else {
+      // Caso contrário, voltamos à etapa original
+      navigateToStep(stepIndex - 1);
+    }
+  };
+
+  // Função para salvar as alterações
+  const handleSaveChanges = async () => {
+    if (onEditStep && editableData) {
+      setIsSubmitting(true);
+      try {
+        await onEditStep(step.id, editableData);
+        setIsEditing(false);
+      } catch (error) {
+        console.error("Erro ao salvar alterações:", error);
+      } finally {
+        setIsSubmitting(false);
+      }
+    }
+  };
+
   // Renderizar resumo com base na seção
   const sectionSummary = useMemo(() => {
     return getSummaryComponent(step.section, sectionData, progress);
   }, [step, sectionData, progress]);
 
   return (
-    <Card className="overflow-hidden border-l-4 border-l-gray-200">
-      <CardHeader className="flex flex-row items-center justify-between bg-gray-50 py-2 px-4">
-        <div className="flex items-center gap-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-50 text-primary-foreground">
-            <span className="text-sm font-medium">{stepIndex}</span>
+    <>
+      <Card className="overflow-hidden border-l-4 border-l-gray-200">
+        <CardHeader className="flex flex-row items-center justify-between bg-gray-50 py-2 px-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-50 text-primary-foreground">
+              <span className="text-sm font-medium">{stepIndex}</span>
+            </div>
+            <CardTitle className="text-lg font-medium">{step.title}</CardTitle>
           </div>
-          <CardTitle className="text-lg font-medium">{step.title}</CardTitle>
-        </div>
-        <div className="flex items-center gap-2">
-          {isCompleted && (
-            <span className="flex items-center text-green-600">
-              <CheckCircle className="mr-1 h-4 w-4" />
-              <span className="text-xs">Completo</span>
-            </span>
-          )}
-          <Button
-            variant="outline"
-            size="sm"
-            className="flex items-center gap-1"
-            onClick={() => navigateToStep(stepIndex - 1)}
-          >
-            <PenSquare className="h-4 w-4" />
-            <span>Editar</span>
-          </Button>
-        </div>
-      </CardHeader>
-      <CardContent className="p-4">{sectionSummary}</CardContent>
-    </Card>
+          <div className="flex items-center gap-2">
+            {isCompleted && (
+              <span className="flex items-center text-green-600">
+                <CheckCircle className="mr-1 h-4 w-4" />
+                <span className="text-xs">Completo</span>
+              </span>
+            )}
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-1"
+              onClick={handleEditClick}
+            >
+              <PenSquare className="h-4 w-4" />
+              <span>Editar</span>
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent className="p-4">{sectionSummary}</CardContent>
+      </Card>
+
+      {isEditing && onEditStep && (
+        <Dialog open={isEditing} onOpenChange={setIsEditing}>
+          <DialogContent className="max-w-3xl">
+            <DialogHeader>
+              <DialogTitle>Editar {step.title}</DialogTitle>
+            </DialogHeader>
+            <div className="py-4">
+              {isSubmitting ? (
+                <div className="flex justify-center items-center p-8">
+                  <LoadingSpinner size={8} />
+                  <p className="ml-3 text-gray-500">Salvando alterações...</p>
+                </div>
+              ) : (
+                <div>
+                  {/* Aqui entraria o componente específico para edição de cada tipo */}
+                </div>
+              )}
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setIsEditing(false)}>
+                <X className="h-4 w-4 mr-1" />
+                Cancelar
+              </Button>
+              <Button onClick={handleSaveChanges} disabled={isSubmitting}>
+                Salvar Alterações
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
+    </>
   );
 };

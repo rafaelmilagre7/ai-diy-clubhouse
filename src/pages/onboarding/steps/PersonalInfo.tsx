@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
 import { PersonalInfoStep } from "@/components/onboarding/steps/PersonalInfoStep";
@@ -91,6 +92,9 @@ const PersonalInfo = () => {
   const personalStepIndex = 0;
   const progressPercentage = Math.round(((personalStepIndex + 1) / 7) * 100);
 
+  // Verificar se a etapa já foi concluída, para tornar o formulário apenas leitura
+  const isReadOnly = !!progress?.completed_steps?.includes("personal");
+
   if (progressLoading && !showForceButton) {
     console.log("[DEBUG] Exibindo spinner de carregamento");
     return (
@@ -177,8 +181,6 @@ const PersonalInfo = () => {
       </OnboardingLayout>
     );
   }
-
-  const isReadOnly = !!progress?.completed_steps?.includes("personal");
 
   return (
     <OnboardingLayout 

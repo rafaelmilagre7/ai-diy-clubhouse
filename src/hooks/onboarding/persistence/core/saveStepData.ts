@@ -54,8 +54,10 @@ export const createSaveStepData = ({
                        dataOrShouldNavigate : true;
     }
 
+    // Verifica se a etapa já foi concluída e só permite edição se explicitamente autorizado
+    // Isso garante que os dados não sejam editáveis após enviados, exceto na etapa de revisão
     if (!allowEdit && progress?.completed_steps?.includes(stepId)) {
-      toast.warning("Esta etapa já foi salva e não pode mais ser editada. Se precisar alterar, utilize a revisão ao final.");
+      toast.warning("Esta etapa já foi concluída e não pode mais ser editada. Se precisar alterar, utilize a revisão ao final do processo.");
       return;
     }
 

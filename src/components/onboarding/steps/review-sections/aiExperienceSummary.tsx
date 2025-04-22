@@ -1,126 +1,65 @@
 
 import React from "react";
-import { Badge } from "@/components/ui/badge";
-import { OnboardingData } from "@/types/onboarding";
 
-export function getAIExperienceSummary(data: OnboardingData['ai_experience']) {
-  console.log("Renderizando summary para AI Experience com dados:", data);
-  
-  // Verificar se os dados estão em formato correto
-  if (!data || typeof data === 'string' || Object.keys(data).length === 0) {
-    console.warn("Dados de AI Experience inválidos ou vazios:", data);
-    return (
-      <p className="text-gray-500 italic">
-        Seção não preenchida ou dados incompletos. Clique em Editar para preencher.
-      </p>
-    );
+export function getAIExperienceSummary(data: any) {
+  if (!data || Object.keys(data).length === 0) {
+    return <p className="text-gray-500 italic">Seção não preenchida. Clique em Editar para preencher.</p>;
   }
 
-  // Tentar converter string para objeto, se necessário
-  let processedData = data;
-  if (typeof data === 'string') {
-    try {
-      processedData = JSON.parse(data);
-      console.log("Dados convertidos de string para objeto:", processedData);
-    } catch (e) {
-      console.error("Erro ao converter string para objeto:", e);
-      return (
-        <p className="text-gray-500 italic">
-          Erro ao processar dados. Clique em Editar para preencher novamente.
-        </p>
-      );
-    }
-  }
-
-  // Mapeamento de níveis para exibição mais amigável
+  // Mapear nível de conhecimento para texto mais legível
   const knowledgeLevelMap: Record<string, string> = {
-    'iniciante': 'Iniciante – Estou começando agora',
-    'basico': 'Básico – Já experimentei algumas ferramentas',
-    'intermediario': 'Intermediário – Uso regularmente',
-    'avancado': 'Avançado – Uso frequentemente e conheço bem',
-    'especialista': 'Especialista – Trabalho profissionalmente com IA'
-  };
-
-  // Mapeamento de áreas desejadas
-  const areaMap: Record<string, string> = {
-    'vendas': 'Soluções de IA para Vendas',
-    'marketing': 'Soluções de IA para Marketing',
-    'rh': 'Soluções de IA para RH',
-    'analise_dados': 'Soluções de IA para Análise de Dados'
-  };
-
-  // Função para verificar o valor de has_implemented de forma segura
-  const hasImplemented = (): boolean => {
-    const value = processedData.has_implemented;
-    
-    // Tratar casos onde has_implemented pode ser string ou boolean
-    if (typeof value === 'boolean') {
-      return value;
-    }
-    
-    if (typeof value === 'string') {
-      return value === "true" || value === "sim";
-    }
-    
-    // Caso padrão, retornar false se não for possível determinar
-    return false;
+    "beginner": "Iniciante",
+    "intermediate": "Intermediário",
+    "advanced": "Avançado",
+    "expert": "Especialista"
   };
 
   return (
-    <div className="space-y-3 text-sm">
+    <div className="space-y-2 text-sm">
       <p>
-        <span className="font-medium">Nível de conhecimento em IA:</span> {
-          processedData.knowledge_level 
-            ? (knowledgeLevelMap[processedData.knowledge_level] || processedData.knowledge_level) 
-            : "Não preenchido"
+        <span className="font-medium">Nível de conhecimento:</span> {
+          knowledgeLevelMap[data.knowledge_level] || data.knowledge_level || "Não preenchido"
         }
       </p>
       
-      {processedData.previous_tools && Array.isArray(processedData.previous_tools) && processedData.previous_tools.length > 0 && (
+      {data.previous_tools && data.previous_tools.length > 0 && (
         <div>
-          <span className="font-medium">Ferramentas já utilizadas:</span>
-          <div className="flex flex-wrap gap-1 mt-1">
-            {processedData.previous_tools.map((tool: string, index: number) => (
-              <Badge key={index} variant="outline" className="bg-gray-100">{tool}</Badge>
+          <p className="font-medium">Ferramentas utilizadas anteriormente:</p>
+          <ul className="list-disc pl-5">
+            {data.previous_tools.map((tool: string, index: number) => (
+              <li key={index}>{tool}</li>
             ))}
-          </div>
-        </div>
-      )}
-      
-      {/* Verificar se desired_ai_areas existe e é um array */}
-      {processedData.desired_ai_areas && Array.isArray(processedData.desired_ai_areas) && processedData.desired_ai_areas.length > 0 && (
-        <div>
-          <span className="font-medium">Áreas de interesse em IA:</span>
-          <div className="flex flex-wrap gap-1 mt-1">
-            {processedData.desired_ai_areas.map((area: string, index: number) => (
-              <Badge key={index} variant="outline" className="bg-gray-100">
-                {areaMap[area] || area}
-              </Badge>
-            ))}
-          </div>
+          </ul>
         </div>
       )}
       
       <p>
-        <span className="font-medium">Já implementou soluções de IA:</span> {
-          hasImplemented() ? "Sim" : "Não"
+        <span className="font-medium">Já implementou IA:</span> {
+          data.has_implemented === "sim" || data.has_implemented === "true" || data.has_implemented === true
+            ? "Sim"
+            : "Não"
         }
       </p>
       
-      {processedData.nps_score !== undefined && (
-        <p><span className="font-medium">Avaliação da experiência (NPS):</span> {processedData.nps_score}/10</p>
+      {data.desired_ai_areas && data.desired_ai_areas.length > 0 && (
+        <div>
+          <p className="font-medium">Áreas de interesse em IA:</p>
+          <ul className="list-disc pl-5">
+            {data.desired_ai_areas.map((area: string, index: number) => (
+              <li key={index}>{area}</li>
+            ))}
+          </ul>
+        </div>
       )}
       
-      {processedData.completed_formation && (
-        <p><span className="font-medium">Formação completada:</span> Sim</p>
+      {data.nps_score !== undefined && (
+        <p><span className="font-medium">Satisfação com IA (0-10):</span> {data.nps_score}</p>
       )}
       
-      {processedData.improvement_suggestions && (
+      {data.improvement_suggestions && (
         <div>
           <p className="font-medium">Sugestões de melhoria:</p>
-          <p className="text-gray-600 mt-1 bg-gray-50 p-2 rounded border border-gray-100">
-            {processedData.improvement_suggestions}
-          </p>
+          <p className="text-gray-600">{data.improvement_suggestions}</p>
         </div>
       )}
     </div>

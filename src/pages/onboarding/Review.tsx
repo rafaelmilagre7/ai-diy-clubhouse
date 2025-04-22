@@ -1,11 +1,11 @@
+
 import React, { useEffect } from "react";
 import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
 import { useOnboardingSteps } from "@/hooks/onboarding/useOnboardingSteps";
 import { MilagrinhoMessage } from "@/components/onboarding/MilagrinhoMessage";
-import { CheckCircle, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useProgress } from "@/hooks/onboarding/useProgress";
-import { Button } from "@/components/ui/button";
 import { ReviewStep } from "@/components/onboarding/steps/ReviewStep";
 import { toast } from "sonner";
 import { useStepPersistenceCore } from "@/hooks/onboarding/persistence/useStepPersistenceCore";
@@ -24,6 +24,7 @@ const Review: React.FC = () => {
   const reviewStepIndex = steps.findIndex(step => step.id === "review");
   const progressPercentage = Math.round(((reviewStepIndex + 1) / steps.length) * 100);
   
+  // Efeito para atualizar dados ao entrar na página
   useEffect(() => {
     const loadFreshData = async () => {
       try {
@@ -39,6 +40,7 @@ const Review: React.FC = () => {
     loadFreshData();
   }, [refreshProgress]);
   
+  // Validar dados de progresso
   useEffect(() => {
     if (progress) {
       console.log("Dados de progresso na tela de revisão:", progress);
@@ -87,11 +89,13 @@ const Review: React.FC = () => {
   const handleEditStep = async (step: string, updatedData: any) => {
     try {
       setIsSubmitting(true);
-      await saveStepData(step, updatedData, false, true /* allowEdit */);
+      // O parâmetro allowEdit=true permite editar etapas já concluídas
+      await saveStepData(step, updatedData, false, true);
       toast.success("Alteração salva com sucesso!");
       await refreshProgress();
     } catch (error) {
       toast.error("Erro ao salvar alteração. Tente novamente.");
+      console.error("Erro ao editar etapa:", error);
     } finally {
       setIsSubmitting(false);
     }
