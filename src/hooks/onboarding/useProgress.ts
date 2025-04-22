@@ -20,7 +20,8 @@ export const useProgress = () => {
     lastUpdateTime,
     lastError,
     retryCount,
-    toastShownRef
+    toastShownRef,
+    logDebugEvent
   } = useProgressState();
 
   const { fetchProgress } = useProgressFetch(
@@ -29,7 +30,8 @@ export const useProgress = () => {
     setIsLoading,
     progressId,
     lastError,
-    retryCount
+    retryCount,
+    logDebugEvent
   );
 
   const { refreshProgress } = useProgressRefresh(
@@ -39,7 +41,8 @@ export const useProgress = () => {
     isMounted,
     setProgress,
     retryCount,
-    fetchProgress
+    fetchProgress,
+    logDebugEvent
   );
 
   const { updateProgress } = useProgressUpdate(
@@ -47,7 +50,8 @@ export const useProgress = () => {
     setProgress,
     toastShownRef,
     lastError,
-    refreshProgress
+    refreshProgress,
+    logDebugEvent
   );
 
   // Função para forçar um reset completo do progresso do usuário
@@ -58,7 +62,7 @@ export const useProgress = () => {
         return false;
       }
       
-      console.log("[DEBUG] Iniciando reset completo de progresso para usuário:", user.id);
+      logDebugEvent("resetProgress", { userId: user.id });
       setIsLoading(true);
       
       // Importação dinâmica para evitar dependências circulares

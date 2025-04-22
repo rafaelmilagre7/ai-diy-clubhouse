@@ -26,27 +26,29 @@ export const usePersonalInfoStep = () => {
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [validationAttempted, setValidationAttempted] = useState(false);
-  // Flag para controlar se já carregamos os dados iniciais
   const [initialDataLoaded, setInitialDataLoaded] = useState(false);
 
   // Função para carregar dados iniciais do banco
   const loadInitialData = useCallback(() => {
+    console.log("[DEBUG] loadInitialData chamado - progresso:", progress);
+    
+    // Verifica se temos o nome e email do perfil primeiro
+    const userName = profile?.name || user?.user_metadata?.name || "";
+    const userEmail = profile?.email || user?.email || "";
+    
+    // Se temos dados do progresso, carregamos deles
     if (progress?.personal_info) {
+      console.log("[DEBUG] Dados encontrados no progresso:", progress.personal_info);
+      
       // Formatar o DDI para garantir que tenha apenas um +
       let ddi = progress.personal_info.ddi || "+55";
       if (ddi) {
         ddi = "+" + ddi.replace(/\+/g, '').replace(/\D/g, '');
       }
       
-      console.log("Dados encontrados no progresso:", progress.personal_info);
-      
-      // Nome e email do perfil têm prioridade sobre os dados do progresso
-      const userName = profile?.name || user?.user_metadata?.name || progress.personal_info.name || "";
-      const userEmail = profile?.email || user?.email || progress.personal_info.email || "";
-      
       setFormData({
-        name: userName,
-        email: userEmail,
+        name: userName || progress.personal_info.name || "",
+        email: userEmail || progress.personal_info.email || "",
         phone: progress.personal_info.phone || "",
         ddi: ddi,
         linkedin: progress.personal_info.linkedin || "",
@@ -57,31 +59,42 @@ export const usePersonalInfoStep = () => {
         timezone: progress.personal_info.timezone || "GMT-3"
       });
       
-      console.log("Dados carregados do progresso:", {
-        name: userName,
-        email: userEmail,
-        phone: progress.personal_info.phone || "",
-        ddi: ddi,
-        // ... outros campos
+      console.log("[DEBUG] Dados carregados do progresso:", {
+        name: userName || progress.personal_info.name || "",
+        email: userEmail || progress.personal_info.email || ""
       });
-      
-      setInitialDataLoaded(true);
     } else {
-      console.log("Nenhum dado de progresso encontrado para personal_info");
+      console.log("[DEBUG] Nenhum dado de progresso encontrado, usando dados do perfil");
       
-      // Se não houver dados no progresso, use dados do perfil se disponíveis
-      if (profile || user) {
-        const userName = profile?.name || user?.user_metadata?.name || "";
-        const userEmail = profile?.email || user?.email || "";
-        
-        setFormData(prev => ({
-          ...prev,
-          name: userName,
-          email: userEmail
-        }));
-      }
+      // Se não houver dados no progresso, use dados do perfil
+      setFormData(prev => ({
+        ...prev,
+        name: userName,
+        email: userEmail
+      }));
     }
-  }, [progress?.personal_info, profile, user]);
+    
+    setInitialDataLoaded(true);
+  }, [progress, profile, user]);
+
+  // Inicializar com dados vazios se não houver progresso após 3 segundos
+  useEffect(() => {
+    if (!initialDataLoaded) {
+      const timer = setTimeout(() => {
+        if (!initialDataLoaded) {
+          console.log("[DEBUG] Tempo limite atingido, inicializando com dados vazios");
+          setFormData(prev => ({
+            ...prev,
+            name: profile?.name || user?.user_metadata?.name || "",
+            email: profile?.email || user?.email || ""
+          }));
+          setInitialDataLoaded(true);
+        }
+      }, 3000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [initialDataLoaded, profile, user]);
 
   // Carregar dados iniciais quando o progresso for carregado
   useEffect(() => {
@@ -110,8 +123,6 @@ export const usePersonalInfoStep = () => {
         return newErrors;
       });
     }
-
-    // Auto-save após alteração (poderia ser implementado aqui)
   };
 
   const handleSubmit = async () => {
@@ -147,12 +158,22 @@ export const usePersonalInfoStep = () => {
         dataToSubmit.ddi = "+" + dataToSubmit.ddi.replace(/\+/g, '').replace(/\D/g, '');
       }
       
-      console.log("Submetendo dados formatados:", dataToSubmit);
+      console.log("[DEBUG] Submetendo dados formatados:", dataToSubmit);
+      
+      // Garantir que temos um progresso.completed_steps válido
+      const currentCompletedSteps = Array.isArray(progress?.completed_steps) 
+        ? progress.completed_steps 
+        : [];
+        
+      // Verificar se "personal" já existe nos completed_steps
+      const newCompletedSteps = currentCompletedSteps.includes("personal")
+        ? currentCompletedSteps
+        : [...currentCompletedSteps, "personal"];
       
       await updateProgress({
         personal_info: dataToSubmit,
         current_step: "professional_data",
-        completed_steps: [...(progress?.completed_steps || []), "personal"],
+        completed_steps: newCompletedSteps,
       });
 
       // Única notificação de sucesso com informação combinada
@@ -162,7 +183,7 @@ export const usePersonalInfoStep = () => {
       
       return true;
     } catch (error) {
-      console.error("Erro ao salvar dados:", error);
+      console.error("[ERRO] Erro ao salvar dados:", error);
       toast.error("Erro ao salvar dados. Tente novamente.");
       return false;
     } finally {
