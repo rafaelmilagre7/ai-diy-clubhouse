@@ -61,7 +61,6 @@ export function useStepPersistenceCore({
     }
     
     console.log(`Salvando dados do passo ${stepId}, índice ${currentStepIndex}:`, data);
-    console.log("Estado atual do progresso:", progress);
 
     try {
       // Montar objeto de atualização para a etapa
@@ -94,17 +93,16 @@ export function useStepPersistenceCore({
       const updatedProgress = (result as any).data || { ...progress, ...updateObj };
       console.log("Progresso atualizado com sucesso:", updatedProgress);
       
-      // Notificar usuário do salvamento
+      // Notificar usuário do salvamento (apenas uma vez aqui)
       toast.success("Dados salvos com sucesso!");
       
       // Forçar atualização dos dados local após salvar
       await refreshProgress();
-      console.log("Dados locais atualizados após salvar");
       
       // Navegação para a próxima etapa
       if (shouldNavigate) {
         console.log("Tentando navegar para a próxima etapa...");
-        // Usar o módulo de navegação por etapas com modificação para usar window.location.href
+        // Usar o módulo de navegação por etapas
         navigateAfterStep(stepId, currentStepIndex, navigate, shouldNavigate);
       } else {
         console.log("Navegação automática desativada, permanecendo na página atual");

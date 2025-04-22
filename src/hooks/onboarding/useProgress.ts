@@ -20,9 +20,11 @@ export const useProgress = () => {
   const lastUpdateTime = useRef<number>(Date.now());
   const lastError = useRef<Error | null>(null);
   const retryCount = useRef(0);
+  const toastShownRef = useRef(false);
 
   useEffect(() => {
     isMounted.current = true;
+    toastShownRef.current = false;
     return () => {
       isMounted.current = false;
     };
@@ -113,14 +115,15 @@ export const useProgress = () => {
       if (error) {
         console.error("Erro ao atualizar dados:", error);
         lastError.current = new Error(error.message);
-        toast.error("Erro ao salvar dados. Por favor, tente novamente.");
+        // Não mostrar toast aqui para evitar duplicação
         throw error;
       }
 
       const updatedProgress = data || { ...progress, ...updates };
       setProgress(updatedProgress);
       console.log("Progresso atualizado com sucesso:", updatedProgress);
-      toast.success("Dados salvos com sucesso!");
+      // Não mostrar toast aqui para evitar duplicação
+      
       retryCount.current = 0; // Reset retry count on success
       return updatedProgress;
     } catch (error) {
@@ -178,20 +181,7 @@ export const useProgress = () => {
     }
   }, [user, fetchProgress]);
 
-  useEffect(() => {
-    if (!user || !progressId.current) return;
-    
-    const checkForUpdates = async () => {
-      if (Date.now() - lastUpdateTime.current > 15000) {
-        console.log("Verificando atualizações no servidor...");
-        await refreshProgress();
-      }
-    };
-    
-    const interval = setInterval(checkForUpdates, 20000);
-    
-    return () => clearInterval(interval);
-  }, [user, refreshProgress]);
+  // Removido o useEffect para verificações periódicas para minimizar a chance de toasts duplicados
 
   return {
     progress,

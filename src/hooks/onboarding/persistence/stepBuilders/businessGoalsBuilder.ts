@@ -1,150 +1,38 @@
 
 import { OnboardingData, OnboardingProgress } from "@/types/onboarding";
+import { buildBaseUpdate } from "./baseBuilder";
 
-interface BusinessGoalsData {
-  primary_goal?: string;
-  expected_outcomes?: string[];
-  expected_outcome_30days?: string;
-  timeline?: string;
-  priority_solution_type?: string;
-  how_implement?: string;
-  week_availability?: string;
-  live_interest?: number;
-  content_formats?: string[];
-}
-
-export function buildBusinessGoalsUpdate(
-  data: Partial<OnboardingData> | BusinessGoalsData, 
-  progress: OnboardingProgress | null
-) {
-  const updateObj: any = {};
+export function buildBusinessGoalsUpdate(data: Partial<OnboardingData>, progress: OnboardingProgress | null) {
+  console.log("Construindo atualização de business_goals:", JSON.stringify(data?.business_goals || {}, null, 2));
   
-  console.log("buildBusinessGoalsUpdate recebeu data:", JSON.stringify(data, null, 2));
-  console.log("buildBusinessGoalsUpdate recebeu progress:", progress ? "Objeto válido" : "Null");
-  
-  // Garantir uma base consistente para os dados
-  let existingGoals: any = {};
-  
-  // Verificar se temos dados válidos de progresso
-  if (progress) {
-    if (typeof progress.business_goals === 'string') {
-      try {
-        // Verificar se é uma string válida antes de tentar trim
-        const stringValue = progress.business_goals ? String(progress.business_goals) : '';
-        if (stringValue && typeof stringValue === 'string' && stringValue.trim()) {
-          existingGoals = JSON.parse(stringValue.trim());
-          console.log("business_goals convertido de string para objeto:", existingGoals);
-        }
-      } catch (e) {
-        console.error("Erro ao converter business_goals de string para objeto:", e);
-      }
-    } else if (progress.business_goals && typeof progress.business_goals === 'object') {
-      existingGoals = progress.business_goals;
-      console.log("business_goals já é um objeto:", existingGoals);
-    }
+  // Verificar se temos dados de business_goals para atualizar
+  if (!data.business_goals) {
+    console.warn("Não há dados de business_goals para atualizar");
+    return {};
   }
   
-  // Inicializar o objeto de atualização com os dados existentes
-  updateObj.business_goals = {...existingGoals};
+  // Processar dados para garantir formato correto
+  const businessGoals = data.business_goals;
   
-  // Verificar se estamos recebendo dados diretos ou em um objeto aninhado
-  const sourceData = 'business_goals' in data && data.business_goals ? data.business_goals : data;
-  
-  if (typeof sourceData === 'object' && sourceData !== null) {
-    // Verificar se a fonte é uma BusinessGoalsData ou um objeto aninhado
-    const goalsData = sourceData as BusinessGoalsData;
-    
-    // Log detalhado dos dados recebidos para diagnóstico
-    console.log("Dados recebidos para processamento em businessGoalsBuilder:", JSON.stringify(goalsData, null, 2));
-    
-    // Mesclar com dados existentes para campos específicos
-    if ('content_formats' in goalsData) {
-      if (goalsData.content_formats === undefined) {
-        // Manter valor existente
-      } else if (!Array.isArray(goalsData.content_formats)) {
-        updateObj.business_goals.content_formats = [goalsData.content_formats].filter(Boolean);
-      } else {
-        updateObj.business_goals.content_formats = goalsData.content_formats;
-      }
-    }
-    
-    if ('expected_outcomes' in goalsData) {
-      if (goalsData.expected_outcomes === undefined) {
-        // Manter valor existente
-      } else if (!Array.isArray(goalsData.expected_outcomes)) {
-        updateObj.business_goals.expected_outcomes = [goalsData.expected_outcomes].filter(Boolean);
-      } else {
-        updateObj.business_goals.expected_outcomes = goalsData.expected_outcomes;
-      }
-    }
-    
-    if ('live_interest' in goalsData) {
-      if (goalsData.live_interest === undefined) {
-        // Manter valor existente
-      } else {
-        // Converter para número caso seja necessário
-        updateObj.business_goals.live_interest = typeof goalsData.live_interest === 'string' ? 
-          parseInt(goalsData.live_interest, 10) || 0 : goalsData.live_interest;
-      }
-    }
-    
-    // Campos de string simples
-    const stringFields = [
-      'primary_goal', 
-      'expected_outcome_30days', 
-      'priority_solution_type',
-      'how_implement',
-      'week_availability',
-      'timeline'
-    ];
-    
-    stringFields.forEach(field => {
-      if (field in goalsData) {
-        if (goalsData[field as keyof BusinessGoalsData] === undefined) {
-          // Manter valor existente
-        } else {
-          updateObj.business_goals[field] = goalsData[field as keyof BusinessGoalsData];
-        }
-      }
-    });
-    
-    // Sincronização especial entre expected_outcomes e expected_outcome_30days
-    if ('expected_outcome_30days' in goalsData && goalsData.expected_outcome_30days) {
-      if (!updateObj.business_goals.expected_outcomes || 
-          !Array.isArray(updateObj.business_goals.expected_outcomes)) {
-        updateObj.business_goals.expected_outcomes = [goalsData.expected_outcome_30days];
-      } else if (!updateObj.business_goals.expected_outcomes.includes(goalsData.expected_outcome_30days)) {
-        updateObj.business_goals.expected_outcomes = [
-          goalsData.expected_outcome_30days,
-          ...updateObj.business_goals.expected_outcomes.filter((item: string) => Boolean(item))
-        ];
-      }
-    } 
-    else if ('expected_outcomes' in goalsData && 
-             Array.isArray(goalsData.expected_outcomes) && 
-             goalsData.expected_outcomes.length > 0 &&
-             goalsData.expected_outcomes[0]) {
-      if (!updateObj.business_goals.expected_outcome_30days) {
-        updateObj.business_goals.expected_outcome_30days = goalsData.expected_outcomes[0];
-      }
-    }
+  // Garantir que live_interest é um número
+  if (businessGoals.live_interest !== undefined && typeof businessGoals.live_interest !== 'number') {
+    businessGoals.live_interest = Number(businessGoals.live_interest);
   }
   
-  // Verificar se o objeto final contém todos os campos obrigatórios
-  const requiredFields = ['primary_goal', 'priority_solution_type', 'how_implement', 'week_availability'];
-  const missingRequiredFields = requiredFields.filter(field => !updateObj.business_goals[field]);
-  
-  if (missingRequiredFields.length > 0) {
-    console.warn(`Campos obrigatórios ausentes no objeto final: ${missingRequiredFields.join(', ')}`);
-  } else {
-    console.log("Todos os campos obrigatórios estão presentes no objeto final");
+  // Garantir que content_formats é um array
+  if (businessGoals.content_formats && !Array.isArray(businessGoals.content_formats)) {
+    businessGoals.content_formats = [businessGoals.content_formats];
+  } else if (!businessGoals.content_formats) {
+    businessGoals.content_formats = [];
   }
   
-  // Verificar se o objeto final contém dados
-  const isEmpty = !updateObj.business_goals || Object.keys(updateObj.business_goals).length === 0;
-  console.log("Objeto business_goals está vazio após processamento?", isEmpty);
+  // Garantir expected_outcomes
+  if (businessGoals.expected_outcome_30days && !businessGoals.expected_outcomes) {
+    businessGoals.expected_outcomes = [businessGoals.expected_outcome_30days];
+  } else if (!businessGoals.expected_outcomes) {
+    businessGoals.expected_outcomes = [];
+  }
   
-  console.log("Objeto de atualização final para business_goals:", JSON.stringify(updateObj.business_goals, null, 2));
-  
-  return updateObj;
+  // Construir atualização base usando o business_goals processado
+  return buildBaseUpdate("business_goals", { business_goals: businessGoals }, progress, {});
 }

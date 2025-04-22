@@ -54,7 +54,7 @@ const BusinessGoalsClub = () => {
         setLocalDataReady(true);
       } catch (error) {
         console.error("Erro ao carregar dados:", error);
-        toast.error("Erro ao carregar dados. Algumas informações podem estar desatualizadas.");
+        // Removemos o toast de erro para evitar toasts duplicados
         setLocalDataReady(true); // Mesmo com erro, permitir a renderização
       }
     };
@@ -120,18 +120,16 @@ const BusinessGoalsClub = () => {
       // Log de dados antes de salvar
       console.log("Dados finais formatados antes de salvar:", JSON.stringify(data, null, 2));
       
-      // Salvar dados
-      await saveStepData(stepId, data, false);
+      // Salvar dados (apenas um toast será mostrado na função saveStepData)
+      const result = await saveStepData(stepId, data, false);
       console.log("Dados salvos com sucesso");
+
+      // Não mostrar toast aqui para evitar duplicação
       
-      // Verificar se os dados foram salvos corretamente
-      await refreshProgress();
-      console.log("Após salvar, dados de progresso:", progress?.business_goals);
-      
-      toast.success("Dados salvos com sucesso!");
-      
-      // Navegar manualmente para a próxima página
-      navigate("/onboarding/customization");
+      // Navegar manualmente para a próxima página após um breve atraso
+      setTimeout(() => {
+        navigate("/onboarding/customization");
+      }, 500);
     } catch (error) {
       console.error("Erro ao salvar dados:", error);
       toast.error("Erro ao salvar dados. Por favor, tente novamente.");
