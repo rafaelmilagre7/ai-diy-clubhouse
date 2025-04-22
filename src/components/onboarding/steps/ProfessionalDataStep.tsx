@@ -8,7 +8,7 @@ import { WebsiteField } from "./professional-inputs/WebsiteField";
 import { CurrentPositionField } from "./professional-inputs/CurrentPositionField";
 import { AnnualRevenueField } from "./professional-inputs/AnnualRevenueField";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, AlertCircle, Building2, Loader2 } from "lucide-react";
+import { ArrowRight, ArrowLeft, AlertCircle, Building2, Loader2 } from "lucide-react";
 import { OnboardingStepProps } from "@/types/onboarding";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -18,6 +18,7 @@ import { NavigationButtons } from "@/components/onboarding/NavigationButtons";
 
 interface ProfessionalDataStepProps extends OnboardingStepProps {
   personalInfo?: any;
+  onPrevious?: () => void;
 }
 
 export const ProfessionalDataStep: React.FC<ProfessionalDataStepProps> = ({
@@ -26,7 +27,8 @@ export const ProfessionalDataStep: React.FC<ProfessionalDataStepProps> = ({
   initialData,
   isLastStep = false,
   onComplete,
-  personalInfo
+  personalInfo,
+  onPrevious
 }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
@@ -86,7 +88,7 @@ export const ProfessionalDataStep: React.FC<ProfessionalDataStepProps> = ({
       
       setFormInitialized(true);
     }
-  }, [initialData]);
+  }, [initialData, methods]);
 
   const handleSubmit = async (data: any) => {
     setIsLoading(true);
@@ -130,6 +132,12 @@ export const ProfessionalDataStep: React.FC<ProfessionalDataStepProps> = ({
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handlePrevious = () => {
+    if (onPrevious) {
+      onPrevious();
     }
   };
 
@@ -182,7 +190,8 @@ export const ProfessionalDataStep: React.FC<ProfessionalDataStepProps> = ({
           isSubmitting={isSubmitting || isLoading}
           submitText="Próximo Passo"
           loadingText="Salvando..."
-          showPrevious={false}
+          showPrevious={true}
+          onPrevious={handlePrevious}
         />
       </form>
     </FormProvider>

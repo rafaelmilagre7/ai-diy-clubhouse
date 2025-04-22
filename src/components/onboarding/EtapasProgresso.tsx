@@ -28,6 +28,7 @@ export const EtapasProgresso: React.FC<EtapasProgressoProps> = ({
         {steps.map((step, idx) => {
           const isComplete = step < currentStep;
           const isActive = step === currentStep;
+          // Permitimos que passos já completados sejam clicáveis
           const isClickable = typeof onStepClick === 'function';
 
           return (
@@ -36,15 +37,15 @@ export const EtapasProgresso: React.FC<EtapasProgressoProps> = ({
               key={step}
               className={cn(
                 "relative z-10 flex flex-col items-center focus:outline-none group bg-transparent p-0 border-0",
-                isClickable && !isActive ? "cursor-pointer select-none hover:scale-110 transition-transform" : "",
+                isClickable ? "cursor-pointer select-none hover:scale-110 transition-transform" : "",
               )}
               onClick={() => {
-                if (isClickable && onStepClick && step !== currentStep) {
+                if (isClickable && onStepClick) {
                   onStepClick(idx);
                 }
               }}
-              aria-disabled={isActive || !isClickable}
-              tabIndex={isClickable && !isActive ? 0 : -1}
+              aria-disabled={!isClickable}
+              tabIndex={isClickable ? 0 : -1}
               role={isClickable ? "button" : undefined}
               title={`Ir para etapa ${step}`}
             >
@@ -64,6 +65,15 @@ export const EtapasProgresso: React.FC<EtapasProgressoProps> = ({
                   <span className="text-white font-medium">{step}</span>
                 )}
               </div>
+              <span className="mt-2 text-xs text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity absolute -bottom-6 whitespace-nowrap">
+                {idx === 0 ? "Dados Pessoais" : 
+                 idx === 1 ? "Dados Profissionais" :
+                 idx === 2 ? "Contexto do Negócio" :
+                 idx === 3 ? "Experiência com IA" :
+                 idx === 4 ? "Objetivos" :
+                 idx === 5 ? "Personalização" :
+                 idx === 6 ? "Complementares" : "Revisar"}
+              </span>
             </button>
           );
         })}

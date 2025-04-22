@@ -13,7 +13,7 @@ import { Loader2 } from "lucide-react";
 
 const ProfessionalData = () => {
   const { progress, isLoading, refreshProgress } = useProgress();
-  const { saveStepData } = useOnboardingSteps();
+  const { saveStepData, navigateToStep } = useOnboardingSteps();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [dataFetched, setDataFetched] = useState(false);
   const navigate = useNavigate();
@@ -61,6 +61,11 @@ const ProfessionalData = () => {
     }
   };
 
+  const handlePrevious = () => {
+    // Navegar para a etapa anterior (Dados Pessoais)
+    navigate("/onboarding");
+  };
+
   return (
     <OnboardingLayout
       currentStep={2}
@@ -82,6 +87,7 @@ const ProfessionalData = () => {
             onSubmit={handleSubmit}
             isSubmitting={isSubmitting}
             initialData={progress}
+            onPrevious={handlePrevious}
           />
         )}
       </div>
