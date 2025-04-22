@@ -24,7 +24,7 @@ export const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({
   const hasErrors = Object.keys(errors).length > 0;
   
   // Adicionar log para depuração
-  console.log("[DEBUG] PersonalInfoForm props:", { isSubmitting, readOnly });
+  console.log("[DEBUG] PersonalInfoForm props:", { isSubmitting, readOnly, formData });
 
   return (
     <div className="space-y-6">

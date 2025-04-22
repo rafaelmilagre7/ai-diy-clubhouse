@@ -6,7 +6,6 @@ import { PhoneInput } from "./PhoneInput";
 import { CountrySelect } from "./CountrySelect";
 import { TimezoneSelect } from "./TimezoneSelect";
 import { cn } from "@/lib/utils";
-import { LocationInputs } from "../inputs/LocationInputs";
 
 interface PersonalInfoInputsProps {
   formData: {
@@ -136,6 +135,7 @@ export const PersonalInfoInputs: React.FC<PersonalInfoInputsProps> = ({
             value={formData.country || 'Brasil'}
             onChange={onChange}
             readOnly={readOnly}
+            error={errors.country}
           />
           {errors.country && (
             <p className="text-red-500 text-sm mt-1">{errors.country}</p>
@@ -143,20 +143,43 @@ export const PersonalInfoInputs: React.FC<PersonalInfoInputsProps> = ({
         </div>
       </div>
 
-      {/* Location Inputs (Estado e Cidade) */}
-      <LocationInputs
-        country={formData.country || 'Brasil'}
-        state={formData.state || ''}
-        city={formData.city || ''}
-        onChangeCountry={(value) => onChange("country", value)}
-        onChangeState={(value) => onChange("state", value)}
-        onChangeCity={(value) => onChange("city", value)}
-        disabled={disabled}
-        errors={{
-          state: errors.state,
-          city: errors.city
-        }}
-      />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+        {/* State */}
+        <div className="col-span-1">
+          <Label htmlFor="state">Estado</Label>
+          <Input
+            type="text"
+            id="state"
+            placeholder="Seu estado"
+            value={formData.state || ''}
+            onChange={(e) => onChange("state", e.target.value)}
+            className={cn(errors.state && "border-red-500")}
+            readOnly={readOnly}
+            disabled={disabled}
+          />
+          {errors.state && (
+            <p className="text-red-500 text-sm mt-1">{errors.state}</p>
+          )}
+        </div>
+
+        {/* City */}
+        <div className="col-span-1">
+          <Label htmlFor="city">Cidade</Label>
+          <Input
+            type="text"
+            id="city"
+            placeholder="Sua cidade"
+            value={formData.city || ''}
+            onChange={(e) => onChange("city", e.target.value)}
+            className={cn(errors.city && "border-red-500")}
+            readOnly={readOnly}
+            disabled={disabled}
+          />
+          {errors.city && (
+            <p className="text-red-500 text-sm mt-1">{errors.city}</p>
+          )}
+        </div>
+      </div>
 
       <div className="mt-6">
         {/* Timezone */}
@@ -165,6 +188,7 @@ export const PersonalInfoInputs: React.FC<PersonalInfoInputsProps> = ({
           value={formData.timezone || 'GMT-3'}
           onChange={onChange}
           readOnly={readOnly}
+          error={errors.timezone}
         />
         {errors.timezone && (
           <p className="text-red-500 text-sm mt-1">{errors.timezone}</p>
