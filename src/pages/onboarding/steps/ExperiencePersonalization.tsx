@@ -6,12 +6,14 @@ import { ExperiencePersonalizationStep } from "@/components/onboarding/steps/Exp
 import { MilagrinhoMessage } from "@/components/onboarding/MilagrinhoMessage";
 import { useProgress } from "@/hooks/onboarding/useProgress";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 const ExperiencePersonalization = () => {
   const { saveStepData, progress, completeOnboarding } = useOnboardingSteps();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { isLoading, refreshProgress } = useProgress();
   const [refreshCount, setRefreshCount] = useState(0);
+  const navigate = useNavigate();
 
   // Efeito para carregar dados mais recentes ao entrar na página
   useEffect(() => {
@@ -32,13 +34,18 @@ const ExperiencePersonalization = () => {
     setIsSubmitting(true);
     try {
       console.log("Salvando dados de personalização:", data);
+      
       // Usar a assinatura com stepId explícito
-      await saveStepData("experience_personalization", data, true);
+      await saveStepData("experience_personalization", data, false);
+      
       console.log("Dados de personalização salvos com sucesso");
       toast.success("Dados salvos com sucesso!");
       
       // Forçar atualização dos dados após salvar
       await refreshProgress();
+      
+      // Navegar manualmente para a próxima página
+      navigate("/onboarding/complementary");
     } catch (error) {
       console.error("Erro ao salvar dados:", error);
       toast.error("Erro ao salvar dados. Por favor, tente novamente.");
@@ -83,7 +90,7 @@ const ExperiencePersonalization = () => {
           <ExperiencePersonalizationStep
             onSubmit={handleSaveData}
             isSubmitting={isSubmitting}
-            initialData={progress?.experience_personalization}
+            initialData={progress}
             isLastStep={false}
             onComplete={completeOnboarding}
           />

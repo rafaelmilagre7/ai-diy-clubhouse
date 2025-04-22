@@ -1,80 +1,67 @@
 
 import { OnboardingData, OnboardingProgress } from "@/types/onboarding";
-import { normalizeBusinessGoals } from "../utils/dataNormalization";
 
 export function buildBusinessGoalsUpdate(data: Partial<OnboardingData>, progress: OnboardingProgress | null) {
-  // Log para debug dos dados recebidos
-  console.log("Dados recebidos no businessGoalsBuilder:", data);
-  
-  // Inicializar objeto de atualização
   const updateObj: any = {};
   
-  // Verificar se temos um objeto business_goals nos dados
-  if (data.business_goals) {
-    // Trabalhar com uma cópia para não modificar os dados originais
-    let businessGoalsData = { ...(data.business_goals) };
-    
-    // Usar a função de normalização para garantir consistência
-    businessGoalsData = normalizeBusinessGoals(businessGoalsData);
-    
-    // Log para debug
-    console.log("Dados de business_goals normalizados:", businessGoalsData);
-    
-    // Criar objeto final
-    updateObj.business_goals = {
-      ...businessGoalsData,
-      _last_updated: new Date().toISOString()
-    };
-  } else if ((data as any).business_goals === "{}") {
-    // Corrigir caso onde temos um string vazio "{}" vindo do backend
-    updateObj.business_goals = { _last_updated: new Date().toISOString() };
-  } else {
-    // Extrair campos relacionados a business_goals diretamente do objeto de dados
-    const businessGoalsFields = {
-      primary_goal: (data as any).primary_goal,
-      expected_outcome_30days: (data as any).expected_outcome_30days,
-      expected_outcomes: (data as any).expected_outcomes,
-      priority_solution_type: (data as any).priority_solution_type,
-      how_implement: (data as any).how_implement,
-      week_availability: (data as any).week_availability,
-      live_interest: (data as any).live_interest,
-      content_formats: (data as any).content_formats,
-    };
-
-    // Filtrar campos não definidos
-    const filteredFields = Object.fromEntries(
-      Object.entries(businessGoalsFields).filter(([_, value]) => value !== undefined)
-    );
-
-    // Se tivermos campos para atualizar, criar o objeto de business_goals
-    if (Object.keys(filteredFields).length > 0) {
-      // Normalizar os campos específicos
-      const normalizedFields = normalizeBusinessGoals(filteredFields);
-      
-      updateObj.business_goals = {
-        ...normalizedFields,
-        _last_updated: new Date().toISOString()
-      };
+  // Garantir uma base consistente para os dados
+  let existingGoals = progress?.business_goals || {};
+  
+  // Se os dados existentes forem uma string, tentar convertê-los para objeto
+  if (typeof existingGoals === 'string' && existingGoals.trim() !== '') {
+    try {
+      existingGoals = JSON.parse(existingGoals);
+    } catch (e) {
+      console.error("Erro ao converter business_goals de string para objeto:", e);
+      existingGoals = {};
     }
+  } else if (typeof existingGoals === 'string') {
+    // Se for string vazia ou '{}', transformar em objeto vazio
+    existingGoals = {};
   }
-
-  // Processar o objeto progress.business_goals existente, se necessário
-  if (progress?.business_goals) {
-    let existingBusinessGoals = normalizeBusinessGoals(progress.business_goals);
-    
-    // Garantir que é um objeto válido antes de mesclar
-    if (existingBusinessGoals && typeof existingBusinessGoals === 'object' && Object.keys(existingBusinessGoals).length > 0) {
-      if (updateObj.business_goals) {
-        updateObj.business_goals = {
-          ...existingBusinessGoals,
-          ...updateObj.business_goals
-        };
-      } else {
-        updateObj.business_goals = existingBusinessGoals;
+  
+  // Inicializar o objeto de atualização com os dados existentes
+  updateObj.business_goals = {...existingGoals};
+  
+  // Verificar se estamos recebendo dados diretos ou em um objeto aninhado
+  const sourceData = (data as any).business_goals || data;
+  
+  if (typeof sourceData === 'object' && sourceData !== null) {
+    // Mesclar com dados existentes
+    Object.entries(sourceData).forEach(([key, value]) => {
+      // Tratamento especial para campos que devem ser arrays
+      if (['expected_outcomes', 'content_formats'].includes(key)) {
+        if (value !== null && value !== undefined) {
+          if (!Array.isArray(value)) {
+            updateObj.business_goals[key] = [value];
+          } else {
+            updateObj.business_goals[key] = value;
+          }
+        }
+      } else if (key === 'live_interest' && value !== undefined) {
+        // Converter para número caso seja necessário
+        updateObj.business_goals[key] = typeof value === 'string' ? 
+          parseInt(value, 10) || 0 : value;
+      } else if (value !== undefined) {
+        // Para outros campos, usar o valor diretamente
+        updateObj.business_goals[key] = value;
       }
+    });
+    
+    // Sincronização especial entre expected_outcomes e expected_outcome_30days
+    if (sourceData.expected_outcome_30days && 
+        (!updateObj.business_goals.expected_outcomes || 
+         updateObj.business_goals.expected_outcomes.length === 0)) {
+      updateObj.business_goals.expected_outcomes = [sourceData.expected_outcome_30days];
+    } else if (sourceData.expected_outcomes && 
+              Array.isArray(sourceData.expected_outcomes) && 
+              sourceData.expected_outcomes.length > 0 &&
+              !updateObj.business_goals.expected_outcome_30days) {
+      updateObj.business_goals.expected_outcome_30days = sourceData.expected_outcomes[0];
     }
   }
   
-  console.log("Objeto de atualização final:", updateObj);
+  console.log("Objeto de atualização para business_goals:", updateObj);
+  
   return updateObj;
 }

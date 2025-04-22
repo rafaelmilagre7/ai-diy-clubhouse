@@ -59,18 +59,47 @@ function translateMentorshipTopic(value: string): string {
   return translations[value] || value;
 }
 
-export function getExperiencePersonalizationSummary(data: OnboardingData['experience_personalization']) {
-  if (!data || Object.keys(data).length === 0) {
+// Função para garantir que os dados são um objeto válido
+function ensureObject(data: any): Record<string, any> {
+  if (!data) return {};
+  
+  if (typeof data === 'string') {
+    try {
+      return JSON.parse(data);
+    } catch (e) {
+      console.error("Erro ao analisar string como JSON:", e);
+      return {};
+    }
+  }
+  
+  return data;
+}
+
+export function getExperiencePersonalizationSummary(data: any) {
+  console.log("Renderizando summary para seção experience_personalization com dados:", data);
+  
+  // Verificação de dados
+  if (!data) {
+    console.warn("Dados vazios para seção experience_personalization");
+    return <p className="text-gray-500 italic">Seção não preenchida. Clique em Editar para preencher.</p>;
+  }
+  
+  // Garantir que estamos trabalhando com um objeto
+  const personalization = ensureObject(data);
+  
+  // Se mesmo após processamento os dados estiverem vazios
+  if (Object.keys(personalization).length === 0) {
+    console.warn("Objeto vazio após processamento para seção experience_personalization");
     return <p className="text-gray-500 italic">Seção não preenchida. Clique em Editar para preencher.</p>;
   }
 
   return (
     <div className="space-y-3 text-sm">
-      {data.interests && data.interests.length > 0 && (
+      {personalization.interests && personalization.interests.length > 0 && (
         <div>
-          <span className="font-medium">Áreas de interesse:</span>
+          <span className="font-medium">Interesses em IA:</span>
           <div className="flex flex-wrap gap-1 mt-1">
-            {data.interests.map((interest: string, index: number) => (
+            {personalization.interests.map((interest: string, index: number) => (
               <Badge key={index} variant="outline" className="bg-gray-100">
                 {translateInterest(interest)}
               </Badge>
@@ -78,44 +107,44 @@ export function getExperiencePersonalizationSummary(data: OnboardingData['experi
           </div>
         </div>
       )}
-      
-      {data.time_preference && data.time_preference.length > 0 && (
+
+      {personalization.time_preference && personalization.time_preference.length > 0 && (
         <div>
-          <span className="font-medium">Preferência de horário:</span>
+          <span className="font-medium">Preferências de horário:</span>
           <div className="flex flex-wrap gap-1 mt-1">
-            {data.time_preference.map((time: string, index: number) => (
+            {personalization.time_preference.map((pref: string, index: number) => (
               <Badge key={index} variant="outline" className="bg-gray-100">
-                {translateTimePreference(time)}
+                {translateTimePreference(pref)}
               </Badge>
             ))}
           </div>
         </div>
       )}
-      
-      {data.available_days && data.available_days.length > 0 && (
+
+      {personalization.available_days && personalization.available_days.length > 0 && (
         <div>
           <span className="font-medium">Dias disponíveis:</span>
           <div className="flex flex-wrap gap-1 mt-1">
-            {data.available_days.map((day: string, index: number) => (
-              <Badge key={index} variant="outline" className="bg-gray-100">{day}</Badge>
+            {personalization.available_days.map((day: string, index: number) => (
+              <Badge key={index} variant="outline" className="bg-gray-100">
+                {day}
+              </Badge>
             ))}
           </div>
         </div>
       )}
-      
-      <div>
-        <span className="font-medium">Disponibilidade para networking:</span> 
-        {typeof data.networking_availability === 'number' 
-          ? <span className="ml-1 px-2 py-0.5 bg-gray-100 rounded text-sm">{data.networking_availability}/10</span>
-          : <span className="text-gray-500 italic ml-1">Não preenchido</span>
-        }
-      </div>
-      
-      {data.skills_to_share && data.skills_to_share.length > 0 && (
+
+      {personalization.networking_availability !== undefined && (
+        <p>
+          <span className="font-medium">Disponibilidade para networking:</span> {personalization.networking_availability}/10
+        </p>
+      )}
+
+      {personalization.skills_to_share && personalization.skills_to_share.length > 0 && (
         <div>
           <span className="font-medium">Habilidades para compartilhar:</span>
           <div className="flex flex-wrap gap-1 mt-1">
-            {data.skills_to_share.map((skill: string, index: number) => (
+            {personalization.skills_to_share.map((skill: string, index: number) => (
               <Badge key={index} variant="outline" className="bg-gray-100">
                 {translateSkill(skill)}
               </Badge>
@@ -123,12 +152,12 @@ export function getExperiencePersonalizationSummary(data: OnboardingData['experi
           </div>
         </div>
       )}
-      
-      {data.mentorship_topics && data.mentorship_topics.length > 0 && (
+
+      {personalization.mentorship_topics && personalization.mentorship_topics.length > 0 && (
         <div>
-          <span className="font-medium">Tópicos de interesse para mentoria:</span>
+          <span className="font-medium">Tópicos para mentoria:</span>
           <div className="flex flex-wrap gap-1 mt-1">
-            {data.mentorship_topics.map((topic: string, index: number) => (
+            {personalization.mentorship_topics.map((topic: string, index: number) => (
               <Badge key={index} variant="outline" className="bg-gray-100">
                 {translateMentorshipTopic(topic)}
               </Badge>

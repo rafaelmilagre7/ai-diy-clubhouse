@@ -1,15 +1,51 @@
 
-import React from "react";
-import { Button } from "@/components/ui/button";
+import React, { useMemo } from "react";
+import { CheckCircle, PenSquare } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Edit } from "lucide-react";
-import { getSummary } from "./ReviewUtils";
-import { OnboardingProgress, OnboardingStep } from "@/types/onboarding";
+import { Button } from "@/components/ui/button";
+import { OnboardingStep } from "@/types/onboarding";
+import { getPersonalInfoSummary } from "./review-sections/personalInfoSummary";
+import { getProfessionalDataSummary } from "./review-sections/professionalDataSummary";
+import { getBusinessContextSummary } from "./review-sections/businessContextSummary";
+import { getAIExperienceSummary } from "./review-sections/aiExperienceSummary";
+import { getBusinessGoalsSummary } from "./review-sections/businessGoalsSummary";
+import { getExperiencePersonalizationSummary } from "./review-sections/experiencePersonalizationSummary";
+import { getComplementaryInfoSummary } from "./review-sections/complementaryInfoSummary";
+
+// Função para determinar o componente de resumo correto com base na seção
+const getSummaryComponent = (section: string, data: any, progress: any) => {
+  console.log(`Renderizando summary para seção ${section} com dados:`, data);
+  
+  if (!data || Object.keys(data).length === 0) {
+    console.warn(`Dados vazios para seção ${section}`);
+    return <p className="text-gray-500 italic">Seção não preenchida. Clique em Editar para preencher.</p>;
+  }
+  
+  switch (section) {
+    case "personal_info":
+      return getPersonalInfoSummary(data);
+    case "professional_info":
+    case "professional_data":
+      return getProfessionalDataSummary(data);
+    case "business_context":
+      return getBusinessContextSummary(data);
+    case "ai_experience":
+      return getAIExperienceSummary(data);
+    case "business_goals":
+      return getBusinessGoalsSummary(data);
+    case "experience_personalization":
+      return getExperiencePersonalizationSummary(data);
+    case "complementary_info":
+      return getComplementaryInfoSummary(data);
+    default:
+      return <p>Seção não reconhecida.</p>;
+  }
+};
 
 interface ReviewSectionCardProps {
   step: OnboardingStep;
   sectionData: any;
-  progress: OnboardingProgress;
+  progress: any;
   stepIndex: number;
   navigateToStep: (index: number) => void;
 }
@@ -19,65 +55,67 @@ export const ReviewSectionCard: React.FC<ReviewSectionCardProps> = ({
   sectionData,
   progress,
   stepIndex,
-  navigateToStep
+  navigateToStep,
 }) => {
-  // Processa os dados da seção para garantir que estejam no formato correto
-  const processedData = React.useMemo(() => {
-    let data = sectionData;
+  // Verificar se há dados válidos na seção
+  const isCompleted = useMemo(() => {
+    // Verificando detalhadamente os dados da seção
+    console.log(`Revisando dados para seção ${step.section}:`, sectionData);
     
-    // Se os dados forem uma string, tentar converter para objeto
-    if (typeof data === 'string' && data !== "{}" && data !== "") {
-      try {
-        data = JSON.parse(data);
-        console.log(`Convertido dados da seção ${step.id} de string para objeto:`, data);
-      } catch (e) {
-        console.error(`Erro ao converter dados da seção ${step.id} de string para objeto:`, e);
-        data = {};
-      }
+    // Para análise de dados específicos
+    if (step.section === 'personal_info') {
+      return !!sectionData.name && !!sectionData.email;
     }
     
-    // Verificar se os dados estão vazios
-    if (!data || (typeof data === 'object' && Object.keys(data).length === 0)) {
-      console.warn(`Dados vazios para seção ${step.id}`);
+    if (step.section === 'professional_info' || step.section === 'professional_data') {
+      return !!sectionData.company_name && !!sectionData.company_size;
     }
     
-    return data;
-  }, [sectionData, step.id]);
-  
-  // Validação dos dados para efeito de log
-  React.useEffect(() => {
-    console.log(`Revisando dados para seção ${step.id}:`, processedData);
-  }, [step.id, processedData]);
+    if (step.section === 'business_context') {
+      return !!sectionData.business_model;
+    }
+    
+    if (step.section === 'ai_experience') {
+      return !!sectionData.knowledge_level;
+    }
+    
+    // Verificação genérica para outras seções
+    return Object.keys(sectionData).length > 0;
+  }, [step, sectionData]);
 
-  const handleEdit = () => {
-    try {
-      // Usando o índice correto (baseado em zero) para navegação
-      const indexToNavigate = stepIndex - 1;
-      console.log(`Navegando para o passo ${indexToNavigate}, originalmente ${stepIndex}`);
-      navigateToStep(indexToNavigate);
-    } catch (error) {
-      console.error("Erro ao navegar para etapa:", error);
-    }
-  };
+  // Renderizar resumo com base na seção
+  const sectionSummary = useMemo(() => {
+    return getSummaryComponent(step.section, sectionData, progress);
+  }, [step, sectionData, progress]);
 
   return (
-    <Card className="overflow-hidden border border-gray-200 shadow-sm">
-      <CardHeader className="bg-gray-50 pb-3 pt-4 px-4 flex flex-row justify-between items-center">
-        <CardTitle className="text-base font-medium text-gray-800">
-          {step.title}
-        </CardTitle>
-        <Button
-          variant="outline"
-          size="sm"
-          className="h-8 text-[#0ABAB5] border-[#0ABAB5] hover:bg-[#0ABAB5]/10"
-          onClick={handleEdit}
-        >
-          <Edit className="h-4 w-4 mr-1" /> Editar
-        </Button>
+    <Card className="overflow-hidden border-l-4 border-l-gray-200">
+      <CardHeader className="flex flex-row items-center justify-between bg-gray-50 py-2 px-4">
+        <div className="flex items-center gap-3">
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-50 text-primary-foreground">
+            <span className="text-sm font-medium">{stepIndex}</span>
+          </div>
+          <CardTitle className="text-lg font-medium">{step.title}</CardTitle>
+        </div>
+        <div className="flex items-center gap-2">
+          {isCompleted && (
+            <span className="flex items-center text-green-600">
+              <CheckCircle className="mr-1 h-4 w-4" />
+              <span className="text-xs">Completo</span>
+            </span>
+          )}
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex items-center gap-1"
+            onClick={() => navigateToStep(stepIndex - 1)}
+          >
+            <PenSquare className="h-4 w-4" />
+            <span>Editar</span>
+          </Button>
+        </div>
       </CardHeader>
-      <CardContent className="pt-4 pb-4">
-        {getSummary(step.section, processedData, progress)}
-      </CardContent>
+      <CardContent className="p-4">{sectionSummary}</CardContent>
     </Card>
   );
 };

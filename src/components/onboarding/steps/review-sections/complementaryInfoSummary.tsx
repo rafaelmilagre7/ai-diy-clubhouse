@@ -3,8 +3,35 @@ import React from "react";
 import { Badge } from "@/components/ui/badge";
 import { OnboardingData } from "@/types/onboarding";
 
-export function getComplementaryInfoSummary(data: OnboardingData['complementary_info']) {
-  if (!data || Object.keys(data).length === 0) {
+// Função para garantir que os dados são um objeto válido
+function ensureObject(data: any): Record<string, any> {
+  if (!data) return {};
+  
+  if (typeof data === 'string') {
+    try {
+      return JSON.parse(data);
+    } catch (e) {
+      console.error("Erro ao analisar string como JSON:", e);
+      return {};
+    }
+  }
+  
+  return data;
+}
+
+export function getComplementaryInfoSummary(data: any) {
+  console.log("Renderizando summary para seção complementary_info com dados:", data);
+  
+  // Verificação de dados
+  if (!data) {
+    return <p className="text-gray-500 italic">Seção não preenchida. Clique em Editar para preencher.</p>;
+  }
+  
+  // Garantir que estamos trabalhando com um objeto
+  const processedData = ensureObject(data);
+  
+  // Se mesmo após processamento os dados estiverem vazios
+  if (Object.keys(processedData).length === 0) {
     return <p className="text-gray-500 italic">Seção não preenchida. Clique em Editar para preencher.</p>;
   }
 
@@ -53,18 +80,18 @@ export function getComplementaryInfoSummary(data: OnboardingData['complementary_
 
   return (
     <div className="space-y-2 text-sm">
-      <p><span className="font-medium">Como nos conheceu:</span> {data.how_found_us ? getDiscoverySourceLabel(data.how_found_us) : "Não preenchido"}</p>
-      {data.how_found_us === "recommendation" && data.referred_by && (
-        <p><span className="font-medium">Indicado por:</span> {data.referred_by}</p>
+      <p><span className="font-medium">Como nos conheceu:</span> {processedData.how_found_us ? getDiscoverySourceLabel(processedData.how_found_us) : "Não preenchido"}</p>
+      {processedData.how_found_us === "recommendation" && processedData.referred_by && (
+        <p><span className="font-medium">Indicado por:</span> {processedData.referred_by}</p>
       )}
-      <p><span className="font-medium">Autoriza uso do caso:</span> {data.authorize_case_usage ? "Sim" : "Não"}</p>
-      <p><span className="font-medium">Interesse em entrevista:</span> {data.interested_in_interview ? "Sim" : "Não"}</p>
+      <p><span className="font-medium">Autoriza uso do caso:</span> {processedData.authorize_case_usage ? "Sim" : "Não"}</p>
+      <p><span className="font-medium">Interesse em entrevista:</span> {processedData.interested_in_interview ? "Sim" : "Não"}</p>
       
-      {data.priority_topics && data.priority_topics.length > 0 && (
+      {processedData.priority_topics && processedData.priority_topics.length > 0 && (
         <div>
           <span className="font-medium">Tópicos prioritários:</span>
           <div className="flex flex-wrap gap-1 mt-1">
-            {data.priority_topics.map((topic: string, index: number) => (
+            {processedData.priority_topics.map((topic: string, index: number) => (
               <Badge key={index} variant="outline" className="bg-gray-100">{getTopicLabel(topic)}</Badge>
             ))}
           </div>

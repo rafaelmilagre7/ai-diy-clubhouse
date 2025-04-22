@@ -59,6 +59,16 @@ const BusinessGoalsClub = () => {
     setRefreshCount(prev => prev + 1);
   };
 
+  // Verificar se temos dados válidos para business_goals
+  const hasBusinessGoals = progress?.business_goals && 
+    typeof progress.business_goals === 'object' && 
+    Object.keys(progress.business_goals).length > 0;
+
+  console.log("Estado dos business_goals:", {
+    hasBusinessGoals,
+    businessGoals: progress?.business_goals
+  });
+
   return (
     <OnboardingLayout
       currentStep={5}
@@ -90,7 +100,7 @@ const BusinessGoalsClub = () => {
           <ExpectativasObjetivosStep
             onSubmit={handleSaveData}
             isSubmitting={isSubmitting}
-            initialData={progress?.business_goals}
+            initialData={progress}
             isLastStep={false}
             onComplete={completeOnboarding}
           />

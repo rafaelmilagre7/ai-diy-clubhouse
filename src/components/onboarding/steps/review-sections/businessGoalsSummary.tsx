@@ -4,19 +4,37 @@ import { Badge } from "@/components/ui/badge";
 import { OnboardingData } from "@/types/onboarding";
 import { normalizeBusinessGoals } from "@/hooks/onboarding/persistence/utils/dataNormalization";
 
+// Função para garantir que os dados são um objeto válido
+function ensureObject(data: any): Record<string, any> {
+  if (!data) return {};
+  
+  if (typeof data === 'string') {
+    try {
+      return JSON.parse(data);
+    } catch (e) {
+      console.error("Erro ao analisar string como JSON:", e);
+      return {};
+    }
+  }
+  
+  return data;
+}
+
 export function getBusinessGoalsSummary(data: OnboardingData['business_goals'] | any) {
-  console.log("Renderizando summary para Business Goals com dados:", data);
+  console.log("Renderizando summary para seção business_goals com dados:", data);
   
   // Verificação de dados
   if (!data) {
+    console.warn("Dados vazios para seção business_goals");
     return <p className="text-gray-500 italic">Seção não preenchida. Clique em Editar para preencher.</p>;
   }
 
-  // Normalizar dados para garantir consistência
-  const processedData = normalizeBusinessGoals(data);
+  // Garantir que estamos trabalhando com um objeto
+  const processedData = ensureObject(data);
 
   // Se mesmo após processamento os dados estiverem vazios
-  if (!processedData || (typeof processedData === 'object' && Object.keys(processedData).length === 0)) {
+  if (Object.keys(processedData).length === 0) {
+    console.warn("Objeto vazio após processamento para seção business_goals");
     return <p className="text-gray-500 italic">Seção não preenchida. Clique em Editar para preencher.</p>;
   }
 
