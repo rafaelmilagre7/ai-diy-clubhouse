@@ -18,14 +18,25 @@ export const CompanySectorField: React.FC = () => {
   const companySector = watch("company_sector");
 
   const companySectors = [
-    { value: "tecnologia", label: "Tecnologia" },
+    { value: "inteligencia-artificial", label: "Inteligência Artificial" },
+    { value: "tecnologia", label: "Tecnologia / TI" },
     { value: "educacao", label: "Educação" },
     { value: "saude", label: "Saúde" },
-    { value: "financas", label: "Finanças" },
-    { value: "comercio", label: "Comércio" },
-    { value: "servicos", label: "Serviços" },
-    { value: "industria", label: "Indústria" },
+    { value: "financas", label: "Financeiro" },
+    { value: "ecommerce", label: "E-commerce / Varejo" },
+    { value: "servicos-profissionais", label: "Serviços Profissionais" },
+    { value: "marketing", label: "Marketing / Publicidade" },
+    { value: "industria", label: "Manufatura / Indústria" },
+    { value: "alimentacao", label: "Alimentação" },
+    { value: "construcao", label: "Construção Civil" },
+    { value: "imobiliario", label: "Imobiliário" },
+    { value: "logistica", label: "Transporte / Logística" },
     { value: "agronegocio", label: "Agronegócio" },
+    { value: "energia", label: "Energia / Sustentabilidade" },
+    { value: "juridico", label: "Jurídico" },
+    { value: "rh", label: "Recursos Humanos / Recrutamento" },
+    { value: "consultoria", label: "Consultoria" },
+    { value: "governo", label: "Governo / Setor Público" },
     { value: "outro", label: "Outro" },
   ];
 
