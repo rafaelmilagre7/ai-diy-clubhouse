@@ -1,5 +1,5 @@
-
 import { OnboardingData, OnboardingProgress, ProfessionalDataInput } from "@/types/onboarding";
+import { buildBusinessContextUpdate } from "./businessContextBuilder";
 
 export function buildProfessionalDataUpdate(
   data: ProfessionalDataInput, 
@@ -56,7 +56,7 @@ export function buildUpdateObject(
   // Processar dados com base no ID da etapa
   switch (stepId) {
     case "personal":
-      // Dados pessoais (preservar implementação existente se houver)
+      // Dados pessoais
       console.log("Processando dados pessoais:", data);
       if (data && Object.keys(data).length > 0) {
         updateObj.personal_info = data;
@@ -71,18 +71,10 @@ export function buildUpdateObject(
       break;
       
     case "business_context":
-      // Dados de contexto de negócio (usar apenas business_data para evitar erros)
+      // Dados de contexto de negócio - usar builder específico
       console.log("Processando dados de contexto de negócio:", data);
-      if (data && Object.keys(data).length > 0) {
-        // Verificar se os dados estão aninhados no objeto business_context
-        if (data.business_context) {
-          // Salvar apenas em business_data, não em business_context
-          updateObj.business_data = data.business_context;
-        } else {
-          // Se não estiverem aninhados, assumir que os dados são diretamente o contexto
-          updateObj.business_data = data;
-        }
-      }
+      const businessContextUpdates = buildBusinessContextUpdate(data, progress);
+      Object.assign(updateObj, businessContextUpdates);
       break;
       
     case "ai_exp":
@@ -154,6 +146,7 @@ export function buildUpdateObject(
     }
   }
 
-  console.log("Objeto de atualização final:", updateObj);
+  // Log detalhado do objeto de atualização final
+  console.log("Objeto de atualização final a ser enviado para o Supabase:", updateObj);
   return updateObj;
 }

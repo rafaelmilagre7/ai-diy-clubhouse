@@ -40,7 +40,7 @@ export const BusinessContextFormStep: React.FC<BusinessContextFormStepProps> = (
       additional_context: ""
     };
     
-    // Usar apenas business_data (evitar referências a business_context)
+    // Usar business_data para acessar os dados existentes
     const businessData = progress.business_data || {};
     
     console.log("Dados iniciais do contexto de negócios:", businessData);
@@ -72,7 +72,18 @@ export const BusinessContextFormStep: React.FC<BusinessContextFormStepProps> = (
     try {
       console.log("Enviando dados do contexto do negócio:", data);
       
-      // Chamar onSave com os dados
+      // Validar que os dados obrigatórios estão preenchidos
+      if (!data.business_model) {
+        toast.error("Por favor, selecione um modelo de negócio");
+        return;
+      }
+      
+      if (!data.business_challenges || data.business_challenges.length === 0) {
+        toast.error("Por favor, selecione pelo menos um desafio de negócio");
+        return;
+      }
+      
+      // Chamar onSave com os dados completos e validados
       await onSave(data);
     } catch (error) {
       console.error("Erro ao salvar dados do contexto do negócio:", error);

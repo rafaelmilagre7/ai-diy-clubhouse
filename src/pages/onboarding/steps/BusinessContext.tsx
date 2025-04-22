@@ -19,8 +19,13 @@ const BusinessContext = () => {
     try {
       console.log("Salvando dados de contexto de negócio:", data);
       
-      // Formato direto: Enviar dados diretamente para business_data
-      await saveStepData("business_context", data, true);
+      // Formatar os dados com a estrutura esperada pelo buildBusinessContextUpdate
+      const formattedData = {
+        business_context: data
+      };
+      
+      // Chamar saveStepData com o ID correto e os dados formatados
+      await saveStepData("business_context", formattedData, true);
       
       toast.success("Dados salvos com sucesso!");
       
@@ -65,7 +70,7 @@ const BusinessContext = () => {
       <BusinessContextStep
         onSubmit={handleSave}
         isSubmitting={false}
-        initialData={progress?.business_data} // Usar apenas business_data
+        initialData={progress?.business_data}
       />
     </OnboardingLayout>
   );

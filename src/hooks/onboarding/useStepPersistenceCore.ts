@@ -24,8 +24,8 @@ export function useStepPersistenceCore({
     thirdParam?: boolean
   ): Promise<void> => {
     if (!progress?.id) {
-      console.error("Dados profissionais não salvos: ID de progresso não encontrado");
-      toast.error("Erro ao salvar dados profissionais");
+      console.error("Dados não salvos: ID de progresso não encontrado");
+      toast.error("Erro ao salvar dados: ID de progresso não encontrado");
       return;
     }
 
@@ -33,60 +33,81 @@ export function useStepPersistenceCore({
     let data: any;
     let shouldNavigate: boolean = true;
 
+    // Determinar os parâmetros com base na assinatura usada
     if (typeof stepIdOrData === 'string') {
       stepId = stepIdOrData;
       data = shouldNavigateOrData;
       shouldNavigate = thirdParam !== undefined ? thirdParam : true;
+      console.log(`saveStepData chamado com assinatura: (stepId: ${stepId}, data: objeto, shouldNavigate: ${shouldNavigate})`);
     } else {
       stepId = steps[currentStepIndex]?.id || '';
       data = stepIdOrData;
       shouldNavigate = shouldNavigateOrData !== undefined ? 
                        typeof shouldNavigateOrData === 'boolean' ? shouldNavigateOrData : true 
                        : true;
+      console.log(`saveStepData chamado com assinatura: (data: objeto, shouldNavigate: ${shouldNavigate})`);
     }
     
-    console.log(`Salvando dados profissionais - Passo: ${stepId}`, data);
+    console.log(`Salvando dados - Passo: ${stepId}, índice ${currentStepIndex}, navegação: ${shouldNavigate ? "SIM" : "NÃO"}`, data);
+    console.log("Estado atual do progresso:", progress);
 
     try {
+      // Montar objeto de atualização para a etapa
       const updateObj = buildUpdateObject(stepId, data, progress, currentStepIndex);
       
-      // Log detalhado do objeto de atualização
-      console.log("Objeto de atualização profissional:", updateObj);
-
       if (Object.keys(updateObj).length === 0) {
         console.warn("Objeto de atualização vazio, nada para salvar");
-        toast.warning("Sem dados profissionais para salvar");
+        toast.warning("Sem dados para salvar");
         return;
       }
 
+      console.log("Objeto de atualização preparado para o Supabase:", updateObj);
+
+      // Atualizar no Supabase
       const updatedProgress = await updateProgress(updateObj);
-      console.log("Dados profissionais atualizados com sucesso:", updatedProgress);
-      
+      console.log("Resposta do Supabase após salvamento:", updatedProgress);
+
+      // Forçar atualização dos dados local após salvar
       await refreshProgress();
+      console.log("Dados locais atualizados após salvamento");
       
-      toast.success("Dados profissionais salvos com sucesso!");
+      // Notificar usuário do salvamento
+      toast.success("Dados salvos com sucesso!");
       
+      // Navegação para próxima etapa
       if (shouldNavigate) {
+        // Mapeamento direto de etapas para rotas de navegação
         const nextRouteMap: {[key: string]: string} = {
+          "personal": "/onboarding/professional-data",
           "professional_data": "/onboarding/business-context",
+          "business_context": "/onboarding/ai-experience",
+          "ai_exp": "/onboarding/club-goals",
+          "business_goals": "/onboarding/customization",
+          "experience_personalization": "/onboarding/complementary",
+          "complementary_info": "/onboarding/review"
         };
         
         if (nextRouteMap[stepId]) {
+          console.log(`Navegando para rota mapeada: ${nextRouteMap[stepId]}`);
           setTimeout(() => {
             navigate(nextRouteMap[stepId]);
           }, 500);
         } else {
+          // Fallback para navegador padrão de etapas
+          console.log(`Sem rota mapeada para ${stepId}, usando navegação padrão`);
           navigateAfterStep(stepId, currentStepIndex, navigate, shouldNavigate);
         }
+      } else {
+        console.log("Navegação automática desativada, permanecendo na página atual");
       }
     } catch (error) {
-      console.error("Erro ao salvar dados profissionais:", error);
-      logError("save_professional_data_error", { 
+      console.error("Erro ao salvar dados:", error);
+      logError("save_step_data_error", { 
         step: stepId, 
         error: error instanceof Error ? error.message : String(error),
         stepIndex: currentStepIndex
       });
-      toast.error("Erro ao salvar dados profissionais. Tente novamente.");
+      toast.error("Erro ao salvar dados. Por favor, tente novamente.");
       throw error;
     }
   };
