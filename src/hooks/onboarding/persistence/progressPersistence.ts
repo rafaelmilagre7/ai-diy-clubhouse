@@ -14,7 +14,9 @@ const normalizeOnboardingData = (data: Partial<OnboardingProgress>) => {
   }
   
   // Converter campos que são string para objetos quando deveriam ser objetos
-  const objectFields = ['ai_experience', 'business_goals', 'experience_personalization', 'complementary_info'];
+  const objectFields = ['ai_experience', 'business_goals', 'experience_personalization', 'complementary_info',
+                        'professional_info', 'business_data', 'business_context', 'personal_info',
+                        'industry_focus', 'resources_needs', 'team_info', 'implementation_preferences'];
   
   objectFields.forEach(field => {
     const value = normalizedData[field as keyof typeof normalizedData];
@@ -23,6 +25,24 @@ const normalizeOnboardingData = (data: Partial<OnboardingProgress>) => {
       (normalizedData as any)[field] = {};
     }
   });
+  
+  // Garantir que arrays de completed_steps estejam sempre corretamente formados
+  if (normalizedData.completed_steps) {
+    if (typeof normalizedData.completed_steps === 'string') {
+      try {
+        // Tentar converter de string JSON para array
+        normalizedData.completed_steps = JSON.parse(normalizedData.completed_steps as unknown as string);
+      } catch (e) {
+        // Se falhar, iniciar como array vazio
+        normalizedData.completed_steps = [];
+      }
+    }
+    
+    // Garantir que é um array
+    if (!Array.isArray(normalizedData.completed_steps)) {
+      normalizedData.completed_steps = [];
+    }
+  }
   
   return normalizedData;
 };
@@ -35,21 +55,50 @@ const normalizeOnboardingResponse = (data: OnboardingProgress): OnboardingProgre
   const normalizedData = { ...data };
   
   // Converter campos que são string para objetos quando deveriam ser objetos
-  const objectFields = ['ai_experience', 'business_goals', 'experience_personalization', 'complementary_info'];
+  const objectFields = ['ai_experience', 'business_goals', 'experience_personalization', 'complementary_info',
+                        'professional_info', 'business_data', 'business_context', 'personal_info',
+                        'industry_focus', 'resources_needs', 'team_info', 'implementation_preferences'];
   
   objectFields.forEach(field => {
     const value = normalizedData[field as keyof typeof normalizedData];
     if (typeof value === 'string') {
-      console.warn(`Convertendo campo ${field} de string para objeto vazio após carregamento`);
-      (normalizedData as any)[field] = {};
+      try {
+        // Tentar fazer parse como JSON
+        (normalizedData as any)[field] = JSON.parse(value as string);
+        console.log(`Convertido campo ${field} de string JSON para objeto:`, (normalizedData as any)[field]);
+      } catch (e) {
+        // Se não for JSON válido, inicializar como objeto vazio
+        console.warn(`Campo ${field} é string mas não é JSON válido, inicializando como objeto vazio:`, value);
+        (normalizedData as any)[field] = {};
+      }
     }
   });
+  
+  // Garantir que completed_steps seja um array
+  if (normalizedData.completed_steps) {
+    if (typeof normalizedData.completed_steps === 'string') {
+      try {
+        // Tentar converter de string JSON para array
+        normalizedData.completed_steps = JSON.parse(normalizedData.completed_steps as unknown as string);
+      } catch (e) {
+        // Se falhar, iniciar como array vazio
+        normalizedData.completed_steps = [];
+      }
+    }
+    
+    // Garantir que é um array
+    if (!Array.isArray(normalizedData.completed_steps)) {
+      normalizedData.completed_steps = [];
+    }
+  }
   
   return normalizedData;
 };
 
 // Buscar progresso do onboarding
 export const fetchOnboardingProgress = async (userId: string) => {
+  console.log("Buscando progresso de onboarding para usuário:", userId);
+  
   const { data: rawData, error } = await supabase
     .from("onboarding_progress")
     .select("*")
@@ -63,6 +112,10 @@ export const fetchOnboardingProgress = async (userId: string) => {
     
   if (data) {
     console.log("Dados carregados e normalizados do banco:", data);
+  } else if (error) {
+    console.error("Erro ao buscar progresso:", error);
+  } else {
+    console.log("Nenhum progresso encontrado para o usuário:", userId);
   }
     
   return { data, error };
@@ -84,6 +137,7 @@ export const createInitialOnboardingProgress = async (user: any) => {
     },
     professional_info: {}, // Inicializar como objeto vazio
     business_data: {}, // Inicializar como objeto vazio
+    business_context: {}, // Para compatibilidade futura
     ai_experience: {}, // Inicializar como objeto vazio
     business_goals: {}, // Inicializar como objeto vazio
     experience_personalization: {}, // Inicializar como objeto vazio
@@ -107,6 +161,12 @@ export const createInitialOnboardingProgress = async (user: any) => {
     .insert(initialData)
     .select()
     .single();
+
+  if (error) {
+    console.error("Erro ao criar progresso inicial:", error);
+  } else {
+    console.log("Progresso inicial criado com sucesso:", data);
+  }
 
   return { data, error };
 };
@@ -137,6 +197,8 @@ export const updateOnboardingProgress = async (progressId: string, updates: Part
 };
 
 export const refreshOnboardingProgress = async (progressId: string) => {
+  console.log("Recarregando dados do progresso com ID:", progressId);
+  
   const { data: rawData, error } = await supabase
     .from("onboarding_progress")
     .select("*")
@@ -146,7 +208,9 @@ export const refreshOnboardingProgress = async (progressId: string) => {
   // Normalizar dados após carregamento
   const data = rawData ? normalizeOnboardingResponse(rawData) : null;
     
-  if (data) {
+  if (error) {
+    console.error("Erro ao recarregar progresso:", error);
+  } else if (data) {
     console.log("Dados atualizados obtidos e normalizados:", data);
   }
     

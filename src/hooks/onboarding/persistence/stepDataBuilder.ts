@@ -236,7 +236,11 @@ export function buildUpdateObject(
 
   // Atualizar campo completed_steps para incluir a etapa atual, se ainda não estiver incluída
   if (progress && progress.completed_steps) {
-    const stepsCompleted = [...progress.completed_steps];
+    // Garantir que completed_steps seja um array
+    const stepsCompleted = Array.isArray(progress.completed_steps) ? 
+                           [...progress.completed_steps] : 
+                           [];
+                           
     if (!stepsCompleted.includes(stepId)) {
       stepsCompleted.push(stepId);
       updateObj.completed_steps = stepsCompleted;

@@ -95,7 +95,7 @@ export const useProgress = () => {
 
   const updateProgress = async (updates: Partial<OnboardingProgress>) => {
     if (!user || !progress) {
-      console.error("Usuário ou progresso não disponível");
+      console.error("Usuário ou progresso não disponível para atualização");
       throw new Error("Usuário ou progresso não disponível");
     }
 
@@ -113,7 +113,9 @@ export const useProgress = () => {
         throw error;
       }
 
-      const updatedProgress = { ...progress, ...updates };
+      // Mesmo se data for null (devido a alguma falha na conversão), vamos atualizar o estado
+      // com as atualizações enviadas para manter consistência na UI
+      const updatedProgress = data || { ...progress, ...updates };
       setProgress(updatedProgress);
       console.log("Progresso atualizado com sucesso:", updatedProgress);
       return updatedProgress;

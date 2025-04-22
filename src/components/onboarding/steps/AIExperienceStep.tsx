@@ -52,20 +52,46 @@ export const AIExperienceStep: React.FC<AIExperienceStepProps> = ({
   // Valores iniciais considerando possíveis formatos
   const getInitialValues = () => {
     // Se initialData for string, usar objeto vazio
-    const data = typeof initialData === 'string' ? {} : initialData || {};
+    if (typeof initialData === 'string') {
+      console.warn("initialData é uma string, usando objeto vazio");
+      return {
+        knowledge_level: "",
+        previous_tools: [],
+        has_implemented: "",
+        desired_ai_areas: [],
+        completed_formation: false,
+        is_member_for_month: false,
+        nps_score: 5,
+        improvement_suggestions: "",
+      };
+    }
     
-    console.log("Usando dados iniciais processados:", data);
+    // Se não temos dados iniciais ou não é um objeto
+    if (!initialData || typeof initialData !== 'object') {
+      return {
+        knowledge_level: "",
+        previous_tools: [],
+        has_implemented: "",
+        desired_ai_areas: [],
+        completed_formation: false,
+        is_member_for_month: false,
+        nps_score: 5,
+        improvement_suggestions: "",
+      };
+    }
+    
+    console.log("Usando dados iniciais processados:", initialData);
     
     return {
-      knowledge_level: data.knowledge_level || "",
-      previous_tools: Array.isArray(data.previous_tools) ? data.previous_tools : [],
-      has_implemented: data.has_implemented || "",
+      knowledge_level: initialData.knowledge_level || "",
+      previous_tools: Array.isArray(initialData.previous_tools) ? initialData.previous_tools : [],
+      has_implemented: initialData.has_implemented || "",
       // Sempre usar desired_ai_areas, garantindo que seja um array
-      desired_ai_areas: Array.isArray(data.desired_ai_areas) ? data.desired_ai_areas : [],
-      completed_formation: data.completed_formation || false,
-      is_member_for_month: data.is_member_for_month || false,
-      nps_score: data.nps_score !== undefined ? data.nps_score : 5,
-      improvement_suggestions: data.improvement_suggestions || "",
+      desired_ai_areas: Array.isArray(initialData.desired_ai_areas) ? initialData.desired_ai_areas : [],
+      completed_formation: initialData.completed_formation || false,
+      is_member_for_month: initialData.is_member_for_month || false,
+      nps_score: initialData.nps_score !== undefined ? initialData.nps_score : 5,
+      improvement_suggestions: initialData.improvement_suggestions || "",
     };
   };
 
@@ -85,12 +111,12 @@ export const AIExperienceStep: React.FC<AIExperienceStepProps> = ({
   }, [formValues]);
 
   const onFormSubmit = (data: AIExperienceFormValues) => {
-    // Formatar corretamente para o banco de dados
+    // Garantir que todos os arrays sejam sempre arrays
     const formattedData = {
       knowledge_level: data.knowledge_level,
-      previous_tools: data.previous_tools,
+      previous_tools: Array.isArray(data.previous_tools) ? data.previous_tools : [],
       has_implemented: data.has_implemented,
-      desired_ai_areas: data.desired_ai_areas, // Usando o array diretamente
+      desired_ai_areas: Array.isArray(data.desired_ai_areas) ? data.desired_ai_areas : [],
       completed_formation: data.completed_formation,
       is_member_for_month: data.is_member_for_month,
       nps_score: data.nps_score,
@@ -163,11 +189,12 @@ export const AIExperienceStep: React.FC<AIExperienceStepProps> = ({
                         <input
                           type="checkbox"
                           id={`area_${opt.value}`}
-                          checked={field.value.includes(opt.value)}
+                          checked={Array.isArray(field.value) && field.value.includes(opt.value)}
                           onChange={(e) => {
+                            const currentValue = Array.isArray(field.value) ? field.value : [];
                             const newValue = e.target.checked
-                              ? [...field.value, opt.value]
-                              : field.value.filter(v => v !== opt.value);
+                              ? [...currentValue, opt.value]
+                              : currentValue.filter(v => v !== opt.value);
                             field.onChange(newValue);
                           }}
                           className="h-4 w-4 rounded border-gray-300 text-[#0ABAB5] focus:ring-[#0ABAB5]"

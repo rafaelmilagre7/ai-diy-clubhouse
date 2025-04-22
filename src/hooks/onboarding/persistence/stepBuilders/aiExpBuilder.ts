@@ -15,10 +15,14 @@ export function buildAiExpUpdate(data: Partial<OnboardingData>, progress: Onboar
     // Se existingAiExp for uma string, inicialize como objeto vazio
     const baseAiExp = typeof existingAiExp === 'string' ? {} : existingAiExp;
     
-    // Garantir que desired_ai_areas seja sempre um array
     let updatedData = { ...baseAiExp, ...aiExpData };
     
-    // Garantir que desired_ai_areas seja um array
+    // Garantir que arrays sejam preservados como arrays
+    if (updatedData.previous_tools && !Array.isArray(updatedData.previous_tools)) {
+      updatedData.previous_tools = [updatedData.previous_tools];
+    }
+    
+    // Garantir que desired_ai_areas seja sempre um array
     if (updatedData.desired_ai_areas && !Array.isArray(updatedData.desired_ai_areas)) {
       updatedData.desired_ai_areas = [updatedData.desired_ai_areas];
     }
@@ -36,6 +40,11 @@ export function buildAiExpUpdate(data: Partial<OnboardingData>, progress: Onboar
     const baseAiExp = typeof existingAiExp === 'string' ? {} : existingAiExp;
     
     let updatedData = { ...baseAiExp, ...data };
+    
+    // Garantir que arrays sejam preservados como arrays
+    if (updatedData.previous_tools && !Array.isArray(updatedData.previous_tools)) {
+      updatedData.previous_tools = [updatedData.previous_tools];
+    }
     
     // Garantir que desired_ai_areas seja um array
     if (updatedData.desired_ai_areas && !Array.isArray(updatedData.desired_ai_areas)) {

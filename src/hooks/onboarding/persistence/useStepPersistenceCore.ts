@@ -44,21 +44,23 @@ export function useStepPersistenceCore({
     let data: any;
     let shouldNavigate: boolean = true;
 
-    // Caso 1: saveStepData(stepId: string, data: any, shouldNavigate?: boolean)
+    // Determinar qual formato de chamada foi utilizado
     if (typeof stepIdOrData === 'string') {
+      // Caso 1: saveStepData(stepId: string, data: any, shouldNavigate?: boolean)
       stepId = stepIdOrData;
       data = dataOrShouldNavigate;
       shouldNavigate = thirdParam !== undefined ? thirdParam : true;
-    } 
-    // Caso 2: saveStepData(data: any, shouldNavigate?: boolean)
-    else {
+      console.log(`saveStepData chamado com stepId='${stepId}', data=objeto, shouldNavigate=${shouldNavigate}`);
+    } else {
+      // Caso 2: saveStepData(data: any, shouldNavigate?: boolean)
       stepId = steps[currentStepIndex]?.id || '';
       data = stepIdOrData;
       shouldNavigate = typeof dataOrShouldNavigate === 'boolean' ? 
                        dataOrShouldNavigate : true;
+      console.log(`saveStepData chamado com data=objeto, shouldNavigate=${shouldNavigate}, inferindo stepId='${stepId}'`);
     }
     
-    console.log(`Salvando dados do passo ${stepId}, índice ${currentStepIndex}, navegação automática: ${shouldNavigate ? "SIM" : "NÃO"}`, data);
+    console.log(`Salvando dados do passo ${stepId}, índice ${currentStepIndex}:`, data);
     console.log("Estado atual do progresso:", progress);
 
     try {
@@ -85,25 +87,8 @@ export function useStepPersistenceCore({
       
       // Garantir navegação adequada para próxima etapa
       if (shouldNavigate) {
-        // Mapeamento direto de etapas para rotas de navegação
-        const nextRouteMap: {[key: string]: string} = {
-          "personal": "/onboarding/professional-data",
-          "professional_data": "/onboarding/business-context",
-          "business_context": "/onboarding/ai-experience",
-          "ai_exp": "/onboarding/club-goals",
-          "business_goals": "/onboarding/customization",
-          "experience_personalization": "/onboarding/complementary",
-          "complementary_info": "/onboarding/review"
-        };
-        
-        if (nextRouteMap[stepId]) {
-          setTimeout(() => {
-            navigate(nextRouteMap[stepId]);
-          }, 500);
-        } else {
-          // Fallback para navegador padrão de etapas
-          navigateAfterStep(stepId, currentStepIndex, navigate, shouldNavigate);
-        }
+        // Usar o módulo de navegação por etapas
+        navigateAfterStep(stepId, currentStepIndex, navigate, shouldNavigate);
       } else {
         console.log("Navegação automática desativada, permanecendo na página atual");
       }

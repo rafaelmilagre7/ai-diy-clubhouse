@@ -12,6 +12,9 @@ export function buildBusinessContextUpdate(data: Partial<OnboardingData>, progre
     const contextData = data.business_context;
     const existingBusinessData = progress?.business_data || {};
     
+    // Garantir que existingBusinessData seja um objeto
+    const baseBusinessData = typeof existingBusinessData === 'string' ? {} : existingBusinessData;
+    
     // Garantir que arrays sejam mantidos como arrays
     let formattedData = { ...contextData };
     
@@ -24,7 +27,16 @@ export function buildBusinessContextUpdate(data: Partial<OnboardingData>, progre
     
     // Salvar em business_data (coluna existente na tabela)
     updateObj.business_data = {
-      ...existingBusinessData,
+      ...baseBusinessData,
+      ...formattedData,
+    };
+    
+    // Para compatibilidade futura também mantemos em business_context
+    const existingContext = progress?.business_context || {};
+    const baseContext = typeof existingContext === 'string' ? {} : existingContext;
+    
+    updateObj.business_context = {
+      ...baseContext,
       ...formattedData,
     };
     
@@ -34,6 +46,9 @@ export function buildBusinessContextUpdate(data: Partial<OnboardingData>, progre
   } else if (typeof data === 'object' && data !== null) {
     // Formato direto: dados enviados diretamente
     const existingBusinessData = progress?.business_data || {};
+    
+    // Garantir que existingBusinessData seja um objeto
+    const baseBusinessData = typeof existingBusinessData === 'string' ? {} : existingBusinessData;
     
     let formattedData = { ...data };
     
@@ -45,7 +60,16 @@ export function buildBusinessContextUpdate(data: Partial<OnboardingData>, progre
     });
     
     updateObj.business_data = {
-      ...existingBusinessData,
+      ...baseBusinessData,
+      ...formattedData,
+    };
+    
+    // Para compatibilidade futura também mantemos em business_context
+    const existingContext = progress?.business_context || {};
+    const baseContext = typeof existingContext === 'string' ? {} : existingContext;
+    
+    updateObj.business_context = {
+      ...baseContext,
       ...formattedData,
     };
     
