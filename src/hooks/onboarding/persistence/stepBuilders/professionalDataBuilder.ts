@@ -3,26 +3,34 @@ import { OnboardingData, OnboardingProgress } from "@/types/onboarding";
 import { normalizeWebsite } from "../utils/dataNormalization";
 
 export function buildProfessionalDataUpdate(data: Partial<OnboardingData>, progress: OnboardingProgress | null) {
-  // Criamos um objeto temporário com tipo explícito para evitar erros de tipagem
-  const tempObj: Record<string, any> = {
-    ...(progress ? { 
-      id: progress.id,
-      user_id: progress.user_id,
-      completed_steps: progress.completed_steps,
-      is_completed: progress.is_completed
-    } : {}),
-    professional_info: { ...(progress?.professional_info || {}) }
-  };
+  // Criar um objeto de retorno com tipos seguros
+  const updateObj: Partial<OnboardingProgress> = {};
+  
+  // Se tivermos um objeto de progresso existente, copiar campos relevantes
+  if (progress) {
+    updateObj.id = progress.id;
+    updateObj.user_id = progress.user_id;
+    updateObj.completed_steps = progress.completed_steps;
+    updateObj.is_completed = progress.is_completed;
+    
+    // Inicializar o objeto professional_info se existir no progresso
+    updateObj.professional_info = progress.professional_info 
+      ? { ...progress.professional_info } 
+      : {};
+  } else {
+    // Inicializar objeto vazio se não tivermos progresso
+    updateObj.professional_info = {};
+  }
   
   // Verificar se temos dados diretos ou dentro do objeto professional_info
   const professionalData = data.professional_info || data;
   
-  // Criar objeto de dados profissionais
-  const professionalInfo: any = {
-    ...progress?.professional_info || {},
+  // Criar objeto de dados profissionais temporário para manipulação
+  const professionalInfo: Record<string, any> = {
+    ...(updateObj.professional_info || {})
   };
 
-  // Atualizar campos do objeto professional_info
+  // Campos a serem verificados e atualizados
   const fieldsToCheck = [
     'company_name', 
     'company_size', 
@@ -47,9 +55,14 @@ export function buildProfessionalDataUpdate(data: Partial<OnboardingData>, progr
       // Atualizar no objeto professional_info
       professionalInfo[field] = value;
       
-      // Atualizar campos de nível superior - usando o tipo correto para acesso
-      // Precisamos usar any ou desabilitar verificação de tipo para atribuir de forma dinâmica
-      (tempObj as any)[field] = value;
+      // Atualizar campos de nível superior de forma segura
+      // Usamos uma abordagem manual e explícita para cada campo
+      if (field === 'company_name') updateObj.company_name = value as string;
+      else if (field === 'company_size') updateObj.company_size = value as string;
+      else if (field === 'company_sector') updateObj.company_sector = value as string;
+      else if (field === 'company_website') updateObj.company_website = value as string;
+      else if (field === 'current_position') updateObj.current_position = value as string;
+      else if (field === 'annual_revenue') updateObj.annual_revenue = value as string;
       
       hasUpdates = true;
     }
@@ -57,12 +70,10 @@ export function buildProfessionalDataUpdate(data: Partial<OnboardingData>, progr
   
   // Adicionar objeto professional_info atualizado
   if (hasUpdates) {
-    tempObj.professional_info = professionalInfo;
+    updateObj.professional_info = professionalInfo;
   }
   
-  console.log("Objeto de atualização para dados profissionais:", tempObj);
+  console.log("Objeto de atualização para dados profissionais:", updateObj);
   
-  // Convertemos para o tipo esperado antes de retornar
-  // Usamos uma asserção de tipo para garantir compatibilidade
-  return tempObj as Partial<OnboardingProgress>;
+  return updateObj;
 }
