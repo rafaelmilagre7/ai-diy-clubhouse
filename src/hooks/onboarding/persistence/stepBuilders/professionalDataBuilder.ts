@@ -3,7 +3,7 @@ import { OnboardingData, OnboardingProgress } from "@/types/onboarding";
 import { normalizeWebsite } from "../utils/dataNormalization";
 
 export function buildProfessionalDataUpdate(data: Partial<OnboardingData>, progress: OnboardingProgress | null) {
-  // Criar um objeto de retorno com tipagem correta
+  // Criar um objeto de retorno com tipagem explícita
   const updateObj: Partial<OnboardingProgress> = {};
   
   // Se tivermos um objeto de progresso existente, copiar campos relevantes
@@ -43,6 +43,10 @@ export function buildProfessionalDataUpdate(data: Partial<OnboardingData>, progr
   // Verificar cada campo para atualização
   let hasUpdates = false;
   
+  // Criar um objeto temporário para adicionar propriedades dinâmicas
+  // Esta abordagem é segura porque estamos usando um tipo conhecido
+  const tempUpdateObj: Record<string, any> = updateObj;
+  
   fieldsToCheck.forEach(field => {
     if (professionalData[field as keyof typeof professionalData]) {
       let value = professionalData[field as keyof typeof professionalData];
@@ -55,10 +59,6 @@ export function buildProfessionalDataUpdate(data: Partial<OnboardingData>, progr
       // Atualizar no objeto professional_info
       professionalInfo[field] = value;
       
-      // Atualizar campos de nível superior usando uma abordagem mais segura
-      // Criamos um tipo de asserção temporário para contornar a verificação de tipos
-      const tempUpdateObj: Record<string, any> = updateObj as Record<string, any>;
-      
       // Agora podemos atribuir propriedades dinâmicas de forma segura
       tempUpdateObj[field] = value;
       
@@ -68,10 +68,11 @@ export function buildProfessionalDataUpdate(data: Partial<OnboardingData>, progr
   
   // Adicionar objeto professional_info atualizado
   if (hasUpdates) {
-    updateObj.professional_info = professionalInfo;
+    tempUpdateObj.professional_info = professionalInfo;
   }
   
-  console.log("Objeto de atualização para dados profissionais:", updateObj);
+  console.log("Objeto de atualização para dados profissionais:", tempUpdateObj);
   
-  return updateObj;
+  // Convertemos de volta para o tipo Partial<OnboardingProgress>
+  return tempUpdateObj as Partial<OnboardingProgress>;
 }
