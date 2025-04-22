@@ -40,7 +40,10 @@ export const ExpectativasObjetivosStep = ({
   
   // Processar dados iniciais para garantir que temos um objeto válido
   const processInitialData = (data: any) => {
-    if (!data) return {};
+    if (!data) {
+      console.log("Nenhum dado inicial recebido");
+      return {};
+    }
     
     console.log("ExpectativasObjetivosStep recebeu initialData:", data);
     
@@ -53,11 +56,11 @@ export const ExpectativasObjetivosStep = ({
     // Se temos uma string, normalizar
     if (data.business_goals && typeof data.business_goals === 'string') {
       try {
-        const normalizedData = normalizeBusinessGoals(data.business_goals);
-        console.log("business_goals normalizado de string:", normalizedData);
-        return normalizedData;
+        const parsedData = JSON.parse(data.business_goals);
+        console.log("business_goals parseado de string:", parsedData);
+        return parsedData;
       } catch (e) {
-        console.error("Erro ao normalizar business_goals:", e);
+        console.error("Erro ao parsear business_goals:", e);
         return {};
       }
     }
@@ -96,6 +99,13 @@ export const ExpectativasObjetivosStep = ({
     if (!initializedForm && initialData) {
       console.log("Inicializando formulário com dados processados:", businessGoalsData);
       
+      // Para prevenir problemas de timing ou dados vazios
+      if (Object.keys(businessGoalsData).length === 0) {
+        console.log("Dados processados vazios, não inicializando formulário");
+        setInitializedForm(true);
+        return;
+      }
+      
       const fieldsToUpdate: Partial<FormValues> = {};
       
       // Configurar os valores do formulário com base nos dados processados
@@ -117,8 +127,11 @@ export const ExpectativasObjetivosStep = ({
       
       console.log("Atualizando formulário com valores:", fieldsToUpdate);
       
-      // Redefinir o formulário com os novos valores para garantir uma atualização completa
-      reset(fieldsToUpdate);
+      // Verificar se temos valores para atualizar
+      if (Object.keys(fieldsToUpdate).length > 0) {
+        // Redefinir o formulário com os novos valores para garantir uma atualização completa
+        reset(fieldsToUpdate);
+      }
       
       setInitializedForm(true);
     }

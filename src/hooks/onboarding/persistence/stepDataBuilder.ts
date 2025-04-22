@@ -1,93 +1,74 @@
 
-// Se este arquivo já existir, adicionar a importação e a referência ao novo builder
+import { OnboardingData, OnboardingProgress } from "@/types/onboarding";
 import { buildPersonalInfoUpdate } from "./stepBuilders/personalInfoBuilder";
 import { buildProfessionalDataUpdate } from "./stepBuilders/professionalDataBuilder";
-import { buildBusinessContextUpdate } from "./stepBuilders/businessContextBuilder";
-import { buildAiExperienceUpdate } from "./stepBuilders/aiExperienceBuilder";
 import { buildBusinessGoalsUpdate } from "./stepBuilders/businessGoalsBuilder";
-import { buildExperiencePersonalizationUpdate } from "./stepBuilders/experiencePersonalizationBuilder";
-import { buildComplementaryInfoUpdate } from "./stepBuilders/complementaryInfoBuilder";
-import { OnboardingData, OnboardingProgress } from "@/types/onboarding";
+import { buildAiExperienceUpdate } from "./stepBuilders/aiExperienceBuilder";
 
 /**
- * Constrói o objeto para atualização com base no ID da etapa
+ * Constrói o objeto de atualização para o progresso do onboarding
+ * baseado no ID da etapa e nos dados enviados
  */
 export function buildUpdateObject(
   stepId: string,
   data: Partial<OnboardingData>,
   progress: OnboardingProgress | null,
-  currentStepIndex: number
-) {
-  console.log(`Construindo objeto de atualização para passo ${stepId} com dados:`, JSON.stringify(data, null, 2));
+  currentIndex: number
+): Partial<OnboardingProgress> {
+  console.log(`Construindo objeto de atualização para passo ${stepId}`);
   
-  // Objeto de atualização base
-  let updateObj: any = {
-    current_step: stepId,
+  // Objeto base de atualização
+  let updateObj: Partial<OnboardingProgress> = {
+    // Adicionar o passo atual às etapas concluídas, se já não estiver lá
+    completed_steps: progress?.completed_steps?.includes(stepId) 
+      ? progress.completed_steps 
+      : [...(progress?.completed_steps || []), stepId]
   };
   
-  // Adicionar à lista de passos concluídos
-  if (progress?.completed_steps) {
-    // Garantir que é um array
-    let completedSteps = Array.isArray(progress.completed_steps) 
-      ? progress.completed_steps 
-      : progress.completed_steps ? [progress.completed_steps] : [];
-    
-    // Adicionar apenas se ainda não estiver na lista
-    if (!completedSteps.includes(stepId)) {
-      completedSteps.push(stepId);
-    }
-    
-    updateObj.completed_steps = completedSteps;
-  } else {
-    updateObj.completed_steps = [stepId];
-  }
+  // Construir objeto específico baseado no stepId
+  let stepUpdateObj: Partial<OnboardingProgress> = {};
   
-  // Atualizar dados específicos com base na etapa
+  // Usar o builder correto com base no stepId
   switch (stepId) {
-    case "personal_info":
     case "personal":
-      Object.assign(updateObj, buildPersonalInfoUpdate(data, progress));
+      stepUpdateObj = buildPersonalInfoUpdate(data, progress);
       break;
       
     case "professional_data":
-    case "professional":
-      Object.assign(updateObj, buildProfessionalDataUpdate(data, progress));
-      break;
-      
-    case "business_context":
-      Object.assign(updateObj, buildBusinessContextUpdate(data, progress));
-      break;
-      
-    case "ai_experience":
-    case "ai_exp":
-      Object.assign(updateObj, buildAiExperienceUpdate(data, progress));
+      stepUpdateObj = buildProfessionalDataUpdate(data, progress);
       break;
       
     case "business_goals":
-    case "goals":
-      Object.assign(updateObj, buildBusinessGoalsUpdate(data, progress));
+      stepUpdateObj = buildBusinessGoalsUpdate(data, progress);
       break;
       
-    case "experience_personalization":
-    case "customization":
-      Object.assign(updateObj, buildExperiencePersonalizationUpdate(data, progress));
+    case "ai_exp":
+      stepUpdateObj = buildAiExperienceUpdate(data, progress);
       break;
       
-    case "complementary_info":
-    case "complementary":
-      Object.assign(updateObj, buildComplementaryInfoUpdate(data, progress));
-      break;
+    // Adicionar outros casos conforme necessário
       
     default:
-      // Se não reconhecermos o ID, apenas adicionamos os dados ao objeto
-      console.warn(`ID de etapa não reconhecido: ${stepId}, passando dados diretos`);
-      if (Object.keys(data).length > 0) {
-        // Mesclar com objeto principal preservando estrutura
-        Object.assign(updateObj, data);
+      console.warn(`Builder não encontrado para stepId: ${stepId}, usando dados diretos`);
+      
+      // Fallback: usar o próprio dado se não houver builder específico
+      if (data[stepId as keyof typeof data]) {
+        stepUpdateObj = {
+          [stepId]: data[stepId as keyof typeof data]
+        };
+      } else {
+        // Se não houver dados específicos para o stepId, usar os dados completos
+        stepUpdateObj = { ...data };
       }
   }
   
-  console.log("Objeto de atualização final:", JSON.stringify(updateObj, null, 2));
+  // Mesclagem dos objetos de atualização
+  updateObj = {
+    ...updateObj,
+    ...stepUpdateObj
+  };
+  
+  console.log(`Objeto de atualização construído para ${stepId}:`, updateObj);
   
   return updateObj;
 }

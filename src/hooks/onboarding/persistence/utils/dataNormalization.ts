@@ -1,4 +1,3 @@
-
 /**
  * Utilitários para normalização de dados de onboarding
  */
@@ -90,42 +89,97 @@ export function normalizeAIExperience(value: any): any {
 /**
  * Normaliza especificamente dados de business_goals
  */
-export function normalizeBusinessGoals(value: any): any {
-  const businessGoals = normalizeField(value, 'business_goals');
+export function normalizeBusinessGoals(data: any): Record<string, any> {
+  console.log("Normalizando business_goals:", typeof data, data);
   
-  // Garantir campos consistentes
-  if (!businessGoals.primary_goal) businessGoals.primary_goal = '';
-  if (!businessGoals.priority_solution_type) businessGoals.priority_solution_type = '';
-  if (!businessGoals.how_implement) businessGoals.how_implement = '';
-  if (!businessGoals.week_availability) businessGoals.week_availability = '';
-  
-  // Garantir que expected_outcomes seja array
-  if (!Array.isArray(businessGoals.expected_outcomes)) {
-    businessGoals.expected_outcomes = businessGoals.expected_outcomes ? [businessGoals.expected_outcomes] : [];
+  // Caso 1: Se for null ou undefined, retorna objeto vazio
+  if (data === null || data === undefined) {
+    console.log("business_goals é null ou undefined, retornando objeto vazio");
+    return {
+      primary_goal: "",
+      expected_outcomes: [],
+      expected_outcome_30days: "",
+      priority_solution_type: "",
+      how_implement: "",
+      week_availability: "",
+      live_interest: 5,
+      content_formats: [],
+    };
   }
   
-  // Adicionar expected_outcome_30days aos expected_outcomes se existir
-  if (businessGoals.expected_outcome_30days && 
-      !businessGoals.expected_outcomes.includes(businessGoals.expected_outcome_30days)) {
-    businessGoals.expected_outcomes = [
-      businessGoals.expected_outcome_30days,
-      ...businessGoals.expected_outcomes.filter(Boolean)
-    ];
+  // Caso 2: Se for string, tenta converter para objeto
+  if (typeof data === 'string') {
+    try {
+      // Se for string vazia, retorna objeto vazio
+      if (data.trim() === '') {
+        console.log("business_goals é string vazia, retornando objeto vazio");
+        return {
+          primary_goal: "",
+          expected_outcomes: [],
+          expected_outcome_30days: "",
+          priority_solution_type: "",
+          how_implement: "",
+          week_availability: "",
+          live_interest: 5,
+          content_formats: [],
+        };
+      }
+      
+      // Tenta parsear a string como JSON
+      const parsedData = JSON.parse(data);
+      console.log("business_goals convertido de string para objeto:", parsedData);
+      
+      // Garante campos obrigatórios após conversão
+      return {
+        primary_goal: parsedData.primary_goal || "",
+        expected_outcomes: Array.isArray(parsedData.expected_outcomes) ? parsedData.expected_outcomes : [],
+        expected_outcome_30days: parsedData.expected_outcome_30days || "",
+        priority_solution_type: parsedData.priority_solution_type || "",
+        how_implement: parsedData.how_implement || "",
+        week_availability: parsedData.week_availability || "",
+        live_interest: parsedData.live_interest !== undefined ? Number(parsedData.live_interest) : 5,
+        content_formats: Array.isArray(parsedData.content_formats) ? parsedData.content_formats : [],
+      };
+    } catch (e) {
+      console.error("Erro ao converter business_goals de string para objeto:", e);
+      return {
+        primary_goal: "",
+        expected_outcomes: [],
+        expected_outcome_30days: "",
+        priority_solution_type: "",
+        how_implement: "",
+        week_availability: "",
+        live_interest: 5,
+        content_formats: [],
+      };
+    }
   }
   
-  // Garantir que content_formats seja array
-  if (!Array.isArray(businessGoals.content_formats)) {
-    businessGoals.content_formats = businessGoals.content_formats ? [businessGoals.content_formats] : [];
+  // Caso 3: Se for objeto, garante campos obrigatórios
+  if (typeof data === 'object') {
+    console.log("business_goals já é um objeto, normalizando campos");
+    return {
+      primary_goal: data.primary_goal || "",
+      expected_outcomes: Array.isArray(data.expected_outcomes) ? data.expected_outcomes : [],
+      expected_outcome_30days: data.expected_outcome_30days || "",
+      priority_solution_type: data.priority_solution_type || "",
+      how_implement: data.how_implement || "",
+      week_availability: data.week_availability || "",
+      live_interest: data.live_interest !== undefined ? Number(data.live_interest) : 5,
+      content_formats: Array.isArray(data.content_formats) ? data.content_formats : [],
+    };
   }
   
-  // Converter live_interest para número
-  if (businessGoals.live_interest !== undefined) {
-    businessGoals.live_interest = typeof businessGoals.live_interest === 'string' 
-      ? parseInt(businessGoals.live_interest, 10) || 5
-      : (businessGoals.live_interest || 5);
-  } else {
-    businessGoals.live_interest = 5;
-  }
-  
-  return businessGoals;
+  // Caso padrão: retorna objeto vazio
+  console.warn("Tipo de dados inesperado para business_goals:", typeof data);
+  return {
+    primary_goal: "",
+    expected_outcomes: [],
+    expected_outcome_30days: "",
+    priority_solution_type: "",
+    how_implement: "",
+    week_availability: "",
+    live_interest: 5,
+    content_formats: [],
+  };
 }

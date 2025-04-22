@@ -30,23 +30,19 @@ const BusinessGoalsClub = () => {
         if (progress) {
           console.log("Tipo de business_goals:", typeof progress.business_goals);
           console.log("Conteúdo de business_goals:", JSON.stringify(progress.business_goals, null, 2));
-          
-          // Normalizar dados para uso local, sem salvar
-          if (typeof progress.business_goals === 'string' || 
-              (typeof progress.business_goals === 'object' && Object.keys(progress.business_goals || {}).length === 0)) {
-            console.log("business_goals precisa ser normalizado");
-          }
         }
         
         // Marcar dados como prontos
         setLocalDataReady(true);
       } catch (error) {
         console.error("Erro ao carregar dados:", error);
+        toast.error("Erro ao carregar seus dados. Tente novamente.");
         setLocalDataReady(true); // Mesmo com erro, permitir a renderização
       }
     };
+    
     loadData();
-  }, [refreshProgress, refreshCount, progress]);
+  }, [refreshProgress, refreshCount]);
 
   const handleSaveData = async (stepId: string, data: any) => {
     console.log(`Iniciando salvamento de dados para passo ${stepId}:`, JSON.stringify(data, null, 2));
@@ -119,6 +115,7 @@ const BusinessGoalsClub = () => {
 
   // Função para tentar recarregar dados
   const handleRetry = () => {
+    console.log("Tentando recarregar dados...");
     setRefreshCount(prev => prev + 1);
   };
   
@@ -126,11 +123,16 @@ const BusinessGoalsClub = () => {
   const processedData = React.useMemo(() => {
     if (!progress) return null;
     
+    console.log("Processando dados para ExpectativasObjetivosStep");
+    
     let businessGoalsData = progress.business_goals;
     
     // Normalizar business_goals se necessário
     if (typeof businessGoalsData === 'string' || !businessGoalsData) {
       businessGoalsData = normalizeBusinessGoals(businessGoalsData);
+      console.log("business_goals normalizado:", businessGoalsData);
+    } else {
+      console.log("business_goals já é um objeto, sem necessidade de normalização");
     }
     
     return {

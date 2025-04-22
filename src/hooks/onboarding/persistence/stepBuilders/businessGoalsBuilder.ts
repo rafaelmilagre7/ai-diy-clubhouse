@@ -1,86 +1,79 @@
 
 import { OnboardingData, OnboardingProgress } from "@/types/onboarding";
+import { normalizeBusinessGoals } from "../utils/dataNormalization";
 
 export function buildBusinessGoalsUpdate(data: Partial<OnboardingData>, progress: OnboardingProgress | null) {
   const updateObj: any = {};
   
-  // Garantir uma base consistente para os dados
-  let existingBusinessGoals: any = {};
+  // Log para debug
+  console.log("Construindo atualização para business_goals com dados:", data);
+  console.log("Dados atuais de progresso:", progress?.business_goals);
   
-  // Verificar se temos dados válidos de progresso
-  if (progress) {
+  // Verificações iniciais
+  if (!data) {
+    console.warn("Dados vazios recebidos em buildBusinessGoalsUpdate");
+    return updateObj;
+  }
+  
+  // Garantir base consistente para os dados
+  let existingBusinessGoals = {};
+  
+  // Verificar se temos dados de progresso válidos
+  if (progress && progress.business_goals) {
     if (typeof progress.business_goals === 'string') {
       try {
-        const trimmedValue = String(progress.business_goals).trim();
-        if (trimmedValue !== '') {
-          existingBusinessGoals = JSON.parse(trimmedValue);
-          console.log("business_goals convertido de string para objeto:", existingBusinessGoals);
-        }
+        existingBusinessGoals = JSON.parse(progress.business_goals as string);
       } catch (e) {
         console.error("Erro ao converter business_goals de string para objeto:", e);
       }
-    } else if (progress.business_goals && typeof progress.business_goals === 'object') {
+    } else if (typeof progress.business_goals === 'object') {
       existingBusinessGoals = progress.business_goals;
     }
   }
   
-  // Inicializar o objeto de atualização com os dados existentes
-  updateObj.business_goals = {...existingBusinessGoals};
+  // Normalizar dados existentes
+  existingBusinessGoals = normalizeBusinessGoals(existingBusinessGoals);
   
-  // Verificar se estamos recebendo dados diretos ou em um objeto aninhado
-  const sourceData = data.business_goals || data;
+  // Verificar se estamos recebendo dados específicos de business_goals ou são dados aninhados
+  const businessGoalsData = data.business_goals || {};
   
-  if (typeof sourceData === 'object' && sourceData !== null) {
-    // Debug: Logue o objeto de origem para verificar estrutura
-    console.log("Dados de origem para business_goals:", JSON.stringify(sourceData, null, 2));
-    
-    // Processar campos de string
-    ['primary_goal', 'expected_outcome_30days', 'timeline', 'priority_solution_type', 
-     'how_implement', 'week_availability'].forEach(field => {
-      if (field in sourceData && sourceData[field as keyof typeof sourceData]) {
-        updateObj.business_goals[field] = sourceData[field as keyof typeof sourceData];
-        console.log(`Definindo ${field}:`, updateObj.business_goals[field]);
-      }
-    });
-    
-    // Processar campos de array
-    ['expected_outcomes', 'content_formats'].forEach(field => {
-      if (field in sourceData && sourceData[field as keyof typeof sourceData]) {
-        const fieldValue = Array.isArray(sourceData[field as keyof typeof sourceData]) ? 
-          sourceData[field as keyof typeof sourceData] : 
-          [sourceData[field as keyof typeof sourceData]].filter(Boolean);
-          
-        if (fieldValue.length > 0) {
-          updateObj.business_goals[field] = fieldValue;
-          console.log(`Definindo ${field}:`, updateObj.business_goals[field]);
-        }
-      }
-    });
-    
-    // Processar campos numéricos
-    if ('live_interest' in sourceData && sourceData.live_interest !== undefined) {
-      updateObj.business_goals.live_interest = typeof sourceData.live_interest === 'string' ? 
-        parseInt(sourceData.live_interest, 10) : 
-        sourceData.live_interest;
-      console.log(`Definindo live_interest:`, updateObj.business_goals.live_interest);
-    }
-    
-    // Garantir que temos campos obrigatórios
-    if (!updateObj.business_goals.expected_outcomes) {
-      updateObj.business_goals.expected_outcomes = [];
-    }
-    
-    // Adicionar o resultado de 30 dias aos resultados esperados
-    if (updateObj.business_goals.expected_outcome_30days && 
-        !updateObj.business_goals.expected_outcomes.includes(updateObj.business_goals.expected_outcome_30days)) {
-      updateObj.business_goals.expected_outcomes = [
-        updateObj.business_goals.expected_outcome_30days,
-        ...updateObj.business_goals.expected_outcomes
-      ].filter(Boolean);
-    }
+  // Se não tivermos dados específicos, não fazer atualização
+  if (Object.keys(businessGoalsData).length === 0) {
+    console.warn("Nenhum dado específico de business_goals encontrado para atualização");
+    return updateObj;
   }
   
-  console.log("Objeto de atualização final para business_goals:", JSON.stringify(updateObj, null, 2));
+  // Construir objeto de atualização
+  updateObj.business_goals = {
+    ...existingBusinessGoals,
+    ...businessGoalsData
+  };
+  
+  // Garantir que expected_outcomes é um array
+  if (!Array.isArray(updateObj.business_goals.expected_outcomes)) {
+    updateObj.business_goals.expected_outcomes = [];
+  }
+  
+  // Adicionar expected_outcome_30days aos expected_outcomes se existir
+  if (updateObj.business_goals.expected_outcome_30days && 
+      !updateObj.business_goals.expected_outcomes.includes(updateObj.business_goals.expected_outcome_30days)) {
+    updateObj.business_goals.expected_outcomes = [
+      updateObj.business_goals.expected_outcome_30days,
+      ...updateObj.business_goals.expected_outcomes.filter(Boolean)
+    ];
+  }
+  
+  // Garantir que content_formats é um array
+  if (!Array.isArray(updateObj.business_goals.content_formats)) {
+    updateObj.business_goals.content_formats = [];
+  }
+  
+  // Converter live_interest para número
+  if (updateObj.business_goals.live_interest !== undefined) {
+    updateObj.business_goals.live_interest = Number(updateObj.business_goals.live_interest);
+  }
+  
+  console.log("Objeto final de atualização para business_goals:", updateObj);
   
   return updateObj;
 }
