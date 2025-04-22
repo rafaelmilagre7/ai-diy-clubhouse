@@ -11,8 +11,8 @@ import { LoadingSpinner } from "@/components/common/LoadingSpinner";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertTriangle } from "lucide-react";
-import { steps } from "@/hooks/onboarding/useStepDefinitions"; // Corrigido
-import { useStepNavigation } from "@/hooks/onboarding/useStepNavigation"; // Adiciona hook central de navegação
+import { useStepDefinitions } from "@/hooks/onboarding/useStepDefinitions"; // Corrigido para o hook
+import { useStepNavigation } from "@/hooks/onboarding/useStepNavigation";
 
 const PersonalInfo = () => {
   const {
@@ -41,6 +41,9 @@ const PersonalInfo = () => {
     attemptDataLoad
   } = usePersonalInfoLoad();
 
+  // Novo: obtenha os steps centralizados
+  const { steps } = useStepDefinitions();
+
   // Hook centralizado de navegação de etapas
   const { navigateToStep } = useStepNavigation();
 
@@ -49,6 +52,9 @@ const PersonalInfo = () => {
   const { personalStepIndex, totalSteps, progressPercentage } = usePersonalInfoProgress();
 
   const navigate = useNavigate();
+
+  // Extrair títulos para o wizard/guia
+  const stepTitles = steps.map(s => s.title);
 
   useEffect(() => {
     // Tentar carregar dados na montagem do componente
@@ -80,7 +86,7 @@ const PersonalInfo = () => {
       goToNextStep();
       return;
     }
-    
+
     // Caso contrário, submeta o formulário normalmente
     const success = await handleSubmit();
     if (success) {
@@ -91,7 +97,7 @@ const PersonalInfo = () => {
   };
 
   const handleStepClick = (stepIdx: number) => {
-    // Navegação "livre" do onboarding
+    // Permite navegação livre entre etapas
     navigateToStep(stepIdx);
   };
 
@@ -100,29 +106,35 @@ const PersonalInfo = () => {
 
   // Verificar se o passo já foi concluído
   const isReadOnly = !!progress?.completed_steps?.includes("personal");
-  
+
   // Log adicional para diagnóstico do estado
-  console.log("[DEBUG] PersonalInfo estados:", { 
-    isReadOnly, 
-    progressLoading, 
-    showForceButton, 
+  console.log("[DEBUG] PersonalInfo estados:", {
+    isReadOnly,
+    progressLoading,
+    showForceButton,
     hasError,
     completedSteps: progress?.completed_steps
   });
 
   if (progressLoading && !showForceButton) {
     return (
-      <OnboardingLayout 
-        currentStep={1} 
+      <OnboardingLayout
+        currentStep={1}
         totalSteps={totalSteps}
-        title="Dados Pessoais" 
+        title="Dados Pessoais"
         backUrl="/"
         progress={progressPercentage}
-        onStepClick={handleStepClick} // Tornar wizard clicável
+        stepTitles={stepTitles}
+        onStepClick={handleStepClick}
       >
-        <div className="flex justify-center items-center py-20">
+        <div className="flex flex-col justify-center items-center py-20 space-y-4">
           <LoadingSpinner size={10} />
-          <p className="ml-4 text-gray-400">Carregando seus dados...</p>
+          <p className="ml-4 text-gray-400 text-lg font-medium">
+            Carregando seus dados pessoais, por favor aguarde...
+          </p>
+          <p className="text-sm text-gray-500 text-center">
+            Você poderá navegar livremente entre as etapas ao terminar o carregamento.
+          </p>
         </div>
       </OnboardingLayout>
     );
@@ -130,12 +142,13 @@ const PersonalInfo = () => {
 
   if (hasError) {
     return (
-      <OnboardingLayout 
+      <OnboardingLayout
         currentStep={1}
         totalSteps={totalSteps}
-        title="Dados Pessoais" 
+        title="Dados Pessoais"
         backUrl="/"
         progress={progressPercentage}
+        stepTitles={stepTitles}
         onStepClick={handleStepClick}
       >
         <div className="space-y-6">
@@ -145,13 +158,12 @@ const PersonalInfo = () => {
               {loadError || (lastError ? "Erro ao carregar dados de progresso." : "")}
             </AlertDescription>
           </Alert>
-          
           <div className="flex justify-center mt-6">
-            <button 
+            <button
               onClick={() => attemptDataLoad(loadInitialData)}
               className="px-4 py-2 bg-[#0ABAB5] text-white rounded hover:bg-[#0ABAB5]/90"
             >
-              Tentar Novamente
+              Tentar novamente
             </button>
           </div>
         </div>
@@ -161,12 +173,13 @@ const PersonalInfo = () => {
 
   if (showForceButton) {
     return (
-      <OnboardingLayout 
+      <OnboardingLayout
         currentStep={1}
         totalSteps={totalSteps}
-        title="Dados Pessoais" 
+        title="Dados Pessoais"
         backUrl="/"
         progress={progressPercentage}
+        stepTitles={stepTitles}
         onStepClick={handleStepClick}
       >
         <div className="space-y-6">
@@ -176,22 +189,21 @@ const PersonalInfo = () => {
               Estamos tendo dificuldades para carregar seus dados. Você pode continuar mesmo assim ou tentar novamente.
             </AlertDescription>
           </Alert>
-          
           <div className="flex justify-center mt-6 space-x-4">
-            <button 
+            <button
               onClick={() => {
                 toast.info("Continuando com dados padrão");
                 setLoadingAttempts(0);
               }}
               className="px-4 py-2 bg-[#0ABAB5] text-white rounded hover:bg-[#0ABAB5]/90"
             >
-              Continuar Mesmo Assim
+              Continuar mesmo assim
             </button>
-            <button 
+            <button
               onClick={() => attemptDataLoad(loadInitialData)}
               className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50"
             >
-              Tentar Novamente
+              Tentar novamente
             </button>
           </div>
         </div>
@@ -201,12 +213,13 @@ const PersonalInfo = () => {
 
   // Renderização principal do formulário
   return (
-    <OnboardingLayout 
+    <OnboardingLayout
       currentStep={1}
       totalSteps={totalSteps}
-      title="Dados Pessoais" 
+      title="Dados Pessoais"
       backUrl="/"
       progress={progressPercentage}
+      stepTitles={stepTitles}
       onStepClick={handleStepClick}
     >
       <PersonalInfoStep
@@ -219,6 +232,11 @@ const PersonalInfo = () => {
         lastSaveTime={lastSaveTime}
         readOnly={isReadOnly}
       />
+      <div className="mt-8 flex justify-center">
+        <p className="text-xs text-gray-400">
+          Você pode clicar em qualquer etapa acima para avançar ou retornar sem seguir uma ordem específica.
+        </p>
+      </div>
     </OnboardingLayout>
   );
 };
