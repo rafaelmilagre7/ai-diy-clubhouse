@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { MilagrinhoMessage } from "../MilagrinhoMessage";
 import { PersonalInfoForm } from "./forms/PersonalInfoForm";
 import { usePersonalInfoForm } from "@/hooks/onboarding/usePersonalInfoForm";
@@ -36,6 +36,18 @@ export const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
   lastSaveTime = null,
 }) => {
   const [validationAttempted, setValidationAttempted] = useState(false);
+  const [localIsSaving, setLocalIsSaving] = useState(isSaving);
+  const [localLastSaveTime, setLocalLastSaveTime] = useState<number | null>(lastSaveTime);
+  
+  useEffect(() => {
+    setLocalIsSaving(isSaving);
+  }, [isSaving]);
+  
+  useEffect(() => {
+    if (lastSaveTime) {
+      setLocalLastSaveTime(lastSaveTime);
+    }
+  }, [lastSaveTime]);
   
   const {
     register,
@@ -74,7 +86,9 @@ export const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
     }
     
     try {
+      setLocalIsSaving(true);
       await onSubmit();
+      setLocalLastSaveTime(Date.now());
       
       toast.success("Dados pessoais salvos com sucesso!", {
         description: "Avançando para a próxima etapa..."
@@ -84,10 +98,18 @@ export const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
       toast.error("Erro ao salvar os dados", {
         description: "Verifique sua conexão e tente novamente"
       });
+    } finally {
+      setLocalIsSaving(false);
     }
   };
 
   const hasValidationErrors = validationAttempted && Object.keys(errors).length > 0;
+
+  // Registrar no console dados relevantes para debug
+  useEffect(() => {
+    console.log("Dados atuais do formulário:", formData);
+    console.log("Erros atuais do formulário:", errors);
+  }, [formData, errors]);
 
   return (
     <form onSubmit={onFormSubmit} className="space-y-6 animate-fade-in">
@@ -129,7 +151,7 @@ export const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
       />
 
       <div className="flex justify-between items-center pt-4">
-        <AutoSaveFeedback isSaving={isSaving} lastSaveTime={lastSaveTime} />
+        <AutoSaveFeedback isSaving={localIsSaving} lastSaveTime={localLastSaveTime} />
       </div>
     </form>
   );

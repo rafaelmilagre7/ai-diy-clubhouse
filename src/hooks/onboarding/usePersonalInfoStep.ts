@@ -83,9 +83,12 @@ export const usePersonalInfoStep = () => {
 
     const timer = setTimeout(autoSave, 1500);
     return () => clearTimeout(timer);
-  }, [formData, isSubmitting]);
+  }, [formData, isSubmitting, updateProgress]);
 
   const handleChange = (field: keyof PersonalInfoData, value: string) => {
+    // Registrar a alteração para debug
+    console.log(`Campo alterado: ${field}, Valor: ${value}`);
+    
     // Se for o campo DDI, garantir formatação adequada
     if (field === 'ddi') {
       // Remover + adicionais e garantir apenas um no início
