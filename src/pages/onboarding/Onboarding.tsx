@@ -9,25 +9,18 @@ import { toast } from 'sonner';
 
 const Onboarding: React.FC = () => {
   const { currentStepIndex, steps, navigateToStep, saveStepData, progress } = useOnboardingSteps();
-  const formStateRef = useRef<any>(null); // Pode ser aprimorado para tipo específico no futuro
+  const formStateRef = useRef<any>(null);
 
-  // Esta função será passada para EtapasProgresso: salva dados e navega ao destino
+  // Função robusta para troca de etapa com salvamento de dados
   const handleStepClick = async (stepIndexDestino: number) => {
-    // Não processa clique na etapa já atual
+    // Permite navegar para qualquer etapa (inclusive a 1ª)
     if (stepIndexDestino === currentStepIndex) return;
 
-    // Se existir referência para salvar, invocá-la (padrão futuro); por ora assume saveStepData global
     try {
-      // Coletar dados do step atual; depende do step
       const currentStep = steps[currentStepIndex];
-      // Exemplo de como coletar dados: se seu onboarding passa dados pelo progress,
-      // você pode adaptar para obter do estado do formulário específico, se necessário.
-      // Aqui tentamos salvar o progress do step atual, mesmo se não tivesse mudança.
-
-      // Se possível, obter os dados do formulário através de ref (caso o step exporte setFormRef)
-      // Por simplicidade, usamos progress
       const stepId = currentStep.id;
       let data = {};
+
       switch (stepId) {
         case 'personal':
           data = progress?.personal_info || {};
@@ -54,16 +47,15 @@ const Onboarding: React.FC = () => {
           data = {};
       }
 
-      // Salva os dados antes de trocar de etapa
+      // Salva os dados do passo atual antes de trocar (mesmo que não tenha alteração)
       await saveStepData(stepId, data, false);
 
     } catch (e) {
       toast.error("Erro ao salvar dados antes de trocar de etapa");
-      // Em caso de erro, não navega
       return;
     }
 
-    // Agora troca de etapa
+    // Troca de etapa SEM restrição, inclusive para a primeira
     navigateToStep(stepIndexDestino);
   };
 

@@ -31,16 +31,22 @@ export const EtapasProgresso: React.FC<EtapasProgressoProps> = ({
           const isClickable = typeof onStepClick === 'function';
 
           return (
-            <div
+            <button
+              type="button"
               key={step}
               className={cn(
-                "relative z-10 flex flex-col items-center",
+                "relative z-10 flex flex-col items-center focus:outline-none group bg-transparent p-0 border-0",
                 isClickable && !isActive ? "cursor-pointer select-none hover:scale-110 transition-transform" : "",
               )}
-              onClick={isClickable && !isActive ? () => onStepClick(idx) : undefined}
+              onClick={() => {
+                if (isClickable && onStepClick && step !== currentStep) {
+                  onStepClick(idx);
+                }
+              }}
               aria-disabled={isActive || !isClickable}
               tabIndex={isClickable && !isActive ? 0 : -1}
               role={isClickable ? "button" : undefined}
+              title={`Ir para etapa ${step}`}
             >
               <div
                 className={cn(
@@ -58,7 +64,7 @@ export const EtapasProgresso: React.FC<EtapasProgressoProps> = ({
                   <span className="text-white font-medium">{step}</span>
                 )}
               </div>
-            </div>
+            </button>
           );
         })}
       </div>
