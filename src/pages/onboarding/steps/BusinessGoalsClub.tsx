@@ -34,7 +34,48 @@ const BusinessGoalsClub = () => {
     console.log(`Iniciando salvamento de dados para passo ${stepId}:`, data);
     setIsSubmitting(true);
     try {
-      // Garantir que o stepId correto esteja sendo utilizado e os dados estejam estruturados corretamente
+      // Garantir que os dados foram formatados adequadamente
+      if (!data.business_goals) {
+        throw new Error("Dados inválidos para envio");
+      }
+      
+      // Converter campos para formato correto se necessário
+      const businessGoalsData = data.business_goals;
+      
+      // Verificar se campos obrigatórios estão presentes
+      const requiredFields = ['primary_goal', 'priority_solution_type', 'how_implement', 'week_availability'];
+      const missingFields = requiredFields.filter(field => !businessGoalsData[field]);
+      
+      if (missingFields.length > 0) {
+        console.warn("Campos obrigatórios não preenchidos:", missingFields);
+        toast.warning("Por favor, preencha todos os campos obrigatórios");
+        setIsSubmitting(false);
+        return;
+      }
+      
+      // Garantir que temos expected_outcomes
+      if (!businessGoalsData.expected_outcomes || !Array.isArray(businessGoalsData.expected_outcomes)) {
+        businessGoalsData.expected_outcomes = [];
+      }
+      
+      // Adicionar expected_outcome_30days para expected_outcomes se existir
+      if (businessGoalsData.expected_outcome_30days && 
+          !businessGoalsData.expected_outcomes.includes(businessGoalsData.expected_outcome_30days)) {
+        businessGoalsData.expected_outcomes = [
+          businessGoalsData.expected_outcome_30days,
+          ...businessGoalsData.expected_outcomes.filter(Boolean)
+        ];
+      }
+      
+      // Garantir que content_formats é um array
+      if (!businessGoalsData.content_formats || !Array.isArray(businessGoalsData.content_formats)) {
+        businessGoalsData.content_formats = [];
+      }
+      
+      // Log de dados antes de salvar
+      console.log("Dados finais formatados antes de salvar:", data);
+      
+      // Salvar dados
       await saveStepData(stepId, data, false);
       
       toast.success("Dados salvos com sucesso!");

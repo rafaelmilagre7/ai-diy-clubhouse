@@ -43,7 +43,7 @@ export const ExpectativasObjetivosStep = ({
   console.log("Dados iniciais para ExpectativasObjetivosStep:", initialData);
   console.log("Dados de business_goals:", businessGoalsData);
 
-  const { control, handleSubmit, setValue, watch, formState: { errors } } = useForm<FormValues>({
+  const { control, handleSubmit, setValue, watch, formState: { errors, isValid, isDirty } } = useForm<FormValues>({
     defaultValues: {
       primary_goal: businessGoalsData.primary_goal || "",
       expected_outcome_30days: businessGoalsData.expected_outcome_30days || "",
@@ -51,24 +51,42 @@ export const ExpectativasObjetivosStep = ({
       how_implement: businessGoalsData.how_implement || "",
       week_availability: businessGoalsData.week_availability || "",
       live_interest: businessGoalsData.live_interest || 5,
-      content_formats: businessGoalsData.content_formats || [],
+      content_formats: Array.isArray(businessGoalsData.content_formats) ? businessGoalsData.content_formats : [],
     },
+    mode: "onChange"
   });
 
   // Monitore o interesse em sessões ao vivo
   const liveInterest = watch("live_interest");
+  const formValues = watch();
+
+  // Depuração de valores do formulário
+  useEffect(() => {
+    console.log("Valores atuais do formulário:", formValues);
+  }, [formValues]);
 
   // Use efeito para inicializar dados se eles chegarem após o mount
   useEffect(() => {
     if (initialData?.business_goals) {
       const data = initialData.business_goals;
+      
       if (data.primary_goal) setValue("primary_goal", data.primary_goal);
       if (data.expected_outcome_30days) setValue("expected_outcome_30days", data.expected_outcome_30days);
       if (data.priority_solution_type) setValue("priority_solution_type", data.priority_solution_type);
       if (data.how_implement) setValue("how_implement", data.how_implement);
       if (data.week_availability) setValue("week_availability", data.week_availability);
       if (data.live_interest !== undefined) setValue("live_interest", data.live_interest);
-      if (data.content_formats) setValue("content_formats", data.content_formats);
+      
+      // Garantir que content_formats é um array
+      if (data.content_formats) {
+        if (Array.isArray(data.content_formats)) {
+          setValue("content_formats", data.content_formats);
+        } else if (typeof data.content_formats === 'string') {
+          setValue("content_formats", [data.content_formats]);
+        }
+      }
+      
+      console.log("Dados inicializados:", data);
     }
   }, [initialData, setValue]);
 
@@ -85,7 +103,7 @@ export const ExpectativasObjetivosStep = ({
         how_implement: data.how_implement,
         week_availability: data.week_availability,
         live_interest: data.live_interest,
-        content_formats: data.content_formats,
+        content_formats: Array.isArray(data.content_formats) ? data.content_formats : [],
       },
     };
     
@@ -110,7 +128,7 @@ export const ExpectativasObjetivosStep = ({
               rules={{ required: "Por favor, selecione uma opção" }}
               render={({ field }) => (
                 <div className="space-y-3">
-                  <Label htmlFor="primary_goal">O que você busca principalmente ao participar do VIVER DE IA Club?</Label>
+                  <Label htmlFor="primary_goal" className="text-base font-medium">O que você busca principalmente ao participar do VIVER DE IA Club?</Label>
                   {errors.primary_goal && <p className="text-red-500 text-sm">{errors.primary_goal.message}</p>}
                   <RadioGroup
                     onValueChange={field.onChange}
@@ -159,7 +177,7 @@ export const ExpectativasObjetivosStep = ({
               control={control}
               render={({ field }) => (
                 <div className="space-y-2">
-                  <Label htmlFor="expected_outcome_30days">Qual resultado concreto você espera alcançar nos primeiros 30 dias?</Label>
+                  <Label htmlFor="expected_outcome_30days" className="text-base font-medium">Qual resultado concreto você espera alcançar nos primeiros 30 dias?</Label>
                   <Textarea
                     id="expected_outcome_30days"
                     placeholder="Exemplo: Implementar um chatbot de atendimento ou criar um fluxo de automação..."
@@ -176,7 +194,7 @@ export const ExpectativasObjetivosStep = ({
               rules={{ required: "Por favor, selecione uma opção" }}
               render={({ field }) => (
                 <div className="space-y-2">
-                  <Label htmlFor="priority_solution_type">Qual tipo de solução é prioritária para seu negócio agora?</Label>
+                  <Label htmlFor="priority_solution_type" className="text-base font-medium">Qual tipo de solução é prioritária para seu negócio agora?</Label>
                   {errors.priority_solution_type && <p className="text-red-500 text-sm">{errors.priority_solution_type.message}</p>}
                   <RadioGroup
                     onValueChange={field.onChange}
@@ -218,7 +236,7 @@ export const ExpectativasObjetivosStep = ({
               rules={{ required: "Por favor, selecione uma opção" }}
               render={({ field }) => (
                 <div className="space-y-2">
-                  <Label htmlFor="how_implement">Como você pretende implementar as soluções de IA?</Label>
+                  <Label htmlFor="how_implement" className="text-base font-medium">Como você pretende implementar as soluções de IA?</Label>
                   {errors.how_implement && <p className="text-red-500 text-sm">{errors.how_implement.message}</p>}
                   <RadioGroup
                     onValueChange={field.onChange}
@@ -248,7 +266,7 @@ export const ExpectativasObjetivosStep = ({
               rules={{ required: "Por favor, selecione uma opção" }}
               render={({ field }) => (
                 <div className="space-y-2">
-                  <Label htmlFor="week_availability">Quantas horas por semana você tem disponíveis para implementar IA?</Label>
+                  <Label htmlFor="week_availability" className="text-base font-medium">Quantas horas por semana você tem disponíveis para implementar IA?</Label>
                   {errors.week_availability && <p className="text-red-500 text-sm">{errors.week_availability.message}</p>}
                   <RadioGroup
                     onValueChange={field.onChange}
@@ -282,7 +300,7 @@ export const ExpectativasObjetivosStep = ({
               render={({ field }) => (
                 <div className="space-y-4">
                   <div className="flex justify-between">
-                    <Label htmlFor="live_interest">Interesse em sessões ao vivo (mentoria, implementação, etc.)</Label>
+                    <Label htmlFor="live_interest" className="text-base font-medium">Interesse em sessões ao vivo (mentoria, implementação, etc.)</Label>
                     <span className="font-medium">{liveInterest}/10</span>
                   </div>
                   <Slider
@@ -306,7 +324,7 @@ export const ExpectativasObjetivosStep = ({
               control={control}
               render={({ field }) => (
                 <div className="space-y-3">
-                  <Label>Quais formatos de conteúdo você prefere? (selecione todos aplicáveis)</Label>
+                  <Label className="text-base font-medium">Quais formatos de conteúdo você prefere? (selecione todos aplicáveis)</Label>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                     <div className="flex items-center space-x-2">
                       <Checkbox 
