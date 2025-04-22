@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { steps } from "./useStepDefinitions";
 import { useProgress } from "./useProgress";
@@ -26,6 +27,14 @@ export const useStepNavigation = () => {
       if (isLoading) return; // Evitar múltiplas chamadas durante carregamento
       
       const refreshedProgress = await refreshProgress();
+      
+      // Se não há progresso, redirecionar para o início do onboarding
+      if (!refreshedProgress) {
+        console.log("Nenhum progresso encontrado, redirecionando para o início do onboarding");
+        navigate("/onboarding");
+        setCurrentStepIndex(0);
+        return;
+      }
       
       const currentPath = location.pathname;
       const currentStepId = pathToStepId[currentPath as keyof typeof pathToStepId];
@@ -91,3 +100,4 @@ export const useStepNavigation = () => {
     currentStep: steps[currentStepIndex] || steps[0]
   };
 };
+
