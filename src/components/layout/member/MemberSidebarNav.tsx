@@ -4,12 +4,11 @@ import { useAuth } from "@/contexts/auth";
 import { 
   LayoutDashboard, 
   Lightbulb, 
-  Tool, 
+  Settings, 
   Trophy,
   Gift,
   MessageSquare,
   User,
-  Settings,
   ShieldCheck
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -42,7 +41,7 @@ export const MemberSidebarNav = ({ sidebarOpen }: SidebarNavProps) => {
     {
       title: "Ferramentas",
       href: "/tools",
-      icon: Tool,
+      icon: Settings,
     },
     {
       title: "Benefícios",
