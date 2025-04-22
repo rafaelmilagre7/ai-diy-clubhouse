@@ -1,4 +1,5 @@
 
+import React, { useRef } from "react";
 import { useProgress } from "../useProgress";
 import { buildUpdateObject } from "./stepDataBuilder";
 import { navigateAfterStep } from "./stepNavigator";
