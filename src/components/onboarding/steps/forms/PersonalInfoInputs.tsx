@@ -1,8 +1,8 @@
+
 import React from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PhoneInput } from "./PhoneInput";
-import { CountrySelect } from "./CountrySelect";
 import { TimezoneSelect } from "./TimezoneSelect";
 import { cn } from "@/lib/utils";
 import { LocationInputs } from "../inputs/LocationInputs";
@@ -128,74 +128,22 @@ export const PersonalInfoInputs: React.FC<PersonalInfoInputsProps> = ({
           )}
         </div>
 
-        {/* Country */}
+        {/* Timezone */}
         <div className="col-span-1">
-          <Label htmlFor="country">País</Label>
-          <CountrySelect
-            value={formData.country || 'Brasil'}
+          <Label htmlFor="timezone">Fuso Horário</Label>
+          <TimezoneSelect
+            value={formData.timezone || 'GMT-3'}
             onChange={onChange}
             readOnly={readOnly}
-            error={errors.country}
+            error={errors.timezone}
           />
-          {errors.country && (
-            <p className="text-red-500 text-sm mt-1">{errors.country}</p>
+          {errors.timezone && (
+            <p className="text-red-500 text-sm mt-1">{errors.timezone}</p>
           )}
         </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-        {/* State */}
-        <div className="col-span-1">
-          <Label htmlFor="state">Estado</Label>
-          <Input
-            type="text"
-            id="state"
-            placeholder="Seu estado"
-            value={formData.state || ''}
-            onChange={(e) => onChange("state", e.target.value)}
-            className={cn(errors.state && "border-red-500")}
-            readOnly={readOnly}
-            disabled={disabled}
-          />
-          {errors.state && (
-            <p className="text-red-500 text-sm mt-1">{errors.state}</p>
-          )}
-        </div>
-
-        {/* City */}
-        <div className="col-span-1">
-          <Label htmlFor="city">Cidade</Label>
-          <Input
-            type="text"
-            id="city"
-            placeholder="Sua cidade"
-            value={formData.city || ''}
-            onChange={(e) => onChange("city", e.target.value)}
-            className={cn(errors.city && "border-red-500")}
-            readOnly={readOnly}
-            disabled={disabled}
-          />
-          {errors.city && (
-            <p className="text-red-500 text-sm mt-1">{errors.city}</p>
-          )}
-        </div>
-      </div>
-
-      <div className="mt-6">
-        {/* Timezone */}
-        <Label htmlFor="timezone">Fuso Horário</Label>
-        <TimezoneSelect
-          value={formData.timezone || 'GMT-3'}
-          onChange={onChange}
-          readOnly={readOnly}
-          error={errors.timezone}
-        />
-        {errors.timezone && (
-          <p className="text-red-500 text-sm mt-1">{errors.timezone}</p>
-        )}
       </div>
       
-      {/* Location Inputs (Estado e Cidade) */}
+      {/* Location Inputs (País, Estado e Cidade) - Componente unificado */}
       <LocationInputs
         country={formData.country || 'Brasil'}
         state={formData.state || ''}
