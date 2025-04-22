@@ -3,7 +3,7 @@ import { OnboardingData, OnboardingProgress } from "@/types/onboarding";
 import { normalizeWebsite } from "../utils/dataNormalization";
 
 export function buildProfessionalDataUpdate(data: Partial<OnboardingData>, progress: OnboardingProgress | null) {
-  const updateObj: any = {};
+  const updateObj: Partial<OnboardingProgress> = {};
   
   // Verificar se temos dados diretos ou dentro do objeto professional_info
   const professionalData = data.professional_info || data;
@@ -39,12 +39,12 @@ export function buildProfessionalDataUpdate(data: Partial<OnboardingData>, progr
       professionalInfo[field] = value;
       
       // Também atualizar no nível raiz para compatibilidade
-      if (field === 'company_name') updateObj.company_name = value;
-      if (field === 'company_size') updateObj.company_size = value;
-      if (field === 'company_sector') updateObj.company_sector = value;
-      if (field === 'company_website') updateObj.company_website = value;
-      if (field === 'current_position') updateObj.current_position = value;
-      if (field === 'annual_revenue') updateObj.annual_revenue = value;
+      if (field === 'company_name') updateObj.company_name = value as string;
+      if (field === 'company_size') updateObj.company_size = value as string;
+      if (field === 'company_sector') updateObj.company_sector = value as string;
+      if (field === 'company_website') updateObj.company_website = value as string;
+      if (field === 'current_position') updateObj.current_position = value as string;
+      if (field === 'annual_revenue') updateObj.annual_revenue = value as string;
       
       hasUpdates = true;
     }
