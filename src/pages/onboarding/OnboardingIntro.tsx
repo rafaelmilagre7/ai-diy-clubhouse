@@ -3,14 +3,13 @@ import React from 'react';
 import { Button } from "@/components/ui/button";
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
-import { theme } from '@/lib/theme';
 import MemberLayout from '@/components/layout/MemberLayout';
 
 const OnboardingIntro = () => {
   const navigate = useNavigate();
 
   const handleStartOnboarding = () => {
-    navigate('/onboarding/personal-info');
+    navigate('/onboarding');
   };
 
   return (

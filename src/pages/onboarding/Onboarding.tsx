@@ -22,9 +22,10 @@ const Onboarding: React.FC = () => {
     const loadData = async () => {
       try {
         await refreshProgress();
-        console.log("Dados do onboarding atualizados");
+        console.log("Dados do onboarding carregados, pronto para começar");
       } catch (error) {
         console.error("Erro ao carregar dados:", error);
+        toast.error("Erro ao carregar dados do onboarding. Tente novamente.");
       }
     };
     

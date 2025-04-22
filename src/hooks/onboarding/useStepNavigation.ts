@@ -100,4 +100,3 @@ export const useStepNavigation = () => {
     currentStep: steps[currentStepIndex] || steps[0]
   };
 };
-
