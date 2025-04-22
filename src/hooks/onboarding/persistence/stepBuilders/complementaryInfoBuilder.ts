@@ -11,7 +11,9 @@ export function buildComplementaryInfoUpdate(data: Partial<OnboardingData>, prog
   if (typeof existingInfo === 'string') {
     try {
       // Verificar se a string não está vazia antes de tentar parsear
-      if (existingInfo && typeof existingInfo === 'string' && existingInfo.trim() !== '') {
+      // Usar uma verificação segura para evitar erros de tipo
+      const trimmedValue = typeof existingInfo === 'string' ? existingInfo.trim() : '';
+      if (existingInfo && trimmedValue !== '') {
         existingInfo = JSON.parse(existingInfo);
       } else {
         existingInfo = {};
