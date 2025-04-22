@@ -7,11 +7,14 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, CheckCircle } from "lucide-react";
-import { OnboardingStepProps } from "@/types/onboarding";
+import { OnboardingStepProps, PersonalInfoData } from "@/types/onboarding";
 
-export interface PersonalInfoStepProps extends OnboardingStepProps {
-  onSubmit: (stepId: string, data: any) => Promise<void>;
+export interface PersonalInfoStepProps extends Partial<OnboardingStepProps> {
+  onSubmit: () => Promise<void>;
   isSubmitting: boolean;
+  formData: PersonalInfoData;
+  errors: Record<string, string>;
+  onChange: (field: keyof PersonalInfoData, value: string) => void;
   initialData?: any;
   isLastStep?: boolean;
   onComplete?: () => void;
@@ -22,7 +25,10 @@ export const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
   isSubmitting,
   initialData,
   isLastStep,
-  onComplete
+  onComplete,
+  formData,
+  errors,
+  onChange
 }) => {
   const navigate = useNavigate();
   const [validationAttempted, setValidationAttempted] = useState(false);
@@ -30,13 +36,11 @@ export const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
   const {
     register,
     handleSubmit,
-    errors,
     touchedFields,
     validation,
     isValid,
     validateForm,
-    formData
-  } = usePersonalInfoForm(initialData);
+  } = usePersonalInfoForm(initialData || formData);
 
   const onFormSubmit = async (data: any) => {
     setValidationAttempted(true);
@@ -52,12 +56,7 @@ export const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
     }
     
     try {
-      await onSubmit("personal", {
-        personal_info: {
-          ...data,
-          ...validation.values
-        }
-      });
+      await onSubmit();
       
       toast.success("Dados pessoais salvos com sucesso!", {
         description: "Avançando para a próxima etapa...",
@@ -109,8 +108,9 @@ export const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
         errors={errors}
         touchedFields={touchedFields}
         isSubmitting={isSubmitting}
-        initialData={initialData}
+        initialData={initialData || formData}
         formData={formData}
+        onChange={onChange}
       />
     </form>
   );
