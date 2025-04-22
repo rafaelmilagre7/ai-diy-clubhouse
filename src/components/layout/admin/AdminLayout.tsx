@@ -12,6 +12,8 @@ interface AdminLayoutProps {
 
 const AdminLayout = ({ children }: AdminLayoutProps) => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  
+  console.log("AdminLayout renderizando");
 
   return (
     <div className="flex h-screen bg-background overflow-hidden">

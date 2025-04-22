@@ -4,7 +4,6 @@ import { lazy } from "react";
 import AdminLayout from "@/components/layout/admin/AdminLayout";
 import { AdminProtectedRoutes } from "@/auth/AdminProtectedRoutes";
 
-// Lazy loading das páginas
 const AdminDashboard = lazy(() => import("@/pages/admin/AdminDashboard"));
 const AdminSolutions = lazy(() => import("@/pages/admin/AdminSolutions"));
 const AdminSolutionEdit = lazy(() => import("@/pages/admin/AdminSolutionEdit"));
@@ -15,7 +14,7 @@ const AdminSuggestionDetails = lazy(() => import("@/pages/admin/AdminSuggestionD
 const SolutionEditor = lazy(() => import("@/pages/admin/SolutionEditor"));
 const UserManagement = lazy(() => import("@/pages/admin/UserManagement"));
 
-export const AdminRoutes = () => {
+const AdminRoutes = () => {
   return (
     <Routes>
       <Route element={
