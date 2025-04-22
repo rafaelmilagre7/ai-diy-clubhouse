@@ -8,6 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MultiSelect } from "@/components/ui/multi-select";
 import { ArrowRight } from "lucide-react";
+import { OnboardingStepProps } from "@/types/onboarding";
 
 const discoverOptions = [
   { value: "google", label: "Google" },
@@ -78,7 +79,7 @@ export const ComplementaryInfoStep = ({
           </Label>
           <Select
             defaultValue={initialData?.how_found_us || ""}
-            onValueChange={(value) => setValue("how_found_us", value)}
+            onValueChange={(value: string) => setValue("how_found_us", value)}
           >
             <SelectTrigger className="w-full bg-gray-900 border-gray-700">
               <SelectValue placeholder="Selecione uma opção" />
@@ -117,7 +118,7 @@ export const ComplementaryInfoStep = ({
           <MultiSelect
             options={topicOptions}
             defaultValue={initialData?.priority_topics || []}
-            onChange={(selected) => setValue("priority_topics", selected)}
+            onChange={(selected: string[]) => setValue("priority_topics", selected)}
             className="bg-gray-900"
             placeholder="Selecione os tópicos"
             maxItems={5}
@@ -133,7 +134,7 @@ export const ComplementaryInfoStep = ({
               <Checkbox
                 id="authorize_case_usage"
                 checked={watch("authorize_case_usage")}
-                onCheckedChange={(checked) => setValue("authorize_case_usage", checked as boolean)}
+                onCheckedChange={(checked: boolean) => setValue("authorize_case_usage", checked)}
                 className="mt-1 data-[state=checked]:bg-[#0ABAB5] data-[state=checked]:border-[#0ABAB5]"
               />
               <div className="space-y-1">
@@ -151,7 +152,7 @@ export const ComplementaryInfoStep = ({
               <Checkbox
                 id="interested_in_interview"
                 checked={watch("interested_in_interview")}
-                onCheckedChange={(checked) => setValue("interested_in_interview", checked as boolean)}
+                onCheckedChange={(checked: boolean) => setValue("interested_in_interview", checked)}
                 className="mt-1 data-[state=checked]:bg-[#0ABAB5] data-[state=checked]:border-[#0ABAB5]"
               />
               <div className="space-y-1">

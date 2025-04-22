@@ -2,6 +2,7 @@
 import { OnboardingProgress } from "@/types/onboarding";
 import { buildProfessionalDataUpdate } from "./stepBuilders/professionalDataBuilder";
 import { buildBusinessGoalsUpdate } from "./stepBuilders/businessGoalsBuilder";
+import { buildComplementaryInfoUpdate } from "./stepBuilders/complementaryInfoBuilder";
 
 export function buildUpdateObject(
   stepId: string,
@@ -60,9 +61,7 @@ export function buildUpdateObject(
       break;
       
     case "complementary_info":
-      specificUpdateObj = {
-        complementary_info: data.complementary_info || data
-      };
+      specificUpdateObj = buildComplementaryInfoUpdate(data, progress);
       break;
       
     default:
