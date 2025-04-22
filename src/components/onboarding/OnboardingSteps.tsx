@@ -1,3 +1,4 @@
+
 import { useOnboardingSteps } from "@/hooks/onboarding/useOnboardingSteps";
 import { PersonalInfoStep } from "./steps/PersonalInfoStep";
 import { BusinessGoalsStep } from "./steps/BusinessGoalsStep";
@@ -10,7 +11,7 @@ import { Progress } from "@/components/ui/progress";
 import { OnboardingData } from "@/types/onboarding";
 import { ProfessionalDataStep } from "./steps/ProfessionalDataStep";
 import { useLocation } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 export const OnboardingSteps = () => {
   const {
@@ -25,6 +26,8 @@ export const OnboardingSteps = () => {
   } = useOnboardingSteps();
   
   const location = useLocation();
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [formData, setFormData] = useState<any>({});
   
   const pathToStepComponent = {
     "/onboarding": "personal",
@@ -43,8 +46,50 @@ export const OnboardingSteps = () => {
     console.log(`Rota atual: ${location.pathname}, stepId mapeado: ${currentPathStepId}, currentStep.id: ${currentStep.id}`);
   }, [location.pathname, currentPathStepId, currentStep.id]);
 
+  // Manipulador genérico para alterações de campo
+  const handleFieldChange = (field: string, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+    
+    // Limpar erros quando o campo é modificado
+    if (errors[field]) {
+      setErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[field];
+        return newErrors;
+      });
+    }
+  };
+
+  // Handler genérico para submissão
+  const handleSubmit = () => {
+    // Aqui você pode implementar validação genérica se necessário
+    saveStepData(currentStep.id, formData);
+  };
+
+  useEffect(() => {
+    // Atualizar formData quando o progresso mudar
+    if (progress) {
+      const sectionKey = currentStep.section as keyof OnboardingData;
+      const currentStepData = progress[sectionKey as keyof typeof progress];
+      if (currentStepData) {
+        setFormData(currentStepData);
+      }
+    }
+  }, [progress, currentStep]);
+
   const stepComponents = {
-    personal: PersonalInfoStep,
+    personal: () => (
+      <PersonalInfoStep
+        formData={formData}
+        errors={errors}
+        isSubmitting={isSubmitting}
+        onChange={handleFieldChange}
+        onSubmit={handleSubmit}
+      />
+    ),
     professional_data: ProfessionalDataStep,
     business_context: BusinessContextStep,
     ai_exp: AIExperienceStep,

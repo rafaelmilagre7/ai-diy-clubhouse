@@ -3,13 +3,15 @@ import React from "react";
 import { PersonalInfoForm } from "./forms/PersonalInfoForm";
 import { Button } from "@/components/ui/button";
 
-interface PersonalInfoStepProps {
+export interface PersonalInfoStepProps {
   formData: any;
   errors: Record<string, string>;
   isSubmitting: boolean;
   onChange: (field: string, value: string) => void;
   onSubmit: () => void;
   readOnly?: boolean;
+  isSaving?: boolean;
+  lastSaveTime?: number | null;
 }
 
 export const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
@@ -19,6 +21,8 @@ export const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
   onChange,
   onSubmit,
   readOnly = false,
+  isSaving,
+  lastSaveTime
 }) => {
   return (
     <form onSubmit={e => {
