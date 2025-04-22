@@ -1,48 +1,57 @@
 
 import { cn } from "@/lib/utils";
-import {
-  LayoutDashboard,
-  Users,
-  Lightbulb,
-  Tool,
+import { useAuth } from "@/contexts/auth";
+import { 
+  LayoutDashboard, 
+  Lightbulb, 
+  Tool, 
+  Trophy,
+  Gift,
   MessageSquare,
-  ChevronLeft,
+  User,
+  Settings,
+  ShieldCheck
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "react-router-dom";
-import { Separator } from "@/components/ui/separator";
 
-interface AdminSidebarNavProps {
+interface SidebarNavProps {
   sidebarOpen: boolean;
 }
 
-export const AdminSidebarNav = ({ sidebarOpen }: AdminSidebarNavProps) => {
+export const MemberSidebarNav = ({ sidebarOpen }: SidebarNavProps) => {
   const location = useLocation();
+  const { isAdmin } = useAuth();
 
   const menuItems = [
     {
       title: "Dashboard",
-      href: "/admin",
+      href: "/dashboard",
       icon: LayoutDashboard,
     },
     {
-      title: "Usuários",
-      href: "/admin/users",
-      icon: Users,
+      title: "Trilha de Implementação",
+      href: "/implementation-trail",
+      icon: Trophy,
     },
     {
       title: "Soluções",
-      href: "/admin/solutions",
+      href: "/solutions",
       icon: Lightbulb,
     },
     {
       title: "Ferramentas",
-      href: "/admin/tools",
+      href: "/tools",
       icon: Tool,
     },
     {
+      title: "Benefícios",
+      href: "/benefits",
+      icon: Gift,
+    },
+    {
       title: "Sugestões",
-      href: "/admin/suggestions",
+      href: "/suggestions",
       icon: MessageSquare,
     },
   ];
@@ -72,21 +81,21 @@ export const AdminSidebarNav = ({ sidebarOpen }: AdminSidebarNavProps) => {
           </Button>
         ))}
 
-        <Separator className="my-4" />
-
-        <Button
-          variant="outline"
-          className={cn(
-            "w-full justify-start gap-2",
-            !sidebarOpen && "justify-center"
-          )}
-          asChild
-        >
-          <Link to="/dashboard">
-            <ChevronLeft className="h-4 w-4" />
-            {sidebarOpen && <span>Voltar ao Dashboard</span>}
-          </Link>
-        </Button>
+        {isAdmin && (
+          <Button
+            variant="outline"
+            className={cn(
+              "w-full justify-start gap-2 border-viverblue text-viverblue hover:bg-viverblue/10",
+              !sidebarOpen && "justify-center"
+            )}
+            asChild
+          >
+            <Link to="/admin">
+              <ShieldCheck className="h-4 w-4" />
+              {sidebarOpen && <span>Painel Admin</span>}
+            </Link>
+          </Button>
+        )}
       </div>
     </div>
   );

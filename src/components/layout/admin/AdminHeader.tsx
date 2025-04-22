@@ -1,6 +1,6 @@
 
-import { Bell, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Menu } from "lucide-react";
 
 interface AdminHeaderProps {
   sidebarOpen: boolean;
@@ -9,23 +9,21 @@ interface AdminHeaderProps {
 
 export const AdminHeader = ({ sidebarOpen, setSidebarOpen }: AdminHeaderProps) => {
   return (
-    <header className="sticky top-0 z-10 flex h-16 items-center border-b bg-background px-4 md:px-6">
-      <Button 
-        variant="ghost" 
-        size="icon" 
-        className="md:hidden mr-2" 
+    <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6">
+      <Button
+        variant="ghost"
+        size="icon"
         onClick={() => setSidebarOpen(!sidebarOpen)}
+        className="md:hidden"
       >
-        <Menu className="h-5 w-5" />
+        <Menu className="h-6 w-6" />
       </Button>
       
-      <div className="ml-auto flex items-center space-x-4">
-        <Button variant="outline" size="icon" className="relative">
-          <Bell className="h-5 w-5" />
-          <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs text-white">
-            3
-          </span>
-        </Button>
+      <div className="flex-1">
+        <h1 className="text-lg font-semibold">Painel Administrativo</h1>
+        <p className="text-sm text-muted-foreground">
+          Gerencie usuários, soluções e configurações do VIVER DE IA Club
+        </p>
       </div>
     </header>
   );
