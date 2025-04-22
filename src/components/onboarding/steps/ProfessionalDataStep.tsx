@@ -89,35 +89,36 @@ export const ProfessionalDataStep: React.FC<ProfessionalDataStepProps> = ({
     setIsLoading(true);
     setValidationErrors([]);
     
-    // Validar todos os campos
-    const errors: string[] = [];
-    const validationResults = {
-      company_name: validations.validateCompanyName(data.company_name),
-      company_website: validations.validateWebsite(data.company_website),
-      company_size: validations.validateCompanySize(data.company_size),
-      company_sector: validations.validateCompanySector(data.company_sector),
-      current_position: validations.validateCurrentPosition(data.current_position),
-      annual_revenue: validations.validateAnnualRevenue(data.annual_revenue)
-    };
-
-    Object.entries(validationResults).forEach(([field, error]) => {
-      if (error) errors.push(error);
-    });
-
-    if (errors.length > 0) {
-      setValidationErrors(errors);
-      setIsLoading(false);
-      return;
-    }
-    
     try {
-      // Normalizar a URL do website antes de salvar
-      if (data.company_website) {
-        data.company_website = normalizeWebsiteUrl(data.company_website);
+      // Validar todos os campos
+      const errors: string[] = [];
+      const validationResults = {
+        company_name: validations.validateCompanyName(data.company_name),
+        company_website: validations.validateWebsite(data.company_website),
+        company_size: validations.validateCompanySize(data.company_size),
+        company_sector: validations.validateCompanySector(data.company_sector),
+        current_position: validations.validateCurrentPosition(data.current_position),
+        annual_revenue: validations.validateAnnualRevenue(data.annual_revenue)
+      };
+
+      Object.entries(validationResults).forEach(([field, error]) => {
+        if (error) errors.push(error);
+      });
+
+      if (errors.length > 0) {
+        setValidationErrors(errors);
+        setIsLoading(false);
+        return;
       }
       
-      console.log("Enviando dados profissionais para onSubmit:", data);
+      console.log("Enviando dados profissionais:", data);
       await onSubmit("professional_data", data);
+      
+      // Toast de sucesso movido para depois do salvamento
+      toast.success("Dados salvos com sucesso!", {
+        description: "Redirecionando para a próxima etapa..."
+      });
+      
     } catch (error) {
       console.error("Erro ao enviar dados profissionais:", error);
       setValidationErrors(["Falha ao salvar dados. Por favor, tente novamente."]);

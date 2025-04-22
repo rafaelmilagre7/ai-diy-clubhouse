@@ -3,25 +3,8 @@ import { OnboardingData, OnboardingProgress, ProfessionalDataInput } from "@/typ
 import { buildBaseUpdate } from "./baseBuilder";
 import { normalizeWebsiteUrl } from "@/utils/professionalDataValidation";
 
-/**
- * Builder específico para dados profissionais
- * Processa e normaliza os dados antes de armazená-los no Supabase
- */
 export function buildProfessionalDataUpdate(data: ProfessionalDataInput, progress: OnboardingProgress | null) {
   console.log("Iniciando buildProfessionalDataUpdate com dados:", data);
-  
-  // Definir os campos que existem no nível superior do progresso
-  const topLevelFields = [
-    "company_name",
-    "company_size",
-    "company_sector",
-    "company_website",
-    "current_position",
-    "annual_revenue"
-  ];
-
-  // Criar objeto de atualização base
-  const updateObj: Record<string, any> = {};
   
   // Processar website para garantir formato correto
   let processedData = { ...data };
@@ -39,16 +22,26 @@ export function buildProfessionalDataUpdate(data: ProfessionalDataInput, progres
     annual_revenue: processedData.annual_revenue || ''
   };
   
-  // Adicionar professional_info ao objeto de atualização
-  updateObj.professional_info = professionalInfo;
+  // Criar objeto de atualização com campos em ambos os níveis
+  const updateObj = {
+    // Campos de nível superior para compatibilidade
+    company_name: professionalInfo.company_name,
+    company_size: professionalInfo.company_size,
+    company_sector: professionalInfo.company_sector,
+    company_website: professionalInfo.company_website,
+    current_position: professionalInfo.current_position,
+    annual_revenue: professionalInfo.annual_revenue,
+    
+    // Objeto professional_info completo
+    professional_info: professionalInfo,
+    
+    // Marcar etapa como completa no array de etapas
+    completed_steps: progress?.completed_steps ? 
+      [...new Set([...progress.completed_steps, 'professional_data'])] : 
+      ['professional_data']
+  };
   
-  // Adicionar também os campos individuais de nível superior para compatibilidade
-  topLevelFields.forEach(field => {
-    updateObj[field] = professionalInfo[field as keyof typeof professionalInfo];
-  });
+  console.log("Objeto de atualização preparado:", updateObj);
   
-  console.log("Dados profissionais processados:", updateObj);
-  
-  // Usar o builder base para finalizar o objeto de atualização
   return { ...buildBaseUpdate("professional_data", data, progress), ...updateObj };
 }
