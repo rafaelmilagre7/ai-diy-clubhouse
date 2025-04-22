@@ -54,7 +54,9 @@ export function getComplementaryInfoSummary(data: OnboardingData['complementary_
   return (
     <div className="space-y-2 text-sm">
       <p><span className="font-medium">Como nos conheceu:</span> {data.how_found_us ? getDiscoverySourceLabel(data.how_found_us) : "Não preenchido"}</p>
-      {data.referred_by && <p><span className="font-medium">Indicado por:</span> {data.referred_by}</p>}
+      {data.how_found_us === "recommendation" && data.referred_by && (
+        <p><span className="font-medium">Indicado por:</span> {data.referred_by}</p>
+      )}
       <p><span className="font-medium">Autoriza uso do caso:</span> {data.authorize_case_usage ? "Sim" : "Não"}</p>
       <p><span className="font-medium">Interesse em entrevista:</span> {data.interested_in_interview ? "Sim" : "Não"}</p>
       

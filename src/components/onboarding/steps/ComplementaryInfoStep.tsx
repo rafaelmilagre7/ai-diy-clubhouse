@@ -98,12 +98,16 @@ export const ComplementaryInfoStep = ({
 
           {sourceType === "recommendation" && (
             <div className="space-y-2">
-              <Label htmlFor="referred_by">Quem indicou você?</Label>
+              <Label htmlFor="referred_by">Quem indicou você para o VIVER DE IA Club?</Label>
               <Input
                 id="referred_by"
-                placeholder="Nome da pessoa que indicou você"
+                placeholder="Digite o nome da pessoa que te indicou"
                 {...register("referred_by")}
+                className="w-full"
               />
+              <p className="text-sm text-muted-foreground">
+                Nos ajuda a agradecer quem está divulgando o VIVER DE IA Club
+              </p>
             </div>
           )}
         </div>
