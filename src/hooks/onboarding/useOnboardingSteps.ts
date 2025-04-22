@@ -1,65 +1,61 @@
-
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { useProgress } from "./useProgress";
-import { useStepPersistenceCore } from "./useStepPersistenceCore";
+import { useState, useEffect, useCallback } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { steps } from "./useStepDefinitions";
+import { useStepPersistenceCore } from "./persistence/useStepPersistenceCore";
+import { useProgress } from "./useProgress";
 
 export const useOnboardingSteps = () => {
-  const navigate = useNavigate();
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const { progress, refreshProgress } = useProgress();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { progress, isLoading } = useProgress();
   
-  const { saveStepData, completeOnboarding } = useStepPersistenceCore({
+  // Obtém a persistência de etapas
+  const { saveStepData: coreSaveStepData, completeOnboarding } = useStepPersistenceCore({
     currentStepIndex,
     setCurrentStepIndex,
     navigate,
   });
-  
-  // Função que identifica o índice do passo atual
-  const findStepIndex = (stepId: string) => {
-    return steps.findIndex((step) => step.id === stepId);
+
+  // Wrapper para saveStepData para manter compatibilidade com diferentes assinaturas
+  const saveStepData = async (
+    stepIdOrData: string | any,
+    dataOrShouldNavigate?: any | boolean,
+    shouldNavigate?: boolean
+  ) => {
+    return coreSaveStepData(stepIdOrData, dataOrShouldNavigate, shouldNavigate);
   };
-  
-  // Define a etapa atual com base no currentStepIndex
-  const currentStep = steps[currentStepIndex] || steps[0];
-  
-  // Função para navegar para um passo específico, aceitando tanto índice quanto ID
-  const navigateToStep = (stepIndexOrId: number | string) => {
-    let stepIndex: number;
-    
-    if (typeof stepIndexOrId === 'string') {
-      // Se for uma string, consideramos como ID da etapa
-      stepIndex = findStepIndex(stepIndexOrId);
-    } else {
-      // Se for número, usamos diretamente como índice
-      stepIndex = stepIndexOrId;
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const currentStep = steps[currentStepIndex];
+  const isLastStep = currentStepIndex === steps.length - 1;
+
+  const navigateToStep = useCallback((index: number) => {
+    if (index >= 0 && index < steps.length) {
+      setCurrentStepIndex(index);
+      navigate(steps[index].path);
     }
-    
-    if (stepIndex !== -1 && stepIndex >= 0 && stepIndex < steps.length) {
-      console.log(`Navegando para etapa ${stepIndex}: ${steps[stepIndex].id} com caminho ${steps[stepIndex].path}`);
+  }, [navigate]);
+
+  useEffect(() => {
+    const path = location.pathname;
+    const stepIndex = steps.findIndex(step => step.path === path);
+    if (stepIndex !== -1) {
       setCurrentStepIndex(stepIndex);
-      setTimeout(() => {
-        navigate(steps[stepIndex].path);
-      }, 100);
-    } else {
-      console.warn(`Índice inválido para navegação: ${stepIndexOrId}, convertido para ${stepIndex}`);
     }
-  };
-  
+  }, [location.pathname]);
+
   return {
-    steps,
     currentStepIndex,
     setCurrentStepIndex,
+    steps,
     currentStep,
-    progress,
-    saveStepData,
-    completeOnboarding,
     navigateToStep,
-    findStepIndex,
     isSubmitting,
     setIsSubmitting,
-    refreshProgress
+    saveStepData,
+    isLastStep,
+    completeOnboarding,
+    progress,
   };
 };

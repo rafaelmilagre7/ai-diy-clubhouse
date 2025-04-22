@@ -26,8 +26,8 @@ const AIExperience = () => {
       console.log("Salvando dados de experiência com IA:", data);
       log("onboarding_ai_experience_submit", { data });
       
-      // Usar o parâmetro de navegação automática como true
-      await saveStepData(data, true);
+      // Usar a assinatura com stepId explícito
+      await saveStepData("ai_exp", data, true);
       
       console.log("Dados de experiência com IA salvos com sucesso");
       // O toast de sucesso já é mostrado pelo hook de persistência

@@ -4,7 +4,7 @@ import { buildUpdateObject } from "./persistence/stepDataBuilder";
 import { navigateAfterStep } from "./persistence/stepNavigator";
 import { steps } from "./useStepDefinitions";
 import { toast } from "sonner";
-import { useLogging } from "@/contexts/logging";
+import { useLogging } from "@/hooks/useLogging";
 
 export function useStepPersistenceCore({
   currentStepIndex,
@@ -16,13 +16,13 @@ export function useStepPersistenceCore({
   navigate: (path: string) => void;
 }) {
   const { progress, updateProgress, refreshProgress } = useProgress();
-  const { error: logError } = useLogging();
+  const { logError } = useLogging();
 
   // Função principal para salvar dados de um passo específico
   const saveStepData = async (
-    stepId: string,
-    data: any,
-    shouldNavigate: boolean = true
+    stepIdOrData: string | any,
+    shouldNavigateOrData?: boolean | any,
+    thirdParam?: boolean
   ): Promise<void> => {
     if (!progress?.id) {
       console.error("Não foi possível salvar dados: ID de progresso não encontrado");
@@ -30,15 +30,32 @@ export function useStepPersistenceCore({
       return;
     }
 
-    // Se stepId não foi fornecido, usar o passo atual
-    const currentStep = stepId || steps[currentStepIndex]?.id || '';
+    // Determinar os parâmetros corretos com base na assinatura usada
+    let stepId: string;
+    let data: any;
+    let shouldNavigate: boolean = true;
+
+    // Caso 1: saveStepData(stepId: string, data: any, shouldNavigate?: boolean)
+    if (typeof stepIdOrData === 'string') {
+      stepId = stepIdOrData;
+      data = shouldNavigateOrData;
+      shouldNavigate = thirdParam !== undefined ? thirdParam : true;
+    } 
+    // Caso 2: saveStepData(data: any, shouldNavigate?: boolean)
+    else {
+      stepId = steps[currentStepIndex]?.id || '';
+      data = stepIdOrData;
+      shouldNavigate = shouldNavigateOrData !== undefined ? 
+                       typeof shouldNavigateOrData === 'boolean' ? shouldNavigateOrData : true 
+                       : true;
+    }
     
-    console.log(`Salvando dados do passo ${currentStep}, índice ${currentStepIndex}, navegação automática: ${shouldNavigate ? "SIM" : "NÃO"}`, data);
+    console.log(`Salvando dados do passo ${stepId}, índice ${currentStepIndex}, navegação automática: ${shouldNavigate ? "SIM" : "NÃO"}`, data);
     console.log("Estado atual do progresso:", progress);
 
     try {
       // Montar objeto de atualização para a etapa
-      const updateObj = buildUpdateObject(currentStep, data, progress, currentStepIndex);
+      const updateObj = buildUpdateObject(stepId, data, progress, currentStepIndex);
       if (Object.keys(updateObj).length === 0) {
         console.warn("Objeto de atualização vazio, nada para salvar");
         toast.warning("Sem dados para salvar");
@@ -58,7 +75,7 @@ export function useStepPersistenceCore({
       // Notificar usuário do salvamento
       toast.success("Dados salvos com sucesso!");
       
-      // Garantir navegação adequada usando o mapeamento direto
+      // Garantir navegação adequada para próxima etapa
       if (shouldNavigate) {
         // Mapeamento direto de etapas para rotas de navegação
         const nextRouteMap: {[key: string]: string} = {
@@ -71,13 +88,13 @@ export function useStepPersistenceCore({
           "complementary_info": "/onboarding/review"
         };
         
-        if (nextRouteMap[currentStep]) {
+        if (nextRouteMap[stepId]) {
           setTimeout(() => {
-            navigate(nextRouteMap[currentStep]);
+            navigate(nextRouteMap[stepId]);
           }, 500);
         } else {
           // Fallback para navegador padrão de etapas
-          navigateAfterStep(currentStep, currentStepIndex, navigate, shouldNavigate);
+          navigateAfterStep(stepId, currentStepIndex, navigate, shouldNavigate);
         }
       } else {
         console.log("Navegação automática desativada, permanecendo na página atual");
@@ -85,7 +102,7 @@ export function useStepPersistenceCore({
     } catch (error) {
       console.error("Erro ao salvar dados:", error);
       logError("save_step_data_error", { 
-        step: currentStep, 
+        step: stepId, 
         error: error instanceof Error ? error.message : String(error),
         stepIndex: currentStepIndex
       });

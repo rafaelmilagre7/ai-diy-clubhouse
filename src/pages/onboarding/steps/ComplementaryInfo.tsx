@@ -21,8 +21,8 @@ const ComplementaryInfo = () => {
     setIsSubmitting(true);
     try {
       console.log("Salvando informações complementares:", data);
-      // Adicionar parâmetro de navegação automática como true
-      await saveStepData(data, true);
+      // Usar a assinatura com stepId explícito
+      await saveStepData("complementary_info", data, true);
       console.log("Informações complementares salvas com sucesso");
     } catch (error) {
       console.error("Erro ao salvar dados:", error);

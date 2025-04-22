@@ -48,8 +48,8 @@ const BusinessGoals = () => {
         annual_revenue: data.annual_revenue,
       };
       
-      // Adicionar parâmetro de navegação automática como true
-      await saveStepData(professionalData, true);
+      // Usando assinatura com stepId explícito
+      await saveStepData("professional_data", professionalData, true);
       toast.success("Informações salvas com sucesso!");
       navigate("/onboarding/business-context");
     } catch (error) {

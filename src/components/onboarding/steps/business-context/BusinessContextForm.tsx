@@ -39,7 +39,7 @@ export const BusinessContextForm: React.FC<BusinessContextFormProps> = ({ progre
         business_context: data
       };
       
-      await saveStepData(businessContextData, true);
+      await saveStepData("business_context", businessContextData, true);
       toast.success("Informações salvas com sucesso!");
       
       // Forçar navegação para a próxima tela após sucesso

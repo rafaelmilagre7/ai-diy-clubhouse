@@ -32,8 +32,8 @@ const BusinessGoalsClub = () => {
     setIsSubmitting(true);
     try {
       console.log("Salvando dados de objetivos:", data);
-      // Adicionar parâmetro de navegação automática como true
-      await saveStepData(data, true);
+      // Usar a assinatura com stepId explícito
+      await saveStepData("business_goals", data, true);
       console.log("Dados de objetivos salvos com sucesso");
       toast.success("Dados salvos com sucesso!");
     } catch (error) {
