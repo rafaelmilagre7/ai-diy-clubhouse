@@ -80,11 +80,32 @@ export const createInitialOnboardingProgress = async (user: any) => {
 };
 
 export const updateOnboardingProgress = async (progressId: string, updates: Partial<OnboardingProgress>) => {
+  if (!progressId) {
+    console.error("ID de progresso não fornecido para atualização");
+    return { data: null, error: new Error("ID de progresso não fornecido") };
+  }
+  
+  // Certifique-se de que o ID seja uma string válida
+  progressId = String(progressId).trim();
+  
+  if (!progressId) {
+    console.error("ID de progresso inválido:", progressId);
+    return { data: null, error: new Error("ID de progresso inválido") };
+  }
+  
+  // Normalizar as atualizações antes do envio
   const normalizedUpdates = normalizeOnboardingResponse(updates as OnboardingProgress);
   
+  // Limpar metadados e campos de sistema antes de enviar para o Supabase
   const cleanedUpdates = { ...normalizedUpdates };
-  delete (cleanedUpdates as any)._metadata;
   
+  // Remover campos de metadados especiais que podem causar problemas
+  delete (cleanedUpdates as any)._metadata;
+  delete (cleanedUpdates as any).id;
+  delete (cleanedUpdates as any).user_id;
+  delete (cleanedUpdates as any).created_at;
+  
+  // Limpar metadados de objetos aninhados
   Object.keys(cleanedUpdates).forEach(key => {
     if (typeof cleanedUpdates[key as keyof typeof cleanedUpdates] === 'object' && 
         cleanedUpdates[key as keyof typeof cleanedUpdates] !== null) {
@@ -94,42 +115,58 @@ export const updateOnboardingProgress = async (progressId: string, updates: Part
     }
   });
   
+  console.log("Atualizando progresso ID:", progressId);
   console.log("Atualizando progresso normalizado:", cleanedUpdates);
   
-  const { data: rawData, error } = await supabase
-    .from("onboarding_progress")
-    .update(cleanedUpdates)
-    .eq("id", progressId)
-    .select()
-    .single();
+  try {
+    const { data: rawData, error } = await supabase
+      .from("onboarding_progress")
+      .update(cleanedUpdates)
+      .eq("id", progressId)
+      .select()
+      .single();
 
-  const data = rawData ? normalizeOnboardingResponse(rawData) : null;
-
-  if (error) {
-    console.error("Erro ao atualizar progresso:", error);
-  } else {
+    if (error) {
+      console.error("Erro ao atualizar progresso:", error);
+      return { data: null, error };
+    }
+    
+    const data = rawData ? normalizeOnboardingResponse(rawData) : null;
     console.log("Progresso atualizado com sucesso:", data);
+    
+    return { data, error: null };
+  } catch (e) {
+    console.error("Exceção ao atualizar progresso:", e);
+    return { data: null, error: e };
   }
-
-  return { data, error };
 };
 
 export const refreshOnboardingProgress = async (progressId: string) => {
+  if (!progressId) {
+    console.error("ID de progresso não fornecido para recarga");
+    return { data: null, error: new Error("ID de progresso não fornecido") };
+  }
+  
   console.log("Recarregando dados do progresso com ID:", progressId);
   
-  const { data: rawData, error } = await supabase
-    .from("onboarding_progress")
-    .select("*")
-    .eq("id", progressId)
-    .single();
+  try {
+    const { data: rawData, error } = await supabase
+      .from("onboarding_progress")
+      .select("*")
+      .eq("id", progressId)
+      .single();
+      
+    if (error) {
+      console.error("Erro ao recarregar progresso:", error);
+      return { data: null, error };
+    }
     
-  const data = rawData ? normalizeOnboardingResponse(rawData) : null;
-    
-  if (error) {
-    console.error("Erro ao recarregar progresso:", error);
-  } else if (data) {
+    const data = rawData ? normalizeOnboardingResponse(rawData) : null;
     console.log("Dados atualizados obtidos e normalizados:", data);
-  }
     
-  return { data, error };
+    return { data, error: null };
+  } catch (e) {
+    console.error("Exceção ao recarregar progresso:", e);
+    return { data: null, error: e };
+  }
 };

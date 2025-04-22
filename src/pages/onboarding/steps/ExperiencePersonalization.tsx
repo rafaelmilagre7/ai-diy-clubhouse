@@ -35,7 +35,12 @@ const ExperiencePersonalization = () => {
     try {
       console.log("Salvando dados de personalização:", data);
       
-      // Usar a assinatura com stepId explícito
+      // Verificar se temos dados válidos
+      if (!data || !data.experience_personalization) {
+        throw new Error("Dados de personalização ausentes ou inválidos");
+      }
+      
+      // Usar a assinatura com stepId explícito para evitar problemas
       await saveStepData("experience_personalization", data, false);
       
       console.log("Dados de personalização salvos com sucesso");

@@ -4,6 +4,7 @@ import { buildPersonalInfoUpdate } from "./stepBuilders/personalInfoBuilder";
 import { buildProfessionalDataUpdate } from "./stepBuilders/professionalDataBuilder";
 import { buildBusinessGoalsUpdate } from "./stepBuilders/businessGoalsBuilder";
 import { buildAiExperienceUpdate } from "./stepBuilders/aiExperienceBuilder";
+import { buildExperiencePersonalizationUpdate } from "./stepBuilders/experiencePersonalizationBuilder";
 
 /**
  * Constrói o objeto de atualização para o progresso do onboarding
@@ -44,6 +45,10 @@ export function buildUpdateObject(
       
     case "ai_exp":
       stepUpdateObj = buildAiExperienceUpdate(data, progress);
+      break;
+      
+    case "experience_personalization":
+      stepUpdateObj = buildExperiencePersonalizationUpdate(data, progress);
       break;
       
     // Adicionar outros casos conforme necessário

@@ -10,6 +10,7 @@ import { MentorshipTopicsSection } from "./ExperiencePersonalizationSections/Men
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import { useExperiencePersonalizationForm } from "./ExperiencePersonalizationSections/useExperiencePersonalizationForm";
+import { NavigationButtons } from "@/components/onboarding/NavigationButtons";
 
 export const ExperiencePersonalizationStep: React.FC<OnboardingStepProps> = ({
   onSubmit,
@@ -25,8 +26,27 @@ export const ExperiencePersonalizationStep: React.FC<OnboardingStepProps> = ({
   // Inicializar dados do formulário com base nos dados iniciais
   useEffect(() => {
     if (initialData) {
-      console.log("Dados iniciais de personalização:", initialData);
-      const experienceData = initialData.experience_personalization || null;
+      console.log("Dados iniciais para ExperiencePersonalizationStep:", initialData);
+      
+      // Extrair dados de experiência de personalização do initialData
+      let experienceData = null;
+      
+      if (initialData.experience_personalization) {
+        experienceData = initialData.experience_personalization;
+        console.log("Dados de personalização encontrados:", experienceData);
+      } else {
+        console.log("Nenhum dado de personalização encontrado, iniciando com valores padrão");
+        // Valores padrão para o formulário
+        experienceData = {
+          interests: [],
+          time_preference: [],
+          available_days: [],
+          networking_availability: 5,
+          skills_to_share: [],
+          mentorship_topics: []
+        };
+      }
+      
       setFormData(experienceData);
     }
   }, [initialData]);
@@ -49,19 +69,22 @@ export const ExperiencePersonalizationStep: React.FC<OnboardingStepProps> = ({
   const onFormSubmit = () => {
     setHasAttemptedSubmit(true);
     
+    // Verificar se todos os campos requeridos estão preenchidos
     if (!isValid) {
-      console.error("Formulário inválido. Campos faltando:", formValues);
+      console.error("Formulário inválido. Campos faltando:", errors);
       return;
     }
 
+    // Construir objeto de dados para envio
     const data = {
       experience_personalization: {
-        interests: formValues.interests,
-        time_preference: formValues.time_preference,
-        available_days: formValues.available_days,
-        networking_availability: formValues.networking_availability,
-        skills_to_share: formValues.skills_to_share,
-        mentorship_topics: formValues.mentorship_topics,
+        interests: formValues.interests || [],
+        time_preference: formValues.time_preference || [],
+        available_days: formValues.available_days || [],
+        networking_availability: typeof formValues.networking_availability === 'number' ? 
+                               formValues.networking_availability : 5,
+        skills_to_share: formValues.skills_to_share || [],
+        mentorship_topics: formValues.mentorship_topics || [],
       },
     };
 
@@ -121,22 +144,13 @@ export const ExperiencePersonalizationStep: React.FC<OnboardingStepProps> = ({
             </div>
           )}
 
-          <div className="flex justify-end">
-            <Button
-              type="submit"
-              className="bg-[#0ABAB5] hover:bg-[#099388] text-white px-5 py-2"
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? (
-                "Salvando..."
-              ) : (
-                <span className="flex items-center gap-2">
-                  Próximo
-                  <ArrowRight className="h-4 w-4" />
-                </span>
-              )}
-            </Button>
-          </div>
+          <NavigationButtons
+            isSubmitting={isSubmitting}
+            submitText="Próximo"
+            loadingText="Salvando..."
+            showPrevious={true}
+            className="mt-8"
+          />
         </form>
       </div>
     </div>
