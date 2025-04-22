@@ -6,12 +6,14 @@ interface CountrySelectProps {
   value: string;
   onChange: (field: string, value: string) => void;
   readOnly?: boolean;
+  error?: string;
 }
 
 export const CountrySelect: React.FC<CountrySelectProps> = ({
   value,
   onChange,
-  readOnly = false
+  readOnly = false,
+  error
 }) => {
   const countries = [
     { value: "Brasil", label: "Brasil" },
@@ -19,21 +21,24 @@ export const CountrySelect: React.FC<CountrySelectProps> = ({
   ];
 
   return (
-    <Select 
-      value={value} 
-      onValueChange={(newValue) => onChange("country", newValue)}
-      disabled={readOnly}
-    >
-      <SelectTrigger>
-        <SelectValue placeholder="Selecione seu país" />
-      </SelectTrigger>
-      <SelectContent>
-        {countries.map((country) => (
-          <SelectItem key={country.value} value={country.value}>
-            {country.label}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
+    <div>
+      <Select 
+        value={value} 
+        onValueChange={(newValue) => onChange("country", newValue)}
+        disabled={readOnly}
+      >
+        <SelectTrigger className={error ? "border-red-500" : ""}>
+          <SelectValue placeholder="Selecione seu país" />
+        </SelectTrigger>
+        <SelectContent>
+          {countries.map((country) => (
+            <SelectItem key={country.value} value={country.value}>
+              {country.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
+    </div>
   );
 };
