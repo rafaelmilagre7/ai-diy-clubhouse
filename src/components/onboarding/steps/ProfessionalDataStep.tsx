@@ -13,6 +13,7 @@ import { OnboardingStepProps } from "@/types/onboarding";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import * as validations from "@/utils/professionalDataValidation";
+import { normalizeWebsiteUrl } from "@/utils/professionalDataValidation";
 
 interface ProfessionalDataStepProps extends OnboardingStepProps {
   personalInfo?: any;
@@ -67,10 +68,14 @@ export const ProfessionalDataStep: React.FC<ProfessionalDataStepProps> = ({
     }
     
     try {
-      // Formatamos os dados para armazenamento apenas no objeto professional_info
-      // Isso deixará a estrutura mais limpa no banco, mas os campos individuais
-      // continuarão disponíveis para compatibilidade
+      // Normalizar a URL do website antes de salvar
+      if (data.company_website) {
+        data.company_website = normalizeWebsiteUrl(data.company_website);
+      }
+      
+      // Estruturar os dados de forma organizada para o salvamento
       const professionalData = {
+        // Dados aninhados na estrutura adequada
         professional_info: {
           company_name: data.company_name,
           company_size: data.company_size,
@@ -79,7 +84,7 @@ export const ProfessionalDataStep: React.FC<ProfessionalDataStepProps> = ({
           current_position: data.current_position,
           annual_revenue: data.annual_revenue,
         },
-        // Campos diretos para compatibilidade com a estrutura atual
+        // Campos individuais para compatibilidade com o sistema atual
         company_name: data.company_name,
         company_size: data.company_size,
         company_sector: data.company_sector,

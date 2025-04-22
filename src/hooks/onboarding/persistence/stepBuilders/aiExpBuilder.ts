@@ -1,61 +1,24 @@
 
 import { OnboardingData, OnboardingProgress } from "@/types/onboarding";
+import { buildBaseUpdate } from "./baseBuilder";
 
 export function buildAiExpUpdate(data: Partial<OnboardingData>, progress: OnboardingProgress | null) {
-  const updateObj: any = {};
-  
-  console.log("Construindo objeto de atualização para AI Experience:", data);
-  
-  // Verificar se os dados vêm no formato aninhado ou direto
+  // Normalizar arrays se necessário
   if (data.ai_experience) {
-    // Formato aninhado: { ai_experience: { ... } }
-    const aiExpData = data.ai_experience;
-    const existingAiExp = progress?.ai_experience || {};
+    const aiExp = data.ai_experience;
     
-    // Se existingAiExp for uma string, inicialize como objeto vazio
-    const baseAiExp = typeof existingAiExp === 'string' ? {} : existingAiExp;
-    
-    let updatedData = { ...baseAiExp, ...aiExpData };
-    
-    // Garantir que arrays sejam preservados como arrays
-    if (updatedData.previous_tools && !Array.isArray(updatedData.previous_tools)) {
-      updatedData.previous_tools = [updatedData.previous_tools];
+    // Verificar que arrays específicos são realmente arrays
+    if (aiExp.desired_ai_areas && !Array.isArray(aiExp.desired_ai_areas)) {
+      aiExp.desired_ai_areas = [aiExp.desired_ai_areas];
     }
     
-    // Garantir que desired_ai_areas seja sempre um array
-    if (updatedData.desired_ai_areas && !Array.isArray(updatedData.desired_ai_areas)) {
-      updatedData.desired_ai_areas = [updatedData.desired_ai_areas];
+    if (aiExp.previous_tools && !Array.isArray(aiExp.previous_tools)) {
+      aiExp.previous_tools = [aiExp.previous_tools];
     }
-    
-    // Salvar dados atualizados
-    updateObj.ai_experience = updatedData;
-    
-    // Log detalhado
-    console.log("Dados de experiência AI formatados:", updatedData);
-  } else if (typeof data === 'object' && data !== null) {
-    // Formato direto: dados enviados diretamente
-    const existingAiExp = progress?.ai_experience || {};
-    
-    // Se existingAiExp for uma string, inicialize como objeto vazio
-    const baseAiExp = typeof existingAiExp === 'string' ? {} : existingAiExp;
-    
-    let updatedData = { ...baseAiExp, ...data };
-    
-    // Garantir que arrays sejam preservados como arrays
-    if (updatedData.previous_tools && !Array.isArray(updatedData.previous_tools)) {
-      updatedData.previous_tools = [updatedData.previous_tools];
-    }
-    
-    // Garantir que desired_ai_areas seja um array
-    if (updatedData.desired_ai_areas && !Array.isArray(updatedData.desired_ai_areas)) {
-      updatedData.desired_ai_areas = [updatedData.desired_ai_areas];
-    }
-    
-    updateObj.ai_experience = updatedData;
-    
-    // Log detalhado
-    console.log("Dados de experiência AI formatados (formato direto):", updatedData);
   }
   
-  return updateObj;
+  // Usar o builder base para construir o objeto de atualização
+  return buildBaseUpdate("ai_experience", data, progress, {
+    topLevelFields: ["ai_knowledge_level"]
+  });
 }

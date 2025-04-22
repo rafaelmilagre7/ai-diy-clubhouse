@@ -1,4 +1,6 @@
 
+// Funções de validação para os dados profissionais
+
 export const validateCompanyName = (value: string): string | undefined => {
   if (!value) return "Nome da empresa é obrigatório";
   if (value.length < 2) return "Nome da empresa deve ter pelo menos 2 caracteres";
@@ -8,13 +10,14 @@ export const validateCompanyName = (value: string): string | undefined => {
 export const validateWebsite = (value: string): string | undefined => {
   if (!value) return undefined; // Website é opcional
   
-  // Verificação mais robusta para URLs
   try {
     // Adicionar protocolo se não existir
     const urlString = value.match(/^https?:\/\//) ? value : `https://${value}`;
+    
+    // Verificar se é uma URL válida
     new URL(urlString);
     
-    // Verificar se o domínio parece válido (tem pelo menos um ponto)
+    // Verificar se o domínio parece válido
     if (!urlString.match(/^https?:\/\/[^.]+\.[^.]+/)) {
       return "URL deve incluir um domínio válido";
     }
@@ -23,6 +26,13 @@ export const validateWebsite = (value: string): string | undefined => {
   } catch (e) {
     return "URL inválida";
   }
+};
+
+export const normalizeWebsiteUrl = (value: string): string => {
+  if (!value) return "";
+  
+  // Adicionar protocolo se não existir
+  return value.match(/^https?:\/\//) ? value : `https://${value}`;
 };
 
 export const validateCompanySize = (value: string): string | undefined => {

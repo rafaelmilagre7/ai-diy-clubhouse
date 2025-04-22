@@ -1,4 +1,3 @@
-
 import { supabase } from "@/lib/supabase";
 import { OnboardingProgress } from "@/types/onboarding";
 
@@ -10,18 +9,43 @@ const normalizeOnboardingData = (data: Partial<OnboardingProgress>) => {
   if (normalizedData.personal_info?.ddi) {
     // Garantir que o DDI tenha apenas um + no início
     normalizedData.personal_info.ddi = "+" + normalizedData.personal_info.ddi.replace(/\+/g, '').replace(/\D/g, '');
-    console.log("DDI normalizado:", normalizedData.personal_info.ddi);
+  }
+  
+  // Normalizar URL do website se existir
+  if (normalizedData.professional_info?.company_website) {
+    const website = normalizedData.professional_info.company_website;
+    if (website && typeof website === 'string' && !website.match(/^https?:\/\//)) {
+      normalizedData.professional_info.company_website = `https://${website}`;
+    }
+  }
+  
+  // Também normalizar website no campo top-level
+  if (normalizedData.company_website) {
+    const website = normalizedData.company_website;
+    if (website && typeof website === 'string' && !website.match(/^https?:\/\//)) {
+      normalizedData.company_website = `https://${website}`;
+    }
   }
   
   // Converter campos que são string para objetos quando deveriam ser objetos
   const objectFields = ['ai_experience', 'business_goals', 'experience_personalization', 'complementary_info',
-                        'professional_info', 'business_data', 'business_context', 'personal_info',
-                        'industry_focus', 'resources_needs', 'team_info', 'implementation_preferences'];
+                      'professional_info', 'business_data', 'business_context', 'personal_info',
+                      'industry_focus', 'resources_needs', 'team_info', 'implementation_preferences'];
   
   objectFields.forEach(field => {
     const value = normalizedData[field as keyof typeof normalizedData];
     if (typeof value === 'string') {
-      console.warn(`Convertendo campo ${field} de string para objeto vazio antes de salvar`);
+      try {
+        // Tentar converter de string JSON para objeto
+        (normalizedData as any)[field] = JSON.parse(value);
+        console.log(`Campo ${field} convertido de string JSON para objeto:`, (normalizedData as any)[field]);
+      } catch (e) {
+        // Se não for JSON válido, inicializar como objeto vazio
+        console.warn(`Campo ${field} é string mas não é JSON válido, inicializando como objeto vazio`);
+        (normalizedData as any)[field] = {};
+      }
+    } else if (value === null) {
+      // Inicializar como objeto vazio se for null
       (normalizedData as any)[field] = {};
     }
   });
@@ -56,8 +80,8 @@ const normalizeOnboardingResponse = (data: OnboardingProgress): OnboardingProgre
   
   // Converter campos que são string para objetos quando deveriam ser objetos
   const objectFields = ['ai_experience', 'business_goals', 'experience_personalization', 'complementary_info',
-                        'professional_info', 'business_data', 'business_context', 'personal_info',
-                        'industry_focus', 'resources_needs', 'team_info', 'implementation_preferences'];
+                       'professional_info', 'business_data', 'business_context', 'personal_info',
+                       'industry_focus', 'resources_needs', 'team_info', 'implementation_preferences'];
   
   objectFields.forEach(field => {
     const value = normalizedData[field as keyof typeof normalizedData];
@@ -65,12 +89,14 @@ const normalizeOnboardingResponse = (data: OnboardingProgress): OnboardingProgre
       try {
         // Tentar fazer parse como JSON
         (normalizedData as any)[field] = JSON.parse(value as string);
-        console.log(`Convertido campo ${field} de string JSON para objeto:`, (normalizedData as any)[field]);
       } catch (e) {
         // Se não for JSON válido, inicializar como objeto vazio
-        console.warn(`Campo ${field} é string mas não é JSON válido, inicializando como objeto vazio:`, value);
+        console.warn(`Campo ${field} é string mas não é JSON válido, inicializando como objeto vazio`);
         (normalizedData as any)[field] = {};
       }
+    } else if (value === null) {
+      // Inicializar como objeto vazio se for null
+      (normalizedData as any)[field] = {};
     }
   });
   
@@ -89,6 +115,33 @@ const normalizeOnboardingResponse = (data: OnboardingProgress): OnboardingProgre
     // Garantir que é um array
     if (!Array.isArray(normalizedData.completed_steps)) {
       normalizedData.completed_steps = [];
+    }
+  } else {
+    normalizedData.completed_steps = [];
+  }
+  
+  // Validar campos específicos
+  
+  // Website - garantir formato adequado
+  if (normalizedData.professional_info?.company_website) {
+    const website = normalizedData.professional_info.company_website;
+    if (typeof website === 'string' && !website.match(/^https?:\/\//)) {
+      normalizedData.professional_info.company_website = `https://${website}`;
+    }
+  }
+  
+  if (normalizedData.company_website) {
+    const website = normalizedData.company_website;
+    if (typeof website === 'string' && !website.match(/^https?:\/\//)) {
+      normalizedData.company_website = `https://${website}`;
+    }
+  }
+  
+  // DDI - garantir formato adequado
+  if (normalizedData.personal_info?.ddi) {
+    const ddi = normalizedData.personal_info.ddi;
+    if (typeof ddi === 'string') {
+      normalizedData.personal_info.ddi = "+" + ddi.replace(/\+/g, '').replace(/\D/g, '');
     }
   }
   

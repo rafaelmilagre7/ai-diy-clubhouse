@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { FormMessage } from "@/components/ui/form-message";
 import { CheckCircle, Globe } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { validateWebsite } from "@/utils/professionalDataValidation";
+import { validateWebsite, normalizeWebsiteUrl } from "@/utils/professionalDataValidation";
 
 export const WebsiteField: React.FC = () => {
   const { register, formState: { errors, touchedFields }, watch, setValue } = useFormContext();
@@ -14,12 +14,11 @@ export const WebsiteField: React.FC = () => {
 
   // Processar URL ao perder foco para garantir formato adequado
   const handleBlur = (event: React.FocusEvent<HTMLInputElement>) => {
-    let value = event.target.value;
-    
-    if (value && !value.match(/^https?:\/\//)) {
-      // Adicionar protocolo automaticamente
-      value = `https://${value}`;
-      setValue("company_website", value, { shouldValidate: true });
+    const value = event.target.value;
+    if (value) {
+      // Normalizar URL usando a função utilitária
+      const normalizedUrl = normalizeWebsiteUrl(value);
+      setValue("company_website", normalizedUrl, { shouldValidate: true });
     }
   };
 
@@ -41,7 +40,7 @@ export const WebsiteField: React.FC = () => {
       <Input
         placeholder="www.suaempresa.com.br"
         {...register("company_website", {
-          validate: value => !value || validateWebsite(value) === undefined,
+          validate: validateWebsite,
           onBlur: handleBlur
         })}
         className={cn(
