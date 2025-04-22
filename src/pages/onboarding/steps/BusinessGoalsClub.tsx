@@ -32,10 +32,15 @@ const BusinessGoalsClub = () => {
     setIsSubmitting(true);
     try {
       console.log("Salvando dados de objetivos:", data);
-      // Usar a assinatura com stepId explícito
+      
+      // Garantir que estamos enviando com o stepId correto
       await saveStepData("business_goals", data, true);
+      
       console.log("Dados de objetivos salvos com sucesso");
       toast.success("Dados salvos com sucesso!");
+      
+      // Forçar atualização dos dados após salvar
+      await refreshProgress();
     } catch (error) {
       console.error("Erro ao salvar dados:", error);
       toast.error("Erro ao salvar dados. Por favor, tente novamente.");
