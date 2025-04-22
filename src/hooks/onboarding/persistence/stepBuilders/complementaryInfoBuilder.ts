@@ -11,10 +11,13 @@ export function buildComplementaryInfoUpdate(data: Partial<OnboardingData>, prog
   if (typeof existingInfo === 'string') {
     try {
       // Verificar se a string não está vazia antes de tentar parsear
-      // Usar uma verificação segura para evitar erros de tipo
-      const trimmedValue = typeof existingInfo === 'string' ? existingInfo.trim() : '';
-      if (existingInfo && trimmedValue !== '') {
-        existingInfo = JSON.parse(existingInfo);
+      if (existingInfo && typeof existingInfo === 'string') {
+        const trimmedValue = existingInfo.trim();
+        if (trimmedValue !== '') {
+          existingInfo = JSON.parse(trimmedValue);
+        } else {
+          existingInfo = {};
+        }
       } else {
         existingInfo = {};
       }

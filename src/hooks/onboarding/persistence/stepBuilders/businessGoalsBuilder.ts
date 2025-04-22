@@ -12,9 +12,13 @@ export function buildBusinessGoalsUpdate(data: Partial<OnboardingData>, progress
     try {
       // Verificar se a string não está vazia antes de tentar parsear
       // Usar uma verificação segura para evitar erros de tipo
-      const trimmedValue = typeof existingGoals === 'string' ? existingGoals.trim() : '';
-      if (existingGoals && trimmedValue !== '') {
-        existingGoals = JSON.parse(existingGoals);
+      if (existingGoals && typeof existingGoals === 'string') {
+        const trimmedValue = existingGoals.trim();
+        if (trimmedValue !== '') {
+          existingGoals = JSON.parse(trimmedValue);
+        } else {
+          existingGoals = {};
+        }
       } else {
         existingGoals = {};
       }

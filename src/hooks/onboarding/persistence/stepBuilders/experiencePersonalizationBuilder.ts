@@ -12,10 +12,13 @@ export function buildExperiencePersonalizationUpdate(data: Partial<OnboardingDat
     // Se for string, tenta converter para objeto
     try {
       // Verificar se a string não está vazia antes de tentar parsear
-      // Usar uma verificação segura para evitar erros de tipo
-      const trimmedValue = typeof existingExperiencePersonalization === 'string' ? existingExperiencePersonalization.trim() : '';
-      if (existingExperiencePersonalization && trimmedValue !== '') {
-        updateObj.experience_personalization = JSON.parse(existingExperiencePersonalization);
+      if (existingExperiencePersonalization && typeof existingExperiencePersonalization === 'string') {
+        const trimmedValue = existingExperiencePersonalization.trim();
+        if (trimmedValue !== '') {
+          updateObj.experience_personalization = JSON.parse(trimmedValue);
+        } else {
+          updateObj.experience_personalization = {};
+        }
       } else {
         updateObj.experience_personalization = {};
       }
