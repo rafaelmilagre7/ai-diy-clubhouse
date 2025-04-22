@@ -33,10 +33,27 @@ const BusinessGoalsClub = () => {
   const handleSaveData = async (data: any) => {
     setIsSubmitting(true);
     try {
-      console.log("Salvando dados de objetivos:", data);
+      console.log("Verificando dados recebidos para objetivos:", data);
+      
+      // Garantir que estamos enviando os dados no formato correto
+      let formattedData;
+      
+      // Se os dados já estiverem no formato correto (com business_goals), apenas usar como está
+      if (data.business_goals) {
+        formattedData = data;
+      } else {
+        // Encapsular os dados em um objeto business_goals
+        formattedData = {
+          business_goals: {
+            ...data
+          }
+        };
+      }
+      
+      console.log("Salvando dados de objetivos formatados:", formattedData);
       
       // Garantir que estamos enviando com o stepId correto
-      await saveStepData("business_goals", data, false); // Mudado para false para não redirecionar automaticamente
+      await saveStepData("business_goals", formattedData, false); // Mudado para false para não redirecionar automaticamente
       
       console.log("Dados de objetivos salvos com sucesso");
       toast.success("Dados salvos com sucesso!");
@@ -61,12 +78,13 @@ const BusinessGoalsClub = () => {
 
   // Verificar se temos dados válidos para business_goals
   const hasBusinessGoals = progress?.business_goals && 
-    typeof progress.business_goals === 'object' && 
-    Object.keys(progress.business_goals).length > 0;
+    (typeof progress.business_goals === 'object' && 
+    Object.keys(progress.business_goals).length > 0);
 
-  console.log("Estado dos business_goals:", {
+  console.log("Estado atual dos business_goals:", {
     hasBusinessGoals,
-    businessGoals: progress?.business_goals
+    businessGoals: progress?.business_goals,
+    progressType: progress ? typeof progress.business_goals : 'undefined'
   });
 
   return (

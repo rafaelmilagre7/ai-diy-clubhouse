@@ -1,164 +1,82 @@
 
 import { OnboardingData, OnboardingProgress } from "@/types/onboarding";
 
-/**
- * Builder específico para dados de experiência com IA
- * Processa e normaliza os dados para garantir consistência no armazenamento
- */
 export function buildAiExpUpdate(data: Partial<OnboardingData>, progress: OnboardingProgress | null) {
-  // Log para debug dos dados recebidos
-  console.log("Dados recebidos no aiExpBuilder:", data);
-  
-  // Extrair os dados de ai_experience do objeto fornecido
-  let aiExperienceData: any = null;
-  
-  // Verificar se os dados já estão dentro de um objeto ai_experience
-  if (data.ai_experience) {
-    aiExperienceData = data.ai_experience;
-    console.log("Dados encontrados diretamente em data.ai_experience");
-  } 
-  // Verificar se há uma propriedade ai_exp que pode conter os dados (usando type assertion)
-  else if ((data as any).ai_exp) {
-    aiExperienceData = (data as any).ai_exp;
-    console.log("Dados encontrados em data.ai_exp");
-  }
-  // Se ai_experience não existe, verificar se existe alguma propriedade aninhada chamada ai_experience
-  else if (data.ai_experience === undefined) {
-    // Verificar se há alguma outra propriedade que possa conter ai_experience
-    for (const key in data) {
-      const value = data[key as keyof typeof data];
-      if (value && typeof value === 'object') {
-        // Usar verificação segura com type assertion
-        if ('ai_experience' in value || 'ai_exp' in (value as any)) {
-          aiExperienceData = 'ai_experience' in value ? 
-                            (value as any).ai_experience : 
-                            (value as any).ai_exp;
-          console.log(`Dados encontrados em data.${key}.ai_experience`);
-          break;
-        }
-      }
-    }
-  }
-  
-  // Se ainda não temos dados, tentar encontrar de outra forma
-  if (!aiExperienceData && typeof data === 'object') {
-    // Tentar encontrar em outras propriedades comuns
-    for (const key in data) {
-      const value = data[key as keyof typeof data];
-      if (
-        value && 
-        typeof value === 'object' && 
-        (
-          'knowledge_level' in value || 
-          'previous_tools' in value || 
-          'has_implemented' in value ||
-          'desired_ai_areas' in value
-        )
-      ) {
-        aiExperienceData = value;
-        console.log(`Dados encontrados através de campos de assinatura em data.${key}`);
-        break;
-      }
-    }
-  }
-  
-  // Se ainda não encontramos, usar um objeto vazio
-  if (!aiExperienceData) {
-    console.warn("Não foi possível encontrar dados de experiência com IA, usando objeto vazio");
-    aiExperienceData = {};
-  }
-  
-  // Converter para string e depois para objeto, se necessário
-  if (typeof aiExperienceData === 'string') {
-    try {
-      aiExperienceData = JSON.parse(aiExperienceData);
-      console.log("Convertido aiExperienceData de string para objeto:", aiExperienceData);
-    } catch (e) {
-      console.error("Erro ao converter aiExperienceData de string para objeto:", e);
-      aiExperienceData = {};
-    }
-  }
-  
-  // Garantir que aiExperienceData é um objeto
-  if (!aiExperienceData || typeof aiExperienceData !== 'object') {
-    aiExperienceData = {};
-  }
-  
-  // Normalizar arrays
-  const normalizedData: Record<string, any> = { ...aiExperienceData };
-  
-  // Garantir que previous_tools é um array
-  if (normalizedData.previous_tools && !Array.isArray(normalizedData.previous_tools)) {
-    normalizedData.previous_tools = [normalizedData.previous_tools];
-    console.log("Normalizado previous_tools para array:", normalizedData.previous_tools);
-  } else if (!normalizedData.previous_tools) {
-    normalizedData.previous_tools = [];
-  }
-  
-  // Garantir que desired_ai_areas é um array
-  if (normalizedData.desired_ai_areas && !Array.isArray(normalizedData.desired_ai_areas)) {
-    normalizedData.desired_ai_areas = [normalizedData.desired_ai_areas];
-    console.log("Normalizado desired_ai_areas para array:", normalizedData.desired_ai_areas);
-  } else if (!normalizedData.desired_ai_areas) {
-    normalizedData.desired_ai_areas = [];
-  }
-  
-  // Normalizar has_implemented para um formato consistente
-  if (normalizedData.has_implemented !== undefined) {
-    if (typeof normalizedData.has_implemented === 'string') {
-      normalizedData.has_implemented = 
-        (normalizedData.has_implemented.toLowerCase() === 'sim' || 
-         normalizedData.has_implemented.toLowerCase() === 'yes' || 
-         normalizedData.has_implemented === '1' || 
-         normalizedData.has_implemented.toLowerCase() === 'true') ? 'sim' : 'nao';
-    } else if (typeof normalizedData.has_implemented === 'boolean') {
-      normalizedData.has_implemented = normalizedData.has_implemented ? 'sim' : 'nao';
-    }
-    console.log("has_implemented normalizado:", normalizedData.has_implemented);
-  }
-  
-  // Garantir que os campos booleanos estão no formato correto
-  if (typeof normalizedData.completed_formation !== 'boolean') {
-    normalizedData.completed_formation = normalizedData.completed_formation === true || 
-      normalizedData.completed_formation === 'true' || 
-      normalizedData.completed_formation === 'sim' || 
-      normalizedData.completed_formation === '1';
-  }
-  
-  if (typeof normalizedData.is_member_for_month !== 'boolean') {
-    normalizedData.is_member_for_month = normalizedData.is_member_for_month === true || 
-      normalizedData.is_member_for_month === 'true' || 
-      normalizedData.is_member_for_month === 'sim' || 
-      normalizedData.is_member_for_month === '1';
-  }
-  
-  // Garantir que nps_score é um número
-  if (normalizedData.nps_score !== undefined && typeof normalizedData.nps_score !== 'number') {
-    normalizedData.nps_score = parseInt(normalizedData.nps_score, 10) || 5;
-    console.log("nps_score normalizado para número:", normalizedData.nps_score);
-  }
-  
-  // Garantir que o nível de conhecimento seja um dos valores esperados
-  if (normalizedData.knowledge_level && typeof normalizedData.knowledge_level === 'string') {
-    const validLevels = ['iniciante', 'basico', 'intermediario', 'avancado', 'especialista'];
-    if (!validLevels.includes(normalizedData.knowledge_level.toLowerCase())) {
-      normalizedData.knowledge_level = 'iniciante';
-      console.log("knowledge_level normalizado para valor padrão (iniciante)");
-    }
-  }
-  
-  // Criar o objeto finalizado para ai_experience
-  const finalAiExpData = {
-    ...normalizedData,
-    _last_updated: new Date().toISOString()
-  };
-  
-  // Log dos dados processados
-  console.log("Dados de AI Experience normalizados:", finalAiExpData);
-  
-  // Construir objeto de atualização
   const updateObj: any = {};
-  updateObj.ai_experience = finalAiExpData;
+  
+  // Garantir uma base consistente para os dados
+  let existingExp: any = {};
+  
+  // Verificar se temos dados válidos de progresso
+  if (progress) {
+    if (typeof progress.ai_experience === 'string') {
+      try {
+        const trimmedValue = typeof progress.ai_experience === 'string' && progress.ai_experience.trim ? 
+          progress.ai_experience.trim() : 
+          progress.ai_experience;
+          
+        if (trimmedValue !== '') {
+          existingExp = JSON.parse(trimmedValue);
+        }
+      } catch (e) {
+        console.error("Erro ao converter ai_experience de string para objeto:", e);
+      }
+    } else if (progress.ai_experience && typeof progress.ai_experience === 'object') {
+      existingExp = progress.ai_experience;
+    }
+  }
+  
+  // Inicializar o objeto de atualização com os dados existentes
+  updateObj.ai_experience = {...existingExp};
+  
+  // Verificar se estamos recebendo dados diretos ou em um objeto aninhado
+  const sourceData = data.ai_experience || data;
+  
+  if (typeof sourceData === 'object' && sourceData !== null) {
+    // Processar campos de array
+    if (sourceData.previous_tools) {
+      const previousTools = Array.isArray(sourceData.previous_tools) ? 
+        sourceData.previous_tools : 
+        [sourceData.previous_tools].filter(Boolean);
+        
+      if (previousTools.length > 0) {
+        updateObj.ai_experience.previous_tools = previousTools;
+      }
+    }
+    
+    if (sourceData.desired_ai_areas) {
+      const desiredAreas = Array.isArray(sourceData.desired_ai_areas) ? 
+        sourceData.desired_ai_areas : 
+        [sourceData.desired_ai_areas].filter(Boolean);
+        
+      if (desiredAreas.length > 0) {
+        updateObj.ai_experience.desired_ai_areas = desiredAreas;
+      }
+    }
+    
+    // Processar outros campos
+    ['knowledge_level', 'has_implemented', 'improvement_suggestions'].forEach(field => {
+      if (sourceData[field] !== undefined) {
+        updateObj.ai_experience[field] = sourceData[field];
+      }
+    });
+    
+    // Processar campos booleanos
+    ['completed_formation', 'is_member_for_month'].forEach(field => {
+      if (sourceData[field] !== undefined) {
+        updateObj.ai_experience[field] = !!sourceData[field];
+      }
+    });
+    
+    // Processar campo numérico
+    if (sourceData.nps_score !== undefined) {
+      updateObj.ai_experience.nps_score = typeof sourceData.nps_score === 'string' ? 
+        parseInt(sourceData.nps_score, 10) : 
+        sourceData.nps_score;
+    }
+  }
+  
+  console.log("Objeto de atualização para ai_experience:", updateObj);
   
   return updateObj;
 }

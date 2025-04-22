@@ -1,80 +1,19 @@
 
-import React from "react";
-import { useForm, Controller } from "react-hook-form";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Form, FormItem, FormLabel, FormMessage, FormControl, FormDescription, FormField } from "@/components/ui/form";
+import { Check, ArrowRight } from "lucide-react";
+import { useForm, Controller } from "react-hook-form";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { Check, User, Users, Lightbulb, Rocket, TrendingUp, Handshake, Wrench, ClipboardList, Video, FileText, Headphones, UserRound, Presentation } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { OnboardingStepProps } from "@/types/onboarding";
+import { Checkbox } from "@/components/ui/checkbox";
+import { OnboardingData, OnboardingStepProps } from "@/types/onboarding";
 
-const STEP_DROPDOWNS = {
-  "goal30": [
-    "Implementar uma solução de IA no meu negócio",
-    "Estruturar um processo de inovação com IA",
-    "Identificar oportunidades de IA relevantes",
-    "Capacitar meu time rapidamente",
-    "Conseguir um resultado tangível relacionado a IA"
-  ],
-  "priority_ia": [
-    "Soluções de Marketing",
-    "Soluções de Vendas",
-    "Soluções de RH",
-    "Soluções Operacionais",
-    "Soluções de Atendimento",
-    "Automação Generalista"
-  ],
-  "disponibilidade": [
-    "Menos de 2h/semana",
-    "2h a 5h/semana",
-    "5h a 10h/semana",
-    "10h+ semana"
-  ]
-};
+interface ExpectativasObjetivosStepProps extends OnboardingStepProps {
+  initialData?: OnboardingData | any;
+}
 
-const IMPLEMENTATION_OPTIONS = [
-  {
-    value: "delegar_time",
-    icon: <User className="w-6 h-6 text-[#0ABAB5]" />,
-    title: "Colocar pessoa do time",
-    description: "Uma pessoa da sua equipe será responsável por implementar as soluções do Club."
-  },
-  {
-    value: "eu_mesmo",
-    icon: <Users className="w-6 h-6 text-[#0ABAB5]" />,
-    title: "Eu mesmo vou implementar",
-    description: "Você será responsável por implementar pessoalmente as soluções de IA no seu negócio."
-  },
-  {
-    value: "contratar_equipe",
-    icon: <Handshake className="w-6 h-6 text-[#0ABAB5]" />,
-    title: "Contratar equipe VIVER DE IA",
-    description: "A equipe do Club será contratada para implementar as soluções para seu negócio."
-  }
-];
-
-const FORMATO_OPTIONS = [
-  { value: "video", icon: <Video />, label: "Vídeo" },
-  { value: "texto", icon: <FileText />, label: "Texto" },
-  { value: "audio", icon: <Headphones />, label: "Áudio" },
-  { value: "ao_vivo", icon: <UserRound />, label: "Ao vivo" },
-  { value: "workshop", icon: <Presentation />, label: "Workshop prático" }
-];
-
-const MOTIVOS_OPCOES = [
-  { value: "networking", label: "Networking com outros empresários", icon: <Users /> },
-  { value: "aprofundar_conhecimento", label: "Aprofundar conhecimento em IA", icon: <Lightbulb /> },
-  { value: "implementar_solucoes", label: "Implementar soluções concretas", icon: <Rocket /> },
-  { value: "be_atualizado", label: "Manter-me atualizado sobre IA", icon: <TrendingUp /> },
-  { value: "mentoria", label: "Mentoria para implementar IA", icon: <Handshake /> },
-  { value: "aprender_ferramentas", label: "Aprender ferramentas práticas", icon: <Wrench /> },
-  { value: "capacitar_time", label: "Capacitar meu time em IA", icon: <User /> },
-  { value: "comunidade", label: "Fazer parte de uma comunidade de IA", icon: <ClipboardList /> }
-];
-
-interface ValoresForm {
+type FormValues = {
   primary_goal: string;
   expected_outcome_30days: string;
   priority_solution_type: string;
@@ -82,279 +21,464 @@ interface ValoresForm {
   week_availability: string;
   live_interest: number;
   content_formats: string[];
-}
+};
 
-export const ExpectativasObjetivosStep: React.FC<OnboardingStepProps> = ({
+// Lista de possíveis motivos
+const motivos = [
+  { id: "networking", label: "Networking com outros empresários" },
+  { id: "aprofundar_conhecimento", label: "Aprofundar conhecimento em IA" },
+  { id: "implementar_solucoes", label: "Implementar soluções concretas" },
+  { id: "be_atualizado", label: "Manter-me atualizado sobre IA" },
+  { id: "mentoria", label: "Mentoria para implementar IA" },
+  { id: "aprender_ferramentas", label: "Aprender ferramentas práticas" },
+  { id: "capacitar_time", label: "Capacitar meu time em IA" },
+  { id: "comunidade", label: "Fazer parte de uma comunidade de IA" },
+];
+
+// Lista de expectativas para 30 dias
+const expectativas30Dias = [
+  "Conhecer as principais ferramentas de IA para meu negócio",
+  "Implementar pelo menos uma solução de IA",
+  "Aumentar meu conhecimento sobre IA aplicada",
+  "Melhorar um processo interno com IA",
+  "Criar uma estratégia de IA para minha empresa",
+  "Capacitar minha equipe em IA",
+  "Reduzir custos com automação de IA",
+  "Aumentar vendas/receita com IA",
+];
+
+// Lista de tipos de soluções prioritárias
+const tiposSolucoes = [
+  "Automação de processos internos",
+  "Marketing e vendas com IA",
+  "Análise de dados e insights",
+  "Atendimento ao cliente automatizado",
+  "Criação de conteúdo com IA",
+  "Desenvolvimento de produtos/serviços",
+  "Gestão estratégica assistida por IA",
+];
+
+// Opções de implementação
+const opcoesImplementacao = [
+  { id: "eu_mesmo", label: "Eu mesmo vou implementar" },
+  { id: "delegar_time", label: "Vou delegar para alguém da equipe" },
+  { id: "contratar_equipe", label: "Contratar equipe do VIVER DE IA" },
+];
+
+// Opções de disponibilidade semanal
+const disponibilidadeSemanal = [
+  "Menos de 1 hora",
+  "1-2 horas",
+  "3-5 horas",
+  "Mais de 5 horas",
+];
+
+// Opções de formatos de conteúdo
+const formatosConteudo = [
+  { id: "video", label: "Vídeos" },
+  { id: "texto", label: "Textos e guias" },
+  { id: "audio", label: "Áudios/Podcasts" },
+  { id: "ao_vivo", label: "Conteúdo ao vivo" },
+  { id: "workshop", label: "Workshops práticos" },
+];
+
+export const ExpectativasObjetivosStep = ({
   onSubmit,
   isSubmitting,
+  initialData,
   isLastStep,
   onComplete,
-  initialData,
-}) => {
-  const form = useForm<ValoresForm>({
-    defaultValues: {
-      primary_goal: initialData?.primary_goal || "",
-      expected_outcome_30days: initialData?.expected_outcomes?.[0] || initialData?.expected_outcome_30days || "",
-      priority_solution_type: initialData?.priority_solution_type || "",
-      how_implement: initialData?.how_implement || "",
-      week_availability: initialData?.week_availability || "",
-      live_interest: initialData?.live_interest ?? 5,
-      content_formats: initialData?.content_formats ?? []
-    },
-    mode: "onBlur"
-  });
-
-  function handleSubmit(data: ValoresForm) {
-    console.log("Enviando dados do formulário:", data);
-    onSubmit("business_goals", {
-      business_goals: {
-        primary_goal: data.primary_goal,
-        expected_outcome_30days: data.expected_outcome_30days,  // Campo individual para verificação
-        expected_outcomes: [data.expected_outcome_30days],  // Array para compatibilidade
-        timeline: "",
-        priority_solution_type: data.priority_solution_type,
-        how_implement: data.how_implement,
-        week_availability: data.week_availability,
-        live_interest: data.live_interest,
-        content_formats: data.content_formats
+}: ExpectativasObjetivosStepProps) => {
+  const [liveInterest, setLiveInterest] = useState<number>(5);
+  
+  // Extrair os dados iniciais de business_goals, lidar com string ou objeto
+  const getInitialBusinessGoals = () => {
+    if (!initialData) return {};
+    
+    let businessGoals = initialData.business_goals;
+    
+    // Se for string, tentar converter para objeto
+    if (typeof businessGoals === 'string') {
+      try {
+        businessGoals = JSON.parse(businessGoals);
+      } catch (e) {
+        console.error("Erro ao converter business_goals de string:", e);
+        businessGoals = {};
       }
-    });
-  }
-
+    }
+    
+    // Se não for objeto ou for null/undefined, usar objeto vazio
+    if (!businessGoals || typeof businessGoals !== 'object') {
+      businessGoals = {};
+    }
+    
+    console.log("Valor inicial de business_goals:", businessGoals);
+    return businessGoals;
+  };
+  
+  const businessGoals = getInitialBusinessGoals();
+  
+  const { control, handleSubmit, setValue, watch, formState: { errors } } = useForm<FormValues>({
+    defaultValues: {
+      primary_goal: businessGoals.primary_goal || "",
+      expected_outcome_30days: businessGoals.expected_outcome_30days || "",
+      priority_solution_type: businessGoals.priority_solution_type || "",
+      how_implement: businessGoals.how_implement || "",
+      week_availability: businessGoals.week_availability || "",
+      live_interest: businessGoals.live_interest || 5,
+      content_formats: businessGoals.content_formats || [],
+    }
+  });
+  
+  // Inicializar o interesse em conteúdo ao vivo
+  useEffect(() => {
+    if (businessGoals.live_interest !== undefined) {
+      setLiveInterest(Number(businessGoals.live_interest));
+      setValue("live_interest", Number(businessGoals.live_interest));
+    }
+  }, [businessGoals, setValue]);
+  
+  // Manipulador para submissão do formulário
+  const onFormSubmit = (data: FormValues) => {
+    console.log("Dados do formulário de expectativas:", data);
+    
+    // Garantir que content_formats seja um array
+    const contentFormats = Array.isArray(data.content_formats) 
+      ? data.content_formats 
+      : [data.content_formats].filter(Boolean);
+    
+    // Preparar dados para salvar
+    const formattedData = {
+      business_goals: {
+        ...data,
+        content_formats: contentFormats,
+        live_interest: Number(data.live_interest)
+      }
+    };
+    
+    console.log("Enviando dados formatados:", formattedData);
+    onSubmit(formattedData);
+  };
+  
   return (
-    <Form {...form}>
-      <form
-        className="space-y-8"
-        onSubmit={form.handleSubmit(handleSubmit)}
-        autoComplete="off"
-      >
-        {/* 1. Motivo principal */}
-        <FormField
-          control={form.control}
-          name="primary_goal"
-          rules={{ required: "Selecione o principal motivo" }}
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="font-bold text-base">Seu principal motivo para entrar no Club *</FormLabel>
+    <div className="space-y-6">
+      <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-8">
+        {/* Motivo Principal */}
+        <div className="bg-white rounded-lg border border-gray-100 p-6 shadow-sm">
+          <h2 className="text-xl font-semibold text-[#15192C] mb-6">
+            Qual seu principal objetivo com o VIVER DE IA Club?
+          </h2>
+          
+          <Controller
+            name="primary_goal"
+            control={control}
+            rules={{ required: "Por favor, selecione um objetivo principal" }}
+            render={({ field }) => (
               <RadioGroup
-                onValueChange={field.onChange}
                 value={field.value}
-                className="flex flex-col gap-3"
+                onValueChange={field.onChange}
+                className="grid grid-cols-1 md:grid-cols-2 gap-4"
               >
-                {MOTIVOS_OPCOES.map(opt => (
-                  <div 
-                    key={opt.value}
-                    className={cn(
-                      "flex items-center gap-2 p-3 border rounded-lg cursor-pointer transition-all",
-                      field.value === opt.value 
-                        ? "border-[#0ABAB5] bg-[#0ABAB5]/10" 
-                        : "border-gray-200 bg-white"
-                    )}
-                    onClick={() => field.onChange(opt.value)}
-                  >
-                    <RadioGroupItem value={opt.value} id={opt.value} className="sr-only" />
-                    <span className="flex items-center gap-2">
-                      {opt.icon}<span>{opt.label}</span>
-                    </span>
-                    {field.value === opt.value && (
-                      <Check className="ml-auto text-[#0ABAB5]" />
-                    )}
+                {motivos.map((motivo) => (
+                  <div key={motivo.id} className="flex items-start space-x-3">
+                    <RadioGroupItem 
+                      value={motivo.id} 
+                      id={`motivo-${motivo.id}`}
+                      className="mt-1"
+                    />
+                    <Label 
+                      htmlFor={`motivo-${motivo.id}`}
+                      className="cursor-pointer font-normal"
+                    >
+                      {motivo.label}
+                    </Label>
                   </div>
                 ))}
               </RadioGroup>
-              <FormMessage />
-            </FormItem>
+            )}
+          />
+          
+          {errors.primary_goal && (
+            <p className="text-red-500 text-sm mt-2">{errors.primary_goal.message}</p>
           )}
-        />
-
-        {/* 2. Objetivo em 30 dias */}
-        <FormField
-          control={form.control}
-          name="expected_outcome_30days"
-          rules={{ required: "Selecione seu objetivo principal" }}
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>O que espera alcançar nos primeiros 30 dias? *</FormLabel>
-              <FormControl>
-                <select
-                  {...field}
-                  className="form-select block w-full mt-2 py-2 px-4 rounded border border-gray-300 focus:ring-[#0ABAB5] focus:border-[#0ABAB5] bg-white text-gray-900"
-                >
-                  <option value="">Selecione seu objetivo principal</option>
-                  {STEP_DROPDOWNS.goal30.map(opt => (
-                    <option key={opt} value={opt}>{opt}</option>
-                  ))}
-                </select>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
+        </div>
+        
+        {/* Expectativa em 30 dias */}
+        <div className="bg-white rounded-lg border border-gray-100 p-6 shadow-sm">
+          <h2 className="text-xl font-semibold text-[#15192C] mb-6">
+            O que você espera alcançar nos primeiros 30 dias?
+          </h2>
+          
+          <Controller
+            name="expected_outcome_30days"
+            control={control}
+            rules={{ required: "Por favor, selecione uma expectativa" }}
+            render={({ field }) => (
+              <RadioGroup
+                value={field.value}
+                onValueChange={field.onChange}
+                className="flex flex-col space-y-3"
+              >
+                {expectativas30Dias.map((expectativa, index) => (
+                  <div key={index} className="flex items-start space-x-3">
+                    <RadioGroupItem 
+                      value={expectativa} 
+                      id={`expectativa-${index}`}
+                      className="mt-1"
+                    />
+                    <Label 
+                      htmlFor={`expectativa-${index}`}
+                      className="cursor-pointer font-normal"
+                    >
+                      {expectativa}
+                    </Label>
+                  </div>
+                ))}
+              </RadioGroup>
+            )}
+          />
+          
+          {errors.expected_outcome_30days && (
+            <p className="text-red-500 text-sm mt-2">{errors.expected_outcome_30days.message}</p>
           )}
-        />
-
-        {/* 3. Tipo de solução prioritária */}
-        <FormField
-          control={form.control}
-          name="priority_solution_type"
-          rules={{ required: "Selecione sua prioridade" }}
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Tipo de solução prioritária para implementar *</FormLabel>
-              <FormControl>
-                <select
-                  {...field}
-                  className="form-select block w-full mt-2 py-2 px-4 rounded border border-gray-300 focus:ring-[#0ABAB5] focus:border-[#0ABAB5] bg-white text-gray-900"
-                >
-                  <option value="">Selecione sua prioridade</option>
-                  {STEP_DROPDOWNS.priority_ia.map(opt => (
-                    <option key={opt} value={opt}>{opt}</option>
-                  ))}
-                </select>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
+        </div>
+        
+        {/* Tipo de Solução Prioritária */}
+        <div className="bg-white rounded-lg border border-gray-100 p-6 shadow-sm">
+          <h2 className="text-xl font-semibold text-[#15192C] mb-6">
+            Que tipo de solução de IA é prioritária para você?
+          </h2>
+          
+          <Controller
+            name="priority_solution_type"
+            control={control}
+            rules={{ required: "Por favor, selecione um tipo de solução prioritária" }}
+            render={({ field }) => (
+              <RadioGroup
+                value={field.value}
+                onValueChange={field.onChange}
+                className="flex flex-col space-y-3"
+              >
+                {tiposSolucoes.map((tipo, index) => (
+                  <div key={index} className="flex items-start space-x-3">
+                    <RadioGroupItem 
+                      value={tipo} 
+                      id={`solucao-${index}`}
+                      className="mt-1"
+                    />
+                    <Label 
+                      htmlFor={`solucao-${index}`}
+                      className="cursor-pointer font-normal"
+                    >
+                      {tipo}
+                    </Label>
+                  </div>
+                ))}
+              </RadioGroup>
+            )}
+          />
+          
+          {errors.priority_solution_type && (
+            <p className="text-red-500 text-sm mt-2">{errors.priority_solution_type.message}</p>
           )}
-        />
-
-        {/* 4. Como pretende implementar */}
-        <FormField
-          control={form.control}
-          name="how_implement"
-          rules={{ required: "Selecione uma opção" }}
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Como pretende implementar as soluções do Club? *</FormLabel>
-              <div className="flex flex-col md:flex-row gap-4">
-                {IMPLEMENTATION_OPTIONS.map(opt => (
-                  <div
-                    key={opt.value}
-                    className={cn(
-                      "flex-1 border rounded-lg p-4 cursor-pointer transition-all",
-                      field.value === opt.value
-                        ? "border-[#0ABAB5] bg-[#0ABAB5]/10 shadow"
-                        : "border-gray-200 bg-white"
-                    )}
-                    onClick={() => field.onChange(opt.value)}
-                  >
-                    <div className="flex items-center gap-3 mb-2">
-                      {opt.icon}
-                      <span className="font-semibold">{opt.title}</span>
-                      {field.value === opt.value && (
-                        <Check className="ml-auto text-[#0ABAB5]" />
-                      )}
-                    </div>
-                    <p className="text-gray-500 text-sm">{opt.description}</p>
+        </div>
+        
+        {/* Como Pretende Implementar */}
+        <div className="bg-white rounded-lg border border-gray-100 p-6 shadow-sm">
+          <h2 className="text-xl font-semibold text-[#15192C] mb-6">
+            Como você pretende implementar as soluções de IA?
+          </h2>
+          
+          <Controller
+            name="how_implement"
+            control={control}
+            rules={{ required: "Por favor, selecione como pretende implementar" }}
+            render={({ field }) => (
+              <RadioGroup
+                value={field.value}
+                onValueChange={field.onChange}
+                className="flex flex-col space-y-3"
+              >
+                {opcoesImplementacao.map((opcao) => (
+                  <div key={opcao.id} className="flex items-start space-x-3">
+                    <RadioGroupItem 
+                      value={opcao.id} 
+                      id={`implementacao-${opcao.id}`}
+                      className="mt-1"
+                    />
+                    <Label 
+                      htmlFor={`implementacao-${opcao.id}`}
+                      className="cursor-pointer font-normal"
+                    >
+                      {opcao.label}
+                    </Label>
+                  </div>
+                ))}
+              </RadioGroup>
+            )}
+          />
+          
+          {errors.how_implement && (
+            <p className="text-red-500 text-sm mt-2">{errors.how_implement.message}</p>
+          )}
+        </div>
+        
+        {/* Disponibilidade Semanal */}
+        <div className="bg-white rounded-lg border border-gray-100 p-6 shadow-sm">
+          <h2 className="text-xl font-semibold text-[#15192C] mb-6">
+            Quanto tempo por semana você tem disponível para implementar IA?
+          </h2>
+          
+          <Controller
+            name="week_availability"
+            control={control}
+            rules={{ required: "Por favor, selecione sua disponibilidade semanal" }}
+            render={({ field }) => (
+              <RadioGroup
+                value={field.value}
+                onValueChange={field.onChange}
+                className="flex flex-col space-y-3"
+              >
+                {disponibilidadeSemanal.map((disponibilidade, index) => (
+                  <div key={index} className="flex items-start space-x-3">
+                    <RadioGroupItem 
+                      value={disponibilidade} 
+                      id={`disponibilidade-${index}`}
+                      className="mt-1"
+                    />
+                    <Label 
+                      htmlFor={`disponibilidade-${index}`}
+                      className="cursor-pointer font-normal"
+                    >
+                      {disponibilidade}
+                    </Label>
+                  </div>
+                ))}
+              </RadioGroup>
+            )}
+          />
+          
+          {errors.week_availability && (
+            <p className="text-red-500 text-sm mt-2">{errors.week_availability.message}</p>
+          )}
+        </div>
+        
+        {/* Interesse em Conteúdo ao Vivo */}
+        <div className="bg-white rounded-lg border border-gray-100 p-6 shadow-sm">
+          <h2 className="text-xl font-semibold text-[#15192C] mb-4">
+            Qual seu interesse em sessões ao vivo?
+          </h2>
+          <p className="text-gray-600 mb-6">
+            Em uma escala de 0 a 10, o quanto você gostaria de participar de sessões ao vivo (implementações, Q&A, etc.)?
+          </p>
+          
+          <Controller
+            name="live_interest"
+            control={control}
+            render={({ field }) => (
+              <div className="space-y-4">
+                <Slider
+                  value={[Number(field.value)]}
+                  min={0}
+                  max={10}
+                  step={1}
+                  onValueChange={(value) => {
+                    setLiveInterest(value[0]);
+                    field.onChange(value[0]);
+                  }}
+                  className="py-4"
+                />
+                
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-500">Pouco interesse (0)</span>
+                  <span className="text-center font-medium text-[#0ABAB5]">{liveInterest}</span>
+                  <span className="text-sm text-gray-500">Muito interesse (10)</span>
+                </div>
+              </div>
+            )}
+          />
+        </div>
+        
+        {/* Formatos de Conteúdo */}
+        <div className="bg-white rounded-lg border border-gray-100 p-6 shadow-sm">
+          <h2 className="text-xl font-semibold text-[#15192C] mb-6">
+            Que formatos de conteúdo você prefere?
+          </h2>
+          <p className="text-gray-600 mb-6">
+            Selecione todos os formatos que você gostaria de acessar no Club.
+          </p>
+          
+          <Controller
+            name="content_formats"
+            control={control}
+            rules={{ validate: value => (value && value.length > 0) || "Por favor, selecione pelo menos um formato" }}
+            render={({ field }) => (
+              <div className="space-y-3">
+                {formatosConteudo.map((formato) => (
+                  <div key={formato.id} className="flex items-center space-x-3">
+                    <Checkbox
+                      id={`formato-${formato.id}`}
+                      checked={field.value?.includes(formato.id)}
+                      onCheckedChange={(checked) => {
+                        const updatedValue = [...(field.value || [])];
+                        
+                        if (checked) {
+                          if (!updatedValue.includes(formato.id)) {
+                            updatedValue.push(formato.id);
+                          }
+                        } else {
+                          const index = updatedValue.indexOf(formato.id);
+                          if (index !== -1) {
+                            updatedValue.splice(index, 1);
+                          }
+                        }
+                        
+                        field.onChange(updatedValue);
+                      }}
+                    />
+                    <Label 
+                      htmlFor={`formato-${formato.id}`}
+                      className="cursor-pointer font-normal"
+                    >
+                      {formato.label}
+                    </Label>
                   </div>
                 ))}
               </div>
-              <FormMessage />
-            </FormItem>
+            )}
+          />
+          
+          {errors.content_formats && (
+            <p className="text-red-500 text-sm mt-2">{errors.content_formats.message}</p>
           )}
-        />
-
-        {/* 5. Disponibilidade semanal */}
-        <FormField
-          control={form.control}
-          name="week_availability"
-          rules={{ required: "Selecione sua disponibilidade semanal" }}
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Disponibilidade semanal para o Club *</FormLabel>
-              <FormControl>
-                <select
-                  {...field}
-                  className="form-select block w-full mt-2 py-2 px-4 rounded border border-gray-300 focus:ring-[#0ABAB5] focus:border-[#0ABAB5] bg-white text-gray-900"
-                >
-                  <option value="">Selecione sua disponibilidade semanal</option>
-                  {STEP_DROPDOWNS.disponibilidade.map(opt => (
-                    <option key={opt} value={opt}>{opt}</option>
-                  ))}
-                </select>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        {/* 6. Interesse em sessões ao vivo */}
-        <FormField
-          control={form.control}
-          name="live_interest"
-          rules={{ required: "Selecione seu interesse" }}
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>
-                Interesse em participar das Sessões ao Vivo / Hotseats *
-              </FormLabel>
-              <Slider
-                min={0}
-                max={10}
-                step={1}
-                value={[field.value]}
-                onValueChange={([v]) => field.onChange(v)}
-                className="w-full mt-4"
-              />
-              <div className="flex justify-between text-xs text-gray-500 mt-2">
-                <span>Pouco interesse</span>
-                <span>Muito interesse</span>
-              </div>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        {/* 7. Preferência de formato (ícones visuais) */}
-        <FormField
-          control={form.control}
-          name="content_formats"
-          rules={{
-            validate: (v) =>
-              Array.isArray(v) && v.length > 0
-                ? true
-                : "Selecione pelo menos um formato preferido"
-          }}
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="block">Preferência de formato de conteúdo *</FormLabel>
-              <ToggleGroup
-                type="multiple"
-                value={field.value}
-                className="flex flex-wrap gap-2"
-                onValueChange={(val: string[]) => {
-                  // Garante que pelo menos um formato está selecionado
-                  if (val.length > 0) {
-                    field.onChange(val);
-                  }
-                }}
-              >
-                {FORMATO_OPTIONS.map((f) => (
-                  <ToggleGroupItem
-                    key={f.value}
-                    value={f.value}
-                    className={cn(
-                      "flex flex-col items-center gap-1 px-4 py-2 border rounded-md",
-                      field.value.includes(f.value)
-                        ? "border-[#0ABAB5] bg-[#0ABAB5]/10"
-                        : "border-gray-200 bg-white"
-                    )}
-                  >
-                    <span className="mb-1">{f.icon}</span>
-                    <span className="text-xs">{f.label}</span>
-                  </ToggleGroupItem>
-                ))}
-              </ToggleGroup>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <Button 
-          disabled={isSubmitting} 
-          type="submit" 
-          className="w-full bg-[#0ABAB5] hover:bg-[#099388] mt-6"
-        >
-          {isSubmitting ? "Salvando..." : (isLastStep ? "Finalizar" : "Próximo")}
-        </Button>
+        </div>
+        
+        {/* Botão de Envio */}
+        <div className="flex justify-end mt-8">
+          <Button
+            type="submit"
+            className="bg-[#0ABAB5] hover:bg-[#099388] text-white px-5 py-2"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? (
+              <span className="flex items-center gap-2">
+                <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"></div>
+                Salvando...
+              </span>
+            ) : isLastStep ? (
+              <span className="flex items-center gap-2">
+                <Check className="h-4 w-4" />
+                Concluir
+              </span>
+            ) : (
+              <span className="flex items-center gap-2">
+                Próximo
+                <ArrowRight className="h-4 w-4" />
+              </span>
+            )}
+          </Button>
+        </div>
       </form>
-    </Form>
+    </div>
   );
 };

@@ -53,7 +53,14 @@ export function buildUpdateObject(
   let specificUpdateObj: Record<string, any> = {};
   
   switch (stepId) {
+    case "personal":
+      specificUpdateObj = {
+        personal_info: processedData.personal_info || processedData
+      };
+      break;
+      
     case "professional_data":
+    case "goals":
       specificUpdateObj = buildProfessionalDataUpdate(processedData, progress);
       break;
       
@@ -104,7 +111,8 @@ function getNextStepId(currentStepId: string): string {
     "ai_exp": "business_goals",
     "business_goals": "experience_personalization",
     "experience_personalization": "complementary_info",
-    "complementary_info": "review"
+    "complementary_info": "review",
+    "goals": "business_context" // Para compatibilidade com o fluxo antigo
   };
   
   return stepSequence[currentStepId] || currentStepId;

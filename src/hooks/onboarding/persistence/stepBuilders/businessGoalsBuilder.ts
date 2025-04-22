@@ -1,24 +1,28 @@
+
 import { OnboardingData, OnboardingProgress } from "@/types/onboarding";
 
 export function buildBusinessGoalsUpdate(data: Partial<OnboardingData>, progress: OnboardingProgress | null) {
   const updateObj: any = {};
   
   // Garantir uma base consistente para os dados
-  let existingGoals: any = progress?.business_goals || {};
+  let existingGoals: any = {};
   
-  // Verificar se existingGoals é uma string
-  if (typeof existingGoals === 'string') {
-    try {
-      // Garantir que seja uma string de fato antes de chamar trim
-      const trimmedValue = typeof existingGoals === 'string' && existingGoals.trim ? existingGoals.trim() : existingGoals;
-      if (trimmedValue !== '') {
-        existingGoals = JSON.parse(trimmedValue);
-      } else {
-        existingGoals = {};
+  // Verificar se temos dados válidos de progresso
+  if (progress) {
+    if (typeof progress.business_goals === 'string') {
+      try {
+        const trimmedValue = typeof progress.business_goals === 'string' && progress.business_goals.trim ? 
+          progress.business_goals.trim() : 
+          progress.business_goals;
+          
+        if (trimmedValue !== '') {
+          existingGoals = JSON.parse(trimmedValue);
+        }
+      } catch (e) {
+        console.error("Erro ao converter business_goals de string para objeto:", e);
       }
-    } catch (e) {
-      console.error("Erro ao converter business_goals de string para objeto:", e);
-      existingGoals = {};
+    } else if (progress.business_goals && typeof progress.business_goals === 'object') {
+      existingGoals = progress.business_goals;
     }
   }
   
@@ -26,7 +30,7 @@ export function buildBusinessGoalsUpdate(data: Partial<OnboardingData>, progress
   updateObj.business_goals = {...existingGoals};
   
   // Verificar se estamos recebendo dados diretos ou em um objeto aninhado
-  const sourceData = (data as any).business_goals || data;
+  const sourceData = data.business_goals || data;
   
   if (typeof sourceData === 'object' && sourceData !== null) {
     // Mesclar com dados existentes
