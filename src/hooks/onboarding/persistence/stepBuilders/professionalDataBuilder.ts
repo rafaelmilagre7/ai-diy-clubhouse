@@ -3,7 +3,15 @@ import { OnboardingData, OnboardingProgress } from "@/types/onboarding";
 import { normalizeWebsite } from "../utils/dataNormalization";
 
 export function buildProfessionalDataUpdate(data: Partial<OnboardingData>, progress: OnboardingProgress | null) {
-  const updateObj: Partial<OnboardingProgress> = {};
+  const updateObj: Partial<OnboardingProgress> = {
+    professional_info: progress?.professional_info || {},
+    company_name: undefined,
+    company_size: undefined,
+    company_sector: undefined,
+    company_website: undefined,
+    current_position: undefined,
+    annual_revenue: undefined
+  };
   
   // Verificar se temos dados diretos ou dentro do objeto professional_info
   const professionalData = data.professional_info || data;
