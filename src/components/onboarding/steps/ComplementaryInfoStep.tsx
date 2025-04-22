@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useForm } from "react-hook-form";
 import { Label } from "@/components/ui/label";
@@ -52,15 +53,18 @@ export const ComplementaryInfoStep = ({
 }: OnboardingStepProps) => {
   const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm({
     defaultValues: {
-      how_found_us: initialData?.how_found_us || "",
-      referred_by: initialData?.referred_by || "",
-      authorize_case_usage: initialData?.authorize_case_usage || false,
-      interested_in_interview: initialData?.interested_in_interview || false,
-      priority_topics: initialData?.priority_topics || [],
+      how_found_us: initialData?.complementary_info?.how_found_us || initialData?.how_found_us || "",
+      referred_by: initialData?.complementary_info?.referred_by || initialData?.referred_by || "",
+      authorize_case_usage: initialData?.complementary_info?.authorize_case_usage || initialData?.authorize_case_usage || false,
+      interested_in_interview: initialData?.complementary_info?.interested_in_interview || initialData?.interested_in_interview || false,
+      priority_topics: initialData?.complementary_info?.priority_topics || initialData?.priority_topics || [],
     }
   });
 
+  console.log("Dados iniciais em ComplementaryInfoStep:", initialData);
+  
   const handleFormSubmit = (data: any) => {
+    console.log("Enviando dados complementary_info:", { complementary_info: data });
     onSubmit('complementary_info', {
       complementary_info: data
     });
@@ -77,8 +81,8 @@ export const ComplementaryInfoStep = ({
             Como você conheceu o VIVER DE IA Club?
           </Label>
           <Select
-            defaultValue={initialData?.how_found_us || ""}
-            onValueChange={(value: string) => setValue("how_found_us", value)}
+            defaultValue={initialData?.complementary_info?.how_found_us || initialData?.how_found_us || ""}
+            onValueChange={(value) => setValue("how_found_us", value)}
           >
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Selecione uma opção" />
@@ -117,8 +121,8 @@ export const ComplementaryInfoStep = ({
           </div>
           <MultiSelect
             options={topicOptions}
-            defaultValue={initialData?.priority_topics || []}
-            onChange={(selected: string[]) => setValue("priority_topics", selected)}
+            defaultValue={initialData?.complementary_info?.priority_topics || initialData?.priority_topics || []}
+            onChange={(selected) => setValue("priority_topics", selected)}
             placeholder="Selecione os tópicos"
             maxItems={5}
           />
@@ -133,7 +137,9 @@ export const ComplementaryInfoStep = ({
               <Checkbox
                 id="authorize_case_usage"
                 checked={watch("authorize_case_usage")}
-                onCheckedChange={(checked: boolean) => setValue("authorize_case_usage", checked)}
+                onCheckedChange={(checked) => 
+                  setValue("authorize_case_usage", checked === true)
+                }
               />
               <div className="space-y-1">
                 <Label htmlFor="authorize_case_usage" className="font-medium">
@@ -150,7 +156,9 @@ export const ComplementaryInfoStep = ({
               <Checkbox
                 id="interested_in_interview"
                 checked={watch("interested_in_interview")}
-                onCheckedChange={(checked: boolean) => setValue("interested_in_interview", checked)}
+                onCheckedChange={(checked) => 
+                  setValue("interested_in_interview", checked === true)
+                }
               />
               <div className="space-y-1">
                 <Label htmlFor="interested_in_interview" className="font-medium">
