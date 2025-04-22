@@ -1,4 +1,3 @@
-
 import React, { useEffect } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { BusinessModelField } from "./inputs/BusinessModelField";
@@ -29,7 +28,7 @@ interface FormValues {
 export const BusinessContextFormStep: React.FC<BusinessContextFormStepProps> = ({ progress, onSave }) => {
   const navigate = useNavigate();
   
-  // Obter dados iniciais do contexto de negócios
+  // Obter dados iniciais do contexto de negócios da coluna correta
   const getInitialData = (): FormValues => {
     if (!progress) return {
       business_model: "",
@@ -40,18 +39,18 @@ export const BusinessContextFormStep: React.FC<BusinessContextFormStepProps> = (
       additional_context: ""
     };
     
-    // Usar business_data para acessar os dados existentes
-    const businessData = progress.business_data || {};
+    // Usar business_context para acessar os dados existentes
+    const contextData = progress.business_context || {};
     
-    console.log("Dados iniciais do contexto de negócios:", businessData);
+    console.log("Dados iniciais do contexto de negócios:", contextData);
     
     return {
-      business_model: businessData.business_model || "",
-      business_challenges: businessData.business_challenges || [],
-      short_term_goals: businessData.short_term_goals || [],
-      medium_term_goals: businessData.medium_term_goals || [],
-      important_kpis: businessData.important_kpis || [],
-      additional_context: businessData.additional_context || "",
+      business_model: contextData.business_model || "",
+      business_challenges: contextData.business_challenges || [],
+      short_term_goals: contextData.short_term_goals || [],
+      medium_term_goals: contextData.medium_term_goals || [],
+      important_kpis: contextData.important_kpis || [],
+      additional_context: contextData.additional_context || "",
     };
   };
   

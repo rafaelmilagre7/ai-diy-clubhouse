@@ -332,6 +332,7 @@ export type Database = {
           ai_knowledge_level: string | null
           annual_revenue: string | null
           budget_range: string | null
+          business_context: Json | null
           business_data: Json | null
           business_goals: Json | null
           company_data: Json | null
@@ -371,6 +372,7 @@ export type Database = {
           ai_knowledge_level?: string | null
           annual_revenue?: string | null
           budget_range?: string | null
+          business_context?: Json | null
           business_data?: Json | null
           business_goals?: Json | null
           company_data?: Json | null
@@ -410,6 +412,7 @@ export type Database = {
           ai_knowledge_level?: string | null
           annual_revenue?: string | null
           budget_range?: string | null
+          business_context?: Json | null
           business_data?: Json | null
           business_goals?: Json | null
           company_data?: Json | null
