@@ -5,7 +5,8 @@ import {
   normalizeWebsite, 
   normalizeDDI, 
   normalizeArrayField,
-  normalizeAIExperience
+  normalizeAIExperience,
+  normalizeBusinessGoals
 } from "../utils/dataNormalization";
 
 export const normalizeOnboardingResponse = (data: OnboardingProgress): OnboardingProgress => {
@@ -15,10 +16,9 @@ export const normalizeOnboardingResponse = (data: OnboardingProgress): Onboardin
 
   // Lista de campos que devem ser objetos
   const objectFields = [
-    'ai_experience', 'business_goals', 'experience_personalization', 
-    'complementary_info', 'professional_info', 'business_data', 
     'business_context', 'personal_info', 'industry_focus', 
-    'resources_needs', 'team_info', 'implementation_preferences'
+    'resources_needs', 'team_info', 'implementation_preferences',
+    'professional_info', 'complementary_info', 'experience_personalization'
   ];
 
   // Normalizar campos de objeto
@@ -26,6 +26,10 @@ export const normalizeOnboardingResponse = (data: OnboardingProgress): Onboardin
     const value = normalizedData[field as keyof typeof normalizedData];
     (normalizedData as any)[field] = normalizeField(value, field);
   });
+  
+  // Normalizar campos especiais que precisam de tratamento personalizado
+  normalizedData.ai_experience = normalizeAIExperience(normalizedData.ai_experience);
+  normalizedData.business_goals = normalizeBusinessGoals(normalizedData.business_goals);
 
   // Normalizar completed_steps
   if (normalizedData.completed_steps) {
@@ -53,11 +57,6 @@ export const normalizeOnboardingResponse = (data: OnboardingProgress): Onboardin
 
   if (normalizedData.personal_info?.ddi) {
     normalizedData.personal_info.ddi = normalizeDDI(normalizedData.personal_info.ddi);
-  }
-
-  // Normalizar AI Experience
-  if (normalizedData.ai_experience) {
-    normalizedData.ai_experience = normalizeAIExperience(normalizedData.ai_experience);
   }
 
   return normalizedData;

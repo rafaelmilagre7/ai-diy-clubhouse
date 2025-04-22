@@ -34,7 +34,7 @@ const BusinessGoalsClub = () => {
       console.log("Salvando dados de objetivos:", data);
       
       // Garantir que estamos enviando com o stepId correto
-      await saveStepData("business_goals", data, true);
+      await saveStepData("business_goals", data, false); // Mudado para false para não redirecionar automaticamente
       
       console.log("Dados de objetivos salvos com sucesso");
       toast.success("Dados salvos com sucesso!");

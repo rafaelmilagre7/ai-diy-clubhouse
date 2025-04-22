@@ -58,3 +58,52 @@ export const normalizeAIExperience = (aiExp: any) => {
 
   return normalizedAIExp;
 };
+
+export const normalizeBusinessGoals = (data: any) => {
+  let normalizedGoals = data;
+  
+  // Converter de string para objeto se necessário
+  if (typeof data === 'string' && data.trim() !== '') {
+    try {
+      normalizedGoals = JSON.parse(data);
+    } catch (e) {
+      console.warn("Erro ao processar business_goals:", e);
+      normalizedGoals = {};
+    }
+  }
+  
+  // Se for null ou undefined, retornar objeto vazio
+  if (!normalizedGoals) {
+    return {};
+  }
+  
+  // Garantir que content_formats é sempre array
+  if (normalizedGoals.content_formats && !Array.isArray(normalizedGoals.content_formats)) {
+    normalizedGoals.content_formats = [normalizedGoals.content_formats];
+  }
+  
+  // Garantir que expected_outcomes é sempre array
+  if (normalizedGoals.expected_outcomes && !Array.isArray(normalizedGoals.expected_outcomes)) {
+    normalizedGoals.expected_outcomes = [normalizedGoals.expected_outcomes];
+  }
+  
+  // Sincronizar expected_outcome_30days com expected_outcomes
+  if (normalizedGoals.expected_outcome_30days && !normalizedGoals.expected_outcomes) {
+    normalizedGoals.expected_outcomes = [normalizedGoals.expected_outcome_30days];
+  } else if (normalizedGoals.expected_outcomes && 
+             Array.isArray(normalizedGoals.expected_outcomes) && 
+             normalizedGoals.expected_outcomes.length > 0 && 
+             !normalizedGoals.expected_outcome_30days) {
+    normalizedGoals.expected_outcome_30days = normalizedGoals.expected_outcomes[0];
+  }
+  
+  // Converter live_interest para número
+  if (normalizedGoals.live_interest !== undefined) {
+    normalizedGoals.live_interest = Number(normalizedGoals.live_interest);
+    if (isNaN(normalizedGoals.live_interest)) {
+      normalizedGoals.live_interest = 5; // Valor padrão
+    }
+  }
+  
+  return normalizedGoals;
+};

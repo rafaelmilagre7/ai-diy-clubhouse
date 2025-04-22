@@ -2,6 +2,7 @@
 import React from "react";
 import { Badge } from "@/components/ui/badge";
 import { OnboardingData } from "@/types/onboarding";
+import { normalizeBusinessGoals } from "@/hooks/onboarding/persistence/utils/dataNormalization";
 
 export function getBusinessGoalsSummary(data: OnboardingData['business_goals'] | any) {
   console.log("Renderizando summary para Business Goals com dados:", data);
@@ -11,20 +12,8 @@ export function getBusinessGoalsSummary(data: OnboardingData['business_goals'] |
     return <p className="text-gray-500 italic">Seção não preenchida. Clique em Editar para preencher.</p>;
   }
 
-  // Tentar converter string para objeto, se necessário
-  let processedData = data;
-  if (typeof data === 'string' && data !== "{}" && data !== "") {
-    try {
-      processedData = JSON.parse(data);
-    } catch (e) {
-      console.error("Erro ao converter string para objeto:", e);
-      return (
-        <p className="text-gray-500 italic">
-          Erro ao processar dados. Clique em Editar para preencher novamente.
-        </p>
-      );
-    }
-  }
+  // Normalizar dados para garantir consistência
+  const processedData = normalizeBusinessGoals(data);
 
   // Se mesmo após processamento os dados estiverem vazios
   if (!processedData || (typeof processedData === 'object' && Object.keys(processedData).length === 0)) {

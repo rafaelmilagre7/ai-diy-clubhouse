@@ -1,5 +1,6 @@
 
 import { OnboardingData, OnboardingProgress } from "@/types/onboarding";
+import { normalizeBusinessGoals } from "../utils/dataNormalization";
 
 export function buildBusinessGoalsUpdate(data: Partial<OnboardingData>, progress: OnboardingProgress | null) {
   // Log para debug dos dados recebidos
@@ -11,35 +12,13 @@ export function buildBusinessGoalsUpdate(data: Partial<OnboardingData>, progress
   // Verificar se temos um objeto business_goals nos dados
   if (data.business_goals) {
     // Trabalhar com uma cópia para não modificar os dados originais
-    const businessGoalsData = { ...(data.business_goals) };
+    let businessGoalsData = { ...(data.business_goals) };
     
-    // Garantir que content_formats seja sempre um array
-    if (businessGoalsData.content_formats && !Array.isArray(businessGoalsData.content_formats)) {
-      businessGoalsData.content_formats = [businessGoalsData.content_formats];
-    }
-    
-    // Garantir sincronização entre expected_outcome_30days e expected_outcomes
-    if (businessGoalsData.expected_outcome_30days && !businessGoalsData.expected_outcomes) {
-      businessGoalsData.expected_outcomes = [businessGoalsData.expected_outcome_30days];
-    } else if (
-      businessGoalsData.expected_outcomes &&
-      Array.isArray(businessGoalsData.expected_outcomes) &&
-      businessGoalsData.expected_outcomes.length > 0 &&
-      !businessGoalsData.expected_outcome_30days
-    ) {
-      businessGoalsData.expected_outcome_30days = businessGoalsData.expected_outcomes[0];
-    }
-    
-    // Normalizar valores numéricos
-    if (businessGoalsData.live_interest !== undefined) {
-      businessGoalsData.live_interest = Number(businessGoalsData.live_interest);
-      if (isNaN(businessGoalsData.live_interest)) {
-        businessGoalsData.live_interest = 5; // Valor padrão se for inválido
-      }
-    }
+    // Usar a função de normalização para garantir consistência
+    businessGoalsData = normalizeBusinessGoals(businessGoalsData);
     
     // Log para debug
-    console.log("Dados de business_goals processados:", businessGoalsData);
+    console.log("Dados de business_goals normalizados:", businessGoalsData);
     
     // Criar objeto final
     updateObj.business_goals = {
@@ -69,25 +48,11 @@ export function buildBusinessGoalsUpdate(data: Partial<OnboardingData>, progress
 
     // Se tivermos campos para atualizar, criar o objeto de business_goals
     if (Object.keys(filteredFields).length > 0) {
-      // Processe campos específicos
-      if (filteredFields.content_formats && !Array.isArray(filteredFields.content_formats)) {
-        filteredFields.content_formats = [filteredFields.content_formats];
-      }
-
-      if (filteredFields.live_interest !== undefined) {
-        filteredFields.live_interest = Number(filteredFields.live_interest);
-        if (isNaN(filteredFields.live_interest)) {
-          filteredFields.live_interest = 5;
-        }
-      }
-
-      // Sincronizar expected_outcome_30days e expected_outcomes
-      if (filteredFields.expected_outcome_30days && !filteredFields.expected_outcomes) {
-        filteredFields.expected_outcomes = [filteredFields.expected_outcome_30days];
-      }
-
+      // Normalizar os campos específicos
+      const normalizedFields = normalizeBusinessGoals(filteredFields);
+      
       updateObj.business_goals = {
-        ...filteredFields,
+        ...normalizedFields,
         _last_updated: new Date().toISOString()
       };
     }
@@ -95,17 +60,7 @@ export function buildBusinessGoalsUpdate(data: Partial<OnboardingData>, progress
 
   // Processar o objeto progress.business_goals existente, se necessário
   if (progress?.business_goals) {
-    let existingBusinessGoals = progress.business_goals;
-    
-    // Converter de string para objeto, se necessário
-    if (typeof existingBusinessGoals === 'string' && existingBusinessGoals !== '{}' && existingBusinessGoals !== '') {
-      try {
-        existingBusinessGoals = JSON.parse(existingBusinessGoals);
-      } catch (e) {
-        console.error("Erro ao analisar business_goals:", e);
-        existingBusinessGoals = {};
-      }
-    }
+    let existingBusinessGoals = normalizeBusinessGoals(progress.business_goals);
     
     // Garantir que é um objeto
     if (existingBusinessGoals && typeof existingBusinessGoals === 'object' && Object.keys(existingBusinessGoals).length > 0) {
