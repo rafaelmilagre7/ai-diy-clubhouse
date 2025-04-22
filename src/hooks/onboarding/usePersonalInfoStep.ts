@@ -19,6 +19,7 @@ export const usePersonalInfoStep = () => {
     country: "Brasil",
     state: "",
     city: "",
+    timezone: "GMT-3", // Valor padrão para timezone
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -28,6 +29,8 @@ export const usePersonalInfoStep = () => {
       setFormData({
         ...formData,
         ...progress.personal_info,
+        // Garantir que timezone tenha um valor padrão se não estiver definido
+        timezone: progress.personal_info.timezone || "GMT-3"
       });
     }
   }, [progress?.personal_info]);
