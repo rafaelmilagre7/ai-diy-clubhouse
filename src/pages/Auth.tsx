@@ -6,18 +6,15 @@ import { useAuth } from "@/contexts/auth";
 import { toast } from "sonner";
 
 const Auth = () => {
-  const { user, profile, isAdmin, isLoading } = useAuth();
+  const { user, profile, isAdmin } = useAuth();
   const navigate = useNavigate();
 
-  // Redirect if user is already authenticated
   useEffect(() => {
     if (user) {
-      // Show feedback toast
       toast("Autenticado", {
         description: "Redirecionando para o dashboard...",
       });
       
-      // Redirect based on role
       if (profile?.role === 'admin' || isAdmin) {
         navigate('/admin', { replace: true });
       } else {
