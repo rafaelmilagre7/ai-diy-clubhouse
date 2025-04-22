@@ -3,6 +3,7 @@ import { usePersonalInfoFormState } from "./usePersonalInfoFormState";
 import { usePersonalInfoFormSubmit } from "./usePersonalInfoFormSubmit";
 import { useLogging } from "@/hooks/useLogging";
 import { useProgress } from "./useProgress";
+import { toast } from "sonner";
 
 export const usePersonalInfoStep = () => {
   const {
@@ -37,14 +38,32 @@ export const usePersonalInfoStep = () => {
 
   // Composição: handleSubmit orquestra as dependências conforme esperado pela nova função
   const handleSubmit = async () => {
-    return submit({
-      progress,
-      user,
-      formData,
-      setValidationAttempted,
-      setErrors,
-      setIsSubmitting,
-    });
+    console.log("handleSubmit chamado no usePersonalInfoStep");
+    
+    if (isSubmitting) {
+      console.log("Já está em processo de submissão, ignorando");
+      return false;
+    }
+    
+    try {
+      toast.info("Processando formulário...");
+      const success = await submit({
+        progress,
+        user,
+        formData,
+        setValidationAttempted,
+        setErrors,
+        setIsSubmitting,
+        logError,
+        refreshProgress
+      });
+      
+      return success;
+    } catch (error) {
+      console.error("Erro ao processar formulário:", error);
+      toast.error("Erro ao salvar dados. Por favor, tente novamente.");
+      return false;
+    }
   };
 
   return {

@@ -7,6 +7,7 @@ import { markStepAsCompleted } from "./persistence/services/progressService";
 import { useProgress } from "./useProgress";
 import { useLogging } from "@/hooks/useLogging";
 import { PersonalInfoData } from "@/types/onboarding";
+import { useNavigate } from "react-router-dom";
 
 type SubmitParams = {
   progress: any,
@@ -26,15 +27,20 @@ export const usePersonalInfoFormSubmit = () => {
   const [lastSaveTime, setLastSaveTime] = useState<number | null>(null);
   const { refreshProgress } = useProgress();
   const { logError } = useLogging();
+  const navigate = useNavigate();
 
   // Log para diagnóstico
   console.log("[DEBUG] usePersonalInfoFormSubmit estados:", { isSubmitting, isSaving });
 
   const handleSubmit = async ({
-    progress, user, formData, setValidationAttempted, setErrors
-  }: Omit<SubmitParams, "logError" | "refreshProgress" | "setIsSubmitting"> & { setIsSubmitting?: (v: boolean) => void }) => {
-    if (isSubmitting) return false;
+    progress, user, formData, setValidationAttempted, setErrors, logError, refreshProgress
+  }: Omit<SubmitParams, "setIsSubmitting"> & { setIsSubmitting?: (v: boolean) => void }) => {
+    if (isSubmitting) {
+      console.log("Já está submetendo, ignorando chamada duplicada");
+      return false;
+    }
 
+    console.log("Iniciando processo de submissão do formulário");
     setValidationAttempted(true);
     const validationErrors = validatePersonalInfoForm(formData);
 
@@ -58,6 +64,8 @@ export const usePersonalInfoFormSubmit = () => {
         throw new Error("Dados de progresso ou usuário não disponíveis");
       }
 
+      console.log("Salvando dados pessoais para progresso:", progress.id);
+      
       // 1. Salvar dados na tabela dedicada
       const saveResult = await savePersonalInfoData(
         progress.id,
@@ -91,6 +99,12 @@ export const usePersonalInfoFormSubmit = () => {
       toast.success("Dados pessoais salvos com sucesso!", {
         description: "Avançando para a próxima etapa..."
       });
+      
+      // 4. Navegação para a próxima etapa após sucesso
+      console.log("Navegando para a próxima etapa: /onboarding/professional-data");
+      setTimeout(() => {
+        navigate("/onboarding/professional-data", { replace: true });
+      }, 500);
 
       return true;
     } catch (error) {

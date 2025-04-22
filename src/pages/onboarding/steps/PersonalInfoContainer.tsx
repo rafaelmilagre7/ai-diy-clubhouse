@@ -1,5 +1,6 @@
 
 import React, { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { usePersonalInfoStep } from "@/hooks/onboarding/usePersonalInfoStep";
 import { usePersonalInfoLoad } from "@/hooks/onboarding/usePersonalInfoLoad";
 import { useStepDefinitions } from "@/hooks/onboarding/useStepDefinitions";
@@ -11,8 +12,11 @@ import { PersonalInfoErrorSection } from "./PersonalInfoErrorSection";
 import { PersonalInfoForceSection } from "./PersonalInfoForceSection";
 import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
 import { PersonalInfoStep } from "@/components/onboarding/steps/PersonalInfoStep";
+import { toast } from "sonner";
 
 export const PersonalInfoContainer: React.FC = () => {
+  const navigate = useNavigate();
+  
   const {
     formData,
     errors,
@@ -59,12 +63,28 @@ export const PersonalInfoContainer: React.FC = () => {
   }, [progressLoading, loadingAttempts]);
 
   const handleSuccess = async () => {
+    console.log("handleSuccess chamado no PersonalInfoContainer");
     if (progress?.completed_steps?.includes("personal")) {
+      console.log("Etapa já concluída, indo para próxima etapa");
       goToNextStep();
       return;
     }
-    const success = await handleSubmit();
-    if (success) goToNextStep();
+    
+    console.log("Tentando submeter formulário");
+    try {
+      const success = await handleSubmit();
+      console.log("Resultado da submissão:", success);
+      
+      if (success) {
+        console.log("Submissão bem-sucedida, navegando para próxima etapa");
+        setTimeout(() => {
+          navigate("/onboarding/professional-data");
+        }, 800);
+      }
+    } catch (error) {
+      console.error("Erro ao processar submissão:", error);
+      toast.error("Erro ao processar dados. Por favor, tente novamente.");
+    }
   };
 
   const handleStepClick = (stepIdx: number) => navigateToStep(stepIdx);

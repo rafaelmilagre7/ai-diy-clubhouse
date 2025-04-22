@@ -29,18 +29,20 @@ export const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
   // Adicionar log para depuração
   console.log("[DEBUG] PersonalInfoStep props:", { isSubmitting, readOnly });
 
+  const handleFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    console.log("Form submit no PersonalInfoStep");
+    onSubmit();
+  };
+
   return (
-    <form onSubmit={e => {
-      e.preventDefault();
-      onSubmit();
-    }} className="space-y-6">
+    <form onSubmit={handleFormSubmit} className="space-y-6">
       <PersonalInfoForm
         formData={formData}
         errors={errors}
         onChange={onChange}
         readOnly={readOnly}
         isSubmitting={isSubmitting}
-        onSubmit={onSubmit}
       />
       
       {isSaving !== undefined && lastSaveTime !== undefined && (
