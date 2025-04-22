@@ -1,9 +1,13 @@
+
 import { useState, useEffect, useCallback } from "react";
 import { useProgress } from "./useProgress";
 import { toast } from "sonner";
 import { PersonalInfoData } from "@/types/onboarding";
 import { validatePersonalInfoForm } from "@/utils/validatePersonalInfoForm";
 import { useAuth } from "@/contexts/auth";
+import { savePersonalInfoData } from "./persistence/services/personalInfoService";
+import { markStepAsCompleted } from "./persistence/services/progressService";
+import { useLogging } from "@/hooks/useLogging";
 
 export const usePersonalInfoStep = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -11,6 +15,8 @@ export const usePersonalInfoStep = () => {
   const [lastSaveTime, setLastSaveTime] = useState<number | null>(null);
   const { progress, updateProgress, refreshProgress } = useProgress();
   const { user, profile } = useAuth();
+  const { logError } = useLogging();
+  
   const [formData, setFormData] = useState<PersonalInfoData>({
     name: "",
     email: "",
@@ -23,6 +29,7 @@ export const usePersonalInfoStep = () => {
     city: "",
     timezone: "GMT-3",
   });
+  
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [validationAttempted, setValidationAttempted] = useState(false);
   const [initialDataLoaded, setInitialDataLoaded] = useState(false);
@@ -131,34 +138,37 @@ export const usePersonalInfoStep = () => {
 
     setIsSubmitting(true);
     try {
-      // Formatação do DDI antes de salvar
-      const dataToSubmit = {
-        ...formData,
-      };
-      
-      // Garantir que o DDI está formatado corretamente
-      if (dataToSubmit.ddi) {
-        dataToSubmit.ddi = "+" + dataToSubmit.ddi.replace(/\+/g, '').replace(/\D/g, '');
+      if (!progress?.id || !user?.id) {
+        throw new Error("Dados de progresso ou usuário não disponíveis");
       }
       
-      console.log("[DEBUG] Submetendo dados formatados:", dataToSubmit);
+      // 1. Salvar dados na tabela dedicada
+      const saveResult = await savePersonalInfoData(
+        progress.id, 
+        user.id, 
+        formData,
+        logError
+      );
       
-      // Garantir que temos um progresso.completed_steps válido
-      const currentCompletedSteps = Array.isArray(progress?.completed_steps) 
-        ? progress.completed_steps 
-        : [];
-        
-      // Verificar se "personal" já existe nos completed_steps
-      const newCompletedSteps = currentCompletedSteps.includes("personal")
-        ? currentCompletedSteps
-        : [...currentCompletedSteps, "personal"];
+      if (!saveResult.success) {
+        throw new Error("Falha ao salvar dados pessoais");
+      }
       
-      await updateProgress({
-        personal_info: dataToSubmit,
-        current_step: "professional_data",
-        completed_steps: newCompletedSteps,
-      });
+      // 2. Marcar etapa como concluída e atualizar progresso
+      const updateResult = await markStepAsCompleted(
+        progress.id,
+        "personal",
+        "professional_data",
+        logError
+      );
+      
+      if (!updateResult.success) {
+        console.warn("Aviso: Dados salvos, mas falha ao atualizar status do progresso");
+      }
 
+      // 3. Atualizar dados locais
+      await refreshProgress();
+      
       // Única notificação de sucesso com informação combinada
       toast.success("Dados pessoais salvos com sucesso!", {
         description: "Avançando para a próxima etapa..."
@@ -167,6 +177,9 @@ export const usePersonalInfoStep = () => {
       return true;
     } catch (error) {
       console.error("[ERRO] Erro ao salvar dados:", error);
+      logError("personal_info_submit_error", {
+        error: error instanceof Error ? error.message : String(error)
+      });
       toast.error("Erro ao salvar dados. Tente novamente.");
       return false;
     } finally {

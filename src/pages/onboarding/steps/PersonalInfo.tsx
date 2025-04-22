@@ -94,13 +94,19 @@ const PersonalInfo = () => {
   // Se houver um erro de carregamento ou erro no último progresso
   const hasError = loadError || lastError;
 
+  // Encontrar o índice correto do passo de dados pessoais
+  const personalStepIndex = 0; // Primeira etapa
+  const progressPercentage = Math.round(((personalStepIndex + 1) / 7) * 100); // 7 etapas no total
+
   if (progressLoading && !showForceButton) {
     console.log("[DEBUG] Exibindo spinner de carregamento");
     return (
       <OnboardingLayout 
         currentStep={1} 
+        totalSteps={7}
         title="Dados Pessoais" 
         backUrl="/"
+        progress={progressPercentage}
       >
         <div className="flex justify-center items-center py-20">
           <LoadingSpinner size={10} />
@@ -114,9 +120,11 @@ const PersonalInfo = () => {
   if (hasError) {
     return (
       <OnboardingLayout 
-        currentStep={1} 
+        currentStep={1}
+        totalSteps={7}
         title="Dados Pessoais" 
         backUrl="/"
+        progress={progressPercentage}
       >
         <div className="space-y-6">
           <Alert variant="destructive" className="bg-red-50 border-red-200">
@@ -143,9 +151,11 @@ const PersonalInfo = () => {
   if (showForceButton) {
     return (
       <OnboardingLayout 
-        currentStep={1} 
+        currentStep={1}
+        totalSteps={7}
         title="Dados Pessoais" 
         backUrl="/"
+        progress={progressPercentage}
       >
         <div className="space-y-6">
           <Alert className="bg-yellow-50 border-yellow-200">
@@ -180,9 +190,11 @@ const PersonalInfo = () => {
 
   return (
     <OnboardingLayout 
-      currentStep={1} 
+      currentStep={1}
+      totalSteps={7}
       title="Dados Pessoais" 
       backUrl="/"
+      progress={progressPercentage}
     >
       <PersonalInfoStep
         onSubmit={handleSuccess}

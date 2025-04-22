@@ -228,6 +228,171 @@ export type Database = {
           },
         ]
       }
+      onboarding_ai_experience: {
+        Row: {
+          completed_formation: boolean | null
+          created_at: string | null
+          desired_ai_areas: string[] | null
+          has_implemented: string | null
+          id: string
+          improvement_suggestions: string | null
+          is_member_for_month: boolean | null
+          knowledge_level: string | null
+          nps_score: number | null
+          previous_tools: string[] | null
+          progress_id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          completed_formation?: boolean | null
+          created_at?: string | null
+          desired_ai_areas?: string[] | null
+          has_implemented?: string | null
+          id?: string
+          improvement_suggestions?: string | null
+          is_member_for_month?: boolean | null
+          knowledge_level?: string | null
+          nps_score?: number | null
+          previous_tools?: string[] | null
+          progress_id: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          completed_formation?: boolean | null
+          created_at?: string | null
+          desired_ai_areas?: string[] | null
+          has_implemented?: string | null
+          id?: string
+          improvement_suggestions?: string | null
+          is_member_for_month?: boolean | null
+          knowledge_level?: string | null
+          nps_score?: number | null
+          previous_tools?: string[] | null
+          progress_id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "onboarding_ai_experience_progress_id_fkey"
+            columns: ["progress_id"]
+            isOneToOne: false
+            referencedRelation: "onboarding_progress"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      onboarding_business_context: {
+        Row: {
+          additional_context: string | null
+          business_challenges: string[] | null
+          business_model: string | null
+          created_at: string | null
+          id: string
+          important_kpis: string[] | null
+          medium_term_goals: string[] | null
+          progress_id: string
+          short_term_goals: string[] | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          additional_context?: string | null
+          business_challenges?: string[] | null
+          business_model?: string | null
+          created_at?: string | null
+          id?: string
+          important_kpis?: string[] | null
+          medium_term_goals?: string[] | null
+          progress_id: string
+          short_term_goals?: string[] | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          additional_context?: string | null
+          business_challenges?: string[] | null
+          business_model?: string | null
+          created_at?: string | null
+          id?: string
+          important_kpis?: string[] | null
+          medium_term_goals?: string[] | null
+          progress_id?: string
+          short_term_goals?: string[] | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "onboarding_business_context_progress_id_fkey"
+            columns: ["progress_id"]
+            isOneToOne: false
+            referencedRelation: "onboarding_progress"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      onboarding_business_goals: {
+        Row: {
+          content_formats: string[] | null
+          created_at: string | null
+          expected_outcome_30days: string | null
+          expected_outcomes: string[] | null
+          how_implement: string | null
+          id: string
+          live_interest: number | null
+          primary_goal: string | null
+          priority_solution_type: string | null
+          progress_id: string
+          timeline: string | null
+          updated_at: string | null
+          user_id: string
+          week_availability: string | null
+        }
+        Insert: {
+          content_formats?: string[] | null
+          created_at?: string | null
+          expected_outcome_30days?: string | null
+          expected_outcomes?: string[] | null
+          how_implement?: string | null
+          id?: string
+          live_interest?: number | null
+          primary_goal?: string | null
+          priority_solution_type?: string | null
+          progress_id: string
+          timeline?: string | null
+          updated_at?: string | null
+          user_id: string
+          week_availability?: string | null
+        }
+        Update: {
+          content_formats?: string[] | null
+          created_at?: string | null
+          expected_outcome_30days?: string | null
+          expected_outcomes?: string[] | null
+          how_implement?: string | null
+          id?: string
+          live_interest?: number | null
+          primary_goal?: string | null
+          priority_solution_type?: string | null
+          progress_id?: string
+          timeline?: string | null
+          updated_at?: string | null
+          user_id?: string
+          week_availability?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "onboarding_business_goals_progress_id_fkey"
+            columns: ["progress_id"]
+            isOneToOne: false
+            referencedRelation: "onboarding_progress"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       onboarding_chat_messages: {
         Row: {
           created_at: string | null
@@ -291,6 +456,56 @@ export type Database = {
         }
         Relationships: []
       }
+      onboarding_experience_personalization: {
+        Row: {
+          available_days: string[] | null
+          created_at: string | null
+          id: string
+          interests: string[] | null
+          mentorship_topics: string[] | null
+          networking_availability: number | null
+          progress_id: string
+          skills_to_share: string[] | null
+          time_preference: string[] | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          available_days?: string[] | null
+          created_at?: string | null
+          id?: string
+          interests?: string[] | null
+          mentorship_topics?: string[] | null
+          networking_availability?: number | null
+          progress_id: string
+          skills_to_share?: string[] | null
+          time_preference?: string[] | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          available_days?: string[] | null
+          created_at?: string | null
+          id?: string
+          interests?: string[] | null
+          mentorship_topics?: string[] | null
+          networking_availability?: number | null
+          progress_id?: string
+          skills_to_share?: string[] | null
+          time_preference?: string[] | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "onboarding_experience_personalization_progress_id_fkey"
+            columns: ["progress_id"]
+            isOneToOne: false
+            referencedRelation: "onboarding_progress"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       onboarding_history: {
         Row: {
           created_at: string | null
@@ -320,6 +535,68 @@ export type Database = {
           {
             foreignKeyName: "onboarding_history_onboarding_id_fkey"
             columns: ["onboarding_id"]
+            isOneToOne: false
+            referencedRelation: "onboarding_progress"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      onboarding_personal_info: {
+        Row: {
+          city: string | null
+          country: string | null
+          created_at: string | null
+          ddi: string | null
+          email: string | null
+          id: string
+          instagram: string | null
+          linkedin: string | null
+          name: string | null
+          phone: string | null
+          progress_id: string
+          state: string | null
+          timezone: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          city?: string | null
+          country?: string | null
+          created_at?: string | null
+          ddi?: string | null
+          email?: string | null
+          id?: string
+          instagram?: string | null
+          linkedin?: string | null
+          name?: string | null
+          phone?: string | null
+          progress_id: string
+          state?: string | null
+          timezone?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          city?: string | null
+          country?: string | null
+          created_at?: string | null
+          ddi?: string | null
+          email?: string | null
+          id?: string
+          instagram?: string | null
+          linkedin?: string | null
+          name?: string | null
+          phone?: string | null
+          progress_id?: string
+          state?: string | null
+          timezone?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "onboarding_personal_info_progress_id_fkey"
+            columns: ["progress_id"]
             isOneToOne: false
             referencedRelation: "onboarding_progress"
             referencedColumns: ["id"]

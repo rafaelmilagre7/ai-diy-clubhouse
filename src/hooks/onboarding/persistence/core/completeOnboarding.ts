@@ -2,6 +2,7 @@
 import { steps } from "../../useStepDefinitions";
 import { toast } from "sonner";
 import { useLogging } from "@/hooks/useLogging";
+import { updateOnboardingProgressStatus } from "../services/progressService";
 
 /**
  * Retorna função para finalizar onboarding
@@ -23,14 +24,20 @@ export const createCompleteOnboarding = ({
       return;
     }
     try {
-      const result = await updateProgress({
-        is_completed: true,
-        completed_steps: steps.map(s => s.id),
-      });
+      // Usar o novo serviço de atualização de status
+      const result = await updateOnboardingProgressStatus(
+        progress.id,
+        {
+          is_completed: true,
+          completed_steps: steps.map(s => s.id)
+        },
+        logError
+      );
 
-      if ((result as any)?.error) {
-        throw new Error((result as any).error.message || "Erro ao completar onboarding");
+      if (!result.success) {
+        throw new Error("Erro ao completar onboarding");
       }
+      
       await refreshProgress();
       toast.success("Onboarding concluído com sucesso!");
       setTimeout(() => {
