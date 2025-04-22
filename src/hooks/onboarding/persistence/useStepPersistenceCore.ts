@@ -75,15 +75,30 @@ export function useStepPersistenceCore({
       console.log("Dados a serem enviados para o banco:", updateObj);
 
       // Atualizar no Supabase
-      const updatedProgress = await updateProgress(updateObj);
-      console.log("Dados atualizados com sucesso no banco:", updatedProgress);
+      const { data: updatedData, error } = await updateProgress(updateObj);
 
-      // Forçar atualização dos dados local após salvar
-      await refreshProgress();
-      console.log("Dados locais atualizados após salvar");
+      if (error) {
+        console.error("Erro ao atualizar dados:", error);
+        logError("save_step_data_error", { 
+          step: stepId, 
+          error: error.message || JSON.stringify(error),
+          stepIndex: currentStepIndex
+        });
+        toast.error("Erro ao salvar dados. Por favor, tente novamente.");
+        throw error;
+      }
+
+      // Mesmo se data for null (devido a alguma falha na conversão), vamos atualizar o estado
+      // com as atualizações enviadas para manter consistência na UI
+      const updatedProgress = updatedData || { ...progress, ...updateObj };
+      console.log("Progresso atualizado com sucesso:", updatedProgress);
       
       // Notificar usuário do salvamento
       toast.success("Dados salvos com sucesso!");
+      
+      // Forçar atualização dos dados local após salvar
+      await refreshProgress();
+      console.log("Dados locais atualizados após salvar");
       
       // Garantir navegação adequada para próxima etapa
       if (shouldNavigate) {
@@ -92,7 +107,7 @@ export function useStepPersistenceCore({
       } else {
         console.log("Navegação automática desativada, permanecendo na página atual");
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erro ao salvar dados:", error);
       logError("save_step_data_error", { 
         step: stepId, 
@@ -130,7 +145,7 @@ export function useStepPersistenceCore({
       
       // Redirecionamento após delay para garantir atualização do estado
       setTimeout(() => {
-        navigate("/implementation-trail");
+        window.location.href = "/implementation-trail";
       }, 1000);
     } catch (error) {
       console.error("Erro ao completar onboarding:", error);
@@ -141,7 +156,7 @@ export function useStepPersistenceCore({
       
       // Fallback para dashboard em caso de erro
       setTimeout(() => {
-        navigate("/dashboard");
+        window.location.href = "/dashboard";
       }, 1500);
     }
   };

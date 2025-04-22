@@ -34,21 +34,11 @@ export function buildProfessionalDataUpdate(data: ProfessionalDataInput, progres
     );
   }
   
-  // Adicionar metadados semânticos para facilitar interpretação por IA
-  const semanticMetadata = {
-    data_type: "professional_data",
-    data_context: "business_profile",
-    data_version: "1.0",
-    timestamp: new Date().toISOString()
-  };
-  
-  // Criar uma versão atualizada de professional_info com metadados, se necessário
+  // Criar uma versão atualizada de professional_info com os dados, se necessário
   if (processedData.professional_info) {
     // Criar cópia para não modificar diretamente o objeto original
     processedData.professional_info = {
-      ...processedData.professional_info,
-      // Adicionar metadados como uma propriedade separada para evitar problemas de tipagem
-      metadata: semanticMetadata
+      ...processedData.professional_info
     };
   }
   
@@ -57,7 +47,6 @@ export function buildProfessionalDataUpdate(data: ProfessionalDataInput, progres
   
   // Usar o builder base para construir o objeto de atualização com os dados processados
   return buildBaseUpdate("professional_info", processedData, progress, {
-    topLevelFields,
-    metadata: semanticMetadata
+    topLevelFields
   });
 }

@@ -1,3 +1,4 @@
+
 import { supabase } from "@/lib/supabase";
 import { OnboardingProgress } from "@/types/onboarding";
 
@@ -47,34 +48,6 @@ const normalizeOnboardingData = (data: Partial<OnboardingProgress>) => {
     } else if (value === null) {
       // Inicializar como objeto vazio se for null
       (normalizedData as any)[field] = {};
-    }
-  });
-  
-  // Adicionar metadados para interpretação por IA se não existirem
-  objectFields.forEach(field => {
-    if (normalizedData[field as keyof typeof normalizedData] && 
-        typeof normalizedData[field as keyof typeof normalizedData] === 'object') {
-      const obj = normalizedData[field as keyof typeof normalizedData] as any;
-      
-      if (!obj._metadata) {
-        // Adicionar metadados básicos
-        obj._metadata = {
-          data_type: field,
-          timestamp: new Date().toISOString(),
-          data_version: "1.0"
-        };
-        
-        // Adicionar context específico com base no tipo de dado
-        if (field === 'personal_info') {
-          obj._metadata.data_context = "personal_identity";
-        } else if (field === 'professional_info') {
-          obj._metadata.data_context = "business_profile";
-        } else if (field === 'business_context' || field === 'business_data') {
-          obj._metadata.data_context = "business_operations";
-        } else if (field === 'ai_experience') {
-          obj._metadata.data_context = "technology_experience";
-        }
-      }
     }
   });
   
@@ -256,11 +229,27 @@ export const updateOnboardingProgress = async (progressId: string, updates: Part
   // Normalizar dados antes de salvar
   const normalizedUpdates = normalizeOnboardingData(updates);
   
-  console.log("Atualizando progresso normalizado:", normalizedUpdates);
+  // Remover campos que não existem na tabela
+  const cleanedUpdates = { ...normalizedUpdates };
+  
+  // Remover campos _metadata se existirem - causador do erro
+  if ('_metadata' in cleanedUpdates) delete cleanedUpdates._metadata;
+  
+  // Verificar campos aninhados com _metadata e removê-los
+  Object.keys(cleanedUpdates).forEach(key => {
+    if (typeof cleanedUpdates[key as keyof typeof cleanedUpdates] === 'object' && 
+        cleanedUpdates[key as keyof typeof cleanedUpdates] !== null) {
+      const objField = cleanedUpdates[key as keyof typeof cleanedUpdates] as any;
+      if ('_metadata' in objField) delete objField._metadata;
+      if ('_last_updated' in objField) delete objField._last_updated;
+    }
+  });
+  
+  console.log("Atualizando progresso normalizado:", cleanedUpdates);
   
   const { data: rawData, error } = await supabase
     .from("onboarding_progress")
-    .update(normalizedUpdates)
+    .update(cleanedUpdates)
     .eq("id", progressId)
     .select()
     .single();

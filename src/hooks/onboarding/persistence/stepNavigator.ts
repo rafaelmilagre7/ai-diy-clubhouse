@@ -30,9 +30,9 @@ export function navigateAfterStep(
   if (nextRouteMap[stepId]) {
     const nextRoute = nextRouteMap[stepId];
     console.log(`Navegando para ${nextRoute} (via mapeamento direto)`);
-    setTimeout(() => {
-      navigate(nextRoute);
-    }, 500);
+    
+    // Usar window.location.href para forçar navegação completa em caso de problemas com o router
+    window.location.href = nextRoute;
     return;
   }
   
@@ -41,15 +41,14 @@ export function navigateAfterStep(
     if (currentStepIndex < steps.length - 1) {
       const nextStep = steps[currentStepIndex + 1];
       console.log(`Navegando para ${nextStep.path} (próximo passo na sequência)`);
-      setTimeout(() => {
-        navigate(nextStep.path);
-      }, 500);
+      
+      // Usar window.location.href para forçar navegação completa
+      window.location.href = nextStep.path;
     } else {
       // Se estamos na última etapa, navegar para a revisão
       console.log('Navegando para /onboarding/review (última etapa)');
-      setTimeout(() => {
-        navigate('/onboarding/review');
-      }, 500);
+      
+      window.location.href = '/onboarding/review';
     }
     return;
   }
