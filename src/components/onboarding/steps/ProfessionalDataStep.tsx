@@ -8,7 +8,7 @@ import { WebsiteField } from "./professional-inputs/WebsiteField";
 import { CurrentPositionField } from "./professional-inputs/CurrentPositionField";
 import { AnnualRevenueField } from "./professional-inputs/AnnualRevenueField";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, AlertCircle, Building2 } from "lucide-react";
+import { ArrowRight, AlertCircle, Building2, Loader2 } from "lucide-react";
 import { OnboardingStepProps } from "@/types/onboarding";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -30,6 +30,7 @@ export const ProfessionalDataStep: React.FC<ProfessionalDataStepProps> = ({
 }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
+  const [formInitialized, setFormInitialized] = useState(false);
   
   console.log("ProfessionalDataStep - initialData recebido:", initialData);
   
@@ -58,12 +59,12 @@ export const ProfessionalDataStep: React.FC<ProfessionalDataStepProps> = ({
   // Inicializar formulário com métodos do react-hook-form
   const methods = useForm({
     defaultValues: {
-      company_name: getInitialValue('company_name'),
-      company_size: getInitialValue('company_size'),
-      company_sector: getInitialValue('company_sector'),
-      company_website: getInitialValue('company_website'),
-      current_position: getInitialValue('current_position'),
-      annual_revenue: getInitialValue('annual_revenue')
+      company_name: "",
+      company_size: "",
+      company_sector: "",
+      company_website: "",
+      current_position: "",
+      annual_revenue: ""
     },
     mode: "onChange"
   });
@@ -82,6 +83,8 @@ export const ProfessionalDataStep: React.FC<ProfessionalDataStepProps> = ({
         current_position: getInitialValue('current_position'),
         annual_revenue: getInitialValue('annual_revenue')
       });
+      
+      setFormInitialized(true);
     }
   }, [initialData]);
 
@@ -129,6 +132,15 @@ export const ProfessionalDataStep: React.FC<ProfessionalDataStepProps> = ({
       setIsLoading(false);
     }
   };
+
+  if (!formInitialized && !initialData) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-[#0ABAB5]" />
+        <span className="ml-2 text-gray-300">Carregando seus dados...</span>
+      </div>
+    );
+  }
 
   return (
     <FormProvider {...methods}>

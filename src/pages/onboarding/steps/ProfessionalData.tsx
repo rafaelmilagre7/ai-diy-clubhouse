@@ -9,16 +9,29 @@ import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { navigateAfterStep } from "@/hooks/onboarding/persistence/stepNavigator";
 import { ProfessionalDataInput } from "@/types/onboarding";
+import { Loader2 } from "lucide-react";
 
 const ProfessionalData = () => {
   const { progress, isLoading, refreshProgress } = useProgress();
   const { saveStepData } = useOnboardingSteps();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [dataFetched, setDataFetched] = useState(false);
   const navigate = useNavigate();
   
   useEffect(() => {
     console.log("ProfessionalData montado - carregando dados mais recentes");
-    refreshProgress();
+    
+    const loadData = async () => {
+      try {
+        await refreshProgress();
+        setDataFetched(true);
+      } catch (error) {
+        console.error("Erro ao carregar dados:", error);
+        toast.error("Falha ao carregar seus dados. Tente novamente.");
+      }
+    };
+    
+    loadData();
   }, [refreshProgress]);
 
   const handleSubmit = async (stepId: string, data: ProfessionalDataInput) => {
@@ -29,6 +42,7 @@ const ProfessionalData = () => {
       // Validar campos obrigatórios
       if (!data.company_name || !data.company_size || !data.company_sector || !data.current_position || !data.annual_revenue) {
         toast.error("Por favor, preencha todos os campos obrigatórios");
+        setIsSubmitting(false);
         return;
       }
       
@@ -57,9 +71,11 @@ const ProfessionalData = () => {
         <MilagrinhoMessage
           message="Agora vamos conhecer um pouco sobre sua empresa e seu papel profissional. Estas informações nos ajudarão a personalizar as soluções que mais se adaptam ao seu contexto de negócio."
         />
-        {isLoading ? (
-          <div className="flex justify-center py-10">
-            <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-[#0ABAB5]"></div>
+        
+        {isLoading && !dataFetched ? (
+          <div className="flex flex-col items-center justify-center py-12">
+            <Loader2 className="h-10 w-10 animate-spin text-[#0ABAB5] mb-4" />
+            <p className="text-gray-400">Carregando seus dados...</p>
           </div>
         ) : (
           <ProfessionalDataStep

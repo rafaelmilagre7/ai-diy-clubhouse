@@ -30,7 +30,8 @@ export async function saveProfessionalData(
     company_sector: profData.company_sector || null,
     company_website: profData.company_website ? normalizeWebsite(profData.company_website) : null,
     current_position: profData.current_position || null,
-    annual_revenue: profData.annual_revenue || null
+    annual_revenue: profData.annual_revenue || null,
+    updated_at: new Date().toISOString()
   };
   
   // Verificar se já existe um registro
