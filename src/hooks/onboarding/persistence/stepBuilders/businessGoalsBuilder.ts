@@ -130,6 +130,16 @@ export function buildBusinessGoalsUpdate(
     }
   }
   
+  // Verificar se o objeto final contém todos os campos obrigatórios
+  const requiredFields = ['primary_goal', 'priority_solution_type', 'how_implement', 'week_availability'];
+  const missingRequiredFields = requiredFields.filter(field => !updateObj.business_goals[field]);
+  
+  if (missingRequiredFields.length > 0) {
+    console.warn(`Campos obrigatórios ausentes no objeto final: ${missingRequiredFields.join(', ')}`);
+  } else {
+    console.log("Todos os campos obrigatórios estão presentes no objeto final");
+  }
+  
   // Verificar se o objeto final contém dados
   const isEmpty = !updateObj.business_goals || Object.keys(updateObj.business_goals).length === 0;
   console.log("Objeto business_goals está vazio após processamento?", isEmpty);

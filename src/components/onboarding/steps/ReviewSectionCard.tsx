@@ -16,11 +16,42 @@ import { getComplementaryInfoSummary } from "./review-sections/complementaryInfo
 const getSummaryComponent = (section: string, data: any, progress: any) => {
   console.log(`Renderizando summary para seção ${section} com dados:`, data);
   
-  if (!data || Object.keys(data).length === 0) {
-    console.warn(`Dados vazios para seção ${section}`);
+  // Verificações iniciais de sanidade dos dados
+  if (!data) {
+    console.warn(`Dados NULOS para seção ${section}`);
     return <p className="text-gray-500 italic">Seção não preenchida. Clique em Editar para preencher.</p>;
   }
   
+  // Verificar se é um objeto vazio
+  if (typeof data === 'object' && Object.keys(data).length === 0) {
+    console.warn(`Objeto vazio para seção ${section}`);
+    return <p className="text-gray-500 italic">Seção não preenchida. Clique em Editar para preencher.</p>;
+  }
+  
+  // Verificar se é uma string vazia ou "{}"
+  if (typeof data === 'string' && (data === "" || data === "{}")) {
+    console.warn(`String vazia ou "{}" para seção ${section}`);
+    return <p className="text-gray-500 italic">Seção não preenchida. Clique em Editar para preencher.</p>;
+  }
+  
+  // Se data for uma string, tentar converter para objeto
+  if (typeof data === 'string' && data !== "" && data !== "{}") {
+    try {
+      data = JSON.parse(data);
+      console.log(`Convertido string para objeto na seção ${section}:`, data);
+    } catch (e) {
+      console.error(`Erro ao converter string para objeto na seção ${section}:`, e);
+      return <p className="text-gray-500 italic">Erro ao processar dados. Clique em Editar para preencher novamente.</p>;
+    }
+  }
+  
+  // Verificação adicional após possível conversão
+  if (typeof data === 'object' && Object.keys(data).length === 0) {
+    console.warn(`Objeto vazio após conversão para seção ${section}`);
+    return <p className="text-gray-500 italic">Seção não preenchida. Clique em Editar para preencher.</p>;
+  }
+  
+  // Selecionar o componente correto com base na seção
   switch (section) {
     case "personal_info":
       return getPersonalInfoSummary(data);
@@ -59,36 +90,89 @@ export const ReviewSectionCard: React.FC<ReviewSectionCardProps> = ({
 }) => {
   // Verificar se há dados válidos na seção
   const isCompleted = useMemo(() => {
-    // Verificando detalhadamente os dados da seção
-    console.log(`Revisando dados para seção ${step.section}:`, sectionData);
+    // Log dos dados da seção para verificação detalhada
+    console.log(`Analisando dados para seção ${step.section}:`, sectionData);
     
-    // Para análise de dados específicos
+    // Se não temos dados, obviamente não está completo
+    if (!sectionData) {
+      console.warn(`Dados NULOS para seção ${step.section}`);
+      return false;
+    }
+    
+    // Verificar se é uma string vazia ou "{}"
+    if (typeof sectionData === 'string') {
+      if (sectionData === "" || sectionData === "{}") {
+        console.warn(`String vazia ou "{}" para seção ${step.section}`);
+        return false;
+      }
+      
+      // Tentar converter para objeto
+      try {
+        const parsedData = JSON.parse(sectionData);
+        console.log(`Convertido string para objeto na seção ${step.section}:`, parsedData);
+        
+        // Verificar se o objeto resultante tem dados
+        if (Object.keys(parsedData).length === 0) {
+          console.warn(`Objeto vazio após conversão para seção ${step.section}`);
+          return false;
+        }
+      } catch (e) {
+        console.error(`Erro ao converter string para objeto na seção ${step.section}:`, e);
+        return false;
+      }
+    }
+    
+    // Verificação específica para cada tipo de seção
     if (step.section === 'personal_info') {
-      return !!sectionData.name && !!sectionData.email;
+      const data = typeof sectionData === 'string' ? JSON.parse(sectionData) : sectionData;
+      return !!data.name && !!data.email;
     }
     
     if (step.section === 'professional_info' || step.section === 'professional_data') {
-      return !!sectionData.company_name && !!sectionData.company_size;
+      const data = typeof sectionData === 'string' ? JSON.parse(sectionData) : sectionData;
+      return !!data.company_name && !!data.company_size;
     }
     
     if (step.section === 'business_context') {
-      return !!sectionData.business_model;
+      const data = typeof sectionData === 'string' ? JSON.parse(sectionData) : sectionData;
+      return !!data.business_model;
     }
     
     if (step.section === 'ai_experience') {
-      return !!sectionData.knowledge_level;
+      const data = typeof sectionData === 'string' ? JSON.parse(sectionData) : sectionData;
+      return !!data.knowledge_level;
     }
     
     if (step.section === 'business_goals') {
-      // Verificação mais específica para business_goals
-      return !!sectionData.primary_goal && 
-             !!sectionData.priority_solution_type &&
-             !!sectionData.how_implement &&
-             !!sectionData.week_availability;
+      // Verificação mais detalhada para business_goals
+      const data = typeof sectionData === 'string' ? JSON.parse(sectionData) : sectionData;
+      
+      const requiredFields = ['primary_goal', 'priority_solution_type', 'how_implement', 'week_availability'];
+      const hasAllRequired = requiredFields.every(field => !!data[field]);
+      
+      if (!hasAllRequired) {
+        const missingFields = requiredFields.filter(field => !data[field]);
+        console.warn(`Campos obrigatórios ausentes em business_goals: ${missingFields.join(', ')}`);
+      }
+      
+      return hasAllRequired;
+    }
+    
+    if (step.section === 'experience_personalization') {
+      const data = typeof sectionData === 'string' ? JSON.parse(sectionData) : sectionData;
+      return Array.isArray(data.interests) && data.interests.length > 0;
+    }
+    
+    if (step.section === 'complementary_info') {
+      const data = typeof sectionData === 'string' ? JSON.parse(sectionData) : sectionData;
+      return !!data.how_found_us;
     }
     
     // Verificação genérica para outras seções
-    return Object.keys(sectionData).length > 0;
+    const data = typeof sectionData === 'string' ? JSON.parse(sectionData) : sectionData;
+    const isEmpty = !data || Object.keys(data).length === 0;
+    
+    return !isEmpty;
   }, [step, sectionData]);
 
   // Renderizar resumo com base na seção

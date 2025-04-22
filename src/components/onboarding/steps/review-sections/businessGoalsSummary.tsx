@@ -38,9 +38,12 @@ export function getBusinessGoalsSummary(data: OnboardingData['business_goals'] |
     return <p className="text-gray-500 italic">Seção não preenchida. Clique em Editar para preencher.</p>;
   }
 
-  // Verificação extra para primary_goal que é um campo obrigatório
-  if (!processedData.primary_goal) {
-    console.warn("Campo obrigatório primary_goal ausente");
+  // Verificação extra para campos obrigatórios
+  const requiredFields = ['primary_goal', 'priority_solution_type', 'how_implement', 'week_availability'];
+  const missingRequiredFields = requiredFields.filter(field => !processedData[field]);
+  
+  if (missingRequiredFields.length > 0) {
+    console.warn(`Campos obrigatórios ausentes: ${missingRequiredFields.join(', ')}`);
     return <p className="text-gray-500 italic">Dados incompletos. Clique em Editar para preencher corretamente.</p>;
   }
 
