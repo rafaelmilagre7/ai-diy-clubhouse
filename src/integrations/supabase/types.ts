@@ -340,7 +340,7 @@ export type Database = {
           company_sector: string | null
           company_size: string | null
           company_website: string | null
-          complementary_info: Json | null
+          complementary_info: Json
           completed_steps: string[] | null
           created_at: string | null
           current_position: string | null
@@ -381,7 +381,7 @@ export type Database = {
           company_sector?: string | null
           company_size?: string | null
           company_website?: string | null
-          complementary_info?: Json | null
+          complementary_info?: Json
           completed_steps?: string[] | null
           created_at?: string | null
           current_position?: string | null
@@ -422,7 +422,7 @@ export type Database = {
           company_sector?: string | null
           company_size?: string | null
           company_website?: string | null
-          complementary_info?: Json | null
+          complementary_info?: Json
           completed_steps?: string[] | null
           created_at?: string | null
           current_position?: string | null

@@ -30,16 +30,15 @@ const discoverOptions = [
 ];
 
 export const DiscoverySourceSection = ({ form }: DiscoverySourceSectionProps) => {
-  const { watch, setValue, register, formState: { errors } } = form;
-  const sourceType = watch("how_found_us");
+  const { register, setValue, formState: { errors } } = form;
 
   return (
     <div className="bg-card p-6 rounded-lg border border-border space-y-4">
       <Label className="text-lg font-semibold">
         Como você conheceu o VIVER DE IA Club?
       </Label>
+      
       <Select
-        defaultValue={watch("how_found_us") || ""}
         onValueChange={(value) => setValue("how_found_us", value)}
       >
         <SelectTrigger className="w-full">
@@ -57,23 +56,21 @@ export const DiscoverySourceSection = ({ form }: DiscoverySourceSectionProps) =>
         <FormMessage type="error" message={errors.how_found_us.message} />
       )}
 
-      {sourceType === "recommendation" && (
-        <div className="space-y-2">
-          <Label htmlFor="referred_by">Quem indicou você para o VIVER DE IA Club?</Label>
-          <Input
-            id="referred_by"
-            placeholder="Digite o nome da pessoa que te indicou"
-            {...register("referred_by")}
-            className="w-full"
-          />
-          {errors.referred_by && (
-            <FormMessage type="error" message={errors.referred_by.message} />
-          )}
-          <p className="text-sm text-muted-foreground">
-            Nos ajuda a agradecer quem está divulgando o VIVER DE IA Club
-          </p>
-        </div>
-      )}
+      <div className="space-y-2">
+        <Label htmlFor="referred_by">Quem indicou você para o VIVER DE IA Club?</Label>
+        <Input
+          id="referred_by"
+          placeholder="Digite o nome da pessoa que te indicou"
+          {...register("referred_by")}
+          className="w-full"
+        />
+        {errors.referred_by && (
+          <FormMessage type="error" message={errors.referred_by.message} />
+        )}
+        <p className="text-sm text-muted-foreground">
+          Nos ajuda a agradecer quem está divulgando o VIVER DE IA Club
+        </p>
+      </div>
     </div>
   );
 };
