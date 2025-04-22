@@ -50,11 +50,25 @@ export const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
     e.preventDefault();
     setValidationAttempted(true);
     
-    const isFormValid = await validateForm();
+    // Verificar quais campos têm erro
+    const fieldErrors = Object.keys(errors);
     
-    if (!isFormValid) {
+    if (fieldErrors.length > 0) {
+      // Criar uma mensagem que lista os campos com erro
+      const errorFieldNames = fieldErrors.map(field => {
+        switch (field) {
+          case 'state': return 'Estado';
+          case 'city': return 'Cidade';
+          case 'phone': return 'Telefone';
+          case 'linkedin': return 'LinkedIn';
+          case 'instagram': return 'Instagram';
+          case 'timezone': return 'Fuso Horário';
+          default: return field.charAt(0).toUpperCase() + field.slice(1);
+        }
+      }).join(', ');
+      
       toast.error("Por favor, corrija os erros antes de continuar", {
-        description: "Verifique os campos destacados em vermelho",
+        description: `Verifique os campos: ${errorFieldNames}`
       });
       return;
     }
@@ -63,19 +77,17 @@ export const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
       await onSubmit();
       
       toast.success("Dados pessoais salvos com sucesso!", {
-        description: "Avançando para a próxima etapa...",
+        description: "Avançando para a próxima etapa..."
       });
     } catch (error) {
       console.error("Erro ao salvar dados:", error);
       toast.error("Erro ao salvar os dados", {
-        description: "Verifique sua conexão e tente novamente",
+        description: "Verifique sua conexão e tente novamente"
       });
     }
   };
 
-  const hasValidationErrors = validationAttempted && (
-    Object.keys(errors).length > 0 || Object.keys(validation.errors).length > 0
-  );
+  const hasValidationErrors = validationAttempted && Object.keys(errors).length > 0;
 
   return (
     <form onSubmit={onFormSubmit} className="space-y-6 animate-fade-in">
@@ -91,7 +103,7 @@ export const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
         <Alert variant="destructive" className="animate-fade-in bg-red-50 border-red-200">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
-            Por favor, corrija os erros destacados antes de prosseguir.
+            Por favor, preencha todos os campos obrigatórios: Estado, Cidade e Fuso Horário.
           </AlertDescription>
         </Alert>
       )}

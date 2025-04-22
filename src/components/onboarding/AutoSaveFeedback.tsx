@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Loader } from 'lucide-react';
+import { Loader, CheckCircle } from 'lucide-react';
 
 interface AutoSaveFeedbackProps {
   isSaving: boolean;
@@ -18,13 +18,16 @@ export const AutoSaveFeedback: React.FC<AutoSaveFeedbackProps> = ({ isSaving, la
           <span>Salvando alterações...</span>
         </>
       ) : lastSaveTime ? (
-        <span>
-          Alterações salvas às{' '}
-          {new Date(lastSaveTime).toLocaleTimeString('pt-BR', {
-            hour: '2-digit',
-            minute: '2-digit'
-          })}
-        </span>
+        <>
+          <CheckCircle className="h-3 w-3 text-green-500" />
+          <span>
+            Alterações salvas às{' '}
+            {new Date(lastSaveTime).toLocaleTimeString('pt-BR', {
+              hour: '2-digit',
+              minute: '2-digit'
+            })}
+          </span>
+        </>
       ) : null}
     </div>
   );

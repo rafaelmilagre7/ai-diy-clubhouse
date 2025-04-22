@@ -1,30 +1,59 @@
 
-import { CheckCircle2, AlertCircle } from "lucide-react";
+import React from "react";
 import { cn } from "@/lib/utils";
+import { AlertCircle, CheckCircle } from "lucide-react";
 
 interface FormMessageProps {
-  type: "success" | "error" | "info";
+  type?: "error" | "success" | "warning" | "info";
   message?: string;
+  children?: React.ReactNode;
   className?: string;
 }
 
-export const FormMessage = ({ type, message, className }: FormMessageProps) => {
-  if (!message) return null;
+export const FormMessage: React.FC<FormMessageProps> = ({
+  type = "error",
+  message,
+  children,
+  className,
+}) => {
+  if (!message && !children) return null;
+
+  const content = message || children;
+  
+  const getTypeStyles = () => {
+    switch (type) {
+      case "error":
+        return "text-red-500 flex items-center";
+      case "success":
+        return "text-green-600 flex items-center";
+      case "warning":
+        return "text-amber-500 flex items-center";
+      case "info":
+        return "text-blue-500 flex items-center";
+      default:
+        return "text-gray-500 flex items-center";
+    }
+  };
+
+  const getIcon = () => {
+    switch (type) {
+      case "error":
+        return <AlertCircle className="h-3 w-3 mr-1.5" />;
+      case "success":
+        return <CheckCircle className="h-3 w-3 mr-1.5" />;
+      case "warning":
+        return <AlertCircle className="h-3 w-3 mr-1.5" />;
+      case "info":
+        return <AlertCircle className="h-3 w-3 mr-1.5" />;
+      default:
+        return null;
+    }
+  };
 
   return (
-    <div
-      className={cn(
-        "flex items-center gap-2 text-sm mt-1.5",
-        type === "error" && "text-red-500",
-        type === "success" && "text-green-500",
-        type === "info" && "text-[#0ABAB5]",
-        "animate-fade-in",
-        className
-      )}
-    >
-      {type === "error" && <AlertCircle className="h-4 w-4" />}
-      {type === "success" && <CheckCircle2 className="h-4 w-4" />}
-      <span>{message}</span>
-    </div>
+    <p className={cn("text-xs mt-1", getTypeStyles(), className)}>
+      {getIcon()}
+      {content}
+    </p>
   );
 };

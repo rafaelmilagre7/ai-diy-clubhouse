@@ -23,6 +23,7 @@ export const usePersonalInfoStep = () => {
     timezone: "GMT-3",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [validationAttempted, setValidationAttempted] = useState(false);
 
   // Carregar dados iniciais
   useEffect(() => {
@@ -39,20 +40,17 @@ export const usePersonalInfoStep = () => {
   useEffect(() => {
     const autoSave = async () => {
       if (!isSubmitting) {
-        const validationErrors = validatePersonalInfoForm(formData);
-        if (Object.keys(validationErrors).length === 0) {
-          try {
-            setIsSaving(true);
-            await updateProgress({
-              personal_info: formData,
-            });
-            setLastSaveTime(Date.now());
-            console.log("Salvamento automático realizado");
-          } catch (error) {
-            console.error("Erro no salvamento automático:", error);
-          } finally {
-            setIsSaving(false);
-          }
+        try {
+          setIsSaving(true);
+          await updateProgress({
+            personal_info: formData,
+          });
+          setLastSaveTime(Date.now());
+          console.log("Salvamento automático realizado");
+        } catch (error) {
+          console.error("Erro no salvamento automático:", error);
+        } finally {
+          setIsSaving(false);
         }
       }
     };
@@ -75,13 +73,24 @@ export const usePersonalInfoStep = () => {
   };
 
   const handleSubmit = async () => {
-    if (isSubmitting) return;
+    if (isSubmitting) return false;
 
+    setValidationAttempted(true);
     const validationErrors = validatePersonalInfoForm(formData);
+    
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
-      toast.error("Por favor, corrija os erros no formulário");
-      return;
+      
+      // Mostrar toast com os erros
+      const errorFields = Object.keys(validationErrors).map(field => 
+        field.charAt(0).toUpperCase() + field.slice(1)
+      ).join(', ');
+      
+      toast.error("Por favor, corrija os erros no formulário", {
+        description: `Verifique os campos: ${errorFields}`
+      });
+      
+      return false;
     }
 
     setIsSubmitting(true);
@@ -92,6 +101,7 @@ export const usePersonalInfoStep = () => {
         completed_steps: [...(progress?.completed_steps || []), "personal"],
       });
 
+      toast.success("Dados pessoais salvos com sucesso!");
       return true;
     } catch (error) {
       console.error("Erro ao salvar dados:", error);
@@ -108,6 +118,7 @@ export const usePersonalInfoStep = () => {
     isSubmitting,
     isSaving,
     lastSaveTime,
+    validationAttempted,
     handleChange,
     handleSubmit
   };
