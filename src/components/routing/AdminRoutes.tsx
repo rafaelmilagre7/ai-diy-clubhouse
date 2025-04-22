@@ -15,6 +15,8 @@ const SolutionEditor = lazy(() => import("@/pages/admin/SolutionEditor"));
 const UserManagement = lazy(() => import("@/pages/admin/UserManagement"));
 
 const AdminRoutes = () => {
+  console.log("Renderizando AdminRoutes");
+  
   return (
     <Routes>
       <Route element={

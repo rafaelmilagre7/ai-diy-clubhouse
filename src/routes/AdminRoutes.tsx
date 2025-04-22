@@ -14,7 +14,13 @@ const AdminSuggestionDetails = lazy(() => import("@/pages/admin/AdminSuggestionD
 const SolutionEditor = lazy(() => import("@/pages/admin/SolutionEditor"));
 const UserManagement = lazy(() => import("@/pages/admin/UserManagement"));
 
+/**
+ * Este componente não é mais usado.
+ * As rotas administrativas estão em src/components/routing/AdminRoutes.tsx
+ */
 export const AdminRoutes = () => {
+  console.log("DEPRECADO: Este arquivo de rotas não deve ser usado");
+  
   return (
     <Route
       path="/admin"

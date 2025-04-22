@@ -14,6 +14,8 @@ interface AdminSidebarProps {
 
 export const AdminSidebar = ({ sidebarOpen, setSidebarOpen }: AdminSidebarProps) => {
   const { profile } = useAuth();
+  
+  console.log("AdminSidebar renderizando, sidebarOpen:", sidebarOpen);
 
   const getInitials = (name: string | null) => {
     if (!name) return "U";
@@ -31,6 +33,7 @@ export const AdminSidebar = ({ sidebarOpen, setSidebarOpen }: AdminSidebarProps)
         "fixed inset-y-0 left-0 z-20 flex h-full flex-col border-r bg-background shadow-sm transition-all duration-300 ease-in-out",
         sidebarOpen ? "w-64" : "w-20"
       )}
+      style={{ transform: "translateX(0)" }} // Garante que o sidebar seja visível
     >
       <div className="flex h-16 items-center justify-between px-4">
         {sidebarOpen ? (

@@ -1,5 +1,5 @@
 
-import { ReactNode, useState } from "react";
+import { ReactNode, useState, useEffect } from "react";
 import { Outlet } from "react-router-dom";
 import { AdminSidebar } from "./AdminSidebar";
 import { AdminHeader } from "./AdminHeader";
@@ -13,7 +13,13 @@ interface AdminLayoutProps {
 const AdminLayout = ({ children }: AdminLayoutProps) => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   
-  console.log("AdminLayout renderizando");
+  console.log("AdminLayout renderizando com sidebarOpen:", sidebarOpen);
+
+  // Forçar o sidebar a aparecer inicialmente no desktop
+  useEffect(() => {
+    const isMobile = window.innerWidth < 768;
+    setSidebarOpen(!isMobile);
+  }, []);
 
   return (
     <div className="flex h-screen bg-background overflow-hidden">

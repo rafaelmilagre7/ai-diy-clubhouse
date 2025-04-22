@@ -18,6 +18,8 @@ interface AdminSidebarNavProps {
 
 export const AdminSidebarNav = ({ sidebarOpen }: AdminSidebarNavProps) => {
   const location = useLocation();
+  
+  console.log("AdminSidebarNav renderizando, location:", location.pathname);
 
   const menuItems = [
     {
