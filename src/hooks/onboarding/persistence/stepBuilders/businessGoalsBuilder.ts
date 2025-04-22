@@ -11,7 +11,7 @@ export function buildBusinessGoalsUpdate(data: Partial<OnboardingData>, progress
   if (typeof existingGoals === 'string') {
     try {
       // Verificar se a string não está vazia antes de tentar parsear
-      if (existingGoals && existingGoals.trim() !== '') {
+      if (existingGoals && typeof existingGoals === 'string' && existingGoals.trim() !== '') {
         existingGoals = JSON.parse(existingGoals);
       } else {
         existingGoals = {};

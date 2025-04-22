@@ -12,7 +12,7 @@ export function buildExperiencePersonalizationUpdate(data: Partial<OnboardingDat
     // Se for string, tenta converter para objeto
     try {
       // Verificar se a string não está vazia antes de tentar parsear
-      if (existingExperiencePersonalization && existingExperiencePersonalization.trim() !== '') {
+      if (existingExperiencePersonalization && typeof existingExperiencePersonalization === 'string' && existingExperiencePersonalization.trim() !== '') {
         updateObj.experience_personalization = JSON.parse(existingExperiencePersonalization);
       } else {
         updateObj.experience_personalization = {};
