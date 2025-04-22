@@ -2,7 +2,7 @@
 import { OnboardingData, OnboardingProgress, ProfessionalDataInput } from "@/types/onboarding";
 
 export function buildGoalsUpdate(data: Partial<OnboardingData> | ProfessionalDataInput, progress: OnboardingProgress | null) {
-  const updateObj: any = {};
+  const updateObj: Partial<OnboardingProgress> = {};
   
   // Verificar se temos dados profissionais
   if ('professional_info' in data && data.professional_info) {

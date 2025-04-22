@@ -17,7 +17,9 @@ export async function saveProfessionalData(
   }
 
   // Obter dados profissionais (seja de data.professional_info ou diretamente de data)
-  const profData = (data as OnboardingData).professional_info || data;
+  const profData = 'professional_info' in data && data.professional_info 
+    ? data.professional_info 
+    : data as ProfessionalDataInput;
   
   // Formatar dados
   const professionalData = {

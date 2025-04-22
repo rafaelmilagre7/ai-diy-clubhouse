@@ -43,23 +43,20 @@ export function buildProfessionalDataUpdate(data: Partial<OnboardingData>, progr
   // Verificar cada campo para atualização
   let hasUpdates = false;
   
-  // Criar um objeto tipado como Record<string, any> para manipulação segura
-  const tempObj: Record<string, any> = { ...updateObj };
-  
   fieldsToCheck.forEach(field => {
-    if (professionalData[field as keyof typeof professionalData]) {
-      let value = professionalData[field as keyof typeof professionalData];
+    if (professionalData && typeof professionalData === 'object' && field in professionalData) {
+      const value = professionalData[field as keyof typeof professionalData];
       
       // Formatação especial para website
-      if (field === 'company_website' && value) {
-        value = normalizeWebsite(value as string);
+      if (field === 'company_website' && value && typeof value === 'string') {
+        professionalInfo[field] = normalizeWebsite(value);
+        updateObj[field as keyof OnboardingProgress] = normalizeWebsite(value);
+      } else {
+        professionalInfo[field] = value;
+        
+        // Atualizar campo de nível superior com type assertion para evitar erros de tipagem
+        (updateObj as any)[field] = value;
       }
-      
-      // Atualizar no objeto professional_info
-      professionalInfo[field] = value;
-      
-      // Atualizar campo de nível superior
-      tempObj[field] = value;
       
       hasUpdates = true;
     }
@@ -67,11 +64,10 @@ export function buildProfessionalDataUpdate(data: Partial<OnboardingData>, progr
   
   // Adicionar objeto professional_info atualizado
   if (hasUpdates) {
-    tempObj.professional_info = professionalInfo;
+    updateObj.professional_info = professionalInfo;
   }
   
-  console.log("Objeto de atualização para dados profissionais:", tempObj);
+  console.log("Objeto de atualização para dados profissionais:", updateObj);
   
-  // Converter de volta para Partial<OnboardingProgress>
-  return tempObj as Partial<OnboardingProgress>;
+  return updateObj;
 }
