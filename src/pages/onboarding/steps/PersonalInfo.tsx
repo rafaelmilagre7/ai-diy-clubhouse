@@ -28,8 +28,7 @@ const PersonalInfo = () => {
     <OnboardingLayout 
       currentStep={1} 
       title="Dados Pessoais" 
-      backUrl="/" 
-      hideProgress={true} // Oculta o progresso nesta página
+      backUrl="/"
     >
       <PersonalInfoStep
         onSubmit={handleSuccess}

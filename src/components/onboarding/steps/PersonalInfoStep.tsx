@@ -7,7 +7,6 @@ import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, CheckCircle } from "lucide-react";
 import { OnboardingStepProps, PersonalInfoData } from "@/types/onboarding";
-import { EtapasProgresso } from "../EtapasProgresso";
 
 export interface PersonalInfoStepProps extends Partial<OnboardingStepProps> {
   onSubmit: () => Promise<void>;
@@ -106,10 +105,6 @@ export const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
 
   return (
     <form onSubmit={onFormSubmit} className="space-y-6 animate-fade-in">
-      <div className="mb-8">
-        <EtapasProgresso currentStep={1} totalSteps={8} />
-      </div>
-
       <MilagrinhoMessage 
         message="Para começar, vou precisar de algumas informações pessoais para personalizar sua experiência no VIVER DE IA Club." 
       />
