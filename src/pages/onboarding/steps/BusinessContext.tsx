@@ -18,7 +18,12 @@ const BusinessContext = () => {
   const handleSave = async (stepId: string, data: any): Promise<void> => {
     try {
       console.log("Salvando dados de contexto de negócio:", data);
-      await saveStepData(data, true);
+      
+      // Modificação aqui: Tratamos os dados para garantir formato correto
+      const formattedData = { business_data: data };
+      await saveStepData(formattedData, true);
+      
+      toast.success("Dados salvos com sucesso!");
       
       // Verificar se a navegação automática funcionou
       setTimeout(() => {
@@ -61,7 +66,7 @@ const BusinessContext = () => {
       <BusinessContextStep
         onSubmit={handleSave}
         isSubmitting={false}
-        initialData={progress?.business_context || progress?.business_data}
+        initialData={progress?.business_data}
       />
     </OnboardingLayout>
   );

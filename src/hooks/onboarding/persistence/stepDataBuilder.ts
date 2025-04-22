@@ -1,4 +1,3 @@
-
 import { steps } from "../useStepDefinitions";
 import { OnboardingData, OnboardingProgress, ProfessionalDataInput } from "@/types/onboarding";
 import { buildPersonalUpdate } from "./stepBuilders/personalBuilder";
@@ -32,7 +31,13 @@ export function buildUpdateObject(
       Object.assign(updateObj, buildProfessionalDataUpdate(data as ProfessionalDataInput, progress));
       break;
     case "business_context":
-      Object.assign(updateObj, buildBusinessContextUpdate(data as Partial<OnboardingData>, progress));
+      // Se já temos business_data formatado, usamos diretamente
+      if (data.business_data) {
+        updateObj.business_data = data.business_data;
+      } else {
+        // Caso contrário, usamos o builder
+        Object.assign(updateObj, buildBusinessContextUpdate(data as Partial<OnboardingData>, progress));
+      }
       break;
     case "ai_exp":
       Object.assign(updateObj, buildAiExpUpdate(data as Partial<OnboardingData>, progress));

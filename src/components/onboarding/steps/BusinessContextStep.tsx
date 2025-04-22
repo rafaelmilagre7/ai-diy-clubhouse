@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -8,6 +7,7 @@ import { toast } from "sonner";
 import { MilagrinhoMessage } from "@/components/onboarding/MilagrinhoMessage";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
+import { FormMessage } from "@/components/ui/form-message";
 
 interface OnboardingStepProps {
   onSubmit: (stepId: string, data: any) => void;
@@ -147,7 +147,7 @@ export const BusinessContextStep = ({ onSubmit, isSubmitting, initialData }: Onb
     
     try {
       schema.parse(formData);
-      onSubmit("business_context", { business_context: formData });
+      onSubmit("business_context", formData);
     } catch (error) {
       if (error instanceof z.ZodError) {
         const firstError = error.errors[0];
