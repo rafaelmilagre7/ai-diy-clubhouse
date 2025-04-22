@@ -30,19 +30,31 @@ const AdminAnalytics = () => {
         </TabsContent>
         
         <TabsContent value="users" className="space-y-4">
-          <PlaceholderTabContent title="Análise de Usuários" />
+          <PlaceholderTabContent 
+            title="Análise de Usuários" 
+            description="Estatísticas e métricas detalhadas sobre os usuários da plataforma."
+          />
         </TabsContent>
         
         <TabsContent value="solutions" className="space-y-4">
-          <PlaceholderTabContent title="Análise de Soluções" />
+          <PlaceholderTabContent 
+            title="Análise de Soluções" 
+            description="Métricas de implementação e engajamento das soluções disponíveis."
+          />
         </TabsContent>
         
         <TabsContent value="implementations" className="space-y-4">
-          <PlaceholderTabContent title="Análise de Implementações" />
+          <PlaceholderTabContent 
+            title="Análise de Implementações" 
+            description="Estatísticas de progresso e conclusão das implementações."
+          />
         </TabsContent>
         
         <TabsContent value="engagement" className="space-y-4">
-          <PlaceholderTabContent title="Análise de Engajamento" />
+          <PlaceholderTabContent 
+            title="Análise de Engajamento" 
+            description="Métricas de interação e atividade dos usuários na plataforma."
+          />
         </TabsContent>
       </Tabs>
     </div>

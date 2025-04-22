@@ -5,11 +5,11 @@ import { Badge } from '@/components/ui/badge';
 
 interface PlaceholderTabContentProps {
   title: string;
-  description: string;
+  description?: string;
   badges?: string[];
 }
 
-export const PlaceholderTabContent = ({ title, description, badges = [] }: PlaceholderTabContentProps) => {
+export const PlaceholderTabContent = ({ title, description = "Conteúdo em desenvolvimento", badges = [] }: PlaceholderTabContentProps) => {
   return (
     <Card>
       <CardHeader>

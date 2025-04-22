@@ -14,7 +14,7 @@ const AdminOnboarding = () => {
         </p>
       </div>
 
-      <Alert variant="info" className="bg-blue-50 border-blue-200">
+      <Alert variant="default" className="bg-blue-50 border-blue-200">
         <InfoIcon className="h-4 w-4 text-blue-600" />
         <AlertTitle className="text-blue-700">Dashboard em desenvolvimento</AlertTitle>
         <AlertDescription className="text-blue-600">

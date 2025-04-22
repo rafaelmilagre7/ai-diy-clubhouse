@@ -9,8 +9,9 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
 
 interface OverviewTabContentProps {
-  loading: boolean;
-  data: {
+  timeRange?: string;
+  loading?: boolean;
+  data?: {
     usersByTime: any[];
     solutionPopularity: any[];
     implementationsByCategory: any[];
@@ -19,7 +20,13 @@ interface OverviewTabContentProps {
   };
 }
 
-export const OverviewTabContent = ({ loading, data }: OverviewTabContentProps) => {
+export const OverviewTabContent = ({ timeRange, loading = true, data = {
+  usersByTime: [],
+  solutionPopularity: [],
+  implementationsByCategory: [],
+  userCompletionRate: [],
+  dayOfWeekActivity: []
+} }: OverviewTabContentProps) => {
   const renderSkeleton = () => (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
