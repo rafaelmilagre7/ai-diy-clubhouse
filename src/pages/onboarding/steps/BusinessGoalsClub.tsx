@@ -7,17 +7,20 @@ import { MilagrinhoMessage } from "@/components/onboarding/MilagrinhoMessage";
 import { useProgress } from "@/hooks/onboarding/useProgress";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { Loader2 } from "lucide-react";
 
 const BusinessGoalsClub = () => {
   const { saveStepData, completeOnboarding } = useOnboardingSteps();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { progress, isLoading, refreshProgress } = useProgress();
   const [refreshCount, setRefreshCount] = useState(0);
+  const [localDataReady, setLocalDataReady] = useState(false);
   const navigate = useNavigate();
 
   // Efeito para carregar dados mais recentes ao entrar na página
   useEffect(() => {
     const loadData = async () => {
+      setLocalDataReady(false);
       try {
         console.log("Carregando dados atualizados para BusinessGoalsClub...");
         await refreshProgress();
@@ -46,9 +49,13 @@ const BusinessGoalsClub = () => {
             }
           }
         }
+        
+        // Marcar dados como prontos
+        setLocalDataReady(true);
       } catch (error) {
         console.error("Erro ao carregar dados:", error);
         toast.error("Erro ao carregar dados. Algumas informações podem estar desatualizadas.");
+        setLocalDataReady(true); // Mesmo com erro, permitir a renderização
       }
     };
     loadData();
@@ -113,45 +120,15 @@ const BusinessGoalsClub = () => {
       // Log de dados antes de salvar
       console.log("Dados finais formatados antes de salvar:", JSON.stringify(data, null, 2));
       
-      // Salvar dados com debug extra
-      try {
-        await saveStepData(stepId, data, false);
-        console.log("Dados salvos com sucesso");
-        toast.success("Dados salvos com sucesso!");
-      } catch (saveError) {
-        console.error("Falha ao chamar saveStepData:", saveError);
-        throw saveError;
-      }
+      // Salvar dados
+      await saveStepData(stepId, data, false);
+      console.log("Dados salvos com sucesso");
       
       // Verificar se os dados foram salvos corretamente
-      try {
-        await refreshProgress();
-        console.log("Após salvar, dados de progresso:", JSON.stringify(progress, null, 2));
-        
-        if (progress?.business_goals) {
-          console.log("business_goals após salvar:", JSON.stringify(progress.business_goals, null, 2));
-          
-          // Verificar campos obrigatórios
-          const savedData = progress.business_goals;
-          const stillMissingFields = requiredFields.filter(field => !savedData[field]);
-          
-          if (stillMissingFields.length > 0) {
-            console.warn("Campos obrigatórios ainda ausentes após salvar:", stillMissingFields);
-            
-            // Tentativa de nova verificação após um pequeno atraso
-            setTimeout(async () => {
-              await refreshProgress();
-              console.log("business_goals após timeout:", JSON.stringify(progress?.business_goals, null, 2));
-            }, 1000);
-          } else {
-            console.log("Todos os campos obrigatórios estão presentes após salvar");
-          }
-        } else {
-          console.warn("business_goals não encontrado após salvar");
-        }
-      } catch (refreshError) {
-        console.error("Erro ao recarregar dados após salvar:", refreshError);
-      }
+      await refreshProgress();
+      console.log("Após salvar, dados de progresso:", progress?.business_goals);
+      
+      toast.success("Dados salvos com sucesso!");
       
       // Navegar manualmente para a próxima página
       navigate("/onboarding/customization");
@@ -181,9 +158,12 @@ const BusinessGoalsClub = () => {
         <MilagrinhoMessage
           message="Agora, gostaria de entender quais são suas expectativas e objetivos com o VIVER DE IA Club. Isso nos ajudará a personalizar sua experiência e garantir que você obtenha o máximo valor possível."
         />
-        {isLoading ? (
+        {isLoading || !localDataReady ? (
           <div className="flex justify-center py-10">
-            <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-[#0ABAB5]"></div>
+            <div className="flex flex-col items-center space-y-2">
+              <Loader2 className="animate-spin h-10 w-10 text-[#0ABAB5]" />
+              <p className="text-sm text-gray-500">Carregando seus dados...</p>
+            </div>
           </div>
         ) : !progress ? (
           <div className="p-6 bg-red-50 border border-red-200 rounded-lg">
