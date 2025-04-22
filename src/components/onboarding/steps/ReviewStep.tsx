@@ -28,9 +28,10 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({
   };
 
   // Verifica se todos os passos necessários foram concluídos
+  // Exclui etapas de review e geração de trilha
   const allStepsCompleted = steps
     .filter(step => step.id !== "review" && step.id !== "trail_generation")
-    .every(step => progress.completed_steps?.includes(step.id));
+    .every(step => progress.completed_steps && Array.isArray(progress.completed_steps) && progress.completed_steps.includes(step.id));
 
   return (
     <div className="space-y-6">
@@ -49,28 +50,27 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({
             let sectionData = progress[sectionKey];
 
             // Tratamento especial para business_context que pode estar em business_data
-            if (step.section === "business_context" && !sectionData) {
+            if (step.section === "business_context" && (!sectionData || Object.keys(sectionData || {}).length === 0)) {
               sectionData = progress.business_data;
             }
 
             // Tratamento especial para dados pessoais
-            if (step.section === "personal_info" && (!sectionData || Object.keys(sectionData).length === 0)) {
-              console.log("Dados pessoais não encontrados, verificando profile");
+            if (step.section === "personal_info" && (!sectionData || Object.keys(sectionData || {}).length === 0)) {
               if (progress.personal_info) {
                 sectionData = progress.personal_info;
               }
             }
 
             // Tratamento especial para dados profissionais
-            if (step.section === "professional_info" && (!sectionData || Object.keys(sectionData).length === 0)) {
+            if (step.section === "professional_info" && (!sectionData || Object.keys(sectionData || {}).length === 0)) {
               // Verificar se há dados diretos no progresso
               const directData = {
-                company_name: progress.company_name,
-                company_size: progress.company_size,
-                company_sector: progress.company_sector,
-                company_website: progress.company_website,
-                current_position: progress.current_position,
-                annual_revenue: progress.annual_revenue,
+                company_name: progress.company_name || "",
+                company_size: progress.company_size || "",
+                company_sector: progress.company_sector || "",
+                company_website: progress.company_website || "",
+                current_position: progress.current_position || "",
+                annual_revenue: progress.annual_revenue || "",
               };
               
               // Se algum dos campos diretos tiver valor, usar esses dados
@@ -78,8 +78,6 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({
                 sectionData = directData;
               }
             }
-
-            console.log(`Dados para seção ${step.section}:`, sectionData);
             
             // Passamos o índice real (baseado em zero) para a função navigateToStep na ReviewSectionCard
             const stepIndex = findStepIndex(step.id);
@@ -90,7 +88,7 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({
               <ReviewSectionCard
                 key={step.id}
                 step={step}
-                sectionData={sectionData}
+                sectionData={sectionData || {}}
                 progress={progress}
                 stepIndex={displayIndex}
                 navigateToStep={navigateToStep}

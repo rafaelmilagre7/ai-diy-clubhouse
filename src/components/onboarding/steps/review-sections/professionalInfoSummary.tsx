@@ -2,7 +2,7 @@
 import React from "react";
 import { ProfessionalDataInput } from "@/types/onboarding";
 
-export function getProfessionalInfoSummary(data: ProfessionalDataInput) {
+export function getProfessionalInfoSummary(data: ProfessionalDataInput | undefined) {
   if (!data || Object.keys(data).length === 0) {
     return <p className="text-gray-500 italic">Seção não preenchida. Clique em Editar para preencher.</p>;
   }

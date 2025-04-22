@@ -10,34 +10,37 @@ import { getExperiencePersonalizationSummary } from "./review-sections/experienc
 import { getComplementaryInfoSummary } from "./review-sections/complementaryInfoSummary";
 
 export function getSummary(section: string, data: any, progress: any) {
-  if (!data || Object.keys(data).length === 0) {
+  // Garantir que os dados não são nulos ou indefinidos
+  const safeData = data || {};
+  
+  if (!data || Object.keys(safeData).length === 0) {
     return <p className="text-gray-500 italic">Seção não preenchida. Clique em Editar para preencher.</p>;
   }
 
   switch (section) {
     case "personal_info":
-      return getPersonalInfoSummary(data);
+      return getPersonalInfoSummary(safeData);
     case "professional_info":
-      return getProfessionalInfoSummary(data);
+      return getProfessionalInfoSummary(safeData);
     case "business_context":
-      return getBusinessContextSummary(data);
+      return getBusinessContextSummary(safeData);
     case "ai_experience":
-      return getAIExperienceSummary(data);
+      return getAIExperienceSummary(safeData);
     case "business_goals":
-      return getBusinessGoalsSummary(data);
+      return getBusinessGoalsSummary(safeData);
     case "experience_personalization":
-      return getExperiencePersonalizationSummary(data);
+      return getExperiencePersonalizationSummary(safeData);
     case "complementary_info":
-      return getComplementaryInfoSummary(data);
+      return getComplementaryInfoSummary(safeData);
     default:
-      return renderDefaultSummary(data);
+      return renderDefaultSummary(safeData);
   }
 }
 
 function renderDefaultSummary(data: any) {
   return (
     <div className="space-y-1 text-sm text-gray-600">
-      {Object.entries(data).map(([key, value]) => {
+      {Object.entries(data || {}).map(([key, value]) => {
         if (Array.isArray(value) && value.length > 0) {
           return renderArrayField(key, value);
         } else if (typeof value === 'boolean') {
