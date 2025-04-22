@@ -50,19 +50,10 @@ export function useProfessionalDataForm({ initialData }: UseProfessionalDataForm
       methods.reset(initialValues);
       setFormInitialized(true);
     }
-  }, [initialData, methods]);
-
-  // Esta função ajuda a preservar os valores durante interações com campos específicos
-  const safeSetValue = (field: keyof ProfessionalDataInput, value: any) => {
-    const currentValues = methods.getValues();
-    methods.setValue(field, value, { shouldValidate: false, shouldDirty: true });
-    console.log(`Campo ${field} atualizado para:`, value);
-    console.log("Valores do formulário após atualização:", methods.getValues());
-  };
+  }, [initialData]);
 
   return {
     methods,
-    formInitialized,
-    safeSetValue
+    formInitialized
   };
 }

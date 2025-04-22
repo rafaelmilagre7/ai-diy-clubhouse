@@ -19,7 +19,6 @@ export const AnnualRevenueField: React.FC = () => {
 
   const handleValueChange = (value: string) => {
     console.log("AnnualRevenueField: atualizando para", value);
-    // Usar setValue com opções que previnem validação imediata
     setValue("annual_revenue", value, {
       shouldValidate: false,
       shouldDirty: true,
@@ -33,7 +32,7 @@ export const AnnualRevenueField: React.FC = () => {
     { value: "500k-1m", label: "R$ 500 mil a R$ 1 milhão" },
     { value: "1m-5m", label: "R$ 1 milhão a R$ 5 milhões" },
     { value: "5m-10m", label: "R$ 5 milhões a R$ 10 milhões" },
-    { value: "+10m", label: "Acima de R$ 10 milhões" },
+    { value: "10m+", label: "Acima de R$ 10 milhões" },
   ];
 
   return (

@@ -6,6 +6,7 @@ import { navigateAfterStep } from "../stepNavigator";
 import { useLogging } from "@/hooks/useLogging";
 import { savePersonalInfoData } from "../services/personalInfoService";
 import { markStepAsCompleted } from "../services/progressService";
+import { saveProfessionalData } from "../services/professionalDataService";
 
 interface SaveStepDataParams {
   progress: any;
@@ -79,6 +80,16 @@ export const createSaveStepData = ({
         success = result.success;
         if (!success) throw new Error("Falha ao salvar dados pessoais");
       } 
+      else if (stepId === 'professional_data') {
+        if (!progress.user_id) throw new Error("ID de usuário não disponível");
+        console.log("Salvando dados profissionais via serviço dedicado:", data);
+        await saveProfessionalData(
+          progress.id,
+          progress.user_id,
+          data
+        );
+        success = true;
+      }
       else {
         const updateObj = buildUpdateObject(stepId, data, progress, currentStepIndex);
         if (Object.keys(updateObj).length === 0) {

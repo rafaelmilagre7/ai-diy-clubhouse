@@ -3,7 +3,7 @@ import React from "react";
 import { useFormContext } from "react-hook-form";
 import { Label } from "@/components/ui/label";
 import { FormMessage } from "@/components/ui/form-message";
-import { CheckCircle, Building2 } from "lucide-react";
+import { CheckCircle, Briefcase } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   Select,
@@ -19,7 +19,6 @@ export const CompanySectorField: React.FC = () => {
 
   const handleValueChange = (value: string) => {
     console.log("CompanySectorField: atualizando para", value);
-    // Usar setValue com opções que previnem validação imediata
     setValue("company_sector", value, {
       shouldValidate: false,
       shouldDirty: true,
@@ -27,27 +26,23 @@ export const CompanySectorField: React.FC = () => {
     });
   };
 
-  const sectorOptions = [
-    { value: "inteligencia-artificial", label: "Inteligência Artificial" },
-    { value: "tecnologia", label: "Tecnologia / TI" },
-    { value: "educacao", label: "Educação" },
+  const sectors = [
+    { value: "tecnologia", label: "Tecnologia" },
     { value: "saude", label: "Saúde" },
-    { value: "financeiro", label: "Financeiro" },
-    { value: "ecommerce", label: "E-commerce / Varejo" },
-    { value: "servicos-profissionais", label: "Serviços Profissionais" },
-    { value: "marketing", label: "Marketing / Publicidade" },
-    { value: "industria", label: "Manufatura / Indústria" },
-    { value: "alimentacao", label: "Alimentação" },
-    { value: "construcao", label: "Construção Civil" },
-    { value: "imobiliario", label: "Imobiliário" },
-    { value: "transporte", label: "Transporte / Logística" },
+    { value: "educacao", label: "Educação" },
+    { value: "financas", label: "Finanças" },
+    { value: "varejo", label: "Varejo" },
+    { value: "industria", label: "Indústria" },
     { value: "agronegocio", label: "Agronegócio" },
-    { value: "energia", label: "Energia / Sustentabilidade" },
-    { value: "juridico", label: "Jurídico" },
-    { value: "rh", label: "Recursos Humanos / Recrutamento" },
+    { value: "construcao", label: "Construção" },
+    { value: "logistica", label: "Logística" },
+    { value: "alimentacao", label: "Alimentação" },
+    { value: "turismo", label: "Turismo" },
+    { value: "entretenimento", label: "Entretenimento" },
     { value: "consultoria", label: "Consultoria" },
-    { value: "governo", label: "Governo / Setor Público" },
-    { value: "outro", label: "Outro" },
+    { value: "marketing", label: "Marketing" },
+    { value: "inteligencia-artificial", label: "Inteligência Artificial" },
+    { value: "outros", label: "Outros" }
   ];
 
   return (
@@ -59,7 +54,7 @@ export const CompanySectorField: React.FC = () => {
           touchedFields.company_sector ? "text-[#0ABAB5]" : ""
         )}
       >
-        <Building2 className="h-4 w-4" />
+        <Briefcase className="h-4 w-4" />
         Setor de Atuação
         {touchedFields.company_sector && !errors.company_sector && (
           <CheckCircle className="h-4 w-4 text-[#0ABAB5]" />
@@ -79,9 +74,9 @@ export const CompanySectorField: React.FC = () => {
           <SelectValue placeholder="Selecione o setor de atuação" />
         </SelectTrigger>
         <SelectContent>
-          {sectorOptions.map((option) => (
-            <SelectItem key={option.value} value={option.value}>
-              {option.label}
+          {sectors.map((sector) => (
+            <SelectItem key={sector.value} value={sector.value}>
+              {sector.label}
             </SelectItem>
           ))}
         </SelectContent>
