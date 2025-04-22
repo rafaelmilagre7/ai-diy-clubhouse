@@ -13,6 +13,7 @@ export const useStepNavigation = () => {
 
   const pathToStepId = {
     "/onboarding": "personal",
+    "/onboarding/personal-info": "personal",
     "/onboarding/professional-data": "professional_data",
     "/onboarding/business-context": "business_context",
     "/onboarding/ai-experience": "ai_exp",
@@ -31,7 +32,28 @@ export const useStepNavigation = () => {
       // Se não há progresso, redirecionar para o início do onboarding
       if (!refreshedProgress) {
         console.log("Nenhum progresso encontrado, redirecionando para o início do onboarding");
-        navigate("/onboarding");
+        
+        // Se estamos na página inicial de onboarding, vamos para a primeira etapa (personal-info)
+        if (location.pathname === '/onboarding') {
+          console.log("Redirecionando para /onboarding/personal-info");
+          navigate("/onboarding/personal-info");
+          setCurrentStepIndex(0);
+          return;
+        }
+        
+        // Se já estamos em uma página de etapa específica, manter
+        if (location.pathname.includes('/onboarding/')) {
+          const currentStepId = pathToStepId[location.pathname as keyof typeof pathToStepId];
+          if (currentStepId) {
+            const index = steps.findIndex(step => step.id === currentStepId);
+            if (index !== -1) {
+              setCurrentStepIndex(index);
+            }
+          }
+          return;
+        }
+        
+        navigate("/onboarding/personal-info");
         setCurrentStepIndex(0);
         return;
       }

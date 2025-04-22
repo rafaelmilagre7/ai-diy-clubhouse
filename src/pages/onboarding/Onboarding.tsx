@@ -6,6 +6,7 @@ import { EtapasProgresso } from '@/components/onboarding/EtapasProgresso';
 import { useOnboardingSteps } from '@/hooks/onboarding/useOnboardingSteps';
 import MemberLayout from '@/components/layout/MemberLayout';
 import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 
 const Onboarding: React.FC = () => {
   const { 
@@ -16,6 +17,8 @@ const Onboarding: React.FC = () => {
     progress, 
     refreshProgress 
   } = useOnboardingSteps();
+  
+  const navigate = useNavigate();
 
   // Carregamento inicial
   useEffect(() => {
@@ -23,6 +26,12 @@ const Onboarding: React.FC = () => {
       try {
         await refreshProgress();
         console.log("Dados do onboarding carregados, pronto para começar");
+        
+        // Se estamos na rota /onboarding, redirecionar para a primeira etapa
+        if (window.location.pathname === '/onboarding') {
+          console.log("Redirecionando para primeira etapa do onboarding");
+          navigate('/onboarding/personal-info');
+        }
       } catch (error) {
         console.error("Erro ao carregar dados:", error);
         toast.error("Erro ao carregar dados do onboarding. Tente novamente.");
@@ -30,7 +39,7 @@ const Onboarding: React.FC = () => {
     };
     
     loadData();
-  }, [refreshProgress]);
+  }, [refreshProgress, navigate]);
 
   // Função melhorada para navegação entre etapas
   const handleStepClick = async (stepIndexDestino: number) => {

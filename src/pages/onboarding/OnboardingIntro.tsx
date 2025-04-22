@@ -4,12 +4,19 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import MemberLayout from '@/components/layout/MemberLayout';
+import { toast } from 'sonner';
 
 const OnboardingIntro = () => {
   const navigate = useNavigate();
 
   const handleStartOnboarding = () => {
-    navigate('/onboarding');
+    try {
+      console.log("Iniciando navegação para /onboarding/personal-info");
+      navigate('/onboarding/personal-info');
+    } catch (error) {
+      console.error("Erro ao navegar:", error);
+      toast.error("Erro ao iniciar onboarding. Tente novamente.");
+    }
   };
 
   return (
