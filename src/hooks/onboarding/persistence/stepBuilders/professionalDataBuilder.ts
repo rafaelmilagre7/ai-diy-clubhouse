@@ -43,5 +43,6 @@ export function buildProfessionalDataUpdate(data: ProfessionalDataInput, progres
   
   console.log("Objeto de atualização preparado:", updateObj);
   
+  // Importante: NÃO incluir campo "professional_data" que não existe na tabela
   return { ...buildBaseUpdate("professional_data", data, progress), ...updateObj };
 }

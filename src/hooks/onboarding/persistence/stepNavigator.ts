@@ -34,7 +34,7 @@ export function navigateAfterStep(
     // Pequeno delay para garantir que os dados foram salvos antes de navegar
     setTimeout(() => {
       navigate(nextRoute);
-    }, 500); // Aumentado para 500ms para garantir que os dados sejam salvos
+    }, 800); // Aumentado para 800ms para garantir que os dados sejam salvos
     return;
   }
   
@@ -46,13 +46,13 @@ export function navigateAfterStep(
       
       setTimeout(() => {
         navigate(nextStep.path);
-      }, 500);
+      }, 800);
     } else {
       console.log('Navegando para /onboarding/review (última etapa)');
       
       setTimeout(() => {
         navigate('/onboarding/review');
-      }, 500);
+      }, 800);
     }
     return;
   }

@@ -114,7 +114,7 @@ export const ProfessionalDataStep: React.FC<ProfessionalDataStepProps> = ({
       console.log("Enviando dados profissionais:", data);
       await onSubmit("professional_data", data);
       
-      // Toast de sucesso movido para depois do salvamento
+      // Mostra feedback de sucesso
       toast.success("Dados salvos com sucesso!", {
         description: "Redirecionando para a próxima etapa..."
       });

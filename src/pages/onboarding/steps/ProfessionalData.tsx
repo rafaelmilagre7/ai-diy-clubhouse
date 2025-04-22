@@ -31,7 +31,7 @@ const ProfessionalData = () => {
       toast.success("Dados profissionais salvos com sucesso!");
       
       // Navegar para a próxima página após salvar
-      // Usando a função de navegação diretamente
+      console.log("Navegando para próxima etapa após salvar dados profissionais");
       navigateAfterStep(stepId, 1, navigate, true);
       
     } catch (error) {
