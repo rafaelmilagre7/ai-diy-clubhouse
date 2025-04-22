@@ -3,6 +3,7 @@ import { OnboardingProgress } from "@/types/onboarding";
 import { buildProfessionalDataUpdate } from "./stepBuilders/professionalDataBuilder";
 import { buildBusinessGoalsUpdate } from "./stepBuilders/businessGoalsBuilder";
 import { buildComplementaryInfoUpdate } from "./stepBuilders/complementaryInfoBuilder";
+import { buildAiExpUpdate } from "./stepBuilders/aiExpBuilder";
 
 export function buildUpdateObject(
   stepId: string,
@@ -45,9 +46,7 @@ export function buildUpdateObject(
       break;
       
     case "ai_exp":
-      specificUpdateObj = {
-        ai_experience: data.ai_experience || data
-      };
+      specificUpdateObj = buildAiExpUpdate(data, progress);
       break;
       
     case "business_goals":

@@ -12,9 +12,22 @@ export function getAIExperienceSummary(data: OnboardingData['ai_experience']) {
     return <p className="text-gray-500 italic">Seção não preenchida ou dados incompletos. Clique em Editar para preencher.</p>;
   }
 
+  // Mapeamento de níveis para exibição mais amigável
+  const knowledgeLevelMap: Record<string, string> = {
+    'iniciante': 'Iniciante – Estou começando agora',
+    'basico': 'Básico – Já experimentei algumas ferramentas',
+    'intermediario': 'Intermediário – Uso regularmente',
+    'avancado': 'Avançado – Uso frequentemente e conheço bem',
+    'especialista': 'Especialista – Trabalho profissionalmente com IA'
+  };
+
   return (
     <div className="space-y-2 text-sm">
-      <p><span className="font-medium">Nível de conhecimento em IA:</span> {data.knowledge_level || "Não preenchido"}</p>
+      <p>
+        <span className="font-medium">Nível de conhecimento em IA:</span> {
+          data.knowledge_level ? (knowledgeLevelMap[data.knowledge_level] || data.knowledge_level) : "Não preenchido"
+        }
+      </p>
       
       {data.previous_tools && data.previous_tools.length > 0 && (
         <div>
@@ -39,7 +52,11 @@ export function getAIExperienceSummary(data: OnboardingData['ai_experience']) {
         </div>
       )}
       
-      <p><span className="font-medium">Já implementou soluções de IA:</span> {data.has_implemented === "sim" ? "Sim" : "Não"}</p>
+      <p>
+        <span className="font-medium">Já implementou soluções de IA:</span> {
+          data.has_implemented === "sim" || data.has_implemented === "true" ? "Sim" : "Não"
+        }
+      </p>
       
       {data.nps_score !== undefined && (
         <p><span className="font-medium">Avaliação da experiência (NPS):</span> {data.nps_score}/10</p>

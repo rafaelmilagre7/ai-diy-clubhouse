@@ -10,54 +10,78 @@ export function buildAiExpUpdate(data: Partial<OnboardingData>, progress: Onboar
   // Criar cópia dos dados para processamento
   const processedData = { ...data };
   
+  // Se os dados vieram dentro de um objeto ai_experience
+  const aiExp = processedData.ai_experience || (data as any).ai_exp;
+  let dataToProcess = aiExp;
+  
+  // Se ai_experience é uma string, tenta converter para objeto
+  if (typeof aiExp === 'string') {
+    try {
+      dataToProcess = JSON.parse(aiExp);
+      console.warn("Convertendo ai_experience de string para objeto:", dataToProcess);
+    } catch (e) {
+      console.error("Erro ao converter ai_experience string para objeto:", e);
+      dataToProcess = { knowledge_level: "iniciante" }; // Fallback básico
+    }
+  }
+  
+  // Se não temos dados dentro de ai_experience, usar o próprio data como fonte
+  if (!dataToProcess && typeof data === 'object') {
+    dataToProcess = { ...data };
+    // Remover campos que não pertencem a experiência com IA
+    delete dataToProcess.ai_experience;
+  }
+  
+  // Garantir que temos um objeto para processar
+  dataToProcess = dataToProcess || {};
+  
   // Normalizar arrays se necessário
-  if (processedData.ai_experience) {
-    const aiExp = processedData.ai_experience;
-    
+  if (dataToProcess) {
     // Verificar que arrays específicos são realmente arrays
-    if (aiExp.desired_ai_areas && !Array.isArray(aiExp.desired_ai_areas)) {
-      aiExp.desired_ai_areas = [aiExp.desired_ai_areas];
+    if (dataToProcess.desired_ai_areas && !Array.isArray(dataToProcess.desired_ai_areas)) {
+      dataToProcess.desired_ai_areas = [dataToProcess.desired_ai_areas];
     }
     
-    if (aiExp.previous_tools && !Array.isArray(aiExp.previous_tools)) {
-      aiExp.previous_tools = [aiExp.previous_tools];
+    if (dataToProcess.previous_tools && !Array.isArray(dataToProcess.previous_tools)) {
+      dataToProcess.previous_tools = [dataToProcess.previous_tools];
     }
     
     // Converter valores de string para booleanos quando apropriado
-    if (aiExp.has_implemented !== undefined) {
-      if (typeof aiExp.has_implemented === 'string') {
-        // Armazenar como string 'true' ou 'false' em vez de booleano
-        aiExp.has_implemented = 
-          (aiExp.has_implemented.toLowerCase() === 'sim' || 
-          aiExp.has_implemented.toLowerCase() === 'yes' || 
-          aiExp.has_implemented === '1' || 
-          aiExp.has_implemented.toLowerCase() === 'true') ? 'true' : 'false';
-      } else if (typeof aiExp.has_implemented === 'boolean') {
+    if (dataToProcess.has_implemented !== undefined) {
+      if (typeof dataToProcess.has_implemented === 'string') {
+        // Armazenar como string 'sim' ou 'nao' para consistência
+        dataToProcess.has_implemented = 
+          (dataToProcess.has_implemented.toLowerCase() === 'sim' || 
+          dataToProcess.has_implemented.toLowerCase() === 'yes' || 
+          dataToProcess.has_implemented === '1' || 
+          dataToProcess.has_implemented.toLowerCase() === 'true') ? 'sim' : 'nao';
+      } else if (typeof dataToProcess.has_implemented === 'boolean') {
         // Converter booleano para string
-        aiExp.has_implemented = aiExp.has_implemented ? 'true' : 'false';
+        dataToProcess.has_implemented = dataToProcess.has_implemented ? 'sim' : 'nao';
       }
     }
     
     // Garantir que o nível de conhecimento seja um dos valores esperados
-    if (aiExp.knowledge_level && typeof aiExp.knowledge_level === 'string') {
-      const validLevels = ['iniciante', 'intermediário', 'avançado'];
-      if (!validLevels.includes(aiExp.knowledge_level.toLowerCase())) {
-        aiExp.knowledge_level = 'iniciante';
+    if (dataToProcess.knowledge_level && typeof dataToProcess.knowledge_level === 'string') {
+      const validLevels = ['iniciante', 'basico', 'intermediario', 'avancado', 'especialista'];
+      if (!validLevels.includes(dataToProcess.knowledge_level.toLowerCase())) {
+        dataToProcess.knowledge_level = 'iniciante';
       }
     }
   }
   
-  // Adicionar metadados semânticos para facilitar interpretação por IA
-  const semanticMetadata = {
-    data_type: "ai_experience",
-    data_context: "technology_experience",
-    data_version: "1.0",
-    timestamp: new Date().toISOString()
+  // Criar o objeto finalizado para ai_experience
+  const finalAiExpData = {
+    ...dataToProcess,
+    _last_updated: new Date().toISOString()
   };
   
-  // Usar o builder base para construir o objeto de atualização
-  return buildBaseUpdate("ai_experience", processedData, progress, {
-    topLevelFields: ["ai_knowledge_level"],
-    metadata: semanticMetadata
-  });
+  // Log dos dados processados
+  console.log("Dados de AI Experience processados:", finalAiExpData);
+  
+  // Construir objeto de atualização
+  const updateObj: any = {};
+  updateObj.ai_experience = finalAiExpData;
+  
+  return updateObj;
 }
