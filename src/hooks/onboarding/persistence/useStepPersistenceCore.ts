@@ -1,8 +1,8 @@
 
 import { useProgress } from "../useProgress";
-import { buildUpdateObject } from "./persistence/stepDataBuilder";
-import { navigateAfterStep } from "./persistence/stepNavigator";
-import { steps } from "./useStepDefinitions";
+import { buildUpdateObject } from "../persistence/stepDataBuilder";
+import { navigateAfterStep } from "../persistence/stepNavigator";
+import { steps } from "../useStepDefinitions";
 import { toast } from "sonner";
 import { useLogging } from "@/hooks/useLogging";
 
@@ -78,8 +78,8 @@ export function useStepPersistenceCore({
       const result = await updateProgress(updateObj);
       
       // Verificar se temos um retorno válido
-      if (!result || result.error) {
-        const errorMessage = result?.error?.message || "Erro desconhecido ao atualizar dados";
+      if (!result || (result as any).error) {
+        const errorMessage = (result as any)?.error?.message || "Erro desconhecido ao atualizar dados";
         console.error("Erro ao atualizar dados:", errorMessage);
         logError("save_step_data_error", { 
           step: stepId, 
@@ -91,7 +91,7 @@ export function useStepPersistenceCore({
       }
       
       // Usar os dados retornados ou fallback para o objeto de progresso com as atualizações
-      const updatedProgress = result.data || { ...progress, ...updateObj };
+      const updatedProgress = (result as any).data || { ...progress, ...updateObj };
       console.log("Progresso atualizado com sucesso:", updatedProgress);
       
       // Notificar usuário do salvamento
@@ -138,8 +138,8 @@ export function useStepPersistenceCore({
         completed_steps: steps.map(s => s.id),
       });
       
-      if (result?.error) {
-        throw new Error(result.error.message || "Erro ao completar onboarding");
+      if ((result as any)?.error) {
+        throw new Error((result as any).error.message || "Erro ao completar onboarding");
       }
       
       // Atualiza dados locais
@@ -152,7 +152,7 @@ export function useStepPersistenceCore({
       setTimeout(() => {
         window.location.href = "/implementation-trail";
       }, 1000);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erro ao completar onboarding:", error);
       logError("complete_onboarding_error", { 
         error: error instanceof Error ? error.message : String(error) 
