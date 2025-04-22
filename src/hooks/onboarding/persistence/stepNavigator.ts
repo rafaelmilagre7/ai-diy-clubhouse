@@ -1,6 +1,10 @@
 
 import { steps } from "../useStepDefinitions";
 
+/**
+ * Função para navegação entre etapas do onboarding
+ * Utiliza diferentes estratégias para determinar a próxima rota
+ */
 export function navigateAfterStep(
   stepId: string, 
   currentStepIndex: number | undefined, 
@@ -31,8 +35,10 @@ export function navigateAfterStep(
     const nextRoute = nextRouteMap[stepId];
     console.log(`Navegando para ${nextRoute} (via mapeamento direto)`);
     
-    // Usar navigate em vez de window.location para evitar recarregamento completo
-    navigate(nextRoute);
+    // Pequeno delay para garantir que os dados foram salvos antes de navegar
+    setTimeout(() => {
+      navigate(nextRoute);
+    }, 300);
     return;
   }
   
@@ -42,12 +48,18 @@ export function navigateAfterStep(
       const nextStep = steps[currentStepIndex + 1];
       console.log(`Navegando para ${nextStep.path} (próximo passo na sequência)`);
       
-      navigate(nextStep.path);
+      // Pequeno delay para garantir que os dados foram salvos
+      setTimeout(() => {
+        navigate(nextStep.path);
+      }, 300);
     } else {
       // Se estamos na última etapa, navegar para a revisão
       console.log('Navegando para /onboarding/review (última etapa)');
       
-      navigate('/onboarding/review');
+      // Pequeno delay para garantir que os dados foram salvos
+      setTimeout(() => {
+        navigate('/onboarding/review');
+      }, 300);
     }
     return;
   }

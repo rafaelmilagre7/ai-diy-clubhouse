@@ -31,7 +31,7 @@ export const ProfessionalDataStep: React.FC<ProfessionalDataStepProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
   
-  console.log("ProfessionalDataStep - initialData:", initialData);
+  console.log("ProfessionalDataStep - initialData recebido:", initialData);
   
   // Função aprimorada para extrair dados iniciais do objeto
   const getInitialValue = (field: string) => {
@@ -41,14 +41,17 @@ export const ProfessionalDataStep: React.FC<ProfessionalDataStepProps> = ({
     if (initialData.professional_info && 
         initialData.professional_info[field] !== undefined && 
         initialData.professional_info[field] !== null) {
+      console.log(`Valor para ${field} encontrado em professional_info:`, initialData.professional_info[field]);
       return initialData.professional_info[field];
     }
     
     // Depois verificar nos campos de nível superior
     if (initialData[field] !== undefined && initialData[field] !== null) {
+      console.log(`Valor para ${field} encontrado no nível superior:`, initialData[field]);
       return initialData[field];
     }
     
+    console.log(`Nenhum valor encontrado para ${field}`);
     return "";
   };
   
@@ -80,7 +83,7 @@ export const ProfessionalDataStep: React.FC<ProfessionalDataStepProps> = ({
         annual_revenue: getInitialValue('annual_revenue')
       });
     }
-  }, [initialData, methods]);
+  }, [initialData]);
 
   const handleSubmit = async (data: any) => {
     setIsLoading(true);
@@ -113,9 +116,8 @@ export const ProfessionalDataStep: React.FC<ProfessionalDataStepProps> = ({
         data.company_website = normalizeWebsiteUrl(data.company_website);
       }
       
-      console.log("Enviando dados profissionais:", data);
+      console.log("Enviando dados profissionais para onSubmit:", data);
       await onSubmit("professional_data", data);
-      toast.success("Dados profissionais salvos com sucesso!");
     } catch (error) {
       console.error("Erro ao enviar dados profissionais:", error);
       setValidationErrors(["Falha ao salvar dados. Por favor, tente novamente."]);

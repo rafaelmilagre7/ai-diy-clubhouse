@@ -7,6 +7,7 @@ import { useOnboardingSteps } from "@/hooks/onboarding/useOnboardingSteps";
 import { MilagrinhoMessage } from "@/components/onboarding/MilagrinhoMessage";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { navigateAfterStep } from "@/hooks/onboarding/persistence/stepNavigator";
 
 const ProfessionalData = () => {
   const { progress, isLoading, refreshProgress } = useProgress();
@@ -16,7 +17,6 @@ const ProfessionalData = () => {
   
   useEffect(() => {
     console.log("ProfessionalData montado - carregando dados mais recentes");
-    // Garantir que temos os dados mais recentes ao montar o componente
     refreshProgress();
   }, [refreshProgress]);
 
@@ -25,13 +25,15 @@ const ProfessionalData = () => {
     try {
       console.log("ProfessionalData - Salvando dados:", data);
       
-      // Garantir navegação para a próxima página (force = true)
-      await saveStepData(stepId, data, true);
+      // Salvar dados usando o hook de persistência
+      await saveStepData(stepId, data, false);
+      
+      toast.success("Dados profissionais salvos com sucesso!");
       
       // Navegar para a próxima página após salvar
-      setTimeout(() => {
-        navigate("/onboarding/business-context");
-      }, 500);
+      // Usando a função de navegação diretamente
+      navigateAfterStep(stepId, 1, navigate, true);
+      
     } catch (error) {
       console.error("Erro ao salvar dados profissionais:", error);
       toast.error("Erro ao salvar dados. Por favor, tente novamente.");
