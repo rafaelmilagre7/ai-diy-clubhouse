@@ -1,5 +1,3 @@
-
-
 export interface OnboardingData {
   // 1. Dados Pessoais
   personal_info: {
@@ -169,4 +167,3 @@ export type ProfessionalDataInput = {
   current_position: string;
   annual_revenue: string;
 };
-

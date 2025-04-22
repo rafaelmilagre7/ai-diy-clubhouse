@@ -326,6 +326,56 @@ export type Database = {
           },
         ]
       }
+      onboarding_professional_info: {
+        Row: {
+          annual_revenue: string | null
+          company_name: string | null
+          company_sector: string | null
+          company_size: string | null
+          company_website: string | null
+          created_at: string | null
+          current_position: string | null
+          id: string
+          progress_id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          annual_revenue?: string | null
+          company_name?: string | null
+          company_sector?: string | null
+          company_size?: string | null
+          company_website?: string | null
+          created_at?: string | null
+          current_position?: string | null
+          id?: string
+          progress_id: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          annual_revenue?: string | null
+          company_name?: string | null
+          company_sector?: string | null
+          company_size?: string | null
+          company_website?: string | null
+          created_at?: string | null
+          current_position?: string | null
+          id?: string
+          progress_id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "onboarding_professional_info_progress_id_fkey"
+            columns: ["progress_id"]
+            isOneToOne: false
+            referencedRelation: "onboarding_progress"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       onboarding_progress: {
         Row: {
           ai_experience: Json | null
