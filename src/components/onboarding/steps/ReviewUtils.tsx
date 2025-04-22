@@ -13,6 +13,9 @@ export function getSummary(section: string, data: any, progress: any) {
   // Garantir que os dados não são nulos ou indefinidos
   const safeData = data || {};
   
+  // Log para debug
+  console.log(`Renderizando summary para seção ${section} com dados:`, safeData);
+  
   if (!data || Object.keys(safeData).length === 0) {
     return <p className="text-gray-500 italic">Seção não preenchida. Clique em Editar para preencher.</p>;
   }
@@ -38,9 +41,15 @@ export function getSummary(section: string, data: any, progress: any) {
 }
 
 function renderDefaultSummary(data: any) {
+  if (!data || Object.keys(data).length === 0) {
+    return <p className="text-gray-500 italic">Dados não disponíveis ou não preenchidos.</p>;
+  }
+  
   return (
     <div className="space-y-1 text-sm text-gray-600">
       {Object.entries(data || {}).map(([key, value]) => {
+        if (!value) return null;
+        
         if (Array.isArray(value) && value.length > 0) {
           return renderArrayField(key, value);
         } else if (typeof value === 'boolean') {
@@ -88,6 +97,8 @@ function renderSimpleField(key: string, value: any) {
 }
 
 function renderObjectField(key: string, value: object) {
+  if (Object.keys(value).length === 0) return null;
+  
   return (
     <div key={key} className="mb-2">
       <span className="font-medium text-gray-700">{formatKey(key)}:</span>

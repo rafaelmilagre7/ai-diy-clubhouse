@@ -31,6 +31,20 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({
 }) => {
   const phoneIsValid = value ? validateBrazilianPhone(value) : true;
   
+  // Certifica-se de que o DDI começa com + (se tiver conteúdo)
+  const formatDDI = (ddiValue: string) => {
+    if (!ddiValue) return "+55";
+    return ddiValue.startsWith('+') ? ddiValue : `+${ddiValue}`;
+  };
+  
+  // Manipula a mudança do DDI garantindo que sempre começa com +
+  const handleDDIChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (onChangeDDI) {
+      const newDDI = formatDDI(e.target.value.replace(/\D/g, ''));
+      onChangeDDI(newDDI);
+    }
+  };
+  
   return (
     <div className="space-y-2">
       <Label htmlFor="phone" className={cn(
@@ -52,7 +66,7 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({
             <Input
               id="ddi"
               value={ddi}
-              onChange={(e) => onChangeDDI(e.target.value)}
+              onChange={handleDDIChange}
               disabled={disabled}
               className={cn(
                 "transition-all duration-200",

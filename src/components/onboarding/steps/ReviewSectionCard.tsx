@@ -22,9 +22,14 @@ export const ReviewSectionCard: React.FC<ReviewSectionCardProps> = ({
   navigateToStep
 }) => {
   const handleEdit = () => {
-    // Ajustando o índice (a UI mostra 1-based, mas a navegação é 0-based)
-    const indexToNavigate = stepIndex > 0 ? stepIndex - 1 : 0;
-    navigateToStep(indexToNavigate);
+    try {
+      // Ajustando o índice (a UI mostra 1-based, mas a navegação é 0-based)
+      const indexToNavigate = stepIndex > 0 ? stepIndex - 1 : 0;
+      console.log(`Navegando para o passo ${indexToNavigate}, originalmente ${stepIndex}`);
+      navigateToStep(indexToNavigate);
+    } catch (error) {
+      console.error("Erro ao navegar para etapa:", error);
+    }
   };
 
   return (

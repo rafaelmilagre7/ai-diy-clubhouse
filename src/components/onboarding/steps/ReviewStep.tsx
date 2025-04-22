@@ -33,6 +33,9 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({
     .filter(step => step.id !== "review" && step.id !== "trail_generation")
     .every(step => progress.completed_steps && Array.isArray(progress.completed_steps) && progress.completed_steps.includes(step.id));
 
+  // Depurar progresso para entender melhor os dados disponíveis
+  console.log("Dados de progresso na ReviewStep:", progress);
+
   return (
     <div className="space-y-6">
       <Card className="bg-[#0ABAB5]/10 p-4 rounded-md border border-[#0ABAB5]/20">
@@ -49,15 +52,20 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({
             const sectionKey = step.section as keyof OnboardingProgress;
             let sectionData = progress[sectionKey];
 
+            // Log para depuração
+            console.log(`Passo ${step.id}, seção ${step.section}, dados:`, sectionData);
+
             // Tratamento especial para business_context que pode estar em business_data
             if (step.section === "business_context" && (!sectionData || Object.keys(sectionData || {}).length === 0)) {
               sectionData = progress.business_data;
+              console.log("Usando business_data como fallback para business_context:", sectionData);
             }
 
             // Tratamento especial para dados pessoais
             if (step.section === "personal_info" && (!sectionData || Object.keys(sectionData || {}).length === 0)) {
               if (progress.personal_info) {
                 sectionData = progress.personal_info;
+                console.log("Usando personal_info:", sectionData);
               }
             }
 
@@ -76,6 +84,7 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({
               // Se algum dos campos diretos tiver valor, usar esses dados
               if (Object.values(directData).some(value => !!value)) {
                 sectionData = directData;
+                console.log("Usando dados diretos para professional_info:", sectionData);
               }
             }
             
@@ -83,6 +92,8 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({
             const stepIndex = findStepIndex(step.id);
             // Mas enviamos stepIndex + 1 apenas para exibição na UI
             const displayIndex = stepIndex + 1;
+
+            console.log(`Renderizando seção ${step.id}, índice para navegação: ${stepIndex}, índice para exibição: ${displayIndex}`);
 
             return (
               <ReviewSectionCard
