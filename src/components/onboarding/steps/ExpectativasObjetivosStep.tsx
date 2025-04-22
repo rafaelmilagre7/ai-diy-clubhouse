@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Check, ArrowRight } from "lucide-react";
@@ -157,7 +156,7 @@ export const ExpectativasObjetivosStep = ({
     };
     
     console.log("Enviando dados formatados:", formattedData);
-    onSubmit(formattedData);
+    onSubmit("business_goals", formattedData);
   };
   
   return (
