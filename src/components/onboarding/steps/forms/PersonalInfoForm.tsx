@@ -12,6 +12,8 @@ interface PersonalInfoFormProps {
   isSubmitting: boolean;
   onSubmit?: () => void;
   readOnly?: boolean;
+  isSaving?: boolean;
+  lastSaveTime?: number;
 }
 
 export const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({ 
@@ -19,7 +21,10 @@ export const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({
   errors, 
   onChange, 
   isSubmitting, 
-  readOnly = false
+  onSubmit,
+  readOnly = false,
+  isSaving = false,
+  lastSaveTime
 }) => {
   const hasErrors = Object.keys(errors).length > 0;
   
@@ -44,10 +49,29 @@ export const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({
       <PersonalInfoInputs 
         formData={formData} 
         onChange={onChange} 
-        disabled={isSubmitting}
+        disabled={isSubmitting || isSaving}
         readOnly={readOnly}
         errors={errors}
       />
+      
+      {onSubmit && !readOnly && (
+        <div className="flex justify-end pt-4">
+          <button
+            type="button"
+            onClick={onSubmit}
+            disabled={isSubmitting || isSaving}
+            className="bg-[#0ABAB5] hover:bg-[#0ABAB5]/90 text-white px-4 py-2 rounded-md"
+          >
+            {isSubmitting || isSaving ? "Salvando..." : "Continuar"}
+          </button>
+        </div>
+      )}
+      
+      {lastSaveTime && (
+        <p className="text-xs text-gray-500 text-right">
+          Última atualização: {new Date(lastSaveTime).toLocaleTimeString()}
+        </p>
+      )}
     </div>
   );
 };
