@@ -7,7 +7,6 @@ import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, CheckCircle } from "lucide-react";
 import { OnboardingStepProps, PersonalInfoData } from "@/types/onboarding";
-import { AutoSaveFeedback } from "../AutoSaveFeedback";
 import { EtapasProgresso } from "../EtapasProgresso";
 
 export interface PersonalInfoStepProps extends Partial<OnboardingStepProps> {
@@ -36,20 +35,8 @@ export const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
   lastSaveTime = null,
 }) => {
   const [validationAttempted, setValidationAttempted] = useState(false);
-  const [localIsSaving, setLocalIsSaving] = useState(isSaving);
-  const [localLastSaveTime, setLocalLastSaveTime] = useState<number | null>(lastSaveTime);
   // Flag para indicar que o formulário foi carregado
   const [isFormLoaded, setIsFormLoaded] = useState(false);
-  
-  useEffect(() => {
-    setLocalIsSaving(isSaving);
-  }, [isSaving]);
-  
-  useEffect(() => {
-    if (lastSaveTime) {
-      setLocalLastSaveTime(lastSaveTime);
-    }
-  }, [lastSaveTime]);
   
   // Marcar o formulário como carregado após um breve delay
   useEffect(() => {
@@ -96,9 +83,7 @@ export const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
     }
     
     try {
-      setLocalIsSaving(true);
       await onSubmit();
-      setLocalLastSaveTime(Date.now());
       
       toast.success("Dados pessoais salvos com sucesso!", {
         description: "Avançando para a próxima etapa..."
@@ -108,8 +93,6 @@ export const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
       toast.error("Erro ao salvar os dados", {
         description: "Verifique sua conexão e tente novamente"
       });
-    } finally {
-      setLocalIsSaving(false);
     }
   };
 
@@ -160,10 +143,6 @@ export const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
         formData={formData}
         onChange={onChange}
       />
-
-      <div className="flex justify-between items-center pt-4">
-        <AutoSaveFeedback isSaving={localIsSaving} lastSaveTime={localLastSaveTime} />
-      </div>
     </form>
   );
 };

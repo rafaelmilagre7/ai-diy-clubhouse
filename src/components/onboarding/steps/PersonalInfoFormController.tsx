@@ -25,26 +25,11 @@ export const PersonalInfoFormController = () => {
 
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
-  // Salvamento automático no carregamento inicial para garantir persistência
+
+  // Carregamento inicial de dados, sem salvamento automático
   useEffect(() => {
     if (formDataLoaded && progress?.id && !isSubmitting) {
-      const saveInitialData = async () => {
-        try {
-          const fullName = profile?.name || user?.user_metadata?.name || formData.name;
-          const email = profile?.email || user?.email || formData.email;
-          const personalInfo = { ...formData, name: fullName, email: email };
-          
-          await updateProgress({
-            personal_info: personalInfo,
-          });
-          console.log("Dados iniciais salvos no carregamento");
-        } catch (error) {
-          console.error("Erro ao salvar dados iniciais:", error);
-        }
-      };
-      
-      saveInitialData();
+      console.log("Dados iniciais carregados");
     }
   }, [formDataLoaded, progress?.id]);
 
