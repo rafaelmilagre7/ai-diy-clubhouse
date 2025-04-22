@@ -2,9 +2,9 @@
 import * as React from "react";
 import { X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Command, CommandGroup, CommandItem } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import { Check } from "lucide-react";
 
 export type OptionType = {
   label: string;
@@ -139,45 +139,42 @@ export function MultiSelect({
         </div>
       </PopoverTrigger>
       <PopoverContent className="p-0" align="start" sideOffset={5}>
-        <Command className="max-h-[300px] overflow-y-auto">
-          <CommandGroup className="max-h-full overflow-auto">
-            {maxItems && selectedItems.length >= maxItems && (
-              <p className="px-2 py-1.5 text-sm text-muted-foreground">
-                Máximo de {maxItems} itens selecionados
-              </p>
-            )}
-            {selectableOptions.length > 0 ? (
-              selectableOptions.map((option) => {
-                const isSelected = selectedItems.includes(option.value);
-                return (
-                  <CommandItem
-                    key={option.value}
-                    value={option.value}
-                    onSelect={() => handleSelect(option.value)}
+        <div className="max-h-[300px] overflow-y-auto py-1">
+          {maxItems && selectedItems.length >= maxItems && (
+            <p className="px-2 py-1.5 text-sm text-muted-foreground">
+              Máximo de {maxItems} itens selecionados
+            </p>
+          )}
+          {selectableOptions.length > 0 ? (
+            selectableOptions.map((option) => {
+              const isSelected = selectedItems.includes(option.value);
+              return (
+                <div
+                  key={option.value}
+                  onClick={() => handleSelect(option.value)}
+                  className={cn(
+                    "flex cursor-pointer items-center gap-2 px-2 py-1.5 hover:bg-accent/50",
+                    isSelected ? "bg-accent/50" : ""
+                  )}
+                >
+                  <div
                     className={cn(
-                      "flex items-center gap-2 px-2 py-1.5",
-                      isSelected ? "bg-accent/50" : ""
+                      "flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
+                      isSelected ? "bg-primary text-primary-foreground" : ""
                     )}
                   >
-                    <div
-                      className={cn(
-                        "flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
-                        isSelected ? "bg-primary text-primary-foreground" : ""
-                      )}
-                    >
-                      {isSelected && <X className="h-3 w-3" />}
-                    </div>
-                    <span>{option.label}</span>
-                  </CommandItem>
-                );
-              })
-            ) : (
-              <p className="px-2 py-1.5 text-sm text-muted-foreground">
-                Nenhuma opção encontrada
-              </p>
-            )}
-          </CommandGroup>
-        </Command>
+                    {isSelected && <Check className="h-3 w-3" />}
+                  </div>
+                  <span>{option.label}</span>
+                </div>
+              );
+            })
+          ) : (
+            <p className="px-2 py-1.5 text-sm text-muted-foreground">
+              Nenhuma opção encontrada
+            </p>
+          )}
+        </div>
       </PopoverContent>
     </Popover>
   );
