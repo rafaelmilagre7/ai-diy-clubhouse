@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Badge } from "@/components/ui/badge";
 import { OnboardingData } from "@/types/onboarding";
@@ -48,6 +47,23 @@ export function getAIExperienceSummary(data: OnboardingData['ai_experience']) {
     'analise_dados': 'Soluções de IA para Análise de Dados'
   };
 
+  // Modificar a verificação de has_implemented para ser mais robusta
+  const hasImplemented = () => {
+    const value = processedData.has_implemented;
+    
+    // Tratar casos onde has_implemented pode ser string ou boolean
+    if (value === true || value === "true" || value === "sim") {
+      return true;
+    }
+    
+    if (value === false || value === "false" || value === "nao") {
+      return false;
+    }
+    
+    // Caso padrão, retornar false se não for possível determinar
+    return false;
+  };
+
   return (
     <div className="space-y-3 text-sm">
       <p>
@@ -85,11 +101,7 @@ export function getAIExperienceSummary(data: OnboardingData['ai_experience']) {
       
       <p>
         <span className="font-medium">Já implementou soluções de IA:</span> {
-          processedData.has_implemented === "sim" ||
-          processedData.has_implemented === true ||
-          processedData.has_implemented === "true"
-            ? "Sim"
-            : "Não"
+          hasImplemented() ? "Sim" : "Não"
         }
       </p>
       
