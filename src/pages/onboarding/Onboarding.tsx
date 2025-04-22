@@ -1,5 +1,5 @@
 
-import React, { useRef } from 'react';
+import React, { useEffect } from 'react';
 import { OnboardingSteps } from '@/components/onboarding/OnboardingSteps';
 import { OnboardingHeader } from '@/components/onboarding/OnboardingHeader';
 import { EtapasProgresso } from '@/components/onboarding/EtapasProgresso';
@@ -8,55 +8,77 @@ import MemberLayout from '@/components/layout/MemberLayout';
 import { toast } from 'sonner';
 
 const Onboarding: React.FC = () => {
-  const { currentStepIndex, steps, navigateToStep, saveStepData, progress } = useOnboardingSteps();
-  const formStateRef = useRef<any>(null);
+  const { 
+    currentStepIndex, 
+    steps, 
+    navigateToStep, 
+    saveStepData, 
+    progress, 
+    refreshProgress 
+  } = useOnboardingSteps();
 
-  // Função robusta para troca de etapa com salvamento de dados
+  // Carregamento inicial
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        await refreshProgress();
+        console.log("Dados do onboarding atualizados");
+      } catch (error) {
+        console.error("Erro ao carregar dados:", error);
+      }
+    };
+    
+    loadData();
+  }, [refreshProgress]);
+
+  // Função melhorada para navegação entre etapas
   const handleStepClick = async (stepIndexDestino: number) => {
-    // Permite navegar para qualquer etapa (inclusive a 1ª)
+    // Evitar recarregar a mesma etapa
     if (stepIndexDestino === currentStepIndex) return;
 
     try {
+      // Salvar dados da etapa atual antes de navegar
       const currentStep = steps[currentStepIndex];
       const stepId = currentStep.id;
+      
+      // Extrair dados da etapa atual com base no ID
       let data = {};
-
-      switch (stepId) {
-        case 'personal':
-          data = progress?.personal_info || {};
-          break;
-        case 'professional_data':
-          data = progress?.professional_info || {};
-          break;
-        case 'business_context':
-          data = progress?.business_context || {};
-          break;
-        case 'ai_exp':
-          data = progress?.ai_experience || {};
-          break;
-        case 'business_goals':
-          data = progress?.business_goals || {};
-          break;
-        case 'experience_personalization':
-          data = progress?.experience_personalization || {};
-          break;
-        case 'complementary_info':
-          data = progress?.complementary_info || {};
-          break;
-        default:
-          data = {};
+      if (progress) {
+        switch (stepId) {
+          case 'personal':
+            data = progress?.personal_info || {};
+            break;
+          case 'professional_data':
+            data = progress?.professional_info || {};
+            break;
+          case 'business_context':
+            data = progress?.business_context || {};
+            break;
+          case 'ai_exp':
+            data = progress?.ai_experience || {};
+            break;
+          case 'business_goals':
+            data = progress?.business_goals || {};
+            break;
+          case 'experience_personalization':
+            data = progress?.experience_personalization || {};
+            break;
+          case 'complementary_info':
+            data = progress?.complementary_info || {};
+            break;
+        }
       }
 
-      // Salva os dados do passo atual antes de trocar (mesmo que não tenha alteração)
+      // Salvar dados atuais
       await saveStepData(stepId, data, false);
-
+      console.log(`Navegando para etapa ${stepIndexDestino + 1}`);
+      
+      // Navegar para a etapa desejada
+      navigateToStep(stepIndexDestino);
     } catch (e) {
-      toast.error("Erro ao salvar dados antes de trocar de etapa");
-      return;
+      console.error("Erro ao trocar de etapa:", e);
+      toast.error("Não foi possível trocar de etapa. Tente novamente.");
     }
-
-    // Troca de etapa SEM restrição, inclusive para a primeira
-    navigateToStep(stepIndexDestino);
   };
 
   return (

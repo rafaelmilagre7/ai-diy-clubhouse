@@ -56,7 +56,7 @@ export const CompanySectorField: React.FC = () => {
         )}
       </Label>
       <Select
-        value={companySector}
+        value={companySector || ""}
         onValueChange={(value) => setValue("company_sector", value, { 
           shouldValidate: true, 
           shouldTouch: true 

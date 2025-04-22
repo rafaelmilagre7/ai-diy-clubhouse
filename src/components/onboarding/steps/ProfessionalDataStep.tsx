@@ -7,13 +7,11 @@ import { CompanySectorField } from "./professional-inputs/CompanySectorField";
 import { WebsiteField } from "./professional-inputs/WebsiteField";
 import { CurrentPositionField } from "./professional-inputs/CurrentPositionField";
 import { AnnualRevenueField } from "./professional-inputs/AnnualRevenueField";
-import { Button } from "@/components/ui/button";
-import { ArrowRight, ArrowLeft, AlertCircle, Building2, Loader2 } from "lucide-react";
+import { AlertCircle, Building2, Loader2 } from "lucide-react";
 import { OnboardingStepProps } from "@/types/onboarding";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import * as validations from "@/utils/professionalDataValidation";
-import { normalizeWebsiteUrl } from "@/utils/professionalDataValidation";
 import { NavigationButtons } from "@/components/onboarding/NavigationButtons";
 
 interface ProfessionalDataStepProps extends OnboardingStepProps {
@@ -34,27 +32,25 @@ export const ProfessionalDataStep: React.FC<ProfessionalDataStepProps> = ({
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
   const [formInitialized, setFormInitialized] = useState(false);
   
-  console.log("ProfessionalDataStep - initialData recebido:", initialData);
+  // Log de depuração para ver o formato dos dados iniciais
+  console.log("ProfessionalDataStep - initialData:", initialData);
   
   // Função aprimorada para extrair dados iniciais do objeto
   const getInitialValue = (field: string) => {
     if (!initialData) return "";
     
-    // Primeiro verificar no objeto professional_info
+    // Verificar no objeto professional_info
     if (initialData.professional_info && 
         initialData.professional_info[field] !== undefined && 
         initialData.professional_info[field] !== null) {
-      console.log(`Valor para ${field} encontrado em professional_info:`, initialData.professional_info[field]);
       return initialData.professional_info[field];
     }
     
-    // Depois verificar nos campos de nível superior
+    // Verificar nos campos de nível superior
     if (initialData[field] !== undefined && initialData[field] !== null) {
-      console.log(`Valor para ${field} encontrado no nível superior:`, initialData[field]);
       return initialData[field];
     }
     
-    console.log(`Nenhum valor encontrado para ${field}`);
     return "";
   };
   
@@ -74,7 +70,7 @@ export const ProfessionalDataStep: React.FC<ProfessionalDataStepProps> = ({
   // Efeito para atualizar o formulário quando os dados iniciais mudarem
   useEffect(() => {
     if (initialData) {
-      console.log("Atualizando formulário com dados iniciais:", initialData);
+      console.log("Atualizando formulário com dados iniciais");
       
       // Resetar o formulário com os valores iniciais
       methods.reset({
@@ -95,20 +91,28 @@ export const ProfessionalDataStep: React.FC<ProfessionalDataStepProps> = ({
     setValidationErrors([]);
     
     try {
-      // Validar todos os campos
+      // Validar campos
       const errors: string[] = [];
-      const validationResults = {
-        company_name: validations.validateCompanyName(data.company_name),
-        company_website: validations.validateWebsite(data.company_website),
-        company_size: validations.validateCompanySize(data.company_size),
-        company_sector: validations.validateCompanySector(data.company_sector),
-        current_position: validations.validateCurrentPosition(data.current_position),
-        annual_revenue: validations.validateAnnualRevenue(data.annual_revenue)
-      };
-
-      Object.entries(validationResults).forEach(([field, error]) => {
-        if (error) errors.push(error);
-      });
+      
+      if (!data.company_name?.trim()) {
+        errors.push("Nome da empresa é obrigatório");
+      }
+      
+      if (!data.company_size) {
+        errors.push("Tamanho da empresa é obrigatório");
+      }
+      
+      if (!data.company_sector) {
+        errors.push("Setor de atuação é obrigatório");
+      }
+      
+      if (!data.current_position?.trim()) {
+        errors.push("Cargo atual é obrigatório");
+      }
+      
+      if (!data.annual_revenue) {
+        errors.push("Faturamento anual é obrigatório");
+      }
 
       if (errors.length > 0) {
         setValidationErrors(errors);
@@ -119,17 +123,12 @@ export const ProfessionalDataStep: React.FC<ProfessionalDataStepProps> = ({
       console.log("Enviando dados profissionais:", data);
       await onSubmit("professional_data", data);
       
-      // Mostra feedback de sucesso
-      toast.success("Dados salvos com sucesso!", {
-        description: "Redirecionando para a próxima etapa..."
-      });
+      toast.success("Dados salvos com sucesso!");
       
     } catch (error) {
       console.error("Erro ao enviar dados profissionais:", error);
       setValidationErrors(["Falha ao salvar dados. Por favor, tente novamente."]);
-      toast.error("Erro ao salvar dados", {
-        description: "Verifique sua conexão e tente novamente."
-      });
+      toast.error("Erro ao salvar dados");
     } finally {
       setIsLoading(false);
     }
@@ -141,11 +140,12 @@ export const ProfessionalDataStep: React.FC<ProfessionalDataStepProps> = ({
     }
   };
 
+  // Tela de carregamento enquanto os dados iniciais não foram carregados
   if (!formInitialized && !initialData) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-[#0ABAB5]" />
-        <span className="ml-2 text-gray-300">Carregando seus dados...</span>
+        <Loader2 className="h-8 w-8 animate-spin text-[#0ABAB5] mr-2" />
+        <span className="text-gray-300">Carregando seus dados...</span>
       </div>
     );
   }

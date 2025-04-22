@@ -28,8 +28,8 @@ export const EtapasProgresso: React.FC<EtapasProgressoProps> = ({
         {steps.map((step, idx) => {
           const isComplete = step < currentStep;
           const isActive = step === currentStep;
-          // Permitimos que passos já completados sejam clicáveis
-          const isClickable = typeof onStepClick === 'function';
+          // Todos os passos são clicáveis para melhorar a navegação
+          const isClickable = !!onStepClick;
 
           return (
             <button
@@ -40,7 +40,8 @@ export const EtapasProgresso: React.FC<EtapasProgressoProps> = ({
                 isClickable ? "cursor-pointer select-none hover:scale-110 transition-transform" : "",
               )}
               onClick={() => {
-                if (isClickable && onStepClick) {
+                if (isClickable) {
+                  console.log(`Clicou na etapa ${idx + 1}`);
                   onStepClick(idx);
                 }
               }}
@@ -56,7 +57,7 @@ export const EtapasProgresso: React.FC<EtapasProgressoProps> = ({
                     ? "bg-[#0ABAB5]"
                     : isActive
                     ? "bg-[#0ABAB5]/20 border-2 border-[#0ABAB5]"
-                    : "bg-gray-700"
+                    : "bg-gray-700 hover:bg-gray-600"
                 )}
               >
                 {isComplete ? (
@@ -65,7 +66,10 @@ export const EtapasProgresso: React.FC<EtapasProgressoProps> = ({
                   <span className="text-white font-medium">{step}</span>
                 )}
               </div>
-              <span className="mt-2 text-xs text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity absolute -bottom-6 whitespace-nowrap">
+              <span className={cn(
+                "mt-2 text-xs text-white font-medium absolute -bottom-6 whitespace-nowrap transition-opacity duration-200",
+                "opacity-0 group-hover:opacity-100"
+              )}>
                 {idx === 0 ? "Dados Pessoais" : 
                  idx === 1 ? "Dados Profissionais" :
                  idx === 2 ? "Contexto do Negócio" :

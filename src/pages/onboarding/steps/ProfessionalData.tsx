@@ -13,13 +13,13 @@ import { Loader2 } from "lucide-react";
 
 const ProfessionalData = () => {
   const { progress, isLoading, refreshProgress } = useProgress();
-  const { saveStepData, navigateToStep } = useOnboardingSteps();
+  const { saveStepData } = useOnboardingSteps();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [dataFetched, setDataFetched] = useState(false);
   const navigate = useNavigate();
   
   useEffect(() => {
-    console.log("ProfessionalData montado - carregando dados mais recentes");
+    console.log("ProfessionalData: carregando dados mais recentes");
     
     const loadData = async () => {
       try {
@@ -39,7 +39,7 @@ const ProfessionalData = () => {
     try {
       console.log("ProfessionalData - Salvando dados:", data);
       
-      // Validar campos obrigatórios
+      // Validação básica
       if (!data.company_name || !data.company_size || !data.company_sector || !data.current_position || !data.annual_revenue) {
         toast.error("Por favor, preencha todos os campos obrigatórios");
         setIsSubmitting(false);
@@ -49,7 +49,6 @@ const ProfessionalData = () => {
       await saveStepData(stepId, data, true);
       
       // Navegar para a próxima página após salvar
-      // O toast de sucesso já será mostrado pelo hook useStepPersistenceCore
       console.log("Navegando para próxima etapa após salvar dados profissionais");
       navigateAfterStep(stepId, 1, navigate, true);
       
@@ -63,6 +62,7 @@ const ProfessionalData = () => {
 
   const handlePrevious = () => {
     // Navegar para a etapa anterior (Dados Pessoais)
+    console.log("Voltando para Dados Pessoais");
     navigate("/onboarding");
   };
 
