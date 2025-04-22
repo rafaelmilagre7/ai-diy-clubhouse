@@ -3,7 +3,7 @@ import { OnboardingData, OnboardingProgress } from "@/types/onboarding";
 import { normalizeWebsite } from "../utils/dataNormalization";
 
 export function buildProfessionalDataUpdate(data: Partial<OnboardingData>, progress: OnboardingProgress | null) {
-  // Criar um objeto de retorno com tipos seguros
+  // Criar um objeto de retorno com tipagem correta
   const updateObj: Partial<OnboardingProgress> = {};
   
   // Se tivermos um objeto de progresso existente, copiar campos relevantes
@@ -55,14 +55,25 @@ export function buildProfessionalDataUpdate(data: Partial<OnboardingData>, progr
       // Atualizar no objeto professional_info
       professionalInfo[field] = value;
       
-      // Atualizar campos de nível superior de forma segura
-      // Usamos uma abordagem manual e explícita para cada campo
-      if (field === 'company_name') updateObj.company_name = value as string;
-      else if (field === 'company_size') updateObj.company_size = value as string;
-      else if (field === 'company_sector') updateObj.company_sector = value as string;
-      else if (field === 'company_website') updateObj.company_website = value as string;
-      else if (field === 'current_position') updateObj.current_position = value as string;
-      else if (field === 'annual_revenue') updateObj.annual_revenue = value as string;
+      // Atualizar campos de nível superior de forma segura usando tipagem assertiva explícita
+      if (field === 'company_name') {
+        (updateObj as any).company_name = value;
+      } 
+      else if (field === 'company_size') {
+        (updateObj as any).company_size = value;
+      }
+      else if (field === 'company_sector') {
+        (updateObj as any).company_sector = value;
+      }
+      else if (field === 'company_website') {
+        (updateObj as any).company_website = value;
+      }
+      else if (field === 'current_position') {
+        (updateObj as any).current_position = value;
+      }
+      else if (field === 'annual_revenue') {
+        (updateObj as any).annual_revenue = value;
+      }
       
       hasUpdates = true;
     }
