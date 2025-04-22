@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Badge } from "@/components/ui/badge";
 import { OnboardingData } from "@/types/onboarding";
@@ -52,12 +53,12 @@ export function getAIExperienceSummary(data: OnboardingData['ai_experience']) {
     const value = processedData.has_implemented;
     
     // Tratar casos onde has_implemented pode ser string ou boolean
-    if (value === true || value === "true" || value === "sim") {
-      return true;
+    if (typeof value === 'boolean') {
+      return value;
     }
     
-    if (value === false || value === "false" || value === "nao") {
-      return false;
+    if (typeof value === 'string') {
+      return value === "true" || value === "sim";
     }
     
     // Caso padrão, retornar false se não for possível determinar
