@@ -6,12 +6,14 @@ import { ExpectativasObjetivosStep } from "@/components/onboarding/steps/Expecta
 import { MilagrinhoMessage } from "@/components/onboarding/MilagrinhoMessage";
 import { useProgress } from "@/hooks/onboarding/useProgress";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 const BusinessGoalsClub = () => {
   const { saveStepData, progress, completeOnboarding } = useOnboardingSteps();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { isLoading, refreshProgress } = useProgress();
   const [refreshCount, setRefreshCount] = useState(0);
+  const navigate = useNavigate();
 
   // Efeito para carregar dados mais recentes ao entrar na página
   useEffect(() => {
@@ -41,6 +43,9 @@ const BusinessGoalsClub = () => {
       
       // Forçar atualização dos dados após salvar
       await refreshProgress();
+      
+      // Navegar manualmente para a próxima página
+      navigate("/onboarding/customization");
     } catch (error) {
       console.error("Erro ao salvar dados:", error);
       toast.error("Erro ao salvar dados. Por favor, tente novamente.");

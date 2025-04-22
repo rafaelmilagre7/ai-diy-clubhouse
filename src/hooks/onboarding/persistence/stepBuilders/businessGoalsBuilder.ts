@@ -62,7 +62,7 @@ export function buildBusinessGoalsUpdate(data: Partial<OnboardingData>, progress
   if (progress?.business_goals) {
     let existingBusinessGoals = normalizeBusinessGoals(progress.business_goals);
     
-    // Garantir que é um objeto
+    // Garantir que é um objeto válido antes de mesclar
     if (existingBusinessGoals && typeof existingBusinessGoals === 'object' && Object.keys(existingBusinessGoals).length > 0) {
       if (updateObj.business_goals) {
         updateObj.business_goals = {

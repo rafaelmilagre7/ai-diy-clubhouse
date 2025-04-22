@@ -62,6 +62,11 @@ export const normalizeAIExperience = (aiExp: any) => {
 export const normalizeBusinessGoals = (data: any) => {
   let normalizedGoals = data;
   
+  // Verificar se é undefined ou null
+  if (data === undefined || data === null) {
+    return {};
+  }
+  
   // Converter de string para objeto se necessário
   if (typeof data === 'string' && data.trim() !== '') {
     try {
@@ -72,23 +77,32 @@ export const normalizeBusinessGoals = (data: any) => {
     }
   }
   
-  // Se for null ou undefined, retornar objeto vazio
-  if (!normalizedGoals) {
+  // Se for objeto vazio, retornar objeto vazio
+  if (!normalizedGoals || (typeof normalizedGoals === 'object' && Object.keys(normalizedGoals).length === 0)) {
     return {};
   }
   
   // Garantir que content_formats é sempre array
-  if (normalizedGoals.content_formats && !Array.isArray(normalizedGoals.content_formats)) {
-    normalizedGoals.content_formats = [normalizedGoals.content_formats];
+  if (normalizedGoals.content_formats) {
+    if (!Array.isArray(normalizedGoals.content_formats)) {
+      normalizedGoals.content_formats = [normalizedGoals.content_formats];
+    }
+  } else {
+    normalizedGoals.content_formats = [];
   }
   
   // Garantir que expected_outcomes é sempre array
-  if (normalizedGoals.expected_outcomes && !Array.isArray(normalizedGoals.expected_outcomes)) {
-    normalizedGoals.expected_outcomes = [normalizedGoals.expected_outcomes];
+  if (normalizedGoals.expected_outcomes) {
+    if (!Array.isArray(normalizedGoals.expected_outcomes)) {
+      normalizedGoals.expected_outcomes = [normalizedGoals.expected_outcomes];
+    }
+  } else {
+    normalizedGoals.expected_outcomes = [];
   }
   
   // Sincronizar expected_outcome_30days com expected_outcomes
-  if (normalizedGoals.expected_outcome_30days && !normalizedGoals.expected_outcomes) {
+  if (normalizedGoals.expected_outcome_30days && 
+      (!normalizedGoals.expected_outcomes || normalizedGoals.expected_outcomes.length === 0)) {
     normalizedGoals.expected_outcomes = [normalizedGoals.expected_outcome_30days];
   } else if (normalizedGoals.expected_outcomes && 
              Array.isArray(normalizedGoals.expected_outcomes) && 
