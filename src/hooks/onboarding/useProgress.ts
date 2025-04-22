@@ -51,7 +51,7 @@ export const useProgress = () => {
     toastShownRef,
     lastError,
     refreshProgress,
-    logDebugEvent
+    logDebugEvent  // Adicionando o argumento logDebugEvent que faltava
   );
 
   // Função para forçar um reset completo do progresso do usuário
