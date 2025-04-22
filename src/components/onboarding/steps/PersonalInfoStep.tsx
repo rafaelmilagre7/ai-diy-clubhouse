@@ -35,6 +35,7 @@ export const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
         onChange={onChange}
         readOnly={readOnly}
         isSubmitting={isSubmitting}
+        onSubmit={onSubmit}
       />
       {!readOnly && (
         <div className="flex justify-end pt-4">

@@ -10,6 +10,7 @@ interface PhoneInputProps {
   ddi?: string;
   readOnly?: boolean;
   error?: string;
+  disabled?: boolean;
 }
 
 export const PhoneInput: React.FC<PhoneInputProps> = ({
@@ -17,6 +18,7 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({
   onChange,
   ddi = "+55",
   readOnly = false,
+  disabled = false,
   error
 }) => {
   return (
@@ -26,13 +28,15 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({
         value={ddi} 
         onChange={e => onChange("ddi", e.target.value)}
         className="w-16 mr-2"
-        disabled={readOnly}
+        disabled={disabled || readOnly}
+        readOnly={readOnly}
       />
       <InputMask
         mask="(99) 99999-9999"
         value={value}
         onChange={(e) => onChange("phone", e.target.value)}
-        disabled={readOnly}
+        disabled={disabled || readOnly}
+        readOnly={readOnly}
       >
         {(inputProps: any) => (
           <Input

@@ -1,6 +1,6 @@
 
 import React from "react";
-import { MilagrinhoMessage } from "../MilagrinhoMessage";
+import { MilagrinhoMessage } from "@/components/onboarding/MilagrinhoMessage";
 import { PersonalInfoInputs } from "./PersonalInfoInputs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
@@ -11,7 +11,8 @@ export const PersonalInfoForm = ({
   errors, 
   onChange, 
   isSubmitting, 
-  onSubmit 
+  onSubmit,
+  readOnly 
 }) => {
   const hasErrors = Object.keys(errors).length > 0;
 
@@ -37,6 +38,7 @@ export const PersonalInfoForm = ({
         formData={formData} 
         onChange={onChange} 
         disabled={isSubmitting}
+        readOnly={readOnly}
         errors={errors}
       />
       

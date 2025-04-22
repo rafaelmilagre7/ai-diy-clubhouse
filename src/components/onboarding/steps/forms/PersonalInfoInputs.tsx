@@ -8,7 +8,27 @@ import { TimezoneSelect } from "./TimezoneSelect";
 import { cn } from "@/lib/utils";
 import { LocationInputs } from "../inputs/LocationInputs";
 
-export const PersonalInfoInputs = ({
+interface PersonalInfoInputsProps {
+  formData: {
+    name?: string;
+    email?: string;
+    phone?: string;
+    ddi?: string;
+    linkedin?: string;
+    instagram?: string;
+    country?: string;
+    state?: string;
+    city?: string;
+    timezone?: string;
+    [key: string]: any;
+  };
+  onChange: (field: string, value: string) => void;
+  disabled?: boolean;
+  errors?: Record<string, string>;
+  readOnly?: boolean;
+}
+
+export const PersonalInfoInputs: React.FC<PersonalInfoInputsProps> = ({
   formData,
   onChange,
   disabled,
@@ -64,6 +84,7 @@ export const PersonalInfoInputs = ({
             ddi={formData.ddi || '+55'}
             onChange={onChange}
             readOnly={readOnly}
+            error={errors.phone}
           />
           {errors.phone && (
             <p className="text-red-500 text-sm mt-1">{errors.phone}</p>
