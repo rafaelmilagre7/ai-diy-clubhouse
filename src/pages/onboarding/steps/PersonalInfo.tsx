@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
 import { PersonalInfoStep } from "@/components/onboarding/steps/PersonalInfoStep";
@@ -10,6 +11,7 @@ import { LoadingSpinner } from "@/components/common/LoadingSpinner";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertTriangle } from "lucide-react";
+import { steps } from "@/hooks/onboarding/useStepDefinitions";
 
 const PersonalInfo = () => {
   const {
