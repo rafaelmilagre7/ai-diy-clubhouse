@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useAuth } from "@/contexts/auth";
 import { OnboardingProgress } from "@/types/onboarding";
@@ -41,7 +40,7 @@ export const useProgress = () => {
 
       if (error) {
         if (error.code === 'PGRST116' || error.message.includes("Results contain 0 rows")) {
-          console.log("Não há progresso existente, criando novo registro para o usuário", user.id);
+          console.log("Não há progresso existente, criando novo registro");
           const { data: newData, error: createError } = await createInitialOnboardingProgress(user);
           if (!createError && newData) {
             setProgress(newData);
@@ -52,13 +51,14 @@ export const useProgress = () => {
             lastError.current = new Error(createError?.message || "Erro ao criar progresso");
           }
           return newData;
-        } else {
-          console.error("Erro ao carregar progresso:", error);
-          lastError.current = new Error(error.message);
-          return null;
         }
-      } else if (!data) {
-        console.log("Nenhum progresso encontrado, criando novo registro para", user.id);
+        console.error("Erro ao carregar progresso:", error);
+        lastError.current = new Error(error.message);
+        return null;
+      }
+
+      if (!data) {
+        console.log("Nenhum progresso encontrado, criando novo registro");
         const { data: newData, error: createError } = await createInitialOnboardingProgress(user);
         if (!createError && newData) {
           setProgress(newData);
@@ -69,12 +69,12 @@ export const useProgress = () => {
           lastError.current = new Error(createError?.message || "Erro ao criar progresso");
         }
         return newData;
-      } else {
-        console.log("Progresso carregado com sucesso:", data);
-        setProgress(data);
-        progressId.current = data.id;
-        return data;
       }
+
+      console.log("Progresso carregado com sucesso:", data);
+      setProgress(data);
+      progressId.current = data.id;
+      return data;
     } catch (error: any) {
       console.error("Erro ao carregar progresso:", error);
       lastError.current = error;
@@ -113,8 +113,6 @@ export const useProgress = () => {
         throw error;
       }
 
-      // Mesmo se data for null (devido a alguma falha na conversão), vamos atualizar o estado
-      // com as atualizações enviadas para manter consistência na UI
       const updatedProgress = data || { ...progress, ...updates };
       setProgress(updatedProgress);
       console.log("Progresso atualizado com sucesso:", updatedProgress);
@@ -163,19 +161,16 @@ export const useProgress = () => {
     }
   }, [user, fetchProgress]);
 
-  // Adicionar efeito para atualização periódica
   useEffect(() => {
     if (!user || !progressId.current) return;
     
     const checkForUpdates = async () => {
-      // Se passou mais de 15 segundos desde a última atualização manual, refrescar
       if (Date.now() - lastUpdateTime.current > 15000) {
         console.log("Verificando atualizações no servidor...");
         await refreshProgress();
       }
     };
     
-    // Verificar a cada 20 segundos
     const interval = setInterval(checkForUpdates, 20000);
     
     return () => clearInterval(interval);

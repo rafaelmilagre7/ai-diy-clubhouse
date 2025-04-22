@@ -1,4 +1,3 @@
-
 import { supabase } from "@/lib/supabase";
 import { OnboardingProgress } from "@/types/onboarding";
 
@@ -187,19 +186,21 @@ export const createInitialOnboardingProgress = async (user: any) => {
     personal_info: {
       name: userName,
       email: userEmail,
-      ddi: "+55", // Garantir formato correto desde o início
+      ddi: "+55",
     },
-    professional_info: {}, // Inicializar como objeto vazio
-    business_data: {}, // Inicializar como objeto vazio
-    business_context: {}, // Para compatibilidade futura
-    ai_experience: {}, // Inicializar como objeto vazio
-    business_goals: {}, // Inicializar como objeto vazio
-    experience_personalization: {}, // Inicializar como objeto vazio
-    complementary_info: {}, // Inicializar como objeto vazio
-    industry_focus: {},
-    resources_needs: {},
-    team_info: {},
-    implementation_preferences: {},
+    professional_info: {
+      company_name: "",
+      company_size: "",
+      company_sector: "",
+      company_website: "",
+      current_position: "",
+      annual_revenue: "",
+    },
+    business_context: {},
+    business_goals: {},
+    ai_experience: {},
+    experience_personalization: {},
+    complementary_info: {},
     company_name: "",
     company_size: "",
     company_sector: "",
