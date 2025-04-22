@@ -11,7 +11,8 @@ import { LoadingSpinner } from "@/components/common/LoadingSpinner";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertTriangle } from "lucide-react";
-import { steps } from "@/hooks/onboarding/useStepDefinitions";
+import { steps } from "@/hooks/onboarding/useStepDefinitions"; // Corrigido
+import { useStepNavigation } from "@/hooks/onboarding/useStepNavigation"; // Adiciona hook central de navegação
 
 const PersonalInfo = () => {
   const {
@@ -39,6 +40,9 @@ const PersonalInfo = () => {
     refreshProgress,
     attemptDataLoad
   } = usePersonalInfoLoad();
+
+  // Hook centralizado de navegação de etapas
+  const { navigateToStep } = useStepNavigation();
 
   const { goToNextStep } = usePersonalInfoNavigation();
 
@@ -87,10 +91,8 @@ const PersonalInfo = () => {
   };
 
   const handleStepClick = (stepIdx: number) => {
-    // Usa navegação por índice conforme seu hook
-    // Salva (sem navegação automática), depois navega
-    // Aqui simplificamos e apenas navegamos, mas pode adicionar save se preferir
-    navigate(steps[stepIdx].path);
+    // Navegação "livre" do onboarding
+    navigateToStep(stepIdx);
   };
 
   const showForceButton = loadingAttempts >= 3 && progressLoading;
@@ -116,7 +118,7 @@ const PersonalInfo = () => {
         title="Dados Pessoais" 
         backUrl="/"
         progress={progressPercentage}
-        onStepClick={handleStepClick}
+        onStepClick={handleStepClick} // Tornar wizard clicável
       >
         <div className="flex justify-center items-center py-20">
           <LoadingSpinner size={10} />

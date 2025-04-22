@@ -35,7 +35,7 @@ export const EtapasProgresso: React.FC<EtapasProgressoProps> = ({
               key={step}
               className={cn(
                 "relative z-10 flex flex-col items-center",
-                isClickable ? "cursor-pointer select-none hover:scale-110 transition-transform" : "",
+                isClickable && !isActive ? "cursor-pointer select-none hover:scale-110 transition-transform" : "",
               )}
               onClick={isClickable && !isActive ? () => onStepClick(idx) : undefined}
               aria-disabled={isActive || !isClickable}
@@ -45,7 +45,11 @@ export const EtapasProgresso: React.FC<EtapasProgressoProps> = ({
               <div
                 className={cn(
                   "flex items-center justify-center w-10 h-10 rounded-full transition-all duration-200",
-                  isComplete ? "bg-[#0ABAB5]" : isActive ? "bg-[#0ABAB5]/20 border-2 border-[#0ABAB5]" : "bg-gray-700"
+                  isComplete
+                    ? "bg-[#0ABAB5]"
+                    : isActive
+                    ? "bg-[#0ABAB5]/20 border-2 border-[#0ABAB5]"
+                    : "bg-gray-700"
                 )}
               >
                 {isComplete ? (
