@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -6,6 +5,7 @@ import { PhoneInput } from "./PhoneInput";
 import { CountrySelect } from "./CountrySelect";
 import { TimezoneSelect } from "./TimezoneSelect";
 import { cn } from "@/lib/utils";
+import { LocationInputs } from "../inputs/LocationInputs";
 
 interface PersonalInfoInputsProps {
   formData: {
@@ -31,8 +31,8 @@ export const PersonalInfoInputs: React.FC<PersonalInfoInputsProps> = ({
   formData,
   onChange,
   disabled,
-  errors = {},
-  readOnly = false
+  readOnly = false,
+  errors = {}
 }) => {
   return (
     <div className="space-y-6">
@@ -194,6 +194,21 @@ export const PersonalInfoInputs: React.FC<PersonalInfoInputsProps> = ({
           <p className="text-red-500 text-sm mt-1">{errors.timezone}</p>
         )}
       </div>
+      
+      {/* Location Inputs (Estado e Cidade) */}
+      <LocationInputs
+        country={formData.country || 'Brasil'}
+        state={formData.state || ''}
+        city={formData.city || ''}
+        onChangeCountry={(value) => onChange("country", value)}
+        onChangeState={(value) => onChange("state", value)}
+        onChangeCity={(value) => onChange("city", value)}
+        disabled={disabled}
+        errors={{
+          state: errors.state,
+          city: errors.city
+        }}
+      />
     </div>
   );
 };
