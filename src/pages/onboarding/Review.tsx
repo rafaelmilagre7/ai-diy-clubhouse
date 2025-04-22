@@ -8,12 +8,18 @@ import { useProgress } from "@/hooks/onboarding/useProgress";
 import { Button } from "@/components/ui/button";
 import { ReviewStep } from "@/components/onboarding/steps/ReviewStep";
 import { toast } from "sonner";
+import { useStepPersistenceCore } from "@/hooks/onboarding/persistence/useStepPersistenceCore";
 
 const Review: React.FC = () => {
   const navigate = useNavigate();
   const { currentStepIndex, steps, completeOnboarding } = useOnboardingSteps();
   const { progress, isLoading, refreshProgress } = useProgress();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const { saveStepData } = useStepPersistenceCore({ 
+    currentStepIndex, 
+    setCurrentStepIndex: () => {}, // Função vazia pois não precisamos alterar o índice aqui
+    navigate 
+  });
   
   const reviewStepIndex = steps.findIndex(step => step.id === "review");
   const progressPercentage = Math.round(((reviewStepIndex + 1) / steps.length) * 100);

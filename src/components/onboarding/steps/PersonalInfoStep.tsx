@@ -19,6 +19,7 @@ export interface PersonalInfoStepProps extends Partial<OnboardingStepProps> {
   onComplete?: () => void;
   isSaving?: boolean;
   lastSaveTime?: number | null;
+  readOnly?: boolean;
 }
 
 export const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
@@ -32,6 +33,7 @@ export const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
   onChange,
   isSaving = false,
   lastSaveTime = null,
+  readOnly = false,
 }) => {
   const [validationAttempted, setValidationAttempted] = useState(false);
   // Flag para indicar que o formulário foi carregado
@@ -56,6 +58,13 @@ export const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
 
   const onFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Se o formulário estiver marcado como somente leitura, não permitir submissão
+    if (readOnly) {
+      toast.info("Este formulário não pode mais ser editado.");
+      return;
+    }
+    
     setValidationAttempted(true);
     
     // Verificar quais campos têm erro
@@ -82,8 +91,6 @@ export const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
     }
     
     try {
-      // Apenas chamar o onSubmit sem mostrar toast de sucesso aqui
-      // O toast será mostrado apenas no hook usePersonalInfoStep
       await onSubmit();
     } catch (error) {
       console.error("Erro ao salvar dados:", error);
@@ -126,6 +133,15 @@ export const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
         </Alert>
       )}
       
+      {readOnly && (
+        <Alert className="animate-fade-in bg-blue-50 border-blue-200">
+          <AlertCircle className="h-4 w-4 text-blue-500" />
+          <AlertDescription className="text-blue-700">
+            Esta etapa já foi concluída. Para editar, utilize a opção de revisão ao final do processo.
+          </AlertDescription>
+        </Alert>
+      )}
+      
       <PersonalInfoForm
         validation={validation}
         register={register}
@@ -135,6 +151,7 @@ export const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
         initialData={initialData || formData}
         formData={formData}
         onChange={onChange}
+        readOnly={readOnly}
       />
     </form>
   );

@@ -1,3 +1,4 @@
+
 import { steps } from "../../useStepDefinitions";
 import { toast } from "sonner";
 import { buildUpdateObject } from "../stepDataBuilder";
@@ -49,7 +50,8 @@ export const createSaveStepData = ({
     } else {
       stepId = steps[currentStepIndex]?.id || '';
       data = stepIdOrData;
-      shouldNavigate = typeof dataOrShouldNavigate === 'boolean' ? dataOrShouldNavigate : true;
+      shouldNavigate = typeof dataOrShouldNavigate === 'boolean' ? 
+                       dataOrShouldNavigate : true;
     }
 
     if (!allowEdit && progress?.completed_steps?.includes(stepId)) {
