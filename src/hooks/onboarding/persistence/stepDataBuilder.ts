@@ -2,7 +2,7 @@
 // Se este arquivo já existir, adicionar a importação e a referência ao novo builder
 import { buildPersonalInfoUpdate } from "./stepBuilders/personalInfoBuilder";
 import { buildProfessionalDataUpdate } from "./stepBuilders/professionalDataBuilder";
-import { buildBusinessContextUpdate } from "./businessContextBuilder";
+import { buildBusinessContextUpdate } from "./stepBuilders/businessContextBuilder";
 import { buildAiExperienceUpdate } from "./stepBuilders/aiExperienceBuilder";
 import { buildBusinessGoalsUpdate } from "./stepBuilders/businessGoalsBuilder";
 import { buildExperiencePersonalizationUpdate } from "./stepBuilders/experiencePersonalizationBuilder";
