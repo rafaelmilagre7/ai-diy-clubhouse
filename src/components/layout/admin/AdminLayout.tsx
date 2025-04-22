@@ -16,7 +16,12 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
   return (
     <div className="flex h-screen bg-background overflow-hidden">
       <AdminSidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
-      <div className={cn("flex-1 flex flex-col transition-all duration-300", sidebarOpen ? "ml-64" : "ml-20")}>
+      <div 
+        className={cn(
+          "flex-1 flex flex-col transition-all duration-300",
+          sidebarOpen ? "md:ml-64" : "md:ml-20"
+        )}
+      >
         <AdminHeader sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
         <AdminContent>
           {children || <Outlet />}

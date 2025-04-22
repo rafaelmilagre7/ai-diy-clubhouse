@@ -56,7 +56,7 @@ export const MemberSidebarNav = ({ sidebarOpen }: SidebarNavProps) => {
   ];
 
   const isActive = (href: string) => {
-    return location.pathname === href;
+    return location.pathname === href || location.pathname.startsWith(href + '/');
   };
 
   return (
@@ -84,7 +84,7 @@ export const MemberSidebarNav = ({ sidebarOpen }: SidebarNavProps) => {
           <Button
             variant="outline"
             className={cn(
-              "w-full justify-start gap-2 border-viverblue text-viverblue hover:bg-viverblue/10",
+              "w-full justify-start gap-2 border-viverblue text-viverblue hover:bg-viverblue/10 mt-4",
               !sidebarOpen && "justify-center"
             )}
             asChild

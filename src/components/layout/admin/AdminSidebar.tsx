@@ -1,5 +1,4 @@
 
-import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
 import { cn } from "@/lib/utils";
@@ -29,8 +28,8 @@ export const AdminSidebar = ({ sidebarOpen, setSidebarOpen }: AdminSidebarProps)
   return (
     <aside
       className={cn(
-        "fixed inset-y-0 left-0 z-20 flex h-full w-64 flex-col border-r bg-white shadow-sm transition-all duration-300 ease-in-out",
-        !sidebarOpen && "w-20"
+        "fixed inset-y-0 left-0 z-20 flex h-full flex-col border-r bg-background shadow-sm transition-all duration-300 ease-in-out",
+        sidebarOpen ? "w-64" : "w-20"
       )}
     >
       <div className="flex h-16 items-center justify-between px-4">
@@ -44,7 +43,7 @@ export const AdminSidebar = ({ sidebarOpen, setSidebarOpen }: AdminSidebarProps)
           </Link>
         ) : (
           <Link to="/admin" className="mx-auto">
-            <div className="h-8 w-8 flex items-center justify-center bg-[#0ABAB5] rounded-full text-white font-bold">
+            <div className="h-8 w-8 flex items-center justify-center bg-viverblue rounded-full text-white font-bold">
               VI
             </div>
           </Link>

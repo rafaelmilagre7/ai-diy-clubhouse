@@ -48,7 +48,7 @@ export const AdminSidebarNav = ({ sidebarOpen }: AdminSidebarNavProps) => {
   ];
 
   const isActive = (href: string) => {
-    return location.pathname === href;
+    return location.pathname === href || location.pathname.startsWith(href + '/');
   };
 
   return (
