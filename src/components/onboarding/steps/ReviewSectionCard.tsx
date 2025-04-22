@@ -79,6 +79,14 @@ export const ReviewSectionCard: React.FC<ReviewSectionCardProps> = ({
       return !!sectionData.knowledge_level;
     }
     
+    if (step.section === 'business_goals') {
+      // Verificação mais específica para business_goals
+      return !!sectionData.primary_goal && 
+             !!sectionData.priority_solution_type &&
+             !!sectionData.how_implement &&
+             !!sectionData.week_availability;
+    }
+    
     // Verificação genérica para outras seções
     return Object.keys(sectionData).length > 0;
   }, [step, sectionData]);

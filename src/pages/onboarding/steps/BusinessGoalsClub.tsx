@@ -22,6 +22,19 @@ const BusinessGoalsClub = () => {
       try {
         await refreshProgress();
         console.log("Dados atualizados para BusinessGoalsClub:", progress);
+        
+        // Diagnóstico adicional para verificar a estrutura dos dados
+        if (progress) {
+          console.log("Tipo de business_goals:", typeof progress.business_goals);
+          console.log("Conteúdo de business_goals:", JSON.stringify(progress.business_goals, null, 2));
+          
+          // Verificar se o objeto business_goals está vazio
+          const isEmpty = !progress.business_goals || 
+                        Object.keys(progress.business_goals).length === 0 ||
+                        JSON.stringify(progress.business_goals) === '{}';
+                        
+          console.log("business_goals está vazio?", isEmpty);
+        }
       } catch (error) {
         console.error("Erro ao carregar dados:", error);
         toast.error("Erro ao carregar dados. Algumas informações podem estar desatualizadas.");
@@ -72,17 +85,23 @@ const BusinessGoalsClub = () => {
         businessGoalsData.content_formats = [];
       }
       
+      // Garantir que live_interest é um número
+      if (businessGoalsData.live_interest !== undefined) {
+        businessGoalsData.live_interest = Number(businessGoalsData.live_interest);
+      }
+      
       // Log de dados antes de salvar
-      console.log("Dados finais formatados antes de salvar:", JSON.stringify(data));
+      console.log("Dados finais formatados antes de salvar:", JSON.stringify(data, null, 2));
       
       // Salvar dados
       await saveStepData(stepId, data, false);
       
       toast.success("Dados salvos com sucesso!");
       
-      // Forçar atualização dos dados após salvar
+      // Verificar se os dados foram salvos corretamente
       await refreshProgress();
       console.log("Após salvar, dados de progresso:", progress);
+      console.log("business_goals após salvar:", JSON.stringify(progress?.business_goals, null, 2));
       
       // Navegar manualmente para a próxima página
       navigate("/onboarding/customization");

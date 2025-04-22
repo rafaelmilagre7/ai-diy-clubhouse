@@ -2,7 +2,6 @@
 import React from "react";
 import { Badge } from "@/components/ui/badge";
 import { OnboardingData } from "@/types/onboarding";
-import { normalizeBusinessGoals } from "@/hooks/onboarding/persistence/utils/dataNormalization";
 
 // Função para garantir que os dados são um objeto válido
 function ensureObject(data: any): Record<string, any> {
@@ -31,11 +30,18 @@ export function getBusinessGoalsSummary(data: OnboardingData['business_goals'] |
 
   // Garantir que estamos trabalhando com um objeto
   const processedData = ensureObject(data);
+  console.log("Dados processados para business_goals:", processedData);
 
   // Se mesmo após processamento os dados estiverem vazios
   if (Object.keys(processedData).length === 0) {
     console.warn("Objeto vazio após processamento para seção business_goals");
     return <p className="text-gray-500 italic">Seção não preenchida. Clique em Editar para preencher.</p>;
+  }
+
+  // Verificação extra para primary_goal que é um campo obrigatório
+  if (!processedData.primary_goal) {
+    console.warn("Campo obrigatório primary_goal ausente");
+    return <p className="text-gray-500 italic">Dados incompletos. Clique em Editar para preencher corretamente.</p>;
   }
 
   // Mapeamento para exibições mais amigáveis
@@ -66,6 +72,24 @@ export function getBusinessGoalsSummary(data: OnboardingData['business_goals'] |
     'workshop': 'Workshop prático'
   };
 
+  // Mapeamento para tipos de soluções prioritárias
+  const solucoesPrioritariasMap: Record<string, string> = {
+    'aumento_vendas': 'Aumento de vendas/receita',
+    'reducao_custos': 'Redução de custos/otimização',
+    'automacao_processos': 'Automação de processos', 
+    'melhorar_experiencia': 'Melhorar experiência do cliente',
+    'analitica_decisao': 'Análise de dados para decisões',
+    'inovacao_produtos': 'Inovação em produtos/serviços'
+  };
+
+  // Mapeamento para disponibilidade semanal
+  const disponibilidadeMap: Record<string, string> = {
+    'menos_1h': 'Menos de 1 hora',
+    '1-3h': '1-3 horas',
+    '4-7h': '4-7 horas',
+    '8h+': '8+ horas'
+  };
+
   return (
     <div className="space-y-2 text-sm">
       {processedData.primary_goal && (
@@ -84,7 +108,9 @@ export function getBusinessGoalsSummary(data: OnboardingData['business_goals'] |
       
       {processedData.priority_solution_type && (
         <p>
-          <span className="font-medium">Tipo de solução prioritária:</span> {processedData.priority_solution_type}
+          <span className="font-medium">Tipo de solução prioritária:</span> {
+            solucoesPrioritariasMap[processedData.priority_solution_type] || processedData.priority_solution_type
+          }
         </p>
       )}
       
@@ -98,7 +124,9 @@ export function getBusinessGoalsSummary(data: OnboardingData['business_goals'] |
       
       {processedData.week_availability && (
         <p>
-          <span className="font-medium">Disponibilidade semanal:</span> {processedData.week_availability}
+          <span className="font-medium">Disponibilidade semanal:</span> {
+            disponibilidadeMap[processedData.week_availability] || processedData.week_availability
+          }
         </p>
       )}
       

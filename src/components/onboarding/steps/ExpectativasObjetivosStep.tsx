@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { OnboardingData } from "@/types/onboarding";
 import { Button } from "@/components/ui/button";
@@ -94,21 +93,42 @@ export const ExpectativasObjetivosStep = ({
   const onFormSubmit = (data: FormValues) => {
     console.log("Enviando dados do formulário ExpectativasObjetivos:", data);
     
+    // Verificar explicitamente cada campo para garantir que temos valores válidos
+    if (!data.primary_goal) {
+      console.warn("Campo obrigatório primary_goal não preenchido");
+      return;
+    }
+    
+    if (!data.priority_solution_type) {
+      console.warn("Campo obrigatório priority_solution_type não preenchido");
+      return;
+    }
+    
+    if (!data.how_implement) {
+      console.warn("Campo obrigatório how_implement não preenchido");
+      return;
+    }
+    
+    if (!data.week_availability) {
+      console.warn("Campo obrigatório week_availability não preenchido");
+      return;
+    }
+    
     // Estruturar dados para envio
     const businessGoalsData: Partial<OnboardingData> = {
       business_goals: {
         primary_goal: data.primary_goal,
-        expected_outcome_30days: data.expected_outcome_30days,
+        expected_outcome_30days: data.expected_outcome_30days || "",
         expected_outcomes: data.expected_outcome_30days ? [data.expected_outcome_30days] : [],
         priority_solution_type: data.priority_solution_type,
         how_implement: data.how_implement,
         week_availability: data.week_availability,
-        live_interest: data.live_interest,
+        live_interest: Number(data.live_interest || 5),
         content_formats: Array.isArray(data.content_formats) ? data.content_formats : [],
       },
     };
     
-    console.log("Dados formatados para envio:", businessGoalsData);
+    console.log("Dados formatados para envio:", JSON.stringify(businessGoalsData, null, 2));
     
     // Enviar dados com o ID da etapa correto
     onSubmit("business_goals", businessGoalsData);

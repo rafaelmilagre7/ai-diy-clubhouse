@@ -19,6 +19,9 @@ export function buildBusinessGoalsUpdate(
 ) {
   const updateObj: any = {};
   
+  console.log("buildBusinessGoalsUpdate recebeu data:", JSON.stringify(data, null, 2));
+  console.log("buildBusinessGoalsUpdate recebeu progress:", progress ? "Objeto válido" : "Null");
+  
   // Garantir uma base consistente para os dados
   let existingGoals: any = {};
   
@@ -30,12 +33,14 @@ export function buildBusinessGoalsUpdate(
         const stringValue = progress.business_goals ? String(progress.business_goals) : '';
         if (stringValue && typeof stringValue === 'string' && stringValue.trim()) {
           existingGoals = JSON.parse(stringValue.trim());
+          console.log("business_goals convertido de string para objeto:", existingGoals);
         }
       } catch (e) {
         console.error("Erro ao converter business_goals de string para objeto:", e);
       }
     } else if (progress.business_goals && typeof progress.business_goals === 'object') {
       existingGoals = progress.business_goals;
+      console.log("business_goals já é um objeto:", existingGoals);
     }
   }
   
@@ -50,7 +55,7 @@ export function buildBusinessGoalsUpdate(
     const goalsData = sourceData as BusinessGoalsData;
     
     // Log detalhado dos dados recebidos para diagnóstico
-    console.log("Dados recebidos para processamento em businessGoalsBuilder:", JSON.stringify(goalsData));
+    console.log("Dados recebidos para processamento em businessGoalsBuilder:", JSON.stringify(goalsData, null, 2));
     
     // Mesclar com dados existentes para campos específicos
     if ('content_formats' in goalsData) {
@@ -125,7 +130,11 @@ export function buildBusinessGoalsUpdate(
     }
   }
   
-  console.log("Objeto de atualização final para business_goals:", JSON.stringify(updateObj.business_goals));
+  // Verificar se o objeto final contém dados
+  const isEmpty = !updateObj.business_goals || Object.keys(updateObj.business_goals).length === 0;
+  console.log("Objeto business_goals está vazio após processamento?", isEmpty);
+  
+  console.log("Objeto de atualização final para business_goals:", JSON.stringify(updateObj.business_goals, null, 2));
   
   return updateObj;
 }
