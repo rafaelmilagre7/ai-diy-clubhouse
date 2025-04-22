@@ -112,7 +112,52 @@ export function useStepPersistenceCore({
     }
   };
 
+  // Adicionar a função completeOnboarding
+  const completeOnboarding = async (): Promise<void> => {
+    if (!progress?.id) {
+      toast.error("Progresso não encontrado. Tente recarregar a página.");
+      return;
+    }
+    
+    try {
+      console.log("Completando onboarding...");
+      
+      // Marca o onboarding como concluído
+      const result = await updateProgress({
+        is_completed: true,
+        completed_steps: steps.map(s => s.id),
+      });
+      
+      if ((result as any)?.error) {
+        throw new Error((result as any).error.message || "Erro ao completar onboarding");
+      }
+      
+      // Atualiza dados locais
+      await refreshProgress();
+      console.log("Onboarding marcado como completo, preparando redirecionamento para trilha...");
+      
+      toast.success("Onboarding concluído com sucesso!");
+      
+      // Redirecionamento após delay para garantir atualização do estado
+      setTimeout(() => {
+        window.location.href = "/implementation-trail";
+      }, 1000);
+    } catch (error: any) {
+      console.error("Erro ao completar onboarding:", error);
+      logError("complete_onboarding_error", { 
+        error: error instanceof Error ? error.message : String(error) 
+      });
+      toast.error("Erro ao finalizar onboarding. Por favor, tente novamente.");
+      
+      // Fallback para dashboard em caso de erro
+      setTimeout(() => {
+        window.location.href = "/dashboard";
+      }, 1500);
+    }
+  };
+
   return {
     saveStepData,
+    completeOnboarding  // Exportando a função aqui
   };
 }

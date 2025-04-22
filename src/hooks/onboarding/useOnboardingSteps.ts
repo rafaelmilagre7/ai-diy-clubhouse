@@ -9,7 +9,7 @@ export const useOnboardingSteps = () => {
   const navigate = useNavigate();
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const { progress, isLoading, refreshProgress } = useProgress();
-  const { saveStepData } = useStepPersistenceCore({
+  const { saveStepData, completeOnboarding } = useStepPersistenceCore({
     currentStepIndex,
     setCurrentStepIndex,
     navigate,
@@ -42,6 +42,7 @@ export const useOnboardingSteps = () => {
     progress,
     isLoading,
     refreshProgress,
-    navigateToStep
+    navigateToStep,
+    completeOnboarding // Adicionando a função aqui
   };
 };
