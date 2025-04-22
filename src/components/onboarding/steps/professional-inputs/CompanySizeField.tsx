@@ -17,17 +17,23 @@ export const CompanySizeField: React.FC = () => {
   const { setValue, watch, formState: { errors, touchedFields } } = useFormContext();
   const companySize = watch("company_size");
 
-  const companySizes = [
-    { value: "solo", label: "Somente eu" },
-    { value: "2-5", label: "2-5 funcionários" },
-    { value: "6-10", label: "6-10 funcionários" },
-    { value: "11-25", label: "11-25 funcionários" },
-    { value: "26-50", label: "26-50 funcionários" },
-    { value: "51-100", label: "51-100 funcionários" },
-    { value: "101-250", label: "101-250 funcionários" },
-    { value: "251-500", label: "251-500 funcionários" },
+  const handleValueChange = (value: string) => {
+    console.log("CompanySizeField: atualizando para", value);
+    // Usar setValue com opções que previnem validação imediata
+    setValue("company_size", value, {
+      shouldValidate: false,
+      shouldDirty: true,
+      shouldTouch: true
+    });
+  };
+
+  const companySizeOptions = [
+    { value: "1-10", label: "1-10 funcionários" },
+    { value: "11-50", label: "11-50 funcionários" },
+    { value: "51-200", label: "51-200 funcionários" },
+    { value: "201-500", label: "201-500 funcionários" },
     { value: "501-1000", label: "501-1000 funcionários" },
-    { value: "1000+", label: "Mais de 1000 funcionários" },
+    { value: "1001+", label: "Mais de 1000 funcionários" },
   ];
 
   return (
@@ -47,10 +53,7 @@ export const CompanySizeField: React.FC = () => {
       </Label>
       <Select
         value={companySize}
-        onValueChange={(value) => setValue("company_size", value, { 
-          shouldValidate: true, 
-          shouldTouch: true 
-        })}
+        onValueChange={handleValueChange}
       >
         <SelectTrigger 
           className={cn(
@@ -59,12 +62,12 @@ export const CompanySizeField: React.FC = () => {
             touchedFields.company_size ? "border-[#0ABAB5]" : ""
           )}
         >
-          <SelectValue placeholder="Selecione o tamanho" />
+          <SelectValue placeholder="Selecione o tamanho da empresa" />
         </SelectTrigger>
         <SelectContent>
-          {companySizes.map((size) => (
-            <SelectItem key={size.value} value={size.value}>
-              {size.label}
+          {companySizeOptions.map((option) => (
+            <SelectItem key={option.value} value={option.value}>
+              {option.label}
             </SelectItem>
           ))}
         </SelectContent>

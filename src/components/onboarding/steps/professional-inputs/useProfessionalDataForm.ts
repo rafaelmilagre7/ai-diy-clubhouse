@@ -30,12 +30,13 @@ export function useProfessionalDataForm({ initialData }: UseProfessionalDataForm
       current_position: "",
       annual_revenue: ""
     },
-    mode: "onSubmit"
+    mode: "onSubmit" // Alterado para onSubmit para evitar validação prematura
   });
 
   // Atualizar formulário se mudar o progresso inicial
   useEffect(() => {
     if (initialData) {
+      console.log("Inicializando formulário com dados:", initialData);
       const initialValues = {
         company_name: getInitialValue('company_name'),
         company_size: getInitialValue('company_size'),
@@ -44,13 +45,23 @@ export function useProfessionalDataForm({ initialData }: UseProfessionalDataForm
         current_position: getInitialValue('current_position'),
         annual_revenue: getInitialValue('annual_revenue')
       };
+      console.log("Valores iniciais do formulário:", initialValues);
       methods.reset(initialValues);
       setFormInitialized(true);
     }
   }, [initialData, methods]);
 
+  // Esta função ajuda a preservar os valores durante interações com campos específicos
+  const safeSetValue = (field: string, value: any) => {
+    const currentValues = methods.getValues();
+    methods.setValue(field, value, { shouldValidate: false, shouldDirty: true });
+    console.log(`Campo ${field} atualizado para:`, value);
+    console.log("Valores do formulário após atualização:", methods.getValues());
+  };
+
   return {
     methods,
-    formInitialized
+    formInitialized,
+    safeSetValue
   };
 }

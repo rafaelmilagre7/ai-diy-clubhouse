@@ -12,11 +12,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { validateAnnualRevenue } from "@/utils/professionalDataValidation";
 
 export const AnnualRevenueField: React.FC = () => {
   const { setValue, watch, formState: { errors, touchedFields } } = useFormContext();
   const annualRevenue = watch("annual_revenue");
+
+  const handleValueChange = (value: string) => {
+    console.log("AnnualRevenueField: atualizando para", value);
+    // Usar setValue com opções que previnem validação imediata
+    setValue("annual_revenue", value, {
+      shouldValidate: false,
+      shouldDirty: true,
+      shouldTouch: true
+    });
+  };
 
   const annualRevenueOptions = [
     { value: "0-100k", label: "Até R$ 100 mil" },
@@ -44,10 +53,7 @@ export const AnnualRevenueField: React.FC = () => {
       </Label>
       <Select
         value={annualRevenue}
-        onValueChange={(value) => setValue("annual_revenue", value, { 
-          shouldValidate: true, 
-          shouldTouch: true 
-        })}
+        onValueChange={handleValueChange}
       >
         <SelectTrigger 
           className={cn(
