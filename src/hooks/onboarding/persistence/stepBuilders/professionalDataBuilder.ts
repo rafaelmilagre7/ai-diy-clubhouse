@@ -12,7 +12,7 @@ export function buildProfessionalDataUpdate(data: ProfessionalDataInput, progres
     processedData.company_website = normalizeWebsiteUrl(processedData.company_website);
   }
   
-  // Estruturar o objeto professional_info
+  // Estruturar o objeto professional_info com todos os campos necessários
   const professionalInfo = {
     company_name: processedData.company_name || '',
     company_size: processedData.company_size || '',
@@ -22,9 +22,12 @@ export function buildProfessionalDataUpdate(data: ProfessionalDataInput, progres
     annual_revenue: processedData.annual_revenue || ''
   };
   
-  // Criar objeto de atualização com campos em ambos os níveis
+  // Criar objeto de atualização apenas com os campos que existem na tabela
   const updateObj = {
-    // Campos de nível superior para compatibilidade
+    // Objeto professional_info completo
+    professional_info: professionalInfo,
+    
+    // Campos individuais para compatibilidade com o banco
     company_name: professionalInfo.company_name,
     company_size: professionalInfo.company_size,
     company_sector: professionalInfo.company_sector,
@@ -32,10 +35,7 @@ export function buildProfessionalDataUpdate(data: ProfessionalDataInput, progres
     current_position: professionalInfo.current_position,
     annual_revenue: professionalInfo.annual_revenue,
     
-    // Objeto professional_info completo
-    professional_info: professionalInfo,
-    
-    // Marcar etapa como completa no array de etapas
+    // Marcar etapa como completa
     completed_steps: progress?.completed_steps ? 
       [...new Set([...progress.completed_steps, 'professional_data'])] : 
       ['professional_data']
@@ -43,6 +43,5 @@ export function buildProfessionalDataUpdate(data: ProfessionalDataInput, progres
   
   console.log("Objeto de atualização preparado:", updateObj);
   
-  // Importante: NÃO incluir campo "professional_data" que não existe na tabela
   return { ...buildBaseUpdate("professional_data", data, progress), ...updateObj };
 }

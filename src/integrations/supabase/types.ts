@@ -355,6 +355,7 @@ export type Database = {
           is_completed: boolean | null
           personal_info: Json | null
           priority_areas: string[] | null
+          professional_data: Json | null
           professional_info: Json | null
           resources_needs: Json | null
           support_level: string | null
@@ -395,6 +396,7 @@ export type Database = {
           is_completed?: boolean | null
           personal_info?: Json | null
           priority_areas?: string[] | null
+          professional_data?: Json | null
           professional_info?: Json | null
           resources_needs?: Json | null
           support_level?: string | null
@@ -435,6 +437,7 @@ export type Database = {
           is_completed?: boolean | null
           personal_info?: Json | null
           priority_areas?: string[] | null
+          professional_data?: Json | null
           professional_info?: Json | null
           resources_needs?: Json | null
           support_level?: string | null
@@ -1400,6 +1403,10 @@ export type Database = {
       is_admin_user: {
         Args: Record<PropertyKey, never>
         Returns: boolean
+      }
+      merge_json_data: {
+        Args: { target: Json; source: Json }
+        Returns: Json
       }
     }
     Enums: {

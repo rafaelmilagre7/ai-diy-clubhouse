@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
 import { ProfessionalDataStep } from "@/components/onboarding/steps/ProfessionalDataStep";
 import { useProgress } from "@/hooks/onboarding/useProgress";
@@ -8,6 +8,7 @@ import { MilagrinhoMessage } from "@/components/onboarding/MilagrinhoMessage";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { navigateAfterStep } from "@/hooks/onboarding/persistence/stepNavigator";
+import { ProfessionalDataInput } from "@/types/onboarding";
 
 const ProfessionalData = () => {
   const { progress, isLoading, refreshProgress } = useProgress();
@@ -20,14 +21,18 @@ const ProfessionalData = () => {
     refreshProgress();
   }, [refreshProgress]);
 
-  const handleSubmit = async (stepId: string, data: any) => {
+  const handleSubmit = async (stepId: string, data: ProfessionalDataInput) => {
     setIsSubmitting(true);
     try {
       console.log("ProfessionalData - Salvando dados:", data);
       
-      // Salvar dados usando o hook de persistência
-      await saveStepData(stepId, data, false);
+      // Validar campos obrigatórios
+      if (!data.company_name || !data.company_size || !data.company_sector || !data.current_position || !data.annual_revenue) {
+        toast.error("Por favor, preencha todos os campos obrigatórios");
+        return;
+      }
       
+      await saveStepData(stepId, data, true);
       toast.success("Dados profissionais salvos com sucesso!");
       
       // Navegar para a próxima página após salvar

@@ -1,12 +1,7 @@
-
 import { OnboardingProgress } from "@/types/onboarding";
 import { buildProfessionalDataUpdate } from "./stepBuilders/professionalDataBuilder";
 import { buildGoalsUpdate } from "./stepBuilders/goalsBuilder";
 
-/**
- * Constrói o objeto de atualização com base no ID da etapa e nos dados fornecidos
- * Encaminha para builders específicos de cada etapa quando disponíveis
- */
 export function buildUpdateObject(
   stepId: string,
   data: any,
@@ -20,10 +15,8 @@ export function buildUpdateObject(
   
   // Atualizar a etapa atual e as etapas concluídas
   if (progress) {
-    // Atualizar etapa atual
     baseUpdateObj.current_step = getNextStepId(stepId);
     
-    // Atualizar etapas concluídas (adicionar esta etapa se não estiver na lista)
     const completedSteps = Array.isArray(progress.completed_steps) 
       ? [...progress.completed_steps] 
       : [];
@@ -38,12 +31,6 @@ export function buildUpdateObject(
   let specificUpdateObj: Record<string, any> = {};
   
   switch (stepId) {
-    case "personal":
-      specificUpdateObj = {
-        personal_info: data.personal_info || data
-      };
-      break;
-      
     case "professional_data":
       specificUpdateObj = buildProfessionalDataUpdate(data, progress);
       break;
@@ -78,7 +65,7 @@ export function buildUpdateObject(
       break;
       
     default:
-      // Para etapas sem um builder específico, usar o campo bruto se disponível, ou os dados diretamente
+      // Para etapas sem um builder específico, usar o campo bruto se disponível
       if (data[stepId]) {
         specificUpdateObj[stepId] = data[stepId];
       } else {
@@ -88,16 +75,11 @@ export function buildUpdateObject(
   
   // Mesclar os objetos
   const updateObj = { ...baseUpdateObj, ...specificUpdateObj };
-  
-  // Log para depuração
   console.log("Objeto de atualização final:", updateObj);
   
   return updateObj;
 }
 
-/**
- * Determina o ID da próxima etapa com base no ID atual
- */
 function getNextStepId(currentStepId: string): string {
   const stepSequence: Record<string, string> = {
     "personal": "professional_data",

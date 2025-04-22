@@ -161,19 +161,10 @@ export interface OnboardingStep {
 
 // Novo tipo para receber entrada de dados profissionais
 export type ProfessionalDataInput = {
-  professional_info?: {
-    company_name?: string;
-    company_size?: string;
-    company_sector?: string;
-    company_website?: string;
-    current_position?: string;
-    annual_revenue?: string;
-    metadata?: Record<string, any>;
-  };
-  company_name?: string;
-  company_size?: string;
-  company_sector?: string;
+  company_name: string;
+  company_size: string;
+  company_sector: string;
   company_website?: string;
-  current_position?: string;
-  annual_revenue?: string;
+  current_position: string;
+  annual_revenue: string;
 };
