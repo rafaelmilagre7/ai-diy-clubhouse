@@ -1,10 +1,14 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { InfoIcon } from 'lucide-react';
 
 const AdminOnboarding = () => {
+  useEffect(() => {
+    console.log("AdminOnboarding renderizado");
+  }, []);
+
   return (
     <div className="space-y-6">
       <div>
