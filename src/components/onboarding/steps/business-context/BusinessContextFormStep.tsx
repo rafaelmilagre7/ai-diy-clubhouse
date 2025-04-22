@@ -40,23 +40,18 @@ export const BusinessContextFormStep: React.FC<BusinessContextFormStepProps> = (
       additional_context: ""
     };
     
-    // Verificar tanto business_data quanto business_context para compatibilidade
+    // Usar apenas business_data (evitar referências a business_context)
     const businessData = progress.business_data || {};
-    // Usar business_context se existir, caso contrário buscar de business_data
-    const businessContext = progress.business_context || businessData;
     
-    // Combinar dados de ambas as fontes, priorizando business_context se existir
-    const combinedData = { ...businessData, ...businessContext };
-    
-    console.log("Dados iniciais do contexto de negócios:", combinedData);
+    console.log("Dados iniciais do contexto de negócios:", businessData);
     
     return {
-      business_model: combinedData.business_model || "",
-      business_challenges: combinedData.business_challenges || [],
-      short_term_goals: combinedData.short_term_goals || [],
-      medium_term_goals: combinedData.medium_term_goals || [],
-      important_kpis: combinedData.important_kpis || [],
-      additional_context: combinedData.additional_context || "",
+      business_model: businessData.business_model || "",
+      business_challenges: businessData.business_challenges || [],
+      short_term_goals: businessData.short_term_goals || [],
+      medium_term_goals: businessData.medium_term_goals || [],
+      important_kpis: businessData.important_kpis || [],
+      additional_context: businessData.additional_context || "",
     };
   };
   

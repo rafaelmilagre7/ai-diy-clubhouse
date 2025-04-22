@@ -71,17 +71,16 @@ export function buildUpdateObject(
       break;
       
     case "business_context":
-      // Dados de contexto de negócio (compatibilidade com dados antigos)
+      // Dados de contexto de negócio (usar apenas business_data para evitar erros)
       console.log("Processando dados de contexto de negócio:", data);
       if (data && Object.keys(data).length > 0) {
         // Verificar se os dados estão aninhados no objeto business_context
         if (data.business_context) {
-          updateObj.business_context = data.business_context;
-          updateObj.business_data = data.business_context; // Para compatibilidade
+          // Salvar apenas em business_data, não em business_context
+          updateObj.business_data = data.business_context;
         } else {
           // Se não estiverem aninhados, assumir que os dados são diretamente o contexto
-          updateObj.business_context = data;
-          updateObj.business_data = data; // Para compatibilidade
+          updateObj.business_data = data;
         }
       }
       break;

@@ -19,12 +19,8 @@ const BusinessContext = () => {
     try {
       console.log("Salvando dados de contexto de negócio:", data);
       
-      // Formato correto: Envolver os dados em um objeto com a propriedade business_context
-      const formattedData = { 
-        business_context: data 
-      };
-      
-      await saveStepData(formattedData, true);
+      // Formato direto: Enviar dados diretamente para business_data
+      await saveStepData("business_context", data, true);
       
       toast.success("Dados salvos com sucesso!");
       
@@ -69,7 +65,7 @@ const BusinessContext = () => {
       <BusinessContextStep
         onSubmit={handleSave}
         isSubmitting={false}
-        initialData={progress?.business_context || progress?.business_data}
+        initialData={progress?.business_data} // Usar apenas business_data
       />
     </OnboardingLayout>
   );
