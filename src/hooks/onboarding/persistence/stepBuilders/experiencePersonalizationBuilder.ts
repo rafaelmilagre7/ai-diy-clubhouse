@@ -1,24 +1,18 @@
-
 import { OnboardingData, OnboardingProgress } from "@/types/onboarding";
 
 export function buildExperiencePersonalizationUpdate(data: Partial<OnboardingData>, progress: OnboardingProgress | null) {
   const updateObj: any = {};
-  const existingExperiencePersonalization = progress?.experience_personalization || {};
   
-  // Se o campo não existir ou for string vazia, inicializamos como objeto vazio
-  if (!existingExperiencePersonalization) {
-    updateObj.experience_personalization = {};
-  } else if (typeof existingExperiencePersonalization === 'string') {
-    // Se for string, tenta converter para objeto
+  // Garantir uma base consistente para os dados
+  let existingExperiencePersonalization: any = progress?.experience_personalization || {};
+  
+  // Verificar se existingExperiencePersonalization é uma string
+  if (typeof existingExperiencePersonalization === 'string') {
     try {
-      // Verificar se a string não está vazia antes de tentar parsear
-      if (existingExperiencePersonalization && typeof existingExperiencePersonalization === 'string') {
-        const trimmedValue = existingExperiencePersonalization.trim();
-        if (trimmedValue !== '') {
-          updateObj.experience_personalization = JSON.parse(trimmedValue);
-        } else {
-          updateObj.experience_personalization = {};
-        }
+      // Garantir que seja uma string de fato antes de chamar trim
+      const trimmedValue = existingExperiencePersonalization.trim ? existingExperiencePersonalization.trim() : '';
+      if (trimmedValue !== '') {
+        updateObj.experience_personalization = JSON.parse(trimmedValue);
       } else {
         updateObj.experience_personalization = {};
       }

@@ -1,24 +1,18 @@
-
 import { OnboardingData, OnboardingProgress } from "@/types/onboarding";
 
 export function buildBusinessGoalsUpdate(data: Partial<OnboardingData>, progress: OnboardingProgress | null) {
   const updateObj: any = {};
   
   // Garantir uma base consistente para os dados
-  let existingGoals = progress?.business_goals || {};
+  let existingGoals: any = progress?.business_goals || {};
   
-  // Se os dados existentes forem uma string, tentar convertê-los para objeto
+  // Verificar se existingGoals é uma string
   if (typeof existingGoals === 'string') {
     try {
-      // Verificar se a string não está vazia antes de tentar parsear
-      // Usar uma verificação segura para evitar erros de tipo
-      if (existingGoals && typeof existingGoals === 'string') {
-        const trimmedValue = existingGoals.trim();
-        if (trimmedValue !== '') {
-          existingGoals = JSON.parse(trimmedValue);
-        } else {
-          existingGoals = {};
-        }
+      // Garantir que seja uma string de fato antes de chamar trim
+      const trimmedValue = existingGoals.trim ? existingGoals.trim() : '';
+      if (trimmedValue !== '') {
+        existingGoals = JSON.parse(trimmedValue);
       } else {
         existingGoals = {};
       }
@@ -26,9 +20,6 @@ export function buildBusinessGoalsUpdate(data: Partial<OnboardingData>, progress
       console.error("Erro ao converter business_goals de string para objeto:", e);
       existingGoals = {};
     }
-  } else if (typeof existingGoals === 'string' && existingGoals === '') {
-    // Se for string vazia, transformar em objeto vazio
-    existingGoals = {};
   }
   
   // Inicializar o objeto de atualização com os dados existentes

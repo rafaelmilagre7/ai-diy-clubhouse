@@ -1,23 +1,18 @@
-
 import { OnboardingData, OnboardingProgress } from "@/types/onboarding";
 
 export function buildComplementaryInfoUpdate(data: Partial<OnboardingData>, progress: OnboardingProgress | null) {
   const updateObj: any = {};
   
   // Garantir uma base consistente para os dados
-  let existingInfo = progress?.complementary_info || {};
+  let existingInfo: any = progress?.complementary_info || {};
   
-  // Se os dados existentes forem uma string, tentar convertê-los para objeto
+  // Verificar se existingInfo é uma string
   if (typeof existingInfo === 'string') {
     try {
-      // Verificar se a string não está vazia antes de tentar parsear
-      if (existingInfo && typeof existingInfo === 'string') {
-        const trimmedValue = existingInfo.trim();
-        if (trimmedValue !== '') {
-          existingInfo = JSON.parse(trimmedValue);
-        } else {
-          existingInfo = {};
-        }
+      // Garantir que seja uma string de fato antes de chamar trim
+      const trimmedValue = existingInfo.trim ? existingInfo.trim() : '';
+      if (trimmedValue !== '') {
+        existingInfo = JSON.parse(trimmedValue);
       } else {
         existingInfo = {};
       }
@@ -25,9 +20,6 @@ export function buildComplementaryInfoUpdate(data: Partial<OnboardingData>, prog
       console.error("Erro ao converter complementary_info de string para objeto:", e);
       existingInfo = {};
     }
-  } else if (typeof existingInfo === 'string' && existingInfo === '') {
-    // Se for string vazia, transformar em objeto vazio
-    existingInfo = {};
   }
   
   // Inicializar o objeto de atualização com os dados existentes
