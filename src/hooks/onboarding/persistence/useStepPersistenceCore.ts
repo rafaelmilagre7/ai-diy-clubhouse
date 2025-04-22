@@ -1,10 +1,11 @@
 
 import { useProgress } from "../useProgress";
-import { buildUpdateObject } from "../persistence/stepDataBuilder";
-import { navigateAfterStep } from "../persistence/stepNavigator";
+import { buildUpdateObject } from "./stepDataBuilder";
+import { navigateAfterStep } from "./stepNavigator";
 import { steps } from "../useStepDefinitions";
 import { toast } from "sonner";
 import { useLogging } from "@/hooks/useLogging";
+import { saveProfessionalData } from "./services/professionalDataService";
 
 /**
  * Hook para gerenciar a persistência de dados das etapas do onboarding
@@ -74,7 +75,18 @@ export function useStepPersistenceCore({
 
       console.log("Dados a serem enviados para o banco:", updateObj);
 
-      // Atualizar no Supabase - Correção para tratar corretamente o retorno
+      // Salvar dados específicos em tabelas separadas
+      try {
+        if (stepId === 'professional_data') {
+          await saveProfessionalData(progress.id, progress.user_id, data);
+        }
+        // Adicionar mais casos para outras etapas conforme necessário
+      } catch (serviceError) {
+        console.error(`Erro ao salvar dados para serviço específico (${stepId}):`, serviceError);
+        // Continuar e tentar atualizar o objeto de progresso principal de qualquer maneira
+      }
+
+      // Atualizar na tabela principal
       const result = await updateProgress(updateObj);
       
       // Verificar se temos um retorno válido

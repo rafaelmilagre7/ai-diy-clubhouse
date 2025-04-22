@@ -43,9 +43,8 @@ export function buildProfessionalDataUpdate(data: Partial<OnboardingData>, progr
   // Verificar cada campo para atualização
   let hasUpdates = false;
   
-  // Criar um objeto temporário para adicionar propriedades dinâmicas
-  // Esta abordagem é segura porque estamos usando um tipo conhecido
-  const tempUpdateObj: Record<string, any> = updateObj;
+  // Criar um objeto tipado como Record<string, any> para manipulação segura
+  const tempObj: Record<string, any> = { ...updateObj };
   
   fieldsToCheck.forEach(field => {
     if (professionalData[field as keyof typeof professionalData]) {
@@ -59,8 +58,8 @@ export function buildProfessionalDataUpdate(data: Partial<OnboardingData>, progr
       // Atualizar no objeto professional_info
       professionalInfo[field] = value;
       
-      // Agora podemos atribuir propriedades dinâmicas de forma segura
-      tempUpdateObj[field] = value;
+      // Atualizar campo de nível superior
+      tempObj[field] = value;
       
       hasUpdates = true;
     }
@@ -68,11 +67,11 @@ export function buildProfessionalDataUpdate(data: Partial<OnboardingData>, progr
   
   // Adicionar objeto professional_info atualizado
   if (hasUpdates) {
-    tempUpdateObj.professional_info = professionalInfo;
+    tempObj.professional_info = professionalInfo;
   }
   
-  console.log("Objeto de atualização para dados profissionais:", tempUpdateObj);
+  console.log("Objeto de atualização para dados profissionais:", tempObj);
   
-  // Convertemos de volta para o tipo Partial<OnboardingProgress>
-  return tempUpdateObj as Partial<OnboardingProgress>;
+  // Converter de volta para Partial<OnboardingProgress>
+  return tempObj as Partial<OnboardingProgress>;
 }

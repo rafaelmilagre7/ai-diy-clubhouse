@@ -1,6 +1,8 @@
+
 import { supabase } from "@/lib/supabase";
 import { OnboardingProgress } from "@/types/onboarding";
 import { normalizeOnboardingResponse } from "./normalizers/progressNormalizer";
+import { fetchProfessionalData, formatProfessionalData } from "./services/professionalDataService";
 
 export const fetchOnboardingProgress = async (userId: string) => {
   console.log("[DEBUG] Buscando progresso de onboarding para usuário:", userId);
@@ -26,8 +28,32 @@ export const fetchOnboardingProgress = async (userId: string) => {
     
     console.log("[DEBUG] Registro bruto de progresso encontrado:", rawData);
     
-    const data = normalizeOnboardingResponse(rawData);
-    console.log("[DEBUG] Dados normalizados do banco:", data);
+    // Normalizar dados do registro principal
+    let data = normalizeOnboardingResponse(rawData);
+    
+    // Buscar dados adicionais das tabelas relacionadas
+    if (data.id) {
+      try {
+        // Buscar dados profissionais
+        const professionalData = await fetchProfessionalData(data.id);
+        if (professionalData) {
+          // Formatar e mesclar com os dados principais
+          const formattedProfData = formatProfessionalData(professionalData);
+          data = {
+            ...data,
+            ...formattedProfData
+          };
+        }
+        
+        // Adicionar mais chamadas para outras tabelas aqui conforme necessário
+        
+      } catch (relatedError) {
+        console.error("[ERRO] Erro ao buscar dados relacionados:", relatedError);
+        // Continuar com os dados que temos
+      }
+    }
+    
+    console.log("[DEBUG] Dados normalizados e enriquecidos:", data);
     
     return { data, error: null };
   } catch (err) {
