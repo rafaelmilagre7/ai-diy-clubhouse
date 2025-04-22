@@ -1,3 +1,4 @@
+
 import { supabase } from "@/lib/supabase";
 import { OnboardingProgress } from "@/types/onboarding";
 
@@ -76,7 +77,7 @@ const normalizeOnboardingData = (data: Partial<OnboardingProgress>) => {
     // Converter de string para objeto se necessário
     if (typeof aiExp === 'string') {
       try {
-        // Use precise type checking and handle potential JSON parsing
+        // Verificar explicitamente o tipo e garantir segurança antes de chamar trim()
         if (typeof aiExp === 'string' && aiExp.trim() !== '') {
           try {
             (normalizedData as any).ai_experience = JSON.parse(aiExp);
