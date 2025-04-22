@@ -11,9 +11,11 @@ export function buildBusinessGoalsUpdate(data: Partial<OnboardingData>, progress
   if (progress) {
     if (typeof progress.business_goals === 'string') {
       try {
-        const trimmedValue = typeof progress.business_goals === 'string' && progress.business_goals.trim ? 
-          progress.business_goals.trim() : 
-          progress.business_goals;
+        // Verificar se é uma string válida antes de tentar trim
+        const stringValue = String(progress.business_goals);
+        const trimmedValue = stringValue && typeof stringValue.trim === 'function' ? 
+          stringValue.trim() : 
+          stringValue;
           
         if (trimmedValue !== '') {
           existingGoals = JSON.parse(trimmedValue);
@@ -55,11 +57,11 @@ export function buildBusinessGoalsUpdate(data: Partial<OnboardingData>, progress
     });
     
     // Sincronização especial entre expected_outcomes e expected_outcome_30days
-    if (sourceData.expected_outcome_30days && 
+    if ('expected_outcome_30days' in sourceData && 
         (!updateObj.business_goals.expected_outcomes || 
          updateObj.business_goals.expected_outcomes.length === 0)) {
       updateObj.business_goals.expected_outcomes = [sourceData.expected_outcome_30days];
-    } else if (sourceData.expected_outcomes && 
+    } else if ('expected_outcomes' in sourceData && 
               Array.isArray(sourceData.expected_outcomes) && 
               sourceData.expected_outcomes.length > 0 &&
               !updateObj.business_goals.expected_outcome_30days) {

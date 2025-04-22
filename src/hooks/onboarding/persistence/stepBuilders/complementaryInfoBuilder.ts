@@ -11,9 +11,11 @@ export function buildComplementaryInfoUpdate(data: Partial<OnboardingData>, prog
   if (progress) {
     if (typeof progress.complementary_info === 'string') {
       try {
-        const trimmedValue = typeof progress.complementary_info === 'string' && progress.complementary_info.trim ? 
-          progress.complementary_info.trim() : 
-          progress.complementary_info;
+        // Verificar se é uma string válida antes de tentar trim
+        const stringValue = String(progress.complementary_info);
+        const trimmedValue = stringValue && typeof stringValue.trim === 'function' ? 
+          stringValue.trim() : 
+          stringValue;
           
         if (trimmedValue !== '') {
           existingInfo = JSON.parse(trimmedValue);
@@ -34,7 +36,7 @@ export function buildComplementaryInfoUpdate(data: Partial<OnboardingData>, prog
   
   if (typeof sourceData === 'object' && sourceData !== null) {
     // Processar campos de array
-    if (sourceData.priority_topics) {
+    if ('priority_topics' in sourceData) {
       const priorityTopics = Array.isArray(sourceData.priority_topics) ? 
         sourceData.priority_topics : 
         [sourceData.priority_topics].filter(Boolean);
@@ -46,15 +48,15 @@ export function buildComplementaryInfoUpdate(data: Partial<OnboardingData>, prog
     
     // Processar campos de texto
     ['how_found_us', 'referred_by'].forEach(field => {
-      if (sourceData[field] !== undefined) {
-        updateObj.complementary_info[field] = sourceData[field];
+      if (field in sourceData && sourceData[field as keyof typeof sourceData] !== undefined) {
+        updateObj.complementary_info[field] = sourceData[field as keyof typeof sourceData];
       }
     });
     
     // Processar campos booleanos
     ['authorize_case_usage', 'interested_in_interview'].forEach(field => {
-      if (sourceData[field] !== undefined) {
-        updateObj.complementary_info[field] = !!sourceData[field];
+      if (field in sourceData && sourceData[field as keyof typeof sourceData] !== undefined) {
+        updateObj.complementary_info[field] = !!sourceData[field as keyof typeof sourceData];
       }
     });
   }

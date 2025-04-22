@@ -11,9 +11,11 @@ export function buildAiExpUpdate(data: Partial<OnboardingData>, progress: Onboar
   if (progress) {
     if (typeof progress.ai_experience === 'string') {
       try {
-        const trimmedValue = typeof progress.ai_experience === 'string' && progress.ai_experience.trim ? 
-          progress.ai_experience.trim() : 
-          progress.ai_experience;
+        // Verificar se é uma string válida antes de tentar trim
+        const stringValue = String(progress.ai_experience);
+        const trimmedValue = stringValue && typeof stringValue.trim === 'function' ? 
+          stringValue.trim() : 
+          stringValue;
           
         if (trimmedValue !== '') {
           existingExp = JSON.parse(trimmedValue);
@@ -33,8 +35,8 @@ export function buildAiExpUpdate(data: Partial<OnboardingData>, progress: Onboar
   const sourceData = data.ai_experience || data;
   
   if (typeof sourceData === 'object' && sourceData !== null) {
-    // Processar campos de array
-    if (sourceData.previous_tools) {
+    // Processar campos de array para previous_tools
+    if ('previous_tools' in sourceData) {
       const previousTools = Array.isArray(sourceData.previous_tools) ? 
         sourceData.previous_tools : 
         [sourceData.previous_tools].filter(Boolean);
@@ -44,7 +46,8 @@ export function buildAiExpUpdate(data: Partial<OnboardingData>, progress: Onboar
       }
     }
     
-    if (sourceData.desired_ai_areas) {
+    // Processar campos de array para desired_ai_areas
+    if ('desired_ai_areas' in sourceData) {
       const desiredAreas = Array.isArray(sourceData.desired_ai_areas) ? 
         sourceData.desired_ai_areas : 
         [sourceData.desired_ai_areas].filter(Boolean);
@@ -56,20 +59,20 @@ export function buildAiExpUpdate(data: Partial<OnboardingData>, progress: Onboar
     
     // Processar outros campos
     ['knowledge_level', 'has_implemented', 'improvement_suggestions'].forEach(field => {
-      if (sourceData[field] !== undefined) {
-        updateObj.ai_experience[field] = sourceData[field];
+      if (field in sourceData && sourceData[field as keyof typeof sourceData] !== undefined) {
+        updateObj.ai_experience[field] = sourceData[field as keyof typeof sourceData];
       }
     });
     
     // Processar campos booleanos
     ['completed_formation', 'is_member_for_month'].forEach(field => {
-      if (sourceData[field] !== undefined) {
-        updateObj.ai_experience[field] = !!sourceData[field];
+      if (field in sourceData && sourceData[field as keyof typeof sourceData] !== undefined) {
+        updateObj.ai_experience[field] = !!sourceData[field as keyof typeof sourceData];
       }
     });
     
     // Processar campo numérico
-    if (sourceData.nps_score !== undefined) {
+    if ('nps_score' in sourceData && sourceData.nps_score !== undefined) {
       updateObj.ai_experience.nps_score = typeof sourceData.nps_score === 'string' ? 
         parseInt(sourceData.nps_score, 10) : 
         sourceData.nps_score;

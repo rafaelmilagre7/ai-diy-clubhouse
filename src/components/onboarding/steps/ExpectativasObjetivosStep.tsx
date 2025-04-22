@@ -86,7 +86,7 @@ export const ExpectativasObjetivosStep = ({
   onSubmit,
   isSubmitting,
   initialData,
-  isLastStep,
+  isLastStep = false,
   onComplete,
 }: ExpectativasObjetivosStepProps) => {
   const [liveInterest, setLiveInterest] = useState<number>(5);

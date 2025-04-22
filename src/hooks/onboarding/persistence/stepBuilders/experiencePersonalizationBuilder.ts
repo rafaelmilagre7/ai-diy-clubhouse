@@ -11,9 +11,11 @@ export function buildExperiencePersonalizationUpdate(data: Partial<OnboardingDat
   if (progress) {
     if (typeof progress.experience_personalization === 'string') {
       try {
-        const trimmedValue = typeof progress.experience_personalization === 'string' && progress.experience_personalization.trim ? 
-          progress.experience_personalization.trim() : 
-          progress.experience_personalization;
+        // Verificar se é uma string válida antes de tentar trim
+        const stringValue = String(progress.experience_personalization);
+        const trimmedValue = stringValue && typeof stringValue.trim === 'function' ? 
+          stringValue.trim() : 
+          stringValue;
           
         if (trimmedValue !== '') {
           existingExperiencePersonalization = JSON.parse(trimmedValue);
@@ -35,10 +37,10 @@ export function buildExperiencePersonalizationUpdate(data: Partial<OnboardingDat
   if (typeof sourceData === 'object' && sourceData !== null) {
     // Processar campos de array
     ['interests', 'time_preference', 'available_days', 'skills_to_share', 'mentorship_topics'].forEach(field => {
-      if (sourceData[field]) {
-        const fieldValue = Array.isArray(sourceData[field]) ? 
-          sourceData[field] : 
-          [sourceData[field]].filter(Boolean);
+      if (field in sourceData && sourceData[field as keyof typeof sourceData]) {
+        const fieldValue = Array.isArray(sourceData[field as keyof typeof sourceData]) ? 
+          sourceData[field as keyof typeof sourceData] : 
+          [sourceData[field as keyof typeof sourceData]].filter(Boolean);
           
         if (fieldValue.length > 0) {
           updateObj.experience_personalization[field] = fieldValue;
@@ -47,7 +49,7 @@ export function buildExperiencePersonalizationUpdate(data: Partial<OnboardingDat
     });
     
     // Processar campo numérico
-    if (sourceData.networking_availability !== undefined) {
+    if ('networking_availability' in sourceData && sourceData.networking_availability !== undefined) {
       updateObj.experience_personalization.networking_availability = typeof sourceData.networking_availability === 'string' ? 
         parseInt(sourceData.networking_availability, 10) : 
         sourceData.networking_availability;
