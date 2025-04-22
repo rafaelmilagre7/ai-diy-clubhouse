@@ -34,11 +34,20 @@ export function buildProfessionalDataUpdate(data: ProfessionalDataInput, progres
     );
   }
   
-  // Criar uma versão atualizada de professional_info com os dados, se necessário
-  if (processedData.professional_info) {
-    // Criar cópia para não modificar diretamente o objeto original
+  // Verificar se temos dados no nível superior ou dentro de professional_info
+  if (!processedData.professional_info && 
+      (processedData.company_name || processedData.company_size || 
+       processedData.company_sector || processedData.company_website || 
+       processedData.current_position || processedData.annual_revenue)) {
+    
+    // Criar objeto professional_info com base nos campos de nível superior
     processedData.professional_info = {
-      ...processedData.professional_info
+      company_name: processedData.company_name || '',
+      company_size: processedData.company_size || '',
+      company_sector: processedData.company_sector || '',
+      company_website: processedData.company_website || '',
+      current_position: processedData.current_position || '',
+      annual_revenue: processedData.annual_revenue || ''
     };
   }
   

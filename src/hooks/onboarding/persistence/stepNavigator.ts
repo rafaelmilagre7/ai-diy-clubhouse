@@ -31,7 +31,7 @@ export function navigateAfterStep(
     const nextRoute = nextRouteMap[stepId];
     console.log(`Navegando para ${nextRoute} (via mapeamento direto)`);
     
-    // Usar window.location.href para forçar navegação completa em caso de problemas com o router
+    // Usar window.location.href para garantir navegação completa
     window.location.href = nextRoute;
     return;
   }
@@ -42,7 +42,7 @@ export function navigateAfterStep(
       const nextStep = steps[currentStepIndex + 1];
       console.log(`Navegando para ${nextStep.path} (próximo passo na sequência)`);
       
-      // Usar window.location.href para forçar navegação completa
+      // Usar window.location.href para garantir navegação completa
       window.location.href = nextStep.path;
     } else {
       // Se estamos na última etapa, navegar para a revisão

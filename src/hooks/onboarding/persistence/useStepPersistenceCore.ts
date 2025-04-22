@@ -101,9 +101,10 @@ export function useStepPersistenceCore({
       await refreshProgress();
       console.log("Dados locais atualizados após salvar");
       
-      // Garantir navegação adequada para próxima etapa
+      // Navegação para a próxima etapa
       if (shouldNavigate) {
-        // Usar o módulo de navegação por etapas
+        console.log("Tentando navegar para a próxima etapa...");
+        // Usar o módulo de navegação por etapas com modificação para usar window.location.href
         navigateAfterStep(stepId, currentStepIndex, navigate, shouldNavigate);
       } else {
         console.log("Navegação automática desativada, permanecendo na página atual");
