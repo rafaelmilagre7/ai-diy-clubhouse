@@ -1,5 +1,5 @@
 
-import { useProgress } from "../useProgress";
+import { useProgress } from "./useProgress";
 import { buildUpdateObject } from "./persistence/stepDataBuilder";
 import { navigateAfterStep } from "./persistence/stepNavigator";
 import { steps } from "./useStepDefinitions";
