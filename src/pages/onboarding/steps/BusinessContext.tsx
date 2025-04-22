@@ -45,7 +45,7 @@ const BusinessContext = () => {
       console.log("Salvando dados de contexto de negócio:", data);
       
       // Evitar múltiplos salvamentos simultâneos
-      const saveTimeout = setTimeout(() => {
+      setTimeout(() => {
         // Formatar os dados com a estrutura esperada
         const formattedData = {
           business_context: data
@@ -63,8 +63,6 @@ const BusinessContext = () => {
           navigate("/onboarding/ai-experience");
         }
       }, 1500);
-      
-      return () => clearTimeout(saveTimeout);
     } catch (error) {
       console.error("Erro ao salvar dados:", error);
       toast.error("Erro ao salvar dados. Tente novamente.");
