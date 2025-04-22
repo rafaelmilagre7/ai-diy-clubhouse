@@ -40,3 +40,121 @@ export function buildProfessionalDataUpdate(
 
   return updateObj;
 }
+
+// Nova função buildUpdateObject que será usada pelos outros arquivos
+export function buildUpdateObject(
+  stepId: string, 
+  data: any, 
+  progress: OnboardingProgress | null, 
+  currentStepIndex: number
+) {
+  console.log(`Construindo objeto de atualização para passo ${stepId}`, data);
+  
+  // Objeto base para atualização
+  const updateObj: any = {};
+  
+  // Processar dados com base no ID da etapa
+  switch (stepId) {
+    case "personal":
+      // Dados pessoais (preservar implementação existente se houver)
+      console.log("Processando dados pessoais:", data);
+      if (data && Object.keys(data).length > 0) {
+        updateObj.personal_info = data;
+      }
+      break;
+      
+    case "professional_data":
+      // Usar a função específica para dados profissionais
+      console.log("Processando dados profissionais:", data);
+      const professionalUpdates = buildProfessionalDataUpdate(data, progress);
+      Object.assign(updateObj, professionalUpdates);
+      break;
+      
+    case "business_context":
+      // Dados de contexto de negócio (compatibilidade com dados antigos)
+      console.log("Processando dados de contexto de negócio:", data);
+      if (data && Object.keys(data).length > 0) {
+        // Verificar se os dados estão aninhados no objeto business_context
+        if (data.business_context) {
+          updateObj.business_context = data.business_context;
+          updateObj.business_data = data.business_context; // Para compatibilidade
+        } else {
+          // Se não estiverem aninhados, assumir que os dados são diretamente o contexto
+          updateObj.business_context = data;
+          updateObj.business_data = data; // Para compatibilidade
+        }
+      }
+      break;
+      
+    case "ai_exp":
+      // Experiência com IA
+      console.log("Processando dados de experiência com IA:", data);
+      if (data && Object.keys(data).length > 0) {
+        updateObj.ai_experience = data;
+      }
+      break;
+      
+    case "business_goals":
+      // Objetivos de negócio
+      console.log("Processando dados de objetivos de negócio:", data);
+      if (data && Object.keys(data).length > 0) {
+        updateObj.business_goals = data;
+      }
+      break;
+      
+    case "experience_personalization":
+      // Personalização de experiência
+      console.log("Processando dados de personalização:", data);
+      if (data && Object.keys(data).length > 0) {
+        updateObj.experience_personalization = data;
+      }
+      break;
+      
+    case "complementary_info":
+      // Informações complementares
+      console.log("Processando informações complementares:", data);
+      if (data && Object.keys(data).length > 0) {
+        updateObj.complementary_info = data;
+      }
+      break;
+      
+    default:
+      console.warn(`Passo não reconhecido: ${stepId}. Dados não processados.`);
+  }
+
+  // Atualizar campo completed_steps para incluir a etapa atual, se ainda não estiver incluída
+  if (progress && progress.completed_steps) {
+    const stepsCompleted = [...progress.completed_steps];
+    if (!stepsCompleted.includes(stepId)) {
+      stepsCompleted.push(stepId);
+      updateObj.completed_steps = stepsCompleted;
+      console.log(`Adicionando ${stepId} aos passos completados:`, stepsCompleted);
+    }
+  } else {
+    updateObj.completed_steps = [stepId];
+    console.log(`Iniciando passos completados com ${stepId}`);
+  }
+
+  // Definir a etapa atual como a próxima após a conclusão
+  if (typeof currentStepIndex === 'number') {
+    const nextIndex = currentStepIndex + 1;
+    const steps = [
+      "personal", 
+      "professional_data", 
+      "business_context", 
+      "ai_exp", 
+      "business_goals", 
+      "experience_personalization", 
+      "complementary_info", 
+      "review"
+    ];
+    
+    if (nextIndex < steps.length) {
+      updateObj.current_step = steps[nextIndex];
+      console.log(`Atualizando passo atual para: ${steps[nextIndex]}`);
+    }
+  }
+
+  console.log("Objeto de atualização final:", updateObj);
+  return updateObj;
+}
