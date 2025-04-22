@@ -70,6 +70,9 @@ export const ExpectativasObjetivosStep = ({
     if (initialData?.business_goals) {
       const data = initialData.business_goals;
       
+      // Usando console.log para verificar os dados no initialData
+      console.log("Atualizando form com dados:", data);
+      
       if (data.primary_goal) setValue("primary_goal", data.primary_goal);
       if (data.expected_outcome_30days) setValue("expected_outcome_30days", data.expected_outcome_30days);
       if (data.priority_solution_type) setValue("priority_solution_type", data.priority_solution_type);
@@ -85,8 +88,6 @@ export const ExpectativasObjetivosStep = ({
           setValue("content_formats", [data.content_formats]);
         }
       }
-      
-      console.log("Dados inicializados:", data);
     }
   }, [initialData, setValue]);
 
@@ -326,81 +327,29 @@ export const ExpectativasObjetivosStep = ({
                 <div className="space-y-3">
                   <Label className="text-base font-medium">Quais formatos de conteúdo você prefere? (selecione todos aplicáveis)</Label>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                    <div className="flex items-center space-x-2">
-                      <Checkbox 
-                        id="video"
-                        checked={field.value?.includes('video')}
-                        onCheckedChange={(checked) => {
-                          const currentValue = field.value || [];
-                          if (checked) {
-                            field.onChange([...currentValue, 'video']);
-                          } else {
-                            field.onChange(currentValue.filter(v => v !== 'video'));
-                          }
-                        }}
-                      />
-                      <Label htmlFor="video" className="cursor-pointer">Vídeos</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Checkbox 
-                        id="texto"
-                        checked={field.value?.includes('texto')}
-                        onCheckedChange={(checked) => {
-                          const currentValue = field.value || [];
-                          if (checked) {
-                            field.onChange([...currentValue, 'texto']);
-                          } else {
-                            field.onChange(currentValue.filter(v => v !== 'texto'));
-                          }
-                        }}
-                      />
-                      <Label htmlFor="texto" className="cursor-pointer">Textos e guias</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Checkbox 
-                        id="audio"
-                        checked={field.value?.includes('audio')}
-                        onCheckedChange={(checked) => {
-                          const currentValue = field.value || [];
-                          if (checked) {
-                            field.onChange([...currentValue, 'audio']);
-                          } else {
-                            field.onChange(currentValue.filter(v => v !== 'audio'));
-                          }
-                        }}
-                      />
-                      <Label htmlFor="audio" className="cursor-pointer">Áudios/Podcasts</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Checkbox 
-                        id="ao_vivo"
-                        checked={field.value?.includes('ao_vivo')}
-                        onCheckedChange={(checked) => {
-                          const currentValue = field.value || [];
-                          if (checked) {
-                            field.onChange([...currentValue, 'ao_vivo']);
-                          } else {
-                            field.onChange(currentValue.filter(v => v !== 'ao_vivo'));
-                          }
-                        }}
-                      />
-                      <Label htmlFor="ao_vivo" className="cursor-pointer">Sessões ao vivo</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Checkbox 
-                        id="workshop"
-                        checked={field.value?.includes('workshop')}
-                        onCheckedChange={(checked) => {
-                          const currentValue = field.value || [];
-                          if (checked) {
-                            field.onChange([...currentValue, 'workshop']);
-                          } else {
-                            field.onChange(currentValue.filter(v => v !== 'workshop'));
-                          }
-                        }}
-                      />
-                      <Label htmlFor="workshop" className="cursor-pointer">Workshops práticos</Label>
-                    </div>
+                    {['video', 'texto', 'audio', 'ao_vivo', 'workshop'].map((format) => (
+                      <div key={format} className="flex items-center space-x-2">
+                        <Checkbox 
+                          id={format}
+                          checked={field.value?.includes(format)}
+                          onCheckedChange={(checked) => {
+                            const currentValue = field.value || [];
+                            if (checked) {
+                              field.onChange([...currentValue, format]);
+                            } else {
+                              field.onChange(currentValue.filter(v => v !== format));
+                            }
+                          }}
+                        />
+                        <Label htmlFor={format} className="cursor-pointer">
+                          {format === 'video' && 'Vídeos'}
+                          {format === 'texto' && 'Textos e guias'}
+                          {format === 'audio' && 'Áudios/Podcasts'}
+                          {format === 'ao_vivo' && 'Sessões ao vivo'}
+                          {format === 'workshop' && 'Workshops práticos'}
+                        </Label>
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}

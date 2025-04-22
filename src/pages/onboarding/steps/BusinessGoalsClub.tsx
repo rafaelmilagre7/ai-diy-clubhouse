@@ -73,7 +73,7 @@ const BusinessGoalsClub = () => {
       }
       
       // Log de dados antes de salvar
-      console.log("Dados finais formatados antes de salvar:", data);
+      console.log("Dados finais formatados antes de salvar:", JSON.stringify(data));
       
       // Salvar dados
       await saveStepData(stepId, data, false);
