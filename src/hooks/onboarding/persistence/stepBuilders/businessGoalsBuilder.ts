@@ -1,7 +1,22 @@
 
 import { OnboardingData, OnboardingProgress } from "@/types/onboarding";
 
-export function buildBusinessGoalsUpdate(data: Partial<OnboardingData>, progress: OnboardingProgress | null) {
+interface BusinessGoalsData {
+  primary_goal?: string;
+  expected_outcomes?: string[];
+  expected_outcome_30days?: string;
+  timeline?: string;
+  priority_solution_type?: string;
+  how_implement?: string;
+  week_availability?: string;
+  live_interest?: number;
+  content_formats?: string[];
+}
+
+export function buildBusinessGoalsUpdate(
+  data: Partial<OnboardingData> | BusinessGoalsData, 
+  progress: OnboardingProgress | null
+) {
   const updateObj: any = {};
   
   // Garantir uma base consistente para os dados
@@ -28,7 +43,7 @@ export function buildBusinessGoalsUpdate(data: Partial<OnboardingData>, progress
   updateObj.business_goals = {...existingGoals};
   
   // Verificar se estamos recebendo dados diretos ou em um objeto aninhado
-  const sourceData = data.business_goals || data;
+  const sourceData = 'business_goals' in data && data.business_goals ? data.business_goals : data;
   
   if (typeof sourceData === 'object' && sourceData !== null) {
     // Mesclar com dados existentes
@@ -53,14 +68,29 @@ export function buildBusinessGoalsUpdate(data: Partial<OnboardingData>, progress
     });
     
     // Sincronização especial entre expected_outcomes e expected_outcome_30days
-    if (sourceData.expected_outcome_30days && 
-        (!updateObj.business_goals.expected_outcomes || updateObj.business_goals.expected_outcomes.length === 0)) {
-      updateObj.business_goals.expected_outcomes = [sourceData.expected_outcome_30days];
-    } else if (sourceData.expected_outcomes && 
-              Array.isArray(sourceData.expected_outcomes) && 
-              sourceData.expected_outcomes.length > 0 &&
-              !updateObj.business_goals.expected_outcome_30days) {
-      updateObj.business_goals.expected_outcome_30days = sourceData.expected_outcomes[0];
+    // Obter as referências para processamento condicional
+    const goalsData = sourceData as BusinessGoalsData;
+    
+    // Verificar se temos expected_outcome_30days nos dados de origem
+    if ('expected_outcome_30days' in goalsData && 
+        goalsData.expected_outcome_30days !== undefined) {
+      
+      // Se não temos expected_outcomes, inicializá-lo com expected_outcome_30days
+      if (!updateObj.business_goals.expected_outcomes || 
+          !Array.isArray(updateObj.business_goals.expected_outcomes) || 
+          updateObj.business_goals.expected_outcomes.length === 0) {
+        updateObj.business_goals.expected_outcomes = [goalsData.expected_outcome_30days];
+      }
+    } 
+    // Verificar se temos expected_outcomes nos dados de origem
+    else if ('expected_outcomes' in goalsData && 
+             Array.isArray(goalsData.expected_outcomes) && 
+             goalsData.expected_outcomes.length > 0) {
+      
+      // Se não temos expected_outcome_30days, inicializá-lo com o primeiro expected_outcomes
+      if (!updateObj.business_goals.expected_outcome_30days) {
+        updateObj.business_goals.expected_outcome_30days = goalsData.expected_outcomes[0];
+      }
     }
   }
   
