@@ -36,7 +36,7 @@ const normalizeOnboardingData = (data: Partial<OnboardingProgress>) => {
   objectFields.forEach(field => {
     const value = normalizedData[field as keyof typeof normalizedData];
     if (typeof value === 'string') {
-      if (value.trim() !== '') {
+      if (typeof value === 'string' && value.trim() !== '') {
         try {
           // Tentar converter de string JSON para objeto
           (normalizedData as any)[field] = JSON.parse(value);
@@ -78,7 +78,7 @@ const normalizeOnboardingData = (data: Partial<OnboardingProgress>) => {
     // Converter de string para objeto se necessário
     if (typeof aiExp === 'string') {
       try {
-        if (aiExp && aiExp.trim() !== '') {  // Adicionando verificação extra para garantir que aiExp não é undefined
+        if (typeof aiExp === 'string' && aiExp.trim() !== '') {  // Verificar explicitamente se é uma string antes de usar trim()
           (normalizedData as any).ai_experience = JSON.parse(aiExp);
         } else {
           (normalizedData as any).ai_experience = {};
