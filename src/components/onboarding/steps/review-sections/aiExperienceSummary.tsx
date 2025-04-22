@@ -48,8 +48,8 @@ export function getAIExperienceSummary(data: OnboardingData['ai_experience']) {
     'analise_dados': 'Soluções de IA para Análise de Dados'
   };
 
-  // Modificar a verificação de has_implemented para ser mais robusta
-  const hasImplemented = () => {
+  // Função para verificar o valor de has_implemented de forma segura
+  const hasImplemented = (): boolean => {
     const value = processedData.has_implemented;
     
     // Tratar casos onde has_implemented pode ser string ou boolean

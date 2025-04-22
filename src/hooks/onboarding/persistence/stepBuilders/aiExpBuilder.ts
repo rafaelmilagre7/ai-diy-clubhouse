@@ -10,19 +10,25 @@ export function buildAiExpUpdate(data: Partial<OnboardingData>, progress: Onboar
   console.log("Dados recebidos no aiExpBuilder:", data);
   
   // Extrair os dados de ai_experience do objeto fornecido
-  let aiExperienceData = null;
+  let aiExperienceData: any = null;
   
   // Verificar se os dados já estão dentro de um objeto ai_experience
   if (data.ai_experience) {
     aiExperienceData = data.ai_experience;
   } 
+  // Verificar se há uma propriedade ai_exp que pode conter os dados
+  else if (data.ai_exp) {
+    aiExperienceData = data.ai_exp;
+  }
   // Se ai_experience não existe, verificar se existe alguma propriedade aninhada chamada ai_experience
   else if (data.ai_experience === undefined) {
     // Verificar se há alguma outra propriedade que possa conter ai_experience
     for (const key in data) {
       const value = data[key as keyof typeof data];
-      if (value && typeof value === 'object' && 'ai_experience' in value) {
-        aiExperienceData = (value as any).ai_experience;
+      if (value && typeof value === 'object' && ('ai_experience' in value || 'ai_exp' in value)) {
+        aiExperienceData = 'ai_experience' in value ? 
+                          (value as any).ai_experience : 
+                          (value as any).ai_exp;
         break;
       }
     }
