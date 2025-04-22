@@ -2,16 +2,19 @@
 import { OnboardingData, OnboardingProgress } from "@/types/onboarding";
 
 export function buildBusinessGoalsUpdate(data: Partial<OnboardingData>, progress: OnboardingProgress | null) {
-  // Criar objeto de atualização
-  const updateObj: any = {};
+  // Log para debug dos dados recebidos
+  console.log("Dados recebidos no businessGoalsBuilder:", data);
   
   // Obter os objetivos de negócios existentes (se houver)
   const existingBusinessGoals = progress?.business_goals || {};
   
   // Garantir que temos um objeto para business_goals, não uma string
   const businessGoalsBase = typeof existingBusinessGoals === 'string' 
-    ? {} 
+    ? JSON.parse(existingBusinessGoals) 
     : (existingBusinessGoals as Record<string, any>);
+  
+  // Inicializar objeto de atualização
+  const updateObj: any = {};
   
   // Verificar se os dados vieram dentro de um objeto business_goals
   if ((data as any).business_goals) {
@@ -36,14 +39,16 @@ export function buildBusinessGoalsUpdate(data: Partial<OnboardingData>, progress
     
     // Normalizar números para a preferência de sessões ao vivo
     if (businessGoalsData.live_interest !== undefined) {
-      const liveInterest = Number(businessGoalsData.live_interest);
-      businessGoalsData.live_interest = isNaN(liveInterest) ? 5 : liveInterest;
+      businessGoalsData.live_interest = Number(businessGoalsData.live_interest);
+      if (isNaN(businessGoalsData.live_interest)) {
+        businessGoalsData.live_interest = 5; // Valor padrão se for inválido
+      }
     }
     
     // Log para debug
     console.log("Dados de business_goals processados:", businessGoalsData);
     
-    // Criar objeto final
+    // Criar objeto final com metadados
     updateObj.business_goals = {
       ...businessGoalsBase,
       ...businessGoalsData,
@@ -52,7 +57,7 @@ export function buildBusinessGoalsUpdate(data: Partial<OnboardingData>, progress
   } else if (typeof data === 'object' && data !== null) {
     // Se os dados não vieram dentro de business_goals, construir manualmente
     
-    // Inicializar com dados existentes
+    // Inicializar com dados existentes e timestamp de atualização
     updateObj.business_goals = { 
       ...businessGoalsBase,
       _last_updated: new Date().toISOString()
@@ -69,7 +74,7 @@ export function buildBusinessGoalsUpdate(data: Partial<OnboardingData>, progress
       'content_formats'
     ];
     
-    // Copiar cada campo
+    // Copiar cada campo definido
     fieldsToCopy.forEach(field => {
       if ((data as any)[field] !== undefined) {
         updateObj.business_goals[field] = (data as any)[field];
@@ -101,8 +106,10 @@ export function buildBusinessGoalsUpdate(data: Partial<OnboardingData>, progress
     
     // Normalizar live_interest para número
     if ((data as any).live_interest !== undefined) {
-      const liveInterest = Number((data as any).live_interest);
-      updateObj.business_goals.live_interest = isNaN(liveInterest) ? 5 : liveInterest;
+      updateObj.business_goals.live_interest = Number((data as any).live_interest);
+      if (isNaN(updateObj.business_goals.live_interest)) {
+        updateObj.business_goals.live_interest = 5;
+      }
     }
     
     // Log para debug
