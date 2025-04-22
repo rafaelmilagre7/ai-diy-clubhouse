@@ -20,7 +20,7 @@ export const usePersonalInfoStep = () => {
     profile,
     progress,
   } = usePersonalInfoFormState();
-  const { isSubmitting, setIsSubmitting, handleSubmit: submit } = usePersonalInfoFormSubmit();
+  const { isSubmitting, setIsSubmitting, isSaving, lastSaveTime, handleSubmit: submit } = usePersonalInfoFormSubmit();
   const { refreshProgress } = useProgress();
   const { logError } = useLogging();
 
@@ -41,6 +41,8 @@ export const usePersonalInfoStep = () => {
     errors,
     isSubmitting,
     validationAttempted,
+    isSaving,
+    lastSaveTime,
     handleChange,
     handleSubmit,
     loadInitialData,

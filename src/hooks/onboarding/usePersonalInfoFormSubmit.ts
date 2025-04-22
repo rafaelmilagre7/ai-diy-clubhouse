@@ -21,6 +21,8 @@ type SubmitParams = {
 
 export const usePersonalInfoFormSubmit = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [lastSaveTime, setLastSaveTime] = useState<number | null>(null);
   const { refreshProgress } = useProgress();
   const { logError } = useLogging();
 
@@ -46,6 +48,7 @@ export const usePersonalInfoFormSubmit = () => {
     }
 
     setIsSubmitting(true);
+    setIsSaving(true);
     try {
       if (!progress?.id || !user?.id) {
         throw new Error("Dados de progresso ou usuário não disponíveis");
@@ -78,6 +81,9 @@ export const usePersonalInfoFormSubmit = () => {
       // 3. Atualizar dados locais
       await refreshProgress();
 
+      // Atualizar timestamp do último salvamento
+      setLastSaveTime(Date.now());
+
       toast.success("Dados pessoais salvos com sucesso!", {
         description: "Avançando para a próxima etapa..."
       });
@@ -92,12 +98,15 @@ export const usePersonalInfoFormSubmit = () => {
       return false;
     } finally {
       setIsSubmitting(false);
+      setIsSaving(false);
     }
   };
 
   return {
     isSubmitting,
     setIsSubmitting,
+    isSaving,
+    lastSaveTime,
     handleSubmit,
   };
 };

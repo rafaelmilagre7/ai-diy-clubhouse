@@ -3,6 +3,7 @@ import React from "react";
 import { PersonalInfoForm } from "./forms/PersonalInfoForm";
 import { Button } from "@/components/ui/button";
 import { NavigationButtons } from "../NavigationButtons";
+import { AutoSaveFeedback } from "../AutoSaveFeedback";
 
 export interface PersonalInfoStepProps {
   formData: any;
@@ -38,6 +39,13 @@ export const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
         isSubmitting={isSubmitting}
         onSubmit={onSubmit}
       />
+      
+      {isSaving !== undefined && lastSaveTime !== undefined && (
+        <div className="flex justify-end mb-2">
+          <AutoSaveFeedback isSaving={!!isSaving} lastSaveTime={lastSaveTime} />
+        </div>
+      )}
+      
       {!readOnly && (
         <div className="flex justify-end pt-4">
           <Button
