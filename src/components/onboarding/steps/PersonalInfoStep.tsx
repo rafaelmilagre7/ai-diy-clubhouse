@@ -38,6 +38,8 @@ export const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
   const [validationAttempted, setValidationAttempted] = useState(false);
   const [localIsSaving, setLocalIsSaving] = useState(isSaving);
   const [localLastSaveTime, setLocalLastSaveTime] = useState<number | null>(lastSaveTime);
+  // Flag para indicar que o formulário foi carregado
+  const [isFormLoaded, setIsFormLoaded] = useState(false);
   
   useEffect(() => {
     setLocalIsSaving(isSaving);
@@ -48,6 +50,14 @@ export const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
       setLocalLastSaveTime(lastSaveTime);
     }
   }, [lastSaveTime]);
+  
+  // Marcar o formulário como carregado após um breve delay
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsFormLoaded(true);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, []);
   
   const {
     register,
@@ -121,7 +131,8 @@ export const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
         message="Para começar, vou precisar de algumas informações pessoais para personalizar sua experiência no VIVER DE IA Club." 
       />
       
-      {hasValidationErrors && (
+      {/* Só mostrar alertas depois que o formulário estiver carregado */}
+      {isFormLoaded && hasValidationErrors && (
         <Alert variant="destructive" className="animate-fade-in bg-red-50 border-red-200">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
@@ -130,7 +141,7 @@ export const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
         </Alert>
       )}
 
-      {!hasValidationErrors && validationAttempted && isValid && (
+      {isFormLoaded && !hasValidationErrors && validationAttempted && isValid && (
         <Alert className="animate-fade-in bg-green-50 border-green-200">
           <CheckCircle className="h-4 w-4 text-green-500" />
           <AlertDescription className="text-green-700">

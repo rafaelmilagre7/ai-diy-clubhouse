@@ -31,8 +31,8 @@ export function navigateAfterStep(
     const nextRoute = nextRouteMap[stepId];
     console.log(`Navegando para ${nextRoute} (via mapeamento direto)`);
     
-    // Uso de redirect em vez de navigate para garantir uma navegação completa
-    window.location.href = nextRoute;
+    // Uso de navigate em vez de window.location.href para evitar recarregamento completo da página
+    navigate(nextRoute);
     return;
   }
   
@@ -42,11 +42,11 @@ export function navigateAfterStep(
       const nextStep = steps[currentStepIndex + 1];
       console.log(`Navegando para ${nextStep.path} (próximo passo na sequência)`);
       
-      window.location.href = nextStep.path;
+      navigate(nextStep.path);
     } else {
       console.log('Navegando para /onboarding/review (última etapa)');
       
-      window.location.href = '/onboarding/review';
+      navigate('/onboarding/review');
     }
     return;
   }

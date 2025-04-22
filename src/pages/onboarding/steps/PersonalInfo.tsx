@@ -12,7 +12,9 @@ const PersonalInfo = () => {
     errors,
     isSubmitting,
     handleChange,
-    handleSubmit
+    handleSubmit,
+    isSaving,
+    lastSaveTime
   } = usePersonalInfoStep();
 
   const handleSuccess = async () => {
@@ -30,6 +32,8 @@ const PersonalInfo = () => {
         formData={formData}
         errors={errors}
         onChange={handleChange}
+        isSaving={isSaving}
+        lastSaveTime={lastSaveTime}
       />
     </OnboardingLayout>
   );

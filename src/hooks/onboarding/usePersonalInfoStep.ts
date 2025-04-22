@@ -24,10 +24,14 @@ export const usePersonalInfoStep = () => {
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [validationAttempted, setValidationAttempted] = useState(false);
+  // Flag para controlar se já carregamos os dados iniciais
+  const [initialDataLoaded, setInitialDataLoaded] = useState(false);
+  // Flag para evitar salvamentos automáticos desnecessários na inicialização
+  const [shouldAutoSave, setShouldAutoSave] = useState(false);
 
   // Carregar dados iniciais
   useEffect(() => {
-    if (progress?.personal_info) {
+    if (progress?.personal_info && !initialDataLoaded) {
       // Formatar o DDI para garantir que tenha apenas um +
       let ddi = progress.personal_info.ddi || "+55";
       if (ddi) {
@@ -45,45 +49,54 @@ export const usePersonalInfoStep = () => {
         ...progress.personal_info,
         ddi: ddi,
       });
+      
+      setInitialDataLoaded(true);
+      
+      // Habilitar salvamento automático apenas depois de carregar os dados iniciais
+      // e com um pequeno atraso para evitar salvamentos desnecessários
+      setTimeout(() => {
+        setShouldAutoSave(true);
+      }, 2000);
     }
   }, [progress?.personal_info]);
 
   // Salvamento automático após 1.5 segundos de inatividade
   useEffect(() => {
+    // Não fazer salvamento automático durante o carregamento inicial ou submissão
+    if (!shouldAutoSave || isSubmitting) return;
+    
     const autoSave = async () => {
-      if (!isSubmitting) {
-        try {
-          setIsSaving(true);
-          
-          // Formatação do DDI antes de salvar
-          const dataToSave = {
-            ...formData,
-          };
-          
-          // Garantir que o DDI está formatado corretamente antes de salvar
-          if (dataToSave.ddi) {
-            dataToSave.ddi = "+" + dataToSave.ddi.replace(/\+/g, '').replace(/\D/g, '');
-          }
-          
-          console.log("Salvando dados automáticos:", dataToSave);
-          
-          await updateProgress({
-            personal_info: dataToSave,
-          });
-          
-          setLastSaveTime(Date.now());
-          console.log("Salvamento automático realizado");
-        } catch (error) {
-          console.error("Erro no salvamento automático:", error);
-        } finally {
-          setIsSaving(false);
+      try {
+        setIsSaving(true);
+        
+        // Formatação do DDI antes de salvar
+        const dataToSave = {
+          ...formData,
+        };
+        
+        // Garantir que o DDI está formatado corretamente antes de salvar
+        if (dataToSave.ddi) {
+          dataToSave.ddi = "+" + dataToSave.ddi.replace(/\+/g, '').replace(/\D/g, '');
         }
+        
+        console.log("Salvando dados automáticos:", dataToSave);
+        
+        await updateProgress({
+          personal_info: dataToSave,
+        });
+        
+        setLastSaveTime(Date.now());
+        console.log("Salvamento automático realizado");
+      } catch (error) {
+        console.error("Erro no salvamento automático:", error);
+      } finally {
+        setIsSaving(false);
       }
     };
 
     const timer = setTimeout(autoSave, 1500);
     return () => clearTimeout(timer);
-  }, [formData, isSubmitting, updateProgress]);
+  }, [formData, isSubmitting, updateProgress, shouldAutoSave]);
 
   const handleChange = (field: keyof PersonalInfoData, value: string) => {
     // Registrar a alteração para debug

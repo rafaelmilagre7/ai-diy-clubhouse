@@ -10,6 +10,7 @@ export function usePersonalInfoFormData() {
   const [formDataLoaded, setFormDataLoaded] = useState(false);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const autoSaveTimeoutRef = useRef<number | null>(null);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
 
   const [formData, setFormData] = useState({
     name: profile?.name || progress?.personal_info?.name || "",
@@ -55,6 +56,8 @@ export function usePersonalInfoFormData() {
   useEffect(() => {
     if (!isLoading) {
       updateFormData();
+      // Após a primeira carga, desabilitar o sinalizador de carga inicial
+      setIsInitialLoad(false);
     }
   }, [updateFormData, isLoading, progress]);
 
@@ -95,6 +98,12 @@ export function usePersonalInfoFormData() {
       window.clearTimeout(autoSaveTimeoutRef.current);
     }
     
+    // Não realizar salvamento automático durante o carregamento inicial
+    if (isInitialLoad) {
+      console.log("Ignorando salvamento automático durante carga inicial");
+      return;
+    }
+    
     // Configurar novo timeout para auto-save (após 1 segundo sem novas alterações)
     autoSaveTimeoutRef.current = window.setTimeout(async () => {
       if (!progress?.id) return;
@@ -120,7 +129,7 @@ export function usePersonalInfoFormData() {
       }
     }, 1000);
     
-  }, [formData, formErrors, progress?.id, updateProgress, profile?.name, profile?.email, user?.user_metadata?.name, user?.email]);
+  }, [formData, formErrors, progress?.id, updateProgress, profile?.name, profile?.email, user?.user_metadata?.name, user?.email, isInitialLoad]);
 
   // Assegurar que os timeouts sejam limpos na desmontagem
   useEffect(() => {
