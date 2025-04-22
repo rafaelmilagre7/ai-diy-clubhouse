@@ -14,10 +14,10 @@ export function buildBusinessContextUpdate(data: Partial<OnboardingData>, progre
   if (data.business_context) {
     // Formato aninhado: { business_context: { ... } }
     const contextData = data.business_context;
-    const existingBusinessData = progress?.business_data || {};
+    const existingBusinessData = progress && 'business_data' in progress ? progress.business_data : {};
     
     // Garantir que existingBusinessData seja um objeto
-    const baseBusinessData = typeof existingBusinessData === 'string' ? {} : existingBusinessData;
+    const baseBusinessData = typeof existingBusinessData === 'string' ? {} : existingBusinessData || {};
     
     // Garantir que arrays sejam mantidos como arrays
     let formattedData = { ...contextData };
@@ -30,7 +30,7 @@ export function buildBusinessContextUpdate(data: Partial<OnboardingData>, progre
     });
     
     // Salvar apenas em business_data (coluna existente na tabela)
-    if (progress?.business_data !== undefined) {
+    if (progress && 'business_data' in progress) {
       updateObj.business_data = {
         ...baseBusinessData,
         ...formattedData,
@@ -47,10 +47,10 @@ export function buildBusinessContextUpdate(data: Partial<OnboardingData>, progre
     console.log("Objeto de atualização gerado:", updateObj);
   } else if (typeof data === 'object' && data !== null) {
     // Formato direto: dados enviados diretamente
-    const existingBusinessData = progress?.business_data || {};
+    const existingBusinessData = progress && 'business_data' in progress ? progress.business_data : {};
     
     // Garantir que existingBusinessData seja um objeto
-    const baseBusinessData = typeof existingBusinessData === 'string' ? {} : existingBusinessData;
+    const baseBusinessData = typeof existingBusinessData === 'string' ? {} : existingBusinessData || {};
     
     let formattedData = { ...data };
     
@@ -62,7 +62,7 @@ export function buildBusinessContextUpdate(data: Partial<OnboardingData>, progre
     });
     
     // Salvar em business_data se existir no progresso
-    if (progress?.business_data !== undefined) {
+    if (progress && 'business_data' in progress) {
       updateObj.business_data = {
         ...baseBusinessData,
         ...formattedData,

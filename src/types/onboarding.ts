@@ -99,6 +99,15 @@ export interface OnboardingProgress {
   complementary_info?: ComplementaryInfo;
   created_at: string;
   updated_at: string;
+  
+  // Adicionando as propriedades extras que estão causando erros
+  business_data?: any;
+  company_name?: string;
+  company_size?: string;
+  company_sector?: string;
+  company_website?: string;
+  current_position?: string;
+  annual_revenue?: string;
 }
 
 export interface OnboardingStep {
@@ -106,9 +115,9 @@ export interface OnboardingStep {
   title: string;
   description?: string;
   path: string;
-  section?: keyof OnboardingData;
+  section?: keyof OnboardingProgress;
   fields: Array<keyof OnboardingFormData>;
-  isCompleted: (data: OnboardingFormData) => boolean;
+  isCompleted?: (data: OnboardingFormData) => boolean;
 }
 
 export interface OnboardingStepProps {

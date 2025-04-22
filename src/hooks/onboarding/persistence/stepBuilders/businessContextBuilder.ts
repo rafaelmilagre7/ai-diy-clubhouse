@@ -7,7 +7,7 @@ export function buildBusinessContextUpdate(data: Partial<OnboardingData>, progre
   const contextUpdate = buildBaseUpdate("business_context", data, progress, {});
   
   // Verificar se business_data existe no progresso atual
-  const dataUpdate = progress?.business_data !== undefined 
+  const dataUpdate = progress && 'business_data' in progress 
     ? buildBaseUpdate("business_data", data, progress, {})
     : {};
   

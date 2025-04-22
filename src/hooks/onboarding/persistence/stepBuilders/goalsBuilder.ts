@@ -2,19 +2,19 @@
 import { OnboardingData, OnboardingProgress, ProfessionalDataInput } from "@/types/onboarding";
 
 export function buildGoalsUpdate(data: Partial<OnboardingData> | ProfessionalDataInput, progress: OnboardingProgress | null) {
-  const updateObj: Partial<OnboardingProgress> = {};
+  const updateObj: Partial<any> = {};
   
   // Verificar se temos dados profissionais
   if ('professional_info' in data && data.professional_info) {
     updateObj.professional_info = data.professional_info;
     
     // Campos diretos para compatibilidade
-    updateObj.company_name = data.professional_info.company_name;
-    updateObj.company_size = data.professional_info.company_size;
-    updateObj.company_sector = data.professional_info.company_sector;
-    updateObj.company_website = data.professional_info.company_website;
-    updateObj.current_position = data.professional_info.current_position;
-    updateObj.annual_revenue = data.professional_info.annual_revenue;
+    if (data.professional_info.company_name) updateObj.company_name = data.professional_info.company_name;
+    if (data.professional_info.company_size) updateObj.company_size = data.professional_info.company_size;
+    if (data.professional_info.company_sector) updateObj.company_sector = data.professional_info.company_sector;
+    if (data.professional_info.company_website) updateObj.company_website = data.professional_info.company_website;
+    if (data.professional_info.current_position) updateObj.current_position = data.professional_info.current_position;
+    if (data.professional_info.annual_revenue) updateObj.annual_revenue = data.professional_info.annual_revenue;
   } 
   // Verificar campos diretos
   else if ('company_name' in data || 'company_size' in data) {
