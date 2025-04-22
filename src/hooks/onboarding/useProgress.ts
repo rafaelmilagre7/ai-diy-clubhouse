@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useAuth } from "@/contexts/auth";
 import { OnboardingProgress } from "@/types/onboarding";
@@ -110,12 +111,14 @@ export const useProgress = () => {
       if (error) {
         console.error("Erro ao atualizar dados:", error);
         lastError.current = new Error(error.message);
+        toast.error("Erro ao salvar dados. Por favor, tente novamente.");
         throw error;
       }
 
       const updatedProgress = data || { ...progress, ...updates };
       setProgress(updatedProgress);
       console.log("Progresso atualizado com sucesso:", updatedProgress);
+      toast.success("Dados salvos com sucesso!");
       return updatedProgress;
     } catch (error) {
       console.error("Erro ao atualizar progresso:", error);
@@ -144,7 +147,7 @@ export const useProgress = () => {
       if (error) {
         console.error("Erro ao recarregar progresso:", error);
         lastError.current = new Error(error.message);
-        throw error;
+        return null;
       }
 
       console.log("Progresso recarregado com sucesso:", data);
