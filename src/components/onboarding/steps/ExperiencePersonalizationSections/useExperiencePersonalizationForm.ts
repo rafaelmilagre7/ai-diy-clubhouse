@@ -25,6 +25,8 @@ export function useExperiencePersonalizationForm(initialData: Partial<Experience
   // Garantir que initialData nunca seja nulo para evitar erros ao acessar propriedades
   const safeInitialData = initialData || {};
   
+  console.log("useExperiencePersonalizationForm initialData:", initialData);
+  
   const form = useForm<ExperienceFormData>({
     defaultValues: {
       interests: safeInitialData.interests || [],
@@ -55,6 +57,9 @@ export function useExperiencePersonalizationForm(initialData: Partial<Experience
       // Forçar validação para atualizar o estado isValid
       trigger();
     }
+    
+    // Debug
+    console.log("Dados iniciais validados:", hasInitialData, safeInitialData);
   }, [safeInitialData, trigger]);
 
   // Função para verificar se todos os campos obrigatórios estão preenchidos
@@ -77,6 +82,16 @@ export function useExperiencePersonalizationForm(initialData: Partial<Experience
       hasMentorshipTopics && 
       hasNetworkingAvailability;
     
+    console.log("Estado de validação dos campos:", {
+      hasInterests,
+      hasTimePreference,
+      hasAvailableDays,
+      hasSkillsToShare,
+      hasMentorshipTopics,
+      hasNetworkingAvailability,
+      allFieldsValid
+    });
+    
     return allFieldsValid;
   }, [formValues]);
 
@@ -97,6 +112,8 @@ export function useExperiencePersonalizationForm(initialData: Partial<Experience
         { shouldValidate: true, shouldDirty: true }
       );
     }
+    
+    console.log(`Campo ${field} atualizado:`, form.watch(field));
   }
 
   return {

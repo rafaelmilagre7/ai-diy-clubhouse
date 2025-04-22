@@ -44,6 +44,28 @@ export function getExperiencePersonalizationSummary(data: OnboardingData['experi
       )}
       
       <p><span className="font-medium">Disponibilidade para networking:</span> {data.networking_availability ? `${data.networking_availability}/10` : "Não preenchido"}</p>
+      
+      {data.skills_to_share && data.skills_to_share.length > 0 && (
+        <div>
+          <span className="font-medium">Habilidades para compartilhar:</span>
+          <div className="flex flex-wrap gap-1 mt-1">
+            {data.skills_to_share.map((skill: string, index: number) => (
+              <Badge key={index} variant="outline" className="bg-gray-100">{skill}</Badge>
+            ))}
+          </div>
+        </div>
+      )}
+      
+      {data.mentorship_topics && data.mentorship_topics.length > 0 && (
+        <div>
+          <span className="font-medium">Tópicos de interesse para mentoria:</span>
+          <div className="flex flex-wrap gap-1 mt-1">
+            {data.mentorship_topics.map((topic: string, index: number) => (
+              <Badge key={index} variant="outline" className="bg-gray-100">{topic}</Badge>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

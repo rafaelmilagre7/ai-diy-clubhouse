@@ -4,6 +4,7 @@ import { buildProfessionalDataUpdate } from "./stepBuilders/professionalDataBuil
 import { buildBusinessGoalsUpdate } from "./stepBuilders/businessGoalsBuilder";
 import { buildComplementaryInfoUpdate } from "./stepBuilders/complementaryInfoBuilder";
 import { buildAiExpUpdate } from "./stepBuilders/aiExpBuilder";
+import { buildExperiencePersonalizationUpdate } from "./stepBuilders/experiencePersonalizationBuilder";
 
 export function buildUpdateObject(
   stepId: string,
@@ -54,9 +55,7 @@ export function buildUpdateObject(
       break;
       
     case "experience_personalization":
-      specificUpdateObj = {
-        experience_personalization: data.experience_personalization || data
-      };
+      specificUpdateObj = buildExperiencePersonalizationUpdate(data, progress);
       break;
       
     case "complementary_info":
