@@ -1,3 +1,4 @@
+
 import React, { useEffect } from "react";
 import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
 import { useOnboardingSteps } from "@/hooks/onboarding/useOnboardingSteps";
@@ -8,17 +9,16 @@ import { useProgress } from "@/hooks/onboarding/useProgress";
 import { Button } from "@/components/ui/button";
 import { ReviewStep } from "@/components/onboarding/steps/ReviewStep";
 import { toast } from "sonner";
-import { steps } from "@/hooks/onboarding/useStepDefinitions";
 
 const Review: React.FC = () => {
   const navigate = useNavigate();
-  const { currentStepIndex, steps: onboardingSteps, completeOnboarding } = useOnboardingSteps();
+  const { currentStepIndex, steps, completeOnboarding } = useOnboardingSteps();
   const { progress, isLoading, refreshProgress } = useProgress();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   
   // Encontrar o índice correto do passo de revisão e calcular progresso arredondado
-  const reviewStepIndex = onboardingSteps.findIndex(step => step.id === "review");
-  const progressPercentage = Math.round(((reviewStepIndex + 1) / onboardingSteps.length) * 100);
+  const reviewStepIndex = steps.findIndex(step => step.id === "review");
+  const progressPercentage = Math.round(((reviewStepIndex + 1) / steps.length) * 100);
   
   // Efeito para atualizar dados ao entrar na página
   useEffect(() => {
@@ -60,7 +60,8 @@ const Review: React.FC = () => {
       };
       
       // Verificar campos principais
-      ['ai_experience', 'business_goals', 'experience_personalization', 'complementary_info'].forEach(field => {
+      ['ai_experience', 'business_goals', 'experience_personalization', 'complementary_info', 
+       'professional_info', 'business_data', 'business_context'].forEach(field => {
         validateField(field, progress[field as keyof typeof progress]);
       });
     }
@@ -84,16 +85,12 @@ const Review: React.FC = () => {
     }
   };
   
-  // Encontrar o índice correto do passo de revisão
-  const reviewStepIndex2 = onboardingSteps.findIndex(step => step.id === "review");
-  const progressPercentage2 = ((reviewStepIndex2 + 1) / onboardingSteps.length) * 100;
-  
   // Verificar se temos dados para mostrar
   if (isLoading || !progress) {
     return (
       <OnboardingLayout
         currentStep={reviewStepIndex + 1}
-        totalSteps={onboardingSteps.length}
+        totalSteps={steps.length}
         title="Revisar Informações"
       >
         <div className="text-center py-8">
@@ -107,7 +104,7 @@ const Review: React.FC = () => {
   return (
     <OnboardingLayout
       currentStep={reviewStepIndex + 1}
-      totalSteps={onboardingSteps.length}
+      totalSteps={steps.length}
       title="Revisar Informações"
       backUrl="/onboarding/complementary"
       progress={progressPercentage}

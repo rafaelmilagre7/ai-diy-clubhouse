@@ -31,10 +31,8 @@ export function navigateAfterStep(
     const nextRoute = nextRouteMap[stepId];
     console.log(`Navegando para ${nextRoute} (via mapeamento direto)`);
     
-    // Pequeno delay para garantir que os dados foram salvos antes de navegar
-    setTimeout(() => {
-      navigate(nextRoute);
-    }, 800); // Aumentado para 800ms para garantir que os dados sejam salvos
+    // Uso de redirect em vez de navigate para garantir uma navegação completa
+    window.location.href = nextRoute;
     return;
   }
   
@@ -44,15 +42,11 @@ export function navigateAfterStep(
       const nextStep = steps[currentStepIndex + 1];
       console.log(`Navegando para ${nextStep.path} (próximo passo na sequência)`);
       
-      setTimeout(() => {
-        navigate(nextStep.path);
-      }, 800);
+      window.location.href = nextStep.path;
     } else {
       console.log('Navegando para /onboarding/review (última etapa)');
       
-      setTimeout(() => {
-        navigate('/onboarding/review');
-      }, 800);
+      window.location.href = '/onboarding/review';
     }
     return;
   }

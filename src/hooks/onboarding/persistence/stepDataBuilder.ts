@@ -31,43 +31,61 @@ export function buildUpdateObject(
     }
   }
   
+  // Verificar se temos dados para processar
+  if (!data) {
+    console.warn(`Dados vazios para o passo "${stepId}"`);
+    return baseUpdateObj;
+  }
+  
+  // Se os dados forem uma string, tentar converter para objeto
+  let processedData = data;
+  if (typeof data === 'string' && data !== "{}" && data !== "") {
+    try {
+      processedData = JSON.parse(data);
+      console.log(`Dados do passo "${stepId}" convertidos de string para objeto:`, processedData);
+    } catch (e) {
+      console.error(`Erro ao converter dados do passo "${stepId}" de string para objeto:`, e);
+      processedData = {};
+    }
+  }
+  
   // Selecionar o builder adequado com base no ID da etapa
   let specificUpdateObj: Record<string, any> = {};
   
   switch (stepId) {
     case "professional_data":
-      specificUpdateObj = buildProfessionalDataUpdate(data, progress);
+      specificUpdateObj = buildProfessionalDataUpdate(processedData, progress);
       break;
       
     case "business_context":
       specificUpdateObj = {
-        business_context: data.business_context || data,
-        business_data: data.business_context || data // Para compatibilidade
+        business_context: processedData.business_context || processedData,
+        business_data: processedData.business_context || processedData // Para compatibilidade
       };
       break;
       
     case "ai_exp":
-      specificUpdateObj = buildAiExpUpdate(data, progress);
+      specificUpdateObj = buildAiExpUpdate(processedData, progress);
       break;
       
     case "business_goals":
-      specificUpdateObj = buildBusinessGoalsUpdate(data, progress);
+      specificUpdateObj = buildBusinessGoalsUpdate(processedData, progress);
       break;
       
     case "experience_personalization":
-      specificUpdateObj = buildExperiencePersonalizationUpdate(data, progress);
+      specificUpdateObj = buildExperiencePersonalizationUpdate(processedData, progress);
       break;
       
     case "complementary_info":
-      specificUpdateObj = buildComplementaryInfoUpdate(data, progress);
+      specificUpdateObj = buildComplementaryInfoUpdate(processedData, progress);
       break;
       
     default:
       // Para etapas sem um builder específico, usar o campo bruto se disponível
-      if (data[stepId]) {
-        specificUpdateObj[stepId] = data[stepId];
+      if (processedData[stepId]) {
+        specificUpdateObj[stepId] = processedData[stepId];
       } else {
-        specificUpdateObj[stepId] = data;
+        specificUpdateObj[stepId] = processedData;
       }
   }
   

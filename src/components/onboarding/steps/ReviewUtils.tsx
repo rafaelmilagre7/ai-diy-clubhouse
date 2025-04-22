@@ -16,27 +16,39 @@ export function getSummary(section: string, data: any, progress: any) {
   // Log para debug
   console.log(`Renderizando summary para seção ${section} com dados:`, safeData);
   
-  if (!data || Object.keys(safeData).length === 0) {
+  // Verificar se os dados são uma string JSON e tentar converter
+  let processedData = safeData;
+  if (typeof safeData === 'string' && safeData !== "{}" && safeData !== "") {
+    try {
+      processedData = JSON.parse(safeData);
+      console.log(`Convertido dados de string para objeto na seção ${section}:`, processedData);
+    } catch (e) {
+      console.error(`Falha ao analisar string para objeto na seção ${section}:`, e);
+      processedData = {};
+    }
+  }
+  
+  if (!data || Object.keys(processedData).length === 0) {
     return <p className="text-gray-500 italic">Seção não preenchida. Clique em Editar para preencher.</p>;
   }
 
   switch (section) {
     case "personal_info":
-      return getPersonalInfoSummary(safeData);
+      return getPersonalInfoSummary(processedData);
     case "professional_info":
-      return getProfessionalInfoSummary(safeData);
+      return getProfessionalInfoSummary(processedData);
     case "business_context":
-      return getBusinessContextSummary(safeData);
+      return getBusinessContextSummary(processedData);
     case "ai_experience":
-      return getAIExperienceSummary(safeData);
+      return getAIExperienceSummary(processedData);
     case "business_goals":
-      return getBusinessGoalsSummary(safeData);
+      return getBusinessGoalsSummary(processedData);
     case "experience_personalization":
-      return getExperiencePersonalizationSummary(safeData);
+      return getExperiencePersonalizationSummary(processedData);
     case "complementary_info":
-      return getComplementaryInfoSummary(safeData);
+      return getComplementaryInfoSummary(processedData);
     default:
-      return renderDefaultSummary(safeData);
+      return renderDefaultSummary(processedData);
   }
 }
 

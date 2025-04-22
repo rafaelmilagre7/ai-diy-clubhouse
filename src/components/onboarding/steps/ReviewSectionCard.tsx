@@ -51,8 +51,8 @@ export const ReviewSectionCard: React.FC<ReviewSectionCardProps> = ({
 
   const handleEdit = () => {
     try {
-      // Ajustando o índice (a UI mostra 1-based, mas a navegação é 0-based)
-      const indexToNavigate = stepIndex > 0 ? stepIndex - 1 : 0;
+      // Usando o índice correto (baseado em zero) para navegação
+      const indexToNavigate = stepIndex - 1;
       console.log(`Navegando para o passo ${indexToNavigate}, originalmente ${stepIndex}`);
       navigateToStep(indexToNavigate);
     } catch (error) {

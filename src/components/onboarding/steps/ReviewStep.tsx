@@ -22,11 +22,6 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({
 }) => {
   if (!progress) return <div>Carregando dados...</div>;
 
-  // A função findStepIndex foi corrigida para retornar o índice correto (baseado em zero)
-  const findStepIndex = (sectionId: string) => {
-    return steps.findIndex((s) => s.id === sectionId);
-  };
-
   // Verifica se todos os passos necessários foram concluídos
   // Exclui etapas de review e geração de trilha
   const allStepsCompleted = steps
@@ -48,7 +43,7 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({
       <div className="space-y-4">
         {steps
           .filter((step) => step.id !== "review" && step.id !== "trail_generation")
-          .map((step) => {
+          .map((step, idx) => {
             const sectionKey = step.section as keyof OnboardingProgress;
             let sectionData = progress[sectionKey];
 
@@ -59,14 +54,6 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({
             if (step.section === "business_context" && (!sectionData || Object.keys(sectionData || {}).length === 0)) {
               sectionData = progress.business_data;
               console.log("Usando business_data como fallback para business_context:", sectionData);
-            }
-
-            // Tratamento especial para dados pessoais
-            if (step.section === "personal_info" && (!sectionData || Object.keys(sectionData || {}).length === 0)) {
-              if (progress.personal_info) {
-                sectionData = progress.personal_info;
-                console.log("Usando personal_info:", sectionData);
-              }
             }
 
             // Tratamento especial para dados profissionais
@@ -88,12 +75,10 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({
               }
             }
             
-            // Passamos o índice real (baseado em zero) para a função navigateToStep na ReviewSectionCard
-            const stepIndex = findStepIndex(step.id);
-            // Mas enviamos stepIndex + 1 apenas para exibição na UI
-            const displayIndex = stepIndex + 1;
+            // Passamos o índice real (começando em 1) para a UI
+            const stepIndex = idx + 1;
 
-            console.log(`Renderizando seção ${step.id}, índice para navegação: ${stepIndex}, índice para exibição: ${displayIndex}`);
+            console.log(`Renderizando seção ${step.id}, índice: ${stepIndex}`);
 
             return (
               <ReviewSectionCard
@@ -101,7 +86,7 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({
                 step={step}
                 sectionData={sectionData || {}}
                 progress={progress}
-                stepIndex={displayIndex}
+                stepIndex={stepIndex}
                 navigateToStep={navigateToStep}
               />
             );

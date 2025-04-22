@@ -19,6 +19,7 @@ export const useProgress = () => {
   const isMounted = useRef(true);
   const lastUpdateTime = useRef<number>(Date.now());
   const lastError = useRef<Error | null>(null);
+  const retryCount = useRef(0);
 
   useEffect(() => {
     isMounted.current = true;
@@ -75,6 +76,7 @@ export const useProgress = () => {
       console.log("Progresso carregado com sucesso:", data);
       setProgress(data);
       progressId.current = data.id;
+      retryCount.current = 0; // Reset retry count on success
       return data;
     } catch (error: any) {
       console.error("Erro ao carregar progresso:", error);
@@ -119,6 +121,7 @@ export const useProgress = () => {
       setProgress(updatedProgress);
       console.log("Progresso atualizado com sucesso:", updatedProgress);
       toast.success("Dados salvos com sucesso!");
+      retryCount.current = 0; // Reset retry count on success
       return updatedProgress;
     } catch (error) {
       console.error("Erro ao atualizar progresso:", error);
@@ -147,11 +150,22 @@ export const useProgress = () => {
       if (error) {
         console.error("Erro ao recarregar progresso:", error);
         lastError.current = new Error(error.message);
+        
+        // Implementar retry com backoff
+        if (retryCount.current < 3) {
+          retryCount.current++;
+          console.log(`Tentando novamente (${retryCount.current}/3) em ${retryCount.current * 1000}ms...`);
+          setTimeout(() => {
+            refreshProgress();
+          }, retryCount.current * 1000);
+        }
+        
         return null;
       }
 
       console.log("Progresso recarregado com sucesso:", data);
       setProgress(data);
+      retryCount.current = 0; // Reset retry count on success
       return data;
     } catch (error) {
       console.error("Erro ao recarregar progresso:", error);
