@@ -12,10 +12,10 @@ export const signOutUser = async (): Promise<void> => {
       console.error('Erro ao realizar logout:', error);
       // Em caso de erro, força logout limpando armazenamento local
       localStorage.removeItem('sb-zotzvtepvpnkcoobdubt-auth-token');
-      window.location.href = '/auth';
+      window.location.href = '/login';
     } else {
       // Logout bem-sucedido, redireciona para a página de login
-      window.location.href = '/auth';
+      window.location.href = '/login';
     }
     
     toast({
@@ -27,7 +27,7 @@ export const signOutUser = async (): Promise<void> => {
     
     // Em caso de exceção, força logout limpando armazenamento local
     localStorage.removeItem('sb-zotzvtepvpnkcoobdubt-auth-token');
-    window.location.href = '/auth';
+    window.location.href = '/login';
     
     toast({
       title: 'Logout realizado',

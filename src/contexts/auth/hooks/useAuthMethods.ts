@@ -62,7 +62,7 @@ export const useAuthMethods = ({ setIsLoading }: UseAuthMethodsProps) => {
       
       if (error) throw error;
       
-      window.location.href = '/auth';
+      window.location.href = '/login';
     } catch (error: any) {
       console.error('Erro ao fazer logout:', error);
       toast({
@@ -70,6 +70,9 @@ export const useAuthMethods = ({ setIsLoading }: UseAuthMethodsProps) => {
         description: 'Não foi possível fazer logout. Tente novamente.',
         variant: 'destructive',
       });
+      
+      // Em caso de erro, forçar redirecionamento para login
+      window.location.href = '/login';
     } finally {
       setIsLoading(false);
     }

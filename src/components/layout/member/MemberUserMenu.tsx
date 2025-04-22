@@ -51,14 +51,14 @@ export const MemberUserMenu = ({
       
       // Redirecionamento forçado para a página de autenticação
       toast.success("Logout realizado com sucesso");
-      console.log("Redirecionando para /auth");
+      console.log("Redirecionando para /login");
       
       // Forçar redirecionamento via location.href para garantir reset completo da aplicação
-      window.location.href = '/auth';
+      window.location.href = '/login';
     } catch (error) {
       console.error("Erro ao fazer logout:", error);
       // Força redirecionamento para login em caso de falha
-      window.location.href = '/auth';
+      window.location.href = '/login';
     } finally {
       setIsLoggingOut(false);
     }
