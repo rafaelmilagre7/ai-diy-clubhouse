@@ -1,4 +1,5 @@
 
+import React from "react";
 import { useProgress } from "./useProgress";
 import { buildUpdateObject } from "./persistence/stepDataBuilder";
 import { navigateAfterStep } from "./persistence/stepNavigator";
@@ -23,7 +24,7 @@ export function useStepPersistenceCore({
   const { logError } = useLogging();
   
   // Flag para controlar exibição de toasts
-  let toastShown = false;
+  const toastShown = React.useRef(false);
 
   /**
    * Função principal para salvar dados de um passo específico
@@ -41,6 +42,9 @@ export function useStepPersistenceCore({
       toast.error("Erro ao salvar dados: ID de progresso não encontrado");
       return;
     }
+
+    // Resetar a flag de toast ao iniciar uma nova operação de salvamento
+    toastShown.current = false;
 
     // Determinar os parâmetros corretos com base na assinatura usada
     let stepId: string;
@@ -70,9 +74,9 @@ export function useStepPersistenceCore({
       const updateObj = buildUpdateObject(stepId, data, progress, currentStepIndex);
       if (Object.keys(updateObj).length === 0) {
         console.warn("Objeto de atualização vazio, nada para salvar");
-        if (!toastShown) {
+        if (!toastShown.current) {
           toast.warning("Sem dados para salvar");
-          toastShown = true;
+          toastShown.current = true;
         }
         return;
       }
@@ -91,9 +95,9 @@ export function useStepPersistenceCore({
           error: errorMessage,
           stepIndex: currentStepIndex
         });
-        if (!toastShown) {
+        if (!toastShown.current) {
           toast.error("Erro ao salvar dados. Por favor, tente novamente.");
-          toastShown = true;
+          toastShown.current = true;
         }
         return;
       }
@@ -103,9 +107,9 @@ export function useStepPersistenceCore({
       console.log("Progresso atualizado com sucesso:", updatedProgress);
       
       // Notificar usuário do salvamento (apenas uma vez)
-      if (!toastShown) {
+      if (!toastShown.current) {
         toast.success("Dados salvos com sucesso!");
-        toastShown = true;
+        toastShown.current = true;
       }
       
       // Forçar atualização dos dados local após salvar
@@ -126,9 +130,9 @@ export function useStepPersistenceCore({
         error: error instanceof Error ? error.message : String(error),
         stepIndex: currentStepIndex
       });
-      if (!toastShown) {
+      if (!toastShown.current) {
         toast.error("Erro ao salvar dados. Por favor, tente novamente.");
-        toastShown = true;
+        toastShown.current = true;
       }
       throw error;
     }

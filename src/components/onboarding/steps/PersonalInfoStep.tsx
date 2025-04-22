@@ -82,11 +82,9 @@ export const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
     }
     
     try {
+      // Apenas chamar o onSubmit sem mostrar toast de sucesso aqui
+      // O toast será mostrado apenas no hook usePersonalInfoStep
       await onSubmit();
-      
-      toast.success("Dados pessoais salvos com sucesso!", {
-        description: "Avançando para a próxima etapa..."
-      });
     } catch (error) {
       console.error("Erro ao salvar dados:", error);
       toast.error("Erro ao salvar os dados", {

@@ -33,9 +33,9 @@ const ProfessionalData = () => {
       }
       
       await saveStepData(stepId, data, true);
-      toast.success("Dados profissionais salvos com sucesso!");
       
       // Navegar para a próxima página após salvar
+      // O toast de sucesso já será mostrado pelo hook useStepPersistenceCore
       console.log("Navegando para próxima etapa após salvar dados profissionais");
       navigateAfterStep(stepId, 1, navigate, true);
       
