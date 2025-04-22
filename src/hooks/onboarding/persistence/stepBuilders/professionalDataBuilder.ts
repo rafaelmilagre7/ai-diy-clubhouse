@@ -19,8 +19,8 @@ export function buildProfessionalDataUpdate(data: ProfessionalDataInput, progres
     "annual_revenue"
   ];
 
-  // Criar cópia dos dados para manipulação
-  const processedData = { ...data };
+  // Criar cópia profunda dos dados para manipulação
+  const processedData = JSON.parse(JSON.stringify(data));
   
   // Processar website para garantir formato correto (antes de enviar ao builder)
   if (processedData.company_website) {
@@ -35,10 +35,8 @@ export function buildProfessionalDataUpdate(data: ProfessionalDataInput, progres
   }
   
   // Verificar se temos dados no nível superior ou dentro de professional_info
-  if (!processedData.professional_info && 
-      (processedData.company_name || processedData.company_size || 
-       processedData.company_sector || processedData.company_website || 
-       processedData.current_position || processedData.annual_revenue)) {
+  if (!processedData.professional_info || 
+      Object.keys(processedData.professional_info).length === 0) {
     
     // Criar objeto professional_info com base nos campos de nível superior
     processedData.professional_info = {
@@ -49,7 +47,17 @@ export function buildProfessionalDataUpdate(data: ProfessionalDataInput, progres
       current_position: processedData.current_position || '',
       annual_revenue: processedData.annual_revenue || ''
     };
+
+    console.log("Criado objeto professional_info a partir de campos de nível superior:", 
+                processedData.professional_info);
   }
+  
+  // Garantir que todos os campos de nível superior também estejam populados
+  topLevelFields.forEach(field => {
+    if (processedData.professional_info && processedData.professional_info[field]) {
+      processedData[field] = processedData.professional_info[field];
+    }
+  });
   
   // Registrar transformação para depuração
   console.log("Dados profissionais processados e preparados para armazenamento:", processedData);

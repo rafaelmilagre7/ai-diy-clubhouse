@@ -30,23 +30,30 @@ export const ProfessionalDataStep: React.FC<ProfessionalDataStepProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
   
-  // Função melhorada para extrair dados iniciais do objeto
+  // Função aprimorada para extrair dados iniciais do objeto
   const getInitialValue = (field: string) => {
-    // Verificar primeiro no professional_info se existir
-    if (initialData?.professional_info && initialData.professional_info[field] !== undefined && initialData.professional_info[field] !== null) {
-      console.log(`Obtendo ${field} de professional_info:`, initialData.professional_info[field]);
-      return initialData.professional_info[field];
+    let value = "";
+    
+    // Primeiro verificar no objeto professional_info
+    if (initialData?.professional_info && 
+        initialData.professional_info[field] !== undefined && 
+        initialData.professional_info[field] !== null) {
+      value = initialData.professional_info[field];
+      console.log(`Obtendo ${field} de professional_info:`, value);
     }
-    // Verificar depois nos campos de nível superior
-    if (initialData && initialData[field] !== undefined && initialData[field] !== null) {
-      console.log(`Obtendo ${field} de nível superior:`, initialData[field]);
-      return initialData[field];
+    // Depois verificar nos campos de nível superior
+    else if (initialData && 
+             initialData[field] !== undefined && 
+             initialData[field] !== null) {
+      value = initialData[field];
+      console.log(`Obtendo ${field} de nível superior:`, value);
     }
-    // Valor padrão vazio
-    return "";
+    
+    // Garantir que retornamos uma string vazia para campos undefined/null
+    return value || "";
   };
   
-  // Initialize form with default values
+  // Inicializar formulário com métodos do react-hook-form
   const methods = useForm({
     defaultValues: {
       company_name: getInitialValue('company_name'),
@@ -59,21 +66,39 @@ export const ProfessionalDataStep: React.FC<ProfessionalDataStepProps> = ({
     mode: "onChange"
   });
   
-  // Atualizar formulário sempre que os dados iniciais mudarem
+  // Efeito para atualizar o formulário quando os dados iniciais mudarem
   useEffect(() => {
     if (initialData) {
       console.log("Atualizando formulário com dados iniciais:", initialData);
-      // Fazer um reset completo dos valores do formulário para garantir atualização
+      
+      // Extrair valores atualizados de todos os campos
+      const company_name = getInitialValue('company_name');
+      const company_size = getInitialValue('company_size');
+      const company_sector = getInitialValue('company_sector');
+      const company_website = getInitialValue('company_website');
+      const current_position = getInitialValue('current_position');
+      const annual_revenue = getInitialValue('annual_revenue');
+      
+      console.log("Valores extraídos para atualização:", {
+        company_name,
+        company_size,
+        company_sector,
+        company_website,
+        current_position,
+        annual_revenue
+      });
+      
+      // Fazer um reset completo do formulário com os novos valores
       methods.reset({
-        company_name: getInitialValue('company_name'),
-        company_size: getInitialValue('company_size'),
-        company_sector: getInitialValue('company_sector'),
-        company_website: getInitialValue('company_website'),
-        current_position: getInitialValue('current_position'),
-        annual_revenue: getInitialValue('annual_revenue')
+        company_name,
+        company_size,
+        company_sector,
+        company_website,
+        current_position,
+        annual_revenue
       });
     }
-  }, [initialData]);
+  }, [initialData, methods]);
 
   const handleSubmit = async (data: any) => {
     setIsLoading(true);
