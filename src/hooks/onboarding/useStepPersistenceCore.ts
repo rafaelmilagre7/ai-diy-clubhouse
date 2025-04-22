@@ -20,6 +20,7 @@ export function useStepPersistenceCore({
 
   // Função principal para salvar dados de um passo específico
   const saveStepData = async (
+    stepId: string,
     data: any,
     shouldNavigate: boolean = true
   ): Promise<void> => {
@@ -29,8 +30,8 @@ export function useStepPersistenceCore({
       return;
     }
 
-    // Identificar qual é o passo atual
-    const currentStep = steps[currentStepIndex]?.id || '';
+    // Se stepId não foi fornecido, usar o passo atual
+    const currentStep = stepId || steps[currentStepIndex]?.id || '';
     
     console.log(`Salvando dados do passo ${currentStep}, índice ${currentStepIndex}, navegação automática: ${shouldNavigate ? "SIM" : "NÃO"}`, data);
     console.log("Estado atual do progresso:", progress);
@@ -59,7 +60,25 @@ export function useStepPersistenceCore({
       
       // Garantir navegação adequada usando o mapeamento direto
       if (shouldNavigate) {
-        navigateAfterStep(currentStep, currentStepIndex, navigate, shouldNavigate);
+        // Mapeamento direto de etapas para rotas de navegação
+        const nextRouteMap: {[key: string]: string} = {
+          "personal": "/onboarding/professional-data",
+          "professional_data": "/onboarding/business-context",
+          "business_context": "/onboarding/ai-experience",
+          "ai_exp": "/onboarding/club-goals",
+          "business_goals": "/onboarding/customization",
+          "experience_personalization": "/onboarding/complementary",
+          "complementary_info": "/onboarding/review"
+        };
+        
+        if (nextRouteMap[currentStep]) {
+          setTimeout(() => {
+            navigate(nextRouteMap[currentStep]);
+          }, 500);
+        } else {
+          // Fallback para navegador padrão de etapas
+          navigateAfterStep(currentStep, currentStepIndex, navigate, shouldNavigate);
+        }
       } else {
         console.log("Navegação automática desativada, permanecendo na página atual");
       }

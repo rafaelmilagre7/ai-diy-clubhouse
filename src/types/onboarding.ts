@@ -131,7 +131,7 @@ export interface OnboardingProgress {
 }
 
 export interface OnboardingStepProps {
-  onSubmit: (stepId: string, data: any) => void;
+  onSubmit: (stepId: string, data: any) => Promise<void>;
   isSubmitting: boolean;
   isLastStep?: boolean;
   onComplete?: () => void;

@@ -7,9 +7,10 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, CheckCircle } from "lucide-react";
+import { OnboardingStepProps } from "@/types/onboarding";
 
-interface PersonalInfoStepProps {
-  onSubmit: (data: any) => void;
+export interface PersonalInfoStepProps extends OnboardingStepProps {
+  onSubmit: (stepId: string, data: any) => Promise<void>;
   isSubmitting: boolean;
   initialData?: any;
   isLastStep?: boolean;
@@ -51,7 +52,7 @@ export const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
     }
     
     try {
-      await onSubmit({
+      await onSubmit("personal", {
         personal_info: {
           ...data,
           ...validation.values

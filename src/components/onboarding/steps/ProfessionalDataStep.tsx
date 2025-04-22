@@ -7,10 +7,12 @@ import { CompanySectorField } from "./professional-inputs/CompanySectorField";
 import { WebsiteField } from "./professional-inputs/WebsiteField";
 import { CurrentPositionField } from "./professional-inputs/CurrentPositionField";
 import { AnnualRevenueField } from "./professional-inputs/AnnualRevenueField";
-import { NavigationButtons } from "../NavigationButtons";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import { OnboardingStepProps } from "@/types/onboarding";
+import { toast } from "sonner";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 interface ProfessionalDataStepProps extends OnboardingStepProps {
   personalInfo?: any;
@@ -25,6 +27,7 @@ export const ProfessionalDataStep: React.FC<ProfessionalDataStepProps> = ({
   personalInfo
 }) => {
   const [isLoading, setIsLoading] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<string[]>([]);
   
   const methods = useForm({
     defaultValues: {
@@ -39,6 +42,8 @@ export const ProfessionalDataStep: React.FC<ProfessionalDataStepProps> = ({
 
   const handleSubmit = async (data: any) => {
     setIsLoading(true);
+    setValidationErrors([]);
+    
     try {
       // Organizar os dados no formato esperado pelo servidor
       const professionalData = {
@@ -61,8 +66,16 @@ export const ProfessionalDataStep: React.FC<ProfessionalDataStepProps> = ({
       
       console.log("Enviando dados profissionais:", professionalData);
       await onSubmit("professional_data", professionalData);
+      
+      toast.success("Dados profissionais salvos com sucesso!");
     } catch (error) {
       console.error("Erro ao enviar dados profissionais:", error);
+      setValidationErrors(["Falha ao salvar dados. Por favor, tente novamente."]);
+      
+      toast.error("Erro ao salvar dados", {
+        description: "Verifique sua conexão e tente novamente.",
+        icon: <AlertCircle className="h-5 w-5 text-red-500" />
+      });
     } finally {
       setIsLoading(false);
     }
@@ -71,6 +84,17 @@ export const ProfessionalDataStep: React.FC<ProfessionalDataStepProps> = ({
   return (
     <FormProvider {...methods}>
       <form onSubmit={methods.handleSubmit(handleSubmit)} className="space-y-6">
+        {validationErrors.length > 0 && (
+          <Alert variant="destructive" className="animate-fade-in">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              {validationErrors.map((err, i) => (
+                <div key={i}>{err}</div>
+              ))}
+            </AlertDescription>
+          </Alert>
+        )}
+        
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <CompanyNameField />
           <CurrentPositionField />

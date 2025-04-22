@@ -91,7 +91,7 @@ export const OnboardingSteps = () => {
     }
     if (currentPathStepId === "business_context" || currentStep.id === "business_context") {
       // Mapear business_data para business_context
-      return progress.business_data;
+      return progress.business_data || progress.business_context;
     }
     
     const sectionKey = currentStep.section as keyof OnboardingData;
