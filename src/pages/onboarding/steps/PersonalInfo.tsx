@@ -30,7 +30,7 @@ const PersonalInfo = () => {
     
     try {
       console.log("Salvando dados pessoais:", data);
-      await saveStepData(data);
+      await saveStepData(data, true);
       console.log("Dados pessoais salvos com sucesso");
       
       toast.success("Dados salvos com sucesso!", {

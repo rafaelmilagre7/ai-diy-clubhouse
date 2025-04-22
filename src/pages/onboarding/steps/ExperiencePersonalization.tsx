@@ -21,8 +21,8 @@ const ExperiencePersonalization = () => {
     setIsSubmitting(true);
     try {
       console.log("Salvando dados de personalização:", data);
-      // Modificado para usar apenas um parâmetro
-      await saveStepData(data);
+      // Adicionar parâmetro de navegação automática como true
+      await saveStepData(data, true);
       console.log("Dados de personalização salvos com sucesso");
     } catch (error) {
       console.error("Erro ao salvar dados:", error);

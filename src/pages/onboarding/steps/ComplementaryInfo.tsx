@@ -21,8 +21,8 @@ const ComplementaryInfo = () => {
     setIsSubmitting(true);
     try {
       console.log("Salvando informações complementares:", data);
-      // Modificado para usar apenas um parâmetro
-      await saveStepData(data);
+      // Adicionar parâmetro de navegação automática como true
+      await saveStepData(data, true);
       console.log("Informações complementares salvas com sucesso");
     } catch (error) {
       console.error("Erro ao salvar dados:", error);

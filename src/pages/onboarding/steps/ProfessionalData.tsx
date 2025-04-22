@@ -54,8 +54,8 @@ const ProfessionalData = () => {
     try {
       console.log("ProfessionalData - Salvando dados:", data);
       
-      // Usar saveStepData do hook
-      await saveStepData(data);
+      // Usar saveStepData do hook com navegação automática
+      await saveStepData(data, true);
       
       // Verificar se a navegação automática funcionou e forçar redirecionamento se necessário
       setTimeout(() => {

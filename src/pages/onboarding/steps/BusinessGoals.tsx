@@ -48,8 +48,8 @@ const BusinessGoals = () => {
         annual_revenue: data.annual_revenue,
       };
       
-      // Modificado para usar apenas um parâmetro
-      await saveStepData(professionalData);
+      // Adicionar parâmetro de navegação automática como true
+      await saveStepData(professionalData, true);
       toast.success("Informações salvas com sucesso!");
       navigate("/onboarding/business-context");
     } catch (error) {
