@@ -20,23 +20,18 @@ const ProfessionalData = () => {
     refreshProgress();
   }, [refreshProgress]);
 
-  const handleSubmit = async (data: any) => {
+  const handleSubmit = async (stepId: string, data: any) => {
     setIsSubmitting(true);
     try {
       console.log("ProfessionalData - Salvando dados:", data);
       
-      // Usar saveStepData do hook com assinatura correta
-      await saveStepData("professional_data", data, true);
+      // Garantir navegação para a próxima página (force = true)
+      await saveStepData(stepId, data, true);
       
-      // Verificar se a navegação automática funcionou e forçar redirecionamento se necessário
+      // Navegar para a próxima página após salvar
       setTimeout(() => {
-        const currentPath = window.location.pathname;
-        if (currentPath === "/onboarding/professional-data") {
-          console.log("Navegação não ocorreu automaticamente, forçando redirecionamento");
-          toast.info("Avançando para a próxima etapa...");
-          navigate("/onboarding/business-context");
-        }
-      }, 1000);
+        navigate("/onboarding/business-context");
+      }, 500);
     } catch (error) {
       console.error("Erro ao salvar dados profissionais:", error);
       toast.error("Erro ao salvar dados. Por favor, tente novamente.");

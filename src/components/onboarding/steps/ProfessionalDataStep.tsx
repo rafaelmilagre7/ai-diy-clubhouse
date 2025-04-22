@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import * as validations from "@/utils/professionalDataValidation";
 import { normalizeWebsiteUrl } from "@/utils/professionalDataValidation";
+import { NavigationButtons } from "@/components/onboarding/NavigationButtons";
 
 interface ProfessionalDataStepProps extends OnboardingStepProps {
   personalInfo?: any;
@@ -30,27 +31,25 @@ export const ProfessionalDataStep: React.FC<ProfessionalDataStepProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
   
+  console.log("ProfessionalDataStep - initialData:", initialData);
+  
   // Função aprimorada para extrair dados iniciais do objeto
   const getInitialValue = (field: string) => {
-    let value = "";
+    if (!initialData) return "";
     
     // Primeiro verificar no objeto professional_info
-    if (initialData?.professional_info && 
+    if (initialData.professional_info && 
         initialData.professional_info[field] !== undefined && 
         initialData.professional_info[field] !== null) {
-      value = initialData.professional_info[field];
-      console.log(`Obtendo ${field} de professional_info:`, value);
-    }
-    // Depois verificar nos campos de nível superior
-    else if (initialData && 
-             initialData[field] !== undefined && 
-             initialData[field] !== null) {
-      value = initialData[field];
-      console.log(`Obtendo ${field} de nível superior:`, value);
+      return initialData.professional_info[field];
     }
     
-    // Garantir que retornamos uma string vazia para campos undefined/null
-    return value || "";
+    // Depois verificar nos campos de nível superior
+    if (initialData[field] !== undefined && initialData[field] !== null) {
+      return initialData[field];
+    }
+    
+    return "";
   };
   
   // Inicializar formulário com métodos do react-hook-form
@@ -71,31 +70,14 @@ export const ProfessionalDataStep: React.FC<ProfessionalDataStepProps> = ({
     if (initialData) {
       console.log("Atualizando formulário com dados iniciais:", initialData);
       
-      // Extrair valores atualizados de todos os campos
-      const company_name = getInitialValue('company_name');
-      const company_size = getInitialValue('company_size');
-      const company_sector = getInitialValue('company_sector');
-      const company_website = getInitialValue('company_website');
-      const current_position = getInitialValue('current_position');
-      const annual_revenue = getInitialValue('annual_revenue');
-      
-      console.log("Valores extraídos para atualização:", {
-        company_name,
-        company_size,
-        company_sector,
-        company_website,
-        current_position,
-        annual_revenue
-      });
-      
-      // Fazer um reset completo do formulário com os novos valores
+      // Resetar o formulário com os valores iniciais
       methods.reset({
-        company_name,
-        company_size,
-        company_sector,
-        company_website,
-        current_position,
-        annual_revenue
+        company_name: getInitialValue('company_name'),
+        company_size: getInitialValue('company_size'),
+        company_sector: getInitialValue('company_sector'),
+        company_website: getInitialValue('company_website'),
+        current_position: getInitialValue('current_position'),
+        annual_revenue: getInitialValue('annual_revenue')
       });
     }
   }, [initialData, methods]);
@@ -131,28 +113,8 @@ export const ProfessionalDataStep: React.FC<ProfessionalDataStepProps> = ({
         data.company_website = normalizeWebsiteUrl(data.company_website);
       }
       
-      // Estruturar os dados de forma organizada para o salvamento
-      const professionalData = {
-        // Dados aninhados na estrutura adequada
-        professional_info: {
-          company_name: data.company_name,
-          company_size: data.company_size,
-          company_sector: data.company_sector,
-          company_website: data.company_website,
-          current_position: data.current_position,
-          annual_revenue: data.annual_revenue,
-        },
-        // Campos individuais para compatibilidade com o sistema atual
-        company_name: data.company_name,
-        company_size: data.company_size,
-        company_sector: data.company_sector,
-        company_website: data.company_website,
-        current_position: data.current_position,
-        annual_revenue: data.annual_revenue,
-      };
-      
-      console.log("Enviando dados profissionais:", professionalData);
-      await onSubmit("professional_data", professionalData);
+      console.log("Enviando dados profissionais:", data);
+      await onSubmit("professional_data", data);
       toast.success("Dados profissionais salvos com sucesso!");
     } catch (error) {
       console.error("Erro ao enviar dados profissionais:", error);
@@ -201,22 +163,12 @@ export const ProfessionalDataStep: React.FC<ProfessionalDataStepProps> = ({
           </div>
         </div>
         
-        <div className="flex justify-end">
-          <Button
-            type="submit"
-            className="bg-[#0ABAB5] hover:bg-[#099388] text-white px-6 py-2"
-            disabled={isSubmitting || isLoading}
-          >
-            {isSubmitting || isLoading ? (
-              "Salvando..."
-            ) : (
-              <span className="flex items-center gap-2">
-                Próximo Passo
-                <ArrowRight className="h-4 w-4" />
-              </span>
-            )}
-          </Button>
-        </div>
+        <NavigationButtons 
+          isSubmitting={isSubmitting || isLoading}
+          submitText="Próximo Passo"
+          loadingText="Salvando..."
+          showPrevious={false}
+        />
       </form>
     </FormProvider>
   );
