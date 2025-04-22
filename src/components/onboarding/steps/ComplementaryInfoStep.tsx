@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useForm } from "react-hook-form";
 import { Label } from "@/components/ui/label";
@@ -73,15 +72,15 @@ export const ComplementaryInfoStep = ({
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-8">
       <div className="space-y-6">
         {/* Como conheceu seção */}
-        <div className="bg-gray-800/50 p-6 rounded-lg border border-gray-700 space-y-4">
-          <Label htmlFor="how_found_us" className="text-lg font-semibold">
+        <div className="bg-card p-6 rounded-lg border border-border space-y-4">
+          <Label className="text-lg font-semibold">
             Como você conheceu o VIVER DE IA Club?
           </Label>
           <Select
             defaultValue={initialData?.how_found_us || ""}
             onValueChange={(value: string) => setValue("how_found_us", value)}
           >
-            <SelectTrigger className="w-full bg-gray-900 border-gray-700">
+            <SelectTrigger className="w-full">
               <SelectValue placeholder="Selecione uma opção" />
             </SelectTrigger>
             <SelectContent>
@@ -94,12 +93,11 @@ export const ComplementaryInfoStep = ({
           </Select>
 
           {sourceType === "recommendation" && (
-            <div className="pt-2">
+            <div className="space-y-2">
               <Label htmlFor="referred_by">Quem indicou você?</Label>
               <Input
                 id="referred_by"
                 placeholder="Nome da pessoa que indicou você"
-                className="bg-gray-900 border-gray-700 mt-1"
                 {...register("referred_by")}
               />
             </div>
@@ -107,10 +105,12 @@ export const ComplementaryInfoStep = ({
         </div>
 
         {/* Tópicos Prioritários seção */}
-        <div className="bg-gray-800/50 p-6 rounded-lg border border-gray-700 space-y-4">
+        <div className="bg-card p-6 rounded-lg border border-border space-y-4">
           <div className="space-y-2">
-            <Label className="text-lg font-semibold">Tópicos Prioritários para Você</Label>
-            <p className="text-sm text-gray-400">
+            <Label className="text-lg font-semibold">
+              Tópicos Prioritários para Você
+            </Label>
+            <p className="text-muted-foreground text-sm">
               Selecione até 5 tópicos que são mais importantes para o seu negócio. 
               Isso nos ajudará a personalizar sua experiência.
             </p>
@@ -119,15 +119,14 @@ export const ComplementaryInfoStep = ({
             options={topicOptions}
             defaultValue={initialData?.priority_topics || []}
             onChange={(selected: string[]) => setValue("priority_topics", selected)}
-            className="bg-gray-900"
             placeholder="Selecione os tópicos"
             maxItems={5}
           />
         </div>
 
         {/* Autorizações seção */}
-        <div className="bg-gray-800/50 p-6 rounded-lg border border-gray-700 space-y-4">
-          <h3 className="text-lg font-semibold mb-4">Permissões e Interesses</h3>
+        <div className="bg-card p-6 rounded-lg border border-border space-y-6">
+          <h3 className="text-lg font-semibold">Permissões e Interesses</h3>
           
           <div className="space-y-6">
             <div className="flex items-start space-x-3">
@@ -135,13 +134,12 @@ export const ComplementaryInfoStep = ({
                 id="authorize_case_usage"
                 checked={watch("authorize_case_usage")}
                 onCheckedChange={(checked: boolean) => setValue("authorize_case_usage", checked)}
-                className="mt-1 data-[state=checked]:bg-[#0ABAB5] data-[state=checked]:border-[#0ABAB5]"
               />
               <div className="space-y-1">
-                <Label htmlFor="authorize_case_usage" className="font-normal">
+                <Label htmlFor="authorize_case_usage" className="font-medium">
                   Autorizo o uso do meu caso como exemplo de sucesso
                 </Label>
-                <p className="text-sm text-gray-400">
+                <p className="text-sm text-muted-foreground">
                   Permite que compartilhemos resultados obtidos com sua implementação 
                   (sem dados sensíveis ou confidenciais).
                 </p>
@@ -153,13 +151,12 @@ export const ComplementaryInfoStep = ({
                 id="interested_in_interview"
                 checked={watch("interested_in_interview")}
                 onCheckedChange={(checked: boolean) => setValue("interested_in_interview", checked)}
-                className="mt-1 data-[state=checked]:bg-[#0ABAB5] data-[state=checked]:border-[#0ABAB5]"
               />
               <div className="space-y-1">
-                <Label htmlFor="interested_in_interview" className="font-normal">
+                <Label htmlFor="interested_in_interview" className="font-medium">
                   Tenho interesse em participar de entrevistas e cases
                 </Label>
-                <p className="text-sm text-gray-400">
+                <p className="text-sm text-muted-foreground">
                   Podemos entrar em contato para entrevistas e compartilhamento de experiência.
                 </p>
               </div>
@@ -169,7 +166,7 @@ export const ComplementaryInfoStep = ({
       </div>
 
       {/* Botões de navegação */}
-      <div className="flex justify-between pt-8">
+      <div className="flex justify-between pt-6">
         <Button
           type="button"
           variant="outline"
@@ -180,7 +177,6 @@ export const ComplementaryInfoStep = ({
         </Button>
         <Button
           type="submit"
-          className="bg-[#0ABAB5] hover:bg-[#0ABAB5]/90"
           disabled={isSubmitting}
         >
           {isSubmitting ? (
