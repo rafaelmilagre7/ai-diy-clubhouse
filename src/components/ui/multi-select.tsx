@@ -136,10 +136,11 @@ export function MultiSelect({
             ) : (
               <span className="text-muted-foreground">{placeholder}</span>
             )}
-            <CommandPrimitive.Input
+            {/* Aqui está o problema: usar o input diretamente em vez do CommandPrimitive.Input */}
+            <input
               ref={inputRef}
               value={inputValue}
-              onValueChange={setInputValue}
+              onChange={(e) => setInputValue(e.target.value)}
               onKeyDown={handleKeyDown}
               className="ml-2 flex-1 bg-transparent outline-none placeholder:text-muted-foreground"
               placeholder=""
