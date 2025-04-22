@@ -1,26 +1,17 @@
-
 import React, { useEffect, useState } from "react";
 import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
 import { PersonalInfoStep } from "@/components/onboarding/steps/PersonalInfoStep";
 import { useNavigate } from "react-router-dom";
+import { usePersonalInfoLoad } from "@/hooks/onboarding/usePersonalInfoLoad";
+import { usePersonalInfoNavigation } from "@/hooks/onboarding/usePersonalInfoNavigation";
+import { usePersonalInfoProgress } from "@/hooks/onboarding/usePersonalInfoProgress";
 import { usePersonalInfoStep } from "@/hooks/onboarding/usePersonalInfoStep";
-import { useProgress } from "@/hooks/onboarding/useProgress";
 import { LoadingSpinner } from "@/components/common/LoadingSpinner";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertTriangle } from "lucide-react";
 
 const PersonalInfo = () => {
-  const navigate = useNavigate();
-  const [loadingAttempts, setLoadingAttempts] = useState(0);
-  const [loadError, setLoadError] = useState<string | null>(null);
-  const { 
-    isLoading: progressLoading, 
-    refreshProgress, 
-    lastError,
-    progress 
-  } = useProgress();
-  
   const {
     formData,
     errors,
@@ -32,76 +23,59 @@ const PersonalInfo = () => {
     loadInitialData
   } = usePersonalInfoStep();
 
-  const attemptDataLoad = async () => {
-    try {
-      setLoadError(null);
-      console.log("[DEBUG] Tentativa #" + (loadingAttempts + 1) + " de carregar dados");
-      
-      await refreshProgress();
-      console.log("[DEBUG] Dados de progresso atualizados:", progress);
-      
-      loadInitialData();
-      setLoadingAttempts(prev => prev + 1);
-    } catch (error) {
-      console.error("[ERRO] Falha ao carregar dados:", error);
-      setLoadError("Erro ao carregar dados. Por favor, tente novamente.");
-    }
-  };
+  const {
+    loadingAttempts,
+    setLoadingAttempts,
+    loadError,
+    setLoadError,
+    progressLoading,
+    progress,
+    lastError,
+    refreshProgress,
+    attemptDataLoad
+  } = usePersonalInfoLoad();
+
+  const { goToNextStep } = usePersonalInfoNavigation();
+
+  const { personalStepIndex, totalSteps, progressPercentage } = usePersonalInfoProgress();
 
   useEffect(() => {
-    console.log("[DEBUG] PersonalInfo montado - iniciando carregamento de dados");
-    attemptDataLoad();
-    
-    return () => {
-      console.log("[DEBUG] PersonalInfo desmontado");
-    };
+    attemptDataLoad(loadInitialData);
+    return () => {};
   }, []);
 
   useEffect(() => {
     if (progressLoading && loadingAttempts < 3) {
       const timer = setTimeout(() => {
-        console.log("[DEBUG] Tempo limite de carregamento atingido, tentando novamente");
-        attemptDataLoad();
+        attemptDataLoad(loadInitialData);
       }, 5000);
-      
       return () => clearTimeout(timer);
     }
-  }, [progressLoading, loadingAttempts]);
+  }, [progressLoading, loadingAttempts, attemptDataLoad, loadInitialData]);
 
   useEffect(() => {
     if (progress) {
-      console.log("[DEBUG] Dados do formulário atualizados:", formData);
     }
   }, [formData, progress]);
 
   const handleSuccess = async () => {
-    console.log("[DEBUG] Tentativa de envio do formulário");
     const success = await handleSubmit();
     if (success) {
-      console.log("[DEBUG] Formulário enviado com sucesso, navegando para próxima etapa");
-      // Forçar navegação direta para a página de dados profissionais
-      navigate("/onboarding/professional-data", { replace: true });
+      goToNextStep();
     } else {
-      console.log("[DEBUG] Falha ao enviar formulário");
     }
   };
 
   const showForceButton = loadingAttempts >= 3 && progressLoading;
-
   const hasError = loadError || lastError;
 
-  const personalStepIndex = 0;
-  const progressPercentage = Math.round(((personalStepIndex + 1) / 7) * 100);
-
-  // Verificar se a etapa já foi concluída, para tornar o formulário apenas leitura
   const isReadOnly = !!progress?.completed_steps?.includes("personal");
 
   if (progressLoading && !showForceButton) {
-    console.log("[DEBUG] Exibindo spinner de carregamento");
     return (
       <OnboardingLayout 
         currentStep={1} 
-        totalSteps={7}
+        totalSteps={totalSteps}
         title="Dados Pessoais" 
         backUrl="/"
         progress={progressPercentage}
@@ -118,7 +92,7 @@ const PersonalInfo = () => {
     return (
       <OnboardingLayout 
         currentStep={1}
-        totalSteps={7}
+        totalSteps={totalSteps}
         title="Dados Pessoais" 
         backUrl="/"
         progress={progressPercentage}
@@ -133,7 +107,7 @@ const PersonalInfo = () => {
           
           <div className="flex justify-center mt-6">
             <button 
-              onClick={attemptDataLoad}
+              onClick={() => attemptDataLoad(loadInitialData)}
               className="px-4 py-2 bg-[#0ABAB5] text-white rounded hover:bg-[#0ABAB5]/90"
             >
               Tentar Novamente
@@ -148,7 +122,7 @@ const PersonalInfo = () => {
     return (
       <OnboardingLayout 
         currentStep={1}
-        totalSteps={7}
+        totalSteps={totalSteps}
         title="Dados Pessoais" 
         backUrl="/"
         progress={progressPercentage}
@@ -172,7 +146,7 @@ const PersonalInfo = () => {
               Continuar Mesmo Assim
             </button>
             <button 
-              onClick={attemptDataLoad}
+              onClick={() => attemptDataLoad(loadInitialData)}
               className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50"
             >
               Tentar Novamente
@@ -186,7 +160,7 @@ const PersonalInfo = () => {
   return (
     <OnboardingLayout 
       currentStep={1}
-      totalSteps={7}
+      totalSteps={totalSteps}
       title="Dados Pessoais" 
       backUrl="/"
       progress={progressPercentage}
