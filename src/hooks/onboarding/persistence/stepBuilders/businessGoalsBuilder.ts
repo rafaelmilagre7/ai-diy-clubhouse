@@ -14,6 +14,7 @@ export function buildBusinessGoalsUpdate(data: Partial<OnboardingData>, progress
         const trimmedValue = String(progress.business_goals).trim();
         if (trimmedValue !== '') {
           existingBusinessGoals = JSON.parse(trimmedValue);
+          console.log("business_goals convertido de string para objeto:", existingBusinessGoals);
         }
       } catch (e) {
         console.error("Erro ao converter business_goals de string para objeto:", e);
@@ -30,11 +31,15 @@ export function buildBusinessGoalsUpdate(data: Partial<OnboardingData>, progress
   const sourceData = data.business_goals || data;
   
   if (typeof sourceData === 'object' && sourceData !== null) {
+    // Debug: Logue o objeto de origem para verificar estrutura
+    console.log("Dados de origem para business_goals:", JSON.stringify(sourceData, null, 2));
+    
     // Processar campos de string
     ['primary_goal', 'expected_outcome_30days', 'timeline', 'priority_solution_type', 
      'how_implement', 'week_availability'].forEach(field => {
       if (field in sourceData && sourceData[field as keyof typeof sourceData]) {
         updateObj.business_goals[field] = sourceData[field as keyof typeof sourceData];
+        console.log(`Definindo ${field}:`, updateObj.business_goals[field]);
       }
     });
     
@@ -47,6 +52,7 @@ export function buildBusinessGoalsUpdate(data: Partial<OnboardingData>, progress
           
         if (fieldValue.length > 0) {
           updateObj.business_goals[field] = fieldValue;
+          console.log(`Definindo ${field}:`, updateObj.business_goals[field]);
         }
       }
     });
@@ -56,6 +62,7 @@ export function buildBusinessGoalsUpdate(data: Partial<OnboardingData>, progress
       updateObj.business_goals.live_interest = typeof sourceData.live_interest === 'string' ? 
         parseInt(sourceData.live_interest, 10) : 
         sourceData.live_interest;
+      console.log(`Definindo live_interest:`, updateObj.business_goals.live_interest);
     }
     
     // Garantir que temos campos obrigatórios
@@ -73,7 +80,7 @@ export function buildBusinessGoalsUpdate(data: Partial<OnboardingData>, progress
     }
   }
   
-  console.log("Objeto de atualização para business_goals:", updateObj);
+  console.log("Objeto de atualização final para business_goals:", JSON.stringify(updateObj, null, 2));
   
   return updateObj;
 }

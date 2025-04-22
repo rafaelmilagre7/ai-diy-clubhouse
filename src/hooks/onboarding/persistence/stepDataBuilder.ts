@@ -18,8 +18,7 @@ export function buildUpdateObject(
   progress: OnboardingProgress | null,
   currentStepIndex: number
 ) {
-  console.log(`Construindo objeto de atualização para passo ${stepId} com dados:`, data);
-  console.log(`Estado atual do progresso: `, progress);
+  console.log(`Construindo objeto de atualização para passo ${stepId} com dados:`, JSON.stringify(data, null, 2));
   
   // Objeto de atualização base
   let updateObj: any = {
@@ -46,10 +45,12 @@ export function buildUpdateObject(
   // Atualizar dados específicos com base na etapa
   switch (stepId) {
     case "personal_info":
+    case "personal":
       Object.assign(updateObj, buildPersonalInfoUpdate(data, progress));
       break;
       
     case "professional_data":
+    case "professional":
       Object.assign(updateObj, buildProfessionalDataUpdate(data, progress));
       break;
       
@@ -58,18 +59,22 @@ export function buildUpdateObject(
       break;
       
     case "ai_experience":
+    case "ai_exp":
       Object.assign(updateObj, buildAiExperienceUpdate(data, progress));
       break;
       
     case "business_goals":
+    case "goals":
       Object.assign(updateObj, buildBusinessGoalsUpdate(data, progress));
       break;
       
     case "experience_personalization":
+    case "customization":
       Object.assign(updateObj, buildExperiencePersonalizationUpdate(data, progress));
       break;
       
     case "complementary_info":
+    case "complementary":
       Object.assign(updateObj, buildComplementaryInfoUpdate(data, progress));
       break;
       
@@ -82,7 +87,7 @@ export function buildUpdateObject(
       }
   }
   
-  console.log("Objeto de atualização final:", updateObj);
+  console.log("Objeto de atualização final:", JSON.stringify(updateObj, null, 2));
   
   return updateObj;
 }

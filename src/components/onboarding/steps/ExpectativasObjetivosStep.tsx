@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Slider } from "@/components/ui/slider";
+import { normalizeBusinessGoals } from "@/hooks/onboarding/persistence/utils/dataNormalization";
 
 interface ExpectativasObjetivosStepProps {
   onSubmit: (stepId: string, data: Partial<OnboardingData>) => void;
@@ -35,41 +36,40 @@ export const ExpectativasObjetivosStep = ({
   onComplete,
   isLastStep,
 }: ExpectativasObjetivosStepProps) => {
-  // Extrair dados iniciais para business_goals
   const [initializedForm, setInitializedForm] = useState(false);
   
   // Processar dados iniciais para garantir que temos um objeto válido
   const processInitialData = (data: any) => {
-    let businessGoals = {};
+    if (!data) return {};
     
-    console.log("ExpectativasObjetivosStep processando initialData:", data);
+    console.log("ExpectativasObjetivosStep recebeu initialData:", data);
     
-    if (!data) return businessGoals;
+    // Verificar se já temos dados normalizados
+    if (data.business_goals && typeof data.business_goals === 'object') {
+      console.log("Usando business_goals como objeto:", data.business_goals);
+      return data.business_goals;
+    }
     
-    // Verificar se temos dados de business_goals
-    if (data.business_goals) {
-      if (typeof data.business_goals === 'string') {
-        try {
-          businessGoals = JSON.parse(data.business_goals);
-          console.log("Dados de business_goals convertidos de string:", businessGoals);
-        } catch (e) {
-          console.error("Erro ao converter business_goals de string:", e);
-        }
-      } else if (typeof data.business_goals === 'object') {
-        businessGoals = data.business_goals;
-        console.log("Dados de business_goals como objeto:", businessGoals);
+    // Se temos uma string, normalizar
+    if (data.business_goals && typeof data.business_goals === 'string') {
+      try {
+        const normalizedData = normalizeBusinessGoals(data.business_goals);
+        console.log("business_goals normalizado de string:", normalizedData);
+        return normalizedData;
+      } catch (e) {
+        console.error("Erro ao normalizar business_goals:", e);
+        return {};
       }
     }
     
-    return businessGoals;
+    // Fallback para dados vazios
+    console.log("Nenhum dado válido de business_goals encontrado");
+    return {};
   };
   
   const businessGoalsData = processInitialData(initialData);
   
-  console.log("Dados iniciais para ExpectativasObjetivosStep:", initialData);
-  console.log("Dados de business_goals processados:", businessGoalsData);
-
-  const { control, handleSubmit, setValue, watch, reset, formState: { errors, isValid, isDirty } } = useForm<FormValues>({
+  const { control, handleSubmit, setValue, watch, reset, formState: { errors, isDirty } } = useForm<FormValues>({
     defaultValues: {
       primary_goal: "",
       expected_outcome_30days: "",
@@ -94,25 +94,24 @@ export const ExpectativasObjetivosStep = ({
   // Use efeito para inicializar dados se eles chegarem após o mount
   useEffect(() => {
     if (!initializedForm && initialData) {
-      console.log("Inicializando formulário com dados:", initialData);
+      console.log("Inicializando formulário com dados processados:", businessGoalsData);
       
-      const data = businessGoalsData as any;
       const fieldsToUpdate: Partial<FormValues> = {};
       
-      // Configurar os valores do formulário com base nos dados
-      if (data.primary_goal) fieldsToUpdate.primary_goal = data.primary_goal;
-      if (data.expected_outcome_30days) fieldsToUpdate.expected_outcome_30days = data.expected_outcome_30days;
-      if (data.priority_solution_type) fieldsToUpdate.priority_solution_type = data.priority_solution_type;
-      if (data.how_implement) fieldsToUpdate.how_implement = data.how_implement;
-      if (data.week_availability) fieldsToUpdate.week_availability = data.week_availability;
-      if (data.live_interest !== undefined) fieldsToUpdate.live_interest = Number(data.live_interest);
+      // Configurar os valores do formulário com base nos dados processados
+      if (businessGoalsData.primary_goal) fieldsToUpdate.primary_goal = businessGoalsData.primary_goal;
+      if (businessGoalsData.expected_outcome_30days) fieldsToUpdate.expected_outcome_30days = businessGoalsData.expected_outcome_30days;
+      if (businessGoalsData.priority_solution_type) fieldsToUpdate.priority_solution_type = businessGoalsData.priority_solution_type;
+      if (businessGoalsData.how_implement) fieldsToUpdate.how_implement = businessGoalsData.how_implement;
+      if (businessGoalsData.week_availability) fieldsToUpdate.week_availability = businessGoalsData.week_availability;
+      if (businessGoalsData.live_interest !== undefined) fieldsToUpdate.live_interest = Number(businessGoalsData.live_interest);
       
       // Garantir que content_formats é um array
-      if (data.content_formats) {
-        if (Array.isArray(data.content_formats)) {
-          fieldsToUpdate.content_formats = data.content_formats;
-        } else if (typeof data.content_formats === 'string') {
-          fieldsToUpdate.content_formats = [data.content_formats];
+      if (businessGoalsData.content_formats) {
+        if (Array.isArray(businessGoalsData.content_formats)) {
+          fieldsToUpdate.content_formats = businessGoalsData.content_formats;
+        } else if (typeof businessGoalsData.content_formats === 'string') {
+          fieldsToUpdate.content_formats = [businessGoalsData.content_formats];
         }
       }
       

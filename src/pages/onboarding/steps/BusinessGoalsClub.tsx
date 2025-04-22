@@ -8,6 +8,7 @@ import { useProgress } from "@/hooks/onboarding/useProgress";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
+import { normalizeBusinessGoals } from "@/hooks/onboarding/persistence/utils/dataNormalization";
 
 const BusinessGoalsClub = () => {
   const { saveStepData, completeOnboarding } = useOnboardingSteps();
@@ -25,28 +26,15 @@ const BusinessGoalsClub = () => {
         console.log("Carregando dados atualizados para BusinessGoalsClub...");
         await refreshProgress();
         
-        // Verificações detalhadas sobre a estrutura dos dados
+        // Logs detalhados para diagnóstico
         if (progress) {
           console.log("Tipo de business_goals:", typeof progress.business_goals);
           console.log("Conteúdo de business_goals:", JSON.stringify(progress.business_goals, null, 2));
           
-          // Verificar se o objeto business_goals está vazio
-          const isEmpty = !progress.business_goals || 
-                         (typeof progress.business_goals === 'object' && Object.keys(progress.business_goals).length === 0) ||
-                         (typeof progress.business_goals === 'string' && (progress.business_goals === '{}' || progress.business_goals === ''));
-                         
-          console.log("business_goals está vazio?", isEmpty);
-          
-          // Verificar dados importantes
-          if (!isEmpty && typeof progress.business_goals === 'object') {
-            const requiredFields = ['primary_goal', 'priority_solution_type', 'how_implement', 'week_availability'];
-            const missingFields = requiredFields.filter(field => !progress.business_goals[field]);
-            
-            if (missingFields.length > 0) {
-              console.warn(`Campos obrigatórios ausentes em business_goals: ${missingFields.join(', ')}`);
-            } else {
-              console.log("Todos os campos obrigatórios estão presentes em business_goals");
-            }
+          // Normalizar dados para uso local, sem salvar
+          if (typeof progress.business_goals === 'string' || 
+              (typeof progress.business_goals === 'object' && Object.keys(progress.business_goals || {}).length === 0)) {
+            console.log("business_goals precisa ser normalizado");
           }
         }
         
@@ -54,16 +42,16 @@ const BusinessGoalsClub = () => {
         setLocalDataReady(true);
       } catch (error) {
         console.error("Erro ao carregar dados:", error);
-        // Removemos o toast de erro para evitar toasts duplicados
         setLocalDataReady(true); // Mesmo com erro, permitir a renderização
       }
     };
     loadData();
-  }, [refreshProgress, refreshCount]);
+  }, [refreshProgress, refreshCount, progress]);
 
   const handleSaveData = async (stepId: string, data: any) => {
     console.log(`Iniciando salvamento de dados para passo ${stepId}:`, JSON.stringify(data, null, 2));
     setIsSubmitting(true);
+    
     try {
       // Verificações detalhadas antes de salvar
       if (!data.business_goals) {
@@ -86,50 +74,41 @@ const BusinessGoalsClub = () => {
         return;
       }
       
-      // Garantir que temos expected_outcomes como array
-      if (!businessGoalsData.expected_outcomes || !Array.isArray(businessGoalsData.expected_outcomes)) {
-        businessGoalsData.expected_outcomes = [];
-      }
-      
-      // Adicionar expected_outcome_30days para expected_outcomes se existir
-      if (businessGoalsData.expected_outcome_30days && 
-          !businessGoalsData.expected_outcomes.includes(businessGoalsData.expected_outcome_30days)) {
-        businessGoalsData.expected_outcomes = [
-          businessGoalsData.expected_outcome_30days,
-          ...businessGoalsData.expected_outcomes.filter(Boolean)
-        ];
-      }
-      
-      // Garantir que content_formats é um array
-      if (!businessGoalsData.content_formats || !Array.isArray(businessGoalsData.content_formats)) {
-        businessGoalsData.content_formats = [];
-      }
-      
-      // Garantir que live_interest é um número
-      if (businessGoalsData.live_interest !== undefined) {
-        businessGoalsData.live_interest = Number(businessGoalsData.live_interest);
-      }
-      
-      // Garantir que os campos obrigatórios são strings
-      requiredFields.forEach(field => {
-        if (businessGoalsData[field] !== undefined && typeof businessGoalsData[field] !== 'string') {
-          businessGoalsData[field] = String(businessGoalsData[field]);
+      // Formatar dados antes de salvar para garantir estrutura consistente
+      const formattedData = {
+        business_goals: {
+          ...businessGoalsData,
+          // Garantir que expected_outcomes é um array
+          expected_outcomes: Array.isArray(businessGoalsData.expected_outcomes) 
+            ? businessGoalsData.expected_outcomes 
+            : [],
+            
+          // Adicionar expected_outcome_30days se existir
+          expected_outcome_30days: businessGoalsData.expected_outcome_30days || "",
+          
+          // Garantir que content_formats é um array
+          content_formats: Array.isArray(businessGoalsData.content_formats) 
+            ? businessGoalsData.content_formats 
+            : [],
+            
+          // Converter live_interest para número
+          live_interest: Number(businessGoalsData.live_interest || 5)
         }
-      });
+      };
       
-      // Log de dados antes de salvar
-      console.log("Dados finais formatados antes de salvar:", JSON.stringify(data, null, 2));
+      // Log detalhado dos dados formatados
+      console.log("Dados formatados para salvar:", JSON.stringify(formattedData, null, 2));
       
-      // Salvar dados (apenas um toast será mostrado na função saveStepData)
-      const result = await saveStepData(stepId, data, false);
+      // Salvar dados usando business_goals como stepId (importante!)
+      await saveStepData("business_goals", formattedData, false);
       console.log("Dados salvos com sucesso");
-
-      // Não mostrar toast aqui para evitar duplicação
+      
+      toast.success("Informações salvas com sucesso!");
       
       // Navegar manualmente para a próxima página após um breve atraso
       setTimeout(() => {
         navigate("/onboarding/customization");
-      }, 500);
+      }, 800);
     } catch (error) {
       console.error("Erro ao salvar dados:", error);
       toast.error("Erro ao salvar dados. Por favor, tente novamente.");
@@ -143,12 +122,26 @@ const BusinessGoalsClub = () => {
     setRefreshCount(prev => prev + 1);
   };
   
-  // Encontrar o índice correto na sequência de passos
-  const stepIndex = 5; // Índice fixo para business_goals
+  // Processar dados para o componente
+  const processedData = React.useMemo(() => {
+    if (!progress) return null;
+    
+    let businessGoalsData = progress.business_goals;
+    
+    // Normalizar business_goals se necessário
+    if (typeof businessGoalsData === 'string' || !businessGoalsData) {
+      businessGoalsData = normalizeBusinessGoals(businessGoalsData);
+    }
+    
+    return {
+      ...progress,
+      business_goals: businessGoalsData
+    };
+  }, [progress]);
 
   return (
     <OnboardingLayout
-      currentStep={stepIndex}
+      currentStep={5} // Índice fixo para business_goals
       title="Expectativas e Objetivos com o Club"
       backUrl="/onboarding/ai-experience"
     >
@@ -180,7 +173,7 @@ const BusinessGoalsClub = () => {
           <ExpectativasObjetivosStep
             onSubmit={handleSaveData}
             isSubmitting={isSubmitting}
-            initialData={progress}
+            initialData={processedData}
             isLastStep={false}
             onComplete={completeOnboarding}
           />
