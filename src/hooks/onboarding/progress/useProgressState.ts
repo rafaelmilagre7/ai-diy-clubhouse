@@ -12,10 +12,45 @@ export function useProgressState() {
   const lastError = useRef<Error | null>(null);
   const retryCount = useRef(0);
   const toastShownRef = useRef(false);
+  
+  // Referência para armazenar histórico de estados para depuração
+  const debugHistory = useRef<Array<{
+    timestamp: number;
+    action: string;
+    progressId: string | null;
+    data: any;
+  }>>([]);
+  
+  // Função para registrar eventos de debug
+  const logDebugEvent = (action: string, data: any = null) => {
+    debugHistory.current.push({
+      timestamp: Date.now(),
+      action,
+      progressId: progressId.current,
+      data,
+    });
+    
+    // Manter apenas os últimos 20 eventos para não consumir muita memória
+    if (debugHistory.current.length > 20) {
+      debugHistory.current.shift();
+    }
+    
+    console.log(`[DEBUG STATE] ${action}`, data);
+  };
+  
+  // Sobrescrevendo setProgress para logar alterações
+  const setProgressWithDebug = (newProgress: OnboardingProgress | null) => {
+    logDebugEvent('setProgress', {
+      previousId: progress?.id,
+      newId: newProgress?.id,
+      hasData: !!newProgress,
+    });
+    setProgress(newProgress);
+  };
 
   return {
     progress,
-    setProgress,
+    setProgress: setProgressWithDebug,
     isLoading,
     setIsLoading,
     hasInitialized,
@@ -24,6 +59,8 @@ export function useProgressState() {
     lastUpdateTime,
     lastError,
     retryCount,
-    toastShownRef
+    toastShownRef,
+    debugHistory,
+    logDebugEvent
   };
 }
