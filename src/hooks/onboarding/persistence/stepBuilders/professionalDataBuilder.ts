@@ -50,7 +50,7 @@ export function buildProfessionalDataUpdate(data: Partial<OnboardingData>, progr
       // Formatação especial para website
       if (field === 'company_website' && value && typeof value === 'string') {
         professionalInfo[field] = normalizeWebsite(value);
-        updateObj[field as keyof OnboardingProgress] = normalizeWebsite(value);
+        (updateObj as any)[field] = normalizeWebsite(value);
       } else {
         professionalInfo[field] = value;
         

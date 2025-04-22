@@ -18,12 +18,12 @@ export function buildGoalsUpdate(data: Partial<OnboardingData> | ProfessionalDat
   } 
   // Verificar campos diretos
   else if ('company_name' in data || 'company_size' in data) {
-    if ('company_name' in data) updateObj.company_name = data.company_name;
-    if ('company_size' in data) updateObj.company_size = data.company_size;
-    if ('company_sector' in data) updateObj.company_sector = data.company_sector;
-    if ('company_website' in data) updateObj.company_website = data.company_website;
-    if ('current_position' in data) updateObj.current_position = data.current_position;
-    if ('annual_revenue' in data) updateObj.annual_revenue = data.annual_revenue;
+    if ('company_name' in data) updateObj.company_name = data.company_name as string;
+    if ('company_size' in data) updateObj.company_size = data.company_size as string;
+    if ('company_sector' in data) updateObj.company_sector = data.company_sector as string;
+    if ('company_website' in data) updateObj.company_website = data.company_website as string;
+    if ('current_position' in data) updateObj.current_position = data.current_position as string;
+    if ('annual_revenue' in data) updateObj.annual_revenue = data.annual_revenue as string;
     
     // Atualizar também no objeto aninhado
     updateObj.professional_info = {
