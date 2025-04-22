@@ -8,15 +8,20 @@ export function buildBusinessGoalsUpdate(data: Partial<OnboardingData>, progress
   let existingGoals = progress?.business_goals || {};
   
   // Se os dados existentes forem uma string, tentar convertê-los para objeto
-  if (typeof existingGoals === 'string' && existingGoals.trim() !== '') {
+  if (typeof existingGoals === 'string') {
     try {
-      existingGoals = JSON.parse(existingGoals);
+      // Verificar se a string não está vazia antes de tentar parsear
+      if (existingGoals && existingGoals.trim() !== '') {
+        existingGoals = JSON.parse(existingGoals);
+      } else {
+        existingGoals = {};
+      }
     } catch (e) {
       console.error("Erro ao converter business_goals de string para objeto:", e);
       existingGoals = {};
     }
-  } else if (typeof existingGoals === 'string') {
-    // Se for string vazia ou '{}', transformar em objeto vazio
+  } else if (typeof existingGoals === 'string' && existingGoals === '') {
+    // Se for string vazia, transformar em objeto vazio
     existingGoals = {};
   }
   

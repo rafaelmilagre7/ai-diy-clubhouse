@@ -6,22 +6,23 @@ export function buildExperiencePersonalizationUpdate(data: Partial<OnboardingDat
   const existingExperiencePersonalization = progress?.experience_personalization || {};
   
   // Se o campo não existir ou for string vazia, inicializamos como objeto vazio
-  if (!existingExperiencePersonalization || 
-      typeof existingExperiencePersonalization === 'string' && 
-      (existingExperiencePersonalization === '{}' || existingExperiencePersonalization === '')) {
+  if (!existingExperiencePersonalization) {
     updateObj.experience_personalization = {};
-  } else {
+  } else if (typeof existingExperiencePersonalization === 'string') {
     // Se for string, tenta converter para objeto
-    if (typeof existingExperiencePersonalization === 'string') {
-      try {
+    try {
+      // Verificar se a string não está vazia antes de tentar parsear
+      if (existingExperiencePersonalization && existingExperiencePersonalization.trim() !== '') {
         updateObj.experience_personalization = JSON.parse(existingExperiencePersonalization);
-      } catch (e) {
-        console.error("Erro ao converter experience_personalization de string para objeto:", e);
+      } else {
         updateObj.experience_personalization = {};
       }
-    } else {
-      updateObj.experience_personalization = {...existingExperiencePersonalization};
+    } catch (e) {
+      console.error("Erro ao converter experience_personalization de string para objeto:", e);
+      updateObj.experience_personalization = {};
     }
+  } else {
+    updateObj.experience_personalization = {...existingExperiencePersonalization};
   }
   
   if ((data as any).experience_personalization) {

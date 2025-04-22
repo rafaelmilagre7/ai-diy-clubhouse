@@ -8,15 +8,20 @@ export function buildComplementaryInfoUpdate(data: Partial<OnboardingData>, prog
   let existingInfo = progress?.complementary_info || {};
   
   // Se os dados existentes forem uma string, tentar convertê-los para objeto
-  if (typeof existingInfo === 'string' && existingInfo.trim() !== '') {
+  if (typeof existingInfo === 'string') {
     try {
-      existingInfo = JSON.parse(existingInfo);
+      // Verificar se a string não está vazia antes de tentar parsear
+      if (existingInfo && existingInfo.trim() !== '') {
+        existingInfo = JSON.parse(existingInfo);
+      } else {
+        existingInfo = {};
+      }
     } catch (e) {
       console.error("Erro ao converter complementary_info de string para objeto:", e);
       existingInfo = {};
     }
-  } else if (typeof existingInfo === 'string') {
-    // Se for string vazia ou '{}', transformar em objeto vazio
+  } else if (typeof existingInfo === 'string' && existingInfo === '') {
+    // Se for string vazia, transformar em objeto vazio
     existingInfo = {};
   }
   
