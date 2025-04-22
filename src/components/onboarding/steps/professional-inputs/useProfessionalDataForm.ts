@@ -1,6 +1,7 @@
 
 import { useForm } from "react-hook-form";
 import { useEffect, useState } from "react";
+import { ProfessionalDataInput } from "@/types/onboarding";
 
 interface UseProfessionalDataFormProps {
   initialData: any;
@@ -21,7 +22,7 @@ export function useProfessionalDataForm({ initialData }: UseProfessionalDataForm
     return "";
   };
 
-  const methods = useForm({
+  const methods = useForm<ProfessionalDataInput>({
     defaultValues: {
       company_name: "",
       company_size: "",
@@ -52,7 +53,7 @@ export function useProfessionalDataForm({ initialData }: UseProfessionalDataForm
   }, [initialData, methods]);
 
   // Esta função ajuda a preservar os valores durante interações com campos específicos
-  const safeSetValue = (field: string, value: any) => {
+  const safeSetValue = (field: keyof ProfessionalDataInput, value: any) => {
     const currentValues = methods.getValues();
     methods.setValue(field, value, { shouldValidate: false, shouldDirty: true });
     console.log(`Campo ${field} atualizado para:`, value);

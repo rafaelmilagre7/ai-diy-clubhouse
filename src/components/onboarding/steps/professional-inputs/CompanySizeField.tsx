@@ -12,6 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useProfessionalDataForm } from "./useProfessionalDataForm";
 
 export const CompanySizeField: React.FC = () => {
   const { setValue, watch, formState: { errors, touchedFields } } = useFormContext();
