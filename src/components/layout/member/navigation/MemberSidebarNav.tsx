@@ -1,126 +1,93 @@
 
-import { cn } from "@/lib/utils";
-import { 
-  LayoutDashboard, 
-  Lightbulb, 
-  Wrench, 
-  Gift, 
-  MessageCircle, 
-  Award, 
-  HelpCircle,
-  Compass,
-  User,
-  Map
-} from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
+import { cn } from "@/lib/utils";
+import {
+  LayoutDashboard,
+  Lightbulb,
+  Settings,
+  MessageSquare,
+  User,
+  Award,
+  Home,
+} from "lucide-react";
+import { useAuth } from "@/contexts/auth";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
-interface MemberSidebarNavProps {
-  sidebarOpen: boolean;
-}
-
-export const MemberSidebarNav = ({ sidebarOpen }: MemberSidebarNavProps) => {
+export function MemberSidebarNav() {
   const location = useLocation();
-  const currentPath = location.pathname;
-  
-  // Debug log para verificar a rota atual
-  console.log("MemberSidebarNav renderizando, currentPath:", currentPath);
+  const { isAdmin } = useAuth();
 
-  // Definição de itens do menu principal
-  const navItems = [
+  const menuItems = [
     {
       title: "Dashboard",
-      icon: LayoutDashboard,
       href: "/dashboard",
-      active: currentPath === "/dashboard"
-    },
-    {
-      title: "Onboarding",
-      icon: Compass,
-      href: "/onboarding",
-      active: currentPath.includes("/onboarding")
-    },
-    {
-      title: "Trilha de Implementação",
-      icon: Map,
-      href: "/implementation-trail",
-      active: currentPath === "/implementation-trail"
+      icon: LayoutDashboard,
     },
     {
       title: "Soluções",
-      icon: Lightbulb,
       href: "/solutions",
-      active: currentPath === "/solutions" || currentPath.includes("/solution")
+      icon: Lightbulb,
     },
     {
       title: "Ferramentas",
-      icon: Wrench,
       href: "/tools",
-      active: currentPath.includes("/tools")
-    },
-    {
-      title: "Benefícios",
-      icon: Gift,
-      href: "/benefits",
-      active: currentPath === "/benefits"
-    },
-    {
-      title: "Conquistas",
-      icon: Award,
-      href: "/achievements",
-      active: currentPath === "/achievements"
+      icon: Settings,
     },
     {
       title: "Sugestões",
-      icon: MessageCircle,
       href: "/suggestions",
-      active: currentPath.includes("/suggestions")
+      icon: MessageSquare,
+    },
+    {
+      title: "Conquistas",
+      href: "/achievements",
+      icon: Award,
     },
     {
       title: "Perfil",
-      icon: User,
       href: "/profile",
-      active: currentPath.includes("/profile")
+      icon: User,
     },
   ];
 
-  // Item separado para suporte
-  const supportItem = {
-    title: "Suporte",
-    icon: HelpCircle,
-    href: "https://wa.me/5511999999999", // Atualizar com o número real
-    external: true
+  const isActive = (href: string) => {
+    if (href === "/dashboard" && location.pathname === "/") {
+      return true;
+    }
+    return location.pathname.startsWith(href);
   };
 
   return (
-    <div className="flex flex-col overflow-y-auto py-4 flex-1">
-      <nav className="flex flex-col gap-1 px-3">
-        {navItems.map((item) => (
-          <Link
-            key={item.title}
-            to={item.href}
-            className={cn(
-              "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
-              item.active
-                ? "bg-[#0ABAB5]/10 text-[#0ABAB5] font-medium"
-                : "text-gray-600 hover:bg-gray-100"
-            )}
-          >
-            <item.icon size={18} className={item.active ? "text-[#0ABAB5]" : ""} />
-            {sidebarOpen && <span>{item.title}</span>}
-          </Link>
-        ))}
-        
-        {/* Item de suporte */}
-        <a
-          href={supportItem.href}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center gap-3 rounded-md px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 transition-colors mt-auto"
+    <div className="space-y-1 py-2">
+      {menuItems.map((item) => (
+        <Button
+          key={item.href}
+          variant={isActive(item.href) ? "default" : "ghost"}
+          className={cn(
+            "w-full justify-start",
+            isActive(item.href) && "bg-viverblue hover:bg-viverblue/90"
+          )}
+          asChild
         >
-          <supportItem.icon size={18} />
-          {sidebarOpen && <span>{supportItem.title}</span>}
-        </a>
-      </nav>
+          <Link to={item.href} className="flex items-center">
+            <item.icon className="mr-2 h-4 w-4" />
+            {item.title}
+          </Link>
+        </Button>
+      ))}
+
+      {isAdmin && (
+        <Button variant="outline" className="w-full justify-start mt-4" asChild>
+          <Link to="/admin" className="flex items-center">
+            <Settings className="mr-2 h-4 w-4" />
+            Painel Admin
+            <Badge variant="outline" className="ml-auto bg-viverblue text-white">
+              Admin
+            </Badge>
+          </Link>
+        </Button>
+      )}
     </div>
   );
-};
+}

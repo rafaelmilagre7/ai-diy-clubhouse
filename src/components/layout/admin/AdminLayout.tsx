@@ -4,6 +4,7 @@ import { Outlet } from "react-router-dom";
 import { AdminSidebar } from "./AdminSidebar";
 import { AdminHeader } from "./AdminHeader";
 import { AdminContent } from "./AdminContent";
+import { cn } from "@/lib/utils";
 
 interface AdminLayoutProps {
   children?: ReactNode;

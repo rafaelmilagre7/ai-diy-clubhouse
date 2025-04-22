@@ -4,7 +4,7 @@ import {
   LayoutDashboard,
   Users,
   Lightbulb,
-  Tool,
+  Settings,
   MessageSquare,
   ChevronLeft,
 } from "lucide-react";
@@ -38,7 +38,7 @@ export const AdminSidebarNav = ({ sidebarOpen }: AdminSidebarNavProps) => {
     {
       title: "Ferramentas",
       href: "/admin/tools",
-      icon: Tool,
+      icon: Settings,
     },
     {
       title: "Sugestões",
