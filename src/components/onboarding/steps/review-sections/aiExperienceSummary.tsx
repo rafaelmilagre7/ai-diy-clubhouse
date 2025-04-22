@@ -86,8 +86,8 @@ export function getAIExperienceSummary(data: OnboardingData['ai_experience']) {
       <p>
         <span className="font-medium">Já implementou soluções de IA:</span> {
           processedData.has_implemented === "sim" ||
-          processedData.has_implemented === "true" ||
-          processedData.has_implemented === true
+          processedData.has_implemented === true ||
+          processedData.has_implemented === "true"
             ? "Sim"
             : "Não"
         }

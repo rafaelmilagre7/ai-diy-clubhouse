@@ -16,18 +16,16 @@ export function buildAiExpUpdate(data: Partial<OnboardingData>, progress: Onboar
   if (data.ai_experience) {
     aiExperienceData = data.ai_experience;
   } 
-  // Caso especial para quando ai_exp ou ai_experience é passado como a raiz
-  else if (data.ai_exp) {
-    aiExperienceData = data.ai_exp.ai_experience || data.ai_exp;
-  }
-  // Se o ai_experience não está nos locais esperados, verificar se é o objeto raiz
-  else if (
-    typeof data.knowledge_level === 'string' || 
-    data.previous_tools || 
-    data.has_implemented || 
-    data.desired_ai_areas
-  ) {
-    aiExperienceData = data;
+  // Se ai_experience não existe, verificar se existe alguma propriedade aninhada chamada ai_experience
+  else if (data.ai_experience === undefined) {
+    // Verificar se há alguma outra propriedade que possa conter ai_experience
+    for (const key in data) {
+      const value = data[key as keyof typeof data];
+      if (value && typeof value === 'object' && 'ai_experience' in value) {
+        aiExperienceData = (value as any).ai_experience;
+        break;
+      }
+    }
   }
   
   // Se ainda não temos dados, tentar encontrar de outra forma
