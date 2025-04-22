@@ -17,12 +17,12 @@ const ComplementaryInfo = () => {
     refreshProgress();
   }, [refreshProgress]);
 
-  const handleSaveData = async (data: any) => {
+  const handleSaveData = async (stepId: string, data: any) => {
     setIsSubmitting(true);
     try {
       console.log("Salvando informações complementares:", data);
       // Usar a assinatura com stepId explícito
-      await saveStepData("complementary_info", data, true);
+      await saveStepData(stepId, data, true);
       console.log("Informações complementares salvas com sucesso");
     } catch (error) {
       console.error("Erro ao salvar dados:", error);
@@ -49,7 +49,7 @@ const ComplementaryInfo = () => {
           <ComplementaryInfoStep
             onSubmit={handleSaveData}
             isSubmitting={isSubmitting}
-            initialData={progress?.complementary_info}
+            initialData={progress}
             isLastStep={false}
             onComplete={completeOnboarding}
           />
