@@ -4,8 +4,12 @@ import { Badge } from "@/components/ui/badge";
 import { OnboardingData } from "@/types/onboarding";
 
 export function getAIExperienceSummary(data: OnboardingData['ai_experience']) {
-  if (!data || Object.keys(data).length === 0) {
-    return <p className="text-gray-500 italic">Seção não preenchida. Clique em Editar para preencher.</p>;
+  console.log("Renderizando summary para AI Experience com dados:", data);
+  
+  // Verificar se os dados estão em formato correto
+  if (!data || typeof data === 'string' || Object.keys(data).length === 0) {
+    console.warn("Dados de AI Experience inválidos ou vazios:", data);
+    return <p className="text-gray-500 italic">Seção não preenchida ou dados incompletos. Clique em Editar para preencher.</p>;
   }
 
   return (
@@ -23,7 +27,8 @@ export function getAIExperienceSummary(data: OnboardingData['ai_experience']) {
         </div>
       )}
       
-      {data.desired_ai_areas && data.desired_ai_areas.length > 0 && (
+      {/* Verificar se desired_ai_areas existe e é um array */}
+      {data.desired_ai_areas && Array.isArray(data.desired_ai_areas) && data.desired_ai_areas.length > 0 && (
         <div>
           <span className="font-medium">Áreas de interesse em IA:</span>
           <div className="flex flex-wrap gap-1 mt-1">
@@ -34,7 +39,29 @@ export function getAIExperienceSummary(data: OnboardingData['ai_experience']) {
         </div>
       )}
       
+      {/* Exibir área única caso não seja array */}
+      {data.desired_ai_area && !data.desired_ai_areas && (
+        <div>
+          <span className="font-medium">Área de interesse em IA:</span>
+          <div className="flex flex-wrap gap-1 mt-1">
+            <Badge variant="outline" className="bg-gray-100">{data.desired_ai_area}</Badge>
+          </div>
+        </div>
+      )}
+      
       <p><span className="font-medium">Já implementou soluções de IA:</span> {data.has_implemented === "sim" ? "Sim" : "Não"}</p>
+      
+      {data.nps_score !== undefined && (
+        <p><span className="font-medium">Avaliação da experiência (NPS):</span> {data.nps_score}/10</p>
+      )}
+      
+      {data.completed_formation && (
+        <p><span className="font-medium">Formação completada:</span> Sim</p>
+      )}
+      
+      {data.improvement_suggestions && (
+        <p><span className="font-medium">Sugestões de melhoria:</span> {data.improvement_suggestions}</p>
+      )}
     </div>
   );
 }

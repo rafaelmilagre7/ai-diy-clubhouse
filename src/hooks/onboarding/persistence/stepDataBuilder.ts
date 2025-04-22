@@ -1,47 +1,173 @@
+
 import { OnboardingData, OnboardingProgress, ProfessionalDataInput } from "@/types/onboarding";
 import { buildBusinessContextUpdate } from "./businessContextBuilder";
+import { buildProfessionalDataUpdate } from "./stepBuilders/professionalDataBuilder";
+import { buildAiExpUpdate } from "./stepBuilders/aiExpBuilder";
+import { buildPersonalUpdate } from "./stepBuilders/personalBuilder";
 
-export function buildProfessionalDataUpdate(
-  data: ProfessionalDataInput, 
-  progress: OnboardingProgress | null
-) {
+// Nova função para processar dados de objetivos de negócio
+function buildBusinessGoalsUpdate(data: Partial<OnboardingData>, progress: OnboardingProgress | null) {
   const updateObj: any = {};
   
-  console.log("Construindo dados profissionais para salvar:", data);
-
-  // Dados profissionais
-  const professionalInfo = {
-    company_name: data.company_name || data.professional_info?.company_name || "",
-    company_size: data.company_size || data.professional_info?.company_size || "",
-    company_sector: data.company_sector || data.professional_info?.company_sector || "",
-    company_website: data.company_website || data.professional_info?.company_website || "",
-    current_position: data.current_position || data.professional_info?.current_position || "",
-    annual_revenue: data.annual_revenue || data.professional_info?.annual_revenue || "",
-  };
-
-  // Log detalhado dos dados
-  console.log("Dados profissionais normalizados:", professionalInfo);
-
-  // Adicionar dados ao objeto de atualização
-  updateObj.professional_info = professionalInfo;
+  console.log("Construindo objeto de atualização para Business Goals:", data);
   
-  // Adicionar campos de nível superior para compatibilidade
-  updateObj.company_name = professionalInfo.company_name;
-  updateObj.company_size = professionalInfo.company_size;
-  updateObj.company_sector = professionalInfo.company_sector;
-  updateObj.company_website = professionalInfo.company_website;
-  updateObj.current_position = professionalInfo.current_position;
-  updateObj.annual_revenue = professionalInfo.annual_revenue;
-
-  // Validações adicionais
-  if (!updateObj.company_name) {
-    console.warn("Nome da empresa não foi preenchido");
+  if (data.business_goals) {
+    // Se recebemos um objeto aninhado
+    const goalsData = data.business_goals;
+    const existingGoals = progress?.business_goals || {};
+    
+    // Se existingGoals for uma string, inicialize como objeto vazio
+    const baseGoals = typeof existingGoals === 'string' ? {} : existingGoals;
+    
+    // Processamento de arrays
+    let formattedData = { ...goalsData };
+    
+    // Garantir que arrays sejam preservados
+    ['expected_outcomes', 'content_formats'].forEach(field => {
+      if (formattedData[field] && !Array.isArray(formattedData[field])) {
+        formattedData[field] = [formattedData[field]];
+      }
+    });
+    
+    updateObj.business_goals = {
+      ...baseGoals,
+      ...formattedData
+    };
+  } else if (typeof data === 'object' && data !== null) {
+    // Dados enviados diretamente
+    const existingGoals = progress?.business_goals || {};
+    
+    // Se existingGoals for uma string, inicialize como objeto vazio
+    const baseGoals = typeof existingGoals === 'string' ? {} : existingGoals;
+    
+    // Processamento de arrays
+    let formattedData = { ...data };
+    
+    // Garantir que arrays sejam preservados
+    ['expected_outcomes', 'content_formats'].forEach(field => {
+      if (formattedData[field] && !Array.isArray(formattedData[field])) {
+        formattedData[field] = [formattedData[field]];
+      }
+    });
+    
+    updateObj.business_goals = {
+      ...baseGoals,
+      ...formattedData
+    };
   }
-
+  
   return updateObj;
 }
 
-// Nova função buildUpdateObject que será usada pelos outros arquivos
+// Nova função para processar personalização de experiência
+function buildExperiencePersonalizationUpdate(data: Partial<OnboardingData>, progress: OnboardingProgress | null) {
+  const updateObj: any = {};
+  
+  console.log("Construindo objeto de atualização para Experience Personalization:", data);
+  
+  if (data.experience_personalization) {
+    // Se recebemos um objeto aninhado
+    const personalizationData = data.experience_personalization;
+    const existingPersonalization = progress?.experience_personalization || {};
+    
+    // Se existingPersonalization for uma string, inicialize como objeto vazio
+    const basePersonalization = typeof existingPersonalization === 'string' ? {} : existingPersonalization;
+    
+    // Processamento de arrays
+    let formattedData = { ...personalizationData };
+    
+    // Garantir que arrays sejam preservados
+    ['interests', 'time_preference', 'available_days', 'skills_to_share', 'mentorship_topics'].forEach(field => {
+      if (formattedData[field] && !Array.isArray(formattedData[field])) {
+        formattedData[field] = [formattedData[field]];
+      }
+    });
+    
+    updateObj.experience_personalization = {
+      ...basePersonalization,
+      ...formattedData
+    };
+  } else if (typeof data === 'object' && data !== null) {
+    // Dados enviados diretamente
+    const existingPersonalization = progress?.experience_personalization || {};
+    
+    // Se existingPersonalization for uma string, inicialize como objeto vazio
+    const basePersonalization = typeof existingPersonalization === 'string' ? {} : existingPersonalization;
+    
+    // Processamento de arrays
+    let formattedData = { ...data };
+    
+    // Garantir que arrays sejam preservados
+    ['interests', 'time_preference', 'available_days', 'skills_to_share', 'mentorship_topics'].forEach(field => {
+      if (formattedData[field] && !Array.isArray(formattedData[field])) {
+        formattedData[field] = [formattedData[field]];
+      }
+    });
+    
+    updateObj.experience_personalization = {
+      ...basePersonalization,
+      ...formattedData
+    };
+  }
+  
+  return updateObj;
+}
+
+// Nova função para processar informações complementares
+function buildComplementaryInfoUpdate(data: Partial<OnboardingData>, progress: OnboardingProgress | null) {
+  const updateObj: any = {};
+  
+  console.log("Construindo objeto de atualização para Complementary Info:", data);
+  
+  if (data.complementary_info) {
+    // Se recebemos um objeto aninhado
+    const complementaryData = data.complementary_info;
+    const existingComplementary = progress?.complementary_info || {};
+    
+    // Se existingComplementary for uma string, inicialize como objeto vazio
+    const baseComplementary = typeof existingComplementary === 'string' ? {} : existingComplementary;
+    
+    // Processamento de arrays
+    let formattedData = { ...complementaryData };
+    
+    // Garantir que arrays sejam preservados
+    ['priority_topics'].forEach(field => {
+      if (formattedData[field] && !Array.isArray(formattedData[field])) {
+        formattedData[field] = [formattedData[field]];
+      }
+    });
+    
+    updateObj.complementary_info = {
+      ...baseComplementary,
+      ...formattedData
+    };
+  } else if (typeof data === 'object' && data !== null) {
+    // Dados enviados diretamente
+    const existingComplementary = progress?.complementary_info || {};
+    
+    // Se existingComplementary for uma string, inicialize como objeto vazio
+    const baseComplementary = typeof existingComplementary === 'string' ? {} : existingComplementary;
+    
+    // Processamento de arrays
+    let formattedData = { ...data };
+    
+    // Garantir que arrays sejam preservados
+    ['priority_topics'].forEach(field => {
+      if (formattedData[field] && !Array.isArray(formattedData[field])) {
+        formattedData[field] = [formattedData[field]];
+      }
+    });
+    
+    updateObj.complementary_info = {
+      ...baseComplementary,
+      ...formattedData
+    };
+  }
+  
+  return updateObj;
+}
+
+// Função principal buildUpdateObject que será usada pelos outros arquivos
 export function buildUpdateObject(
   stepId: string, 
   data: any, 
@@ -56,11 +182,10 @@ export function buildUpdateObject(
   // Processar dados com base no ID da etapa
   switch (stepId) {
     case "personal":
-      // Dados pessoais
+      // Dados pessoais usando o builder específico
       console.log("Processando dados pessoais:", data);
-      if (data && Object.keys(data).length > 0) {
-        updateObj.personal_info = data;
-      }
+      const personalUpdates = buildPersonalUpdate(data, progress);
+      Object.assign(updateObj, personalUpdates);
       break;
       
     case "professional_data":
@@ -78,35 +203,31 @@ export function buildUpdateObject(
       break;
       
     case "ai_exp":
-      // Experiência com IA
+      // Experiência com IA - usar builder específico
       console.log("Processando dados de experiência com IA:", data);
-      if (data && Object.keys(data).length > 0) {
-        updateObj.ai_experience = data;
-      }
+      const aiExpUpdates = buildAiExpUpdate(data, progress);
+      Object.assign(updateObj, aiExpUpdates);
       break;
       
     case "business_goals":
-      // Objetivos de negócio
+      // Objetivos de negócio - usar builder específico
       console.log("Processando dados de objetivos de negócio:", data);
-      if (data && Object.keys(data).length > 0) {
-        updateObj.business_goals = data;
-      }
+      const businessGoalsUpdates = buildBusinessGoalsUpdate(data, progress);
+      Object.assign(updateObj, businessGoalsUpdates);
       break;
       
     case "experience_personalization":
-      // Personalização de experiência
+      // Personalização de experiência - usar builder específico
       console.log("Processando dados de personalização:", data);
-      if (data && Object.keys(data).length > 0) {
-        updateObj.experience_personalization = data;
-      }
+      const personalizationUpdates = buildExperiencePersonalizationUpdate(data, progress);
+      Object.assign(updateObj, personalizationUpdates);
       break;
       
     case "complementary_info":
-      // Informações complementares
+      // Informações complementares - usar builder específico
       console.log("Processando informações complementares:", data);
-      if (data && Object.keys(data).length > 0) {
-        updateObj.complementary_info = data;
-      }
+      const complementaryUpdates = buildComplementaryInfoUpdate(data, progress);
+      Object.assign(updateObj, complementaryUpdates);
       break;
       
     default:

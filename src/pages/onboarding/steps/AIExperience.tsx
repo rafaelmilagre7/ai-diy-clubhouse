@@ -20,11 +20,29 @@ const AIExperience = () => {
     refreshProgress();
   }, [refreshProgress]);
 
+  // Validar dados iniciais
+  useEffect(() => {
+    if (progress) {
+      console.log("Dados de AI Experience obtidos:", progress.ai_experience);
+      
+      // Verificar se os dados estão em formato de string
+      if (typeof progress.ai_experience === 'string') {
+        console.warn("Alerta: ai_experience está como string em vez de objeto:", progress.ai_experience);
+      }
+    }
+  }, [progress]);
+
   const handleSaveData = async (data: any) => {
     setIsSubmitting(true);
     try {
       console.log("Salvando dados de experiência com IA:", data);
       log("onboarding_ai_experience_submit", { data });
+      
+      // Garantir formato de objeto mesmo se vier como string
+      if (typeof data === 'string') {
+        console.warn("Convertendo dados de string para objeto antes de salvar");
+        data = { ai_experience: { default: data } };
+      }
       
       // Usar a assinatura com stepId explícito
       await saveStepData("ai_exp", data, true);

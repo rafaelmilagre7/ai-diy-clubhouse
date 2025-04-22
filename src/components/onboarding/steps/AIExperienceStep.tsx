@@ -22,7 +22,7 @@ type AIExperienceFormValues = {
   knowledge_level: string;
   previous_tools: string[];
   has_implemented: string; // "sim" ou "nao"
-  desired_ai_area: string; // "vendas" | "marketing" | "rh" | "analise_dados"
+  desired_ai_areas: string[]; // Usando array para áreas desejadas
   completed_formation: boolean;
   is_member_for_month: boolean;
   nps_score: number;
@@ -41,42 +41,68 @@ export const AIExperienceStep: React.FC<AIExperienceStepProps> = ({
   isSubmitting,
   initialData,
 }) => {
-  // Valores iniciais simplificados
+  // Verificar formato dos dados iniciais para debug
+  useEffect(() => {
+    console.log("Dados iniciais recebidos em AIExperienceStep:", initialData);
+    if (typeof initialData === 'string') {
+      console.warn("Recebido initialData como string em vez de objeto:", initialData);
+    }
+  }, [initialData]);
+
+  // Valores iniciais considerando possíveis formatos
   const getInitialValues = () => {
+    // Se initialData for string, usar objeto vazio
+    const data = typeof initialData === 'string' ? {} : initialData || {};
+    
+    console.log("Usando dados iniciais processados:", data);
+    
     return {
-      knowledge_level: initialData?.knowledge_level || "",
-      previous_tools: initialData?.previous_tools || [],
-      has_implemented: initialData?.has_implemented || "",
-      desired_ai_area: initialData?.desired_ai_area || "",
-      completed_formation: initialData?.completed_formation || false,
-      is_member_for_month: initialData?.is_member_for_month || false,
-      nps_score: initialData?.nps_score ?? 5,
-      improvement_suggestions: initialData?.improvement_suggestions || "",
+      knowledge_level: data.knowledge_level || "",
+      previous_tools: Array.isArray(data.previous_tools) ? data.previous_tools : [],
+      has_implemented: data.has_implemented || "",
+      // Suporte para ambos os formatos de áreas desejadas
+      desired_ai_areas: Array.isArray(data.desired_ai_areas) ? data.desired_ai_areas : 
+                       data.desired_ai_area ? [data.desired_ai_area] : [],
+      completed_formation: data.completed_formation || false,
+      is_member_for_month: data.is_member_for_month || false,
+      nps_score: data.nps_score !== undefined ? data.nps_score : 5,
+      improvement_suggestions: data.improvement_suggestions || "",
     };
   };
 
-  const { control, handleSubmit, reset, formState: { errors } } = useForm<AIExperienceFormValues>({
+  const { control, handleSubmit, watch, reset, formState: { errors } } = useForm<AIExperienceFormValues>({
     defaultValues: getInitialValues()
   });
 
+  // Atualizar valores iniciais quando os dados mudarem
   useEffect(() => {
-    if (initialData) {
-      reset(getInitialValues());
-    }
+    reset(getInitialValues());
   }, [initialData, reset]);
 
+  // Valores do formulário para logging
+  const formValues = watch();
+  useEffect(() => {
+    console.log("Valores atuais do formulário:", formValues);
+  }, [formValues]);
+
   const onFormSubmit = (data: AIExperienceFormValues) => {
+    // Formatar corretamente para o banco de dados
+    const formattedData = {
+      knowledge_level: data.knowledge_level,
+      previous_tools: data.previous_tools,
+      has_implemented: data.has_implemented,
+      desired_ai_areas: data.desired_ai_areas, // Usando o array diretamente
+      completed_formation: data.completed_formation,
+      is_member_for_month: data.is_member_for_month,
+      nps_score: data.nps_score,
+      improvement_suggestions: data.improvement_suggestions,
+    };
+    
+    console.log("Enviando dados formatados de AI Experience:", formattedData);
+    
+    // Encapsular em ai_experience conforme esperado pelo backend
     onSubmit("ai_exp", {
-      ai_experience: {
-        knowledge_level: data.knowledge_level,
-        previous_tools: data.previous_tools,
-        has_implemented: data.has_implemented,
-        desired_ai_area: data.desired_ai_area,
-        completed_formation: data.completed_formation,
-        is_member_for_month: data.is_member_for_month,
-        nps_score: data.nps_score,
-        improvement_suggestions: data.improvement_suggestions,
-      }
+      ai_experience: formattedData
     });
   };
 
@@ -91,7 +117,7 @@ export const AIExperienceStep: React.FC<AIExperienceStepProps> = ({
             <AIKnowledgeLevelField control={control} error={errors.knowledge_level} />
             <AIToolsField control={control} error={errors.previous_tools} />
 
-            {/* Nova pergunta: Já implementou alguma solução de IA? */}
+            {/* Pergunta: Já implementou alguma solução de IA? */}
             <div className="space-y-2 bg-gray-50 p-6 rounded-lg">
               <h3 className="text-lg font-medium text-gray-800">
                 Você já implementou alguma solução de IA?
@@ -122,31 +148,38 @@ export const AIExperienceStep: React.FC<AIExperienceStepProps> = ({
               />
             </div>
 
-            {/* Pergunta sobre áreas desejadas para implementação */}
+            {/* Áreas desejadas para implementação - agora usando checkboxes para permitir múltiplas seleções */}
             <div className="space-y-2 bg-gray-50 p-6 rounded-lg">
               <h3 className="text-lg font-medium text-gray-800">
                 Quais áreas você deseja implementar soluções de IA no seu negócio?
               </h3>
               <Controller
                 control={control}
-                name="desired_ai_area"
-                rules={{ required: "Selecione uma área" }}
+                name="desired_ai_areas"
+                rules={{ validate: (value) => value.length > 0 || "Selecione pelo menos uma área" }}
                 render={({ field, fieldState }) => (
-                  <RadioGroup
-                    onValueChange={field.onChange}
-                    value={field.value}
-                    className="flex flex-col gap-3 mt-2"
-                  >
+                  <div className="space-y-2 mt-2">
                     {desiredAreas.map(opt => (
                       <div key={opt.value} className="flex items-center gap-2">
-                        <RadioGroupItem value={opt.value} id={`area_${opt.value}`} />
+                        <input
+                          type="checkbox"
+                          id={`area_${opt.value}`}
+                          checked={field.value.includes(opt.value)}
+                          onChange={(e) => {
+                            const newValue = e.target.checked
+                              ? [...field.value, opt.value]
+                              : field.value.filter(v => v !== opt.value);
+                            field.onChange(newValue);
+                          }}
+                          className="h-4 w-4 rounded border-gray-300 text-[#0ABAB5] focus:ring-[#0ABAB5]"
+                        />
                         <label htmlFor={`area_${opt.value}`} className="text-sm">{opt.label}</label>
                       </div>
                     ))}
                     {fieldState.error && (
-                      <span className="text-red-500 text-xs ml-4">{fieldState.error.message}</span>
+                      <span className="text-red-500 text-xs block mt-1">{fieldState.error.message}</span>
                     )}
-                  </RadioGroup>
+                  </div>
                 )}
               />
             </div>

@@ -8,12 +8,48 @@ import { useNavigate } from "react-router-dom";
 import { useProgress } from "@/hooks/onboarding/useProgress";
 import { Button } from "@/components/ui/button";
 import { ReviewStep } from "@/components/onboarding/steps/ReviewStep";
+import { toast } from "sonner";
 
 const Review: React.FC = () => {
   const navigate = useNavigate();
   const { currentStepIndex, steps, completeOnboarding } = useOnboardingSteps();
-  const { progress, isLoading } = useProgress();
+  const { progress, isLoading, refreshProgress } = useProgress();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  
+  // Efeito para atualizar dados ao entrar na página
+  useEffect(() => {
+    const loadFreshData = async () => {
+      try {
+        console.log("Recarregando dados mais recentes para a revisão...");
+        await refreshProgress();
+        console.log("Dados atualizados para revisão");
+      } catch (error) {
+        console.error("Erro ao recarregar dados para revisão:", error);
+        toast.error("Falha ao carregar dados atualizados. Tente recarregar a página.");
+      }
+    };
+    
+    loadFreshData();
+  }, [refreshProgress]);
+  
+  // Validar dados de progresso
+  useEffect(() => {
+    if (progress) {
+      console.log("Dados de progresso na tela de revisão:", progress);
+      
+      // Verificar campos que são strings em vez de objetos
+      const validateField = (fieldName: string, value: any) => {
+        if (typeof value === 'string' && fieldName !== 'current_step' && fieldName !== 'user_id' && fieldName !== 'id') {
+          console.warn(`Campo ${fieldName} está como string em vez de objeto: "${value}"`);
+        }
+      };
+      
+      // Verificar campos principais
+      ['ai_experience', 'business_goals', 'experience_personalization', 'complementary_info'].forEach(field => {
+        validateField(field, progress[field as keyof typeof progress]);
+      });
+    }
+  }, [progress]);
   
   const handleNavigateToStep = (index: number) => {
     navigate(steps[index].path);
@@ -27,6 +63,7 @@ const Review: React.FC = () => {
       await completeOnboarding();
     } catch (error) {
       console.error("Erro ao finalizar onboarding:", error);
+      toast.error("Erro ao finalizar o onboarding. Por favor, tente novamente.");
     } finally {
       setIsSubmitting(false);
     }

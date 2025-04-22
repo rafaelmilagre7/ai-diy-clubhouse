@@ -21,6 +21,16 @@ export const ReviewSectionCard: React.FC<ReviewSectionCardProps> = ({
   stepIndex,
   navigateToStep
 }) => {
+  // Validação dos dados para efeito de log
+  React.useEffect(() => {
+    console.log(`Revisando dados para seção ${step.id}:`, sectionData);
+    if (typeof sectionData === 'string') {
+      console.warn(`Dados da seção ${step.id} estão como string:`, sectionData);
+    } else if (!sectionData || Object.keys(sectionData).length === 0) {
+      console.warn(`Dados vazios para seção ${step.id}`);
+    }
+  }, [step.id, sectionData]);
+
   const handleEdit = () => {
     try {
       // Ajustando o índice (a UI mostra 1-based, mas a navegação é 0-based)

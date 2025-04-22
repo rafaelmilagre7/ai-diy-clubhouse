@@ -3,22 +3,62 @@ import { OnboardingData, OnboardingProgress } from "@/types/onboarding";
 
 export function buildAiExpUpdate(data: Partial<OnboardingData>, progress: OnboardingProgress | null) {
   const updateObj: any = {};
+  
+  console.log("Construindo objeto de atualização para AI Experience:", data);
+  
+  // Verificar se os dados vêm no formato aninhado ou direto
   if (data.ai_experience) {
-    const existingAiExperience = progress?.ai_experience || {};
-    let aiData = { ...existingAiExperience, ...data.ai_experience };
-    if (typeof aiData.desired_ai_areas === "string") {
-      aiData.desired_ai_areas = [aiData.desired_ai_areas];
+    // Formato aninhado: { ai_experience: { ... } }
+    const aiExpData = data.ai_experience;
+    const existingAiExp = progress?.ai_experience || {};
+    
+    // Se existingAiExp for uma string, inicialize como objeto vazio
+    const baseAiExp = typeof existingAiExp === 'string' ? {} : existingAiExp;
+    
+    // Garantir que desired_ai_areas seja sempre um array
+    let updatedData = { ...baseAiExp, ...aiExpData };
+    
+    // Converter desired_ai_area em desired_ai_areas se existir
+    if (updatedData.desired_ai_area && !updatedData.desired_ai_areas) {
+      updatedData.desired_ai_areas = [updatedData.desired_ai_area];
+      delete updatedData.desired_ai_area;
     }
-    if (aiData.desired_ai_areas && !Array.isArray(aiData.desired_ai_areas)) {
-      aiData.desired_ai_areas = [aiData.desired_ai_areas];
+    
+    // Garantir que desired_ai_areas seja um array
+    if (updatedData.desired_ai_areas && !Array.isArray(updatedData.desired_ai_areas)) {
+      updatedData.desired_ai_areas = [updatedData.desired_ai_areas];
     }
-    updateObj.ai_experience = aiData;
+    
+    // Salvar dados atualizados
+    updateObj.ai_experience = updatedData;
+    
+    // Log detalhado
+    console.log("Dados de experiência AI formatados:", updatedData);
   } else if (typeof data === 'object' && data !== null) {
-    const existingAiExperience = progress?.ai_experience || {};
-    updateObj.ai_experience = {
-      ...existingAiExperience,
-      ...data
-    };
+    // Formato direto: dados enviados diretamente
+    const existingAiExp = progress?.ai_experience || {};
+    
+    // Se existingAiExp for uma string, inicialize como objeto vazio
+    const baseAiExp = typeof existingAiExp === 'string' ? {} : existingAiExp;
+    
+    let updatedData = { ...baseAiExp, ...data };
+    
+    // Converter desired_ai_area em desired_ai_areas se existir
+    if (updatedData.desired_ai_area && !updatedData.desired_ai_areas) {
+      updatedData.desired_ai_areas = [updatedData.desired_ai_area];
+      delete updatedData.desired_ai_area;
+    }
+    
+    // Garantir que desired_ai_areas seja um array
+    if (updatedData.desired_ai_areas && !Array.isArray(updatedData.desired_ai_areas)) {
+      updatedData.desired_ai_areas = [updatedData.desired_ai_areas];
+    }
+    
+    updateObj.ai_experience = updatedData;
+    
+    // Log detalhado
+    console.log("Dados de experiência AI formatados (formato direto):", updatedData);
   }
+  
   return updateObj;
 }
