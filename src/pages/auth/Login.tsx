@@ -1,4 +1,5 @@
 
+import React from "react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/auth";
 import { FcGoogle } from "react-icons/fc";
@@ -46,7 +47,7 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-[#33C3F0] py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
           <img
@@ -54,10 +55,10 @@ const Login = () => {
             src="https://milagredigital.com/wp-content/uploads/2025/04/viverdeiaclub.avif"
             alt="VIVER DE IA Club"
           />
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-white">
             VIVER DE IA Club
           </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
+          <p className="mt-2 text-center text-sm text-white">
             Implemente soluções de IA com autonomia e sucesso
           </p>
         </div>
@@ -69,7 +70,7 @@ const Login = () => {
           </Alert>
         )}
         
-        <div className="mt-8 space-y-6">
+        <div className="mt-8 space-y-6 bg-white bg-opacity-20 backdrop-blur-lg rounded-xl p-6">
           <div className="rounded-md shadow-sm space-y-4">
             <Button 
               onClick={handleSignIn} 
@@ -101,36 +102,36 @@ const Login = () => {
             <div className="text-center mt-2 space-y-2">
               <Link 
                 to="/reset-password" 
-                className="text-sm text-blue-600 hover:text-blue-500 block"
+                className="text-sm text-white hover:text-gray-200 block"
               >
                 Esqueceu sua senha?
               </Link>
               
               <Link 
                 to="/index" 
-                className="text-sm text-blue-600 hover:text-blue-500 block"
+                className="text-sm text-white hover:text-gray-200 block"
               >
                 Voltar para página inicial
               </Link>
             </div>
           </div>
+        </div>
 
-          <div className="text-center text-sm text-gray-500 mt-8">
-            <p>
-              Acesso exclusivo para membros do VIVER DE IA Club.
-            </p>
-            <p className="mt-2">
-              Não é membro ainda?{" "}
-              <a
-                href="https://milagredigital.com/club/"
-                className="font-medium text-[#0ABAB5] hover:text-[#0ABAB5]/90"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Conheça o Club
-              </a>
-            </p>
-          </div>
+        <div className="text-center text-sm text-white mt-8">
+          <p>
+            Acesso exclusivo para membros do VIVER DE IA Club.
+          </p>
+          <p className="mt-2">
+            Não é membro ainda?{" "}
+            <a
+              href="https://milagredigital.com/club/"
+              className="font-medium text-white hover:text-gray-200"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Conheça o Club
+            </a>
+          </p>
         </div>
       </div>
     </div>

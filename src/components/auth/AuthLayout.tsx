@@ -8,7 +8,7 @@ import { AnimatePresence, motion } from "framer-motion";
 
 const AuthLayout = () => {
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-b from-gray-900 to-black p-4">
+    <div className="min-h-screen w-full flex items-center justify-center bg-[#33C3F0] p-4">
       <AnimatePresence mode="wait">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -28,20 +28,20 @@ const AuthLayout = () => {
             </h2>
           </div>
 
-          <Card className="w-full bg-gray-900 border-gray-800 text-white shadow-xl">
+          <Card className="w-full bg-white bg-opacity-20 backdrop-blur-lg border-white/20 text-white shadow-xl">
             <CardHeader className="pb-4">
-              <CardTitle className="text-xl text-center">Acesse sua conta</CardTitle>
-              <CardDescription className="text-gray-400 text-center">
+              <CardTitle className="text-xl text-center text-white">Acesse sua conta</CardTitle>
+              <CardDescription className="text-white/80 text-center">
                 Entre para acessar suas soluções de IA
               </CardDescription>
             </CardHeader>
             <CardContent>
               <Tabs defaultValue="login" className="w-full">
-                <TabsList className="grid grid-cols-2 mb-6 bg-gray-800">
-                  <TabsTrigger value="login" className="data-[state=active]:bg-viverblue">
+                <TabsList className="grid grid-cols-2 mb-6 bg-white/20 backdrop-blur-lg">
+                  <TabsTrigger value="login" className="text-white data-[state=active]:bg-white/30">
                     Login
                   </TabsTrigger>
-                  <TabsTrigger value="register" className="data-[state=active]:bg-viverblue">
+                  <TabsTrigger value="register" className="text-white data-[state=active]:bg-white/30">
                     Cadastro
                   </TabsTrigger>
                 </TabsList>
@@ -55,7 +55,7 @@ const AuthLayout = () => {
             </CardContent>
           </Card>
 
-          <div className="mt-6 text-center text-sm text-gray-400">
+          <div className="mt-6 text-center text-sm text-white">
             <p>
               Acesso exclusivo para membros do VIVER DE IA Club.
             </p>
@@ -63,7 +63,7 @@ const AuthLayout = () => {
               Não é membro ainda?{" "}
               <a
                 href="https://milagredigital.com/club/"
-                className="font-medium text-viverblue hover:text-viverblue/90"
+                className="font-medium text-white hover:text-gray-200"
                 target="_blank"
                 rel="noopener noreferrer"
               >
