@@ -3,9 +3,11 @@ import React from "react";
 import { Label } from "@/components/ui/label";
 import { MultiSelect } from "@/components/ui/multi-select";
 import { UseFormReturn } from "react-hook-form";
+import { FormMessage } from "@/components/ui/form-message";
+import type { ComplementaryInfoFormData } from "@/schemas/complementaryInfoSchema";
 
 interface PriorityTopicsSectionProps {
-  form: UseFormReturn<any>;
+  form: UseFormReturn<ComplementaryInfoFormData>;
 }
 
 const topicOptions = [
@@ -27,7 +29,7 @@ const topicOptions = [
 ];
 
 export const PriorityTopicsSection = ({ form }: PriorityTopicsSectionProps) => {
-  const { setValue } = form;
+  const { setValue, watch, formState: { errors } } = form;
 
   return (
     <div className="bg-card p-6 rounded-lg border border-border space-y-4">
@@ -42,11 +44,14 @@ export const PriorityTopicsSection = ({ form }: PriorityTopicsSectionProps) => {
       </div>
       <MultiSelect
         options={topicOptions}
-        defaultValue={form.watch("priority_topics") || []}
+        defaultValue={watch("priority_topics") || []}
         onChange={(selected) => setValue("priority_topics", selected)}
         placeholder="Selecione os tópicos"
         maxItems={5}
       />
+      {errors.priority_topics && (
+        <FormMessage type="error" message={errors.priority_topics.message} />
+      )}
     </div>
   );
 };

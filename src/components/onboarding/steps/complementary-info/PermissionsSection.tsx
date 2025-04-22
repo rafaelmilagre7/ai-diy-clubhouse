@@ -3,9 +3,10 @@ import React from "react";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { UseFormReturn } from "react-hook-form";
+import type { ComplementaryInfoFormData } from "@/schemas/complementaryInfoSchema";
 
 interface PermissionsSectionProps {
-  form: UseFormReturn<any>;
+  form: UseFormReturn<ComplementaryInfoFormData>;
 }
 
 export const PermissionsSection = ({ form }: PermissionsSectionProps) => {
