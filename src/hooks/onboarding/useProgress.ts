@@ -108,6 +108,10 @@ export const useProgress = () => {
       console.log("Atualizando progresso:", updates);
       lastUpdateTime.current = Date.now();
       
+      // Prevenção de múltiplas chamadas de toast
+      const shouldShowToasts = !toastShownRef.current;
+      toastShownRef.current = true;
+      
       const { data, error } = await updateOnboardingProgress(progress.id, updates);
 
       if (!isMounted.current) return null;
@@ -115,14 +119,18 @@ export const useProgress = () => {
       if (error) {
         console.error("Erro ao atualizar dados:", error);
         lastError.current = new Error(error.message);
-        // Não mostrar toast aqui para evitar duplicação
+        // Não mostrar toast para evitar duplicação
         throw error;
       }
 
       const updatedProgress = data || { ...progress, ...updates };
       setProgress(updatedProgress);
       console.log("Progresso atualizado com sucesso:", updatedProgress);
-      // Não mostrar toast aqui para evitar duplicação
+      
+      // Reset do flag de toast após um tempo
+      setTimeout(() => {
+        toastShownRef.current = false;
+      }, 2000);
       
       retryCount.current = 0; // Reset retry count on success
       return updatedProgress;
@@ -180,8 +188,6 @@ export const useProgress = () => {
       }
     }
   }, [user, fetchProgress]);
-
-  // Removido o useEffect para verificações periódicas para minimizar a chance de toasts duplicados
 
   return {
     progress,

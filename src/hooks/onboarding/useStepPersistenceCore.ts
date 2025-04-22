@@ -21,6 +21,9 @@ export function useStepPersistenceCore({
 }) {
   const { progress, updateProgress, refreshProgress } = useProgress();
   const { logError } = useLogging();
+  
+  // Flag para controlar exibição de toasts
+  let toastShown = false;
 
   /**
    * Função principal para salvar dados de um passo específico
@@ -67,7 +70,10 @@ export function useStepPersistenceCore({
       const updateObj = buildUpdateObject(stepId, data, progress, currentStepIndex);
       if (Object.keys(updateObj).length === 0) {
         console.warn("Objeto de atualização vazio, nada para salvar");
-        toast.warning("Sem dados para salvar");
+        if (!toastShown) {
+          toast.warning("Sem dados para salvar");
+          toastShown = true;
+        }
         return;
       }
 
@@ -85,7 +91,10 @@ export function useStepPersistenceCore({
           error: errorMessage,
           stepIndex: currentStepIndex
         });
-        toast.error("Erro ao salvar dados. Por favor, tente novamente.");
+        if (!toastShown) {
+          toast.error("Erro ao salvar dados. Por favor, tente novamente.");
+          toastShown = true;
+        }
         return;
       }
       
@@ -93,8 +102,11 @@ export function useStepPersistenceCore({
       const updatedProgress = (result as any).data || { ...progress, ...updateObj };
       console.log("Progresso atualizado com sucesso:", updatedProgress);
       
-      // Notificar usuário do salvamento (apenas uma vez aqui)
-      toast.success("Dados salvos com sucesso!");
+      // Notificar usuário do salvamento (apenas uma vez)
+      if (!toastShown) {
+        toast.success("Dados salvos com sucesso!");
+        toastShown = true;
+      }
       
       // Forçar atualização dos dados local após salvar
       await refreshProgress();
@@ -114,7 +126,10 @@ export function useStepPersistenceCore({
         error: error instanceof Error ? error.message : String(error),
         stepIndex: currentStepIndex
       });
-      toast.error("Erro ao salvar dados. Por favor, tente novamente.");
+      if (!toastShown) {
+        toast.error("Erro ao salvar dados. Por favor, tente novamente.");
+        toastShown = true;
+      }
       throw error;
     }
   };

@@ -9,13 +9,16 @@ export const ToasterProvider = () => {
       richColors
       closeButton
       toastOptions={{
-        duration: 2000,
+        duration: 3000,
         className: 'toast-custom-class',
         style: {
           background: 'white',
           color: 'black',
         }
       }}
+      visibleToasts={1}
+      expand={false}
+      pauseWhenPageIsHidden
     />
   );
 };

@@ -29,23 +29,19 @@ export function buildBusinessContextUpdate(data: Partial<OnboardingData>, progre
       }
     });
     
-    // Adicionar metadados semânticos para facilitar interpretação por IA
-    const semanticMetadata = {
-      data_type: "business_context",
-      data_context: "business_operations",
-      data_version: "1.0",
-      timestamp: new Date().toISOString()
-    };
-    
     // Salvar apenas em business_data (coluna existente na tabela)
     updateObj.business_data = {
       ...baseBusinessData,
       ...formattedData,
-      _metadata: semanticMetadata
+      _last_updated: new Date().toISOString()
     };
     
-    // Log detalhado para rastreamento
-    console.log("Dados de contexto de negócio formatados:", formattedData);
+    // Para compatibilidade, salvar explicitamente em business_context também
+    updateObj.business_context = {
+      ...formattedData,
+      _last_updated: new Date().toISOString()
+    };
+    
     console.log("Objeto de atualização gerado:", updateObj);
   } else if (typeof data === 'object' && data !== null) {
     // Formato direto: dados enviados diretamente
@@ -63,23 +59,17 @@ export function buildBusinessContextUpdate(data: Partial<OnboardingData>, progre
       }
     });
     
-    // Adicionar metadados semânticos para facilitar interpretação por IA
-    const semanticMetadata = {
-      data_type: "business_context",
-      data_context: "business_operations",
-      data_version: "1.0",
-      timestamp: new Date().toISOString()
-    };
-    
     updateObj.business_data = {
       ...baseBusinessData,
       ...formattedData,
-      _metadata: semanticMetadata
+      _last_updated: new Date().toISOString()
     };
     
-    // Log detalhado para rastreamento
-    console.log("Dados de contexto de negócio formatados (formato direto):", formattedData);
-    console.log("Objeto de atualização gerado:", updateObj);
+    // Para compatibilidade, salvar explicitamente em business_context também
+    updateObj.business_context = {
+      ...formattedData,
+      _last_updated: new Date().toISOString()
+    };
   }
   
   return updateObj;

@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
 import { useProgress } from "@/hooks/onboarding/useProgress";
 import { BusinessContextStep } from "@/components/onboarding/steps/BusinessContextStep";
@@ -8,36 +8,63 @@ import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 
 const BusinessContext = () => {
-  const { progress, isLoading } = useProgress();
+  const { progress, isLoading, refreshProgress } = useProgress();
   const { saveStepData, currentStepIndex, steps } = useOnboardingSteps();
   const navigate = useNavigate();
 
+  // Carregar dados atualizados quando a página for carregada
+  useEffect(() => {
+    const loadData = async () => {
+      console.log("Carregando dados atualizados na página de contexto de negócio");
+      await refreshProgress();
+    };
+    
+    loadData();
+  }, [refreshProgress]);
+
   // Calcular progresso para exibição
   const progressPercentage = Math.round(((currentStepIndex + 1) / steps.length) * 100);
+
+  // Combinar dados de business_context e business_data para garantir compatibilidade
+  const getInitialData = () => {
+    if (!progress) return {};
+    
+    // Verificar ambas as fontes de dados
+    const fromContext = progress.business_context || {};
+    const fromData = progress.business_data || {};
+    
+    // Mesclar dados, priorizando business_context
+    return {
+      ...fromData,
+      ...fromContext
+    };
+  };
 
   const handleSave = async (stepId: string, data: any): Promise<void> => {
     try {
       console.log("Salvando dados de contexto de negócio:", data);
       
-      // Formatar os dados com a estrutura esperada pelo buildBusinessContextUpdate
-      const formattedData = {
-        business_context: data
-      };
-      
-      // Chamar saveStepData com o ID correto e os dados formatados
-      await saveStepData("business_context", formattedData, true);
-      
-      toast.success("Dados salvos com sucesso!");
+      // Evitar múltiplos salvamentos simultâneos
+      const saveTimeout = setTimeout(() => {
+        // Formatar os dados com a estrutura esperada
+        const formattedData = {
+          business_context: data
+        };
+        
+        // Chamar saveStepData com o ID correto e os dados formatados
+        saveStepData("business_context", formattedData, true);
+      }, 100);
       
       // Verificar se a navegação automática funcionou
       setTimeout(() => {
         const currentPath = window.location.pathname;
         if (currentPath === "/onboarding/business-context") {
           console.log("Navegação não ocorreu automaticamente, forçando redirecionamento");
-          toast.info("Avançando para a próxima etapa...");
           navigate("/onboarding/ai-experience");
         }
-      }, 1000);
+      }, 1500);
+      
+      return () => clearTimeout(saveTimeout);
     } catch (error) {
       console.error("Erro ao salvar dados:", error);
       toast.error("Erro ao salvar dados. Tente novamente.");
@@ -59,6 +86,10 @@ const BusinessContext = () => {
     );
   }
 
+  // Obter dados combinados de todas as fontes possíveis
+  const initialData = getInitialData();
+  console.log("Dados iniciais para o formulário de contexto:", initialData);
+
   return (
     <OnboardingLayout
       currentStep={3}
@@ -70,7 +101,7 @@ const BusinessContext = () => {
       <BusinessContextStep
         onSubmit={handleSave}
         isSubmitting={false}
-        initialData={progress?.business_data}
+        initialData={initialData}
       />
     </OnboardingLayout>
   );
