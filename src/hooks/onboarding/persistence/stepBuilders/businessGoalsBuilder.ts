@@ -12,13 +12,9 @@ export function buildBusinessGoalsUpdate(data: Partial<OnboardingData>, progress
     if (typeof progress.business_goals === 'string') {
       try {
         // Verificar se é uma string válida antes de tentar trim
-        const stringValue = String(progress.business_goals);
-        const trimmedValue = stringValue && typeof stringValue.trim === 'function' ? 
-          stringValue.trim() : 
-          stringValue;
-          
-        if (trimmedValue !== '') {
-          existingGoals = JSON.parse(trimmedValue);
+        const stringValue = progress.business_goals ? String(progress.business_goals) : '';
+        if (stringValue && typeof stringValue === 'string' && stringValue.trim()) {
+          existingGoals = JSON.parse(stringValue.trim());
         }
       } catch (e) {
         console.error("Erro ao converter business_goals de string para objeto:", e);
@@ -37,11 +33,11 @@ export function buildBusinessGoalsUpdate(data: Partial<OnboardingData>, progress
   if (typeof sourceData === 'object' && sourceData !== null) {
     // Mesclar com dados existentes
     Object.entries(sourceData).forEach(([key, value]) => {
-      // Tratamento especial para campos que devem ser arrays
-      if (['expected_outcomes', 'content_formats'].includes(key)) {
+      // Tratar campos específicos
+      if (key === 'content_formats' || key === 'expected_outcomes') {
         if (value !== null && value !== undefined) {
           if (!Array.isArray(value)) {
-            updateObj.business_goals[key] = [value];
+            updateObj.business_goals[key] = [value].filter(Boolean);
           } else {
             updateObj.business_goals[key] = value;
           }
@@ -57,11 +53,10 @@ export function buildBusinessGoalsUpdate(data: Partial<OnboardingData>, progress
     });
     
     // Sincronização especial entre expected_outcomes e expected_outcome_30days
-    if ('expected_outcome_30days' in sourceData && 
-        (!updateObj.business_goals.expected_outcomes || 
-         updateObj.business_goals.expected_outcomes.length === 0)) {
+    if (sourceData.expected_outcome_30days && 
+        (!updateObj.business_goals.expected_outcomes || updateObj.business_goals.expected_outcomes.length === 0)) {
       updateObj.business_goals.expected_outcomes = [sourceData.expected_outcome_30days];
-    } else if ('expected_outcomes' in sourceData && 
+    } else if (sourceData.expected_outcomes && 
               Array.isArray(sourceData.expected_outcomes) && 
               sourceData.expected_outcomes.length > 0 &&
               !updateObj.business_goals.expected_outcome_30days) {

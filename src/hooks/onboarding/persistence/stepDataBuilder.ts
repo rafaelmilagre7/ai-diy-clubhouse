@@ -76,6 +76,8 @@ export function buildUpdateObject(
       break;
       
     case "business_goals":
+      // Importante: garantir que usamos o builder específico para business_goals
+      console.log("Usando buildBusinessGoalsUpdate para processar dados de negócio:", processedData);
       specificUpdateObj = buildBusinessGoalsUpdate(processedData, progress);
       break;
       

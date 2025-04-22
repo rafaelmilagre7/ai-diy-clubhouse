@@ -30,32 +30,14 @@ const BusinessGoalsClub = () => {
     loadData();
   }, [refreshProgress, refreshCount]);
 
-  const handleSaveData = async (data: any) => {
+  const handleSaveData = async (stepId: string, data: any) => {
+    console.log(`Iniciando salvamento de dados para passo ${stepId}:`, data);
     setIsSubmitting(true);
     try {
-      console.log("Verificando dados recebidos para objetivos:", data);
-      
       // Garantir que estamos enviando os dados no formato correto
-      let formattedData;
+      // e que estamos incluindo o stepId corretamente
+      await saveStepData(stepId, data, false); // false para não redirecionar automaticamente
       
-      // Se os dados já estiverem no formato correto (com business_goals), apenas usar como está
-      if (data.business_goals) {
-        formattedData = data;
-      } else {
-        // Encapsular os dados em um objeto business_goals
-        formattedData = {
-          business_goals: {
-            ...data
-          }
-        };
-      }
-      
-      console.log("Salvando dados de objetivos formatados:", formattedData);
-      
-      // Garantir que estamos enviando com o stepId correto
-      await saveStepData("business_goals", formattedData, false); // Mudado para false para não redirecionar automaticamente
-      
-      console.log("Dados de objetivos salvos com sucesso");
       toast.success("Dados salvos com sucesso!");
       
       // Forçar atualização dos dados após salvar

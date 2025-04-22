@@ -9,8 +9,8 @@ export function buildProfessionalDataUpdate(data: Partial<OnboardingData> | Prof
     ...(progress?.professional_info || {})
   };
   
-  // Verificar se os dados são do tipo ProfessionalDataInput ou se têm professional_info aninhado
-  if ('professional_info' in data && data.professional_info) {
+  // Verificar se os dados são do tipo OnboardingData com professional_info aninhado
+  if (data && typeof data === 'object' && 'professional_info' in data && data.professional_info) {
     // Caso 1: Dados aninhados em professional_info
     updateObj.professional_info = {
       ...professionalInfo,
