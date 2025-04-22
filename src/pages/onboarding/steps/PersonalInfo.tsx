@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
 import { PersonalInfoStep } from "@/components/onboarding/steps/PersonalInfoStep";
@@ -43,6 +42,8 @@ const PersonalInfo = () => {
 
   const { personalStepIndex, totalSteps, progressPercentage } = usePersonalInfoProgress();
 
+  const navigate = useNavigate();
+
   useEffect(() => {
     // Tentar carregar dados na montagem do componente
     attemptDataLoad(loadInitialData);
@@ -83,6 +84,13 @@ const PersonalInfo = () => {
     }
   };
 
+  const handleStepClick = (stepIdx: number) => {
+    // Usa navegação por índice conforme seu hook
+    // Salva (sem navegação automática), depois navega
+    // Aqui simplificamos e apenas navegamos, mas pode adicionar save se preferir
+    navigate(steps[stepIdx].path);
+  };
+
   const showForceButton = loadingAttempts >= 3 && progressLoading;
   const hasError = loadError || lastError;
 
@@ -106,6 +114,7 @@ const PersonalInfo = () => {
         title="Dados Pessoais" 
         backUrl="/"
         progress={progressPercentage}
+        onStepClick={handleStepClick}
       >
         <div className="flex justify-center items-center py-20">
           <LoadingSpinner size={10} />
@@ -123,6 +132,7 @@ const PersonalInfo = () => {
         title="Dados Pessoais" 
         backUrl="/"
         progress={progressPercentage}
+        onStepClick={handleStepClick}
       >
         <div className="space-y-6">
           <Alert variant="destructive" className="bg-red-50 border-red-200">
@@ -153,6 +163,7 @@ const PersonalInfo = () => {
         title="Dados Pessoais" 
         backUrl="/"
         progress={progressPercentage}
+        onStepClick={handleStepClick}
       >
         <div className="space-y-6">
           <Alert className="bg-yellow-50 border-yellow-200">
@@ -192,6 +203,7 @@ const PersonalInfo = () => {
       title="Dados Pessoais" 
       backUrl="/"
       progress={progressPercentage}
+      onStepClick={handleStepClick}
     >
       <PersonalInfoStep
         onSubmit={handleSuccess}
