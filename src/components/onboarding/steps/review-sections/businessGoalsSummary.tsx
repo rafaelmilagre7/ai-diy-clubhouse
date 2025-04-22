@@ -7,13 +7,13 @@ export function getBusinessGoalsSummary(data: OnboardingData['business_goals']) 
   console.log("Renderizando summary para Business Goals com dados:", data);
   
   // Verificação de dados
-  if (!data || typeof data === 'string' || Object.keys(data).length === 0) {
+  if (!data || typeof data === 'string' && data === "{}" || Object.keys(data).length === 0) {
     return <p className="text-gray-500 italic">Seção não preenchida. Clique em Editar para preencher.</p>;
   }
 
   // Tentar converter string para objeto, se necessário
   let processedData = data;
-  if (typeof data === 'string') {
+  if (typeof data === 'string' && data !== "{}") {
     try {
       processedData = JSON.parse(data);
     } catch (e) {

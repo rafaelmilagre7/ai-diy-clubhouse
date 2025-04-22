@@ -5,22 +5,15 @@ export function buildBusinessGoalsUpdate(data: Partial<OnboardingData>, progress
   // Log para debug dos dados recebidos
   console.log("Dados recebidos no businessGoalsBuilder:", data);
   
-  // Obter os objetivos de negócios existentes (se houver)
-  const existingBusinessGoals = progress?.business_goals || {};
-  
-  // Garantir que temos um objeto para business_goals, não uma string
-  const businessGoalsBase = typeof existingBusinessGoals === 'string' 
-    ? JSON.parse(existingBusinessGoals) 
-    : (existingBusinessGoals as Record<string, any>);
-  
   // Inicializar objeto de atualização
   const updateObj: any = {};
   
-  // Verificar se os dados vieram dentro de um objeto business_goals
-  if ((data as any).business_goals) {
-    const businessGoalsData = (data as any).business_goals;
+  // Verificar se temos um objeto business_goals nos dados
+  if (data.business_goals) {
+    // Trabalhar com uma cópia para não modificar os dados originais
+    const businessGoalsData = { ...(data.business_goals) };
     
-    // Normalizar dados de arrays
+    // Garantir que content_formats seja sempre um array
     if (businessGoalsData.content_formats && !Array.isArray(businessGoalsData.content_formats)) {
       businessGoalsData.content_formats = [businessGoalsData.content_formats];
     }
@@ -37,7 +30,7 @@ export function buildBusinessGoalsUpdate(data: Partial<OnboardingData>, progress
       businessGoalsData.expected_outcome_30days = businessGoalsData.expected_outcomes[0];
     }
     
-    // Normalizar números para a preferência de sessões ao vivo
+    // Normalizar valores numéricos
     if (businessGoalsData.live_interest !== undefined) {
       businessGoalsData.live_interest = Number(businessGoalsData.live_interest);
       if (isNaN(businessGoalsData.live_interest)) {
@@ -48,73 +41,77 @@ export function buildBusinessGoalsUpdate(data: Partial<OnboardingData>, progress
     // Log para debug
     console.log("Dados de business_goals processados:", businessGoalsData);
     
-    // Criar objeto final com metadados
+    // Criar objeto final
     updateObj.business_goals = {
-      ...businessGoalsBase,
       ...businessGoalsData,
       _last_updated: new Date().toISOString()
     };
-  } else if (typeof data === 'object' && data !== null) {
-    // Se os dados não vieram dentro de business_goals, construir manualmente
-    
-    // Inicializar com dados existentes e timestamp de atualização
-    updateObj.business_goals = { 
-      ...businessGoalsBase,
-      _last_updated: new Date().toISOString()
+  } else if ((data as any).business_goals === "{}") {
+    // Corrigir caso onde temos um string vazio "{}" vindo do backend
+    updateObj.business_goals = { _last_updated: new Date().toISOString() };
+  } else {
+    // Extrair campos relacionados a business_goals diretamente do objeto de dados
+    const businessGoalsFields = {
+      primary_goal: (data as any).primary_goal,
+      expected_outcome_30days: (data as any).expected_outcome_30days,
+      expected_outcomes: (data as any).expected_outcomes,
+      priority_solution_type: (data as any).priority_solution_type,
+      how_implement: (data as any).how_implement,
+      week_availability: (data as any).week_availability,
+      live_interest: (data as any).live_interest,
+      content_formats: (data as any).content_formats,
     };
-    
-    // Campos a serem copiados
-    const fieldsToCopy = [
-      'primary_goal', 
-      'expected_outcome_30days', 
-      'priority_solution_type', 
-      'how_implement', 
-      'week_availability', 
-      'live_interest', 
-      'content_formats'
-    ];
-    
-    // Copiar cada campo definido
-    fieldsToCopy.forEach(field => {
-      if ((data as any)[field] !== undefined) {
-        updateObj.business_goals[field] = (data as any)[field];
+
+    // Filtrar campos não definidos
+    const filteredFields = Object.fromEntries(
+      Object.entries(businessGoalsFields).filter(([_, value]) => value !== undefined)
+    );
+
+    // Se tivermos campos para atualizar, criar o objeto de business_goals
+    if (Object.keys(filteredFields).length > 0) {
+      // Processe campos específicos
+      if (filteredFields.content_formats && !Array.isArray(filteredFields.content_formats)) {
+        filteredFields.content_formats = [filteredFields.content_formats];
       }
-    });
-    
-    // Processamento de arrays específicos
-    if ((data as any).content_formats && !Array.isArray((data as any).content_formats)) {
-      updateObj.business_goals.content_formats = [(data as any).content_formats];
+
+      if (filteredFields.live_interest !== undefined) {
+        filteredFields.live_interest = Number(filteredFields.live_interest);
+        if (isNaN(filteredFields.live_interest)) {
+          filteredFields.live_interest = 5;
+        }
+      }
+
+      // Sincronizar expected_outcome_30days e expected_outcomes
+      if (filteredFields.expected_outcome_30days && !filteredFields.expected_outcomes) {
+        filteredFields.expected_outcomes = [filteredFields.expected_outcome_30days];
+      }
+
+      updateObj.business_goals = {
+        ...filteredFields,
+        _last_updated: new Date().toISOString()
+      };
     }
-    
-    // Sincronizar expected_outcome_30days e expected_outcomes
-    if ((data as any).expected_outcome_30days) {
-      updateObj.business_goals.expected_outcome_30days = (data as any).expected_outcome_30days;
-      
-      // Garantir que expected_outcomes é um array e contém expected_outcome_30days
-      updateObj.business_goals.expected_outcomes = updateObj.business_goals.expected_outcomes || [];
-      if (!Array.isArray(updateObj.business_goals.expected_outcomes)) {
-        updateObj.business_goals.expected_outcomes = [];
+  }
+
+  // Processar o objeto progress.business_goals existente, se necessário
+  const existingBusinessGoals = progress?.business_goals;
+  if (existingBusinessGoals && typeof existingBusinessGoals === 'string' && existingBusinessGoals !== '{}') {
+    try {
+      // Tentar converter string para objeto e combinar com os novos dados
+      const parsedExisting = JSON.parse(existingBusinessGoals);
+      if (updateObj.business_goals) {
+        updateObj.business_goals = {
+          ...parsedExisting,
+          ...updateObj.business_goals
+        };
+      } else {
+        updateObj.business_goals = parsedExisting;
       }
-      
-      if (!updateObj.business_goals.expected_outcomes.includes((data as any).expected_outcome_30days)) {
-        updateObj.business_goals.expected_outcomes = [
-          (data as any).expected_outcome_30days,
-          ...updateObj.business_goals.expected_outcomes
-        ];
-      }
+    } catch (e) {
+      console.error("Erro ao analisar business_goals:", e);
     }
-    
-    // Normalizar live_interest para número
-    if ((data as any).live_interest !== undefined) {
-      updateObj.business_goals.live_interest = Number((data as any).live_interest);
-      if (isNaN(updateObj.business_goals.live_interest)) {
-        updateObj.business_goals.live_interest = 5;
-      }
-    }
-    
-    // Log para debug
-    console.log("Dados de business_goals construídos manualmente:", updateObj.business_goals);
   }
   
+  console.log("Objeto de atualização final:", updateObj);
   return updateObj;
 }
