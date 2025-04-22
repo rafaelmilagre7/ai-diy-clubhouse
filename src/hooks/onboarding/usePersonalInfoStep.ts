@@ -27,6 +27,12 @@ export const usePersonalInfoStep = () => {
   // Flag para controlar se já carregamos os dados iniciais
   const [initialDataLoaded, setInitialDataLoaded] = useState(false);
 
+  // Adicionando um useEffect para forçar o refresh de dados ao iniciar
+  useEffect(() => {
+    console.log("Forçando atualização dos dados do progresso ao iniciar");
+    refreshProgress();
+  }, [refreshProgress]);
+
   // Carregar dados iniciais
   useEffect(() => {
     if (progress?.personal_info && !initialDataLoaded) {
@@ -36,10 +42,20 @@ export const usePersonalInfoStep = () => {
         ddi = "+" + ddi.replace(/\+/g, '').replace(/\D/g, '');
       }
       
+      console.log("Dados encontrados no progresso:", progress.personal_info);
+      
       setFormData({
         ...formData,
         ...progress.personal_info,
         ddi: ddi,
+        name: progress.personal_info.name || "",
+        email: progress.personal_info.email || "",
+        phone: progress.personal_info.phone || "",
+        linkedin: progress.personal_info.linkedin || "",
+        instagram: progress.personal_info.instagram || "",
+        country: progress.personal_info.country || "Brasil",
+        state: progress.personal_info.state || "",
+        city: progress.personal_info.city || "",
         timezone: progress.personal_info.timezone || "GMT-3"
       });
       
@@ -49,8 +65,10 @@ export const usePersonalInfoStep = () => {
       });
       
       setInitialDataLoaded(true);
+    } else if (!progress?.personal_info && !initialDataLoaded) {
+      console.log("Nenhum dado de progresso encontrado para personal_info");
     }
-  }, [progress?.personal_info]);
+  }, [progress?.personal_info, formData, initialDataLoaded]);
 
   const handleChange = (field: keyof PersonalInfoData, value: string) => {
     // Registrar a alteração para debug
