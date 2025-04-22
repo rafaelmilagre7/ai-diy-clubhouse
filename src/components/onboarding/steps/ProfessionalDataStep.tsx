@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { CompanyNameField } from "./professional-inputs/CompanyNameField";
 import { CompanySizeField } from "./professional-inputs/CompanySizeField";
@@ -30,17 +30,46 @@ export const ProfessionalDataStep: React.FC<ProfessionalDataStepProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
   
+  // Extrair dados iniciais do objeto aninhado ou dos campos de nível superior
+  const getInitialValue = (field: string) => {
+    // Verificar primeiro no professional_info se existir
+    if (initialData?.professional_info && initialData.professional_info[field]) {
+      return initialData.professional_info[field];
+    }
+    // Verificar depois nos campos de nível superior
+    if (initialData && initialData[field]) {
+      return initialData[field];
+    }
+    // Valor padrão vazio
+    return "";
+  };
+  
   const methods = useForm({
     defaultValues: {
-      company_name: initialData?.company_name || initialData?.professional_info?.company_name || "",
-      company_size: initialData?.company_size || initialData?.professional_info?.company_size || "",
-      company_sector: initialData?.company_sector || initialData?.professional_info?.company_sector || "",
-      company_website: initialData?.company_website || initialData?.professional_info?.company_website || "",
-      current_position: initialData?.current_position || initialData?.professional_info?.current_position || "",
-      annual_revenue: initialData?.annual_revenue || initialData?.professional_info?.annual_revenue || "",
+      company_name: getInitialValue('company_name'),
+      company_size: getInitialValue('company_size'),
+      company_sector: getInitialValue('company_sector'),
+      company_website: getInitialValue('company_website'),
+      current_position: getInitialValue('current_position'),
+      annual_revenue: getInitialValue('annual_revenue')
     },
     mode: "onChange"
   });
+  
+  // Atualizar formulário quando initialData mudar
+  useEffect(() => {
+    if (initialData) {
+      console.log("Atualizando formulário com dados iniciais:", initialData);
+      methods.reset({
+        company_name: getInitialValue('company_name'),
+        company_size: getInitialValue('company_size'),
+        company_sector: getInitialValue('company_sector'),
+        company_website: getInitialValue('company_website'),
+        current_position: getInitialValue('current_position'),
+        annual_revenue: getInitialValue('annual_revenue')
+      });
+    }
+  }, [initialData]);
 
   const handleSubmit = async (data: any) => {
     setIsLoading(true);

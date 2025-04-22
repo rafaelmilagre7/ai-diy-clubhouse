@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
 import { ProfessionalDataStep } from "@/components/onboarding/steps/ProfessionalDataStep";
@@ -15,6 +16,7 @@ const ProfessionalData = () => {
   
   useEffect(() => {
     console.log("ProfessionalData montado - carregando dados mais recentes");
+    // Garantir que temos os dados mais recentes ao montar o componente
     refreshProgress();
   }, [refreshProgress]);
 
