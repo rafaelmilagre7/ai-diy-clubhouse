@@ -61,16 +61,16 @@ export const CommentsSection: React.FC<CommentsSectionProps> = ({
         >
           <div className="flex gap-3">
             <Avatar className="h-8 w-8">
-              <AvatarImage src={parentComment.user?.avatar_url} />
+              <AvatarImage src={parentComment.user?.avatar_url || parentComment.profiles?.avatar_url} />
               <AvatarFallback>
-                {parentComment.user?.name?.charAt(0) || 'U'}
+                {(parentComment.user?.name || parentComment.profiles?.name || '?').charAt(0)}
               </AvatarFallback>
             </Avatar>
             
             <div className="flex-1 space-y-2">
               <div className="flex items-center justify-between">
                 <div>
-                  <span className="font-medium">{parentComment.user?.name || 'Usuário'}</span>
+                  <span className="font-medium">{parentComment.user?.name || parentComment.profiles?.name || 'Usuário'}</span>
                   <span className="text-xs text-muted-foreground ml-2">{formatTimeAgo(parentComment.created_at)}</span>
                 </div>
                 
@@ -81,7 +81,7 @@ export const CommentsSection: React.FC<CommentsSectionProps> = ({
                       size="sm" 
                       variant="ghost" 
                       className="h-6 w-6 p-1"
-                      onClick={() => deleteComment(parentComment.id)}
+                      onClick={() => deleteComment(parentComment)}
                     >
                       <Trash2 className="h-3.5 w-3.5 text-muted-foreground hover:text-destructive" />
                     </Button>
@@ -96,12 +96,12 @@ export const CommentsSection: React.FC<CommentsSectionProps> = ({
                   size="sm" 
                   variant="ghost" 
                   className="h-6 px-2 text-xs gap-1 text-muted-foreground"
-                  onClick={() => likeComment(parentComment.id)}
+                  onClick={() => likeComment(parentComment)}
                 >
                   <Heart 
                     className={cn(
                       "h-3.5 w-3.5",
-                      parentComment.has_liked ? "fill-red-500 text-red-500" : ""
+                      parentComment.user_has_liked ? "fill-red-500 text-red-500" : ""
                     )} 
                   />
                   <span>{parentComment.likes_count || 0}</span>
@@ -138,7 +138,7 @@ export const CommentsSection: React.FC<CommentsSectionProps> = ({
           <div className="mb-2 p-2 bg-muted/50 rounded-md">
             <div className="flex justify-between items-center">
               <div className="text-xs text-muted-foreground">
-                Respondendo a <span className="font-medium">{replyTo.user?.name || 'Usuário'}</span>
+                Respondendo a <span className="font-medium">{replyTo.profiles?.name || replyTo.user?.name || 'Usuário'}</span>
               </div>
               <Button 
                 size="sm" 

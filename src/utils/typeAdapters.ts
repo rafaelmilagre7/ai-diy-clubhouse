@@ -1,7 +1,6 @@
 
 import { Solution as SupabaseSolution, Module as SupabaseModule } from '@/types/supabaseTypes';
-import { Solution as AppSolution, Module as AppModule, ModuleType } from '@/types/solution';
-import { Progress } from '@/types/solution';
+import { Solution as AppSolution, Module as AppModule, ModuleType, Progress } from '@/types/solution';
 
 /**
  * Adapta o tipo Solution do Supabase para o tipo Solution da aplicação
@@ -77,6 +76,7 @@ export function adaptProgressType(progress: any): Progress | null {
     completed_modules: progress.completed_modules || [],
     last_activity: progress.last_activity || '',
     completion_percentage: progress.completion_percentage || 0,
+    completion_data: progress.completion_data || {},
     completed_at: progress.completed_at
   };
 }

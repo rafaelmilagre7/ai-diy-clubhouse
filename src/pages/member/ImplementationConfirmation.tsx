@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Check, CheckCircle, Trophy } from "lucide-react";
@@ -47,10 +48,8 @@ const ImplementationConfirmation = () => {
       const success = await completeSolution();
       
       if (success) {
-        // Exibir mensagem de sucesso
-        toast({
-          title: "Implementação concluída!",
-          description: "Parabéns! Você aplicou com sucesso esta solução em seu negócio.",
+        toast.success("Implementação concluída!", {
+          description: "Parabéns! Você aplicou com sucesso esta solução em seu negócio."
         });
         
         // Redirecionar para página de certificado ou dashboard
@@ -58,10 +57,8 @@ const ImplementationConfirmation = () => {
       }
     } catch (error) {
       console.error("Erro ao confirmar implementação:", error);
-      toast({
-        title: "Erro",
-        description: "Ocorreu um erro ao confirmar a implementação. Tente novamente.",
-        variant: "destructive",
+      toast.error("Erro", {
+        description: "Ocorreu um erro ao confirmar a implementação. Tente novamente."
       });
     } finally {
       setIsSubmitting(false);

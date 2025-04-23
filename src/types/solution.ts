@@ -67,7 +67,7 @@ export interface Progress {
   last_activity: string;
   completion_data?: Record<string, any>;
   completion_percentage?: number;
-  modules?: any[];
+  completed_at?: string;
 }
 
 export interface Prerequisite {
@@ -78,16 +78,4 @@ export interface Prerequisite {
 export interface CompletionCriteria {
   id?: string;
   text: string;
-}
-
-export interface Comment {
-  id: string;
-  user_id: string;
-  user?: {
-    name: string;
-    avatar_url?: string;
-  };
-  content: string;
-  created_at: string;
-  likes_count: number;
 }

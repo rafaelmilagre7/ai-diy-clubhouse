@@ -1,5 +1,6 @@
 
-import React from "react";
+import React from 'react';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -7,31 +8,27 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Loader, CheckCircle } from "lucide-react";
-import { useLogging } from "@/hooks/useLogging";
+} from '@/components/ui/dialog';
+import { CheckCircle, AlertCircle } from 'lucide-react';
 
-interface ImplementationConfirmationModalProps {
+export interface ImplementationConfirmationModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: () => void;
-  isLoading?: boolean;
+  onConfirm: () => Promise<void> | void;
+  isCompleting?: boolean;
+  isLoading?: boolean; // Para compatibilidade com código existente
 }
 
-export const ImplementationConfirmationModal = ({
+export const ImplementationConfirmationModal: React.FC<ImplementationConfirmationModalProps> = ({
   isOpen,
   onClose,
   onConfirm,
-  isLoading = false
-}: ImplementationConfirmationModalProps) => {
-  const { log } = useLogging();
-  
-  const handleConfirm = () => {
-    log("User confirmed implementation");
-    onConfirm();
-  };
-  
+  isCompleting = false,
+  isLoading = false,
+}) => {
+  // Usar qualquer um dos dois props para indicar estado de carregamento
+  const loading = isCompleting || isLoading;
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
@@ -41,48 +38,38 @@ export const ImplementationConfirmationModal = ({
             Confirmar Implementação
           </DialogTitle>
           <DialogDescription>
-            Você está prestes a confirmar que implementou esta solução com sucesso.
+            Você está prestes a confirmar que implementou esta solução com sucesso em seu negócio.
           </DialogDescription>
         </DialogHeader>
-        
+
         <div className="py-4">
-          <p className="text-sm text-muted-foreground mb-4">
-            A confirmação de implementação não pode ser desfeita. Isso ajuda a acompanhar 
-            seu progresso no VIVER DE IA Club e libera acesso para certificados e benefícios.
-          </p>
-          
-          <div className="bg-blue-50 p-3 rounded border border-blue-100">
-            <p className="text-sm text-blue-700">
-              Ao confirmar, você declara que implementou com sucesso esta solução 
-              em sua empresa ou ambiente de negócios.
-            </p>
-          </div>
+          <p className="mb-2">Ao confirmar a implementação:</p>
+          <ul className="space-y-1 list-disc list-inside text-sm">
+            <li>Você receberá um certificado de conclusão</li>
+            <li>Seu progresso será registrado</li>
+            <li>Você poderá acessar recursos adicionais</li>
+          </ul>
         </div>
-        
-        <DialogFooter className="gap-2 sm:gap-0">
-          <Button
+
+        <DialogFooter>
+          <Button 
             variant="outline"
             onClick={onClose}
-            disabled={isLoading}
+            disabled={loading}
           >
             Cancelar
           </Button>
-          <Button
-            onClick={handleConfirm}
-            disabled={isLoading}
-            className="gap-2"
+          <Button 
+            onClick={() => onConfirm()}
+            disabled={loading}
+            className="bg-green-600 hover:bg-green-700"
           >
-            {isLoading ? (
-              <>
-                <Loader className="h-4 w-4 animate-spin" />
-                Processando...
-              </>
-            ) : (
-              "Confirmar Implementação"
-            )}
+            {loading ? 'Processando...' : 'Confirmar Implementação'}
           </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
   );
 };
+
+export default ImplementationConfirmationModal;

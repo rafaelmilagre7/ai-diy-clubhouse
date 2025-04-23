@@ -7,7 +7,13 @@ export interface Comment {
   likes_count: number;
   parent_id?: string;
   replies?: Comment[];
-  has_liked?: boolean;
+  user_has_liked?: boolean;
+  profiles?: {
+    name: string;
+    avatar_url?: string;
+    role?: string;
+    id: string;
+  };
   user?: {
     name: string;
     avatar_url?: string;
