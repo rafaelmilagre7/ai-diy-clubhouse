@@ -1,8 +1,9 @@
 
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useState, useEffect, useCallback } from "react";
-import { useSolutionsData } from "@/hooks/useSolutionsData";
+import { useQuery } from "@tanstack/react-query";
 import { useDashboardProgress } from "@/hooks/useDashboardProgress";
+import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { Solution } from "@/lib/supabase";
@@ -11,7 +12,27 @@ import LoadingScreen from "@/components/common/LoadingScreen";
 const Dashboard = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { solutions, loading: solutionsLoading } = useSolutionsData();
+  
+  // Buscar soluções com React Query
+  const { 
+    data: solutions = [], 
+    isLoading: solutionsLoading 
+  } = useQuery({
+    queryKey: ['dashboardSolutions'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('solutions')
+        .select('*')
+        .eq('published', true)
+        .order('created_at', { ascending: false });
+        
+      if (error) throw error;
+      return data as Solution[];
+    },
+    staleTime: 5 * 60 * 1000 // 5 minutos de cache
+  });
+  
+  // Usar o hook de progresso
   const { 
     active, 
     completed, 
@@ -34,7 +55,7 @@ const Dashboard = () => {
     navigate(`/solution/${solution.id}`);
   };
 
-  // Efeito para mostrar toast na primeira visita
+  // Efeito para mostrar toast na primeira visita - executado apenas 1 vez
   useEffect(() => {
     const isFirstVisit = localStorage.getItem("firstDashboardVisit") !== "false";
     

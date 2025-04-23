@@ -1,20 +1,20 @@
 
-import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Solution } from '@/lib/supabase';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/auth';
 import { useLogging } from '@/hooks/useLogging';
 
 export const useAvailableSolutions = () => {
-  const [availableSolutions, setAvailableSolutions] = useState<Solution[]>([]);
-  const [loading, setLoading] = useState(true);
   const { isAdmin } = useAuth();
   const { log, logError } = useLogging('useAvailableSolutions');
 
-  useEffect(() => {
-    const fetchAvailableSolutions = async () => {
+  const { data: availableSolutions = [], isLoading: loading } = useQuery({
+    queryKey: ['availableSolutions', isAdmin],
+    queryFn: async () => {
       try {
-        setLoading(true);
+        log('Buscando soluções disponíveis');
+        
         // Construir a consulta base
         let query = supabase
           .from('solutions')
@@ -31,18 +31,16 @@ export const useAvailableSolutions = () => {
         const { data, error } = await query;
 
         if (error) throw error;
-
-        setAvailableSolutions(data as Solution[]);
+        
+        log('Soluções disponíveis carregadas', { count: data?.length || 0 });
+        return (data || []) as Solution[];
       } catch (err) {
         logError('Erro ao buscar soluções disponíveis:', err);
-        setAvailableSolutions([]);
-      } finally {
-        setLoading(false);
+        return [];
       }
-    };
-
-    fetchAvailableSolutions();
-  }, [isAdmin, log, logError]);
+    },
+    staleTime: 3 * 60 * 1000 // 3 minutos de cache
+  });
 
   return { availableSolutions, loading };
 };

@@ -1,6 +1,7 @@
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useAuth } from "@/contexts/auth";
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from "@/lib/supabase";
 import { Solution } from "@/lib/supabase";
 
@@ -9,22 +10,17 @@ export const useDashboardProgress = (solutions: Solution[] = []) => {
   const [active, setActive] = useState<Solution[]>([]);
   const [completed, setCompleted] = useState<Solution[]>([]);
   const [recommended, setRecommended] = useState<Solution[]>([]);
-  const [loading, setLoading] = useState(true);
 
-  // Função para processar os dados do progresso
-  const processProgressData = useCallback(async () => {
-    if (!user || !solutions || solutions.length === 0) {
-      console.log("Condições não atendidas para processar dados de progresso");
-      setActive([]);
-      setCompleted([]);
-      setRecommended([]);
-      setLoading(false);
-      return;
-    }
-
-    try {
-      // Buscar progresso do usuário
-      const { data: progressData, error } = await supabase
+  // Usar react-query para buscar o progresso
+  const { 
+    data: progressData, 
+    isLoading: loading 
+  } = useQuery({
+    queryKey: ['userProgress', user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+      
+      const { data, error } = await supabase
         .from("progress")
         .select("*")
         .eq("user_id", user.id);
@@ -34,61 +30,57 @@ export const useDashboardProgress = (solutions: Solution[] = []) => {
         throw error;
       }
 
-      console.log("Processando dados do dashboard:", {
-        solutionsCount: solutions.length,
-        progressDataCount: progressData?.length || 0,
-        category: "general"
-      });
+      return data || [];
+    },
+    enabled: !!user && solutions.length > 0,
+    staleTime: 2 * 60 * 1000 // 2 minutos de cache
+  });
 
-      // Soluções ativas (em progresso)
-      const activeSolutions = progressData
-        ? solutions.filter(solution => 
-            progressData.some(
-              progress => 
-                progress.solution_id === solution.id && 
-                !progress.is_completed
-            )
-          )
-        : [];
-
-      // Soluções completas
-      const completedSolutions = progressData
-        ? solutions.filter(solution => 
-            progressData.some(
-              progress => 
-                progress.solution_id === solution.id && 
-                progress.is_completed
-            )
-          )
-        : [];
-
-      // Soluções recomendadas (não iniciadas)
-      const recommendedSolutions = solutions.filter(solution => 
-        !activeSolutions.some(active => active.id === solution.id) && 
-        !completedSolutions.some(completed => completed.id === solution.id)
-      );
-
-      setActive(activeSolutions);
-      setCompleted(completedSolutions);
-      setRecommended(recommendedSolutions);
-
-      console.log("Dashboard processado com sucesso:", {
-        active: activeSolutions.length,
-        completed: completedSolutions.length,
-        recommended: recommendedSolutions.length,
-        category: "general"
-      });
-    } catch (error) {
-      console.error("Erro ao processar dados do dashboard:", error);
-    } finally {
-      setLoading(false);
+  // Processar as categorias de soluções usando useMemo para evitar cálculos desnecessários
+  const processedSolutions = useMemo(() => {
+    if (!solutions || !progressData) {
+      return { active: [], completed: [], recommended: [] };
     }
-  }, [user, solutions]);
 
-  // Efeito para processar dados quando as soluções ou o usuário mudarem
+    // Soluções ativas (em progresso)
+    const activeSolutions = solutions.filter(solution => 
+      progressData.some(
+        progress => 
+          progress.solution_id === solution.id && 
+          !progress.is_completed
+      )
+    );
+
+    // Soluções completas
+    const completedSolutions = solutions.filter(solution => 
+      progressData.some(
+        progress => 
+          progress.solution_id === solution.id && 
+          progress.is_completed
+      )
+    );
+
+    // Soluções recomendadas (não iniciadas)
+    const recommendedSolutions = solutions.filter(solution => 
+      !activeSolutions.some(active => active.id === solution.id) && 
+      !completedSolutions.some(completed => completed.id === solution.id)
+    );
+
+    return {
+      active: activeSolutions,
+      completed: completedSolutions,
+      recommended: recommendedSolutions
+    };
+  }, [solutions, progressData]);
+
+  // Atualizar os estados apenas quando o processamento mudar
   useEffect(() => {
-    processProgressData();
-  }, [processProgressData]);
+    if (processedSolutions) {
+      setActive(processedSolutions.active);
+      setCompleted(processedSolutions.completed);
+      setRecommended(processedSolutions.recommended);
+    }
+  }, [processedSolutions]);
 
   return {
     active,

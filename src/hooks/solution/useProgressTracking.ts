@@ -1,19 +1,23 @@
 
-import { useState, useEffect, useCallback } from 'react';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { queryClient } from '@/lib/react-query';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/auth';
 import { Progress } from '@/types/supabaseTypes';
 import { useLogging } from '@/hooks/useLogging';
 
 export const useProgressTracking = (solutionId: string | undefined) => {
-  const [progress, setProgress] = useState<Progress | null>(null);
   const { user } = useAuth();
   const { log, logError } = useLogging('useProgressTracking');
 
-  // Buscar progresso atual
-  useEffect(() => {
-    const fetchProgress = async () => {
-      if (!user || !solutionId) return;
+  // Buscar o progresso atual usando react-query
+  const { 
+    data: progress, 
+    isLoading: loading 
+  } = useQuery({
+    queryKey: ['solutionProgress', solutionId, user?.id],
+    queryFn: async () => {
+      if (!user || !solutionId) return null;
       
       try {
         const { data, error } = await supabase
@@ -25,7 +29,7 @@ export const useProgressTracking = (solutionId: string | undefined) => {
           
         if (error) {
           logError("Erro ao buscar progresso", { error });
-          return;
+          return null;
         }
         
         if (data) {
@@ -35,21 +39,23 @@ export const useProgressTracking = (solutionId: string | undefined) => {
             const completedCount = data.completed_modules.length;
             const percentage = totalModules ? Math.round((completedCount / totalModules) * 100) : 0;
             
-            setProgress({
+            return {
               ...data,
               completion_percentage: percentage
-            } as Progress);
-          } else {
-            setProgress(data as Progress);
+            } as Progress;
           }
+          return data as Progress;
         }
+        
+        return null;
       } catch (err) {
         logError("Erro ao processar progresso", { err });
+        return null;
       }
-    };
-    
-    fetchProgress();
-  }, [user, solutionId, log, logError]);
+    },
+    enabled: !!user && !!solutionId,
+    staleTime: 2 * 60 * 1000 // 2 minutos de cache
+  });
   
   // Função para obter a contagem de módulos de uma solução
   const getTotalModulesCount = async (solutionId: string): Promise<number> => {
@@ -66,11 +72,13 @@ export const useProgressTracking = (solutionId: string | undefined) => {
     }
   };
   
-  // Função para atualizar o progresso
-  const updateProgress = useCallback(async (updates: Partial<Progress>): Promise<void> => {
-    if (!user || !solutionId || !progress?.id) return;
-    
-    try {
+  // Mutation para atualizar o progresso
+  const updateProgressMutation = useMutation({
+    mutationFn: async (updates: Partial<Progress>) => {
+      if (!user || !solutionId || !progress?.id) {
+        throw new Error('Dados insuficientes para atualizar o progresso');
+      }
+      
       const { error } = await supabase
         .from('progress')
         .update({
@@ -80,19 +88,35 @@ export const useProgressTracking = (solutionId: string | undefined) => {
         .eq('id', progress.id);
         
       if (error) {
-        logError("Erro ao atualizar progresso", { error });
-        return;
+        throw error;
       }
       
-      // Atualizar estado local
-      setProgress(prev => prev ? { ...prev, ...updates } : null);
+      return { ...progress, ...updates };
+    },
+    onSuccess: (updatedProgress) => {
+      // Atualizar o cache
+      queryClient.setQueryData(
+        ['solutionProgress', solutionId, user?.id], 
+        updatedProgress
+      );
+    },
+    onError: (error) => {
+      logError("Erro ao atualizar progresso", { error });
+    }
+  });
+  
+  // Função para atualizar o progresso
+  const updateProgress = async (updates: Partial<Progress>): Promise<void> => {
+    try {
+      await updateProgressMutation.mutateAsync(updates);
     } catch (err) {
       logError("Erro ao processar atualização de progresso", { err });
     }
-  }, [user, solutionId, progress?.id, logError]);
+  };
 
   return {
     progress,
-    updateProgress
+    updateProgress,
+    loading
   };
 };

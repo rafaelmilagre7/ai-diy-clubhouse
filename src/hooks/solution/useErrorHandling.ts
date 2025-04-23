@@ -1,44 +1,33 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { useLogging } from '@/hooks/useLogging';
 
 export const useErrorHandling = () => {
   const [error, setError] = useState<Error | null>(null);
-  const [networkError, setNetworkError] = useState(false);
-  const [notFoundError, setNotFoundError] = useState(false);
   const { logError } = useLogging('useErrorHandling');
-
-  // Efeito para classificar o tipo de erro
-  useEffect(() => {
-    if (error) {
-      // Verificar se é erro de rede
-      if (error.message && (
-        error.message.includes("fetch") || 
-        error.message.includes("network") ||
-        error.message.includes("Failed to fetch")
-      )) {
-        setNetworkError(true);
-        setNotFoundError(false);
-      } 
-      // Verificar se é erro de "não encontrado"
-      else if (error.message && (
-        error.message.includes("não encontrada") ||
-        error.message.includes("not found") ||
-        error.message.includes("não encontrado")
-      )) {
-        setNetworkError(false);
-        setNotFoundError(true);
-      } 
-      // Outros tipos de erro
-      else {
-        setNetworkError(false);
-        setNotFoundError(false);
-      }
-    } else {
-      // Resetar estados se não houver erro
-      setNetworkError(false);
-      setNotFoundError(false);
+  
+  // Usar useMemo para calcular os tipos de erro apenas quando error mudar
+  const { networkError, notFoundError } = useMemo(() => {
+    if (!error) {
+      return { networkError: false, notFoundError: false };
     }
+    
+    const isNetworkError = error.message && (
+      error.message.includes("fetch") || 
+      error.message.includes("network") ||
+      error.message.includes("Failed to fetch")
+    );
+    
+    const isNotFoundError = error.message && (
+      error.message.includes("não encontrada") ||
+      error.message.includes("not found") ||
+      error.message.includes("não encontrado")
+    );
+    
+    return { 
+      networkError: isNetworkError,
+      notFoundError: isNotFoundError
+    };
   }, [error]);
 
   // Função para lidar com erros

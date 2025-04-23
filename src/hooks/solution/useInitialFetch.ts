@@ -1,24 +1,27 @@
 
-import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Solution } from '@/lib/supabase';
 import { useLogging } from '@/hooks/useLogging';
 import { supabase } from '@/lib/supabase';
 
 export const useInitialFetch = (solutionId: string | undefined) => {
-  const [solution, setSolution] = useState<Solution | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
   const { log, logError } = useLogging('useInitialFetch');
 
-  useEffect(() => {
-    const fetchSolution = async () => {
+  const { 
+    data: solution, 
+    isLoading: loading, 
+    error,
+    refetch
+  } = useQuery({
+    queryKey: ['solution', solutionId],
+    queryFn: async () => {
       if (!solutionId) {
-        setLoading(false);
-        return;
+        return null;
       }
 
       try {
-        setLoading(true);
+        log('Buscando solução', { id: solutionId });
+        
         const { data, error } = await supabase
           .from('solutions')
           .select(`
@@ -40,19 +43,22 @@ export const useInitialFetch = (solutionId: string | undefined) => {
           modules: data.modules?.length || 0
         });
         
-        setSolution(data as Solution);
-        setError(null);
+        return data as Solution;
       } catch (err) {
         logError('Erro ao buscar solução:', err);
-        setError(err instanceof Error ? err : new Error(String(err)));
-        setSolution(null);
-      } finally {
-        setLoading(false);
+        throw err;
       }
-    };
+    },
+    enabled: !!solutionId,
+    staleTime: 5 * 60 * 1000, // 5 minutos de cache
+    retry: 1
+  });
 
-    fetchSolution();
-  }, [solutionId, log, logError]);
-
-  return { solution, loading, error, setSolution };
+  return { 
+    solution, 
+    loading, 
+    error, 
+    refetch,
+    setSolution: () => {} // Mantido por compatibilidade
+  };
 };
