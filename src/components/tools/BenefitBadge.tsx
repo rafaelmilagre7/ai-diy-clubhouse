@@ -2,12 +2,14 @@
 import React from "react";
 import { Badge } from "@/components/ui/badge";
 import { BenefitType } from "@/types/toolTypes";
+import { cn } from "@/lib/utils";
 
 interface BenefitBadgeProps {
   type: BenefitType;
+  className?: string; // Adicionando suporte para className
 }
 
-export const BenefitBadge: React.FC<BenefitBadgeProps> = ({ type }) => {
+export const BenefitBadge: React.FC<BenefitBadgeProps> = ({ type, className }) => {
   const getBadgeStyle = () => {
     switch (type) {
       case "discount":
@@ -41,7 +43,7 @@ export const BenefitBadge: React.FC<BenefitBadgeProps> = ({ type }) => {
   return (
     <Badge 
       variant="outline" 
-      className={`text-xs ${getBadgeStyle()}`}
+      className={cn(`text-xs ${getBadgeStyle()}`, className)}
     >
       {getLabel()}
     </Badge>
