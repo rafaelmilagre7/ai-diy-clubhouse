@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/auth";
@@ -74,10 +73,10 @@ export const useImplementationProfile = () => {
     console.log("Salvando perfil com valores:", values);
 
     try {
-      // Simplifiquei: sempre upsert pelo user_id
       const toSend = {
         ...values,
         user_id: user.id,
+        nps_score: values.nps_score ? Number(values.nps_score) : null,
         updated_at: new Date().toISOString(),
       };
 
@@ -97,7 +96,6 @@ export const useImplementationProfile = () => {
 
       console.log("Resposta do upsert:", data);
 
-      // Buscar perfil atualizado
       const { data: updatedProfile, error: fetchError } = await supabase
         .from("implementation_profiles")
         .select("*")

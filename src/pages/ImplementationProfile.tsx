@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useImplementationProfile } from "@/hooks/useImplementationProfile";
 import { Loader2, Flag, Linkedin, Instagram, Building, Link as LinkIcon, Users, DollarSign, Brain, Star, User, Mail } from "lucide-react";
@@ -58,19 +57,26 @@ const companySizeOptions = [
   "501-1000 colaboradores",
   "1000+ colaboradores"
 ];
+
 const revenueOptions = [
-  "Até R$ 360 mil",
-  "R$ 360 mil - R$ 4,8 milhões",
+  "Até R$ 81 mil",
+  "R$ 81 mil - R$ 360 mil",
+  "R$ 360 mil - R$ 1 milhão",
+  "R$ 1 milhão - R$ 4,8 milhões",
   "R$ 4,8 milhões - R$ 16 milhões",
-  "R$ 16 milhões - R$ 300 milhões",
+  "R$ 16 milhões - R$ 40 milhões",
+  "R$ 40 milhões - R$ 90 milhões",
+  "R$ 90 milhões - R$ 300 milhões",
   "Acima de R$ 300 milhões"
 ];
+
 const aiKnowledgeLevels = [
   "Básico",
   "Intermediário",
   "Avançado",
   "Expert"
 ];
+
 const mainGoalOptions = [
   "Aumentar Receita",
   "Otimizar Operações",
@@ -99,7 +105,6 @@ export default function ImplementationProfilePage() {
   const { estados, cidadesPorEstado, isLoading: locLoading } = useIBGELocations();
 
   useEffect(() => {
-    // Preenche nome/email com dados do perfil do usuário
     setValues((prev) => ({
       ...prev,
       name: authProfile?.name || "",
@@ -116,7 +121,6 @@ export default function ImplementationProfilePage() {
     setValues((old) => ({ ...old, [name]: value }));
   };
 
-  // Máscara de telefone simples (brasileiro)
   const formatPhone = (value: string) => {
     let onlyNums = value.replace(/\D/g, "");
     if (onlyNums.length <= 2) return `(${onlyNums}`;
@@ -135,25 +139,21 @@ export default function ImplementationProfilePage() {
     e.preventDefault();
     console.log("Submetendo formulário com valores:", values);
 
-    // Validação simples do site
     if (values.company_website && !/^https?:\/\/\S+\.\S+/.test(values.company_website)) {
       toast.error("Digite uma URL válida para o site da empresa (ex: https://minhaempresa.com)");
       return;
     }
 
-    // Validar Instagram (opcional)
     if (values.instagram && !/^https?:\/\/(www\.)?instagram\.com\/[\w\.]+/i.test(values.instagram)) {
       toast.error("Digite uma URL válida para o Instagram ou deixe em branco");
       return;
     }
 
-    // Validar Linkedin (opcional)
     if (values.linkedin && !/^https?:\/\/(www\.)?linkedin\.com\/in\/[\w\d-]+/i.test(values.linkedin)) {
       toast.error("Digite uma URL válida para o LinkedIn ou deixe em branco");
       return;
     }
 
-    // Ajuste NPS
     if (
       values.nps_score !== "" &&
       (isNaN(Number(values.nps_score)) ||
@@ -164,9 +164,26 @@ export default function ImplementationProfilePage() {
       return;
     }
 
-    // Simplesmente salva (envia para o Supabase neste formato)
     saveProfile(values);
   };
+
+  const renderNPSSelector = () => (
+    <div className="flex space-x-2 mt-1">
+      {[...Array(11).keys()].map(n => (
+        <button
+          key={n}
+          type="button"
+          onClick={() => setValues((old) => ({ ...old, nps_score: n.toString() }))}
+          className={`rounded-full w-8 h-8 flex items-center justify-center border border-gray-300
+            ${values.nps_score == n ? 'bg-viverblue text-white border-viverblue scale-110 shadow' : 'bg-white text-gray-800'}
+            transition-all hover:bg-viverblue/20`}
+          aria-label={`Nota ${n}`}
+        >
+          {n}
+        </button>
+      ))}
+    </div>
+  );
 
   if (loading || locLoading) {
     return (
@@ -184,9 +201,7 @@ export default function ImplementationProfilePage() {
         Preencha seu perfil para criarmos sua trilha personalizada.
       </p>
       <form onSubmit={handleSubmit} className="space-y-6 bg-white p-6 rounded-xl shadow-lg max-w-2xl mx-auto">
-        {/* Dados pessoais */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Nome */}
           <div className="space-y-2">
             <Label htmlFor="name">Nome*</Label>
             <div className="relative">
@@ -202,7 +217,6 @@ export default function ImplementationProfilePage() {
               />
             </div>
           </div>
-          {/* Email */}
           <div className="space-y-2">
             <Label htmlFor="email">E-mail*</Label>
             <div className="relative">
@@ -218,7 +232,6 @@ export default function ImplementationProfilePage() {
               />
             </div>
           </div>
-          {/* Telefone */}
           <div className="space-y-2 flex flex-col">
             <Label htmlFor="phone">Telefone</Label>
             <div className="flex gap-2 items-center">
@@ -256,7 +269,6 @@ export default function ImplementationProfilePage() {
               />
             </div>
           </div>
-          {/* Instagram */}
           <div className="space-y-2">
             <Label htmlFor="instagram">Instagram</Label>
             <div className="relative">
@@ -273,7 +285,6 @@ export default function ImplementationProfilePage() {
               />
             </div>
           </div>
-          {/* LinkedIn */}
           <div className="space-y-2">
             <Label htmlFor="linkedin">LinkedIn</Label>
             <div className="relative">
@@ -290,7 +301,6 @@ export default function ImplementationProfilePage() {
               />
             </div>
           </div>
-          {/* País */}
           <div className="space-y-2">
             <Label htmlFor="country">País*</Label>
             <Select
@@ -308,7 +318,6 @@ export default function ImplementationProfilePage() {
               </SelectContent>
             </Select>
           </div>
-          {/* Estado */}
           <div className="space-y-2">
             <Label htmlFor="state">Estado</Label>
             <Select
@@ -325,7 +334,6 @@ export default function ImplementationProfilePage() {
               </SelectContent>
             </Select>
           </div>
-          {/* Cidade */}
           <div className="space-y-2">
             <Label htmlFor="city">Cidade</Label>
             <Select
@@ -344,10 +352,7 @@ export default function ImplementationProfilePage() {
             </Select>
           </div>
         </div>
-
-        {/* Profissional */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Empresa */}
           <div className="space-y-2">
             <Label htmlFor="company_name">Empresa</Label>
             <div className="relative">
@@ -364,7 +369,6 @@ export default function ImplementationProfilePage() {
               />
             </div>
           </div>
-          {/* Site da Empresa */}
           <div className="space-y-2">
             <Label htmlFor="company_website">Site da Empresa</Label>
             <div className="relative">
@@ -381,7 +385,6 @@ export default function ImplementationProfilePage() {
               />
             </div>
           </div>
-          {/* Cargo/posição - Transformado em seletor */}
           <div className="space-y-2">
             <Label htmlFor="current_position">Cargo Atual</Label>
             <Select
@@ -398,7 +401,6 @@ export default function ImplementationProfilePage() {
               </SelectContent>
             </Select>
           </div>
-          {/* Setor */}
           <div className="space-y-2">
             <Label htmlFor="company_sector">Setor</Label>
             <Select
@@ -415,7 +417,6 @@ export default function ImplementationProfilePage() {
               </SelectContent>
             </Select>
           </div>
-          {/* Colaboradores */}
           <div className="space-y-2">
             <Label htmlFor="company_size">Nº de Colaboradores</Label>
             <Select
@@ -432,7 +433,6 @@ export default function ImplementationProfilePage() {
               </SelectContent>
             </Select>
           </div>
-          {/* Faturamento anual */}
           <div className="space-y-2">
             <Label htmlFor="annual_revenue">Faturamento Anual</Label>
             <Select
@@ -450,7 +450,6 @@ export default function ImplementationProfilePage() {
             </Select>
           </div>
         </div>
-        {/* Objetivo principal IA */}
         <div>
           <Label className="font-semibold block mb-2">Principal objetivo com IA</Label>
           <div className="flex flex-wrap gap-3 mt-2">
@@ -467,7 +466,6 @@ export default function ImplementationProfilePage() {
             ))}
           </div>
         </div>
-        {/* Nível de conhecimento em IA */}
         <div>
           <Label htmlFor="ai_knowledge_level" className="font-semibold block">
             Nível de conhecimento em IA
@@ -486,19 +484,9 @@ export default function ImplementationProfilePage() {
             </SelectContent>
           </Select>
         </div>
-        {/* NPS */}
         <div>
           <Label htmlFor="nps_score">De 0 a 10, qual a chance de você indicar o VIVER DE IA Club para um amigo?</Label>
-          <Input
-            id="nps_score"
-            name="nps_score"
-            type="number"
-            min={0}
-            max={10}
-            value={values.nps_score}
-            onChange={handleChange}
-            className="w-32"
-          />
+          {renderNPSSelector()}
         </div>
         <Button type="submit" className="w-full bg-viverblue hover:bg-viverblue/90" disabled={saving}>
           {saving ? <Loader2 className="animate-spin mr-2" /> : null}
