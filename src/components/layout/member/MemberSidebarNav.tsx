@@ -34,8 +34,8 @@ export const MemberSidebarNav = ({ sidebarOpen }: SidebarNavProps) => {
       icon: LayoutDashboard,
     },
     {
-      title: "Onboarding",
-      href: "/onboarding",
+      title: "Perfil de Implementação",
+      href: "/perfil-de-implementacao",
       icon: BookOpen,
     },
     {

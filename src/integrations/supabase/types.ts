@@ -145,6 +145,84 @@ export type Database = {
           },
         ]
       }
+      implementation_profiles: {
+        Row: {
+          ai_knowledge_level: number | null
+          annual_revenue: string | null
+          business_challenges: string[] | null
+          city: string | null
+          company_name: string | null
+          company_sector: string | null
+          company_size: string | null
+          company_website: string | null
+          country: string | null
+          created_at: string | null
+          current_position: string | null
+          email: string | null
+          id: string
+          is_completed: boolean | null
+          linkedin: string | null
+          name: string | null
+          networking_interests: string[] | null
+          phone: string | null
+          primary_goal: string | null
+          state: string | null
+          updated_at: string | null
+          user_id: string | null
+          weekly_availability: string | null
+        }
+        Insert: {
+          ai_knowledge_level?: number | null
+          annual_revenue?: string | null
+          business_challenges?: string[] | null
+          city?: string | null
+          company_name?: string | null
+          company_sector?: string | null
+          company_size?: string | null
+          company_website?: string | null
+          country?: string | null
+          created_at?: string | null
+          current_position?: string | null
+          email?: string | null
+          id?: string
+          is_completed?: boolean | null
+          linkedin?: string | null
+          name?: string | null
+          networking_interests?: string[] | null
+          phone?: string | null
+          primary_goal?: string | null
+          state?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          weekly_availability?: string | null
+        }
+        Update: {
+          ai_knowledge_level?: number | null
+          annual_revenue?: string | null
+          business_challenges?: string[] | null
+          city?: string | null
+          company_name?: string | null
+          company_sector?: string | null
+          company_size?: string | null
+          company_website?: string | null
+          country?: string | null
+          created_at?: string | null
+          current_position?: string | null
+          email?: string | null
+          id?: string
+          is_completed?: boolean | null
+          linkedin?: string | null
+          name?: string | null
+          networking_interests?: string[] | null
+          phone?: string | null
+          primary_goal?: string | null
+          state?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          weekly_availability?: string | null
+        }
+        Relationships: []
+      }
       implementation_trails: {
         Row: {
           created_at: string
