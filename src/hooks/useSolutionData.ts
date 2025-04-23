@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from "react";
 import { supabase, Solution } from "@/lib/supabase";
 import { useAuth } from "@/contexts/auth";

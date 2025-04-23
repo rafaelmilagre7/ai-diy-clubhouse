@@ -4,8 +4,8 @@ import BasicInfoForm from "@/components/admin/solution/BasicInfoForm";
 import { SolutionFormValues } from "@/components/admin/solution/form/solutionFormSchema";
 
 interface BasicInfoTabProps {
-  defaultValues?: SolutionFormValues;  // Mantemos para compatibilidade
-  currentValues?: SolutionFormValues;  // Adicionamos a nova prop
+  defaultValues?: SolutionFormValues;
+  currentValues?: SolutionFormValues;
   onSubmit: (values: SolutionFormValues) => Promise<void>;
   saving: boolean;
 }
