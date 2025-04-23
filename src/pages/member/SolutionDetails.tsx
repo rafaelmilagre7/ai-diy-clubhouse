@@ -48,7 +48,7 @@ const SolutionDetails = () => {
     return <LoadingScreen message="Carregando detalhes da solução..." />;
   }
   
-  if (!solution) {, logError
+  if (!solution) {
     logError("Solution not found", { id });
     return <SolutionNotFound />;
   }
