@@ -26,6 +26,8 @@ export type ImplementationProfile = {
   weekly_availability?: string;
   networking_interests?: string[];
   is_completed?: boolean;
+  created_at?: string;
+  updated_at?: string;
 };
 
 export const useImplementationProfile = () => {
