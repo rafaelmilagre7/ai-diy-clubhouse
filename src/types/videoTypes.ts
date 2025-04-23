@@ -11,3 +11,14 @@ export interface VideoItem {
     description?: string;
   };
 }
+
+export interface VideoFetchResponse {
+  videos: VideoItem[];
+  loading: boolean;
+  error: Error | null;
+}
+
+export interface VideoDeleteResponse {
+  success: boolean;
+  error: Error | null;
+}
