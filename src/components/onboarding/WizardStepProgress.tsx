@@ -22,7 +22,7 @@ export const WizardStepProgress = ({
   return (
     <TooltipProvider>
       <div className="relative px-4 py-4 rounded-lg bg-white shadow-sm border border-gray-200 w-full">
-        <div className="relative flex items-center justify-between">
+        <div className="relative flex items-center justify-between w-full">
           {/* Linha de progresso base */}
           <div className="absolute left-0 top-1/2 transform -translate-y-1/2 w-full h-1 bg-gray-100 rounded-full" />
           {/* Linha de progresso preenchida */}
@@ -74,7 +74,7 @@ export const WizardStepProgress = ({
         </div>
 
         {/* Etapas em tela pequena */}
-        <div className="mt-4 grid grid-cols-2 gap-2 md:hidden">
+        <div className="mt-4 grid grid-cols-2 gap-2 md:hidden w-full">
           {steps.map((step) => {
             const isComplete = step < currentStep;
             const isActive = step === currentStep;

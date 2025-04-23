@@ -38,8 +38,8 @@ const OnboardingLayout: React.FC<OnboardingLayoutProps> = ({
   return (
     <MemberLayout>
       <div className="w-full min-h-screen bg-gradient-to-b from-white via-viverblue-lighter/10 to-viverblue/10">
-        <div className="container mx-auto px-4 py-6 md:py-8">
-          <div className="max-w-4xl mx-auto">
+        <div className="w-full max-w-4xl mx-auto px-4 py-6 md:py-8">
+          <div className="w-full">
             <div className="mb-6 md:mb-8 space-y-3">
               <h1 className="text-2xl md:text-3xl font-bold text-viverblue-dark font-heading">{title}</h1>
               {description && <p className="text-neutral-600">{description}</p>}
@@ -77,7 +77,7 @@ const OnboardingLayout: React.FC<OnboardingLayoutProps> = ({
               )}
               
               {steps.length > 0 && (
-                <div className="mt-6">
+                <div className="mt-6 w-full">
                   <WizardStepProgress
                     currentStep={currentStep}
                     totalSteps={steps.length}
@@ -88,7 +88,7 @@ const OnboardingLayout: React.FC<OnboardingLayoutProps> = ({
               )}
             </div>
             
-            <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 md:p-8">
+            <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 md:p-8 w-full">
               {children}
             </div>
           </div>

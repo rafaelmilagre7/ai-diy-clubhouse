@@ -11,8 +11,8 @@ const OnboardingIntro = () => {
 
   const handleStartOnboarding = () => {
     try {
-      console.log("Iniciando navegação para /onboarding/personal-info");
-      navigate('/onboarding/personal-info');
+      console.log("Iniciando navegação para /onboarding");
+      navigate('/onboarding');
     } catch (error) {
       console.error("Erro ao navegar:", error);
       toast.error("Erro ao iniciar onboarding. Tente novamente.");
@@ -22,7 +22,7 @@ const OnboardingIntro = () => {
   return (
     <MemberLayout>
       <div className="flex items-center min-h-screen bg-gradient-to-b from-white via-viverblue-lighter/10 to-viverblue/10 py-0 md:py-16">
-        <div className="container w-full max-w-3xl mx-auto px-2 md:px-4">
+        <div className="w-full max-w-3xl mx-auto px-4">
           <div className="rounded-2xl bg-white shadow-lg border border-viverblue/15 overflow-hidden">
             {/* Cabeçalho */}
             <div className="flex flex-col gap-4 items-center justify-center py-8 bg-gradient-to-r from-viverblue to-viverblue-dark">
