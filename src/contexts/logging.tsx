@@ -1,7 +1,7 @@
 
 import { createContext, useContext, ReactNode } from "react";
 import { useLogging as useLoggingBase } from "@/hooks/useLogging";
-import { LoggingProvider as OriginalLoggingProvider } from "@/hooks/useLogging";
+import { LoggingProvider as OriginalLoggingProvider } from "@/hooks/useLogging.tsx";
 
 export type LogData = {
   [key: string]: any;

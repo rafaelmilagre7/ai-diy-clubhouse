@@ -5,7 +5,7 @@ import { onboardingRoutes } from './routes/onboarding.routes';
 import { AuthProvider } from './contexts/auth';
 import ErrorBoundary from './components/ErrorBoundary';
 import RootRedirect from './components/routing/RootRedirect';
-import { LoggingProvider } from './hooks/useLogging';
+import { LoggingProvider } from './hooks/useLogging.tsx';
 
 // Importando rota de dashboard (placeholder)
 const Dashboard = () => <div className="p-8">Dashboard - Página em construção</div>;
