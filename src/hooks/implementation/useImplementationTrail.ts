@@ -153,6 +153,7 @@ export const useImplementationTrail = () => {
       // Obter token de autenticação atual
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
+        console.error("Sessão de autenticação não encontrada");
         throw new Error("Sessão de autenticação não encontrada");
       }
       
@@ -223,6 +224,8 @@ export const useImplementationTrail = () => {
           errorMessage = "Não foi possível gerar sua trilha. Perfil de implementação não encontrado.";
         } else if (error.message.includes("autenticação")) {
           errorMessage = "Não foi possível gerar sua trilha. Problema de autenticação.";
+        } else if (error.message.includes("Edge Function returned a non-2xx status code")) {
+          errorMessage = "Erro de comunicação com o servidor. Por favor, tente novamente.";
         }
       }
       

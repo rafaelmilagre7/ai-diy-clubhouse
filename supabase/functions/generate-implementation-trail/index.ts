@@ -17,14 +17,16 @@ serve(async (req) => {
   }
 
   try {
-    // Extrair token de autorização do header da requisição
+    // Extrair e validar o token JWT do cabeçalho Authorization
     const authHeader = req.headers.get('Authorization');
+    console.log("Cabeçalho Authorization recebido:", authHeader ? "Presente" : "Ausente");
+    
     if (!authHeader) {
-      console.error('Cabeçalho de autorização ausente');
+      console.error("Erro de autenticação: Cabeçalho Authorization não encontrado");
       return new Response(
         JSON.stringify({ 
-          error: 'Usuário não autenticado',
-          details: 'Cabeçalho de autorização ausente' 
+          error: 'Não autorizado', 
+          message: 'Usuário não autenticado' 
         }),
         { 
           status: 401, 
@@ -32,33 +34,53 @@ serve(async (req) => {
         }
       );
     }
-    
-    console.log("Authorization header presente:", authHeader ? "Sim" : "Não");
 
-    // Configurar cliente Supabase com o token de autorização
+    // Configurar cliente Supabase
     const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
     const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY') || '';
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
     
-    if (!supabaseUrl || !supabaseAnonKey) {
-      console.error('Configuração do Supabase ausente:', { supabaseUrl: !!supabaseUrl, supabaseAnonKey: !!supabaseAnonKey });
+    if (!supabaseUrl || !supabaseServiceKey) {
+      console.error("Erro de configuração: Variáveis de ambiente do Supabase não definidas");
       throw new Error('Configuração do Supabase incompleta');
     }
+
+    // Extrair o token JWT do cabeçalho (removendo "Bearer " se presente)
+    const token = authHeader.replace(/^Bearer\s/, '');
+    console.log("Token JWT extraído do cabeçalho");
+
+    // Usar a service_role key para operações administrativas
+    const adminClient = createClient(supabaseUrl, supabaseServiceKey);
     
-    const supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
-      global: {
-        headers: { Authorization: authHeader },
-      },
-    });
-    
-    // Verificar autenticação do usuário
-    const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
-    
-    if (authError || !user) {
-      console.error('Erro de autenticação:', authError);
+    // Decodificar o token JWT para obter o user_id
+    let userId = null;
+    try {
+      // Verificar o JWT para obter o usuário
+      const { data: { user }, error: verifyError } = await adminClient.auth.getUser(token);
+      
+      if (verifyError || !user) {
+        console.error("Erro ao verificar token JWT:", verifyError);
+        return new Response(
+          JSON.stringify({ 
+            error: 'Erro de autenticação', 
+            message: 'Token inválido ou expirado',
+            details: verifyError 
+          }),
+          { 
+            status: 401, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
+        );
+      }
+      
+      userId = user.id;
+      console.log("Usuário autenticado com ID:", userId);
+    } catch (jwtError) {
+      console.error("Erro ao decodificar JWT:", jwtError);
       return new Response(
         JSON.stringify({ 
-          error: 'Usuário não autenticado',
-          details: authError 
+          error: 'Erro de autenticação', 
+          message: 'Falha ao processar token de autenticação' 
         }),
         { 
           status: 401, 
@@ -67,20 +89,19 @@ serve(async (req) => {
       );
     }
     
-    console.log("Usuário autenticado:", user.id);
-    
-    // Buscar perfil de implementação
-    const { data: profileData, error: profileError } = await supabaseClient
+    // Verificar perfil de implementação usando o ID do usuário extraído do token
+    const { data: profileData, error: profileError } = await adminClient
       .from('implementation_profiles')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
       .single();
     
     if (profileError) {
-      console.error('Erro ao buscar perfil:', profileError);
+      console.error("Erro ao buscar perfil de implementação:", profileError);
       return new Response(
         JSON.stringify({ 
-          error: 'Erro ao buscar perfil de implementação',
+          error: 'Erro ao buscar perfil', 
+          message: 'Não foi possível encontrar seu perfil de implementação',
           details: profileError.message 
         }),
         { 
@@ -91,10 +112,10 @@ serve(async (req) => {
     }
     
     if (!profileData || !profileData.is_completed) {
-      console.warn("Perfil incompleto para usuário:", user.id);
+      console.warn("Perfil de implementação incompleto para usuário:", userId);
       return new Response(
         JSON.stringify({ 
-          error: 'Perfil de implementação incompleto',
+          error: 'Perfil incompleto', 
           message: 'Complete seu perfil de implementação para gerar recomendações.' 
         }),
         { 
@@ -105,7 +126,7 @@ serve(async (req) => {
     }
     
     // Buscar soluções disponíveis
-    const { data: solutions, error: solutionsError } = await supabaseClient
+    const { data: solutions, error: solutionsError } = await adminClient
       .from('solutions')
       .select('*')
       .eq('published', true);
@@ -119,7 +140,7 @@ serve(async (req) => {
       console.warn("Nenhuma solução disponível encontrada");
       return new Response(
         JSON.stringify({ 
-          error: 'Nenhuma solução disponível',
+          error: 'Sem soluções disponíveis',
           recommendations: {
             priority1: [],
             priority2: [],
@@ -133,29 +154,66 @@ serve(async (req) => {
       );
     }
 
-    console.log("Soluções encontradas:", solutions.length);
+    console.log("Total de soluções encontradas:", solutions.length);
 
-    // Método para criar recomendações quando a OpenAI não estiver disponível
+    // Método para criar recomendações quando a OpenAI não estiver disponível ou falhar
     const createFallbackRecommendations = () => {
       console.log("Utilizando método de fallback para recomendações");
-      // Dividir soluções em 3 grupos
-      const totalSolutions = solutions.length;
-      const solutionsPerGroup = Math.ceil(totalSolutions / 3);
       
-      // Criar recomendações simples baseadas nas categorias
+      // Função para calcular relevância básica de uma solução para o perfil do usuário
+      const calculateRelevance = (solution, profile) => {
+        let score = 0;
+        
+        // Priorizar soluções com base no nível de conhecimento em IA
+        const aiLevel = profile.ai_knowledge_level || 1;
+        if (solution.difficulty === 'beginner' && aiLevel <= 2) score += 3;
+        if (solution.difficulty === 'intermediate' && aiLevel >= 2 && aiLevel <= 3) score += 3;
+        if (solution.difficulty === 'advanced' && aiLevel >= 3) score += 3;
+        
+        // Priorizar baseado no setor da empresa se as tags contiverem o setor
+        if (profile.company_sector && solution.tags && 
+            solution.tags.some(tag => tag.toLowerCase().includes(profile.company_sector.toLowerCase()))) {
+          score += 2;
+        }
+        
+        // Priorizar baseado no objetivo principal
+        if (profile.primary_goal && solution.description && 
+            solution.description.toLowerCase().includes(profile.primary_goal.toLowerCase())) {
+          score += 2;
+        }
+        
+        return score;
+      };
+      
+      // Calcular relevância para cada solução
+      const scoredSolutions = solutions.map(solution => ({
+        solution,
+        score: calculateRelevance(solution, profileData)
+      }));
+      
+      // Ordenar por relevância
+      scoredSolutions.sort((a, b) => b.score - a.score);
+      
+      // Dividir em grupos de prioridade
+      const highPriority = scoredSolutions.slice(0, 3).map(item => ({
+        solutionId: item.solution.id,
+        justification: `Altamente recomendado para seu perfil. ${item.solution.title} combina com seu nível de conhecimento em IA e objetivos de negócio.`
+      }));
+      
+      const mediumPriority = scoredSolutions.slice(3, 6).map(item => ({
+        solutionId: item.solution.id,
+        justification: `Recomendação complementar para seu perfil. ${item.solution.title} pode trazer benefícios adicionais para seu negócio.`
+      }));
+      
+      const lowPriority = scoredSolutions.slice(6, 9).map(item => ({
+        solutionId: item.solution.id,
+        justification: `Sugestão adicional para exploração futura. ${item.solution.title} pode ser interessante para expandir seus conhecimentos.`
+      }));
+      
       return {
-        priority1: solutions.slice(0, solutionsPerGroup).map(s => ({
-          solutionId: s.id,
-          justification: `Recomendado com base no seu perfil e objetivos de negócio. ${s.description}`
-        })),
-        priority2: solutions.slice(solutionsPerGroup, solutionsPerGroup * 2).map(s => ({
-          solutionId: s.id,
-          justification: `Esta solução complementa seu perfil profissional. ${s.description}`
-        })),
-        priority3: solutions.slice(solutionsPerGroup * 2).map(s => ({
-          solutionId: s.id,
-          justification: `Solução adicional que pode ser interessante explorar. ${s.description}`
-        }))
+        priority1: highPriority,
+        priority2: mediumPriority,
+        priority3: lowPriority
       };
     };
 
@@ -176,7 +234,7 @@ serve(async (req) => {
           cargo: profileData.current_position || "Cargo não especificado",
           objetivoPrincipal: profileData.primary_goal || "Não especificado",
           nivelConhecimentoIA: typeof profileData.ai_knowledge_level === 'number' ? 
-                               profileData.ai_knowledge_level : 1,
+                              profileData.ai_knowledge_level : 1,
           desafiosNegocio: profileData.business_challenges || []
         };
         
@@ -256,10 +314,11 @@ serve(async (req) => {
 
         const openaiData = await openaiResponse.json();
         const openaiContent = openaiData.choices[0].message.content;
-        console.log("Resposta da OpenAI recebida:", openaiContent.substring(0, 100) + "...");
+        console.log("Resposta da OpenAI recebida:");
         
         try {
           recommendations = JSON.parse(openaiContent);
+          console.log("Recomendações processadas com sucesso da resposta OpenAI");
         } catch (parseError) {
           console.error("Erro ao parsear resposta da OpenAI:", parseError);
           console.log("Conteúdo recebido:", openaiContent);
@@ -268,6 +327,7 @@ serve(async (req) => {
       }
     } catch (aiError) {
       console.error("Erro ao gerar recomendações com IA:", aiError);
+      console.log("Usando mecanismo de fallback devido a erro na IA");
       recommendations = createFallbackRecommendations();
     }
 
@@ -280,13 +340,46 @@ serve(async (req) => {
       recommendations = createFallbackRecommendations();
     }
 
+    // Verificar se as recomendações contêm IDs de solução válidos
+    const validateRecommendations = (recs) => {
+      const solutionIds = solutions.map(s => s.id);
+      
+      // Função para filtrar recomendações válidas
+      const filterValid = (recsList) => {
+        return recsList.filter(rec => {
+          if (!rec.solutionId || !solutionIds.includes(rec.solutionId)) {
+            console.warn(`Removendo recomendação com ID inválido: ${rec.solutionId}`);
+            return false;
+          }
+          return true;
+        });
+      };
+      
+      return {
+        priority1: filterValid(recs.priority1),
+        priority2: filterValid(recs.priority2),
+        priority3: filterValid(recs.priority3)
+      };
+    };
+    
+    // Aplicar validação e garantir que há pelo menos uma recomendação
+    recommendations = validateRecommendations(recommendations);
+    
+    // Se não houver recomendações válidas, usar fallback
+    if (recommendations.priority1.length === 0 && 
+        recommendations.priority2.length === 0 && 
+        recommendations.priority3.length === 0) {
+      console.warn("Nenhuma recomendação válida, usando fallback");
+      recommendations = createFallbackRecommendations();
+    }
+
     // Salvar recomendações
     try {
       console.log("Salvando recomendações na tabela implementation_trails");
-      const { error: saveError } = await supabaseClient
+      const { error: saveError } = await adminClient
         .from("implementation_trails")
         .upsert({
-          user_id: user.id,
+          user_id: userId,
           trail_data: recommendations,
           status: "completed",
           updated_at: new Date().toISOString()
@@ -296,12 +389,12 @@ serve(async (req) => {
         console.error("Erro ao salvar trilha:", saveError);
         throw new Error(`Erro ao salvar trilha: ${saveError.message}`);
       }
+      
+      console.log("Trilha salva com sucesso");
     } catch (dbError) {
       console.error("Erro ao persistir dados no Supabase:", dbError);
       throw dbError;
     }
-
-    console.log("Trilha gerada e salva com sucesso");
 
     return new Response(
       JSON.stringify({ 
