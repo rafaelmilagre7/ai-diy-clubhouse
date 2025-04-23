@@ -36,7 +36,7 @@ interface MemberRoutesProps {
 const MemberRoutes = ({ children }: MemberRoutesProps) => {
   return (
     <Routes>
-      <Route path="/" element={<MemberLayout>{children}</MemberLayout>}>
+      <Route element={<MemberLayout>{children}</MemberLayout>}>
         <Route index element={<Navigate to="/dashboard" replace />} />
         
         <Route path="onboarding" element={<Onboarding />} />

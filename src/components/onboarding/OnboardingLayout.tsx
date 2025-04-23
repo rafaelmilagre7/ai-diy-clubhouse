@@ -1,12 +1,12 @@
 
-import React from 'react';
+import React, { ReactNode } from 'react';
 import { OnboardingStep } from '@/types/onboarding';
 import { Progress } from '@/components/ui/progress';
 import MemberLayout from '@/components/layout/MemberLayout';
 import { StepIndicator } from './StepIndicator';
 
 export interface OnboardingLayoutProps {
-  children: React.ReactNode;
+  children: ReactNode;
   title: string;
   description?: string;
   currentStep: number;
