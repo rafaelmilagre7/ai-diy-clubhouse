@@ -1,6 +1,7 @@
 
 import { createContext, useContext, ReactNode } from "react";
-import { useLogging, LoggingProvider as OriginalLoggingProvider } from "@/hooks/useLogging";
+import { useLogging as useLoggingBase } from "@/hooks/useLogging";
+import { LoggingProvider as OriginalLoggingProvider } from "@/hooks/useLogging";
 
 export type LogData = {
   [key: string]: any;
@@ -16,7 +17,7 @@ interface LoggingContextType {
 // Redireciona para a implementação principal em hooks/useLogging
 export const useLogging = (): LoggingContextType => {
   // Usa a implementação de useLogging do hooks/useLogging.tsx
-  const loggingHook = useLogging();
+  const loggingHook = useLoggingBase();
   
   // Adapta a interface para manter compatibilidade com o código existente
   return {
