@@ -1,11 +1,16 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/auth";
 import { toast } from "sonner";
+import { 
+  validateLinkedInUrl, 
+  validateInstagramUrl, 
+  validateCompanyWebsite,
+  formatWebsiteUrl,
+  formatSocialUrl 
+} from "@/utils/validationUtils";
 
-/**
- * O tipo do perfil segue o banco de dados, mas todos campos são string/simples para facilitar salvamento.
- */
 export type ImplementationProfile = {
   id?: string;
   user_id?: string;
@@ -51,6 +56,7 @@ export const useImplementationProfile = () => {
         .select("*")
         .eq("user_id", user.id)
         .maybeSingle();
+
       if (!error && data) {
         console.log("Perfil carregado:", data);
         setProfile(data);
@@ -63,33 +69,82 @@ export const useImplementationProfile = () => {
     fetchProfile();
   }, [user]);
 
+  const validateProfile = (values: ImplementationProfile): string[] => {
+    const errors: string[] = [];
+
+    // Validar URLs
+    if (values.linkedin && !validateLinkedInUrl(values.linkedin)) {
+      errors.push("URL do LinkedIn inválida");
+    }
+    if (values.instagram && !validateInstagramUrl(values.instagram)) {
+      errors.push("URL do Instagram inválida");
+    }
+    if (values.company_website && !validateCompanyWebsite(values.company_website)) {
+      errors.push("URL do site da empresa inválida");
+    }
+
+    // Validar campos obrigatórios do perfil de implementação
+    if (!values.company_name?.trim()) {
+      errors.push("Nome da empresa é obrigatório");
+    }
+    if (!values.company_sector?.trim()) {
+      errors.push("Setor da empresa é obrigatório");
+    }
+    if (!values.company_size?.trim()) {
+      errors.push("Tamanho da empresa é obrigatório");
+    }
+    if (!values.current_position?.trim()) {
+      errors.push("Cargo atual é obrigatório");
+    }
+
+    // Validar NPS
+    if (values.nps_score !== undefined && values.nps_score !== "") {
+      const npsNumber = Number(values.nps_score);
+      if (isNaN(npsNumber) || npsNumber < 0 || npsNumber > 10) {
+        errors.push("NPS deve ser um número entre 0 e 10");
+      }
+    }
+
+    return errors;
+  };
+
   const saveProfile = async (values: ImplementationProfile) => {
     if (!user) {
       console.error("Usuário não autenticado");
       toast.error("Você precisa estar autenticado para salvar o perfil.");
       return;
     }
+
+    const errors = validateProfile(values);
+    if (errors.length > 0) {
+      errors.forEach(error => toast.error(error));
+      return;
+    }
+
     setSaving(true);
     console.log("Salvando perfil com valores:", values);
 
     try {
-      const toSend = {
+      // Formatar URLs antes de salvar
+      const formattedValues = {
         ...values,
         user_id: user.id,
-        nps_score: values.nps_score ? Number(values.nps_score) : null,
+        linkedin: values.linkedin ? formatSocialUrl(values.linkedin, "linkedin") : null,
+        instagram: values.instagram ? formatSocialUrl(values.instagram, "instagram") : null,
+        company_website: values.company_website ? formatWebsiteUrl(values.company_website) : null,
+        is_completed: true, // Marcar como completo quando salvar
         updated_at: new Date().toISOString(),
       };
 
-      console.log("Enviando dados para Supabase:", toSend);
+      console.log("Enviando dados formatados para Supabase:", formattedValues);
 
       const { error, data } = await supabase
         .from("implementation_profiles")
-        .upsert([toSend], { onConflict: "user_id" })
+        .upsert([formattedValues], { onConflict: "user_id" })
         .select();
 
       if (error) {
         console.error("Erro detalhado do Supabase:", error);
-        setSaving(false);
         toast.error(`Erro ao salvar informações: ${error.message}`);
         return;
       }
