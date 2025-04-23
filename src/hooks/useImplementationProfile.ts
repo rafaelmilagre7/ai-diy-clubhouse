@@ -4,12 +4,17 @@ import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/auth";
 import { toast } from "sonner";
 
+/**
+ * O tipo do perfil segue o banco de dados, mas todos campos são string/simples para facilitar salvamento.
+ */
 export type ImplementationProfile = {
   id?: string;
   user_id?: string;
   name?: string;
   email?: string;
   phone?: string;
+  phone_country_code?: string;
+  instagram?: string;
   linkedin?: string;
   country?: string;
   state?: string;
@@ -21,11 +26,8 @@ export type ImplementationProfile = {
   company_size?: string;
   annual_revenue?: string;
   primary_goal?: string;
-  business_challenges?: string[];
-  ai_knowledge_level?: number;
-  weekly_availability?: string;
-  networking_interests?: string[];
-  is_completed?: boolean;
+  ai_knowledge_level?: string;
+  nps_score?: string;
   created_at?: string;
   updated_at?: string;
 };
@@ -44,7 +46,6 @@ export const useImplementationProfile = () => {
     }
     const fetchProfile = async () => {
       setLoading(true);
-      // Buscar perfil e setar, se não houver, manter como null sem erro
       const { data, error } = await supabase
         .from("implementation_profiles")
         .select("*")
@@ -61,43 +62,26 @@ export const useImplementationProfile = () => {
   }, [user]);
 
   const saveProfile = async (values: ImplementationProfile) => {
-    if (!user) {
-      return;
-    }
+    if (!user) return;
     setSaving(true);
 
-    let response;
-    if (profile?.id) {
-      // Atualizar perfil existente
-      response = await supabase
-        .from("implementation_profiles")
-        .update({
-          ...values,
-          is_completed: true,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", profile.id);
-    } else {
-      // Criar novo perfil
-      response = await supabase
-        .from("implementation_profiles")
-        .insert([
-          {
-            ...values,
-            user_id: user.id,
-            is_completed: true,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          },
-        ]);
-    }
-    const { error } = response;
+    // Simplifiquei: sempre upsert pelo user_id
+    const toSend = {
+      ...values,
+      user_id: user.id,
+      updated_at: new Date().toISOString(),
+    };
+
+    const { error } = await supabase
+      .from("implementation_profiles")
+      .upsert([toSend], { onConflict: "user_id" });
+
     if (error) {
-      toast.error("Não foi possível salvar o perfil. Tente novamente.");
       setSaving(false);
+      toast.error("Erro ao salvar informações. Tente novamente.");
       return;
     }
-    // Buscar perfil atualizado para garantir que o perfil local fique certo
+    // Buscar perfil atualizado
     const { data: updatedProfile } = await supabase
       .from("implementation_profiles")
       .select("*")

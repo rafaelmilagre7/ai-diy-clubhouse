@@ -160,11 +160,14 @@ export type Database = {
           current_position: string | null
           email: string | null
           id: string
+          instagram: string | null
           is_completed: boolean | null
           linkedin: string | null
           name: string | null
           networking_interests: string[] | null
+          nps_score: number | null
           phone: string | null
+          phone_country_code: string | null
           primary_goal: string | null
           state: string | null
           updated_at: string | null
@@ -185,11 +188,14 @@ export type Database = {
           current_position?: string | null
           email?: string | null
           id?: string
+          instagram?: string | null
           is_completed?: boolean | null
           linkedin?: string | null
           name?: string | null
           networking_interests?: string[] | null
+          nps_score?: number | null
           phone?: string | null
+          phone_country_code?: string | null
           primary_goal?: string | null
           state?: string | null
           updated_at?: string | null
@@ -210,11 +216,14 @@ export type Database = {
           current_position?: string | null
           email?: string | null
           id?: string
+          instagram?: string | null
           is_completed?: boolean | null
           linkedin?: string | null
           name?: string | null
           networking_interests?: string[] | null
+          nps_score?: number | null
           phone?: string | null
+          phone_country_code?: string | null
           primary_goal?: string | null
           state?: string | null
           updated_at?: string | null

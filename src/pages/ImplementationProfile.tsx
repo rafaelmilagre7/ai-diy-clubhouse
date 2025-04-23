@@ -1,25 +1,52 @@
 
 import React, { useEffect, useState } from "react";
 import { useImplementationProfile } from "@/hooks/useImplementationProfile";
-import { Loader2 } from "lucide-react";
+import { Loader2, Flag, Linkedin, Instagram, Building, Link as LinkIcon, Users, DollarSign, Brain, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useAuth } from "@/contexts/auth";
+import { useIBGELocations } from "@/hooks/useIBGELocations";
+import { toast } from "sonner";
 
-const initialState = {
-  name: "", email: "", phone: "", linkedin: "",
-  country: "", state: "", city: "",
-  company_name: "", company_website: "",
-  current_position: "", company_sector: "",
-  company_size: "", annual_revenue: "",
-  primary_goal: "", ai_knowledge_level: 1,
-  business_challenges: [],
-  weekly_availability: "",
-  networking_interests: [],
-};
-
-const businessChallengeOptions = [
+const sectorOptions = [
+  "Agronegócio",
+  "Comércio",
+  "Indústria",
+  "Saúde",
+  "Educação",
+  "Serviços",
+  "Startups",
+  "Inteligência Artificial",
+  "Tecnologia",
+  "Consultoria",
+  "Financeiro",
+  "Outro"
+];
+const companySizeOptions = [
+  "1-10 colaboradores",
+  "11-50 colaboradores",
+  "51-200 colaboradores",
+  "201-500 colaboradores",
+  "501-1000 colaboradores",
+  "1000+ colaboradores"
+];
+const revenueOptions = [
+  "Até R$ 360 mil",
+  "R$ 360 mil - R$ 4,8 milhões",
+  "R$ 4,8 milhões - R$ 16 milhões",
+  "R$ 16 milhões - R$ 300 milhões",
+  "Acima de R$ 300 milhões"
+];
+const aiKnowledgeLevels = [
+  "Básico",
+  "Intermediário",
+  "Avançado",
+  "Expert"
+];
+const mainGoalOptions = [
   "Aumentar Receita",
   "Otimizar Operações",
   "Melhorar Decisão",
@@ -27,16 +54,33 @@ const businessChallengeOptions = [
   "Inovar com IA"
 ];
 
-const networkingOptions = [
-  "Mentoria",
-  "Networking",
-  "Parcerias",
-  "Compartilhar Experiências"
-];
+const initialState = {
+  name: "", email: "", phone: "", phone_country_code: "+55", instagram: "", linkedin: "",
+  country: "Brasil", state: "", city: "",
+  company_name: "", company_website: "",
+  current_position: "", company_sector: "",
+  company_size: "", annual_revenue: "",
+  primary_goal: "",
+  business_challenges: [],
+  ai_knowledge_level: "Básico",
+  networking_interests: [],
+  nps_score: "",
+};
 
 export default function ImplementationProfilePage() {
   const { profile, loading, saving, saveProfile } = useImplementationProfile();
+  const { profile: authProfile } = useAuth();
   const [values, setValues] = useState(initialState);
+  const { estados, cidadesPorEstado, isLoading: locLoading } = useIBGELocations();
+
+  useEffect(() => {
+    // Preenche nome/email com dados do perfil do usuário
+    setValues((prev) => ({
+      ...prev,
+      name: authProfile?.name || "",
+      email: authProfile?.email || "",
+    }));
+  }, [authProfile]);
 
   useEffect(() => {
     if (profile) setValues({ ...initialState, ...profile });
@@ -47,21 +91,58 @@ export default function ImplementationProfilePage() {
     setValues((old) => ({ ...old, [name]: value }));
   };
 
-  const handleMultiChange = (name: string, value: string) => {
-    setValues((old) => ({
-      ...old,
-      [name]: old[name]?.includes(value)
-        ? old[name].filter((v: string) => v !== value)
-        : [...(old[name] || []), value]
-    }));
+  // Máscara de telefone simples (brasileiro)
+  const formatPhone = (value: string) => {
+    let onlyNums = value.replace(/\D/g, "");
+    if (onlyNums.length <= 2) return `(${onlyNums}`;
+    if (onlyNums.length <= 7) return `(${onlyNums.slice(0, 2)}) ${onlyNums.slice(2)}`;
+    if (onlyNums.length <= 11) return `(${onlyNums.slice(0, 2)}) ${onlyNums.slice(2, 7)}-${onlyNums.slice(7)}`;
+    return `(${onlyNums.slice(0, 2)}) ${onlyNums.slice(2, 7)}-${onlyNums.slice(7, 11)}`;
+  };
+
+  const handlePhoneChange = (e: any) => {
+    const raw = e.target.value.replace(/\D/g, "");
+    let formatted = formatPhone(raw);
+    setValues((old) => ({ ...old, phone: formatted }));
   };
 
   const handleSubmit = (e: any) => {
     e.preventDefault();
+
+    // Validação simples do site
+    if (values.company_website && !/^https?:\/\/\S+\.\S+/.test(values.company_website)) {
+      toast.error("Digite uma URL válida para o site da empresa (ex: https://minhaempresa.com)");
+      return;
+    }
+
+    // Validar Instagram (opcional)
+    if (values.instagram && !/^https?:\/\/(www\.)?instagram\.com\/[\w\.]+/i.test(values.instagram)) {
+      toast.error("Digite uma URL válida para o Instagram ou deixe em branco");
+      return;
+    }
+
+    // Validar Linkedin (opcional)
+    if (values.linkedin && !/^https?:\/\/(www\.)?linkedin\.com\/in\/[\w\d-]+/i.test(values.linkedin)) {
+      toast.error("Digite uma URL válida para o LinkedIn ou deixe em branco");
+      return;
+    }
+
+    // Ajuste NPS
+    if (
+      values.nps_score !== "" &&
+      (isNaN(Number(values.nps_score)) ||
+        Number(values.nps_score) < 0 ||
+        Number(values.nps_score) > 10)
+    ) {
+      toast.error("NPS deve ser um número entre 0 e 10");
+      return;
+    }
+
+    // Simplesmente salva (envia para o Supabase neste formato)
     saveProfile(values);
   };
 
-  if (loading) {
+  if (loading || locLoading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <Loader2 className="animate-spin mr-2" />
@@ -77,105 +158,288 @@ export default function ImplementationProfilePage() {
         Preencha seu perfil para criarmos sua trilha personalizada.
       </p>
       <form onSubmit={handleSubmit} className="space-y-6 bg-white p-6 rounded-xl shadow-lg max-w-2xl mx-auto">
+        {/* Dados pessoais */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Nome */}
           <div className="space-y-2">
             <Label htmlFor="name">Nome*</Label>
-            <Input id="name" name="name" value={values.name || ""} onChange={handleChange} placeholder="Nome completo" required />
+            <Input
+              id="name"
+              name="name"
+              value={values.name}
+              disabled
+              className="bg-gray-100"
+              iconleft={<User />}
+            />
           </div>
+          {/* Email */}
           <div className="space-y-2">
             <Label htmlFor="email">E-mail*</Label>
-            <Input id="email" name="email" value={values.email || ""} onChange={handleChange} placeholder="E-mail" required />
+            <Input
+              id="email"
+              name="email"
+              value={values.email}
+              disabled
+              className="bg-gray-100"
+              iconleft={<Flag />}
+            />
           </div>
-          <div className="space-y-2">
+          {/* Telefone */}
+          <div className="space-y-2 flex flex-col">
             <Label htmlFor="phone">Telefone</Label>
-            <Input id="phone" name="phone" value={values.phone || ""} onChange={handleChange} placeholder="Telefone" />
+            <div className="flex gap-2 items-center">
+              <Select
+                value={values.phone_country_code}
+                onValueChange={val =>
+                  setValues((old) => ({ ...old, phone_country_code: val }))
+                }
+              >
+                <SelectTrigger className="w-20 rounded-md">
+                  <span className="flex items-center">
+                    <span className="mr-2" role="img" aria-label="Brasil">🇧🇷</span>
+                    <SelectValue />
+                  </span>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="+55">
+                    <span className="mr-2" role="img" aria-label="Brasil">🇧🇷</span> +55 BR
+                  </SelectItem>
+                  <SelectItem value="+1">
+                    <span className="mr-2" role="img" aria-label="USA">🇺🇸</span> +1 US
+                  </SelectItem>
+                  <SelectItem value="+351">
+                    <span className="mr-2" role="img" aria-label="Portugal">🇵🇹</span> +351 PT
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+              <Input
+                id="phone"
+                name="phone"
+                value={values.phone || ""}
+                onChange={handlePhoneChange}
+                placeholder="(99) 99999-9999"
+                maxLength={15}
+              />
+            </div>
           </div>
+          {/* Instagram */}
+          <div className="space-y-2">
+            <Label htmlFor="instagram">Instagram</Label>
+            <Input
+              id="instagram"
+              name="instagram"
+              value={values.instagram || ""}
+              onChange={handleChange}
+              placeholder="https://instagram.com/seuusuario"
+              iconleft={<Instagram />}
+            />
+          </div>
+          {/* LinkedIn */}
           <div className="space-y-2">
             <Label htmlFor="linkedin">LinkedIn</Label>
-            <Input id="linkedin" name="linkedin" value={values.linkedin || ""} onChange={handleChange} placeholder="LinkedIn" />
+            <Input
+              id="linkedin"
+              name="linkedin"
+              value={values.linkedin || ""}
+              onChange={handleChange}
+              placeholder="https://linkedin.com/in/seuusuario"
+              iconleft={<Linkedin />}
+            />
           </div>
+          {/* País */}
           <div className="space-y-2">
             <Label htmlFor="country">País*</Label>
-            <Input id="country" name="country" value={values.country || ""} onChange={handleChange} placeholder="País" required />
+            <Select
+              value={values.country}
+              onValueChange={val => setValues((old) => ({ ...old, country: val }))}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Brasil">Brasil</SelectItem>
+                <SelectItem value="Estados Unidos">Estados Unidos</SelectItem>
+                <SelectItem value="Portugal">Portugal</SelectItem>
+                <SelectItem value="Outro">Outro</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
+          {/* Estado */}
           <div className="space-y-2">
             <Label htmlFor="state">Estado</Label>
-            <Input id="state" name="state" value={values.state || ""} onChange={handleChange} placeholder="Estado" />
+            <Select
+              value={values.state}
+              onValueChange={val => setValues((old) => ({ ...old, state: val }))}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Estado" />
+              </SelectTrigger>
+              <SelectContent>
+                {estados.map(e => (
+                  <SelectItem key={e.code} value={e.name}>{e.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
+          {/* Cidade */}
           <div className="space-y-2">
             <Label htmlFor="city">Cidade</Label>
-            <Input id="city" name="city" value={values.city || ""} onChange={handleChange} placeholder="Cidade" />
+            <Select
+              value={values.city}
+              onValueChange={val => setValues((old) => ({ ...old, city: val }))}
+              disabled={!values.state}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Cidade" />
+              </SelectTrigger>
+              <SelectContent>
+                {(cidadesPorEstado[estados.find(e => e.name === values.state)?.code || ""] || []).map(c => (
+                  <SelectItem key={c.name} value={c.name}>{c.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
+
+        {/* Profissional */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Empresa */}
           <div className="space-y-2">
             <Label htmlFor="company_name">Empresa</Label>
-            <Input id="company_name" name="company_name" value={values.company_name || ""} onChange={handleChange} placeholder="Empresa" />
+            <Input
+              id="company_name"
+              name="company_name"
+              value={values.company_name || ""}
+              onChange={handleChange}
+              placeholder="Nome da empresa"
+              iconleft={<Building />}
+            />
           </div>
+          {/* Site da Empresa */}
           <div className="space-y-2">
             <Label htmlFor="company_website">Site da Empresa</Label>
-            <Input id="company_website" name="company_website" value={values.company_website || ""} onChange={handleChange} placeholder="Site da Empresa" />
+            <Input
+              id="company_website"
+              name="company_website"
+              value={values.company_website || ""}
+              onChange={handleChange}
+              placeholder="https://empresa.com"
+              iconleft={<LinkIcon />}
+            />
           </div>
+          {/* Cargo/posição */}
           <div className="space-y-2">
             <Label htmlFor="current_position">Cargo Atual</Label>
-            <Input id="current_position" name="current_position" value={values.current_position || ""} onChange={handleChange} placeholder="Cargo Atual" />
+            <Input
+              id="current_position"
+              name="current_position"
+              value={values.current_position || ""}
+              onChange={handleChange}
+              placeholder="Cargo Atual"
+              iconleft={<Users />}
+            />
           </div>
+          {/* Setor */}
           <div className="space-y-2">
             <Label htmlFor="company_sector">Setor</Label>
-            <Input id="company_sector" name="company_sector" value={values.company_sector || ""} onChange={handleChange} placeholder="Setor" />
+            <Select
+              value={values.company_sector || ""}
+              onValueChange={val => setValues((old) => ({ ...old, company_sector: val }))}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Setor" />
+              </SelectTrigger>
+              <SelectContent>
+                {sectorOptions.map(opt => (
+                  <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
+          {/* Colaboradores */}
           <div className="space-y-2">
-            <Label htmlFor="company_size">Porte</Label>
-            <Input id="company_size" name="company_size" value={values.company_size || ""} onChange={handleChange} placeholder="Porte" />
+            <Label htmlFor="company_size">Nº de Colaboradores</Label>
+            <Select
+              value={values.company_size || ""}
+              onValueChange={val => setValues((old) => ({ ...old, company_size: val }))}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Colaboradores" />
+              </SelectTrigger>
+              <SelectContent>
+                {companySizeOptions.map(opt => (
+                  <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
+          {/* Faturamento anual */}
           <div className="space-y-2">
             <Label htmlFor="annual_revenue">Faturamento Anual</Label>
-            <Input id="annual_revenue" name="annual_revenue" value={values.annual_revenue || ""} onChange={handleChange} placeholder="Faturamento Anual" />
+            <Select
+              value={values.annual_revenue || ""}
+              onValueChange={val => setValues((old) => ({ ...old, annual_revenue: val }))}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Faturamento" />
+              </SelectTrigger>
+              <SelectContent>
+                {revenueOptions.map(opt => (
+                  <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
+        {/* Objetivo principal IA */}
         <div>
-          <Label className="font-semibold block mb-2">Desafios do momento:</Label>
+          <Label className="font-semibold block mb-2">Principal objetivo com IA</Label>
           <div className="flex flex-wrap gap-3 mt-2">
-            {businessChallengeOptions.map(opt => (
+            {mainGoalOptions.map(opt => (
               <Button
                 key={opt}
                 type="button"
-                variant={values.business_challenges?.includes(opt) ? "default" : "outline"}
-                onClick={() => handleMultiChange("business_challenges", opt)}
-                className={values.business_challenges?.includes(opt) ? "bg-viverblue text-white" : ""}
+                variant={values.primary_goal === opt ? "default" : "outline"}
+                onClick={() => setValues((old) => ({ ...old, primary_goal: opt }))}
+                className={values.primary_goal === opt ? "bg-viverblue text-white" : ""}
               >
                 {opt}
               </Button>
             ))}
           </div>
         </div>
+        {/* Nível de conhecimento em IA */}
         <div>
-          <Label htmlFor="primary_goal" className="font-semibold block mb-2">Principal objetivo com IA</Label>
-          <Textarea id="primary_goal" name="primary_goal" value={values.primary_goal || ""} onChange={handleChange} placeholder="Descreva seu objetivo principal" />
+          <Label htmlFor="ai_knowledge_level" className="font-semibold block">
+            Nível de conhecimento em IA
+          </Label>
+          <Select
+            value={values.ai_knowledge_level || "Básico"}
+            onValueChange={val => setValues((old) => ({ ...old, ai_knowledge_level: val }))}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Selecione" />
+            </SelectTrigger>
+            <SelectContent>
+              {aiKnowledgeLevels.map(opt => (
+                <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="ai_knowledge_level" className="font-semibold block">Nível de conhecimento em IA (1 a 5)</Label>
-            <Input id="ai_knowledge_level" name="ai_knowledge_level" type="number" min={1} max={5} value={values.ai_knowledge_level || 1} onChange={handleChange} />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="weekly_availability" className="font-semibold block">Horas por semana disponível</Label>
-            <Input id="weekly_availability" name="weekly_availability" value={values.weekly_availability || ""} onChange={handleChange} placeholder="Horas por semana disponível" />
-          </div>
-        </div>
+        {/* NPS */}
         <div>
-          <Label className="font-semibold block mb-2">Interesses de networking</Label>
-          <div className="flex flex-wrap gap-3 mt-2">
-            {networkingOptions.map(opt => (
-              <Button
-                key={opt}
-                type="button"
-                variant={values.networking_interests?.includes(opt) ? "default" : "outline"}
-                onClick={() => handleMultiChange("networking_interests", opt)}
-                className={values.networking_interests?.includes(opt) ? "bg-viverblue" : ""}
-              >{opt}</Button>
-            ))}
-          </div>
+          <Label htmlFor="nps_score">De 0 a 10, qual a chance de você indicar o VIVER DE IA Club para um amigo?</Label>
+          <Input
+            id="nps_score"
+            name="nps_score"
+            type="number"
+            min={0}
+            max={10}
+            value={values.nps_score}
+            onChange={handleChange}
+            className="w-32"
+          />
         </div>
         <Button type="submit" className="w-full bg-viverblue hover:bg-viverblue/90" disabled={saving}>
           {saving ? <Loader2 className="animate-spin mr-2" /> : null}
