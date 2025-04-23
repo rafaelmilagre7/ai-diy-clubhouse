@@ -29,9 +29,7 @@ export const MemberSidebarNav = ({ sidebarOpen }: SidebarNavProps) => {
   // Log para verificar a renderização e o estado atual
   log("Renderizando menu lateral", { 
     sidebarOpen, 
-    currentPath: location.pathname,
-    isPathSolutions: location.pathname.startsWith("/solutions"),
-    isPathSolution: location.pathname.startsWith("/solution/")
+    currentPath: location.pathname
   });
 
   const menuItems = [
@@ -83,14 +81,23 @@ export const MemberSidebarNav = ({ sidebarOpen }: SidebarNavProps) => {
   ];
 
   const isActive = (href: string) => {
-    // Considera ativa a rota "solutions" mesmo se estiver visualizando uma solução específica
+    // Se for a rota de soluções, considerar ativa também para solution/:id e solutions/:id
     if (href === "/solutions" && (
-      location.pathname.startsWith("/solutions/") || 
-      location.pathname.startsWith("/solution/")
+      location.pathname.startsWith("/solution/") || 
+      location.pathname.startsWith("/solutions/")
     )) {
       return true;
     }
     
+    // Para caminhos como /implementation/:id ou /implement/:id
+    if (href === "/solutions" && (
+      location.pathname.startsWith("/implement/") ||
+      location.pathname.startsWith("/implementation/")
+    )) {
+      return true;
+    }
+    
+    // Verificação normal para outras rotas
     return location.pathname === href || location.pathname.startsWith(href + '/');
   };
 

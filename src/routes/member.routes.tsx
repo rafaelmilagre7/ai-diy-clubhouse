@@ -20,7 +20,7 @@ import Benefits from "@/pages/member/Benefits";
 import ImplementationTrailPage from "@/pages/member/ImplementationTrailPage";
 import ImplementationProfilePage from "@/pages/ImplementationProfile";
 
-// Vamos registrar um console.log para debug
+// Debug log para verificar carregamento de rotas
 console.log("Carregando memberRoutes");
 
 export const memberRoutes = (
@@ -33,10 +33,12 @@ export const memberRoutes = (
       {/* Perfil de Implementação */}
       <Route path="perfil-de-implementacao" element={<ImplementationProfilePage />} />
       
-      {/* Soluções */}
+      {/* Soluções - As duas formas de acesso a solução específica */}
       <Route path="solutions" element={<Solutions />} />
       <Route path="solutions/:id" element={<SolutionDetails />} />
       <Route path="solution/:id" element={<SolutionDetails />} />
+      
+      {/* Implementação */}
       <Route path="implement/:id/:moduleIdx" element={<SolutionImplementation />} />
       <Route path="implementation/:id" element={<SolutionImplementation />} />
       <Route path="implementation/:id/:moduleIdx" element={<SolutionImplementation />} />

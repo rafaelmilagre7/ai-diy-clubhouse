@@ -13,7 +13,22 @@ export const SolutionBackButton = () => {
     // Log para debug antes de navegar
     log("Clique no botão voltar", { currentPath: location.pathname });
     
+    // Se o usuário vier de uma página de implementação, voltar para ela
+    if (location.state && location.state.from === "implementation") {
+      log("Voltando para implementação", { from: location.state.from });
+      navigate(-1);
+      return;
+    }
+    
+    // Verificar se veio de uma página específica para voltar
+    if (location.state && location.state.from) {
+      log("Voltando para origem", { from: location.state.from });
+      navigate(location.state.from);
+      return;
+    }
+    
     // Navegar de volta para a lista de soluções
+    log("Voltando para lista de soluções");
     navigate("/solutions");
   };
 

@@ -8,12 +8,20 @@ import { ProtectedRoutes } from "@/auth/ProtectedRoutes";
 import NotFound from "@/pages/NotFound";
 import RootRedirect from "@/components/routing/RootRedirect";
 import { useLogging } from "@/hooks/useLogging";
+import { toast } from "sonner";
 
 const AppRoutes = () => {
   const { log } = useLogging("AppRoutes");
   
   // Log para debug
   log("Renderizando as rotas da aplicação");
+  
+  // Exibe um toast para informar usuário sobre possíveis lentidões
+  React.useEffect(() => {
+    toast.info("Se estiver enfrentando lentidão, isso pode ser devido à conexão com o servidor.", {
+      duration: 5000,
+    });
+  }, []);
   
   return (
     <Routes>

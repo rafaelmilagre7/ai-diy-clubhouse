@@ -1,121 +1,128 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase, Solution } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/auth";
 import { useNavigate } from "react-router-dom";
 import { useLogging } from "@/hooks/useLogging";
+import { toast } from "sonner";
 
 export const useSolutionData = (id: string | undefined) => {
   const { user, profile } = useAuth();
-  const { toast } = useToast();
+  const { toast: uiToast } = useToast();
   const navigate = useNavigate();
   const { log, logError, logDebug } = useLogging("useSolutionData");
   const [solution, setSolution] = useState<Solution | null>(null);
   const [progress, setProgress] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<any | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
   const isAdmin = profile?.role === 'admin';
 
-  useEffect(() => {
-    const fetchSolution = async () => {
-      if (!id) {
-        log("ID da solução não fornecido");
-        setLoading(false);
-        return;
+  const fetchSolution = useCallback(async () => {
+    if (!id) {
+      log("ID da solução não fornecido");
+      setLoading(false);
+      return;
+    }
+    
+    try {
+      setLoading(true);
+      setError(null);
+      log("Iniciando busca por solução", { id, retryAttempt: retryCount });
+      
+      // Informações de debug sobre a conexão
+      log("Usando configs do Supabase:", { 
+        baseUrl: supabase.supabaseUrl, 
+        authHeader: !!supabase.auth.session(),
+        userAuthenticated: !!user
+      });
+      
+      // Buscar a solução pelo ID
+      let query = supabase
+        .from("solutions")
+        .select("*")
+        .eq("id", id);
+        
+      // Se não for um admin, só mostra soluções publicadas
+      if (!isAdmin) {
+        query = query.eq("published", true);
       }
       
-      try {
-        setLoading(true);
-        log("Iniciando busca por solução", { id });
+      const { data, error: fetchError } = await query.maybeSingle();
+      
+      if (fetchError) {
+        logError("Erro ao buscar solução:", { error: fetchError, id });
         
-        // Buscar a solução pelo ID
-        let query = supabase
-          .from("solutions")
-          .select("*")
-          .eq("id", id);
-          
-        // Se não for um admin, só mostra soluções publicadas
-        if (!isAdmin) {
-          query = query.eq("published", true);
+        // Se o erro for de registro não encontrado e o usuário não é admin,
+        // provavelmente está tentando acessar uma solução não publicada
+        if (fetchError.code === "PGRST116" && !isAdmin) {
+          toast.error("Esta solução não está disponível no momento.");
+          navigate("/solutions");
+          return;
         }
         
-        const { data, error: fetchError } = await query.maybeSingle();
-        
-        if (fetchError) {
-          logError("Erro ao buscar solução:", { error: fetchError, id });
-          
-          // Se o erro for de registro não encontrado e o usuário não é admin,
-          // provavelmente está tentando acessar uma solução não publicada
-          if (fetchError.code === "PGRST116" && !isAdmin) {
-            toast({
-              title: "Solução não disponível",
-              description: "Esta solução não está disponível no momento.",
-              variant: "destructive"
-            });
-            navigate("/solutions");
-            return;
-          }
-          
-          throw fetchError;
-        }
-        
-        if (data) {
-          log("Dados da solução encontrados", { solutionId: data.id, solutionTitle: data.title });
-          setSolution(data as Solution);
-          
-          // Fetch progress for this solution and user if user is authenticated
-          if (user) {
-            try {
-              const { data: progressData, error: progressError } = await supabase
-                .from("progress")
-                .select("*")
-                .eq("solution_id", id)
-                .eq("user_id", user.id)
-                .maybeSingle(); // Usando maybeSingle em vez de single para evitar erros
-                
-              if (progressError) {
-                logError("Erro ao buscar progresso:", { error: progressError });
-              } else if (progressData) {
-                setProgress(progressData);
-                log("Dados de progresso encontrados", { progressId: progressData.id });
-              } else {
-                log("Nenhum progresso encontrado para esta solução", { solutionId: id, userId: user.id });
-              }
-            } catch (progressFetchError) {
-              logError("Erro ao buscar progresso:", { error: progressFetchError });
-            }
-          }
-        } else {
-          log("Nenhuma solução encontrada com ID", { id });
-          setError(`Solução não encontrada com ID: ${id}`);
-          toast({
-            title: "Solução não encontrada",
-            description: "Não foi possível encontrar a solução solicitada.",
-            variant: "destructive"
-          });
-        }
-      } catch (error: any) {
-        logError("Erro em useSolutionData:", { error });
-        setError(error.message || "Erro ao buscar a solução");
-        toast({
-          title: "Erro ao carregar solução",
-          description: error.message || "Não foi possível carregar os dados da solução.",
-          variant: "destructive"
-        });
-      } finally {
-        setLoading(false);
+        throw fetchError;
       }
-    };
-    
+      
+      if (data) {
+        log("Dados da solução encontrados", { solutionId: data.id, solutionTitle: data.title });
+        setSolution(data as Solution);
+        toast.success("Solução carregada com sucesso!");
+        
+        // Fetch progress for this solution and user if user is authenticated
+        if (user) {
+          try {
+            const { data: progressData, error: progressError } = await supabase
+              .from("progress")
+              .select("*")
+              .eq("solution_id", id)
+              .eq("user_id", user.id)
+              .maybeSingle();
+              
+            if (progressError) {
+              logError("Erro ao buscar progresso:", { error: progressError });
+            } else if (progressData) {
+              setProgress(progressData);
+              log("Dados de progresso encontrados", { progressId: progressData.id });
+            } else {
+              log("Nenhum progresso encontrado para esta solução", { solutionId: id, userId: user.id });
+            }
+          } catch (progressFetchError) {
+            logError("Erro ao buscar progresso:", { error: progressFetchError });
+            // Não mostrar erro para o usuário se apenas o progresso falhar
+          }
+        }
+      } else {
+        log("Nenhuma solução encontrada com ID", { id });
+        setError(`Solução não encontrada com ID: ${id}`);
+        toast.error("Não foi possível encontrar a solução solicitada.");
+      }
+    } catch (error: any) {
+      logError("Erro em useSolutionData:", { error });
+      setError(error);
+      toast.error("Não foi possível carregar os dados da solução.");
+    } finally {
+      setLoading(false);
+    }
+  }, [id, user, isAdmin, profile?.role, log, logError, logDebug, navigate, retryCount]);
+
+  // Função para recarregar os dados
+  const refetch = useCallback(() => {
+    setRetryCount(prevCount => prevCount + 1);
+    return fetchSolution();
+  }, [fetchSolution]);
+
+  useEffect(() => {
     fetchSolution();
-  }, [id, toast, user, navigate, isAdmin, profile?.role, log, logError, logDebug]);
+  }, [fetchSolution]);
 
   return {
     solution,
     setSolution,
     loading,
     error,
-    progress
+    progress,
+    refetch
   };
 };
