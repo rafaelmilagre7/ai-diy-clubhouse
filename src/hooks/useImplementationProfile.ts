@@ -125,6 +125,25 @@ export const useImplementationProfile = () => {
     console.log("Salvando perfil com valores:", values);
 
     try {
+      // Converter ai_knowledge_level para um valor numérico baseado no nível
+      let aiKnowledgeLevel: number;
+      switch (values.ai_knowledge_level) {
+        case "Básico":
+          aiKnowledgeLevel = 1;
+          break;
+        case "Intermediário":
+          aiKnowledgeLevel = 2;
+          break;
+        case "Avançado":
+          aiKnowledgeLevel = 3;
+          break;
+        case "Expert":
+          aiKnowledgeLevel = 4;
+          break;
+        default:
+          aiKnowledgeLevel = 1; // Valor padrão
+      }
+
       // Formatar URLs antes de salvar
       const formattedValues = {
         ...values,
@@ -134,6 +153,8 @@ export const useImplementationProfile = () => {
         company_website: values.company_website ? formatWebsiteUrl(values.company_website) : null,
         is_completed: true, // Marcar como completo quando salvar
         updated_at: new Date().toISOString(),
+        ai_knowledge_level: aiKnowledgeLevel, // Usando o valor numérico convertido
+        nps_score: values.nps_score ? parseInt(values.nps_score) : null // Garantir que NPS seja um número
       };
 
       console.log("Enviando dados formatados para Supabase:", formattedValues);
