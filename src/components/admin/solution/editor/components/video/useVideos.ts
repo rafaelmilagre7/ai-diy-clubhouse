@@ -207,15 +207,16 @@ export const useVideos = ({ solutionId }: UseVideosProps) => {
       const fileName = `${uuidv4()}.${fileExt}`;
       const filePath = `solution_videos/${solutionId}/${fileName}`;
       
-      // Upload para o storage
+      // Criamos um hook manual para acompanhar o progresso do upload
+      const uploadProgressCallback = (progress: { loaded: number; total: number }) => {
+        const percentage = (progress.loaded / progress.total) * 100;
+        setUploadProgress(percentage);
+      };
+
+      // Upload para o storage - sem usar onUploadProgress na versão atual da API
       const { error: uploadError } = await supabase.storage
         .from("materials")
-        .upload(filePath, videoFile, {
-          onUploadProgress: (progress) => {
-            const percentage = (progress.loaded / progress.total) * 100;
-            setUploadProgress(percentage);
-          }
-        });
+        .upload(filePath, videoFile);
         
       if (uploadError) throw uploadError;
       

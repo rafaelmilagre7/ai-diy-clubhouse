@@ -34,7 +34,7 @@ const TabBasedNavigation: React.FC<TabBasedNavigationProps> = ({
       <div className="mt-6">
         <TabsContent value="basic-info">
           <BasicInfoTab
-            solution={solution}
+            defaultValues={currentValues}
             currentValues={currentValues}
             onSubmit={onSubmit}
             saving={saving}
@@ -44,7 +44,6 @@ const TabBasedNavigation: React.FC<TabBasedNavigationProps> = ({
         <TabsContent value="tools">
           <ToolsTab
             solution={solution}
-            currentValues={currentValues}
             onSubmit={onSubmit}
             saving={saving}
           />
@@ -52,9 +51,8 @@ const TabBasedNavigation: React.FC<TabBasedNavigationProps> = ({
         
         <TabsContent value="materials">
           <ResourcesTab
-            solution={solution}
-            currentValues={currentValues}
-            onSubmit={onSubmit}
+            solutionId={solution?.id}
+            onSave={() => onSubmit(currentValues)}
             saving={saving}
           />
         </TabsContent>
@@ -70,8 +68,7 @@ const TabBasedNavigation: React.FC<TabBasedNavigationProps> = ({
         
         <TabsContent value="checklist">
           <ChecklistTab
-            solution={solution}
-            currentValues={currentValues}
+            solutionId={solution?.id}
             onSubmit={onSubmit}
             saving={saving}
           />
@@ -79,15 +76,15 @@ const TabBasedNavigation: React.FC<TabBasedNavigationProps> = ({
         
         <TabsContent value="modules">
           <ModulesTab 
-            solution={solution} 
+            solutionId={solution?.id} 
           />
         </TabsContent>
         
         <TabsContent value="publish">
           <PublishTab
+            solutionId={solution?.id}
             solution={solution}
-            currentValues={currentValues}
-            onSubmit={onSubmit}
+            onSave={onSubmit}
             saving={saving}
           />
         </TabsContent>
