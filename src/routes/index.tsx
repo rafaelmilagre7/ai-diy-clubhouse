@@ -21,11 +21,14 @@ const AppRoutes = () => {
       {authRoutes}
       
       {/* Rota para perfil de implementação */}
-      <Route path="/perfil-de-implementacao" element={
-        <ProtectedRoutes>
-          <ImplementationProfilePage />
-        </ProtectedRoutes>
-      } />
+      <Route 
+        path="/perfil-de-implementacao" 
+        element={
+          <ProtectedRoutes>
+            <ImplementationProfilePage />
+          </ProtectedRoutes>
+        } 
+      />
       
       {/* Rotas de membros protegidas */}
       <Route path="/*" element={<ProtectedRoutes />}>
