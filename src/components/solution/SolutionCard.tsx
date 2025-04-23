@@ -1,124 +1,101 @@
 
-import React from "react";
 import { Solution } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
-import { Clock, ArrowRight } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { formatDistanceToNowStrict } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { useLogging } from "@/hooks/useLogging";
 
 interface SolutionCardProps {
   solution: Solution;
-  onClick: () => void;
+  onClick?: () => void;
+  className?: string;
 }
 
-export const SolutionCard = ({ solution, onClick }: SolutionCardProps) => {
-  // Classes de gradiente baseadas na categoria
-  const categoryGradient = {
-    revenue: "from-green-50 to-white border-l-4 border-l-green-500",
-    operational: "from-blue-50 to-white border-l-4 border-l-blue-500",
-    strategy: "from-purple-50 to-white border-l-4 border-l-purple-500",
-    default: "from-gray-50 to-white border-l-4 border-l-gray-500"
-  };
-  
-  const gradientClass = 
-    solution.category in categoryGradient
-      ? categoryGradient[solution.category as keyof typeof categoryGradient]
-      : categoryGradient.default;
-      
-  // Data de criação formatada
-  const formattedDate = solution.created_at
-    ? formatDistanceToNowStrict(new Date(solution.created_at), {
-        addSuffix: true,
-        locale: ptBR
-      })
-    : "";
+export const SolutionCard = ({ solution, onClick, className }: SolutionCardProps) => {
+  const navigate = useNavigate();
+  const { log } = useLogging("SolutionCard");
+
+  const handleClick = () => {
+    log("Clique na solução", { 
+      solutionId: solution.id, 
+      title: solution.title
+    });
     
-  // Dificuldade formatada
-  const getDifficultyLabel = (difficulty: string) => {
-    switch (difficulty) {
-      case "easy": return "Fácil";
-      case "medium": return "Média";
-      case "hard": return "Difícil";
-      default: return "Média";
+    if (onClick) {
+      onClick();
+    } else {
+      // Garantindo que usamos o caminho correto
+      navigate(`/solutions/${solution.id}`);
     }
   };
-  
-  // Cores baseadas na dificuldade
-  const difficultyColors = {
-    easy: "bg-green-100 text-green-800",
-    medium: "bg-yellow-100 text-yellow-800",
-    hard: "bg-red-100 text-red-800",
-    default: "bg-gray-100 text-gray-800"
+
+  // Classes de gradiente baseadas na categoria
+  const categoryGradient = {
+    revenue: "from-revenue-lighter to-white border-l-4 border-l-revenue",
+    operational: "from-operational-lighter to-white border-l-4 border-l-operational",
+    strategy: "from-strategy-lighter to-white border-l-4 border-l-strategy"
   };
-  
-  const difficultyColor = 
-    solution.difficulty in difficultyColors
-      ? difficultyColors[solution.difficulty as keyof typeof difficultyColors]
-      : difficultyColors.default;
-      
-  // Usar diretamente o onClick passado por props, mantendo o caminho consistente
-  const handleClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    onClick();
-  };
+
+  // Fallback para categoria desconhecida
+  const gradientClass = solution.category && categoryGradient[solution.category as keyof typeof categoryGradient]
+    ? categoryGradient[solution.category as keyof typeof categoryGradient]
+    : "from-gray-50 to-white border-l-4 border-l-gray-300";
 
   return (
     <Card 
       className={cn(
-        "overflow-hidden transition-all duration-300 cursor-pointer shadow-sm hover:shadow-md",
+        "overflow-hidden rounded-xl shadow-md transition-all duration-300 cursor-pointer depth-effect",
+        "hover:shadow-xl hover:translate-y-[-4px]",
         "bg-gradient-to-br",
-        gradientClass
+        gradientClass,
+        className
       )}
       onClick={handleClick}
     >
-      <CardContent className="p-0">
+      <CardContent className="p-0 relative">
         {/* Thumbnail */}
         {solution.thumbnail_url && (
-          <div className="w-full h-40 relative">
+          <div className="h-48 w-full overflow-hidden">
             <img 
               src={solution.thumbnail_url} 
-              alt={solution.title}
+              alt={solution.title} 
               className="w-full h-full object-cover"
             />
           </div>
         )}
         
-        {/* Content */}
-        <div className="p-4">
+        <div className="p-4 space-y-2">
+          {/* Category and difficulty */}
           <div className="flex items-center justify-between mb-2">
-            <Badge variant="secondary" className="capitalize">
-              {solution.category === "revenue" ? "Receita" : 
-               solution.category === "operational" ? "Operacional" : 
-               solution.category === "strategy" ? "Estratégia" : 
-               solution.category}
+            <Badge variant="outline" className="capitalize text-xs">
+              {solution.category}
             </Badge>
             
-            <Badge className={cn("text-xs", difficultyColor)}>
-              {getDifficultyLabel(solution.difficulty)}
-            </Badge>
+            {solution.difficulty && (
+              <span className="text-xs text-muted-foreground">
+                {solution.difficulty}
+              </span>
+            )}
           </div>
           
-          <h3 className="font-semibold text-lg line-clamp-2 mb-2">{solution.title}</h3>
-          
-          <p className="text-muted-foreground text-sm line-clamp-2 mb-2">
-            {solution.description}
-          </p>
+          {/* Title and description */}
+          <div>
+            <h3 className="font-semibold text-lg mb-1">{solution.title}</h3>
+            <p className="text-muted-foreground text-sm line-clamp-3">
+              {solution.description}
+            </p>
+          </div>
         </div>
       </CardContent>
       
-      <CardFooter className="flex justify-between items-center p-4 pt-0">
-        <div className="flex items-center text-xs text-muted-foreground">
-          <Clock className="w-3 h-3 mr-1" />
-          <span>Criada {formattedDate}</span>
-        </div>
-        
-        <Button variant="ghost" size="sm" className="gap-1" onClick={handleClick}>
-          <span className="sr-only md:not-sr-only md:inline-block">Ver</span>
-          <ArrowRight className="w-4 h-4" />
-        </Button>
+      <CardFooter className="px-4 py-3 border-t border-gray-100 flex justify-between items-center">
+        <span className="text-xs text-muted-foreground">
+          {new Date(solution.created_at).toLocaleDateString('pt-BR')}
+        </span>
+        <span className="text-xs font-medium text-primary hover:underline">
+          Ver detalhes
+        </span>
       </CardFooter>
     </Card>
   );

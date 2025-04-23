@@ -1,4 +1,3 @@
-
 import { createClient } from '@supabase/supabase-js';
 import { Database } from './types';
 export * from '@/types/supabaseTypes';
@@ -15,22 +14,46 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
     detectSessionInUrl: true,
     flowType: 'pkce',
   },
+  global: {
+    fetch: (url, options) => {
+      const controller = new AbortController();
+      const { signal } = controller;
+      
+      // Definir timeout para requisições
+      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 segundos timeout
+      
+      return fetch(url, { ...options, signal })
+        .finally(() => clearTimeout(timeoutId));
+    }
+  }
 });
 
 // Exportar funções de utilidade para operações comuns
 export const fetchSolutionById = async (id: string) => {
-  const { data, error } = await supabase
-    .from('solutions')
-    .select('*')
-    .eq('id', id)
-    .single();
+  try {
+    console.log(`Buscando solução com ID: ${id}`);
+    
+    const { data, error } = await supabase
+      .from('solutions')
+      .select('*')
+      .eq('id', id)
+      .single();
 
-  if (error) {
-    console.error('Error fetching solution:', error);
+    if (error) {
+      console.error('Erro ao buscar solução:', error);
+      throw error;
+    }
+
+    if (!data) {
+      throw new Error('Solução não encontrada');
+    }
+
+    console.log('Solução encontrada:', data.title);
+    return data;
+  } catch (error) {
+    console.error('Erro na função fetchSolutionById:', error);
     throw error;
   }
-
-  return data;
 };
 
 export const fetchSolutionResources = async (solutionId: string) => {

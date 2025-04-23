@@ -2,7 +2,6 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import { AlertCircle, RefreshCw } from "lucide-react";
-import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { SolutionNotFound } from "@/components/solution/SolutionNotFound";
@@ -16,6 +15,7 @@ import { useSolutionInteractions } from "@/hooks/useSolutionInteractions";
 import { useLogging } from "@/hooks/useLogging";
 import LoadingScreen from "@/components/common/LoadingScreen";
 import { toast } from "sonner";
+import { SolutionSkeleton } from "@/components/solution/SolutionSkeleton";
 
 const SolutionDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -23,9 +23,8 @@ const SolutionDetails = () => {
   const { log, logError } = useLogging("SolutionDetails");
   const [retryCount, setRetryCount] = useState(0);
   const initialRenderRef = useRef(true);
-  const queryClient = useQueryClient();
   
-  // Fetch solution data with the hook that includes progress
+  // Fetch solution data with the hook
   const { solution, loading, error, progress, refetch, networkError } = useSolutionData(id);
   
   // Solution interaction handlers
@@ -45,48 +44,35 @@ const SolutionDetails = () => {
         currentRoute: window.location.href, 
       });
       initialRenderRef.current = false;
-
-      // Pré-carregar dados em cache que podem ser necessários
-      if (id) {
-        queryClient.prefetchQuery({
-          queryKey: ['solution-modules', id],
-          queryFn: async () => {
-            // Prefetch lógico apenas - não fazemos nada com o resultado ainda
-            return null;
-          },
-          staleTime: 2 * 60 * 1000 // 2 minutos
-        });
-      }
     }
     
     // Limpeza ao desmontar
     return () => {
       log("SolutionDetails desmontado");
     };
-  }, [id, log, queryClient]);
+  }, [id, log]);
   
   // Função para tentar novamente com backoff exponencial
   const handleRetry = () => {
     const newRetryCount = retryCount + 1;
     setRetryCount(newRetryCount);
     toast.info("Tentando carregar novamente...");
-    
-    // Aguardar um tempo proporcional ao número de tentativas
-    const delay = Math.min(1000 * Math.pow(1.5, newRetryCount), 10000); // máximo de 10 segundos
-    
-    log("Tentando novamente após erro", { retryCount: newRetryCount, delay });
-    
-    setTimeout(() => {
-      refetch();
-    }, delay);
+    refetch();
   };
 
   // Verificar ID inválido ou ausente
   if (!id) {
-    navigate("/solutions");
+    log("ID da solução não fornecido, redirecionando para lista de soluções");
+    navigate("/solutions", { replace: true });
     return null;
   }
   
+  // Mostrar esqueleto de loading primeiro durante 1.5s (mais amigável que spinner)
+  if (loading && initialRenderRef.current) {
+    return <SolutionSkeleton />;
+  }
+  
+  // Se o carregamento continuar por mais tempo, mostrar tela de loading completa
   if (loading) {
     return <LoadingScreen message="Carregando detalhes da solução..." />;
   }
@@ -105,9 +91,8 @@ const SolutionDetails = () => {
             onClick={handleRetry} 
             className="mt-4 flex items-center gap-2"
             variant="outline"
-            disabled={loading}
           >
-            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} /> 
+            <RefreshCw className="h-4 w-4" /> 
             Tentar novamente
           </Button>
         </Alert>
@@ -130,9 +115,8 @@ const SolutionDetails = () => {
             onClick={handleRetry} 
             className="mt-4 flex items-center gap-2"
             variant="outline"
-            disabled={loading}
           >
-            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} /> 
+            <RefreshCw className="h-4 w-4" /> 
             Tentar novamente
           </Button>
         </Alert>

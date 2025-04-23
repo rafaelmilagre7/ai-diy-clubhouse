@@ -17,7 +17,7 @@ export const useSolutionData = (solutionId: string | undefined) => {
   const [retryAttempts, setRetryAttempts] = useState(0);
   const [networkError, setNetworkError] = useState(false);
   const queryClient = useQueryClient();
-  const MAX_RETRIES = 3;
+  const MAX_RETRIES = 2; // Reduzir para 2 tentativas para evitar loops excessivos
 
   const fetchSolutionData = useCallback(async (ignoreCache = false) => {
     if (!solutionId) {
@@ -34,15 +34,21 @@ export const useSolutionData = (solutionId: string | undefined) => {
         user: user?.id 
       });
 
-      // Verificação adicional de log para depuração
-      console.log('Detalhes da solicitação:', { 
-        solutionId, 
-        user: user?.id,
-        timestamp: new Date().toISOString()
-      });
-
-      // Buscar solução
-      const solutionData = await fetchSolutionById(solutionId);
+      // Buscar solução - com timeout para evitar requisições que ficam pendentes
+      const abortController = new AbortController();
+      const timeoutId = setTimeout(() => abortController.abort(), 10000); // 10 segundos timeout
+      
+      let solutionData;
+      try {
+        solutionData = await fetchSolutionById(solutionId);
+        clearTimeout(timeoutId);
+      } catch (fetchError: any) {
+        clearTimeout(timeoutId);
+        if (fetchError.name === 'AbortError') {
+          throw new Error('Tempo limite excedido na requisição');
+        }
+        throw fetchError;
+      }
       
       if (!solutionData) {
         log('Solução não encontrada', { solutionId });
@@ -58,36 +64,29 @@ export const useSolutionData = (solutionId: string | undefined) => {
         }
       });
 
-      // Pré-carregar dados relacionados
-      queryClient.prefetchQuery({
-        queryKey: ['solution-modules', solutionId],
-        queryFn: async () => {
-          const { data } = await supabase
-            .from('modules')
-            .select('*')
-            .eq('solution_id', solutionId)
-            .order('module_order', { ascending: true });
-          return data;
-        },
-        staleTime: 2 * 60 * 1000
-      });
-
       // Buscar progresso se usuário estiver logado
       if (user) {
-        const { data: progressData, error: progressError } = await supabase
-          .from('progress')
-          .select('*')
-          .eq('solution_id', solutionId)
-          .eq('user_id', user.id)
-          .maybeSingle();
+        try {
+          const { data: progressData, error: progressError } = await supabase
+            .from('progress')
+            .select('*')
+            .eq('solution_id', solutionId)
+            .eq('user_id', user.id)
+            .maybeSingle();
 
-        if (progressError) {
-          log('Aviso: Erro ao carregar progresso', { error: progressError });
-        }
-
-        setProgress(progressData);
-        if (progressData) {
-          log('Dados de progresso carregados', { progress: progressData });
+          if (progressError) {
+            log('Aviso: Erro ao carregar progresso', { error: progressError });
+          } else {
+            setProgress(progressData);
+            if (progressData) {
+              log('Dados de progresso carregados', { progressId: progressData.id });
+            }
+          }
+        } catch (progressError) {
+          // Apenas log, não falhar toda a operação se o progresso falhar
+          logError('Erro ao carregar dados de progresso', { 
+            error: progressError
+          });
         }
       }
 
@@ -99,18 +98,13 @@ export const useSolutionData = (solutionId: string | undefined) => {
       logError('Erro ao carregar dados da solução', { 
         error: err,
         solutionId,
-        message: err.message,
-        stack: err.stack 
+        message: err.message
       });
       
-      // Log de console para depuração
-      console.error('Erro detalhado:', {
-        message: err.message,
-        stack: err.stack,
-        solutionId
-      });
-      
-      if (err.message?.includes('fetch') || err.message?.includes('network')) {
+      if (err.message?.includes('fetch') || 
+          err.message?.includes('network') || 
+          err.message?.includes('timeout') || 
+          err.message?.includes('AbortError')) {
         setNetworkError(true);
         if (retryAttempts === 0) {
           toast.error("Problemas de conexão. Tentando novamente...");
@@ -129,7 +123,8 @@ export const useSolutionData = (solutionId: string | undefined) => {
         }, delay);
       } else {
         setSolution(null);
-        setError(err);
+        setError(err instanceof Error ? err : new Error(String(err)));
+        toast.error("Não foi possível carregar a solução após várias tentativas");
         log('Máximo de tentativas atingido', { solutionId, maxRetries: MAX_RETRIES });
       }
     } finally {
@@ -139,16 +134,22 @@ export const useSolutionData = (solutionId: string | undefined) => {
 
   useEffect(() => {
     if (solutionId) {
+      // Resetar estados quando o ID mudar
       setSolution(null);
       setProgress(null);
       setError(null);
       setRetryAttempts(0);
       setNetworkError(false);
-      fetchSolutionData();
+      // Buscar dados com pequeno delay para evitar requisições em cascata
+      const timeoutId = setTimeout(() => {
+        fetchSolutionData();
+      }, 100);
+      
+      return () => clearTimeout(timeoutId);
     }
   }, [solutionId, fetchSolutionData]);
 
-  const refetch = useCallback(async () => {
+  const refetch = useCallback(() => {
     setError(null);
     setRetryAttempts(0);
     return fetchSolutionData(true);
