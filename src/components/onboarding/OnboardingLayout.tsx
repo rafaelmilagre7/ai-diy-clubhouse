@@ -36,15 +36,15 @@ const OnboardingLayout: React.FC<OnboardingLayoutProps> = ({
 }) => {
   return (
     <MemberLayout>
-      <div className="min-h-screen bg-gradient-to-b from-white via-viverblue-lighter/10 to-viverblue/10">
-        <div className="container max-w-4xl mx-auto px-4 py-8">
-          <div className="mb-8 space-y-4">
-            <h1 className="text-3xl font-bold text-viverblue-dark font-heading">{title}</h1>
+      <div className="min-h-screen w-full bg-gradient-to-b from-white via-viverblue-lighter/10 to-viverblue/10">
+        <div className="w-full max-w-4xl mx-auto px-4 md:px-6 py-6 md:py-8">
+          <div className="mb-6 md:mb-8 space-y-3">
+            <h1 className="text-2xl md:text-3xl font-bold text-viverblue-dark font-heading">{title}</h1>
             {description && <p className="text-neutral-600">{description}</p>}
             
             {!hideProgress && (
               <>
-                <div className="flex items-center justify-between mt-6">
+                <div className="flex items-center justify-between mt-4">
                   <p className="text-neutral-600 font-medium">
                     Passo {currentStep} de {totalSteps}
                   </p>
@@ -60,7 +60,7 @@ const OnboardingLayout: React.FC<OnboardingLayoutProps> = ({
             )}
             
             {stepTitles.length > 0 && (
-              <div className="flex flex-wrap gap-2 mt-6">
+              <div className="flex flex-wrap gap-2 mt-4">
                 {stepTitles.map((title, index) => (
                   <StepIndicator 
                     key={index}
@@ -75,7 +75,7 @@ const OnboardingLayout: React.FC<OnboardingLayoutProps> = ({
             )}
             
             {steps.length > 0 && (
-              <div className="flex flex-wrap gap-2 mt-6">
+              <div className="flex flex-wrap gap-2 mt-4">
                 {steps.map((step, index) => (
                   <StepIndicator 
                     key={step.id}
@@ -90,7 +90,7 @@ const OnboardingLayout: React.FC<OnboardingLayoutProps> = ({
             )}
           </div>
           
-          <div className="bg-white p-8 rounded-xl border border-gray-100 shadow-md">
+          <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 md:p-8">
             {children}
           </div>
         </div>

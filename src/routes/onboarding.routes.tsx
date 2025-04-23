@@ -1,8 +1,13 @@
 
 import { RouteObject } from 'react-router-dom';
 import Onboarding from '@/pages/onboarding/Onboarding';
+import OnboardingIntro from '@/pages/onboarding/OnboardingIntro';
 
 export const onboardingRoutes: RouteObject[] = [
+  {
+    path: '/onboarding/intro',
+    element: <OnboardingIntro />,
+  },
   {
     path: '/onboarding',
     element: <Onboarding />,

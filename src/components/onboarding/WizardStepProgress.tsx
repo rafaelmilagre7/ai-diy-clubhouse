@@ -21,13 +21,13 @@ export const WizardStepProgress = ({
 
   return (
     <TooltipProvider>
-      <div className="relative px-4 py-4 rounded-lg bg-white dark:bg-gray-800 shadow-sm border border-gray-200 dark:border-gray-700">
+      <div className="relative px-4 py-4 rounded-lg bg-white shadow-sm border border-gray-200">
         <div className="relative flex items-center justify-between">
           {/* Linha de progresso base */}
-          <div className="absolute left-0 top-1/2 transform -translate-y-1/2 w-full h-1 bg-gray-100 dark:bg-gray-700 rounded-full" />
+          <div className="absolute left-0 top-1/2 transform -translate-y-1/2 w-full h-1 bg-gray-100 rounded-full" />
           {/* Linha de progresso preenchida */}
           <div
-            className="absolute left-0 top-1/2 transform -translate-y-1/2 h-1 bg-[#0ABAB5] rounded-full transition-all duration-300"
+            className="absolute left-0 top-1/2 transform -translate-y-1/2 h-1 bg-viverblue rounded-full transition-all duration-300"
             style={{ width: `${((currentStep - 1) / (totalSteps - 1)) * 100}%` }}
           />
 
@@ -41,13 +41,13 @@ export const WizardStepProgress = ({
                 <TooltipTrigger asChild>
                   <div
                     className={cn(
-                      "relative z-10 flex items-center justify-center w-10 h-10 rounded-full transition-all duration-200 select-none",
+                      "relative z-10 flex items-center justify-center w-8 h-8 rounded-full transition-all duration-200 select-none",
                       isClickable && !isActive ? "cursor-pointer hover:scale-110" : "",
                       isComplete
                         ? "bg-green-500 text-white shadow-sm"
                         : isActive
-                        ? "bg-[#0ABAB5] text-white ring-4 ring-[#0ABAB5]/20 shadow-lg scale-110"
-                        : "bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-600 text-gray-400"
+                        ? "bg-viverblue text-white ring-4 ring-viverblue/20 shadow-md scale-110"
+                        : "bg-white border-2 border-gray-200 text-gray-400"
                     )}
                     onClick={() => {
                       if (isClickable && !isActive && onStepClick) {
@@ -56,15 +56,15 @@ export const WizardStepProgress = ({
                     }}
                   >
                     {isComplete ? (
-                      <CheckIcon className="w-5 h-5" />
+                      <CheckIcon className="w-4 h-4" />
                     ) : (
-                      <span className="text-sm font-medium">{step}</span>
+                      <span className="text-xs font-medium">{step}</span>
                     )}
                   </div>
                 </TooltipTrigger>
                 <TooltipContent
                   side="bottom"
-                  className="bg-[#0ABAB5] text-white font-medium border-none"
+                  className="bg-viverblue text-white font-medium border-none"
                 >
                   {stepTitles[step - 1]}
                 </TooltipContent>
@@ -85,10 +85,10 @@ export const WizardStepProgress = ({
                 className={cn(
                   "text-xs px-2 py-1 rounded",
                   isComplete
-                    ? "text-green-600 dark:text-green-400"
+                    ? "text-green-600"
                     : isActive
-                    ? "text-[#0ABAB5] font-medium"
-                    : "text-gray-500 dark:text-gray-400"
+                    ? "text-viverblue font-medium"
+                    : "text-gray-500"
                 )}
               >
                 {step}. {stepTitles[step - 1]}

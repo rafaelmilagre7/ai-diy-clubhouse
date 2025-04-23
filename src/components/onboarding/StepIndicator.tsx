@@ -23,7 +23,7 @@ export const StepIndicator: React.FC<StepIndicatorProps> = ({
   return (
     <div 
       className={cn(
-        "flex items-center gap-2 p-1 rounded-lg transition-all duration-200",
+        "flex items-center gap-2 p-1.5 rounded-md transition-all duration-200",
         isClickable ? "cursor-pointer hover:bg-neutral-100" : "cursor-default",
         isActive && "font-medium"
       )}
@@ -33,15 +33,15 @@ export const StepIndicator: React.FC<StepIndicatorProps> = ({
     >
       <div 
         className={cn(
-          "flex items-center justify-center w-7 h-7 rounded-full text-sm font-medium",
+          "flex items-center justify-center w-6 h-6 rounded-full text-xs font-medium",
           isCompleted 
             ? "bg-green-500 text-white" 
             : isActive 
               ? "bg-viverblue text-white shadow-sm" 
-              : "bg-neutral-200 text-neutral-600"
+              : "bg-neutral-100 text-neutral-600"
         )}
       >
-        {isCompleted ? <Check className="h-4 w-4" /> : index}
+        {isCompleted ? <Check className="h-3.5 w-3.5" /> : index}
       </div>
       <span 
         className={cn(
