@@ -18,43 +18,39 @@ import NewSuggestion from "@/pages/member/NewSuggestion";
 import Achievements from "@/pages/member/Achievements";
 import Benefits from "@/pages/member/Benefits";
 import ImplementationTrailPage from "@/pages/member/ImplementationTrailPage";
-import ImplementationProfilePage from "@/pages/ImplementationProfile";
 
 export const memberRoutes = (
   <Fragment>
     <Route element={<MemberLayout />}>
       {/* Dashboard */}
-      <Route path="/dashboard" element={<Dashboard />} />
+      <Route path="dashboard" element={<Dashboard />} />
       
       {/* Soluções */}
-      <Route path="/solutions" element={<Solutions />} />
-      <Route path="/solution/:id" element={<SolutionDetails />} />
-      <Route path="/implement/:id/:moduleIdx" element={<SolutionImplementation />} />
-      <Route path="/implementation/:id" element={<SolutionImplementation />} />
-      <Route path="/implementation/:id/:moduleIdx" element={<SolutionImplementation />} />
-      <Route path="/implementation-trail" element={<ImplementationTrailPage />} />
-      
-      {/* Perfil de Implementação */}
-      <Route path="/perfil-de-implementacao" element={<ImplementationProfilePage />} />
+      <Route path="solutions" element={<Solutions />} />
+      <Route path="solution/:id" element={<SolutionDetails />} />
+      <Route path="implement/:id/:moduleIdx" element={<SolutionImplementation />} />
+      <Route path="implementation/:id" element={<SolutionImplementation />} />
+      <Route path="implementation/:id/:moduleIdx" element={<SolutionImplementation />} />
+      <Route path="implementation-trail" element={<ImplementationTrailPage />} />
       
       {/* Perfil */}
-      <Route path="/profile" element={<Profile />} />
-      <Route path="/profile/edit" element={<EditProfile />} />
+      <Route path="profile" element={<Profile />} />
+      <Route path="profile/edit" element={<EditProfile />} />
       
       {/* Ferramentas */}
-      <Route path="/tools" element={<Tools />} />
-      <Route path="/tools/:id" element={<ToolDetails />} />
+      <Route path="tools" element={<Tools />} />
+      <Route path="tools/:id" element={<ToolDetails />} />
       
       {/* Benefícios */}
-      <Route path="/benefits" element={<Benefits />} />
+      <Route path="benefits" element={<Benefits />} />
       
       {/* Sugestões */}
-      <Route path="/suggestions" element={<Suggestions />} />
-      <Route path="/suggestions/:id" element={<SuggestionDetails />} />
-      <Route path="/suggestions/new" element={<NewSuggestion />} />
+      <Route path="suggestions" element={<Suggestions />} />
+      <Route path="suggestions/:id" element={<SuggestionDetails />} />
+      <Route path="suggestions/new" element={<NewSuggestion />} />
       
       {/* Conquistas */}
-      <Route path="/achievements" element={<Achievements />} />
+      <Route path="achievements" element={<Achievements />} />
     </Route>
   </Fragment>
 );

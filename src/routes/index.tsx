@@ -28,12 +28,12 @@ const AppRoutes = () => {
       } />
       
       {/* Rotas de membros protegidas */}
-      <Route element={<ProtectedRoutes />}>
+      <Route path="/*" element={<ProtectedRoutes />}>
         {memberRoutes}
       </Route>
       
       {/* Rotas de administradores protegidas */}
-      <Route element={<AdminProtectedRoutes />}>
+      <Route path="/admin/*" element={<AdminProtectedRoutes />}>
         {adminRoutes}
       </Route>
       

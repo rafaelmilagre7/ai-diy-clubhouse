@@ -45,19 +45,7 @@ const ImplementationTrailPage = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex flex-col items-center justify-center py-8 text-center">
-              <h3 className="text-lg font-medium mb-2">Complete seu perfil para gerar sua trilha</h3>
-              <p className="text-muted-foreground mb-6 max-w-lg">
-                Para podermos criar uma trilha de implementação personalizada para você, 
-                precisamos que você complete seu Perfil de Implementação.
-              </p>
-              <Button 
-                onClick={() => navigate("/perfil-de-implementacao")} 
-                className="bg-[#0ABAB5] hover:bg-[#0ABAB5]/90"
-              >
-                Completar Perfil de Implementação
-              </Button>
-            </div>
+            <OnboardingIncompleteState onNavigateToOnboarding={() => navigate("/perfil-de-implementacao")} />
           </CardContent>
         </Card>
       </div>

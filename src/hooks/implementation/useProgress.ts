@@ -26,7 +26,7 @@ export const useProgress = () => {
           setProgress({
             is_completed: profile.is_completed || false,
             user_id: profile.user_id || user.id,
-            updated_at: profile.updated_at || new Date().toISOString()
+            updated_at: new Date().toISOString() // Usando uma data atual em vez da referência ao profile
           });
         } else {
           setProgress({
