@@ -33,7 +33,8 @@ export const useStepNavigation = () => {
       if (isLoading) return; // Evitar múltiplas chamadas durante carregamento
       
       try {
-        logger.logInfo("Carregando progresso do onboarding, path atual:", location.pathname);
+        // Aqui está o problema - precisamos passar um objeto ao invés de uma string como segundo parâmetro
+        logger.logInfo("Carregando progresso do onboarding, path atual:", { path: location.pathname });
         const refreshedProgress = await refreshProgress();
         
         // Verificar se temos um progresso válido
@@ -93,7 +94,7 @@ export const useStepNavigation = () => {
           navigate(steps[0].path);
         }
       } catch (error) {
-        logger.logError("Erro ao carregar progresso:", error);
+        logger.logError("Erro ao carregar progresso:", { error });
       }
     };
     
