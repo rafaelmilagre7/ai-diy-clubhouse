@@ -7,7 +7,7 @@ import { useSolutionSteps } from "@/hooks/useSolutionSteps";
 import { Solution } from "@/lib/supabase";
 
 export const useSolutionEditor = (id: string | undefined, user: any) => {
-  // Get solution data
+  // Get solution data - agora com setSolution disponível
   const { solution, setSolution, loading } = useSolutionData(id);
   
   // Get step navigation

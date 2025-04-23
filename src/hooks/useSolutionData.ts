@@ -12,6 +12,7 @@ export const useSolutionData = (id: string | undefined) => {
   const navigate = useNavigate();
   const { log, logError } = useLogging("useSolutionData");
   const isAdmin = profile?.role === 'admin';
+  const [solutionData, setSolutionData] = useState<Solution | null>(null);
   
   // Refs para controle de estados e operações
   const toastShownRef = useRef<Record<string, boolean>>({
@@ -109,30 +110,6 @@ export const useSolutionData = (id: string | undefined) => {
     }
   }, [id, isAdmin, navigate, log, logError]);
 
-  // Fetch progresso do usuário
-  const fetchProgress = useCallback(async (solutionId: string) => {
-    if (!user || !solutionId) return null;
-    
-    try {
-      const { data, error } = await supabase
-        .from("progress")
-        .select("*")
-        .eq("solution_id", solutionId)
-        .eq("user_id", user.id)
-        .maybeSingle();
-        
-      if (error) {
-        logError("Erro ao buscar progresso:", { error });
-        return null;
-      }
-      
-      return data;
-    } catch (error) {
-      logError("Erro ao buscar progresso:", { error });
-      return null;
-    }
-  }, [user, logError]);
-
   // Usar React Query para gerenciar os estados e cache
   const { 
     data: solution, 
@@ -148,11 +125,39 @@ export const useSolutionData = (id: string | undefined) => {
     refetchOnWindowFocus: false,
   });
 
+  // Função para definir a solução manualmente (necessária para o editor)
+  const setSolution = (solution: Solution) => {
+    setSolutionData(solution);
+  };
+
   // Progress state
   const [progress, setProgress] = useState<any | null>(null);
 
   // Fetch progresso quando a solução é carregada
   useEffect(() => {
+    const fetchProgress = async (solutionId: string) => {
+      if (!user || !solutionId) return null;
+      
+      try {
+        const { data, error } = await supabase
+          .from("progress")
+          .select("*")
+          .eq("solution_id", solutionId)
+          .eq("user_id", user.id)
+          .maybeSingle();
+          
+        if (error) {
+          logError("Erro ao buscar progresso:", { error });
+          return null;
+        }
+        
+        return data;
+      } catch (error) {
+        logError("Erro ao buscar progresso:", { error });
+        return null;
+      }
+    };
+
     if (solution && user) {
       fetchProgress(solution.id).then(progressData => {
         if (progressData) {
@@ -166,7 +171,7 @@ export const useSolutionData = (id: string | undefined) => {
         }
       });
     }
-  }, [solution, user, fetchProgress, log]);
+  }, [solution, user, log, logError]);
 
   // Reset refs quando o ID muda
   useEffect(() => {
@@ -181,10 +186,11 @@ export const useSolutionData = (id: string | undefined) => {
   }, [id]);
 
   return {
-    solution,
+    solution: solutionData || solution,
     loading,
     error,
     progress,
-    refetch
+    refetch,
+    setSolution
   };
 };
