@@ -2,7 +2,7 @@
 import { SolutionCategory } from '@/types/solution';
 
 // Re-exportando para manter compatibilidade com código existente
-export { SolutionCategory };
+export type { SolutionCategory };
 
 export const toSolutionCategory = (category: string): SolutionCategory => {
   if (category === 'revenue' || category === 'operational' || category === 'strategy') {

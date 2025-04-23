@@ -1,4 +1,3 @@
-
 import { Solution as SupabaseSolution, Module as SupabaseModule } from '@/types/supabaseTypes';
 import { Solution, Module, Progress, ModuleType } from '@/types/solution';
 
@@ -15,19 +14,22 @@ export const adaptSolutionType = (supaSolution: SupabaseSolution): Solution => {
   let progressData = null;
   
   if (supaSolution.progress) {
+    // Para lidar com a possível falta de propriedades, usamos uma asserção de tipo após verificar
+    const supaProgress = supaSolution.progress as any;
+    
     // Criando um objeto Progress com valores padrão quando necessário
     progressData = {
-      id: supaSolution.progress.id || '',
-      user_id: supaSolution.progress.user_id || '',
-      solution_id: supaSolution.progress.solution_id || '',
-      implementation_status: (supaSolution.progress.implementation_status as any) || 'not_started',
-      current_module: supaSolution.progress.current_module || 0,
-      is_completed: supaSolution.progress.is_completed || false,
-      completed_modules: supaSolution.progress.completed_modules || [],
-      last_activity: supaSolution.progress.last_activity || new Date().toISOString(),
-      completion_percentage: supaSolution.progress.completion_percentage || 0,
-      completion_data: supaSolution.progress.completion_data || {},
-      completed_at: supaSolution.progress.completed_at || null
+      id: supaProgress.id || '',
+      user_id: supaProgress.user_id || '',
+      solution_id: supaProgress.solution_id || '',
+      implementation_status: supaProgress.implementation_status || 'not_started',
+      current_module: supaProgress.current_module || 0,
+      is_completed: supaProgress.is_completed || false,
+      completed_modules: supaProgress.completed_modules || [],
+      last_activity: supaProgress.last_activity || new Date().toISOString(),
+      completion_percentage: supaProgress.completion_percentage || 0,
+      completion_data: supaProgress.completion_data || {},
+      completed_at: supaProgress.completed_at || null
     } as Progress;
   }
 
@@ -42,7 +44,8 @@ export const adaptSolutionType = (supaSolution: SupabaseSolution): Solution => {
                    supaSolution.difficulty === 'advanced') ? 
                    supaSolution.difficulty : 'medium';
 
-  return {
+  // Criar o objeto Solution sem a propriedade completion_requirements se não estiver definido no tipo
+  const solution: Solution = {
     id: supaSolution.id,
     title: supaSolution.title,
     description: supaSolution.description || '',
@@ -56,8 +59,6 @@ export const adaptSolutionType = (supaSolution: SupabaseSolution): Solution => {
     implementation_steps: supaSolution.implementation_steps || [],
     // Verificamos se checklist_items existe no objeto antes de usá-lo
     checklist_items: supaSolution.checklist ? supaSolution.checklist : (supaSolution as any).checklist_items || [],
-    // Verificamos se completion_requirements existe no objeto antes de usá-lo
-    completion_requirements: (supaSolution as any).completion_requirements || {},
     modules: modules,
     progress: progressData,
     overview: supaSolution.overview || '',
@@ -67,6 +68,8 @@ export const adaptSolutionType = (supaSolution: SupabaseSolution): Solution => {
     success_rate: supaSolution.success_rate || 0,
     tags: supaSolution.tags || [],
   };
+
+  return solution;
 };
 
 /**
