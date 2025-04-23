@@ -24,10 +24,11 @@ export const useFileUpload = (solutionId: string) => {
       return null;
     }
 
-    const maxSize = 100 * 1024 * 1024;
+    // Aumentando o limite de 100MB para 500MB
+    const maxSize = 500 * 1024 * 1024;
     if (file.size > maxSize) {
       toast("Arquivo muito grande", {
-        description: "O tamanho máximo permitido é 100MB."
+        description: "O tamanho máximo permitido é 500MB."
       });
       return null;
     }
@@ -40,9 +41,20 @@ export const useFileUpload = (solutionId: string) => {
       const fileName = `${uuidv4()}.${fileExt}`;
       const filePath = `solution_videos/${solutionId}/${fileName}`;
 
+      // Simulando progresso de upload para feedback visual
+      const progressInterval = setInterval(() => {
+        setUploadProgress(prev => {
+          // Não chega a 100% até que o upload realmente termine
+          if (prev < 80) return prev + 5;
+          return prev;
+        });
+      }, 500);
+
       const { error: uploadError } = await supabase.storage
         .from("materials")
         .upload(filePath, file);
+
+      clearInterval(progressInterval);
 
       if (uploadError) throw uploadError;
 
@@ -51,6 +63,8 @@ export const useFileUpload = (solutionId: string) => {
         .getPublicUrl(filePath);
 
       if (!urlData) throw new Error("Não foi possível obter a URL do vídeo");
+
+      setUploadProgress(100); // Completar progresso ao finalizar
 
       const newVideo = {
         solution_id: solutionId,
@@ -85,7 +99,7 @@ export const useFileUpload = (solutionId: string) => {
       return null;
     } finally {
       setUploading(false);
-      setUploadProgress(0);
+      setTimeout(() => setUploadProgress(0), 2000); // Reset do progresso após um tempo
     }
   };
 

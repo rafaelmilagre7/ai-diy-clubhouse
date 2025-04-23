@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -28,6 +27,14 @@ export const SimpleVideoUpload: React.FC<SimpleVideoUploadProps> = ({ solutionId
     return; // Garantir que retorna void
   };
 
+  // Função de manipulação para o upload de arquivo
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      handleFileUpload(file);
+    }
+  };
+
   return (
     <Card className="border shadow-sm">
       <CardHeader className="pb-3">
@@ -52,10 +59,7 @@ export const SimpleVideoUpload: React.FC<SimpleVideoUploadProps> = ({ solutionId
           <TabsContent value="upload" className="space-y-4">
             <div className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
               <FileVideoUploader
-                onFileChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) handleFileUpload(file);
-                }}
+                onFileChange={handleFileChange}
                 isUploading={uploading}
                 uploadProgress={uploadProgress}
                 disabled={!solutionId}

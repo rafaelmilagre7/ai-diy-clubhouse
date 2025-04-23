@@ -20,7 +20,9 @@ const VideoUploader: React.FC<VideoUploaderProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleButtonClick = () => {
-    fileInputRef.current?.click();
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
   };
 
   const handleFileDrop = (e: React.DragEvent<HTMLDivElement>) => {
@@ -82,7 +84,7 @@ const VideoUploader: React.FC<VideoUploaderProps> = ({
             Arraste e solte seu arquivo de vídeo aqui ou clique para selecionar
           </p>
           <p className="text-xs text-muted-foreground mb-4">
-            Formatos suportados: MP4, WEBM, MOV (Máx: 100MB)
+            Formatos suportados: MP4, WEBM, MOV (Máx: 500MB)
           </p>
           
           <Button
