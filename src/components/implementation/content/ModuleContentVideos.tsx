@@ -20,9 +20,10 @@ interface ModuleContentVideosProps {
 export const ModuleContentVideos: React.FC<ModuleContentVideosProps> = ({ module }) => {
   const [videos, setVideos] = useState<Video[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const { log, logError } = useLogging("ModuleContentVideos");
 
-  // Fetch solution data to get videos - otimizado para funcionar melhor
+  // Fetch solution data to get videos - otimizado com melhor tratamento de erros
   useEffect(() => {
     const fetchVideos = async () => {
       if (!module || !module.solution_id) {
@@ -36,6 +37,16 @@ export const ModuleContentVideos: React.FC<ModuleContentVideosProps> = ({ module
           module_id: module.id, 
           solution_id: module.solution_id 
         });
+
+        // Checando se o ID do módulo é um placeholder
+        const isPlaceholder = module.id.startsWith('placeholder-');
+        
+        if (isPlaceholder) {
+          log("Módulo é um placeholder, não buscando vídeos do banco");
+          setVideos([]);
+          setLoading(false);
+          return;
+        }
         
         // Primeiro, verificamos se há vídeos no conteúdo do módulo
         if (module.content && module.content.videos && Array.isArray(module.content.videos)) {
@@ -45,66 +56,72 @@ export const ModuleContentVideos: React.FC<ModuleContentVideosProps> = ({ module
           return;
         }
         
-        // Senão, buscamos recursos de vídeo relacionados ao módulo
-        const { data: moduleResources, error: moduleResourcesError } = await supabase
-          .from("solution_resources")
-          .select("*")
-          .eq("module_id", module.id)
-          .eq("type", "video");
-          
-        if (moduleResourcesError) {
-          logError("Erro ao buscar recursos de vídeo do módulo", { error: moduleResourcesError });
-        } else if (moduleResources && moduleResources.length > 0) {
-          log("Encontrados recursos de vídeo para o módulo", { count: moduleResources.length });
-          
-          const formattedVideos = moduleResources.map(resource => ({
-            id: resource.id,
-            title: resource.name,
-            description: resource.format || "",
-            url: resource.url,
-            youtube_id: resource.url.includes("youtube.com/embed/") 
-              ? resource.url.split("youtube.com/embed/")[1]?.split("?")[0] 
-              : null
-          }));
-          
-          setVideos(formattedVideos);
-          setLoading(false);
-          return;
+        try {
+          // Senão, buscamos recursos de vídeo relacionados ao módulo
+          const { data: moduleResources, error: moduleResourcesError } = await supabase
+            .from("solution_resources")
+            .select("*")
+            .eq("module_id", module.id)
+            .eq("type", "video");
+            
+          if (moduleResourcesError) {
+            logError("Erro ao buscar recursos de vídeo do módulo", { error: moduleResourcesError });
+          } else if (moduleResources && moduleResources.length > 0) {
+            log("Encontrados recursos de vídeo para o módulo", { count: moduleResources.length });
+            
+            const formattedVideos = moduleResources.map(resource => ({
+              id: resource.id,
+              title: resource.name,
+              description: resource.format || "",
+              url: resource.url,
+              youtube_id: extractYoutubeId(resource.url)
+            }));
+            
+            setVideos(formattedVideos);
+            setLoading(false);
+            return;
+          }
+        } catch (err) {
+          logError("Erro ao buscar recursos de vídeo do módulo", { err });
+          // Continuamos para tentar buscar vídeos da solução
         }
         
-        // Se não encontramos vídeos relacionados ao módulo, buscamos vídeos da solução
-        const { data: solutionResources, error: solutionResourcesError } = await supabase
-          .from("solution_resources")
-          .select("*")
-          .eq("solution_id", module.solution_id)
-          .eq("type", "video")
-          .is("module_id", null);
-          
-        if (solutionResourcesError) {
-          logError("Erro ao buscar recursos de vídeo da solução", { error: solutionResourcesError });
-        } else if (solutionResources && solutionResources.length > 0) {
-          log("Encontrados recursos de vídeo para a solução", { count: solutionResources.length });
-          
-          const formattedVideos = solutionResources.map(resource => ({
-            id: resource.id,
-            title: resource.name,
-            description: resource.format || "",
-            url: resource.url,
-            youtube_id: resource.url.includes("youtube.com/embed/") 
-              ? resource.url.split("youtube.com/embed/")[1]?.split("?")[0] 
-              : null
-          }));
-          
-          setVideos(formattedVideos);
-        } else {
-          log("Nenhum vídeo encontrado para o módulo ou solução", {
-            module_id: module.id,
-            solution_id: module.solution_id
-          });
-          setVideos([]);
+        try {
+          // Se não encontramos vídeos relacionados ao módulo, buscamos vídeos da solução
+          const { data: solutionResources, error: solutionResourcesError } = await supabase
+            .from("solution_resources")
+            .select("*")
+            .eq("solution_id", module.solution_id)
+            .eq("type", "video")
+            .is("module_id", null);
+            
+          if (solutionResourcesError) {
+            logError("Erro ao buscar recursos de vídeo da solução", { error: solutionResourcesError });
+          } else if (solutionResources && solutionResources.length > 0) {
+            log("Encontrados recursos de vídeo para a solução", { count: solutionResources.length });
+            
+            const formattedVideos = solutionResources.map(resource => ({
+              id: resource.id,
+              title: resource.name,
+              description: resource.format || "",
+              url: resource.url,
+              youtube_id: extractYoutubeId(resource.url)
+            }));
+            
+            setVideos(formattedVideos);
+          } else {
+            log("Nenhum vídeo encontrado para o módulo ou solução", {
+              module_id: module.id,
+              solution_id: module.solution_id
+            });
+            setVideos([]);
+          }
+        } catch (err) {
+          logError("Erro ao buscar recursos de vídeo da solução", { err });
         }
       } catch (err) {
         logError("Erro ao carregar vídeos", { err });
+        setError("Não foi possível carregar os vídeos");
       } finally {
         setLoading(false);
       }
@@ -113,16 +130,25 @@ export const ModuleContentVideos: React.FC<ModuleContentVideosProps> = ({ module
     fetchVideos();
   }, [module, log, logError]);
 
-  // Extract YouTube ID from URL com tratamento de erro
-  const getYouTubeId = (url: string): string | null => {
+  // Função melhorada para extrair YouTube ID de URL com tratamento de erro
+  const extractYoutubeId = (url?: string): string | null => {
     if (!url) return null;
     
     try {
+      // Extrair de URL de incorporação
+      if (url.includes('youtube.com/embed/')) {
+        const embedPath = url.split('youtube.com/embed/')[1];
+        if (embedPath) {
+          return embedPath.split('?')[0].split('/')[0];
+        }
+      }
+      
+      // Extrair de URL regular do YouTube
       const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
       const match = url.match(regExp);
       return (match && match[2].length === 11) ? match[2] : null;
     } catch (error) {
-      logError("Erro ao extrair YouTube ID", { error });
+      logError("Erro ao extrair YouTube ID", { error, url });
       return null;
     }
   };
@@ -142,6 +168,15 @@ export const ModuleContentVideos: React.FC<ModuleContentVideosProps> = ({ module
     );
   }
 
+  if (error) {
+    return (
+      <div className="p-4 bg-red-50 border border-red-200 rounded-md mt-8">
+        <h3 className="text-lg font-semibold text-red-700">Erro</h3>
+        <p className="text-red-600">{error}</p>
+      </div>
+    );
+  }
+
   if (videos.length === 0) {
     return (
       <div className="text-center py-6 mt-6 bg-gray-50 rounded-md">
@@ -157,7 +192,7 @@ export const ModuleContentVideos: React.FC<ModuleContentVideosProps> = ({ module
       <div className="space-y-8">
         {videos.map((video, index) => {
           // Get video ID from provided youtube_id or extract from URL
-          const youtubeId = video.youtube_id || (video.url ? getYouTubeId(video.url) : null);
+          const youtubeId = video.youtube_id || (video.url ? extractYoutubeId(video.url) : null);
           
           if (!youtubeId && !video.url) {
             log("Vídeo sem URL ou YouTube ID válido", { video, index });

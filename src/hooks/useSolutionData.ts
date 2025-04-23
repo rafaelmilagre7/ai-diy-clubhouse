@@ -62,7 +62,7 @@ export const useSolutionData = (id: string | undefined) => {
     }
   }, [id, isAdmin, log, logError]);
 
-  // Usar React Query para gerenciar os estados e cache - otimizado
+  // Usar React Query para gerenciar os estados e cache - atualizado para nova versão
   const { 
     data: solution, 
     error,

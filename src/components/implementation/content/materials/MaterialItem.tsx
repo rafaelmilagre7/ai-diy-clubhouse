@@ -10,6 +10,7 @@ interface MaterialItemProps {
     name: string;
     file_url?: string;
     external_url?: string;
+    url?: string; // Adicionado para compatibilidade
     size?: number;
     type?: string;
   };
@@ -37,27 +38,31 @@ export const MaterialItem = ({ material, onDownload }: MaterialItemProps) => {
     return splitUrl[splitUrl.length - 1].split('?')[0];
   };
 
+  // Determinar qual URL usar (compatibilidade com diferentes formatos)
+  const fileUrl = material.file_url || material.url;
+  const externalUrl = material.external_url;
+
   // Retorna o tipo de link (externo ou download)
   const renderActionButton = () => {
-    if (material.external_url) {
+    if (externalUrl) {
       return (
         <Button 
           size="sm" 
           variant="outline" 
           className="flex items-center gap-1"
-          onClick={() => window.open(material.external_url, '_blank')}
+          onClick={() => window.open(externalUrl, '_blank')}
         >
           <ExternalLink className="h-4 w-4" />
           Acessar
         </Button>
       );
-    } else if (material.file_url) {
+    } else if (fileUrl) {
       return (
         <Button 
           size="sm" 
           variant="outline" 
           className="flex items-center gap-1"
-          onClick={() => handleDownload(material.file_url || '', getFileName(material.file_url))}
+          onClick={() => handleDownload(fileUrl || '', getFileName(fileUrl))}
           disabled={downloading}
         >
           <Download className="h-4 w-4" />

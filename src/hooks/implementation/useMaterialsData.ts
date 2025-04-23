@@ -6,7 +6,9 @@ import { useLogging } from "@/hooks/useLogging";
 interface Material {
   id: string;
   name: string;
-  url: string;
+  url?: string;
+  file_url?: string;
+  external_url?: string;
   type: string;
   format: string;
   size?: number;
@@ -65,6 +67,7 @@ export const useMaterialsData = (module: Module) => {
             id: material.id,
             name: material.name,
             url: material.url,
+            file_url: material.url, // Adicionando para compatibilidade
             type: material.type,
             format: material.format || "Documento",
             size: material.size
