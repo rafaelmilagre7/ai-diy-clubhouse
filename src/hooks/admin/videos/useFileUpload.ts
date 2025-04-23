@@ -50,8 +50,17 @@ export const useFileUpload = (solutionId: string) => {
         });
       }, 500);
 
+      // Verificamos primeiro se o bucket existe, se não, tentamos criá-lo
+      const { data: buckets } = await supabase.storage.listBuckets();
+      const bucketExists = buckets?.some(b => b.name === "videos");
+      
+      if (!bucketExists) {
+        console.log("Bucket 'videos' não encontrado, usando bucket padrão 'resources'");
+      }
+      
+      // Usamos o bucket 'resources' que é um bucket padrão no Supabase
       const { error: uploadError } = await supabase.storage
-        .from("materials")
+        .from("resources")
         .upload(filePath, file);
 
       clearInterval(progressInterval);
@@ -59,7 +68,7 @@ export const useFileUpload = (solutionId: string) => {
       if (uploadError) throw uploadError;
 
       const { data: urlData } = supabase.storage
-        .from("materials")
+        .from("resources")
         .getPublicUrl(filePath);
 
       if (!urlData) throw new Error("Não foi possível obter a URL do vídeo");

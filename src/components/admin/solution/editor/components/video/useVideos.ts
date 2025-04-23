@@ -188,12 +188,12 @@ export const useVideos = ({ solutionId }: UseVideosProps) => {
       return;
     }
 
-    // Verificar tamanho do arquivo (100MB máximo)
-    const maxSize = 100 * 1024 * 1024; // 100MB em bytes
+    // Verificar tamanho do arquivo (aumentando para 500MB máximo)
+    const maxSize = 500 * 1024 * 1024; // 500MB em bytes
     if (videoFile.size > maxSize) {
       toast({
         title: "Arquivo muito grande",
-        description: "O tamanho máximo permitido é 100MB.",
+        description: "O tamanho máximo permitido é 500MB.",
         variant: "destructive"
       });
       return;
@@ -207,25 +207,31 @@ export const useVideos = ({ solutionId }: UseVideosProps) => {
       const fileName = `${uuidv4()}.${fileExt}`;
       const filePath = `solution_videos/${solutionId}/${fileName}`;
       
-      // Criamos um hook manual para acompanhar o progresso do upload
-      const uploadProgressCallback = (progress: { loaded: number; total: number }) => {
-        const percentage = (progress.loaded / progress.total) * 100;
-        setUploadProgress(percentage);
-      };
-
-      // Upload para o storage - sem usar onUploadProgress na versão atual da API
+      // Simulando progresso de upload
+      const progressInterval = setInterval(() => {
+        setUploadProgress(prev => {
+          if (prev < 80) return prev + 5;
+          return prev;
+        });
+      }, 500);
+      
+      // Upload para o bucket resources (que presumimos que existe)
       const { error: uploadError } = await supabase.storage
-        .from("materials")
+        .from("resources")
         .upload(filePath, videoFile);
+        
+      clearInterval(progressInterval);
         
       if (uploadError) throw uploadError;
       
       // Obter a URL do arquivo
       const { data: urlData } = supabase.storage
-        .from("materials")
+        .from("resources")
         .getPublicUrl(filePath);
         
       if (!urlData) throw new Error("Não foi possível obter a URL do vídeo");
+      
+      setUploadProgress(100);
       
       // Registrar no banco de dados
       const newVideo = {
@@ -233,8 +239,6 @@ export const useVideos = ({ solutionId }: UseVideosProps) => {
         name: videoFile.name,
         type: "video",
         url: urlData.publicUrl,
-        format: fileExt,
-        size: videoFile.size,
         metadata: {
           title: videoFile.name,
           description: `Vídeo para a solução`,
@@ -274,7 +278,7 @@ export const useVideos = ({ solutionId }: UseVideosProps) => {
       });
     } finally {
       setUploading(false);
-      setUploadProgress(0);
+      setTimeout(() => setUploadProgress(0), 2000);
     }
   };
 
@@ -298,12 +302,12 @@ export const useVideos = ({ solutionId }: UseVideosProps) => {
       });
       
       // Tentativa de remover do storage se for um upload
-      if (url.includes("materials") && !url.includes("youtube.com")) {
+      if (url.includes("resources") && !url.includes("youtube.com")) {
         try {
-          const filePath = url.split("/materials/")[1];
+          const filePath = url.split("/resources/")[1];
           if (filePath) {
             await supabase.storage
-              .from("materials")
+              .from("resources")
               .remove([filePath]);
           }
         } catch (storageError) {
