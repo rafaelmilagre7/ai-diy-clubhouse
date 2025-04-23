@@ -1,12 +1,11 @@
 
 import React, { useEffect, useState } from "react";
 import { useImplementationProfile } from "@/hooks/useImplementationProfile";
-import { Loader2, AlertCircle } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const initialState = {
   name: "", email: "", phone: "", linkedin: "",
@@ -36,9 +35,8 @@ const networkingOptions = [
 ];
 
 export default function ImplementationProfilePage() {
-  const { profile, loading, saving, saveProfile, errorMessage } = useImplementationProfile();
+  const { profile, loading, saving, saveProfile } = useImplementationProfile();
   const [values, setValues] = useState(initialState);
-  const [hasAttemptedRetry, setHasAttemptedRetry] = useState(false);
 
   useEffect(() => {
     if (profile) setValues({ ...initialState, ...profile });
@@ -62,11 +60,6 @@ export default function ImplementationProfilePage() {
     e.preventDefault();
     saveProfile(values);
   };
-  
-  const handleRetry = () => {
-    setHasAttemptedRetry(true);
-    window.location.reload(); // Recarregar a página para tentar novamente
-  };
 
   if (loading) {
     return (
@@ -81,27 +74,8 @@ export default function ImplementationProfilePage() {
     <div className="py-8 px-4">
       <h1 className="text-2xl font-bold mb-2">Perfil de Implementação</h1>
       <p className="text-muted-foreground mb-6">
-        Preencha seu perfil para criarmos sua trilha personalizada. 
+        Preencha seu perfil para criarmos sua trilha personalizada.
       </p>
-      
-      {errorMessage && !hasAttemptedRetry && (
-        <Alert variant="destructive" className="mb-6">
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Erro ao carregar perfil</AlertTitle>
-          <AlertDescription className="mt-2">
-            <p>{errorMessage}</p>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={handleRetry}
-              className="mt-2"
-            >
-              Tentar novamente
-            </Button>
-          </AlertDescription>
-        </Alert>
-      )}
-      
       <form onSubmit={handleSubmit} className="space-y-6 bg-white p-6 rounded-xl shadow-lg max-w-2xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
