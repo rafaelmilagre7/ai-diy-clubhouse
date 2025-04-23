@@ -10,6 +10,8 @@ import AdminSolutionCreate from "@/pages/admin/AdminSolutionCreate";
 import AdminSolutionEdit from "@/pages/admin/AdminSolutionEdit";
 import SolutionEditor from "@/pages/admin/SolutionEditor";
 import AdminSolutionRedirect from "@/components/routing/AdminSolutionRedirect";
+import AdminUsers from "@/pages/admin/AdminUsers";
+import AdminTools from "@/pages/admin/AdminTools";
 
 export const adminRoutes = (
   <Fragment>
@@ -17,6 +19,20 @@ export const adminRoutes = (
     <Route path="admin" element={
       <AdminLayout>
         <AdminDashboard />
+      </AdminLayout>
+    } />
+    
+    {/* Gerenciamento de Usuários */}
+    <Route path="admin/users" element={
+      <AdminLayout>
+        <AdminUsers />
+      </AdminLayout>
+    } />
+    
+    {/* Gerenciamento de Ferramentas */}
+    <Route path="admin/tools" element={
+      <AdminLayout>
+        <AdminTools />
       </AdminLayout>
     } />
     
@@ -44,14 +60,10 @@ export const adminRoutes = (
     
     {/* Redirecionamento para URLs antigas */}
     <Route path="admin/solution/:id" element={
-      <AdminLayout>
-        <AdminSolutionRedirect />
-      </AdminLayout>
+      <AdminSolutionRedirect />
     } />
     <Route path="admin/solution/:id/editor" element={
-      <AdminLayout>
-        <AdminSolutionRedirect />
-      </AdminLayout>
+      <AdminSolutionRedirect />
     } />
   </Fragment>
 );

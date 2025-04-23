@@ -4,11 +4,16 @@ import { ProtectedRoutes } from '@/auth/ProtectedRoutes';
 import { AdminProtectedRoutes } from '@/auth/AdminProtectedRoutes';
 import { memberRoutes } from './member.routes';
 import { adminRoutes } from './admin.routes';
+import { authRoutes } from './auth.routes';
 import RootRedirect from '@/components/routing/RootRedirect';
+import { NotFound } from '@/pages/NotFound';
 
 const AppRoutes = () => {
   return (
     <Routes>
+      {/* Autenticação */}
+      {authRoutes}
+      
       {/* Rota raiz para redirecionar com base no tipo de usuário */}
       <Route path="/" element={<RootRedirect />} />
       
@@ -23,7 +28,7 @@ const AppRoutes = () => {
       </Route>
       
       {/* Fallback para qualquer outra rota */}
-      <Route path="*" element={<div>Página não encontrada</div>} />
+      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 };
