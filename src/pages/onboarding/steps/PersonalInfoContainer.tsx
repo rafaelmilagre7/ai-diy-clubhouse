@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { PersonalInfoForm } from "@/components/onboarding/steps/forms/PersonalInfoForm";
@@ -17,7 +16,6 @@ import { toast } from "sonner";
 export const PersonalInfoContainer: React.FC = () => {
   const navigate = useNavigate();
   
-  // Função utilitária para converter erro para string
   const getErrorMessage = (error: unknown): string => {
     if (error instanceof Error) return error.message;
     if (typeof error === 'string') return error;
@@ -54,11 +52,9 @@ export const PersonalInfoContainer: React.FC = () => {
 
     const stepTitles = steps.map(s => s.title);
 
-    // Use a função utilitária para converter erros de forma segura
     const errorMessage = getErrorMessage(lastError || loadError);
 
     useEffect(() => {
-      // Envolver em try/catch para evitar erros não tratados
       try {
         attemptDataLoad(loadInitialData);
       } catch (error) {
@@ -136,7 +132,7 @@ export const PersonalInfoContainer: React.FC = () => {
           progressPercentage={progressPercentage}
           stepTitles={stepTitles}
           onStepClick={handleStepClick}
-          loadError={typeof loadError === 'string' ? loadError : getErrorMessage(loadError)}
+          loadError={getErrorMessage(loadError)}
           lastError={errorMessage}
           onRetry={() => attemptDataLoad(loadInitialData)}
         />
@@ -184,7 +180,6 @@ export const PersonalInfoContainer: React.FC = () => {
       </OnboardingLayout>
     );
   } catch (error) {
-    // Convert caught error to string
     const errorMessage = getErrorMessage(error);
     
     console.error("Erro ao renderizar PersonalInfoContainer:", errorMessage);
