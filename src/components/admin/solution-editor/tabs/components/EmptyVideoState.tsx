@@ -7,17 +7,19 @@ interface EmptyVideoStateProps {
   onYoutubeClick: () => void;
   onFileUploadClick: () => void;
   solutionId?: string;
+  uploading?: boolean;
 }
 
 const EmptyVideoState: React.FC<EmptyVideoStateProps> = ({
   onYoutubeClick,
   onFileUploadClick,
-  solutionId
+  solutionId,
+  uploading = false
 }) => {
   return (
     <div className="flex flex-col items-center justify-center py-16 border-2 border-dashed border-gray-200 rounded-lg">
-      <div className="h-20 w-20 rounded-full bg-gray-100 flex items-center justify-center mb-6">
-        <Video className="h-10 w-10 text-gray-400" />
+      <div className="h-24 w-24 rounded-full bg-[#0ABAB5]/10 flex items-center justify-center mb-6">
+        <Video className="h-12 w-12 text-[#0ABAB5]" />
       </div>
       <h3 className="text-xl font-medium mb-2">Nenhum vídeo ainda</h3>
       <p className="text-muted-foreground mb-8 text-center max-w-md">
@@ -28,7 +30,8 @@ const EmptyVideoState: React.FC<EmptyVideoStateProps> = ({
         <Button 
           onClick={onFileUploadClick} 
           className="gap-2"
-          disabled={!solutionId}
+          disabled={!solutionId || uploading}
+          variant="default"
         >
           <Upload className="h-4 w-4" />
           Fazer upload de vídeo
@@ -37,7 +40,7 @@ const EmptyVideoState: React.FC<EmptyVideoStateProps> = ({
           variant="outline" 
           onClick={onYoutubeClick}
           className="gap-2"
-          disabled={!solutionId}
+          disabled={!solutionId || uploading}
         >
           <Youtube className="h-4 w-4 text-red-500" />
           Adicionar do YouTube

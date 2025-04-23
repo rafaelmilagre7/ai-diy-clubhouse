@@ -2,7 +2,7 @@
 import React, { useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Upload, Loader2 } from "lucide-react";
+import { Upload, Loader2, Video } from "lucide-react";
 
 interface VideoUploaderProps {
   onFileSelect: (file: File) => void;
@@ -23,6 +23,18 @@ const VideoUploader: React.FC<VideoUploaderProps> = ({
     fileInputRef.current?.click();
   };
 
+  const handleFileDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (disabled || isUploading) return;
+    
+    const file = e.dataTransfer.files?.[0];
+    if (file) {
+      onFileSelect(file);
+    }
+  };
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -30,12 +42,21 @@ const VideoUploader: React.FC<VideoUploaderProps> = ({
       e.target.value = ""; // Limpar input para permitir selecionar o mesmo arquivo novamente
     }
   };
+  
+  const preventDefaults = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
 
   return (
     <div className="w-full">
       <div 
         className={`border-2 border-dashed rounded-lg p-8 flex flex-col items-center justify-center bg-gray-50 hover:bg-gray-100 transition-colors ${disabled ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
         onClick={!disabled && !isUploading ? handleButtonClick : undefined}
+        onDrop={handleFileDrop}
+        onDragOver={preventDefaults}
+        onDragEnter={preventDefaults}
+        onDragLeave={preventDefaults}
       >
         <input
           ref={fileInputRef}
@@ -49,7 +70,11 @@ const VideoUploader: React.FC<VideoUploaderProps> = ({
         
         <div className="flex flex-col items-center text-center">
           <div className="h-16 w-16 rounded-full bg-[#0ABAB5]/10 flex items-center justify-center mb-4">
-            <Upload className="h-8 w-8 text-[#0ABAB5]" />
+            {isUploading ? (
+              <Loader2 className="h-8 w-8 text-[#0ABAB5] animate-spin" />
+            ) : (
+              <Video className="h-8 w-8 text-[#0ABAB5]" />
+            )}
           </div>
           
           <h3 className="text-lg font-medium mb-1">Upload de vídeo</h3>
@@ -87,7 +112,6 @@ const VideoUploader: React.FC<VideoUploaderProps> = ({
             <Progress 
               value={uploadProgress} 
               className="h-2 w-full"
-              indicatorClassName="bg-[#0ABAB5]"
             />
             <div className="flex justify-between">
               <span className="text-sm text-muted-foreground">Enviando vídeo...</span>

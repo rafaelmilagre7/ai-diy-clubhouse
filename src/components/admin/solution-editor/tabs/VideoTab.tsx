@@ -1,16 +1,16 @@
 
-import React, { useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
+import React, { useState, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Video, Youtube, FileVideo, Upload, Loader2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
 import { v4 as uuidv4 } from "uuid";
-import VideosList from "./components/VideosList";
 import VideoUploader from "./components/VideoUploader";
 import YouTubeVideoForm from "./components/YouTubeVideoForm";
 import EmptyVideoState from "./components/EmptyVideoState";
+import VideosList from "./components/VideosList";
 
 interface VideoItem {
   id: string;
@@ -49,7 +49,7 @@ const VideoTab: React.FC<VideoTabProps> = ({
   const { toast } = useToast();
 
   // Carregar vídeos ao montar o componente
-  React.useEffect(() => {
+  useEffect(() => {
     fetchVideos();
   }, [solution?.id]);
 
@@ -317,7 +317,7 @@ const VideoTab: React.FC<VideoTabProps> = ({
   return (
     <div className="space-y-8">
       {/* Cabeçalho e opções de upload */}
-      <Card className="border border-[#0ABAB5]/30 shadow-sm">
+      <Card className="border-2 border-[#0ABAB5]/20 shadow-sm">
         <CardContent className="p-6">
           <div className="flex flex-col space-y-6">
             <div className="flex items-center justify-between">
@@ -362,7 +362,7 @@ const VideoTab: React.FC<VideoTabProps> = ({
       </Card>
 
       {/* Lista de vídeos */}
-      <Card className="border shadow-sm">
+      <Card className="border-2 border-[#0ABAB5]/10 shadow-sm">
         <CardContent className="p-6">
           <Tabs defaultValue="todos" value={activeTab} onValueChange={setActiveTab}>
             <div className="flex items-center justify-between mb-6">
