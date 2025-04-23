@@ -8,16 +8,16 @@ export const useImplementationNavigation = () => {
   const { id, moduleIndex, moduleIdx } = useParams<{ 
     id: string; 
     moduleIndex: string;
-    moduleIdx: string;
+    moduleIdx: string; 
   }>();
-  
-  const { log } = useLogging("useImplementationNavigation");
-  const navigationAttempts = useRef(0);
   
   // Normaliza os parâmetros, suportando tanto /implement/:id/:moduleIdx quanto /implementation/:id/:moduleIdx
   const moduleIdxParam = moduleIndex || moduleIdx || "0";
   const moduleIdxNumber = parseInt(moduleIdxParam);
+  
+  const { log, logError } = useLogging("useImplementationNavigation");
   const navigate = useNavigate();
+  const navigationAttempts = useRef(0);
   
   // Usa consistentemente o padrão /implement/:id/:moduleIdx para navegação
   const basePath = "/implement";
@@ -26,14 +26,14 @@ export const useImplementationNavigation = () => {
   useEffect(() => {
     if (!id) {
       log("ID da implementação não encontrado, redirecionando para dashboard");
-      toast.error("ID da solução não encontrado");
       navigate("/dashboard", { replace: true });
+      return;
     }
   }, [id, navigate, log]);
 
   // Corrigir problemas de URL inconsistente - com limitador de tentativas
   useEffect(() => {
-    // Limitar correções para evitar loops
+    // Limitar número de tentativas para evitar loops
     if (navigationAttempts.current > 2 || !id) return;
     
     const path = window.location.pathname;

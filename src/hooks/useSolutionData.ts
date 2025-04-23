@@ -14,15 +14,15 @@ export const useSolutionData = (id: string | undefined) => {
   const [solutionData, setSolutionData] = useState<Solution | null>(null);
   const [progress, setProgress] = useState<any | null>(null);
   
-  // Função para buscar solução de forma simplificada
+  // Função para buscar solução - otimizada e robusta
   const fetchSolution = useCallback(async () => {
     if (!id) {
-      log("ID da solução não fornecido");
+      log("ID da solução não fornecido, não será possível buscar dados");
       return null;
     }
     
     try {
-      log("Buscando solução", { id });
+      log("Buscando dados da solução", { id });
       
       // Buscar a solução pelo ID
       let query = supabase
@@ -47,7 +47,13 @@ export const useSolutionData = (id: string | undefined) => {
         return null;
       }
       
-      log("Dados da solução encontrados", { solutionId: data.id, solutionTitle: data.title });
+      log("Dados da solução encontrados com sucesso", { 
+        solutionId: data.id, 
+        solutionTitle: data.title,
+        solutionCategory: data.category,
+        solutionPublished: data.published
+      });
+      
       return data as Solution;
       
     } catch (error: any) {
@@ -56,7 +62,7 @@ export const useSolutionData = (id: string | undefined) => {
     }
   }, [id, isAdmin, log, logError]);
 
-  // Usar React Query para gerenciar os estados e cache
+  // Usar React Query para gerenciar os estados e cache - otimizado
   const { 
     data: solution, 
     error,
@@ -66,17 +72,22 @@ export const useSolutionData = (id: string | undefined) => {
     queryKey: ['solution', id],
     queryFn: fetchSolution,
     enabled: !!id,
-    staleTime: 1000 * 60, // 1 minuto antes de considerar os dados obsoletos
-    retry: 1, // Uma tentativa adicional, dois no total
+    staleTime: 1000 * 30, // 30 segundos antes de considerar os dados obsoletos
+    cacheTime: 1000 * 60 * 5, // Cache por 5 minutos
+    retry: 1,
     refetchOnWindowFocus: false,
   });
 
-  // Sincronizar o estado interno com os dados obtidos
+  // Sincronizar o estado interno com os dados obtidos imediatamente
   useEffect(() => {
     if (solution) {
+      log("Atualizando estado interno com solução encontrada", { 
+        id: solution.id, 
+        title: solution.title 
+      });
       setSolutionData(solution);
     }
-  }, [solution]);
+  }, [solution, log]);
 
   // Fetch progresso quando a solução é carregada
   useEffect(() => {
@@ -120,6 +131,7 @@ export const useSolutionData = (id: string | undefined) => {
 
   // Função para definir a solução manualmente (para o editor)
   const setSolution = (solution: Solution) => {
+    log("Atualizando solução manualmente", { id: solution.id });
     setSolutionData(solution);
   };
 

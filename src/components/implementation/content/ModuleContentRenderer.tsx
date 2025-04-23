@@ -35,6 +35,11 @@ export const ModuleContentRenderer = ({ module, onInteraction }: ModuleContentRe
       });
       hasLoggedRef.current = true;
     }
+    
+    // Limpeza do efeito quando o componente for desmontado
+    return () => {
+      hasLoggedRef.current = false;
+    };
   }, [module?.id, module?.type, module?.title, module?.solution_id, log]);
   
   if (!module) {

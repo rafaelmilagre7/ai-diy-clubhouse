@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { useLogging } from "@/hooks/useLogging";
 
 export const useSolutionEditor = (id: string | undefined, user: any) => {
-  // Get solution data - agora com setSolution disponível
+  // Get solution data com setSolution disponível
   const { solution, setSolution, loading, refetch } = useSolutionData(id);
   const { log, logError } = useLogging("useSolutionEditor");
   
@@ -32,18 +32,18 @@ export const useSolutionEditor = (id: string | undefined, user: any) => {
   
   const [currentValuesState, setCurrentValuesState] = useState<SolutionFormValues>(defaultValues);
   
-  // Carregar solução se necessário
+  // Carregar solução imediatamente se o ID estiver disponível
   useEffect(() => {
-    if (id && !solution && !loading) {
-      log("Nenhuma solução carregada, buscando dados");
+    if (id) {
+      log("Tentando buscar solução com ID:", { id });
       refetch();
     }
-  }, [id, solution, loading, refetch, log]);
+  }, [id, refetch, log]);
   
   // Atualizar valores atuais quando a solução mudar
   useEffect(() => {
     if (solution) {
-      log("Atualizando valores do formulário", {
+      log("Atualizando valores do formulário com solução obtida", {
         title: solution.title,
         hasDescription: !!solution.description,
         category: solution.category
@@ -58,6 +58,8 @@ export const useSolutionEditor = (id: string | undefined, user: any) => {
         published: solution.published || false,
         slug: solution.slug || "",
       };
+      
+      // Importante: garantir que os valores sejam atualizados imediatamente
       setCurrentValuesState(updatedValues);
     } else if (!loading && id) {
       logError("Solução não encontrada para edição", { id });
