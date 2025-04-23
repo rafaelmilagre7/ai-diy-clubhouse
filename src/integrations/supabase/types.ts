@@ -1095,9 +1095,11 @@ export type Database = {
         Row: {
           completed_at: string | null
           completed_modules: number[] | null
+          completion_data: Json | null
           created_at: string
           current_module: number
           id: string
+          implementation_status: string | null
           is_completed: boolean
           last_activity: string
           solution_id: string
@@ -1106,9 +1108,11 @@ export type Database = {
         Insert: {
           completed_at?: string | null
           completed_modules?: number[] | null
+          completion_data?: Json | null
           created_at?: string
           current_module?: number
           id?: string
+          implementation_status?: string | null
           is_completed?: boolean
           last_activity?: string
           solution_id: string
@@ -1117,9 +1121,11 @@ export type Database = {
         Update: {
           completed_at?: string | null
           completed_modules?: number[] | null
+          completion_data?: Json | null
           created_at?: string
           current_module?: number
           id?: string
+          implementation_status?: string | null
           is_completed?: boolean
           last_activity?: string
           solution_id?: string
@@ -1128,6 +1134,41 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "progress_solution_id_fkey"
+            columns: ["solution_id"]
+            isOneToOne: false
+            referencedRelation: "solutions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      solution_certificates: {
+        Row: {
+          certificate_data: Json | null
+          created_at: string | null
+          id: string
+          issued_at: string | null
+          solution_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          certificate_data?: Json | null
+          created_at?: string | null
+          id?: string
+          issued_at?: string | null
+          solution_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          certificate_data?: Json | null
+          created_at?: string | null
+          id?: string
+          issued_at?: string | null
+          solution_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "solution_certificates_solution_id_fkey"
             columns: ["solution_id"]
             isOneToOne: false
             referencedRelation: "solutions"
@@ -1380,11 +1421,14 @@ export type Database = {
       solutions: {
         Row: {
           category: Database["public"]["Enums"]["solution_category"]
+          checklist_items: Json | null
+          completion_requirements: Json | null
           created_at: string
           description: string
           difficulty: Database["public"]["Enums"]["difficulty_level"]
           estimated_time: number | null
           id: string
+          implementation_steps: Json | null
           published: boolean
           related_solutions: string[] | null
           slug: string
@@ -1396,11 +1440,14 @@ export type Database = {
         }
         Insert: {
           category: Database["public"]["Enums"]["solution_category"]
+          checklist_items?: Json | null
+          completion_requirements?: Json | null
           created_at?: string
           description: string
           difficulty: Database["public"]["Enums"]["difficulty_level"]
           estimated_time?: number | null
           id?: string
+          implementation_steps?: Json | null
           published?: boolean
           related_solutions?: string[] | null
           slug: string
@@ -1412,11 +1459,14 @@ export type Database = {
         }
         Update: {
           category?: Database["public"]["Enums"]["solution_category"]
+          checklist_items?: Json | null
+          completion_requirements?: Json | null
           created_at?: string
           description?: string
           difficulty?: Database["public"]["Enums"]["difficulty_level"]
           estimated_time?: number | null
           id?: string
+          implementation_steps?: Json | null
           published?: boolean
           related_solutions?: string[] | null
           slug?: string
