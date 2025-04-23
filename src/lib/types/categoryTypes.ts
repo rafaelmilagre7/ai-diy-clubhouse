@@ -9,5 +9,9 @@ export const isSolutionCategory = (category: string): category is SolutionCatego
 
 // Function to convert string to SolutionCategory, with a fallback
 export const toSolutionCategory = (category: string): SolutionCategory => {
+  // Se "operations" for enviado do banco, converter para "operational"
+  if (category === "operations") {
+    return "operational";
+  }
   return isSolutionCategory(category) ? category : "operational";
 };

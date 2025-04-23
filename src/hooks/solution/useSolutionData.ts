@@ -1,6 +1,6 @@
 
 import { useQuery } from '@tanstack/react-query';
-import { Solution } from '@/types/solution';
+import { Solution } from '@/types/supabaseTypes'; // Usar o tipo do supabaseTypes
 import { supabase } from '@/lib/supabase';
 import { useLogging } from '@/hooks/useLogging';
 import { useState, useEffect } from 'react';
@@ -8,6 +8,7 @@ import { useAvailableSolutions } from './useAvailableSolutions';
 import { useErrorHandling } from './useErrorHandling';
 import { queryClient } from '@/lib/react-query';
 import { toast } from 'sonner';
+import { toSolutionCategory } from '@/lib/types/categoryTypes';
 
 export const useSolutionData = (solutionId: string) => {
   const { log, logError } = useLogging('useSolutionData');
@@ -75,8 +76,15 @@ export const useSolutionData = (solutionId: string) => {
           modules: data.modules?.length || 0
         });
         
-        setSolution(data as Solution);
-        return data as Solution;
+        // Normalizar categoria para garantir compatibilidade entre tipo string do banco
+        // e o tipo union do nosso sistema
+        const normalizedSolution = {
+          ...data,
+          category: toSolutionCategory(data.category)
+        };
+        
+        setSolution(normalizedSolution as Solution);
+        return normalizedSolution as Solution;
       } catch (err) {
         logError('Erro ao buscar solução:', err);
         handleError(err);

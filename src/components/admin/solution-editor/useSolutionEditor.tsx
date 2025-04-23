@@ -4,7 +4,7 @@ import { SolutionFormValues } from "@/components/admin/solution/form/solutionFor
 import { useSolutionData } from "@/hooks/solution/useSolutionData";
 import { useSolutionSave } from "@/hooks/useSolutionSave";
 import { useSolutionSteps } from "@/hooks/useSolutionSteps";
-import { Solution } from "@/lib/supabase";
+import { Solution } from "@/types/supabaseTypes"; // Importante: usando o tipo Solution do supabaseTypes
 import { toast } from "sonner";
 import { useLogging } from "@/hooks/useLogging";
 
@@ -17,7 +17,10 @@ export const useSolutionEditor = (id: string | undefined, user: any) => {
   const { currentStep, setCurrentStep, activeTab, setActiveTab, totalSteps, stepTitles } = useSolutionSteps(0);
   
   // Get save functionality
-  const { saving, onSubmit } = useSolutionSave(id, setSolution);
+  // Modificamos esta linha para criar uma função wrapper que é compatível com o tipo esperado
+  const { saving, onSubmit: saveSubmit } = useSolutionSave(id, (updatedSolution: Solution) => {
+    setSolution(updatedSolution);
+  });
   
   // Prepare the default and current form values
   const defaultValues: SolutionFormValues = {
@@ -52,10 +55,17 @@ export const useSolutionEditor = (id: string | undefined, user: any) => {
       // Debug temporário para verificar os dados recebidos
       console.log("Dados da solução carregados:", solution);
       
+      // Converter a categoria se necessário para garantir compatibilidade
+      const categoryValue = (solution.category === "operations" || solution.category === "operational") 
+        ? "operational" 
+        : (solution.category === "revenue" || solution.category === "strategy") 
+        ? solution.category 
+        : "revenue";
+      
       const updatedValues = {
         title: solution.title || "",
         description: solution.description || "",
-        category: (solution.category || "revenue") as "revenue" | "operational" | "strategy",
+        category: categoryValue as "revenue" | "operational" | "strategy",
         difficulty: (solution.difficulty || "medium") as "easy" | "medium" | "advanced",
         thumbnail_url: solution.thumbnail_url || "",
         published: solution.published || false,
@@ -72,7 +82,7 @@ export const useSolutionEditor = (id: string | undefined, user: any) => {
   // Create a submit handler that uses our onSubmit function
   const handleSubmit = (values: SolutionFormValues) => {
     log("Enviando formulário", values);
-    return onSubmit(values)
+    return saveSubmit(values)
       .then(() => {
         setCurrentValuesState(values);
         toast.success("Solução salva com sucesso!");

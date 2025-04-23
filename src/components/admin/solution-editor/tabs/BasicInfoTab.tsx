@@ -2,6 +2,7 @@
 import React, { useEffect } from "react";
 import BasicInfoForm from "@/components/admin/solution/BasicInfoForm";
 import { SolutionFormValues } from "@/components/admin/solution/form/solutionFormSchema";
+import { toSolutionCategory } from "@/lib/types/categoryTypes";
 
 interface BasicInfoTabProps {
   defaultValues?: SolutionFormValues;
@@ -32,9 +33,15 @@ const BasicInfoTab: React.FC<BasicInfoTabProps> = ({
     slug: "",
   };
   
+  // Garantir que a categoria seja do tipo correto
+  const normalizedValues = {
+    ...values,
+    category: toSolutionCategory(values.category)
+  };
+  
   return (
     <BasicInfoForm 
-      defaultValues={values} 
+      defaultValues={normalizedValues} 
       onSubmit={onSubmit} 
       saving={saving} 
     />
