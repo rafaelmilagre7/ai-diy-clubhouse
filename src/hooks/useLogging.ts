@@ -9,7 +9,7 @@ export function useLogging(moduleName: string = '') {
    * Logar informações
    */
   const logInfo = (message: string, data?: Record<string, any>) => {
-    console.log(`${prefix} ${message}`, data !== undefined ? data : '');
+    console.info(`${prefix} ${message}`, data !== undefined ? data : '');
   };
   
   /**

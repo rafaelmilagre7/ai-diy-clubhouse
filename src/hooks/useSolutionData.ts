@@ -28,6 +28,7 @@ export const useSolutionData = (id: string | undefined) => {
         setLoading(true);
         log(`Buscando solução com ID`, { id });
         
+        // Primeiro busca no caminho /solutions/:id
         let query = supabase
           .from("solutions")
           .select("*")

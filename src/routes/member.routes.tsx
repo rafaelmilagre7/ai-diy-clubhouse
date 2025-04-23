@@ -32,6 +32,7 @@ export const memberRoutes = (
       
       {/* Soluções */}
       <Route path="solutions" element={<Solutions />} />
+      <Route path="solutions/:id" element={<SolutionDetails />} />
       <Route path="solution/:id" element={<SolutionDetails />} />
       <Route path="implement/:id/:moduleIdx" element={<SolutionImplementation />} />
       <Route path="implementation/:id" element={<SolutionImplementation />} />
