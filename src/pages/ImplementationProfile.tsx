@@ -5,6 +5,8 @@ import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { FormItem } from "@/components/ui/form";
 
 const initialState = {
   name: "", email: "", phone: "", linkedin: "",
@@ -72,24 +74,63 @@ export default function ImplementationProfilePage() {
       </p>
       <form onSubmit={handleSubmit} className="space-y-6 bg-white p-6 rounded-xl shadow-lg">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Input name="name" value={values.name || ""} onChange={handleChange} placeholder="Nome completo" label="Nome*" required />
-          <Input name="email" value={values.email || ""} onChange={handleChange} placeholder="E-mail*" required />
-          <Input name="phone" value={values.phone || ""} onChange={handleChange} placeholder="Telefone" />
-          <Input name="linkedin" value={values.linkedin || ""} onChange={handleChange} placeholder="LinkedIn" />
-          <Input name="country" value={values.country || ""} onChange={handleChange} placeholder="País" required />
-          <Input name="state" value={values.state || ""} onChange={handleChange} placeholder="Estado" />
-          <Input name="city" value={values.city || ""} onChange={handleChange} placeholder="Cidade" />
+          <div className="space-y-2">
+            <Label htmlFor="name">Nome*</Label>
+            <Input id="name" name="name" value={values.name || ""} onChange={handleChange} placeholder="Nome completo" required />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="email">E-mail*</Label>
+            <Input id="email" name="email" value={values.email || ""} onChange={handleChange} placeholder="E-mail" required />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="phone">Telefone</Label>
+            <Input id="phone" name="phone" value={values.phone || ""} onChange={handleChange} placeholder="Telefone" />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="linkedin">LinkedIn</Label>
+            <Input id="linkedin" name="linkedin" value={values.linkedin || ""} onChange={handleChange} placeholder="LinkedIn" />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="country">País*</Label>
+            <Input id="country" name="country" value={values.country || ""} onChange={handleChange} placeholder="País" required />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="state">Estado</Label>
+            <Input id="state" name="state" value={values.state || ""} onChange={handleChange} placeholder="Estado" />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="city">Cidade</Label>
+            <Input id="city" name="city" value={values.city || ""} onChange={handleChange} placeholder="Cidade" />
+          </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Input name="company_name" value={values.company_name || ""} onChange={handleChange} placeholder="Empresa" />
-          <Input name="company_website" value={values.company_website || ""} onChange={handleChange} placeholder="Site da Empresa" />
-          <Input name="current_position" value={values.current_position || ""} onChange={handleChange} placeholder="Cargo Atual" />
-          <Input name="company_sector" value={values.company_sector || ""} onChange={handleChange} placeholder="Setor" />
-          <Input name="company_size" value={values.company_size || ""} onChange={handleChange} placeholder="Porte" />
-          <Input name="annual_revenue" value={values.annual_revenue || ""} onChange={handleChange} placeholder="Faturamento Anual" />
+          <div className="space-y-2">
+            <Label htmlFor="company_name">Empresa</Label>
+            <Input id="company_name" name="company_name" value={values.company_name || ""} onChange={handleChange} placeholder="Empresa" />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="company_website">Site da Empresa</Label>
+            <Input id="company_website" name="company_website" value={values.company_website || ""} onChange={handleChange} placeholder="Site da Empresa" />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="current_position">Cargo Atual</Label>
+            <Input id="current_position" name="current_position" value={values.current_position || ""} onChange={handleChange} placeholder="Cargo Atual" />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="company_sector">Setor</Label>
+            <Input id="company_sector" name="company_sector" value={values.company_sector || ""} onChange={handleChange} placeholder="Setor" />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="company_size">Porte</Label>
+            <Input id="company_size" name="company_size" value={values.company_size || ""} onChange={handleChange} placeholder="Porte" />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="annual_revenue">Faturamento Anual</Label>
+            <Input id="annual_revenue" name="annual_revenue" value={values.annual_revenue || ""} onChange={handleChange} placeholder="Faturamento Anual" />
+          </div>
         </div>
         <div>
-          <label className="font-semibold">Desafios do momento:</label>
+          <Label className="font-semibold block mb-2">Desafios do momento:</Label>
           <div className="flex flex-wrap gap-3 mt-2">
             {businessChallengeOptions.map(opt => (
               <Button
@@ -105,18 +146,21 @@ export default function ImplementationProfilePage() {
           </div>
         </div>
         <div>
-          <label className="font-semibold">Principal objetivo com IA</label>
-          <Textarea name="primary_goal" value={values.primary_goal || ""} onChange={handleChange} placeholder="Descreva seu objetivo principal" />
+          <Label htmlFor="primary_goal" className="font-semibold block mb-2">Principal objetivo com IA</Label>
+          <Textarea id="primary_goal" name="primary_goal" value={values.primary_goal || ""} onChange={handleChange} placeholder="Descreva seu objetivo principal" />
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="font-semibold">Nível de conhecimento em IA (1 a 5)</label>
-            <Input name="ai_knowledge_level" type="number" min={1} max={5} value={values.ai_knowledge_level || 1} onChange={handleChange} />
+          <div className="space-y-2">
+            <Label htmlFor="ai_knowledge_level" className="font-semibold block">Nível de conhecimento em IA (1 a 5)</Label>
+            <Input id="ai_knowledge_level" name="ai_knowledge_level" type="number" min={1} max={5} value={values.ai_knowledge_level || 1} onChange={handleChange} />
           </div>
-          <Input name="weekly_availability" value={values.weekly_availability || ""} onChange={handleChange} placeholder="Horas por semana disponível" />
+          <div className="space-y-2">
+            <Label htmlFor="weekly_availability" className="font-semibold block">Horas por semana disponível</Label>
+            <Input id="weekly_availability" name="weekly_availability" value={values.weekly_availability || ""} onChange={handleChange} placeholder="Horas por semana disponível" />
+          </div>
         </div>
         <div>
-          <label className="font-semibold">Interesses de networking</label>
+          <Label className="font-semibold block mb-2">Interesses de networking</Label>
           <div className="flex flex-wrap gap-3 mt-2">
             {networkingOptions.map(opt => (
               <Button
@@ -130,7 +174,7 @@ export default function ImplementationProfilePage() {
           </div>
         </div>
         <Button type="submit" className="w-full bg-viverblue hover:bg-viverblue/90" disabled={saving}>
-          {saving ? <Loader2 className="animate-spin mr-2" /> : "Salvar"}
+          {saving ? <Loader2 className="animate-spin mr-2" /> : null}
           Salvar Perfil
         </Button>
       </form>

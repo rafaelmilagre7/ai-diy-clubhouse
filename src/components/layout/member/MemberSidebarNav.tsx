@@ -11,7 +11,8 @@ import {
   User,
   Award,
   BookOpen,
-  Map
+  Map,
+  ClipboardList
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "react-router-dom";
@@ -36,7 +37,7 @@ export const MemberSidebarNav = ({ sidebarOpen }: SidebarNavProps) => {
     {
       title: "Perfil de Implementação",
       href: "/perfil-de-implementacao",
-      icon: BookOpen,
+      icon: ClipboardList,
     },
     {
       title: "Trilha de Implementação",

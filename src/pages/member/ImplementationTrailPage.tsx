@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useProgress } from "@/hooks/onboarding/useProgress";
+import { useProgress } from "@/hooks/implementation/useProgress";
 import { ImplementationTrailCreator } from "@/components/implementation-trail/ImplementationTrailCreator";
 import { OnboardingIncompleteState } from "@/components/implementation-trail/OnboardingIncompleteState";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -33,7 +33,7 @@ const ImplementationTrailPage = () => {
     );
   }
 
-  // Se o onboarding não foi concluído, exibir mensagem orientando o usuário
+  // Se o onboarding não foi concluído, exibir mensagem orientando o usuário para o Perfil de Implementação
   if (isOnboardingComplete === false) {
     return (
       <div className="container py-8">
@@ -45,7 +45,19 @@ const ImplementationTrailPage = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <OnboardingIncompleteState onNavigateToOnboarding={() => navigate("/onboarding")} />
+            <div className="flex flex-col items-center justify-center py-8 text-center">
+              <h3 className="text-lg font-medium mb-2">Complete seu perfil para gerar sua trilha</h3>
+              <p className="text-muted-foreground mb-6 max-w-lg">
+                Para podermos criar uma trilha de implementação personalizada para você, 
+                precisamos que você complete seu Perfil de Implementação.
+              </p>
+              <Button 
+                onClick={() => navigate("/perfil-de-implementacao")} 
+                className="bg-[#0ABAB5] hover:bg-[#0ABAB5]/90"
+              >
+                Completar Perfil de Implementação
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>

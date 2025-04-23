@@ -1,3 +1,4 @@
+
 import { Route, Routes } from "react-router-dom";
 import { authRoutes } from "./auth.routes";
 import { memberRoutes } from "./member.routes";
@@ -20,7 +21,11 @@ const AppRoutes = () => {
       {authRoutes}
       
       {/* Rota para perfil de implementação */}
-      <Route path="/perfil-de-implementacao" element={<ImplementationProfilePage />} />
+      <Route path="/perfil-de-implementacao" element={
+        <ProtectedRoutes>
+          <ImplementationProfilePage />
+        </ProtectedRoutes>
+      } />
       
       {/* Rotas de membros protegidas */}
       <Route element={<ProtectedRoutes />}>
