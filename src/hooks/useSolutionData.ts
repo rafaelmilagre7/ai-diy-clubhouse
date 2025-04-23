@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/auth';
 import { supabase, fetchSolutionById } from '@/lib/supabase';
-import { Solution } from '@/types/solution';
+import { Solution } from '@/types/supabaseTypes';
 import { useLogging } from '@/hooks/useLogging';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';

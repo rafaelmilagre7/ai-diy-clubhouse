@@ -1,6 +1,7 @@
 
 import { createClient } from '@supabase/supabase-js';
 import { Database } from './types';
+export * from '@/types/supabaseTypes';
 
 // Usando constantes ao invés de variáveis de ambiente
 const supabaseUrl = 'https://zotzvtepvpnkcoobdubt.supabase.co';
