@@ -63,12 +63,55 @@ export function useLogging(moduleName: string = '') {
     }
   };
   
+  /**
+   * Função de log geral para compatibilidade com código existente
+   */
+  const log = (message: string, data?: Record<string, any>) => {
+    logInfo(message, data);
+  };
+  
   return {
     logInfo,
     logWarning,
     logError,
     logDebug,
     logTimer,
-    logTimerAsync
+    logTimerAsync,
+    log
   };
 }
+
+// Criando o Provider para o contexto de logs
+import React, { createContext, useContext, ReactNode } from 'react';
+
+interface LoggingContextType {
+  logInfo: (message: string, data?: Record<string, any>) => void;
+  logWarning: (message: string, data?: Record<string, any>) => void;
+  logError: (message: string, data?: Record<string, any>) => void;
+  logDebug: (message: string, data?: Record<string, any>) => void;
+  logTimer: (operationName: string, callback: Function) => void;
+  logTimerAsync: (operationName: string, callback: () => Promise<any>) => Promise<any>;
+  log: (message: string, data?: Record<string, any>) => void;
+}
+
+const LoggingContext = createContext<LoggingContextType | undefined>(undefined);
+
+export const LoggingProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const loggingService = useLogging();
+  
+  return (
+    <LoggingContext.Provider value={loggingService}>
+      {children}
+    </LoggingContext.Provider>
+  );
+};
+
+export const useLoggingContext = () => {
+  const context = useContext(LoggingContext);
+  
+  if (!context) {
+    throw new Error('useLoggingContext must be used within a LoggingProvider');
+  }
+  
+  return context;
+};

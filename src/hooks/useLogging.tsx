@@ -15,10 +15,10 @@ interface LoggingContextType {
 }
 
 // Create a context for logging functions
-const LoggingContext = createContext<LoggingContextType | undefined>(undefined);
+const LegacyLoggingContext = createContext<LoggingContextType | undefined>(undefined);
 
 // Provider component
-export const LoggingProvider = ({ children }: { children: ReactNode }) => {
+export const LegacyLoggingProvider = ({ children }: { children: ReactNode }) => {
   const { toast } = useToast();
   const [lastError, setLastError] = useState<any>(null);
   
@@ -105,17 +105,17 @@ export const LoggingProvider = ({ children }: { children: ReactNode }) => {
   };
   
   return (
-    <LoggingContext.Provider value={contextValue}>
+    <LegacyLoggingContext.Provider value={contextValue}>
       {children}
-    </LoggingContext.Provider>
+    </LegacyLoggingContext.Provider>
   );
 };
 
 // Hook to use the logging context
-export const useLogging = (): LoggingContextType => {
-  const context = useContext(LoggingContext);
+export const useLegacyLogging = (): LoggingContextType => {
+  const context = useContext(LegacyLoggingContext);
   if (context === undefined) {
-    throw new Error("useLogging must be used within a LoggingProvider");
+    throw new Error("useLegacyLogging must be used within a LegacyLoggingProvider");
   }
   return context;
 };
