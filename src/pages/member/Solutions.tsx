@@ -1,16 +1,26 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useSolutionsData } from '@/hooks/useSolutionsData';
 import { SolutionCard } from '@/components/solution/SolutionCard';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Search } from 'lucide-react';
+import { Search, Filter } from 'lucide-react';
 import LoadingScreen from '@/components/common/LoadingScreen';
 import { Solution } from '@/lib/supabase';
 import { useLogging } from '@/hooks/useLogging';
 import { useQueryClient } from '@tanstack/react-query';
 import { NoSolutionsPlaceholder } from '@/components/dashboard/NoSolutionsPlaceholder';
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger
+} from '@/components/ui/dropdown-menu';
 
 const Solutions = () => {
   // Logger para depuração
@@ -26,6 +36,9 @@ const Solutions = () => {
   const [searchQuery, setSearchQuery] = useState(
     searchParams.get('search') || ''
   );
+  const [difficulty, setDifficulty] = useState(
+    searchParams.get('difficulty') || 'all'
+  );
 
   // Buscar os dados das soluções
   const { 
@@ -34,7 +47,7 @@ const Solutions = () => {
     loading,
     error,
     refetch
-  } = useSolutionsData(activeCategory, searchQuery);
+  } = useSolutionsData(activeCategory, searchQuery, difficulty);
 
   // Atualizar os parâmetros de URL quando mudar categoria ou pesquisa
   useEffect(() => {
@@ -48,16 +61,25 @@ const Solutions = () => {
       params.search = searchQuery;
     }
     
+    if (difficulty !== 'all') {
+      params.difficulty = difficulty;
+    }
+    
     setSearchParams(params);
-  }, [activeCategory, searchQuery, setSearchParams]);
+  }, [activeCategory, searchQuery, difficulty, setSearchParams]);
 
   // Função para lidar com a mudança de categoria
   const handleCategoryChange = (category: string) => {
     setActiveCategory(category);
   };
 
+  // Função para lidar com a mudança de dificuldade
+  const handleDifficultyChange = (value: string) => {
+    setDifficulty(value);
+  };
+
   // Função para lidar com cliques nas soluções
-  const handleSolutionClick = (solution: Solution) => {
+  const handleSolutionClick = useCallback((solution: Solution) => {
     // Validar dados da solução antes de navegar
     if (!solution || !solution.id) {
       log("ERRO: Tentativa de navegação com solução inválida", { solution });
@@ -91,13 +113,20 @@ const Solutions = () => {
     
     // Navegar para a página de detalhes da solução com o parâmetro de ID
     navigate(`/solutions/${id}`);
-  };
+  }, [log, navigate, queryClient]);
 
   const categories = [
     { id: 'all', name: 'Todas' },
     { id: 'revenue', name: 'Receita' },
     { id: 'operational', name: 'Operacional' },
     { id: 'strategy', name: 'Estratégia' }
+  ];
+  
+  const difficultyOptions = [
+    { value: 'all', label: 'Todas as dificuldades' },
+    { value: 'easy', label: 'Fácil' },
+    { value: 'medium', label: 'Intermediário' },
+    { value: 'advanced', label: 'Avançado' }
   ];
 
   // Função para tentar carregar novamente as soluções em caso de erro
@@ -118,12 +147,12 @@ const Solutions = () => {
         <p className="text-gray-600 mb-6">
           {error instanceof Error ? error.message : "Ocorreu um erro ao tentar buscar as soluções. Por favor, tente novamente."}
         </p>
-        <button 
+        <Button 
           onClick={handleRetry}
           className="px-4 py-2 bg-[#0ABAB5] text-white rounded-md hover:bg-[#099388] transition-colors"
         >
           Tentar novamente
-        </button>
+        </Button>
       </div>
     );
   }
@@ -149,6 +178,25 @@ const Solutions = () => {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
+          
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="icon">
+                <Filter className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuLabel>Filtrar por dificuldade</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuRadioGroup value={difficulty} onValueChange={handleDifficultyChange}>
+                {difficultyOptions.map((option) => (
+                  <DropdownMenuRadioItem key={option.value} value={option.value}>
+                    {option.label}
+                  </DropdownMenuRadioItem>
+                ))}
+              </DropdownMenuRadioGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 

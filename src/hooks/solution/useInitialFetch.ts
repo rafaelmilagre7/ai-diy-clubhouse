@@ -22,7 +22,10 @@ export const useInitialFetch = (solutionId: string | undefined) => {
         setLoading(true);
         const { data, error } = await supabase
           .from('solutions')
-          .select('*')
+          .select(`
+            *,
+            modules (*)
+          `)
           .eq('id', solutionId)
           .maybeSingle();
 
@@ -32,7 +35,12 @@ export const useInitialFetch = (solutionId: string | undefined) => {
           throw new Error(`Solução com ID ${solutionId} não encontrada`);
         }
 
-        log('Solução encontrada com sucesso', { id: data.id });
+        log('Solução encontrada com sucesso', { 
+          id: data.id,
+          title: data.title,
+          modules: data.modules?.length || 0
+        });
+        
         setSolution(data as Solution);
         setError(null);
       } catch (err) {

@@ -35,7 +35,8 @@ const SolutionDetails = () => {
     notFoundError,
     availableSolutions, 
     connectionStatus,
-    checkConnection
+    checkConnection,
+    implementationMetrics
   } = useSolutionData(id);
   
   // Solution interaction handlers
@@ -53,6 +54,29 @@ const SolutionDetails = () => {
     }
   }, [user, loading, id, navigate]);
   
+  // Registrar visualização da solução
+  useEffect(() => {
+    if (user && solution && !loading && initialRenderRef.current) {
+      // Registrar visualização para métricas
+      const trackView = async () => {
+        try {
+          await supabase.rpc('increment', {
+            row_id: solution.id,
+            table_name: 'solution_metrics',
+            column_name: 'total_views'
+          });
+          
+          log("Visualização registrada", { solutionId: solution.id });
+        } catch (error) {
+          // Não exibir erro para usuário - apenas log
+          log("Erro ao registrar visualização", { error });
+        }
+      };
+      
+      trackView();
+    }
+  }, [user, solution, loading]);
+  
   // Log detalhado na primeira renderização para diagnóstico
   useEffect(() => {
     if (initialRenderRef.current) {
@@ -61,14 +85,15 @@ const SolutionDetails = () => {
         currentRoute: window.location.href,
         availableSolutionsCount: availableSolutions?.length || 0,
         isAdmin,
-        connectionStatus
+        connectionStatus,
+        hasImplementationMetrics: !!implementationMetrics
       });
       
       // Verificar a conexão com o servidor no carregamento inicial
       checkConnection();
       initialRenderRef.current = false;
     }
-  }, [id, log, availableSolutions, isAdmin, connectionStatus, checkConnection]);
+  }, [id, log, availableSolutions, isAdmin, connectionStatus, checkConnection, implementationMetrics]);
 
   // Verificar ID inválido ou ausente
   if (!id) {
@@ -120,11 +145,17 @@ const SolutionDetails = () => {
     <div className="max-w-5xl mx-auto pb-12 animate-fade-in">
       <SolutionBackButton />
       
-      <SolutionHeaderSection solution={solution} />
+      <SolutionHeaderSection 
+        solution={solution} 
+        implementationMetrics={implementationMetrics} 
+      />
       
       <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-8">
         <div className="md:col-span-2">
-          <SolutionTabsContent solution={solution} />
+          <SolutionTabsContent 
+            solution={solution} 
+            progress={progress}
+          />
           
           <SolutionMobileActions 
             solutionId={solution.id}
@@ -132,6 +163,7 @@ const SolutionDetails = () => {
             startImplementation={startImplementation}
             continueImplementation={continueImplementation}
             initializing={initializing}
+            completionPercentage={progress?.completion_percentage || 0}
           />
         </div>
         
@@ -142,6 +174,7 @@ const SolutionDetails = () => {
             startImplementation={startImplementation}
             continueImplementation={continueImplementation}
             initializing={initializing}
+            implementationMetrics={implementationMetrics}
           />
         </div>
       </div>

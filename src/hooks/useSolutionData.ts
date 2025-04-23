@@ -1,5 +1,5 @@
 
-import { useCallback, useState } from 'react';
+import { useCallback, useState, useEffect } from 'react';
 import { supabase, fetchSolutionById, checkSolutionExists, getAllSolutions } from '@/lib/supabase';
 import { useLogging } from '@/hooks/useLogging';
 import {
@@ -9,17 +9,19 @@ import {
   useErrorHandling
 } from './solution';
 import { toast } from 'sonner';
+import { Solution, Progress } from '@/types/supabaseTypes';
 
 export const useSolutionData = (solutionId: string | undefined) => {
   const { log } = useLogging('useSolutionData');
   
   // Utilizamos os hooks especializados
   const { solution, loading, error, setSolution } = useInitialFetch(solutionId);
-  const { progress } = useProgressTracking(solutionId);
+  const { progress, updateProgress } = useProgressTracking(solutionId);
   const { availableSolutions } = useAvailableSolutions();
   const { networkError, notFoundError, handleError } = useErrorHandling();
 
   const [connectionStatus, setConnectionStatus] = useState<'connected' | 'reconnecting' | 'disconnected'>('connected');
+  const [implementationMetrics, setImplementationMetrics] = useState<any>(null);
   
   // Função para verificar a conexão com o Supabase
   const checkConnection = useCallback(async () => {
@@ -79,12 +81,88 @@ export const useSolutionData = (solutionId: string | undefined) => {
       const solutionData = await fetchSolutionById(solutionId);
       setSolution(solutionData);
       setConnectionStatus('connected');
+      
+      // Buscar métricas de implementação se disponíveis
+      await fetchImplementationMetrics(solutionId);
     } catch (err) {
       handleError(err);
       // Tenta verificar a conexão com o Supabase para diagnóstico
       await checkConnection();
     }
   }, [solutionId, log, setSolution, handleError, checkConnection]);
+
+  // Nova função para buscar métricas de implementação
+  const fetchImplementationMetrics = useCallback(async (solutionId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('solution_implementation_metrics')
+        .select('*')
+        .eq('solution_id', solutionId)
+        .maybeSingle();
+      
+      if (error) throw error;
+      
+      if (data) {
+        setImplementationMetrics(data);
+        log('Métricas de implementação carregadas', { metricsId: data.id });
+      }
+    } catch (err) {
+      log('Erro ao buscar métricas de implementação', { error: err });
+      // Não exibimos toast aqui pois é uma funcionalidade complementar
+    }
+  }, [log]);
+  
+  // Função para atualizar as métricas de implementação
+  const updateImplementationMetrics = useCallback(async (metricsData: Partial<any>) => {
+    if (!solutionId) return;
+    
+    try {
+      const { data: existingMetrics } = await supabase
+        .from('solution_implementation_metrics')
+        .select('*')
+        .eq('solution_id', solutionId)
+        .maybeSingle();
+      
+      if (existingMetrics) {
+        // Atualizar métricas existentes
+        const { data, error } = await supabase
+          .from('solution_implementation_metrics')
+          .update(metricsData)
+          .eq('id', existingMetrics.id)
+          .select()
+          .single();
+        
+        if (error) throw error;
+        
+        setImplementationMetrics(data);
+        log('Métricas de implementação atualizadas', { metricsId: data.id });
+      } else {
+        // Criar novas métricas
+        const { data, error } = await supabase
+          .from('solution_implementation_metrics')
+          .insert({
+            solution_id: solutionId,
+            ...metricsData
+          })
+          .select()
+          .single();
+        
+        if (error) throw error;
+        
+        setImplementationMetrics(data);
+        log('Métricas de implementação criadas', { metricsId: data.id });
+      }
+    } catch (err) {
+      log('Erro ao atualizar métricas de implementação', { error: err });
+    }
+  }, [solutionId, log]);
+
+  // Carregar métricas de implementação ao montar o componente
+  useEffect(() => {
+    if (solutionId) {
+      fetchImplementationMetrics(solutionId);
+    }
+  }, [solutionId, fetchImplementationMetrics]);
 
   return {
     solution,
@@ -97,6 +175,9 @@ export const useSolutionData = (solutionId: string | undefined) => {
     networkError,
     notFoundError,
     availableSolutions,
-    setSolution
+    setSolution,
+    implementationMetrics,
+    updateImplementationMetrics,
+    updateProgress
   };
 };
