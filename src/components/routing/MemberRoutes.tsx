@@ -18,6 +18,7 @@ import Benefits from "@/pages/member/Benefits";
 import ImplementationProfilePage from "@/pages/ImplementationProfile";
 import { NotFoundContent } from "@/components/implementation/NotFoundContent";
 import { ImplementationNotFound } from "@/components/implementation/ImplementationNotFound";
+import MemberSolutionRedirect from "./MemberSolutionRedirect";
 
 interface MemberRoutesProps {
   children?: ReactNode;
@@ -38,15 +39,22 @@ const MemberRoutes = ({ children }: MemberRoutesProps) => {
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="solutions" element={<Solutions />} />
         
-        {/* Ambas as rotas de solução apontam para o mesmo componente */}
+        {/* Rotas para soluções - formato mais recente */}
         <Route path="solutions/:id" element={<SolutionDetails />} />
-        <Route path="solution/:id" element={<SolutionDetails />} />
         
+        {/* Rota antiga redirecionada */}
+        <Route path="solution/:id" element={<MemberSolutionRedirect />} />
+        
+        {/* Rotas de implementação */}
         <Route path="implement/:id/:moduleIdx" element={<SolutionImplementation />} />
         <Route path="implementation/:id" element={<SolutionImplementation />} />
         <Route path="implementation/:id/:moduleIdx" element={<SolutionImplementation />} />
+        
+        {/* Rotas do perfil */}
         <Route path="profile" element={<Profile />} />
         <Route path="profile/edit" element={<EditProfile />} />
+        
+        {/* Demais rotas */}
         <Route path="tools" element={<Tools />} />
         <Route path="tools/:id" element={<ToolDetails />} />
         <Route path="benefits" element={<Benefits />} />

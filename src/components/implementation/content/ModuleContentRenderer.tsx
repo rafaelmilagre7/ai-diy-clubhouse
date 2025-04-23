@@ -1,9 +1,10 @@
 
-import React from "react";
+import React, { useCallback } from "react";
 import { Module } from "@/lib/supabase";
 import { ModuleContentText } from "./ModuleContentText";
 import { ContentTypeSwitcher } from "./ContentTypeSwitcher";
 import { getContentType } from "./utils/ContentTypeUtils";
+import { useLogging } from "@/hooks/useLogging";
 
 interface ModuleContentRendererProps {
   module: Module;
@@ -11,6 +12,14 @@ interface ModuleContentRendererProps {
 }
 
 export const ModuleContentRenderer = ({ module, onInteraction }: ModuleContentRendererProps) => {
+  const { log } = useLogging("ModuleContentRenderer");
+  
+  // Memoize handler para evitar recriações desnecessárias
+  const handleInteraction = useCallback(() => {
+    log("Interação do usuário com módulo", { module_id: module.id });
+    onInteraction();
+  }, [module.id, onInteraction, log]);
+  
   if (!module.content) {
     return (
       <div className="p-8 text-center">
@@ -21,11 +30,6 @@ export const ModuleContentRenderer = ({ module, onInteraction }: ModuleContentRe
 
   // Determine the content type based on module.type or content structure
   const contentType = getContentType(module);
-
-  // Track user interaction with content
-  const handleInteraction = () => {
-    onInteraction();
-  };
 
   // Render appropriate content based on content type
   return (

@@ -1,4 +1,5 @@
-import React, { useEffect } from "react";
+
+import React, { useEffect, useRef } from "react";
 import { Module } from "@/lib/supabase";
 import { LandingModule } from "./LandingModule";
 import { CelebrationModule } from "./CelebrationModule";
@@ -14,13 +15,20 @@ interface ModuleContentProps {
 
 export const ModuleContent = ({ module, onComplete, onError }: ModuleContentProps) => {
   const { log, logError } = useLogging();
+  const hasAutoCompletedRef = useRef(false);
   
   // Mark landing and celebration modules as automatically interacted with
   useEffect(() => {
-    if (module && shouldAutoComplete(module)) {
+    if (module && shouldAutoComplete(module) && !hasAutoCompletedRef.current) {
       log("Auto-completing module", { module_id: module.id, module_type: module.type });
+      hasAutoCompletedRef.current = true;
       onComplete();
     }
+    
+    // Reset flag when module changes
+    return () => {
+      hasAutoCompletedRef.current = false;
+    };
   }, [module, onComplete, log]);
 
   if (!module) {
