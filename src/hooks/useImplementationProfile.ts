@@ -138,19 +138,33 @@ export const useImplementationProfile = () => {
 
       console.log("Enviando dados formatados para Supabase:", formattedValues);
 
-      const { error, data } = await supabase
-        .from("implementation_profiles")
-        .upsert([formattedValues], { onConflict: "user_id" })
-        .select();
+      // Verificar se já existe um perfil para o usuário
+      if (profile?.id) {
+        // Atualizar perfil existente usando o ID
+        const { error } = await supabase
+          .from("implementation_profiles")
+          .update(formattedValues)
+          .eq("id", profile.id);
 
-      if (error) {
-        console.error("Erro detalhado do Supabase:", error);
-        toast.error(`Erro ao salvar informações: ${error.message}`);
-        return;
+        if (error) {
+          console.error("Erro detalhado do Supabase:", error);
+          toast.error(`Erro ao atualizar informações: ${error.message}`);
+          return;
+        }
+      } else {
+        // Inserir novo perfil
+        const { error } = await supabase
+          .from("implementation_profiles")
+          .insert([formattedValues]);
+
+        if (error) {
+          console.error("Erro detalhado do Supabase:", error);
+          toast.error(`Erro ao inserir informações: ${error.message}`);
+          return;
+        }
       }
 
-      console.log("Resposta do upsert:", data);
-
+      // Buscar o perfil atualizado
       const { data: updatedProfile, error: fetchError } = await supabase
         .from("implementation_profiles")
         .select("*")
