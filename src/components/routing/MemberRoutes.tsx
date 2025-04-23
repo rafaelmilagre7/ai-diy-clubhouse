@@ -37,7 +37,11 @@ const MemberRoutes = ({ children }: MemberRoutesProps) => {
 
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="solutions" element={<Solutions />} />
+        
+        {/* Ambas as rotas de solução apontam para o mesmo componente */}
+        <Route path="solutions/:id" element={<SolutionDetails />} />
         <Route path="solution/:id" element={<SolutionDetails />} />
+        
         <Route path="implement/:id/:moduleIdx" element={<SolutionImplementation />} />
         <Route path="implementation/:id" element={<SolutionImplementation />} />
         <Route path="implementation/:id/:moduleIdx" element={<SolutionImplementation />} />

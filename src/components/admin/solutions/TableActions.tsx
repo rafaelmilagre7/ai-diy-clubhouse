@@ -20,7 +20,7 @@ export const TableActions: React.FC<TableActionsProps> = ({
       <Button 
         variant="outline" 
         size="sm"
-        onClick={() => navigate(`/solution/${solutionId}`)}
+        onClick={() => navigate(`/solutions/${solutionId}`)}
       >
         <Eye className="h-4 w-4" />
       </Button>

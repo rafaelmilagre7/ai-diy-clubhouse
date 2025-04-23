@@ -31,6 +31,7 @@ export const useSolutionData = (id: string | undefined) => {
     
     try {
       log("Iniciando busca por solução", { id });
+      console.log("Buscando solução com ID:", id); // Adicional para depuração
       
       // Buscar a solução pelo ID
       let query = supabase
@@ -47,6 +48,7 @@ export const useSolutionData = (id: string | undefined) => {
       
       if (fetchError) {
         logError("Erro ao buscar solução:", { error: fetchError, id });
+        console.error("Erro na consulta do Supabase:", fetchError); // Adicional para depuração
         
         // Se o erro for de registro não encontrado e o usuário não é admin,
         // provavelmente está tentando acessar uma solução não publicada
@@ -67,6 +69,7 @@ export const useSolutionData = (id: string | undefined) => {
       
       if (!data) {
         log("Nenhuma solução encontrada com ID", { id });
+        console.warn("Solução não encontrada:", id); // Adicional para depuração
         if (!toastShownRef.current.notFound) {
           toast.error("Não foi possível encontrar a solução solicitada.", {
             id: `solution-not-found-${id}`,
@@ -78,6 +81,7 @@ export const useSolutionData = (id: string | undefined) => {
       }
       
       log("Dados da solução encontrados", { solutionId: data.id, solutionTitle: data.title });
+      console.log("Solução encontrada:", data); // Adicional para depuração
       
       // Toast apenas na primeira carga bem-sucedida
       if (!toastShownRef.current.success) {
@@ -91,6 +95,7 @@ export const useSolutionData = (id: string | undefined) => {
       return data as Solution;
     } catch (error: any) {
       logError("Erro em useSolutionData:", { error });
+      console.error("Erro ao buscar solução:", error); // Adicional para depuração
       
       // Verificar se é um erro de conexão
       const isNetworkError = error?.message?.includes('fetch') || 
@@ -122,9 +127,16 @@ export const useSolutionData = (id: string | undefined) => {
     queryFn: fetchSolution,
     enabled: !!id,
     staleTime: 5 * 60 * 1000, // 5 minutos antes de considerar os dados obsoletos
-    retry: 1,
+    retry: 2, // Aumentando o número de tentativas
     refetchOnWindowFocus: false,
   });
+
+  // Sincronizar o estado interno com os dados obtidos
+  useEffect(() => {
+    if (solution) {
+      setSolutionData(solution);
+    }
+  }, [solution]);
 
   // Função para definir a solução manualmente (necessária para o editor)
   const setSolution = (solution: Solution) => {
@@ -186,6 +198,7 @@ export const useSolutionData = (id: string | undefined) => {
     }
   }, [id]);
 
+  // Returna o estado combinado (dando prioridade para o estado local)
   return {
     solution: solutionData || solution,
     loading,

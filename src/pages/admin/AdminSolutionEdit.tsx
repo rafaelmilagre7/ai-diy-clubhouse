@@ -11,12 +11,23 @@ import NavigationButtons from '@/components/admin/solution-editor/NavigationButt
 import AuthError from '@/components/admin/solution-editor/AuthError';
 import { useToast } from '@/hooks/use-toast';
 import { useSolutionEditor } from '@/components/admin/solution-editor/useSolutionEditor';
+import { toast as sonnerToast } from 'sonner';
 
 const AdminSolutionEdit = () => {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  
+  // Toast para informar que está carregando
+  useEffect(() => {
+    if (id) {
+      sonnerToast.info("Carregando solução para edição...", {
+        id: `loading-solution-edit-${id}`,
+        duration: 3000
+      });
+    }
+  }, [id]);
   
   const {
     solution,
@@ -36,12 +47,18 @@ const AdminSolutionEdit = () => {
     // Logging for debugging purposes
     console.log("Solution Editor loaded with ID:", id);
     console.log("Solution data:", solution);
-    console.log("Current step:", currentStep);
-    console.log("Active tab:", activeTab);
-  }, [id, solution, currentStep, activeTab]);
+    
+    if (!solution && !loading && id) {
+      sonnerToast.error("Solução não encontrada para edição", {
+        description: "Não foi possível encontrar a solução com o ID fornecido.",
+        id: `solution-edit-not-found-${id}`,
+        duration: 5000
+      });
+    }
+  }, [id, solution, loading]);
   
   if (loading) {
-    return <LoadingScreen />;
+    return <LoadingScreen message="Carregando editor de solução..." />;
   }
   
   // Função para mostrar toast explicitamente ao salvar

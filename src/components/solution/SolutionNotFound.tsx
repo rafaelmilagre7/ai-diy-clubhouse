@@ -1,23 +1,39 @@
 
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Search, ArrowLeft, Home, RefreshCw } from 'lucide-react';
+import { Search, ArrowLeft, Home, RefreshCw, List } from 'lucide-react';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
 
 export const SolutionNotFound = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { id } = useParams<{ id: string }>();
+  const location = useLocation();
   
   const handleRefreshCache = () => {
     toast.info("Limpando cache e tentando novamente...");
+    
+    // Invalidar todas as queries relacionadas a soluções
     queryClient.invalidateQueries({ queryKey: ['solution'] });
     queryClient.invalidateQueries({ queryKey: ['solutions'] });
     
+    // Se temos um ID específico, invalidar também essa query
+    if (id) {
+      queryClient.invalidateQueries({ queryKey: ['solution', id] });
+      console.log("Invalidando cache para solução:", id);
+    }
+    
     // Pequeno delay para melhor experiência do usuário
     setTimeout(() => {
-      window.location.reload();
+      if (id) {
+        // Se temos um ID, tentar recarregar a página atual
+        window.location.reload();
+      } else {
+        // Caso contrário, voltar para a lista de soluções
+        navigate('/solutions', { replace: true });
+      }
     }, 500);
   };
   
@@ -32,10 +48,16 @@ export const SolutionNotFound = () => {
           Solução não encontrada
         </h1>
         
-        <p className="text-muted-foreground mb-6">
+        <p className="text-muted-foreground mb-2">
           A solução que você está procurando pode ter sido removida, renomeada 
-          ou talvez nunca tenha existido. Verifique o ID na URL.
+          ou talvez nunca tenha existido.
         </p>
+        
+        {id && (
+          <p className="text-sm text-muted-foreground mb-6">
+            ID: <code className="bg-gray-100 px-2 py-1 rounded">{id}</code>
+          </p>
+        )}
         
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <Button 
@@ -52,7 +74,7 @@ export const SolutionNotFound = () => {
             className="flex items-center gap-2"
             onClick={() => navigate('/solutions')}
           >
-            <Home className="h-4 w-4" />
+            <List className="h-4 w-4" />
             Ver todas as soluções
           </Button>
           

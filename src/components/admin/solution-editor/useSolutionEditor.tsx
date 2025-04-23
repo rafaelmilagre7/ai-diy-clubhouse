@@ -1,10 +1,11 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { SolutionFormValues } from "@/components/admin/solution/form/solutionFormSchema";
 import { useSolutionData } from "@/hooks/useSolutionData";
 import { useSolutionSave } from "@/hooks/useSolutionSave";
 import { useSolutionSteps } from "@/hooks/useSolutionSteps";
 import { Solution } from "@/lib/supabase";
+import { toast } from "sonner";
 
 export const useSolutionEditor = (id: string | undefined, user: any) => {
   // Get solution data - agora com setSolution disponível
@@ -27,8 +28,12 @@ export const useSolutionEditor = (id: string | undefined, user: any) => {
     slug: "",
   };
   
-  const currentValues: SolutionFormValues = solution
-    ? {
+  const [currentValuesState, setCurrentValuesState] = useState<SolutionFormValues>(defaultValues);
+  
+  // Atualizar valores atuais quando a solução mudar
+  useEffect(() => {
+    if (solution) {
+      const updatedValues = {
         title: solution.title,
         description: solution.description,
         category: solution.category as "revenue" | "operational" | "strategy",
@@ -36,12 +41,29 @@ export const useSolutionEditor = (id: string | undefined, user: any) => {
         thumbnail_url: solution.thumbnail_url || "",
         published: solution.published,
         slug: solution.slug,
-      }
-    : defaultValues;
+      };
+      setCurrentValuesState(updatedValues);
+      
+      console.log("Valores da solução carregados:", updatedValues);
+    } else if (!loading && id) {
+      console.warn("Solução não encontrada para edição com ID:", id);
+    }
+  }, [solution, loading, id]);
 
   // Create a submit handler that uses our onSubmit function
   const handleSubmit = (values: SolutionFormValues) => {
-    return onSubmit(values);
+    console.log("Enviando formulário com valores:", values);
+    return onSubmit(values)
+      .then(() => {
+        setCurrentValuesState(values);
+        toast.success("Solução salva com sucesso!");
+      })
+      .catch((error) => {
+        console.error("Erro ao salvar solução:", error);
+        toast.error("Erro ao salvar solução", {
+          description: "Por favor, tente novamente."
+        });
+      });
   };
 
   return {
@@ -51,7 +73,7 @@ export const useSolutionEditor = (id: string | undefined, user: any) => {
     activeTab,
     setActiveTab,
     onSubmit: handleSubmit,
-    currentValues,
+    currentValues: currentValuesState,
     currentStep,
     setCurrentStep,
     totalSteps,
