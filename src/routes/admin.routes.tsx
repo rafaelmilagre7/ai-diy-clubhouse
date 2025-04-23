@@ -12,6 +12,8 @@ import SolutionEditor from "@/pages/admin/SolutionEditor";
 import AdminSolutionRedirect from "@/components/routing/AdminSolutionRedirect";
 import AdminUsers from "@/pages/admin/AdminUsers";
 import AdminTools from "@/pages/admin/AdminTools";
+import AdminImplementationProfiles from "@/pages/admin/AdminImplementationProfiles";
+import AdminImplementationProfileDetails from "@/pages/admin/AdminImplementationProfileDetails";
 
 export const adminRoutes = (
   <Fragment>
@@ -33,6 +35,18 @@ export const adminRoutes = (
     <Route path="admin/tools" element={
       <AdminLayout>
         <AdminTools />
+      </AdminLayout>
+    } />
+    
+    {/* Perfis de Implementação */}
+    <Route path="admin/implementation-profiles" element={
+      <AdminLayout>
+        <AdminImplementationProfiles />
+      </AdminLayout>
+    } />
+    <Route path="admin/implementation-profiles/:id" element={
+      <AdminLayout>
+        <AdminImplementationProfileDetails />
       </AdminLayout>
     } />
     

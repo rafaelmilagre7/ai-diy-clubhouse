@@ -38,7 +38,8 @@ const RootRedirect = () => {
       user, 
       isAdmin, 
       isLoading, 
-      timeoutExceeded 
+      timeoutExceeded,
+      currentPath: window.location.pathname
     });
   }, [user, isAdmin, isLoading, timeoutExceeded]);
   

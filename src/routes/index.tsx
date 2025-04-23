@@ -9,6 +9,8 @@ import RootRedirect from '@/components/routing/RootRedirect';
 import { NotFound } from '@/pages/NotFound';
 
 const AppRoutes = () => {
+  console.log('AppRoutes renderizando');
+  
   return (
     <Routes>
       {/* Autenticação */}
