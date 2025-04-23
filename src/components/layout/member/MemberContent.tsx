@@ -1,6 +1,5 @@
 
 import { ReactNode } from "react";
-import { Outlet } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Menu } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -8,7 +7,7 @@ import { cn } from "@/lib/utils";
 interface MemberContentProps {
   sidebarOpen: boolean;
   setSidebarOpen: (open: boolean) => void;
-  children?: ReactNode;
+  children: ReactNode;
 }
 
 export const MemberContent = ({ 
@@ -52,7 +51,7 @@ export const MemberContent = ({
 
       {/* Área de conteúdo */}
       <div className="container py-6 md:py-8">
-        {children || <Outlet />}
+        {children}
       </div>
     </main>
   );

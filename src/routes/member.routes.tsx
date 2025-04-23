@@ -30,45 +30,47 @@ import TrailGeneration from "@/pages/onboarding/steps/TrailGeneration";
 
 export const memberRoutes = (
   <Fragment>
-    {/* Dashboard */}
-    <Route path="/dashboard" element={<Dashboard />} />
-    
-    {/* Soluções */}
-    <Route path="/solutions" element={<Solutions />} />
-    <Route path="/solution/:id" element={<SolutionDetails />} />
-    <Route path="/implement/:id/:moduleIdx" element={<SolutionImplementation />} />
-    <Route path="/implementation/:id" element={<SolutionImplementation />} />
-    <Route path="/implementation/:id/:moduleIdx" element={<SolutionImplementation />} />
-    <Route path="/implementation-trail" element={<ImplementationTrailPage />} />
-    
-    {/* Perfil */}
-    <Route path="/profile" element={<Profile />} />
-    <Route path="/profile/edit" element={<EditProfile />} />
-    
-    {/* Ferramentas */}
-    <Route path="/tools" element={<Tools />} />
-    <Route path="/tools/:id" element={<ToolDetails />} />
-    
-    {/* Benefícios */}
-    <Route path="/benefits" element={<Benefits />} />
-    
-    {/* Sugestões */}
-    <Route path="/suggestions" element={<Suggestions />} />
-    <Route path="/suggestions/:id" element={<SuggestionDetails />} />
-    <Route path="/suggestions/new" element={<NewSuggestion />} />
-    
-    {/* Conquistas */}
-    <Route path="/achievements" element={<Achievements />} />
-    
-    {/* Onboarding */}
-    <Route path="/onboarding" element={<Onboarding />} />
-    <Route path="/onboarding/professional-data" element={<ProfessionalData />} />
-    <Route path="/onboarding/business-context" element={<BusinessContext />} />
-    <Route path="/onboarding/ai-experience" element={<AIExperience />} />
-    <Route path="/onboarding/club-goals" element={<BusinessGoalsClub />} />
-    <Route path="/onboarding/customization" element={<ExperiencePersonalization />} />
-    <Route path="/onboarding/complementary" element={<ComplementaryInfo />} />
-    <Route path="/onboarding/review" element={<Review />} />
-    <Route path="/onboarding/trail-generation" element={<TrailGeneration />} />
+    <Route element={<MemberLayout />}>
+      {/* Dashboard */}
+      <Route path="/dashboard" element={<Dashboard />} />
+      
+      {/* Soluções */}
+      <Route path="/solutions" element={<Solutions />} />
+      <Route path="/solution/:id" element={<SolutionDetails />} />
+      <Route path="/implement/:id/:moduleIdx" element={<SolutionImplementation />} />
+      <Route path="/implementation/:id" element={<SolutionImplementation />} />
+      <Route path="/implementation/:id/:moduleIdx" element={<SolutionImplementation />} />
+      <Route path="/implementation-trail" element={<ImplementationTrailPage />} />
+      
+      {/* Perfil */}
+      <Route path="/profile" element={<Profile />} />
+      <Route path="/profile/edit" element={<EditProfile />} />
+      
+      {/* Ferramentas */}
+      <Route path="/tools" element={<Tools />} />
+      <Route path="/tools/:id" element={<ToolDetails />} />
+      
+      {/* Benefícios */}
+      <Route path="/benefits" element={<Benefits />} />
+      
+      {/* Sugestões */}
+      <Route path="/suggestions" element={<Suggestions />} />
+      <Route path="/suggestions/:id" element={<SuggestionDetails />} />
+      <Route path="/suggestions/new" element={<NewSuggestion />} />
+      
+      {/* Conquistas */}
+      <Route path="/achievements" element={<Achievements />} />
+      
+      {/* Onboarding */}
+      <Route path="/onboarding" element={<Onboarding />} />
+      <Route path="/onboarding/professional-data" element={<ProfessionalData />} />
+      <Route path="/onboarding/business-context" element={<BusinessContext />} />
+      <Route path="/onboarding/ai-experience" element={<AIExperience />} />
+      <Route path="/onboarding/club-goals" element={<BusinessGoalsClub />} />
+      <Route path="/onboarding/customization" element={<ExperiencePersonalization />} />
+      <Route path="/onboarding/complementary" element={<ComplementaryInfo />} />
+      <Route path="/onboarding/review" element={<Review />} />
+      <Route path="/onboarding/trail-generation" element={<TrailGeneration />} />
+    </Route>
   </Fragment>
 );
