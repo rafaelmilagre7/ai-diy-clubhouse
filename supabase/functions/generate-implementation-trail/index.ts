@@ -25,16 +25,44 @@ serve(async (req) => {
   }
 
   try {
+    // Log para debug
+    console.log("Iniciando edge function generate-implementation-trail");
+    
     // Obter dados da requisição
-    const { onboardingData } = await req.json();
+    let requestData;
+    try {
+      requestData = await req.json();
+      console.log("Dados recebidos:", JSON.stringify(requestData));
+    } catch (parseError) {
+      console.error("Erro ao parsear dados da requisição:", parseError);
+      requestData = { onboardingData: {} }; // Fallback para objeto vazio
+    }
+    
+    const { onboardingData } = requestData;
     
     // Obter o token de autenticação do cabeçalho
     const authHeader = req.headers.get('Authorization');
+    console.log("Cabeçalho de autenticação presente:", !!authHeader);
+    
+    // Verificar se as variáveis de ambiente estão definidas
+    if (!Deno.env.get('SUPABASE_URL') || !Deno.env.get('SUPABASE_ANON_KEY')) {
+      console.error("Variáveis de ambiente do Supabase não estão configuradas");
+      return new Response(
+        JSON.stringify({ 
+          error: 'Configuração do servidor incompleta - Variáveis de ambiente ausentes',
+          details: 'SUPABASE_URL ou SUPABASE_ANON_KEY não estão definidos'
+        }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
     
     // Configurar cliente Supabase com a URL e chave anônima
     const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      Deno.env.get('SUPABASE_URL') || '',
+      Deno.env.get('SUPABASE_ANON_KEY') || '',
       {
         global: {
           headers: { 
@@ -45,6 +73,7 @@ serve(async (req) => {
     );
     
     // Verificar autenticação do usuário
+    console.log("Verificando autenticação do usuário");
     const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
     
     if (authError || !user) {
@@ -61,31 +90,59 @@ serve(async (req) => {
       );
     }
     
+    console.log("Usuário autenticado:", user.id);
+    
     // Obter dados das soluções disponíveis
+    console.log("Buscando soluções publicadas");
     const { data: solutions, error: solutionsError } = await supabaseClient
       .from('solutions')
       .select('*')
       .eq('published', true);
     
     if (solutionsError) {
+      console.error(`Erro ao buscar soluções: ${solutionsError.message}`, solutionsError);
       throw new Error(`Erro ao buscar soluções: ${solutionsError.message}`);
     }
     
     if (!solutions || solutions.length === 0) {
-      throw new Error('Nenhuma solução disponível para recomendação');
+      console.warn('Nenhuma solução disponível para recomendação');
+      return new Response(
+        JSON.stringify({ 
+          error: 'Nenhuma solução disponível para recomendação',
+          recommendations: {
+            priority1: [],
+            priority2: [],
+            priority3: []
+          }
+        }),
+        { 
+          status: 200, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
     }
     
-    // Buscar dados de onboarding do usuário (agora usando implementation_profiles)
+    console.log(`Encontradas ${solutions.length} soluções publicadas`);
+    
+    // Buscar dados de perfil de implementação do usuário
+    console.log("Buscando perfil de implementação do usuário:", user.id);
     const { data: profileData, error: profileError } = await supabaseClient
       .from('implementation_profiles')
       .select('*')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
       .limit(1)
-      .single();
+      .maybeSingle();
     
     if (profileError && !profileError.message.includes('Results contain 0 rows')) {
       console.error('Erro ao buscar perfil de implementação:', profileError);
+    }
+    
+    // Log para verificar se encontrou perfil
+    if (profileData) {
+      console.log("Perfil de implementação encontrado");
+    } else {
+      console.warn("Perfil de implementação não encontrado para o usuário:", user.id);
     }
     
     // Definir variáveis que serão usadas para personalização
@@ -221,6 +278,36 @@ serve(async (req) => {
       priority3
     };
     
+    // Verificar se a trilha tem conteúdo
+    if (priority1.length === 0 && priority2.length === 0 && priority3.length === 0) {
+      console.warn("Não foi possível gerar recomendações de qualidade. Usando fallback.");
+      
+      // Criar algumas recomendações mock como fallback
+      const fallbackRecommendations: ImplementationTrail = {
+        priority1: solutions.slice(0, 3).map(s => ({
+          solutionId: s.id,
+          justification: "Esta solução foi selecionada como opção padrão com base no seu perfil."
+        })),
+        priority2: solutions.slice(3, 6).map(s => ({
+          solutionId: s.id,
+          justification: "Esta solução complementa seu conjunto de ferramentas de IA."
+        })),
+        priority3: solutions.slice(6, 9).map(s => ({
+          solutionId: s.id,
+          justification: "Esta solução pode ser explorada para expandir suas capacidades."
+        }))
+      };
+      
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          recommendations: fallbackRecommendations,
+          warning: "Usando recomendações padrão devido à falta de correspondências precisas"
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
     console.log("Recomendações geradas com sucesso:", {
       priority1Count: priority1.length,
       priority2Count: priority2.length,
@@ -238,10 +325,16 @@ serve(async (req) => {
   } catch (error) {
     console.error('Erro na geração da trilha:', error);
     
+    // Fornecer informações detalhadas de erro para facilitar o debug
+    const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+    const errorStack = error instanceof Error ? error.stack : undefined;
+    
     return new Response(
       JSON.stringify({ 
-        error: error instanceof Error ? error.message : 'Erro desconhecido',
-        stack: error instanceof Error ? error.stack : undefined
+        error: errorMessage,
+        stack: errorStack,
+        timestamp: new Date().toISOString(),
+        suggestion: "Verifique se o perfil de implementação está completo e tente novamente"
       }),
       { 
         status: 500, 

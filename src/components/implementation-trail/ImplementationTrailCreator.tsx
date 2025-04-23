@@ -4,11 +4,13 @@ import { useImplementationTrail } from "@/hooks/implementation/useImplementation
 import { useSolutionsData } from "@/hooks/useSolutionsData";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Loader2, RefreshCw, AlertTriangle } from "lucide-react";
+import { Loader2, RefreshCw, AlertTriangle, HelpCircle } from "lucide-react";
 import { TrailSolutionsList } from "./TrailSolutionsList";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 export const ImplementationTrailCreator = () => {
+  const navigate = useNavigate();
   const { trail, isLoading, error, hasContent, generateImplementationTrail, refreshTrail } = useImplementationTrail();
   const { solutions: allSolutions, loading: solutionsLoading } = useSolutionsData();
   const [processedSolutions, setProcessedSolutions] = useState<any[]>([]);
@@ -72,6 +74,11 @@ export const ImplementationTrailCreator = () => {
     }
   };
 
+  // Função para navegar para a página de perfil de implementação
+  const handleNavigateToProfile = () => {
+    navigate("/perfil-de-implementacao");
+  };
+
   // Estado de carregamento
   if (isLoading || solutionsLoading) {
     return (
@@ -85,22 +92,41 @@ export const ImplementationTrailCreator = () => {
   // Estado de erro
   if (error) {
     return (
-      <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
-        <AlertTriangle className="h-10 w-10 text-red-500 mx-auto mb-4" />
-        <h3 className="text-lg font-medium mb-2">Erro ao carregar trilha</h3>
-        <p className="text-gray-600 mb-4">
-          Não foi possível carregar sua trilha personalizada.
-        </p>
-        <Button onClick={handleGenerateTrail} disabled={isGenerating}>
-          {isGenerating ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Gerando...
-            </>
-          ) : (
-            "Tentar Novamente"
-          )}
-        </Button>
+      <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+        <div className="flex flex-col items-center text-center mb-6">
+          <AlertTriangle className="h-10 w-10 text-red-500 mb-4" />
+          <h3 className="text-lg font-medium mb-2">Erro ao carregar trilha</h3>
+          <p className="text-gray-600 mb-4 max-w-lg">
+            Não foi possível carregar sua trilha personalizada. 
+            Isto geralmente acontece quando seu perfil de implementação não está 
+            completo ou há um problema de conexão.
+          </p>
+        </div>
+        
+        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          <Button 
+            onClick={handleGenerateTrail} 
+            disabled={isGenerating}
+            className="bg-[#0ABAB5] hover:bg-[#0ABAB5]/90"
+          >
+            {isGenerating ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Gerando...
+              </>
+            ) : (
+              "Tentar Novamente"
+            )}
+          </Button>
+          
+          <Button 
+            onClick={handleNavigateToProfile} 
+            variant="outline"
+          >
+            <HelpCircle className="mr-2 h-4 w-4" />
+            Verificar Perfil
+          </Button>
+        </div>
       </div>
     );
   }
@@ -115,20 +141,28 @@ export const ImplementationTrailCreator = () => {
             Baseado nas suas respostas do onboarding, vamos gerar uma trilha 
             de implementação exclusiva para o seu negócio.
           </p>
-          <Button 
-            onClick={handleGenerateTrail} 
-            disabled={isGenerating}
-            className="bg-[#0ABAB5] hover:bg-[#0ABAB5]/90"
-          >
-            {isGenerating ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Gerando Trilha...
-              </>
-            ) : (
-              "Gerar Minha Trilha"
-            )}
-          </Button>
+          <div className="flex flex-col sm:flex-row justify-center gap-3">
+            <Button 
+              onClick={handleGenerateTrail} 
+              disabled={isGenerating}
+              className="bg-[#0ABAB5] hover:bg-[#0ABAB5]/90"
+            >
+              {isGenerating ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Gerando Trilha...
+                </>
+              ) : (
+                "Gerar Minha Trilha"
+              )}
+            </Button>
+            <Button 
+              onClick={handleNavigateToProfile} 
+              variant="outline"
+            >
+              Verificar Perfil
+            </Button>
+          </div>
         </div>
       </div>
     );
