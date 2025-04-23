@@ -15,7 +15,6 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
 
 const SolutionDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -65,12 +64,6 @@ const SolutionDetails = () => {
       });
       initialRenderRef.current = false;
 
-      // Mostrar toast ao carregar página
-      toast.info("Carregando solução...", {
-        id: `loading-solution-${id}`,
-        duration: 2000
-      });
-
       // Pré-carregar dados em cache que podem ser necessários
       if (id) {
         queryClient.prefetchQuery({
@@ -94,8 +87,6 @@ const SolutionDetails = () => {
   const handleRetry = () => {
     const newRetryCount = retryCount + 1;
     setRetryCount(newRetryCount);
-    
-    toast.info("Tentando carregar solução novamente...");
     
     // Aguardar um tempo proporcional ao número de tentativas
     const delay = Math.min(1000 * Math.pow(1.5, newRetryCount), 10000); // máximo de 10 segundos

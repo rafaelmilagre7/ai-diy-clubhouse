@@ -6,6 +6,7 @@ import { ModuleContentVideos } from "./ModuleContentVideos";
 import { ModuleContentTools } from "./ModuleContentTools";
 import { ModuleContentChecklist } from "./ModuleContentChecklist";
 import { ModuleContentFAQ } from "./ModuleContentFAQ";
+import { useLogging } from "@/hooks/useLogging";
 
 interface ContentTypeSwitcherProps {
   contentType: string;
@@ -16,13 +17,23 @@ export const ContentTypeSwitcher: React.FC<ContentTypeSwitcherProps> = ({
   contentType,
   module
 }) => {
-  console.log("ContentTypeSwitcher render:", { contentType, moduleId: module.id });
+  const { log } = useLogging("ContentTypeSwitcher");
+  
+  // Log para diagnóstico
+  React.useEffect(() => {
+    log("ContentTypeSwitcher renderizado", { 
+      contentType, 
+      moduleId: module.id 
+    });
+  }, [contentType, module.id, log]);
   
   // Montando componentes de acordo com o tipo de conteúdo
   return (
-    <>
-      {/* Sempre mostrar vídeos se disponíveis */}
-      <ModuleContentVideos module={module} />
+    <div className="space-y-8">
+      {/* Sempre mostrar vídeos se o tipo for videos ou overview */}
+      {(contentType === "videos" || contentType === "overview") && (
+        <ModuleContentVideos module={module} />
+      )}
 
       {/* Mostrar materiais se o tipo for materials ou preparation */}
       {(contentType === "materials" || contentType === "preparation") && (
@@ -30,7 +41,7 @@ export const ContentTypeSwitcher: React.FC<ContentTypeSwitcherProps> = ({
       )}
 
       {/* Mostrar ferramentas se o tipo for tools */}
-      {(contentType === "tools") && (
+      {contentType === "tools" && (
         <ModuleContentTools module={module} />
       )}
 
@@ -43,6 +54,6 @@ export const ContentTypeSwitcher: React.FC<ContentTypeSwitcherProps> = ({
       {contentType === "faq" && (
         <ModuleContentFAQ module={module} />
       )}
-    </>
+    </div>
   );
 };
