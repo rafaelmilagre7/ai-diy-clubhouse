@@ -2,7 +2,7 @@
 import React from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Search, ArrowLeft, Home, RefreshCw, List } from 'lucide-react';
+import { Search, ArrowLeft, List, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
 

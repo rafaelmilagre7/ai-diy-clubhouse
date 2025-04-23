@@ -1,20 +1,20 @@
 
 import { useParams, useNavigate } from "react-router-dom";
-import LoadingScreen from "@/components/common/LoadingScreen";
-import { useSolutionData } from "@/hooks/useSolutionData";
-import { useSolutionInteractions } from "@/hooks/useSolutionInteractions";
+import { useEffect, useRef, useState } from "react";
+import { AlertCircle, RefreshCw } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { SolutionNotFound } from "@/components/solution/SolutionNotFound";
 import { SolutionBackButton } from "@/components/solution/SolutionBackButton";
 import { SolutionHeaderSection } from "@/components/solution/SolutionHeaderSection";
 import { SolutionTabsContent } from "@/components/solution/tabs/SolutionTabsContent";
 import { SolutionSidebar } from "@/components/solution/SolutionSidebar";
 import { SolutionMobileActions } from "@/components/solution/SolutionMobileActions";
-import { SolutionNotFound } from "@/components/solution/SolutionNotFound";
-import { useEffect, useRef, useState } from "react";
+import { useSolutionData } from "@/hooks/useSolutionData";
+import { useSolutionInteractions } from "@/hooks/useSolutionInteractions";
 import { useLogging } from "@/hooks/useLogging";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle, RefreshCw } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { useQueryClient } from "@tanstack/react-query";
+import LoadingScreen from "@/components/common/LoadingScreen";
 
 const SolutionDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -44,7 +44,10 @@ const SolutionDetails = () => {
       if (error.message && (
         error.message.includes("fetch") || 
         error.message.includes("network") ||
-        error.message.includes("Failed to fetch")
+        error.message.includes("Failed to fetch") ||
+        error.message.includes("ERR_INSUFFICIENT_RESOURCES") ||
+        error.message.includes("TypeError") ||
+        error.message.includes("ECONNREFUSED")
       )) {
         setNetworkError(true);
       } else {

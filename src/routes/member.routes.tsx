@@ -2,6 +2,7 @@
 import { Fragment } from "react";
 import { Route } from "react-router-dom";
 import MemberLayout from "@/components/layout/MemberLayout";
+import MemberSolutionRedirect from "@/components/routing/MemberSolutionRedirect";
 
 // Páginas de membros
 import Dashboard from "@/pages/member/Dashboard";
@@ -36,7 +37,9 @@ export const memberRoutes = (
       {/* Soluções - As duas formas de acesso a solução específica */}
       <Route path="solutions" element={<Solutions />} />
       <Route path="solutions/:id" element={<SolutionDetails />} />
-      <Route path="solution/:id" element={<SolutionDetails />} />
+      
+      {/* Compatibilidade com URL antiga - Redireciona para a nova estrutura */}
+      <Route path="solution/:id" element={<MemberSolutionRedirect />} />
       
       {/* Implementação */}
       <Route path="implement/:id/:moduleIdx" element={<SolutionImplementation />} />
