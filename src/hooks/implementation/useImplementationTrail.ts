@@ -112,24 +112,29 @@ export const useImplementationTrail = () => {
       setDetailedError(null);
       console.log("generateImplementationTrail: Iniciando geração para", user.id);
 
-      // Buscar trilha existente primeiro para evitar regenerações desnecessárias
-      const { data: existingTrail } = await supabase
-        .from("implementation_trails")
+      // Verificar perfil de implementação do usuário
+      const { data: profileData, error: profileError } = await supabase
+        .from("implementation_profiles")
         .select("*")
         .eq("user_id", user.id)
-        .eq("status", "completed")
-        .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle();
 
-      if (existingTrail) {
-        console.log("generateImplementationTrail: Trilha existente encontrada");
-        const sanitizedData = sanitizeTrailData(existingTrail.trail_data as ImplementationTrail);
-        setTrail(sanitizedData);
-        return sanitizedData;
+      if (profileError) {
+        console.error("Erro ao buscar perfil de implementação:", profileError);
+        throw new Error("Erro ao buscar perfil de implementação");
       }
 
-      console.log("generateImplementationTrail: Criando registro pendente");
+      if (!profileData) {
+        console.error("Perfil de implementação não encontrado");
+        throw new Error("Perfil de implementação não encontrado");
+      }
+
+      if (!profileData.is_completed) {
+        console.error("Perfil de implementação incompleto");
+        throw new Error("Perfil de implementação incompleto");
+      }
+
       // Iniciar processo de geração - criar ou atualizar registro pendente
       const { error: updateError } = await supabase
         .from("implementation_trails")
@@ -203,22 +208,38 @@ export const useImplementationTrail = () => {
       return sanitizedData;
     } catch (error: any) {
       console.error("Erro ao gerar trilha:", error);
-      setError("Não foi possível gerar sua trilha. Verifique seu perfil de implementação.");
+      
+      let errorMessage = "Não foi possível gerar sua trilha.";
+      
+      // Extrair mensagem de erro mais específica se disponível
+      if (error.message) {
+        if (error.message.includes("incompleto")) {
+          errorMessage = "Não foi possível gerar sua trilha. Verifique se seu perfil de implementação está completo.";
+        } else if (error.message.includes("não encontrado")) {
+          errorMessage = "Não foi possível gerar sua trilha. Perfil de implementação não encontrado.";
+        } else if (error.message.includes("autenticação")) {
+          errorMessage = "Não foi possível gerar sua trilha. Problema de autenticação.";
+        }
+      }
+      
+      setError(errorMessage);
       setDetailedError(error);
       
       // Atualizar status para erro
-      await supabase
-        .from("implementation_trails")
-        .update({
-          status: "error",
-          error_message: error.message || "Erro desconhecido",
-          updated_at: new Date().toISOString()
-        })
-        .eq("user_id", user.id)
-        .eq("status", "pending");
+      if (user?.id) {
+        await supabase
+          .from("implementation_trails")
+          .update({
+            status: "error",
+            error_message: error.message || "Erro desconhecido",
+            updated_at: new Date().toISOString()
+          })
+          .eq("user_id", user.id)
+          .eq("status", "pending");
+      }
 
-      toast.error("Não foi possível gerar sua trilha. Verifique se seu perfil de implementação está completo.", {
-        description: error.message || "Erro ao processar sua solicitação."
+      toast.error(errorMessage, {
+        description: "Tente novamente ou entre em contato com o suporte."
       });
       return null;
     } finally {
@@ -231,6 +252,7 @@ export const useImplementationTrail = () => {
     let retries = 0;
     let success = false;
     let result = null;
+    let lastError = null;
     
     while (retries <= maxRetries && !success) {
       try {
@@ -240,17 +262,23 @@ export const useImplementationTrail = () => {
         } else {
           retries++;
           if (retries <= maxRetries) {
-            console.log(`Tentativa ${retries} falhou, tentando novamente...`);
+            console.log(`Tentativa ${retries} falhou, tentando novamente em 2 segundos...`);
             await new Promise(resolve => setTimeout(resolve, 2000)); // espera 2 segundos
           }
         }
       } catch (e) {
+        lastError = e;
         retries++;
         console.error(`Erro na tentativa ${retries}:`, e);
         if (retries <= maxRetries) {
-          await new Promise(resolve => setTimeout(resolve, 2000));
+          console.log(`Aguardando ${retries * 2} segundos antes de nova tentativa...`);
+          await new Promise(resolve => setTimeout(resolve, retries * 2000));
         }
       }
+    }
+    
+    if (!success && lastError) {
+      throw lastError; // propagar o último erro se todas as tentativas falharem
     }
     
     return result;

@@ -36,22 +36,19 @@ serve(async (req) => {
       console.log("Dados recebidos:", JSON.stringify(requestData));
     } catch (parseError) {
       console.error("Erro ao parsear dados da requisição:", parseError);
-      requestData = { onboardingData: {} }; // Fallback para objeto vazio
+      requestData = { onboardingData: {} }; 
     }
-    
-    const { onboardingData } = requestData;
     
     // Obter o token de autenticação do cabeçalho
     const authHeader = req.headers.get('Authorization');
     console.log("Cabeçalho de autenticação presente:", !!authHeader);
     
-    // Verificar se as variáveis de ambiente estão definidas
+    // Verificar variáveis de ambiente
     if (!Deno.env.get('SUPABASE_URL') || !Deno.env.get('SUPABASE_ANON_KEY')) {
       console.error("Variáveis de ambiente do Supabase não estão configuradas");
       return new Response(
         JSON.stringify({ 
-          error: 'Configuração do servidor incompleta - Variáveis de ambiente ausentes',
-          details: 'SUPABASE_URL ou SUPABASE_ANON_KEY não estão definidos'
+          error: 'Configuração do servidor incompleta - Variáveis de ambiente ausentes'
         }),
         { 
           status: 500, 
@@ -60,7 +57,7 @@ serve(async (req) => {
       );
     }
     
-    // Configurar cliente Supabase com a URL e chave anônima
+    // Configurar cliente Supabase
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') || '',
       Deno.env.get('SUPABASE_ANON_KEY') || '',
@@ -149,10 +146,8 @@ serve(async (req) => {
       );
     }
     
-    // Log para verificar se encontrou perfil
-    if (profileData) {
-      console.log("Perfil de implementação encontrado:", profileData);
-    } else {
+    // Verificar se perfil foi encontrado
+    if (!profileData) {
       console.warn("Perfil de implementação não encontrado para o usuário:", user.id);
       return new Response(
         JSON.stringify({ 
@@ -166,6 +161,8 @@ serve(async (req) => {
       );
     }
 
+    console.log("Perfil de implementação encontrado:", profileData);
+    
     // Verificar se o perfil está completo
     if (!profileData.is_completed) {
       console.warn("Perfil de implementação incompleto para o usuário:", user.id);
@@ -181,23 +178,25 @@ serve(async (req) => {
       );
     }
     
-    // Se temos uma OpenAI API key, vamos usá-la para gerar recomendações inteligentes
+    // Usar OpenAI para recomendações personalizadas se disponível
     const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
     if (openaiApiKey) {
       try {
         console.log("OpenAI API Key encontrada, gerando recomendações com IA");
         
-        // Formatar dados do perfil e das soluções para o prompt
+        // Formatar dados do perfil para o prompt
         const profileSummary = {
-          nome: profileData.name,
-          empresa: profileData.company_name,
-          setor: profileData.company_sector,
-          tamanho: profileData.company_size,
-          cargo: profileData.current_position,
-          objetivos: profileData.business_challenges || [],
-          nivelConhecimentoIA: profileData.ai_knowledge_level || 1
+          nome: profileData.name || "Usuário",
+          empresa: profileData.company_name || "Empresa não especificada",
+          setor: profileData.company_sector || "Setor não especificado",
+          tamanho: profileData.company_size || "Tamanho não especificado", 
+          cargo: profileData.current_position || "Cargo não especificado",
+          objetivoPrincipal: profileData.primary_goal || "Não especificado",
+          nivelConhecimentoIA: typeof profileData.ai_knowledge_level === 'number' ? 
+                               profileData.ai_knowledge_level : 1
         };
         
+        // Formatar dados das soluções para o prompt
         const solutionsSummary = solutions.map(s => ({
           id: s.id,
           titulo: s.title,
@@ -207,29 +206,23 @@ serve(async (req) => {
           tags: s.tags || []
         }));
         
-        // Criar prompt para a OpenAI
+        // Criar prompt detalhado para a OpenAI com instruções claras
         const prompt = `
-        Você é um sistema de recomendação para soluções de IA.
+        Você é um sistema especializado em matchmaking entre perfis empresariais e soluções de IA.
         
-        ## Informações do perfil do usuário:
+        ## Perfil do usuário:
         ${JSON.stringify(profileSummary, null, 2)}
-        
-        ## Desafios e objetivos de negócio do usuário:
-        ${profileData.business_challenges ? profileData.business_challenges.join(", ") : "Informação não disponível"}
-        
-        ## Nível de conhecimento em IA (1-4):
-        ${profileData.ai_knowledge_level || "Informação não disponível"}
         
         ## Soluções disponíveis:
         ${JSON.stringify(solutionsSummary, null, 2)}
         
-        Por favor, analise o perfil do usuário e as soluções disponíveis. Recomende as soluções mais adequadas, organizadas em três níveis de prioridade:
+        Sua tarefa é analisar o perfil do usuário e as soluções disponíveis para recomendar as melhores opções organizadas em três níveis de prioridade:
         
-        1. Prioridade 1: Soluções altamente relevantes e recomendadas para implementação imediata (máximo de 3)
-        2. Prioridade 2: Soluções importantes mas que podem ser implementadas em um segundo momento (máximo de 3)
-        3. Prioridade 3: Soluções complementares para exploração futura (máximo de 3)
+        1. Prioridade 1 (Alta): Soluções altamente relevantes com base no setor, cargo, objetivos e nível de conhecimento em IA (max. 3)
+        2. Prioridade 2 (Média): Soluções importantes, mas que podem ser implementadas depois (max. 3)
+        3. Prioridade 3 (Baixa): Soluções complementares para exploração futura (max. 3)
         
-        Para cada solução recomendada, forneça uma breve justificativa de por que essa solução é relevante para o perfil e objetivos do usuário.
+        Para cada solução recomendada, forneça uma justificativa personalizada e específica explicando por que essa solução é relevante para este usuário em particular.
         
         Retorne APENAS um objeto JSON com o seguinte formato, sem texto adicional:
         
@@ -257,7 +250,7 @@ serve(async (req) => {
         
         console.log("Enviando prompt para OpenAI");
         
-        // Fazer requisição para OpenAI
+        // Fazer requisição para OpenAI com modelo mais recente e preciso
         const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
           method: 'POST',
           headers: {
@@ -276,8 +269,8 @@ serve(async (req) => {
                 content: prompt
               }
             ],
-            temperature: 0.7,
-            max_tokens: 1500
+            temperature: 0.5,
+            max_tokens: 2000
           })
         });
         
@@ -306,7 +299,7 @@ serve(async (req) => {
         } catch (jsonError) {
           console.error("Erro ao parsear recomendações da OpenAI:", jsonError);
           
-          // Tentar extrair JSON da resposta usando regex se o parsing falhar
+          // Tentar extrair JSON da resposta usando regex
           const jsonMatch = aiContent.match(/\{[\s\S]*\}/);
           if (jsonMatch) {
             try {
@@ -359,35 +352,42 @@ serve(async (req) => {
       }
     }
     
+    // Algoritmo de fallback para quando OpenAI falha ou não está disponível
+    console.log("Usando algoritmo interno para gerar recomendações");
+    
     // Definir variáveis que serão usadas para personalização
-    let businessGoals = profileData.business_challenges || [];
-    let industryFocus = profileData.company_sector || '';
-    let aiExperience = profileData.ai_knowledge_level || 1;
-    let companySize = profileData.company_size || '';
+    const primaryGoal = profileData.primary_goal || '';
+    const businessChallenges = profileData.business_challenges || [];
+    const industryFocus = profileData.company_sector || '';
+    const aiExperience = profileData.ai_knowledge_level || 1;
+    const companySize = profileData.company_size || '';
     
     console.log("Gerando recomendações com algoritmo interno baseado nos dados:", {
-      goals: businessGoals,
+      primaryGoal,
+      businessChallenges,
       industry: industryFocus,
-      aiExperience: aiExperience,
-      companySize: companySize,
+      aiExperience,
+      companySize,
     });
     
-    // Criar algoritmo simples de pontuação para as soluções
+    // Criar algoritmo de pontuação para as soluções
     const scoredSolutions = solutions.map(solution => {
       let score = 0;
       
       // Pontuação com base na categoria da solução
-      if (businessGoals.includes('Aumentar Receita') && solution.category === 'revenue') {
+      if ((primaryGoal === 'Aumentar Receita' || businessChallenges.includes('Aumentar Receita')) && 
+          solution.category === 'revenue') {
         score += 3;
       }
       
-      if (businessGoals.includes('Reduzir Custos') && solution.category === 'optimization') {
+      if ((primaryGoal === 'Otimizar Operações' || businessChallenges.includes('Otimizar Operações')) && 
+          (solution.category === 'operational' || solution.category === 'optimization')) {
         score += 3;
       }
       
-      if (businessGoals.includes('Otimizar Operações') && 
-          (solution.category === 'optimization' || solution.category === 'automation')) {
-        score += 2;
+      if ((primaryGoal === 'Gestão Estratégica' || businessChallenges.includes('Melhorar Decisão')) && 
+          solution.category === 'strategy') {
+        score += 3;
       }
       
       // Pontuação com base nas tags
@@ -397,8 +397,12 @@ serve(async (req) => {
             score += 2;
           }
           
-          businessGoals.forEach(goal => {
-            if (tag.toLowerCase().includes(goal.toLowerCase())) {
+          if (primaryGoal && tag.toLowerCase().includes(primaryGoal.toLowerCase())) {
+            score += 2;
+          }
+          
+          businessChallenges.forEach(challenge => {
+            if (tag.toLowerCase().includes(challenge.toLowerCase())) {
               score += 1;
             }
           });
@@ -406,21 +410,15 @@ serve(async (req) => {
       }
       
       // Ajustar com base na dificuldade e experiência com IA
-      let aiLevel = 'beginner';
+      const aiLevel = typeof aiExperience === 'number' ? aiExperience : 1;
       
-      if (aiExperience >= 4) {
-        aiLevel = 'advanced';
-      } else if (aiExperience >= 2) {
-        aiLevel = 'intermediate';
-      }
-      
-      if (solution.difficulty === 'beginner' && aiLevel === 'beginner') {
+      if (solution.difficulty === 'beginner' && aiLevel <= 2) {
         score += 2;
-      } else if (solution.difficulty === 'intermediate' && aiLevel === 'intermediate') {
+      } else if (solution.difficulty === 'intermediate' && aiLevel >= 2 && aiLevel <= 3) {
         score += 2;
-      } else if (solution.difficulty === 'advanced' && aiLevel === 'advanced') {
+      } else if (solution.difficulty === 'advanced' && aiLevel >= 3) {
         score += 2;
-      } else if (solution.difficulty === 'advanced' && aiLevel === 'beginner') {
+      } else if (solution.difficulty === 'advanced' && aiLevel <= 1) {
         score -= 1;
       }
       
@@ -435,26 +433,29 @@ serve(async (req) => {
     
     // Gerar as justificativas com base nas características
     const generateJustification = (solution: any, score: number) => {
-      const justifications = [
-        `Esta solução é altamente compatível com seus objetivos de negócio.`,
-        `Baseado no seu perfil, esta solução pode trazer resultados rápidos.`,
-        `Considerando seu setor ${industryFocus}, esta solução pode gerar diferencial competitivo.`,
-        `Com base no seu nível de experiência em IA, esta implementação será adequada.`,
-        `Recomendamos esta solução para melhorar seus processos operacionais.`
-      ];
+      let justification = "";
       
-      // Personalizar com base na categoria
+      // Justificativa baseada na categoria
       if (solution.category === 'revenue') {
-        justifications.push(`Esta solução pode ajudar a aumentar suas receitas.`);
-      } else if (solution.category === 'optimization') {
-        justifications.push(`Esta solução pode otimizar seus processos e reduzir custos.`);
-      } else if (solution.category === 'automation') {
-        justifications.push(`Esta solução pode automatizar tarefas repetitivas.`);
+        justification = `Esta solução de ${solution.title} foi selecionada porque você indicou interesse em aumentar receita. Ela pode ajudar sua empresa a identificar novas oportunidades de negócio.`;
+      } else if (solution.category === 'operational' || solution.category === 'optimization') {
+        justification = `Recomendamos ${solution.title} para otimizar seus processos operacionais, reduzir custos e aumentar eficiência.`;
+      } else if (solution.category === 'strategy') {
+        justification = `Baseado no seu perfil de ${profileData.current_position || 'gestor'} em uma empresa de ${industryFocus}, esta solução estratégica pode ajudar na tomada de decisões.`;
+      } else {
+        justification = `Considerando seu objetivo de "${primaryGoal}", esta solução pode trazer resultados significativos para sua empresa.`;
       }
       
-      // Escolher uma justificativa com base em um índice derivado do score
-      const index = Math.abs(score) % justifications.length;
-      return justifications[index];
+      // Adicionar personalização baseada em nível de IA
+      if (typeof aiExperience === 'number') {
+        if (aiExperience <= 1 && solution.difficulty === 'beginner') {
+          justification += " É uma solução de fácil implementação, ideal para quem está começando com IA.";
+        } else if (aiExperience >= 3 && solution.difficulty === 'advanced') {
+          justification += " Como você tem experiência avançada em IA, esta solução aproveitará suas habilidades existentes.";
+        }
+      }
+      
+      return justification;
     };
     
     // Criar as recomendações por prioridade
@@ -487,19 +488,19 @@ serve(async (req) => {
     if (priority1.length === 0 && priority2.length === 0 && priority3.length === 0) {
       console.warn("Não foi possível gerar recomendações de qualidade. Usando fallback.");
       
-      // Criar algumas recomendações mock como fallback
+      // Criar algumas recomendações simples como fallback
       const fallbackRecommendations: ImplementationTrail = {
         priority1: solutions.slice(0, 3).map(s => ({
           solutionId: s.id,
-          justification: "Esta solução foi selecionada como opção padrão com base no seu perfil."
+          justification: `Esta solução "${s.title}" foi selecionada como opção padrão para seu perfil de ${profileData.current_position || 'profissional'} em ${profileData.company_name || 'sua empresa'}.`
         })),
         priority2: solutions.slice(3, 6).map(s => ({
           solutionId: s.id,
-          justification: "Esta solução complementa seu conjunto de ferramentas de IA."
+          justification: `A solução "${s.title}" complementa seu conjunto de ferramentas de IA e pode trazer benefícios adicionais.`
         })),
         priority3: solutions.slice(6, 9).map(s => ({
           solutionId: s.id,
-          justification: "Esta solução pode ser explorada para expandir suas capacidades."
+          justification: `Recomendamos explorar "${s.title}" para expandir suas capacidades em ${s.category}.`
         }))
       };
       
@@ -523,7 +524,7 @@ serve(async (req) => {
         JSON.stringify({ 
           success: true, 
           recommendations: fallbackRecommendations,
-          warning: "Usando recomendações padrão devido à falta de correspondências precisas"
+          message: "Recomendações padrão geradas com sucesso"
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );

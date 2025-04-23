@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { CircleHelp } from "lucide-react";
 
 export const ImplementationTrailCreator = () => {
   const navigate = useNavigate();
@@ -28,9 +29,12 @@ export const ImplementationTrailCreator = () => {
   const [processedSolutions, setProcessedSolutions] = useState<any[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [attemptCount, setAttemptCount] = useState(0);
+  const [showDebug, setShowDebug] = useState(false);
   
   // Processar soluções quando os dados estiverem disponíveis
   useEffect(() => {
+    if (solutionsLoading || !allSolutions?.length) return;
+    
     const processSolutions = () => {
       if (!trail || !allSolutions?.length) {
         setProcessedSolutions([]);
@@ -49,6 +53,8 @@ export const ImplementationTrailCreator = () => {
               ...item,
               priority: idx + 1
             });
+          } else {
+            console.warn(`Solução não encontrada para ID: ${item.solutionId}`);
           }
         });
       });
@@ -57,16 +63,16 @@ export const ImplementationTrailCreator = () => {
     };
 
     processSolutions();
-  }, [trail, allSolutions]);
+  }, [trail, allSolutions, solutionsLoading]);
 
-  // Função para gerar a trilha
+  // Função para gerar a trilha com retentativas
   const handleGenerateTrail = async () => {
     try {
       setIsGenerating(true);
       setAttemptCount(prev => prev + 1);
       
-      // Usar generateWithRetries para ter mais chances de sucesso
-      await generateWithRetries({});
+      // Usar generateWithRetries para até 3 tentativas automáticas com delays
+      await generateWithRetries({}, 3);
       toast.success("Trilha de implementação gerada com sucesso!");
     } catch (error) {
       console.error("Erro ao gerar trilha:", error);
@@ -95,14 +101,26 @@ export const ImplementationTrailCreator = () => {
     navigate("/perfil-de-implementacao");
   };
 
-  // Exibir detalhes do erro (para debugging)
+  // Exibir detalhes técnicos do erro para debug
   const ErrorDebugInfo = () => {
     if (!detailedError) return null;
     
     return (
       <div className="mt-4 p-4 bg-gray-50 rounded-lg text-xs overflow-auto max-h-[200px]">
-        <p className="font-semibold mb-2">Detalhes técnicos (para suporte):</p>
-        <pre>{JSON.stringify(detailedError, null, 2)}</pre>
+        <div className="flex justify-between items-center mb-2">
+          <p className="font-semibold">Detalhes técnicos (para suporte):</p>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => setShowDebug(!showDebug)}
+            className="text-xs h-6 px-2"
+          >
+            {showDebug ? "Ocultar" : "Mostrar"}
+          </Button>
+        </div>
+        {showDebug && (
+          <pre>{JSON.stringify(detailedError, null, 2)}</pre>
+        )}
       </div>
     );
   };
@@ -162,7 +180,7 @@ export const ImplementationTrailCreator = () => {
               <Alert className="mt-6 bg-amber-50 border-amber-200">
                 <Info className="h-4 w-4 text-amber-600" />
                 <AlertDescription className="text-amber-700 text-sm">
-                  Múltiplas tentativas detectadas. Se o problema persistir, verifique se:
+                  Múltiplas tentativas detectadas. Verifique se:
                   <ul className="list-disc pl-5 mt-2 space-y-1">
                     <li>Seu perfil de implementação está completo</li>
                     <li>O campo "is_completed" está marcado como true</li>
@@ -172,7 +190,7 @@ export const ImplementationTrailCreator = () => {
               </Alert>
             )}
             
-            {process.env.NODE_ENV === 'development' && <ErrorDebugInfo />}
+            <ErrorDebugInfo />
           </CardContent>
         </Card>
       </div>
@@ -186,7 +204,7 @@ export const ImplementationTrailCreator = () => {
         <div className="bg-blue-50 rounded-lg p-8 max-w-2xl mx-auto">
           <h3 className="text-xl font-medium mb-4">Vamos criar sua trilha personalizada</h3>
           <p className="text-gray-600 mb-6">
-            Baseado nas suas respostas do onboarding, vamos gerar uma trilha 
+            Baseado nas suas respostas do perfil de implementação, vamos gerar uma trilha 
             de implementação exclusiva para o seu negócio.
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-3">
@@ -226,6 +244,7 @@ export const ImplementationTrailCreator = () => {
           size="sm" 
           onClick={handleRefreshTrail}
           disabled={isGenerating}
+          className="text-[#0ABAB5]"
         >
           {isGenerating ? (
             <Loader2 className="h-4 w-4 animate-spin" />
@@ -240,7 +259,23 @@ export const ImplementationTrailCreator = () => {
       
       <Separator />
       
-      <TrailSolutionsList solutions={processedSolutions} />
+      {processedSolutions.length > 0 ? (
+        <TrailSolutionsList solutions={processedSolutions} />
+      ) : (
+        <div className="text-center py-8">
+          <CircleHelp className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+          <h3 className="text-lg font-medium">Nenhuma solução encontrada</h3>
+          <p className="text-gray-500 mb-4">
+            Não encontramos soluções correspondentes ao seu perfil. Tente atualizar seu perfil com mais informações.
+          </p>
+          <Button
+            onClick={handleGenerateTrail}
+            className="bg-[#0ABAB5] hover:bg-[#0ABAB5]/90"
+          >
+            Tentar Novamente
+          </Button>
+        </div>
+      )}
     </div>
   );
 };
