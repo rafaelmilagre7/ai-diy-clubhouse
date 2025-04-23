@@ -99,8 +99,7 @@ export const adaptProgressType = (progress: any): Progress => {
     completion_data: progress.completion_data || {},
     completion_percentage: progress.completion_percentage || 0,
     completed_at: progress.completed_at || null,
-    // Incluindo campos opcionais adicionais
-    last_interaction_at: progress.last_interaction_at,
+    // Campos opcionais no tipo Progress conforme definido na interface
     failed_attempts: progress.failed_attempts || []
   };
 };
