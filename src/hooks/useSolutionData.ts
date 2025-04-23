@@ -25,6 +25,7 @@ export const useSolutionData = (id: string | undefined) => {
   // Função para buscar solução
   const fetchSolution = useCallback(async () => {
     if (!id) {
+      log("ID da solução não fornecido");
       return null;
     }
     

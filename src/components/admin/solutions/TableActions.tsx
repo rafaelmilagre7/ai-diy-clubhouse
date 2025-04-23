@@ -27,14 +27,14 @@ export const TableActions: React.FC<TableActionsProps> = ({
       <Button 
         variant="outline" 
         size="sm"
-        onClick={() => navigate(`/admin/solution/${solutionId}`)}
+        onClick={() => navigate(`/admin/solutions/${solutionId}`)}
       >
         <Edit className="h-4 w-4" />
       </Button>
       <Button 
         variant="outline" 
         size="sm"
-        onClick={() => navigate(`/admin/metrics/${solutionId}`)}
+        onClick={() => navigate(`/admin/analytics/${solutionId}`)}
       >
         <BarChart2 className="h-4 w-4" />
       </Button>
