@@ -6,7 +6,7 @@ export * from '@/types/supabaseTypes';
 // Usando constantes da configuração centralizada
 import { supabaseConfig } from './config';
 
-// Cliente Supabase com configurações aprimoradas para melhor diagnóstico
+// Cliente Supabase com configurações para melhor diagnóstico
 export const supabase = createClient<Database>(supabaseConfig.url, supabaseConfig.anonKey, {
   auth: {
     persistSession: true,
@@ -14,80 +14,69 @@ export const supabase = createClient<Database>(supabaseConfig.url, supabaseConfi
     autoRefreshToken: true,
     detectSessionInUrl: true,
     flowType: 'pkce',
-  },
-  global: {
-    fetch: (url, options) => {
-      const controller = new AbortController();
-      const { signal } = controller;
-      
-      // Definir timeout para requisições para evitar hanging pendente
-      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 segundos timeout
-      
-      // Log para depurar requisições potencialmente problemáticas
-      console.log(`[Supabase] Requisição iniciada: ${url}`);
-      
-      return fetch(url, { ...options, signal })
-        .then(response => {
-          console.log(`[Supabase] Resposta recebida: ${url} | Status: ${response.status}`);
-          return response;
-        })
-        .catch(error => {
-          console.error(`[Supabase] Erro na requisição: ${url}`, error);
-          throw error;
-        })
-        .finally(() => clearTimeout(timeoutId));
-    }
   }
 });
 
-// FUNÇÃO PRINCIPAL: Implementação robusta para buscar solução por ID
+// Função padronizada para buscar solução por ID, sem fallback
 export const fetchSolutionById = async (id: string) => {
+  if (!id || typeof id !== 'string' || id.trim() === '') {
+    throw new Error('ID da solução inválido ou não especificado');
+  }
+  
+  // Buscar a solução pelo ID específico
+  const { data, error } = await supabase
+    .from('solutions')
+    .select('*')
+    .eq('id', id)
+    .maybeSingle();
+    
+  if (error) {
+    throw error;
+  }
+  
+  if (!data) {
+    throw new Error(`Solução com ID ${id} não encontrada`);
+  }
+  
+  return data;
+};
+
+// Função para verificar existência de solução
+export const checkSolutionExists = async (id: string): Promise<boolean> => {
   try {
-    if (!id || typeof id !== 'string' || id.trim() === '') {
-      throw new Error('ID da solução inválido ou não especificado');
-    }
+    if (!id) return false;
     
-    console.log(`[Supabase] Buscando solução diretamente por ID: ${id}`);
-    
-    // Buscar TODOS os registros da tabela solutions (sem filtro)
-    const { data: allSolutions, error: listError, status: listStatus } = await supabase
+    const { data, error } = await supabase
       .from('solutions')
-      .select('*');
-      
-    // Log detalhado das soluções disponíveis
-    console.log(`[Supabase] Total de soluções no banco: ${allSolutions?.length || 0}`);
+      .select('id')
+      .eq('id', id)
+      .maybeSingle();
     
-    if (listError) {
-      console.error('Erro ao listar todas as soluções:', listError);
-      throw listError;
+    if (error) {
+      console.error('Erro ao verificar disponibilidade de soluções:', error);
+      return false;
     }
     
-    if (!allSolutions || allSolutions.length === 0) {
-      console.error('Nenhuma solução cadastrada no banco de dados');
-      throw new Error('Base de dados sem soluções cadastradas');
-    }
-    
-    // Procurar solução pelo ID informado
-    const foundSolution = allSolutions.find(solution => solution.id === id);
-    
-    if (!foundSolution) {
-      // Se não encontrar pelo ID exato, exibir os IDs disponíveis para diagnóstico
-      console.error(`Solução com ID ${id} não encontrada. IDs disponíveis:`, 
-        allSolutions.map(s => ({ id: s.id, title: s.title })));
-      
-      // No ambiente de produção, selecionamos a primeira solução disponível como fallback
-      if (allSolutions.length > 0) {
-        console.log(`[FALLBACK] Retornando primeira solução disponível: ${allSolutions[0].id} - ${allSolutions[0].title}`);
-        return allSolutions[0];
-      }
-      
-      throw new Error(`Solução com ID ${id} não encontrada no banco de dados`);
-    }
-    
-    console.log('Solução encontrada:', foundSolution.title);
-    return foundSolution;
+    return !!data;
   } catch (error) {
-    console.error('Erro na função fetchSolutionById:', error);
+    console.error('Erro ao verificar solução:', error);
+    return false;
+  }
+};
+
+// Obter todas as soluções disponíveis
+export const getAllSolutions = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('solutions')
+      .select('*')
+      .order('created_at', { ascending: false });
+    
+    if (error) throw error;
+    
+    return data || [];
+  } catch (error) {
+    console.error('Erro ao buscar todas as soluções:', error);
     throw error;
   }
 };
@@ -119,54 +108,4 @@ export const fetchSolutionTools = async (solutionId: string) => {
   }
 
   return data;
-};
-
-// NOVA FUNÇÃO: Verificação robusta de existência de solução
-export const checkSolutionExists = async (id: string): Promise<boolean> => {
-  try {
-    if (!id) return false;
-    
-    const { data, error } = await supabase
-      .from('solutions')
-      .select('id, title')
-      .limit(10);  // Limitamos a consulta para performance
-    
-    if (error) {
-      console.error('Erro ao verificar disponibilidade de soluções:', error);
-      return false;
-    }
-    
-    if (!data || data.length === 0) {
-      console.error('Nenhuma solução disponível no banco de dados');
-      return false;
-    }
-    
-    // Verificamos se a solução específica existe
-    const exists = data.some(solution => solution.id === id);
-    console.log(`ID ${id} existe no banco? ${exists ? 'SIM' : 'NÃO'}`, 
-      { disponíveis: data.map(s => ({ id: s.id, title: s.title })) });
-    
-    return exists;
-  } catch (error) {
-    console.error('Erro ao verificar solução:', error);
-    return false;
-  }
-};
-
-// NOVA FUNÇÃO: Obter todas as soluções disponíveis
-export const getAllSolutions = async () => {
-  try {
-    const { data, error } = await supabase
-      .from('solutions')
-      .select('*')
-      .order('created_at', { ascending: false });
-    
-    if (error) throw error;
-    
-    console.log(`Recuperadas ${data?.length || 0} soluções do banco de dados`);
-    return data || [];
-  } catch (error) {
-    console.error('Erro ao buscar todas as soluções:', error);
-    throw error;
-  }
 };

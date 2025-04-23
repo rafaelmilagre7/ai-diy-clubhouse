@@ -1,75 +1,59 @@
 
-import { useState, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useLogging } from '@/hooks/useLogging';
-import { toast } from 'sonner';
 
 export const useErrorHandling = () => {
-  const [networkError, setNetworkError] = useState<boolean>(false);
-  const [notFoundError, setNotFoundError] = useState<boolean>(false);
-  const [permissionError, setPermissionError] = useState<boolean>(false);
+  const [error, setError] = useState<Error | null>(null);
+  const [networkError, setNetworkError] = useState(false);
+  const [notFoundError, setNotFoundError] = useState(false);
   const { logError } = useLogging('useErrorHandling');
 
-  const handleError = useCallback((error: any) => {
-    logError('Erro detectado:', error);
-    
-    // Limpar estados de erro anteriores
-    setNetworkError(false);
-    setNotFoundError(false);
-    setPermissionError(false);
-    
-    // Verificar o tipo de erro
-    if (!error) return;
-    
-    const errorMessage = error.message || String(error);
-    
-    // Verificar erro de rede
-    if (
-      errorMessage.includes('fetch failed') ||
-      errorMessage.includes('network') ||
-      errorMessage.includes('Failed to fetch') ||
-      errorMessage.includes('NetworkError') ||
-      errorMessage.includes('timeout') ||
-      error.code === 'NETWORK_ERROR'
-    ) {
-      setNetworkError(true);
-      toast.error('Erro de conexão com o servidor');
-      return;
+  // Efeito para classificar o tipo de erro
+  useEffect(() => {
+    if (error) {
+      // Verificar se é erro de rede
+      if (error.message && (
+        error.message.includes("fetch") || 
+        error.message.includes("network") ||
+        error.message.includes("Failed to fetch")
+      )) {
+        setNetworkError(true);
+        setNotFoundError(false);
+      } 
+      // Verificar se é erro de "não encontrado"
+      else if (error.message && (
+        error.message.includes("não encontrada") ||
+        error.message.includes("not found") ||
+        error.message.includes("não encontrado")
+      )) {
+        setNetworkError(false);
+        setNotFoundError(true);
+      } 
+      // Outros tipos de erro
+      else {
+        setNetworkError(false);
+        setNotFoundError(false);
+      }
+    } else {
+      // Resetar estados se não houver erro
+      setNetworkError(false);
+      setNotFoundError(false);
     }
-    
-    // Verificar erro de recurso não encontrado
-    if (
-      errorMessage.includes('não encontrada') ||
-      errorMessage.includes('not found') ||
-      error.code === 'PGRST116' ||
-      error.status === 404
-    ) {
-      setNotFoundError(true);
-      toast.error('Solução não encontrada');
-      return;
-    }
-    
-    // Verificar erro de permissão
-    if (
-      errorMessage.includes('permission') ||
-      errorMessage.includes('access denied') ||
-      errorMessage.includes('not allowed') ||
-      error.code === 'PGRST301' ||
-      error.status === 403
-    ) {
-      setPermissionError(true);
-      toast.error('Você não tem permissão para acessar este recurso');
-      return;
-    }
-    
-    // Erro genérico
-    toast.error('Ocorreu um erro ao processar sua solicitação');
-    
-  }, [logError]);
+  }, [error]);
+
+  // Função para lidar com erros
+  const handleError = (err: any) => {
+    const errorObj = err instanceof Error ? err : new Error(String(err));
+    logError('Erro capturado:', errorObj);
+    setError(errorObj);
+    return errorObj;
+  };
 
   return {
+    error,
     networkError,
     notFoundError,
-    permissionError,
-    handleError
+    handleError,
+    setError
   };
 };

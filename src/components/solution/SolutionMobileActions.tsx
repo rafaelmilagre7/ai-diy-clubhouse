@@ -28,10 +28,8 @@ export const SolutionMobileActions = ({
     if (progress?.is_completed) {
       navigate(`/implement/${solutionId}/0`);
     } else if (progress) {
-      console.log("Mobile: Chamando continueImplementation");
       await continueImplementation();
     } else {
-      console.log("Mobile: Chamando startImplementation");
       await startImplementation();
     }
   };

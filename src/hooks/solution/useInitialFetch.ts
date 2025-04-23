@@ -3,7 +3,6 @@ import { useState, useEffect } from 'react';
 import { Solution } from '@/lib/supabase';
 import { useLogging } from '@/hooks/useLogging';
 import { supabase } from '@/lib/supabase';
-import { toast } from 'sonner';
 
 export const useInitialFetch = (solutionId: string | undefined) => {
   const [solution, setSolution] = useState<Solution | null>(null);
@@ -47,7 +46,6 @@ export const useInitialFetch = (solutionId: string | undefined) => {
         logError('Erro ao buscar solução:', err);
         setError(err instanceof Error ? err : new Error(String(err)));
         setSolution(null);
-        toast.error('Erro ao carregar solução');
       } finally {
         setLoading(false);
       }

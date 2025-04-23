@@ -29,8 +29,8 @@ export const SolutionCard = ({ solution, onClick }: SolutionCardProps) => {
   }[solution.difficulty] || solution.difficulty;
 
   // Verificar se há progresso
-  const hasProgress = solution.progress && solution.progress[0];
-  const progress = hasProgress ? solution.progress[0] : null;
+  const hasProgress = solution.progress !== undefined && solution.progress !== null;
+  const progress = hasProgress ? solution.progress : null;
   const isCompleted = progress?.is_completed || false;
   
   return (

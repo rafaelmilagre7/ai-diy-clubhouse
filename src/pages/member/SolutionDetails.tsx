@@ -81,20 +81,19 @@ const SolutionDetails = () => {
   // Log detalhado na primeira renderização para diagnóstico
   useEffect(() => {
     if (initialRenderRef.current) {
-      log("SolutionDetails montado com diagnóstico completo", { 
+      log("SolutionDetails montado", { 
         requestedId: id,
         currentRoute: window.location.href,
         availableSolutionsCount: availableSolutions?.length || 0,
         isAdmin,
-        connectionStatus,
-        hasImplementationMetrics: !!implementationMetrics
+        connectionStatus
       });
       
       // Verificar a conexão com o servidor no carregamento inicial
       checkConnection();
       initialRenderRef.current = false;
     }
-  }, [id, log, availableSolutions, isAdmin, connectionStatus, checkConnection, implementationMetrics]);
+  }, [id, log, availableSolutions, isAdmin, connectionStatus, checkConnection]);
 
   // Verificar ID inválido ou ausente
   if (!id) {
@@ -140,6 +139,8 @@ const SolutionDetails = () => {
       />
     );
   }
+
+  const completionPercentage = progress?.completion_percentage || 0;
   
   // Se chegou aqui, temos dados válidos para renderizar
   return (
@@ -162,9 +163,9 @@ const SolutionDetails = () => {
             solutionId={solution.id}
             progress={progress}
             startImplementation={startImplementation}
-            continueImplementation={async () => await continueImplementation()}
+            continueImplementation={continueImplementation}
             initializing={initializing}
-            completionPercentage={progress?.completion_percentage || 0}
+            completionPercentage={completionPercentage}
           />
         </div>
         

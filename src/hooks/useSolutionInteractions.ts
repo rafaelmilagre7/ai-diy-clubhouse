@@ -15,7 +15,7 @@ export const useSolutionInteractions = (solutionId: string | undefined, progress
   
   const [initializing, setInitializing] = useState(false);
   
-  const startImplementation = async () => {
+  const startImplementation = async (): Promise<void> => {
     if (!user) {
       uiToast({
         title: "Autenticação necessária",
@@ -65,7 +65,7 @@ export const useSolutionInteractions = (solutionId: string | undefined, progress
             solution_id: solutionId,
             current_module: 0,
             is_completed: false,
-            completed_modules: [], // Initialize as empty array
+            completed_modules: [], 
             last_activity: new Date().toISOString(),
           })
           .select()
@@ -101,7 +101,7 @@ export const useSolutionInteractions = (solutionId: string | undefined, progress
     }
   };
   
-  const continueImplementation = async () => {
+  const continueImplementation = async (): Promise<void> => {
     if (!solutionId) {
       uiToast({
         title: "Erro",
@@ -117,20 +117,27 @@ export const useSolutionInteractions = (solutionId: string | undefined, progress
       return;
     }
     
-    // Navigate directly to the implementation page
-    const moduleIdx = progress.current_module || 0;
-    log("Continuando implementação no módulo", { moduleIdx });
-    navigate(`/implement/${solutionId}/${moduleIdx}`);
+    try {
+      // Navigate directly to the implementation page
+      const moduleIdx = progress.current_module || 0;
+      log("Continuando implementação no módulo", { moduleIdx });
+      navigate(`/implement/${solutionId}/${moduleIdx}`);
+    } catch (error) {
+      logError("Erro ao continuar implementação", { error });
+      uiToast({
+        title: "Erro ao continuar implementação",
+        description: "Ocorreu um erro ao continuar a implementação da solução.",
+        variant: "destructive"
+      });
+    }
   };
   
-  const toggleFavorite = () => {
-    // Desativar notificações toast
-    log("Função de favoritar ainda não implementada");
+  const toggleFavorite = async (): Promise<void> => {
+    // Implementação futura
   };
   
-  const downloadMaterials = () => {
-    // Desativar notificações toast
-    log("Função de download ainda não implementada");
+  const downloadMaterials = async (): Promise<void> => {
+    // Implementação futura
   };
   
   return {

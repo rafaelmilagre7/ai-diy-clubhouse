@@ -2,33 +2,47 @@
 import { useState, useEffect } from 'react';
 import { Solution } from '@/lib/supabase';
 import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/contexts/auth';
 import { useLogging } from '@/hooks/useLogging';
 
 export const useAvailableSolutions = () => {
   const [availableSolutions, setAvailableSolutions] = useState<Solution[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { isAdmin } = useAuth();
   const { log, logError } = useLogging('useAvailableSolutions');
 
   useEffect(() => {
-    const fetchAllSolutions = async () => {
+    const fetchAvailableSolutions = async () => {
       try {
-        const { data, error } = await supabase
+        setLoading(true);
+        // Construir a consulta base
+        let query = supabase
           .from('solutions')
-          .select('*')
-          .order('created_at', { ascending: false });
+          .select('*');
+
+        // Aplicar filtro apenas para soluções publicadas, exceto para admins
+        if (!isAdmin) {
+          query = query.eq('published', true);
+        }
+
+        // Ordenar por data de criação mais recente
+        query = query.order('created_at', { ascending: false });
+        
+        const { data, error } = await query;
 
         if (error) throw error;
 
-        if (data) {
-          log(`Recuperadas ${data.length} soluções para diagnóstico`);
-          setAvailableSolutions(data as Solution[]);
-        }
+        setAvailableSolutions(data as Solution[]);
       } catch (err) {
-        logError('Erro ao buscar lista de soluções:', err);
+        logError('Erro ao buscar soluções disponíveis:', err);
+        setAvailableSolutions([]);
+      } finally {
+        setLoading(false);
       }
     };
 
-    fetchAllSolutions();
-  }, [log, logError]);
+    fetchAvailableSolutions();
+  }, [isAdmin, log, logError]);
 
-  return { availableSolutions };
+  return { availableSolutions, loading };
 };
