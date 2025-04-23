@@ -15,6 +15,7 @@ export const useStepNavigation = () => {
   const pathToStepId = {
     "/onboarding": "personal",
     "/onboarding/personal-info": "personal",
+    "/onboarding/professional": "professional_data",
     "/onboarding/professional-data": "professional_data",
     "/onboarding/business-context": "business_context",
     "/onboarding/ai-experience": "ai_exp",
