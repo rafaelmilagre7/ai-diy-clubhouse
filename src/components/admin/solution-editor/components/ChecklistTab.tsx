@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Solution } from "@/types/solution";
 

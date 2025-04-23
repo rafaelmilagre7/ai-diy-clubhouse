@@ -13,6 +13,7 @@ export interface Comment {
     avatar_url?: string;
     role?: string;
     id: string;
+    full_name?: string;
   };
   user?: {
     name: string;

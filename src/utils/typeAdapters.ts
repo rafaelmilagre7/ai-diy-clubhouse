@@ -1,71 +1,89 @@
 
 import { Solution as SupabaseSolution, Module as SupabaseModule } from '@/types/supabaseTypes';
-import { Solution as AppSolution, Module as AppModule, ModuleType, Progress } from '@/types/solution';
+import { Solution, Module, Progress, ModuleType } from '@/types/solution';
 
 /**
- * Adapta o tipo Solution do Supabase para o tipo Solution da aplicação
+ * Adapta o tipo Solution do Supabase para o tipo interno Solution
  */
-export function adaptSolutionType(supabaseSolution: SupabaseSolution): AppSolution {
+export const adaptSolutionType = (supaSolution: SupabaseSolution): Solution => {
+  // Garantir que o campo modules seja um array
+  const modules = Array.isArray(supaSolution.modules) 
+    ? supaSolution.modules.map(adaptModuleType)
+    : [];
+
   return {
-    ...supabaseSolution,
-    difficulty: adaptDifficultyType(supabaseSolution.difficulty),
-    category: adaptCategoryType(supabaseSolution.category),
-    modules: supabaseSolution.modules?.map(adaptModuleType) || []
-  } as AppSolution;
-}
+    id: supaSolution.id,
+    title: supaSolution.title,
+    description: supaSolution.description || '',
+    category: supaSolution.category || 'strategy',
+    difficulty: supaSolution.difficulty || 'medium',
+    published: supaSolution.published || false,
+    thumbnail_url: supaSolution.thumbnail_url,
+    created_at: supaSolution.created_at,
+    updated_at: supaSolution.updated_at,
+    slug: supaSolution.slug || '',
+    implementation_steps: supaSolution.implementation_steps || [],
+    checklist_items: supaSolution.checklist_items || [],
+    completion_requirements: supaSolution.completion_requirements || {},
+    modules: modules,
+    progress: supaSolution.progress,
+    overview: supaSolution.overview || '',
+    prerequisites: supaSolution.prerequisites || [],
+    completion_criteria: supaSolution.completion_criteria || [],
+    estimated_time: supaSolution.estimated_time || 0,
+    success_rate: supaSolution.success_rate || 0,
+  };
+};
 
 /**
- * Adapta o tipo Module do Supabase para o tipo Module da aplicação
+ * Adapta o tipo Module do Supabase para o tipo interno Module
  */
-export function adaptModuleType(supabaseModule: SupabaseModule): AppModule {
+export const adaptModuleType = (module: SupabaseModule): Module => {
+  // Garantir que o tipo do módulo seja um dos tipos válidos
+  const validType = validateModuleType(module.type);
+
   return {
-    ...supabaseModule,
-    type: adaptModuleTypeEnum(supabaseModule.type)
-  } as AppModule;
-}
+    id: module.id,
+    solution_id: module.solution_id,
+    title: module.title,
+    type: validType,
+    content: module.content || { blocks: [] },
+    module_order: module.module_order,
+    created_at: module.created_at,
+    updated_at: module.updated_at,
+    certificate_template: module.certificate_template,
+    estimated_time_minutes: module.estimated_time_minutes,
+    metrics: module.metrics,
+  };
+};
 
 /**
- * Adapta o tipo de módulo de string para o enum ModuleType
+ * Valida o tipo do módulo para garantir que seja um dos tipos válidos
  */
-function adaptModuleTypeEnum(type: string): ModuleType {
-  switch (type) {
-    case 'landing': return 'landing';
-    case 'overview': return 'overview';
-    case 'preparation': return 'preparation';
-    case 'implementation': return 'implementation';
-    case 'verification': return 'verification';
-    case 'results': return 'results';
-    case 'optimization': return 'optimization';
-    case 'celebration': return 'celebration';
-    default: return 'overview';
+export const validateModuleType = (type: string): ModuleType => {
+  const validTypes: ModuleType[] = [
+    'landing',
+    'overview',
+    'preparation',
+    'implementation',
+    'verification',
+    'results',
+    'optimization',
+    'celebration'
+  ];
+
+  if (validTypes.includes(type as ModuleType)) {
+    return type as ModuleType;
   }
-}
+
+  // Retornar um tipo padrão se não for válido
+  return 'overview';
+};
 
 /**
- * Adapta o tipo de dificuldade para o formato esperado
+ * Adapta o tipo Progress do Supabase para o tipo interno Progress
  */
-function adaptDifficultyType(difficulty: string): 'easy' | 'medium' | 'advanced' {
-  switch (difficulty) {
-    case 'easy': return 'easy';
-    case 'medium': return 'medium';
-    case 'advanced': return 'advanced';
-    default: return 'easy';
-  }
-}
-
-/**
- * Adapta o tipo de categoria para o formato esperado
- */
-function adaptCategoryType(category: string): string {
-  return category;
-}
-
-/**
- * Adapta o objeto de progresso para o tipo Progress
- */
-export function adaptProgressType(progress: any): Progress | null {
-  if (!progress) return null;
-  
+export const adaptProgressType = (progress: any): Progress => {
   return {
     id: progress.id || '',
     user_id: progress.user_id || '',
@@ -74,9 +92,9 @@ export function adaptProgressType(progress: any): Progress | null {
     implementation_status: progress.implementation_status || 'not_started',
     is_completed: progress.is_completed || false,
     completed_modules: progress.completed_modules || [],
-    last_activity: progress.last_activity || '',
-    completion_percentage: progress.completion_percentage || 0,
+    last_activity: progress.last_activity || new Date().toISOString(),
     completion_data: progress.completion_data || {},
-    completed_at: progress.completed_at
+    completion_percentage: progress.completion_percentage || 0,
+    completed_at: progress.completed_at || null
   };
-}
+};

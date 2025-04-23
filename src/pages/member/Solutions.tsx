@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useSolutionsData } from '@/hooks/useSolutionsData';
 import { SolutionCard } from '@/components/solution/SolutionCard';
@@ -7,10 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Search, Filter } from 'lucide-react';
 import LoadingScreen from '@/components/common/LoadingScreen';
-import { Solution } from '@/lib/supabase';
+import { Solution } from '@/types/solution';
 import { useLogging } from '@/hooks/useLogging';
-import { useQueryClient } from '@tanstack/react-query';
-import { NoSolutionsPlaceholder } from '@/components/dashboard/NoSolutionsPlaceholder';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -21,14 +19,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
-import { toSolutionCategory } from '@/lib/types/categoryTypes';
+import { NoSolutionsPlaceholder } from '@/components/dashboard/NoSolutionsPlaceholder';
 
 const Solutions = () => {
   // Logger para depuração
   const { log } = useLogging("SolutionsPage");
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const queryClient = useQueryClient();
   
   // Estado local para armazenar a categoria ativa e termo de pesquisa
   const [activeCategory, setActiveCategory] = useState(
@@ -80,7 +77,7 @@ const Solutions = () => {
   };
 
   // Função para lidar com cliques nas soluções
-  const handleSolutionClick = useCallback((solution: Solution) => {
+  const handleSolutionClick = (solution: Solution) => {
     // Validar dados da solução antes de navegar
     if (!solution || !solution.id) {
       log("ERRO: Tentativa de navegação com solução inválida", { solution });
@@ -91,10 +88,7 @@ const Solutions = () => {
     log("Navegando para solução", { 
       solutionId: solution.id, 
       title: solution.title,
-      path: `/solutions/${solution.id}`,
-      category: solution.category,
-      normalizedCategory: toSolutionCategory(solution.category),
-      difficulty: solution.difficulty
+      path: `/solutions/${solution.id}`
     });
     
     // Verificar se temos um ID válido antes de navegar
@@ -102,20 +96,10 @@ const Solutions = () => {
       log("ERRO: ID da solução é inválido", { solution });
       return;
     }
-
-    // Limpar cache de qualquer erro anterior
-    queryClient.invalidateQueries({ queryKey: ['solution', solution.id] });
-    
-    // Verificar se o ID é válido e convertê-lo para string
-    const id = String(solution.id).trim();
-    if (!id) {
-      log("ERRO: ID inválido após conversão", { originalId: solution.id });
-      return;
-    }
     
     // Navegar para a página de detalhes da solução com o parâmetro de ID
-    navigate(`/solutions/${id}`);
-  }, [log, navigate, queryClient]);
+    navigate(`/solutions/${solution.id}`);
+  };
 
   const categories = [
     { id: 'all', name: 'Todas' },

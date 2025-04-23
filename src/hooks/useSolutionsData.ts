@@ -1,10 +1,9 @@
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Solution } from '@/types/supabaseTypes';
+import { Solution } from '@/types/solution';
 import { useAuth } from '@/contexts/auth';
-import { useLogging } from '@/hooks/useLogging';
-import { toSolutionCategory } from '@/lib/types/categoryTypes';
+import { useToast } from '@/hooks/use-toast';
 
 export const useSolutionsData = (
   activeCategory: string = 'all',
@@ -14,22 +13,20 @@ export const useSolutionsData = (
   const [solutions, setSolutions] = useState<Solution[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
-  const { isAdmin } = useAuth();
-  const { log, logError } = useLogging('useSolutionsData');
+  const { profile } = useAuth();
+  const { toast } = useToast();
+  const isAdmin = profile?.role === 'admin';
 
   // Função para buscar soluções
   const fetchSolutions = useCallback(async () => {
     try {
       setLoading(true);
-      log('Buscando soluções', { category: activeCategory, search: searchQuery, difficulty });
+      console.log('Buscando soluções', { category: activeCategory, search: searchQuery, difficulty });
 
       // Construir a consulta base
       let query = supabase
         .from('solutions')
-        .select(`
-          *,
-          progress:progress(*)
-        `);
+        .select('*');
 
       // Aplicar filtro apenas para soluções publicadas, exceto para admins
       if (!isAdmin) {
@@ -55,27 +52,27 @@ export const useSolutionsData = (
       if (error) throw error;
 
       if (data) {
-        log('Soluções carregadas com sucesso', { count: data.length });
-        
-        // Normalizar categorias para o tipo correto
-        const normalizedSolutions = data.map(solution => ({
-          ...solution,
-          category: toSolutionCategory(solution.category)
-        })) as Solution[];
-        
-        setSolutions(normalizedSolutions);
+        console.log('Soluções carregadas com sucesso', { count: data.length });
+        setSolutions(data as Solution[]);
       } else {
         setSolutions([]);
       }
 
       setError(null);
     } catch (err) {
-      logError('Erro ao buscar soluções:', err);
+      console.error('Erro ao buscar soluções:', err);
       setError(err instanceof Error ? err : new Error('Erro ao buscar soluções'));
+      
+      // Notificar o usuário sobre o erro
+      toast({
+        title: "Erro ao carregar soluções",
+        description: "Ocorreu um problema ao buscar as soluções. Por favor, tente novamente.",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
-  }, [activeCategory, isAdmin, searchQuery, difficulty, log, logError]);
+  }, [activeCategory, isAdmin, searchQuery, difficulty, toast]);
 
   // Buscar soluções ao montar o componente ou quando os filtros mudarem
   useEffect(() => {
@@ -90,9 +87,9 @@ export const useSolutionsData = (
     
     return solutions.filter(solution => 
       solution.title.toLowerCase().includes(lowerCaseQuery) || 
-      solution.description?.toLowerCase().includes(lowerCaseQuery) ||
-      (solution.tags && solution.tags.some(tag => 
-        tag.toLowerCase().includes(lowerCaseQuery)
+      (solution.description && solution.description.toLowerCase().includes(lowerCaseQuery)) ||
+      (solution.tags && Array.isArray(solution.tags) && solution.tags.some(tag => 
+        tag && tag.toLowerCase().includes(lowerCaseQuery)
       ))
     );
   }, [solutions, searchQuery]);
