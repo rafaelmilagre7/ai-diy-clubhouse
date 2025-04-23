@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
-import { Resource } from "../types/ResourceTypes";
+import { Resource, ResourceMetadata } from "../types/ResourceTypes";
 
 export function useResourcesManager(solutionId: string | null) {
   const { toast } = useToast();
@@ -92,7 +92,7 @@ export function useResourcesManager(solutionId: string | null) {
       const fileType = getFileType(fileExtension);
       
       // Criar metadados
-      const metadata = {
+      const metadata: ResourceMetadata = {
         title: fileName,
         description: `Arquivo ${fileExtension}`,
         url: url,
@@ -205,14 +205,14 @@ export function useResourcesManager(solutionId: string | null) {
     const presentationExtensions = ['ppt', 'pptx', 'odp'];
     const videoExtensions = ['mp4', 'webm', 'ogg', 'mov'];
     
-    if (imageExtensions.includes(extension)) return 'image';
-    if (docExtensions.includes(extension)) return 'document';
-    if (pdfExtensions.includes(extension)) return 'pdf';
-    if (spreadsheetExtensions.includes(extension)) return 'spreadsheet';
-    if (presentationExtensions.includes(extension)) return 'presentation';
-    if (videoExtensions.includes(extension)) return 'video';
+    if (imageExtensions.includes(extension)) return "image";
+    if (docExtensions.includes(extension)) return "document";
+    if (pdfExtensions.includes(extension)) return "pdf";
+    if (spreadsheetExtensions.includes(extension)) return "spreadsheet";
+    if (presentationExtensions.includes(extension)) return "presentation";
+    if (videoExtensions.includes(extension)) return "video";
     
-    return 'other';
+    return "other";
   }
 
   return {

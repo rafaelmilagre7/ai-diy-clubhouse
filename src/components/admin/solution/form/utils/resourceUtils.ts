@@ -14,19 +14,24 @@ export const formatFileSize = (bytes?: number): string => {
 /**
  * Detecta o tipo do arquivo baseado na extensão
  */
-export const detectFileType = (ext?: string): string => {
+export const detectFileType = (ext?: string): "document" | "pdf" | "image" | "spreadsheet" | "presentation" | "video" | "template" | "other" => {
   if (!ext) return "document";
+  
+  const extension = ext.split('.').pop()?.toLowerCase() || '';
+  
   const imageExts = ["png", "jpg", "jpeg", "gif", "webp", "svg"];
   const docExts = ["doc", "docx", "odt", "rtf", "txt", "md"];
   const spreadsheetExts = ["xls", "xlsx", "ods", "csv"];
   const presentationExts = ["ppt", "pptx", "odp"];
   const pdfExts = ["pdf"];
+  const videoExts = ["mp4", "webm", "mov", "avi"];
   
-  if (imageExts.includes(ext.toLowerCase())) return "image";
-  if (docExts.includes(ext.toLowerCase())) return "document";
-  if (spreadsheetExts.includes(ext.toLowerCase())) return "spreadsheet";
-  if (presentationExts.includes(ext.toLowerCase())) return "presentation";
-  if (pdfExts.includes(ext.toLowerCase())) return "pdf";
+  if (imageExts.includes(extension)) return "image";
+  if (docExts.includes(extension)) return "document";
+  if (spreadsheetExts.includes(extension)) return "spreadsheet";
+  if (presentationExts.includes(extension)) return "presentation";
+  if (pdfExts.includes(extension)) return "pdf";
+  if (videoExts.includes(extension)) return "video";
   
   return "other";
 };
@@ -48,4 +53,3 @@ export const getFileFormatName = (format: string): string => {
     default: return format.toUpperCase();
   }
 };
-
