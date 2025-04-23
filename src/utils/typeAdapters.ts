@@ -1,3 +1,4 @@
+
 import { Solution as SupabaseSolution, Module as SupabaseModule } from '@/types/supabaseTypes';
 import { Solution, Module, Progress, ModuleType } from '@/types/solution';
 
