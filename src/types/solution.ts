@@ -1,3 +1,4 @@
+
 export interface Solution {
   id: string;
   title: string;
@@ -14,6 +15,11 @@ export interface Solution {
   completion_requirements?: Record<string, any>;
   modules?: Module[];
   progress?: Progress;
+  overview?: string;
+  prerequisites?: Prerequisite[];
+  completion_criteria?: CompletionCriteria[];
+  estimated_time?: number;
+  success_rate?: number;
 }
 
 export interface Module {
@@ -60,4 +66,14 @@ export interface Progress {
   completed_modules: number[];
   last_activity: string;
   completion_data?: Record<string, any>;
+}
+
+export interface Prerequisite {
+  id?: string;
+  text: string;
+}
+
+export interface CompletionCriteria {
+  id?: string;
+  text: string;
 }

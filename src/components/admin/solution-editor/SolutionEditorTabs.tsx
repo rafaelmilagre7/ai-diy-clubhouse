@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileText, Tool, FileArchive, Video, CheckSquare, Upload, Send } from "lucide-react";
+import { FileText, Wrench, FileArchive, Video, CheckSquare, Upload, Send } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface SolutionEditorTabsProps {
@@ -33,7 +33,7 @@ const SolutionEditorTabs: React.FC<SolutionEditorTabsProps> = ({
     {
       id: "tools",
       label: "Ferramentas",
-      icon: <Tool className="w-4 h-4 mr-2" />,
+      icon: <Wrench className="w-4 h-4 mr-2" />,
       step: 1
     },
     {

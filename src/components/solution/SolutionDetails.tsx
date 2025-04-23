@@ -4,7 +4,7 @@ import { useCentralDataStore } from "@/hooks/useCentralDataStore";
 import { useSolutionInteractions } from "@/hooks/useSolutionInteractions";
 import { SolutionBackButton } from "@/components/solution/SolutionBackButton";
 import { SolutionHeaderSection } from "@/components/solution/SolutionHeaderSection";
-import { SolutionTabsContent } from "@/components/solution/tabs/SolutionTabsContent";
+import SolutionTabsContent from "@/components/solution/tabs/SolutionTabsContent";
 import { SolutionSidebar } from "@/components/solution/SolutionSidebar";
 import { SolutionMobileActions } from "@/components/solution/SolutionMobileActions";
 import { SolutionNotFound } from "@/components/solution/SolutionNotFound";
@@ -58,7 +58,7 @@ const SolutionDetails = () => {
           
           <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="md:col-span-2">
-              <SolutionTabsContent solution={solution} />
+              <SolutionTabsContent solution={solution} progress={progress} />
               
               <SolutionMobileActions 
                 solutionId={solution.id}

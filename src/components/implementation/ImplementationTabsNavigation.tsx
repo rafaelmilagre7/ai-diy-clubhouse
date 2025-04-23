@@ -1,53 +1,113 @@
 
-import React from 'react';
-import { TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
-  Tool,
-  FileArchive,
-  Video,
-  CheckSquare,
-  MessageSquare,
-  CheckCircle
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { 
+  FileText, 
+  Wrench, 
+  FileArchive, 
+  Video, 
+  CheckSquare, 
+  MessageSquare, 
+  Bot, 
+  Trophy 
+} from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface ImplementationTabsNavigationProps {
   activeTab: string;
-  setActiveTab: (value: string) => void;
+  onTabChange: (tab: string) => void;
+  progress: any;
+  className?: string;
 }
 
-export const ImplementationTabsNavigation: React.FC<ImplementationTabsNavigationProps> = ({
+const ImplementationTabsNavigation = ({
   activeTab,
-  setActiveTab
-}) => {
+  onTabChange,
+  progress,
+  className
+}: ImplementationTabsNavigationProps) => {
+  const isCompleted = progress?.is_completed || false;
+
   const tabs = [
-    { id: 'tools', label: 'Ferramentas', icon: <Tool className="w-4 h-4 mr-2" /> },
-    { id: 'materials', label: 'Materiais', icon: <FileArchive className="w-4 h-4 mr-2" /> },
-    { id: 'videos', label: 'Vídeos', icon: <Video className="w-4 h-4 mr-2" /> },
-    { id: 'checklist', label: 'Checklist', icon: <CheckSquare className="w-4 h-4 mr-2" /> },
-    { id: 'comments', label: 'Comentários', icon: <MessageSquare className="w-4 h-4 mr-2" /> },
-    { id: 'complete', label: 'Finalizar', icon: <CheckCircle className="w-4 h-4 mr-2" /> }
+    {
+      id: "overview",
+      label: "Visão geral",
+      shortLabel: "Visão",
+      icon: <FileText className="w-4 h-4 mr-2" />,
+      disabled: false
+    },
+    {
+      id: "tools",
+      label: "Ferramentas",
+      shortLabel: "Ferramentas",
+      icon: <Wrench className="w-4 h-4 mr-2" />,
+      disabled: false
+    },
+    {
+      id: "materials",
+      label: "Materiais",
+      shortLabel: "Materiais",
+      icon: <FileArchive className="w-4 h-4 mr-2" />,
+      disabled: false
+    },
+    {
+      id: "videos",
+      label: "Vídeos",
+      shortLabel: "Vídeos",
+      icon: <Video className="w-4 h-4 mr-2" />,
+      disabled: false
+    },
+    {
+      id: "checklist",
+      label: "Checklist",
+      shortLabel: "Checklist",
+      icon: <CheckSquare className="w-4 h-4 mr-2" />,
+      disabled: false
+    },
+    {
+      id: "comments",
+      label: "Comentários",
+      shortLabel: "Comentários",
+      icon: <MessageSquare className="w-4 h-4 mr-2" />,
+      disabled: false
+    },
+    {
+      id: "ai-assistant",
+      label: "Assistente IA",
+      shortLabel: "IA",
+      icon: <Bot className="w-4 h-4 mr-2" />,
+      disabled: false
+    },
+    {
+      id: "conclusion",
+      label: "Conclusão",
+      shortLabel: "Final",
+      icon: <Trophy className="w-4 h-4 mr-2" />,
+      disabled: false
+    }
   ];
 
   return (
-    <TabsList className={cn(
-      "w-full h-auto p-1 bg-white/80 rounded-lg mb-4",
-      "grid grid-cols-3 md:grid-cols-6 gap-1"
-    )}>
-      {tabs.map((tab) => (
-        <TabsTrigger
-          key={tab.id}
-          value={tab.id}
-          className={cn(
-            "flex items-center justify-center py-2 px-1 data-[state=active]:bg-white data-[state=active]:shadow-sm",
-            "text-xs sm:text-sm whitespace-nowrap"
-          )}
-        >
-          {tab.icon}
-          <span className="hidden sm:inline">{tab.label}</span>
-          <span className="inline sm:hidden">{tab.label.substring(0, 4)}</span>
-        </TabsTrigger>
-      ))}
-    </TabsList>
+    <Tabs 
+      value={activeTab} 
+      onValueChange={onTabChange}
+      className={cn("w-full", className)}
+    >
+      <TabsList className="w-full overflow-x-auto flex flex-nowrap p-1 h-auto">
+        {tabs.map(tab => (
+          <TabsTrigger
+            key={tab.id}
+            value={tab.id}
+            disabled={tab.disabled}
+            className="flex-shrink-0 py-1.5 px-2.5 h-auto"
+          >
+            {tab.icon}
+            <span className="hidden md:inline-block">{tab.label}</span>
+            <span className="inline-block md:hidden">{tab.shortLabel}</span>
+          </TabsTrigger>
+        ))}
+      </TabsList>
+    </Tabs>
   );
 };
+
+export default ImplementationTabsNavigation;

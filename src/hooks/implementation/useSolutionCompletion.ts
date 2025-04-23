@@ -1,115 +1,119 @@
 
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { useLogging } from "@/hooks/useLogging";
 import { useAuth } from "@/contexts/auth";
 
-interface UseSolutionCompletionProps {
-  progressId?: string;
-  solutionId?: string;
-  moduleIdx: number;
-  completedModules: number[];
-  setCompletedModules: (modules: number[]) => void;
-}
-
-export const useSolutionCompletion = ({
-  progressId,
-  solutionId,
-  moduleIdx,
-  completedModules,
-  setCompletedModules
-}: UseSolutionCompletionProps) => {
-  const [isCompleting, setIsCompleting] = useState(false);
-  const [isCompleted, setIsCompleted] = useState(false);
-  const { toast } = useToast();
+export const useSolutionCompletion = (solutionId?: string, progress?: any) => {
+  const [completing, setCompleting] = useState(false);
+  const [generating, setGenerating] = useState(false);
+  const navigate = useNavigate();
   const { log, logError } = useLogging("useSolutionCompletion");
   const { user } = useAuth();
-  
-  // Função para confirmar a implementação da solução
-  const handleConfirmImplementation = async () => {
-    // Se não há ID de progresso ou ID de solução, não podemos continuar
-    if (!progressId || !solutionId || !user) {
-      toast({
-        title: "Erro ao completar implementação",
-        description: "Informações insuficientes para completar a implementação.",
-        variant: "destructive"
-      });
-      return Promise.reject(new Error("Informações insuficientes"));
+
+  const completeSolution = async (): Promise<boolean> => {
+    if (!user || !solutionId) {
+      toast.error("É necessário estar logado para concluir a implementação");
+      return false;
     }
-    
+
+    if (!progress) {
+      toast.error("Nenhum progresso encontrado para esta solução");
+      return false;
+    }
+
     try {
-      setIsCompleting(true);
-      
-      // Marcar solução como implementada
-      const { error } = await supabase
+      setCompleting(true);
+      log("Iniciando processo de conclusão", { progressId: progress.id });
+
+      // Atualizar o registro de progresso para marcar como concluído
+      const { error: progressError } = await supabase
         .from("progress")
         .update({
           is_completed: true,
           implementation_status: "completed",
-          completed_at: new Date().toISOString(),
-          last_activity: new Date().toISOString()
+          completed_at: new Date().toISOString()
         })
-        .eq("id", progressId);
-        
-      if (error) throw error;
-      
-      // Registrar estatísticas de implementação
-      await supabase.rpc('increment', {
-        row_id: solutionId,
-        table_name: 'solution_metrics',
-        column_name: 'total_completions'
-      }).catch(err => {
-        // Log do erro, mas não bloquear o fluxo
-        logError("Erro ao incrementar métricas", { error: err });
-      });
-      
-      // Registra entrada de certificado
-      await supabase
-        .from("solution_certificates")
-        .insert({
-          user_id: user.id,
-          solution_id: solutionId,
-          issued_at: new Date().toISOString(),
-          certificate_data: {
-            completion_date: new Date().toISOString()
-          }
-        })
-        .catch(err => {
-          // Log do erro, mas não bloquear o fluxo
-          logError("Erro ao criar certificado", { error: err });
+        .eq("id", progress.id);
+
+      if (progressError) {
+        throw progressError;
+      }
+
+      log("Progresso atualizado como concluído", { progressId: progress.id });
+
+      // Incrementar métricas de conclusão na solução
+      try {
+        await supabase.rpc('increment', {
+          row_id: solutionId,
+          table_name: 'solution_metrics',
+          column_name: 'total_completions'
         });
-      
-      log("Solução marcada como implementada", { 
-        progressId,
-        solutionId,
-        userId: user.id
-      });
-      
-      toast({
-        title: "Implementação Concluída",
-        description: "Parabéns! Você completou a implementação desta solução."
-      });
-      
-      setIsCompleted(true);
-      
-      return Promise.resolve();
+        log("Métricas de solução atualizadas");
+      } catch (metricsError) {
+        logError("Erro ao atualizar métricas da solução", { error: metricsError });
+        // Não vamos interromper o fluxo por falha nas métricas
+      }
+
+      // Gerar certificado para o usuário
+      try {
+        const { data: certificateData, error: certificateError } = await supabase
+          .from("solution_certificates")
+          .insert({
+            user_id: user.id,
+            solution_id: solutionId,
+            issued_at: new Date().toISOString(),
+            certificate_data: {
+              completedBy: user.id,
+              completedAt: new Date().toISOString(),
+              solutionId: solutionId
+            }
+          })
+          .select();
+
+        if (certificateError) {
+          logError("Erro ao gerar certificado", { error: certificateError });
+        } else {
+          log("Certificado gerado com sucesso", { certificateId: certificateData?.[0]?.id });
+        }
+      } catch (certError) {
+        logError("Erro ao gerar certificado", { error: certError });
+      }
+
+      toast.success("Parabéns! Você concluiu a implementação com sucesso!");
+      return true;
     } catch (error) {
-      logError("Erro ao confirmar implementação", { error });
-      toast({
-        title: "Erro ao completar implementação",
-        description: "Não foi possível completar a implementação. Por favor, tente novamente.",
-        variant: "destructive"
-      });
-      return Promise.reject(error);
+      logError("Erro ao concluir implementação", { error });
+      toast.error("Ocorreu um erro ao concluir a implementação");
+      return false;
     } finally {
-      setIsCompleting(false);
+      setCompleting(false);
     }
   };
-  
+
+  const generateCertificate = async (): Promise<void> => {
+    if (!user || !solutionId) {
+      toast.error("É necessário estar logado para gerar o certificado");
+      return;
+    }
+
+    try {
+      setGenerating(true);
+      navigate(`/implementation/${solutionId}/certificate`);
+    } catch (error) {
+      logError("Erro ao gerar certificado", { error });
+      toast.error("Ocorreu um erro ao gerar o certificado");
+    } finally {
+      setGenerating(false);
+    }
+  };
+
   return {
-    isCompleting,
-    isCompleted,
-    handleConfirmImplementation
+    completing,
+    generating,
+    completeSolution,
+    generateCertificate
   };
 };

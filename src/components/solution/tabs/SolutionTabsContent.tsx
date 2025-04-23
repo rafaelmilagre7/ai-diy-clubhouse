@@ -1,8 +1,7 @@
 
 import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileText, Tool, FileArchive, Video, CheckSquare } from "lucide-react";
-import SolutionOverview from "./SolutionOverview";
+import { FileText, Wrench, FileArchive, Video, CheckSquare } from "lucide-react";
 import SolutionToolsTab from "./SolutionToolsTab";
 import SolutionMaterialsTab from "./SolutionMaterialsTab";
 import SolutionVideosTab from "./SolutionVideosTab";
@@ -17,7 +16,7 @@ interface SolutionTabsContentProps {
   progress?: any;
 }
 
-const SolutionTabsContent = ({ solution, progress }: SolutionTabsContentProps) => {
+const SolutionTabsContent: React.FC<SolutionTabsContentProps> = ({ solution, progress }) => {
   const [activeTab, setActiveTab] = useState("overview");
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -51,7 +50,7 @@ const SolutionTabsContent = ({ solution, progress }: SolutionTabsContentProps) =
               <span className="inline md:hidden">Geral</span>
             </TabsTrigger>
             <TabsTrigger value="tools" className="data-[state=active]:bg-muted">
-              <Tool className="w-4 h-4 mr-2" />
+              <Wrench className="w-4 h-4 mr-2" />
               <span className="hidden md:inline">Ferramentas</span>
               <span className="inline md:hidden">Ferramentas</span>
             </TabsTrigger>
@@ -72,7 +71,7 @@ const SolutionTabsContent = ({ solution, progress }: SolutionTabsContentProps) =
             </TabsTrigger>
           </TabsList>
           <TabsContent value="overview" className="py-6 px-6">
-            <SolutionOverview solution={solution} />
+            <SolutionOverviewTab solution={solution} />
           </TabsContent>
           <TabsContent value="tools" className="py-6 px-6">
             <SolutionToolsTab solution={solution} />

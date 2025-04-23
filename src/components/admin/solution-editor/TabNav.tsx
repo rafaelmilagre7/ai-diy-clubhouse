@@ -1,7 +1,7 @@
 
 import React from "react";
 import { TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileText, Tool, FileArchive, Video, CheckSquare, Send } from "lucide-react";
+import { FileText, Wrench, FileArchive, Video, CheckSquare, Send } from "lucide-react";
 
 interface TabNavProps {
   activeTab: string;
@@ -18,7 +18,7 @@ const TabNav: React.FC<TabNavProps> = ({ activeTab, setActiveTab }) => {
     {
       id: "tools",
       label: "Ferramentas",
-      icon: <Tool className="w-4 h-4 mr-2" />
+      icon: <Wrench className="w-4 h-4 mr-2" />
     },
     {
       id: "materials",
