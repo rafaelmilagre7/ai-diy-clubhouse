@@ -6,7 +6,7 @@ import { useVideoRemove } from "./useVideoRemove";
 
 export const useVideosData = (solutionId: string) => {
   const [videos, setVideos] = useState<VideoItem[]>([]);
-  const { videos: fetchedVideos, loading } = useFetchVideos(solutionId);
+  const { videos: fetchedVideos, loading, error, refetch } = useFetchVideos(solutionId);
   const { handleRemoveVideo } = useVideoRemove();
 
   // Atualiza o estado local quando os vídeos são carregados
@@ -21,10 +21,16 @@ export const useVideosData = (solutionId: string) => {
     }
   };
 
+  const fetchVideos = async () => {
+    console.log("Recarregando vídeos...");
+    await refetch();
+  };
+
   return {
     videos,
     loading,
-    fetchVideos: () => setVideos(fetchedVideos),
+    error,
+    fetchVideos,
     handleRemoveVideo: handleRemove
   };
 };

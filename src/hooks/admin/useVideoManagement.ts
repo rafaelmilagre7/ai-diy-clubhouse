@@ -16,14 +16,14 @@ export const useVideoManagement = (solutionId: string) => {
     const video = await handleAddYouTube(data);
     if (video) {
       setYoutubeDialogOpen(false);
-      await fetchVideos();
+      await fetchVideos(); // Recarregar videos após adicionar
     }
   };
 
   const handleFileVideoUpload = async (file: File) => {
     const video = await handleFileUpload(file);
     if (video) {
-      await fetchVideos();
+      await fetchVideos(); // Recarregar videos após upload
     }
   };
 

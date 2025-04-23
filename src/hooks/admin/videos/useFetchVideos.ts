@@ -1,15 +1,15 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { VideoItem, VideoFetchResponse } from "@/types/videoTypes";
 
-export const useFetchVideos = (solutionId: string): VideoFetchResponse => {
+export const useFetchVideos = (solutionId: string): VideoFetchResponse & { refetch: () => Promise<void> } => {
   const [videos, setVideos] = useState<VideoItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
-  const fetchVideos = async () => {
+  const fetchVideos = useCallback(async () => {
     if (!solutionId) {
       setLoading(false);
       return;
@@ -17,6 +17,8 @@ export const useFetchVideos = (solutionId: string): VideoFetchResponse => {
 
     try {
       setLoading(true);
+      console.log("Buscando vídeos para solução:", solutionId);
+      
       const { data, error } = await supabase
         .from("solution_resources")
         .select("*")
@@ -26,6 +28,7 @@ export const useFetchVideos = (solutionId: string): VideoFetchResponse => {
 
       if (error) throw error;
       
+      console.log("Vídeos recebidos:", data?.length || 0);
       setVideos(data || []);
       setError(null);
     } catch (err) {
@@ -35,11 +38,11 @@ export const useFetchVideos = (solutionId: string): VideoFetchResponse => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [solutionId]);
 
   useEffect(() => {
     fetchVideos();
-  }, [solutionId]);
+  }, [fetchVideos]);
 
-  return { videos, loading, error };
+  return { videos, loading, error, refetch: fetchVideos };
 };

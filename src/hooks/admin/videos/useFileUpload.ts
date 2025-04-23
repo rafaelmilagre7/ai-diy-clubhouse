@@ -61,7 +61,9 @@ export const useFileUpload = (solutionId: string) => {
       // Usamos o bucket 'resources' que é um bucket padrão no Supabase
       const { error: uploadError } = await supabase.storage
         .from("resources")
-        .upload(filePath, file);
+        .upload(filePath, file, {
+          cacheControl: '3600' // Adicionando cache control para evitar problemas de cache
+        });
 
       clearInterval(progressInterval);
 
