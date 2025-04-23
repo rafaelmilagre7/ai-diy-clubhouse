@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+
+import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { PersonalInfoForm } from "@/components/onboarding/steps/forms/PersonalInfoForm";
 import { usePersonalInfoStep } from "@/hooks/onboarding/usePersonalInfoStep";
