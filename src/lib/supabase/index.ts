@@ -3,11 +3,10 @@ import { createClient } from '@supabase/supabase-js';
 import { Database } from './types';
 export * from '@/types/supabaseTypes';
 
-// Usando constantes ao invés de variáveis de ambiente
-const supabaseUrl = 'https://zotzvtepvpnkcoobdubt.supabase.co';
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpvdHp2dGVwdnBua2Nvb2JkdWJ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQzNzgzODAsImV4cCI6MjA1OTk1NDM4MH0.dxjPkqTPnK8gjjxJbooPX5_kpu3INciLeDpuU8dszHQ';
+// Usando constantes da configuração centralizada
+import { supabaseConfig } from './config';
 
-export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
+export const supabase = createClient<Database>(supabaseConfig.url, supabaseConfig.anonKey, {
   auth: {
     persistSession: true,
     storage: localStorage,
@@ -40,7 +39,7 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
   }
 });
 
-// CORREÇÃO CRÍTICA: Reimplementação completa da função fetchSolutionById
+// FUNÇÃO PRINCIPAL: Implementação robusta para buscar solução por ID
 export const fetchSolutionById = async (id: string) => {
   try {
     if (!id || typeof id !== 'string' || id.trim() === '') {
@@ -121,7 +120,7 @@ export const fetchSolutionTools = async (solutionId: string) => {
   return data;
 };
 
-// CORREÇÃO: Melhorada para verificação mais precisa de soluções
+// NOVA FUNÇÃO: Verificação robusta de existência de solução
 export const checkSolutionExists = async (id: string): Promise<boolean> => {
   try {
     if (!id) return false;
