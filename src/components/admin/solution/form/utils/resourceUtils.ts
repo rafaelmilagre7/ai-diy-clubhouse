@@ -10,3 +10,42 @@ export const formatFileSize = (bytes?: number): string => {
   if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + " KB";
   return (bytes / (1024 * 1024)).toFixed(2) + " MB";
 };
+
+/**
+ * Detecta o tipo do arquivo baseado na extensão
+ */
+export const detectFileType = (ext?: string): string => {
+  if (!ext) return "document";
+  const imageExts = ["png", "jpg", "jpeg", "gif", "webp", "svg"];
+  const docExts = ["doc", "docx", "odt", "rtf", "txt", "md"];
+  const spreadsheetExts = ["xls", "xlsx", "ods", "csv"];
+  const presentationExts = ["ppt", "pptx", "odp"];
+  const pdfExts = ["pdf"];
+  
+  if (imageExts.includes(ext.toLowerCase())) return "image";
+  if (docExts.includes(ext.toLowerCase())) return "document";
+  if (spreadsheetExts.includes(ext.toLowerCase())) return "spreadsheet";
+  if (presentationExts.includes(ext.toLowerCase())) return "presentation";
+  if (pdfExts.includes(ext.toLowerCase())) return "pdf";
+  
+  return "other";
+};
+
+/**
+ * Obtém o nome formatado do tipo de arquivo
+ */
+export const getFileFormatName = (format: string): string => {
+  switch (format.toLowerCase()) {
+    case "pdf": return "PDF";
+    case "doc":
+    case "docx": return "Documento Word";
+    case "xls":
+    case "xlsx": return "Planilha Excel";
+    case "ppt":
+    case "pptx": return "Apresentação PowerPoint";
+    case "txt": return "Arquivo de texto";
+    case "csv": return "Arquivo CSV";
+    default: return format.toUpperCase();
+  }
+};
+

@@ -10,19 +10,12 @@ interface MaterialsListProps {
   loading?: boolean;
   searchQuery?: string;
   onRemove: (id: string) => Promise<void>;
-  formatFileSize?: (bytes?: number) => string;
 }
 
 const MaterialsList: React.FC<MaterialsListProps> = ({ 
   materials, 
   searchQuery = "",
   onRemove,
-  formatFileSize = (bytes?: number) => {
-    if (!bytes) return "Desconhecido";
-    if (bytes < 1024) return bytes + " bytes";
-    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + " KB";
-    return (bytes / (1024 * 1024)).toFixed(2) + " MB";
-  },
   loading = false
 }) => {
   if (loading) {
