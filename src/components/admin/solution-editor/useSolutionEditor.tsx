@@ -10,7 +10,7 @@ import { useLogging } from "@/hooks/useLogging";
 
 export const useSolutionEditor = (id: string | undefined, user: any) => {
   // Get solution data com setSolution disponível
-  const { solution, setSolution, loading, refetch } = useSolutionData(id);
+  const { solution, isLoading: loading, error, refetch, setSolution } = useSolutionData(id || "");
   const { log, logError } = useLogging("useSolutionEditor");
   
   // Get step navigation

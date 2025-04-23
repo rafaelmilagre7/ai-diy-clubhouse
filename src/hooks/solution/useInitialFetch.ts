@@ -3,13 +3,15 @@ import { useQuery } from '@tanstack/react-query';
 import { Solution } from '@/lib/supabase';
 import { useLogging } from '@/hooks/useLogging';
 import { supabase } from '@/lib/supabase';
+import { useState } from 'react';
 
 export const useInitialFetch = (solutionId: string | undefined) => {
   const { log, logError } = useLogging('useInitialFetch');
+  const [solutionState, setSolution] = useState<Solution | null>(null);
 
   const { 
-    data: solution, 
-    isLoading: loading, 
+    data, 
+    isLoading, 
     error,
     refetch
   } = useQuery({
@@ -43,6 +45,7 @@ export const useInitialFetch = (solutionId: string | undefined) => {
           modules: data.modules?.length || 0
         });
         
+        setSolution(data as Solution);
         return data as Solution;
       } catch (err) {
         logError('Erro ao buscar solução:', err);
@@ -55,10 +58,11 @@ export const useInitialFetch = (solutionId: string | undefined) => {
   });
 
   return { 
-    solution, 
-    loading, 
+    solution: solutionState || data,
+    loading: isLoading, 
+    isLoading,
     error, 
     refetch,
-    setSolution: () => {} // Mantido por compatibilidade
+    setSolution
   };
 };
