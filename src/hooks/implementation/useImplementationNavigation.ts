@@ -2,24 +2,20 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useRef } from "react";
 import { useLogging } from "@/hooks/useLogging";
-import { toast } from "sonner";
 
 export const useImplementationNavigation = () => {
-  const { id, moduleIndex, moduleIdx } = useParams<{ 
+  const { id, moduleIdx } = useParams<{ 
     id: string; 
-    moduleIndex: string;
     moduleIdx: string; 
   }>();
   
-  // Normaliza os parâmetros, suportando tanto /implement/:id/:moduleIdx quanto /implementation/:id/:moduleIdx
-  const moduleIdxParam = moduleIndex || moduleIdx || "0";
-  const moduleIdxNumber = parseInt(moduleIdxParam);
+  const moduleIdxNumber = parseInt(moduleIdx || "0");
   
-  const { log, logError } = useLogging("useImplementationNavigation");
+  const { log } = useLogging("useImplementationNavigation");
   const navigate = useNavigate();
   const navigationAttempts = useRef(0);
   
-  // Usa consistentemente o padrão /implement/:id/:moduleIdx para navegação
+  // Padronizamos para usar apenas o formato /implement/:id/:moduleIdx
   const basePath = "/implement";
   
   // Verificar se temos um ID válido
@@ -31,26 +27,6 @@ export const useImplementationNavigation = () => {
     }
   }, [id, navigate, log]);
 
-  // Corrigir problemas de URL inconsistente - com limitador de tentativas
-  useEffect(() => {
-    // Limitar número de tentativas para evitar loops
-    if (navigationAttempts.current > 2 || !id) return;
-    
-    const path = window.location.pathname;
-    
-    // Só fazer correção se precisar
-    if (path.includes("/implementation/") || 
-        (path.includes("/implement/") && !path.includes(`/${moduleIdxNumber}`))) {
-      
-      navigationAttempts.current += 1;
-      
-      // URL incorreta, vamos corrigir de forma silenciosa
-      const correctPath = `${basePath}/${id}/${moduleIdxNumber}`;
-      log("Corrigindo URL de implementação", { from: path, to: correctPath });
-      navigate(correctPath, { replace: true });
-    }
-  }, [id, moduleIdxNumber, navigate, log]);
-  
   // Navigate to next module
   const handleComplete = () => {
     if (!id) {

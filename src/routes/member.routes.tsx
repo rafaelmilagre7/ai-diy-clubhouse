@@ -23,30 +23,24 @@ import ImplementationProfilePage from "@/pages/ImplementationProfile";
 import { SolutionNotFound } from "@/components/solution/SolutionNotFound";
 import { NotFoundContent } from "@/components/implementation/NotFoundContent";
 
-// Debug log para verificar carregamento de rotas
-console.log("Carregando memberRoutes");
-
 export const memberRoutes = (
   <Fragment>
     <Route element={<MemberLayout />}>
       {/* Dashboard */}
-      <Route index element={<Dashboard />} />
       <Route path="dashboard" element={<Dashboard />} />
       
       {/* Perfil de Implementação */}
       <Route path="perfil-de-implementacao" element={<ImplementationProfilePage />} />
       
-      {/* Soluções - As duas formas de acesso a solução específica */}
+      {/* Soluções */}
       <Route path="solutions" element={<Solutions />} />
       <Route path="solutions/:id" element={<SolutionDetails />} />
       
       {/* Compatibilidade com URL antiga - Redireciona para a nova estrutura */}
       <Route path="solution/:id" element={<MemberSolutionRedirect />} />
       
-      {/* Implementação */}
+      {/* Implementação - Consolidado para um único formato de URL */}
       <Route path="implement/:id/:moduleIdx" element={<SolutionImplementation />} />
-      <Route path="implementation/:id" element={<SolutionImplementation />} />
-      <Route path="implementation/:id/:moduleIdx" element={<SolutionImplementation />} />
       <Route path="implementation-trail" element={<ImplementationTrailPage />} />
       
       {/* Páginas de erro para soluções */}
