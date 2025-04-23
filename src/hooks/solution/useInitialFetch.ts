@@ -4,6 +4,7 @@ import { Solution } from '@/lib/supabase';
 import { useLogging } from '@/hooks/useLogging';
 import { supabase } from '@/lib/supabase';
 import { useState } from 'react';
+import { queryClient } from '@/lib/react-query';
 
 export const useInitialFetch = (solutionId: string | undefined) => {
   const { log, logError } = useLogging('useInitialFetch');
@@ -13,17 +14,31 @@ export const useInitialFetch = (solutionId: string | undefined) => {
     data, 
     isLoading, 
     error,
-    refetch
+    refetch,
+    isFetching
   } = useQuery({
     queryKey: ['solution', solutionId],
     queryFn: async () => {
       if (!solutionId) {
+        log('ID da solução não fornecido');
         return null;
       }
 
       try {
         log('Buscando solução', { id: solutionId });
         
+        // Verificar se já temos os dados em cache
+        const cachedData = queryClient.getQueryData<Solution>(['solution', solutionId]);
+        if (cachedData) {
+          log('Solução encontrada em cache', { 
+            id: cachedData.id,
+            title: cachedData.title
+          });
+          setSolution(cachedData);
+          return cachedData;
+        }
+        
+        // Caso não tenha em cache, buscar do servidor
         const { data, error } = await supabase
           .from('solutions')
           .select(`
@@ -54,13 +69,15 @@ export const useInitialFetch = (solutionId: string | undefined) => {
     },
     enabled: !!solutionId,
     staleTime: 5 * 60 * 1000, // 5 minutos de cache
-    retry: 1
+    retry: 1,
+    refetchOnWindowFocus: false
   });
 
   return { 
     solution: solutionState || data,
     loading: isLoading, 
     isLoading,
+    isFetching,
     error, 
     refetch,
     setSolution

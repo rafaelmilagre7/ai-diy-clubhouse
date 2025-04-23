@@ -17,6 +17,7 @@ import { SolutionSkeleton } from "@/components/solution/SolutionSkeleton";
 import LoadingScreen from "@/components/common/LoadingScreen";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
+import { useCacheManagement } from "@/hooks/useCacheManagement";
 
 const SolutionDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -24,11 +25,14 @@ const SolutionDetails = () => {
   const { log } = useLogging("SolutionDetails");
   const initialRenderRef = useRef(true);
   const { user, isAdmin } = useAuth();
+  const { invalidateSolution } = useCacheManagement();
   
   // Hook aprimorada para buscar os dados da solução com diagnóstico adicional
   const { 
     solution, 
     loading, 
+    isLoading,
+    isFetching,
     error, 
     progress, 
     refetch, 
@@ -38,7 +42,7 @@ const SolutionDetails = () => {
     connectionStatus,
     checkConnection,
     implementationMetrics
-  } = useSolutionData(id);
+  } = useSolutionData(id || "");
   
   // Solution interaction handlers
   const { 
@@ -47,17 +51,24 @@ const SolutionDetails = () => {
     continueImplementation
   } = useSolutionInteractions(id, progress);
 
+  // Invalidar cache em caso de erro
+  useEffect(() => {
+    if (error && id) {
+      invalidateSolution(id);
+    }
+  }, [error, id, invalidateSolution]);
+
   // Verificar a autenticação do usuário
   useEffect(() => {
-    if (!loading && !user) {
+    if (!isLoading && !loading && !user) {
       toast.error("Você precisa estar logado para acessar esta página");
       navigate("/login", { state: { returnTo: `/solution/${id}` } });
     }
-  }, [user, loading, id, navigate]);
+  }, [user, loading, isLoading, id, navigate]);
   
   // Registrar visualização da solução
   useEffect(() => {
-    if (user && solution && !loading && initialRenderRef.current) {
+    if (user && solution && !loading && !isLoading && initialRenderRef.current) {
       // Registrar visualização para métricas
       const trackView = async () => {
         try {
@@ -76,7 +87,7 @@ const SolutionDetails = () => {
       
       trackView();
     }
-  }, [user, solution, loading, log]);
+  }, [user, solution, loading, isLoading, log]);
   
   // Log detalhado na primeira renderização para diagnóstico
   useEffect(() => {
@@ -86,7 +97,8 @@ const SolutionDetails = () => {
         currentRoute: window.location.href,
         availableSolutionsCount: availableSolutions?.length || 0,
         isAdmin,
-        connectionStatus
+        connectionStatus,
+        isOnline: navigator.onLine
       });
       
       // Verificar a conexão com o servidor no carregamento inicial
@@ -103,18 +115,18 @@ const SolutionDetails = () => {
   }
   
   // Mostrar esqueleto de loading primeiro durante carregamento inicial
-  if (loading && initialRenderRef.current) {
+  if ((loading || isLoading) && initialRenderRef.current) {
     return <SolutionSkeleton />;
   }
   
   // Se o carregamento continuar por mais tempo, mostrar tela de loading completa
-  if (loading) {
+  if (loading || isLoading) {
     return <LoadingScreen message="Carregando detalhes da solução..." />;
   }
   
   // Tratar erro de rede separadamente
   if (networkError) {
-    return <NetworkError id={id} onRetry={refetch} loading={loading} />;
+    return <NetworkError id={id} onRetry={refetch} loading={isFetching} />;
   }
   
   // Tratar erro geral

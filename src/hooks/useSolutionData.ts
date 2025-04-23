@@ -3,9 +3,11 @@ import { useQuery } from '@tanstack/react-query';
 import { Solution } from '@/lib/supabase';
 import { supabase } from '@/lib/supabase';
 import { useLogging } from '@/hooks/useLogging';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAvailableSolutions } from './solution/useAvailableSolutions';
 import { useErrorHandling } from './solution/useErrorHandling';
+import { queryClient } from '@/lib/react-query';
+import { toast } from 'sonner';
 
 export const useSolutionData = (solutionId: string) => {
   const { log, logError } = useLogging('useSolutionData');
@@ -14,23 +16,51 @@ export const useSolutionData = (solutionId: string) => {
   const { error: errorHandling, networkError, notFoundError, handleError } = useErrorHandling();
   const [connectionStatus, setConnectionStatus] = useState<'online' | 'offline' | 'checking'>('checking');
   const [implementationMetrics, setImplementationMetrics] = useState<any | null>(null);
+  const [isMounted, setIsMounted] = useState(false);
+
+  // Assegurar que estamos montados para evitar atualizações de estado em componentes desmontados
+  useEffect(() => {
+    setIsMounted(true);
+    return () => setIsMounted(false);
+  }, []);
+
+  // Verificar status da conexão no início
+  useEffect(() => {
+    if (isMounted) {
+      checkConnection();
+    }
+  }, [isMounted]);
 
   const { 
     data, 
     isLoading, 
     error,
-    refetch
+    refetch,
+    isFetching
   } = useQuery({
     queryKey: ['solution', solutionId],
     queryFn: async () => {
       try {
         log('Buscando solução', { id: solutionId });
+
+        // Verificar se já temos os dados em cache
+        const cachedData = queryClient.getQueryData<Solution>(['solution', solutionId]);
+        if (cachedData) {
+          log('Solução encontrada em cache', { 
+            id: cachedData.id,
+            title: cachedData.title
+          });
+          if (isMounted) {
+            setSolution(cachedData);
+          }
+          return cachedData;
+        }
         
         const { data, error } = await supabase
           .from('solutions')
           .select('*, modules(*)')
           .eq('id', solutionId)
-          .single();
+          .maybeSingle();
 
         if (error) throw error;
 
@@ -44,25 +74,70 @@ export const useSolutionData = (solutionId: string) => {
           modules: data.modules?.length || 0
         });
         
-        setSolution(data as Solution);
+        if (isMounted) {
+          setSolution(data as Solution);
+        }
         return data as Solution;
       } catch (err) {
         logError('Erro ao buscar solução:', err);
         handleError(err);
+        
+        // Notificar o usuário sobre erros de conexão
+        if (navigator.onLine === false || (err instanceof Error && 
+            err.message && err.message.toLowerCase().includes('network'))) {
+          toast.error("Erro de conexão", {
+            description: "Verifique sua conexão com a internet e tente novamente."
+          });
+        }
+        
         throw err;
       }
     },
-    enabled: !!solutionId
+    enabled: !!solutionId && isMounted,
+    staleTime: 3 * 60 * 1000, // 3 minutos de cache
+    retry: 2,
+    retryDelay: attempt => Math.min(1000 * Math.pow(1.5, attempt), 10000),
+    refetchOnWindowFocus: false
   });
+
+  // Carregar métricas de implementação se tivermos uma solução
+  useEffect(() => {
+    if (solution?.id && isMounted) {
+      const fetchMetrics = async () => {
+        try {
+          const { data: metrics, error: metricsError } = await supabase
+            .from('solution_metrics')
+            .select('*')
+            .eq('solution_id', solution.id)
+            .maybeSingle();
+            
+          if (!metricsError && metrics) {
+            setImplementationMetrics(metrics);
+          }
+        } catch (err) {
+          // Falha silenciosa para métricas - não são críticas
+          log('Erro ao buscar métricas (não crítico):', { error: err });
+        }
+      };
+      
+      fetchMetrics();
+    }
+  }, [solution?.id, isMounted]);
 
   // Função para verificar o status da conexão
   const checkConnection = async () => {
+    if (!isMounted) return;
+    
     setConnectionStatus('checking');
     try {
       const { data, error } = await supabase.from('_health').select('*').limit(1).maybeSingle();
-      setConnectionStatus(error ? 'offline' : 'online');
+      if (isMounted) {
+        setConnectionStatus(error ? 'offline' : 'online');
+      }
     } catch (err) {
-      setConnectionStatus('offline');
+      if (isMounted) {
+        setConnectionStatus('offline');
+      }
     }
   };
 
@@ -74,6 +149,7 @@ export const useSolutionData = (solutionId: string) => {
     solution: solution || data, // Usar state local primeiro, depois dados da query
     loading: isLoading,
     isLoading,
+    isFetching,
     error: error || errorHandling,
     networkError,
     notFoundError,
