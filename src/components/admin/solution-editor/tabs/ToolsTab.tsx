@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import ToolsForm from "@/components/admin/solution/ToolsForm";
+import ToolsChecklistForm from "@/components/admin/solution/form/ToolsChecklistForm";
 
 interface ToolsTabProps {
   solutionId: string;
@@ -13,7 +13,7 @@ const ToolsTab: React.FC<ToolsTabProps> = ({ solutionId, onSave, saving }) => {
   return (
     <Card>
       <CardContent className="p-6">
-        <ToolsForm 
+        <ToolsChecklistForm 
           solutionId={solutionId}
           onSave={onSave}
           saving={saving}
