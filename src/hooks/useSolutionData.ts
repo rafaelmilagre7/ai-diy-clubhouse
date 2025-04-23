@@ -98,5 +98,5 @@ export const useSolutionData = (solutionId: string | undefined) => {
     }
   };
 
-  return { solution, loading, error, progress, refetch };
+  return { solution, setSolution, loading, error, progress, refetch };
 };
