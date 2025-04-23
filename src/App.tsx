@@ -13,6 +13,7 @@ const queryClient = new QueryClient({
       retry: 1,
       refetchOnWindowFocus: false,
       staleTime: 60000, // 1 minuto antes de considerar os dados obsoletos
+      gcTime: 5 * 60 * 1000, // 5 minutos antes de remover dados do cache
     },
   },
 });
@@ -39,4 +40,3 @@ function App() {
 }
 
 export default App;
-

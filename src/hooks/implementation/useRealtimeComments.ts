@@ -14,11 +14,16 @@ export const useRealtimeComments = (
   const { log, logError } = useLogging();
   const toastShownRef = useRef(false);
   const channelsRef = useRef<any[]>([]);
+  const isSetupRef = useRef(false);
   
   useEffect(() => {
-    if (!isEnabled || !solutionId || !moduleId) {
+    // Não configurar se já estiver configurado ou não estiver habilitado
+    if (isSetupRef.current || !isEnabled || !solutionId || !moduleId) {
       return;
     }
+    
+    // Marcar como configurado
+    isSetupRef.current = true;
     
     log('Iniciando escuta de comentários em tempo real', { solutionId, moduleId });
     
@@ -126,7 +131,7 @@ export const useRealtimeComments = (
         supabase.removeChannel(channel);
       });
       channelsRef.current = [];
+      isSetupRef.current = false;
     };
   }, [solutionId, moduleId, queryClient, isEnabled, log, logError]);
 };
-

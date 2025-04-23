@@ -26,28 +26,7 @@ const SolutionDetails = () => {
   const [retryCount, setRetryCount] = useState(0);
   const [networkError, setNetworkError] = useState(false);
   const initialLoadRef = useRef(true);
-  
-  // Log inicial detalhado para debug - apenas uma vez
-  useEffect(() => {
-    if (initialLoadRef.current) {
-      log("SolutionDetails montado", { 
-        id,
-        path: location.pathname,
-        search: location.search,
-        currentRoute: window.location.href
-      });
-      
-      // Toast para informar usuário sobre carregamento - apenas uma vez no início
-      toast.info("Carregando detalhes da solução...", {
-        id: `solution-loading-${id}` // ID único para evitar duplicação
-      });
-      
-      initialLoadRef.current = false;
-    }
-  }, [id, location, log]);
-  
-  // Garantir que os dados das ferramentas estejam corretos, mas ignorar erros
-  const { isLoading: toolsDataLoading } = useToolsData();
+  const toastShownRef = useRef(false);
   
   // Fetch solution data with the updated hook that includes progress
   const { solution, loading, error, progress, refetch } = useSolutionData(id);
@@ -61,19 +40,38 @@ const SolutionDetails = () => {
     downloadMaterials 
   } = useSolutionInteractions(id, progress);
   
+  // Log inicial detalhado para debug - apenas uma vez
+  useEffect(() => {
+    if (initialLoadRef.current) {
+      log("SolutionDetails montado", { 
+        id,
+        path: location.pathname,
+        search: location.search,
+        currentRoute: window.location.href
+      });
+      
+      // Toast para informar usuário sobre carregamento - apenas uma vez no início
+      if (!toastShownRef.current) {
+        toast.info("Carregando detalhes da solução...", {
+          id: `solution-loading-${id}` // ID único para evitar duplicação
+        });
+        toastShownRef.current = true;
+      }
+      
+      initialLoadRef.current = false;
+    }
+  }, [id, location, log]);
+  
   // Verificar se há erro de rede - uma única vez quando o erro muda
   useEffect(() => {
     if (error) {
       if (error.message && (error.message.includes("fetch") || error.message?.includes("network"))) {
         setNetworkError(true);
-        toast.error("Erro de conexão com o servidor", {
-          id: `network-error-${id}` // ID único para evitar duplicação
-        });
       }
     } else {
       setNetworkError(false);
     }
-  }, [error, id]);
+  }, [error]);
   
   // Função para tentar novamente
   const handleRetry = () => {
@@ -83,24 +81,6 @@ const SolutionDetails = () => {
     });
     refetch();
   };
-  
-  // Log page visit - apenas quando solution mudar e não estiver em loading
-  useEffect(() => {
-    if (solution && !loading) {
-      log("Solução carregada com sucesso", { 
-        solution_id: solution.id, 
-        solution_title: solution.title
-      });
-    } else if (!loading && error) {
-      logError("Erro ao carregar solução", { id, error });
-      // Usando uiToast apenas uma vez para o erro
-      uiToast({
-        title: "Erro ao carregar solução",
-        description: "Não foi possível carregar os detalhes da solução solicitada.",
-        variant: "destructive"
-      });
-    }
-  }, [solution, loading, error, log, logError, uiToast, id]);
   
   if (loading) {
     return <LoadingScreen message="Carregando detalhes da solução..." />;
@@ -174,4 +154,3 @@ const SolutionDetails = () => {
 };
 
 export default SolutionDetails;
-

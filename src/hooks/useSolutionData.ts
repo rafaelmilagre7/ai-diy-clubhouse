@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase, Solution } from "@/lib/supabase";
 import { useAuth } from "@/contexts/auth";
 import { useNavigate } from "react-router-dom";
@@ -16,24 +16,25 @@ export const useSolutionData = (id: string | undefined) => {
   const [error, setError] = useState<any | null>(null);
   const [retryCount, setRetryCount] = useState(0);
   const isAdmin = profile?.role === 'admin';
+  
+  // Controle para evitar múltiplas notificações e chamadas
+  const fetchingRef = useRef(false);
+  const errorShownRef = useRef(false);
+  const successShownRef = useRef(false);
 
   const fetchSolution = useCallback(async () => {
-    if (!id) {
-      log("ID da solução não fornecido");
-      setLoading(false);
+    // Se não há ID ou já está buscando, não continuar
+    if (!id || fetchingRef.current) {
       return;
     }
     
     try {
+      // Marcar como em processo de busca
+      fetchingRef.current = true;
       setLoading(true);
       setError(null);
-      log("Iniciando busca por solução", { id, retryAttempt: retryCount });
       
-      // Informações de debug sobre a conexão
-      log("Tentando conectar ao Supabase", { 
-        userAuthenticated: !!user,
-        solutionId: id
-      });
+      log("Iniciando busca por solução", { id, retryAttempt: retryCount });
       
       // Buscar a solução pelo ID
       let query = supabase
@@ -54,9 +55,12 @@ export const useSolutionData = (id: string | undefined) => {
         // Se o erro for de registro não encontrado e o usuário não é admin,
         // provavelmente está tentando acessar uma solução não publicada
         if (fetchError.code === "PGRST116" && !isAdmin) {
-          toast.error("Esta solução não está disponível no momento.", {
-            id: `solution-not-available-${id}` // ID único para evitar duplicação
-          });
+          if (!errorShownRef.current) {
+            toast.error("Esta solução não está disponível no momento.", {
+              id: `solution-not-available-${id}`, // ID único para evitar duplicação
+            });
+            errorShownRef.current = true;
+          }
           navigate("/solutions");
           return;
         }
@@ -68,11 +72,12 @@ export const useSolutionData = (id: string | undefined) => {
         log("Dados da solução encontrados", { solutionId: data.id, solutionTitle: data.title });
         setSolution(data as Solution);
         
-        // Toast apenas na primeira carga bem-sucedida
-        if (retryCount === 0) {
+        // Toast apenas na primeira carga bem-sucedida e se não já foi mostrado
+        if (retryCount === 0 && !successShownRef.current) {
           toast.success("Solução carregada com sucesso!", {
-            id: `solution-loaded-${id}` // ID único para evitar duplicação
+            id: `solution-loaded-${id}`, // ID único para evitar duplicação
           });
+          successShownRef.current = true;
         }
         
         // Fetch progress for this solution and user if user is authenticated
@@ -100,32 +105,64 @@ export const useSolutionData = (id: string | undefined) => {
         }
       } else {
         log("Nenhuma solução encontrada com ID", { id });
+        if (!errorShownRef.current) {
+          toast.error("Não foi possível encontrar a solução solicitada.", {
+            id: `solution-not-found-${id}` // ID único para evitar duplicação
+          });
+          errorShownRef.current = true;
+        }
         setError(`Solução não encontrada com ID: ${id}`);
-        toast.error("Não foi possível encontrar a solução solicitada.", {
-          id: `solution-not-found-${id}` // ID único para evitar duplicação
-        });
       }
     } catch (error: any) {
       logError("Erro em useSolutionData:", { error });
       setError(error);
-      toast.error("Não foi possível carregar os dados da solução.", {
-        id: `solution-error-${id}` // ID único para evitar duplicação
-      });
+      
+      // Verificar se é um erro de conexão
+      const isNetworkError = error?.message?.includes('fetch') || error?.message?.includes('network');
+      
+      if (!errorShownRef.current) {
+        toast.error(isNetworkError 
+          ? "Erro de conexão com o servidor. Verifique sua internet." 
+          : "Não foi possível carregar os dados da solução.", {
+          id: `solution-error-${id}`, // ID único para evitar duplicação
+          duration: 5000
+        });
+        errorShownRef.current = true;
+      }
     } finally {
       setLoading(false);
+      fetchingRef.current = false;
     }
   }, [id, user, isAdmin, profile?.role, log, logError, logDebug, navigate, retryCount]);
 
   // Função para recarregar os dados
   const refetch = useCallback(() => {
+    // Resetar flags para permitir mostrar notificações novamente
+    errorShownRef.current = false;
+    successShownRef.current = false;
     setRetryCount(prevCount => prevCount + 1);
     return fetchSolution();
   }, [fetchSolution]);
 
   useEffect(() => {
+    // Limpar estado ao mudar o ID para prevenir dados obsoletos
+    if (id) {
+      setSolution(null);
+      setProgress(null);
+      setError(null);
+      errorShownRef.current = false;
+      successShownRef.current = false;
+      fetchingRef.current = false;
+    }
+    
     // Prevenir execuções desnecessárias
     fetchSolution();
-  }, [fetchSolution]);
+    
+    // Limpar ao desmontar
+    return () => {
+      fetchingRef.current = false;
+    };
+  }, [fetchSolution, id]);
 
   return {
     solution,
@@ -136,4 +173,3 @@ export const useSolutionData = (id: string | undefined) => {
     refetch
   };
 };
-
