@@ -14,7 +14,7 @@ export const steps: OnboardingStep[] = [
     id: "professional_data",
     title: "Dados Profissionais",
     section: "professional_info",
-    path: "/onboarding/professional-data",
+    path: "/onboarding/professional-data", // Mantendo a rota nova como a padrão
     fields: ["company_name", "company_size", "company_sector", "company_website", "current_position", "annual_revenue"]
   },
   {

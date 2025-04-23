@@ -20,7 +20,7 @@ export const onboardingRoutes: RouteObject[] = [
     path: '/onboarding',
     element: <Onboarding />,
   },
-  // Garantir que a rota antiga aponte para o mesmo componente da nova
+  // Garantir que a rota antiga `/onboarding/professional` seja tratada pelo componente ProfessionalData
   {
     path: '/onboarding/professional',
     element: <ProfessionalData />,

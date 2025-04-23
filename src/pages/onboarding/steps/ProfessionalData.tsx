@@ -17,16 +17,10 @@ const ProfessionalData = () => {
     console.log("ProfessionalData component montado, path atual:", location.pathname);
     
     if (location.pathname === "/onboarding/professional") {
-      // Mostrar um toast informativo sobre o redirecionamento
-      toast.info("Redirecionando para a nova URL...");
-      console.log("Redirecionando de /onboarding/professional para /onboarding/professional-data");
-      
-      // Redirecionar para a nova rota com replace para não adicionar à história de navegação
-      setTimeout(() => {
-        navigate("/onboarding/professional-data", { replace: true });
-      }, 500);
+      // Apenas log, sem redirecionamento para não causar loops
+      console.log("Na rota antiga /onboarding/professional, mas mantendo para evitar loops");
     }
-  }, [location.pathname, navigate]);
+  }, [location.pathname]);
   
   const handleSubmit = async (stepId: string, data: any) => {
     console.log("Dados profissionais enviados:", data);

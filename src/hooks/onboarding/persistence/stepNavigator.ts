@@ -16,6 +16,7 @@ export function navigateAfterStep(
   console.log(`Determinando próxima rota após etapa ${stepId} (índice atual: ${currentStepIndex})`);
   
   // Mapeamento direto de etapas para rotas de navegação
+  // Tanto as rotas antigas quanto as novas são mapeadas para o mesmo destino
   const nextRouteMap: {[key: string]: string} = {
     "personal": "/onboarding/professional-data",
     "professional": "/onboarding/professional-data", // Redireciona para a nova URL
