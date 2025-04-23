@@ -5,18 +5,7 @@ import { SolutionFormValues } from "@/components/admin/solution/form/solutionFor
 import { Solution } from "@/types/supabaseTypes";
 import { useLogging } from "@/hooks/useLogging";
 import { toast } from "sonner";
-
-// Função para mapear valores de dificuldade para os valores aceitos pelo enum no banco de dados
-const mapDifficultyToEnum = (difficulty: string): string => {
-  const difficultyMap: Record<string, string> = {
-    'beginner': 'easy',
-    'easy': 'easy',
-    'medium': 'medium',
-    'advanced': 'advanced'
-  };
-  
-  return difficultyMap[difficulty] || 'medium'; // Retorna 'medium' como fallback
-};
+import { toDatabaseDifficulty } from "@/lib/types/difficultyTypes";
 
 export const useSolutionSave = (
   id: string | undefined, 
@@ -32,12 +21,19 @@ export const useSolutionSave = (
     log("Iniciando salvamento de solução", { id, values });
     
     try {
+      // Adicionar console.log para debug
+      console.log("Valores antes do mapeamento:", values);
+      const mappedDifficulty = toDatabaseDifficulty(values.difficulty);
+      console.log("Dificuldade mapeada:", mappedDifficulty);
+      
       const formData = {
         ...values,
         // Mapear o valor de dificuldade para o valor aceito pelo enum
-        difficulty: mapDifficultyToEnum(values.difficulty),
+        difficulty: mappedDifficulty,
         updated_at: new Date().toISOString()
       };
+      
+      console.log("Dados do formulário a serem enviados:", formData);
       
       let response;
       
