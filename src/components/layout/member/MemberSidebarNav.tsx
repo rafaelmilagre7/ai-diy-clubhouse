@@ -10,7 +10,6 @@ import {
   ShieldCheck,
   User,
   Award,
-  BookOpen,
   Map,
   ClipboardList
 } from "lucide-react";
@@ -25,10 +24,15 @@ interface SidebarNavProps {
 export const MemberSidebarNav = ({ sidebarOpen }: SidebarNavProps) => {
   const location = useLocation();
   const { isAdmin } = useAuth();
-  const { log } = useLogging();
+  const { log } = useLogging("MemberSidebarNav");
 
-  // Log para verificar se o componente está sendo renderizado
-  log("MemberSidebarNav renderizando", { sidebarOpen, currentPath: location.pathname });
+  // Log para verificar a renderização e o estado atual
+  log("Renderizando menu lateral", { 
+    sidebarOpen, 
+    currentPath: location.pathname,
+    isPathSolutions: location.pathname.startsWith("/solutions"),
+    isPathSolution: location.pathname.startsWith("/solution/")
+  });
 
   const menuItems = [
     {
@@ -79,6 +83,14 @@ export const MemberSidebarNav = ({ sidebarOpen }: SidebarNavProps) => {
   ];
 
   const isActive = (href: string) => {
+    // Considera ativa a rota "solutions" mesmo se estiver visualizando uma solução específica
+    if (href === "/solutions" && (
+      location.pathname.startsWith("/solutions/") || 
+      location.pathname.startsWith("/solution/")
+    )) {
+      return true;
+    }
+    
     return location.pathname === href || location.pathname.startsWith(href + '/');
   };
 

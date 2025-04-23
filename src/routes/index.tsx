@@ -7,9 +7,13 @@ import { AdminProtectedRoutes } from "@/auth/AdminProtectedRoutes";
 import { ProtectedRoutes } from "@/auth/ProtectedRoutes";
 import NotFound from "@/pages/NotFound";
 import RootRedirect from "@/components/routing/RootRedirect";
+import { useLogging } from "@/hooks/useLogging";
 
 const AppRoutes = () => {
-  console.log("Renderizando AppRoutes");
+  const { log } = useLogging("AppRoutes");
+  
+  // Log para debug
+  log("Renderizando as rotas da aplicação");
   
   return (
     <Routes>

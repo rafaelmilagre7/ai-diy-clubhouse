@@ -10,7 +10,7 @@ export const useSolutionData = (id: string | undefined) => {
   const { user, profile } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { log, logError } = useLogging();
+  const { log, logError, logDebug } = useLogging("useSolutionData");
   const [solution, setSolution] = useState<Solution | null>(null);
   const [progress, setProgress] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
@@ -20,15 +20,16 @@ export const useSolutionData = (id: string | undefined) => {
   useEffect(() => {
     const fetchSolution = async () => {
       if (!id) {
+        log("ID da solução não fornecido");
         setLoading(false);
         return;
       }
       
       try {
         setLoading(true);
-        log(`Buscando solução com ID`, { id });
+        log("Iniciando busca por solução", { id });
         
-        // Primeiro busca no caminho /solutions/:id
+        // Buscar a solução pelo ID
         let query = supabase
           .from("solutions")
           .select("*")
@@ -42,7 +43,7 @@ export const useSolutionData = (id: string | undefined) => {
         const { data, error: fetchError } = await query.maybeSingle();
         
         if (fetchError) {
-          logError("Erro ao buscar solução:", fetchError);
+          logError("Erro ao buscar solução:", { error: fetchError, id });
           
           // Se o erro for de registro não encontrado e o usuário não é admin,
           // provavelmente está tentando acessar uma solução não publicada
@@ -60,7 +61,7 @@ export const useSolutionData = (id: string | undefined) => {
         }
         
         if (data) {
-          log("Dados da solução encontrados:", { solution: data });
+          log("Dados da solução encontrados", { solutionId: data.id, solutionTitle: data.title });
           setSolution(data as Solution);
           
           // Fetch progress for this solution and user if user is authenticated
@@ -74,21 +75,20 @@ export const useSolutionData = (id: string | undefined) => {
                 .maybeSingle(); // Usando maybeSingle em vez de single para evitar erros
                 
               if (progressError) {
-                logError("Erro ao buscar progresso:", progressError);
+                logError("Erro ao buscar progresso:", { error: progressError });
               } else if (progressData) {
                 setProgress(progressData);
-                log("Dados de progresso encontrados:", { progress: progressData });
+                log("Dados de progresso encontrados", { progressId: progressData.id });
               } else {
                 log("Nenhum progresso encontrado para esta solução", { solutionId: id, userId: user.id });
               }
             } catch (progressFetchError) {
-              logError("Erro ao buscar progresso:", progressFetchError);
+              logError("Erro ao buscar progresso:", { error: progressFetchError });
             }
           }
         } else {
           log("Nenhuma solução encontrada com ID", { id });
-          setError("Solução não encontrada");
-          // Não redirecionamos automaticamente para dar chance ao usuário de ver a mensagem
+          setError(`Solução não encontrada com ID: ${id}`);
           toast({
             title: "Solução não encontrada",
             description: "Não foi possível encontrar a solução solicitada.",
@@ -96,7 +96,7 @@ export const useSolutionData = (id: string | undefined) => {
           });
         }
       } catch (error: any) {
-        logError("Erro em useSolutionData:", error);
+        logError("Erro em useSolutionData:", { error });
         setError(error.message || "Erro ao buscar a solução");
         toast({
           title: "Erro ao carregar solução",
@@ -109,7 +109,7 @@ export const useSolutionData = (id: string | undefined) => {
     };
     
     fetchSolution();
-  }, [id, toast, user, navigate, isAdmin, profile?.role, log, logError]);
+  }, [id, toast, user, navigate, isAdmin, profile?.role, log, logError, logDebug]);
 
   return {
     solution,

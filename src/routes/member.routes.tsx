@@ -20,6 +20,9 @@ import Benefits from "@/pages/member/Benefits";
 import ImplementationTrailPage from "@/pages/member/ImplementationTrailPage";
 import ImplementationProfilePage from "@/pages/ImplementationProfile";
 
+// Vamos registrar um console.log para debug
+console.log("Carregando memberRoutes");
+
 export const memberRoutes = (
   <Fragment>
     <Route element={<MemberLayout />}>

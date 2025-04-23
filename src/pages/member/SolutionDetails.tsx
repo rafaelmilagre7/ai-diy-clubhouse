@@ -12,18 +12,21 @@ import { SolutionNotFound } from "@/components/solution/SolutionNotFound";
 import { useEffect } from "react";
 import { useToolsData } from "@/hooks/useToolsData";
 import { useLogging } from "@/hooks/useLogging";
+import { useToast } from "@/hooks/use-toast";
 
 const SolutionDetails = () => {
   const { id } = useParams<{ id: string }>();
   const location = useLocation();
-  const { log, logError } = useLogging();
+  const { log, logError } = useLogging("SolutionDetails");
+  const { toast } = useToast();
   
-  // Log inicial para debug
+  // Log inicial detalhado para debug
   useEffect(() => {
     log("SolutionDetails montado", { 
       id,
       path: location.pathname,
-      search: location.search
+      search: location.search,
+      currentRoute: window.location.href
     });
   }, [id, location, log]);
   
@@ -45,20 +48,26 @@ const SolutionDetails = () => {
   // Log page visit
   useEffect(() => {
     if (solution) {
-      log("Solution details page visited", { 
+      log("Solução carregada com sucesso", { 
         solution_id: solution.id, 
-        solution_title: solution.title,
-        path: location.pathname
+        solution_title: solution.title
+      });
+    } else if (!loading && error) {
+      logError("Erro ao carregar solução", { id, error });
+      toast({
+        title: "Erro ao carregar solução",
+        description: "Não foi possível carregar os detalhes da solução solicitada.",
+        variant: "destructive"
       });
     }
-  }, [solution, location.pathname, log]);
+  }, [solution, loading, error, log, logError, toast, id]);
   
   if (loading) {
     return <LoadingScreen message="Carregando detalhes da solução..." />;
   }
   
   if (!solution) {
-    logError("Solution not found", { id });
+    logError("Solução não encontrada", { id, path: location.pathname });
     return <SolutionNotFound />;
   }
   
@@ -66,7 +75,7 @@ const SolutionDetails = () => {
   log("Renderizando SolutionDetails com solução", { 
     solutionId: solution.id, 
     solutionTitle: solution.title,
-    progress
+    hasProgress: !!progress
   });
   
   return (
