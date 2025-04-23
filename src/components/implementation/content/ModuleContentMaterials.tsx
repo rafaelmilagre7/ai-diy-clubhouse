@@ -34,8 +34,7 @@ export const ModuleContentMaterials: React.FC<ModuleContentMaterialsProps> = ({ 
         {materials.map((material) => (
           <MaterialItem 
             key={material.id} 
-            material={material} 
-            onDownload={handleDownload} 
+            material={material}
           />
         ))}
       </div>

@@ -13,10 +13,14 @@ interface MaterialItemProps {
     size?: number;
     type?: string;
   };
+  onDownload?: (url: string, filename: string) => Promise<void>;
 }
 
-export const MaterialItem = ({ material }: MaterialItemProps) => {
-  const { downloading, handleDownload } = useFileDownload();
+export const MaterialItem = ({ material, onDownload }: MaterialItemProps) => {
+  const { downloading, handleDownload: defaultHandleDownload } = useFileDownload();
+  
+  // Usa a função onDownload fornecida ou a função padrão do hook
+  const handleDownload = onDownload || defaultHandleDownload;
 
   // Função para formatar o tamanho do arquivo para exibição
   const formatFileSize = (bytes?: number) => {
