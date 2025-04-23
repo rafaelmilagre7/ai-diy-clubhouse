@@ -2,8 +2,8 @@
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Youtube } from "lucide-react";
-import VideoUploader from "./VideoUploader";
+import { Youtube, AlertCircle } from "lucide-react";
+import VideoUploader from "../components/VideoUploader";
 
 interface VideoHeaderProps {
   solutionId?: string;

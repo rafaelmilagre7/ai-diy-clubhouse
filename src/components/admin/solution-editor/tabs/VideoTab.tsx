@@ -4,9 +4,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
 import { useVideoManagement } from "@/hooks/admin/useVideoManagement";
 import VideoHeader from "./videos/VideoHeader";
-import EmptyVideoState from "../components/EmptyVideoState";
-import VideosList from "../components/VideosList";
-import YouTubeVideoForm from "../components/YouTubeVideoForm";
+import EmptyVideoState from "./components/EmptyVideoState";
+import VideosList from "./components/VideosList";
+import YouTubeVideoForm from "./components/YouTubeVideoForm";
 
 interface VideoTabProps {
   solution: any;

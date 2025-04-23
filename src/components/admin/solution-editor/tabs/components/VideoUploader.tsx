@@ -106,7 +106,6 @@ const VideoUploader: React.FC<VideoUploaderProps> = ({
           </Button>
         </div>
 
-        {/* Barra de progresso */}
         {isUploading && (
           <div className="w-full mt-6 space-y-2">
             <Progress 
