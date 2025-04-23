@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { v4 as uuidv4 } from "uuid";
 
 interface UseVideoUploadProps {
@@ -17,7 +17,6 @@ interface YoutubeData {
 export const useVideoUpload = ({ solutionId }: UseVideoUploadProps) => {
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
-  const { toast } = useToast();
 
   const getYouTubeId = (url: string) => {
     const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
@@ -27,11 +26,7 @@ export const useVideoUpload = ({ solutionId }: UseVideoUploadProps) => {
 
   const handleYoutubeUpload = async (youtubeData: YoutubeData) => {
     if (!solutionId) {
-      toast({
-        title: "Erro",
-        description: "É necessário salvar as informações básicas antes de adicionar vídeos.",
-        variant: "destructive"
-      });
+      toast.error("Salve as informações básicas antes de adicionar vídeos.");
       return;
     }
 
@@ -66,42 +61,25 @@ export const useVideoUpload = ({ solutionId }: UseVideoUploadProps) => {
         
       if (error) throw error;
       
-      toast({
-        title: "Sucesso",
-        description: "Vídeo do YouTube adicionado com sucesso."
-      });
+      toast.success("Vídeo do YouTube adicionado com sucesso");
+      return true;
     } catch (error) {
       console.error("Erro ao adicionar vídeo:", error);
-      toast({
-        title: "Erro ao adicionar vídeo",
-        description: "Ocorreu um erro ao tentar adicionar o vídeo.",
-        variant: "destructive"
-      });
+      toast.error("Ocorreu um erro ao tentar adicionar o vídeo.");
+      return false;
     } finally {
       setUploading(false);
     }
   };
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (file: File) => {
     if (!solutionId) {
-      toast({
-        title: "Erro",
-        description: "É necessário salvar as informações básicas antes de adicionar vídeos.",
-        variant: "destructive"
-      });
+      toast.error("Salve as informações básicas antes de adicionar vídeos.");
       return;
     }
 
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
-    
-    const videoFile = files[0];
-    if (!videoFile.type.startsWith("video/")) {
-      toast({
-        title: "Tipo de arquivo inválido",
-        description: "Por favor, selecione apenas arquivos de vídeo.",
-        variant: "destructive"
-      });
+    if (!file.type.startsWith("video/")) {
+      toast.error("Por favor, selecione apenas arquivos de vídeo.");
       return;
     }
     
@@ -109,13 +87,13 @@ export const useVideoUpload = ({ solutionId }: UseVideoUploadProps) => {
       setUploading(true);
       setUploadProgress(0);
       
-      const fileExt = videoFile.name.split(".").pop();
+      const fileExt = file.name.split(".").pop();
       const fileName = `${uuidv4()}.${fileExt}`;
       const filePath = `solution_videos/${solutionId}/${fileName}`;
       
       const { error: uploadError } = await supabase.storage
         .from("materials")
-        .upload(filePath, videoFile);
+        .upload(filePath, file);
         
       if (uploadError) throw uploadError;
       
@@ -129,35 +107,28 @@ export const useVideoUpload = ({ solutionId }: UseVideoUploadProps) => {
         .from("solution_resources")
         .insert({
           solution_id: solutionId,
-          name: videoFile.name,
+          name: file.name,
           type: "video",
           url: urlData.publicUrl,
           metadata: {
-            title: videoFile.name,
+            title: file.name,
             description: `Vídeo para a solução`,
             url: urlData.publicUrl,
             type: "video",
             source: "upload",
             format: fileExt,
-            size: videoFile.size
+            size: file.size
           }
         });
         
       if (error) throw error;
       
-      toast({
-        title: "Sucesso",
-        description: "Vídeo carregado com sucesso."
-      });
-      
-      e.target.value = "";
+      toast.success("Vídeo carregado com sucesso");
+      return true;
     } catch (error) {
       console.error("Erro no upload:", error);
-      toast({
-        title: "Erro no upload",
-        description: "Ocorreu um erro ao tentar fazer o upload do vídeo.",
-        variant: "destructive"
-      });
+      toast.error("Ocorreu um erro ao tentar fazer o upload do vídeo.");
+      return false;
     } finally {
       setUploading(false);
       setUploadProgress(0);
