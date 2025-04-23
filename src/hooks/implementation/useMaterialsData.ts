@@ -3,15 +3,17 @@ import { useState, useEffect } from "react";
 import { Module, supabase } from "@/lib/supabase";
 import { useLogging } from "@/hooks/useLogging";
 
-interface Material {
+export interface Material {
   id: string;
   name: string;
   url?: string;
-  file_url?: string;
-  external_url?: string;
+  file_url?: string;  // Campo para compatibilidade
+  external_url?: string;  // Para links externos
   type: string;
   format: string;
   size?: number;
+  module_id?: string;
+  solution_id?: string;
 }
 
 export const useMaterialsData = (module: Module) => {
@@ -34,14 +36,13 @@ export const useMaterialsData = (module: Module) => {
         const { data: moduleMaterials, error: moduleError } = await supabase
           .from("solution_resources")
           .select("*")
-          .eq("module_id", module.id)
-          .not("type", "eq", "video");
+          .eq("module_id", module.id);
           
         if (moduleError) {
           logError("Erro ao buscar materiais do módulo", { error: moduleError });
         }
         
-        // Depois buscamos materiais gerais da solução
+        // Depois buscamos materiais gerais da solução (exceto vídeos, que são tratados separadamente)
         const { data: solutionMaterials, error: solutionError } = await supabase
           .from("solution_resources")
           .select("*")
@@ -57,7 +58,7 @@ export const useMaterialsData = (module: Module) => {
         const allMaterials = [
           ...(moduleMaterials || []),
           ...(solutionMaterials || [])
-        ];
+        ].filter(m => m.type !== "video"); // Garantir que vídeos não sejam incluídos aqui
         
         if (allMaterials.length > 0) {
           log("Materiais encontrados", { count: allMaterials.length });
@@ -68,12 +69,16 @@ export const useMaterialsData = (module: Module) => {
             name: material.name,
             url: material.url,
             file_url: material.url, // Adicionando para compatibilidade
+            external_url: material.metadata?.external_url || null,
             type: material.type,
             format: material.format || "Documento",
-            size: material.size
+            size: material.size,
+            module_id: material.module_id,
+            solution_id: material.solution_id
           }));
           
           setMaterials(formattedMaterials);
+          log("Materiais formatados", { materials: formattedMaterials });
         } else {
           log("Nenhum material encontrado", { module_id: module.id });
           setMaterials([]);

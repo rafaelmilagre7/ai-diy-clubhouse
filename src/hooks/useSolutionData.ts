@@ -62,7 +62,7 @@ export const useSolutionData = (id: string | undefined) => {
     }
   }, [id, isAdmin, log, logError]);
 
-  // Usar React Query para gerenciar os estados e cache - atualizado para nova versão
+  // Usar React Query para gerenciar os estados e cache
   const { 
     data: solution, 
     error,
@@ -73,7 +73,7 @@ export const useSolutionData = (id: string | undefined) => {
     queryFn: fetchSolution,
     enabled: !!id,
     staleTime: 1000 * 30, // 30 segundos antes de considerar os dados obsoletos
-    gcTime: 1000 * 60 * 5, // Cache por 5 minutos (substituindo cacheTime)
+    gcTime: 1000 * 60 * 5, // Substituindo cacheTime (obsoleto) por gcTime
     retry: 1,
     refetchOnWindowFocus: false,
   });

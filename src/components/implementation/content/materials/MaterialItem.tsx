@@ -13,6 +13,7 @@ interface MaterialItemProps {
     url?: string; // Adicionado para compatibilidade
     size?: number;
     type?: string;
+    format?: string;
   };
   onDownload?: (url: string, filename: string) => Promise<void>;
 }
@@ -34,13 +35,21 @@ export const MaterialItem = ({ material, onDownload }: MaterialItemProps) => {
   // Função para gerar nome do arquivo para download
   const getFileName = (url?: string) => {
     if (!url) return 'arquivo';
-    const splitUrl = url.split('/');
-    return splitUrl[splitUrl.length - 1].split('?')[0];
+    try {
+      const splitUrl = url.split('/');
+      return splitUrl[splitUrl.length - 1].split('?')[0];
+    } catch (e) {
+      console.error("Erro ao extrair nome do arquivo:", e);
+      return 'arquivo';
+    }
   };
 
   // Determinar qual URL usar (compatibilidade com diferentes formatos)
   const fileUrl = material.file_url || material.url;
   const externalUrl = material.external_url;
+  
+  const materialFormat = material.format || "Documento";
+  const materialType = material.type || "document";
 
   // Retorna o tipo de link (externo ou download)
   const renderActionButton = () => {
@@ -62,7 +71,10 @@ export const MaterialItem = ({ material, onDownload }: MaterialItemProps) => {
           size="sm" 
           variant="outline" 
           className="flex items-center gap-1"
-          onClick={() => handleDownload(fileUrl || '', getFileName(fileUrl))}
+          onClick={() => {
+            console.log("Iniciando download:", fileUrl);
+            handleDownload(fileUrl || '', getFileName(fileUrl));
+          }}
           disabled={downloading}
         >
           <Download className="h-4 w-4" />
@@ -79,9 +91,14 @@ export const MaterialItem = ({ material, onDownload }: MaterialItemProps) => {
         <FileText className="h-5 w-5 text-[#0ABAB5]" />
         <div>
           <p className="font-medium">{material.name}</p>
-          {material.size && (
-            <p className="text-xs text-muted-foreground">{formatFileSize(material.size)}</p>
-          )}
+          <div className="flex items-center gap-2">
+            {materialFormat && (
+              <span className="text-xs text-muted-foreground">{materialFormat}</span>
+            )}
+            {material.size && (
+              <span className="text-xs text-muted-foreground">{formatFileSize(material.size)}</span>
+            )}
+          </div>
         </div>
       </div>
       {renderActionButton()}
