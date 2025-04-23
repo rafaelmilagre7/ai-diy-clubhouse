@@ -1,5 +1,6 @@
+
 // Reexporta do novo index centralizado e mantém tipos para retrocompatibilidade
-export * from "./implementation/useImplementationTrail/index";
+export * from "./useImplementationTrail/index";
 export type ImplementationRecommendation = {
   solutionId: string;
   justification: string;

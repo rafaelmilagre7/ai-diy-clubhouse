@@ -1,11 +1,20 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/auth";
-import { ImplementationTrail } from "../useImplementationTrail";
 import { sanitizeTrailData } from "./utils";
 import { useGenerateImplementationTrail } from "./useGenerateTrail";
 
-export { ImplementationTrail, ImplementationRecommendation } from "../useImplementationTrail";
+// Exportação de tipos usando "export type" para lidar com isolatedModules
+export type ImplementationRecommendation = {
+  solutionId: string;
+  justification: string;
+};
+
+export type ImplementationTrail = {
+  priority1: ImplementationRecommendation[];
+  priority2: ImplementationRecommendation[];
+  priority3: ImplementationRecommendation[];
+};
 
 /**
  * Hook principal de trilha de implementação
