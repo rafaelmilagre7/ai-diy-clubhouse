@@ -31,11 +31,10 @@ export const useSolutionData = (id: string | undefined) => {
       setError(null);
       log("Iniciando busca por solução", { id, retryAttempt: retryCount });
       
-      // Informações de debug sobre a conexão
-      log("Usando configs do Supabase:", { 
-        baseUrl: supabase.supabaseUrl, 
-        authHeader: !!supabase.auth.session(),
-        userAuthenticated: !!user
+      // Informações de debug sobre a conexão - corrigindo as propriedades protegidas
+      log("Tentando conectar ao Supabase", { 
+        userAuthenticated: !!user,
+        solutionId: id
       });
       
       // Buscar a solução pelo ID
