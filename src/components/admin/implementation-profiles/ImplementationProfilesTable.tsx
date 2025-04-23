@@ -31,6 +31,14 @@ export const ImplementationProfilesTable: React.FC<ImplementationProfilesTablePr
   profiles,
   onViewProfile,
 }) => {
+  const getCompletionBadgeVariant = (isCompleted: boolean) => {
+    return isCompleted ? "default" : "secondary";
+  };
+
+  const getAiLevelBadgeVariant = (level: number) => {
+    return level >= 7 ? "default" : "secondary";
+  };
+
   return (
     <div className="rounded-md border">
       <Table>
@@ -60,12 +68,12 @@ export const ImplementationProfilesTable: React.FC<ImplementationProfilesTablePr
               <TableCell>{profile.company_name}</TableCell>
               <TableCell>{profile.company_size}</TableCell>
               <TableCell>
-                <Badge variant={profile.ai_knowledge_level >= 7 ? "default" : "secondary"}>
+                <Badge variant={getAiLevelBadgeVariant(profile.ai_knowledge_level)}>
                   {profile.ai_knowledge_level}/10
                 </Badge>
               </TableCell>
               <TableCell>
-                <Badge variant={profile.is_completed ? "success" : "warning"}>
+                <Badge variant={getCompletionBadgeVariant(profile.is_completed)}>
                   {profile.is_completed ? "Completo" : "Incompleto"}
                 </Badge>
               </TableCell>
