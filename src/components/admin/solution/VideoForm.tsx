@@ -1,19 +1,21 @@
 
 import React from "react";
+import { Solution } from "@/types/supabaseTypes";
+import { SolutionFormValues } from "@/components/admin/solution/form/solutionFormSchema";
 import VideoLessonsForm from "@/components/admin/solution/form/VideoLessonsForm";
 
 interface VideoFormProps {
-  solutionId: string;
-  onSave: () => Promise<void>;
+  solution: Solution;
+  onSave: (values: SolutionFormValues) => Promise<void>;
   saving: boolean;
 }
 
-const VideoForm: React.FC<VideoFormProps> = ({ solutionId, onSave, saving }) => {
+const VideoForm: React.FC<VideoFormProps> = ({ solution, onSave, saving }) => {
   return (
     <VideoLessonsForm
-      solutionId={solutionId}
-      onSave={onSave}
-      saving={saving}
+      solutionId={solution?.id}
+      onSave={async () => await onSave(solution as SolutionFormValues)}
+      isSaving={saving}
     />
   );
 };

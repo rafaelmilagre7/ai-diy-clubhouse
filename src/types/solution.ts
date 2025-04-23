@@ -1,5 +1,6 @@
 
-import { SolutionBase, SolutionCategory } from './solution';
+// Definição de tipos para categorias de soluções
+export type SolutionCategory = 'revenue' | 'operational' | 'strategy';
 
 export type ModuleType = 
   | 'landing'
@@ -43,7 +44,18 @@ export interface Progress {
   failed_attempts?: any[];
 }
 
-export interface Solution extends SolutionBase {
+// Interface para representar uma solução completa
+export interface Solution {
+  id: string;
+  title: string;
+  description: string;
+  category: SolutionCategory;
+  difficulty: 'easy' | 'medium' | 'advanced';
+  published: boolean;
+  thumbnail_url: string;
+  created_at: string;
+  updated_at: string;
+  slug: string;
   modules?: Module[];
   progress?: Progress | null;
   checklist_items?: any[];

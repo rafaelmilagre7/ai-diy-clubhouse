@@ -51,5 +51,5 @@ export const getCategoryStyles = (category: SolutionCategory) => {
   }
 };
 
-// Exportando SolutionCategory para resolver os erros em vários arquivos
-export { SolutionCategory } from '@/types/solution';
+// Re-exportando SolutionCategory para manter compatibilidade com o código existente
+export { SolutionCategory };
