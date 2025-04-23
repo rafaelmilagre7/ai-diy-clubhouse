@@ -1,12 +1,13 @@
-
 import { useEffect, useState } from "react";
 import { steps } from "./useStepDefinitions";
 import { useProgress } from "./useProgress";
 import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "sonner";
 import { OnboardingProgress } from "@/types/onboarding";
+import { useLogging } from "@/hooks/useLogging";
 
 export const useStepNavigation = () => {
+  const logger = useLogging("StepNavigation");
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const { progress, refreshProgress, isLoading } = useProgress();
   const navigate = useNavigate();
@@ -31,7 +32,7 @@ export const useStepNavigation = () => {
       if (isLoading) return; // Evitar múltiplas chamadas durante carregamento
       
       try {
-        console.log("Carregando progresso do onboarding em useStepNavigation, path atual:", location.pathname);
+        logger.logInfo("Carregando progresso do onboarding, path atual:", location.pathname);
         const refreshedProgress = await refreshProgress();
         
         // Verificar se temos um progresso válido
@@ -39,15 +40,7 @@ export const useStepNavigation = () => {
         
         // Se não há progresso, redirecionar para o início do onboarding
         if (!progressData) {
-          console.log("Nenhum progresso encontrado, redirecionando para o início do onboarding");
-          
-          // Se estamos na página inicial de onboarding, vamos para a primeira etapa (personal-info)
-          if (location.pathname === '/onboarding') {
-            console.log("Redirecionando para /onboarding/personal-info");
-            navigate("/onboarding/personal-info");
-            setCurrentStepIndex(0);
-            return;
-          }
+          logger.logInfo("Nenhum progresso encontrado, redirecionando para o início do onboarding");
           
           // Se já estamos em uma página de etapa específica, manter
           if (location.pathname.includes('/onboarding/')) {
@@ -55,14 +48,14 @@ export const useStepNavigation = () => {
             if (currentStepId) {
               const index = steps.findIndex(step => step.id === currentStepId);
               if (index !== -1) {
-                console.log(`Definindo índice de etapa atual para ${index} com base no caminho: ${location.pathname}`);
+                logger.logInfo(`Definindo índice de etapa atual para ${index} com base no caminho: ${location.pathname}`);
                 setCurrentStepIndex(index);
               }
             }
             return;
           }
           
-          navigate("/onboarding/personal-info");
+          navigate("/onboarding");
           setCurrentStepIndex(0);
           return;
         }
@@ -74,39 +67,41 @@ export const useStepNavigation = () => {
           const stepIndexByPath = steps.findIndex(step => step.id === currentStepId);
           
           if (stepIndexByPath !== -1) {
-            console.log(`Definindo etapa atual baseada na URL: ${currentStepId} (índice ${stepIndexByPath})`);
+            logger.logInfo(`Definindo etapa atual baseada na URL: ${currentStepId} (índice ${stepIndexByPath})`);
             setCurrentStepIndex(stepIndexByPath);
+            
+            // Importante: NÃO redirecionar mais se a URL já for uma das 
+            // rotas válidas (professional ou professional-data)
+            return;
           }
         } else if (progressData.current_step) {
           const stepIndex = steps.findIndex(step => step.id === progressData.current_step);
           
           if (stepIndex !== -1) {
-            console.log(`Continuando onboarding da etapa: ${progressData.current_step} (índice ${stepIndex})`);
+            logger.logInfo(`Continuando onboarding da etapa: ${progressData.current_step} (índice ${stepIndex})`);
             setCurrentStepIndex(stepIndex);
             
-            // IMPORTANTE: Removida a navegação forçada que poderia causar loops
-            // Se estivermos em /onboarding/professional, não redirecionar para professional-data
+            // IMPORTANTE: Não redirecionar para evitar loops
           } else {
-            console.warn(`Etapa não encontrada nos passos definidos: ${progressData.current_step}`);
+            logger.logWarning(`Etapa não encontrada nos passos definidos: ${progressData.current_step}`);
             navigate(steps[0].path);
             toast.info("Iniciando o preenchimento do onboarding");
           }
         } else {
-          console.log("Nenhuma etapa atual definida, começando do início");
+          logger.logInfo("Nenhuma etapa atual definida, começando do início");
           navigate(steps[0].path);
         }
       } catch (error) {
-        console.error("Erro ao carregar progresso:", error);
+        logger.logError("Erro ao carregar progresso:", error);
       }
     };
     
     loadProgress();
   }, [navigate, refreshProgress, isLoading, location.pathname, progress]);
 
-  // ... manter o restante do código existente (navigateToStep, navigateToStepById, etc.)
   const navigateToStep = (stepIndex: number) => {
     if (stepIndex >= 0 && stepIndex < steps.length) {
-      console.log(`Navegando manualmente para etapa índice ${stepIndex}: ${steps[stepIndex].id} (${steps[stepIndex].path})`);
+      logger.logInfo(`Navegando manualmente para etapa índice ${stepIndex}: ${steps[stepIndex].id} (${steps[stepIndex].path})`);
       setCurrentStepIndex(stepIndex);
       navigate(steps[stepIndex].path);
     }
@@ -115,7 +110,7 @@ export const useStepNavigation = () => {
   const navigateToStepById = (stepId: string) => {
     const index = steps.findIndex(step => step.id === stepId);
     if (index !== -1) {
-      console.log(`Navegando para etapa ID ${stepId} (índice ${index}): ${steps[index].path}`);
+      logger.logInfo(`Navegando para etapa ID ${stepId} (índice ${index}): ${steps[index].path}`);
       setCurrentStepIndex(index);
       navigate(steps[index].path);
     }
@@ -124,11 +119,11 @@ export const useStepNavigation = () => {
   const navigateToPreviousStep = () => {
     if (currentStepIndex > 0) {
       const previousIndex = currentStepIndex - 1;
-      console.log(`Navegando para etapa anterior: ${steps[previousIndex].id}`);
+      logger.logInfo(`Navegando para etapa anterior: ${steps[previousIndex].id}`);
       setCurrentStepIndex(previousIndex);
       navigate(steps[previousIndex].path);
     } else {
-      console.log("Já está na primeira etapa, não é possível retornar");
+      logger.logInfo("Já está na primeira etapa, não é possível retornar");
     }
   };
 

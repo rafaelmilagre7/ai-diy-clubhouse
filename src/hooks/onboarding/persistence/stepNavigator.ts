@@ -19,7 +19,7 @@ export function navigateAfterStep(
   // Tanto a rota antiga "professional" quanto a nova "professional_data" direcionam para a próxima etapa
   const nextRouteMap: {[key: string]: string} = {
     "personal": "/onboarding/professional-data", // Usar a rota nova como padrão
-    "professional": "/onboarding/business-context", // Adicionar mapeamento explícito para a rota antiga
+    "professional": "/onboarding/business-context", // Mapeamento explícito para rota antiga
     "professional_data": "/onboarding/business-context",
     "business_context": "/onboarding/ai-experience",
     "ai_exp": "/onboarding/club-goals",

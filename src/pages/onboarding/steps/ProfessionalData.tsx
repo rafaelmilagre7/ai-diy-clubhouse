@@ -5,8 +5,10 @@ import { useOnboardingSteps } from "@/hooks/onboarding/useOnboardingSteps";
 import { useProgress } from "@/hooks/onboarding/useProgress";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { useLogging } from "@/hooks/useLogging";
 
 const ProfessionalData = () => {
+  const logger = useLogging("ProfessionalData");
   const { saveStepData, isSubmitting, navigateToPreviousStep } = useOnboardingSteps();
   const { progress } = useProgress();
   const location = useLocation();
@@ -14,22 +16,23 @@ const ProfessionalData = () => {
   
   // Log ampliado para diagnóstico
   useEffect(() => {
-    console.log("ProfessionalData component montado", {
+    logger.logInfo("ProfessionalData component montado", {
       path: location.pathname,
       progress: progress,
       isCurrentlySubmitting: isSubmitting
     });
     
-    // Não redirecionar automaticamente, permitir que a página professional seja exibida
-  }, [location.pathname, progress]);
+    // NÃO redirecionar automaticamente - permanecer na rota atual
+    // seja ela professional ou professional-data
+  }, [location.pathname, progress, isSubmitting]);
   
   const handleSubmit = async (stepId: string, data: any) => {
-    console.log("Dados profissionais enviados:", data);
+    logger.logInfo("Dados profissionais enviados:", data);
     await saveStepData(stepId, data);
   };
   
   const handlePrevious = () => {
-    console.log("Navegando para etapa anterior");
+    logger.logInfo("Navegando para etapa anterior");
     navigateToPreviousStep();
   };
   

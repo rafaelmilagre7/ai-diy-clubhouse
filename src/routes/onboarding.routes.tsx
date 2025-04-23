@@ -20,11 +20,12 @@ export const onboardingRoutes: RouteObject[] = [
     path: '/onboarding',
     element: <Onboarding />,
   },
-  // Define explicitamente para a rota legacy e a nova rota
+  // Definição para rota antiga: professional - MANTER AMBAS
   {
     path: '/onboarding/professional',
     element: <ProfessionalData />,
   },
+  // Definição para nova rota: professional-data
   {
     path: '/onboarding/professional-data',
     element: <ProfessionalData />,

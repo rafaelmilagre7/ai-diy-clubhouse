@@ -15,8 +15,10 @@ import { ComplementaryForm } from '@/components/onboarding/forms/ComplementaryFo
 import { ReviewStep } from '@/components/onboarding/forms/ReviewStep';
 import { useAuth } from '@/contexts/auth';
 import { toast } from 'sonner';
+import { useLogging } from '@/hooks/useLogging';
 
 const Onboarding: React.FC = () => {
+  const logger = useLogging("Onboarding");
   const { user } = useAuth();
   const { isLoading, data, currentStep, saveFormData, completeOnboarding, isSaving } = useOnboarding();
   const location = useLocation();
@@ -24,7 +26,7 @@ const Onboarding: React.FC = () => {
   const routeStep = getStepFromRoute(location.pathname);
   
   useEffect(() => {
-    console.log(`Onboarding renderizado. Rota atual: ${location.pathname}, routeStep mapeado: ${routeStep}, currentStep: ${currentStep}`);
+    logger.logInfo(`Onboarding renderizado. Rota atual: ${location.pathname}, routeStep mapeado: ${routeStep}, currentStep: ${currentStep}`);
   }, [location.pathname, routeStep, currentStep]);
   
   // Redirecionar para o passo atual se estiver em um passo incorreto
@@ -38,21 +40,19 @@ const Onboarding: React.FC = () => {
 
     if (!isLoading && data) {
       // Log para diagnóstico
-      console.log(`Verificando redirecionamento. Rota atual: ${location.pathname}, currentStep: ${currentStep}`);
+      logger.logInfo(`Verificando redirecionamento. Rota atual: ${location.pathname}, currentStep: ${currentStep}`);
       
-      // Verificar se estamos em uma rota antiga que precisa ser redirecionada
-      const pathParts = location.pathname.split('/');
-      const currentRouteStep = pathParts[pathParts.length - 1];
+      // IMPORTANTE: Se estamos em /onboarding/professional, NÃO redirecionar
+      if (location.pathname === '/onboarding/professional') {
+        logger.logInfo('Detectada rota legacy /onboarding/professional - mantendo sem redirecionamento');
+        return;
+      }
       
-      // IMPORTANTE: NÃO redirecionaremos mais automaticamente para evitar loops infinitos
-      // Em vez disso, usamos as rotas para renderizar o componente correto onde quer que estejamos
-
-      // Redirecionar se estivermos em um passo incorreto que não seja professional/professional-data
+      // Redirecionar se estivermos em um passo incorreto 
       if (currentStep !== routeStep && 
           routeStep !== 'professional_data' && 
-          routeStep !== 'professional' && 
-          currentRouteStep !== 'professional') {
-        console.log(`Redirecionando para o passo correto: ${currentStep}`);
+          routeStep !== 'professional') {
+        logger.logInfo(`Redirecionando para o passo correto: ${currentStep}`);
         navigate(`/onboarding/${currentStep === 'personal' ? '' : currentStep}`, { replace: true });
       }
     }
@@ -83,11 +83,11 @@ const Onboarding: React.FC = () => {
 
   // Renderizar o formulário adequado
   const renderStepForm = () => {
-    console.log(`Renderizando formulário para routeStep: ${routeStep}`);
+    logger.logInfo(`Renderizando formulário para routeStep: ${routeStep}`);
     
     // Tratar especificamente o caso da rota /onboarding/professional
     if (location.pathname === '/onboarding/professional') {
-      console.log('Renderizando formulário de dados profissionais (rota antiga)');
+      logger.logInfo('Renderizando formulário de dados profissionais (rota antiga)');
       return <ProfessionalForm data={data} onSubmit={(formData) => saveFormData(formData, 'professional_data')} isSaving={isSaving} />;
     }
     
