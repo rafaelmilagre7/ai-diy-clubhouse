@@ -1,56 +1,45 @@
 
-import { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabase";
-import { useLogging } from "@/hooks/useLogging";
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/lib/supabase';
+import { Tool } from '@/types/toolTypes';
+import { useLogging } from '@/hooks/useLogging';
 
+/**
+ * Hook para carregar dados de todas as ferramentas disponíveis
+ * Usado para garantir que os dados das ferramentas estejam disponíveis antes de mostrar ferramentas específicas
+ */
 export const useToolsData = () => {
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const { log, logError } = useLogging();
+  const { log, logError } = useLogging("useToolsData");
 
-  useEffect(() => {
-    const fetchToolsData = async () => {
+  const query = useQuery({
+    queryKey: ['tools-data'],
+    queryFn: async () => {
       try {
-        setIsLoading(true);
-        await checkToolLogosBucket();
+        log("Carregando dados de ferramentas");
+        
+        // Buscar todas as ferramentas ativas
+        const { data, error } = await supabase
+          .from('tools')
+          .select('*')
+          .eq('status', true);
+          
+        if (error) {
+          throw error;
+        }
+        
+        log("Ferramentas carregadas", { count: data?.length || 0 });
+        return data as Tool[];
       } catch (error) {
-        // Capturar o erro, mas não bloquear a renderização
-        console.error("Erro ao inicializar dados de ferramentas:", error);
-      } finally {
-        setIsLoading(false);
+        logError("Erro ao carregar ferramentas", { error });
+        throw error;
       }
-    };
+    },
+    staleTime: 5 * 60 * 1000 // 5 minutos
+  });
 
-    fetchToolsData();
-  }, []);
-
-  // Função para verificar e criar o bucket de logos se necessário
-  const checkToolLogosBucket = async () => {
-    try {
-      log("Verificando bucket para logos de ferramentas...", {});
-      
-      // Consultar informações sobre o bucket sem tentar criá-lo
-      const { data: buckets, error: bucketsError } = await supabase
-        .storage
-        .listBuckets();
-      
-      if (bucketsError) {
-        // Apenas registrar o erro e continuar
-        logError("Erro ao listar buckets", bucketsError);
-        return;
-      }
-      
-      const bucketExists = buckets?.find(bucket => bucket.name === 'tool_logos');
-      
-      if (!bucketExists) {
-        log("Bucket tool_logos não encontrado, mas será criado pelo administrador", {});
-        // Não tentamos criar o bucket aqui para evitar erros de RLS
-      }
-    } catch (err) {
-      // Capturar o erro, mas não bloquear a funcionalidade principal
-      logError("Erro ao verificar bucket de logos", err);
-    }
+  return {
+    data: query.data,
+    isLoading: query.isLoading,
+    error: query.error
   };
-
-  return { isLoading, error };
 };
