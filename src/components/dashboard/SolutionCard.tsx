@@ -1,12 +1,12 @@
 
-import { Solution } from "@/hooks/dashboard/types";
+import { Solution } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { CardThumbnail } from "./CardThumbnail";
 import { CardHeader } from "./CardHeader";
 import { CardContentSection } from "./CardContent";
 import { CardFooterSection } from "./CardFooter";
-import { toSolutionCategory } from "@/lib/types/categoryTypes";
+import { toSolutionCategory, SolutionCategory } from "@/lib/types/appTypes";
 
 interface SolutionCardProps {
   solution: Solution;
@@ -23,7 +23,7 @@ export const SolutionCard = ({ solution, onClick }: SolutionCardProps) => {
   const normalizedCategory = toSolutionCategory(solution.category);
 
   // Classes de gradiente baseadas na categoria
-  const categoryGradient = {
+  const categoryGradient: Record<SolutionCategory, string> = {
     revenue: "from-revenue-lighter to-white border-l-4 border-l-revenue",
     operational: "from-operational-lighter to-white border-l-4 border-l-operational",
     strategy: "from-strategy-lighter to-white border-l-4 border-l-strategy"

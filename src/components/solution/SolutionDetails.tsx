@@ -1,7 +1,6 @@
 
 import { useParams, useNavigate } from "react-router-dom";
-import LoadingScreen from "@/components/common/LoadingScreen";
-import { useSolutionData } from "@/hooks/useSolutionData";
+import { useCentralDataStore } from "@/hooks/useCentralDataStore";
 import { useSolutionInteractions } from "@/hooks/useSolutionInteractions";
 import { SolutionBackButton } from "@/components/solution/SolutionBackButton";
 import { SolutionHeaderSection } from "@/components/solution/SolutionHeaderSection";
@@ -9,11 +8,13 @@ import { SolutionTabsContent } from "@/components/solution/tabs/SolutionTabsCont
 import { SolutionSidebar } from "@/components/solution/SolutionSidebar";
 import { SolutionMobileActions } from "@/components/solution/SolutionMobileActions";
 import { SolutionNotFound } from "@/components/solution/SolutionNotFound";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useLogging } from "@/hooks/useLogging";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useQuery } from "@tanstack/react-query";
+import { LoadingPage } from "@/components/ui/loading-states";
 
 const SolutionDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -21,28 +22,31 @@ const SolutionDetails = () => {
   const { log, logError } = useLogging("SolutionDetails");
   const [networkError, setNetworkError] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
-  const initialRenderRef = useRef(true);
   
-  // Fetch solution data with the hook that includes progress
-  const { solution, loading, error, progress, refetch } = useSolutionData(id);
+  const { fetchSolutionDetails } = useCentralDataStore();
   
-  // Solution interaction handlers
+  // Buscar dados da solução usando React Query
   const { 
-    initializing, 
-    startImplementation, 
-    continueImplementation, 
-    toggleFavorite, 
-    downloadMaterials 
-  } = useSolutionInteractions(id, progress);
+    data: solution, 
+    isLoading,
+    error,
+    refetch
+  } = useQuery({
+    queryKey: ['solution', id],
+    queryFn: () => fetchSolutionDetails(id || ''),
+    enabled: !!id,
+    staleTime: 5 * 60 * 1000 // 5 minutos
+  });
   
-  // Verificar se há erro de rede - uma única vez quando o erro muda
+  // Verificar erro de rede
   useEffect(() => {
     if (error) {
-      log("Erro detectado:", { errorMessage: error.message, id });
-      if (error.message && (
-        error.message.includes("fetch") || 
-        error.message.includes("network") ||
-        error.message.includes("Failed to fetch")
+      log("Erro detectado:", { errorMessage: (error as Error).message, id });
+      
+      if ((error as Error).message && (
+        (error as Error).message.includes("fetch") || 
+        (error as Error).message.includes("network") ||
+        (error as Error).message.includes("Failed to fetch")
       )) {
         setNetworkError(true);
       } else {
@@ -51,31 +55,25 @@ const SolutionDetails = () => {
     } else {
       setNetworkError(false);
     }
-  }, [error, log]);
-
-  // Log detalhado na primeira renderização
-  useEffect(() => {
-    if (initialRenderRef.current) {
-      log("SolutionDetails montado", { 
-        id,
-        currentRoute: window.location.href, 
-      });
-      initialRenderRef.current = false;
-    }
-    
-    // Limpeza ao desmontar
-    return () => {
-      log("SolutionDetails desmontado");
-    };
-  }, [id, log]);
+  }, [error, id, log]);
   
-  // Função para tentar novamente
+  // Requisitar dados de interação do usuário com a solução (progresso, etc)
+  const { 
+    initializing, 
+    startImplementation, 
+    continueImplementation, 
+    toggleFavorite, 
+    downloadMaterials,
+    progress 
+  } = useSolutionInteractions(id, null);
+  
+  // Função para tentar novamente em caso de erro
   const handleRetry = () => {
     const newRetryCount = retryCount + 1;
     setRetryCount(newRetryCount);
     
     // Aguardar um tempo proporcional ao número de tentativas
-    const delay = Math.min(1000 * Math.pow(1.5, newRetryCount), 5000); // máximo de 5 segundos
+    const delay = Math.min(1000 * Math.pow(1.5, newRetryCount), 5000);
     
     log("Tentando novamente após erro", { retryCount: newRetryCount, delay });
     
@@ -90,8 +88,13 @@ const SolutionDetails = () => {
     return null;
   }
   
-  if (loading) {
-    return <LoadingScreen message="Carregando detalhes da solução..." />;
+  if (isLoading) {
+    return (
+      <LoadingPage 
+        message="Carregando detalhes da solução" 
+        description="Por favor, aguarde enquanto buscamos informações desta solução..." 
+      />
+    );
   }
   
   if (networkError) {
@@ -108,9 +111,9 @@ const SolutionDetails = () => {
             onClick={handleRetry} 
             className="mt-4 flex items-center gap-2"
             variant="outline"
-            disabled={loading}
+            disabled={isLoading}
           >
-            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} /> 
+            <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} /> 
             Tentar novamente
           </Button>
         </Alert>

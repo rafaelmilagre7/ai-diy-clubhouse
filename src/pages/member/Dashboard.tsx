@@ -1,44 +1,22 @@
 
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { useState, useEffect, useCallback } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { useDashboardProgress } from "@/hooks/useDashboardProgress";
-import { supabase } from "@/lib/supabase";
+import { useState, useCallback, useEffect } from "react";
+import { useCentralDataStore } from "@/hooks/useCentralDataStore";
 import { toast } from "sonner";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { Solution } from "@/lib/supabase";
-import LoadingScreen from "@/components/common/LoadingScreen";
+import { LoadingPage } from "@/components/ui/loading-states";
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   
-  // Buscar soluções com React Query
+  // Usar nosso hook centralizado de dados
   const { 
-    data: solutions = [], 
-    isLoading: solutionsLoading 
-  } = useQuery({
-    queryKey: ['dashboardSolutions'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('solutions')
-        .select('*')
-        .eq('published', true)
-        .order('created_at', { ascending: false });
-        
-      if (error) throw error;
-      return data as Solution[];
-    },
-    staleTime: 5 * 60 * 1000 // 5 minutos de cache
-  });
-  
-  // Usar o hook de progresso
-  const { 
-    active, 
-    completed, 
-    recommended, 
-    loading: progressLoading 
-  } = useDashboardProgress(solutions);
+    categorizedSolutions,
+    isLoading,
+    prefetchSolution
+  } = useCentralDataStore();
   
   const [category, setCategory] = useState<string>(
     searchParams.get("category") || "general"
@@ -51,9 +29,13 @@ const Dashboard = () => {
   }, [setSearchParams]);
 
   // Função para navegar para a página de detalhes da solução
-  const handleSolutionClick = (solution: Solution) => {
+  const handleSolutionClick = useCallback((solution: Solution) => {
+    // Prefetch dos dados da solução para carregamento rápido
+    prefetchSolution(solution.id);
+    
+    // Navegar para página de detalhes
     navigate(`/solution/${solution.id}`);
-  };
+  }, [navigate, prefetchSolution]);
 
   // Efeito para mostrar toast na primeira visita - executado apenas 1 vez
   useEffect(() => {
@@ -66,15 +48,20 @@ const Dashboard = () => {
   }, []);
 
   // Mostrar tela de carregamento enquanto os dados estão sendo carregados
-  if (solutionsLoading || progressLoading) {
-    return <LoadingScreen message="Carregando seu dashboard..." />;
+  if (isLoading) {
+    return (
+      <LoadingPage 
+        message="Carregando seu dashboard" 
+        description="Estamos preparando sua experiência personalizada do VIVER DE IA Club..." 
+      />
+    );
   }
 
   return (
     <DashboardLayout
-      active={active}
-      completed={completed}
-      recommended={recommended}
+      active={categorizedSolutions.active}
+      completed={categorizedSolutions.completed}
+      recommended={categorizedSolutions.recommended}
       category={category}
       onCategoryChange={handleCategoryChange}
       onSolutionClick={handleSolutionClick}
