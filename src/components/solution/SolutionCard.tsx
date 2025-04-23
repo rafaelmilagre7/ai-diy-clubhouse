@@ -17,9 +17,16 @@ export const SolutionCard = ({ solution, onClick, className }: SolutionCardProps
   const { log } = useLogging("SolutionCard");
 
   const handleClick = () => {
+    // CORREÇÃO CRÍTICA: Validar ID antes de navegar e registrar detalhes
+    if (!solution.id) {
+      log("ERRO: Tentativa de navegar para solução sem ID", { solution });
+      return;
+    }
+    
     log("Clique na solução", { 
       solutionId: solution.id, 
-      title: solution.title
+      title: solution.title,
+      path: `/solutions/${solution.id}`
     });
     
     if (onClick) {
@@ -62,6 +69,7 @@ export const SolutionCard = ({ solution, onClick, className }: SolutionCardProps
         className
       )}
       onClick={handleClick}
+      data-solution-id={solution.id} // Adicionar data attribute para depuração
     >
       <CardContent className="p-0 relative">
         {/* Thumbnail */}
@@ -71,6 +79,14 @@ export const SolutionCard = ({ solution, onClick, className }: SolutionCardProps
               src={solution.thumbnail_url} 
               alt={solution.title} 
               className="w-full h-full object-cover"
+              onError={(e) => {
+                // Tratamento para erro de imagem
+                log("Erro ao carregar thumbnail", { 
+                  src: solution.thumbnail_url,
+                  solutionId: solution.id
+                });
+                e.currentTarget.src = 'https://placehold.co/600x400?text=VIVER+DE+IA';
+              }}
             />
           </div>
         )}

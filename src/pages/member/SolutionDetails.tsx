@@ -39,9 +39,11 @@ const SolutionDetails = () => {
   // Log detalhado na primeira renderização
   useEffect(() => {
     if (initialRenderRef.current) {
+      // CORREÇÃO CRÍTICA: Registrar dados importantes para debug
       log("SolutionDetails montado", { 
         id,
-        currentRoute: window.location.href, 
+        currentRoute: window.location.href,
+        userAgent: navigator.userAgent
       });
       initialRenderRef.current = false;
     }
@@ -67,7 +69,7 @@ const SolutionDetails = () => {
     return null;
   }
   
-  // Mostrar esqueleto de loading primeiro durante 1.5s (mais amigável que spinner)
+  // CORREÇÃO CRÍTICA: Mostrar esqueleto de loading primeiro durante carregamento inicial
   if (loading && initialRenderRef.current) {
     return <SolutionSkeleton />;
   }
@@ -77,6 +79,7 @@ const SolutionDetails = () => {
     return <LoadingScreen message="Carregando detalhes da solução..." />;
   }
   
+  // CORREÇÃO CRÍTICA: Tratar erro de rede separadamente
   if (networkError) {
     return (
       <div className="max-w-5xl mx-auto py-12 px-4">
@@ -100,6 +103,7 @@ const SolutionDetails = () => {
     );
   }
   
+  // CORREÇÃO CRÍTICA: Tratamento específico para erros
   if (error) {
     logError("Erro ao carregar solução", { error, id });
     return (
@@ -110,6 +114,9 @@ const SolutionDetails = () => {
           <AlertTitle>Erro ao carregar solução</AlertTitle>
           <AlertDescription>
             {error.message || "Ocorreu um erro ao carregar os detalhes desta solução."}
+            <br />
+            <br />
+            Detalhes técnicos: {error.name} {error.message}
           </AlertDescription>
           <Button 
             onClick={handleRetry} 
@@ -119,16 +126,25 @@ const SolutionDetails = () => {
             <RefreshCw className="h-4 w-4" /> 
             Tentar novamente
           </Button>
+          <Button
+            onClick={() => navigate("/solutions")}
+            className="mt-4 ml-2"
+            variant="secondary"
+          >
+            Voltar para soluções
+          </Button>
         </Alert>
       </div>
     );
   }
   
+  // CORREÇÃO CRÍTICA: Verificar solução existente
   if (!solution) {
     logError("Solução não encontrada", { id });
     return <SolutionNotFound />;
   }
   
+  // Se chegou aqui, temos dados válidos para renderizar
   return (
     <div className="max-w-5xl mx-auto pb-12 animate-fade-in">
       <SolutionBackButton />

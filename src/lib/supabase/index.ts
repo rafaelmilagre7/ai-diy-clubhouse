@@ -49,17 +49,19 @@ export const fetchSolutionById = async (id: string) => {
       throw new Error('ID da solução inválido ou não especificado');
     }
     
+    // CORREÇÃO CRÍTICA: Modificar a consulta para usar .eq() com o ID correto
     const { data, error } = await supabase
       .from('solutions')
       .select('*')
       .eq('id', id)
-      .maybeSingle();  // Usar maybeSingle ao invés de single para evitar erros
+      .single();  // Usar single() para obter exatamente um resultado ou erro
 
     if (error) {
       console.error('Erro ao buscar solução:', error);
       throw error;
     }
 
+    // Se não houver dados, lançar um erro
     if (!data) {
       console.error(`Solução com ID ${id} não encontrada`);
       throw new Error('Solução não encontrada');
