@@ -44,15 +44,14 @@ const Onboarding: React.FC = () => {
       const pathParts = location.pathname.split('/');
       const currentRouteStep = pathParts[pathParts.length - 1];
       
-      if (routeMapping[currentRouteStep]) {
-        console.log(`Redirecionando de ${location.pathname} para /onboarding/${routeMapping[currentRouteStep]}`);
-        toast.info(`Redirecionando para a rota atualizada...`);
-        navigate(`/onboarding/${routeMapping[currentRouteStep]}`, { replace: true });
-        return;
-      }
+      // IMPORTANTE: NÃO redirecionaremos mais automaticamente para evitar loops infinitos
+      // Em vez disso, usamos as rotas para renderizar o componente correto onde quer que estejamos
 
-      // Redirecionar se estivermos em um passo incorreto
-      if (currentStep !== routeStep && routeStep !== 'professional_data' && routeStep !== 'professional') {
+      // Redirecionar se estivermos em um passo incorreto que não seja professional/professional-data
+      if (currentStep !== routeStep && 
+          routeStep !== 'professional_data' && 
+          routeStep !== 'professional' && 
+          currentRouteStep !== 'professional') {
         console.log(`Redirecionando para o passo correto: ${currentStep}`);
         navigate(`/onboarding/${currentStep === 'personal' ? '' : currentStep}`, { replace: true });
       }
@@ -85,6 +84,12 @@ const Onboarding: React.FC = () => {
   // Renderizar o formulário adequado
   const renderStepForm = () => {
     console.log(`Renderizando formulário para routeStep: ${routeStep}`);
+    
+    // Tratar especificamente o caso da rota /onboarding/professional
+    if (location.pathname === '/onboarding/professional') {
+      console.log('Renderizando formulário de dados profissionais (rota antiga)');
+      return <ProfessionalForm data={data} onSubmit={(formData) => saveFormData(formData, 'professional_data')} isSaving={isSaving} />;
+    }
     
     switch (routeStep) {
       case 'personal':

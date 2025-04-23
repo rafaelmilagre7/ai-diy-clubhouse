@@ -12,10 +12,11 @@ export const useStepNavigation = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  // Mapeamento de caminhos para IDs de etapas, incluindo explicitamente a rota antiga
   const pathToStepId = {
     "/onboarding": "personal",
     "/onboarding/personal-info": "personal",
-    "/onboarding/professional": "professional_data",
+    "/onboarding/professional": "professional_data", // Mapeamento da rota antiga
     "/onboarding/professional-data": "professional_data",
     "/onboarding/business-context": "business_context",
     "/onboarding/ai-experience": "ai_exp",

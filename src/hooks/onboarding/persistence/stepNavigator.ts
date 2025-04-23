@@ -16,10 +16,10 @@ export function navigateAfterStep(
   console.log(`Determinando próxima rota após etapa ${stepId} (índice atual: ${currentStepIndex})`);
   
   // Mapeamento direto de etapas para rotas de navegação
-  // Tanto as rotas antigas quanto as novas são mapeadas para o mesmo destino
+  // Ambas as rotas (antiga "professional" e nova "professional_data") direcionam para professional-data
   const nextRouteMap: {[key: string]: string} = {
     "personal": "/onboarding/professional-data",
-    "professional": "/onboarding/professional-data", // Redireciona para a nova URL
+    "professional": "/onboarding/professional-data", 
     "professional_data": "/onboarding/business-context",
     "business_context": "/onboarding/ai-experience",
     "ai_exp": "/onboarding/club-goals",
@@ -32,8 +32,6 @@ export function navigateAfterStep(
   if (nextRouteMap[stepId]) {
     const nextRoute = nextRouteMap[stepId];
     console.log(`Navegando para ${nextRoute} (via mapeamento direto)`);
-    
-    // Uso de navigate em vez de window.location.href para evitar recarregamento completo da página
     navigate(nextRoute);
     return;
   }
@@ -43,11 +41,9 @@ export function navigateAfterStep(
     if (currentStepIndex < steps.length - 1) {
       const nextStep = steps[currentStepIndex + 1];
       console.log(`Navegando para ${nextStep.path} (próximo passo na sequência)`);
-      
       navigate(nextStep.path);
     } else {
       console.log('Navegando para /onboarding/review (última etapa)');
-      
       navigate('/onboarding/review');
     }
     return;
