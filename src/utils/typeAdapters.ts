@@ -11,6 +11,19 @@ export const adaptSolutionType = (supaSolution: SupabaseSolution): Solution => {
     ? supaSolution.modules.map(adaptModuleType)
     : [];
 
+  // Adaptar o campo progress para garantir que contenha todas as propriedades necessárias
+  const progressData = supaSolution.progress ? {
+    id: '',  // Valores default para as propriedades obrigatórias
+    user_id: '',
+    solution_id: '',
+    implementation_status: 'not_started' as const,
+    current_module: supaSolution.progress.current_module,
+    is_completed: supaSolution.progress.is_completed,
+    completed_modules: supaSolution.progress.completed_modules || [],
+    last_activity: supaSolution.progress.last_activity,
+    completion_percentage: supaSolution.progress.completion_percentage
+  } : null;
+
   return {
     id: supaSolution.id,
     title: supaSolution.title,
@@ -28,7 +41,7 @@ export const adaptSolutionType = (supaSolution: SupabaseSolution): Solution => {
     // Verificamos se completion_requirements existe no objeto antes de usá-lo
     completion_requirements: (supaSolution as any).completion_requirements || {},
     modules: modules,
-    progress: supaSolution.progress,
+    progress: progressData,
     overview: supaSolution.overview || '',
     prerequisites: supaSolution.prerequisites || [],
     completion_criteria: supaSolution.completion_criteria || [],
