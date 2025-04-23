@@ -18,14 +18,20 @@ export const useSolutionsData = (
     try {
       log("Buscando soluções disponíveis...");
       
-      // Usar a função getAllSolutions para consistência
-      const data = await getAllSolutions();
+      // Buscar diretamente da tabela solutions para garantir IDs corretos
+      const { data: solutionsData, error: solutionsError } = await supabase
+        .from("solutions")
+        .select("*")
+        .order("created_at", { ascending: false });
+      
+      if (solutionsError) {
+        throw solutionsError;
+      }
       
       // Verificar se temos dados válidos
-      if (!data || data.length === 0) {
+      if (!solutionsData || solutionsData.length === 0) {
         log("Nenhuma solução encontrada no banco de dados");
         
-        // Criar toast apenas se ainda não foi mostrado
         if (!toastShownRef.current) {
           toast.warning("Não há soluções disponíveis", {
             description: "Nenhuma solução foi encontrada no banco de dados.",
@@ -33,11 +39,17 @@ export const useSolutionsData = (
           });
           toastShownRef.current = true;
         }
-      } else {
-        log(`Encontradas ${data.length} soluções. Primeira solução: ${data[0]?.id} - ${data[0]?.title}`);
+        return [];
       }
       
-      return data as Solution[];
+      // Log detalhado das soluções encontradas
+      log(`Encontradas ${solutionsData.length} soluções.`, {
+        firstSolution: solutionsData[0]?.id,
+        allIds: solutionsData.map(s => s.id)
+      });
+      
+      return solutionsData as Solution[];
+      
     } catch (error) {
       logError("Erro ao buscar soluções:", error);
       
@@ -64,35 +76,37 @@ export const useSolutionsData = (
     queryFn: fetchSolutions,
     staleTime: 5 * 60 * 1000, // 5 minutos
     refetchOnWindowFocus: false,
-    retry: 2 // Tentar 2 vezes antes de falhar
+    retry: 2
   });
 
-  // Validar soluções para garantir que todos os registros têm IDs válidos
+  // Validar IDs das soluções
   useEffect(() => {
     if (solutions && solutions.length > 0) {
-      const invalidSolutions = solutions.filter(sol => !sol.id || !sol.title);
+      const invalidSolutions = solutions.filter(sol => !sol.id);
       if (invalidSolutions.length > 0) {
-        logError(`${invalidSolutions.length} soluções com dados inválidos encontradas`, { 
+        logError(`${invalidSolutions.length} soluções com IDs inválidos encontradas`, { 
           invalidSolutionsCount: invalidSolutions.length,
           sampleInvalid: invalidSolutions.slice(0, 3) 
         });
+      } else {
+        log("Todas as soluções têm IDs válidos", {
+          solutionIds: solutions.map(s => s.id)
+        });
       }
     }
-  }, [solutions, logError]);
+  }, [solutions, logError, log]);
 
   // Filtra as soluções com base na categoria e pesquisa
   const filteredSolutions = solutions.filter((solution: Solution) => {
-    // Verificar se a solução tem um ID válido
     if (!solution.id) {
+      logError("Solução sem ID detectada", { solution });
       return false;
     }
     
-    // Verificar categoria
     const categoryMatch = 
       activeCategory === "all" || 
       solution.category === activeCategory;
     
-    // Verificar termo de pesquisa
     const searchLower = searchQuery.toLowerCase();
     const searchMatch = 
       !searchQuery ||

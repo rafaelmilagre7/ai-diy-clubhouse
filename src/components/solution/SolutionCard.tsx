@@ -1,4 +1,3 @@
-
 import { Solution } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
@@ -18,35 +17,25 @@ export const SolutionCard = ({ solution, onClick, className }: SolutionCardProps
   const { log } = useLogging("SolutionCard");
 
   const handleClick = () => {
-    // Validação rigorosa do ID antes de navegar
-    if (!solution || !solution.id) {
-      const errorMsg = "Solução inválida: ID ausente";
+    // Validação rigorosa do ID
+    if (!solution || !solution.id || typeof solution.id !== 'string') {
+      const errorMsg = "Solução inválida: ID ausente ou inválido";
       log("ERRO: " + errorMsg, { solution });
       toast.error(errorMsg);
       return;
     }
     
-    // Garantir que o ID é uma string válida
-    const id = String(solution.id).trim();
-    if (!id) {
-      const errorMsg = "ID da solução é inválido após conversão";
-      log("ERRO: " + errorMsg, { originalId: solution.id });
-      toast.error(errorMsg);
-      return;
-    }
-    
-    // Log detalhado para diagnóstico
-    log("Clique na solução", { 
-      solutionId: id, 
+    // Log detalhado da navegação
+    log("Navegando para solução", { 
+      solutionId: solution.id, 
       title: solution.title,
-      path: `/solutions/${id}`
+      path: `/solutions/${solution.id}`
     });
     
     if (onClick) {
       onClick();
     } else {
-      // Navegar com ID validado
-      navigate(`/solutions/${id}`);
+      navigate(`/solutions/${solution.id}`);
     }
   };
 
