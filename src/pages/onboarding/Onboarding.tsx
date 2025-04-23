@@ -38,8 +38,11 @@ const Onboarding: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <Loader2 className="h-12 w-12 animate-spin text-[#0ABAB5]" />
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-white to-viverblue/5">
+        <div className="text-center">
+          <Loader2 className="h-12 w-12 animate-spin text-viverblue mx-auto" />
+          <p className="mt-4 text-viverblue-dark font-medium">Carregando seus dados...</p>
+        </div>
       </div>
     );
   }

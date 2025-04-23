@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { cn } from '@/lib/utils';
-import { CheckCircle } from 'lucide-react';
+import { Check } from 'lucide-react';
 
 interface StepIndicatorProps {
   index: number;
@@ -18,25 +18,43 @@ export const StepIndicator: React.FC<StepIndicatorProps> = ({
   isCompleted,
   onClick,
 }) => {
+  const isClickable = !!onClick && (isCompleted || isActive);
+  
   return (
     <div 
       className={cn(
-        "flex items-center gap-2 px-3 py-1 rounded-full text-sm transition-colors",
-        isActive ? "bg-[#0ABAB5] text-white" : 
-        isCompleted ? "bg-[#0ABAB5]/20 text-[#0ABAB5]" : 
-        "bg-gray-700 text-gray-400",
-        onClick ? "cursor-pointer hover:bg-opacity-90" : ""
+        "flex items-center gap-2 p-1 rounded-lg transition-all duration-200",
+        isClickable ? "cursor-pointer hover:bg-neutral-100" : "cursor-default",
+        isActive && "font-medium"
       )}
-      onClick={onClick}
+      onClick={isClickable ? onClick : undefined}
+      role={isClickable ? "button" : undefined}
+      tabIndex={isClickable ? 0 : undefined}
     >
-      {isCompleted ? (
-        <CheckCircle className="h-4 w-4" />
-      ) : (
-        <span className="flex items-center justify-center rounded-full h-5 w-5 text-xs font-medium">
-          {index}
-        </span>
-      )}
-      <span className="hidden sm:inline">{title}</span>
+      <div 
+        className={cn(
+          "flex items-center justify-center w-7 h-7 rounded-full text-sm font-medium",
+          isCompleted 
+            ? "bg-green-500 text-white" 
+            : isActive 
+              ? "bg-viverblue text-white shadow-sm" 
+              : "bg-neutral-200 text-neutral-600"
+        )}
+      >
+        {isCompleted ? <Check className="h-4 w-4" /> : index}
+      </div>
+      <span 
+        className={cn(
+          "text-sm whitespace-nowrap",
+          isActive 
+            ? "text-viverblue-dark" 
+            : isCompleted 
+              ? "text-neutral-800" 
+              : "text-neutral-500"
+        )}
+      >
+        {title}
+      </span>
     </div>
   );
 };

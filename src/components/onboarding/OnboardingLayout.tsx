@@ -36,27 +36,31 @@ const OnboardingLayout: React.FC<OnboardingLayoutProps> = ({
 }) => {
   return (
     <MemberLayout>
-      <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800">
+      <div className="min-h-screen bg-gradient-to-b from-white via-viverblue-lighter/10 to-viverblue/10">
         <div className="container max-w-4xl mx-auto px-4 py-8">
           <div className="mb-8 space-y-4">
-            <h1 className="text-3xl font-bold text-white font-heading">{title}</h1>
-            {description && <p className="text-gray-300">{description}</p>}
+            <h1 className="text-3xl font-bold text-viverblue-dark font-heading">{title}</h1>
+            {description && <p className="text-neutral-600">{description}</p>}
             
             {!hideProgress && (
               <>
-                <div className="flex items-center justify-between mt-8">
-                  <p className="text-gray-300">
+                <div className="flex items-center justify-between mt-6">
+                  <p className="text-neutral-600 font-medium">
                     Passo {currentStep} de {totalSteps}
                   </p>
-                  <p className="text-gray-300">{Math.round(progress)}% concluído</p>
+                  <p className="text-viverblue font-medium">{Math.round(progress)}% concluído</p>
                 </div>
                 
-                <Progress value={progress} className="h-2 bg-gray-700" indicatorClassName="bg-viverblue" />
+                <Progress 
+                  value={progress} 
+                  className="h-2 bg-neutral-200" 
+                  indicatorClassName="bg-viverblue" 
+                />
               </>
             )}
             
             {stepTitles.length > 0 && (
-              <div className="flex flex-wrap gap-2 mt-4">
+              <div className="flex flex-wrap gap-2 mt-6">
                 {stepTitles.map((title, index) => (
                   <StepIndicator 
                     key={index}
@@ -71,7 +75,7 @@ const OnboardingLayout: React.FC<OnboardingLayoutProps> = ({
             )}
             
             {steps.length > 0 && (
-              <div className="flex flex-wrap gap-2 mt-4">
+              <div className="flex flex-wrap gap-2 mt-6">
                 {steps.map((step, index) => (
                   <StepIndicator 
                     key={step.id}
@@ -86,7 +90,7 @@ const OnboardingLayout: React.FC<OnboardingLayoutProps> = ({
             )}
           </div>
           
-          <div className="bg-gray-800/80 p-8 rounded-xl border border-gray-700 shadow-lg">
+          <div className="bg-white p-8 rounded-xl border border-gray-100 shadow-md">
             {children}
           </div>
         </div>
