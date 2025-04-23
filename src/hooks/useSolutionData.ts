@@ -1,7 +1,6 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { supabase, Solution } from "@/lib/supabase";
-import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/auth";
 import { useNavigate } from "react-router-dom";
 import { useLogging } from "@/hooks/useLogging";
@@ -9,7 +8,6 @@ import { toast } from "sonner";
 
 export const useSolutionData = (id: string | undefined) => {
   const { user, profile } = useAuth();
-  const { toast: uiToast } = useToast();
   const navigate = useNavigate();
   const { log, logError, logDebug } = useLogging("useSolutionData");
   const [solution, setSolution] = useState<Solution | null>(null);
@@ -31,7 +29,7 @@ export const useSolutionData = (id: string | undefined) => {
       setError(null);
       log("Iniciando busca por solução", { id, retryAttempt: retryCount });
       
-      // Informações de debug sobre a conexão - corrigindo as propriedades protegidas
+      // Informações de debug sobre a conexão
       log("Tentando conectar ao Supabase", { 
         userAuthenticated: !!user,
         solutionId: id
@@ -56,7 +54,9 @@ export const useSolutionData = (id: string | undefined) => {
         // Se o erro for de registro não encontrado e o usuário não é admin,
         // provavelmente está tentando acessar uma solução não publicada
         if (fetchError.code === "PGRST116" && !isAdmin) {
-          toast.error("Esta solução não está disponível no momento.");
+          toast.error("Esta solução não está disponível no momento.", {
+            id: `solution-not-available-${id}` // ID único para evitar duplicação
+          });
           navigate("/solutions");
           return;
         }
@@ -67,7 +67,13 @@ export const useSolutionData = (id: string | undefined) => {
       if (data) {
         log("Dados da solução encontrados", { solutionId: data.id, solutionTitle: data.title });
         setSolution(data as Solution);
-        toast.success("Solução carregada com sucesso!");
+        
+        // Toast apenas na primeira carga bem-sucedida
+        if (retryCount === 0) {
+          toast.success("Solução carregada com sucesso!", {
+            id: `solution-loaded-${id}` // ID único para evitar duplicação
+          });
+        }
         
         // Fetch progress for this solution and user if user is authenticated
         if (user) {
@@ -95,12 +101,16 @@ export const useSolutionData = (id: string | undefined) => {
       } else {
         log("Nenhuma solução encontrada com ID", { id });
         setError(`Solução não encontrada com ID: ${id}`);
-        toast.error("Não foi possível encontrar a solução solicitada.");
+        toast.error("Não foi possível encontrar a solução solicitada.", {
+          id: `solution-not-found-${id}` // ID único para evitar duplicação
+        });
       }
     } catch (error: any) {
       logError("Erro em useSolutionData:", { error });
       setError(error);
-      toast.error("Não foi possível carregar os dados da solução.");
+      toast.error("Não foi possível carregar os dados da solução.", {
+        id: `solution-error-${id}` // ID único para evitar duplicação
+      });
     } finally {
       setLoading(false);
     }
@@ -113,6 +123,7 @@ export const useSolutionData = (id: string | undefined) => {
   }, [fetchSolution]);
 
   useEffect(() => {
+    // Prevenir execuções desnecessárias
     fetchSolution();
   }, [fetchSolution]);
 
@@ -125,3 +136,4 @@ export const useSolutionData = (id: string | undefined) => {
     refetch
   };
 };
+

@@ -12,6 +12,7 @@ const queryClient = new QueryClient({
     queries: {
       retry: 1,
       refetchOnWindowFocus: false,
+      staleTime: 60000, // 1 minuto antes de considerar os dados obsoletos
     },
   },
 });
@@ -23,7 +24,13 @@ function App() {
         <LoggingProvider>
           <AuthProvider>
             <AppRoutes />
-            <Toaster position="top-right" richColors />
+            {/* Usando apenas um toaster para toda a aplicação */}
+            <Toaster 
+              position="top-right" 
+              richColors 
+              closeButton 
+              duration={3000} // Reduzir tempo padrão para 3 segundos
+            />
           </AuthProvider>
         </LoggingProvider>
       </QueryClientProvider>
@@ -32,3 +39,4 @@ function App() {
 }
 
 export default App;
+
