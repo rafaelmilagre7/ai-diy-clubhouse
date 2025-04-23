@@ -91,7 +91,7 @@ export const SolutionSidebar = ({
             <Button
               className="w-full"
               variant="outline"
-              onClick={continueImplementation}
+              onClick={async () => await continueImplementation()}
             >
               <Repeat className="mr-2 h-4 w-4" />
               Revisar Implementação
@@ -100,7 +100,7 @@ export const SolutionSidebar = ({
         ) : hasStarted ? (
           <Button
             className="w-full"
-            onClick={continueImplementation}
+            onClick={async () => await continueImplementation()}
             disabled={initializing}
           >
             {initializing ? (
@@ -116,7 +116,7 @@ export const SolutionSidebar = ({
         ) : (
           <Button
             className="w-full"
-            onClick={startImplementation}
+            onClick={async () => await startImplementation()}
             disabled={initializing}
           >
             {initializing ? (

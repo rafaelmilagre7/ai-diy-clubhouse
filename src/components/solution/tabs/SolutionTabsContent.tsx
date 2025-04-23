@@ -4,7 +4,7 @@ import { Solution } from "@/lib/supabase";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { SolutionContentSection } from "../SolutionContentSection";
 import { Card, CardContent } from "@/components/ui/card";
-import { CheckCircle, FileText, Server, Tool } from "lucide-react";
+import { CheckCircle, FileText, Server, Wrench } from "lucide-react";
 
 interface SolutionTabsContentProps {
   solution: Solution;
@@ -77,7 +77,7 @@ export const SolutionTabsContent = ({ solution, progress }: SolutionTabsContentP
             <SolutionContentSection
               title="Recursos Necessários"
               description="Ferramentas e recursos para implementação bem-sucedida"
-              icon={<Tool className="h-5 w-5 text-muted-foreground" />}
+              icon={<Wrench className="h-5 w-5 text-muted-foreground" />}
             >
               <div className="mt-4">
                 {solution.modules && solution.modules.length > 0 ? (

@@ -101,7 +101,7 @@ export const useSolutionInteractions = (solutionId: string | undefined, progress
     }
   };
   
-  const continueImplementation = () => {
+  const continueImplementation = async () => {
     if (!solutionId) {
       uiToast({
         title: "Erro",
@@ -113,7 +113,7 @@ export const useSolutionInteractions = (solutionId: string | undefined, progress
     
     if (!progress) {
       // Se não há progresso, iniciar como novo
-      startImplementation();
+      await startImplementation();
       return;
     }
     

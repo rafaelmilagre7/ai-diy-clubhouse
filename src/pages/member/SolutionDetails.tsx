@@ -16,6 +16,7 @@ import { SolutionMobileActions } from "@/components/solution/SolutionMobileActio
 import { SolutionSkeleton } from "@/components/solution/SolutionSkeleton";
 import LoadingScreen from "@/components/common/LoadingScreen";
 import { toast } from "sonner";
+import { supabase } from "@/lib/supabase";
 
 const SolutionDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -75,7 +76,7 @@ const SolutionDetails = () => {
       
       trackView();
     }
-  }, [user, solution, loading]);
+  }, [user, solution, loading, log]);
   
   // Log detalhado na primeira renderização para diagnóstico
   useEffect(() => {
@@ -161,7 +162,7 @@ const SolutionDetails = () => {
             solutionId={solution.id}
             progress={progress}
             startImplementation={startImplementation}
-            continueImplementation={continueImplementation}
+            continueImplementation={async () => await continueImplementation()}
             initializing={initializing}
             completionPercentage={progress?.completion_percentage || 0}
           />
