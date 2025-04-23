@@ -11,7 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 interface VideoLessonsFormProps {
   solutionId: string;
   onSave: () => Promise<void>;
-  saving: boolean;
+  isSaving?: boolean;  // Changed from 'saving' to 'isSaving'
 }
 
 interface VideoLesson {
@@ -26,11 +26,11 @@ interface VideoLesson {
 const VideoLessonsForm: React.FC<VideoLessonsFormProps> = ({
   solutionId,
   onSave,
-  saving
+  isSaving = false  // Default value and renamed
 }) => {
   const [videos, setVideos] = useState<VideoLesson[]>([]);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  const [saving, setSaving] = useState(false);  // Internal saving state
   const { toast } = useToast();
 
   useEffect(() => {
