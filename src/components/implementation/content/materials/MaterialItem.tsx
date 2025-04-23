@@ -10,7 +10,7 @@ interface MaterialItemProps {
     name: string;
     file_url?: string;
     external_url?: string;
-    url?: string; // Adicionado para compatibilidade
+    url?: string;
     size?: number;
     type?: string;
     format?: string;
@@ -37,7 +37,13 @@ export const MaterialItem = ({ material, onDownload }: MaterialItemProps) => {
     if (!url) return 'arquivo';
     try {
       const splitUrl = url.split('/');
-      return splitUrl[splitUrl.length - 1].split('?')[0];
+      let fileName = splitUrl[splitUrl.length - 1].split('?')[0];
+      // Se o nome do arquivo for muito longo, usar apenas os 30 primeiros caracteres
+      if (fileName.length > 30) {
+        const extension = fileName.split('.').pop();
+        fileName = fileName.substring(0, 30) + (extension ? '.' + extension : '');
+      }
+      return fileName;
     } catch (e) {
       console.error("Erro ao extrair nome do arquivo:", e);
       return 'arquivo';
@@ -47,6 +53,14 @@ export const MaterialItem = ({ material, onDownload }: MaterialItemProps) => {
   // Determinar qual URL usar (compatibilidade com diferentes formatos)
   const fileUrl = material.file_url || material.url;
   const externalUrl = material.external_url;
+  
+  console.log("Material render:", { material, fileUrl, externalUrl });
+  
+  // Se não tiver nenhuma URL, não renderiza
+  if (!fileUrl && !externalUrl) {
+    console.warn("Material sem URL:", material);
+    return null;
+  }
   
   const materialFormat = material.format || "Documento";
   const materialType = material.type || "document";

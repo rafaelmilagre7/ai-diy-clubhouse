@@ -7,8 +7,8 @@ export interface Material {
   id: string;
   name: string;
   url?: string;
-  file_url?: string;  // Campo para compatibilidade
-  external_url?: string;  // Para links externos
+  file_url?: string;
+  external_url?: string;
   type: string;
   format: string;
   size?: number;
@@ -32,6 +32,9 @@ export const useMaterialsData = (module: Module) => {
         setLoading(true);
         log("Buscando materiais", { module_id: module.id, solution_id: module.solution_id });
         
+        // Logs para diagnóstico
+        console.log(`Buscando materiais para módulo ${module.id} da solução ${module.solution_id}`);
+        
         // Primeiro buscamos materiais específicos do módulo
         const { data: moduleMaterials, error: moduleError } = await supabase
           .from("solution_resources")
@@ -40,6 +43,9 @@ export const useMaterialsData = (module: Module) => {
           
         if (moduleError) {
           logError("Erro ao buscar materiais do módulo", { error: moduleError });
+          console.error("Erro ao buscar materiais do módulo:", moduleError);
+        } else {
+          console.log(`Materiais específicos do módulo: ${moduleMaterials ? moduleMaterials.length : 0} encontrados`);
         }
         
         // Depois buscamos materiais gerais da solução (exceto vídeos, que são tratados separadamente)
@@ -52,6 +58,9 @@ export const useMaterialsData = (module: Module) => {
           
         if (solutionError) {
           logError("Erro ao buscar materiais da solução", { error: solutionError });
+          console.error("Erro ao buscar materiais da solução:", solutionError);
+        } else {
+          console.log(`Materiais gerais da solução: ${solutionMaterials ? solutionMaterials.length : 0} encontrados`);
         }
         
         // Combinamos os resultados
@@ -62,6 +71,7 @@ export const useMaterialsData = (module: Module) => {
         
         if (allMaterials.length > 0) {
           log("Materiais encontrados", { count: allMaterials.length });
+          console.log(`Total de materiais encontrados: ${allMaterials.length}`);
           
           // Formatar materiais para o formato esperado
           const formattedMaterials = allMaterials.map(material => ({
@@ -79,12 +89,16 @@ export const useMaterialsData = (module: Module) => {
           
           setMaterials(formattedMaterials);
           log("Materiais formatados", { materials: formattedMaterials });
+          console.log("Materiais formatados:", formattedMaterials);
         } else {
           log("Nenhum material encontrado", { module_id: module.id });
+          console.log(`Nenhum material encontrado para o módulo ${module.id}`);
           setMaterials([]);
         }
       } catch (error) {
         logError("Erro ao buscar materiais", { error });
+        console.error("Erro ao buscar materiais:", error);
+        setMaterials([]);
       } finally {
         setLoading(false);
       }

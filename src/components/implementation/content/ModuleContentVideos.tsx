@@ -23,7 +23,6 @@ export const ModuleContentVideos: React.FC<ModuleContentVideosProps> = ({ module
   const [error, setError] = useState<string | null>(null);
   const { log, logError } = useLogging("ModuleContentVideos");
 
-  // Fetch solution data to get videos - otimizado com melhor tratamento de erros
   useEffect(() => {
     const fetchVideos = async () => {
       if (!module || !module.solution_id) {
@@ -38,7 +37,10 @@ export const ModuleContentVideos: React.FC<ModuleContentVideosProps> = ({ module
           solution_id: module.solution_id 
         });
 
-        // Checando se o ID do módulo é um placeholder
+        // Logs para diagnóstico
+        console.log(`Buscando vídeos para módulo ${module.id} da solução ${module.solution_id}`);
+
+        // Verificando se o módulo é um placeholder
         const isPlaceholder = module.id.startsWith('placeholder-');
         
         if (isPlaceholder) {
@@ -51,76 +53,70 @@ export const ModuleContentVideos: React.FC<ModuleContentVideosProps> = ({ module
         // Primeiro, verificamos se há vídeos no conteúdo do módulo
         if (module.content && module.content.videos && Array.isArray(module.content.videos)) {
           log("Encontrados vídeos no conteúdo do módulo", { count: module.content.videos.length });
+          console.log(`Encontrados ${module.content.videos.length} vídeos no conteúdo do módulo`);
           setVideos(module.content.videos);
           setLoading(false);
           return;
         }
         
-        try {
-          // Senão, buscamos recursos de vídeo relacionados ao módulo
-          const { data: moduleResources, error: moduleResourcesError } = await supabase
-            .from("solution_resources")
-            .select("*")
-            .eq("module_id", module.id)
-            .eq("type", "video");
-            
-          if (moduleResourcesError) {
-            logError("Erro ao buscar recursos de vídeo do módulo", { error: moduleResourcesError });
-          } else if (moduleResources && moduleResources.length > 0) {
-            log("Encontrados recursos de vídeo para o módulo", { count: moduleResources.length });
-            
-            const formattedVideos = moduleResources.map(resource => ({
-              id: resource.id,
-              title: resource.name,
-              description: resource.format || "",
-              url: resource.url,
-              youtube_id: extractYoutubeId(resource.url)
-            }));
-            
-            setVideos(formattedVideos);
-            setLoading(false);
-            return;
-          }
-        } catch (err) {
-          logError("Erro ao buscar recursos de vídeo do módulo", { err });
-          // Continuamos para tentar buscar vídeos da solução
+        // Senão, buscamos recursos de vídeo relacionados ao módulo
+        const { data: moduleVideos, error: moduleVideosError } = await supabase
+          .from("solution_resources")
+          .select("*")
+          .eq("module_id", module.id)
+          .eq("type", "video");
+          
+        if (moduleVideosError) {
+          logError("Erro ao buscar vídeos do módulo", { error: moduleVideosError });
+          console.error("Erro ao buscar vídeos do módulo:", moduleVideosError);
+        } else {
+          console.log(`Vídeos específicos do módulo: ${moduleVideos ? moduleVideos.length : 0} encontrados`);
         }
         
-        try {
-          // Se não encontramos vídeos relacionados ao módulo, buscamos vídeos da solução
-          const { data: solutionResources, error: solutionResourcesError } = await supabase
-            .from("solution_resources")
-            .select("*")
-            .eq("solution_id", module.solution_id)
-            .eq("type", "video")
-            .is("module_id", null);
-            
-          if (solutionResourcesError) {
-            logError("Erro ao buscar recursos de vídeo da solução", { error: solutionResourcesError });
-          } else if (solutionResources && solutionResources.length > 0) {
-            log("Encontrados recursos de vídeo para a solução", { count: solutionResources.length });
-            
-            const formattedVideos = solutionResources.map(resource => ({
-              id: resource.id,
-              title: resource.name,
-              description: resource.format || "",
-              url: resource.url,
-              youtube_id: extractYoutubeId(resource.url)
-            }));
-            
-            setVideos(formattedVideos);
-          } else {
-            log("Nenhum vídeo encontrado para o módulo ou solução", {
-              module_id: module.id,
-              solution_id: module.solution_id
-            });
-            setVideos([]);
-          }
-        } catch (err) {
-          logError("Erro ao buscar recursos de vídeo da solução", { err });
+        // Buscamos também vídeos gerais da solução
+        const { data: solutionVideos, error: solutionVideosError } = await supabase
+          .from("solution_resources")
+          .select("*")
+          .eq("solution_id", module.solution_id)
+          .eq("type", "video")
+          .is("module_id", null);
+          
+        if (solutionVideosError) {
+          logError("Erro ao buscar vídeos da solução", { error: solutionVideosError });
+          console.error("Erro ao buscar vídeos da solução:", solutionVideosError);
+        } else {
+          console.log(`Vídeos gerais da solução: ${solutionVideos ? solutionVideos.length : 0} encontrados`);
+        }
+        
+        // Combinamos todos os vídeos encontrados
+        const allVideos = [
+          ...(moduleVideos || []),
+          ...(solutionVideos || [])
+        ];
+        
+        if (allVideos.length > 0) {
+          log("Vídeos encontrados", { count: allVideos.length });
+          console.log(`Total de vídeos encontrados: ${allVideos.length}`);
+          
+          const formattedVideos = allVideos.map(video => ({
+            id: video.id,
+            title: video.name,
+            description: video.format || "",
+            url: video.url,
+            youtube_id: extractYoutubeId(video.url)
+          }));
+          
+          setVideos(formattedVideos);
+          log("Vídeos formatados", { videos: formattedVideos });
+          console.log("Vídeos formatados:", formattedVideos);
+        } else {
+          log("Nenhum vídeo encontrado", { module_id: module.id });
+          console.log(`Nenhum vídeo encontrado para o módulo ${module.id}`);
+          setVideos([]);
         }
       } catch (err) {
         logError("Erro ao carregar vídeos", { err });
+        console.error("Erro ao carregar vídeos:", err);
         setError("Não foi possível carregar os vídeos");
       } finally {
         setLoading(false);
@@ -130,7 +126,7 @@ export const ModuleContentVideos: React.FC<ModuleContentVideosProps> = ({ module
     fetchVideos();
   }, [module, log, logError]);
 
-  // Função melhorada para extrair YouTube ID de URL com tratamento de erro
+  // Função para extrair YouTube ID de URL
   const extractYoutubeId = (url?: string): string | null => {
     if (!url) return null;
     
@@ -178,11 +174,7 @@ export const ModuleContentVideos: React.FC<ModuleContentVideosProps> = ({ module
   }
 
   if (videos.length === 0) {
-    return (
-      <div className="text-center py-6 mt-6 bg-gray-50 rounded-md">
-        <p className="text-muted-foreground">Nenhum vídeo disponível para esta solução.</p>
-      </div>
-    );
+    return null;
   }
 
   return (
