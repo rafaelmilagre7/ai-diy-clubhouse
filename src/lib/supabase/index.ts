@@ -1,3 +1,4 @@
+
 import { createClient } from '@supabase/supabase-js';
 import { Database } from './types';
 export * from '@/types/supabaseTypes';
@@ -22,7 +23,18 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
       // Definir timeout para requisições
       const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 segundos timeout
       
+      // Adicionar log para depurar requisições problemáticas
+      console.log(`[Supabase] Requisição iniciada: ${url}`);
+      
       return fetch(url, { ...options, signal })
+        .then(response => {
+          console.log(`[Supabase] Resposta recebida: ${url} | Status: ${response.status}`);
+          return response;
+        })
+        .catch(error => {
+          console.error(`[Supabase] Erro na requisição: ${url}`, error);
+          throw error;
+        })
         .finally(() => clearTimeout(timeoutId));
     }
   }
@@ -33,11 +45,15 @@ export const fetchSolutionById = async (id: string) => {
   try {
     console.log(`Buscando solução com ID: ${id}`);
     
+    if (!id || typeof id !== 'string' || id.trim() === '') {
+      throw new Error('ID da solução inválido ou não especificado');
+    }
+    
     const { data, error } = await supabase
       .from('solutions')
       .select('*')
       .eq('id', id)
-      .single();
+      .maybeSingle();  // Usar maybeSingle ao invés de single para evitar erros
 
     if (error) {
       console.error('Erro ao buscar solução:', error);
@@ -45,6 +61,7 @@ export const fetchSolutionById = async (id: string) => {
     }
 
     if (!data) {
+      console.error(`Solução com ID ${id} não encontrada`);
       throw new Error('Solução não encontrada');
     }
 

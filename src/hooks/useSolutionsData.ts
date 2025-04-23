@@ -18,21 +18,48 @@ export const useSolutionsData = (
     try {
       log("Buscando soluções...");
       
-      let query = supabase
-        .from("solutions")
-        .select("*")
-        .eq("published", true)
-        .order("created_at", { ascending: false });
+      // Configurar um timeout para a requisição
+      const controller = new AbortController();
+      const { signal } = controller;
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 segundos timeout
       
-      const { data, error } = await query;
-      
-      if (error) {
-        logError("Erro ao buscar soluções:", error);
-        throw error;
+      try {
+        let query = supabase
+          .from("solutions")
+          .select("*")
+          .eq("published", true)
+          .order("created_at", { ascending: false });
+        
+        const { data, error } = await query;
+        
+        clearTimeout(timeoutId);
+        
+        if (error) {
+          logError("Erro ao buscar soluções:", error);
+          throw error;
+        }
+        
+        log(`Encontradas ${data?.length || 0} soluções`);
+        
+        // Verificar se temos dados válidos
+        if (!data || data.length === 0) {
+          log("Nenhuma solução encontrada ou retornada");
+        } else {
+          // Verificar se todas as soluções têm os campos necessários
+          const invalidSolutions = data.filter(sol => !sol.id || !sol.title);
+          if (invalidSolutions.length > 0) {
+            log("Algumas soluções têm dados incompletos", { count: invalidSolutions.length });
+          }
+        }
+        
+        return data as Solution[];
+      } catch (fetchError: any) {
+        clearTimeout(timeoutId);
+        if (fetchError.name === 'AbortError') {
+          throw new Error('Tempo limite excedido ao buscar soluções');
+        }
+        throw fetchError;
       }
-      
-      log(`Encontradas ${data?.length || 0} soluções`);
-      return data as Solution[];
     } catch (error) {
       logError("Erro ao buscar soluções:", error);
       
@@ -59,7 +86,7 @@ export const useSolutionsData = (
     queryFn: fetchSolutions,
     staleTime: 5 * 60 * 1000, // 5 minutos
     refetchOnWindowFocus: false,
-    retry: 1
+    retry: 2 // Tentar 2 vezes antes de falhar
   });
 
   // Filtra as soluções com base na categoria e pesquisa
@@ -74,7 +101,7 @@ export const useSolutionsData = (
     const searchMatch = 
       !searchQuery ||
       solution.title.toLowerCase().includes(searchLower) ||
-      solution.description.toLowerCase().includes(searchLower);
+      (solution.description?.toLowerCase().includes(searchLower) || false);
     
     return categoryMatch && searchMatch;
   });

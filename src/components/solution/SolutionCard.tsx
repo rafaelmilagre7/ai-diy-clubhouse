@@ -25,8 +25,18 @@ export const SolutionCard = ({ solution, onClick, className }: SolutionCardProps
     if (onClick) {
       onClick();
     } else {
-      // Garantindo que usamos o caminho correto
+      // Assegurar que estamos usando o caminho correto
       navigate(`/solutions/${solution.id}`);
+    }
+  };
+
+  // Traduzir nível de dificuldade
+  const translateDifficulty = (difficulty: string) => {
+    switch (difficulty.toLowerCase()) {
+      case "easy": return "Fácil";
+      case "medium": return "Médio";
+      case "advanced": return "Avançado";
+      default: return difficulty;
     }
   };
 
@@ -69,12 +79,21 @@ export const SolutionCard = ({ solution, onClick, className }: SolutionCardProps
           {/* Category and difficulty */}
           <div className="flex items-center justify-between mb-2">
             <Badge variant="outline" className="capitalize text-xs">
-              {solution.category}
+              {solution.category === "revenue" ? "Receita" : 
+               solution.category === "operational" ? "Operacional" : 
+               solution.category === "strategy" ? "Estratégia" : 
+               solution.category}
             </Badge>
             
             {solution.difficulty && (
-              <span className="text-xs text-muted-foreground">
-                {solution.difficulty}
+              <span className={cn(
+                "text-xs px-2 py-1 rounded-full",
+                solution.difficulty.toLowerCase() === "easy" ? "bg-green-100 text-green-800" :
+                solution.difficulty.toLowerCase() === "medium" ? "bg-yellow-100 text-yellow-800" :
+                solution.difficulty.toLowerCase() === "advanced" ? "bg-red-100 text-red-800" :
+                "bg-gray-100 text-gray-800"
+              )}>
+                {translateDifficulty(solution.difficulty)}
               </span>
             )}
           </div>
@@ -91,7 +110,7 @@ export const SolutionCard = ({ solution, onClick, className }: SolutionCardProps
       
       <CardFooter className="px-4 py-3 border-t border-gray-100 flex justify-between items-center">
         <span className="text-xs text-muted-foreground">
-          {new Date(solution.created_at).toLocaleDateString('pt-BR')}
+          {solution.created_at ? new Date(solution.created_at).toLocaleDateString('pt-BR') : ""}
         </span>
         <span className="text-xs font-medium text-primary hover:underline">
           Ver detalhes

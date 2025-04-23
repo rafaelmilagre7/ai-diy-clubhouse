@@ -7,8 +7,17 @@ interface SolutionHeaderSectionProps {
   solution: Solution;
 }
 
+const translateDifficulty = (difficulty: string): string => {
+  switch (difficulty.toLowerCase()) {
+    case "easy": return "Fácil";
+    case "medium": return "Médio";
+    case "advanced": return "Avançado";
+    default: return difficulty;
+  }
+};
+
 const getDifficultyStyles = (difficulty: string) => {
-  switch (difficulty) {
+  switch (difficulty.toLowerCase()) {
     case "easy":
       return "bg-green-100 text-green-800 border-green-200";
     case "medium":
@@ -35,7 +44,7 @@ export const SolutionHeaderSection = ({ solution }: SolutionHeaderSectionProps) 
         >
           {solution.category === "revenue" ? "Receita" : 
            solution.category === "operational" ? "Operacional" : 
-           "Estratégia"}
+           solution.category === "strategy" ? "Estratégia" : solution.category}
         </Badge>
         
         <Badge 
@@ -45,9 +54,7 @@ export const SolutionHeaderSection = ({ solution }: SolutionHeaderSectionProps) 
             getDifficultyStyles(solution.difficulty)
           )}
         >
-          {solution.difficulty === "easy" ? "Fácil" :
-           solution.difficulty === "medium" ? "Médio" :
-           solution.difficulty === "advanced" ? "Avançado" : solution.difficulty}
+          {translateDifficulty(solution.difficulty)}
         </Badge>
         {/* Só mostra tempo estimado se existir e for maior que zero */}
         {solution.estimated_time && solution.estimated_time > 0 && (

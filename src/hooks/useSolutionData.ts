@@ -40,7 +40,27 @@ export const useSolutionData = (solutionId: string | undefined) => {
       
       let solutionData;
       try {
-        solutionData = await fetchSolutionById(solutionId);
+        // Verificar se temos um ID válido
+        if (!solutionId || typeof solutionId !== 'string' || solutionId.trim() === '') {
+          throw new Error('ID da solução é inválido ou não foi fornecido');
+        }
+        
+        // Buscar solução diretamente da tabela
+        const { data, error } = await supabase
+          .from('solutions')
+          .select('*')
+          .eq('id', solutionId)
+          .maybeSingle();
+        
+        if (error) {
+          throw error;
+        }
+        
+        if (!data) {
+          throw new Error(`Solução com ID ${solutionId} não encontrada`);
+        }
+        
+        solutionData = data;
         clearTimeout(timeoutId);
       } catch (fetchError: any) {
         clearTimeout(timeoutId);
