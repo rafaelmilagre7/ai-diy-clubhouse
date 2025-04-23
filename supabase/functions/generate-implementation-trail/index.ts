@@ -27,25 +27,39 @@ serve(async (req) => {
   try {
     // Obter dados da requisição
     const { onboardingData } = await req.json();
+    
+    // Obter o token de autenticação do cabeçalho
     const authHeader = req.headers.get('Authorization');
     
-    if (!authHeader) {
-      return new Response(
-        JSON.stringify({ error: 'Autorização necessária' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-    
-    // Configurar cliente Supabase
+    // Configurar cliente Supabase com a URL e chave anônima
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
       {
         global: {
-          headers: { Authorization: authHeader },
+          headers: { 
+            Authorization: authHeader || '',
+          },
         },
       }
     );
+    
+    // Verificar autenticação do usuário
+    const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
+    
+    if (authError || !user) {
+      console.error('Erro de autenticação:', authError);
+      return new Response(
+        JSON.stringify({ 
+          error: 'Usuário não autenticado ou sessão expirada',
+          details: authError 
+        }),
+        { 
+          status: 401, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
     
     // Obter dados das soluções disponíveis
     const { data: solutions, error: solutionsError } = await supabaseClient
@@ -61,43 +75,38 @@ serve(async (req) => {
       throw new Error('Nenhuma solução disponível para recomendação');
     }
     
-    // Buscar dados de onboarding do usuário
-    const { data: { user } } = await supabaseClient.auth.getUser();
-    
-    if (!user) {
-      throw new Error('Usuário não autenticado');
-    }
-    
-    const { data: onboardingProgress, error: onboardingError } = await supabaseClient
-      .from('onboarding_progress')
+    // Buscar dados de onboarding do usuário (agora usando implementation_profiles)
+    const { data: profileData, error: profileError } = await supabaseClient
+      .from('implementation_profiles')
       .select('*')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
       .limit(1)
       .single();
     
-    if (onboardingError && !onboardingError.message.includes('Results contain 0 rows')) {
-      throw new Error(`Erro ao buscar dados de onboarding: ${onboardingError.message}`);
+    if (profileError && !profileError.message.includes('Results contain 0 rows')) {
+      console.error('Erro ao buscar perfil de implementação:', profileError);
     }
     
     // Definir variáveis que serão usadas para personalização
     let businessGoals = [];
     let industryFocus = '';
-    let aiExperience = {};
+    let aiExperience = 0;
     let companySize = '';
     
-    // Extrair informações do onboarding para melhorar as recomendações
-    if (onboardingProgress) {
-      businessGoals = onboardingProgress.goals || onboardingProgress.business_goals?.goals || [];
-      industryFocus = onboardingProgress.industry_focus?.industry || onboardingProgress.company_sector || '';
-      aiExperience = onboardingProgress.ai_experience || {};
-      companySize = onboardingProgress.company_size || '';
+    // Extrair informações do perfil para melhorar as recomendações
+    if (profileData) {
+      businessGoals = profileData.business_challenges || [];
+      industryFocus = profileData.company_sector || '';
+      aiExperience = profileData.ai_knowledge_level || 0;
+      companySize = profileData.company_size || '';
     }
     
     console.log("Gerando recomendações com base nos dados:", {
-      hasOnboardingData: !!onboardingProgress,
+      hasProfileData: !!profileData,
       goals: businessGoals,
       industry: industryFocus,
+      aiExperience: aiExperience,
       companySize: companySize,
     });
     
@@ -106,21 +115,21 @@ serve(async (req) => {
       let score = 0;
       
       // Pontuação com base na categoria da solução
-      if (businessGoals.includes('revenue_increase') && solution.category === 'revenue') {
+      if (businessGoals.includes('Aumentar Receita') && solution.category === 'revenue') {
         score += 3;
       }
       
-      if (businessGoals.includes('cost_reduction') && solution.category === 'optimization') {
+      if (businessGoals.includes('Reduzir Custos') && solution.category === 'optimization') {
         score += 3;
       }
       
-      if (businessGoals.includes('operational_efficiency') && 
+      if (businessGoals.includes('Otimizar Operações') && 
           (solution.category === 'optimization' || solution.category === 'automation')) {
         score += 2;
       }
       
       // Pontuação com base nas tags
-      if (solution.tags) {
+      if (solution.tags && Array.isArray(solution.tags)) {
         solution.tags.forEach(tag => {
           if (industryFocus && tag.toLowerCase().includes(industryFocus.toLowerCase())) {
             score += 2;
@@ -135,7 +144,13 @@ serve(async (req) => {
       }
       
       // Ajustar com base na dificuldade e experiência com IA
-      const aiLevel = aiExperience.knowledge_level || 'beginner';
+      let aiLevel = 'beginner';
+      
+      if (aiExperience >= 4) {
+        aiLevel = 'advanced';
+      } else if (aiExperience >= 2) {
+        aiLevel = 'intermediate';
+      }
       
       if (solution.difficulty === 'beginner' && aiLevel === 'beginner') {
         score += 2;

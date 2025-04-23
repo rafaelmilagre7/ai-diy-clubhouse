@@ -124,19 +124,31 @@ export const useImplementationTrail = () => {
 
       if (updateError) throw updateError;
 
-      // Chamar função de geração
+      // Obter token de autenticação atual
+      const { data: { session } } = await supabase.auth.getSession();
+      const authToken = session?.access_token;
+
+      if (!authToken) {
+        throw new Error("Sessão de autenticação inválida");
+      }
+
+      // Chamar função de geração com headers de autenticação explícitos
       const { data: generatedData, error: fnError } = await supabase.functions.invoke(
         "generate-implementation-trail",
         {
-          body: {
-            onboardingData
-          },
+          body: { onboardingData },
+          headers: {
+            Authorization: `Bearer ${authToken}`
+          }
         }
       );
 
-      if (fnError) throw fnError;
+      if (fnError) {
+        console.error("Erro na função de geração:", fnError);
+        throw fnError;
+      }
 
-      // Como a edge function ainda não está implementada, vamos criar dados mockados
+      // Usar dados mockados se a edge function não retornar nada
       const mockRecommendations = {
         priority1: [
           {
@@ -162,6 +174,7 @@ export const useImplementationTrail = () => {
         ]
       };
 
+      // Usar dados reais se disponíveis, ou fallback para dados mockados
       const recommendationsToSave = generatedData?.recommendations || mockRecommendations;
 
       // Salvar trilha gerada
