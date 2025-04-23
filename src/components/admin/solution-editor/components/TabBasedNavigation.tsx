@@ -69,14 +69,17 @@ const TabBasedNavigation: React.FC<TabBasedNavigationProps> = ({
         <TabsContent value="checklist">
           <ChecklistTab
             solutionId={solution?.id}
-            onSubmit={onSubmit}
+            onSave={() => onSubmit(currentValues)}
             saving={saving}
           />
         </TabsContent>
         
         <TabsContent value="modules">
           <ModulesTab 
-            solutionId={solution?.id} 
+            solutionId={solution?.id}
+            onSave={() => onSubmit(currentValues)} 
+            saving={saving}
+            currentModuleStep={0}
           />
         </TabsContent>
         
