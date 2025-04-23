@@ -2,6 +2,7 @@
 import { supabase, UserProfile } from "@/lib/supabase";
 import { createUserProfileIfNeeded, fetchUserProfile } from "@/contexts/auth/utils/profileUtils";
 import { determineRoleFromEmail, validateUserRole } from "@/contexts/auth/utils/profileUtils/roleValidation";
+import { UserRole } from "@/types/supabaseTypes";
 
 /**
  * Processa o perfil do usuário durante a inicialização da sessão
@@ -34,7 +35,9 @@ export const processUserProfile = async (
     
     // Verificar e atualizar o papel do usuário se necessário
     if (profile.role) {
-      const validatedRole = await validateUserRole(profile.id, profile.role, email);
+      // Garantindo que profile.role seja do tipo UserRole antes de passar para validateUserRole
+      const currentRole = profile.role as UserRole;
+      const validatedRole = await validateUserRole(profile.id, currentRole, email);
       if (validatedRole !== profile.role) {
         profile.role = validatedRole;
       }
