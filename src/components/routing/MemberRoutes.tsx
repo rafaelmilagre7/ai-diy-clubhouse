@@ -2,6 +2,7 @@
 import { ReactNode } from "react";
 import { Route, Routes, Navigate } from "react-router-dom";
 import MemberLayout from "@/components/layout/MemberLayout";
+import MemberSolutionRedirect from "./MemberSolutionRedirect";
 import Dashboard from "@/pages/member/Dashboard";
 import Solutions from "@/pages/member/Solutions";
 import SolutionDetails from "@/pages/member/SolutionDetails";
@@ -16,9 +17,9 @@ import NewSuggestion from "@/pages/member/NewSuggestion";
 import Achievements from "@/pages/member/Achievements";
 import Benefits from "@/pages/member/Benefits";
 import ImplementationProfilePage from "@/pages/ImplementationProfile";
+import ImplementationTrailPage from "@/pages/member/ImplementationTrailPage";
+import { SolutionNotFound } from "@/components/solution/SolutionNotFound";
 import { NotFoundContent } from "@/components/implementation/NotFoundContent";
-import { ImplementationNotFound } from "@/components/implementation/ImplementationNotFound";
-import MemberSolutionRedirect from "./MemberSolutionRedirect";
 
 interface MemberRoutesProps {
   children?: ReactNode;
@@ -31,41 +32,50 @@ const MemberRoutes = ({ children }: MemberRoutesProps) => {
   return (
     <Routes>
       <Route element={<MemberLayout>{children}</MemberLayout>}>
+        {/* Redirect da raiz para o dashboard */}
         <Route index element={<Navigate to="/dashboard" replace />} />
+        
+        {/* Dashboard */}
+        <Route path="dashboard" element={<Dashboard />} />
         
         {/* Perfil de Implementação */}
         <Route path="perfil-de-implementacao" element={<ImplementationProfilePage />} />
-
-        <Route path="dashboard" element={<Dashboard />} />
-        <Route path="solutions" element={<Solutions />} />
         
-        {/* Rotas para soluções - formato mais recente */}
+        {/* Soluções */}
+        <Route path="solutions" element={<Solutions />} />
         <Route path="solutions/:id" element={<SolutionDetails />} />
         
-        {/* Rota antiga redirecionada */}
+        {/* Compatibilidade com URLs antigas */}
         <Route path="solution/:id" element={<MemberSolutionRedirect />} />
         
-        {/* Rotas de implementação */}
+        {/* Implementação de Soluções */}
         <Route path="implement/:id/:moduleIdx" element={<SolutionImplementation />} />
         <Route path="implementation/:id" element={<SolutionImplementation />} />
         <Route path="implementation/:id/:moduleIdx" element={<SolutionImplementation />} />
+        <Route path="implementation-trail" element={<ImplementationTrailPage />} />
         
-        {/* Rotas do perfil */}
+        {/* Páginas de erro */}
+        <Route path="solution/not-found" element={<SolutionNotFound />} />
+        <Route path="implementation/not-found" element={<NotFoundContent />} />
+        
+        {/* Perfil */}
         <Route path="profile" element={<Profile />} />
         <Route path="profile/edit" element={<EditProfile />} />
         
-        {/* Demais rotas */}
+        {/* Ferramentas */}
         <Route path="tools" element={<Tools />} />
         <Route path="tools/:id" element={<ToolDetails />} />
+        
+        {/* Benefícios */}
         <Route path="benefits" element={<Benefits />} />
+        
+        {/* Sugestões */}
         <Route path="suggestions" element={<Suggestions />} />
         <Route path="suggestions/:id" element={<SuggestionDetails />} />
         <Route path="suggestions/new" element={<NewSuggestion />} />
-        <Route path="achievements" element={<Achievements />} />
         
-        {/* Páginas não encontradas */}
-        <Route path="solution/not-found" element={<NotFoundContent />} />
-        <Route path="implementation/not-found" element={<ImplementationNotFound />} />
+        {/* Conquistas */}
+        <Route path="achievements" element={<Achievements />} />
       </Route>
     </Routes>
   );

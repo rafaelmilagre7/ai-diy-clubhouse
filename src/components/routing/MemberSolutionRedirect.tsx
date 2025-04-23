@@ -49,7 +49,7 @@ const MemberSolutionRedirect = () => {
         } else if (location.pathname.includes("/implement/") || location.pathname.includes("/implementation/")) {
           // Se for implementação, usar o formato correto
           const moduleIdx = location.pathname.split("/").pop() || "0";
-          const newPath = `/implement/${id}/${moduleIdx}`;
+          const newPath = `/implementation/${id}/${moduleIdx}`;
           log("Redirecionando para implementação", { from: location.pathname, to: newPath });
           navigate(newPath, { replace: true });
         }

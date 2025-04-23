@@ -15,18 +15,18 @@ import { useSolutionData } from "@/hooks/useSolutionData";
 import { useSolutionInteractions } from "@/hooks/useSolutionInteractions";
 import { useLogging } from "@/hooks/useLogging";
 import LoadingScreen from "@/components/common/LoadingScreen";
+import { toast } from "sonner";
 
 const SolutionDetails = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { log, logError } = useLogging("SolutionDetails");
-  const [networkError, setNetworkError] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
   const initialRenderRef = useRef(true);
   const queryClient = useQueryClient();
   
   // Fetch solution data with the hook that includes progress
-  const { solution, loading, error, progress, refetch } = useSolutionData(id);
+  const { solution, loading, error, progress, refetch, networkError } = useSolutionData(id);
   
   // Solution interaction handlers
   const { 
@@ -37,27 +37,6 @@ const SolutionDetails = () => {
     downloadMaterials 
   } = useSolutionInteractions(id, progress);
   
-  // Verificar se há erro de rede - uma única vez quando o erro muda
-  useEffect(() => {
-    if (error) {
-      log("Erro detectado:", { errorMessage: error.message, id });
-      if (error.message && (
-        error.message.includes("fetch") || 
-        error.message.includes("network") ||
-        error.message.includes("Failed to fetch") ||
-        error.message.includes("ERR_INSUFFICIENT_RESOURCES") ||
-        error.message.includes("TypeError") ||
-        error.message.includes("ECONNREFUSED")
-      )) {
-        setNetworkError(true);
-      } else {
-        setNetworkError(false);
-      }
-    } else {
-      setNetworkError(false);
-    }
-  }, [error, log]);
-
   // Log detalhado na primeira renderização
   useEffect(() => {
     if (initialRenderRef.current) {
@@ -90,6 +69,7 @@ const SolutionDetails = () => {
   const handleRetry = () => {
     const newRetryCount = retryCount + 1;
     setRetryCount(newRetryCount);
+    toast.info("Tentando carregar novamente...");
     
     // Aguardar um tempo proporcional ao número de tentativas
     const delay = Math.min(1000 * Math.pow(1.5, newRetryCount), 10000); // máximo de 10 segundos
@@ -120,6 +100,31 @@ const SolutionDetails = () => {
           <AlertTitle>Erro de conexão</AlertTitle>
           <AlertDescription>
             Não foi possível conectar ao servidor. Verifique sua conexão com a internet e tente novamente.
+          </AlertDescription>
+          <Button 
+            onClick={handleRetry} 
+            className="mt-4 flex items-center gap-2"
+            variant="outline"
+            disabled={loading}
+          >
+            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} /> 
+            Tentar novamente
+          </Button>
+        </Alert>
+      </div>
+    );
+  }
+  
+  if (error) {
+    logError("Erro ao carregar solução", { error, id });
+    return (
+      <div className="max-w-5xl mx-auto py-12 px-4">
+        <SolutionBackButton />
+        <Alert variant="destructive" className="my-8">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Erro ao carregar solução</AlertTitle>
+          <AlertDescription>
+            {error.message || "Ocorreu um erro ao carregar os detalhes desta solução."}
           </AlertDescription>
           <Button 
             onClick={handleRetry} 

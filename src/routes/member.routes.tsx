@@ -20,6 +20,8 @@ import Achievements from "@/pages/member/Achievements";
 import Benefits from "@/pages/member/Benefits";
 import ImplementationTrailPage from "@/pages/member/ImplementationTrailPage";
 import ImplementationProfilePage from "@/pages/ImplementationProfile";
+import { SolutionNotFound } from "@/components/solution/SolutionNotFound";
+import { NotFoundContent } from "@/components/implementation/NotFoundContent";
 
 // Debug log para verificar carregamento de rotas
 console.log("Carregando memberRoutes");
@@ -46,6 +48,10 @@ export const memberRoutes = (
       <Route path="implementation/:id" element={<SolutionImplementation />} />
       <Route path="implementation/:id/:moduleIdx" element={<SolutionImplementation />} />
       <Route path="implementation-trail" element={<ImplementationTrailPage />} />
+      
+      {/* Páginas de erro para soluções */}
+      <Route path="solution/not-found" element={<SolutionNotFound />} />
+      <Route path="implementation/not-found" element={<NotFoundContent />} />
       
       {/* Perfil */}
       <Route path="profile" element={<Profile />} />

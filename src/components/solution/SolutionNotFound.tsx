@@ -2,7 +2,7 @@
 import React from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Search, ArrowLeft, List, RefreshCw } from 'lucide-react';
+import { Search, ArrowLeft, List, RefreshCw, Home } from 'lucide-react';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
 
@@ -35,6 +35,11 @@ export const SolutionNotFound = () => {
         navigate('/solutions', { replace: true });
       }
     }, 500);
+  };
+  
+  const handleGoToDashboard = () => {
+    // Navegar para o dashboard
+    navigate('/dashboard', { replace: true });
   };
   
   return (
@@ -85,6 +90,15 @@ export const SolutionNotFound = () => {
           >
             <RefreshCw className="h-4 w-4" />
             Tentar novamente
+          </Button>
+          
+          <Button 
+            variant="ghost" 
+            className="flex items-center gap-2"
+            onClick={handleGoToDashboard}
+          >
+            <Home className="h-4 w-4" />
+            Dashboard
           </Button>
         </div>
       </div>

@@ -3,6 +3,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/auth';
 import { useLogging } from '@/hooks/useLogging';
+import { toast } from 'sonner';
+import { useQueryClient } from '@tanstack/react-query';
 
 export const useSolutionData = (solutionId: string | undefined) => {
   const { user } = useAuth();
@@ -12,6 +14,8 @@ export const useSolutionData = (solutionId: string | undefined) => {
   const [error, setError] = useState<Error | null>(null);
   const [progress, setProgress] = useState<any>(null);
   const [retryAttempts, setRetryAttempts] = useState(0);
+  const [networkError, setNetworkError] = useState(false);
+  const queryClient = useQueryClient();
   const MAX_RETRIES = 3;
 
   // Função para buscar dados da solução
@@ -23,6 +27,7 @@ export const useSolutionData = (solutionId: string | undefined) => {
 
     try {
       setLoading(true);
+      setNetworkError(false);
       log('Buscando dados da solução', { solutionId, retryAttempt: retryAttempts });
 
       let options = {};
@@ -39,6 +44,10 @@ export const useSolutionData = (solutionId: string | undefined) => {
         .single();
 
       if (error) {
+        if (error.message && error.message.includes('fetch')) {
+          setNetworkError(true);
+          throw new Error(`Erro de conexão: ${error.message}`);
+        }
         throw new Error(`Erro ao buscar solução: ${error.message}`);
       }
       
@@ -51,6 +60,20 @@ export const useSolutionData = (solutionId: string | undefined) => {
 
       setSolution(data);
       log('Dados da solução carregados', { solution: data });
+
+      // Pré-carregar dados relacionados para melhorar UX
+      queryClient.prefetchQuery({
+        queryKey: ['solution-modules', solutionId],
+        queryFn: async () => {
+          const { data } = await supabase
+            .from('modules')
+            .select('*')
+            .eq('solution_id', solutionId)
+            .order('module_order', { ascending: true });
+          return data;
+        },
+        staleTime: 2 * 60 * 1000 // 2 minutos
+      });
 
       // Get progress if user is logged in
       if (user) {
@@ -81,6 +104,18 @@ export const useSolutionData = (solutionId: string | undefined) => {
       logError('Erro ao carregar dados da solução', { error: err });
       console.error('Error fetching solution data:', err);
       
+      // Verificar se é erro de rede
+      if (err.message && (
+        err.message.includes('fetch') || 
+        err.message.includes('network') ||
+        err.message.includes('Failed to fetch')
+      )) {
+        setNetworkError(true);
+        if (retryAttempts === 0) {
+          toast.error("Problemas de conexão. Tentando novamente...");
+        }
+      }
+      
       // Se ainda estamos dentro do limite de tentativas
       if (retryAttempts < MAX_RETRIES) {
         const newRetryAttempts = retryAttempts + 1;
@@ -102,7 +137,7 @@ export const useSolutionData = (solutionId: string | undefined) => {
     } finally {
       setLoading(false);
     }
-  }, [solutionId, user, log, logError, retryAttempts]);
+  }, [solutionId, user, log, logError, retryAttempts, queryClient]);
 
   useEffect(() => {
     // Reset state when solutionId changes
@@ -111,16 +146,25 @@ export const useSolutionData = (solutionId: string | undefined) => {
       setProgress(null);
       setError(null);
       setRetryAttempts(0);
+      setNetworkError(false);
       fetchSolutionData();
     }
   }, [solutionId, fetchSolutionData]);
 
   // Function to refetch data
-  const refetch = async () => {
+  const refetch = useCallback(async () => {
     setError(null);
     setRetryAttempts(0);
     return fetchSolutionData(true); // Force fresh data on manual refetch
-  };
+  }, [fetchSolutionData]);
 
-  return { solution, setSolution, loading, error, progress, refetch };
+  return { 
+    solution, 
+    setSolution, 
+    loading, 
+    error, 
+    progress, 
+    refetch,
+    networkError 
+  };
 };
