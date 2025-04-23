@@ -1,3 +1,4 @@
+
 import React from "react";
 import { UseFormReturn } from "react-hook-form";
 import { ResourceFormValues } from "../hooks/useResourcesFormData";
@@ -30,9 +31,9 @@ const ResourceMaterialsTab: React.FC<ResourceMaterialsTabProps> = ({
       />
 
       <MaterialsList 
-        materials={materials} 
-        loading={loading} 
-        onRemove={handleRemoveResource} 
+        materials={materials}
+        loading={loading}
+        onRemove={handleRemoveResource}
       />
       
       {/* Hidden input to keep form working */}

@@ -6,67 +6,55 @@ import { Resource } from "../types/ResourceTypes";
 import MaterialItem from "./MaterialItem";
 
 interface MaterialsListProps {
-  filteredResources: Resource[];
-  searchQuery: string;
-  handleRemoveResource: (id?: string) => Promise<void>;
-  formatFileSize: (bytes?: number) => string;
+  materials: Resource[];
+  loading?: boolean;
+  searchQuery?: string;
+  onRemove: (id: string) => Promise<void>;
+  formatFileSize?: (bytes?: number) => string;
 }
 
-const ResourceList: React.FC<MaterialsListProps> = ({ 
-  filteredResources, 
-  searchQuery, 
-  handleRemoveResource,
-  formatFileSize
+const MaterialsList: React.FC<MaterialsListProps> = ({ 
+  materials, 
+  searchQuery = "",
+  onRemove,
+  formatFileSize = (bytes?: number) => {
+    if (!bytes) return "Desconhecido";
+    if (bytes < 1024) return bytes + " bytes";
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + " KB";
+    return (bytes / (1024 * 1024)).toFixed(2) + " MB";
+  },
+  loading = false
 }) => {
+  if (loading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Materiais Adicionados</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex justify-center items-center py-10">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card>
       <CardHeader>
         <CardTitle className="text-base">Materiais Adicionados</CardTitle>
       </CardHeader>
       <CardContent>
-        {filteredResources.length > 0 ? (
+        {materials.length > 0 ? (
           <ScrollArea className="h-[400px] pr-4">
             <div className="space-y-3">
-              {filteredResources.map((resource) => (
-                <div 
-                  key={resource.id} 
-                  className="flex items-center justify-between p-3 border rounded-md hover:bg-muted/50 transition-colors"
-                >
-                  <div className="flex items-center space-x-3">
-                    <div className="flex-shrink-0">
-                      {resource.type === 'image' && (
-                        <div className="w-10 h-10 bg-gray-100 rounded overflow-hidden">
-                          <img src={resource.url} alt={resource.name} className="w-full h-full object-cover" />
-                        </div>
-                      )}
-                      {resource.type !== 'image' && (
-                        <div className="w-10 h-10 flex items-center justify-center bg-gray-100 rounded">
-                          <span className="text-xs font-medium">{resource.format?.toUpperCase() || 'DOC'}</span>
-                        </div>
-                      )}
-                    </div>
-                    <div>
-                      <div className="font-medium truncate max-w-[200px]">{resource.name}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {resource.type} • {formatFileSize(resource.size)}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex space-x-2">
-                    <button 
-                      onClick={() => window.open(resource.url, '_blank')}
-                      className="text-blue-500 hover:text-blue-700 text-sm"
-                    >
-                      Ver
-                    </button>
-                    <button 
-                      onClick={() => handleRemoveResource(resource.id)}
-                      className="text-red-500 hover:text-red-700 text-sm"
-                    >
-                      Remover
-                    </button>
-                  </div>
-                </div>
+              {materials.map((resource) => (
+                <MaterialItem 
+                  key={resource.id}
+                  material={resource}
+                  onRemove={() => resource.id && onRemove(resource.id)}
+                />
               ))}
             </div>
           </ScrollArea>
@@ -84,4 +72,4 @@ const ResourceList: React.FC<MaterialsListProps> = ({
   );
 };
 
-export default ResourceList;
+export default MaterialsList;
