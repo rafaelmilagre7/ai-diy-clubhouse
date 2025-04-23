@@ -37,7 +37,6 @@ serve(async (req) => {
 
     // Configurar cliente Supabase
     const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
-    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY') || '';
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
     
     if (!supabaseUrl || !supabaseServiceKey) {
@@ -50,7 +49,12 @@ serve(async (req) => {
     console.log("Token JWT extraído do cabeçalho");
 
     // Usar a service_role key para operações administrativas
-    const adminClient = createClient(supabaseUrl, supabaseServiceKey);
+    const adminClient = createClient(supabaseUrl, supabaseServiceKey, {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+      }
+    });
     
     // Decodificar o token JWT para obter o user_id
     let userId = null;
@@ -80,7 +84,8 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ 
           error: 'Erro de autenticação', 
-          message: 'Falha ao processar token de autenticação' 
+          message: 'Falha ao processar token de autenticação',
+          details: jwtError.message 
         }),
         { 
           status: 401, 
@@ -90,6 +95,7 @@ serve(async (req) => {
     }
     
     // Verificar perfil de implementação usando o ID do usuário extraído do token
+    console.log("Verificando perfil de implementação para usuário:", userId);
     const { data: profileData, error: profileError } = await adminClient
       .from('implementation_profiles')
       .select('*')
@@ -116,7 +122,11 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ 
           error: 'Perfil incompleto', 
-          message: 'Complete seu perfil de implementação para gerar recomendações.' 
+          message: 'Complete seu perfil de implementação para gerar recomendações.',
+          details: {
+            profileFound: !!profileData,
+            isCompleted: profileData?.is_completed || false
+          }
         }),
         { 
           status: 400, 
@@ -314,7 +324,7 @@ serve(async (req) => {
 
         const openaiData = await openaiResponse.json();
         const openaiContent = openaiData.choices[0].message.content;
-        console.log("Resposta da OpenAI recebida:");
+        console.log("Resposta da OpenAI recebida");
         
         try {
           recommendations = JSON.parse(openaiContent);

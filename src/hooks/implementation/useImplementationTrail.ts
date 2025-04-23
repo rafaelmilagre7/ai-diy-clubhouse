@@ -17,7 +17,7 @@ export type ImplementationTrail = {
 };
 
 export const useImplementationTrail = () => {
-  const { user } = useAuth();
+  const { user, session } = useAuth();
   const [trail, setTrail] = useState<ImplementationTrail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -100,9 +100,9 @@ export const useImplementationTrail = () => {
 
   // Gerar nova trilha
   const generateImplementationTrail = async (onboardingData: any) => {
-    if (!user) {
-      setError("Usuário não autenticado");
-      console.log("generateImplementationTrail: Usuário não autenticado");
+    if (!user || !session) {
+      setError("Usuário não autenticado ou sessão inválida");
+      console.log("generateImplementationTrail: Usuário não autenticado ou sessão inválida");
       return null;
     }
 
@@ -151,19 +151,14 @@ export const useImplementationTrail = () => {
       }
 
       // Obter token de autenticação atual
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        console.error("Sessão de autenticação não encontrada");
-        throw new Error("Sessão de autenticação não encontrada");
-      }
-      
-      const authToken = session.access_token;
+      const authToken = session?.access_token;
       if (!authToken) {
         console.error("Token de autenticação não encontrado na sessão");
         throw new Error("Token de autenticação não encontrado");
       }
 
       console.log("generateImplementationTrail: Invocando edge function com token de autenticação");
+      console.log("Token de autenticação:", authToken.slice(0, 10) + "...");
       
       // Chamar função de geração com headers de autenticação explícitos
       const { data: generatedData, error: fnError } = await supabase.functions.invoke(
