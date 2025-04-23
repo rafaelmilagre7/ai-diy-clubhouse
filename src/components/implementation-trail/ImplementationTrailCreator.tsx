@@ -4,7 +4,7 @@ import { useImplementationTrail } from "@/hooks/implementation/useImplementation
 import { useSolutionsData } from "@/hooks/useSolutionsData";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Loader2, RefreshCw, AlertTriangle, HelpCircle, Info } from "lucide-react";
+import { Loader2, RefreshCw, AlertTriangle, HelpCircle, Info, Bug } from "lucide-react";
 import { TrailSolutionsList } from "./TrailSolutionsList";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
@@ -45,7 +45,13 @@ export const ImplementationTrailCreator = () => {
       
       ["priority1", "priority2", "priority3"].forEach((priority, idx) => {
         const items = (trail as any)[priority] || [];
+        
         items.forEach((item: any) => {
+          if (!item || !item.solutionId) {
+            console.warn('Item inválido encontrado na trilha:', item);
+            return;
+          }
+          
           const solution = allSolutions.find(s => s.id === item.solutionId);
           if (solution) {
             result.push({
@@ -71,6 +77,7 @@ export const ImplementationTrailCreator = () => {
       setIsGenerating(true);
       setAttemptCount(prev => prev + 1);
       
+      console.log("Iniciando geração da trilha com retentativas...");
       // Usar generateWithRetries para até 3 tentativas automáticas com delays
       await generateWithRetries({}, 3);
       toast.success("Trilha de implementação gerada com sucesso!");
@@ -173,6 +180,15 @@ export const ImplementationTrailCreator = () => {
               >
                 <HelpCircle className="mr-2 h-4 w-4" />
                 Verificar Perfil
+              </Button>
+              
+              <Button
+                variant="outline"
+                onClick={() => setShowDebug(!showDebug)}
+                className="text-yellow-600 border-yellow-300"
+              >
+                <Bug className="mr-2 h-4 w-4" />
+                Diagnóstico
               </Button>
             </div>
             

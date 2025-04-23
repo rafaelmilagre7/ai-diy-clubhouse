@@ -152,14 +152,18 @@ export const useImplementationTrail = () => {
 
       // Obter token de autenticação atual
       const { data: { session } } = await supabase.auth.getSession();
-      const authToken = session?.access_token;
-
+      if (!session) {
+        throw new Error("Sessão de autenticação não encontrada");
+      }
+      
+      const authToken = session.access_token;
       if (!authToken) {
-        console.error("Sessão de autenticação inválida");
-        throw new Error("Sessão de autenticação inválida");
+        console.error("Token de autenticação não encontrado na sessão");
+        throw new Error("Token de autenticação não encontrado");
       }
 
-      console.log("generateImplementationTrail: Invocando edge function");
+      console.log("generateImplementationTrail: Invocando edge function com token de autenticação");
+      
       // Chamar função de geração com headers de autenticação explícitos
       const { data: generatedData, error: fnError } = await supabase.functions.invoke(
         "generate-implementation-trail",
@@ -256,9 +260,11 @@ export const useImplementationTrail = () => {
     
     while (retries <= maxRetries && !success) {
       try {
+        console.log(`Tentativa ${retries + 1} de ${maxRetries + 1} para gerar trilha`);
         result = await generateImplementationTrail(onboardingData);
         if (result) {
           success = true;
+          console.log(`Tentativa ${retries + 1} bem-sucedida!`);
         } else {
           retries++;
           if (retries <= maxRetries) {
