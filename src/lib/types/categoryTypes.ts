@@ -12,8 +12,9 @@ import {
   getCategoryStyles 
 } from './appTypes';
 
+// Usando export type para re-exportar tipos quando isolatedModules está ativado
+export type { SolutionCategory };
 export { 
-  SolutionCategory,
   isSolutionCategory,
   toSolutionCategory,
   getCategoryDisplayName,
