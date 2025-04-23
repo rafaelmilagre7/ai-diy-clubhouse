@@ -1,5 +1,5 @@
 
-import React, { useCallback } from "react";
+import React, { useCallback, useEffect } from "react";
 import { Module } from "@/lib/supabase";
 import { ModuleContentText } from "./ModuleContentText";
 import { ContentTypeSwitcher } from "./ContentTypeSwitcher";
@@ -19,6 +19,16 @@ export const ModuleContentRenderer = ({ module, onInteraction }: ModuleContentRe
     log("Interação do usuário com módulo", { module_id: module.id });
     onInteraction();
   }, [module.id, onInteraction, log]);
+  
+  // Efeito para detectar primeiro carregamento
+  useEffect(() => {
+    // Registrar renderização do módulo
+    log("Módulo renderizado", { 
+      module_id: module.id,
+      module_type: module.type,
+      module_title: module.title
+    });
+  }, [module.id, module.type, module.title, log]);
   
   if (!module.content) {
     return (

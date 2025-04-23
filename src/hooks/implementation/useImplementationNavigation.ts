@@ -2,7 +2,6 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import { useLogging } from "@/hooks/useLogging";
-import { toast } from "sonner";
 
 export const useImplementationNavigation = () => {
   const { id, moduleIndex, moduleIdx } = useParams<{ 
@@ -11,7 +10,7 @@ export const useImplementationNavigation = () => {
     moduleIdx: string;
   }>();
   
-  const { log, logError } = useLogging("useImplementationNavigation");
+  const { log } = useLogging("useImplementationNavigation");
   
   // Normaliza os parâmetros, suportando tanto /implement/:id/:moduleIdx quanto /implementation/:id/:moduleIdx
   const moduleIdxParam = moduleIndex || moduleIdx || "0";
@@ -24,18 +23,19 @@ export const useImplementationNavigation = () => {
   // Verificar se temos um ID válido
   useEffect(() => {
     if (!id) {
-      logError("ID da implementação não encontrado");
-      toast.error("Não foi possível carregar a implementação");
-      navigate("/dashboard");
+      log("ID da implementação não encontrado, redirecionando para dashboard");
+      navigate("/dashboard", { replace: true });
     }
-  }, [id, navigate, logError]);
+  }, [id, navigate, log]);
 
-  // Se houver um erro de navegação, tenta corrigir
+  // Corrigir problemas de URL inconsistente
   useEffect(() => {
     const path = window.location.pathname;
-    if ((path.includes("/implementation/") || path.includes("/implement/")) && 
-        !path.includes(`/${moduleIdxNumber}`)) {
-      // URL incorreta, vamos corrigir
+    
+    // Só fazer correção se precisar
+    if (path.includes("/implementation/") || 
+        (path.includes("/implement/") && !path.includes(`/${moduleIdxNumber}`))) {
+      // URL incorreta, vamos corrigir de forma silenciosa
       const correctPath = `${basePath}/${id}/${moduleIdxNumber}`;
       log("Corrigindo URL de implementação", { from: path, to: correctPath });
       navigate(correctPath, { replace: true });
@@ -44,24 +44,20 @@ export const useImplementationNavigation = () => {
   
   // Navigate to next module
   const handleComplete = () => {
-    console.log(`Navegando para o próximo módulo: ${moduleIdxNumber + 1}`);
     navigate(`${basePath}/${id}/${moduleIdxNumber + 1}`, { replace: true });
   };
   
   // Navigate to previous module
   const handlePrevious = () => {
     if (moduleIdxNumber > 0) {
-      console.log(`Navegando para o módulo anterior: ${moduleIdxNumber - 1}`);
       navigate(`${basePath}/${id}/${moduleIdxNumber - 1}`, { replace: true });
     } else {
-      console.log(`Voltando para a página de solução: ${id}`);
       navigate(`/solutions/${id}`, { replace: true });
     }
   };
   
   // Navigate to specific module
   const handleNavigateToModule = (moduleIdx: number) => {
-    console.log(`Navegando para o módulo específico: ${moduleIdx}`);
     navigate(`${basePath}/${id}/${moduleIdx}`, { replace: true });
   };
   

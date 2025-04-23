@@ -49,38 +49,15 @@ const Solutions = () => {
     setSearchParams(params);
   }, [activeCategory, searchQuery, setSearchParams]);
 
-  // Pré-carregar detalhes das soluções quando listar todas
-  useEffect(() => {
-    if (solutions && solutions.length > 0 && !loading) {
-      // Prefetch das primeiras 3 soluções para melhorar a experiência
-      solutions.slice(0, 3).forEach(solution => {
-        queryClient.prefetchQuery({
-          queryKey: ['solution', solution.id],
-          queryFn: async () => null, // Apenas para registrar a chave
-          staleTime: 2 * 60 * 1000 // 2 minutos
-        });
-      });
-    }
-  }, [solutions, loading, queryClient]);
-
-  // Log para diagnóstico
-  useEffect(() => {
-    log("Solutions page loaded", { 
-      solutionsCount: filteredSolutions?.length || 0,
-      activeCategory,
-      isLoading: loading
-    });
-  }, [filteredSolutions, activeCategory, loading, log]);
-
   // Função para lidar com a mudança de categoria
   const handleCategoryChange = (category: string) => {
     setActiveCategory(category);
   };
 
-  // Função para lidar com cliques nas soluções
+  // Função para lidar com cliques nas soluções - corrigida para usar o caminho padrão /solutions/:id
   const handleSolutionClick = (solution: Solution) => {
     log("Navegando para solução", { solutionId: solution.id, title: solution.title });
-    navigate(`/solution/${solution.id}`);
+    navigate(`/solutions/${solution.id}`);
   };
 
   const categories = [

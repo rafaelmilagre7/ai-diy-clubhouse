@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useModuleImplementation } from "@/hooks/useModuleImplementation";
 import LoadingScreen from "@/components/common/LoadingScreen";
 import { ImplementationHeader } from "@/components/implementation/ImplementationHeader";
@@ -18,6 +18,9 @@ import { GlassCard } from "@/components/ui/GlassCard";
 import { ImplementationTabsNavigation } from "@/components/implementation/ImplementationTabsNavigation";
 
 const SolutionImplementation = () => {
+  const initialLoadRef = useRef(true);
+  
+  // Carregar dados do módulo
   const {
     solution,
     modules,
@@ -27,9 +30,11 @@ const SolutionImplementation = () => {
     progress
   } = useModuleImplementation();
   
+  // Estado da aba ativa
   const [activeTab, setActiveTab] = useState("tools");
   const { log, logError } = useLogging();
   
+  // Funcionalidade de conclusão
   const {
     isCompleting,
     isCompleted,
@@ -42,52 +47,45 @@ const SolutionImplementation = () => {
     setCompletedModules: () => {}
   });
   
+  // IDs para comentários em tempo real
   const solutionId = solution?.id || "";
   const moduleId = currentModule?.id || "";
   
+  // Controle de comentários em tempo real
   const enableRealtimeComments = !!solution && 
                                 !!currentModule && 
                                 activeTab === "comments";
   
   useRealtimeComments(solutionId, moduleId, enableRealtimeComments);
   
+  // Efeito para registrar primeira carga
   useEffect(() => {
-    if (activeTab === "comments" && solution && currentModule) {
-      log("Aba de comentários ativada", { 
-        solutionId: solution.id, 
-        moduleId: currentModule.id
-      });
+    if (initialLoadRef.current && !loading) {
+      initialLoadRef.current = false;
+      
+      if (solution) {
+        log("Página de implementação carregada com sucesso", {
+          solution_id: solution.id,
+          solution_title: solution.title,
+          module_count: modules?.length
+        });
+      }
     }
-  }, [activeTab, solution, currentModule, log]);
+  }, [loading, solution, modules, log]);
   
+  // Função para completar implementação
   const onComplete = async () => {
-    const success = await handleConfirmImplementation();
-    if (success) {
-      log("Implementation completed successfully", { solution_id: solution?.id });
-    }
+    await handleConfirmImplementation();
   };
   
-  useEffect(() => {
-    if (currentModule && solution) {
-      log("Module loaded", { 
-        solution_id: solution.id,
-        solution_title: solution.title,
-        module_id: currentModule.id,
-        module_title: currentModule.title,
-        module_type: currentModule.type,
-        has_content: !!currentModule.content,
-        content_keys: currentModule.content ? Object.keys(currentModule.content) : []
-      });
-    }
-  }, [currentModule, solution, log]);
-  
+  // Mostra loading enquanto carrega
   if (loading) {
     return <LoadingScreen />;
   }
   
+  // Se não encontrou solução
   if (!solution) {
-    const errorMsg = "Solution not found";
-    logError("Implementation not found", { error: errorMsg, solution_id: solution?.id });
+    logError("Solução não encontrada na implementação");
     return <ImplementationNotFound />;
   }
   

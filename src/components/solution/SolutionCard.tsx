@@ -58,6 +58,12 @@ export const SolutionCard = ({ solution, onClick }: SolutionCardProps) => {
     solution.difficulty in difficultyColors
       ? difficultyColors[solution.difficulty as keyof typeof difficultyColors]
       : difficultyColors.default;
+      
+  // Usar diretamente o onClick passado por props, mantendo o caminho consistente
+  const handleClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    onClick();
+  };
 
   return (
     <Card 
@@ -66,7 +72,7 @@ export const SolutionCard = ({ solution, onClick }: SolutionCardProps) => {
         "bg-gradient-to-br",
         gradientClass
       )}
-      onClick={onClick}
+      onClick={handleClick}
     >
       <CardContent className="p-0">
         {/* Thumbnail */}
@@ -109,7 +115,7 @@ export const SolutionCard = ({ solution, onClick }: SolutionCardProps) => {
           <span>Criada {formattedDate}</span>
         </div>
         
-        <Button variant="ghost" size="sm" className="gap-1">
+        <Button variant="ghost" size="sm" className="gap-1" onClick={handleClick}>
           <span className="sr-only md:not-sr-only md:inline-block">Ver</span>
           <ArrowRight className="w-4 h-4" />
         </Button>
