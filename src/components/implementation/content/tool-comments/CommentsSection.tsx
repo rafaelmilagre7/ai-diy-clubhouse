@@ -9,6 +9,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { useAuth } from '@/contexts/auth';
 import { cn } from '@/lib/utils';
 import { formatTimeAgo } from '@/utils/date';
+import { Comment } from '@/types/commentTypes';
 
 interface CommentsSectionProps {
   solutionId: string;
@@ -46,7 +47,7 @@ export const CommentsSection: React.FC<CommentsSectionProps> = ({
   const isAdmin = profile?.role === 'admin';
 
   // Renderizar comentários de forma recursiva
-  const renderComments = (parentComments: any[], level = 0) => {
+  const renderComments = (parentComments: Comment[], level = 0) => {
     return parentComments.map((parentComment) => {
       const childComments = comments.filter(c => c.parent_id === parentComment.id);
 

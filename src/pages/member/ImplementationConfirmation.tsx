@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Check, CheckCircle, Trophy } from "lucide-react";
@@ -8,17 +7,22 @@ import { Progress } from "@/components/ui/progress";
 import { useSolutionData } from "@/hooks/useSolutionData";
 import { useProgressTracking } from "@/hooks/implementation/useProgressTracking";
 import { useSolutionCompletion } from "@/hooks/implementation/useSolutionCompletion";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import LoadingScreen from "@/components/common/LoadingScreen";
+import { adaptSolutionType, adaptProgressType } from "@/utils/typeAdapters";
 
 const ImplementationConfirmation = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   // Carregar dados da solução
-  const { solution, loading: solutionLoading, progress } = useSolutionData(id || "");
+  const { solution: supaSolution, loading: solutionLoading, progress: supaProgress } = useSolutionData(id || "");
+  
+  // Adaptar tipos para compatibilidade
+  const solution = supaSolution ? adaptSolutionType(supaSolution) : null;
+  const progress = supaProgress ? adaptProgressType(supaProgress) : null;
+  
   const totalModules = solution?.modules?.length || 8;
   
   // Hook para conclusão da solução
@@ -27,7 +31,8 @@ const ImplementationConfirmation = () => {
   // Hooks de progresso
   const { 
     completedModules, 
-    calculateProgress 
+    calculateProgress,
+    isCompleting 
   } = useProgressTracking(
     id || "",
     progress,
@@ -157,9 +162,9 @@ const ImplementationConfirmation = () => {
             size="lg" 
             className="w-full sm:w-auto"
             onClick={handleConfirm}
-            disabled={isSubmitting || completing}
+            disabled={isSubmitting || completing || isCompleting}
           >
-            {isSubmitting || completing ? (
+            {isSubmitting || completing || isCompleting ? (
               <>Confirmando...</>
             ) : (
               <>
@@ -174,7 +179,7 @@ const ImplementationConfirmation = () => {
             size="lg" 
             className="w-full sm:w-auto"
             onClick={handleCancel}
-            disabled={isSubmitting || completing}
+            disabled={isSubmitting || completing || isCompleting}
           >
             Voltar
           </Button>

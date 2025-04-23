@@ -6,13 +6,13 @@ import { Solution } from "@/types/solution";
 
 interface ImplementationHeaderProps {
   solution: Solution;
-  moduleIdx?: number;
+  currentModule?: number;
   totalModules?: number;
 }
 
 export const ImplementationHeader = ({
   solution,
-  moduleIdx = 0,
+  currentModule = 0,
   totalModules = 1
 }: ImplementationHeaderProps) => {
   return (
@@ -28,7 +28,7 @@ export const ImplementationHeader = ({
             <div>
               <h1 className="text-xl font-bold">{solution.title}</h1>
               <div className="flex items-center space-x-2 text-sm text-muted-foreground mt-1">
-                <span>Módulo {moduleIdx + 1} de {totalModules}</span>
+                <span>Módulo {currentModule + 1} de {totalModules}</span>
               </div>
             </div>
           </div>

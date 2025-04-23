@@ -18,7 +18,7 @@ import LoadingScreen from "@/components/common/LoadingScreen";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { useCacheManagement } from "@/hooks/useCacheManagement";
-import { Solution } from "@/types/supabaseTypes";
+import { adaptSolutionType, adaptProgressType } from "@/utils/typeAdapters";
 
 const SolutionDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -30,12 +30,12 @@ const SolutionDetails = () => {
   
   // Hook aprimorada para buscar os dados da solução com diagnóstico adicional
   const { 
-    solution, 
+    solution: supaSolution, 
     loading, 
     isLoading,
     isFetching,
     error, 
-    progress, 
+    progress: supaProgress, 
     refetch, 
     networkError, 
     notFoundError,
@@ -44,6 +44,10 @@ const SolutionDetails = () => {
     checkConnection,
     implementationMetrics
   } = useSolutionData(id || "");
+  
+  // Adaptar tipos para compatibilidade
+  const solution = supaSolution ? adaptSolutionType(supaSolution) : null;
+  const progress = supaProgress ? adaptProgressType(supaProgress) : null;
   
   // Solution interaction handlers
   const { 
@@ -173,12 +177,12 @@ const SolutionDetails = () => {
           />
           
           <SolutionMobileActions 
-            solutionId={solution.id}
+            solutionId={solution?.id}
             progress={progress}
             startImplementation={startImplementation}
             continueImplementation={continueImplementation}
             initializing={initializing}
-            completionPercentage={completionPercentage}
+            completionPercentage={progress?.completion_percentage || 0}
           />
         </div>
         

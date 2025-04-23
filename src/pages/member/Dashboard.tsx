@@ -1,4 +1,3 @@
-
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useState, useCallback, useEffect } from "react";
 import { useCentralDataStore } from "@/hooks/useCentralDataStore";
@@ -11,12 +10,19 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   
-  // Usar nosso hook centralizado de dados
+  // Usar nosso hook centralizado de dados com props corretas
   const { 
-    categorizedSolutions,
-    isLoading,
-    prefetchSolution
+    solutions,
+    loadingSolutions: isLoading,
+    fetchSolutionDetails: prefetchSolution
   } = useCentralDataStore();
+  
+  // Categorizar soluções
+  const categorizedSolutions = {
+    active: solutions.filter(s => s.published),
+    recommended: solutions.filter(s => s.published).slice(0, 3),
+    completed: []
+  };
   
   const [category, setCategory] = useState<string>(
     searchParams.get("category") || "general"
@@ -32,8 +38,6 @@ const Dashboard = () => {
   const handleSolutionClick = useCallback((solution: Solution) => {
     // Prefetch dos dados da solução para carregamento rápido
     prefetchSolution(solution.id);
-    
-    // Navegar para página de detalhes
     navigate(`/solution/${solution.id}`);
   }, [navigate, prefetchSolution]);
 
@@ -59,12 +63,11 @@ const Dashboard = () => {
 
   return (
     <DashboardLayout
-      active={categorizedSolutions.active}
-      completed={categorizedSolutions.completed}
-      recommended={categorizedSolutions.recommended}
-      category={category}
+      solutions={categorizedSolutions}
+      isLoading={isLoading}
       onCategoryChange={handleCategoryChange}
       onSolutionClick={handleSolutionClick}
+      currentCategory={category}
     />
   );
 };
