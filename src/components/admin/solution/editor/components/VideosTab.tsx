@@ -29,8 +29,6 @@ const VideosTab: React.FC<VideosTabProps> = ({
     uploadProgress,
     addYouTubeOpen,
     setAddYouTubeOpen,
-    activeFilter,
-    setActiveFilter,
     handleAddYouTube,
     handleVideoFileUpload,
     handleRemove
@@ -38,11 +36,9 @@ const VideosTab: React.FC<VideosTabProps> = ({
 
   return (
     <div className="space-y-6">
-      <Card>
+      <Card className="border-2 border-[#0ABAB5]/10">
         <CardHeader className="pb-3">
           <VideoUploadHeader
-            activeTab={activeFilter}
-            onTabChange={setActiveFilter}
             onYouTubeClick={() => setAddYouTubeOpen(true)}
           >
             <FileVideoUploader
