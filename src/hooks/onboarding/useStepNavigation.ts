@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { steps } from "./useStepDefinitions";
 import { useProgress } from "./useProgress";
@@ -14,7 +15,7 @@ export const useStepNavigation = () => {
   const location = useLocation();
 
   // Mapeamento de caminhos para IDs de etapas
-  const pathToStepId = {
+  const pathToStepId: Record<string, string> = {
     "/onboarding": "personal",
     "/onboarding/personal-info": "personal",
     "/onboarding/professional": "professional_data", // Mapear a rota antiga para o ID correto
@@ -44,7 +45,7 @@ export const useStepNavigation = () => {
           
           // Se já estamos em uma página de etapa específica, manter
           if (location.pathname.includes('/onboarding/')) {
-            const currentStepId = pathToStepId[location.pathname as keyof typeof pathToStepId];
+            const currentStepId = pathToStepId[location.pathname];
             if (currentStepId) {
               const index = steps.findIndex(step => step.id === currentStepId);
               if (index !== -1) {
@@ -61,7 +62,7 @@ export const useStepNavigation = () => {
         }
         
         const currentPath = location.pathname;
-        const currentStepId = pathToStepId[currentPath as keyof typeof pathToStepId];
+        const currentStepId = pathToStepId[currentPath];
         
         if (currentStepId) {
           const stepIndexByPath = steps.findIndex(step => step.id === currentStepId);
