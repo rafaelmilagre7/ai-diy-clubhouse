@@ -1,7 +1,5 @@
-import { SolutionCategory } from '@/types/solution';
 
-// Re-export the type to maintain existing imports
-export type { SolutionCategory };
+import { SolutionCategory } from '@/types/solution';
 
 export const toSolutionCategory = (category: string): SolutionCategory => {
   if (category === 'revenue' || category === 'operational' || category === 'strategy') {
@@ -52,6 +50,3 @@ export const getCategoryStyles = (category: SolutionCategory) => {
       };
   }
 };
-
-// Re-exportando SolutionCategory para manter compatibilidade com o código existente
-export { SolutionCategory };
