@@ -7,7 +7,8 @@ export const steps: OnboardingStep[] = [
     id: "personal",
     title: "Dados Pessoais",
     section: "personal_info",
-    path: "/onboarding",
+    path: "/onboarding", 
+    pathAlias: "/onboarding/personal", // Adicionando alias para compatibilidade
     fields: ["name", "email", "phone", "ddi", "linkedin", "instagram", "country", "state", "city", "timezone"]
   },
   {

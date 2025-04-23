@@ -17,6 +17,7 @@ export const useStepNavigation = () => {
   // Mapeamento de caminhos para IDs de etapas
   const pathToStepId: Record<string, string> = {
     "/onboarding": "personal",
+    "/onboarding/personal": "personal",
     "/onboarding/personal-info": "personal",
     "/onboarding/professional": "professional_data", // Mapear a rota antiga para o ID correto
     "/onboarding/professional-data": "professional_data",
@@ -33,7 +34,7 @@ export const useStepNavigation = () => {
       if (isLoading) return; // Evitar múltiplas chamadas durante carregamento
       
       try {
-        // Aqui está o problema - precisamos passar um objeto ao invés de uma string como segundo parâmetro
+        // Passamos um objeto ao invés de uma string como segundo parâmetro
         logger.logInfo("Carregando progresso do onboarding, path atual:", { path: location.pathname });
         const refreshedProgress = await refreshProgress();
         
@@ -50,7 +51,7 @@ export const useStepNavigation = () => {
             if (currentStepId) {
               const index = steps.findIndex(step => step.id === currentStepId);
               if (index !== -1) {
-                logger.logInfo(`Definindo índice de etapa atual para ${index} com base no caminho: ${location.pathname}`);
+                logger.logInfo(`Definindo índice de etapa atual para ${index} com base no caminho: ${location.pathname}`, { path: location.pathname, index });
                 setCurrentStepIndex(index);
               }
             }
@@ -69,7 +70,7 @@ export const useStepNavigation = () => {
           const stepIndexByPath = steps.findIndex(step => step.id === currentStepId);
           
           if (stepIndexByPath !== -1) {
-            logger.logInfo(`Definindo etapa atual baseada na URL: ${currentStepId} (índice ${stepIndexByPath})`);
+            logger.logInfo(`Definindo etapa atual baseada na URL: ${currentStepId} (índice ${stepIndexByPath})`, { currentStepId, stepIndexByPath });
             setCurrentStepIndex(stepIndexByPath);
             
             // Importante: NÃO redirecionar mais se a URL já for uma das 
@@ -80,12 +81,12 @@ export const useStepNavigation = () => {
           const stepIndex = steps.findIndex(step => step.id === progressData.current_step);
           
           if (stepIndex !== -1) {
-            logger.logInfo(`Continuando onboarding da etapa: ${progressData.current_step} (índice ${stepIndex})`);
+            logger.logInfo(`Continuando onboarding da etapa: ${progressData.current_step} (índice ${stepIndex})`, { step: progressData.current_step, stepIndex });
             setCurrentStepIndex(stepIndex);
             
             // IMPORTANTE: Não redirecionar para evitar loops
           } else {
-            logger.logWarning(`Etapa não encontrada nos passos definidos: ${progressData.current_step}`);
+            logger.logWarning(`Etapa não encontrada nos passos definidos: ${progressData.current_step}`, { step: progressData.current_step });
             navigate(steps[0].path);
             toast.info("Iniciando o preenchimento do onboarding");
           }
@@ -103,7 +104,7 @@ export const useStepNavigation = () => {
 
   const navigateToStep = (stepIndex: number) => {
     if (stepIndex >= 0 && stepIndex < steps.length) {
-      logger.logInfo(`Navegando manualmente para etapa índice ${stepIndex}: ${steps[stepIndex].id} (${steps[stepIndex].path})`);
+      logger.logInfo(`Navegando manualmente para etapa índice ${stepIndex}: ${steps[stepIndex].id} (${steps[stepIndex].path})`, { stepIndex, stepId: steps[stepIndex].id, path: steps[stepIndex].path });
       setCurrentStepIndex(stepIndex);
       navigate(steps[stepIndex].path);
     }
@@ -112,7 +113,7 @@ export const useStepNavigation = () => {
   const navigateToStepById = (stepId: string) => {
     const index = steps.findIndex(step => step.id === stepId);
     if (index !== -1) {
-      logger.logInfo(`Navegando para etapa ID ${stepId} (índice ${index}): ${steps[index].path}`);
+      logger.logInfo(`Navegando para etapa ID ${stepId} (índice ${index}): ${steps[index].path}`, { stepId, index, path: steps[index].path });
       setCurrentStepIndex(index);
       navigate(steps[index].path);
     }
@@ -121,7 +122,7 @@ export const useStepNavigation = () => {
   const navigateToPreviousStep = () => {
     if (currentStepIndex > 0) {
       const previousIndex = currentStepIndex - 1;
-      logger.logInfo(`Navegando para etapa anterior: ${steps[previousIndex].id}`);
+      logger.logInfo(`Navegando para etapa anterior: ${steps[previousIndex].id}`, { previousIndex, stepId: steps[previousIndex].id });
       setCurrentStepIndex(previousIndex);
       navigate(steps[previousIndex].path);
     } else {

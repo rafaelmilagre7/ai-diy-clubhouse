@@ -10,6 +10,7 @@ import BusinessGoalsClub from '@/pages/onboarding/steps/BusinessGoalsClub';
 import ExperiencePersonalization from '@/pages/onboarding/steps/ExperiencePersonalization';
 import ComplementaryInfo from '@/pages/onboarding/steps/ComplementaryInfo';
 import { NotFound } from '@/pages/NotFound';
+import PersonalInfo from '@/pages/onboarding/steps/PersonalInfo';
 
 export const onboardingRoutes: RouteObject[] = [
   {
@@ -20,12 +21,17 @@ export const onboardingRoutes: RouteObject[] = [
     path: '/onboarding',
     element: <Onboarding />,
   },
-  // Definição para rota antiga: professional - MANTER AMBAS
+  // Rota específica para dados pessoais (nova)
+  {
+    path: '/onboarding/personal',
+    element: <PersonalInfo />,
+  },
+  // Rota para dados profissionais (antiga)
   {
     path: '/onboarding/professional',
     element: <ProfessionalData />,
   },
-  // Definição para nova rota: professional-data
+  // Rota para dados profissionais (nova)
   {
     path: '/onboarding/professional-data',
     element: <ProfessionalData />,
