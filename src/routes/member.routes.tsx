@@ -1,27 +1,24 @@
 
 import { Fragment } from "react";
 import { Route } from "react-router-dom";
-import MemberLayout from "@/components/layout/MemberLayout";
+import MemberLayout from "@/components/layout/member/MemberLayout";
 
 // Páginas de membros
 import Dashboard from "@/pages/member/Dashboard";
 import Solutions from "@/pages/member/Solutions";
 import SolutionDetails from "@/pages/member/SolutionDetails";
 import SolutionImplementation from "@/pages/member/SolutionImplementation";
-import ImplementationCompleted from "@/pages/member/ImplementationCompleted";
 import Profile from "@/pages/member/Profile";
 import EditProfile from "@/pages/member/EditProfile";
 import Tools from "@/pages/member/Tools";
 import ToolDetails from "@/pages/member/ToolDetails";
-import Benefits from "@/pages/member/Benefits";
 import Suggestions from "@/pages/member/Suggestions";
 import SuggestionDetails from "@/pages/member/SuggestionDetails";
 import NewSuggestion from "@/pages/member/NewSuggestion";
 import Achievements from "@/pages/member/Achievements";
-
-// Páginas de onboarding
-import OnboardingIntro from "@/pages/onboarding/OnboardingIntro";
-import PersonalInfo from "@/pages/onboarding/steps/PersonalInfo";
+import Benefits from "@/pages/member/Benefits";
+import ImplementationTrail from "@/pages/member/ImplementationTrail";
+import Onboarding from "@/pages/onboarding/Onboarding";
 import ProfessionalData from "@/pages/onboarding/steps/ProfessionalData";
 import BusinessContext from "@/pages/onboarding/steps/BusinessContext";
 import AIExperience from "@/pages/onboarding/steps/AIExperience";
@@ -30,47 +27,41 @@ import ExperiencePersonalization from "@/pages/onboarding/steps/ExperiencePerson
 import ComplementaryInfo from "@/pages/onboarding/steps/ComplementaryInfo";
 import Review from "@/pages/onboarding/steps/Review";
 import TrailGeneration from "@/pages/onboarding/steps/TrailGeneration";
-import ImplementationTrailPage from "@/pages/member/ImplementationTrailPage";
 
 export const memberRoutes = (
   <Fragment>
-    {/* Rotas do Dashboard */}
-    <Route path="/" element={<MemberLayout><Dashboard /></MemberLayout>} />
-    <Route path="/dashboard" element={<MemberLayout><Dashboard /></MemberLayout>} />
+    {/* Dashboard */}
+    <Route path="/dashboard" element={<Dashboard />} />
     
-    {/* Trilha de implementação */}
-    <Route path="/implementation-trail" element={<MemberLayout><ImplementationTrailPage /></MemberLayout>} />
-    
-    {/* Rotas de Soluções */}
-    <Route path="/solutions" element={<MemberLayout><Solutions /></MemberLayout>} />
-    <Route path="/solution/:id" element={<MemberLayout><SolutionDetails /></MemberLayout>} />
-    <Route path="/implement/:id/:moduleIdx" element={<MemberLayout><SolutionImplementation /></MemberLayout>} />
-    <Route path="/implementation/:id" element={<MemberLayout><SolutionImplementation /></MemberLayout>} />
-    <Route path="/implementation/:id/:moduleIdx" element={<MemberLayout><SolutionImplementation /></MemberLayout>} />
-    <Route path="/implementation/completed/:id" element={<MemberLayout><ImplementationCompleted /></MemberLayout>} />
-    
-    {/* Ferramentas */}
-    <Route path="/tools" element={<MemberLayout><Tools /></MemberLayout>} />
-    <Route path="/tools/:id" element={<MemberLayout><ToolDetails /></MemberLayout>} />
+    {/* Soluções */}
+    <Route path="/solutions" element={<Solutions />} />
+    <Route path="/solution/:id" element={<SolutionDetails />} />
+    <Route path="/implement/:id/:moduleIdx" element={<SolutionImplementation />} />
+    <Route path="/implementation/:id" element={<SolutionImplementation />} />
+    <Route path="/implementation/:id/:moduleIdx" element={<SolutionImplementation />} />
+    <Route path="/implementation-trail" element={<ImplementationTrail />} />
     
     {/* Perfil */}
-    <Route path="/profile" element={<MemberLayout><Profile /></MemberLayout>} />
-    <Route path="/profile/edit" element={<MemberLayout><EditProfile /></MemberLayout>} />
+    <Route path="/profile" element={<Profile />} />
+    <Route path="/profile/edit" element={<EditProfile />} />
+    
+    {/* Ferramentas */}
+    <Route path="/tools" element={<Tools />} />
+    <Route path="/tools/:id" element={<ToolDetails />} />
     
     {/* Benefícios */}
-    <Route path="/benefits" element={<MemberLayout><Benefits /></MemberLayout>} />
+    <Route path="/benefits" element={<Benefits />} />
     
     {/* Sugestões */}
-    <Route path="/suggestions" element={<MemberLayout><Suggestions /></MemberLayout>} />
-    <Route path="/suggestions/:id" element={<MemberLayout><SuggestionDetails /></MemberLayout>} />
-    <Route path="/suggestions/new" element={<MemberLayout><NewSuggestion /></MemberLayout>} />
+    <Route path="/suggestions" element={<Suggestions />} />
+    <Route path="/suggestions/:id" element={<SuggestionDetails />} />
+    <Route path="/suggestions/new" element={<NewSuggestion />} />
     
     {/* Conquistas */}
-    <Route path="/achievements" element={<MemberLayout><Achievements /></MemberLayout>} />
+    <Route path="/achievements" element={<Achievements />} />
     
     {/* Onboarding */}
-    <Route path="/onboarding" element={<OnboardingIntro />} />
-    <Route path="/onboarding/personal-info" element={<PersonalInfo />} />
+    <Route path="/onboarding" element={<Onboarding />} />
     <Route path="/onboarding/professional-data" element={<ProfessionalData />} />
     <Route path="/onboarding/business-context" element={<BusinessContext />} />
     <Route path="/onboarding/ai-experience" element={<AIExperience />} />
