@@ -6,6 +6,18 @@ import { Solution } from "@/types/supabaseTypes";
 import { useLogging } from "@/hooks/useLogging";
 import { toast } from "sonner";
 
+// Função para mapear valores de dificuldade para os valores aceitos pelo enum no banco de dados
+const mapDifficultyToEnum = (difficulty: string): string => {
+  const difficultyMap: Record<string, string> = {
+    'beginner': 'easy',
+    'easy': 'easy',
+    'medium': 'medium',
+    'advanced': 'advanced'
+  };
+  
+  return difficultyMap[difficulty] || 'medium'; // Retorna 'medium' como fallback
+};
+
 export const useSolutionSave = (
   id: string | undefined, 
   setSolution: (solution: Solution) => void
@@ -22,6 +34,8 @@ export const useSolutionSave = (
     try {
       const formData = {
         ...values,
+        // Mapear o valor de dificuldade para o valor aceito pelo enum
+        difficulty: mapDifficultyToEnum(values.difficulty),
         updated_at: new Date().toISOString()
       };
       

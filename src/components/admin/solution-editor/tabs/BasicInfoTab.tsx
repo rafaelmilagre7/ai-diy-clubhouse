@@ -4,6 +4,23 @@ import BasicInfoForm from "@/components/admin/solution/form/BasicInfoForm";
 import { SolutionFormValues } from "@/components/admin/solution/form/solutionFormSchema";
 import { toSolutionCategory } from "@/lib/types/categoryTypes";
 
+// Função auxiliar para converter/mapear valores de dificuldade
+const normalizeDifficulty = (difficulty?: string): "easy" | "medium" | "advanced" => {
+  if (!difficulty) return "medium";
+  
+  // Mapa de normalização
+  const difficultyMap: Record<string, "easy" | "medium" | "advanced"> = {
+    'beginner': 'easy',
+    'easy': 'easy',
+    'medium': 'medium',
+    'intermediate': 'medium', 
+    'advanced': 'advanced',
+    'hard': 'advanced'
+  };
+  
+  return difficultyMap[difficulty.toLowerCase()] || "medium";
+};
+
 interface BasicInfoTabProps {
   defaultValues?: SolutionFormValues;
   currentValues?: SolutionFormValues;
@@ -33,10 +50,11 @@ const BasicInfoTab: React.FC<BasicInfoTabProps> = ({
     slug: "",
   };
   
-  // Garantir que a categoria seja do tipo correto
+  // Garantir que a categoria e dificuldade sejam dos tipos corretos
   const normalizedValues = {
     ...values,
-    category: toSolutionCategory(values.category)
+    category: toSolutionCategory(values.category),
+    difficulty: normalizeDifficulty(values.difficulty)
   };
   
   return (
