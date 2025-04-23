@@ -3,6 +3,12 @@ import { RouteObject } from 'react-router-dom';
 import Onboarding from '@/pages/onboarding/Onboarding';
 import OnboardingIntro from '@/pages/onboarding/OnboardingIntro';
 import Review from '@/pages/onboarding/Review'; 
+import ProfessionalData from '@/pages/onboarding/steps/ProfessionalData';
+import BusinessContext from '@/pages/onboarding/steps/BusinessContext';
+import AIExperience from '@/pages/onboarding/steps/AIExperience';
+import BusinessGoalsClub from '@/pages/onboarding/steps/BusinessGoalsClub';
+import ExperiencePersonalization from '@/pages/onboarding/steps/ExperiencePersonalization';
+import ComplementaryInfo from '@/pages/onboarding/steps/ComplementaryInfo';
 
 export const onboardingRoutes: RouteObject[] = [
   {
@@ -14,28 +20,28 @@ export const onboardingRoutes: RouteObject[] = [
     element: <Onboarding />,
   },
   {
-    path: '/onboarding/professional',
-    element: <Onboarding />,
+    path: '/onboarding/professional-data',
+    element: <ProfessionalData />,
   },
   {
     path: '/onboarding/business-context',
-    element: <Onboarding />,
+    element: <BusinessContext />,
   },
   {
-    path: '/onboarding/business-goals',
-    element: <Onboarding />,
+    path: '/onboarding/club-goals',
+    element: <BusinessGoalsClub />,
   },
   {
     path: '/onboarding/ai-experience',
-    element: <Onboarding />,
+    element: <AIExperience />,
   },
   {
-    path: '/onboarding/personalization',
-    element: <Onboarding />,
+    path: '/onboarding/customization',
+    element: <ExperiencePersonalization />,
   },
   {
     path: '/onboarding/complementary',
-    element: <Onboarding />,
+    element: <ComplementaryInfo />,
   },
   {
     path: '/onboarding/review',

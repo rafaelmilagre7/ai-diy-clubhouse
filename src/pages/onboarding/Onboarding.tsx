@@ -24,10 +24,29 @@ const Onboarding: React.FC = () => {
   
   // Redirecionar para o passo atual se estiver em um passo incorreto
   useEffect(() => {
-    if (!isLoading && data && currentStep !== routeStep) {
-      navigate(`/onboarding/${currentStep === 'personal' ? '' : currentStep}`);
+    // Mapear as rotas antigas para as novas
+    const routeMapping: Record<string, string> = {
+      'professional': 'professional-data',
+      'business-goals': 'club-goals',
+      'personalization': 'customization'
+    };
+
+    if (!isLoading && data) {
+      // Verificar se estamos em uma rota antiga que precisa ser redirecionada
+      const pathParts = location.pathname.split('/');
+      const currentRouteStep = pathParts[pathParts.length - 1];
+      
+      if (routeMapping[currentRouteStep]) {
+        navigate(`/onboarding/${routeMapping[currentRouteStep]}`);
+        return;
+      }
+
+      // Redirecionar se estivermos em um passo incorreto
+      if (currentStep !== routeStep) {
+        navigate(`/onboarding/${currentStep === 'personal' ? '' : currentStep}`);
+      }
     }
-  }, [isLoading, data, currentStep, routeStep, navigate]);
+  }, [isLoading, data, currentStep, routeStep, navigate, location.pathname]);
 
   // Verificar se o usuário está autenticado
   useEffect(() => {
@@ -58,14 +77,17 @@ const Onboarding: React.FC = () => {
       case 'personal':
         return <PersonalForm data={data} onSubmit={(formData) => saveFormData(formData, 'personal')} isSaving={isSaving} />;
       case 'professional':
-        return <ProfessionalForm data={data} onSubmit={(formData) => saveFormData(formData, 'professional')} isSaving={isSaving} />;
+      case 'professional_data':
+        return <ProfessionalForm data={data} onSubmit={(formData) => saveFormData(formData, 'professional_data')} isSaving={isSaving} />;
       case 'business-context':
         return <BusinessContextForm data={data} onSubmit={(formData) => saveFormData(formData, 'business-context')} isSaving={isSaving} />;
       case 'business-goals':
+      case 'club-goals':
         return <BusinessGoalsForm data={data} onSubmit={(formData) => saveFormData(formData, 'business-goals')} isSaving={isSaving} />;
       case 'ai-experience':
         return <AIExperienceForm data={data} onSubmit={(formData) => saveFormData(formData, 'ai-experience')} isSaving={isSaving} />;
       case 'personalization':
+      case 'customization':
         return <PersonalizationForm data={data} onSubmit={(formData) => saveFormData(formData, 'personalization')} isSaving={isSaving} />;
       case 'complementary':
         return <ComplementaryForm data={data} onSubmit={(formData) => saveFormData(formData, 'complementary')} isSaving={isSaving} />;
