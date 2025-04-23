@@ -21,7 +21,7 @@ export const WizardStepProgress = ({
 
   return (
     <TooltipProvider>
-      <div className="relative px-4 py-4 rounded-lg bg-white shadow-sm border border-gray-200">
+      <div className="relative px-4 py-4 rounded-lg bg-white shadow-sm border border-gray-200 w-full">
         <div className="relative flex items-center justify-between">
           {/* Linha de progresso base */}
           <div className="absolute left-0 top-1/2 transform -translate-y-1/2 w-full h-1 bg-gray-100 rounded-full" />

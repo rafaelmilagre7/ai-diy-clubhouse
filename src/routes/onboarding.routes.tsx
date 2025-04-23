@@ -2,6 +2,7 @@
 import { RouteObject } from 'react-router-dom';
 import Onboarding from '@/pages/onboarding/Onboarding';
 import OnboardingIntro from '@/pages/onboarding/OnboardingIntro';
+import Review from '@/pages/onboarding/Review'; 
 
 export const onboardingRoutes: RouteObject[] = [
   {
@@ -38,6 +39,6 @@ export const onboardingRoutes: RouteObject[] = [
   },
   {
     path: '/onboarding/review',
-    element: <Onboarding />,
+    element: <Review />,
   },
 ];
