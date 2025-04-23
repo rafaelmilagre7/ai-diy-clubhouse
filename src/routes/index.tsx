@@ -1,24 +1,25 @@
 
 import { Routes, Route } from 'react-router-dom';
-import AdminSolutionEdit from '@/pages/admin/AdminSolutionEdit';
-import AdminSolutions from '@/pages/admin/AdminSolutions';
 import { ProtectedRoutes } from '@/auth/ProtectedRoutes';
 import { AdminProtectedRoutes } from '@/auth/AdminProtectedRoutes';
 import { memberRoutes } from './member.routes';
+import { adminRoutes } from './admin.routes';
+import RootRedirect from '@/components/routing/RootRedirect';
 
 const AppRoutes = () => {
   return (
     <Routes>
+      {/* Rota raiz para redirecionar com base no tipo de usuário */}
+      <Route path="/" element={<RootRedirect />} />
+      
       {/* Rotas de Membros */}
       <Route element={<ProtectedRoutes />}>
         {memberRoutes}
       </Route>
 
       {/* Rotas Administrativas */}
-      <Route path="/admin" element={<AdminProtectedRoutes />}>
-        <Route path="solutions" element={<AdminSolutions />} />
-        <Route path="solutions/:id" element={<AdminSolutionEdit />} />
-        <Route path="solutions/new" element={<AdminSolutionEdit />} />
+      <Route element={<AdminProtectedRoutes />}>
+        {adminRoutes}
       </Route>
       
       {/* Fallback para qualquer outra rota */}
