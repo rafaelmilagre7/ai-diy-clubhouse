@@ -5,7 +5,7 @@ import { Video, Youtube } from "lucide-react";
 interface VideoThumbnailProps {
   video: {
     metadata?: {
-      source?: "youtube";
+      source?: "youtube" | "upload";
       youtube_id?: string;
       thumbnail_url?: string;
     };
