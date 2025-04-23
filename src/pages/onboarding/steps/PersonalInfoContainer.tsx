@@ -1,4 +1,3 @@
-
 import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { PersonalInfoForm } from "@/components/onboarding/steps/forms/PersonalInfoForm";
@@ -47,6 +46,15 @@ export const PersonalInfoContainer: React.FC = () => {
     const { totalSteps, progressPercentage } = usePersonalInfoProgress();
 
     const stepTitles = steps.map(s => s.title);
+
+    // Converte lastError para string de forma segura
+    const errorMessage = lastError instanceof Error 
+      ? lastError.message 
+      : typeof lastError === 'string' 
+        ? lastError 
+        : lastError 
+          ? String(lastError) 
+          : '';
 
     useEffect(() => {
       // Envolver em try/catch para evitar erros não tratados
@@ -106,7 +114,7 @@ export const PersonalInfoContainer: React.FC = () => {
     };
 
     const showForceButton = loadingAttempts >= 3 && progressLoading;
-    const hasError = loadError || lastError;
+    const hasError = loadError || errorMessage;
     const isReadOnly = !!progress?.completed_steps?.includes("personal");
 
     if (progressLoading && !showForceButton) {
@@ -128,7 +136,7 @@ export const PersonalInfoContainer: React.FC = () => {
           stepTitles={stepTitles}
           onStepClick={handleStepClick}
           loadError={loadError}
-          lastError={lastError ? (lastError instanceof Error ? lastError.message : String(lastError)) : ""}
+          lastError={errorMessage}
           onRetry={() => attemptDataLoad(loadInitialData)}
         />
       );
@@ -175,7 +183,6 @@ export const PersonalInfoContainer: React.FC = () => {
       </OnboardingLayout>
     );
   } catch (error) {
-    // Fallback para caso ocorra erro nos hooks
     console.error("Erro ao renderizar PersonalInfoContainer:", error);
     return (
       <div className="p-8 bg-red-50 text-red-900 rounded-md">
@@ -191,3 +198,5 @@ export const PersonalInfoContainer: React.FC = () => {
     );
   }
 };
+
+export default PersonalInfoContainer;
