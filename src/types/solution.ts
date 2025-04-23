@@ -3,7 +3,7 @@ export interface Solution {
   id: string;
   title: string;
   description: string;
-  category: 'revenue' | 'operations' | 'strategy';
+  category: 'revenue' | 'operations' | 'strategy' | string;  // Adicionado string para compatibilidade
   difficulty: 'easy' | 'medium' | 'advanced';
   published: boolean;
   thumbnail_url?: string;
@@ -66,6 +66,7 @@ export interface Progress {
   completed_modules: number[];
   last_activity: string;
   completion_data?: Record<string, any>;
+  completion_percentage?: number; // Adicionado para compatibilidade
 }
 
 export interface Prerequisite {

@@ -1,78 +1,93 @@
 
-import { useState } from "react";
-import { useParams } from "react-router-dom";
-import { useAuth } from "@/contexts/auth";
-import { Progress } from "@/lib/supabase";
-import { useModuleChangeTracking } from "./useModuleChangeTracking";
-import { useModuleCompletion } from "./useModuleCompletion";
-import { useSolutionCompletion } from "./useSolutionCompletion";
-import { calculateProgressPercentage } from "./utils/progressUtils";
+import { useState, useEffect, useCallback } from "react";
+import { supabase } from "@/lib/supabase";
+import { useLogging } from "@/hooks/useLogging";
+import { calculateProgressPercentage, logProgressEvent } from "./utils/progressUtils";
+import { Progress } from "@/types/solution";
+import { toast } from "sonner";
 
 export const useProgressTracking = (
-  progress: Progress | null, 
-  completedModules: number[], 
-  setCompletedModules: (modules: number[]) => void,
-  modulesLength: number = 6
+  solutionId: string,
+  progress: Progress | null,
+  currentModuleIdx: number
 ) => {
-  const { id, moduleIndex } = useParams<{ id: string; moduleIndex: string }>();
-  const moduleIdx = parseInt(moduleIndex || "0");
-  const { user } = useAuth();
+  const { log, logError } = useLogging("useProgressTracking");
+  const [completedModules, setCompletedModules] = useState<number[]>([]);
+  const [isUpdating, setIsUpdating] = useState(false);
   
-  // State for tracking user interactions
-  const [hasInteracted, setHasInteracted] = useState(false);
-  const [requireUserConfirmation, setRequireUserConfirmation] = useState(true);
+  // Inicializar array de módulos concluídos a partir do progresso existente
+  useEffect(() => {
+    if (progress && Array.isArray(progress.completed_modules)) {
+      setCompletedModules(progress.completed_modules);
+    }
+  }, [progress]);
 
-  // Track module changes for progress updates
-  useModuleChangeTracking(
-    moduleIdx, 
-    progress?.id, 
-    id
+  // Marcar um módulo como concluído
+  const markModuleCompleted = useCallback(async (moduleIdx: number) => {
+    if (!solutionId || isUpdating) return;
+    
+    // Verificar se o módulo já está marcado como concluído
+    if (completedModules.includes(moduleIdx)) {
+      log("Módulo já estava marcado como concluído", { moduleIdx });
+      return;
+    }
+    
+    setIsUpdating(true);
+    
+    try {
+      // Adicionar o novo módulo à lista de concluídos
+      const updatedModules = [...completedModules, moduleIdx];
+      
+      // Atualizar o estado local primeiro para UI responsiva
+      setCompletedModules(updatedModules);
+      
+      // Se existir um registro de progresso, atualizar
+      if (progress?.id) {
+        const { error } = await supabase
+          .from("progress")
+          .update({
+            completed_modules: updatedModules,
+            current_module: Math.max(currentModuleIdx, moduleIdx + 1), // Avançar para o próximo módulo
+            last_activity: new Date().toISOString()
+          })
+          .eq("id", progress.id);
+          
+        if (error) throw error;
+        
+        // Registrar evento de progresso para análise
+        await logProgressEvent(
+          progress.user_id,
+          solutionId,
+          "module_completed",
+          { moduleIdx, total_completed: updatedModules.length }
+        );
+      }
+      
+      // Feedback visual
+      toast.success("Módulo concluído com sucesso!");
+      
+    } catch (error) {
+      logError("Erro ao atualizar progresso", { error, moduleIdx });
+      toast.error("Erro ao salvar seu progresso. Tente novamente.");
+      
+      // Reverter estado em caso de erro
+      setCompletedModules(completedModules);
+    } finally {
+      setIsUpdating(false);
+    }
+  }, [solutionId, progress, completedModules, currentModuleIdx, log, logError]);
+
+  // Calcular porcentagem de conclusão
+  const completionPercentage = calculateProgressPercentage(
+    completedModules, 
+    progress?.modules?.length || 8 // Padrão: 8 módulos
   );
-  
-  // Module completion functionality
-  const {
-    handleMarkAsCompleted,
-    showConfirmationModal,
-    setShowConfirmationModal
-  } = useModuleCompletion({
-    moduleIdx,
-    progressId: progress?.id,
-    solutionId: id,
+
+  return {
     completedModules,
     setCompletedModules,
-    modulesLength,
-    hasInteracted,
-    requireUserConfirmation
-  });
-  
-  // Solution implementation completion
-  const {
-    isCompleting,
-    handleConfirmImplementation
-  } = useSolutionCompletion({
-    progressId: progress?.id,
-    solutionId: id,
-    moduleIdx,
-    completedModules,
-    setCompletedModules
-  });
-  
-  // Set interaction state for the current module
-  const setModuleInteraction = (interacted: boolean) => {
-    setHasInteracted(interacted);
-  };
-  
-  return {
-    moduleIdx,
-    isCompleting,
-    hasInteracted,
-    showConfirmationModal,
-    setShowConfirmationModal,
-    handleMarkAsCompleted,
-    handleConfirmImplementation,
-    calculateProgress: () => calculateProgressPercentage(completedModules, modulesLength),
-    setModuleInteraction,
-    requireUserConfirmation,
-    setRequireUserConfirmation
+    markModuleCompleted,
+    isUpdating,
+    completionPercentage
   };
 };

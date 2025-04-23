@@ -6,6 +6,7 @@ import SolutionToolsTab from "./SolutionToolsTab";
 import SolutionMaterialsTab from "./SolutionMaterialsTab";
 import SolutionVideosTab from "./SolutionVideosTab";
 import SolutionChecklistTab from "./SolutionChecklistTab";
+import SolutionOverviewTab from "./SolutionOverviewTab";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
@@ -16,7 +17,7 @@ interface SolutionTabsContentProps {
   progress?: any;
 }
 
-const SolutionTabsContent: React.FC<SolutionTabsContentProps> = ({ solution, progress }) => {
+export const SolutionTabsContent: React.FC<SolutionTabsContentProps> = ({ solution, progress }) => {
   const [activeTab, setActiveTab] = useState("overview");
   const { toast } = useToast();
   const navigate = useNavigate();

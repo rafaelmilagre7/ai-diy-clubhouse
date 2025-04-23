@@ -10,7 +10,7 @@ import { GeneralError } from "@/components/solution/errors/GeneralError";
 import { SolutionNotFound } from "@/components/solution/SolutionNotFound";
 import { SolutionBackButton } from "@/components/solution/SolutionBackButton";
 import { SolutionHeaderSection } from "@/components/solution/SolutionHeaderSection";
-import { SolutionTabsContent } from "@/components/solution/tabs/SolutionTabsContent";
+import SolutionTabsContent from "@/components/solution/tabs/SolutionTabsContent";
 import { SolutionSidebar } from "@/components/solution/SolutionSidebar";
 import { SolutionMobileActions } from "@/components/solution/SolutionMobileActions";
 import { SolutionSkeleton } from "@/components/solution/SolutionSkeleton";
@@ -18,6 +18,7 @@ import LoadingScreen from "@/components/common/LoadingScreen";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { useCacheManagement } from "@/hooks/useCacheManagement";
+import { Solution } from "@/types/supabaseTypes";
 
 const SolutionDetails = () => {
   const { id } = useParams<{ id: string }>();

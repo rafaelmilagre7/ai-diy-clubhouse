@@ -1,113 +1,71 @@
 
+import React from 'react';
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
+  Monitor, 
   FileText, 
   Wrench, 
   FileArchive, 
   Video, 
-  CheckSquare, 
-  MessageSquare, 
-  Bot, 
-  Trophy 
+  CheckSquare,
+  MessageSquare,
+  Bot,
+  Certificate
 } from "lucide-react";
-import { cn } from "@/lib/utils";
 
 interface ImplementationTabsNavigationProps {
   activeTab: string;
-  onTabChange: (tab: string) => void;
-  progress: any;
-  className?: string;
+  onChangeTab: (value: string) => void;
+  isLastStep?: boolean;
 }
 
-const ImplementationTabsNavigation = ({
+const ImplementationTabsNavigation: React.FC<ImplementationTabsNavigationProps> = ({
   activeTab,
-  onTabChange,
-  progress,
-  className
-}: ImplementationTabsNavigationProps) => {
-  const isCompleted = progress?.is_completed || false;
-
-  const tabs = [
-    {
-      id: "overview",
-      label: "Visão geral",
-      shortLabel: "Visão",
-      icon: <FileText className="w-4 h-4 mr-2" />,
-      disabled: false
-    },
-    {
-      id: "tools",
-      label: "Ferramentas",
-      shortLabel: "Ferramentas",
-      icon: <Wrench className="w-4 h-4 mr-2" />,
-      disabled: false
-    },
-    {
-      id: "materials",
-      label: "Materiais",
-      shortLabel: "Materiais",
-      icon: <FileArchive className="w-4 h-4 mr-2" />,
-      disabled: false
-    },
-    {
-      id: "videos",
-      label: "Vídeos",
-      shortLabel: "Vídeos",
-      icon: <Video className="w-4 h-4 mr-2" />,
-      disabled: false
-    },
-    {
-      id: "checklist",
-      label: "Checklist",
-      shortLabel: "Checklist",
-      icon: <CheckSquare className="w-4 h-4 mr-2" />,
-      disabled: false
-    },
-    {
-      id: "comments",
-      label: "Comentários",
-      shortLabel: "Comentários",
-      icon: <MessageSquare className="w-4 h-4 mr-2" />,
-      disabled: false
-    },
-    {
-      id: "ai-assistant",
-      label: "Assistente IA",
-      shortLabel: "IA",
-      icon: <Bot className="w-4 h-4 mr-2" />,
-      disabled: false
-    },
-    {
-      id: "conclusion",
-      label: "Conclusão",
-      shortLabel: "Final",
-      icon: <Trophy className="w-4 h-4 mr-2" />,
-      disabled: false
-    }
-  ];
-
+  onChangeTab,
+  isLastStep = false
+}) => {
   return (
-    <Tabs 
-      value={activeTab} 
-      onValueChange={onTabChange}
-      className={cn("w-full", className)}
-    >
-      <TabsList className="w-full overflow-x-auto flex flex-nowrap p-1 h-auto">
-        {tabs.map(tab => (
-          <TabsTrigger
-            key={tab.id}
-            value={tab.id}
-            disabled={tab.disabled}
-            className="flex-shrink-0 py-1.5 px-2.5 h-auto"
-          >
-            {tab.icon}
-            <span className="hidden md:inline-block">{tab.label}</span>
-            <span className="inline-block md:hidden">{tab.shortLabel}</span>
+    <Tabs value={activeTab} onValueChange={onChangeTab} className="w-full">
+      <TabsList className="grid grid-cols-4 md:grid-cols-8 w-full">
+        <TabsTrigger value="overview" className="flex items-center justify-center">
+          <Monitor className="h-4 w-4 md:mr-2" />
+          <span className="hidden md:inline">Visão geral</span>
+        </TabsTrigger>
+        <TabsTrigger value="tools" className="flex items-center justify-center">
+          <Wrench className="h-4 w-4 md:mr-2" />
+          <span className="hidden md:inline">Ferramentas</span>
+        </TabsTrigger>
+        <TabsTrigger value="materials" className="flex items-center justify-center">
+          <FileArchive className="h-4 w-4 md:mr-2" />
+          <span className="hidden md:inline">Materiais</span>
+        </TabsTrigger>
+        <TabsTrigger value="videos" className="flex items-center justify-center">
+          <Video className="h-4 w-4 md:mr-2" />
+          <span className="hidden md:inline">Vídeos</span>
+        </TabsTrigger>
+        <TabsTrigger value="checklist" className="flex items-center justify-center">
+          <CheckSquare className="h-4 w-4 md:mr-2" />
+          <span className="hidden md:inline">Checklist</span>
+        </TabsTrigger>
+        <TabsTrigger value="comments" className="flex items-center justify-center">
+          <MessageSquare className="h-4 w-4 md:mr-2" />
+          <span className="hidden md:inline">Comentários</span>
+        </TabsTrigger>
+        <TabsTrigger value="assistant" className="flex items-center justify-center">
+          <Bot className="h-4 w-4 md:mr-2" />
+          <span className="hidden md:inline">Assistente</span>
+        </TabsTrigger>
+        
+        {isLastStep && (
+          <TabsTrigger value="conclusion" className="flex items-center justify-center">
+            <Certificate className="h-4 w-4 md:mr-2" />
+            <span className="hidden md:inline">Conclusão</span>
           </TabsTrigger>
-        ))}
+        )}
       </TabsList>
     </Tabs>
   );
 };
 
 export default ImplementationTabsNavigation;
+export { ImplementationTabsNavigation };
