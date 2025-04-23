@@ -9,7 +9,7 @@ import { toast } from "sonner";
 
 export const useSolutionEditor = (id: string | undefined, user: any) => {
   // Get solution data - agora com setSolution disponível
-  const { solution, setSolution, loading } = useSolutionData(id);
+  const { solution, setSolution, loading, refetch } = useSolutionData(id);
   
   // Get step navigation
   const { currentStep, setCurrentStep, activeTab, setActiveTab, totalSteps, stepTitles } = useSolutionSteps(0);
@@ -29,6 +29,13 @@ export const useSolutionEditor = (id: string | undefined, user: any) => {
   };
   
   const [currentValuesState, setCurrentValuesState] = useState<SolutionFormValues>(defaultValues);
+  
+  // Carregar solução se necessário
+  useEffect(() => {
+    if (id && !solution && !loading) {
+      refetch();
+    }
+  }, [id, solution, loading, refetch]);
   
   // Atualizar valores atuais quando a solução mudar
   useEffect(() => {

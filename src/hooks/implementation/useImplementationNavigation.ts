@@ -1,6 +1,6 @@
 
 import { useParams, useNavigate } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useLogging } from "@/hooks/useLogging";
 
 export const useImplementationNavigation = () => {
@@ -11,6 +11,7 @@ export const useImplementationNavigation = () => {
   }>();
   
   const { log } = useLogging("useImplementationNavigation");
+  const navigationAttempts = useRef(0);
   
   // Normaliza os parâmetros, suportando tanto /implement/:id/:moduleIdx quanto /implementation/:id/:moduleIdx
   const moduleIdxParam = moduleIndex || moduleIdx || "0";
@@ -28,13 +29,19 @@ export const useImplementationNavigation = () => {
     }
   }, [id, navigate, log]);
 
-  // Corrigir problemas de URL inconsistente
+  // Corrigir problemas de URL inconsistente - com limitador de tentativas
   useEffect(() => {
+    // Limitar correções para evitar loops
+    if (navigationAttempts.current > 2) return;
+    
     const path = window.location.pathname;
     
     // Só fazer correção se precisar
     if (path.includes("/implementation/") || 
         (path.includes("/implement/") && !path.includes(`/${moduleIdxNumber}`))) {
+      
+      navigationAttempts.current += 1;
+      
       // URL incorreta, vamos corrigir de forma silenciosa
       const correctPath = `${basePath}/${id}/${moduleIdxNumber}`;
       log("Corrigindo URL de implementação", { from: path, to: correctPath });

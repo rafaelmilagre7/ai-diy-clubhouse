@@ -1,33 +1,20 @@
 
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/auth';
-import { supabase, Solution } from '@/lib/supabase';
-import LoadingScreen from '@/components/common/LoadingScreen';
-import SolutionEditorHeader from '@/components/admin/solution-editor/SolutionEditorHeader';
-import SolutionEditorTabs from '@/components/admin/solution-editor/SolutionEditorTabs';
-import { Card, CardContent } from '@/components/ui/card';
-import NavigationButtons from '@/components/admin/solution-editor/NavigationButtons';
-import AuthError from '@/components/admin/solution-editor/AuthError';
-import { useToast } from '@/hooks/use-toast';
-import { useSolutionEditor } from '@/components/admin/solution-editor/useSolutionEditor';
-import { toast as sonnerToast } from 'sonner';
+import { useParams } from "react-router-dom";
+import { useAuth } from "@/contexts/auth";
+import LoadingScreen from "@/components/common/LoadingScreen";
+import SolutionEditorHeader from "@/components/admin/solution-editor/SolutionEditorHeader";
+import SolutionEditorTabs from "@/components/admin/solution-editor/SolutionEditorTabs";
+import { Card, CardContent } from "@/components/ui/card";
+import NavigationButtons from "@/components/admin/solution-editor/NavigationButtons";
+import AuthError from "@/components/admin/solution-editor/AuthError";
+import { useToast } from "@/hooks/use-toast";
+import { useSolutionEditor } from "@/components/admin/solution-editor/useSolutionEditor";
+import { useEffect } from "react";
 
 const AdminSolutionEdit = () => {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
   const { toast } = useToast();
-  const navigate = useNavigate();
-  
-  // Toast para informar que está carregando
-  useEffect(() => {
-    if (id) {
-      sonnerToast.info("Carregando solução para edição...", {
-        id: `loading-solution-edit-${id}`,
-        duration: 3000
-      });
-    }
-  }, [id]);
   
   const {
     solution,
@@ -39,21 +26,14 @@ const AdminSolutionEdit = () => {
     currentValues,
     currentStep,
     setCurrentStep,
-    totalSteps,
-    stepTitles
+    totalSteps
   } = useSolutionEditor(id, user);
   
   useEffect(() => {
-    // Logging for debugging purposes
-    console.log("Solution Editor loaded with ID:", id);
-    console.log("Solution data:", solution);
+    console.log("Admin Solution Edit loaded with ID:", id);
     
     if (!solution && !loading && id) {
-      sonnerToast.error("Solução não encontrada para edição", {
-        description: "Não foi possível encontrar a solução com o ID fornecido.",
-        id: `solution-edit-not-found-${id}`,
-        duration: 5000
-      });
+      console.warn("Solução não encontrada para edição no admin:", id);
     }
   }, [id, solution, loading]);
   

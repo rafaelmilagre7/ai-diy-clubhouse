@@ -1,5 +1,5 @@
 
-import React, { useCallback, useEffect } from "react";
+import React, { useCallback, useEffect, useRef } from "react";
 import { Module } from "@/lib/supabase";
 import { ModuleContentText } from "./ModuleContentText";
 import { ContentTypeSwitcher } from "./ContentTypeSwitcher";
@@ -13,6 +13,7 @@ interface ModuleContentRendererProps {
 
 export const ModuleContentRenderer = ({ module, onInteraction }: ModuleContentRendererProps) => {
   const { log } = useLogging("ModuleContentRenderer");
+  const hasLoggedRef = useRef(false);
   
   // Memoize handler para evitar recriações desnecessárias
   const handleInteraction = useCallback(() => {
@@ -20,17 +21,20 @@ export const ModuleContentRenderer = ({ module, onInteraction }: ModuleContentRe
     onInteraction();
   }, [module.id, onInteraction, log]);
   
-  // Efeito para detectar primeiro carregamento
+  // Efeito para detectar primeiro carregamento - usando ref para garantir uma só vez
   useEffect(() => {
-    // Registrar renderização do módulo
-    log("Módulo renderizado", { 
-      module_id: module.id,
-      module_type: module.type,
-      module_title: module.title
-    });
-  }, [module.id, module.type, module.title, log]);
+    if (!hasLoggedRef.current && module?.id) {
+      // Registrar renderização do módulo apenas uma vez
+      log("Módulo renderizado", { 
+        module_id: module.id,
+        module_type: module.type,
+        module_title: module.title
+      });
+      hasLoggedRef.current = true;
+    }
+  }, [module?.id, module?.type, module?.title, log]);
   
-  if (!module.content) {
+  if (!module?.content) {
     return (
       <div className="p-8 text-center">
         <p className="text-muted-foreground">Nenhum conteúdo disponível para este módulo.</p>

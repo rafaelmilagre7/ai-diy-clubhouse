@@ -1,61 +1,60 @@
 
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
-import { supabase, Solution, Module, Progress } from "@/lib/supabase";
+import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
+import { Module, Solution } from "@/lib/supabase";
 import { useLogging } from "@/hooks/useLogging";
 
-export const useImplementationData = () => {
-  const { id } = useParams<{ id: string }>();
-  const { user, profile } = useAuth();
+export const useModuleImplementation = () => {
+  const { id, moduleIndex, moduleIdx } = useParams<{ 
+    id: string; 
+    moduleIndex: string;
+    moduleIdx: string; 
+  }>();
+  
+  // Compatibilidade entre URLs /implement/:id/:moduleIdx e /implementation/:id/:moduleIdx
+  const currentModuleIdx = moduleIndex || moduleIdx || "0";
+  const moduleIdxNumber = parseInt(currentModuleIdx);
+  
+  const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { log, logError } = useLogging("useImplementationData");
-  const isAdmin = profile?.role === 'admin';
+  const { log, logError } = useLogging();
   
   const [solution, setSolution] = useState<Solution | null>(null);
   const [modules, setModules] = useState<Module[]>([]);
-  const [progress, setProgress] = useState<Progress | null>(null);
+  const [currentModule, setCurrentModule] = useState<Module | null>(null);
   const [completedModules, setCompletedModules] = useState<number[]>([]);
+  const [progress, setProgress] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [attemptCount, setAttemptCount] = useState(0);
-
-  // Fetch solution and modules - com limite de tentativas
+  const [loadAttempt, setLoadAttempt] = useState(0);
+  
+  // Fetch solution and modules data - com limite de tentativas
   useEffect(() => {
-    // Evitar carregamentos repetidos
-    if (attemptCount > 2) return;
+    // Limitar número de tentativas para evitar loops
+    if (loadAttempt > 2) {
+      setLoading(false);
+      return;
+    }
     
     const fetchData = async () => {
-      if (!id) {
-        setLoading(false);
-        return;
-      }
+      if (!id) return;
       
       try {
         setLoading(true);
-        log("Buscando dados de implementação", { id, attempt: attemptCount });
+        log("Buscando dados para implementação", { id, moduleIdx: moduleIdxNumber, attempt: loadAttempt });
         
-        // Buscar solução
-        let query = supabase
+        // Fetch solution
+        const { data: solutionData, error: solutionError } = await supabase
           .from("solutions")
           .select("*")
-          .eq("id", id);
-          
-        // Se não for admin, filtra apenas soluções publicadas
-        if (!isAdmin) {
-          query = query.eq("published", true);
-        }
-        
-        const { data: solutionData, error: solutionError } = await query.single();
+          .eq("id", id)
+          .single();
         
         if (solutionError) {
-          // Se não encontrou a solução
-          if (solutionError.code === "PGRST116" && !isAdmin) {
-            toast({
-              title: "Solução não disponível",
-              description: "Esta solução não está disponível para implementação.",
-            });
+          if (solutionError.code === "PGRST116") {
             navigate("/solutions");
             return;
           }
@@ -68,9 +67,9 @@ export const useImplementationData = () => {
         }
         
         setSolution(solutionData as Solution);
-        log("Solução carregada com sucesso", { id: solutionData.id });
+        log("Solução carregada", { id: solutionData.id });
         
-        // Buscar módulos para esta solução
+        // Fetch modules for this solution
         const { data: modulesData, error: modulesError } = await supabase
           .from("modules")
           .select("*")
@@ -81,15 +80,27 @@ export const useImplementationData = () => {
           throw modulesError;
         }
         
+        // Verificar se temos módulos válidos
         if (modulesData && modulesData.length > 0) {
           setModules(modulesData as Module[]);
           log("Módulos carregados", { count: modulesData.length });
+          
+          // Set current module based on moduleIdx - verificar limites
+          if (moduleIdxNumber < modulesData.length) {
+            setCurrentModule(modulesData[moduleIdxNumber] as Module);
+          } else if (modulesData.length > 0) {
+            // Se o índice estiver fora dos limites, usar o primeiro módulo
+            setCurrentModule(modulesData[0] as Module);
+          }
         } else {
-          // Criar módulo placeholder se não existirem módulos
+          // Se não houver módulos, criar um placeholder
           const placeholderModule = {
-            id: `placeholder-module-${id}`,
+            id: `placeholder-${id}`,
             solution_id: id,
-            title: solutionData?.title || "Implementação",
+            title: solutionData.title,
+            description: "Implementação da solução",
+            type: "landing",
+            module_order: 0,
             content: {
               blocks: [
                 {
@@ -104,51 +115,62 @@ export const useImplementationData = () => {
                 }
               ]
             },
-            type: "implementation",
-            module_order: 0,
             created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
           };
           
           setModules([placeholderModule as Module]);
+          setCurrentModule(placeholderModule as Module);
         }
         
-        // Buscar progresso do usuário
+        // Fetch progress for logged in user
         if (user) {
           try {
             const { data: progressData, error: progressError } = await supabase
               .from("progress")
               .select("*")
-              .eq("user_id", user.id)
               .eq("solution_id", id)
+              .eq("user_id", user.id)
               .maybeSingle();
             
             if (!progressError && progressData) {
-              setProgress(progressData as Progress);
+              setProgress(progressData);
+              log("Progresso encontrado", { progress: progressData });
               
-              // Processar módulos completados
-              if (Array.isArray(progressData.completed_modules)) {
+              // Update current module index in progress if different
+              if (progressData.current_module !== moduleIdxNumber) {
+                await supabase
+                  .from("progress")
+                  .update({ 
+                    current_module: moduleIdxNumber,
+                    last_activity: new Date().toISOString()
+                  })
+                  .eq("id", progressData.id);
+              }
+              
+              // Set completed modules
+              if (progressData.completed_modules && Array.isArray(progressData.completed_modules)) {
                 setCompletedModules(progressData.completed_modules);
               } else {
                 setCompletedModules([]);
               }
             } else {
-              // Criar registro de progresso inicial se não existir
+              // Create progress record if it doesn't exist
               const { data: newProgress, error: createError } = await supabase
                 .from("progress")
                 .insert({
                   user_id: user.id,
                   solution_id: id,
-                  current_module: 0,
+                  current_module: moduleIdxNumber,
                   is_completed: false,
                   completed_modules: [],
-                  last_activity: new Date().toISOString(),
+                  last_activity: new Date().toISOString()
                 })
                 .select()
                 .single();
               
               if (!createError && newProgress) {
-                setProgress(newProgress as Progress);
+                setProgress(newProgress);
                 setCompletedModules([]);
               }
             }
@@ -157,22 +179,24 @@ export const useImplementationData = () => {
           }
         }
       } catch (error) {
-        logError("Erro ao carregar dados de implementação", { error, id, attempt: attemptCount });
-        setAttemptCount(prev => prev + 1);
+        logError("Erro na implementação", { error, id });
+        // Incrementar contador de tentativas para limitar retentativas
+        setLoadAttempt(prev => prev + 1);
       } finally {
         setLoading(false);
       }
     };
     
     fetchData();
-  }, [id, user, toast, navigate, isAdmin, log, logError, attemptCount]);
+  }, [id, moduleIdxNumber, user, toast, navigate, log, logError, loadAttempt]);
   
   return {
     solution,
     modules,
-    progress,
+    currentModule,
     completedModules,
     setCompletedModules,
+    progress,
     loading
   };
 };

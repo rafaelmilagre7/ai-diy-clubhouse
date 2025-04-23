@@ -24,7 +24,7 @@ export const useSolutionData = (id: string | undefined) => {
     try {
       log("Buscando solução", { id });
       
-      // Buscar a solução pelo ID
+      // Buscar a solução pelo ID - não uso maybeSingle para evitar erro se não encontrar
       let query = supabase
         .from("solutions")
         .select("*")
@@ -35,16 +35,16 @@ export const useSolutionData = (id: string | undefined) => {
         query = query.eq("published", true);
       }
       
-      const { data, error: fetchError } = await query.maybeSingle();
+      const { data, error: fetchError } = await query.single();
       
       if (fetchError) {
+        if (fetchError.code === 'PGRST116') {
+          log("Solução não encontrada", { id });
+          return null;
+        }
+        
         logError("Erro ao buscar solução:", { error: fetchError, id });
         throw fetchError;
-      }
-      
-      if (!data) {
-        log("Nenhuma solução encontrada com ID", { id });
-        return null;
       }
       
       log("Dados da solução encontrados", { solutionId: data.id, solutionTitle: data.title });
@@ -52,7 +52,10 @@ export const useSolutionData = (id: string | undefined) => {
       
     } catch (error: any) {
       logError("Erro em useSolutionData:", { error });
-      throw error;
+      if (error.code === 'PGRST116') {
+        return null; // Solução não encontrada
+      }
+      return null;
     }
   }, [id, isAdmin, log, logError]);
 
@@ -60,15 +63,16 @@ export const useSolutionData = (id: string | undefined) => {
   const { 
     data: solution, 
     error,
-    isLoading: loading,
+    isLoading,
     refetch
   } = useQuery({
     queryKey: ['solution', id],
     queryFn: fetchSolution,
     enabled: !!id,
-    staleTime: 5 * 60 * 1000, // 5 minutos antes de considerar os dados obsoletos
-    retry: 1, // Reduzindo número de tentativas para evitar sobrecarga
+    staleTime: 1000 * 60, // 1 minuto antes de considerar os dados obsoletos
+    retry: false, // Sem tentativas repetidas para evitar excesso de requisições
     refetchOnWindowFocus: false,
+    refetchOnMount: true,
   });
 
   // Sincronizar o estado interno com os dados obtidos
@@ -124,8 +128,8 @@ export const useSolutionData = (id: string | undefined) => {
   };
 
   return {
-    solution: solutionData || solution,
-    loading,
+    solution: solutionData,
+    loading: isLoading,
     error,
     progress,
     refetch,

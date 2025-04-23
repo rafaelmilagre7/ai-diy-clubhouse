@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef } from "react";
-import { useModuleImplementation } from "@/hooks/useModuleImplementation";
+import { useModuleImplementation } from "@/hooks/implementation/useModuleImplementation";
 import LoadingScreen from "@/components/common/LoadingScreen";
 import { ImplementationHeader } from "@/components/implementation/ImplementationHeader";
 import { ImplementationNotFound } from "@/components/implementation/ImplementationNotFound";
@@ -19,6 +19,7 @@ import { ImplementationTabsNavigation } from "@/components/implementation/Implem
 
 const SolutionImplementation = () => {
   const initialLoadRef = useRef(true);
+  const loadAttemptRef = useRef(0);
   
   // Carregar dados do módulo
   const {
@@ -32,7 +33,7 @@ const SolutionImplementation = () => {
   
   // Estado da aba ativa
   const [activeTab, setActiveTab] = useState("tools");
-  const { log, logError } = useLogging();
+  const { log, logError } = useLogging("SolutionImplementation");
   
   // Funcionalidade de conclusão
   const {
@@ -78,8 +79,9 @@ const SolutionImplementation = () => {
     await handleConfirmImplementation();
   };
   
-  // Mostra loading enquanto carrega
-  if (loading) {
+  // Verificar carregamento com limite de tentativas
+  if (loading && loadAttemptRef.current < 3) {
+    loadAttemptRef.current++;
     return <LoadingScreen />;
   }
   

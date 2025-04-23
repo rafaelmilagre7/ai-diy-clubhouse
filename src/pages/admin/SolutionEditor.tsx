@@ -1,5 +1,5 @@
 
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
 import LoadingScreen from "@/components/common/LoadingScreen";
 import SolutionEditorHeader from "@/components/admin/solution-editor/SolutionEditorHeader";
@@ -10,23 +10,11 @@ import AuthError from "@/components/admin/solution-editor/AuthError";
 import { useToast } from "@/hooks/use-toast";
 import { useSolutionEditor } from "@/components/admin/solution-editor/useSolutionEditor";
 import { useEffect } from "react";
-import { toast as sonnerToast } from "sonner";
 
 const SolutionEditor = () => {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
   const { toast } = useToast();
-  const navigate = useNavigate();
-  
-  // Toast para informar que está carregando
-  useEffect(() => {
-    if (id) {
-      sonnerToast.info("Carregando editor de solução...", {
-        id: `loading-solution-editor-${id}`,
-        duration: 3000
-      });
-    }
-  }, [id]);
   
   const {
     solution,
@@ -38,21 +26,15 @@ const SolutionEditor = () => {
     currentValues,
     currentStep,
     setCurrentStep,
-    totalSteps,
-    stepTitles
+    totalSteps
   } = useSolutionEditor(id, user);
   
   useEffect(() => {
     // Logging for debugging purposes
     console.log("Solution Editor loaded with ID:", id);
-    console.log("Solution data:", solution);
     
     if (!solution && !loading && id) {
-      sonnerToast.error("Solução não encontrada", {
-        description: "Não foi possível encontrar a solução com o ID fornecido.",
-        id: `solution-editor-not-found-${id}`,
-        duration: 5000
-      });
+      console.warn("Solução não encontrada para edição:", id);
     }
   }, [id, solution, loading]);
   
