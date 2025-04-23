@@ -23,6 +23,10 @@ const Onboarding: React.FC = () => {
   const navigate = useNavigate();
   const routeStep = getStepFromRoute(location.pathname);
   
+  useEffect(() => {
+    console.log(`Onboarding renderizado. Rota atual: ${location.pathname}, routeStep mapeado: ${routeStep}, currentStep: ${currentStep}`);
+  }, [location.pathname, routeStep, currentStep]);
+  
   // Redirecionar para o passo atual se estiver em um passo incorreto
   useEffect(() => {
     // Mapear as rotas antigas para as novas
@@ -33,19 +37,23 @@ const Onboarding: React.FC = () => {
     };
 
     if (!isLoading && data) {
+      // Log para diagnóstico
+      console.log(`Verificando redirecionamento. Rota atual: ${location.pathname}, currentStep: ${currentStep}`);
+      
       // Verificar se estamos em uma rota antiga que precisa ser redirecionada
       const pathParts = location.pathname.split('/');
       const currentRouteStep = pathParts[pathParts.length - 1];
       
       if (routeMapping[currentRouteStep]) {
         console.log(`Redirecionando de ${location.pathname} para /onboarding/${routeMapping[currentRouteStep]}`);
+        toast.info(`Redirecionando para a rota atualizada...`);
         navigate(`/onboarding/${routeMapping[currentRouteStep]}`, { replace: true });
-        toast.info(`Redirecionando para a página correta...`);
         return;
       }
 
       // Redirecionar se estivermos em um passo incorreto
       if (currentStep !== routeStep && routeStep !== 'professional_data' && routeStep !== 'professional') {
+        console.log(`Redirecionando para o passo correto: ${currentStep}`);
         navigate(`/onboarding/${currentStep === 'personal' ? '' : currentStep}`, { replace: true });
       }
     }
@@ -76,11 +84,14 @@ const Onboarding: React.FC = () => {
 
   // Renderizar o formulário adequado
   const renderStepForm = () => {
+    console.log(`Renderizando formulário para routeStep: ${routeStep}`);
+    
     switch (routeStep) {
       case 'personal':
         return <PersonalForm data={data} onSubmit={(formData) => saveFormData(formData, 'personal')} isSaving={isSaving} />;
       case 'professional':
       case 'professional_data':
+        console.log('Renderizando formulário de dados profissionais');
         return <ProfessionalForm data={data} onSubmit={(formData) => saveFormData(formData, 'professional_data')} isSaving={isSaving} />;
       case 'business-context':
         return <BusinessContextForm data={data} onSubmit={(formData) => saveFormData(formData, 'business-context')} isSaving={isSaving} />;

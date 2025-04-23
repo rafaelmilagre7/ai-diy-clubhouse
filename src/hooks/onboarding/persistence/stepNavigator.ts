@@ -18,7 +18,7 @@ export function navigateAfterStep(
   // Mapeamento direto de etapas para rotas de navegação
   const nextRouteMap: {[key: string]: string} = {
     "personal": "/onboarding/professional-data",
-    "professional": "/onboarding/business-context", // Compatibilidade com o nome antigo
+    "professional": "/onboarding/professional-data", // Redireciona para a nova URL
     "professional_data": "/onboarding/business-context",
     "business_context": "/onboarding/ai-experience",
     "ai_exp": "/onboarding/club-goals",
