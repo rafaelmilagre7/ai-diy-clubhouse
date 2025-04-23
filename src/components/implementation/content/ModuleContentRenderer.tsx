@@ -17,9 +17,11 @@ export const ModuleContentRenderer = ({ module, onInteraction }: ModuleContentRe
   
   // Memoize handler para evitar recriações desnecessárias
   const handleInteraction = useCallback(() => {
-    log("Interação do usuário com módulo", { module_id: module.id });
-    onInteraction();
-  }, [module.id, onInteraction, log]);
+    if (module?.id) {
+      log("Interação do usuário com módulo", { module_id: module.id });
+      onInteraction();
+    }
+  }, [module?.id, onInteraction, log]);
   
   // Efeito para detectar primeiro carregamento - usando ref para garantir uma só vez
   useEffect(() => {
@@ -28,13 +30,22 @@ export const ModuleContentRenderer = ({ module, onInteraction }: ModuleContentRe
       log("Módulo renderizado", { 
         module_id: module.id,
         module_type: module.type,
-        module_title: module.title
+        module_title: module.title,
+        solution_id: module.solution_id
       });
       hasLoggedRef.current = true;
     }
-  }, [module?.id, module?.type, module?.title, log]);
+  }, [module?.id, module?.type, module?.title, module?.solution_id, log]);
   
-  if (!module?.content) {
+  if (!module) {
+    return (
+      <div className="p-8 text-center">
+        <p className="text-muted-foreground">Nenhum módulo disponível para implementação.</p>
+      </div>
+    );
+  }
+  
+  if (!module.content) {
     return (
       <div className="p-8 text-center">
         <p className="text-muted-foreground">Nenhum conteúdo disponível para este módulo.</p>

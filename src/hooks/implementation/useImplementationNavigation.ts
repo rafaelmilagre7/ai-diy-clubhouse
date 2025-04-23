@@ -2,6 +2,7 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useRef } from "react";
 import { useLogging } from "@/hooks/useLogging";
+import { toast } from "sonner";
 
 export const useImplementationNavigation = () => {
   const { id, moduleIndex, moduleIdx } = useParams<{ 
@@ -25,6 +26,7 @@ export const useImplementationNavigation = () => {
   useEffect(() => {
     if (!id) {
       log("ID da implementação não encontrado, redirecionando para dashboard");
+      toast.error("ID da solução não encontrado");
       navigate("/dashboard", { replace: true });
     }
   }, [id, navigate, log]);
@@ -32,7 +34,7 @@ export const useImplementationNavigation = () => {
   // Corrigir problemas de URL inconsistente - com limitador de tentativas
   useEffect(() => {
     // Limitar correções para evitar loops
-    if (navigationAttempts.current > 2) return;
+    if (navigationAttempts.current > 2 || !id) return;
     
     const path = window.location.pathname;
     
@@ -51,11 +53,20 @@ export const useImplementationNavigation = () => {
   
   // Navigate to next module
   const handleComplete = () => {
+    if (!id) {
+      log("ID da implementação não encontrado, não é possível avançar");
+      return;
+    }
     navigate(`${basePath}/${id}/${moduleIdxNumber + 1}`, { replace: true });
   };
   
   // Navigate to previous module
   const handlePrevious = () => {
+    if (!id) {
+      log("ID da implementação não encontrado, não é possível retornar");
+      return;
+    }
+    
     if (moduleIdxNumber > 0) {
       navigate(`${basePath}/${id}/${moduleIdxNumber - 1}`, { replace: true });
     } else {
@@ -65,6 +76,10 @@ export const useImplementationNavigation = () => {
   
   // Navigate to specific module
   const handleNavigateToModule = (moduleIdx: number) => {
+    if (!id) {
+      log("ID da implementação não encontrado, não é possível navegar para módulo específico");
+      return;
+    }
     navigate(`${basePath}/${id}/${moduleIdx}`, { replace: true });
   };
   
@@ -72,6 +87,7 @@ export const useImplementationNavigation = () => {
     handleComplete,
     handlePrevious,
     handleNavigateToModule,
-    currentModuleIdx: moduleIdxNumber
+    currentModuleIdx: moduleIdxNumber,
+    implementationId: id
   };
 };

@@ -24,7 +24,7 @@ export const useSolutionData = (id: string | undefined) => {
     try {
       log("Buscando solução", { id });
       
-      // Buscar a solução pelo ID - não uso maybeSingle para evitar erro se não encontrar
+      // Buscar a solução pelo ID
       let query = supabase
         .from("solutions")
         .select("*")
@@ -35,26 +35,23 @@ export const useSolutionData = (id: string | undefined) => {
         query = query.eq("published", true);
       }
       
-      const { data, error: fetchError } = await query.single();
+      const { data, error: fetchError } = await query.maybeSingle();
       
       if (fetchError) {
-        if (fetchError.code === 'PGRST116') {
-          log("Solução não encontrada", { id });
-          return null;
-        }
-        
-        logError("Erro ao buscar solução:", { error: fetchError, id });
+        logError("Erro ao buscar solução", { error: fetchError, id });
         throw fetchError;
+      }
+      
+      if (!data) {
+        log("Solução não encontrada", { id });
+        return null;
       }
       
       log("Dados da solução encontrados", { solutionId: data.id, solutionTitle: data.title });
       return data as Solution;
       
     } catch (error: any) {
-      logError("Erro em useSolutionData:", { error });
-      if (error.code === 'PGRST116') {
-        return null; // Solução não encontrada
-      }
+      logError("Erro em useSolutionData", { error });
       return null;
     }
   }, [id, isAdmin, log, logError]);
@@ -70,9 +67,8 @@ export const useSolutionData = (id: string | undefined) => {
     queryFn: fetchSolution,
     enabled: !!id,
     staleTime: 1000 * 60, // 1 minuto antes de considerar os dados obsoletos
-    retry: false, // Sem tentativas repetidas para evitar excesso de requisições
+    retry: 1, // Uma tentativa adicional, dois no total
     refetchOnWindowFocus: false,
-    refetchOnMount: true,
   });
 
   // Sincronizar o estado interno com os dados obtidos
@@ -96,7 +92,7 @@ export const useSolutionData = (id: string | undefined) => {
           .maybeSingle();
           
         if (error) {
-          logError("Erro ao buscar progresso:", { error });
+          logError("Erro ao buscar progresso", { error });
           return null;
         }
         
@@ -112,7 +108,7 @@ export const useSolutionData = (id: string | undefined) => {
         
         return data;
       } catch (error) {
-        logError("Erro ao buscar progresso:", { error });
+        logError("Erro ao buscar progresso", { error });
         return null;
       }
     };

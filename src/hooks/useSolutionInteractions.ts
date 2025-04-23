@@ -5,18 +5,19 @@ import { useAuth } from "@/contexts/auth";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 import { useLogging } from "@/hooks/useLogging";
+import { toast } from "sonner";
 
 export const useSolutionInteractions = (solutionId: string | undefined, progress: any) => {
   const { user } = useAuth();
-  const { toast } = useToast();
+  const { toast: uiToast } = useToast();
   const navigate = useNavigate();
-  const { log, logError } = useLogging();
+  const { log, logError } = useLogging("useSolutionInteractions");
   
   const [initializing, setInitializing] = useState(false);
   
   const startImplementation = async () => {
-    if (!user || !solutionId) {
-      toast({
+    if (!user) {
+      uiToast({
         title: "Autenticação necessária",
         description: "Você precisa estar logado para implementar esta solução",
         variant: "destructive"
@@ -24,9 +25,35 @@ export const useSolutionInteractions = (solutionId: string | undefined, progress
       return;
     }
     
+    if (!solutionId) {
+      uiToast({
+        title: "Erro",
+        description: "ID da solução não encontrado",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     try {
       setInitializing(true);
-      log("Iniciando implementação da solução:", { solutionId });
+      log("Iniciando implementação da solução", { solutionId });
+      
+      // Verificar se a solução existe antes de prosseguir
+      const { data: solutionData, error: solutionError } = await supabase
+        .from("solutions")
+        .select("id, title")
+        .eq("id", solutionId)
+        .maybeSingle();
+        
+      if (solutionError || !solutionData) {
+        logError("Erro ao verificar solução", { error: solutionError });
+        uiToast({
+          title: "Solução não encontrada",
+          description: "Não foi possível encontrar a solução solicitada.",
+          variant: "destructive"
+        });
+        return;
+      }
       
       // If there's no progress record yet, create one
       if (!progress) {
@@ -45,21 +72,26 @@ export const useSolutionInteractions = (solutionId: string | undefined, progress
           .single();
         
         if (error) {
-          logError("Erro ao criar progresso:", error);
-          throw error;
+          logError("Erro ao criar progresso", { error });
+          uiToast({
+            title: "Erro ao criar progresso",
+            description: "Ocorreu um erro ao tentar iniciar a implementação.",
+            variant: "destructive"
+          });
+          return;
         }
         
-        log("Progresso criado com sucesso:", { data });
+        log("Progresso criado com sucesso", { data });
       } else {
-        log("Usando progresso existente:", { progress });
+        log("Usando progresso existente", { progress });
       }
       
-      // Navigate directly to the implementation page
+      // Navegar para implementação
       log("Redirecionando para", { path: `/implement/${solutionId}/0` });
       navigate(`/implement/${solutionId}/0`);
     } catch (error) {
-      logError("Erro ao iniciar implementação:", error);
-      toast({
+      logError("Erro ao iniciar implementação", { error });
+      uiToast({
         title: "Erro ao iniciar implementação",
         description: "Ocorreu um erro ao tentar iniciar a implementação da solução.",
         variant: "destructive",
@@ -70,34 +102,35 @@ export const useSolutionInteractions = (solutionId: string | undefined, progress
   };
   
   const continueImplementation = () => {
-    if (!solutionId || !progress) {
-      toast({
+    if (!solutionId) {
+      uiToast({
         title: "Erro",
-        description: "Não foi possível continuar a implementação",
+        description: "ID da solução não encontrado",
         variant: "destructive"
       });
       return;
     }
     
+    if (!progress) {
+      // Se não há progresso, iniciar como novo
+      startImplementation();
+      return;
+    }
+    
     // Navigate directly to the implementation page
-    log("Continuando implementação no módulo:", { moduleIdx: progress.current_module });
-    navigate(`/implement/${solutionId}/${progress.current_module || 0}`);
+    const moduleIdx = progress.current_module || 0;
+    log("Continuando implementação no módulo", { moduleIdx });
+    navigate(`/implement/${solutionId}/${moduleIdx}`);
   };
   
   const toggleFavorite = () => {
-    toast({
-      title: "Recurso em desenvolvimento",
-      description: "A função de favoritos será implementada em breve."
-    });
-    // Implementação futura para favoritar soluções
+    // Desativar notificações toast
+    log("Função de favoritar ainda não implementada");
   };
   
   const downloadMaterials = () => {
-    toast({
-      title: "Recurso em desenvolvimento",
-      description: "O download de materiais será implementado em breve."
-    });
-    // Implementação futura para download de materiais
+    // Desativar notificações toast
+    log("Função de download ainda não implementada");
   };
   
   return {

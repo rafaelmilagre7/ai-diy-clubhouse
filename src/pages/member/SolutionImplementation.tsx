@@ -16,6 +16,7 @@ import { useSolutionCompletion } from "@/hooks/implementation/useSolutionComplet
 import { useRealtimeComments } from "@/hooks/implementation/useRealtimeComments";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { ImplementationTabsNavigation } from "@/components/implementation/ImplementationTabsNavigation";
+import ErrorBoundary from "@/components/ErrorBoundary";
 
 const SolutionImplementation = () => {
   const initialLoadRef = useRef(true);
@@ -76,7 +77,15 @@ const SolutionImplementation = () => {
   
   // Função para completar implementação
   const onComplete = async () => {
-    await handleConfirmImplementation();
+    try {
+      if (!progress?.id) {
+        log("Progresso não encontrado, não é possível completar");
+        return;
+      }
+      await handleConfirmImplementation();
+    } catch (error) {
+      logError("Erro ao confirmar implementação", { error });
+    }
   };
   
   // Verificar carregamento com limite de tentativas
@@ -91,56 +100,73 @@ const SolutionImplementation = () => {
     return <ImplementationNotFound />;
   }
   
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-[#f8fdff] via-[#f0fafe] to-[#edf6fb] pb-16">
-      <div className="container max-w-4xl py-4 md:py-6 animate-fade-in">
-        <GlassCard className="p-0 md:p-0 transition-all duration-300 shadow-xl border border-[#0ABAB5]/10 overflow-hidden">
-          <ImplementationHeader solution={solution} />
-          
-          <div className="mt-0 px-4 md:px-6 pb-6">
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <ImplementationTabsNavigation activeTab={activeTab} setActiveTab={setActiveTab} />
-              
-              <div className="bg-white/50 rounded-xl p-4 md:p-6 border border-[#0ABAB5]/5 min-h-[30vh]">
-                <TabsContent value="tools" className="mt-0">
-                  <ModuleContentTools module={currentModule} />
-                </TabsContent>
-                
-                <TabsContent value="materials" className="mt-0">
-                  <ModuleContentMaterials module={currentModule} />
-                </TabsContent>
-                
-                <TabsContent value="videos" className="mt-0">
-                  <ModuleContentVideos module={currentModule} />
-                </TabsContent>
-                
-                <TabsContent value="checklist" className="mt-0">
-                  <ModuleContentChecklist module={currentModule} />
-                </TabsContent>
-                
-                <TabsContent value="comments" className="mt-0">
-                  {solution && currentModule && (
-                    <CommentsSection 
-                      solutionId={solution.id} 
-                      moduleId={currentModule.id} 
-                    />
-                  )}
-                </TabsContent>
-                
-                <TabsContent value="complete" className="mt-0">
-                  <ImplementationComplete 
-                    solution={solution} 
-                    onComplete={onComplete} 
-                    isCompleting={isCompleting}
-                    isCompleted={isCompleted}
-                  />
-                </TabsContent>
-              </div>
-            </Tabs>
-          </div>
-        </GlassCard>
+  // Validar se temos um módulo atual
+  if (!currentModule) {
+    logError("Módulo atual não encontrado");
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-[#f8fdff] via-[#f0fafe] to-[#edf6fb] pb-16 flex items-center justify-center">
+        <div className="container max-w-4xl py-4 md:py-6">
+          <GlassCard className="p-6 md:p-8">
+            <h2 className="text-xl font-medium mb-4">Módulo não encontrado</h2>
+            <p>Não foi possível encontrar o módulo solicitado para esta solução.</p>
+          </GlassCard>
+        </div>
       </div>
-    </div>
+    );
+  }
+
+  return (
+    <ErrorBoundary>
+      <div className="min-h-screen bg-gradient-to-br from-[#f8fdff] via-[#f0fafe] to-[#edf6fb] pb-16">
+        <div className="container max-w-4xl py-4 md:py-6 animate-fade-in">
+          <GlassCard className="p-0 md:p-0 transition-all duration-300 shadow-xl border border-[#0ABAB5]/10 overflow-hidden">
+            <ImplementationHeader solution={solution} />
+            
+            <div className="mt-0 px-4 md:px-6 pb-6">
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                <ImplementationTabsNavigation activeTab={activeTab} setActiveTab={setActiveTab} />
+                
+                <div className="bg-white/50 rounded-xl p-4 md:p-6 border border-[#0ABAB5]/5 min-h-[30vh]">
+                  <TabsContent value="tools" className="mt-0">
+                    <ModuleContentTools module={currentModule} />
+                  </TabsContent>
+                  
+                  <TabsContent value="materials" className="mt-0">
+                    <ModuleContentMaterials module={currentModule} />
+                  </TabsContent>
+                  
+                  <TabsContent value="videos" className="mt-0">
+                    <ModuleContentVideos module={currentModule} />
+                  </TabsContent>
+                  
+                  <TabsContent value="checklist" className="mt-0">
+                    <ModuleContentChecklist module={currentModule} />
+                  </TabsContent>
+                  
+                  <TabsContent value="comments" className="mt-0">
+                    {solution && currentModule && (
+                      <CommentsSection 
+                        solutionId={solution.id} 
+                        moduleId={currentModule.id} 
+                      />
+                    )}
+                  </TabsContent>
+                  
+                  <TabsContent value="complete" className="mt-0">
+                    <ImplementationComplete 
+                      solution={solution} 
+                      onComplete={onComplete} 
+                      isCompleting={isCompleting}
+                      isCompleted={isCompleted}
+                    />
+                  </TabsContent>
+                </div>
+              </Tabs>
+            </div>
+          </GlassCard>
+        </div>
+      </div>
+    </ErrorBoundary>
   );
 };
 

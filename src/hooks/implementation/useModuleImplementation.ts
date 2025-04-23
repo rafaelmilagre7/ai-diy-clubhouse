@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 import { Module, Solution } from "@/lib/supabase";
 import { useLogging } from "@/hooks/useLogging";
+import { toast } from "sonner";
 
 export const useModuleImplementation = () => {
   const { id, moduleIndex, moduleIdx } = useParams<{ 
@@ -19,9 +20,8 @@ export const useModuleImplementation = () => {
   const moduleIdxNumber = parseInt(currentModuleIdx);
   
   const { user } = useAuth();
-  const { toast } = useToast();
   const navigate = useNavigate();
-  const { log, logError } = useLogging();
+  const { log, logError } = useLogging("useModuleImplementation");
   
   const [solution, setSolution] = useState<Solution | null>(null);
   const [modules, setModules] = useState<Module[]>([]);
@@ -39,9 +39,13 @@ export const useModuleImplementation = () => {
       return;
     }
     
+    if (!id) {
+      log("ID da solução não fornecido");
+      setLoading(false);
+      return;
+    }
+    
     const fetchData = async () => {
-      if (!id) return;
-      
       try {
         setLoading(true);
         log("Buscando dados para implementação", { id, moduleIdx: moduleIdxNumber, attempt: loadAttempt });
@@ -51,10 +55,12 @@ export const useModuleImplementation = () => {
           .from("solutions")
           .select("*")
           .eq("id", id)
-          .single();
+          .maybeSingle();
         
         if (solutionError) {
+          logError("Erro ao buscar solução", { error: solutionError });
           if (solutionError.code === "PGRST116") {
+            toast.error("Solução não encontrada");
             navigate("/solutions");
             return;
           }
@@ -62,6 +68,7 @@ export const useModuleImplementation = () => {
         }
         
         if (!solutionData) {
+          toast.error("Solução não encontrada");
           navigate("/solutions");
           return;
         }
@@ -77,6 +84,7 @@ export const useModuleImplementation = () => {
           .order("module_order", { ascending: true });
         
         if (modulesError) {
+          logError("Erro ao buscar módulos", { error: modulesError });
           throw modulesError;
         }
         
@@ -91,9 +99,12 @@ export const useModuleImplementation = () => {
           } else if (modulesData.length > 0) {
             // Se o índice estiver fora dos limites, usar o primeiro módulo
             setCurrentModule(modulesData[0] as Module);
+            // Corrigir o índice na URL
+            navigate(`/implement/${id}/0`, { replace: true });
           }
         } else {
           // Se não houver módulos, criar um placeholder
+          log("Nenhum módulo encontrado, criando placeholder");
           const placeholderModule = {
             id: `placeholder-${id}`,
             solution_id: id,
@@ -133,7 +144,9 @@ export const useModuleImplementation = () => {
               .eq("user_id", user.id)
               .maybeSingle();
             
-            if (!progressError && progressData) {
+            if (progressError) {
+              logError("Erro ao buscar progresso", { error: progressError });
+            } else if (progressData) {
               setProgress(progressData);
               log("Progresso encontrado", { progress: progressData });
               
@@ -156,6 +169,7 @@ export const useModuleImplementation = () => {
               }
             } else {
               // Create progress record if it doesn't exist
+              log("Nenhum progresso encontrado, criando novo registro");
               const { data: newProgress, error: createError } = await supabase
                 .from("progress")
                 .insert({
@@ -169,7 +183,9 @@ export const useModuleImplementation = () => {
                 .select()
                 .single();
               
-              if (!createError && newProgress) {
+              if (createError) {
+                logError("Erro ao criar progresso", { error: createError });
+              } else if (newProgress) {
                 setProgress(newProgress);
                 setCompletedModules([]);
               }
@@ -177,9 +193,11 @@ export const useModuleImplementation = () => {
           } catch (progressError) {
             logError("Erro ao processar progresso", { error: progressError });
           }
+        } else {
+          log("Usuário não autenticado, não é possível buscar progresso");
         }
       } catch (error) {
-        logError("Erro na implementação", { error, id });
+        logError("Erro ao carregar implementação", { error, id });
         // Incrementar contador de tentativas para limitar retentativas
         setLoadAttempt(prev => prev + 1);
       } finally {
@@ -188,7 +206,7 @@ export const useModuleImplementation = () => {
     };
     
     fetchData();
-  }, [id, moduleIdxNumber, user, toast, navigate, log, logError, loadAttempt]);
+  }, [id, moduleIdxNumber, user, navigate, log, logError, loadAttempt]);
   
   return {
     solution,

@@ -6,10 +6,12 @@ import { useSolutionSave } from "@/hooks/useSolutionSave";
 import { useSolutionSteps } from "@/hooks/useSolutionSteps";
 import { Solution } from "@/lib/supabase";
 import { toast } from "sonner";
+import { useLogging } from "@/hooks/useLogging";
 
 export const useSolutionEditor = (id: string | undefined, user: any) => {
   // Get solution data - agora com setSolution disponível
   const { solution, setSolution, loading, refetch } = useSolutionData(id);
+  const { log, logError } = useLogging("useSolutionEditor");
   
   // Get step navigation
   const { currentStep, setCurrentStep, activeTab, setActiveTab, totalSteps, stepTitles } = useSolutionSteps(0);
@@ -33,40 +35,45 @@ export const useSolutionEditor = (id: string | undefined, user: any) => {
   // Carregar solução se necessário
   useEffect(() => {
     if (id && !solution && !loading) {
+      log("Nenhuma solução carregada, buscando dados");
       refetch();
     }
-  }, [id, solution, loading, refetch]);
+  }, [id, solution, loading, refetch, log]);
   
   // Atualizar valores atuais quando a solução mudar
   useEffect(() => {
     if (solution) {
-      const updatedValues = {
+      log("Atualizando valores do formulário", {
         title: solution.title,
-        description: solution.description,
-        category: solution.category as "revenue" | "operational" | "strategy",
-        difficulty: solution.difficulty as "easy" | "medium" | "advanced",
+        hasDescription: !!solution.description,
+        category: solution.category
+      });
+      
+      const updatedValues = {
+        title: solution.title || "",
+        description: solution.description || "",
+        category: (solution.category || "revenue") as "revenue" | "operational" | "strategy",
+        difficulty: (solution.difficulty || "medium") as "easy" | "medium" | "advanced",
         thumbnail_url: solution.thumbnail_url || "",
-        published: solution.published,
-        slug: solution.slug,
+        published: solution.published || false,
+        slug: solution.slug || "",
       };
       setCurrentValuesState(updatedValues);
-      
-      console.log("Valores da solução carregados:", updatedValues);
     } else if (!loading && id) {
-      console.warn("Solução não encontrada para edição com ID:", id);
+      logError("Solução não encontrada para edição", { id });
     }
-  }, [solution, loading, id]);
+  }, [solution, loading, id, log, logError]);
 
   // Create a submit handler that uses our onSubmit function
   const handleSubmit = (values: SolutionFormValues) => {
-    console.log("Enviando formulário com valores:", values);
+    log("Enviando formulário", values);
     return onSubmit(values)
       .then(() => {
         setCurrentValuesState(values);
         toast.success("Solução salva com sucesso!");
       })
       .catch((error) => {
-        console.error("Erro ao salvar solução:", error);
+        logError("Erro ao salvar solução", { error });
         toast.error("Erro ao salvar solução", {
           description: "Por favor, tente novamente."
         });
