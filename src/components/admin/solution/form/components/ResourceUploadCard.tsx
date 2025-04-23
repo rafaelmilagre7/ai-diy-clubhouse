@@ -54,10 +54,10 @@ const ResourceUploadCard: React.FC<ResourceUploadCardProps> = ({
       <CardHeader className="pb-3">
         <CardTitle className="text-[#0ABAB5] flex items-center text-xl">
           <Upload className="h-5 w-5 mr-2" />
-          Upload Rápido
+          Upload de Materiais
         </CardTitle>
         <CardDescription className="text-base">
-          Adicione PDFs, documentos, planilhas e outros materiais de apoio.
+          Adicione PDFs, documentos, planilhas e outros materiais de apoio para download.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">

@@ -19,7 +19,7 @@ export interface Resource {
   type: "document" | "image" | "template" | "pdf" | "spreadsheet" | "presentation" | "video" | "other";
   format?: string;
   solution_id: string;
-  metadata: ResourceMetadata;  // Changed from optional to required
+  metadata: ResourceMetadata;
   created_at?: string;
   updated_at?: string;
   module_id?: string;

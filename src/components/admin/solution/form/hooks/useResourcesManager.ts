@@ -1,18 +1,16 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
-import { Resource, ResourceMetadata } from "../types/ResourceTypes";
 import { useToast } from "@/hooks/use-toast";
-import { parseResourceMetadata } from "../utils/resourceMetadataUtils";
-import { detectFileType } from "../utils/resourceUtils";
+import { Resource } from "../types/ResourceTypes";
 
 export function useResourcesManager(solutionId: string | null) {
+  const { toast } = useToast();
   const [resources, setResources] = useState<Resource[]>([]);
   const [loading, setLoading] = useState(true);
   const [savingResources, setSavingResources] = useState(false);
-  const { toast } = useToast();
-  
-  // Fetch resources on component mount
+
+  // Carregar recursos quando o componente montar
   useEffect(() => {
     if (solutionId) {
       fetchResources();
@@ -20,99 +18,123 @@ export function useResourcesManager(solutionId: string | null) {
       setLoading(false);
     }
   }, [solutionId]);
-  
-  // Fetch resources from Supabase
+
+  // Buscar recursos do Supabase
   const fetchResources = async () => {
+    if (!solutionId) return;
+    
     try {
       setLoading(true);
       
       const { data, error } = await supabase
         .from("solution_resources")
         .select("*")
-        .eq("solution_id", solutionId)
-        .is("module_id", null)
-        .neq("type", "video");
+        .eq("solution_id", solutionId);
         
       if (error) throw error;
       
       if (data) {
-        // Map the data to Resource objects
-        const mappedResources = data.map(parseResourceMetadata);
-        setResources(mappedResources);
+        // Processar os recursos
+        const processedResources: Resource[] = data.map(item => {
+          let metadata;
+          
+          try {
+            metadata = typeof item.metadata === 'string' 
+              ? JSON.parse(item.metadata)
+              : item.metadata || {};
+          } catch (e) {
+            metadata = {};
+          }
+          
+          return {
+            id: item.id,
+            name: item.name,
+            url: item.url,
+            type: item.type,
+            format: item.format,
+            solution_id: item.solution_id,
+            metadata: metadata,
+            created_at: item.created_at,
+            updated_at: item.updated_at,
+            module_id: item.module_id,
+            size: item.size
+          };
+        });
+        
+        setResources(processedResources);
       }
-    } catch (error: any) {
-      console.error("Error fetching resources:", error);
+    } catch (error) {
+      console.error("Erro ao carregar recursos:", error);
       toast({
-        title: "Erro ao carregar materiais",
-        description: error.message || "Ocorreu um erro ao tentar carregar os materiais.",
+        title: "Erro ao carregar recursos",
+        description: "Não foi possível carregar a lista de recursos.",
         variant: "destructive",
       });
     } finally {
       setLoading(false);
     }
   };
-  
-  // Handle file upload completion
+
+  // Gerenciar o upload de arquivos
   const handleUploadComplete = async (url: string, fileName: string, fileSize: number) => {
-    if (!solutionId) return;
+    if (!solutionId) {
+      toast({
+        title: "Erro",
+        description: "É necessário salvar a solução antes de adicionar materiais.",
+        variant: "destructive",
+      });
+      return;
+    }
     
     try {
-      // Detect file type and format
+      // Determinar o tipo de arquivo
       const fileExtension = fileName.split('.').pop()?.toLowerCase() || '';
       const fileType = getFileType(fileExtension);
-      const fileFormat = getFileFormat(fileExtension);
       
-      // Create metadata object
-      const metadata: ResourceMetadata = {
+      // Criar metadados
+      const metadata = {
         title: fileName,
-        description: `Arquivo ${fileFormat}`,
+        description: `Arquivo ${fileExtension}`,
         url: url,
         type: fileType,
-        format: fileFormat,
-        tags: [],
-        order: 0,
-        downloads: 0,
+        format: fileExtension,
         size: fileSize,
         version: "1.0"
       };
       
-      // Create new resource object
-      const newResource = {
-        solution_id: solutionId,
-        name: fileName,
-        url: url,
-        type: fileType,
-        format: fileFormat,
-        metadata: JSON.stringify(metadata),
-        size: fileSize
-      };
-      
-      // Save to Supabase
+      // Salvar no Supabase
       const { data, error } = await supabase
         .from("solution_resources")
-        .insert(newResource)
+        .insert({
+          solution_id: solutionId,
+          name: fileName,
+          url: url,
+          type: fileType,
+          format: fileExtension,
+          metadata: metadata,
+          size: fileSize
+        })
         .select()
         .single();
         
       if (error) throw error;
       
       if (data) {
-        // Map to Resource object and add to state
-        const resource: Resource = {
+        const newResource: Resource = {
           id: data.id,
           name: data.name,
           url: data.url,
-          type: fileType,
+          type: data.type,
           format: data.format,
           solution_id: data.solution_id,
           metadata: metadata,
           created_at: data.created_at,
           updated_at: data.updated_at,
-          module_id: data.module_id,
           size: data.size
         };
         
-        setResources(prev => [...prev, resource]);
+        // Adicionar ao estado
+        setResources(prev => [newResource, ...prev]);
         
         toast({
           title: "Material adicionado",
@@ -120,22 +142,36 @@ export function useResourcesManager(solutionId: string | null) {
         });
       }
     } catch (error: any) {
-      console.error("Error adding resource:", error);
+      console.error("Erro ao adicionar material:", error);
       toast({
         title: "Erro ao adicionar material",
         description: error.message || "Ocorreu um erro ao tentar adicionar o material.",
         variant: "destructive",
       });
-      throw error;
     }
   };
-  
-  // Handle resource removal
-  const handleRemoveResource = async (id?: string, url?: string) => {
+
+  // Remover um recurso
+  const handleRemoveResource = async (id?: string) => {
     if (!id) return;
     
     try {
-      // Delete from Supabase
+      // Get resource to remove from storage if needed
+      const resourceToRemove = resources.find(r => r.id === id);
+      
+      if (resourceToRemove?.url && resourceToRemove.url.includes('solution_files')) {
+        try {
+          const filePath = resourceToRemove.url.split('/').pop() || '';
+          await supabase.storage
+            .from('solution_files')
+            .remove([`documents/${filePath}`]);
+        } catch (storageError) {
+          console.error("Erro ao remover arquivo do storage:", storageError);
+          // Continue porque o registro ainda pode ser removido do banco
+        }
+      }
+      
+      // Remove from database
       const { error } = await supabase
         .from("solution_resources")
         .delete()
@@ -143,72 +179,45 @@ export function useResourcesManager(solutionId: string | null) {
         
       if (error) throw error;
       
-      // Remove from state
-      setResources(prev => prev.filter(resource => resource.id !== id));
+      // Update state
+      setResources(prev => prev.filter(r => r.id !== id));
       
       toast({
         title: "Material removido",
         description: "O material foi removido com sucesso.",
       });
     } catch (error: any) {
-      console.error("Error removing resource:", error);
+      console.error("Erro ao remover recurso:", error);
       toast({
-        title: "Erro ao remover material",
-        description: error.message || "Ocorreu um erro ao tentar remover o material.",
+        title: "Erro ao remover recurso",
+        description: error.message || "Ocorreu um erro ao tentar remover o recurso.",
         variant: "destructive",
       });
-      throw error;
     }
   };
-  
-  // Helper functions for file type and format detection
-  function getFileType(extension: string): Resource['type'] {
-    const documentExtensions = ['doc', 'docx', 'odt', 'rtf', 'txt'];
-    const spreadsheetExtensions = ['xls', 'xlsx', 'ods', 'csv'];
-    const presentationExtensions = ['ppt', 'pptx', 'odp', 'key'];
+
+  // Helper para determinar o tipo de arquivo
+  function getFileType(extension: string): "document" | "image" | "template" | "pdf" | "spreadsheet" | "presentation" | "video" | "other" {
     const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'svg', 'webp'];
+    const docExtensions = ['doc', 'docx', 'txt', 'rtf', 'odt'];
     const pdfExtensions = ['pdf'];
-    const videoExtensions = ['mp4', 'webm', 'ogv', 'mov', 'avi'];
+    const spreadsheetExtensions = ['xls', 'xlsx', 'csv', 'ods'];
+    const presentationExtensions = ['ppt', 'pptx', 'odp'];
+    const videoExtensions = ['mp4', 'webm', 'ogg', 'mov'];
     
-    if (documentExtensions.includes(extension)) return 'document';
+    if (imageExtensions.includes(extension)) return 'image';
+    if (docExtensions.includes(extension)) return 'document';
+    if (pdfExtensions.includes(extension)) return 'pdf';
     if (spreadsheetExtensions.includes(extension)) return 'spreadsheet';
     if (presentationExtensions.includes(extension)) return 'presentation';
-    if (imageExtensions.includes(extension)) return 'image';
-    if (pdfExtensions.includes(extension)) return 'pdf';
     if (videoExtensions.includes(extension)) return 'video';
     
     return 'other';
   }
-  
-  function getFileFormat(extension: string): string {
-    const formats: {[key: string]: string} = {
-      'doc': 'Word',
-      'docx': 'Word',
-      'xls': 'Excel',
-      'xlsx': 'Excel',
-      'ppt': 'PowerPoint',
-      'pptx': 'PowerPoint',
-      'pdf': 'PDF',
-      'jpg': 'Imagem',
-      'jpeg': 'Imagem',
-      'png': 'Imagem',
-      'gif': 'Imagem',
-      'mp4': 'Vídeo',
-      'webm': 'Vídeo',
-      'mov': 'Vídeo',
-      'csv': 'CSV',
-      'txt': 'Texto',
-      'rtf': 'Rich Text',
-      'zip': 'Arquivo ZIP',
-      'rar': 'Arquivo RAR'
-    };
-    
-    return formats[extension] || 'Outro';
-  }
-  
+
   return {
     resources,
-    setResources, // Now exposing this
+    setResources,
     loading,
     savingResources,
     setSavingResources,
