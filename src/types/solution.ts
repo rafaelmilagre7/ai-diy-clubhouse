@@ -1,4 +1,3 @@
-
 export interface Solution {
   id: string;
   title: string;
@@ -17,32 +16,48 @@ export interface Solution {
   progress?: Progress;
 }
 
+export interface Module {
+  id: string;
+  solution_id: string;
+  title: string;
+  type: ModuleType;
+  content: ModuleContent;
+  module_order: number;
+  created_at: string;
+  updated_at: string;
+  certificate_template?: any;
+  estimated_time_minutes?: number;
+  metrics?: Record<string, any>;
+}
+
+export type ModuleType = 
+  | 'landing'
+  | 'overview'
+  | 'preparation'
+  | 'implementation'
+  | 'verification'
+  | 'results' 
+  | 'optimization'
+  | 'celebration';
+
+export interface ModuleContent {
+  blocks: ContentBlock[];
+}
+
+export interface ContentBlock {
+  id: string;
+  type: string;
+  data: Record<string, any>;
+}
+
 export interface Progress {
   id: string;
   user_id: string;
   solution_id: string;
   current_module: number;
+  implementation_status: 'not_started' | 'in_progress' | 'completed' | 'abandoned';
   is_completed: boolean;
   completed_modules: number[];
   last_activity: string;
-  implementation_status: 'not_started' | 'in_progress' | 'completed' | 'abandoned';
   completion_data?: Record<string, any>;
-}
-
-export interface Module {
-  id: string;
-  solution_id: string;
-  title: string;
-  type: string;
-  content: any;
-  module_order: number;
-}
-
-export interface SolutionCertificate {
-  id: string;
-  solution_id: string;
-  user_id: string;
-  issued_at: string;
-  certificate_data: Record<string, any>;
-  created_at: string;
 }

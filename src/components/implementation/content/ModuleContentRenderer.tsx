@@ -23,10 +23,8 @@ export const ModuleContentRenderer = ({ module, onInteraction }: ModuleContentRe
     }
   }, [module?.id, onInteraction, log]);
   
-  // Efeito para detectar primeiro carregamento - usando ref para garantir uma só vez
   useEffect(() => {
     if (!hasLoggedRef.current && module?.id) {
-      // Registrar renderização do módulo apenas uma vez
       log("Módulo renderizado", { 
         module_id: module.id,
         module_type: module.type,
@@ -36,7 +34,6 @@ export const ModuleContentRenderer = ({ module, onInteraction }: ModuleContentRe
       hasLoggedRef.current = true;
     }
     
-    // Limpeza do efeito quando o componente for desmontado
     return () => {
       hasLoggedRef.current = false;
     };
@@ -45,7 +42,9 @@ export const ModuleContentRenderer = ({ module, onInteraction }: ModuleContentRe
   if (!module) {
     return (
       <div className="p-8 text-center">
-        <p className="text-muted-foreground">Nenhum módulo disponível para implementação.</p>
+        <p className="text-muted-foreground">
+          Nenhum módulo disponível para implementação.
+        </p>
       </div>
     );
   }
@@ -53,21 +52,22 @@ export const ModuleContentRenderer = ({ module, onInteraction }: ModuleContentRe
   if (!module.content) {
     return (
       <div className="p-8 text-center">
-        <p className="text-muted-foreground">Nenhum conteúdo disponível para este módulo.</p>
+        <p className="text-muted-foreground">
+          Nenhum conteúdo disponível para este módulo.
+        </p>
       </div>
     );
   }
 
-  // Determine the content type based on module.type or content structure
+  // Determine o tipo de conteúdo baseado no tipo do módulo
   const contentType = getContentType(module);
 
-  // Render appropriate content based on content type
   return (
     <div onClick={handleInteraction} className="space-y-8">
-      {/* Main content text from module */}
+      {/* Texto principal do módulo */}
       <ModuleContentText content={module.content} />
 
-      {/* Render specific content based on module type */}
+      {/* Renderiza conteúdo específico baseado no tipo do módulo */}
       <ContentTypeSwitcher contentType={contentType} module={module} />
     </div>
   );

@@ -19,22 +19,14 @@ export const useImplementationData = () => {
   const [progress, setProgress] = useState<Progress | null>(null);
   const [completedModules, setCompletedModules] = useState<number[]>([]);
   const [loading, setLoading] = useState(true);
-  const [attemptCount, setAttemptCount] = useState(0);
 
-  // Fetch solution and modules - com limite de tentativas
   useEffect(() => {
-    // Evitar carregamentos repetidos
-    if (attemptCount > 2) return;
-    
     const fetchData = async () => {
-      if (!id) {
-        setLoading(false);
-        return;
-      }
+      if (!id) return;
       
       try {
         setLoading(true);
-        log("Buscando dados de implementação", { id, attempt: attemptCount });
+        log("Buscando dados de implementação", { id });
         
         // Buscar solução
         let query = supabase
@@ -47,132 +39,77 @@ export const useImplementationData = () => {
           query = query.eq("published", true);
         }
         
-        const { data: solutionData, error: solutionError } = await query.single();
+        const { data: solutionData, error: solutionError } = await query.maybeSingle();
         
         if (solutionError) {
-          // Se não encontrou a solução
-          if (solutionError.code === "PGRST116" && !isAdmin) {
+          if (!isAdmin) {
             toast({
               title: "Solução não disponível",
               description: "Esta solução não está disponível para implementação.",
+              variant: "destructive"
             });
             navigate("/solutions");
             return;
           }
+          
           throw solutionError;
         }
         
         if (!solutionData) {
+          toast({
+            title: "Solução não encontrada",
+            description: "Esta solução não está disponível.",
+            variant: "destructive"
+          });
           navigate("/solutions");
           return;
         }
         
         setSolution(solutionData as Solution);
-        log("Solução carregada com sucesso", { id: solutionData.id });
         
-        // Buscar módulos para esta solução
+        // Buscar módulos
         const { data: modulesData, error: modulesError } = await supabase
           .from("modules")
           .select("*")
           .eq("solution_id", id)
           .order("module_order", { ascending: true });
         
-        if (modulesError) {
-          throw modulesError;
-        }
+        if (modulesError) throw modulesError;
         
         if (modulesData && modulesData.length > 0) {
           setModules(modulesData as Module[]);
-          log("Módulos carregados", { count: modulesData.length });
-        } else {
-          // Criar módulo placeholder se não existirem módulos
-          const placeholderModule = {
-            id: `placeholder-module-${id}`,
-            solution_id: id,
-            title: solutionData?.title || "Implementação",
-            content: {
-              blocks: [
-                {
-                  id: "welcome",
-                  type: "header",
-                  data: { text: "Bem-vindo à implementação", level: 1 }
-                },
-                {
-                  id: "intro",
-                  type: "paragraph",
-                  data: { text: "Esta solução está sendo preparada para implementação. Em breve você poderá implementá-la passo a passo." }
-                }
-              ]
-            },
-            type: "implementation",
-            module_order: 0,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          };
-          
-          setModules([placeholderModule as Module]);
         }
         
         // Buscar progresso do usuário
         if (user) {
-          try {
-            const { data: progressData, error: progressError } = await supabase
-              .from("progress")
-              .select("*")
-              .eq("user_id", user.id)
-              .eq("solution_id", id)
-              .maybeSingle();
-            
-            if (!progressError && progressData) {
-              setProgress(progressData as Progress);
-              
-              // Processar módulos completados
-              if (Array.isArray(progressData.completed_modules)) {
-                setCompletedModules(progressData.completed_modules);
-              } else {
-                setCompletedModules([]);
-              }
-            } else {
-              // Criar registro de progresso inicial se não existir
-              const { data: newProgress, error: createError } = await supabase
-                .from("progress")
-                .insert({
-                  user_id: user.id,
-                  solution_id: id,
-                  current_module: 0,
-                  is_completed: false,
-                  completed_modules: [],
-                  last_activity: new Date().toISOString(),
-                })
-                .select()
-                .single();
-              
-              if (!createError && newProgress) {
-                setProgress(newProgress as Progress);
-                setCompletedModules([]);
-              }
-            }
-          } catch (progressError) {
-            logError("Erro ao processar progresso", { error: progressError });
+          const { data: progressData, error: progressError } = await supabase
+            .from("progress")
+            .select("*")
+            .eq("user_id", user.id)
+            .eq("solution_id", id)
+            .maybeSingle();
+          
+          if (!progressError && progressData) {
+            setProgress(progressData as Progress);
+            setCompletedModules(progressData.completed_modules || []);
           }
         }
       } catch (error) {
-        logError("Erro ao carregar dados de implementação", { error, id, attempt: attemptCount });
-        setAttemptCount(prev => prev + 1);
+        logError("Erro ao carregar dados de implementação:", error);
       } finally {
         setLoading(false);
       }
     };
-    
+
     fetchData();
-  }, [id, user, toast, navigate, isAdmin, log, logError, attemptCount]);
-  
+  }, [id, user, isAdmin]);
+
   return {
     solution,
     modules,
     progress,
     completedModules,
     setCompletedModules,
-    loading
+    loading,
   };
 };
