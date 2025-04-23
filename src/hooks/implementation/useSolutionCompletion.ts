@@ -1,15 +1,16 @@
 
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { toast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { useLogging } from "@/hooks/useLogging";
+import { useAuth } from "@/contexts/auth";
 
-interface SolutionCompletionProps {
+interface UseSolutionCompletionProps {
   progressId?: string;
   solutionId?: string;
   moduleIdx: number;
   completedModules: number[];
-  setCompletedModules: React.Dispatch<React.SetStateAction<number[]>>;
+  setCompletedModules: (modules: number[]) => void;
 }
 
 export const useSolutionCompletion = ({
@@ -18,66 +19,89 @@ export const useSolutionCompletion = ({
   moduleIdx,
   completedModules,
   setCompletedModules
-}: SolutionCompletionProps) => {
+}: UseSolutionCompletionProps) => {
   const [isCompleting, setIsCompleting] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
-  const { log, logError } = useLogging();
+  const { toast } = useToast();
+  const { log, logError } = useLogging("useSolutionCompletion");
+  const { user } = useAuth();
   
-  const handleConfirmImplementation = async (): Promise<boolean> => {
-    if (!progressId || !solutionId) {
+  // Função para confirmar a implementação da solução
+  const handleConfirmImplementation = async () => {
+    // Se não há ID de progresso ou ID de solução, não podemos continuar
+    if (!progressId || !solutionId || !user) {
       toast({
-        title: "Erro",
-        description: "Não foi possível completar a implementação. Dados de progresso inválidos.",
-        variant: "destructive",
+        title: "Erro ao completar implementação",
+        description: "Informações insuficientes para completar a implementação.",
+        variant: "destructive"
       });
-      return false;
+      return Promise.reject(new Error("Informações insuficientes"));
     }
     
-    setIsCompleting(true);
-    
     try {
-      log("Confirming implementation", { 
-        progress_id: progressId, 
-        solution_id: solutionId 
-      });
+      setIsCompleting(true);
       
       // Marcar solução como implementada
       const { error } = await supabase
         .from("progress")
         .update({
           is_completed: true,
-          completed_modules: [...new Set([...completedModules, moduleIdx])],
-          completed_at: new Date().toISOString(), // Updated column name
+          implementation_status: "completed",
+          completed_at: new Date().toISOString(),
+          last_activity: new Date().toISOString()
         })
         .eq("id", progressId);
+        
+      if (error) throw error;
       
-      if (error) {
-        throw error;
-      }
-      
-      log("Implementation marked as complete", { 
-        progress_id: progressId,
-        solution_id: solutionId
+      // Registrar estatísticas de implementação
+      await supabase.rpc('increment', {
+        row_id: solutionId,
+        table_name: 'solution_metrics',
+        column_name: 'total_completions'
+      }).catch(err => {
+        // Log do erro, mas não bloquear o fluxo
+        logError("Erro ao incrementar métricas", { error: err });
       });
       
-      // Atualizar estado local
-      setCompletedModules(prev => [...new Set([...prev, moduleIdx])]);
+      // Registra entrada de certificado
+      await supabase
+        .from("solution_certificates")
+        .insert({
+          user_id: user.id,
+          solution_id: solutionId,
+          issued_at: new Date().toISOString(),
+          certificate_data: {
+            completion_date: new Date().toISOString()
+          }
+        })
+        .catch(err => {
+          // Log do erro, mas não bloquear o fluxo
+          logError("Erro ao criar certificado", { error: err });
+        });
+      
+      log("Solução marcada como implementada", { 
+        progressId,
+        solutionId,
+        userId: user.id
+      });
+      
+      toast({
+        title: "Implementação Concluída",
+        description: "Parabéns! Você completou a implementação desta solução."
+      });
+      
       setIsCompleted(true);
       
-      toast({
-        title: "Parabéns!",
-        description: "Você concluiu com sucesso a implementação desta solução.",
-      });
-      
-      return true;
+      return Promise.resolve();
     } catch (error) {
-      logError("Error confirming implementation", error);
+      logError("Erro ao confirmar implementação", { error });
       toast({
-        title: "Erro",
-        description: "Ocorreu um erro ao tentar completar a implementação. Tente novamente.",
-        variant: "destructive",
+        title: "Erro ao completar implementação",
+        description: "Não foi possível completar a implementação. Por favor, tente novamente.",
+        variant: "destructive"
       });
-      return false;
+      return Promise.reject(error);
     } finally {
       setIsCompleting(false);
     }

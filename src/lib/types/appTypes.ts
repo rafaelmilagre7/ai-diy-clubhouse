@@ -1,71 +1,85 @@
 
+import { cn } from "@/lib/utils";
+
 /**
- * Arquivo central de tipos para a aplicação
- * Consolidando definições que estavam espalhadas em diferentes arquivos
+ * Tipos relacionados às categorias de soluções
  */
+export type SolutionCategory = 'revenue' | 'operational' | 'strategy';
 
-// Tipos essenciais de categoria
-export type SolutionCategory = "revenue" | "operational" | "strategy";
-
-// Função para validar se uma string é uma categoria válida
-export const isSolutionCategory = (category: string): category is SolutionCategory => {
-  return ["revenue", "operational", "strategy"].includes(category);
+/**
+ * Verifica se uma string é uma categoria válida
+ */
+export const isSolutionCategory = (value: any): value is SolutionCategory => {
+  return ['revenue', 'operational', 'strategy'].includes(value);
 };
 
-// Função robusta para converter string para o tipo SolutionCategory, com fallback
-export const toSolutionCategory = (category: string | undefined): SolutionCategory => {
-  if (!category) {
-    return "operational";
+/**
+ * Converte uma string para uma categoria válida ou retorna uma categoria padrão
+ */
+export const toSolutionCategory = (value: any): SolutionCategory => {
+  if (isSolutionCategory(value)) {
+    return value;
   }
-  
-  const normalizedCategory = category.toLowerCase();
-  
-  // Mapeamento de possíveis valores vindos do banco
-  if (normalizedCategory === "operations" || 
-      normalizedCategory === "operacional" || 
-      normalizedCategory === "operational") {
-    return "operational";
-  }
-  
-  if (normalizedCategory === "receita" || 
-      normalizedCategory === "revenue") {
-    return "revenue";
-  }
-  
-  if (normalizedCategory === "estratégia" || 
-      normalizedCategory === "strategy") {
-    return "strategy";
-  }
-  
-  // Verificação final
-  return isSolutionCategory(normalizedCategory) ? 
-    normalizedCategory as SolutionCategory : "operational";
+  return 'revenue'; // valor padrão
 };
 
-// Tradução de categorias para exibição
-export const getCategoryDisplayName = (category: SolutionCategory): string => {
-  switch (category) {
-    case "revenue":
-      return "Receita";
-    case "operational":
-      return "Operacional";
-    case "strategy":
-      return "Estratégia";
+/**
+ * Obtém o nome de exibição de uma categoria
+ */
+export const getCategoryDisplayName = (category: SolutionCategory | string): string => {
+  const safeCategory = toSolutionCategory(category);
+  
+  switch (safeCategory) {
+    case 'revenue':
+      return 'Aumento de Receita';
+    case 'operational':
+      return 'Otimização Operacional';
+    case 'strategy':
+      return 'Gestão Estratégica';
     default:
-      return "Operacional";
+      return 'Categoria Desconhecida';
   }
 };
 
-// Helper para estilo de categorias
-export const getCategoryStyles = (category: SolutionCategory) => {
-  switch (category) {
-    case "revenue":
-      return "bg-gradient-to-r from-revenue to-revenue-light text-white";
-    case "operational":
-      return "bg-gradient-to-r from-operational to-operational-light text-white";
-    case "strategy":
-      return "bg-gradient-to-r from-strategy to-strategy-light text-white";
+/**
+ * Obtém os estilos CSS para uma categoria
+ */
+export const getCategoryStyles = (category: SolutionCategory | string): { 
+  badge: string;
+  card: string;
+  icon: string;
+  border: string;
+} => {
+  const safeCategory = toSolutionCategory(category);
+  
+  switch (safeCategory) {
+    case 'revenue':
+      return {
+        badge: 'bg-blue-100 text-blue-800 hover:bg-blue-200',
+        card: 'border-blue-100 bg-blue-50',
+        icon: 'text-blue-500',
+        border: 'border-blue-200'
+      };
+    case 'operational':
+      return {
+        badge: 'bg-violet-100 text-violet-800 hover:bg-violet-200',
+        card: 'border-violet-100 bg-violet-50',
+        icon: 'text-violet-500',
+        border: 'border-violet-200'
+      };
+    case 'strategy':
+      return {
+        badge: 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200',
+        card: 'border-emerald-100 bg-emerald-50',
+        icon: 'text-emerald-500',
+        border: 'border-emerald-200'
+      };
     default:
-      return "bg-gradient-to-r from-neutral-700 to-neutral-600 text-white";
+      return {
+        badge: 'bg-gray-100 text-gray-800 hover:bg-gray-200',
+        card: 'border-gray-100 bg-gray-50',
+        icon: 'text-gray-500',
+        border: 'border-gray-200'
+      };
   }
 };
