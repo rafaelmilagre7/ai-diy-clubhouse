@@ -47,20 +47,31 @@ const SolutionImplementation = () => {
   );
   
   // Rastrear progresso da implementação
-  const { markModuleCompleted, completedModules, setCompletedModules } = useProgressTracking(
-    id || "", progress, moduleIdx
+  const { 
+    markModuleCompleted, 
+    completedModules, 
+    setCompletedModules,
+    completionPercentage,
+    calculateProgress,
+    handleConfirmImplementation,
+    isCompleting
+  } = useProgressTracking(
+    id || "", 
+    progress, 
+    moduleIdx,
+    modules?.length || 8
   );
   
   // Hook para conclusão da solução
-  const { completing, generating, completeSolution, generateCertificate } = useSolutionCompletion(id || "");
+  const { completeSolution } = useSolutionCompletion(id || "");
   
   // Rastrear mudanças no módulo atual
   const { trackModuleView } = useModuleChangeTracking(id || "", moduleIdx);
   
   // Atalhos de teclado
   useImplementationShortcuts({
-    onNext: () => handleModuleChange(moduleIdx + 1),
-    onPrevious: () => handleModuleChange(moduleIdx - 1),
+    onNext: () => moduleIdx < (modules?.length || 0) - 1 && handleModuleChange(moduleIdx + 1),
+    onPrevious: () => moduleIdx > 0 && handleModuleChange(moduleIdx - 1),
     isFirstModule: moduleIdx === 0,
     isLastModule
   });
@@ -118,7 +129,7 @@ const SolutionImplementation = () => {
         
         {/* Progresso da implementação */}
         <ImplementationProgress 
-          currentStep={moduleIdx + 1}
+          currentStep={moduleIdx}
           totalSteps={modules?.length || 1}
           completedModules={completedModules}
         />
@@ -136,7 +147,7 @@ const SolutionImplementation = () => {
           {/* Lista de módulos */}
           <div className="md:col-span-1">
             <ModulesList 
-              modules={modules || []}
+              modules={modules}
               currentModuleIdx={moduleIdx}
               onModuleChange={handleModuleChange}
               completedModules={completedModules}
@@ -149,9 +160,7 @@ const SolutionImplementation = () => {
               {currentModule && (
                 <ModuleContent 
                   module={currentModule}
-                  solution={solution}
-                  activeTab={activeTab}
-                  moduleIdx={moduleIdx}
+                  onComplete={() => markModuleCompleted(moduleIdx)}
                 />
               )}
               
@@ -159,7 +168,6 @@ const SolutionImplementation = () => {
               <WizardStepProgress 
                 currentStep={moduleIdx}
                 totalSteps={modules?.length || 1}
-                isCompleted={completedModules.includes(moduleIdx)}
                 onPrevious={() => handleModuleChange(moduleIdx - 1)}
                 onNext={() => handleModuleChange(moduleIdx + 1)}
                 onComplete={() => markModuleCompleted(moduleIdx)}
@@ -178,7 +186,7 @@ const SolutionImplementation = () => {
         isOpen={showCompletionModal}
         onClose={() => setShowCompletionModal(false)}
         onConfirm={handleConfirmImplementation}
-        isLoading={completing}
+        isLoading={isCompleting}
       />
     </div>
   );

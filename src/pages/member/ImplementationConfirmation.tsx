@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Progress } from "@/components/ui/progress";
 import { useSolutionData } from "@/hooks/useSolutionData";
 import { useProgressTracking } from "@/hooks/implementation/useProgressTracking";
-import { useImplementationData } from "@/hooks/implementation/useImplementationData";
+import { useSolutionCompletion } from "@/hooks/implementation/useSolutionCompletion";
 import { useToast } from "@/hooks/use-toast";
 import LoadingScreen from "@/components/common/LoadingScreen";
 
@@ -18,34 +18,28 @@ const ImplementationConfirmation = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   // Carregar dados da solução
-  const { solution, loading: solutionLoading } = useSolutionData(id);
+  const { solution, loading: solutionLoading, progress } = useSolutionData(id || "");
+  const totalModules = solution?.modules?.length || 8;
   
-  // Carregar dados de implementação
-  const { 
-    modules,
-    progress,
-    completedModules,
-    setCompletedModules,
-    loading: implementationLoading 
-  } = useImplementationData();
+  // Hook para conclusão da solução
+  const { completing, completeSolution } = useSolutionCompletion(id || "");
   
   // Hooks de progresso
-  const {
-    isCompleting,
-    handleConfirmImplementation,
-    calculateProgress,
-  } = useProgressTracking(
-    progress, 
+  const { 
     completedModules, 
-    setCompletedModules,
-    modules.length
+    calculateProgress 
+  } = useProgressTracking(
+    id || "",
+    progress,
+    0,
+    totalModules
   );
   
   // Manipulador para confirmar implementação
   const handleConfirm = async () => {
     setIsSubmitting(true);
     try {
-      const success = await handleConfirmImplementation();
+      const success = await completeSolution();
       
       if (success) {
         // Exibir mensagem de sucesso
@@ -73,7 +67,7 @@ const ImplementationConfirmation = () => {
     navigate(`/implement/${id}/0`);
   };
   
-  if (solutionLoading || implementationLoading) {
+  if (solutionLoading) {
     return <LoadingScreen message="Carregando dados da solução..." />;
   }
   
@@ -104,7 +98,7 @@ const ImplementationConfirmation = () => {
             <div>
               <p className="font-medium">Progresso da implementação</p>
               <p className="text-sm text-muted-foreground">
-                {completedModules.length} de {modules.length} etapas concluídas
+                {completedModules.length} de {totalModules} etapas concluídas
               </p>
             </div>
             <div className="font-bold text-lg">
@@ -163,9 +157,9 @@ const ImplementationConfirmation = () => {
             size="lg" 
             className="w-full sm:w-auto"
             onClick={handleConfirm}
-            disabled={isSubmitting}
+            disabled={isSubmitting || completing}
           >
-            {isSubmitting ? (
+            {isSubmitting || completing ? (
               <>Confirmando...</>
             ) : (
               <>
@@ -180,7 +174,7 @@ const ImplementationConfirmation = () => {
             size="lg" 
             className="w-full sm:w-auto"
             onClick={handleCancel}
-            disabled={isSubmitting}
+            disabled={isSubmitting || completing}
           >
             Voltar
           </Button>

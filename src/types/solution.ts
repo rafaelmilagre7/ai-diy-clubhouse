@@ -3,8 +3,8 @@ export interface Solution {
   id: string;
   title: string;
   description: string;
-  category: 'revenue' | 'operations' | 'strategy' | string;  // Adicionado string para compatibilidade
-  difficulty: 'easy' | 'medium' | 'advanced';
+  category: 'revenue' | 'operations' | 'strategy' | string;
+  difficulty: 'easy' | 'medium' | 'advanced' | string;
   published: boolean;
   thumbnail_url?: string;
   created_at: string;
@@ -66,7 +66,8 @@ export interface Progress {
   completed_modules: number[];
   last_activity: string;
   completion_data?: Record<string, any>;
-  completion_percentage?: number; // Adicionado para compatibilidade
+  completion_percentage?: number;
+  modules?: any[];
 }
 
 export interface Prerequisite {
@@ -77,4 +78,16 @@ export interface Prerequisite {
 export interface CompletionCriteria {
   id?: string;
   text: string;
+}
+
+export interface Comment {
+  id: string;
+  user_id: string;
+  user?: {
+    name: string;
+    avatar_url?: string;
+  };
+  content: string;
+  created_at: string;
+  likes_count: number;
 }

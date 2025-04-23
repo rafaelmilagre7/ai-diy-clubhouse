@@ -10,7 +10,7 @@ import {
   CheckSquare,
   MessageSquare,
   Bot,
-  Certificate
+  Award
 } from "lucide-react";
 
 interface ImplementationTabsNavigationProps {
@@ -58,7 +58,7 @@ const ImplementationTabsNavigation: React.FC<ImplementationTabsNavigationProps> 
         
         {isLastStep && (
           <TabsTrigger value="conclusion" className="flex items-center justify-center">
-            <Certificate className="h-4 w-4 md:mr-2" />
+            <Award className="h-4 w-4 md:mr-2" />
             <span className="hidden md:inline">Conclusão</span>
           </TabsTrigger>
         )}
@@ -68,4 +68,3 @@ const ImplementationTabsNavigation: React.FC<ImplementationTabsNavigationProps> 
 };
 
 export default ImplementationTabsNavigation;
-export { ImplementationTabsNavigation };

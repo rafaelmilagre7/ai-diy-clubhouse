@@ -9,11 +9,13 @@ import { toast } from "sonner";
 export const useProgressTracking = (
   solutionId: string,
   progress: Progress | null,
-  currentModuleIdx: number
+  currentModuleIdx: number,
+  totalModules: number = 8
 ) => {
   const { log, logError } = useLogging("useProgressTracking");
   const [completedModules, setCompletedModules] = useState<number[]>([]);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [isCompleting, setIsCompleting] = useState(false);
   
   // Inicializar array de módulos concluídos a partir do progresso existente
   useEffect(() => {
@@ -80,14 +82,61 @@ export const useProgressTracking = (
   // Calcular porcentagem de conclusão
   const completionPercentage = calculateProgressPercentage(
     completedModules, 
-    progress?.modules?.length || 8 // Padrão: 8 módulos
+    totalModules
   );
+  
+  // Função para calcular a porcentagem de progresso
+  const calculateProgress = useCallback(() => {
+    return Math.round((completedModules.length / totalModules) * 100);
+  }, [completedModules, totalModules]);
+
+  // Função para confirmar implementação
+  const handleConfirmImplementation = useCallback(async () => {
+    if (!solutionId || !progress?.id) {
+      toast.error("Dados insuficientes para concluir a implementação.");
+      return false;
+    }
+
+    setIsCompleting(true);
+    try {
+      const { error } = await supabase
+        .from("progress")
+        .update({
+          is_completed: true,
+          implementation_status: 'completed',
+          completed_at: new Date().toISOString(),
+          last_activity: new Date().toISOString()
+        })
+        .eq("id", progress.id);
+
+      if (error) throw error;
+      
+      // Registrar evento de conclusão
+      await logProgressEvent(
+        progress.user_id,
+        solutionId,
+        "solution_completed",
+        { totalModules, completedModules: completedModules.length }
+      );
+      
+      return true;
+    } catch (error) {
+      logError("Erro ao confirmar implementação", { error });
+      toast.error("Erro ao confirmar implementação. Tente novamente.");
+      return false;
+    } finally {
+      setIsCompleting(false);
+    }
+  }, [solutionId, progress, completedModules.length, logError, totalModules]);
 
   return {
     completedModules,
     setCompletedModules,
     markModuleCompleted,
     isUpdating,
-    completionPercentage
+    completionPercentage,
+    calculateProgress,
+    handleConfirmImplementation,
+    isCompleting
   };
 };

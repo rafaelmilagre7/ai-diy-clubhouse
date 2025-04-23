@@ -1,186 +1,70 @@
 
-import { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import { useAuth } from "@/contexts/auth";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { queryClient } from "@/lib/react-query";
-import { supabase } from "@/lib/supabase";
-import { Module, Solution } from "@/lib/supabase";
+import { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
+import { Module, Solution } from "@/types/solution";
 import { useLogging } from "@/hooks/useLogging";
-import { toast } from "sonner";
 
-export const useModuleImplementation = () => {
-  const { id, moduleIndex, moduleIdx } = useParams<{ 
-    id: string; 
-    moduleIndex: string;
-    moduleIdx: string; 
-  }>();
-  
-  // Compatibilidade entre URLs /implement/:id/:moduleIdx e /implementation/:id/:moduleIdx
-  const currentModuleIdx = moduleIndex || moduleIdx || "0";
-  const moduleIdxNumber = parseInt(currentModuleIdx);
-  
-  const { user } = useAuth();
-  const navigate = useNavigate();
+export const useModuleImplementation = (
+  solution: Solution | null,
+  moduleIdx: number
+) => {
   const { log, logError } = useLogging("useModuleImplementation");
-  
+  const navigate = useNavigate();
   const [currentModule, setCurrentModule] = useState<Module | null>(null);
-  const [completedModules, setCompletedModules] = useState<number[]>([]);
-
-  // Buscar dados da solução
-  const { 
-    data: solution,
-    isLoading: solutionLoading
-  } = useQuery({
-    queryKey: ['implementationSolution', id],
-    queryFn: async () => {
-      if (!id) return null;
-      
-      try {
-        const { data, error } = await supabase
-          .from("solutions")
-          .select("*")
-          .eq("id", id)
-          .maybeSingle();
-          
-        if (error) throw error;
-        if (!data) throw new Error(`Solução não encontrada: ${id}`);
-        
-        return data as Solution;
-      } catch (err) {
-        logError("Erro ao buscar solução", { error: err });
-        throw err;
-      }
-    },
-    enabled: !!id,
-    staleTime: 5 * 60 * 1000, // 5 minutos
-    retry: 1
-  });
+  const [modules, setModules] = useState<Module[]>([]);
   
-  // Buscar módulos
-  const { 
-    data: modules = [], 
-    isLoading: modulesLoading 
-  } = useQuery({
-    queryKey: ['implementationModules', id],
-    queryFn: async () => {
-      if (!id) return [];
-      
-      try {
-        const { data, error } = await supabase
-          .from("modules")
-          .select("*")
-          .eq("solution_id", id)
-          .order("module_order", { ascending: true });
-          
-        if (error) throw error;
-        return data as Module[];
-      } catch (err) {
-        logError("Erro ao buscar módulos", { error: err });
-        throw err;
-      }
-    },
-    enabled: !!id,
-    staleTime: 5 * 60 * 1000 // 5 minutos
-  });
-  
-  // Buscar progresso
-  const {
-    data: progress,
-    isLoading: progressLoading
-  } = useQuery({
-    queryKey: ['implementationProgress', id, user?.id],
-    queryFn: async () => {
-      if (!id || !user) return null;
-      
-      try {
-        const { data, error } = await supabase
-          .from("progress")
-          .select("*")
-          .eq("solution_id", id)
-          .eq("user_id", user.id)
-          .maybeSingle();
-          
-        if (error) throw error;
-        return data;
-      } catch (err) {
-        logError("Erro ao buscar progresso", { error: err });
-        return null;
-      }
-    },
-    enabled: !!id && !!user,
-    staleTime: 2 * 60 * 1000 // 2 minutos
-  });
-  
-  // Mutation para criar progresso
-  const createProgressMutation = useMutation({
-    mutationFn: async () => {
-      if (!user || !id) return null;
-      
-      const { data, error } = await supabase
-        .from("progress")
-        .insert({
-          user_id: user.id,
-          solution_id: id,
-          current_module: moduleIdxNumber,
-          is_completed: false,
-          completed_modules: [],
-          last_activity: new Date().toISOString()
-        })
-        .select()
-        .single();
-        
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: (data) => {
-      if (data) {
-        queryClient.setQueryData(['implementationProgress', id, user?.id], data);
-      }
-    }
-  });
-  
-  // Efeito para definir o módulo atual baseado no índice
+  // Efeito para configurar os módulos quando a solução mudar
   useEffect(() => {
-    if (modules.length > 0) {
-      if (moduleIdxNumber < modules.length) {
-        setCurrentModule(modules[moduleIdxNumber]);
-      } else if (modules.length > 0) {
-        setCurrentModule(modules[0]);
-        navigate(`/implement/${id}/0`, { replace: true });
+    if (solution && solution.modules && Array.isArray(solution.modules) && solution.modules.length > 0) {
+      const sortedModules = [...solution.modules].sort((a, b) => a.module_order - b.module_order);
+      setModules(sortedModules);
+      
+      // Definir o módulo atual baseado no índice fornecido
+      if (moduleIdx < sortedModules.length) {
+        setCurrentModule(sortedModules[moduleIdx]);
+      } else if (sortedModules.length > 0) {
+        // Se o índice está fora dos limites, usar o primeiro módulo
+        setCurrentModule(sortedModules[0]);
+        log("Índice de módulo fora dos limites, usando o primeiro módulo", { 
+          requestedIdx: moduleIdx, 
+          maxIdx: sortedModules.length - 1 
+        });
+      }
+    } else {
+      setModules([]);
+      setCurrentModule(null);
+    }
+  }, [solution, moduleIdx, log]);
+  
+  // Verificar se este é o último módulo
+  const isLastModule = modules.length > 0 ? moduleIdx === modules.length - 1 : false;
+  
+  // Função para navegar entre módulos
+  const handleModuleChange = useCallback((newModuleIdx: number) => {
+    if (solution) {
+      if (newModuleIdx >= 0 && newModuleIdx < modules.length) {
+        log("Navegando para o módulo", { 
+          fromModuleIdx: moduleIdx, 
+          toModuleIdx: newModuleIdx,
+          moduleId: modules[newModuleIdx]?.id 
+        });
+        navigate(`/implement/${solution.id}/${newModuleIdx}`);
+      } else if (newModuleIdx < 0) {
+        // Se o usuário tenta ir para um módulo com índice negativo, redirecionar para a página da solução
+        log("Navegando de volta para a página da solução");
+        navigate(`/solution/${solution.id}`);
+      } else if (newModuleIdx >= modules.length) {
+        // Se o usuário tenta ir para um módulo após o último, considerar como conclusão
+        log("Tentando ir além do último módulo, potencial conclusão");
+        navigate(`/solution/${solution.id}/completion`);
       }
     }
-  }, [modules, moduleIdxNumber, id, navigate]);
-  
-  // Efeito para atualizar módulos completados quando o progresso muda
-  useEffect(() => {
-    if (progress) {
-      if (progress.completed_modules && Array.isArray(progress.completed_modules)) {
-        setCompletedModules(progress.completed_modules);
-      } else {
-        setCompletedModules([]);
-      }
-    }
-  }, [progress]);
-  
-  // Efeito para criar progresso se não existir
-  useEffect(() => {
-    const shouldCreateProgress = !progressLoading && !progress && user && id && !createProgressMutation.isPending;
-    
-    if (shouldCreateProgress) {
-      createProgressMutation.mutate();
-    }
-  }, [progress, progressLoading, user, id, createProgressMutation.isPending]);
-  
-  const loading = solutionLoading || modulesLoading || progressLoading || createProgressMutation.isPending;
+  }, [solution, modules, moduleIdx, navigate, log]);
   
   return {
-    solution,
-    modules,
     currentModule,
-    completedModules,
-    setCompletedModules,
-    progress,
-    loading
+    modules,
+    isLastModule,
+    handleModuleChange
   };
 };

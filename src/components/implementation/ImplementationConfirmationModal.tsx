@@ -9,32 +9,26 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Solution } from "@/lib/supabase";
 import { Loader, CheckCircle } from "lucide-react";
 import { useLogging } from "@/hooks/useLogging";
 
 interface ImplementationConfirmationModalProps {
-  solution: Solution;
   isOpen: boolean;
-  isSubmitting: boolean;
   onClose: () => void;
   onConfirm: () => void;
+  isLoading?: boolean;
 }
 
 export const ImplementationConfirmationModal = ({
-  solution,
   isOpen,
-  isSubmitting,
   onClose,
   onConfirm,
+  isLoading = false
 }: ImplementationConfirmationModalProps) => {
   const { log } = useLogging();
   
   const handleConfirm = () => {
-    log("User confirmed implementation", { 
-      solution_id: solution.id, 
-      solution_title: solution.title 
-    });
+    log("User confirmed implementation");
     onConfirm();
   };
   
@@ -52,7 +46,6 @@ export const ImplementationConfirmationModal = ({
         </DialogHeader>
         
         <div className="py-4">
-          <h3 className="font-medium mb-2">Solução: {solution.title}</h3>
           <p className="text-sm text-muted-foreground mb-4">
             A confirmação de implementação não pode ser desfeita. Isso ajuda a acompanhar 
             seu progresso no VIVER DE IA Club e libera acesso para certificados e benefícios.
@@ -70,16 +63,16 @@ export const ImplementationConfirmationModal = ({
           <Button
             variant="outline"
             onClick={onClose}
-            disabled={isSubmitting}
+            disabled={isLoading}
           >
             Cancelar
           </Button>
           <Button
             onClick={handleConfirm}
-            disabled={isSubmitting}
+            disabled={isLoading}
             className="gap-2"
           >
-            {isSubmitting ? (
+            {isLoading ? (
               <>
                 <Loader className="h-4 w-4 animate-spin" />
                 Processando...

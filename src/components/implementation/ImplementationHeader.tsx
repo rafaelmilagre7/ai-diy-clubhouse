@@ -2,14 +2,18 @@
 import React from "react";
 import { ChevronLeft } from "lucide-react";
 import { Link } from "react-router-dom";
-import { Solution } from "@/lib/supabase";
+import { Solution } from "@/types/solution";
 
 interface ImplementationHeaderProps {
   solution: Solution;
+  moduleIdx?: number;
+  totalModules?: number;
 }
 
 export const ImplementationHeader = ({
-  solution
+  solution,
+  moduleIdx = 0,
+  totalModules = 1
 }: ImplementationHeaderProps) => {
   return (
     <div className="bg-white border-b">
@@ -20,10 +24,13 @@ export const ImplementationHeader = ({
             <span>Voltar para detalhes</span>
           </Link>
           
-          <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-            <span>Dashboard</span>
-            <span>/</span>
-            <span>{solution.title}</span>
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-xl font-bold">{solution.title}</h1>
+              <div className="flex items-center space-x-2 text-sm text-muted-foreground mt-1">
+                <span>Módulo {moduleIdx + 1} de {totalModules}</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>

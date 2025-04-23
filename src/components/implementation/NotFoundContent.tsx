@@ -1,26 +1,26 @@
 
-import React from "react";
-import { Button } from "@/components/ui/button";
-import { ChevronLeft } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { AlertTriangle } from 'lucide-react';
 
 export const NotFoundContent = () => {
   const navigate = useNavigate();
   
   return (
-    <div className="container py-12 max-w-xl mx-auto text-center">
-      <h2 className="text-2xl font-semibold mb-4">Solução não encontrada</h2>
+    <div className="max-w-lg mx-auto p-8 text-center flex flex-col items-center">
+      <AlertTriangle size={48} className="text-yellow-500 mb-4" />
+      <h1 className="text-2xl font-bold mb-3">Erro ao carregar implementação</h1>
       <p className="text-muted-foreground mb-6">
-        A solução que você está procurando não existe ou você não tem acesso a ela.
+        Não foi possível carregar os dados para esta implementação. 
+        O recurso pode não existir ou pode ter sido removido.
       </p>
-      <div className="space-y-2">
-        <Button 
-          variant="default" 
-          onClick={() => navigate("/dashboard")}
-          className="w-full sm:w-auto"
-        >
-          <ChevronLeft className="mr-2 h-4 w-4" />
-          Ir para o Dashboard
+      <div className="flex space-x-4">
+        <Button onClick={() => navigate(-1)} variant="outline">
+          Voltar
+        </Button>
+        <Button onClick={() => navigate("/dashboard")}>
+          Ir para Dashboard
         </Button>
       </div>
     </div>

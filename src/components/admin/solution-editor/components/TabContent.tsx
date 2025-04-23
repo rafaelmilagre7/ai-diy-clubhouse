@@ -38,9 +38,8 @@ const TabContent: React.FC<TabContentProps> = ({
     case "tools":
       return (
         <ToolsTab
-          solution={solution}
-          currentValues={currentValues}
-          onSubmit={onSubmit}
+          solutionId={solution?.id || null}
+          onSave={onSubmit}
           saving={saving}
         />
       );
@@ -65,9 +64,8 @@ const TabContent: React.FC<TabContentProps> = ({
     case "checklist":
       return (
         <ChecklistTab
-          solution={solution}
-          currentValues={currentValues}
-          onSubmit={onSubmit}
+          solutionId={solution?.id || null}
+          onSave={onSubmit}
           saving={saving}
         />
       );

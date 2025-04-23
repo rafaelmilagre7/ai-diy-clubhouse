@@ -1,44 +1,35 @@
 
-/**
- * Calcula a porcentagem de progresso com base nos módulos concluídos
- * @param completedModules Array de índices dos módulos concluídos
- * @param totalModules Número total de módulos
- * @returns Porcentagem de conclusão (0-100)
- */
+import { supabase } from "@/lib/supabase";
+
+// Calcular porcentagem de progresso
 export const calculateProgressPercentage = (
   completedModules: number[],
   totalModules: number
 ): number => {
-  if (!completedModules || !Array.isArray(completedModules) || totalModules <= 0) {
-    return 0;
-  }
-  
-  const uniqueCompleted = new Set(completedModules).size;
-  return Math.min(100, Math.round((uniqueCompleted / totalModules) * 100));
+  if (!totalModules || totalModules <= 0) return 0;
+  return Math.round((completedModules.length / totalModules) * 100);
 };
 
-/**
- * Registra um evento de progresso para fins de análise
- * @param userId ID do usuário
- * @param solutionId ID da solução
- * @param event Nome do evento
- * @param details Detalhes adicionais do evento
- */
+// Registrar eventos de progresso para análise
 export const logProgressEvent = async (
   userId: string,
   solutionId: string,
-  event: string,
-  details?: Record<string, any>
-): Promise<void> => {
+  eventType: string,
+  eventData: Record<string, any> = {}
+) => {
   try {
-    console.log(`Registrando evento de progresso: ${event}`, { 
-      userId, 
-      solutionId, 
-      ...details 
+    await supabase.from("analytics").insert({
+      user_id: userId,
+      solution_id: solutionId,
+      event_type: eventType,
+      event_data: {
+        ...eventData,
+        timestamp: new Date().toISOString()
+      }
     });
-    // Aqui poderíamos implementar um registro real no banco de dados
-    // ou enviar para um serviço de análise
+    return true;
   } catch (error) {
     console.error("Erro ao registrar evento de progresso:", error);
+    return false;
   }
 };
