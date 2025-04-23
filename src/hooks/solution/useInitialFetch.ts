@@ -5,6 +5,7 @@ import { useLogging } from '@/hooks/useLogging';
 import { supabase } from '@/lib/supabase';
 import { useState } from 'react';
 import { queryClient } from '@/lib/react-query';
+import { toast } from 'sonner';
 
 export const useInitialFetch = (solutionId: string | undefined) => {
   const { log, logError } = useLogging('useInitialFetch');
@@ -48,9 +49,13 @@ export const useInitialFetch = (solutionId: string | undefined) => {
           .eq('id', solutionId)
           .maybeSingle();
 
-        if (error) throw error;
+        if (error) {
+          logError('Erro ao buscar solução:', error);
+          throw error;
+        }
 
         if (!data) {
+          logError(`Solução não encontrada: ${solutionId}`);
           throw new Error(`Solução com ID ${solutionId} não encontrada`);
         }
 
@@ -64,6 +69,14 @@ export const useInitialFetch = (solutionId: string | undefined) => {
         return data as Solution;
       } catch (err) {
         logError('Erro ao buscar solução:', err);
+        
+        // Notificar o usuário sobre erros de conexão
+        if (navigator.onLine === false) {
+          toast.error("Erro de conexão", {
+            description: "Verifique sua conexão com a internet e tente novamente."
+          });
+        }
+        
         throw err;
       }
     },
