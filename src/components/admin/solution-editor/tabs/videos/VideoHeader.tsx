@@ -20,6 +20,11 @@ const VideoHeader: React.FC<VideoHeaderProps> = ({
   isUploading,
   uploadProgress
 }) => {
+  const handleFileSelect = async (file: File) => {
+    console.log("Arquivo selecionado no VideoHeader:", file.name);
+    await onFileUpload(file);
+  };
+
   return (
     <Card className="border-2 border-[#0ABAB5]/20 shadow-sm">
       <CardContent className="p-6">
@@ -46,7 +51,7 @@ const VideoHeader: React.FC<VideoHeaderProps> = ({
           </div>
           
           <VideoUploader
-            onFileSelect={onFileUpload}
+            onFileSelect={handleFileSelect}
             isUploading={isUploading}
             uploadProgress={uploadProgress}
             disabled={!solutionId}

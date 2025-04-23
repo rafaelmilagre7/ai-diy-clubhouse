@@ -20,7 +20,7 @@ const VideoUploader: React.FC<VideoUploaderProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleButtonClick = () => {
-    if (fileInputRef.current) {
+    if (!disabled && !isUploading && fileInputRef.current) {
       fileInputRef.current.click();
     }
   };
@@ -33,6 +33,7 @@ const VideoUploader: React.FC<VideoUploaderProps> = ({
     
     const file = e.dataTransfer.files?.[0];
     if (file) {
+      console.log("Arquivo selecionado por drag & drop:", file.name);
       onFileSelect(file);
     }
   };
@@ -40,6 +41,7 @@ const VideoUploader: React.FC<VideoUploaderProps> = ({
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      console.log("Arquivo selecionado pelo input:", file.name);
       onFileSelect(file);
       e.target.value = ""; // Limpar input para permitir selecionar o mesmo arquivo novamente
     }
@@ -113,6 +115,7 @@ const VideoUploader: React.FC<VideoUploaderProps> = ({
             <Progress 
               value={uploadProgress} 
               className="h-2 w-full"
+              indicatorClassName={uploadProgress < 100 ? "bg-[#0ABAB5]" : "bg-green-500"}
             />
             <div className="flex justify-between">
               <span className="text-sm text-muted-foreground">Enviando vídeo...</span>

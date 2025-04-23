@@ -24,6 +24,8 @@ interface Video {
     youtube_id?: string;
     thumbnail_url?: string;
     description?: string;
+    format?: string;
+    size?: number;
   };
 }
 
@@ -35,6 +37,8 @@ interface VideosListProps {
 const VideosList: React.FC<VideosListProps> = ({ videos, onRemove }) => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [videoToDelete, setVideoToDelete] = useState<{ id: string; name: string; url: string } | null>(null);
+  
+  console.log("Videos na lista:", videos.length, videos);
 
   const handleDelete = (video: Video) => {
     setVideoToDelete({
@@ -59,6 +63,22 @@ const VideosList: React.FC<VideosListProps> = ({ videos, onRemove }) => {
     }
     return "https://placehold.co/320x180/e6f7ff/0abab5?text=Vídeo";
   };
+
+  const formatFileSize = (bytes?: number) => {
+    if (!bytes) return "";
+    if (bytes < 1024) return bytes + " B";
+    else if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
+    else if (bytes < 1024 * 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(1) + " MB";
+    else return (bytes / (1024 * 1024 * 1024)).toFixed(1) + " GB";
+  };
+
+  if (videos.length === 0) {
+    return (
+      <div className="text-center p-8 border border-dashed rounded-lg">
+        <p className="text-muted-foreground">Nenhum vídeo adicionado ainda</p>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -98,6 +118,11 @@ const VideosList: React.FC<VideosListProps> = ({ videos, onRemove }) => {
             </div>
             <CardContent className="pt-4">
               <h3 className="font-medium text-base line-clamp-2 mb-1" title={video.name}>{video.name}</h3>
+              {video.metadata?.size && (
+                <p className="text-xs text-muted-foreground mb-1">
+                  {video.metadata?.format?.toUpperCase()} • {formatFileSize(video.metadata?.size)}
+                </p>
+              )}
               <p className="text-sm text-muted-foreground line-clamp-2 mb-3" title={video.metadata?.description || ""}>
                 {video.metadata?.description || "Sem descrição"}
               </p>

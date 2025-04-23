@@ -28,7 +28,7 @@ export const useFetchVideos = (solutionId: string): VideoFetchResponse & { refet
 
       if (error) throw error;
       
-      console.log("Vídeos recebidos:", data?.length || 0);
+      console.log("Vídeos recebidos:", data?.length || 0, data);
       setVideos(data || []);
       setError(null);
     } catch (err) {

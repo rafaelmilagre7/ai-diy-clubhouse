@@ -41,6 +41,8 @@ export const useFileUpload = (solutionId: string) => {
       const fileName = `${uuidv4()}.${fileExt}`;
       const filePath = `solution_videos/${solutionId}/${fileName}`;
 
+      console.log("Iniciando upload do arquivo:", file.name, "tamanho:", file.size);
+
       // Simulando progresso de upload para feedback visual
       const progressInterval = setInterval(() => {
         setUploadProgress(prev => {
@@ -59,21 +61,31 @@ export const useFileUpload = (solutionId: string) => {
       }
       
       // Usamos o bucket 'resources' que é um bucket padrão no Supabase
-      const { error: uploadError } = await supabase.storage
+      console.log("Enviando arquivo para o bucket 'resources', caminho:", filePath);
+      
+      const { error: uploadError, data: uploadData } = await supabase.storage
         .from("resources")
         .upload(filePath, file, {
-          cacheControl: '3600' // Adicionando cache control para evitar problemas de cache
+          cacheControl: '3600', // Adicionando cache control para evitar problemas de cache
+          upsert: true // Substituir o arquivo se já existir
         });
 
       clearInterval(progressInterval);
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error("Erro no upload:", uploadError);
+        throw uploadError;
+      }
+
+      console.log("Upload concluído com sucesso:", uploadData);
 
       const { data: urlData } = supabase.storage
         .from("resources")
         .getPublicUrl(filePath);
 
       if (!urlData) throw new Error("Não foi possível obter a URL do vídeo");
+
+      console.log("URL pública obtida:", urlData.publicUrl);
 
       setUploadProgress(100); // Completar progresso ao finalizar
 
@@ -90,12 +102,19 @@ export const useFileUpload = (solutionId: string) => {
         }
       };
 
+      console.log("Inserindo registro do vídeo no banco de dados:", newVideo);
+
       const { data, error } = await supabase
         .from("solution_resources")
         .insert(newVideo)
         .select();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Erro ao inserir dados no banco:", error);
+        throw error;
+      }
+
+      console.log("Vídeo registrado com sucesso no banco:", data);
 
       toast("Upload concluído", {
         description: "O vídeo foi adicionado com sucesso."
