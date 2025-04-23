@@ -1,5 +1,6 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useSolutionsData } from '@/hooks/useSolutionsData';
 import { SolutionCard } from '@/components/solution/SolutionCard';
 import { Input } from '@/components/ui/input';
@@ -7,31 +8,80 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Search, Filter } from 'lucide-react';
 import LoadingScreen from '@/components/common/LoadingScreen';
 import { Solution } from '@/lib/supabase';
-import { useToolsData } from '@/hooks/useToolsData';
-import { useLogging } from '@/contexts/logging';
+import { useLogging } from '@/hooks/useLogging';
+import { useQueryClient } from '@tanstack/react-query';
 
 const Solutions = () => {
   // Logger para depuração
-  const { log } = useLogging();
+  const { log } = useLogging("SolutionsPage");
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const queryClient = useQueryClient();
   
-  // Garantir que as ferramentas estejam corretamente configuradas, mas ignorar erros
-  const { isLoading: toolsDataLoading } = useToolsData();
-  
-  const { 
-    filteredSolutions, 
-    loading, 
-    searchQuery, 
-    setSearchQuery,
-    activeCategory,
-    setActiveCategory
-  } = useSolutionsData(null);
+  // Estado local para armazenar a categoria ativa e termo de pesquisa
+  const [activeCategory, setActiveCategory] = useState(
+    searchParams.get('category') || 'all'
+  );
+  const [searchQuery, setSearchQuery] = useState(
+    searchParams.get('search') || ''
+  );
 
-  // Log data for debugging
-  log("Solutions page loaded", { 
-    solutionsCount: filteredSolutions?.length || 0, 
-    activeCategory,
-    isLoading: loading || toolsDataLoading
-  });
+  // Buscar os dados das soluções
+  const { 
+    solutions,
+    filteredSolutions, 
+    loading,
+    error
+  } = useSolutionsData(activeCategory, searchQuery);
+
+  // Atualizar os parâmetros de URL quando mudar categoria ou pesquisa
+  useEffect(() => {
+    const params: Record<string, string> = {};
+    
+    if (activeCategory !== 'all') {
+      params.category = activeCategory;
+    }
+    
+    if (searchQuery) {
+      params.search = searchQuery;
+    }
+    
+    setSearchParams(params);
+  }, [activeCategory, searchQuery, setSearchParams]);
+
+  // Pré-carregar detalhes das soluções quando listar todas
+  useEffect(() => {
+    if (solutions && solutions.length > 0 && !loading) {
+      // Prefetch das primeiras 3 soluções para melhorar a experiência
+      solutions.slice(0, 3).forEach(solution => {
+        queryClient.prefetchQuery({
+          queryKey: ['solution', solution.id],
+          queryFn: async () => null, // Apenas para registrar a chave
+          staleTime: 2 * 60 * 1000 // 2 minutos
+        });
+      });
+    }
+  }, [solutions, loading, queryClient]);
+
+  // Log para diagnóstico
+  useEffect(() => {
+    log("Solutions page loaded", { 
+      solutionsCount: filteredSolutions?.length || 0,
+      activeCategory,
+      isLoading: loading
+    });
+  }, [filteredSolutions, activeCategory, loading, log]);
+
+  // Função para lidar com a mudança de categoria
+  const handleCategoryChange = (category: string) => {
+    setActiveCategory(category);
+  };
+
+  // Função para lidar com cliques nas soluções
+  const handleSolutionClick = (solution: Solution) => {
+    log("Navegando para solução", { solutionId: solution.id, title: solution.title });
+    navigate(`/solution/${solution.id}`);
+  };
 
   const categories = [
     { id: 'all', name: 'Todas' },
@@ -41,9 +91,20 @@ const Solutions = () => {
   ];
 
   // Se estiver carregando as soluções, mostrar tela de carregamento
-  // Mas não bloquear se apenas as ferramentas estiverem carregando
   if (loading) {
     return <LoadingScreen message="Carregando soluções..." />;
+  }
+
+  // Se ocorrer um erro, mostrar mensagem de erro
+  if (error) {
+    return (
+      <div className="text-center py-12">
+        <h2 className="text-2xl font-bold mb-2">Erro ao carregar soluções</h2>
+        <p className="text-gray-600">
+          Ocorreu um erro ao tentar buscar as soluções. Por favor, tente novamente mais tarde.
+        </p>
+      </div>
+    );
   }
 
   return (
@@ -70,7 +131,11 @@ const Solutions = () => {
         </div>
       </div>
 
-      <Tabs defaultValue={activeCategory} onValueChange={setActiveCategory} className="w-full">
+      <Tabs 
+        value={activeCategory} 
+        onValueChange={handleCategoryChange} 
+        className="w-full"
+      >
         <TabsList className="mb-6 flex flex-wrap">
           {categories.map((category) => (
             <TabsTrigger 
@@ -98,7 +163,11 @@ const Solutions = () => {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredSolutions?.map((solution: Solution) => (
-                  <SolutionCard key={solution.id} solution={solution} />
+                  <SolutionCard 
+                    key={solution.id} 
+                    solution={solution} 
+                    onClick={() => handleSolutionClick(solution)} 
+                  />
                 ))}
               </div>
             )}

@@ -1,82 +1,94 @@
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 import { Solution } from "@/lib/supabase";
-import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/contexts/auth";
+import { useLogging } from "@/hooks/useLogging";
+import { useQuery } from "@tanstack/react-query";
+import { toast } from "sonner";
 
-export const useSolutionsData = (options?: { 
-  category?: string, 
-  publishedOnly?: boolean 
-}) => {
-  const { toast } = useToast();
-  const { isAdmin } = useAuth();
-  const [solutions, setSolutions] = useState<Solution[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [activeCategory, setActiveCategory] = useState(options?.category || "all");
-
-  useEffect(() => {
-    const fetchSolutions = async () => {
-      try {
-        setLoading(true);
-        
-        // Iniciar a consulta básica
-        let query = supabase.from("solutions").select("*");
-        
-        // Aplicar filtro por categoria se especificado e não for "all"
-        const categoryToFilter = activeCategory !== "all" ? activeCategory : options?.category;
-        if (categoryToFilter && categoryToFilter !== "all") {
-          query = query.eq("category", categoryToFilter);
-        }
-        
-        // Aplicar filtro para mostrar apenas soluções publicadas (se não for admin)
-        if ((options?.publishedOnly !== false) && !isAdmin) {
-          query = query.eq("published", true);
-        }
-        
-        // Ordenar por data de criação (mais recentes primeiro)
-        query = query.order("created_at", { ascending: false });
-        
-        const { data, error: fetchError } = await query;
-        
-        if (fetchError) throw fetchError;
-        
-        setSolutions(data as Solution[]);
-        setError(null);
-      } catch (err: any) {
-        console.error("Erro ao buscar soluções:", err);
-        setError(err);
-        toast({
-          title: "Erro ao carregar soluções",
-          description: "Não foi possível carregar as soluções. Tente novamente mais tarde.",
-          variant: "destructive",
-        });
-      } finally {
-        setLoading(false);
+export const useSolutionsData = (
+  activeCategory: string = "all",
+  searchQuery: string = ""
+) => {
+  const { log, logError } = useLogging("useSolutionsData");
+  const toastShownRef = useRef(false);
+  
+  // Buscar soluções da API
+  const fetchSolutions = async () => {
+    try {
+      log("Buscando soluções...");
+      
+      let query = supabase
+        .from("solutions")
+        .select("*")
+        .eq("published", true)
+        .order("created_at", { ascending: false });
+      
+      const { data, error } = await query;
+      
+      if (error) {
+        logError("Erro ao buscar soluções:", error);
+        throw error;
       }
-    };
+      
+      log(`Encontradas ${data?.length || 0} soluções`);
+      return data as Solution[];
+    } catch (error) {
+      logError("Erro ao buscar soluções:", error);
+      
+      if (!toastShownRef.current) {
+        toast.error("Erro ao carregar soluções", {
+          description: "Não foi possível buscar as soluções no momento.",
+          id: "solutions-fetch-error"
+        });
+        toastShownRef.current = true;
+      }
+      
+      throw error;
+    }
+  };
+
+  // Usar React Query para buscar e armazenar em cache
+  const { 
+    data: solutions = [], 
+    error,
+    isLoading: loading 
+  } = useQuery({
+    queryKey: ["solutions"],
+    queryFn: fetchSolutions,
+    staleTime: 5 * 60 * 1000, // 5 minutos
+    refetchOnWindowFocus: false,
+    retry: 1
+  });
+
+  // Filtra as soluções com base na categoria e pesquisa
+  const filteredSolutions = solutions.filter((solution: Solution) => {
+    // Verificar categoria
+    const categoryMatch = 
+      activeCategory === "all" || 
+      solution.category === activeCategory;
     
-    fetchSolutions();
-  }, [options?.category, options?.publishedOnly, isAdmin, toast, activeCategory]);
-  
-  // Filtramos as soluções baseado na pesquisa
-  const filteredSolutions = useMemo(() => {
-    return solutions.filter(solution =>
-      solution.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      solution.description.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  }, [solutions, searchQuery]);
-  
+    // Verificar termo de pesquisa
+    const searchLower = searchQuery.toLowerCase();
+    const searchMatch = 
+      !searchQuery ||
+      solution.title.toLowerCase().includes(searchLower) ||
+      solution.description.toLowerCase().includes(searchLower);
+    
+    return categoryMatch && searchMatch;
+  });
+
+  // Resetar o toast quando a dependência mudar
+  useEffect(() => {
+    return () => {
+      toastShownRef.current = false;
+    };
+  }, []);
+
   return {
     solutions,
     filteredSolutions,
     loading,
-    error,
-    searchQuery,
-    setSearchQuery,
-    activeCategory,
-    setActiveCategory
+    error
   };
 };

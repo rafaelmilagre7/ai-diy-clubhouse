@@ -12,8 +12,8 @@ const queryClient = new QueryClient({
     queries: {
       retry: 1,
       refetchOnWindowFocus: false,
-      staleTime: 1 * 60 * 1000, // 1 minuto antes de considerar os dados obsoletos
-      gcTime: 5 * 60 * 1000, // 5 minutos antes de remover dados do cache
+      staleTime: 5 * 60 * 1000, // 5 minutos antes de considerar os dados obsoletos
+      gcTime: 10 * 60 * 1000, // 10 minutos antes de remover dados do cache
     },
   },
 });

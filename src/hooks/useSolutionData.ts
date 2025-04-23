@@ -5,35 +5,29 @@ import { useAuth } from "@/contexts/auth";
 import { useNavigate } from "react-router-dom";
 import { useLogging } from "@/hooks/useLogging";
 import { toast } from "sonner";
+import { useQuery } from "@tanstack/react-query";
 
 export const useSolutionData = (id: string | undefined) => {
   const { user, profile } = useAuth();
   const navigate = useNavigate();
   const { log, logError } = useLogging("useSolutionData");
-  const [solution, setSolution] = useState<Solution | null>(null);
-  const [progress, setProgress] = useState<any | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<any | null>(null);
   const isAdmin = profile?.role === 'admin';
   
-  // Controle para prevenir requisições duplicadas e toasts repetidos
-  const fetchAttemptedRef = useRef(false);
-  const fetchingRef = useRef(false);
-  const errorShownRef = useRef(false);
-  const successShownRef = useRef(false);
+  // Refs para controle de estados e operações
+  const toastShownRef = useRef<Record<string, boolean>>({
+    error: false,
+    success: false,
+    notFound: false,
+    notAvailable: false
+  });
 
+  // Função para buscar solução
   const fetchSolution = useCallback(async () => {
-    // Não buscar se não tem ID, já está buscando, ou já tentou buscar (exceto em refetch explícito)
-    if (!id || fetchingRef.current) {
-      return;
+    if (!id) {
+      return null;
     }
     
     try {
-      // Marcar como em processo de busca
-      fetchingRef.current = true;
-      setLoading(true);
-      setError(null);
-      
       log("Iniciando busca por solução", { id });
       
       // Buscar a solução pelo ID
@@ -55,127 +49,139 @@ export const useSolutionData = (id: string | undefined) => {
         // Se o erro for de registro não encontrado e o usuário não é admin,
         // provavelmente está tentando acessar uma solução não publicada
         if (fetchError.code === "PGRST116" && !isAdmin) {
-          if (!errorShownRef.current) {
+          if (!toastShownRef.current.notAvailable) {
             toast.error("Esta solução não está disponível no momento.", {
-              id: `solution-not-available-${id}`, // ID único para evitar duplicação
+              id: `solution-not-available-${id}`,
               duration: 3000
             });
-            errorShownRef.current = true;
+            toastShownRef.current.notAvailable = true;
           }
           navigate("/solutions");
-          return;
+          return null;
         }
         
         throw fetchError;
       }
       
-      if (data) {
-        log("Dados da solução encontrados", { solutionId: data.id, solutionTitle: data.title });
-        setSolution(data as Solution);
-        
-        // Toast apenas na primeira carga bem-sucedida e se não já foi mostrado
-        if (!successShownRef.current) {
-          toast.success("Solução carregada com sucesso!", {
-            id: `solution-loaded-${id}`, // ID único para evitar duplicação
-            duration: 3000
-          });
-          successShownRef.current = true;
-        }
-        
-        // Fetch progress for this solution and user if user is authenticated
-        if (user) {
-          try {
-            const { data: progressData, error: progressError } = await supabase
-              .from("progress")
-              .select("*")
-              .eq("solution_id", id)
-              .eq("user_id", user.id)
-              .maybeSingle();
-              
-            if (progressError) {
-              logError("Erro ao buscar progresso:", { error: progressError });
-            } else if (progressData) {
-              setProgress(progressData);
-              log("Dados de progresso encontrados", { progressId: progressData.id });
-            } else {
-              log("Nenhum progresso encontrado para esta solução", { solutionId: id, userId: user.id });
-            }
-          } catch (progressFetchError) {
-            logError("Erro ao buscar progresso:", { error: progressFetchError });
-            // Não mostrar erro para o usuário se apenas o progresso falhar
-          }
-        }
-      } else {
+      if (!data) {
         log("Nenhuma solução encontrada com ID", { id });
-        if (!errorShownRef.current) {
+        if (!toastShownRef.current.notFound) {
           toast.error("Não foi possível encontrar a solução solicitada.", {
-            id: `solution-not-found-${id}`, // ID único para evitar duplicação
+            id: `solution-not-found-${id}`,
             duration: 3000
           });
-          errorShownRef.current = true;
+          toastShownRef.current.notFound = true;
         }
-        setError(`Solução não encontrada com ID: ${id}`);
+        return null;
       }
+      
+      log("Dados da solução encontrados", { solutionId: data.id, solutionTitle: data.title });
+      
+      // Toast apenas na primeira carga bem-sucedida
+      if (!toastShownRef.current.success) {
+        toast.success("Solução carregada com sucesso!", {
+          id: `solution-loaded-${id}`,
+          duration: 3000
+        });
+        toastShownRef.current.success = true;
+      }
+      
+      return data as Solution;
     } catch (error: any) {
       logError("Erro em useSolutionData:", { error });
-      setError(error);
       
       // Verificar se é um erro de conexão
-      const isNetworkError = error?.message?.includes('fetch') || error?.message?.includes('network');
+      const isNetworkError = error?.message?.includes('fetch') || 
+                           error?.message?.includes('network');
       
-      if (!errorShownRef.current) {
+      // Mostrar toast de erro apenas uma vez
+      if (!toastShownRef.current.error) {
         toast.error(isNetworkError 
           ? "Erro de conexão com o servidor. Verifique sua internet." 
           : "Não foi possível carregar os dados da solução.", {
-          id: `solution-error-${id}`, // ID único para evitar duplicação
+          id: `solution-error-${id}`,
           duration: 5000
         });
-        errorShownRef.current = true;
+        toastShownRef.current.error = true;
       }
-    } finally {
-      fetchAttemptedRef.current = true;
-      setLoading(false);
-      fetchingRef.current = false;
+      
+      throw error;
     }
-  }, [id, user, isAdmin, profile?.role, log, logError, navigate]);
+  }, [id, isAdmin, navigate, log, logError]);
 
-  // Função para recarregar os dados
-  const refetch = useCallback(() => {
-    // Resetar flags para permitir mostrar notificações novamente
-    errorShownRef.current = false;
-    successShownRef.current = false;
-    fetchAttemptedRef.current = false; 
-    // Permite a busca mesmo se já foi tentada antes
-    return fetchSolution();
-  }, [fetchSolution]);
+  // Fetch progresso do usuário
+  const fetchProgress = useCallback(async (solutionId: string) => {
+    if (!user || !solutionId) return null;
+    
+    try {
+      const { data, error } = await supabase
+        .from("progress")
+        .select("*")
+        .eq("solution_id", solutionId)
+        .eq("user_id", user.id)
+        .maybeSingle();
+        
+      if (error) {
+        logError("Erro ao buscar progresso:", { error });
+        return null;
+      }
+      
+      return data;
+    } catch (error) {
+      logError("Erro ao buscar progresso:", { error });
+      return null;
+    }
+  }, [user, logError]);
 
+  // Usar React Query para gerenciar os estados e cache
+  const { 
+    data: solution, 
+    error,
+    isLoading: loading,
+    refetch
+  } = useQuery({
+    queryKey: ['solution', id],
+    queryFn: fetchSolution,
+    enabled: !!id,
+    staleTime: 5 * 60 * 1000, // 5 minutos antes de considerar os dados obsoletos
+    retry: 1,
+    refetchOnWindowFocus: false,
+  });
+
+  // Progress state
+  const [progress, setProgress] = useState<any | null>(null);
+
+  // Fetch progresso quando a solução é carregada
   useEffect(() => {
-    // Reset state when ID changes to prevent stale data
+    if (solution && user) {
+      fetchProgress(solution.id).then(progressData => {
+        if (progressData) {
+          setProgress(progressData);
+          log("Dados de progresso encontrados", { progressId: progressData.id });
+        } else {
+          log("Nenhum progresso encontrado para esta solução", { 
+            solutionId: solution.id, 
+            userId: user.id 
+          });
+        }
+      });
+    }
+  }, [solution, user, fetchProgress, log]);
+
+  // Reset refs quando o ID muda
+  useEffect(() => {
     if (id) {
-      // Somente redefinir o estado se o ID mudar
-      setSolution(null);
-      setProgress(null);
-      setError(null);
-      errorShownRef.current = false;
-      successShownRef.current = false;
-      fetchAttemptedRef.current = false;
-      fetchingRef.current = false;
+      toastShownRef.current = {
+        error: false,
+        success: false,
+        notFound: false,
+        notAvailable: false
+      };
     }
-    
-    // Execute a busca se tivermos um ID e não tiver sido tentado ainda
-    if (id && !fetchAttemptedRef.current) {
-      fetchSolution();
-    }
-    
-    // Cleanup on unmount
-    return () => {
-      fetchingRef.current = false;
-    };
-  }, [id, fetchSolution]);
+  }, [id]);
 
   return {
     solution,
-    setSolution,
     loading,
     error,
     progress,
