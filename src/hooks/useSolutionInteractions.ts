@@ -145,6 +145,7 @@ export const useSolutionInteractions = (solutionId: string | undefined, progress
     startImplementation,
     continueImplementation,
     toggleFavorite,
-    downloadMaterials
+    downloadMaterials,
+    progress // Adicionando explicitamente o progress ao retorno
   };
 };

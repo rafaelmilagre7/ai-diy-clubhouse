@@ -64,8 +64,7 @@ const SolutionDetails = () => {
     continueImplementation, 
     toggleFavorite, 
     downloadMaterials,
-    // Adicionando propriedade progress para satisfazer dependências
-    progress = null
+    progress
   } = useSolutionInteractions(id, null);
   
   // Função para tentar novamente em caso de erro
