@@ -29,6 +29,15 @@ export const useSolutionData = (solutionId: string) => {
       try {
         log('Buscando solução', { id: solutionId });
         
+        // Se não há ID, não buscar dados
+        if (!solutionId) {
+          log('ID da solução não fornecido');
+          return null;
+        }
+
+        // Log para debug de problemas de carregamento
+        console.log('Iniciando fetch da solução com ID:', solutionId);
+        
         // Verificar se já temos os dados em cache
         const cachedData = queryClient.getQueryData<Solution>(['solution', solutionId]);
         if (cachedData) {
@@ -36,23 +45,31 @@ export const useSolutionData = (solutionId: string) => {
             id: cachedData.id,
             title: cachedData.title
           });
+          console.log('Dados do cache:', cachedData);
           setSolution(cachedData);
           return cachedData;
         }
         
+        // Caso não tenha em cache, buscar do servidor
         const { data, error } = await supabase
           .from('solutions')
           .select('*, modules(*)')
           .eq('id', solutionId)
           .maybeSingle();
 
-        if (error) throw error;
+        if (error) {
+          console.error('Erro ao buscar solução:', error);
+          throw error;
+        }
 
         if (!data) {
+          console.error(`Solução não encontrada: ${solutionId}`);
           throw new Error(`Solução com ID ${solutionId} não encontrada`);
         }
 
-        log('Solução carregada com sucesso', { 
+        console.log('Dados recebidos do Supabase:', data);
+        
+        log('Solução encontrada com sucesso', { 
           id: data.id,
           title: data.title,
           modules: data.modules?.length || 0
@@ -81,6 +98,14 @@ export const useSolutionData = (solutionId: string) => {
     retryDelay: attempt => Math.min(1000 * Math.pow(1.5, attempt), 10000),
     refetchOnWindowFocus: false
   });
+
+  // Efeito para garantir que o solution state seja atualizado corretamente
+  useEffect(() => {
+    if (data && !solution) {
+      console.log("Atualizando estado interno da solução com dados recebidos:", data);
+      setSolution(data);
+    }
+  }, [data, solution]);
 
   // Carregar métricas de implementação se tivermos uma solução
   useEffect(() => {

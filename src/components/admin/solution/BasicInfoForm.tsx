@@ -21,10 +21,21 @@ const BasicInfoForm = ({
   onSubmit,
   saving,
 }: BasicInfoFormProps) => {
+  // Log para debug
+  console.log("BasicInfoForm renderizando com defaultValues:", defaultValues);
+
   const form = useForm<SolutionFormValues>({
     resolver: zodResolver(solutionFormSchema),
     defaultValues,
   });
+
+  // Re-inicializar o formulário quando defaultValues mudar
+  useEffect(() => {
+    if (defaultValues) {
+      console.log("Resetando formulário com valores:", defaultValues);
+      form.reset(defaultValues);
+    }
+  }, [form, defaultValues]);
 
   const title = form.watch("title");
   const difficulty = form.watch("difficulty");

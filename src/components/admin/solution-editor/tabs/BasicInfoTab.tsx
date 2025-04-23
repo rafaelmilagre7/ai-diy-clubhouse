@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import BasicInfoForm from "@/components/admin/solution/BasicInfoForm";
 import { SolutionFormValues } from "@/components/admin/solution/form/solutionFormSchema";
 
@@ -16,8 +16,21 @@ const BasicInfoTab: React.FC<BasicInfoTabProps> = ({
   onSubmit,
   saving,
 }) => {
+  // Log para debug
+  useEffect(() => {
+    console.log("BasicInfoTab renderizando com valores:", { defaultValues, currentValues });
+  }, [defaultValues, currentValues]);
+
   // Usamos currentValues se disponível, caso contrário, defaultValues
-  const values = currentValues || defaultValues;
+  const values = currentValues || defaultValues || {
+    title: "",
+    description: "",
+    category: "revenue" as const,
+    difficulty: "medium" as const,
+    thumbnail_url: "",
+    published: false,
+    slug: "",
+  };
   
   return (
     <BasicInfoForm 

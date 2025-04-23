@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { SolutionFormValues } from "@/components/admin/solution/form/solutionFormSchema";
-import { useSolutionData } from "@/hooks/useSolutionData";
+import { useSolutionData } from "@/hooks/solution/useSolutionData";
 import { useSolutionSave } from "@/hooks/useSolutionSave";
 import { useSolutionSteps } from "@/hooks/useSolutionSteps";
 import { Solution } from "@/lib/supabase";
@@ -48,6 +48,9 @@ export const useSolutionEditor = (id: string | undefined, user: any) => {
         hasDescription: !!solution.description,
         category: solution.category
       });
+      
+      // Debug temporário para verificar os dados recebidos
+      console.log("Dados da solução carregados:", solution);
       
       const updatedValues = {
         title: solution.title || "",

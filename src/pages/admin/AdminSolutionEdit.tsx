@@ -35,7 +35,16 @@ const AdminSolutionEdit = () => {
     if (!solution && !loading && id) {
       console.warn("Solução não encontrada para edição no admin:", id);
     }
-  }, [id, solution, loading]);
+    
+    // Log dos valores atuais do formulário para debug
+    if (solution) {
+      console.log("Solução carregada em AdminSolutionEdit:", {
+        id: solution.id,
+        title: solution.title,
+        currentValues
+      });
+    }
+  }, [id, solution, loading, currentValues]);
   
   if (loading) {
     return <LoadingScreen message="Carregando editor de solução..." />;
