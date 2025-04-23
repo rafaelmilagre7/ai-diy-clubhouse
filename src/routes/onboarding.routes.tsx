@@ -9,6 +9,7 @@ import AIExperience from '@/pages/onboarding/steps/AIExperience';
 import BusinessGoalsClub from '@/pages/onboarding/steps/BusinessGoalsClub';
 import ExperiencePersonalization from '@/pages/onboarding/steps/ExperiencePersonalization';
 import ComplementaryInfo from '@/pages/onboarding/steps/ComplementaryInfo';
+import { NotFound } from '@/pages/NotFound';
 
 export const onboardingRoutes: RouteObject[] = [
   {
@@ -51,4 +52,9 @@ export const onboardingRoutes: RouteObject[] = [
     path: '/onboarding/review',
     element: <Review />,
   },
+  // Rota curinga para capturar URLs inválidas dentro do onboarding
+  {
+    path: '/onboarding/*',
+    element: <NotFound />,
+  }
 ];

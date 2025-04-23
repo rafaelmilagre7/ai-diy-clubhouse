@@ -14,6 +14,7 @@ import { PersonalizationForm } from '@/components/onboarding/forms/Personalizati
 import { ComplementaryForm } from '@/components/onboarding/forms/ComplementaryForm';
 import { ReviewStep } from '@/components/onboarding/forms/ReviewStep';
 import { useAuth } from '@/contexts/auth';
+import { toast } from 'sonner';
 
 const Onboarding: React.FC = () => {
   const { user } = useAuth();
@@ -38,13 +39,14 @@ const Onboarding: React.FC = () => {
       
       if (routeMapping[currentRouteStep]) {
         console.log(`Redirecionando de ${location.pathname} para /onboarding/${routeMapping[currentRouteStep]}`);
-        navigate(`/onboarding/${routeMapping[currentRouteStep]}`);
+        navigate(`/onboarding/${routeMapping[currentRouteStep]}`, { replace: true });
+        toast.info(`Redirecionando para a página correta...`);
         return;
       }
 
       // Redirecionar se estivermos em um passo incorreto
-      if (currentStep !== routeStep && routeStep !== 'professional') {
-        navigate(`/onboarding/${currentStep === 'personal' ? '' : currentStep}`);
+      if (currentStep !== routeStep && routeStep !== 'professional_data' && routeStep !== 'professional') {
+        navigate(`/onboarding/${currentStep === 'personal' ? '' : currentStep}`, { replace: true });
       }
     }
   }, [isLoading, data, currentStep, routeStep, navigate, location.pathname]);
@@ -95,6 +97,7 @@ const Onboarding: React.FC = () => {
       case 'review':
         return <ReviewStep data={data} onComplete={completeOnboarding} isSaving={isSaving} />;
       default:
+        console.log(`Rota não reconhecida: ${routeStep}, renderizando formulário pessoal padrão`);
         return <PersonalForm data={data} onSubmit={(formData) => saveFormData(formData, 'personal')} isSaving={isSaving} />;
     }
   };
