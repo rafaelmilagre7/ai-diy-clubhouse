@@ -46,6 +46,7 @@ export const useSolutionData = (solutionId: string | undefined) => {
     refetch,
     networkError,
     notFoundError,
-    availableSolutions
+    availableSolutions,
+    setSolution // Importante: incluir setSolution no retorno
   };
 };
