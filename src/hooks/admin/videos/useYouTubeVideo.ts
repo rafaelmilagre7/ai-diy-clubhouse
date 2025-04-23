@@ -16,10 +16,8 @@ export const useYouTubeVideo = (solutionId: string) => {
       const youtubeId = match && match[2].length === 11 ? match[2] : null;
 
       if (!youtubeId) {
-        toast({
-          title: "URL inválida",
-          description: "Por favor, insira uma URL válida do YouTube.",
-          variant: "destructive"
+        toast("URL inválida", {
+          description: "Por favor, insira uma URL válida do YouTube."
         });
         return;
       }
@@ -47,18 +45,15 @@ export const useYouTubeVideo = (solutionId: string) => {
 
       if (error) throw error;
 
-      toast({
-        title: "Vídeo adicionado",
+      toast("Vídeo adicionado", {
         description: "O vídeo do YouTube foi adicionado com sucesso."
       });
 
       return data[0] as VideoItem;
     } catch (error) {
       console.error("Erro ao adicionar vídeo:", error);
-      toast({
-        title: "Erro ao adicionar vídeo",
-        description: "Ocorreu um erro ao tentar adicionar o vídeo.",
-        variant: "destructive"
+      toast("Erro ao adicionar vídeo", {
+        description: "Ocorreu um erro ao tentar adicionar o vídeo."
       });
       return null;
     }

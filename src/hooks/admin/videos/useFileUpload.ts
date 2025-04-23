@@ -11,29 +11,23 @@ export const useFileUpload = (solutionId: string) => {
 
   const handleFileUpload = async (file: File) => {
     if (!solutionId) {
-      toast({
-        title: "Erro",
-        description: "É necessário salvar a solução antes de adicionar vídeos.",
-        variant: "destructive"
+      toast("Erro", {
+        description: "É necessário salvar a solução antes de adicionar vídeos."
       });
       return null;
     }
 
     if (!file.type.startsWith("video/")) {
-      toast({
-        title: "Tipo de arquivo inválido",
-        description: "Por favor, selecione apenas arquivos de vídeo.",
-        variant: "destructive"
+      toast("Tipo de arquivo inválido", {
+        description: "Por favor, selecione apenas arquivos de vídeo."
       });
       return null;
     }
 
     const maxSize = 100 * 1024 * 1024;
     if (file.size > maxSize) {
-      toast({
-        title: "Arquivo muito grande",
-        description: "O tamanho máximo permitido é 100MB.",
-        variant: "destructive"
+      toast("Arquivo muito grande", {
+        description: "O tamanho máximo permitido é 100MB."
       });
       return null;
     }
@@ -78,18 +72,15 @@ export const useFileUpload = (solutionId: string) => {
 
       if (error) throw error;
 
-      toast({
-        title: "Upload concluído",
+      toast("Upload concluído", {
         description: "O vídeo foi adicionado com sucesso."
       });
 
       return data[0] as VideoItem;
     } catch (error) {
       console.error("Erro no upload:", error);
-      toast({
-        title: "Erro no upload",
-        description: "Ocorreu um erro ao tentar fazer o upload do vídeo.",
-        variant: "destructive"
+      toast("Erro no upload", {
+        description: "Ocorreu um erro ao tentar fazer o upload do vídeo."
       });
       return null;
     } finally {
