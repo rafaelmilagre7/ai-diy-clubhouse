@@ -73,7 +73,7 @@ export const useSolutionData = (id: string | undefined) => {
     queryFn: fetchSolution,
     enabled: !!id,
     staleTime: 1000 * 30, // 30 segundos antes de considerar os dados obsoletos
-    cacheTime: 1000 * 60 * 5, // Cache por 5 minutos
+    gcTime: 1000 * 60 * 5, // Cache por 5 minutos (substituindo cacheTime)
     retry: 1,
     refetchOnWindowFocus: false,
   });

@@ -49,6 +49,7 @@ const TabBasedNavigation = ({
             solutionId={solution?.id || null}
             onSave={onSubmit.bind(null, currentValues)}
             saving={saving}
+            currentModuleStep={0} // Adicionando com valor default
           />
         );
       case "resources":
