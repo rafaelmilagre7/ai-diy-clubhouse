@@ -1,6 +1,6 @@
 
 import React from "react";
-import { VideoLessonsForm } from "@/components/admin/solution/form/VideoLessonsForm";
+import VideoLessonsForm from "@/components/admin/solution/form/VideoLessonsForm";
 
 interface VideoFormProps {
   solutionId: string;
