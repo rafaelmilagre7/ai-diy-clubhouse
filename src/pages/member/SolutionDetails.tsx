@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import { useSolutionData } from "@/hooks/useSolutionData";
 import { useSolutionInteractions } from "@/hooks/useSolutionInteractions";
 import { useLogging } from "@/hooks/useLogging";
+import { useAuth } from "@/contexts/auth";
 import { NetworkError } from "@/components/solution/errors/NetworkError";
 import { GeneralError } from "@/components/solution/errors/GeneralError";
 import { SolutionNotFound } from "@/components/solution/SolutionNotFound";
@@ -14,12 +15,14 @@ import { SolutionSidebar } from "@/components/solution/SolutionSidebar";
 import { SolutionMobileActions } from "@/components/solution/SolutionMobileActions";
 import { SolutionSkeleton } from "@/components/solution/SolutionSkeleton";
 import LoadingScreen from "@/components/common/LoadingScreen";
+import { toast } from "sonner";
 
 const SolutionDetails = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { log } = useLogging("SolutionDetails");
   const initialRenderRef = useRef(true);
+  const { user, isAdmin } = useAuth();
   
   // Hook aprimorada para buscar os dados da solução com diagnóstico adicional
   const { 
@@ -30,7 +33,9 @@ const SolutionDetails = () => {
     refetch, 
     networkError, 
     notFoundError,
-    availableSolutions 
+    availableSolutions, 
+    connectionStatus,
+    checkConnection
   } = useSolutionData(id);
   
   // Solution interaction handlers
@@ -39,6 +44,14 @@ const SolutionDetails = () => {
     startImplementation, 
     continueImplementation
   } = useSolutionInteractions(id, progress);
+
+  // Verificar a autenticação do usuário
+  useEffect(() => {
+    if (!loading && !user) {
+      toast.error("Você precisa estar logado para acessar esta página");
+      navigate("/login", { state: { returnTo: `/solution/${id}` } });
+    }
+  }, [user, loading, id, navigate]);
   
   // Log detalhado na primeira renderização para diagnóstico
   useEffect(() => {
@@ -46,12 +59,16 @@ const SolutionDetails = () => {
       log("SolutionDetails montado com diagnóstico completo", { 
         requestedId: id,
         currentRoute: window.location.href,
-        availableSolutionsCount: availableSolutions?.length || 0
+        availableSolutionsCount: availableSolutions?.length || 0,
+        isAdmin,
+        connectionStatus
       });
       
+      // Verificar a conexão com o servidor no carregamento inicial
+      checkConnection();
       initialRenderRef.current = false;
     }
-  }, [id, log, availableSolutions]);
+  }, [id, log, availableSolutions, isAdmin, connectionStatus, checkConnection]);
 
   // Verificar ID inválido ou ausente
   if (!id) {
@@ -83,6 +100,19 @@ const SolutionDetails = () => {
   // Tratar o caso específico de "não encontrado"
   if (notFoundError || !solution) {
     return <SolutionNotFound />;
+  }
+
+  // Verificar se o usuário tem acesso à solução (não publicada)
+  if (!isAdmin && !solution.published) {
+    log("Usuário tentando acessar solução não publicada", { solutionId: id });
+    return (
+      <GeneralError 
+        error={new Error("Esta solução não está disponível ou publicada.")} 
+        id={id} 
+        onRetry={refetch} 
+        availableSolutions={availableSolutions?.filter(s => s.published)} 
+      />
+    );
   }
   
   // Se chegou aqui, temos dados válidos para renderizar

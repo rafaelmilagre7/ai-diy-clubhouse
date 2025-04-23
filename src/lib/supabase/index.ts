@@ -6,6 +6,7 @@ export * from '@/types/supabaseTypes';
 // Usando constantes da configuração centralizada
 import { supabaseConfig } from './config';
 
+// Cliente Supabase com configurações aprimoradas para melhor diagnóstico
 export const supabase = createClient<Database>(supabaseConfig.url, supabaseConfig.anonKey, {
   auth: {
     persistSession: true,
@@ -19,10 +20,10 @@ export const supabase = createClient<Database>(supabaseConfig.url, supabaseConfi
       const controller = new AbortController();
       const { signal } = controller;
       
-      // Definir timeout para requisições
+      // Definir timeout para requisições para evitar hanging pendente
       const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 segundos timeout
       
-      // Adicionar log para depurar requisições problemáticas
+      // Log para depurar requisições potencialmente problemáticas
       console.log(`[Supabase] Requisição iniciada: ${url}`);
       
       return fetch(url, { ...options, signal })
