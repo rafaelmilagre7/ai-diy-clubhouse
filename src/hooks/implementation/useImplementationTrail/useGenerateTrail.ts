@@ -1,101 +1,85 @@
 
-import { supabase } from "@/lib/supabase";
-import { toast } from "sonner";
-import { sanitizeTrailData } from "./utils";
+import { useState, useEffect } from "react";
+import { User, Session } from "@supabase/supabase-js";
 import { ImplementationTrail } from "../useImplementationTrail";
 
+// Hook para geração de trilhas de implementação
 export const useGenerateImplementationTrail = (
-  user: any,
-  session: any,
-  setIsLoading: (v: boolean) => void,
-  setError: (v: string | null) => void,
-  setDetailedError: (v: any) => void,
-  setTrail: (t: ImplementationTrail | null) => void,
-  setLastGenerationTime: (d: Date | null) => void
+  user: User | null,
+  session: Session | null,
+  setIsLoading: (loading: boolean) => void,
+  setError: (error: string | null) => void,
+  setDetailedError: (error: any) => void,
+  setTrail: (trail: ImplementationTrail | null) => void,
+  setLastGenerationTime: (time: Date | null) => void
 ) => {
-  return async (onboardingData: any) => {
+  // Funções e lógica de geração de trilha
+  const generateImplementationTrail = async (onboardingData: any) => {
     if (!user || !session) {
-      setError("Usuário não autenticado ou sessão inválida");
+      setError("Usuário não autenticado");
       return null;
     }
+
     try {
       setIsLoading(true);
       setError(null);
       setDetailedError(null);
 
-      const { data: profileData, error: profileError } = await supabase
-        .from("implementation_profiles")
-        .select("*")
-        .eq("user_id", user.id)
-        .limit(1)
-        .maybeSingle();
+      // Implementação simplificada para chamada à API de geração
+      const { data: generatedTrailData, error: generationError } = await import("@/lib/supabase")
+        .then(m => m.supabase)
+        .then(supabase => supabase.functions.invoke("generate-implementation-trail", {
+          body: {
+            onboardingData,
+            userId: user.id
+          }
+        }));
 
-      if (profileError || !profileData || !profileData.is_completed) {
-        throw new Error("Perfil de implementação não encontrado ou incompleto");
+      // Tratamento de erros da API
+      if (generationError) {
+        console.error("Erro na API de geração de trilha:", generationError);
+        setError("Erro ao gerar sua trilha de implementação");
+        setDetailedError(generationError);
+        return null;
       }
 
-      await supabase
-        .from("implementation_trails")
-        .upsert({
-          user_id: user.id,
-          status: "pending",
-          generation_attempts: 1,
-          updated_at: new Date().toISOString()
-        });
+      // Se dados de trilha foram retornados corretamente
+      if (generatedTrailData?.trail) {
+        // Salvar no banco de dados
+        const { error: saveError } = await import("@/lib/supabase")
+          .then(m => m.supabase)
+          .then(supabase => supabase.from("implementation_trails").insert({
+            user_id: user.id,
+            trail_data: generatedTrailData.trail,
+            status: "completed",
+            created_at: new Date().toISOString()
+          }));
 
-      const authToken = session?.access_token;
-      if (!authToken) throw new Error("Token de autenticação não encontrado");
-
-      const { data: generatedData, error: fnError } = await supabase.functions.invoke(
-        "generate-implementation-trail",
-        {
-          body: { onboardingData },
-          headers: { Authorization: `Bearer ${authToken}` }
+        if (saveError) {
+          console.error("Erro ao salvar trilha:", saveError);
+          setError("Erro ao salvar sua trilha");
+          setDetailedError(saveError);
+          return null;
         }
-      );
 
-      setLastGenerationTime(new Date());
-
-      if (fnError) throw fnError;
-      if (!generatedData?.recommendations)
-        throw new Error("A função de geração retornou uma resposta inválida");
-
-      const recommendationsToSave = generatedData.recommendations;
-
-      await supabase
-        .from("implementation_trails")
-        .update({
-          trail_data: recommendationsToSave,
-          status: "completed",
-          updated_at: new Date().toISOString()
-        })
-        .eq("user_id", user.id)
-        .eq("status", "pending");
-
-      const sanitizedData = sanitizeTrailData(recommendationsToSave);
-      setTrail(sanitizedData);
-      return sanitizedData;
-    } catch (error: any) {
-      setError("Não foi possível gerar sua trilha.");
-      setDetailedError(error);
-
-      if (user?.id) {
-        await supabase
-          .from("implementation_trails")
-          .update({
-            status: "error",
-            error_message: error.message || "Erro desconhecido",
-            updated_at: new Date().toISOString()
-          })
-          .eq("user_id", user.id)
-          .eq("status", "pending");
+        // Atualizar estados
+        setTrail(generatedTrailData.trail as ImplementationTrail);
+        setLastGenerationTime(new Date());
+        return generatedTrailData.trail;
+      } else {
+        setError("Não foi possível gerar sua trilha");
+        console.error("Dados da trilha inválidos:", generatedTrailData);
+        return null;
       }
-      toast.error("Não foi possível gerar sua trilha.", {
-        description: "Tente novamente ou entre em contato com o suporte."
-      });
+    } catch (error) {
+      console.error("Erro ao gerar trilha:", error);
+      setError("Erro inesperado ao gerar sua trilha");
+      setDetailedError(error);
       return null;
     } finally {
       setIsLoading(false);
     }
   };
+
+  return generateImplementationTrail;
 };
