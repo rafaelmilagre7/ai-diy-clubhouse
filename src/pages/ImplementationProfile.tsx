@@ -1,10 +1,9 @@
 
 import React, { useEffect, useState } from "react";
 import { useImplementationProfile } from "@/hooks/useImplementationProfile";
-import { Loader2, Flag, Linkedin, Instagram, Building, Link as LinkIcon, Users, DollarSign, Brain, Star, User as UserIcon, Mail } from "lucide-react";
+import { Loader2, Flag, Linkedin, Instagram, Building, Link as LinkIcon, Users, DollarSign, Brain, Star, User, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/contexts/auth";
@@ -25,6 +24,32 @@ const sectorOptions = [
   "Financeiro",
   "Outro"
 ];
+
+const positionOptions = [
+  "CEO / Diretor(a) Executivo(a)",
+  "CTO / Diretor(a) de Tecnologia",
+  "COO / Diretor(a) de Operações",
+  "CFO / Diretor(a) Financeiro(a)",
+  "CMO / Diretor(a) de Marketing",
+  "CHRO / Diretor(a) de RH",
+  "CIO / Diretor(a) de Informação",
+  "CDO / Diretor(a) de Dados",
+  "Gerente de Projeto",
+  "Gerente de Produto",
+  "Gerente de TI",
+  "Gestor(a) de Operações",
+  "Analista de Dados",
+  "Cientista de Dados",
+  "Desenvolvedor(a)",
+  "Engenheiro(a) de Software",
+  "Especialista em IA",
+  "Consultor(a)",
+  "Empreendedor(a)",
+  "Acadêmico(a) / Professor(a)",
+  "Estudante",
+  "Outro"
+];
+
 const companySizeOptions = [
   "1-10 colaboradores",
   "11-50 colaboradores",
@@ -108,6 +133,7 @@ export default function ImplementationProfilePage() {
 
   const handleSubmit = (e: any) => {
     e.preventDefault();
+    console.log("Submetendo formulário com valores:", values);
 
     // Validação simples do site
     if (values.company_website && !/^https?:\/\/\S+\.\S+/.test(values.company_website)) {
@@ -165,7 +191,7 @@ export default function ImplementationProfilePage() {
             <Label htmlFor="name">Nome*</Label>
             <div className="relative">
               <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
-                <UserIcon size={16} />
+                <User size={16} />
               </span>
               <Input
                 id="name"
@@ -355,22 +381,22 @@ export default function ImplementationProfilePage() {
               />
             </div>
           </div>
-          {/* Cargo/posição */}
+          {/* Cargo/posição - Transformado em seletor */}
           <div className="space-y-2">
             <Label htmlFor="current_position">Cargo Atual</Label>
-            <div className="relative">
-              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
-                <Users size={16} />
-              </span>
-              <Input
-                id="current_position"
-                name="current_position"
-                value={values.current_position || ""}
-                onChange={handleChange}
-                placeholder="Cargo Atual"
-                className="pl-10"
-              />
-            </div>
+            <Select
+              value={values.current_position || ""}
+              onValueChange={val => setValues((old) => ({ ...old, current_position: val }))}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione seu cargo" />
+              </SelectTrigger>
+              <SelectContent>
+                {positionOptions.map(position => (
+                  <SelectItem key={position} value={position}>{position}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           {/* Setor */}
           <div className="space-y-2">
