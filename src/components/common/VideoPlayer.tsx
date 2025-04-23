@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import ReactPlayer from "react-player";
+import ReactPlayer from "react-player/lazy"; // Use lazy loader for better performance
 import { useVideoPlayer } from "@/hooks/implementation/useVideoPlayer";
 import { useLogging } from "@/hooks/useLogging";
 
