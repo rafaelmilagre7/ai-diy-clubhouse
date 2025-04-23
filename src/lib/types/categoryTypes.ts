@@ -1,5 +1,7 @@
-
 import { SolutionCategory } from '@/types/solution';
+
+// Re-export the type to maintain existing imports
+export type { SolutionCategory };
 
 export const toSolutionCategory = (category: string): SolutionCategory => {
   if (category === 'revenue' || category === 'operational' || category === 'strategy') {
