@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { useImplementationProfile } from "@/hooks/useImplementationProfile";
 import { Loader2, Flag, Linkedin, Instagram, Building, Link as LinkIcon, Users, DollarSign, Brain, Star, User, Mail } from "lucide-react";
@@ -175,7 +176,7 @@ export default function ImplementationProfilePage() {
           type="button"
           onClick={() => setValues((old) => ({ ...old, nps_score: n.toString() }))}
           className={`rounded-full w-8 h-8 flex items-center justify-center border border-gray-300
-            ${values.nps_score == n ? 'bg-viverblue text-white border-viverblue scale-110 shadow' : 'bg-white text-gray-800'}
+            ${values.nps_score === n.toString() ? 'bg-viverblue text-white border-viverblue scale-110 shadow' : 'bg-white text-gray-800'}
             transition-all hover:bg-viverblue/20`}
           aria-label={`Nota ${n}`}
         >
