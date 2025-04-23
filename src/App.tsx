@@ -6,9 +6,10 @@ import { AuthProvider } from './contexts/auth';
 import ErrorBoundary from './components/ErrorBoundary';
 import RootRedirect from './components/routing/RootRedirect';
 import { LoggingProvider } from './hooks/useLogging.tsx';
+import Dashboard from './pages/member/Dashboard';
+import MemberLayout from './components/layout/MemberLayout';
 
-// Importando rota de dashboard (placeholder)
-const Dashboard = () => <div className="p-8">Dashboard - Página em construção</div>;
+// Placeholder para página de login
 const Login = () => <div className="p-8">Login - Página em construção</div>;
 
 function App() {
@@ -29,7 +30,14 @@ function App() {
             ))}
             
             {/* Rotas principais */}
-            <Route path="/dashboard" element={<Dashboard />} />
+            <Route 
+              path="/dashboard" 
+              element={
+                <MemberLayout>
+                  <Dashboard />
+                </MemberLayout>
+              } 
+            />
           </Routes>
           
           <Toaster position="top-right" richColors />
