@@ -14,6 +14,8 @@ import AdminUsers from "@/pages/admin/AdminUsers";
 import AdminTools from "@/pages/admin/AdminTools";
 import AdminImplementationProfiles from "@/pages/admin/AdminImplementationProfiles";
 import AdminImplementationProfileDetails from "@/pages/admin/AdminImplementationProfileDetails";
+import AdminSuggestions from "@/pages/admin/AdminSuggestions";
+import AdminSuggestionDetails from "@/pages/admin/AdminSuggestionDetails";
 
 export const adminRoutes = (
   <Fragment>
@@ -47,6 +49,18 @@ export const adminRoutes = (
     <Route path="admin/implementation-profiles/:id" element={
       <AdminLayout>
         <AdminImplementationProfileDetails />
+      </AdminLayout>
+    } />
+    
+    {/* Gerenciamento de Sugestões */}
+    <Route path="admin/suggestions" element={
+      <AdminLayout>
+        <AdminSuggestions />
+      </AdminLayout>
+    } />
+    <Route path="admin/suggestions/:id" element={
+      <AdminLayout>
+        <AdminSuggestionDetails />
       </AdminLayout>
     } />
     

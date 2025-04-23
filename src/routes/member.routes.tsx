@@ -10,6 +10,8 @@ import ImplementationCompleted from "@/pages/member/ImplementationCompleted";
 import Achievements from "@/pages/member/Achievements";
 import ProfileSettings from "@/pages/member/Profile";
 import MemberSolutionRedirect from "@/components/routing/MemberSolutionRedirect";
+import Suggestions from "@/pages/member/Suggestions";
+import SuggestionDetails from "@/pages/member/SuggestionDetails";
 
 export const memberRoutes = (
   <Fragment>
@@ -21,6 +23,8 @@ export const memberRoutes = (
     <Route path="/solutions/:id/implementation/completed" element={<LayoutProvider><ImplementationCompleted /></LayoutProvider>} />
     <Route path="/profile" element={<LayoutProvider><ProfileSettings /></LayoutProvider>} />
     <Route path="/achievements" element={<LayoutProvider><Achievements /></LayoutProvider>} />
+    <Route path="/suggestions" element={<LayoutProvider><Suggestions /></LayoutProvider>} />
+    <Route path="/suggestions/:id" element={<LayoutProvider><SuggestionDetails /></LayoutProvider>} />
     
     {/* Redirecionamento para URLs antigas */}
     <Route path="/solution/:id" element={<MemberSolutionRedirect />} />
