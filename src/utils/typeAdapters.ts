@@ -92,12 +92,15 @@ export const adaptProgressType = (progress: any): Progress => {
     user_id: progress.user_id || '',
     solution_id: progress.solution_id || '',
     current_module: progress.current_module || 0,
-    implementation_status: progress.implementation_status || 'not_started',
     is_completed: progress.is_completed || false,
     completed_modules: progress.completed_modules || [],
     last_activity: progress.last_activity || new Date().toISOString(),
+    implementation_status: progress.implementation_status || 'not_started',
     completion_data: progress.completion_data || {},
     completion_percentage: progress.completion_percentage || 0,
-    completed_at: progress.completed_at || null
+    completed_at: progress.completed_at || null,
+    // Incluindo campos opcionais adicionais
+    last_interaction_at: progress.last_interaction_at,
+    failed_attempts: progress.failed_attempts || []
   };
 };
