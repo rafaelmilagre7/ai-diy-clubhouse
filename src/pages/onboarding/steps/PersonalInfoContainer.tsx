@@ -1,4 +1,3 @@
-
 import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { PersonalInfoForm } from "@/components/onboarding/steps/forms/PersonalInfoForm";
@@ -17,7 +16,13 @@ import { toast } from "sonner";
 export const PersonalInfoContainer: React.FC = () => {
   const navigate = useNavigate();
   
-  // Usar try/catch para lidar com possíveis erros nos hooks
+  // Função utilitária para converter erro para string
+  const getErrorMessage = (error: unknown): string => {
+    if (error instanceof Error) return error.message;
+    if (typeof error === 'string') return error;
+    return String(error);
+  };
+  
   try {
     const {
       formData,
@@ -48,14 +53,8 @@ export const PersonalInfoContainer: React.FC = () => {
 
     const stepTitles = steps.map(s => s.title);
 
-    // Converte lastError para string de forma segura
-    const errorMessage = typeof lastError === 'string' 
-      ? lastError 
-      : lastError instanceof Error 
-        ? lastError.message 
-        : lastError 
-          ? String(lastError) 
-          : '';
+    // Use a função utilitária para converter erros de forma segura
+    const errorMessage = getErrorMessage(lastError || loadError);
 
     useEffect(() => {
       // Envolver em try/catch para evitar erros não tratados
@@ -129,7 +128,7 @@ export const PersonalInfoContainer: React.FC = () => {
       );
     }
 
-    if (hasError) {
+    if (errorMessage) {
       return (
         <PersonalInfoErrorSection
           totalSteps={totalSteps}
@@ -184,11 +183,14 @@ export const PersonalInfoContainer: React.FC = () => {
       </OnboardingLayout>
     );
   } catch (error) {
-    console.error("Erro ao renderizar PersonalInfoContainer:", error);
+    // Convert caught error to string
+    const errorMessage = getErrorMessage(error);
+    
+    console.error("Erro ao renderizar PersonalInfoContainer:", errorMessage);
     return (
       <div className="p-8 bg-red-50 text-red-900 rounded-md">
         <h2 className="text-xl font-bold mb-4">Erro ao carregar formulário</h2>
-        <p>Ocorreu um erro ao carregar o formulário de dados pessoais. Por favor, tente novamente ou entre em contato com o suporte.</p>
+        <p>{errorMessage}</p>
         <button 
           onClick={() => window.location.reload()}
           className="mt-4 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
