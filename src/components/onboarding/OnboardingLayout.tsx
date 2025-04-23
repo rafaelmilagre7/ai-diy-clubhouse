@@ -39,19 +39,19 @@ const OnboardingLayout: React.FC<OnboardingLayoutProps> = ({
       <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800">
         <div className="container max-w-4xl mx-auto px-4 py-8">
           <div className="mb-8 space-y-4">
-            <h1 className="text-3xl font-bold text-white">{title}</h1>
-            {description && <p className="text-gray-400">{description}</p>}
+            <h1 className="text-3xl font-bold text-white font-heading">{title}</h1>
+            {description && <p className="text-gray-300">{description}</p>}
             
             {!hideProgress && (
               <>
                 <div className="flex items-center justify-between mt-8">
-                  <p className="text-gray-400">
+                  <p className="text-gray-300">
                     Passo {currentStep} de {totalSteps}
                   </p>
-                  <p className="text-gray-400">{Math.round(progress)}% concluído</p>
+                  <p className="text-gray-300">{Math.round(progress)}% concluído</p>
                 </div>
                 
-                <Progress value={progress} className="h-2" />
+                <Progress value={progress} className="h-2 bg-gray-700" indicatorClassName="bg-viverblue" />
               </>
             )}
             
@@ -86,7 +86,7 @@ const OnboardingLayout: React.FC<OnboardingLayoutProps> = ({
             )}
           </div>
           
-          <div className="bg-gray-800 p-8 rounded-lg shadow-lg">
+          <div className="bg-gray-800/80 p-8 rounded-xl border border-gray-700 shadow-lg">
             {children}
           </div>
         </div>
