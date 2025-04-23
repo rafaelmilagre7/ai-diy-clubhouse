@@ -2,6 +2,7 @@
 import { Fragment } from "react";
 import { Route } from "react-router-dom";
 import AdminLayout from "@/components/layout/admin/AdminLayout";
+import AdminSolutionRedirect from "@/components/routing/AdminSolutionRedirect";
 
 // Páginas de administração
 import AdminDashboard from "@/pages/admin/AdminDashboard";
@@ -60,6 +61,18 @@ export const adminRoutes = (
     <Route path="admin/solutions/:id/editor" element={
       <AdminLayout>
         <SolutionEditor />
+      </AdminLayout>
+    } />
+    
+    {/* Redirecionamento para URLs antigas/incorretas */}
+    <Route path="admin/solution/:id" element={
+      <AdminLayout>
+        <AdminSolutionRedirect />
+      </AdminLayout>
+    } />
+    <Route path="admin/solution/:id/editor" element={
+      <AdminLayout>
+        <AdminSolutionRedirect />
       </AdminLayout>
     } />
     
