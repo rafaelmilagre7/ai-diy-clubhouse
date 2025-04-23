@@ -1,19 +1,18 @@
 
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'sonner';
 import AppRoutes from './routes';
 import { AuthProvider } from './contexts/auth';
 import ErrorBoundary from './components/ErrorBoundary';
 import { LoggingProvider } from './hooks/useLogging.tsx';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
-// Criar uma instância do QueryClient para toda a aplicação
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       retry: 1,
       refetchOnWindowFocus: false,
-      staleTime: 5 * 60 * 1000, // 5 minutos antes de considerar os dados obsoletos
-      gcTime: 10 * 60 * 1000, // 10 minutos antes de remover dados do cache
+      staleTime: 5 * 60 * 1000,
+      gcTime: 10 * 60 * 1000,
     },
   },
 });
@@ -25,21 +24,22 @@ function App() {
         <LoggingProvider>
           <AuthProvider>
             <AppRoutes />
-            {/* Usando apenas um toaster para toda a aplicação */}
             <Toaster 
-              position="top-right" 
-              richColors 
-              closeButton 
-              duration={3000} // 3 segundos de duração padrão
+              position="bottom-right"
+              expand={false}
+              closeButton={false}
+              richColors
+              duration={2000}
+              visibleToasts={1}
+              className="!bg-transparent"
               toastOptions={{
-                className: 'toast-custom-class',
                 style: {
-                  background: 'white',
-                  color: 'black',
+                  background: 'rgba(255, 255, 255, 0.95)',
+                  fontSize: '0.875rem',
+                  border: '1px solid rgba(0, 0, 0, 0.1)',
+                  boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
                 }
               }}
-              visibleToasts={2}
-              pauseWhenPageIsHidden
             />
           </AuthProvider>
         </LoggingProvider>
