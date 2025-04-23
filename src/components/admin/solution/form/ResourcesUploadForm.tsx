@@ -1,7 +1,6 @@
 
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Save, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useResourcesManager } from "./hooks/useResourcesManager";
@@ -32,58 +31,12 @@ const ResourcesUploadForm: React.FC<ResourcesUploadFormProps> = ({
     handleRemoveResource
   } = useResourcesManager(solutionId);
 
-  // Função para extrair ID do vídeo do YouTube
-  const getYouTubeVideoId = (url: string) => {
-    let videoId = "";
-    
-    if (url.includes("youtube.com/watch")) {
-      videoId = new URL(url).searchParams.get("v") || "";
-    } else if (url.includes("youtu.be/")) {
-      videoId = url.split("youtu.be/")[1]?.split("?")[0] || "";
-    } else if (url.includes("youtube.com/embed/")) {
-      videoId = url.split("youtube.com/embed/")[1]?.split("?")[0] || "";
-    }
-    
-    return videoId;
-  };
-
   // Função para formatar o tamanho do arquivo
   const formatFileSize = (bytes?: number) => {
     if (!bytes) return "Desconhecido";
     if (bytes < 1024) return bytes + " bytes";
     if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + " KB";
     return (bytes / (1024 * 1024)).toFixed(2) + " MB";
-  };
-
-  // Gerenciar submissão de URL do YouTube
-  const handleYoutubeUrlSubmit = async (url: string) => {
-    if (!solutionId) return;
-    
-    try {
-      const videoId = getYouTubeVideoId(url);
-      
-      if (!videoId) {
-        toast({
-          title: "URL inválido",
-          description: "Por favor, insira um URL válido do YouTube.",
-          variant: "destructive",
-        });
-        return;
-      }
-      
-      // Criar URL de embed
-      const embedUrl = `https://www.youtube.com/embed/${videoId}`;
-      
-      // Criar entrada de recurso
-      await handleUploadComplete(embedUrl, `Vídeo do YouTube (${videoId})`, 0);
-    } catch (error: any) {
-      console.error("Erro ao adicionar vídeo do YouTube:", error);
-      toast({
-        title: "Erro ao adicionar vídeo",
-        description: error.message || "Ocorreu um erro ao tentar adicionar o vídeo do YouTube.",
-        variant: "destructive",
-      });
-    }
   };
 
   // Função para salvar e continuar
@@ -130,7 +83,6 @@ const ResourcesUploadForm: React.FC<ResourcesUploadFormProps> = ({
     <div className="space-y-6">
       <ResourceUploadCard 
         handleUploadComplete={handleUploadComplete} 
-        handleYoutubeUrlSubmit={handleYoutubeUrlSubmit}
       />
       
       <ResourceList 

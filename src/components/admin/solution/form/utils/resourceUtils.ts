@@ -24,14 +24,14 @@ export const detectFileType = (ext?: string): "document" | "pdf" | "image" | "sp
   const spreadsheetExts = ["xls", "xlsx", "ods", "csv"];
   const presentationExts = ["ppt", "pptx", "odp"];
   const pdfExts = ["pdf"];
-  const videoExts = ["mp4", "webm", "mov", "avi"];
+  
+  // Removido videoExts da detecção na seção de materiais
   
   if (imageExts.includes(extension)) return "image";
   if (docExts.includes(extension)) return "document";
   if (spreadsheetExts.includes(extension)) return "spreadsheet";
   if (presentationExts.includes(extension)) return "presentation";
   if (pdfExts.includes(extension)) return "pdf";
-  if (videoExts.includes(extension)) return "video";
   
   return "other";
 };
