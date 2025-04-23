@@ -1,4 +1,5 @@
-import React, { useEffect } from "react";
+
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { PersonalInfoForm } from "@/components/onboarding/steps/forms/PersonalInfoForm";
 import { usePersonalInfoStep } from "@/hooks/onboarding/usePersonalInfoStep";
@@ -114,7 +115,7 @@ export const PersonalInfoContainer: React.FC = () => {
     };
 
     const showForceButton = loadingAttempts >= 3 && progressLoading;
-    const hasError = loadError || errorMessage;
+    const hasError = !!errorMessage;
     const isReadOnly = !!progress?.completed_steps?.includes("personal");
 
     if (progressLoading && !showForceButton) {
@@ -128,14 +129,14 @@ export const PersonalInfoContainer: React.FC = () => {
       );
     }
 
-    if (errorMessage) {
+    if (hasError) {
       return (
         <PersonalInfoErrorSection
           totalSteps={totalSteps}
           progressPercentage={progressPercentage}
           stepTitles={stepTitles}
           onStepClick={handleStepClick}
-          loadError={loadError}
+          loadError={typeof loadError === 'string' ? loadError : getErrorMessage(loadError)}
           lastError={errorMessage}
           onRetry={() => attemptDataLoad(loadInitialData)}
         />
