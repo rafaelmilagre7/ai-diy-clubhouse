@@ -7,7 +7,6 @@ import { AdminProtectedRoutes } from "@/auth/AdminProtectedRoutes";
 import { ProtectedRoutes } from "@/auth/ProtectedRoutes";
 import NotFound from "@/pages/NotFound";
 import RootRedirect from "@/components/routing/RootRedirect";
-import ImplementationProfilePage from "@/pages/ImplementationProfile";
 
 const AppRoutes = () => {
   console.log("Renderizando AppRoutes");
@@ -19,16 +18,6 @@ const AppRoutes = () => {
       
       {/* Rotas de autenticação */}
       {authRoutes}
-      
-      {/* Rota para perfil de implementação */}
-      <Route 
-        path="/perfil-de-implementacao" 
-        element={
-          <ProtectedRoutes>
-            <ImplementationProfilePage />
-          </ProtectedRoutes>
-        } 
-      />
       
       {/* Rotas de membros protegidas */}
       <Route element={<ProtectedRoutes />}>

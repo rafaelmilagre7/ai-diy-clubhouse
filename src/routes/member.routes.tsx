@@ -18,6 +18,7 @@ import NewSuggestion from "@/pages/member/NewSuggestion";
 import Achievements from "@/pages/member/Achievements";
 import Benefits from "@/pages/member/Benefits";
 import ImplementationTrailPage from "@/pages/member/ImplementationTrailPage";
+import ImplementationProfilePage from "@/pages/ImplementationProfile";
 
 export const memberRoutes = (
   <Fragment>
@@ -25,6 +26,9 @@ export const memberRoutes = (
       {/* Dashboard */}
       <Route index element={<Dashboard />} />
       <Route path="dashboard" element={<Dashboard />} />
+      
+      {/* Perfil de Implementação */}
+      <Route path="perfil-de-implementacao" element={<ImplementationProfilePage />} />
       
       {/* Soluções */}
       <Route path="solutions" element={<Solutions />} />

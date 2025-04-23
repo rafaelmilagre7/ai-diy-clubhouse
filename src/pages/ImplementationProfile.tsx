@@ -67,12 +67,12 @@ export default function ImplementationProfilePage() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto py-10 px-4">
+    <div className="py-8 px-4">
       <h1 className="text-2xl font-bold mb-2">Perfil de Implementação</h1>
       <p className="text-muted-foreground mb-6">
         Preencha seu perfil para criarmos sua trilha personalizada. 
       </p>
-      <form onSubmit={handleSubmit} className="space-y-6 bg-white p-6 rounded-xl shadow-lg">
+      <form onSubmit={handleSubmit} className="space-y-6 bg-white p-6 rounded-xl shadow-lg max-w-2xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label htmlFor="name">Nome*</Label>
