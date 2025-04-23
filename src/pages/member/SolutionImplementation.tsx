@@ -53,7 +53,8 @@ const SolutionImplementation = () => {
     setCompletedModules,
     completionPercentage,
     calculateProgress,
-    handleConfirmImplementation,
+    // Renomeamos para evitar conflito com a função local de mesmo nome
+    handleConfirmImplementation: progressTrackerConfirmImplementation,
     isCompleting
   } = useProgressTracking(
     id || "", 
@@ -96,6 +97,7 @@ const SolutionImplementation = () => {
     setShowCompletionModal(true);
   };
   
+  // Mantemos esta função com o nome original, pois ela é usada no componente
   const handleConfirmImplementation = async () => {
     const success = await completeSolution();
     if (success) {

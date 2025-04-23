@@ -90,7 +90,7 @@ export const useProgressTracking = (
     return Math.round((completedModules.length / totalModules) * 100);
   }, [completedModules, totalModules]);
 
-  // Função para confirmar implementação
+  // Função para confirmar implementação - renomeada para manter consistência
   const handleConfirmImplementation = useCallback(async () => {
     if (!solutionId || !progress?.id) {
       toast.error("Dados insuficientes para concluir a implementação.");
