@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useImplementationProfile } from "@/hooks/useImplementationProfile";
-import { Loader2, Flag, Linkedin, Instagram, Building, Link as LinkIcon, Users, DollarSign, Brain, Star } from "lucide-react";
+import { Loader2, Flag, Linkedin, Instagram, Building, Link as LinkIcon, Users, DollarSign, Brain, Star, User as UserIcon, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -163,26 +163,34 @@ export default function ImplementationProfilePage() {
           {/* Nome */}
           <div className="space-y-2">
             <Label htmlFor="name">Nome*</Label>
-            <Input
-              id="name"
-              name="name"
-              value={values.name}
-              disabled
-              className="bg-gray-100"
-              iconleft={<User />}
-            />
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+                <UserIcon size={16} />
+              </span>
+              <Input
+                id="name"
+                name="name"
+                value={values.name}
+                disabled
+                className="bg-gray-100 pl-10"
+              />
+            </div>
           </div>
           {/* Email */}
           <div className="space-y-2">
             <Label htmlFor="email">E-mail*</Label>
-            <Input
-              id="email"
-              name="email"
-              value={values.email}
-              disabled
-              className="bg-gray-100"
-              iconleft={<Flag />}
-            />
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+                <Mail size={16} />
+              </span>
+              <Input
+                id="email"
+                name="email"
+                value={values.email}
+                disabled
+                className="bg-gray-100 pl-10"
+              />
+            </div>
           </div>
           {/* Telefone */}
           <div className="space-y-2 flex flex-col">
@@ -225,26 +233,36 @@ export default function ImplementationProfilePage() {
           {/* Instagram */}
           <div className="space-y-2">
             <Label htmlFor="instagram">Instagram</Label>
-            <Input
-              id="instagram"
-              name="instagram"
-              value={values.instagram || ""}
-              onChange={handleChange}
-              placeholder="https://instagram.com/seuusuario"
-              iconleft={<Instagram />}
-            />
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+                <Instagram size={16} />
+              </span>
+              <Input
+                id="instagram"
+                name="instagram"
+                value={values.instagram || ""}
+                onChange={handleChange}
+                placeholder="https://instagram.com/seuusuario"
+                className="pl-10"
+              />
+            </div>
           </div>
           {/* LinkedIn */}
           <div className="space-y-2">
             <Label htmlFor="linkedin">LinkedIn</Label>
-            <Input
-              id="linkedin"
-              name="linkedin"
-              value={values.linkedin || ""}
-              onChange={handleChange}
-              placeholder="https://linkedin.com/in/seuusuario"
-              iconleft={<Linkedin />}
-            />
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+                <Linkedin size={16} />
+              </span>
+              <Input
+                id="linkedin"
+                name="linkedin"
+                value={values.linkedin || ""}
+                onChange={handleChange}
+                placeholder="https://linkedin.com/in/seuusuario"
+                className="pl-10"
+              />
+            </div>
           </div>
           {/* País */}
           <div className="space-y-2">
@@ -306,38 +324,53 @@ export default function ImplementationProfilePage() {
           {/* Empresa */}
           <div className="space-y-2">
             <Label htmlFor="company_name">Empresa</Label>
-            <Input
-              id="company_name"
-              name="company_name"
-              value={values.company_name || ""}
-              onChange={handleChange}
-              placeholder="Nome da empresa"
-              iconleft={<Building />}
-            />
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+                <Building size={16} />
+              </span>
+              <Input
+                id="company_name"
+                name="company_name"
+                value={values.company_name || ""}
+                onChange={handleChange}
+                placeholder="Nome da empresa"
+                className="pl-10"
+              />
+            </div>
           </div>
           {/* Site da Empresa */}
           <div className="space-y-2">
             <Label htmlFor="company_website">Site da Empresa</Label>
-            <Input
-              id="company_website"
-              name="company_website"
-              value={values.company_website || ""}
-              onChange={handleChange}
-              placeholder="https://empresa.com"
-              iconleft={<LinkIcon />}
-            />
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+                <LinkIcon size={16} />
+              </span>
+              <Input
+                id="company_website"
+                name="company_website"
+                value={values.company_website || ""}
+                onChange={handleChange}
+                placeholder="https://empresa.com"
+                className="pl-10"
+              />
+            </div>
           </div>
           {/* Cargo/posição */}
           <div className="space-y-2">
             <Label htmlFor="current_position">Cargo Atual</Label>
-            <Input
-              id="current_position"
-              name="current_position"
-              value={values.current_position || ""}
-              onChange={handleChange}
-              placeholder="Cargo Atual"
-              iconleft={<Users />}
-            />
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+                <Users size={16} />
+              </span>
+              <Input
+                id="current_position"
+                name="current_position"
+                value={values.current_position || ""}
+                onChange={handleChange}
+                placeholder="Cargo Atual"
+                className="pl-10"
+              />
+            </div>
           </div>
           {/* Setor */}
           <div className="space-y-2">

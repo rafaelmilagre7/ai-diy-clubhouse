@@ -28,6 +28,7 @@ export type ImplementationProfile = {
   primary_goal?: string;
   ai_knowledge_level?: string;
   nps_score?: string;
+  is_completed?: boolean;
   created_at?: string;
   updated_at?: string;
 };
