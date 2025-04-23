@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "react-router-dom";
+import { useLogging } from "@/hooks/useLogging";
 
 interface SidebarNavProps {
   sidebarOpen: boolean;
@@ -24,9 +25,10 @@ interface SidebarNavProps {
 export const MemberSidebarNav = ({ sidebarOpen }: SidebarNavProps) => {
   const location = useLocation();
   const { isAdmin } = useAuth();
+  const { log } = useLogging();
 
   // Log para verificar se o componente está sendo renderizado
-  console.log("MemberSidebarNav renderizando, sidebarOpen:", sidebarOpen);
+  log("MemberSidebarNav renderizando", { sidebarOpen, currentPath: location.pathname });
 
   const menuItems = [
     {

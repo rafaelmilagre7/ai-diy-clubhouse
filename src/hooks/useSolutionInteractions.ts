@@ -5,11 +5,13 @@ import { useAuth } from "@/contexts/auth";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 import { toast } from "sonner";
+import { useLogging } from "@/hooks/useLogging";
 
 export const useSolutionInteractions = (solutionId: string | undefined, progress: any) => {
   const { user } = useAuth();
   const { toast: uiToast } = useToast();
   const navigate = useNavigate();
+  const { log, logError } = useLogging();
   
   const [initializing, setInitializing] = useState(false);
   
@@ -21,11 +23,11 @@ export const useSolutionInteractions = (solutionId: string | undefined, progress
     
     try {
       setInitializing(true);
-      console.log("Iniciando implementação da solução:", solutionId);
+      log("Iniciando implementação da solução:", { solutionId });
       
       // If there's no progress record yet, create one
       if (!progress) {
-        console.log("Criando novo registro de progresso");
+        log("Criando novo registro de progresso", { userId: user.id, solutionId });
         const { data, error } = await supabase
           .from("progress")
           .insert({
@@ -40,21 +42,21 @@ export const useSolutionInteractions = (solutionId: string | undefined, progress
           .single();
         
         if (error) {
-          console.error("Erro ao criar progresso:", error);
+          logError("Erro ao criar progresso:", error);
           throw error;
         }
         
-        console.log("Progresso criado com sucesso:", data);
+        log("Progresso criado com sucesso:", { data });
       } else {
-        console.log("Usando progresso existente:", progress);
+        log("Usando progresso existente:", { progress });
       }
       
       // Navigate directly to the implementation page
       toast.success("Redirecionando para a implementação...");
-      console.log("Redirecionando para /implement/" + solutionId + "/0");
+      log("Redirecionando para", { path: `/implement/${solutionId}/0` });
       navigate(`/implement/${solutionId}/0`);
     } catch (error) {
-      console.error("Erro ao iniciar implementação:", error);
+      logError("Erro ao iniciar implementação:", error);
       uiToast({
         title: "Erro ao iniciar implementação",
         description: "Ocorreu um erro ao tentar iniciar a implementação da solução.",
@@ -72,9 +74,9 @@ export const useSolutionInteractions = (solutionId: string | undefined, progress
     }
     
     // Navigate directly to the implementation page
-    console.log("Continuando implementação no módulo:", progress.current_module);
+    log("Continuando implementação no módulo:", { moduleIdx: progress.current_module });
     toast.success("Redirecionando para onde você parou...");
-    console.log("Redirecionando para /implement/" + solutionId + "/" + (progress.current_module || 0));
+    log("Redirecionando para", { path: `/implement/${solutionId}/${progress.current_module || 0}` });
     navigate(`/implement/${solutionId}/${progress.current_module || 0}`);
   };
   

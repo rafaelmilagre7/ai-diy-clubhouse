@@ -18,6 +18,15 @@ const SolutionDetails = () => {
   const location = useLocation();
   const { log, logError } = useLogging();
   
+  // Log inicial para debug
+  useEffect(() => {
+    log("SolutionDetails montado", { 
+      id,
+      path: location.pathname,
+      search: location.search
+    });
+  }, [id, location, log]);
+  
   // Garantir que os dados das ferramentas estejam corretos, mas ignorar erros
   const { isLoading: toolsDataLoading } = useToolsData();
   
