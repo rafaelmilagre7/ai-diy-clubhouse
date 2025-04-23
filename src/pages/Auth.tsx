@@ -11,7 +11,8 @@ const Auth = () => {
 
   useEffect(() => {
     if (user) {
-      toast("Autenticado", {
+      console.log("Auth: User is authenticated, redirecting");
+      toast.success("Autenticado com sucesso", {
         description: "Redirecionando para o dashboard...",
       });
       

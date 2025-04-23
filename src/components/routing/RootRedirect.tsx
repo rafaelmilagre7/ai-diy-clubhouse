@@ -48,9 +48,16 @@ const RootRedirect = () => {
         return;
       }
       
-      if (user && profile) {
-        console.log("RootRedirect: User and profile available, redirecting based on role");
-        if (profile.role === 'admin' || isAdmin) {
+      if (user) {
+        console.log("RootRedirect: User available, redirecting based on role");
+        // Mesmo sem profile, redirecionar para dashboard como fallback
+        if (!profile) {
+          console.log("RootRedirect: No profile yet, redirecting to dashboard as fallback");
+          navigate('/dashboard', { replace: true });
+          return;
+        }
+        
+        if (profile?.role === 'admin' || isAdmin) {
           navigate('/admin', { replace: true });
         } else {
           navigate('/dashboard', { replace: true });
@@ -65,7 +72,7 @@ const RootRedirect = () => {
   }
   
   // Fallback redirect
-  return !user ? <Navigate to="/login" replace /> : <Navigate to="/dashboard" replace />;
+  return <Navigate to={user ? "/dashboard" : "/login"} replace />;
 };
 
 export default RootRedirect;
