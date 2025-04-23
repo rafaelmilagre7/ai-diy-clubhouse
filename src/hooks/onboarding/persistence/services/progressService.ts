@@ -1,129 +1,63 @@
 
-import { supabase } from "@/lib/supabase";
-import { useLogging } from "@/hooks/useLogging";
+import { supabase } from '@/lib/supabase';
 
 /**
- * Atualiza o progresso geral do onboarding (etapa atual, etapas concluídas)
+ * Marca uma etapa como concluída e avança para a próxima
  */
-export const updateOnboardingProgressStatus = async (
-  progressId: string,
-  updates: {
-    current_step?: string;
-    completed_steps?: string[];
-    is_completed?: boolean;
-  },
-  logError: ReturnType<typeof useLogging>["logError"]
-) => {
-  if (!progressId) {
-    console.error("[ERRO] ID de progresso não fornecido para atualização de status");
-    return { success: false, error: "ID de progresso não fornecido" };
-  }
-
-  try {
-    // Filtrar apenas campos válidos para atualização
-    const validUpdates: any = {};
-    
-    if (updates.current_step !== undefined) {
-      validUpdates.current_step = updates.current_step;
-    }
-    
-    if (updates.completed_steps !== undefined) {
-      // Garantir que completed_steps é um array
-      if (Array.isArray(updates.completed_steps)) {
-        validUpdates.completed_steps = updates.completed_steps;
-      } else {
-        console.error("[ERRO] completed_steps não é um array:", updates.completed_steps);
-      }
-    }
-    
-    if (updates.is_completed !== undefined) {
-      validUpdates.is_completed = updates.is_completed;
-    }
-    
-    validUpdates.updated_at = new Date().toISOString();
-
-    // Registrar o que será atualizado
-    console.log("[DEBUG] Atualizando status do progresso:", validUpdates);
-
-    const { data, error } = await supabase
-      .from("onboarding_progress")
-      .update(validUpdates)
-      .eq("id", progressId)
-      .select()
-      .single();
-
-    if (error) {
-      console.error("[ERRO] Erro ao atualizar status de progresso:", error);
-      logError("update_progress_status_error", {
-        error: error.message,
-        progressId,
-        updates: validUpdates
-      });
-      return { success: false, error };
-    }
-
-    return { success: true, data };
-  } catch (err) {
-    console.error("[ERRO] Exceção ao atualizar status de progresso:", err);
-    logError("update_progress_status_exception", {
-      error: err instanceof Error ? err.message : String(err),
-      progressId
-    });
-    return { success: false, error: err };
-  }
-};
-
-/**
- * Marca uma etapa específica como concluída
- */
-export const markStepAsCompleted = async (
+export async function markStepAsCompleted(
   progressId: string,
   stepId: string,
-  nextStep: string | null,
-  logError: ReturnType<typeof useLogging>["logError"]
-) => {
+  nextStepId: string,
+  logError: (event: string, data?: Record<string, any>) => void
+) {
   try {
-    // Primeiro, buscar o progresso atual para obter as etapas já concluídas
+    console.log(`Marcando etapa ${stepId} como concluída e avançando para ${nextStepId}`);
+    
+    // Buscar progresso atual primeiro
     const { data: currentProgress, error: fetchError } = await supabase
-      .from("onboarding_progress")
-      .select("completed_steps")
-      .eq("id", progressId)
+      .from('onboarding')
+      .select('completed_steps')
+      .eq('id', progressId)
       .single();
-
+    
     if (fetchError) {
-      console.error("[ERRO] Erro ao buscar progresso atual:", fetchError);
+      console.error('Erro ao buscar progresso atual:', fetchError);
+      logError('mark_step_fetch_error', { error: fetchError.message });
       return { success: false, error: fetchError };
     }
-
-    // Garantir que completed_steps é um array
-    let completedSteps = Array.isArray(currentProgress.completed_steps) 
-      ? currentProgress.completed_steps 
+    
+    // Garantir que completed_steps é um array e adicionar o step atual
+    const completedSteps = Array.isArray(currentProgress?.completed_steps) 
+      ? [...currentProgress.completed_steps] 
       : [];
-      
-    // Adicionar o stepId se ainda não estiver presente
+    
+    // Verificar se o step já foi concluído
     if (!completedSteps.includes(stepId)) {
-      completedSteps = [...completedSteps, stepId];
+      completedSteps.push(stepId);
     }
-
-    // Preparar atualizações
-    const updates: any = {
-      completed_steps: completedSteps
-    };
-
-    // Adicionar próxima etapa se fornecida
-    if (nextStep) {
-      updates.current_step = nextStep;
+    
+    // Atualizar progresso
+    const { error: updateError } = await supabase
+      .from('onboarding')
+      .update({
+        completed_steps: completedSteps,
+        current_step: nextStepId,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', progressId);
+    
+    if (updateError) {
+      console.error('Erro ao atualizar progresso:', updateError);
+      logError('mark_step_update_error', { error: updateError.message });
+      return { success: false, error: updateError };
     }
-
-    // Atualizar o progresso
-    return await updateOnboardingProgressStatus(progressId, updates, logError);
-  } catch (err) {
-    console.error("[ERRO] Exceção ao marcar etapa como concluída:", err);
-    logError("mark_step_completed_exception", {
-      error: err instanceof Error ? err.message : String(err),
-      progressId,
-      stepId
+    
+    return { success: true };
+  } catch (error) {
+    console.error('Exceção ao marcar etapa como concluída:', error);
+    logError('mark_step_exception', { 
+      error: error instanceof Error ? error.message : String(error)
     });
-    return { success: false, error: err };
+    return { success: false, error };
   }
-};
+}

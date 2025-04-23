@@ -1,79 +1,43 @@
 
-import { supabase } from "@/lib/supabase";
-import { OnboardingProgress, PersonalInfo, PersonalInfoData } from "@/types/onboarding";
+import { supabase } from '@/lib/supabase';
+import { PersonalInfo } from '@/types/onboarding';
 
-export const fetchPersonalInfo = async (progressId: string) => {
-  try {
-    const { data, error } = await supabase
-      .from("onboarding_personal_info")
-      .select("*")
-      .eq("progress_id", progressId)
-      .single();
-      
-    if (error) {
-      console.error("Erro ao buscar dados pessoais:", error);
-      return null;
-    }
-    
-    return data;
-  } catch (err) {
-    console.error("Exceção ao buscar dados pessoais:", err);
-    return null;
-  }
-};
-
-// Alias para compatibilidade com código que usa fetchPersonalInfoData
-export const fetchPersonalInfoData = fetchPersonalInfo;
-
-export const formatPersonalInfoData = (data: any): Partial<OnboardingProgress> => {
-  if (!data) return {};
-  
-  const personalInfo: PersonalInfo = {
-    name: data.name,
-    email: data.email,
-    phone: data.phone,
-    ddi: data.ddi,
-    linkedin: data.linkedin,
-    instagram: data.instagram,
-    country: data.country,
-    state: data.state,
-    city: data.city,
-    timezone: data.timezone
-  };
-  
-  return {
-    personal_info: personalInfo
-  };
-};
-
-// Adicionando a função que estava faltando
-export const savePersonalInfoData = async (
+/**
+ * Salva os dados pessoais do usuário
+ */
+export async function savePersonalInfoData(
   progressId: string,
   userId: string,
-  formData: PersonalInfoData,
+  personalInfo: PersonalInfo,
   logError: (event: string, data?: Record<string, any>) => void
-) => {
+) {
   try {
+    console.log(`Salvando dados pessoais para usuário ${userId}, progresso ${progressId}`);
+    
+    // Prepara os dados para salvar
+    const dataToSave = {
+      personal_info: personalInfo,
+      updated_at: new Date().toISOString()
+    };
+    
+    // Atualiza o registro de onboarding
     const { error } = await supabase
-      .from("onboarding_personal_info")
-      .upsert({
-        progress_id: progressId,
-        user_id: userId,
-        ...formData
-      }, { onConflict: "progress_id" });
-
+      .from('onboarding')
+      .update(dataToSave)
+      .eq('id', progressId);
+    
     if (error) {
-      console.error("Erro ao salvar dados pessoais:", error);
-      logError("personal_info_save_error", { error: error.message });
+      console.error('Erro ao salvar dados pessoais:', error);
+      logError('save_personal_info_error', { error: error.message });
       return { success: false, error };
     }
-
+    
     return { success: true };
-  } catch (err) {
-    const errorMessage = err instanceof Error ? err.message : String(err);
-    console.error("Exceção ao salvar dados pessoais:", err);
-    logError("personal_info_save_exception", { error: errorMessage });
-    return { success: false, error: err };
+  } catch (error) {
+    console.error('Exceção ao salvar dados pessoais:', error);
+    logError('save_personal_info_exception', { 
+      error: error instanceof Error ? error.message : String(error)
+    });
+    return { success: false, error };
   }
-};
-
+}

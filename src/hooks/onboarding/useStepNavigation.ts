@@ -29,10 +29,10 @@ export const useStepNavigation = () => {
       if (isLoading) return; // Evitar múltiplas chamadas durante carregamento
       
       try {
-        await refreshProgress();
+        const refreshedProgress = await refreshProgress();
         
         // Verificar se temos um progresso válido
-        const progressData: OnboardingProgress | null = progress || null;
+        const progressData: OnboardingProgress | null = refreshedProgress || progress || null;
         
         // Se não há progresso, redirecionar para o início do onboarding
         if (!progressData) {
@@ -73,7 +73,7 @@ export const useStepNavigation = () => {
             console.log(`Definindo etapa atual baseada na URL: ${currentStepId} (índice ${stepIndexByPath})`);
             setCurrentStepIndex(stepIndexByPath);
           }
-        } else if (progressData?.current_step) {
+        } else if (progressData.current_step) {
           const stepIndex = steps.findIndex(step => step.id === progressData.current_step);
           
           if (stepIndex !== -1) {
@@ -91,7 +91,7 @@ export const useStepNavigation = () => {
             navigate(steps[0].path);
             toast.info("Iniciando o preenchimento do onboarding");
           }
-        } else if (progressData) {
+        } else {
           console.log("Nenhuma etapa atual definida, começando do início");
           navigate(steps[0].path);
         }
@@ -119,6 +119,17 @@ export const useStepNavigation = () => {
       navigate(steps[index].path);
     }
   };
+  
+  const navigateToPreviousStep = () => {
+    if (currentStepIndex > 0) {
+      const previousIndex = currentStepIndex - 1;
+      console.log(`Navegando para etapa anterior: ${steps[previousIndex].id}`);
+      setCurrentStepIndex(previousIndex);
+      navigate(steps[previousIndex].path);
+    } else {
+      console.log("Já está na primeira etapa, não é possível retornar");
+    }
+  };
 
   return {
     currentStepIndex,
@@ -126,6 +137,7 @@ export const useStepNavigation = () => {
     progress,
     navigateToStep,
     navigateToStepById,
+    navigateToPreviousStep,
     isLoading,
     currentStep: steps[currentStepIndex] || steps[0]
   };
