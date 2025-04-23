@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/auth';
-import { supabase } from '@/lib/supabase';
+import { supabase, fetchSolutionById, checkSolutionExists } from '@/lib/supabase';
 import { Solution } from '@/types/supabaseTypes';
 import { useLogging } from '@/hooks/useLogging';
 import { toast } from 'sonner';
@@ -15,7 +15,8 @@ export const useSolutionData = (solutionId: string | undefined) => {
   const [progress, setProgress] = useState<any>(null);
   const [retryAttempts, setRetryAttempts] = useState(0);
   const [networkError, setNetworkError] = useState(false);
-  const MAX_RETRIES = 2;
+  const [notFoundError, setNotFoundError] = useState(false);
+  const MAX_RETRIES = 1; // Limitamos a apenas uma tentativa para evitar loops infinitos
 
   const fetchSolutionData = useCallback(async (ignoreCache = false) => {
     if (!solutionId) {
@@ -26,11 +27,23 @@ export const useSolutionData = (solutionId: string | undefined) => {
     try {
       setLoading(true);
       setNetworkError(false);
+      setNotFoundError(false);
       log('Buscando dados da solução', { 
         solutionId, 
         retryAttempt: retryAttempts,
         user: user?.id 
       });
+
+      // Verificar se a solução existe antes de tentar carregá-la
+      const exists = await checkSolutionExists(solutionId);
+      
+      if (!exists) {
+        log('Solução não encontrada na verificação prévia', { solutionId });
+        setNotFoundError(true);
+        setError(new Error(`Solução com ID ${solutionId} não encontrada no banco de dados`));
+        setLoading(false);
+        return;
+      }
 
       // Configurar timeout para a requisição
       const abortController = new AbortController();
@@ -42,24 +55,13 @@ export const useSolutionData = (solutionId: string | undefined) => {
           throw new Error('ID da solução é inválido ou não foi fornecido');
         }
         
-        // CORREÇÃO CRÍTICA: Buscar solução diretamente usando método correto
-        const { data, error } = await supabase
-          .from('solutions')
-          .select('*')
-          .eq('id', solutionId)
-          .single(); // Usar single() para obter exatamente um resultado ou erro
+        // Usar a função fetchSolutionById refatorada
+        const data = await fetchSolutionById(solutionId);
         
         clearTimeout(timeoutId);
         
-        if (error) {
-          // CORREÇÃO: Identificar especificamente o erro de "não encontrado" vs outros erros
-          if (error.code === 'PGRST116') {
-            throw new Error(`Solução com ID ${solutionId} não encontrada`);
-          }
-          throw error;
-        }
-        
         if (!data) {
+          setNotFoundError(true);
           throw new Error(`Solução com ID ${solutionId} não encontrada`);
         }
         
@@ -75,16 +77,21 @@ export const useSolutionData = (solutionId: string | undefined) => {
         
         // Buscar progresso do usuário
         if (user) {
-          const { data: progressData } = await supabase
-            .from('progress')
-            .select('*')
-            .eq('solution_id', solutionId)
-            .eq('user_id', user.id)
-            .maybeSingle();
-          
-          setProgress(progressData);
-          if (progressData) {
-            log('Progresso do usuário encontrado', { progressId: progressData.id });
+          try {
+            const { data: progressData } = await supabase
+              .from('progress')
+              .select('*')
+              .eq('solution_id', solutionId)
+              .eq('user_id', user.id)
+              .maybeSingle();
+            
+            setProgress(progressData);
+            if (progressData) {
+              log('Progresso do usuário encontrado', { progressId: progressData.id });
+            }
+          } catch (progressError) {
+            logError('Erro ao buscar progresso do usuário', { error: progressError });
+            // Não interrompe o fluxo principal se houver erro no progresso
           }
         }
         
@@ -94,6 +101,11 @@ export const useSolutionData = (solutionId: string | undefined) => {
         
         if (fetchError.name === 'AbortError') {
           throw new Error('Tempo limite excedido na requisição');
+        }
+        
+        // Se o erro indicar que a solução não foi encontrada
+        if (fetchError.message && fetchError.message.includes('não encontrada')) {
+          setNotFoundError(true);
         }
         
         throw fetchError;
@@ -116,7 +128,7 @@ export const useSolutionData = (solutionId: string | undefined) => {
       }
       
       // CORREÇÃO CRÍTICA: Limitar número de tentativas automáticas
-      if (retryAttempts < MAX_RETRIES) {
+      if (retryAttempts < MAX_RETRIES && !notFoundError) {
         const newRetryAttempts = retryAttempts + 1;
         setRetryAttempts(newRetryAttempts);
         
@@ -128,11 +140,11 @@ export const useSolutionData = (solutionId: string | undefined) => {
           fetchSolutionData(true);
         }, delay);
       } else {
-        // Parar de tentar após MAX_RETRIES
+        // Parar de tentar após MAX_RETRIES ou se for erro de "não encontrado"
         setSolution(null);
         setError(err instanceof Error ? err : new Error(String(err)));
         
-        if (retryAttempts >= MAX_RETRIES) {
+        if (retryAttempts >= MAX_RETRIES && !notFoundError) {
           toast.error("Não foi possível carregar a solução após várias tentativas");
           log('Máximo de tentativas atingido, parando retentativas automáticas');
         }
@@ -140,7 +152,7 @@ export const useSolutionData = (solutionId: string | undefined) => {
     } finally {
       setLoading(false);
     }
-  }, [solutionId, user, log, logError, retryAttempts]);
+  }, [solutionId, user, log, logError, retryAttempts, notFoundError]);
 
   // Efeito para carregar dados quando o ID mudar
   useEffect(() => {
@@ -151,6 +163,7 @@ export const useSolutionData = (solutionId: string | undefined) => {
       setError(null);
       setRetryAttempts(0);
       setNetworkError(false);
+      setNotFoundError(false);
       
       // Pequeno delay para evitar requisições em cascata
       const timeoutId = setTimeout(() => {
@@ -165,6 +178,7 @@ export const useSolutionData = (solutionId: string | undefined) => {
   const refetch = useCallback(() => {
     setError(null);
     setRetryAttempts(0);
+    setNotFoundError(false);
     return fetchSolutionData(true);
   }, [fetchSolutionData]);
 
@@ -175,6 +189,7 @@ export const useSolutionData = (solutionId: string | undefined) => {
     error, 
     progress, 
     refetch,
-    networkError 
+    networkError,
+    notFoundError
   };
 };

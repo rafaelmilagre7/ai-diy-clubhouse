@@ -5,7 +5,7 @@ import { useSolutionsData } from '@/hooks/useSolutionsData';
 import { SolutionCard } from '@/components/solution/SolutionCard';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Search, Filter } from 'lucide-react';
+import { Search } from 'lucide-react';
 import LoadingScreen from '@/components/common/LoadingScreen';
 import { Solution } from '@/lib/supabase';
 import { useLogging } from '@/hooks/useLogging';
@@ -58,23 +58,39 @@ const Solutions = () => {
 
   // Função para lidar com cliques nas soluções
   const handleSolutionClick = (solution: Solution) => {
+    // Validar dados da solução antes de navegar
+    if (!solution || !solution.id) {
+      log("ERRO: Tentativa de navegação com solução inválida", { solution });
+      return;
+    }
+    
+    // Log detalhado para diagnóstico
     log("Navegando para solução", { 
       solutionId: solution.id, 
       title: solution.title,
-      path: `/solutions/${solution.id}`
+      path: `/solutions/${solution.id}`,
+      category: solution.category,
+      difficulty: solution.difficulty
     });
     
     // Verificar se temos um ID válido antes de navegar
-    if (!solution.id) {
-      console.error("Tentativa de navegar para uma solução sem ID");
+    if (!solution.id || typeof solution.id !== 'string' || solution.id.trim() === '') {
+      log("ERRO: ID da solução é inválido", { solution });
       return;
     }
 
     // Limpar cache de qualquer erro anterior
     queryClient.invalidateQueries({ queryKey: ['solution', solution.id] });
     
+    // Verificar se o ID é válido e convertê-lo para string
+    const id = String(solution.id).trim();
+    if (!id) {
+      log("ERRO: ID inválido após conversão", { originalId: solution.id });
+      return;
+    }
+    
     // Navegar para a página de detalhes da solução com o parâmetro de ID
-    navigate(`/solutions/${solution.id}`);
+    navigate(`/solutions/${id}`);
   };
 
   const categories = [

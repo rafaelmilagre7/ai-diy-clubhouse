@@ -16,6 +16,7 @@ import { useLogging } from "@/hooks/useLogging";
 import LoadingScreen from "@/components/common/LoadingScreen";
 import { toast } from "sonner";
 import { SolutionSkeleton } from "@/components/solution/SolutionSkeleton";
+import { supabase } from "@/lib/supabase";
 
 const SolutionDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -23,9 +24,10 @@ const SolutionDetails = () => {
   const { log, logError } = useLogging("SolutionDetails");
   const [retryCount, setRetryCount] = useState(0);
   const initialRenderRef = useRef(true);
+  const [diagnosticInfo, setDiagnosticInfo] = useState<any>(null);
   
   // Fetch solution data with the hook
-  const { solution, loading, error, progress, refetch, networkError } = useSolutionData(id);
+  const { solution, loading, error, progress, refetch, networkError, notFoundError } = useSolutionData(id);
   
   // Solution interaction handlers
   const { 
@@ -35,6 +37,36 @@ const SolutionDetails = () => {
     toggleFavorite, 
     downloadMaterials 
   } = useSolutionInteractions(id, progress);
+  
+  // Buscar informações de diagnóstico sobre a solução
+  useEffect(() => {
+    const fetchDiagnosticInfo = async () => {
+      if (!id) return;
+      
+      try {
+        // Verificar se a solução existe diretamente com uma consulta simplificada
+        const { count, error } = await supabase
+          .from('solutions')
+          .select('*', { count: 'exact', head: true })
+          .eq('id', id);
+        
+        setDiagnosticInfo({
+          timestamp: new Date().toISOString(),
+          solutionExists: count && count > 0,
+          error: error ? error.message : null,
+          routeId: id
+        });
+        
+        if (count === 0) {
+          logError(`Diagnóstico confirmou: solução ${id} não existe no banco`);
+        }
+      } catch (err) {
+        console.error("Erro ao buscar informações de diagnóstico", err);
+      }
+    };
+    
+    fetchDiagnosticInfo();
+  }, [id, logError]);
   
   // Log detalhado na primeira renderização
   useEffect(() => {
@@ -88,7 +120,13 @@ const SolutionDetails = () => {
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>Erro de conexão</AlertTitle>
           <AlertDescription>
-            Não foi possível conectar ao servidor. Verifique sua conexão com a internet e tente novamente.
+            <p>Não foi possível conectar ao servidor. Verifique sua conexão com a internet e tente novamente.</p>
+            
+            {diagnosticInfo && (
+              <div className="mt-2 p-2 bg-gray-100 rounded text-xs">
+                <p>Diagnóstico: {diagnosticInfo.solutionExists ? "A solução existe no banco de dados" : "A solução NÃO existe no banco de dados"}</p>
+              </div>
+            )}
           </AlertDescription>
           <Button 
             onClick={handleRetry} 
@@ -103,8 +141,48 @@ const SolutionDetails = () => {
     );
   }
   
-  // CORREÇÃO CRÍTICA: Tratamento específico para erros
-  if (error) {
+  // Tratar o caso específico de "não encontrado"
+  if (notFoundError || !solution) {
+    logError("Solução não encontrada", { id, diagnosticInfo });
+    return (
+      <div className="max-w-5xl mx-auto py-12 px-4">
+        <SolutionBackButton />
+        <Alert variant="destructive" className="my-8">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Solução não encontrada</AlertTitle>
+          <AlertDescription>
+            <p>A solução com ID <code className="bg-gray-100 px-1 py-0.5 rounded">{id}</code> não foi encontrada na base de dados.</p>
+            
+            {diagnosticInfo && (
+              <div className="mt-2 p-2 bg-gray-100 rounded text-xs">
+                <p>Diagnóstico técnico: Solução com este ID não existe.</p>
+                <p>Timestamp: {new Date(diagnosticInfo.timestamp).toLocaleString('pt-BR')}</p>
+              </div>
+            )}
+          </AlertDescription>
+          <div className="flex gap-2 mt-4">
+            <Button 
+              onClick={handleRetry} 
+              className="flex items-center gap-2"
+              variant="outline"
+            >
+              <RefreshCw className="h-4 w-4" /> 
+              Tentar novamente
+            </Button>
+            <Button
+              onClick={() => navigate("/solutions")}
+              variant="secondary"
+            >
+              Voltar para soluções
+            </Button>
+          </div>
+        </Alert>
+      </div>
+    );
+  }
+  
+  // CORREÇÃO CRÍTICA: Tratamento específico para erros gerais
+  if (error && !notFoundError && !networkError) {
     logError("Erro ao carregar solução", { error, id });
     return (
       <div className="max-w-5xl mx-auto py-12 px-4">
@@ -136,12 +214,6 @@ const SolutionDetails = () => {
         </Alert>
       </div>
     );
-  }
-  
-  // CORREÇÃO CRÍTICA: Verificar solução existente
-  if (!solution) {
-    logError("Solução não encontrada", { id });
-    return <SolutionNotFound />;
   }
   
   // Se chegou aqui, temos dados válidos para renderizar

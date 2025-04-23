@@ -17,33 +17,45 @@ export const SolutionCard = ({ solution, onClick, className }: SolutionCardProps
   const { log } = useLogging("SolutionCard");
 
   const handleClick = () => {
-    // CORREÇÃO CRÍTICA: Validar ID antes de navegar e registrar detalhes
+    // Validação rigorosa do ID antes de navegar
     if (!solution.id) {
-      log("ERRO: Tentativa de navegar para solução sem ID", { solution });
+      log("ERRO: Tentativa de navegar para solução sem ID", { 
+        solution,
+        title: solution.title
+      });
       return;
     }
     
+    // Log detalhado para diagnóstico
     log("Clique na solução", { 
       solutionId: solution.id, 
       title: solution.title,
-      path: `/solutions/${solution.id}`
+      path: `/solutions/${solution.id}`,
+      solutionObj: JSON.stringify(solution)
     });
     
     if (onClick) {
       onClick();
     } else {
-      // Assegurar que estamos usando o caminho correto
-      navigate(`/solutions/${solution.id}`);
+      // Assegurar que o ID é uma string válida antes de navegar
+      const id = String(solution.id).trim();
+      if (!id) {
+        log("ERRO: ID inválido após conversão", { originalId: solution.id });
+        return;
+      }
+      
+      // Navegar com ID validado
+      navigate(`/solutions/${id}`);
     }
   };
 
   // Traduzir nível de dificuldade
   const translateDifficulty = (difficulty: string) => {
-    switch (difficulty.toLowerCase()) {
+    switch (difficulty?.toLowerCase()) {
       case "easy": return "Fácil";
       case "medium": return "Médio";
       case "advanced": return "Avançado";
-      default: return difficulty;
+      default: return difficulty || "Não definido";
     }
   };
 

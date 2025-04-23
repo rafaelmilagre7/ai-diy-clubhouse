@@ -49,22 +49,27 @@ export const fetchSolutionById = async (id: string) => {
       throw new Error('ID da solução inválido ou não especificado');
     }
     
-    // CORREÇÃO CRÍTICA: Modificar a consulta para usar .eq() com o ID correto
-    const { data, error } = await supabase
+    // Refatoração da consulta para maior clareza e detalhamento de logs
+    const { data, error, status, statusText } = await supabase
       .from('solutions')
       .select('*')
       .eq('id', id)
-      .single();  // Usar single() para obter exatamente um resultado ou erro
+      .single();  
+
+    console.log(`[Supabase] Resultado da consulta:`, { data, error, status, statusText });
 
     if (error) {
-      console.error('Erro ao buscar solução:', error);
+      if (error.code === 'PGRST116') {
+        console.error(`Solução com ID ${id} não encontrada no banco de dados`);
+        throw new Error(`Solução não encontrada (ID: ${id})`);
+      }
+      console.error('Erro na consulta Supabase:', error);
       throw error;
     }
 
-    // Se não houver dados, lançar um erro
     if (!data) {
-      console.error(`Solução com ID ${id} não encontrada`);
-      throw new Error('Solução não encontrada');
+      console.error(`Solução com ID ${id} retornou dados vazios`);
+      throw new Error('Nenhum dado encontrado para esta solução');
     }
 
     console.log('Solução encontrada:', data.title);
@@ -101,4 +106,26 @@ export const fetchSolutionTools = async (solutionId: string) => {
   }
 
   return data;
+};
+
+// Função auxiliar para verificar se uma solução existe
+export const checkSolutionExists = async (id: string): Promise<boolean> => {
+  try {
+    if (!id) return false;
+    
+    const { count, error } = await supabase
+      .from('solutions')
+      .select('*', { count: 'exact', head: true })
+      .eq('id', id);
+    
+    if (error) {
+      console.error('Erro ao verificar existência da solução:', error);
+      return false;
+    }
+    
+    return count !== null && count > 0;
+  } catch (error) {
+    console.error('Erro ao verificar solução:', error);
+    return false;
+  }
 };
