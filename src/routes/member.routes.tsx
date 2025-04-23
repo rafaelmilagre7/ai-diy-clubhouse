@@ -1,7 +1,7 @@
 
 import { Fragment } from "react";
 import { Route } from "react-router-dom";
-import MemberLayout from "@/components/layout/member/MemberLayout";
+import MemberLayout from "@/components/layout/MemberLayout";
 
 // Páginas de membros
 import Dashboard from "@/pages/member/Dashboard";
@@ -17,7 +17,7 @@ import SuggestionDetails from "@/pages/member/SuggestionDetails";
 import NewSuggestion from "@/pages/member/NewSuggestion";
 import Achievements from "@/pages/member/Achievements";
 import Benefits from "@/pages/member/Benefits";
-import ImplementationTrail from "@/pages/member/ImplementationTrail";
+import ImplementationTrailPage from "@/pages/member/ImplementationTrailPage";
 import Onboarding from "@/pages/onboarding/Onboarding";
 import ProfessionalData from "@/pages/onboarding/steps/ProfessionalData";
 import BusinessContext from "@/pages/onboarding/steps/BusinessContext";
@@ -39,7 +39,7 @@ export const memberRoutes = (
     <Route path="/implement/:id/:moduleIdx" element={<SolutionImplementation />} />
     <Route path="/implementation/:id" element={<SolutionImplementation />} />
     <Route path="/implementation/:id/:moduleIdx" element={<SolutionImplementation />} />
-    <Route path="/implementation-trail" element={<ImplementationTrail />} />
+    <Route path="/implementation-trail" element={<ImplementationTrailPage />} />
     
     {/* Perfil */}
     <Route path="/profile" element={<Profile />} />
