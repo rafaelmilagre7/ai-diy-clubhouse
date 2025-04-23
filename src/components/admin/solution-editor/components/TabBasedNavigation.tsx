@@ -64,8 +64,8 @@ const TabBasedNavigation: React.FC<TabBasedNavigationProps> = ({
       <TabsContent value="tools">
         {solution?.id ? (
           <ToolsTab
-            solutionId={solution.id}
-            onSave={() => onSubmit(currentValues)}
+            solution={solution}
+            onSubmit={onSubmit}
             saving={saving}
           />
         ) : null}
@@ -84,8 +84,8 @@ const TabBasedNavigation: React.FC<TabBasedNavigationProps> = ({
       <TabsContent value="video">
         {solution?.id ? (
           <VideoTab
-            solutionId={solution.id}
-            onSave={() => onSubmit(currentValues)}
+            solution={solution}
+            onSubmit={onSubmit}
             saving={saving}
           />
         ) : null}

@@ -12,26 +12,42 @@ export const adaptSolutionType = (supaSolution: SupabaseSolution): Solution => {
     : [];
 
   // Adaptar o campo progress para garantir que contenha todas as propriedades necessárias
-  const progressData = supaSolution.progress ? {
-    id: supaSolution.progress.id || '',
-    user_id: supaSolution.progress.user_id || '',
-    solution_id: supaSolution.progress.solution_id || '',
-    implementation_status: supaSolution.progress.implementation_status || 'not_started' as const,
-    current_module: supaSolution.progress.current_module,
-    is_completed: supaSolution.progress.is_completed,
-    completed_modules: supaSolution.progress.completed_modules || [],
-    last_activity: supaSolution.progress.last_activity,
-    completion_percentage: supaSolution.progress.completion_percentage || 0,
-    completion_data: supaSolution.progress.completion_data || {},
-    completed_at: supaSolution.progress.completed_at || null
-  } : null;
+  let progressData = null;
+  
+  if (supaSolution.progress) {
+    // Criando um objeto Progress com valores padrão quando necessário
+    progressData = {
+      id: supaSolution.progress.id || '',
+      user_id: supaSolution.progress.user_id || '',
+      solution_id: supaSolution.progress.solution_id || '',
+      implementation_status: (supaSolution.progress.implementation_status as any) || 'not_started',
+      current_module: supaSolution.progress.current_module || 0,
+      is_completed: supaSolution.progress.is_completed || false,
+      completed_modules: supaSolution.progress.completed_modules || [],
+      last_activity: supaSolution.progress.last_activity || new Date().toISOString(),
+      completion_percentage: supaSolution.progress.completion_percentage || 0,
+      completion_data: supaSolution.progress.completion_data || {},
+      completed_at: supaSolution.progress.completed_at || null
+    } as Progress;
+  }
+
+  // Garantir que category e difficulty sejam valores válidos para os tipos esperados
+  const category = (supaSolution.category === 'revenue' || 
+                 supaSolution.category === 'operational' || 
+                 supaSolution.category === 'strategy') ? 
+                 supaSolution.category : 'strategy';
+                 
+  const difficulty = (supaSolution.difficulty === 'easy' || 
+                   supaSolution.difficulty === 'medium' || 
+                   supaSolution.difficulty === 'advanced') ? 
+                   supaSolution.difficulty : 'medium';
 
   return {
     id: supaSolution.id,
     title: supaSolution.title,
     description: supaSolution.description || '',
-    category: supaSolution.category || 'strategy',
-    difficulty: supaSolution.difficulty || 'medium',
+    category: category,
+    difficulty: difficulty,
     published: supaSolution.published || false,
     thumbnail_url: supaSolution.thumbnail_url,
     created_at: supaSolution.created_at,

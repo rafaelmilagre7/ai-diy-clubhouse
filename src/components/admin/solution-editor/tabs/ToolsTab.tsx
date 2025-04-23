@@ -9,10 +9,15 @@ interface ToolsTabProps {
 }
 
 const ToolsTab: React.FC<ToolsTabProps> = ({ solution, onSubmit, saving }) => {
+  // Função de adaptação para compatibilidade com a interface de ToolsChecklistForm
+  const handleSave = async () => {
+    await onSubmit({});
+  };
+
   return (
     <ToolsChecklistForm
       solutionId={solution.id}
-      onSave={onSubmit}
+      onSave={handleSave}
       isSaving={saving}
     />
   );
