@@ -1,5 +1,5 @@
 
-import { Solution } from "@/lib/supabase";
+import { Solution } from "@/types/supabaseTypes";
 
 interface SolutionContentSectionProps {
   solution: Solution;

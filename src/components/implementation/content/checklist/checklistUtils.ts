@@ -1,5 +1,5 @@
 
-import { Solution, UserChecklist } from "@/lib/supabase";
+import { Solution, UserChecklist } from "@/types/supabaseTypes";
 import { toast } from "sonner";
 
 export interface ChecklistItem {

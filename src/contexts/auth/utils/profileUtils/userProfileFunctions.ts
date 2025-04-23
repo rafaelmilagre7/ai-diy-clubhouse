@@ -1,5 +1,6 @@
 
-import { supabase, UserProfile, UserRole } from '@/lib/supabase';
+import { supabase, UserProfile } from '@/lib/supabase';
+import { UserRole } from '@/types/supabaseTypes';
 import { determineRoleFromEmail } from './roleValidation';
 
 /**
