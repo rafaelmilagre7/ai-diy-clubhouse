@@ -88,6 +88,7 @@ export const validateModuleType = (type: string): ModuleType => {
  */
 export const adaptProgressType = (progress: any): Progress => {
   return {
+    // Garantir que todos os campos obrigatórios da interface Progress estejam presentes
     id: progress.id || '',
     user_id: progress.user_id || '',
     solution_id: progress.solution_id || '',
