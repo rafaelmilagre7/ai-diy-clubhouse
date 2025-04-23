@@ -4,17 +4,30 @@ import { useImplementationTrail } from "@/hooks/implementation/useImplementation
 import { useSolutionsData } from "@/hooks/useSolutionsData";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Loader2, RefreshCw, AlertTriangle, HelpCircle } from "lucide-react";
+import { Loader2, RefreshCw, AlertTriangle, HelpCircle, Info } from "lucide-react";
 import { TrailSolutionsList } from "./TrailSolutionsList";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { Card, CardContent } from "@/components/ui/card";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export const ImplementationTrailCreator = () => {
   const navigate = useNavigate();
-  const { trail, isLoading, error, hasContent, generateImplementationTrail, refreshTrail } = useImplementationTrail();
+  const { 
+    trail, 
+    isLoading, 
+    error, 
+    detailedError, 
+    hasContent, 
+    generateImplementationTrail, 
+    refreshTrail,
+    generateWithRetries
+  } = useImplementationTrail();
+  
   const { solutions: allSolutions, loading: solutionsLoading } = useSolutionsData();
   const [processedSolutions, setProcessedSolutions] = useState<any[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [attemptCount, setAttemptCount] = useState(0);
   
   // Processar soluções quando os dados estiverem disponíveis
   useEffect(() => {
@@ -50,7 +63,10 @@ export const ImplementationTrailCreator = () => {
   const handleGenerateTrail = async () => {
     try {
       setIsGenerating(true);
-      await generateImplementationTrail({});
+      setAttemptCount(prev => prev + 1);
+      
+      // Usar generateWithRetries para ter mais chances de sucesso
+      await generateWithRetries({});
       toast.success("Trilha de implementação gerada com sucesso!");
     } catch (error) {
       console.error("Erro ao gerar trilha:", error);
@@ -79,6 +95,18 @@ export const ImplementationTrailCreator = () => {
     navigate("/perfil-de-implementacao");
   };
 
+  // Exibir detalhes do erro (para debugging)
+  const ErrorDebugInfo = () => {
+    if (!detailedError) return null;
+    
+    return (
+      <div className="mt-4 p-4 bg-gray-50 rounded-lg text-xs overflow-auto max-h-[200px]">
+        <p className="font-semibold mb-2">Detalhes técnicos (para suporte):</p>
+        <pre>{JSON.stringify(detailedError, null, 2)}</pre>
+      </div>
+    );
+  };
+
   // Estado de carregamento
   if (isLoading || solutionsLoading) {
     return (
@@ -92,41 +120,61 @@ export const ImplementationTrailCreator = () => {
   // Estado de erro
   if (error) {
     return (
-      <div className="bg-red-50 border border-red-200 rounded-lg p-6">
-        <div className="flex flex-col items-center text-center mb-6">
-          <AlertTriangle className="h-10 w-10 text-red-500 mb-4" />
-          <h3 className="text-lg font-medium mb-2">Erro ao carregar trilha</h3>
-          <p className="text-gray-600 mb-4 max-w-lg">
+      <div className="space-y-6">
+        <Alert variant="destructive" className="bg-red-50 border border-red-200">
+          <AlertTriangle className="h-5 w-5" />
+          <AlertTitle className="ml-2 text-red-800">Erro ao carregar trilha</AlertTitle>
+          <AlertDescription className="ml-2 text-red-700">
             Não foi possível carregar sua trilha personalizada. 
             Isto geralmente acontece quando seu perfil de implementação não está 
             completo ou há um problema de conexão.
-          </p>
-        </div>
+          </AlertDescription>
+        </Alert>
         
-        <div className="flex flex-col sm:flex-row gap-3 justify-center">
-          <Button 
-            onClick={handleGenerateTrail} 
-            disabled={isGenerating}
-            className="bg-[#0ABAB5] hover:bg-[#0ABAB5]/90"
-          >
-            {isGenerating ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Gerando...
-              </>
-            ) : (
-              "Tentar Novamente"
+        <Card className="border border-red-100">
+          <CardContent className="pt-6">
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <Button 
+                onClick={handleGenerateTrail} 
+                disabled={isGenerating}
+                className="bg-[#0ABAB5] hover:bg-[#0ABAB5]/90"
+              >
+                {isGenerating ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Gerando...
+                  </>
+                ) : (
+                  "Tentar Novamente"
+                )}
+              </Button>
+              
+              <Button 
+                onClick={handleNavigateToProfile} 
+                variant="outline"
+              >
+                <HelpCircle className="mr-2 h-4 w-4" />
+                Verificar Perfil
+              </Button>
+            </div>
+            
+            {attemptCount > 1 && (
+              <Alert className="mt-6 bg-amber-50 border-amber-200">
+                <Info className="h-4 w-4 text-amber-600" />
+                <AlertDescription className="text-amber-700 text-sm">
+                  Múltiplas tentativas detectadas. Se o problema persistir, verifique se:
+                  <ul className="list-disc pl-5 mt-2 space-y-1">
+                    <li>Seu perfil de implementação está completo</li>
+                    <li>O campo "is_completed" está marcado como true</li>
+                    <li>Você possui informações preenchidas sobre seus objetivos de negócio</li>
+                  </ul>
+                </AlertDescription>
+              </Alert>
             )}
-          </Button>
-          
-          <Button 
-            onClick={handleNavigateToProfile} 
-            variant="outline"
-          >
-            <HelpCircle className="mr-2 h-4 w-4" />
-            Verificar Perfil
-          </Button>
-        </div>
+            
+            {process.env.NODE_ENV === 'development' && <ErrorDebugInfo />}
+          </CardContent>
+        </Card>
       </div>
     );
   }

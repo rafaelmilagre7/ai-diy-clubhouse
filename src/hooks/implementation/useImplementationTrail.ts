@@ -21,6 +21,7 @@ export const useImplementationTrail = () => {
   const [trail, setTrail] = useState<ImplementationTrail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [detailedError, setDetailedError] = useState<any>(null);
 
   // Verificar se a trilha tem conteúdo
   const hasContent = useCallback(() => {
@@ -51,6 +52,7 @@ export const useImplementationTrail = () => {
 
       setIsLoading(true);
       setError(null);
+      setDetailedError(null);
       console.log("useImplementationTrail: Carregando trilha existente para", user.id);
 
       const { data, error: loadError } = await supabase
@@ -65,6 +67,7 @@ export const useImplementationTrail = () => {
       if (loadError) {
         console.error("Erro ao carregar trilha:", loadError);
         setError("Erro ao carregar sua trilha");
+        setDetailedError(loadError);
         return null;
       }
 
@@ -83,6 +86,7 @@ export const useImplementationTrail = () => {
     } catch (error) {
       console.error("Erro ao carregar trilha:", error);
       setError("Erro ao carregar sua trilha");
+      setDetailedError(error);
       return null;
     } finally {
       setIsLoading(false);
@@ -105,9 +109,10 @@ export const useImplementationTrail = () => {
     try {
       setIsLoading(true);
       setError(null);
+      setDetailedError(null);
       console.log("generateImplementationTrail: Iniciando geração para", user.id);
 
-      // Buscar trilha existente
+      // Buscar trilha existente primeiro para evitar regenerações desnecessárias
       const { data: existingTrail } = await supabase
         .from("implementation_trails")
         .select("*")
@@ -125,13 +130,14 @@ export const useImplementationTrail = () => {
       }
 
       console.log("generateImplementationTrail: Criando registro pendente");
-      // Iniciar processo de geração
+      // Iniciar processo de geração - criar ou atualizar registro pendente
       const { error: updateError } = await supabase
         .from("implementation_trails")
-        .insert({
+        .upsert({
           user_id: user.id,
           status: "pending",
-          generation_attempts: 1
+          generation_attempts: 1,
+          updated_at: new Date().toISOString()
         });
 
       if (updateError) {
@@ -167,37 +173,14 @@ export const useImplementationTrail = () => {
 
       console.log("generateImplementationTrail: Resposta da edge function:", generatedData);
 
-      // Usar dados mockados se a edge function não retornar nada
-      const mockRecommendations = {
-        priority1: [
-          {
-            solutionId: "mock-solution-1",
-            justification: "Esta solução é perfeita para seu negócio B2B e pode ajudar a otimizar seus processos de vendas."
-          },
-          {
-            solutionId: "mock-solution-2",
-            justification: "Considerando seu foco em automação, esta solução trará ganhos imediatos de produtividade."
-          }
-        ],
-        priority2: [
-          {
-            solutionId: "mock-solution-3",
-            justification: "Com seu conhecimento avançado em IA, você poderá implementar esta solução rapidamente."
-          }
-        ],
-        priority3: [
-          {
-            solutionId: "mock-solution-4",
-            justification: "Para complementar sua estratégia de marketing com IA, esta ferramenta será muito útil."
-          }
-        ]
-      };
+      if (!generatedData || !generatedData.recommendations) {
+        console.error("Resposta da edge function sem recomendações:", generatedData);
+        throw new Error("A função de geração retornou uma resposta inválida");
+      }
 
-      // Usar dados reais se disponíveis, ou fallback para dados mockados
-      const recommendationsToSave = generatedData?.recommendations || mockRecommendations;
+      const recommendationsToSave = generatedData.recommendations;
 
-      console.log("generateImplementationTrail: Salvando trilha gerada");
-      // Salvar trilha gerada
+      // Atualizar status para completed
       const { error: saveError } = await supabase
         .from("implementation_trails")
         .update({
@@ -220,23 +203,57 @@ export const useImplementationTrail = () => {
       return sanitizedData;
     } catch (error: any) {
       console.error("Erro ao gerar trilha:", error);
-      setError(error.message || "Erro ao gerar trilha");
+      setError("Não foi possível gerar sua trilha. Verifique seu perfil de implementação.");
+      setDetailedError(error);
       
-      // Registrar erro
+      // Atualizar status para erro
       await supabase
         .from("implementation_trails")
         .update({
           status: "error",
           error_message: error.message || "Erro desconhecido",
+          updated_at: new Date().toISOString()
         })
         .eq("user_id", user.id)
         .eq("status", "pending");
 
-      toast.error("Não foi possível gerar sua trilha. Verifique se seu perfil de implementação está completo.");
+      toast.error("Não foi possível gerar sua trilha. Verifique se seu perfil de implementação está completo.", {
+        description: error.message || "Erro ao processar sua solicitação."
+      });
       return null;
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Gerar trilha com delay e retentativas
+  const generateWithRetries = async (onboardingData: any, maxRetries = 2) => {
+    let retries = 0;
+    let success = false;
+    let result = null;
+    
+    while (retries <= maxRetries && !success) {
+      try {
+        result = await generateImplementationTrail(onboardingData);
+        if (result) {
+          success = true;
+        } else {
+          retries++;
+          if (retries <= maxRetries) {
+            console.log(`Tentativa ${retries} falhou, tentando novamente...`);
+            await new Promise(resolve => setTimeout(resolve, 2000)); // espera 2 segundos
+          }
+        }
+      } catch (e) {
+        retries++;
+        console.error(`Erro na tentativa ${retries}:`, e);
+        if (retries <= maxRetries) {
+          await new Promise(resolve => setTimeout(resolve, 2000));
+        }
+      }
+    }
+    
+    return result;
   };
 
   // Carregar trilha ao montar o componente
@@ -248,8 +265,10 @@ export const useImplementationTrail = () => {
     trail,
     isLoading,
     error,
+    detailedError,
     hasContent: hasContent(),
     refreshTrail,
     generateImplementationTrail,
+    generateWithRetries
   };
 };

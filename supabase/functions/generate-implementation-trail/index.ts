@@ -1,6 +1,7 @@
 
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.33.1';
+import "https://deno.land/x/xhr@0.1.0/mod.ts";
 
 interface ImplementationRecommendation {
   solutionId: string;
@@ -134,33 +135,237 @@ serve(async (req) => {
       .limit(1)
       .maybeSingle();
     
-    if (profileError && !profileError.message.includes('Results contain 0 rows')) {
+    if (profileError) {
       console.error('Erro ao buscar perfil de implementação:', profileError);
+      return new Response(
+        JSON.stringify({ 
+          error: 'Erro ao buscar perfil de implementação',
+          details: profileError.message 
+        }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
     }
     
     // Log para verificar se encontrou perfil
     if (profileData) {
-      console.log("Perfil de implementação encontrado");
+      console.log("Perfil de implementação encontrado:", profileData);
     } else {
       console.warn("Perfil de implementação não encontrado para o usuário:", user.id);
+      return new Response(
+        JSON.stringify({ 
+          error: 'Perfil de implementação não encontrado',
+          message: 'É necessário preencher o perfil de implementação para gerar recomendações.' 
+        }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+
+    // Verificar se o perfil está completo
+    if (!profileData.is_completed) {
+      console.warn("Perfil de implementação incompleto para o usuário:", user.id);
+      return new Response(
+        JSON.stringify({ 
+          error: 'Perfil de implementação incompleto',
+          message: 'É necessário completar o perfil de implementação para gerar recomendações.' 
+        }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+    
+    // Se temos uma OpenAI API key, vamos usá-la para gerar recomendações inteligentes
+    const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
+    if (openaiApiKey) {
+      try {
+        console.log("OpenAI API Key encontrada, gerando recomendações com IA");
+        
+        // Formatar dados do perfil e das soluções para o prompt
+        const profileSummary = {
+          nome: profileData.name,
+          empresa: profileData.company_name,
+          setor: profileData.company_sector,
+          tamanho: profileData.company_size,
+          cargo: profileData.current_position,
+          objetivos: profileData.business_challenges || [],
+          nivelConhecimentoIA: profileData.ai_knowledge_level || 1
+        };
+        
+        const solutionsSummary = solutions.map(s => ({
+          id: s.id,
+          titulo: s.title,
+          descricao: s.description,
+          categoria: s.category,
+          dificuldade: s.difficulty,
+          tags: s.tags || []
+        }));
+        
+        // Criar prompt para a OpenAI
+        const prompt = `
+        Você é um sistema de recomendação para soluções de IA.
+        
+        ## Informações do perfil do usuário:
+        ${JSON.stringify(profileSummary, null, 2)}
+        
+        ## Desafios e objetivos de negócio do usuário:
+        ${profileData.business_challenges ? profileData.business_challenges.join(", ") : "Informação não disponível"}
+        
+        ## Nível de conhecimento em IA (1-4):
+        ${profileData.ai_knowledge_level || "Informação não disponível"}
+        
+        ## Soluções disponíveis:
+        ${JSON.stringify(solutionsSummary, null, 2)}
+        
+        Por favor, analise o perfil do usuário e as soluções disponíveis. Recomende as soluções mais adequadas, organizadas em três níveis de prioridade:
+        
+        1. Prioridade 1: Soluções altamente relevantes e recomendadas para implementação imediata (máximo de 3)
+        2. Prioridade 2: Soluções importantes mas que podem ser implementadas em um segundo momento (máximo de 3)
+        3. Prioridade 3: Soluções complementares para exploração futura (máximo de 3)
+        
+        Para cada solução recomendada, forneça uma breve justificativa de por que essa solução é relevante para o perfil e objetivos do usuário.
+        
+        Retorne APENAS um objeto JSON com o seguinte formato, sem texto adicional:
+        
+        {
+          "priority1": [
+            {
+              "solutionId": "id-da-solução",
+              "justification": "Justificativa personalizada"
+            }
+          ],
+          "priority2": [
+            {
+              "solutionId": "id-da-solução",
+              "justification": "Justificativa personalizada"
+            }
+          ],
+          "priority3": [
+            {
+              "solutionId": "id-da-solução",
+              "justification": "Justificativa personalizada"
+            }
+          ]
+        }
+        `;
+        
+        console.log("Enviando prompt para OpenAI");
+        
+        // Fazer requisição para OpenAI
+        const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${openaiApiKey}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            model: 'gpt-4o-mini',
+            messages: [
+              {
+                role: 'system',
+                content: 'Você é um assistente especializado em matchmaking entre perfis empresariais e soluções de IA. Responda apenas com JSON válido conforme solicitado.'
+              },
+              {
+                role: 'user',
+                content: prompt
+              }
+            ],
+            temperature: 0.7,
+            max_tokens: 1500
+          })
+        });
+        
+        if (!openaiResponse.ok) {
+          const errorData = await openaiResponse.json();
+          console.error("Erro na resposta da OpenAI:", errorData);
+          throw new Error(`OpenAI API error: ${errorData.error?.message || 'Unknown error'}`);
+        }
+        
+        const openaiData = await openaiResponse.json();
+        console.log("Resposta da OpenAI recebida");
+        
+        if (!openaiData.choices || !openaiData.choices[0] || !openaiData.choices[0].message) {
+          throw new Error("Formato de resposta da OpenAI inválido");
+        }
+        
+        // Extrair recomendações da resposta
+        const aiContent = openaiData.choices[0].message.content;
+        console.log("Resposta da OpenAI:", aiContent);
+        
+        let recommendations;
+        try {
+          // Tentar parsear a resposta como JSON
+          recommendations = JSON.parse(aiContent);
+          console.log("Recomendações parseadas com sucesso:", recommendations);
+        } catch (jsonError) {
+          console.error("Erro ao parsear recomendações da OpenAI:", jsonError);
+          
+          // Tentar extrair JSON da resposta usando regex se o parsing falhar
+          const jsonMatch = aiContent.match(/\{[\s\S]*\}/);
+          if (jsonMatch) {
+            try {
+              recommendations = JSON.parse(jsonMatch[0]);
+              console.log("Recomendações extraídas com regex:", recommendations);
+            } catch (regexError) {
+              console.error("Falha ao extrair JSON com regex:", regexError);
+              throw new Error("Não foi possível processar a resposta da IA");
+            }
+          } else {
+            throw new Error("Formato de resposta da IA inválido");
+          }
+        }
+        
+        // Validar estrutura das recomendações
+        if (!recommendations.priority1 || !recommendations.priority2 || !recommendations.priority3) {
+          console.error("Estrutura de recomendações inválida:", recommendations);
+          throw new Error("Estrutura de recomendações inválida");
+        }
+        
+        // Salvar as recomendações no banco de dados
+        const { error: saveError } = await supabaseClient
+          .from("implementation_trails")
+          .upsert({
+            user_id: user.id,
+            trail_data: recommendations,
+            status: "completed",
+            updated_at: new Date().toISOString()
+          })
+          .eq("user_id", user.id);
+        
+        if (saveError) {
+          console.error("Erro ao salvar trilha:", saveError);
+          throw new Error(`Erro ao salvar trilha: ${saveError.message}`);
+        }
+        
+        console.log("Trilha salva com sucesso usando IA");
+        
+        return new Response(
+          JSON.stringify({ 
+            success: true, 
+            recommendations,
+            source: "openai" 
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      } catch (openaiError) {
+        console.error("Erro ao processar com OpenAI:", openaiError);
+        // Continuar com algoritmo de fallback se falhar
+      }
     }
     
     // Definir variáveis que serão usadas para personalização
-    let businessGoals = [];
-    let industryFocus = '';
-    let aiExperience = 0;
-    let companySize = '';
+    let businessGoals = profileData.business_challenges || [];
+    let industryFocus = profileData.company_sector || '';
+    let aiExperience = profileData.ai_knowledge_level || 1;
+    let companySize = profileData.company_size || '';
     
-    // Extrair informações do perfil para melhorar as recomendações
-    if (profileData) {
-      businessGoals = profileData.business_challenges || [];
-      industryFocus = profileData.company_sector || '';
-      aiExperience = profileData.ai_knowledge_level || 0;
-      companySize = profileData.company_size || '';
-    }
-    
-    console.log("Gerando recomendações com base nos dados:", {
-      hasProfileData: !!profileData,
+    console.log("Gerando recomendações com algoritmo interno baseado nos dados:", {
       goals: businessGoals,
       industry: industryFocus,
       aiExperience: aiExperience,
@@ -233,7 +438,7 @@ serve(async (req) => {
       const justifications = [
         `Esta solução é altamente compatível com seus objetivos de negócio.`,
         `Baseado no seu perfil, esta solução pode trazer resultados rápidos.`,
-        `Considerando seu setor, esta solução pode gerar diferencial competitivo.`,
+        `Considerando seu setor ${industryFocus}, esta solução pode gerar diferencial competitivo.`,
         `Com base no seu nível de experiência em IA, esta implementação será adequada.`,
         `Recomendamos esta solução para melhorar seus processos operacionais.`
       ];
@@ -298,6 +503,22 @@ serve(async (req) => {
         }))
       };
       
+      // Salvar as recomendações de fallback
+      const { error: saveError } = await supabaseClient
+        .from("implementation_trails")
+        .upsert({
+          user_id: user.id,
+          trail_data: fallbackRecommendations,
+          status: "completed",
+          updated_at: new Date().toISOString()
+        })
+        .eq("user_id", user.id);
+      
+      if (saveError) {
+        console.error("Erro ao salvar trilha fallback:", saveError);
+        throw new Error(`Erro ao salvar trilha: ${saveError.message}`);
+      }
+      
       return new Response(
         JSON.stringify({ 
           success: true, 
@@ -306,6 +527,22 @@ serve(async (req) => {
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
+    }
+    
+    // Salvar as recomendações no banco de dados
+    const { error: saveError } = await supabaseClient
+      .from("implementation_trails")
+      .upsert({
+        user_id: user.id,
+        trail_data: recommendations,
+        status: "completed",
+        updated_at: new Date().toISOString()
+      })
+      .eq("user_id", user.id);
+    
+    if (saveError) {
+      console.error("Erro ao salvar trilha:", saveError);
+      throw new Error(`Erro ao salvar trilha: ${saveError.message}`);
     }
     
     console.log("Recomendações geradas com sucesso:", {
