@@ -16,6 +16,8 @@ import NewSuggestion from "@/pages/member/NewSuggestion";
 import Achievements from "@/pages/member/Achievements";
 import Benefits from "@/pages/member/Benefits";
 import ImplementationProfilePage from "@/pages/ImplementationProfile";
+import { NotFoundContent } from "@/components/implementation/NotFoundContent";
+import { ImplementationNotFound } from "@/components/implementation/ImplementationNotFound";
 
 interface MemberRoutesProps {
   children?: ReactNode;
@@ -48,6 +50,10 @@ const MemberRoutes = ({ children }: MemberRoutesProps) => {
         <Route path="suggestions/:id" element={<SuggestionDetails />} />
         <Route path="suggestions/new" element={<NewSuggestion />} />
         <Route path="achievements" element={<Achievements />} />
+        
+        {/* Páginas não encontradas */}
+        <Route path="solution/not-found" element={<NotFoundContent />} />
+        <Route path="implementation/not-found" element={<ImplementationNotFound />} />
       </Route>
     </Routes>
   );

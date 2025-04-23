@@ -52,7 +52,8 @@ export const useSolutionsData = (
   const { 
     data: solutions = [], 
     error,
-    isLoading: loading 
+    isLoading: loading,
+    refetch
   } = useQuery({
     queryKey: ["solutions"],
     queryFn: fetchSolutions,
@@ -89,6 +90,7 @@ export const useSolutionsData = (
     solutions,
     filteredSolutions,
     loading,
-    error
+    error,
+    refetch
   };
 };
