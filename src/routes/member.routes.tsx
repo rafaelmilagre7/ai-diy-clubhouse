@@ -23,6 +23,7 @@ export const memberRoutes = (
   <Fragment>
     <Route element={<MemberLayout />}>
       {/* Dashboard */}
+      <Route index element={<Dashboard />} />
       <Route path="dashboard" element={<Dashboard />} />
       
       {/* Soluções */}
