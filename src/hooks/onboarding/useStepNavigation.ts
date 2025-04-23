@@ -12,11 +12,11 @@ export const useStepNavigation = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Mapeamento de caminhos para IDs de etapas, incluindo explicitamente a rota antiga
+  // Mapeamento de caminhos para IDs de etapas
   const pathToStepId = {
     "/onboarding": "personal",
     "/onboarding/personal-info": "personal",
-    "/onboarding/professional": "professional_data", // Mapeamento da rota antiga
+    "/onboarding/professional": "professional_data", // Mapear a rota antiga para o ID correto
     "/onboarding/professional-data": "professional_data",
     "/onboarding/business-context": "business_context",
     "/onboarding/ai-experience": "ai_exp",
@@ -31,6 +31,7 @@ export const useStepNavigation = () => {
       if (isLoading) return; // Evitar múltiplas chamadas durante carregamento
       
       try {
+        console.log("Carregando progresso do onboarding em useStepNavigation, path atual:", location.pathname);
         const refreshedProgress = await refreshProgress();
         
         // Verificar se temos um progresso válido
@@ -54,6 +55,7 @@ export const useStepNavigation = () => {
             if (currentStepId) {
               const index = steps.findIndex(step => step.id === currentStepId);
               if (index !== -1) {
+                console.log(`Definindo índice de etapa atual para ${index} com base no caminho: ${location.pathname}`);
                 setCurrentStepIndex(index);
               }
             }
@@ -82,12 +84,8 @@ export const useStepNavigation = () => {
             console.log(`Continuando onboarding da etapa: ${progressData.current_step} (índice ${stepIndex})`);
             setCurrentStepIndex(stepIndex);
             
-            const correctPath = steps[stepIndex].path;
-            
-            if (currentPath !== correctPath) {
-              console.log(`Redirecionando de ${currentPath} para ${correctPath}`);
-              navigate(correctPath);
-            }
+            // IMPORTANTE: Removida a navegação forçada que poderia causar loops
+            // Se estivermos em /onboarding/professional, não redirecionar para professional-data
           } else {
             console.warn(`Etapa não encontrada nos passos definidos: ${progressData.current_step}`);
             navigate(steps[0].path);
@@ -105,6 +103,7 @@ export const useStepNavigation = () => {
     loadProgress();
   }, [navigate, refreshProgress, isLoading, location.pathname, progress]);
 
+  // ... manter o restante do código existente (navigateToStep, navigateToStepById, etc.)
   const navigateToStep = (stepIndex: number) => {
     if (stepIndex >= 0 && stepIndex < steps.length) {
       console.log(`Navegando manualmente para etapa índice ${stepIndex}: ${steps[stepIndex].id} (${steps[stepIndex].path})`);

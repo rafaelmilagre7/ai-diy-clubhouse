@@ -16,10 +16,10 @@ export function navigateAfterStep(
   console.log(`Determinando próxima rota após etapa ${stepId} (índice atual: ${currentStepIndex})`);
   
   // Mapeamento direto de etapas para rotas de navegação
-  // Ambas as rotas (antiga "professional" e nova "professional_data") direcionam para professional-data
+  // Tanto a rota antiga "professional" quanto a nova "professional_data" direcionam para a próxima etapa
   const nextRouteMap: {[key: string]: string} = {
-    "personal": "/onboarding/professional-data",
-    "professional": "/onboarding/professional-data", 
+    "personal": "/onboarding/professional-data", // Usar a rota nova como padrão
+    "professional": "/onboarding/business-context", // Adicionar mapeamento explícito para a rota antiga
     "professional_data": "/onboarding/business-context",
     "business_context": "/onboarding/ai-experience",
     "ai_exp": "/onboarding/club-goals",

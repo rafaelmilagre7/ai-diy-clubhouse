@@ -20,7 +20,7 @@ export const onboardingRoutes: RouteObject[] = [
     path: '/onboarding',
     element: <Onboarding />,
   },
-  // Importante: a rota antiga deve vir ANTES da nova para ser capturada primeiro
+  // Define explicitamente para a rota legacy e a nova rota
   {
     path: '/onboarding/professional',
     element: <ProfessionalData />,

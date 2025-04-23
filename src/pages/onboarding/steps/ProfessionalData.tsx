@@ -3,18 +3,25 @@ import React, { useEffect } from "react";
 import { ProfessionalDataStep } from "@/components/onboarding/steps/ProfessionalDataStep";
 import { useOnboardingSteps } from "@/hooks/onboarding/useOnboardingSteps";
 import { useProgress } from "@/hooks/onboarding/useProgress";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
 const ProfessionalData = () => {
   const { saveStepData, isSubmitting, navigateToPreviousStep } = useOnboardingSteps();
   const { progress } = useProgress();
   const location = useLocation();
+  const navigate = useNavigate();
   
-  // Log para diagnóstico
+  // Log ampliado para diagnóstico
   useEffect(() => {
-    console.log("ProfessionalData component montado, path atual:", location.pathname);
-  }, [location.pathname]);
+    console.log("ProfessionalData component montado", {
+      path: location.pathname,
+      progress: progress,
+      isCurrentlySubmitting: isSubmitting
+    });
+    
+    // Não redirecionar automaticamente, permitir que a página professional seja exibida
+  }, [location.pathname, progress]);
   
   const handleSubmit = async (stepId: string, data: any) => {
     console.log("Dados profissionais enviados:", data);
