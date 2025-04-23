@@ -9,6 +9,7 @@ import {
   ChevronLeft,
   BookOpen,
   Gauge,
+  UserCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "react-router-dom";
@@ -33,6 +34,11 @@ export const AdminSidebarNav = ({ sidebarOpen }: AdminSidebarNavProps) => {
       title: "Usuários",
       href: "/admin/users",
       icon: Users,
+    },
+    {
+      title: "Perfis de Implementação",
+      href: "/admin/implementation-profiles",
+      icon: UserCheck,
     },
     {
       title: "Soluções",
