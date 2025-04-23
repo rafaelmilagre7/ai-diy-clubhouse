@@ -35,46 +35,115 @@ export const useImplementationProfile = () => {
   const [profile, setProfile] = useState<ImplementationProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) return;
-    setLoading(true);
-    supabase
-      .from("implementation_profiles")
-      .select("*")
-      .eq("user_id", user.id)
-      .maybeSingle()
-      .then(({ data, error }) => {
+    
+    const fetchProfile = async () => {
+      try {
+        setLoading(true);
+        setErrorMessage(null);
+        
+        console.log("Buscando perfil de implementação para o usuário:", user.id);
+        
+        const { data, error } = await supabase
+          .from("implementation_profiles")
+          .select("*")
+          .eq("user_id", user.id)
+          .maybeSingle();
+          
         if (error) {
-          toast.error("Erro ao buscar perfil.");
+          console.error("Erro ao buscar perfil:", error);
+          setErrorMessage(error.message);
+          toast.error("Erro ao buscar perfil: " + error.message);
+          return;
         }
-        setProfile(data || null);
+        
+        console.log("Perfil de implementação encontrado:", data);
+        setProfile(data);
+      } catch (err) {
+        console.error("Erro inesperado ao buscar perfil:", err);
+        const errorMsg = err instanceof Error ? err.message : "Erro desconhecido";
+        setErrorMessage(errorMsg);
+        toast.error("Erro ao buscar perfil: " + errorMsg);
+      } finally {
         setLoading(false);
-      });
+      }
+    };
+    
+    fetchProfile();
   }, [user]);
 
   const saveProfile = async (values: ImplementationProfile) => {
-    if (!user) return;
-    setSaving(true);
-    let res, error;
-    if (profile?.id) {
-      ({ error } = await supabase
-        .from("implementation_profiles")
-        .update({ ...values })
-        .eq("id", profile.id));
-    } else {
-      ({ error } = await supabase
-        .from("implementation_profiles")
-        .insert([{ ...values, user_id: user.id }]));
+    if (!user) {
+      toast.error("Usuário não autenticado");
+      return;
     }
-    if (!error) {
+    
+    try {
+      setSaving(true);
+      setErrorMessage(null);
+      
+      console.log("Salvando perfil de implementação:", values);
+      
+      let response;
+      
+      if (profile?.id) {
+        // Atualizar perfil existente
+        response = await supabase
+          .from("implementation_profiles")
+          .update({ 
+            ...values,
+            is_completed: true, 
+            updated_at: new Date().toISOString() 
+          })
+          .eq("id", profile.id);
+      } else {
+        // Criar novo perfil
+        response = await supabase
+          .from("implementation_profiles")
+          .insert([{ 
+            ...values, 
+            user_id: user.id,
+            is_completed: true, 
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          }]);
+      }
+      
+      const { error } = response;
+      
+      if (error) {
+        console.error("Erro ao salvar perfil:", error);
+        setErrorMessage(error.message);
+        toast.error("Erro ao salvar perfil: " + error.message);
+        return;
+      }
+      
+      // Buscar o perfil atualizado para ter o ID e outras informações atualizadas
+      const { data: updatedProfile, error: fetchError } = await supabase
+        .from("implementation_profiles")
+        .select("*")
+        .eq("user_id", user.id)
+        .maybeSingle();
+        
+      if (fetchError) {
+        console.error("Erro ao buscar perfil atualizado:", fetchError);
+      } else {
+        setProfile(updatedProfile);
+      }
+      
       toast.success("Perfil salvo com sucesso!");
-      setProfile({ ...profile, ...values });
-    } else {
-      toast.error("Erro ao salvar perfil.");
+    } catch (err) {
+      console.error("Erro inesperado ao salvar perfil:", err);
+      const errorMsg = err instanceof Error ? err.message : "Erro desconhecido";
+      setErrorMessage(errorMsg);
+      toast.error("Erro ao salvar perfil: " + errorMsg);
+    } finally {
+      setSaving(false);
     }
-    setSaving(false);
   };
 
-  return { profile, loading, saving, saveProfile };
+  return { profile, loading, saving, saveProfile, errorMessage };
 };
