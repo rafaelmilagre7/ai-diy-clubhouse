@@ -61,3 +61,41 @@ export async function markStepAsCompleted(
     return { success: false, error };
   }
 }
+
+/**
+ * Atualiza o status do progresso de onboarding
+ */
+export async function updateOnboardingProgressStatus(
+  progressId: string,
+  updates: {
+    is_completed?: boolean;
+    completed_steps?: string[];
+  },
+  logError: (event: string, data?: Record<string, any>) => void
+) {
+  try {
+    console.log(`Atualizando status do progresso ${progressId}:`, updates);
+    
+    const { error } = await supabase
+      .from('onboarding')
+      .update({
+        ...updates,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', progressId);
+    
+    if (error) {
+      console.error('Erro ao atualizar status do progresso:', error);
+      logError('update_progress_status_error', { error: error.message });
+      return { success: false, error };
+    }
+    
+    return { success: true };
+  } catch (error) {
+    console.error('Exceção ao atualizar status do progresso:', error);
+    logError('update_progress_status_exception', { 
+      error: error instanceof Error ? error.message : String(error)
+    });
+    return { success: false, error };
+  }
+}

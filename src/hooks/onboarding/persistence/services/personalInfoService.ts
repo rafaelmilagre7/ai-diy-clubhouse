@@ -41,3 +41,54 @@ export async function savePersonalInfoData(
     return { success: false, error };
   }
 }
+
+/**
+ * Busca os dados pessoais do usuário
+ */
+export async function fetchPersonalInfo(progressId: string) {
+  try {
+    console.log(`Buscando dados pessoais para progresso ${progressId}`);
+    
+    const { data, error } = await supabase
+      .from("onboarding")
+      .select("personal_info")
+      .eq("id", progressId)
+      .single();
+    
+    if (error) {
+      console.error('Erro ao buscar dados pessoais:', error);
+      return null;
+    }
+    
+    return data?.personal_info || null;
+  } catch (error) {
+    console.error('Exceção ao buscar dados pessoais:', error);
+    return null;
+  }
+}
+
+/**
+ * Formata os dados pessoais para exibição
+ */
+export function formatPersonalInfoData(data: any) {
+  if (!data) return { personal_info: {} };
+  
+  // Se os dados já estiverem no formato esperado, retorna-os diretamente
+  if (typeof data === 'object' && !Array.isArray(data)) {
+    return { personal_info: data };
+  }
+  
+  // Tenta converter string para objeto, se necessário
+  if (typeof data === 'string') {
+    try {
+      const parsedData = JSON.parse(data);
+      return { personal_info: parsedData };
+    } catch (e) {
+      console.error('Erro ao fazer parse dos dados pessoais:', e);
+      return { personal_info: {} };
+    }
+  }
+  
+  // Fallback para objeto vazio
+  return { personal_info: {} };
+}

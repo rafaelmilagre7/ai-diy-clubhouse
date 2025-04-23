@@ -128,7 +128,7 @@ export const PersonalInfoContainer: React.FC = () => {
           stepTitles={stepTitles}
           onStepClick={handleStepClick}
           loadError={loadError}
-          lastError={lastError}
+          lastError={lastError ? (lastError instanceof Error ? lastError.message : String(lastError)) : ""}
           onRetry={() => attemptDataLoad(loadInitialData)}
         />
       );
