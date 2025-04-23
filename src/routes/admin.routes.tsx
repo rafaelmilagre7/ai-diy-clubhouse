@@ -8,7 +8,6 @@ import AdminDashboard from "@/pages/admin/AdminDashboard";
 import AdminSolutions from "@/pages/admin/AdminSolutions";
 import AdminSolutionCreate from "@/pages/admin/AdminSolutionCreate";
 import AdminSolutionEdit from "@/pages/admin/AdminSolutionEdit";
-import SolutionEditor from "@/pages/admin/SolutionEditor";
 import AdminSolutionRedirect from "@/components/routing/AdminSolutionRedirect";
 import AdminUsers from "@/pages/admin/AdminUsers";
 import AdminTools from "@/pages/admin/AdminTools";
@@ -78,11 +77,6 @@ export const adminRoutes = (
     <Route path="admin/solutions/:id" element={
       <AdminLayout>
         <AdminSolutionEdit />
-      </AdminLayout>
-    } />
-    <Route path="admin/solutions/:id/editor" element={
-      <AdminLayout>
-        <SolutionEditor />
       </AdminLayout>
     } />
     

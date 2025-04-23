@@ -1,18 +1,21 @@
 
 import React from "react";
-import BasicInfoTab from "./BasicInfoTab";
-import ToolsTab from "./ToolsTab";
-import MaterialsTab from "./MaterialsTab";
-import VideosTab from "./VideosTab";
-import ChecklistTab from "./ChecklistTab";
-import PublishTab from "./PublishTab";
+import BasicInfoTab from "@/components/admin/solution-editor/tabs/BasicInfoTab";
+import ResourcesTab from "@/components/admin/solution-editor/tabs/ResourcesTab";
+import ToolsTab from "@/components/admin/solution-editor/tabs/ToolsTab";
+import VideoTab from "@/components/admin/solution-editor/tabs/VideoTab";
+import ModulesTab from "@/components/admin/solution-editor/tabs/ModulesTab";
+import ChecklistTab from "@/components/admin/solution-editor/tabs/ChecklistTab";
+import PublishTab from "@/components/admin/solution-editor/tabs/PublishTab";
+import { Solution } from "@/types/supabaseTypes";
+import { SolutionFormValues } from "@/components/admin/solution/form/solutionFormSchema";
 
 interface TabContentProps {
   activeTab: string;
   currentStep: number;
-  solution: any;
-  currentValues: any;
-  onSubmit: (values: any) => Promise<void>;
+  solution: Solution | null;
+  currentValues: SolutionFormValues;
+  onSubmit: (values: SolutionFormValues) => Promise<void>;
   saving: boolean;
 }
 
@@ -24,62 +27,60 @@ const TabContent: React.FC<TabContentProps> = ({
   onSubmit,
   saving
 }) => {
-  // Renderiza o conteúdo apropriado baseado na aba ativa
   switch (activeTab) {
     case "basic-info":
       return (
         <BasicInfoTab
-          solution={solution}
+          defaultValues={currentValues}
           currentValues={currentValues}
           onSubmit={onSubmit}
           saving={saving}
         />
       );
     case "tools":
-      return (
-        <ToolsTab
-          solution={solution}
-          onSubmit={onSubmit}
-          saving={saving}
-        />
-      );
+      return solution ? (
+        <ToolsTab solution={solution} onSubmit={onSubmit} saving={saving} />
+      ) : null;
     case "materials":
-      return (
-        <MaterialsTab
-          solution={solution}
-          currentValues={currentValues}
-          onSubmit={onSubmit}
+      return solution ? (
+        <ResourcesTab
+          solutionId={solution.id}
+          onSave={() => onSubmit(currentValues)}
           saving={saving}
         />
-      );
+      ) : null;
     case "videos":
-      return (
-        <VideosTab
-          solution={solution}
-          currentValues={currentValues}
-          onSubmit={onSubmit}
+      return solution ? (
+        <VideoTab solution={solution} onSubmit={onSubmit} saving={saving} />
+      ) : null;
+    case "modules":
+      return solution ? (
+        <ModulesTab
+          solutionId={solution.id}
+          onSave={() => onSubmit(currentValues)}
           saving={saving}
+          currentModuleStep={0}
         />
-      );
+      ) : null;
     case "checklist":
-      return (
+      return solution ? (
         <ChecklistTab
-          solution={solution}
-          onSubmit={onSubmit}
+          solutionId={solution.id}
+          onSave={() => onSubmit(currentValues)}
           saving={saving}
         />
-      );
+      ) : null;
     case "publish":
-      return (
+      return solution ? (
         <PublishTab
+          solutionId={solution.id}
           solution={solution}
-          currentValues={currentValues}
-          onSubmit={onSubmit}
+          onSave={onSubmit}
           saving={saving}
         />
-      );
+      ) : null;
     default:
-      return <div>Conteúdo não encontrado</div>;
+      return <div>Tab não encontrada</div>;
   }
 };
 

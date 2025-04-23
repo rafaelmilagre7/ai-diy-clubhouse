@@ -3,78 +3,62 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
 import LoadingScreen from "@/components/common/LoadingScreen";
 import { Card, CardContent } from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
-import { useSolutionEditor } from "@/hooks/admin/useSolutionEditor";
-import { useEffect } from "react";
+import { toast } from "sonner";
+import { useSolutionData } from "@/hooks/solution/useSolutionData";
+import { useSolutionSave } from "@/hooks/useSolutionSave";
+import { useState } from "react";
 import TabBasedNavigation from "@/components/admin/solution-editor/components/TabBasedNavigation";
 import SolutionEditorHeader from "@/components/admin/solution-editor/SolutionEditorHeader";
 import AuthError from "@/components/admin/solution-editor/AuthError";
 import NavigationButtons from "@/components/admin/solution-editor/NavigationButtons";
+import { SolutionFormValues } from "@/components/admin/solution/form/solutionFormSchema";
 
 const AdminSolutionEdit = () => {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
-  const { toast } = useToast();
   const navigate = useNavigate();
   
-  const {
-    solution,
-    loading,
-    saving,
-    activeTab,
-    setActiveTab,
-    onSubmit,
-    currentValues,
-    currentStep,
-    setCurrentStep,
-    totalSteps
-  } = useSolutionEditor(id, user);
+  // Estados para controle de navegação e formulário
+  const [activeTab, setActiveTab] = useState("basic");
+  const [currentStep, setCurrentStep] = useState(0);
+  const [saving, setSaving] = useState(false);
+  const totalSteps = 7;
   
-  useEffect(() => {
-    console.log("Admin Solution Edit loaded with ID:", id);
-    
-    if (!solution && !loading && id) {
-      console.warn("Solução não encontrada para edição no admin:", id);
-    }
-    
-    // Log dos valores atuais do formulário para debug
-    if (solution) {
-      console.log("Solução carregada em AdminSolutionEdit:", {
-        id: solution.id,
-        title: solution.title,
-        currentValues
-      });
-    }
-  }, [id, solution, loading, currentValues]);
+  // Busca dados da solução
+  const { 
+    solution, 
+    loading, 
+    setSolution 
+  } = useSolutionData(id || "");
   
-  if (loading) {
-    return <LoadingScreen message="Carregando editor de solução..." />;
-  }
+  // Valores iniciais do formulário
+  const currentValues: SolutionFormValues = {
+    title: solution?.title || "",
+    description: solution?.description || "",
+    category: (solution?.category as "revenue" | "operational" | "strategy") || "revenue",
+    difficulty: (solution?.difficulty as "easy" | "medium" | "advanced") || "medium",
+    thumbnail_url: solution?.thumbnail_url || "",
+    published: solution?.published || false,
+    slug: solution?.slug || ""
+  };
+  
+  // Hook para salvar alterações
+  const { onSubmit: saveSubmit } = useSolutionSave(id, setSolution);
   
   // Função para mostrar toast explicitamente ao salvar
   const handleSaveWithToast = () => {
-    // Na primeira etapa, dispara o submit do formulário
-    if (currentStep === 0) {
-      const form = document.querySelector("form");
-      if (form) form.dispatchEvent(new Event("submit", { cancelable: true, bubbles: true }));
-    } else {
-      // Nas outras etapas, chama a função específica de salvamento
-      onSubmit({...currentValues, published: currentStep === totalSteps - 1})
-        .then(() => {
-          toast({
-            title: "Progresso salvo",
-            description: "Suas alterações foram salvas com sucesso."
-          });
-        })
-        .catch(error => {
-          console.error("Erro ao salvar:", error);
-          toast({
-            title: "Erro ao salvar",
-            description: "Ocorreu um erro ao salvar suas alterações.",
-            variant: "destructive"
-          });
-        });
-    }
+    setSaving(true);
+    
+    saveSubmit({...currentValues, published: currentStep === totalSteps - 1})
+      .then(() => {
+        toast.success("Alterações salvas com sucesso");
+        setSaving(false);
+      })
+      .catch(error => {
+        console.error("Erro ao salvar:", error);
+        toast.error("Erro ao salvar alterações");
+        setSaving(false);
+      });
   };
 
   const handleNextStep = () => {
@@ -104,6 +88,10 @@ const AdminSolutionEdit = () => {
     }
   };
   
+  if (loading) {
+    return <LoadingScreen message="Carregando editor de solução..." />;
+  }
+  
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-10">
       <SolutionEditorHeader 
@@ -124,7 +112,7 @@ const AdminSolutionEdit = () => {
             setActiveTab={setActiveTab}
             solution={solution}
             currentValues={currentValues}
-            onSubmit={onSubmit}
+            onSubmit={saveSubmit}
             saving={saving}
           />
         </CardContent>

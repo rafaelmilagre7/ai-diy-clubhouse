@@ -2,8 +2,9 @@
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { SolutionFormValues } from "@/components/admin/solution/form/solutionFormSchema";
-import { Solution } from "@/types/supabaseTypes"; // Usar o tipo do supabaseTypes
+import { Solution } from "@/types/supabaseTypes";
 import { useLogging } from "@/hooks/useLogging";
+import { toast } from "sonner";
 
 export const useSolutionSave = (
   id: string | undefined, 
@@ -32,19 +33,18 @@ export const useSolutionSave = (
           .from("solutions")
           .update(formData)
           .eq("id", id)
-          .select("*")
+          .select()
           .single();
       } else {
         // Criar nova solução
         response = await supabase
           .from("solutions")
           .insert([formData])
-          .select("*")
+          .select()
           .single();
       }
       
       if (response.error) {
-        logError("Erro ao salvar solução", { error: response.error });
         throw response.error;
       }
       
@@ -53,10 +53,12 @@ export const useSolutionSave = (
       // Atualizar os dados da solução no contexto
       setSolution(response.data as Solution);
       
+      toast.success("Solução salva com sucesso");
       setSaving(false);
       return response.data;
     } catch (error) {
       logError("Exceção ao salvar solução", { error });
+      toast.error("Erro ao salvar solução");
       setSaving(false);
       throw error;
     }
