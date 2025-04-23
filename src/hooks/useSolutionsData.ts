@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabase';
 import { Solution } from '@/types/supabaseTypes';
 import { useAuth } from '@/contexts/auth';
 import { useLogging } from '@/hooks/useLogging';
+import { toSolutionCategory } from '@/lib/types/categoryTypes';
 
 export const useSolutionsData = (
   activeCategory: string = 'all',
@@ -55,7 +56,14 @@ export const useSolutionsData = (
 
       if (data) {
         log('Soluções carregadas com sucesso', { count: data.length });
-        setSolutions(data as Solution[]);
+        
+        // Normalizar categorias para o tipo correto
+        const normalizedSolutions = data.map(solution => ({
+          ...solution,
+          category: toSolutionCategory(solution.category)
+        })) as Solution[];
+        
+        setSolutions(normalizedSolutions);
       } else {
         setSolutions([]);
       }

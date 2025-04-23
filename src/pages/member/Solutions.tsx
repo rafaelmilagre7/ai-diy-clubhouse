@@ -21,6 +21,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
+import { toSolutionCategory } from '@/lib/types/categoryTypes';
 
 const Solutions = () => {
   // Logger para depuração
@@ -92,6 +93,7 @@ const Solutions = () => {
       title: solution.title,
       path: `/solutions/${solution.id}`,
       category: solution.category,
+      normalizedCategory: toSolutionCategory(solution.category),
       difficulty: solution.difficulty
     });
     

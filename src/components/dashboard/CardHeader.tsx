@@ -3,9 +3,10 @@ import { Solution } from "@/lib/supabase";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { DifficultyBadge } from "./DifficultyBadge";
+import { SolutionCategory } from "@/lib/types/categoryTypes";
 
 interface CardHeaderProps {
-  category: Solution['category']; 
+  category: SolutionCategory; 
   difficulty: string;
 }
 

@@ -8,10 +8,29 @@ export const isSolutionCategory = (category: string): category is SolutionCatego
 };
 
 // Function to convert string to SolutionCategory, with a fallback
-export const toSolutionCategory = (category: string): SolutionCategory => {
-  // Se "operations" for enviado do banco, converter para "operational"
-  if (category === "operations") {
+export const toSolutionCategory = (category: string | undefined): SolutionCategory => {
+  // Verificação de valor undefined/null
+  if (!category) {
+    console.warn("Categoria indefinida, usando 'operational' como fallback");
     return "operational";
   }
-  return isSolutionCategory(category) ? category : "operational";
+  
+  // Converter para lowercase para aumentar a robustez
+  const normalizedCategory = category.toLowerCase();
+  
+  // Mapeamento de possíveis valores do banco para o tipo correto
+  if (normalizedCategory === "operations" || normalizedCategory === "operacional") {
+    return "operational";
+  }
+  
+  if (normalizedCategory === "receita") {
+    return "revenue";
+  }
+  
+  if (normalizedCategory === "estratégia") {
+    return "strategy";
+  }
+  
+  // Verifica se é um valor válido, caso contrário usa fallback
+  return isSolutionCategory(category) ? category as SolutionCategory : "operational";
 };

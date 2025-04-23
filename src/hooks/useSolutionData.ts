@@ -8,6 +8,7 @@ import { useAvailableSolutions } from './solution/useAvailableSolutions';
 import { useErrorHandling } from './solution/useErrorHandling';
 import { queryClient } from '@/lib/react-query';
 import { toast } from 'sonner';
+import { toSolutionCategory } from '@/lib/types/categoryTypes';
 
 export const useSolutionData = (solutionId: string) => {
   const { log, logError } = useLogging('useSolutionData');
@@ -50,10 +51,17 @@ export const useSolutionData = (solutionId: string) => {
             id: cachedData.id,
             title: cachedData.title
           });
+          
+          // Garantir que a categoria esteja no formato correto
+          const normalizedSolution = {
+            ...cachedData,
+            category: toSolutionCategory(cachedData.category)
+          };
+          
           if (isMounted) {
-            setSolution(cachedData);
+            setSolution(normalizedSolution);
           }
-          return cachedData;
+          return normalizedSolution;
         }
         
         const { data, error } = await supabase
@@ -71,13 +79,20 @@ export const useSolutionData = (solutionId: string) => {
         log('Solução carregada com sucesso', { 
           id: data.id,
           title: data.title,
+          category: data.category,
           modules: data.modules?.length || 0
         });
         
+        // Normalizar a categoria para garantir compatibilidade
+        const normalizedSolution = {
+          ...data,
+          category: toSolutionCategory(data.category)
+        } as Solution;
+        
         if (isMounted) {
-          setSolution(data as Solution);
+          setSolution(normalizedSolution);
         }
-        return data as Solution;
+        return normalizedSolution;
       } catch (err) {
         logError('Erro ao buscar solução:', err);
         handleError(err);
@@ -122,7 +137,7 @@ export const useSolutionData = (solutionId: string) => {
       
       fetchMetrics();
     }
-  }, [solution?.id, isMounted]);
+  }, [solution?.id, isMounted, log]);
 
   // Função para verificar o status da conexão
   const checkConnection = async () => {
@@ -155,7 +170,15 @@ export const useSolutionData = (solutionId: string) => {
     notFoundError,
     progress,
     refetch,
-    setSolution,
+    setSolution: (updatedSolution: Solution) => {
+      // Garantir que a categoria esteja normalizada
+      const normalizedSolution = {
+        ...updatedSolution,
+        category: toSolutionCategory(updatedSolution.category)
+      } as Solution;
+      
+      setSolution(normalizedSolution);
+    },
     availableSolutions,
     connectionStatus,
     checkConnection,
