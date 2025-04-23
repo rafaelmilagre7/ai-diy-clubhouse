@@ -1,6 +1,6 @@
 
 import React, { useEffect } from "react";
-import BasicInfoForm from "@/components/admin/solution/BasicInfoForm";
+import BasicInfoForm from "@/components/admin/solution/form/BasicInfoForm";
 import { SolutionFormValues } from "@/components/admin/solution/form/solutionFormSchema";
 import { toSolutionCategory } from "@/lib/types/categoryTypes";
 

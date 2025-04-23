@@ -1,24 +1,25 @@
 
 import React from "react";
-import ImplementationChecklist from "@/components/admin/solution/form/ImplementationChecklist";
+import { Card, CardContent } from "@/components/ui/card";
+import ChecklistForm from "@/components/admin/solution/ChecklistForm";
 
 interface ChecklistTabProps {
-  solutionId: string | null;
-  onSave: () => void;
+  solutionId: string;
+  onSave: () => Promise<void>;
   saving: boolean;
 }
 
-const ChecklistTab: React.FC<ChecklistTabProps> = ({
-  solutionId,
-  onSave,
-  saving,
-}) => {
+const ChecklistTab: React.FC<ChecklistTabProps> = ({ solutionId, onSave, saving }) => {
   return (
-    <ImplementationChecklist 
-      solutionId={solutionId} 
-      onSave={onSave} 
-      saving={saving} 
-    />
+    <Card>
+      <CardContent className="p-6">
+        <ChecklistForm 
+          solutionId={solutionId}
+          onSave={onSave}
+          saving={saving}
+        />
+      </CardContent>
+    </Card>
   );
 };
 

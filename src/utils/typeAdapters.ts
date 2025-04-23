@@ -13,15 +13,17 @@ export const adaptSolutionType = (supaSolution: SupabaseSolution): Solution => {
 
   // Adaptar o campo progress para garantir que contenha todas as propriedades necessárias
   const progressData = supaSolution.progress ? {
-    id: '',  // Valores default para as propriedades obrigatórias
-    user_id: '',
-    solution_id: '',
-    implementation_status: 'not_started' as const,
+    id: supaSolution.progress.id || '',
+    user_id: supaSolution.progress.user_id || '',
+    solution_id: supaSolution.progress.solution_id || '',
+    implementation_status: supaSolution.progress.implementation_status || 'not_started' as const,
     current_module: supaSolution.progress.current_module,
     is_completed: supaSolution.progress.is_completed,
     completed_modules: supaSolution.progress.completed_modules || [],
     last_activity: supaSolution.progress.last_activity,
-    completion_percentage: supaSolution.progress.completion_percentage
+    completion_percentage: supaSolution.progress.completion_percentage || 0,
+    completion_data: supaSolution.progress.completion_data || {},
+    completed_at: supaSolution.progress.completed_at || null
   } : null;
 
   return {

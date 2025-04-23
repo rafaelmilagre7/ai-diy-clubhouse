@@ -1,62 +1,25 @@
 
 import React from "react";
+import { Card, CardContent } from "@/components/ui/card";
 import ResourcesForm from "@/components/admin/solution/ResourcesForm";
-import ResourcesUploadForm from "@/components/admin/solution/form/ResourcesUploadForm";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 interface ResourcesTabProps {
-  solutionId: string | null;
-  onSave: () => void;
+  solutionId: string;
+  onSave: () => Promise<void>;
   saving: boolean;
 }
 
-const ResourcesTab: React.FC<ResourcesTabProps> = ({
-  solutionId,
-  onSave,
-  saving,
-}) => {
-  const [activeResourceTab, setActiveResourceTab] = React.useState<string>("materials");
-
+const ResourcesTab: React.FC<ResourcesTabProps> = ({ solutionId, onSave, saving }) => {
   return (
-    <div className="space-y-6">
-      <Tabs 
-        defaultValue="materials" 
-        value={activeResourceTab} 
-        onValueChange={setActiveResourceTab}
-        className="w-full"
-      >
-        <TabsList className="grid grid-cols-2 mb-6 bg-[#F1F0FB] p-1">
-          <TabsTrigger 
-            value="materials"
-            className="data-[state=active]:bg-[#0ABAB5] data-[state=active]:text-white"
-          >
-            Materiais
-          </TabsTrigger>
-          <TabsTrigger 
-            value="faq"
-            className="data-[state=active]:bg-[#0ABAB5] data-[state=active]:text-white"
-          >
-            FAQ
-          </TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="materials" className="mt-0">
-          <ResourcesUploadForm 
-            solutionId={solutionId} 
-            onSave={onSave} 
-            saving={saving} 
-          />
-        </TabsContent>
-        
-        <TabsContent value="faq" className="mt-0">
-          <ResourcesForm 
-            solutionId={solutionId} 
-            onSave={onSave} 
-            saving={saving} 
-          />
-        </TabsContent>
-      </Tabs>
-    </div>
+    <Card>
+      <CardContent className="p-6">
+        <ResourcesForm 
+          solutionId={solutionId}
+          onSave={onSave}
+          saving={saving}
+        />
+      </CardContent>
+    </Card>
   );
 };
 

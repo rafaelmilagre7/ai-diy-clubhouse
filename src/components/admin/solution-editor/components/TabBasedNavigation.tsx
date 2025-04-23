@@ -1,15 +1,15 @@
 
 import React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Solution } from "@/lib/supabase";
+import { Solution } from "@/types/supabaseTypes";
 import { SolutionFormValues } from "@/components/admin/solution/form/solutionFormSchema";
-import BasicInfoTab from "../tabs/BasicInfoTab";
-import ResourcesTab from "../tabs/ResourcesTab";
-import ToolsTab from "../tabs/ToolsTab";
-import VideoTab from "../tabs/VideoTab";
-import ModulesTab from "../tabs/ModulesTab";
-import ChecklistTab from "../tabs/ChecklistTab";
-import PublishTab from "../tabs/PublishTab";
+import BasicInfoTab from "@/components/admin/solution-editor/tabs/BasicInfoTab";
+import ResourcesTab from "@/components/admin/solution-editor/tabs/ResourcesTab";
+import ToolsTab from "@/components/admin/solution-editor/tabs/ToolsTab";
+import VideoTab from "@/components/admin/solution-editor/tabs/VideoTab";
+import ModulesTab from "@/components/admin/solution-editor/tabs/ModulesTab";
+import ChecklistTab from "@/components/admin/solution-editor/tabs/ChecklistTab";
+import PublishTab from "@/components/admin/solution-editor/tabs/PublishTab";
 
 interface TabBasedNavigationProps {
   activeTab: string;
@@ -29,8 +29,8 @@ const TabBasedNavigation: React.FC<TabBasedNavigationProps> = ({
   saving,
 }) => {
   return (
-    <Tabs value={activeTab} onValueChange={setActiveTab}>
-      <TabsList className="grid grid-cols-3 md:grid-cols-7 mb-6">
+    <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+      <TabsList className="grid grid-cols-3 md:grid-cols-7 mb-6 w-full">
         <TabsTrigger value="basic">Básico</TabsTrigger>
         <TabsTrigger value="tools" disabled={!solution?.id}>
           Ferramentas

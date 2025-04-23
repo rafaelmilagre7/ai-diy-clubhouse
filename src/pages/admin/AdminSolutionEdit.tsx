@@ -1,20 +1,21 @@
 
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
 import LoadingScreen from "@/components/common/LoadingScreen";
-import SolutionEditorHeader from "@/components/admin/solution-editor/SolutionEditorHeader";
-import SolutionEditorTabs from "@/components/admin/solution-editor/SolutionEditorTabs";
 import { Card, CardContent } from "@/components/ui/card";
-import NavigationButtons from "@/components/admin/solution-editor/NavigationButtons";
-import AuthError from "@/components/admin/solution-editor/AuthError";
 import { useToast } from "@/hooks/use-toast";
-import { useSolutionEditor } from "@/components/admin/solution-editor/useSolutionEditor";
+import { useSolutionEditor } from "@/hooks/admin/useSolutionEditor";
 import { useEffect } from "react";
+import TabBasedNavigation from "@/components/admin/solution-editor/components/TabBasedNavigation";
+import SolutionEditorHeader from "@/components/admin/solution-editor/SolutionEditorHeader";
+import AuthError from "@/components/admin/solution-editor/AuthError";
+import NavigationButtons from "@/components/admin/solution-editor/NavigationButtons";
 
 const AdminSolutionEdit = () => {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
   
   const {
     solution,
@@ -117,15 +118,14 @@ const AdminSolutionEdit = () => {
       {!user && <AuthError />}
       
       <Card className="border-none shadow-sm">
-        <CardContent className="p-0">
-          <SolutionEditorTabs 
+        <CardContent className="p-4 md:p-6">
+          <TabBasedNavigation 
             activeTab={activeTab}
             setActiveTab={setActiveTab}
             solution={solution}
             currentValues={currentValues}
             onSubmit={onSubmit}
             saving={saving}
-            currentStep={currentStep}
           />
         </CardContent>
       </Card>

@@ -5,12 +5,13 @@ import { useToast } from "@/hooks/use-toast";
 import { useLogging } from "@/hooks/useLogging";
 import { SolutionFormValues } from "@/components/admin/solution/form/solutionFormSchema";
 import { useNavigate } from "react-router-dom";
+import { Solution } from "@/types/supabaseTypes";
 
 export const useSolutionEditor = (solutionId: string | undefined, user: any) => {
   const { log, logError } = useLogging("useSolutionEditor");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [solution, setSolution] = useState<any>(null);
+  const [solution, setSolution] = useState<Solution | null>(null);
   const [currentValues, setCurrentValues] = useState<SolutionFormValues>({
     title: "",
     description: "",
@@ -20,13 +21,22 @@ export const useSolutionEditor = (solutionId: string | undefined, user: any) => 
     published: false,
     slug: ""
   });
-  const [activeTab, setActiveTab] = useState("basic-info");
+  const [activeTab, setActiveTab] = useState("basic");
   const [currentStep, setCurrentStep] = useState(0);
   const { toast } = useToast();
   const navigate = useNavigate();
 
   // Define os passos do editor
-  const totalSteps = 6;
+  const totalSteps = 7;
+  const stepTitles = [
+    "Informações Básicas",
+    "Ferramentas",
+    "Materiais",
+    "Vídeos",
+    "Módulos",
+    "Checklist",
+    "Publicação"
+  ];
 
   // Carregar dados da solução quando o ID mudar
   useEffect(() => {
@@ -65,7 +75,7 @@ export const useSolutionEditor = (solutionId: string | undefined, user: any) => 
           });
         }
       } catch (error) {
-        logError("Erro ao carregar solução", error);
+        logError("Erro ao carregar solução", { error });
         toast({
           title: "Erro ao carregar dados",
           description: "Não foi possível carregar os dados da solução.",
@@ -87,7 +97,7 @@ export const useSolutionEditor = (solutionId: string | undefined, user: any) => 
         description: "Você precisa estar logado para editar uma solução.",
         variant: "destructive"
       });
-      return;
+      return Promise.reject(new Error("Não autenticado"));
     }
 
     setSaving(true);
@@ -113,7 +123,7 @@ export const useSolutionEditor = (solutionId: string | undefined, user: any) => 
         if (error) throw error;
 
         log("Solução atualizada com sucesso");
-        setSolution(prev => ({ ...prev, ...updateData }));
+        setSolution(prev => ({ ...prev, ...updateData } as Solution));
       } else {
         // Criar nova solução
         const { data, error } = await supabase
@@ -132,7 +142,7 @@ export const useSolutionEditor = (solutionId: string | undefined, user: any) => 
 
       return Promise.resolve();
     } catch (error) {
-      logError("Erro ao salvar solução", error);
+      logError("Erro ao salvar solução", { error });
       toast({
         title: "Erro ao salvar",
         description: "Ocorreu um erro ao tentar salvar as alterações.",
@@ -146,7 +156,7 @@ export const useSolutionEditor = (solutionId: string | undefined, user: any) => 
 
   // Ao mudar de etapa, também atualiza a aba ativa
   useEffect(() => {
-    const tabs = ["basic-info", "tools", "materials", "videos", "checklist", "publish"];
+    const tabs = ["basic", "tools", "resources", "video", "modules", "checklist", "publish"];
     if (tabs[currentStep]) {
       setActiveTab(tabs[currentStep]);
     }
@@ -162,6 +172,7 @@ export const useSolutionEditor = (solutionId: string | undefined, user: any) => 
     currentValues,
     currentStep,
     setCurrentStep,
-    totalSteps
+    totalSteps,
+    stepTitles
   };
 };

@@ -1,24 +1,25 @@
 
 import React from "react";
-import VideoLessonsForm from "@/components/admin/solution/form/VideoLessonsForm";
+import { Card, CardContent } from "@/components/ui/card";
+import VideoForm from "@/components/admin/solution/VideoForm";
 
 interface VideoTabProps {
-  solutionId: string | null;
-  onSave: () => void;
+  solutionId: string;
+  onSave: () => Promise<void>;
   saving: boolean;
 }
 
-const VideoTab: React.FC<VideoTabProps> = ({
-  solutionId,
-  onSave,
-  saving,
-}) => {
+const VideoTab: React.FC<VideoTabProps> = ({ solutionId, onSave, saving }) => {
   return (
-    <VideoLessonsForm 
-      solutionId={solutionId} 
-      onSave={onSave} 
-      saving={saving} 
-    />
+    <Card>
+      <CardContent className="p-6">
+        <VideoForm 
+          solutionId={solutionId}
+          onSave={onSave}
+          saving={saving}
+        />
+      </CardContent>
+    </Card>
   );
 };
 

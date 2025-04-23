@@ -1,22 +1,23 @@
 
+import { SolutionCategory } from "@/types/solution";
+
 /**
- * Este arquivo é mantido para compatibilidade com código existente.
- * Novas implementações devem usar src/lib/types/appTypes.ts
+ * Converte uma string para o tipo SolutionCategory
  */
-
-import { 
-  SolutionCategory, 
-  isSolutionCategory, 
-  toSolutionCategory, 
-  getCategoryDisplayName, 
-  getCategoryStyles 
-} from './appTypes';
-
-// Usando export type para re-exportar tipos quando isolatedModules está ativado
-export type { SolutionCategory };
-export { 
-  isSolutionCategory,
-  toSolutionCategory,
-  getCategoryDisplayName,
-  getCategoryStyles
-};
+export function toSolutionCategory(category: string | SolutionCategory | undefined): SolutionCategory {
+  if (!category) {
+    return "revenue";
+  }
+  
+  // Normalizar categorias antigas para o novo padrão
+  if (category === "operations" || category === "operational") {
+    return "operational";
+  }
+  
+  if (category === "revenue" || category === "strategy") {
+    return category;
+  }
+  
+  // Valor padrão caso a categoria não seja reconhecida
+  return "revenue";
+}
