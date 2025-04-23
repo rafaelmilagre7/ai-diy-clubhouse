@@ -10,10 +10,7 @@ import { SolutionSidebar } from "@/components/solution/SolutionSidebar";
 import { SolutionMobileActions } from "@/components/solution/SolutionMobileActions";
 import { SolutionNotFound } from "@/components/solution/SolutionNotFound";
 import { useEffect, useState, useRef } from "react";
-import { useToolsData } from "@/hooks/useToolsData";
 import { useLogging } from "@/hooks/useLogging";
-import { useToast } from "@/hooks/use-toast";
-import { toast } from "sonner";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -22,11 +19,10 @@ const SolutionDetails = () => {
   const { id } = useParams<{ id: string }>();
   const location = useLocation();
   const { log, logError } = useLogging("SolutionDetails");
-  const { toast: uiToast } = useToast();
   const [retryCount, setRetryCount] = useState(0);
   const [networkError, setNetworkError] = useState(false);
   const initialLoadRef = useRef(true);
-  const toastShownRef = useRef(false);
+  const loggedRef = useRef(false);
   
   // Fetch solution data with the updated hook that includes progress
   const { solution, loading, error, progress, refetch } = useSolutionData(id);
@@ -42,7 +38,7 @@ const SolutionDetails = () => {
   
   // Log inicial detalhado para debug - apenas uma vez
   useEffect(() => {
-    if (initialLoadRef.current) {
+    if (initialLoadRef.current && !loggedRef.current) {
       log("SolutionDetails montado", { 
         id,
         path: location.pathname,
@@ -50,14 +46,7 @@ const SolutionDetails = () => {
         currentRoute: window.location.href
       });
       
-      // Toast para informar usuário sobre carregamento - apenas uma vez no início
-      if (!toastShownRef.current) {
-        toast.info("Carregando detalhes da solução...", {
-          id: `solution-loading-${id}` // ID único para evitar duplicação
-        });
-        toastShownRef.current = true;
-      }
-      
+      loggedRef.current = true;
       initialLoadRef.current = false;
     }
   }, [id, location, log]);
@@ -76,9 +65,6 @@ const SolutionDetails = () => {
   // Função para tentar novamente
   const handleRetry = () => {
     setRetryCount(prevCount => prevCount + 1);
-    toast.info("Tentando carregar novamente...", {
-      id: `retry-${id}-${retryCount}` // ID único que inclui a contagem de tentativas
-    });
     refetch();
   };
   
@@ -112,13 +98,6 @@ const SolutionDetails = () => {
     logError("Solução não encontrada", { id, path: location.pathname });
     return <SolutionNotFound />;
   }
-  
-  // Log para depuração
-  log("Renderizando SolutionDetails com solução", { 
-    solutionId: solution.id, 
-    solutionTitle: solution.title,
-    hasProgress: !!progress
-  });
   
   return (
     <div className="max-w-5xl mx-auto pb-12 animate-fade-in">

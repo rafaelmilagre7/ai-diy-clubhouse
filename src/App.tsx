@@ -12,7 +12,7 @@ const queryClient = new QueryClient({
     queries: {
       retry: 1,
       refetchOnWindowFocus: false,
-      staleTime: 60000, // 1 minuto antes de considerar os dados obsoletos
+      staleTime: 1 * 60 * 1000, // 1 minuto antes de considerar os dados obsoletos
       gcTime: 5 * 60 * 1000, // 5 minutos antes de remover dados do cache
     },
   },
@@ -30,7 +30,16 @@ function App() {
               position="top-right" 
               richColors 
               closeButton 
-              duration={3000} // Reduzir tempo padrão para 3 segundos
+              duration={3000} // 3 segundos de duração padrão
+              toastOptions={{
+                className: 'toast-custom-class',
+                style: {
+                  background: 'white',
+                  color: 'black',
+                }
+              }}
+              visibleToasts={2}
+              pauseWhenPageIsHidden
             />
           </AuthProvider>
         </LoggingProvider>

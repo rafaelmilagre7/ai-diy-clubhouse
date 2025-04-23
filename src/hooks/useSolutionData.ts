@@ -9,21 +9,21 @@ import { toast } from "sonner";
 export const useSolutionData = (id: string | undefined) => {
   const { user, profile } = useAuth();
   const navigate = useNavigate();
-  const { log, logError, logDebug } = useLogging("useSolutionData");
+  const { log, logError } = useLogging("useSolutionData");
   const [solution, setSolution] = useState<Solution | null>(null);
   const [progress, setProgress] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<any | null>(null);
-  const [retryCount, setRetryCount] = useState(0);
   const isAdmin = profile?.role === 'admin';
   
-  // Controle para evitar múltiplas notificações e chamadas
+  // Controle para prevenir requisições duplicadas e toasts repetidos
+  const fetchAttemptedRef = useRef(false);
   const fetchingRef = useRef(false);
   const errorShownRef = useRef(false);
   const successShownRef = useRef(false);
 
   const fetchSolution = useCallback(async () => {
-    // Se não há ID ou já está buscando, não continuar
+    // Não buscar se não tem ID, já está buscando, ou já tentou buscar (exceto em refetch explícito)
     if (!id || fetchingRef.current) {
       return;
     }
@@ -34,7 +34,7 @@ export const useSolutionData = (id: string | undefined) => {
       setLoading(true);
       setError(null);
       
-      log("Iniciando busca por solução", { id, retryAttempt: retryCount });
+      log("Iniciando busca por solução", { id });
       
       // Buscar a solução pelo ID
       let query = supabase
@@ -58,6 +58,7 @@ export const useSolutionData = (id: string | undefined) => {
           if (!errorShownRef.current) {
             toast.error("Esta solução não está disponível no momento.", {
               id: `solution-not-available-${id}`, // ID único para evitar duplicação
+              duration: 3000
             });
             errorShownRef.current = true;
           }
@@ -73,9 +74,10 @@ export const useSolutionData = (id: string | undefined) => {
         setSolution(data as Solution);
         
         // Toast apenas na primeira carga bem-sucedida e se não já foi mostrado
-        if (retryCount === 0 && !successShownRef.current) {
+        if (!successShownRef.current) {
           toast.success("Solução carregada com sucesso!", {
             id: `solution-loaded-${id}`, // ID único para evitar duplicação
+            duration: 3000
           });
           successShownRef.current = true;
         }
@@ -107,7 +109,8 @@ export const useSolutionData = (id: string | undefined) => {
         log("Nenhuma solução encontrada com ID", { id });
         if (!errorShownRef.current) {
           toast.error("Não foi possível encontrar a solução solicitada.", {
-            id: `solution-not-found-${id}` // ID único para evitar duplicação
+            id: `solution-not-found-${id}`, // ID único para evitar duplicação
+            duration: 3000
           });
           errorShownRef.current = true;
         }
@@ -130,39 +133,45 @@ export const useSolutionData = (id: string | undefined) => {
         errorShownRef.current = true;
       }
     } finally {
+      fetchAttemptedRef.current = true;
       setLoading(false);
       fetchingRef.current = false;
     }
-  }, [id, user, isAdmin, profile?.role, log, logError, logDebug, navigate, retryCount]);
+  }, [id, user, isAdmin, profile?.role, log, logError, navigate]);
 
   // Função para recarregar os dados
   const refetch = useCallback(() => {
     // Resetar flags para permitir mostrar notificações novamente
     errorShownRef.current = false;
     successShownRef.current = false;
-    setRetryCount(prevCount => prevCount + 1);
+    fetchAttemptedRef.current = false; 
+    // Permite a busca mesmo se já foi tentada antes
     return fetchSolution();
   }, [fetchSolution]);
 
   useEffect(() => {
-    // Limpar estado ao mudar o ID para prevenir dados obsoletos
+    // Reset state when ID changes to prevent stale data
     if (id) {
+      // Somente redefinir o estado se o ID mudar
       setSolution(null);
       setProgress(null);
       setError(null);
       errorShownRef.current = false;
       successShownRef.current = false;
+      fetchAttemptedRef.current = false;
       fetchingRef.current = false;
     }
     
-    // Prevenir execuções desnecessárias
-    fetchSolution();
+    // Execute a busca se tivermos um ID e não tiver sido tentado ainda
+    if (id && !fetchAttemptedRef.current) {
+      fetchSolution();
+    }
     
-    // Limpar ao desmontar
+    // Cleanup on unmount
     return () => {
       fetchingRef.current = false;
     };
-  }, [fetchSolution, id]);
+  }, [id, fetchSolution]);
 
   return {
     solution,

@@ -100,8 +100,10 @@ export const useRealtimeComments = (
     channelsRef.current = [insertChannel, updateChannel, deleteChannel, likesChannel];
     
     const invalidateComments = () => {
+      // Usando staleTime para evitar refetches desnecessários
       queryClient.invalidateQueries({ 
-        queryKey: ['solution-comments', solutionId, moduleId] 
+        queryKey: ['solution-comments', solutionId, moduleId],
+        refetchType: 'active' // Apenas refetch queries ativas
       });
     };
     
@@ -126,12 +128,14 @@ export const useRealtimeComments = (
     
     // Cancelar inscrição ao desmontar
     return () => {
-      log('Cancelando escuta de comentários', { solutionId, moduleId });
-      channelsRef.current.forEach(channel => {
-        supabase.removeChannel(channel);
-      });
-      channelsRef.current = [];
-      isSetupRef.current = false;
+      if (channelsRef.current.length > 0) {
+        log('Cancelando escuta de comentários', { solutionId, moduleId });
+        channelsRef.current.forEach(channel => {
+          supabase.removeChannel(channel);
+        });
+        channelsRef.current = [];
+        isSetupRef.current = false;
+      }
     };
   }, [solutionId, moduleId, queryClient, isEnabled, log, logError]);
 };
