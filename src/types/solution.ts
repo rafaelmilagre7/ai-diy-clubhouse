@@ -1,21 +1,21 @@
 
-import { Solution as SupabaseSolution } from "@/lib/supabase";
+import { Database } from '@/lib/supabase';
 
-// Definição unificada de Solution que estende a SupabaseSolution
-export interface Solution extends Omit<SupabaseSolution, 'author_id'> {
-  id: string;
-  title: string;
-  description: string;
-  category: string;
-  difficulty: string;
-  published: boolean;
-  created_at: string;
-  updated_at: string;
-  thumbnail_url?: string;
-  slug: string;
-  tags?: string[];
-  estimated_time?: number;
-  success_rate?: number;
-  related_solutions?: string[];
-  author_id?: string; // Tornando author_id opcional para compatibilidade
-}
+export type Solution = Database['public']['Tables']['solutions']['Row'] & {
+  modules?: {
+    id: string;
+    title: string;
+    type: string;
+    module_order: number;
+  }[];
+  progress?: {
+    current_module: number;
+    is_completed: boolean;
+    completed_modules: number[];
+    last_activity: string;
+  } | null;
+};
+
+// Tipos auxiliares para recursos e ferramentas relacionadas
+export type SolutionResource = Database['public']['Tables']['solution_resources']['Row'];
+export type SolutionTool = Database['public']['Tables']['solution_tools']['Row'];
