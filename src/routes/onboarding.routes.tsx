@@ -20,6 +20,10 @@ export const onboardingRoutes: RouteObject[] = [
     element: <Onboarding />,
   },
   {
+    path: '/onboarding/professional',
+    element: <ProfessionalData />,
+  },
+  {
     path: '/onboarding/professional-data',
     element: <ProfessionalData />,
   },

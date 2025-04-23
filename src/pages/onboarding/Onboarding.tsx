@@ -37,12 +37,13 @@ const Onboarding: React.FC = () => {
       const currentRouteStep = pathParts[pathParts.length - 1];
       
       if (routeMapping[currentRouteStep]) {
+        console.log(`Redirecionando de ${location.pathname} para /onboarding/${routeMapping[currentRouteStep]}`);
         navigate(`/onboarding/${routeMapping[currentRouteStep]}`);
         return;
       }
 
       // Redirecionar se estivermos em um passo incorreto
-      if (currentStep !== routeStep) {
+      if (currentStep !== routeStep && routeStep !== 'professional') {
         navigate(`/onboarding/${currentStep === 'personal' ? '' : currentStep}`);
       }
     }
