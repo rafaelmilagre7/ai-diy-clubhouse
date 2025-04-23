@@ -28,17 +28,35 @@ export const useSolutionData = (solutionId: string | undefined) => {
     try {
       setLoading(true);
       setNetworkError(false);
-      log('Buscando dados da solução', { solutionId, retryAttempt: retryAttempts });
+      log('Iniciando busca de dados da solução', { 
+        solutionId, 
+        retryAttempt: retryAttempts,
+        user: user?.id 
+      });
+
+      // Verificação adicional de log para depuração
+      console.log('Detalhes da solicitação:', { 
+        solutionId, 
+        user: user?.id,
+        timestamp: new Date().toISOString()
+      });
 
       // Buscar solução
       const solutionData = await fetchSolutionById(solutionId);
       
       if (!solutionData) {
+        log('Solução não encontrada', { solutionId });
         throw new Error('Solução não encontrada');
       }
 
       setSolution(solutionData);
-      log('Dados da solução carregados', { solution: solutionData });
+      log('Dados da solução carregados com sucesso', { 
+        solution: {
+          id: solutionData.id,
+          title: solutionData.title,
+          category: solutionData.category
+        }
+      });
 
       // Pré-carregar dados relacionados
       queryClient.prefetchQuery({
@@ -77,7 +95,20 @@ export const useSolutionData = (solutionId: string | undefined) => {
       setRetryAttempts(0);
 
     } catch (err: any) {
-      logError('Erro ao carregar dados da solução', { error: err });
+      // Log detalhado de erros
+      logError('Erro ao carregar dados da solução', { 
+        error: err,
+        solutionId,
+        message: err.message,
+        stack: err.stack 
+      });
+      
+      // Log de console para depuração
+      console.error('Erro detalhado:', {
+        message: err.message,
+        stack: err.stack,
+        solutionId
+      });
       
       if (err.message?.includes('fetch') || err.message?.includes('network')) {
         setNetworkError(true);
