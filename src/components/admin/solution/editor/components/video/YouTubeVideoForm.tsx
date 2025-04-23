@@ -75,9 +75,6 @@ const YouTubeVideoForm: React.FC<YouTubeVideoFormProps> = ({
                 setYoutubeData({ ...youtubeData, url: e.target.value })
               }
             />
-            <p className="text-xs text-muted-foreground">
-              Ex: https://www.youtube.com/watch?v=abcdefghijk
-            </p>
           </div>
           <div className="space-y-2">
             <Label htmlFor="youtube-description">Descrição (opcional)</Label>
