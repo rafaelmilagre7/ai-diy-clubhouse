@@ -51,7 +51,12 @@ const TabContent: React.FC<TabContentProps> = ({
       ) : null;
     case "videos":
       return solution ? (
-        <VideoTab solution={solution} onSubmit={onSubmit} saving={saving} />
+        <VideoTab
+          solution={solution}
+          currentValues={currentValues}
+          onSubmit={onSubmit}
+          saving={saving}
+        />
       ) : null;
     case "modules":
       return solution ? (
