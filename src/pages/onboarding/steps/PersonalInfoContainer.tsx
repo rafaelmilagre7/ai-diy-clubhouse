@@ -49,10 +49,10 @@ export const PersonalInfoContainer: React.FC = () => {
     const stepTitles = steps.map(s => s.title);
 
     // Converte lastError para string de forma segura
-    const errorMessage = lastError instanceof Error 
-      ? lastError.message 
-      : typeof lastError === 'string' 
-        ? lastError 
+    const errorMessage = typeof lastError === 'string' 
+      ? lastError 
+      : lastError instanceof Error 
+        ? lastError.message 
         : lastError 
           ? String(lastError) 
           : '';

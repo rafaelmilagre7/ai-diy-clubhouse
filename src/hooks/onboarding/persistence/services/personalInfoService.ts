@@ -46,11 +46,13 @@ export async function savePersonalInfoData(
         .eq('id', existingData.id)
         .select();
     } else {
-      // Inserir novo registro
-      personalInfoData.created_at = new Date().toISOString();
+      // Inserir novo registro - adicionar campo created_at apenas no momento da inserção
       result = await supabase
         .from('personal_info')
-        .insert(personalInfoData)
+        .insert({
+          ...personalInfoData,
+          created_at: new Date().toISOString()
+        })
         .select();
     }
     
