@@ -1,80 +1,55 @@
 
-import { SolutionCategory } from "@/types/solution";
+import { SolutionCategory } from '@/types/solution';
 
-/**
- * Converte uma string para o tipo SolutionCategory
- */
-export function toSolutionCategory(category: string | SolutionCategory | undefined): SolutionCategory {
-  if (!category) {
-    return "revenue";
+export const toSolutionCategory = (category: string): SolutionCategory => {
+  if (category === 'revenue' || category === 'operational' || category === 'strategy') {
+    return category as SolutionCategory;
   }
-  
-  // Normalizar categorias antigas para o novo padrão
-  if (category === "operations" || category === "operational") {
-    return "operational";
-  }
-  
-  if (category === "revenue" || category === "strategy") {
-    return category;
-  }
-  
-  // Valor padrão caso a categoria não seja reconhecida
-  return "revenue";
-}
+  return 'strategy';
+};
 
-/**
- * Retorna o nome de exibição formatado para uma categoria
- */
-export function getCategoryDisplayName(category: SolutionCategory): string {
+export const getCategoryDisplayName = (category: SolutionCategory): string => {
   switch (category) {
-    case "revenue":
-      return "Aumento de Receita";
-    case "operational":
-      return "Otimização Operacional";
-    case "strategy":
-      return "Gestão Estratégica";
+    case 'revenue':
+      return 'Aumento de Receita';
+    case 'operational':
+      return 'Otimização Operacional';
+    case 'strategy':
+      return 'Gestão Estratégica';
     default:
-      return "Categoria";
+      return 'Gestão Estratégica';
   }
-}
+};
 
-/**
- * Retorna as classes de estilo para cada categoria
- */
-export function getCategoryStyles(category: SolutionCategory): {
-  text: string;
-  bg: string;
-  border: string;
-  hover: string;
-} {
+export const getCategoryStyles = (category: SolutionCategory) => {
   switch (category) {
-    case "revenue":
+    case 'revenue':
       return {
-        text: "text-emerald-700",
-        bg: "bg-emerald-50",
-        border: "border-emerald-200",
-        hover: "hover:bg-emerald-100"
+        text: 'text-emerald-600',
+        bg: 'bg-emerald-50',
+        border: 'border-emerald-200',
+        hover: 'hover:bg-emerald-100',
+        badge: 'bg-emerald-50 text-emerald-600 border-emerald-200'
       };
-    case "operational":
+    case 'operational':
       return {
-        text: "text-blue-700",
-        bg: "bg-blue-50",
-        border: "border-blue-200",
-        hover: "hover:bg-blue-100"
+        text: 'text-blue-600',
+        bg: 'bg-blue-50',
+        border: 'border-blue-200',
+        hover: 'hover:bg-blue-100',
+        badge: 'bg-blue-50 text-blue-600 border-blue-200'
       };
-    case "strategy":
-      return {
-        text: "text-purple-700",
-        bg: "bg-purple-50",
-        border: "border-purple-200",
-        hover: "hover:bg-purple-100"
-      };
+    case 'strategy':
     default:
       return {
-        text: "text-gray-700",
-        bg: "bg-gray-50",
-        border: "border-gray-200",
-        hover: "hover:bg-gray-100"
+        text: 'text-purple-600',
+        bg: 'bg-purple-50',
+        border: 'border-purple-200',
+        hover: 'hover:bg-purple-100',
+        badge: 'bg-purple-50 text-purple-600 border-purple-200'
       };
   }
-}
+};
+
+// Exportando SolutionCategory para resolver os erros em vários arquivos
+export { SolutionCategory } from '@/types/solution';

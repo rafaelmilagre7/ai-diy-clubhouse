@@ -1,19 +1,59 @@
 
-export type SolutionCategory = "revenue" | "operational" | "strategy";
+import { SolutionBase, SolutionCategory } from './solution';
 
-export interface SolutionBase {
+export type ModuleType = 
+  | 'landing'
+  | 'overview'
+  | 'preparation'
+  | 'implementation'
+  | 'verification'
+  | 'results'
+  | 'optimization'
+  | 'celebration';
+
+export interface Module {
   id: string;
+  solution_id: string;
   title: string;
-  description: string;
-  category: SolutionCategory;
-  thumbnail_url?: string;
-  difficulty: "easy" | "medium" | "advanced";
-  slug: string;
+  type: ModuleType;
+  content: {
+    blocks: any[];
+  };
+  module_order: number;
   created_at: string;
   updated_at: string;
-  published: boolean;
+  certificate_template?: any;
+  estimated_time_minutes?: number;
+  metrics?: any;
 }
 
-export interface SolutionWithModules extends SolutionBase {
-  modules: any[];
+export interface Progress {
+  id: string;
+  user_id: string;
+  solution_id: string;
+  current_module: number;
+  is_completed: boolean;
+  implementation_status: 'not_started' | 'in_progress' | 'completed' | 'abandoned';
+  completed_modules: number[];
+  last_activity: string;
+  completion_percentage?: number;
+  completion_data?: any;
+  completed_at?: string | null;
+  last_interaction_at?: string;
+  failed_attempts?: any[];
+}
+
+export interface Solution extends SolutionBase {
+  modules?: Module[];
+  progress?: Progress | null;
+  checklist_items?: any[];
+  implementation_steps?: any[];
+  prerequisites?: any[];
+  completion_criteria?: any[];
+  overview?: string;
+  estimated_time?: number;
+  success_rate?: number;
+  tags?: string[];
+  modules_count?: number;
+  tools_count?: number;
 }

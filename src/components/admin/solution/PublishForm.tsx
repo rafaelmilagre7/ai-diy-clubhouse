@@ -2,7 +2,7 @@
 import React from "react";
 import { Solution } from "@/types/supabaseTypes";
 import { SolutionFormValues } from "@/components/admin/solution/form/solutionFormSchema";
-import { PublishSolutionForm } from "@/components/admin/solution/form/PublishSolutionForm";
+import PublishSolutionForm from "@/components/admin/solution/form/PublishSolutionForm";
 
 interface PublishFormProps {
   solution: Solution;
