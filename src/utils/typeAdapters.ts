@@ -23,8 +23,10 @@ export const adaptSolutionType = (supaSolution: SupabaseSolution): Solution => {
     updated_at: supaSolution.updated_at,
     slug: supaSolution.slug || '',
     implementation_steps: supaSolution.implementation_steps || [],
-    checklist_items: supaSolution.checklist_items || [],
-    completion_requirements: supaSolution.completion_requirements || {},
+    // Verificamos se checklist_items existe no objeto antes de usá-lo
+    checklist_items: supaSolution.checklist ? supaSolution.checklist : (supaSolution as any).checklist_items || [],
+    // Verificamos se completion_requirements existe no objeto antes de usá-lo
+    completion_requirements: (supaSolution as any).completion_requirements || {},
     modules: modules,
     progress: supaSolution.progress,
     overview: supaSolution.overview || '',
