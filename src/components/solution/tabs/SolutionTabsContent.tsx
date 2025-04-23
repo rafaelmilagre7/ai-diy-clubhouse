@@ -2,10 +2,10 @@
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Solution, Progress } from '@/types/solution';
-import { SolutionOverviewTab } from './SolutionOverviewTab';
-import { SolutionImplementationTab } from './SolutionImplementationTab';
-import { SolutionResourcesTab } from './SolutionResourcesTab';
-import { SolutionCommentsTab } from './SolutionCommentsTab';
+import SolutionOverviewTab from './SolutionOverviewTab';
+import SolutionImplementationTab from './SolutionImplementationTab';
+import SolutionResourcesTab from './SolutionResourcesTab';
+import SolutionCommentsTab from './SolutionCommentsTab';
 
 interface SolutionTabsContentProps {
   solution: Solution;
