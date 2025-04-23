@@ -21,7 +21,13 @@ const AppRoutes = () => {
       {authRoutes}
       
       {/* Rotas de onboarding diretamente acessíveis */}
-      {onboardingRoutes}
+      {onboardingRoutes.map((route) => (
+        <Route
+          key={route.path}
+          path={route.path}
+          element={route.element}
+        />
+      ))}
       
       {/* Rotas de membros protegidas */}
       <Route element={<ProtectedRoutes />}>

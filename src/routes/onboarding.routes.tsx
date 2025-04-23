@@ -3,14 +3,15 @@ import { RouteObject } from 'react-router-dom';
 import Onboarding from '@/pages/onboarding/Onboarding';
 import OnboardingIntro from '@/pages/onboarding/OnboardingIntro';
 import Review from '@/pages/onboarding/Review'; 
+import PersonalInfo from '@/pages/onboarding/steps/PersonalInfo';
 import ProfessionalData from '@/pages/onboarding/steps/ProfessionalData';
 import BusinessContext from '@/pages/onboarding/steps/BusinessContext';
 import AIExperience from '@/pages/onboarding/steps/AIExperience';
 import BusinessGoalsClub from '@/pages/onboarding/steps/BusinessGoalsClub';
 import ExperiencePersonalization from '@/pages/onboarding/steps/ExperiencePersonalization';
 import ComplementaryInfo from '@/pages/onboarding/steps/ComplementaryInfo';
+import TrailGeneration from '@/pages/onboarding/steps/TrailGeneration';
 import { NotFound } from '@/pages/NotFound';
-import PersonalInfo from '@/pages/onboarding/steps/PersonalInfo';
 
 export const onboardingRoutes: RouteObject[] = [
   {
@@ -21,7 +22,7 @@ export const onboardingRoutes: RouteObject[] = [
     path: '/onboarding',
     element: <Onboarding />,
   },
-  // Rota específica para dados pessoais (nova)
+  // Rota específica para dados pessoais
   {
     path: '/onboarding/personal',
     element: <PersonalInfo />,
@@ -59,6 +60,10 @@ export const onboardingRoutes: RouteObject[] = [
   {
     path: '/onboarding/review',
     element: <Review />,
+  },
+  {
+    path: '/onboarding/trail-generation',
+    element: <TrailGeneration />,
   },
   // Rota curinga para capturar URLs inválidas dentro do onboarding
   {

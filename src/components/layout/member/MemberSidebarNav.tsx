@@ -5,7 +5,6 @@ import {
   LayoutDashboard, 
   Lightbulb, 
   Settings, 
-  Trophy,
   Gift,
   MessageSquare,
   ShieldCheck,
