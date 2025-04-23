@@ -6,12 +6,31 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Loader2, Youtube } from "lucide-react";
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+
+const youtubeFormSchema = z.object({
+  name: z.string().min(3, { message: "O título deve ter pelo menos 3 caracteres" }),
+  url: z.string().url({ message: "URL inválida" }).refine(
+    (url) => {
+      const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+      return regExp.test(url);
+    },
+    { message: "Informe uma URL válida do YouTube" }
+  ),
+  description: z.string().optional(),
+});
+
+type YouTubeFormValues = z.infer<typeof youtubeFormSchema>;
 
 interface YouTubeVideoFormProps {
   onAddYouTube: (data: {
@@ -30,78 +49,120 @@ const YouTubeVideoForm: React.FC<YouTubeVideoFormProps> = ({
   onOpenChange,
   isUploading,
 }) => {
-  const [youtubeData, setYoutubeData] = useState({
-    name: "",
-    url: "",
-    description: "",
+  const form = useForm<YouTubeFormValues>({
+    resolver: zodResolver(youtubeFormSchema),
+    defaultValues: {
+      name: "",
+      url: "",
+      description: "",
+    },
   });
 
-  const handleSubmit = async () => {
-    await onAddYouTube(youtubeData);
-    setYoutubeData({ name: "", url: "", description: "" });
+  const handleSubmit = async (data: YouTubeFormValues) => {
+    await onAddYouTube({
+      name: data.name,
+      url: data.url,
+      description: data.description || "",
+    });
+    form.reset();
+    onOpenChange(false);
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogTrigger asChild>
-        <Button size="sm" variant="outline">
-          <Youtube className="mr-2 h-4 w-4" />
-          Adicionar do YouTube
-        </Button>
-      </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Adicionar vídeo do YouTube</DialogTitle>
+          <DialogTitle className="flex items-center gap-2 text-xl">
+            <Youtube className="h-5 w-5 text-red-500" />
+            Adicionar vídeo do YouTube
+          </DialogTitle>
         </DialogHeader>
-        <div className="space-y-4 py-4">
-          <div className="space-y-2">
-            <Label htmlFor="youtube-name">Título do vídeo</Label>
-            <Input
-              id="youtube-name"
-              placeholder="Título do vídeo"
-              value={youtubeData.name}
-              onChange={(e) =>
-                setYoutubeData({ ...youtubeData, name: e.target.value })
-              }
+        
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4 py-4">
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Título do vídeo*</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      placeholder="Ex: Como implementar IA no atendimento"
+                      disabled={isUploading}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="youtube-url">URL do YouTube</Label>
-            <Input
-              id="youtube-url"
-              placeholder="https://www.youtube.com/watch?v=..."
-              value={youtubeData.url}
-              onChange={(e) =>
-                setYoutubeData({ ...youtubeData, url: e.target.value })
-              }
+            
+            <FormField
+              control={form.control}
+              name="url"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>URL do YouTube*</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      placeholder="https://www.youtube.com/watch?v=..."
+                      disabled={isUploading}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    Cole a URL completa do vídeo do YouTube
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="youtube-description">Descrição (opcional)</Label>
-            <Textarea
-              id="youtube-description"
-              placeholder="Descrição do vídeo"
-              value={youtubeData.description}
-              onChange={(e) =>
-                setYoutubeData({ ...youtubeData, description: e.target.value })
-              }
+            
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Descrição (opcional)</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      {...field}
+                      placeholder="Descreva brevemente o conteúdo do vídeo"
+                      rows={3}
+                      disabled={isUploading}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
-          <Button
-            className="w-full"
-            onClick={handleSubmit}
-            disabled={isUploading || !youtubeData.name || !youtubeData.url}
-          >
-            {isUploading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Adicionando...
-              </>
-            ) : (
-              "Adicionar Vídeo"
-            )}
-          </Button>
-        </div>
+            
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+                disabled={isUploading}
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="submit"
+                disabled={isUploading || !form.formState.isValid}
+              >
+                {isUploading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Adicionando...
+                  </>
+                ) : (
+                  "Adicionar Vídeo"
+                )}
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );
