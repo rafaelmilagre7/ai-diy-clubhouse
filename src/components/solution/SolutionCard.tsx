@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { useLogging } from "@/hooks/useLogging";
+import { toast } from "sonner";
 
 interface SolutionCardProps {
   solution: Solution;
@@ -18,32 +19,32 @@ export const SolutionCard = ({ solution, onClick, className }: SolutionCardProps
 
   const handleClick = () => {
     // Validação rigorosa do ID antes de navegar
-    if (!solution.id) {
-      log("ERRO: Tentativa de navegar para solução sem ID", { 
-        solution,
-        title: solution.title
-      });
+    if (!solution || !solution.id) {
+      const errorMsg = "Solução inválida: ID ausente";
+      log("ERRO: " + errorMsg, { solution });
+      toast.error(errorMsg);
+      return;
+    }
+    
+    // Garantir que o ID é uma string válida
+    const id = String(solution.id).trim();
+    if (!id) {
+      const errorMsg = "ID da solução é inválido após conversão";
+      log("ERRO: " + errorMsg, { originalId: solution.id });
+      toast.error(errorMsg);
       return;
     }
     
     // Log detalhado para diagnóstico
     log("Clique na solução", { 
-      solutionId: solution.id, 
+      solutionId: id, 
       title: solution.title,
-      path: `/solutions/${solution.id}`,
-      solutionObj: JSON.stringify(solution)
+      path: `/solutions/${id}`
     });
     
     if (onClick) {
       onClick();
     } else {
-      // Assegurar que o ID é uma string válida antes de navegar
-      const id = String(solution.id).trim();
-      if (!id) {
-        log("ERRO: ID inválido após conversão", { originalId: solution.id });
-        return;
-      }
-      
       // Navegar com ID validado
       navigate(`/solutions/${id}`);
     }
@@ -81,7 +82,7 @@ export const SolutionCard = ({ solution, onClick, className }: SolutionCardProps
         className
       )}
       onClick={handleClick}
-      data-solution-id={solution.id} // Adicionar data attribute para depuração
+      data-solution-id={solution.id}
     >
       <CardContent className="p-0 relative">
         {/* Thumbnail */}

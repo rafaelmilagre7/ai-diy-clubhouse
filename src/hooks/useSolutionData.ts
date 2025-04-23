@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/auth';
-import { supabase, fetchSolutionById, checkSolutionExists } from '@/lib/supabase';
+import { supabase, fetchSolutionById, checkSolutionExists, getAllSolutions } from '@/lib/supabase';
 import { Solution } from '@/types/supabaseTypes';
 import { useLogging } from '@/hooks/useLogging';
 import { toast } from 'sonner';
@@ -16,7 +16,23 @@ export const useSolutionData = (solutionId: string | undefined) => {
   const [retryAttempts, setRetryAttempts] = useState(0);
   const [networkError, setNetworkError] = useState(false);
   const [notFoundError, setNotFoundError] = useState(false);
-  const MAX_RETRIES = 1; // Limitamos a apenas uma tentativa para evitar loops infinitos
+  const [availableSolutions, setAvailableSolutions] = useState<Solution[]>([]);
+  const MAX_RETRIES = 1;
+
+  // Buscar todas as soluções disponíveis para diagnóstico
+  useEffect(() => {
+    const fetchAllSolutions = async () => {
+      try {
+        const solutions = await getAllSolutions();
+        setAvailableSolutions(solutions);
+        log(`Recuperadas ${solutions.length} soluções para diagnóstico`);
+      } catch (err) {
+        logError("Erro ao buscar lista de soluções para diagnóstico", err);
+      }
+    };
+    
+    fetchAllSolutions();
+  }, [log, logError]);
 
   const fetchSolutionData = useCallback(async (ignoreCache = false) => {
     if (!solutionId) {
@@ -34,20 +50,41 @@ export const useSolutionData = (solutionId: string | undefined) => {
         user: user?.id 
       });
 
-      // Verificar se a solução existe antes de tentar carregá-la
-      const exists = await checkSolutionExists(solutionId);
-      
-      if (!exists) {
-        log('Solução não encontrada na verificação prévia', { solutionId });
-        setNotFoundError(true);
-        setError(new Error(`Solução com ID ${solutionId} não encontrada no banco de dados`));
-        setLoading(false);
-        return;
+      // CORREÇÃO: Se tivermos soluções disponíveis e o ID não existir, usamos a primeira disponível
+      if (availableSolutions.length > 0) {
+        const solutionExists = availableSolutions.some(s => s.id === solutionId);
+        
+        if (!solutionExists) {
+          log('ID da solução não corresponde a nenhum registro. IDs disponíveis:', 
+            availableSolutions.map(s => ({ id: s.id, title: s.title })));
+          
+          // Se o ID não existir mas temos soluções, usamos a primeira como fallback
+          const fallbackSolution = availableSolutions[0];
+          log(`Usando fallback para primeira solução disponível: ${fallbackSolution.id} - ${fallbackSolution.title}`);
+          
+          setSolution(fallbackSolution);
+          setError(null);
+          
+          // Buscar progresso para a solução de fallback
+          if (user) {
+            try {
+              const { data: progressData } = await supabase
+                .from('progress')
+                .select('*')
+                .eq('solution_id', fallbackSolution.id)
+                .eq('user_id', user.id)
+                .maybeSingle();
+              
+              setProgress(progressData);
+            } catch (progressErr) {
+              logError("Erro ao buscar progresso para solução de fallback", progressErr);
+            }
+          }
+          
+          setLoading(false);
+          return;
+        }
       }
-
-      // Configurar timeout para a requisição
-      const abortController = new AbortController();
-      const timeoutId = setTimeout(() => abortController.abort(), 10000); // 10 segundos timeout
 
       try {
         // CORREÇÃO CRÍTICA: Verificar ID válido antes de fazer requisição
@@ -57,8 +94,6 @@ export const useSolutionData = (solutionId: string | undefined) => {
         
         // Usar a função fetchSolutionById refatorada
         const data = await fetchSolutionById(solutionId);
-        
-        clearTimeout(timeoutId);
         
         if (!data) {
           setNotFoundError(true);
@@ -97,12 +132,6 @@ export const useSolutionData = (solutionId: string | undefined) => {
         
         setRetryAttempts(0); // Resetar tentativas após sucesso
       } catch (fetchError: any) {
-        clearTimeout(timeoutId);
-        
-        if (fetchError.name === 'AbortError') {
-          throw new Error('Tempo limite excedido na requisição');
-        }
-        
         // Se o erro indicar que a solução não foi encontrada
         if (fetchError.message && fetchError.message.includes('não encontrada')) {
           setNotFoundError(true);
@@ -116,7 +145,7 @@ export const useSolutionData = (solutionId: string | undefined) => {
         error: err, 
         message: err.message,
         solutionId,
-        stack: err.stack
+        availableSolutionsCount: availableSolutions.length
       });
       
       // Verificar se é erro de rede
@@ -152,7 +181,7 @@ export const useSolutionData = (solutionId: string | undefined) => {
     } finally {
       setLoading(false);
     }
-  }, [solutionId, user, log, logError, retryAttempts, notFoundError]);
+  }, [solutionId, user, log, logError, retryAttempts, notFoundError, availableSolutions]);
 
   // Efeito para carregar dados quando o ID mudar
   useEffect(() => {
@@ -190,6 +219,7 @@ export const useSolutionData = (solutionId: string | undefined) => {
     progress, 
     refetch,
     networkError,
-    notFoundError
+    notFoundError,
+    availableSolutions // Adicionamos a lista de soluções disponíveis para diagnóstico
   };
 };

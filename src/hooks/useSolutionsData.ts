@@ -1,6 +1,6 @@
 
 import { useState, useEffect, useRef } from "react";
-import { supabase } from "@/lib/supabase";
+import { supabase, getAllSolutions } from "@/lib/supabase";
 import { Solution } from "@/lib/supabase";
 import { useLogging } from "@/hooks/useLogging";
 import { useQuery } from "@tanstack/react-query";
@@ -13,53 +13,31 @@ export const useSolutionsData = (
   const { log, logError } = useLogging("useSolutionsData");
   const toastShownRef = useRef(false);
   
-  // Buscar soluções da API
+  // Buscar soluções da API usando a função centralizada
   const fetchSolutions = async () => {
     try {
-      log("Buscando soluções...");
+      log("Buscando soluções disponíveis...");
       
-      // Configurar um timeout para a requisição
-      const controller = new AbortController();
-      const { signal } = controller;
-      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 segundos timeout
+      // Usar a função getAllSolutions para consistência
+      const data = await getAllSolutions();
       
-      try {
-        let query = supabase
-          .from("solutions")
-          .select("*")
-          .eq("published", true)
-          .order("created_at", { ascending: false });
+      // Verificar se temos dados válidos
+      if (!data || data.length === 0) {
+        log("Nenhuma solução encontrada no banco de dados");
         
-        const { data, error } = await query;
-        
-        clearTimeout(timeoutId);
-        
-        if (error) {
-          logError("Erro ao buscar soluções:", error);
-          throw error;
+        // Criar toast apenas se ainda não foi mostrado
+        if (!toastShownRef.current) {
+          toast.warning("Não há soluções disponíveis", {
+            description: "Nenhuma solução foi encontrada no banco de dados.",
+            duration: 5000
+          });
+          toastShownRef.current = true;
         }
-        
-        log(`Encontradas ${data?.length || 0} soluções`);
-        
-        // Verificar se temos dados válidos
-        if (!data || data.length === 0) {
-          log("Nenhuma solução encontrada ou retornada");
-        } else {
-          // Verificar se todas as soluções têm os campos necessários
-          const invalidSolutions = data.filter(sol => !sol.id || !sol.title);
-          if (invalidSolutions.length > 0) {
-            log("Algumas soluções têm dados incompletos", { count: invalidSolutions.length });
-          }
-        }
-        
-        return data as Solution[];
-      } catch (fetchError: any) {
-        clearTimeout(timeoutId);
-        if (fetchError.name === 'AbortError') {
-          throw new Error('Tempo limite excedido ao buscar soluções');
-        }
-        throw fetchError;
+      } else {
+        log(`Encontradas ${data.length} soluções. Primeira solução: ${data[0]?.id} - ${data[0]?.title}`);
       }
+      
+      return data as Solution[];
     } catch (error) {
       logError("Erro ao buscar soluções:", error);
       
@@ -89,8 +67,26 @@ export const useSolutionsData = (
     retry: 2 // Tentar 2 vezes antes de falhar
   });
 
+  // Validar soluções para garantir que todos os registros têm IDs válidos
+  useEffect(() => {
+    if (solutions && solutions.length > 0) {
+      const invalidSolutions = solutions.filter(sol => !sol.id || !sol.title);
+      if (invalidSolutions.length > 0) {
+        logError(`${invalidSolutions.length} soluções com dados inválidos encontradas`, { 
+          invalidSolutionsCount: invalidSolutions.length,
+          sampleInvalid: invalidSolutions.slice(0, 3) 
+        });
+      }
+    }
+  }, [solutions, logError]);
+
   // Filtra as soluções com base na categoria e pesquisa
   const filteredSolutions = solutions.filter((solution: Solution) => {
+    // Verificar se a solução tem um ID válido
+    if (!solution.id) {
+      return false;
+    }
+    
     // Verificar categoria
     const categoryMatch = 
       activeCategory === "all" || 
