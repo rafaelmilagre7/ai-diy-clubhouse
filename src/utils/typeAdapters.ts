@@ -32,6 +32,7 @@ export const adaptSolutionType = (supaSolution: SupabaseSolution): Solution => {
     completion_criteria: supaSolution.completion_criteria || [],
     estimated_time: supaSolution.estimated_time || 0,
     success_rate: supaSolution.success_rate || 0,
+    tags: supaSolution.tags || [],
   };
 };
 

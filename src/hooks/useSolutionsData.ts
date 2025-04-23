@@ -88,8 +88,8 @@ export const useSolutionsData = (
     return solutions.filter(solution => 
       solution.title.toLowerCase().includes(lowerCaseQuery) || 
       (solution.description && solution.description.toLowerCase().includes(lowerCaseQuery)) ||
-      (solution.tags && Array.isArray(solution.tags) && solution.tags.some(tag => 
-        tag && tag.toLowerCase().includes(lowerCaseQuery)
+      (Array.isArray(solution.tags) && solution.tags && solution.tags.some(tag => 
+        typeof tag === 'string' && tag.toLowerCase().includes(lowerCaseQuery)
       ))
     );
   }, [solutions, searchQuery]);

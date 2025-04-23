@@ -20,6 +20,7 @@ export interface Solution {
   completion_criteria?: CompletionCriteria[];
   estimated_time?: number;
   success_rate?: number;
+  tags?: string[];
 }
 
 export interface Module {
@@ -67,7 +68,7 @@ export interface Progress {
   last_activity: string;
   completion_data?: Record<string, any>;
   completion_percentage?: number;
-  completed_at?: string;
+  completed_at?: string | null;
 }
 
 export interface Prerequisite {
