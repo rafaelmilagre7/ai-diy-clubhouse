@@ -9,7 +9,7 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  console.log("Iniciando geração de trilha personalizada");
+  console.log("Iniciando geração de trilha personalizada", new Date().toISOString());
   
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -26,7 +26,8 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ 
           error: 'Não autorizado', 
-          message: 'Usuário não autenticado' 
+          message: 'Usuário não autenticado',
+          timestamp: new Date().toISOString()
         }),
         { 
           status: 401, 
@@ -46,7 +47,7 @@ serve(async (req) => {
 
     // Extrair o token JWT do cabeçalho (removendo "Bearer " se presente)
     const token = authHeader.replace(/^Bearer\s/, '');
-    console.log("Token JWT extraído do cabeçalho");
+    console.log("Token JWT extraído do cabeçalho", token ? token.substring(0, 15) + "..." : "Vazio");
 
     // Usar a service_role key para operações administrativas
     const adminClient = createClient(supabaseUrl, supabaseServiceKey, {
@@ -60,15 +61,32 @@ serve(async (req) => {
     let userId = null;
     try {
       // Verificar o JWT para obter o usuário
+      console.log("Verificando token JWT...");
       const { data: { user }, error: verifyError } = await adminClient.auth.getUser(token);
       
-      if (verifyError || !user) {
+      if (verifyError) {
         console.error("Erro ao verificar token JWT:", verifyError);
         return new Response(
           JSON.stringify({ 
             error: 'Erro de autenticação', 
             message: 'Token inválido ou expirado',
-            details: verifyError 
+            details: verifyError,
+            timestamp: new Date().toISOString()
+          }),
+          { 
+            status: 401, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
+        );
+      }
+      
+      if (!user) {
+        console.error("Usuário não encontrado no token");
+        return new Response(
+          JSON.stringify({ 
+            error: 'Erro de autenticação', 
+            message: 'Usuário não encontrado no token',
+            timestamp: new Date().toISOString()
           }),
           { 
             status: 401, 
@@ -85,7 +103,8 @@ serve(async (req) => {
         JSON.stringify({ 
           error: 'Erro de autenticação', 
           message: 'Falha ao processar token de autenticação',
-          details: jwtError.message 
+          details: jwtError.message,
+          timestamp: new Date().toISOString()
         }),
         { 
           status: 401, 
@@ -108,7 +127,8 @@ serve(async (req) => {
         JSON.stringify({ 
           error: 'Erro ao buscar perfil', 
           message: 'Não foi possível encontrar seu perfil de implementação',
-          details: profileError.message 
+          details: profileError.message,
+          timestamp: new Date().toISOString()
         }),
         { 
           status: 500, 
@@ -125,8 +145,10 @@ serve(async (req) => {
           message: 'Complete seu perfil de implementação para gerar recomendações.',
           details: {
             profileFound: !!profileData,
-            isCompleted: profileData?.is_completed || false
-          }
+            isCompleted: profileData?.is_completed || false,
+            profileId: profileData?.id || null
+          },
+          timestamp: new Date().toISOString()
         }),
         { 
           status: 400, 
@@ -136,6 +158,7 @@ serve(async (req) => {
     }
     
     // Buscar soluções disponíveis
+    console.log("Buscando soluções disponíveis...");
     const { data: solutions, error: solutionsError } = await adminClient
       .from('solutions')
       .select('*')
@@ -155,7 +178,8 @@ serve(async (req) => {
             priority1: [],
             priority2: [],
             priority3: []
-          }
+          },
+          timestamp: new Date().toISOString()
         }),
         { 
           status: 200, 
@@ -400,7 +424,7 @@ serve(async (req) => {
         throw new Error(`Erro ao salvar trilha: ${saveError.message}`);
       }
       
-      console.log("Trilha salva com sucesso");
+      console.log("Trilha salva com sucesso", new Date().toISOString());
     } catch (dbError) {
       console.error("Erro ao persistir dados no Supabase:", dbError);
       throw dbError;
@@ -409,7 +433,8 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         success: true, 
-        recommendations 
+        recommendations,
+        timestamp: new Date().toISOString()
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
@@ -420,7 +445,8 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         error: error instanceof Error ? error.message : 'Erro desconhecido',
-        suggestion: "Verifique seu perfil de implementação e tente novamente"
+        suggestion: "Verifique seu perfil de implementação e tente novamente",
+        timestamp: new Date().toISOString()
       }),
       { 
         status: 500, 

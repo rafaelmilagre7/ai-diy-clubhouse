@@ -22,6 +22,7 @@ export const useImplementationTrail = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [detailedError, setDetailedError] = useState<any>(null);
+  const [lastGenerationTime, setLastGenerationTime] = useState<Date | null>(null);
 
   // Verificar se a trilha tem conteúdo
   const hasContent = useCallback(() => {
@@ -159,6 +160,7 @@ export const useImplementationTrail = () => {
 
       console.log("generateImplementationTrail: Invocando edge function com token de autenticação");
       console.log("Token de autenticação:", authToken.slice(0, 10) + "...");
+      console.log("Timestamp de início da chamada:", new Date().toISOString());
       
       // Chamar função de geração com headers de autenticação explícitos
       const { data: generatedData, error: fnError } = await supabase.functions.invoke(
@@ -171,8 +173,14 @@ export const useImplementationTrail = () => {
         }
       );
 
+      // Registrar timestamp de conclusão
+      const completionTime = new Date();
+      setLastGenerationTime(completionTime);
+      console.log("Timestamp de conclusão da chamada:", completionTime.toISOString());
+
       if (fnError) {
         console.error("Erro na função de geração:", fnError);
+        console.log("Detalhes do erro:", JSON.stringify(fnError));
         throw fnError;
       }
 
@@ -301,6 +309,7 @@ export const useImplementationTrail = () => {
     hasContent: hasContent(),
     refreshTrail,
     generateImplementationTrail,
-    generateWithRetries
+    generateWithRetries,
+    lastGenerationTime
   };
 };
