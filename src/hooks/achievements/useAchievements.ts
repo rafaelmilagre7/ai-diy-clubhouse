@@ -1,9 +1,9 @@
-
 import { useCallback } from 'react';
 import { useAuth } from '@/contexts/auth';
 import { useToast } from '@/hooks/use-toast';
 import { useAchievementData } from './useAchievementData';
 import { Achievement, BadgeData } from '@/types/achievementTypes';
+import { SolutionCategory } from '@/lib/types/categoryTypes';
 import { useQuery } from '@tanstack/react-query';
 import { 
   fetchProgressData, 
@@ -24,7 +24,7 @@ interface Badge {
   name: string;
   description: string;
   icon: string;
-  category: string;
+  category: "achievement" | SolutionCategory;
 }
 
 export function useAchievements() {
@@ -120,12 +120,21 @@ export function useAchievements() {
             // Se for um array, iteramos sobre cada badge
             if (Array.isArray(badgeData.badges)) {
               badgeData.badges.forEach((badge: Badge) => {
+                // Validação do category antes de adicionar
+                const validCategories: ("achievement" | SolutionCategory)[] = [
+                  "achievement", "revenue", "operational", "strategy"
+                ];
+                
+                const category = validCategories.includes(badge.category as any) 
+                  ? badge.category 
+                  : "achievement";
+
                 allAchievements.push({
                   id: badge.id,
                   name: badge.name,
                   description: badge.description,
                   icon: badge.icon,
-                  category: badge.category,
+                  category: category,
                   isUnlocked: true,
                   earnedAt: badgeData.earned_at,
                 });
@@ -134,12 +143,22 @@ export function useAchievements() {
             // Se for um objeto único, tratamos diretamente
             else {
               const badge = badgeData.badges as Badge;
+              
+              // Validação do category antes de adicionar
+              const validCategories: ("achievement" | SolutionCategory)[] = [
+                "achievement", "revenue", "operational", "strategy"
+              ];
+              
+              const category = validCategories.includes(badge.category as any) 
+                ? badge.category 
+                : "achievement";
+
               allAchievements.push({
                 id: badge.id,
                 name: badge.name,
                 description: badge.description,
                 icon: badge.icon,
-                category: badge.category,
+                category: category,
                 isUnlocked: true,
                 earnedAt: badgeData.earned_at,
               });
