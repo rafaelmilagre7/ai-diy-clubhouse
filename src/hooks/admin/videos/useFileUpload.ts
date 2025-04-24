@@ -11,45 +11,6 @@ export const useFileUpload = (solutionId: string) => {
   const [lastUploadedVideo, setLastUploadedVideo] = useState<VideoItem | null>(null);
   const uploadInProgressRef = useRef(false);
 
-  // Função para verificar e criar bucket se necessário
-  const ensureBucketExists = async (bucketName: string) => {
-    try {
-      console.log(`[useFileUpload] Verificando se o bucket '${bucketName}' existe...`);
-      
-      // Verificar se o bucket existe
-      const { data: buckets, error } = await supabase.storage.listBuckets();
-      
-      if (error) {
-        console.error("[useFileUpload] Erro ao listar buckets:", error);
-        return false;
-      }
-      
-      const bucketExists = buckets?.some(b => b.name === bucketName);
-      console.log(`[useFileUpload] Bucket '${bucketName}' existe:`, bucketExists);
-      
-      // Se o bucket não existir, criar
-      if (!bucketExists) {
-        console.log(`[useFileUpload] Criando bucket '${bucketName}'...`);
-        const { data, error: createError } = await supabase.storage.createBucket(bucketName, {
-          public: true,
-          fileSizeLimit: 524288000 // 500MB
-        });
-        
-        if (createError) {
-          console.error(`[useFileUpload] Erro ao criar bucket '${bucketName}':`, createError);
-          return false;
-        }
-        
-        console.log(`[useFileUpload] Bucket '${bucketName}' criado com sucesso`);
-      }
-      
-      return true;
-    } catch (err) {
-      console.error("[useFileUpload] Erro ao verificar/criar bucket:", err);
-      return false;
-    }
-  };
-
   const handleFileUpload = async (file: File): Promise<VideoItem | null> => {
     if (!solutionId) {
       toast("Erro", {
@@ -90,16 +51,6 @@ export const useFileUpload = (solutionId: string) => {
         description: "Preparando para enviar o vídeo..."
       });
       
-      // Usamos o bucket "solution_files" conforme configuração existente
-      const bucketName = "solution_files";
-      const bucketReady = await ensureBucketExists(bucketName);
-      
-      if (!bucketReady) {
-        throw new Error("Não foi possível criar/acessar o bucket de armazenamento. Verifique as permissões.");
-      }
-      
-      setUploadProgress(10);
-
       const fileExt = file.name.split(".").pop();
       const fileName = `${uuidv4()}-${Date.now()}.${fileExt}`;
       const filePath = `videos/${solutionId}/${fileName}`;
@@ -119,11 +70,9 @@ export const useFileUpload = (solutionId: string) => {
         });
       }, 1000);
       
-      console.log(`[useFileUpload] Enviando arquivo para o bucket '${bucketName}'...`);
-      
       // Upload para o storage
       const { error: uploadError, data: uploadData } = await supabase.storage
-        .from(bucketName)
+        .from("solution_files")
         .upload(filePath, file, {
           cacheControl: '3600',
           upsert: true,
@@ -141,7 +90,7 @@ export const useFileUpload = (solutionId: string) => {
       setUploadProgress(90);
 
       const { data: urlData } = supabase.storage
-        .from(bucketName)
+        .from("solution_files")
         .getPublicUrl(filePath);
 
       if (!urlData) throw new Error("Não foi possível obter a URL do vídeo");
