@@ -75,7 +75,7 @@ const VideoTab: React.FC<VideoTabProps> = ({
 
   return (
     <div className="space-y-8">
-      {/* Área de Upload Principal - Sempre visível */}
+      {/* Área de Upload Principal - SEMPRE visível como primeiro elemento */}
       <Card className="border-2 border-[#0ABAB5]/10 shadow-sm">
         <CardContent className="p-6">
           <VideoUploader
@@ -95,7 +95,7 @@ const VideoTab: React.FC<VideoTabProps> = ({
         </CardContent>
       </Card>
 
-      {/* Lista de Vídeos - Separada do upload */}
+      {/* Lista de Vídeos - Aparece DEPOIS da área de upload quando há vídeos */}
       {videos.length > 0 && (
         <Card className="border-2 border-[#0ABAB5]/10 shadow-sm">
           <CardContent className="p-6">
@@ -109,6 +109,7 @@ const VideoTab: React.FC<VideoTabProps> = ({
                   size="sm"
                   onClick={fetchVideos}
                   className="flex items-center gap-2"
+                  title="Atualizar lista de vídeos do servidor"
                 >
                   <RefreshCw className="h-4 w-4" />
                   Atualizar lista
@@ -119,6 +120,7 @@ const VideoTab: React.FC<VideoTabProps> = ({
                   onClick={verifyDatabaseRecords}
                   disabled={isVerifying}
                   className="flex items-center gap-2"
+                  title="Verificar dados diretamente no banco"
                 >
                   {isVerifying ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
                   Verificar BD

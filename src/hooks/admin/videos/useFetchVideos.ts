@@ -35,6 +35,8 @@ export const useFetchVideos = (solutionId: string): VideoFetchResponse & { refet
       
       if (data && data.length > 0) {
         console.log("[useFetchVideos] Primeiro vídeo da lista:", data[0]);
+      } else {
+        console.log("[useFetchVideos] Nenhum vídeo encontrado para a solução");
       }
       
       setVideos(data || []);
@@ -55,14 +57,16 @@ export const useFetchVideos = (solutionId: string): VideoFetchResponse & { refet
     console.log("[useFetchVideos] Forçando refetch de vídeos...");
     setRefreshCounter(prev => prev + 1); // Incrementa o contador para forçar refetch
     
-    // Pequeno atraso para garantir que qualquer operação de banco de dados tenha tempo de propagar
-    await new Promise(resolve => setTimeout(resolve, 800));
-    
     try {
+      // Pequeno atraso para garantir que qualquer operação de banco de dados tenha tempo de propagar
+      await new Promise(resolve => setTimeout(resolve, 1000));
       await fetchVideos(); // Chama diretamente a função fetchVideos
       console.log("[useFetchVideos] Refetch concluído com sucesso");
     } catch (err) {
       console.error("[useFetchVideos] Erro durante refetch:", err);
+      toast("Erro ao atualizar", {
+        description: "Ocorreu um problema ao tentar atualizar a lista de vídeos."
+      });
     }
   }, [fetchVideos]);
 

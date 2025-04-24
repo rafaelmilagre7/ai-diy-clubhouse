@@ -11,6 +11,58 @@ export const useFileUpload = (solutionId: string) => {
   const [lastUploadedVideo, setLastUploadedVideo] = useState<VideoItem | null>(null);
   const uploadInProgressRef = useRef(false);
 
+  // Função para verificar e criar bucket se necessário
+  const ensureBucketExists = async (bucketName: string) => {
+    try {
+      console.log(`[useFileUpload] Verificando se o bucket '${bucketName}' existe...`);
+      
+      // Verificar se o bucket existe
+      const { data: buckets, error } = await supabase.storage.listBuckets();
+      
+      if (error) {
+        console.error("[useFileUpload] Erro ao listar buckets:", error);
+        return false;
+      }
+      
+      const bucketExists = buckets?.some(b => b.name === bucketName);
+      console.log(`[useFileUpload] Bucket '${bucketName}' existe:`, bucketExists);
+      
+      if (!bucketExists) {
+        // Se não existir, tentar criar
+        console.log(`[useFileUpload] Criando bucket '${bucketName}'...`);
+        const { error: createError } = await supabase.storage.createBucket(bucketName, {
+          public: true,
+          fileSizeLimit: 524288000 // 500MB em bytes
+        });
+        
+        if (createError) {
+          console.error("[useFileUpload] Erro ao criar bucket:", createError);
+          toast("Erro na configuração", {
+            description: "Não foi possível criar o bucket de armazenamento. Contate o administrador."
+          });
+          return false;
+        }
+        
+        console.log(`[useFileUpload] Bucket '${bucketName}' criado com sucesso!`);
+      } else {
+        // Atualizar configurações do bucket se já existir
+        const { error: updateError } = await supabase.storage.updateBucket(bucketName, {
+          public: true,
+          fileSizeLimit: 524288000 // 500MB em bytes
+        });
+        
+        if (updateError) {
+          console.warn("[useFileUpload] Aviso ao atualizar bucket:", updateError);
+        }
+      }
+      
+      return true;
+    } catch (err) {
+      console.error("[useFileUpload] Erro ao verificar/criar bucket:", err);
+      return false;
+    }
+  };
+
   const handleFileUpload = async (file: File): Promise<VideoItem | null> => {
     if (!solutionId) {
       toast("Erro", {
@@ -33,7 +85,7 @@ export const useFileUpload = (solutionId: string) => {
       return null;
     }
 
-    // Aumentando o limite de 100MB para 500MB
+    // Aumentando o limite para 500MB
     const maxSize = 500 * 1024 * 1024;
     if (file.size > maxSize) {
       toast("Arquivo muito grande", {
@@ -45,16 +97,34 @@ export const useFileUpload = (solutionId: string) => {
     try {
       uploadInProgressRef.current = true;
       setUploading(true);
-      setUploadProgress(0);
+      setUploadProgress(5);
+      
+      toast("Iniciando upload", {
+        description: "Preparando para enviar o vídeo..."
+      });
+      
+      // Verificar/criar bucket antes do upload
+      const bucketName = "public";
+      const bucketReady = await ensureBucketExists(bucketName);
+      
+      if (!bucketReady) {
+        throw new Error("Não foi possível configurar o armazenamento para uploads.");
+      }
+      
+      setUploadProgress(10);
 
       const fileExt = file.name.split(".").pop();
       const fileName = `${uuidv4()}-${Date.now()}.${fileExt}`;
       const filePath = `videos/${solutionId}/${fileName}`;
 
-      console.log("[useFileUpload] Iniciando upload do arquivo:", file.name, "tamanho:", file.size);
-      console.log("[useFileUpload] Caminho no storage:", filePath);
+      console.log(`[useFileUpload] Iniciando upload do arquivo: ${file.name}, tamanho: ${file.size}`);
+      console.log(`[useFileUpload] Caminho no storage: ${filePath}`);
+      
+      toast("Upload em progresso", {
+        description: `Enviando ${file.name}...`
+      });
 
-      // Atualizar o progresso a cada 1 segundo para feedback visual
+      // Simular progresso para feedback visual
       const progressInterval = setInterval(() => {
         setUploadProgress(prev => {
           if (prev < 85) return prev + 2;
@@ -62,53 +132,11 @@ export const useFileUpload = (solutionId: string) => {
         });
       }, 1000);
       
-      // Verificar se o bucket public existe
-      const { data: buckets } = await supabase.storage.listBuckets();
-      const bucketExists = buckets?.some(b => b.name === 'public');
-      
-      console.log("[useFileUpload] Bucket 'public' existe:", bucketExists);
-      
-      if (!bucketExists) {
-        // Se não existir, tentamos criar
-        console.log("[useFileUpload] Tentando criar bucket 'public'...");
-        try {
-          const { data, error } = await supabase.storage.createBucket('public', {
-            public: true,
-            fileSizeLimit: 524288000 // 500MB em bytes
-          });
-          
-          if (error) {
-            console.error("[useFileUpload] Erro ao criar bucket:", error);
-            throw new Error("Não foi possível criar o bucket de armazenamento.");
-          }
-          console.log("[useFileUpload] Bucket criado com sucesso:", data);
-        } catch (err) {
-          console.error("[useFileUpload] Erro ao tentar criar bucket:", err);
-          throw new Error("Ocorreu um erro ao configurar o armazenamento.");
-        }
-      } else {
-        // Se o bucket já existe, vamos verificar se está com acesso público
-        try {
-          console.log("[useFileUpload] Bucket 'public' já existe, verificando configurações...");
-          // Atualizar para garantir que esteja público e com o limite correto
-          const { error } = await supabase.storage.updateBucket('public', {
-            public: true,
-            fileSizeLimit: 524288000 // 500MB em bytes
-          });
-          
-          if (error) {
-            console.warn("[useFileUpload] Aviso ao atualizar bucket:", error);
-          }
-        } catch (err) {
-          console.warn("[useFileUpload] Aviso ao verificar bucket:", err);
-        }
-      }
-      
-      console.log("[useFileUpload] Enviando arquivo para o storage...");
+      console.log(`[useFileUpload] Enviando arquivo para o bucket '${bucketName}'...`);
       
       // Upload para o storage
       const { error: uploadError, data: uploadData } = await supabase.storage
-        .from("public")
+        .from(bucketName)
         .upload(filePath, file, {
           cacheControl: '3600',
           upsert: true,
@@ -126,7 +154,7 @@ export const useFileUpload = (solutionId: string) => {
       setUploadProgress(90);
 
       const { data: urlData } = supabase.storage
-        .from("public")
+        .from(bucketName)
         .getPublicUrl(filePath);
 
       if (!urlData) throw new Error("Não foi possível obter a URL do vídeo");

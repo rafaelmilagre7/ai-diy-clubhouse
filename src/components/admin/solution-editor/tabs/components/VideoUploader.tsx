@@ -22,10 +22,11 @@ const VideoUploader: React.FC<VideoUploaderProps> = ({
 
   // Função para acionar o clique no input quando o botão ou área de drop for clicada
   const handleButtonClick = (e: React.MouseEvent) => {
-    // Importante para evitar que o evento de clique se propague quando clicar no botão interno
+    e.preventDefault();
     e.stopPropagation(); 
     
     if (!disabled && !isUploading && fileInputRef.current) {
+      console.log("[VideoUploader] Clique no botão de upload detectado");
       fileInputRef.current.click();
     }
   };
@@ -52,7 +53,7 @@ const VideoUploader: React.FC<VideoUploaderProps> = ({
       console.log("Arquivo selecionado pelo input:", file.name);
       onFileSelect(file);
       // Limpar input para permitir selecionar o mesmo arquivo novamente
-      e.target.value = "";
+      if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
   
@@ -96,7 +97,7 @@ const VideoUploader: React.FC<VideoUploaderProps> = ({
           ref={fileInputRef}
           id="video-file-input"
           type="file"
-          accept="video/mp4,video/webm,video/mov,video/avi"
+          accept="video/mp4,video/webm,video/mov,video/avi,video/quicktime"
           className="hidden"
           onChange={handleFileChange}
           disabled={disabled || isUploading}
@@ -124,7 +125,10 @@ const VideoUploader: React.FC<VideoUploaderProps> = ({
             type="button"
             variant="outline"
             className="gap-2"
-            onClick={handleButtonClick}
+            onClick={(e) => {
+              e.stopPropagation(); // Importante para evitar duplo acionamento
+              handleButtonClick(e);
+            }}
             disabled={disabled || isUploading}
             data-testid="video-upload-button"
           >

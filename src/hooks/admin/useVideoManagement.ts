@@ -16,7 +16,15 @@ export const useVideoManagement = (solutionId: string) => {
   // Função para atualizar explicitamente os vídeos
   const refreshVideos = useCallback(async () => {
     console.log("[useVideoManagement] Atualizando lista de vídeos explicitamente");
-    await fetchVideos();
+    try {
+      await fetchVideos();
+      console.log("[useVideoManagement] Lista atualizada com sucesso");
+    } catch (error) {
+      console.error("[useVideoManagement] Erro ao atualizar lista:", error);
+      toast("Erro ao atualizar", {
+        description: "Não foi possível atualizar a lista de vídeos."
+      });
+    }
   }, [fetchVideos]);
 
   const handleYouTubeAdd = async (data: { name: string; url: string; description: string; }) => {
@@ -50,13 +58,12 @@ export const useVideoManagement = (solutionId: string) => {
       if (video) {
         console.log("[useVideoManagement] Upload bem-sucedido:", video);
         
-        // Adicionamos um atraso antes de recarregar a lista para garantir que o banco de dados
-        // tenha tempo de processar a inserção
+        // Atraso estratégico para garantir que o banco de dados processe completamente a inserção
         setTimeout(async () => {
           console.log("[useVideoManagement] Atualizando lista após upload de arquivo");
           await refreshVideos();
           console.log("[useVideoManagement] Lista atualizada após upload");
-        }, 1500);
+        }, 2000);
         
         toast("Upload concluído", {
           description: "O vídeo foi adicionado com sucesso. Atualizando lista..."
