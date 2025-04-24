@@ -6,14 +6,13 @@ import { useDashboardProgress } from "@/hooks/useDashboardProgress";
 import { toast } from "sonner";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { Solution } from "@/lib/supabase";
-import LoadingScreen from "@/components/common/LoadingScreen";
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   
   // Otimização: Usar useMemo para lembrar o valor da categoria entre renderizações
-  const initialCategory = useMemo(() => searchParams.get("category") || "general", []);
+  const initialCategory = useMemo(() => searchParams.get("category") || "general", [searchParams]);
   const [category, setCategory] = useState<string>(initialCategory);
   
   // Otimização: Adicionar configuração de staleTime mais longa para reduzir requisições
@@ -62,17 +61,7 @@ const Dashboard = () => {
     }
   }, []);
 
-  // Mostrar tela de carregamento enquanto os dados são carregados
-  // Otimização: Usado uma versão memoizada para evitar recriação do componente
-  const loadingComponent = useMemo(() => {
-    if (solutionsLoading || progressLoading) {
-      return <LoadingScreen message="Carregando seu dashboard..." />;
-    }
-    return null;
-  }, [solutionsLoading, progressLoading]);
-  
-  if (loadingComponent) return loadingComponent;
-
+  // Renderizar o layout diretamente, sem usar um componente de carregamento bloqueante
   return (
     <DashboardLayout
       active={active}
@@ -81,6 +70,7 @@ const Dashboard = () => {
       category={category}
       onCategoryChange={handleCategoryChange}
       onSolutionClick={handleSolutionClick}
+      isLoading={solutionsLoading || progressLoading}
     />
   );
 };

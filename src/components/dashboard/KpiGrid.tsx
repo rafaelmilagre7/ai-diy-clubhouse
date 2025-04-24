@@ -1,8 +1,29 @@
-
 import { CheckCircle, Clock, TrendingUp } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
-export function KpiGrid({ completed, inProgress, total }: { completed: number, inProgress: number, total: number }) {
+interface KpiGridProps {
+  completed: number;
+  inProgress: number;
+  total: number;
+  isLoading?: boolean;
+}
+
+export const KpiGrid: React.FC<KpiGridProps> = ({ 
+  completed, 
+  inProgress, 
+  total,
+  isLoading = false 
+}) => {
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {[1, 2, 3].map((i) => (
+          <Skeleton key={i} className="h-24 rounded-lg" />
+        ))}
+      </div>
+    );
+  }
+
   const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
 
   return (

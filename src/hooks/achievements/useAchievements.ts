@@ -23,7 +23,6 @@ interface Badge {
   id: string;
   name: string;
   description: string;
-  icon: string;
   category: "achievement" | SolutionCategory;
 }
 
@@ -47,9 +46,6 @@ export function useAchievements() {
       
       if (dataError) throw new Error(dataError);
       
-      const progressResponse = await fetchProgressData(user.id);
-      const badgesResponse = await fetchBadgesData(user.id);
-
       const generatedAchievements: Achievement[] = [
         ...generateImplementationAchievements(progressData, solutions),
         ...generateCategoryAchievements(progressData, solutions),
@@ -113,14 +109,32 @@ export function useAchievements() {
       
       let allAchievements = [...basicAchievements, ...generatedAchievements];
       
-      if (badgesResponse && badgesResponse.length > 0) {
-        badgesResponse.forEach(badgeData => {
-          // Verifica se o badgeData.badges existe antes de processá-lo
+      if (badgesData && badgesData.length > 0) {
+        badgesData.forEach(badgeData => {
           if (badgeData.badges) {
-            // Se for um array, iteramos sobre cada badge
-            if (Array.isArray(badgeData.badges)) {
-              badgeData.badges.forEach((badge: Badge) => {
-                // Validação do category antes de adicionar
+            try {
+              if (Array.isArray(badgeData.badges)) {
+                badgeData.badges.forEach((badge: Badge) => {
+                  const validCategories: ("achievement" | SolutionCategory)[] = [
+                    "achievement", "revenue", "operational", "strategy"
+                  ];
+                  
+                  const category = validCategories.includes(badge.category as any) 
+                    ? badge.category 
+                    : "achievement";
+  
+                  allAchievements.push({
+                    id: badge.id,
+                    name: badge.name,
+                    description: badge.description,
+                    category: category,
+                    isUnlocked: true,
+                    earnedAt: badgeData.earned_at,
+                  });
+                });
+              } else if (typeof badgeData.badges === 'object' && badgeData.badges !== null) {
+                const badge = badgeData.badges as Badge;
+                
                 const validCategories: ("achievement" | SolutionCategory)[] = [
                   "achievement", "revenue", "operational", "strategy"
                 ];
@@ -128,47 +142,25 @@ export function useAchievements() {
                 const category = validCategories.includes(badge.category as any) 
                   ? badge.category 
                   : "achievement";
-
+  
                 allAchievements.push({
                   id: badge.id,
                   name: badge.name,
                   description: badge.description,
-                  icon: badge.icon,
                   category: category,
                   isUnlocked: true,
                   earnedAt: badgeData.earned_at,
                 });
-              });
-            } 
-            // Se for um objeto único, tratamos diretamente
-            else {
-              const badge = badgeData.badges as Badge;
-              
-              // Validação do category antes de adicionar
-              const validCategories: ("achievement" | SolutionCategory)[] = [
-                "achievement", "revenue", "operational", "strategy"
-              ];
-              
-              const category = validCategories.includes(badge.category as any) 
-                ? badge.category 
-                : "achievement";
-
-              allAchievements.push({
-                id: badge.id,
-                name: badge.name,
-                description: badge.description,
-                icon: badge.icon,
-                category: category,
-                isUnlocked: true,
-                earnedAt: badgeData.earned_at,
-              });
+              }
+            } catch (error) {
+              console.error('Erro ao processar badges:', error);
             }
           }
         });
       }
       
       const uniqueAchievements = removeDuplicateAchievements(allAchievements);
-      console.log("Conquistas carregadas:", uniqueAchievements.length, uniqueAchievements);
+      console.log("Conquistas carregadas:", uniqueAchievements.length);
       return uniqueAchievements;
       
     } catch (error) {
@@ -193,6 +185,7 @@ export function useAchievements() {
     queryFn: fetchAchievements,
     enabled: !!user,
     staleTime: 5 * 60 * 1000, // 5 minutos
+    refetchOnWindowFocus: false,
   });
   
   return { 

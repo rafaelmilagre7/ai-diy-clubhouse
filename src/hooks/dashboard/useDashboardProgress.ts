@@ -33,9 +33,10 @@ export const useDashboardProgress = (solutions: Solution[] = []) => {
   } = useQuery({
     queryKey: ['progress', user?.id],
     queryFn: fetchProgress,
-    staleTime: 2 * 60 * 1000, // 2 minutos de cache
+    staleTime: 5 * 60 * 1000, // 5 minutos de cache
     enabled: !!user && solutions.length > 0,
-    refetchOnWindowFocus: false
+    refetchOnWindowFocus: false, // Desativar refetch ao focar a janela
+    refetchInterval: false // Desativar refetch automático baseado em intervalo
   });
 
   // Usar useMemo para processar os dados apenas quando necessário

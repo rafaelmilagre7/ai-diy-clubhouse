@@ -9,6 +9,7 @@ import { ModernDashboardHeader } from "./ModernDashboardHeader";
 import { KpiGrid } from "./KpiGrid";
 import { useAuth } from "@/contexts/auth";
 import { AchievementsSummary } from "./AchievementsSummary"; 
+import { SolutionsGridLoader } from "./SolutionsGridLoader";
 
 interface DashboardLayoutProps {
   active: Solution[];
@@ -17,6 +18,7 @@ interface DashboardLayoutProps {
   category: string;
   onCategoryChange: (category: string) => void;
   onSolutionClick: (solution: Solution) => void;
+  isLoading?: boolean; // Nova prop para indicar se os dados estão carregando
 }
 
 // Otimização: Usar memo para evitar re-renderizações desnecessárias
@@ -26,9 +28,10 @@ export const DashboardLayout: FC<DashboardLayoutProps> = memo(({
   recommended,
   category,
   onCategoryChange,
-  onSolutionClick
+  onSolutionClick,
+  isLoading = false
 }) => {
-  const hasNoSolutions = active.length === 0 && completed.length === 0 && recommended.length === 0;
+  const hasNoSolutions = !isLoading && active.length === 0 && completed.length === 0 && recommended.length === 0;
   const { profile } = useAuth();
   const userName = profile?.name?.split(" ")[0] || "Membro";
 
@@ -47,9 +50,13 @@ export const DashboardLayout: FC<DashboardLayoutProps> = memo(({
         completed={completed.length} 
         inProgress={active.length}
         total={active.length + completed.length + recommended.length}
+        isLoading={isLoading}
       />
 
-      {hasNoSolutions ? (
+      {/* Mostrar loaders enquanto carrega, ou conteúdo quando pronto */}
+      {isLoading ? (
+        <SolutionsGridLoader />
+      ) : hasNoSolutions ? (
         <NoSolutionsPlaceholder />
       ) : (
         <>
