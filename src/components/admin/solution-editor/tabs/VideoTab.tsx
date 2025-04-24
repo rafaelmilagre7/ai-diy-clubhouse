@@ -1,15 +1,14 @@
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Loader2, RefreshCw } from "lucide-react";
 import { useVideoManagement } from "@/hooks/admin/useVideoManagement";
-import VideoHeader from "./videos/VideoHeader";
-import EmptyVideoState from "./components/EmptyVideoState";
 import VideosList from "./components/VideosList";
 import YouTubeVideoForm from "./components/YouTubeVideoForm";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
+import VideoUploader from "./components/VideoUploader";
 
 interface VideoTabProps {
   solution: any;
@@ -37,15 +36,14 @@ const VideoTab: React.FC<VideoTabProps> = ({
     fetchVideos
   } = useVideoManagement(solution?.id);
   
-  const [isVerifying, setIsVerifying] = useState(false);
+  const [isVerifying, setIsVerifying] = React.useState(false);
 
-  // Forçar a atualização da lista de vídeos quando o componente é montado
   useEffect(() => {
     console.log("[VideoTab] Componente montado, buscando vídeos...");
     fetchVideos();
   }, [solution?.id, fetchVideos]);
 
-  // Verificar se há registros no banco de dados
+  // Verificar registros no banco de dados
   const verifyDatabaseRecords = async () => {
     if (!solution?.id) return;
     
@@ -64,7 +62,7 @@ const VideoTab: React.FC<VideoTabProps> = ({
       });
       
       console.log("[VideoTab] Verificação direta do banco:", data);
-      await fetchVideos(); // Atualizar a lista após verificação
+      await fetchVideos();
     } catch (error) {
       console.error("[VideoTab] Erro ao verificar banco de dados:", error);
       toast("Erro ao verificar registros", {
@@ -75,30 +73,29 @@ const VideoTab: React.FC<VideoTabProps> = ({
     }
   };
 
-  const handleUploadFile = async (file: File) => {
-    console.log("[VideoTab] Arquivo selecionado:", file.name);
-    const success = await handleFileUpload(file);
-    
-    if (success) {
-      console.log("[VideoTab] Upload realizado com sucesso, recarregando vídeos");
-      // Dar tempo para a inserção propagar no banco de dados
-      setTimeout(async () => {
-        await fetchVideos();
-        console.log("[VideoTab] Recarregamento de vídeos após upload concluído");
-      }, 1000);
-    }
-  };
-
   return (
     <div className="space-y-8">
-      <VideoHeader
-        solutionId={solution?.id}
-        onYoutubeClick={() => setYoutubeDialogOpen(true)}
-        onFileUpload={handleUploadFile}
-        isUploading={uploading}
-        uploadProgress={uploadProgress}
-      />
+      {/* Área de Upload Principal */}
+      <Card className="border-2 border-[#0ABAB5]/10 shadow-sm">
+        <CardContent className="p-6">
+          <VideoUploader
+            onFileSelect={handleFileUpload}
+            isUploading={uploading}
+            uploadProgress={uploadProgress}
+            disabled={!solution?.id}
+          />
+          
+          {!solution?.id && (
+            <div className="flex items-center p-4 gap-2 bg-amber-50 border border-amber-200 rounded-md mt-4">
+              <p className="text-sm text-amber-800">
+                Salve as informações básicas antes de adicionar vídeos.
+              </p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
+      {/* Lista de Vídeos */}
       <Card className="border-2 border-[#0ABAB5]/10 shadow-sm">
         <CardContent className="p-6">
           <div className="flex justify-between items-center mb-4">
@@ -125,6 +122,14 @@ const VideoTab: React.FC<VideoTabProps> = ({
                 {isVerifying ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
                 Verificar BD
               </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setYoutubeDialogOpen(true)}
+                disabled={!solution?.id || uploading}
+              >
+                Adicionar do YouTube
+              </Button>
             </div>
           </div>
           
@@ -135,13 +140,6 @@ const VideoTab: React.FC<VideoTabProps> = ({
                 <span className="mt-2 text-sm text-muted-foreground">Carregando vídeos...</span>
               </div>
             </div>
-          ) : videos.length === 0 ? (
-            <EmptyVideoState 
-              onYoutubeClick={() => setYoutubeDialogOpen(true)}
-              onFileUploadClick={() => document.getElementById('video-file-input')?.click()}
-              solutionId={solution?.id}
-              uploading={uploading}
-            />
           ) : (
             <VideosList videos={videos} onRemove={handleRemoveVideo} />
           )}
