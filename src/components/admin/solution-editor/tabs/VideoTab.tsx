@@ -73,6 +73,22 @@ const VideoTab: React.FC<VideoTabProps> = ({
     }
   };
 
+  // Informação de debug sobre o bucket atual
+  const verifyStorageBuckets = async () => {
+    try {
+      const { data: buckets, error } = await supabase.storage.listBuckets();
+      
+      if (error) throw error;
+      
+      console.log("[VideoTab] Buckets disponíveis:", buckets);
+      toast("Buckets verificados", {
+        description: `Existem ${buckets?.length || 0} buckets. Verifique o console para detalhes.`,
+      });
+    } catch (error) {
+      console.error("[VideoTab] Erro ao listar buckets:", error);
+    }
+  };
+
   return (
     <div className="space-y-8">
       {/* Área de Upload SEMPRE em primeiro lugar */}
@@ -121,6 +137,14 @@ const VideoTab: React.FC<VideoTabProps> = ({
           >
             {isVerifying ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
             Verificar BD
+          </Button>
+          <Button
+            variant="outline"
+            size="sm" 
+            onClick={verifyStorageBuckets}
+            title="Verificar buckets de armazenamento"
+          >
+            Verificar Buckets
           </Button>
           <Button
             variant="outline"

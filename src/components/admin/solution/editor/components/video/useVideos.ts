@@ -205,7 +205,7 @@ export const useVideos = ({ solutionId }: UseVideosProps) => {
       
       const fileExt = videoFile.name.split(".").pop();
       const fileName = `${uuidv4()}.${fileExt}`;
-      const filePath = `solution_videos/${solutionId}/${fileName}`;
+      const filePath = `videos/${solutionId}/${fileName}`;
       
       // Simulando progresso de upload
       const progressInterval = setInterval(() => {
@@ -215,9 +215,9 @@ export const useVideos = ({ solutionId }: UseVideosProps) => {
         });
       }, 500);
       
-      // Upload para o bucket resources (que presumimos que existe)
+      // Upload para o bucket solution_files (que sabemos que existe)
       const { error: uploadError } = await supabase.storage
-        .from("resources")
+        .from("solution_files")
         .upload(filePath, videoFile);
         
       clearInterval(progressInterval);
@@ -226,7 +226,7 @@ export const useVideos = ({ solutionId }: UseVideosProps) => {
       
       // Obter a URL do arquivo
       const { data: urlData } = supabase.storage
-        .from("resources")
+        .from("solution_files")
         .getPublicUrl(filePath);
         
       if (!urlData) throw new Error("Não foi possível obter a URL do vídeo");
@@ -302,12 +302,12 @@ export const useVideos = ({ solutionId }: UseVideosProps) => {
       });
       
       // Tentativa de remover do storage se for um upload
-      if (url.includes("resources") && !url.includes("youtube.com")) {
+      if (url.includes("solution_files") && !url.includes("youtube.com")) {
         try {
-          const filePath = url.split("/resources/")[1];
+          const filePath = url.split("/solution_files/")[1];
           if (filePath) {
             await supabase.storage
-              .from("resources")
+              .from("solution_files")
               .remove([filePath]);
           }
         } catch (storageError) {

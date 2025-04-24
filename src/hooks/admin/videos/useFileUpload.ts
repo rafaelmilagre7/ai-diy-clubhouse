@@ -27,11 +27,7 @@ export const useFileUpload = (solutionId: string) => {
       const bucketExists = buckets?.some(b => b.name === bucketName);
       console.log(`[useFileUpload] Bucket '${bucketName}' existe:`, bucketExists);
       
-      if (!bucketExists) {
-        console.log(`[useFileUpload] Bucket '${bucketName}' não encontrado, mas já deve estar criado via migração SQL.`);
-      }
-      
-      return true;
+      return bucketExists;
     } catch (err) {
       console.error("[useFileUpload] Erro ao verificar bucket:", err);
       return false;
@@ -78,12 +74,12 @@ export const useFileUpload = (solutionId: string) => {
         description: "Preparando para enviar o vídeo..."
       });
       
-      // Verificar bucket antes do upload - usamos o bucket "public" configurado via SQL
-      const bucketName = "public";
+      // Usamos o bucket "solution_files" conforme configuração existente
+      const bucketName = "solution_files";
       const bucketReady = await ensureBucketExists(bucketName);
       
       if (!bucketReady) {
-        throw new Error("Não foi possível configurar o armazenamento para uploads. Verifique se o bucket 'public' existe.");
+        throw new Error("Bucket de armazenamento 'solution_files' não encontrado. Entre em contato com o administrador.");
       }
       
       setUploadProgress(10);
