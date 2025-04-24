@@ -1,7 +1,12 @@
 
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import ResourcesUploadForm from './form/ResourcesUploadForm';
+import { Button } from "@/components/ui/button";
+import { Loader2, Save } from "lucide-react";
+import { useResourcesFormData } from './form/hooks/useResourcesFormData';
+
+// Import FAQ tab component
+import ResourceFaqTab from "./form/components/ResourceFaqTab";
 
 interface ResourcesFormProps {
   solutionId: string | null;
@@ -10,21 +15,70 @@ interface ResourcesFormProps {
 }
 
 const ResourcesForm = ({ solutionId, onSave, saving }: ResourcesFormProps) => {
+  const {
+    form,
+    error,
+    isLoading,
+    isSaving,
+    setError,
+    handleSaveResources
+  } = useResourcesFormData(solutionId);
+  
+  const saveAndContinue = async () => {
+    const success = await handleSaveResources();
+    if (success) {
+      onSave();
+    }
+  };
+  
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center py-20">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-4" />
+          <p>Carregando recursos...</p>
+        </div>
+      </div>
+    );
+  }
+  
   return (
     <div className="space-y-6">
       <Card className="border border-[#0ABAB5]/20">
         <CardHeader>
-          <CardTitle>Materiais de Apoio</CardTitle>
+          <CardTitle>Perguntas Frequentes (FAQ)</CardTitle>
           <CardDescription>
-            Adicione documentos, templates e recursos que ajudarão o usuário a implementar a solução.
+            Gerencie as perguntas e respostas frequentes relacionadas a esta solução.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <ResourcesUploadForm
-            solutionId={solutionId}
-            onSave={onSave}
-            saving={saving}
-          />
+          <ResourceFaqTab form={form} />
+          
+          {error && (
+            <div className="mt-4 p-3 bg-destructive/10 text-destructive rounded-md">
+              {error}
+            </div>
+          )}
+          
+          <div className="mt-6 flex justify-end">
+            <Button 
+              onClick={saveAndContinue} 
+              disabled={isSaving || saving || !solutionId}
+              className="bg-[#0ABAB5] hover:bg-[#0ABAB5]/90"
+            >
+              {isSaving || saving ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Salvando...
+                </>
+              ) : (
+                <>
+                  <Save className="mr-2 h-4 w-4" />
+                  Salvar FAQ
+                </>
+              )}
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>

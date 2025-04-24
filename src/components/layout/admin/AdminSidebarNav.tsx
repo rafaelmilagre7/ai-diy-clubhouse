@@ -7,7 +7,8 @@ import {
   Settings,
   MessageSquare,
   ChevronLeft,
-  UserCheck,
+  BookOpen,
+  Gauge,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "react-router-dom";
@@ -34,11 +35,6 @@ export const AdminSidebarNav = ({ sidebarOpen }: AdminSidebarNavProps) => {
       icon: Users,
     },
     {
-      title: "Perfis de Implementação",
-      href: "/admin/implementation-profiles",
-      icon: UserCheck,
-    },
-    {
       title: "Soluções",
       href: "/admin/solutions",
       icon: Lightbulb,
@@ -52,6 +48,16 @@ export const AdminSidebarNav = ({ sidebarOpen }: AdminSidebarNavProps) => {
       title: "Sugestões",
       href: "/admin/suggestions",
       icon: MessageSquare,
+    },
+    {
+      title: "Onboarding",
+      href: "/admin/onboarding",
+      icon: BookOpen,
+    },
+    {
+      title: "Analytics",
+      href: "/admin/analytics",
+      icon: Gauge,
     },
   ];
 

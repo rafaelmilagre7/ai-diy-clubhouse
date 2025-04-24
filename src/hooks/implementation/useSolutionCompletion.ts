@@ -1,141 +1,91 @@
 
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { useAuth } from "@/contexts/auth";
+import { toast } from "@/components/ui/use-toast";
 import { useLogging } from "@/hooks/useLogging";
-import { toast } from "sonner";
 
-export const useSolutionCompletion = (solutionId: string) => {
-  const [completing, setCompleting] = useState(false);
-  const [generating, setGenerating] = useState(false);
-  const { user } = useAuth();
-  const { log, logError } = useLogging("useSolutionCompletion");
+interface SolutionCompletionProps {
+  progressId?: string;
+  solutionId?: string;
+  moduleIdx: number;
+  completedModules: number[];
+  setCompletedModules: React.Dispatch<React.SetStateAction<number[]>>;
+}
 
-  // Função para gerar certificado
-  const generateCertificate = useCallback(async () => {
-    if (!user || !solutionId) {
-      toast.error("Usuário não autenticado ou solução não especificada");
-      return null;
-    }
-
-    setGenerating(true);
-    try {
-      // Verificar se já existe certificado
-      const { data: existingCert, error: certCheckError } = await supabase
-        .from("solution_certificates")
-        .select("id")
-        .eq("solution_id", solutionId)
-        .eq("user_id", user.id)
-        .maybeSingle();
-
-      if (certCheckError) throw certCheckError;
-
-      // Se já existir certificado, retorna o ID
-      if (existingCert) {
-        return existingCert.id;
-      }
-
-      // Obter dados da solução
-      const { data: solution, error: solutionError } = await supabase
-        .from("solutions")
-        .select("title")
-        .eq("id", solutionId)
-        .single();
-
-      if (solutionError) throw solutionError;
-
-      // Criar certificado
-      const certificateData = {
-        title: `Certificado de Implementação: ${solution.title}`,
-        issued_date: new Date().toISOString(),
-        solution_name: solution.title,
-      };
-
-      const { data: newCert, error: createError } = await supabase
-        .from("solution_certificates")
-        .insert({
-          user_id: user.id,
-          solution_id: solutionId,
-          certificate_data: certificateData,
-          issued_at: new Date().toISOString()
-        })
-        .select()
-        .single();
-
-      if (createError) throw createError;
-      
-      log("Certificado gerado com sucesso", { certId: newCert.id });
-      return newCert.id;
-    } catch (error) {
-      logError("Erro ao gerar certificado", { error });
-      toast.error("Não foi possível gerar o certificado.");
-      return null;
-    } finally {
-      setGenerating(false);
-    }
-  }, [solutionId, user, log, logError]);
-
-  // Função para completar a implementação
-  const completeSolution = useCallback(async () => {
-    if (!user || !solutionId) {
-      toast.error("Usuário não autenticado ou solução não especificada");
+export const useSolutionCompletion = ({
+  progressId,
+  solutionId,
+  moduleIdx,
+  completedModules,
+  setCompletedModules
+}: SolutionCompletionProps) => {
+  const [isCompleting, setIsCompleting] = useState(false);
+  const [isCompleted, setIsCompleted] = useState(false);
+  const { log, logError } = useLogging();
+  
+  const handleConfirmImplementation = async (): Promise<boolean> => {
+    if (!progressId || !solutionId) {
+      toast({
+        title: "Erro",
+        description: "Não foi possível completar a implementação. Dados de progresso inválidos.",
+        variant: "destructive",
+      });
       return false;
     }
-
-    setCompleting(true);
+    
+    setIsCompleting(true);
+    
     try {
-      // Obter progresso atual
-      const { data: progress, error: progressError } = await supabase
-        .from("progress")
-        .select("*")
-        .eq("solution_id", solutionId)
-        .eq("user_id", user.id)
-        .maybeSingle();
-
-      if (progressError) throw progressError;
-
-      if (!progress) {
-        toast.error("Nenhum progresso encontrado para esta solução");
-        return false;
-      }
-
-      // Atualizar progresso para completo
-      const { error: updateError } = await supabase
+      log("Confirming implementation", { 
+        progress_id: progressId, 
+        solution_id: solutionId 
+      });
+      
+      // Marcar solução como implementada
+      const { error } = await supabase
         .from("progress")
         .update({
           is_completed: true,
-          implementation_status: "completed",
-          completed_at: new Date().toISOString(),
-          last_activity: new Date().toISOString()
+          completed_modules: [...new Set([...completedModules, moduleIdx])],
+          completed_at: new Date().toISOString(), // Updated column name
         })
-        .eq("id", progress.id);
-
-      if (updateError) throw updateError;
-
-      // Incrementar métricas de conclusão
-      await supabase.rpc('increment', {
-        row_id: solutionId,
-        table_name: 'solution_metrics',
-        column_name: 'total_completions'
+        .eq("id", progressId);
+      
+      if (error) {
+        throw error;
+      }
+      
+      log("Implementation marked as complete", { 
+        progress_id: progressId,
+        solution_id: solutionId
       });
-
-      // Gerar certificado automaticamente
-      await generateCertificate();
-
-      log("Solução marcada como concluída com sucesso", { solutionId });
+      
+      // Atualizar estado local
+      setCompletedModules(prev => [...new Set([...prev, moduleIdx])]);
+      setIsCompleted(true);
+      
+      toast({
+        title: "Parabéns!",
+        description: "Você concluiu com sucesso a implementação desta solução.",
+      });
+      
       return true;
     } catch (error) {
-      logError("Erro ao completar solução", { error });
+      logError("Error confirming implementation", error);
+      toast({
+        title: "Erro",
+        description: "Ocorreu um erro ao tentar completar a implementação. Tente novamente.",
+        variant: "destructive",
+      });
       return false;
     } finally {
-      setCompleting(false);
+      setIsCompleting(false);
     }
-  }, [solutionId, user, generateCertificate, log, logError]);
-
+  };
+  
   return {
-    completing,
-    generating,
-    completeSolution,
-    generateCertificate
+    isCompleting,
+    isCompleted,
+    handleConfirmImplementation
   };
 };

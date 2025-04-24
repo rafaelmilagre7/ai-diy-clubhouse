@@ -1,32 +1,61 @@
 
 import { Fragment } from "react";
 import { Route } from "react-router-dom";
-import LayoutProvider from "@/components/layout/LayoutProvider";
+import MemberLayout from "@/components/layout/MemberLayout";
+
+// Páginas de membros
 import Dashboard from "@/pages/member/Dashboard";
+import Solutions from "@/pages/member/Solutions";
 import SolutionDetails from "@/pages/member/SolutionDetails";
 import SolutionImplementation from "@/pages/member/SolutionImplementation";
-import ImplementationConfirmation from "@/pages/member/ImplementationConfirmation";
-import ImplementationCompleted from "@/pages/member/ImplementationCompleted";
-import Achievements from "@/pages/member/Achievements";
-import ProfileSettings from "@/pages/member/Profile";
-import MemberSolutionRedirect from "@/components/routing/MemberSolutionRedirect";
+import Profile from "@/pages/member/Profile";
+import EditProfile from "@/pages/member/EditProfile";
+import Tools from "@/pages/member/Tools";
+import ToolDetails from "@/pages/member/ToolDetails";
 import Suggestions from "@/pages/member/Suggestions";
 import SuggestionDetails from "@/pages/member/SuggestionDetails";
+import NewSuggestion from "@/pages/member/NewSuggestion";
+import Achievements from "@/pages/member/Achievements";
+import Benefits from "@/pages/member/Benefits";
+import ImplementationTrailPage from "@/pages/member/ImplementationTrailPage";
+import ImplementationProfilePage from "@/pages/ImplementationProfile";
 
 export const memberRoutes = (
   <Fragment>
-    <Route path="/" element={<LayoutProvider><Dashboard /></LayoutProvider>} />
-    <Route path="/dashboard" element={<LayoutProvider><Dashboard /></LayoutProvider>} />
-    <Route path="/solutions/:id" element={<LayoutProvider><SolutionDetails /></LayoutProvider>} />
-    <Route path="/solutions/:id/implementation" element={<LayoutProvider><SolutionImplementation /></LayoutProvider>} />
-    <Route path="/solutions/:id/implementation/confirm" element={<LayoutProvider><ImplementationConfirmation /></LayoutProvider>} />
-    <Route path="/solutions/:id/implementation/completed" element={<LayoutProvider><ImplementationCompleted /></LayoutProvider>} />
-    <Route path="/profile" element={<LayoutProvider><ProfileSettings /></LayoutProvider>} />
-    <Route path="/achievements" element={<LayoutProvider><Achievements /></LayoutProvider>} />
-    <Route path="/suggestions" element={<LayoutProvider><Suggestions /></LayoutProvider>} />
-    <Route path="/suggestions/:id" element={<LayoutProvider><SuggestionDetails /></LayoutProvider>} />
-    
-    {/* Redirecionamento para URLs antigas */}
-    <Route path="/solution/:id" element={<MemberSolutionRedirect />} />
+    <Route element={<MemberLayout />}>
+      {/* Dashboard */}
+      <Route index element={<Dashboard />} />
+      <Route path="dashboard" element={<Dashboard />} />
+      
+      {/* Perfil de Implementação */}
+      <Route path="perfil-de-implementacao" element={<ImplementationProfilePage />} />
+      
+      {/* Soluções */}
+      <Route path="solutions" element={<Solutions />} />
+      <Route path="solution/:id" element={<SolutionDetails />} />
+      <Route path="implement/:id/:moduleIdx" element={<SolutionImplementation />} />
+      <Route path="implementation/:id" element={<SolutionImplementation />} />
+      <Route path="implementation/:id/:moduleIdx" element={<SolutionImplementation />} />
+      <Route path="implementation-trail" element={<ImplementationTrailPage />} />
+      
+      {/* Perfil */}
+      <Route path="profile" element={<Profile />} />
+      <Route path="profile/edit" element={<EditProfile />} />
+      
+      {/* Ferramentas */}
+      <Route path="tools" element={<Tools />} />
+      <Route path="tools/:id" element={<ToolDetails />} />
+      
+      {/* Benefícios */}
+      <Route path="benefits" element={<Benefits />} />
+      
+      {/* Sugestões */}
+      <Route path="suggestions" element={<Suggestions />} />
+      <Route path="suggestions/:id" element={<SuggestionDetails />} />
+      <Route path="suggestions/new" element={<NewSuggestion />} />
+      
+      {/* Conquistas */}
+      <Route path="achievements" element={<Achievements />} />
+    </Route>
   </Fragment>
 );

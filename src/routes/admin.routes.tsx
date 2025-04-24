@@ -5,65 +5,35 @@ import AdminLayout from "@/components/layout/admin/AdminLayout";
 
 // Páginas de administração
 import AdminDashboard from "@/pages/admin/AdminDashboard";
+import AdminUsers from "@/pages/admin/AdminUsers";
 import AdminSolutions from "@/pages/admin/AdminSolutions";
+import AdminTools from "@/pages/admin/AdminTools";
+import AdminSuggestions from "@/pages/admin/AdminSuggestions";
+import AdminOnboarding from "@/pages/admin/AdminOnboarding";
+import AdminAnalytics from "@/pages/admin/AdminAnalytics";
 import AdminSolutionCreate from "@/pages/admin/AdminSolutionCreate";
 import AdminSolutionEdit from "@/pages/admin/AdminSolutionEdit";
-import AdminSolutionRedirect from "@/components/routing/AdminSolutionRedirect";
-import AdminUsers from "@/pages/admin/AdminUsers";
-import AdminTools from "@/pages/admin/AdminTools";
-import AdminImplementationProfiles from "@/pages/admin/AdminImplementationProfiles";
-import AdminImplementationProfileDetails from "@/pages/admin/AdminImplementationProfileDetails";
-import AdminSuggestions from "@/pages/admin/AdminSuggestions";
+import SolutionEditor from "@/pages/admin/SolutionEditor";
+import AdminToolEdit from "@/pages/admin/AdminToolEdit";
 import AdminSuggestionDetails from "@/pages/admin/AdminSuggestionDetails";
 
 export const adminRoutes = (
   <Fragment>
-    {/* Dashboard Admin */}
+    {/* Dashboard */}
     <Route path="admin" element={
       <AdminLayout>
         <AdminDashboard />
       </AdminLayout>
     } />
     
-    {/* Gerenciamento de Usuários */}
+    {/* Usuários */}
     <Route path="admin/users" element={
       <AdminLayout>
         <AdminUsers />
       </AdminLayout>
     } />
     
-    {/* Gerenciamento de Ferramentas */}
-    <Route path="admin/tools" element={
-      <AdminLayout>
-        <AdminTools />
-      </AdminLayout>
-    } />
-    
-    {/* Perfis de Implementação */}
-    <Route path="admin/implementation-profiles" element={
-      <AdminLayout>
-        <AdminImplementationProfiles />
-      </AdminLayout>
-    } />
-    <Route path="admin/implementation-profiles/:id" element={
-      <AdminLayout>
-        <AdminImplementationProfileDetails />
-      </AdminLayout>
-    } />
-    
-    {/* Gerenciamento de Sugestões */}
-    <Route path="admin/suggestions" element={
-      <AdminLayout>
-        <AdminSuggestions />
-      </AdminLayout>
-    } />
-    <Route path="admin/suggestions/:id" element={
-      <AdminLayout>
-        <AdminSuggestionDetails />
-      </AdminLayout>
-    } />
-    
-    {/* Gerenciamento de Soluções */}
+    {/* Soluções */}
     <Route path="admin/solutions" element={
       <AdminLayout>
         <AdminSolutions />
@@ -79,13 +49,51 @@ export const adminRoutes = (
         <AdminSolutionEdit />
       </AdminLayout>
     } />
-    
-    {/* Redirecionamento para URLs antigas */}
-    <Route path="admin/solution/:id" element={
-      <AdminSolutionRedirect />
+    <Route path="admin/solutions/:id/editor" element={
+      <AdminLayout>
+        <SolutionEditor />
+      </AdminLayout>
     } />
-    <Route path="admin/solution/:id/editor" element={
-      <AdminSolutionRedirect />
+    
+    {/* Ferramentas */}
+    <Route path="admin/tools" element={
+      <AdminLayout>
+        <AdminTools />
+      </AdminLayout>
+    } />
+    <Route path="admin/tools/new" element={
+      <AdminLayout>
+        <AdminToolEdit />
+      </AdminLayout>
+    } />
+    <Route path="admin/tools/:id" element={
+      <AdminLayout>
+        <AdminToolEdit />
+      </AdminLayout>
+    } />
+    
+    {/* Sugestões */}
+    <Route path="admin/suggestions" element={
+      <AdminLayout>
+        <AdminSuggestions />
+      </AdminLayout>
+    } />
+    <Route path="admin/suggestions/:id" element={
+      <AdminLayout>
+        <AdminSuggestionDetails />
+      </AdminLayout>
+    } />
+    
+    {/* Onboarding e Analytics */}
+    <Route path="admin/onboarding" element={
+      <AdminLayout>
+        <AdminOnboarding />
+      </AdminLayout>
+    } />
+    <Route path="admin/analytics" element={
+      <AdminLayout>
+        <AdminAnalytics />
+      </AdminLayout>
     } />
   </Fragment>
 );

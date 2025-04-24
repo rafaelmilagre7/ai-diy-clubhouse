@@ -1,38 +1,39 @@
 
-import { Routes, Route } from 'react-router-dom';
-import { ProtectedRoutes } from '@/auth/ProtectedRoutes';
-import { AdminProtectedRoutes } from '@/auth/AdminProtectedRoutes';
-import { memberRoutes } from './member.routes';
-import { adminRoutes } from './admin.routes';
-import { authRoutes } from './auth.routes';
-import RootRedirect from '@/components/routing/RootRedirect';
-import { NotFound } from '@/pages/NotFound';
+import { Route, Routes } from "react-router-dom";
+import { authRoutes } from "./auth.routes";
+import { memberRoutes } from "./member.routes";
+import { adminRoutes } from "./admin.routes";
+import { AdminProtectedRoutes } from "@/auth/AdminProtectedRoutes";
+import { ProtectedRoutes } from "@/auth/ProtectedRoutes";
+import NotFound from "@/pages/NotFound";
+import RootRedirect from "@/components/routing/RootRedirect";
 
 const AppRoutes = () => {
-  console.log('AppRoutes renderizando');
+  console.log("Renderizando AppRoutes");
   
   return (
     <Routes>
-      {/* Autenticação */}
-      {authRoutes}
-      
-      {/* Rota raiz para redirecionar com base no tipo de usuário */}
+      {/* Rota raiz - redireciona com base no estado de autenticação */}
       <Route path="/" element={<RootRedirect />} />
       
-      {/* Rotas de Membros */}
+      {/* Rotas de autenticação */}
+      {authRoutes}
+      
+      {/* Rotas de membros protegidas */}
       <Route element={<ProtectedRoutes />}>
         {memberRoutes}
       </Route>
-
-      {/* Rotas Administrativas */}
+      
+      {/* Rotas de administradores protegidas */}
       <Route element={<AdminProtectedRoutes />}>
         {adminRoutes}
       </Route>
       
-      {/* Fallback para qualquer outra rota */}
+      {/* Rota para página não encontrada */}
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
 };
 
+export { AppRoutes };
 export default AppRoutes;

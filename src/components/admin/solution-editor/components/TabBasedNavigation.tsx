@@ -2,20 +2,16 @@
 import React from "react";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import TabNav from "../TabNav";
-import BasicInfoTab from "../tabs/BasicInfoTab";
-import ToolsTab from "../tabs/ToolsTab";
-import ResourcesTab from "../tabs/ResourcesTab";
-import ChecklistTab from "../tabs/ChecklistTab";
-import PublishTab from "../tabs/PublishTab";
-import ModulesTab from "../tabs/ModulesTab";
-import VideosTab from "../../solution/editor/components/VideosTab";
+import TabContent from "./TabContent";
+import { Solution } from "@/lib/supabase";
+import { SolutionFormValues } from "@/components/admin/solution/form/solutionFormSchema";
 
 interface TabBasedNavigationProps {
   activeTab: string;
   setActiveTab: (value: string) => void;
-  solution: any;
-  currentValues: any;
-  onSubmit: (values: any) => Promise<void>;
+  solution: Solution | null;
+  currentValues: SolutionFormValues;
+  onSubmit: (values: SolutionFormValues) => Promise<void>;
   saving: boolean;
 }
 
@@ -28,70 +24,21 @@ const TabBasedNavigation: React.FC<TabBasedNavigationProps> = ({
   saving
 }) => {
   return (
-    <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-      <TabNav activeTab={activeTab} setActiveTab={setActiveTab} />
-      
-      <div className="mt-6">
-        <TabsContent value="basic-info">
-          <BasicInfoTab
-            defaultValues={currentValues}
-            currentValues={currentValues}
-            onSubmit={onSubmit}
-            saving={saving}
-          />
-        </TabsContent>
-        
-        <TabsContent value="tools">
-          <ToolsTab
-            solution={solution}
-            onSubmit={onSubmit}
-            saving={saving}
-          />
-        </TabsContent>
-        
-        <TabsContent value="materials">
-          <ResourcesTab
-            solutionId={solution?.id}
-            onSave={() => onSubmit(currentValues)}
-            saving={saving}
-          />
-        </TabsContent>
-        
-        <TabsContent value="videos">
-          <VideosTab
-            solution={solution}
-            currentValues={currentValues}
-            onSubmit={onSubmit}
-            saving={saving}
-          />
-        </TabsContent>
-        
-        <TabsContent value="checklist">
-          <ChecklistTab
-            solutionId={solution?.id}
-            onSave={() => onSubmit(currentValues)}
-            saving={saving}
-          />
-        </TabsContent>
-        
-        <TabsContent value="modules">
-          <ModulesTab 
-            solutionId={solution?.id}
-            onSave={() => onSubmit(currentValues)} 
-            saving={saving}
-            currentModuleStep={0}
-          />
-        </TabsContent>
-        
-        <TabsContent value="publish">
-          <PublishTab
-            solutionId={solution?.id}
-            solution={solution}
-            onSave={onSubmit}
-            saving={saving}
-          />
-        </TabsContent>
+    <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-6">
+      <div className="mx-6">
+        <TabNav activeTab={activeTab} setActiveTab={setActiveTab} />
       </div>
+      
+      <TabsContent value={activeTab} className="space-y-6 mt-6 px-6 pb-6">
+        <TabContent
+          activeTab={activeTab}
+          currentStep={0}
+          solution={solution}
+          currentValues={currentValues}
+          onSubmit={onSubmit}
+          saving={saving}
+        />
+      </TabsContent>
     </Tabs>
   );
 };

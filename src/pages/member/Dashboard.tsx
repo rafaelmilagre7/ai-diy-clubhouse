@@ -1,28 +1,23 @@
+
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { useState, useCallback, useEffect } from "react";
-import { useCentralDataStore } from "@/hooks/useCentralDataStore";
+import { useState, useEffect, useCallback } from "react";
+import { useSolutionsData } from "@/hooks/useSolutionsData";
+import { useDashboardProgress } from "@/hooks/useDashboardProgress";
 import { toast } from "sonner";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { Solution } from "@/lib/supabase";
-import { LoadingPage } from "@/components/ui/loading-states";
+import LoadingScreen from "@/components/common/LoadingScreen";
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  
-  // Usar nosso hook centralizado de dados com props corretas
+  const { solutions, loading: solutionsLoading } = useSolutionsData();
   const { 
-    solutions,
-    loadingSolutions: isLoading,
-    fetchSolutionDetails: prefetchSolution
-  } = useCentralDataStore();
-  
-  // Categorizar soluções
-  const categorizedSolutions = {
-    active: solutions.filter(s => s.published),
-    recommended: solutions.filter(s => s.published).slice(0, 3),
-    completed: []
-  };
+    active, 
+    completed, 
+    recommended, 
+    loading: progressLoading 
+  } = useDashboardProgress(solutions);
   
   const [category, setCategory] = useState<string>(
     searchParams.get("category") || "general"
@@ -35,13 +30,11 @@ const Dashboard = () => {
   }, [setSearchParams]);
 
   // Função para navegar para a página de detalhes da solução
-  const handleSolutionClick = useCallback((solution: Solution) => {
-    // Prefetch dos dados da solução para carregamento rápido
-    prefetchSolution(solution.id);
+  const handleSolutionClick = (solution: Solution) => {
     navigate(`/solution/${solution.id}`);
-  }, [navigate, prefetchSolution]);
+  };
 
-  // Efeito para mostrar toast na primeira visita - executado apenas 1 vez
+  // Efeito para mostrar toast na primeira visita
   useEffect(() => {
     const isFirstVisit = localStorage.getItem("firstDashboardVisit") !== "false";
     
@@ -52,22 +45,18 @@ const Dashboard = () => {
   }, []);
 
   // Mostrar tela de carregamento enquanto os dados estão sendo carregados
-  if (isLoading) {
-    return (
-      <LoadingPage 
-        message="Carregando seu dashboard" 
-        description="Estamos preparando sua experiência personalizada do VIVER DE IA Club..." 
-      />
-    );
+  if (solutionsLoading || progressLoading) {
+    return <LoadingScreen message="Carregando seu dashboard..." />;
   }
 
   return (
     <DashboardLayout
-      solutions={categorizedSolutions}
-      isLoading={isLoading}
+      active={active}
+      completed={completed}
+      recommended={recommended}
+      category={category}
       onCategoryChange={handleCategoryChange}
       onSolutionClick={handleSolutionClick}
-      currentCategory={category}
     />
   );
 };

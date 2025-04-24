@@ -1,88 +1,63 @@
 
 import React from "react";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileText, Wrench, FileArchive, Video, CheckSquare, Upload, Send } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Solution } from "@/lib/supabase";
+import { SolutionFormValues } from "@/components/admin/solution/form/solutionFormSchema";
+import TabHeader from "./TabHeader";
+import TabBasedNavigation from "./components/TabBasedNavigation";
+import StepBasedContent from "./components/StepBasedContent";
 
 interface SolutionEditorTabsProps {
   activeTab: string;
   setActiveTab: (value: string) => void;
-  solution: any;
-  currentValues: any;
-  onSubmit: (values: any) => Promise<void>;
+  solution: Solution | null;
+  currentValues: SolutionFormValues;
+  onSubmit: (values: SolutionFormValues) => Promise<void>;
   saving: boolean;
   currentStep: number;
 }
 
-const SolutionEditorTabs: React.FC<SolutionEditorTabsProps> = ({
+/**
+ * Componente principal para o editor de soluções baseado em abas/etapas
+ * Gerencia a exibição correta do conteúdo com base na etapa atual
+ */
+const SolutionEditorTabs = ({
   activeTab,
   setActiveTab,
   solution,
   currentValues,
   onSubmit,
   saving,
-  currentStep
-}) => {
-  const tabs = [
-    {
-      id: "basic-info",
-      label: "Informações Básicas",
-      icon: <FileText className="w-4 h-4 mr-2" />,
-      step: 0
-    },
-    {
-      id: "tools",
-      label: "Ferramentas",
-      icon: <Wrench className="w-4 h-4 mr-2" />,
-      step: 1
-    },
-    {
-      id: "materials",
-      label: "Materiais",
-      icon: <FileArchive className="w-4 h-4 mr-2" />,
-      step: 2
-    },
-    {
-      id: "videos",
-      label: "Vídeos",
-      icon: <Video className="w-4 h-4 mr-2" />,
-      step: 3
-    },
-    {
-      id: "checklist",
-      label: "Checklist",
-      icon: <CheckSquare className="w-4 h-4 mr-2" />,
-      step: 4
-    },
-    {
-      id: "publish",
-      label: "Publicar",
-      icon: <Send className="w-4 h-4 mr-2" />,
-      step: 5
-    }
-  ];
+  currentStep,
+}: SolutionEditorTabsProps) => {
+  const isValid = solution && solution.id;
+  
+  // Mostra abas apenas na primeira etapa
+  const shouldShowTabs = currentStep === 0;
 
   return (
-    <div className="px-1">
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid grid-cols-3 md:grid-cols-6">
-          {tabs.map((tab) => (
-            <TabsTrigger
-              key={tab.id}
-              value={tab.id}
-              className={cn(
-                "flex items-center",
-                tab.step > currentStep && "opacity-70",
-                tab.step === currentStep && "font-medium"
-              )}
-            >
-              {tab.icon}
-              <span className="hidden md:inline">{tab.label}</span>
-              <span className="inline md:hidden">{tab.label.split(" ")[0]}</span>
-            </TabsTrigger>
-          ))}
-        </TabsList>
-      </Tabs>
+    <div className="space-y-6">
+      <TabHeader currentStep={currentStep} activeTab={activeTab} />
+      
+      {shouldShowTabs ? (
+        <TabBasedNavigation 
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          solution={solution}
+          currentValues={currentValues}
+          onSubmit={onSubmit}
+          saving={saving}
+        />
+      ) : (
+        <StepBasedContent
+          activeTab={activeTab}
+          currentStep={currentStep}
+          solution={solution}
+          currentValues={currentValues}
+          onSubmit={onSubmit}
+          saving={saving}
+          setActiveTab={setActiveTab} // Passando o setter do activeTab
+        />
+      )}
     </div>
   );
 };

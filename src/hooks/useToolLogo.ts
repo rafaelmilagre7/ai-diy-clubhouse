@@ -1,53 +1,57 @@
 
-import { useState, useEffect } from "react";
-import { useLogging } from "@/hooks/useLogging";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/lib/supabase";
+import { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
+import { useLogging } from '@/hooks/useLogging';
 
 interface UseToolLogoProps {
-  toolId?: string;
   toolName?: string;
+  toolId?: string;
 }
 
-export const useToolLogo = ({ toolId, toolName }: UseToolLogoProps) => {
+export const useToolLogo = ({ toolName, toolId }: UseToolLogoProps) => {
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
-  const { log, logError } = useLogging("useToolLogo");
+  const [loading, setLoading] = useState(true);
+  const { log, logError } = useLogging();
 
-  const { data: tool, isLoading: loading } = useQuery({
-    queryKey: ['tool-logo', toolId || toolName],
-    queryFn: async () => {
+  useEffect(() => {
+    const fetchToolLogo = async () => {
+      if (!toolName && !toolId) {
+        setLoading(false);
+        return;
+      }
+
       try {
-        let query = supabase.from('tools').select('logo_url, name');
+        setLoading(true);
+        
+        let query = supabase.from('tools').select('logo_url, name, has_member_benefit, benefit_type');
         
         if (toolId) {
           query = query.eq('id', toolId);
         } else if (toolName) {
           query = query.ilike('name', toolName);
-        } else {
-          return null;
         }
         
-        const { data, error } = await query.maybeSingle();
+        const { data, error } = await query.limit(1);
         
         if (error) {
           throw error;
         }
         
-        return data;
+        if (data && data.length > 0) {
+          log('Logo da ferramenta encontrado', { tool: data[0].name });
+          setLogoUrl(data[0].logo_url);
+        } else {
+          log('Nenhum logo encontrado para a ferramenta', { toolName, toolId });
+        }
       } catch (error) {
-        logError("Erro ao buscar logo da ferramenta", { error, toolId, toolName });
-        return null;
+        logError('Erro ao buscar logo da ferramenta', error);
+      } finally {
+        setLoading(false);
       }
-    },
-    enabled: !!toolId || !!toolName,
-    staleTime: 10 * 60 * 1000 // 10 minutos
-  });
-
-  useEffect(() => {
-    if (tool?.logo_url) {
-      setLogoUrl(tool.logo_url);
-    }
-  }, [tool]);
-
+    };
+    
+    fetchToolLogo();
+  }, [toolName, toolId, log, logError]);
+  
   return { logoUrl, loading };
 };

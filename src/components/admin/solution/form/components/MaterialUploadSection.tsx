@@ -1,6 +1,8 @@
 
 import React from "react";
 import { FileUpload } from "@/components/ui/file-upload";
+import { detectFileType, getFileFormatName } from "../utils/resourceUtils";
+import { ResourceMetadata } from "../types/ResourceTypes";
 
 interface MaterialUploadSectionProps {
   solutionId: string | null;
@@ -19,7 +21,7 @@ const MaterialUploadSection: React.FC<MaterialUploadSectionProps> = ({
     <div className="bg-white border p-6 rounded-lg">
       <h3 className="text-lg font-medium mb-4">Upload de Material</h3>
       <p className="text-sm text-muted-foreground mb-4">
-        Adicione documentos de suporte para esta solução (PDFs, planilhas, slides, textos).
+        Adicione materiais de suporte para esta solução (PDFs, planilhas, slides, etc).
       </p>
       
       {solutionId ? (
@@ -27,9 +29,9 @@ const MaterialUploadSection: React.FC<MaterialUploadSectionProps> = ({
           bucketName="solution_files"
           folder="documents"
           onUploadComplete={handleFileUploadComplete}
-          accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.csv,.txt"
+          accept="*"
           maxSize={25} // 25MB
-          buttonText="Upload de Documento"
+          buttonText="Upload de Material"
           fieldLabel="Selecione um arquivo (até 25MB)"
         />
       ) : (

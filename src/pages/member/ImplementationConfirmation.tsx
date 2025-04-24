@@ -7,49 +7,51 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Progress } from "@/components/ui/progress";
 import { useSolutionData } from "@/hooks/useSolutionData";
 import { useProgressTracking } from "@/hooks/implementation/useProgressTracking";
-import { useSolutionCompletion } from "@/hooks/implementation/useSolutionCompletion";
-import { toast } from "sonner";
+import { useImplementationData } from "@/hooks/implementation/useImplementationData";
+import { useToast } from "@/hooks/use-toast";
 import LoadingScreen from "@/components/common/LoadingScreen";
-import { adaptSolutionType, adaptProgressType } from "@/utils/typeAdapters";
 
 const ImplementationConfirmation = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   // Carregar dados da solução
-  const { solution: supaSolution, loading: solutionLoading, progress: supaProgress } = useSolutionData(id || "");
+  const { solution, loading: solutionLoading } = useSolutionData(id);
   
-  // Adaptar tipos para compatibilidade
-  const solution = supaSolution ? adaptSolutionType(supaSolution) : null;
-  const progress = supaProgress ? adaptProgressType(supaProgress) : null;
-  
-  const totalModules = solution?.modules?.length || 8;
-  
-  // Hook para conclusão da solução
-  const { completing, completeSolution } = useSolutionCompletion(id || "");
+  // Carregar dados de implementação
+  const { 
+    modules,
+    progress,
+    completedModules,
+    setCompletedModules,
+    loading: implementationLoading 
+  } = useImplementationData();
   
   // Hooks de progresso
-  const { 
-    completedModules, 
+  const {
+    isCompleting,
+    handleConfirmImplementation,
     calculateProgress,
-    isCompleting 
   } = useProgressTracking(
-    id || "",
-    progress,
-    0,
-    totalModules
+    progress, 
+    completedModules, 
+    setCompletedModules,
+    modules.length
   );
   
   // Manipulador para confirmar implementação
   const handleConfirm = async () => {
     setIsSubmitting(true);
     try {
-      const success = await completeSolution();
+      const success = await handleConfirmImplementation();
       
       if (success) {
-        toast.success("Implementação concluída!", {
-          description: "Parabéns! Você aplicou com sucesso esta solução em seu negócio."
+        // Exibir mensagem de sucesso
+        toast({
+          title: "Implementação concluída!",
+          description: "Parabéns! Você aplicou com sucesso esta solução em seu negócio.",
         });
         
         // Redirecionar para página de certificado ou dashboard
@@ -57,8 +59,10 @@ const ImplementationConfirmation = () => {
       }
     } catch (error) {
       console.error("Erro ao confirmar implementação:", error);
-      toast.error("Erro", {
-        description: "Ocorreu um erro ao confirmar a implementação. Tente novamente."
+      toast({
+        title: "Erro",
+        description: "Ocorreu um erro ao confirmar a implementação. Tente novamente.",
+        variant: "destructive",
       });
     } finally {
       setIsSubmitting(false);
@@ -69,7 +73,7 @@ const ImplementationConfirmation = () => {
     navigate(`/implement/${id}/0`);
   };
   
-  if (solutionLoading) {
+  if (solutionLoading || implementationLoading) {
     return <LoadingScreen message="Carregando dados da solução..." />;
   }
   
@@ -100,7 +104,7 @@ const ImplementationConfirmation = () => {
             <div>
               <p className="font-medium">Progresso da implementação</p>
               <p className="text-sm text-muted-foreground">
-                {completedModules.length} de {totalModules} etapas concluídas
+                {completedModules.length} de {modules.length} etapas concluídas
               </p>
             </div>
             <div className="font-bold text-lg">
@@ -159,9 +163,9 @@ const ImplementationConfirmation = () => {
             size="lg" 
             className="w-full sm:w-auto"
             onClick={handleConfirm}
-            disabled={isSubmitting || completing || isCompleting}
+            disabled={isSubmitting}
           >
-            {isSubmitting || completing || isCompleting ? (
+            {isSubmitting ? (
               <>Confirmando...</>
             ) : (
               <>
@@ -176,7 +180,7 @@ const ImplementationConfirmation = () => {
             size="lg" 
             className="w-full sm:w-auto"
             onClick={handleCancel}
-            disabled={isSubmitting || completing || isCompleting}
+            disabled={isSubmitting}
           >
             Voltar
           </Button>

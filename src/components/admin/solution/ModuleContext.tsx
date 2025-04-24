@@ -1,5 +1,6 @@
+
 import React, { createContext, useContext, ReactNode } from "react";
-import { Module } from "@/types/supabaseTypes";
+import { Module } from "@/lib/supabase";
 
 interface ModuleContextProps {
   modules: Module[];

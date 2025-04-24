@@ -4,7 +4,10 @@ import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import { Tool } from "@/types/toolTypes";
-import { SelectedTool } from "@/components/admin/solution/form/types";
+
+export interface SelectedTool extends Tool {
+  is_required: boolean;
+}
 
 export const useToolsChecklist = (solutionId: string | null) => {
   const [tools, setTools] = useState<SelectedTool[]>([]);

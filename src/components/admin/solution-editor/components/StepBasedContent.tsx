@@ -3,7 +3,7 @@ import React from "react";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import TabNav from "../TabNav";
 import TabContent from "./TabContent";
-import { Solution } from "@/types/supabaseTypes";
+import { Solution } from "@/lib/supabase";
 import { SolutionFormValues } from "@/components/admin/solution/form/solutionFormSchema";
 
 interface StepBasedContentProps {

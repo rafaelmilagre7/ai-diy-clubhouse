@@ -1,23 +1,27 @@
 
 export interface Comment {
   id: string;
+  tool_id: string;
+  user_id: string;
   content: string;
   created_at: string;
-  user_id: string;
+  updated_at: string;
   likes_count: number;
-  parent_id?: string;
-  replies?: Comment[];
+  parent_id?: string | null;
   user_has_liked?: boolean;
+  // Informações do perfil do usuário que fez o comentário
   profiles?: {
     name: string;
     avatar_url?: string;
     role?: string;
-    id: string;
-    full_name?: string;
   };
-  user?: {
-    name: string;
-    avatar_url?: string;
-    id: string;
-  };
+  // Comentários aninhados (respostas a este comentário)
+  replies?: Comment[];
+}
+
+export interface CommentFormData {
+  content: string;
+  tool_id: string;
+  parent_id?: string;
+  images?: File[];
 }

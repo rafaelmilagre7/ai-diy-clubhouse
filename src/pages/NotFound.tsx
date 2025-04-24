@@ -15,12 +15,8 @@ export const NotFound: React.FC = () => {
       location.pathname
     );
     
-    // Se estamos em uma rota de solução, mostrar um toast informativo específico
-    if (location.pathname.includes('/solution/')) {
-      toast.error("Solução não encontrada. Verifique o ID da solução ou navegue para todas as soluções.");
-    }
     // Se estamos em uma rota de onboarding, mostrar um toast informativo
-    else if (location.pathname.includes('/onboarding/')) {
+    if (location.pathname.includes('/onboarding/')) {
       toast.error("Página de onboarding não encontrada. Redirecionando para opções válidas...");
     }
   }, [location.pathname]);
@@ -39,8 +35,8 @@ export const NotFound: React.FC = () => {
     }
   };
 
-  const handleRedirectToSolutions = () => {
-    navigate('/solutions');
+  const handleRedirectToOnboarding = () => {
+    navigate('/onboarding');
   };
   
   const handleGoBack = () => {
@@ -58,10 +54,10 @@ export const NotFound: React.FC = () => {
         <div className="flex flex-col sm:flex-row justify-center gap-4">
           <Button 
             className="flex items-center gap-2 bg-[#0ABAB5] hover:bg-[#099388]" 
-            onClick={handleRedirectToSolutions}
+            onClick={handleRedirectToOnboarding}
           >
             <Home className="h-4 w-4" />
-            Soluções
+            Onboarding
           </Button>
           <Button 
             variant="outline" 

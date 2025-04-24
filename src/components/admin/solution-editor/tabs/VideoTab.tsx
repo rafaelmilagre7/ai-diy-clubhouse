@@ -1,19 +1,23 @@
 
 import React from "react";
-import VideoForm from "@/components/admin/solution/VideoForm";
+import VideoLessonsForm from "@/components/admin/solution/form/VideoLessonsForm";
 
 interface VideoTabProps {
-  solution: any;
-  onSubmit: (values: any) => Promise<void>;
-  saving?: boolean;
+  solutionId: string | null;
+  onSave: () => void;
+  saving: boolean;
 }
 
-const VideoTab: React.FC<VideoTabProps> = ({ solution, onSubmit, saving }) => {
+const VideoTab: React.FC<VideoTabProps> = ({
+  solutionId,
+  onSave,
+  saving,
+}) => {
   return (
-    <VideoForm
-      solution={solution}
-      onSave={onSubmit}
-      saving={saving}
+    <VideoLessonsForm 
+      solutionId={solutionId} 
+      onSave={onSave} 
+      saving={saving} 
     />
   );
 };

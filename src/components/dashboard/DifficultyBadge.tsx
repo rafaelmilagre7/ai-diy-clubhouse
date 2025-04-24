@@ -7,7 +7,7 @@ interface DifficultyBadgeProps {
 
 export const DifficultyBadge = ({ difficulty }: DifficultyBadgeProps) => {
   const getColor = () => {
-    switch (difficulty.toLowerCase()) {
+    switch (difficulty) {
       case "easy":
         return "bg-gradient-to-r from-green-100 to-green-50 text-green-800 border-green-200";
       case "medium":
@@ -20,7 +20,7 @@ export const DifficultyBadge = ({ difficulty }: DifficultyBadgeProps) => {
   };
 
   const getLabel = () => {
-    switch (difficulty.toLowerCase()) {
+    switch (difficulty) {
       case "easy":
         return "Fácil";
       case "medium":

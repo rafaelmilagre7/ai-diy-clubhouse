@@ -1,177 +1,145 @@
-import { useParams, useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
-import { useAuth } from "@/contexts/auth";
-import { useSolutionData } from "@/hooks/useSolutionData";
-import { useLogging } from "@/hooks/useLogging";
-import { useModuleImplementation } from "@/hooks/implementation/useModuleImplementation";
-import { useProgressTracking } from "@/hooks/implementation/useProgressTracking";
-import { useModuleChangeTracking } from "@/hooks/implementation/useModuleChangeTracking";
-import { useSolutionCompletion } from "@/hooks/implementation/useSolutionCompletion";
-import { useImplementationShortcuts } from "@/hooks/implementation/useImplementationShortcuts";
-import { adaptSolutionType, adaptProgressType } from "@/utils/typeAdapters";
 
-import { SolutionNotFound } from "@/components/solution/SolutionNotFound";
-import { NotFoundContent } from "@/components/implementation/NotFoundContent";
-import ImplementationTabsNavigation from "@/components/implementation/ImplementationTabsNavigation";
+import React, { useEffect, useState } from "react";
+import { useModuleImplementation } from "@/hooks/useModuleImplementation";
+import LoadingScreen from "@/components/common/LoadingScreen";
 import { ImplementationHeader } from "@/components/implementation/ImplementationHeader";
-import { ImplementationProgress } from "@/components/implementation/ImplementationProgress";
-import { ModuleContent } from "@/components/implementation/ModuleContent";
-import { ModulesList } from "@/components/implementation/ModulesList";
-import { WizardStepProgress } from "@/components/implementation/WizardStepProgress";
-import { KeyboardShortcuts } from "@/components/implementation/KeyboardShortcuts";
-import { ImplementationConfirmationModal } from "@/components/implementation/ImplementationConfirmationModal";
-
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { toast } from "sonner";
+import { ImplementationNotFound } from "@/components/implementation/ImplementationNotFound";
+import { useLogging } from "@/hooks/useLogging";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
+import { ModuleContentMaterials } from "@/components/implementation/content/ModuleContentMaterials";
+import { ModuleContentVideos } from "@/components/implementation/content/ModuleContentVideos";
+import { ModuleContentTools } from "@/components/implementation/content/ModuleContentTools";
+import { ModuleContentChecklist } from "@/components/implementation/content/ModuleContentChecklist";
+import { ImplementationComplete } from "@/components/implementation/content/ImplementationComplete";
+import { CommentsSection } from "@/components/implementation/content/tool-comments/CommentsSection";
+import { useSolutionCompletion } from "@/hooks/implementation/useSolutionCompletion";
+import { useRealtimeComments } from "@/hooks/implementation/useRealtimeComments";
+import { GlassCard } from "@/components/ui/GlassCard";
+import { ImplementationTabsNavigation } from "@/components/implementation/ImplementationTabsNavigation";
 
 const SolutionImplementation = () => {
-  const { id, moduleIdx: moduleIdxParam } = useParams<{ id: string; moduleIdx: string }>();
-  const navigate = useNavigate();
-  const { user } = useAuth();
-  const { log } = useLogging("SolutionImplementation");
+  const {
+    solution,
+    modules,
+    currentModule,
+    loading,
+    completedModules,
+    progress
+  } = useModuleImplementation();
   
-  const [activeTab, setActiveTab] = useState("overview");
-  const [showCompletionModal, setShowCompletionModal] = useState(false);
+  const [activeTab, setActiveTab] = useState("tools");
+  const { log, logError } = useLogging();
   
-  const moduleIdx = moduleIdxParam ? parseInt(moduleIdxParam, 10) : 0;
-  
-  const { solution: supaSolution, loading, error, progress: supaProgress, notFoundError } = useSolutionData(id || "");
-  
-  const solution = supaSolution ? adaptSolutionType(supaSolution) : null;
-  const progress = supaProgress ? adaptProgressType(supaProgress) : null;
-  
-  const { currentModule, modules, isLastModule, handleModuleChange } = useModuleImplementation(
-    solution, moduleIdx
-  );
-  
-  const { 
-    markModuleCompleted, 
-    completedModules, 
-    setCompletedModules,
-    completionPercentage,
-    calculateProgress,
-    handleConfirmImplementation: progressTrackerConfirmImplementation,
-    isCompleting
-  } = useProgressTracking(
-    id || "", 
-    progress, 
-    moduleIdx,
-    modules?.length || 8
-  );
-  
-  const { completeSolution } = useSolutionCompletion(id || "");
-  
-  const { trackModuleView } = useModuleChangeTracking(id || "", moduleIdx);
-  
-  useImplementationShortcuts({
-    onNext: () => moduleIdx < (modules?.length || 0) - 1 && handleModuleChange(moduleIdx + 1),
-    onPrevious: () => moduleIdx > 0 && handleModuleChange(moduleIdx - 1),
-    isFirstModule: moduleIdx === 0,
-    isLastModule
+  const {
+    isCompleting,
+    isCompleted,
+    handleConfirmImplementation
+  } = useSolutionCompletion({
+    progressId: progress?.id,
+    solutionId: solution?.id,
+    moduleIdx: 0,
+    completedModules: completedModules,
+    setCompletedModules: () => {}
   });
   
-  useEffect(() => {
-    if (!loading && !user) {
-      toast.error("Você precisa estar logado para acessar esta página");
-      navigate("/login", { state: { returnTo: `/implement/${id}/${moduleIdx}` } });
-    }
-  }, [user, loading, id, moduleIdx, navigate]);
+  const solutionId = solution?.id || "";
+  const moduleId = currentModule?.id || "";
+  
+  const enableRealtimeComments = !!solution && 
+                                !!currentModule && 
+                                activeTab === "comments";
+  
+  useRealtimeComments(solutionId, moduleId, enableRealtimeComments);
   
   useEffect(() => {
-    if (solution && modules && modules.length > 0 && currentModule) {
-      trackModuleView(moduleIdx, currentModule.id);
+    if (activeTab === "comments" && solution && currentModule) {
+      log("Aba de comentários ativada", { 
+        solutionId: solution.id, 
+        moduleId: currentModule.id
+      });
     }
-  }, [solution, moduleIdx, modules, currentModule, trackModuleView]);
+  }, [activeTab, solution, currentModule, log]);
   
-  const handleConfirmCompletion = () => {
-    setShowCompletionModal(true);
-  };
-  
-  const handleConfirmImplementation = async () => {
-    const success = await completeSolution();
+  const onComplete = async () => {
+    const success = await handleConfirmImplementation();
     if (success) {
-      toast.success("Parabéns! Você concluiu esta implementação!");
-      navigate(`/solution/${id}`);
-    } else {
-      toast.error("Não foi possível concluir sua implementação. Tente novamente.");
+      log("Implementation completed successfully", { solution_id: solution?.id });
     }
-    setShowCompletionModal(false);
   };
   
-  if (error) {
-    return <NotFoundContent />;
+  useEffect(() => {
+    if (currentModule && solution) {
+      log("Module loaded", { 
+        solution_id: solution.id,
+        solution_title: solution.title,
+        module_id: currentModule.id,
+        module_title: currentModule.title,
+        module_type: currentModule.type,
+        has_content: !!currentModule.content,
+        content_keys: currentModule.content ? Object.keys(currentModule.content) : []
+      });
+    }
+  }, [currentModule, solution, log]);
+  
+  if (loading) {
+    return <LoadingScreen />;
   }
   
-  if (notFoundError || !solution) {
-    return <SolutionNotFound />;
+  if (!solution) {
+    const errorMsg = "Solution not found";
+    logError("Implementation not found", { error: errorMsg, solution_id: solution?.id });
+    return <ImplementationNotFound />;
   }
   
   return (
-    <div className="container max-w-7xl mx-auto pb-10 animate-fade-in">
-      <div className="space-y-6">
-        <ImplementationHeader 
-          solution={solution} 
-          currentModule={moduleIdx}
-          totalModules={modules?.length || 1}
-        />
-        
-        <ImplementationProgress 
-          currentStep={moduleIdx}
-          totalSteps={modules?.length || 1}
-          completedModules={completedModules}
-        />
-        
-        <div className="mt-4">
-          <ImplementationTabsNavigation 
-            activeTab={activeTab}
-            onChangeTab={setActiveTab}
-            isLastStep={isLastModule}
-          />
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <div className="md:col-span-1">
-            <ModulesList 
-              modules={modules}
-              currentModuleIdx={moduleIdx}
-              onModuleChange={handleModuleChange}
-              completedModules={completedModules}
-            />
-          </div>
+    <div className="min-h-screen bg-gradient-to-br from-[#f8fdff] via-[#f0fafe] to-[#edf6fb] pb-16">
+      <div className="container max-w-4xl py-4 md:py-6 animate-fade-in">
+        <GlassCard className="p-0 md:p-0 transition-all duration-300 shadow-xl border border-[#0ABAB5]/10 overflow-hidden">
+          <ImplementationHeader solution={solution} />
           
-          <div className="md:col-span-3">
-            <Card className="p-6">
-              {currentModule && (
-                <ModuleContent 
-                  module={currentModule}
-                  onComplete={() => markModuleCompleted(moduleIdx)}
-                />
-              )}
+          <div className="mt-0 px-4 md:px-6 pb-6">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <ImplementationTabsNavigation activeTab={activeTab} setActiveTab={setActiveTab} />
               
-              <WizardStepProgress 
-                currentStep={moduleIdx}
-                totalSteps={modules?.length || 1}
-                onPrevious={() => handleModuleChange(moduleIdx - 1)}
-                onNext={() => handleModuleChange(moduleIdx + 1)}
-                onComplete={() => markModuleCompleted(moduleIdx)}
-                isFirstStep={moduleIdx === 0}
-                isLastStep={isLastModule}
-                onFinish={handleConfirmCompletion}
-              />
-            </Card>
+              <div className="bg-white/50 rounded-xl p-4 md:p-6 border border-[#0ABAB5]/5 min-h-[30vh]">
+                <TabsContent value="tools" className="mt-0">
+                  <ModuleContentTools module={currentModule} />
+                </TabsContent>
+                
+                <TabsContent value="materials" className="mt-0">
+                  <ModuleContentMaterials module={currentModule} />
+                </TabsContent>
+                
+                <TabsContent value="videos" className="mt-0">
+                  <ModuleContentVideos module={currentModule} />
+                </TabsContent>
+                
+                <TabsContent value="checklist" className="mt-0">
+                  <ModuleContentChecklist module={currentModule} />
+                </TabsContent>
+                
+                <TabsContent value="comments" className="mt-0">
+                  {solution && currentModule && (
+                    <CommentsSection 
+                      solutionId={solution.id} 
+                      moduleId={currentModule.id} 
+                    />
+                  )}
+                </TabsContent>
+                
+                <TabsContent value="complete" className="mt-0">
+                  <ImplementationComplete 
+                    solution={solution} 
+                    onComplete={onComplete} 
+                    isCompleting={isCompleting}
+                    isCompleted={isCompleted}
+                  />
+                </TabsContent>
+              </div>
+            </Tabs>
           </div>
-        </div>
-        
-        <KeyboardShortcuts />
+        </GlassCard>
       </div>
-      
-      <ImplementationConfirmationModal 
-        isOpen={showCompletionModal}
-        onClose={() => setShowCompletionModal(false)}
-        onConfirm={handleConfirmImplementation}
-        isLoading={isCompleting}
-      />
     </div>
   );
 };

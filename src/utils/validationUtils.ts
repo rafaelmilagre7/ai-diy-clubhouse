@@ -18,12 +18,6 @@ export const validateBrazilianPhone = (phone: string): boolean => {
   return isValidPhone(cleanPhone); // Using isValidPhone instead of isPhone
 };
 
-export const validateCompanyWebsite = (url: string): boolean => {
-  if (!url) return true; // URL opcional
-  const urlRegex = /^(https?:\/\/)?([\w-]+\.)+[\w-]+(\/[\w- ./?%&=]*)?$/;
-  return urlRegex.test(url);
-};
-
 export const formatSocialUrl = (url: string, type: "linkedin" | "instagram"): string => {
   if (!url) return "";
   
@@ -42,14 +36,5 @@ export const formatSocialUrl = (url: string, type: "linkedin" | "instagram"): st
     url = `https://instagram.com/${url.replace(/^https?:\/\//i, "")}`;
   }
   
-  return url;
-};
-
-export const formatWebsiteUrl = (url: string): string => {
-  if (!url) return "";
-  url = url.trim();
-  if (!/^https?:\/\//i.test(url)) {
-    url = `https://${url}`;
-  }
   return url;
 };

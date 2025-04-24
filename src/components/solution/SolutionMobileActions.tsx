@@ -7,10 +7,9 @@ import { useNavigate } from "react-router-dom";
 interface SolutionMobileActionsProps {
   solutionId: string;
   progress: any | null;
-  startImplementation: () => Promise<void>;
-  continueImplementation: () => Promise<void>;
+  startImplementation: () => void;
+  continueImplementation: () => void;
   initializing: boolean;
-  completionPercentage?: number;
 }
 
 export const SolutionMobileActions = ({
@@ -18,19 +17,20 @@ export const SolutionMobileActions = ({
   progress,
   startImplementation,
   continueImplementation,
-  initializing,
-  completionPercentage = 0
+  initializing
 }: SolutionMobileActionsProps) => {
   const navigate = useNavigate();
   
   // Handler para o botão de implementação
-  const handleImplementation = async () => {
+  const handleImplementation = () => {
     if (progress?.is_completed) {
       navigate(`/implement/${solutionId}/0`);
     } else if (progress) {
-      await continueImplementation();
+      console.log("Mobile: Chamando continueImplementation");
+      continueImplementation();
     } else {
-      await startImplementation();
+      console.log("Mobile: Chamando startImplementation");
+      startImplementation();
     }
   };
   
@@ -62,7 +62,6 @@ export const SolutionMobileActions = ({
         >
           <PlayCircle className="mr-2 h-5 w-5" />
           {initializing ? 'Preparando...' : 'Implementar solução'}
-          {completionPercentage > 0 && ` (${completionPercentage}%)`}
         </Button>
       )}
     </div>

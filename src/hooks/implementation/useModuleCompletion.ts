@@ -1,20 +1,25 @@
 
 import { useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { supabase, Progress } from "@/lib/supabase";
+import { useAuth } from "@/contexts/auth";
 import { useToast } from "@/hooks/use-toast";
 import { useLogging } from "@/hooks/useLogging";
+import { validateModuleInteraction, logProgressEvent } from "./utils/progressUtils";
 
 interface UseModuleCompletionProps {
   moduleIdx: number;
-  progressId?: string;
-  solutionId?: string;
+  progressId: string | undefined;
+  solutionId: string | undefined;
   completedModules: number[];
   setCompletedModules: (modules: number[]) => void;
   modulesLength: number;
-  hasInteracted?: boolean;
-  requireUserConfirmation?: boolean;
+  hasInteracted: boolean;
+  requireUserConfirmation: boolean;
 }
 
+/**
+ * Hook to handle marking modules as completed
+ */
 export const useModuleCompletion = ({
   moduleIdx,
   progressId,
@@ -22,91 +27,98 @@ export const useModuleCompletion = ({
   completedModules,
   setCompletedModules,
   modulesLength,
-  hasInteracted = false,
-  requireUserConfirmation = true
+  hasInteracted,
+  requireUserConfirmation
 }: UseModuleCompletionProps) => {
-  const [markingAsCompleted, setMarkingAsCompleted] = useState(false);
-  const [showConfirmationModal, setShowConfirmationModal] = useState(false);
+  const { user } = useAuth();
   const { toast } = useToast();
-  const { log, logError } = useLogging("useModuleCompletion");
+  const { log, logError } = useLogging();
+  const [showConfirmationModal, setShowConfirmationModal] = useState(false);
   
-  // Verifica se o módulo atual já foi concluído
-  const isModuleCompleted = completedModules.includes(moduleIdx);
-  
-  // Função para marcar o módulo como concluído
+  // Mark module as completed - Always requires user confirmation for final module
   const handleMarkAsCompleted = async () => {
-    // Se o módulo já está marcado como concluído
-    if (isModuleCompleted) {
-      log("Módulo já concluído", { moduleIdx });
-      return;
-    }
-    
-    // Se precisar de confirmação do usuário e não houve interação
-    if (requireUserConfirmation && !hasInteracted) {
+    // Always require user to confirm completion of final module
+    if (moduleIdx >= modulesLength - 1) {
+      logProgressEvent(log, "Showing confirmation modal for final module", { 
+        moduleIdx, 
+        modulesLength 
+      });
       setShowConfirmationModal(true);
       return;
     }
     
-    // Se não há ID de progresso, não podemos continuar
-    if (!progressId) {
-      logError("Sem ID de progresso para marcar conclusão", { moduleIdx });
+    // Validate that user has interacted with the content
+    const validation = validateModuleInteraction(hasInteracted, requireUserConfirmation);
+    if (!validation.isValid) {
+      log("User hasn't interacted with content yet", { hasInteracted });
       toast({
-        title: "Erro ao salvar progresso",
-        description: "Não foi possível salvar seu progresso. Por favor, tente novamente.",
-        variant: "destructive"
+        title: "Interação necessária",
+        description: validation.message,
+        variant: "default",
       });
       return;
     }
     
+    // Mark this module as completed
+    await completeModule();
+  };
+  
+  // Save completed module to database
+  const completeModule = async () => {
+    if (!user || !progressId) return false;
+    
     try {
-      setMarkingAsCompleted(true);
+      logProgressEvent(log, "Marking module as completed", { moduleIdx });
       
-      // Adicionar o módulo atual à lista de concluídos
-      const updatedModules = [...completedModules, moduleIdx];
-      
-      // Atualizar no banco de dados
-      const { error } = await supabase
-        .from("progress")
-        .update({
-          completed_modules: updatedModules,
-          current_module: Math.min(moduleIdx + 1, modulesLength - 1),
-          last_activity: new Date().toISOString()
-        })
-        .eq("id", progressId);
+      // Add this module to completed modules if not already there
+      if (!completedModules.includes(moduleIdx)) {
+        const updatedCompletedModules = [...completedModules, moduleIdx];
         
-      if (error) throw error;
-      
-      // Atualizar o estado local
-      setCompletedModules(updatedModules);
-      
-      log("Módulo marcado como concluído", { 
-        moduleIdx, 
-        progressId,
-        solutionId,
-        updatedModules
-      });
-      
-      toast({
-        title: "Módulo concluído",
-        description: "Seu progresso foi salvo com sucesso."
-      });
+        // Update in database
+        const { error } = await supabase
+          .from("progress")
+          .update({ 
+            completed_modules: updatedCompletedModules,
+            last_activity: new Date().toISOString()
+          })
+          .eq("id", progressId);
+        
+        if (error) {
+          throw error;
+        }
+        
+        // Update local state
+        setCompletedModules(updatedCompletedModules);
+        
+        toast({
+          title: "Módulo concluído!",
+          description: "Este módulo foi marcado como concluído com sucesso.",
+        });
+        
+        logProgressEvent(log, "Module marked as completed successfully", { 
+          moduleIdx, 
+          updatedCompletedModules 
+        });
+        
+        return true;
+      } else {
+        log("Module already marked as completed", { moduleIdx });
+        return false;
+      }
     } catch (error) {
-      logError("Erro ao marcar módulo como concluído", { error, moduleIdx });
+      logError("Error marking module as completed", error);
       toast({
-        title: "Erro ao salvar progresso",
-        description: "Não foi possível salvar seu progresso. Por favor, tente novamente.",
-        variant: "destructive"
+        title: "Erro ao marcar módulo",
+        description: "Ocorreu um erro ao tentar marcar o módulo como concluído.",
+        variant: "destructive",
       });
-    } finally {
-      setMarkingAsCompleted(false);
-      setShowConfirmationModal(false);
+      return false;
     }
   };
   
   return {
-    isModuleCompleted,
-    markingAsCompleted,
     handleMarkAsCompleted,
+    completeModule,
     showConfirmationModal,
     setShowConfirmationModal
   };

@@ -1,69 +1,48 @@
 
 import { useParams, useNavigate } from "react-router-dom";
-import { useEffect, useRef } from "react";
-import { useLogging } from "@/hooks/useLogging";
 
 export const useImplementationNavigation = () => {
-  const { id, moduleIdx } = useParams<{ 
+  const { id, moduleIndex, moduleIdx } = useParams<{ 
     id: string; 
-    moduleIdx: string; 
+    moduleIndex: string;
+    moduleIdx: string;
   }>();
   
-  const moduleIdxNumber = parseInt(moduleIdx || "0");
-  
-  const { log } = useLogging("useImplementationNavigation");
+  // Normaliza os parâmetros, suportando tanto /implement/:id/:moduleIdx quanto /implementation/:id/:moduleIdx
+  const moduleIdxParam = moduleIndex || moduleIdx || "0";
+  const moduleIdxNumber = parseInt(moduleIdxParam);
   const navigate = useNavigate();
-  const navigationAttempts = useRef(0);
   
-  // Padronizamos para usar apenas o formato /implement/:id/:moduleIdx
+  // Usa consistentemente o padrão /implement/:id/:moduleIdx para navegação
   const basePath = "/implement";
   
-  // Verificar se temos um ID válido
-  useEffect(() => {
-    if (!id) {
-      log("ID da implementação não encontrado, redirecionando para dashboard");
-      navigate("/dashboard", { replace: true });
-      return;
-    }
-  }, [id, navigate, log]);
-
   // Navigate to next module
   const handleComplete = () => {
-    if (!id) {
-      log("ID da implementação não encontrado, não é possível avançar");
-      return;
-    }
-    navigate(`${basePath}/${id}/${moduleIdxNumber + 1}`, { replace: true });
+    console.log(`Navegando para o próximo módulo: ${moduleIdxNumber + 1}`);
+    navigate(`${basePath}/${id}/${moduleIdxNumber + 1}`);
   };
   
   // Navigate to previous module
   const handlePrevious = () => {
-    if (!id) {
-      log("ID da implementação não encontrado, não é possível retornar");
-      return;
-    }
-    
     if (moduleIdxNumber > 0) {
-      navigate(`${basePath}/${id}/${moduleIdxNumber - 1}`, { replace: true });
+      console.log(`Navegando para o módulo anterior: ${moduleIdxNumber - 1}`);
+      navigate(`${basePath}/${id}/${moduleIdxNumber - 1}`);
     } else {
-      navigate(`/solutions/${id}`, { replace: true });
+      console.log(`Voltando para a página de solução: ${id}`);
+      navigate(`/solution/${id}`);
     }
   };
   
   // Navigate to specific module
   const handleNavigateToModule = (moduleIdx: number) => {
-    if (!id) {
-      log("ID da implementação não encontrado, não é possível navegar para módulo específico");
-      return;
-    }
-    navigate(`${basePath}/${id}/${moduleIdx}`, { replace: true });
+    console.log(`Navegando para o módulo específico: ${moduleIdx}`);
+    navigate(`${basePath}/${id}/${moduleIdx}`);
   };
   
   return {
     handleComplete,
     handlePrevious,
     handleNavigateToModule,
-    currentModuleIdx: moduleIdxNumber,
-    implementationId: id
+    currentModuleIdx: moduleIdxNumber
   };
 };

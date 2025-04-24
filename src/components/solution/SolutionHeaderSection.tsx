@@ -1,74 +1,80 @@
 
-import React from "react";
+import { Solution } from "@/lib/supabase";
 import { Badge } from "@/components/ui/badge";
-import { getCategoryDisplayName, getCategoryStyles } from "@/lib/types/categoryTypes";
-import { Solution } from "@/types/solution";
-import { Users, Clock, Award } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface SolutionHeaderSectionProps {
   solution: Solution;
-  implementationMetrics?: any;
 }
 
-export const SolutionHeaderSection = ({ 
-  solution,
-  implementationMetrics
-}: SolutionHeaderSectionProps) => {
-  const categoryStyles = getCategoryStyles(solution.category);
-  const categoryName = getCategoryDisplayName(solution.category);
-  
+const getDifficultyStyles = (difficulty: string) => {
+  switch (difficulty) {
+    case "easy":
+      return "bg-green-100 text-green-800 border-green-200";
+    case "medium":
+      return "bg-yellow-100 text-yellow-800 border-yellow-200";
+    case "advanced":
+      return "bg-red-100 text-red-800 border-red-200";
+    default:
+      return "bg-gray-100 text-gray-800 border-gray-200";
+  }
+};
+
+export const SolutionHeaderSection = ({ solution }: SolutionHeaderSectionProps) => {
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap gap-2 items-center">
-        <Badge className={cn("capitalize", categoryStyles.badge)}>
-          {categoryName}
+    <div className="space-y-4 animate-fade-in">
+      <div className="flex items-center gap-2">
+        <Badge 
+          variant="outline" 
+          className={`
+            px-3 py-1 rounded-full shadow-sm font-medium
+            ${solution.category === "revenue" ? "bg-gradient-to-r from-revenue to-revenue-light text-white border-0" : ""}
+            ${solution.category === "operational" ? "bg-gradient-to-r from-operational to-operational-light text-white border-0" : ""}
+            ${solution.category === "strategy" ? "bg-gradient-to-r from-strategy to-strategy-light text-white border-0" : ""}
+          `}
+        >
+          {solution.category === "revenue" ? "Receita" : 
+           solution.category === "operational" ? "Operacional" : 
+           "Estratégia"}
         </Badge>
         
-        <Badge variant="outline" className={cn(
-          solution.difficulty === "easy" && "border-green-200 bg-green-50 text-green-600",
-          solution.difficulty === "medium" && "border-amber-200 bg-amber-50 text-amber-600",
-          solution.difficulty === "advanced" && "border-red-200 bg-red-50 text-red-600",
-        )}>
-          {solution.difficulty === "easy" && "Fácil"}
-          {solution.difficulty === "medium" && "Média"}
-          {solution.difficulty === "advanced" && "Avançada"}
+        <Badge 
+          variant="outline" 
+          className={cn(
+            "px-3 py-1 rounded-full shadow-sm font-medium border",
+            getDifficultyStyles(solution.difficulty)
+          )}
+        >
+          {solution.difficulty === "easy" ? "Fácil" :
+           solution.difficulty === "medium" ? "Médio" :
+           solution.difficulty === "advanced" ? "Avançado" : solution.difficulty}
         </Badge>
-      </div>
-      
-      <div>
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">{solution.title}</h1>
-        <p className="mt-2 text-muted-foreground">{solution.description}</p>
-      </div>
-      
-      <div className="flex flex-wrap gap-4 pt-1">
-        <div className="flex items-center text-sm text-muted-foreground">
-          <Clock className="mr-1 h-4 w-4" />
-          <span>{solution.estimated_time || 30} minutos</span>
-        </div>
-        
-        {implementationMetrics?.total_completions > 0 && (
-          <div className="flex items-center text-sm text-muted-foreground">
-            <Users className="mr-1 h-4 w-4" />
-            <span>{implementationMetrics.total_completions} implementações</span>
-          </div>
+        {/* Só mostra tempo estimado se existir e for maior que zero */}
+        {solution.estimated_time && solution.estimated_time > 0 && (
+          <Badge variant="outline" className="px-2 py-1 bg-slate-50 text-slate-700 border-slate-200">
+            {solution.estimated_time} min
+          </Badge>
         )}
-        
-        {solution.success_rate > 0 && (
-          <div className="flex items-center text-sm text-muted-foreground">
-            <Award className="mr-1 h-4 w-4" />
-            <span>{solution.success_rate}% de sucesso</span>
-          </div>
+        {/* Só mostra taxa de sucesso se existir e for maior que zero */}
+        {typeof solution.success_rate === "number" && solution.success_rate > 0 && (
+          <Badge variant="outline" className="px-2 py-1 bg-blue-50 text-blue-800 border-blue-200">
+            {solution.success_rate}% sucesso
+          </Badge>
         )}
       </div>
+      
+      <h1 className="text-2xl md:text-3xl font-bold font-heading bg-clip-text text-transparent bg-gradient-to-r from-neutral-900 to-neutral-700">
+        {solution.title}
+      </h1>
       
       {solution.thumbnail_url && (
-        <div className="mt-4 overflow-hidden rounded-lg border">
-          <img
-            src={solution.thumbnail_url}
-            alt={solution.title}
-            className="h-[200px] w-full object-cover"
+        <div className="mt-6 relative overflow-hidden rounded-xl shadow-lg">
+          <img 
+            src={solution.thumbnail_url} 
+            alt={solution.title} 
+            className="w-full h-60 object-cover transition-transform duration-700 hover:scale-105"
           />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-60"></div>
         </div>
       )}
     </div>

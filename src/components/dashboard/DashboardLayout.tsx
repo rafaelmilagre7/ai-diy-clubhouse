@@ -1,93 +1,77 @@
 
-import React from 'react';
-import { Solution } from '@/types/solution';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { SolutionsGrid } from './SolutionsGrid';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Card } from '@/components/ui/card';
-import { NoSolutionsPlaceholder } from './NoSolutionsPlaceholder';
+import { FC } from "react";
+import { ActiveSolutions } from "./ActiveSolutions";
+import { CompletedSolutions } from "./CompletedSolutions";
+import { RecommendedSolutions } from "./RecommendedSolutions";
+import { NoSolutionsPlaceholder } from "./NoSolutionsPlaceholder";
+import { Solution } from "@/lib/supabase";
+import { ModernDashboardHeader } from "./ModernDashboardHeader";
+import { KpiGrid } from "./KpiGrid";
+import { useAuth } from "@/contexts/auth";
+import { AchievementsSummary } from "./AchievementsSummary"; // Adicionando a importação do componente
 
-export interface DashboardLayoutProps {
-  solutions: {
-    active: Solution[];
-    recommended: Solution[];
-    completed: any[];
-  };
-  isLoading: boolean;
+interface DashboardLayoutProps {
+  active: Solution[];
+  completed: Solution[];
+  recommended: Solution[];
+  category: string;
   onCategoryChange: (category: string) => void;
   onSolutionClick: (solution: Solution) => void;
-  currentCategory: string;
 }
 
-export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
-  solutions,
-  isLoading,
+export const DashboardLayout: FC<DashboardLayoutProps> = ({
+  active,
+  completed,
+  recommended,
+  category,
   onCategoryChange,
-  onSolutionClick,
-  currentCategory
+  onSolutionClick
 }) => {
-  if (isLoading) {
-    return (
-      <div>
-        <h2 className="text-2xl font-bold">Dashboard</h2>
-        
-        <Tabs defaultValue={currentCategory} className="mt-6" value={currentCategory} onValueChange={onCategoryChange}>
-          <TabsList>
-            <TabsTrigger value="recommended">Recomendadas</TabsTrigger>
-            <TabsTrigger value="active">Em andamento</TabsTrigger>
-            <TabsTrigger value="completed">Concluídas</TabsTrigger>
-          </TabsList>
-        </Tabs>
-        
-        <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {Array(6).fill(0).map((_, index) => (
-            <Card key={index} className="p-4">
-              <Skeleton className="h-4 w-3/4 mb-3" />
-              <Skeleton className="h-16 w-full mb-2" />
-              <Skeleton className="h-4 w-1/3" />
-            </Card>
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  // Renderizar o conteúdo apropriado com base na categoria selecionada
-  const renderSolutionsContent = (solutionsToRender: Solution[]) => {
-    if (!solutionsToRender || solutionsToRender.length === 0) {
-      return <NoSolutionsPlaceholder />;
-    }
-    
-    return <SolutionsGrid solutions={solutionsToRender} onSolutionClick={onSolutionClick} />;
-  };
+  const hasNoSolutions = active.length === 0 && completed.length === 0 && recommended.length === 0;
+  const { profile } = useAuth();
 
   return (
-    <div>
-      <h2 className="text-2xl font-bold">Dashboard</h2>
-      
-      <Tabs defaultValue={currentCategory} className="mt-6" value={currentCategory} onValueChange={onCategoryChange}>
-        <TabsList>
-          <TabsTrigger value="recommended">Recomendadas</TabsTrigger>
-          <TabsTrigger value="active">Em andamento</TabsTrigger>
-          <TabsTrigger value="completed">Concluídas</TabsTrigger>
-        </TabsList>
-        
-        <div className="mt-6">
-          <TabsContent value="recommended">
-            {renderSolutionsContent(solutions.recommended)}
-          </TabsContent>
-          
-          <TabsContent value="active">
-            {renderSolutionsContent(solutions.active)}
-          </TabsContent>
-          
-          <TabsContent value="completed">
-            {renderSolutionsContent(solutions.completed)}
-          </TabsContent>
-        </div>
-      </Tabs>
+    <div className="space-y-8 md:pt-2 animate-fade-in">
+      {/* HEADER IMERSIVO */}
+      <ModernDashboardHeader userName={profile?.name?.split(" ")[0] || "Membro"} />
+
+      {/* NOVO: Resumo gamificação - conquistas */}
+      <div className="animate-fade-in">
+        {/* AchievementsSummary adiciona badges/conquistas com microinteração */}
+        <AchievementsSummary />
+      </div>
+
+      {/* CARDS DE PROGRESSO (KPI) */}
+      <KpiGrid 
+        completed={completed.length} 
+        inProgress={active.length}
+        total={active.length + completed.length + recommended.length}
+      />
+
+      {hasNoSolutions ? (
+        <NoSolutionsPlaceholder />
+      ) : (
+        <>
+          {active.length > 0 && (
+            <ActiveSolutions 
+              solutions={active} 
+              onSolutionClick={onSolutionClick} 
+            />
+          )}
+          {completed.length > 0 && (
+            <CompletedSolutions 
+              solutions={completed} 
+              onSolutionClick={onSolutionClick} 
+            />
+          )}
+          {recommended.length > 0 && (
+            <RecommendedSolutions 
+              solutions={recommended} 
+              onSolutionClick={onSolutionClick} 
+            />
+          )}
+        </>
+      )}
     </div>
   );
 };
-
-export default DashboardLayout;

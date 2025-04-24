@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useImplementationProfile } from "@/hooks/useImplementationProfile";
 import { Loader2, Users, DollarSign, Brain, Star } from "lucide-react";
@@ -55,32 +54,7 @@ export default function ImplementationProfilePage() {
   }, [authProfile]);
 
   useEffect(() => {
-    if (profile) {
-      // Converter o nível de conhecimento de IA de número para string se necessário
-      let aiKnowledgeLevel = "Básico";
-      
-      if (profile.ai_knowledge_level !== null && profile.ai_knowledge_level !== undefined) {
-        // Verificar se é um número ou string
-        const level = typeof profile.ai_knowledge_level === 'number' 
-          ? profile.ai_knowledge_level 
-          : parseInt(profile.ai_knowledge_level as string);
-        
-        switch (level) {
-          case 1: aiKnowledgeLevel = "Básico"; break;
-          case 2: aiKnowledgeLevel = "Intermediário"; break;
-          case 3: aiKnowledgeLevel = "Avançado"; break;
-          case 4: aiKnowledgeLevel = "Expert"; break;
-          default: aiKnowledgeLevel = "Básico";
-        }
-      }
-      
-      setValues({ 
-        ...initialState, 
-        ...profile, 
-        ai_knowledge_level: aiKnowledgeLevel,
-        nps_score: profile.nps_score !== null ? String(profile.nps_score) : ""
-      });
-    }
+    if (profile) setValues({ ...initialState, ...profile });
   }, [profile]);
 
   const handleChange = (e: any) => {

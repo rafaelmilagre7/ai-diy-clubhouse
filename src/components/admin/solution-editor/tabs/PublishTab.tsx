@@ -1,33 +1,29 @@
 
 import React from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import PublishForm from "@/components/admin/solution/PublishForm";
-import { Solution } from "@/types/supabaseTypes";
+import PublishSolutionForm from "@/components/admin/solution/form/PublishSolutionForm";
+import { Solution } from "@/lib/supabase";
 import { SolutionFormValues } from "@/components/admin/solution/form/solutionFormSchema";
 
 interface PublishTabProps {
-  solutionId: string;
-  solution: Solution;
+  solutionId: string | null;
+  solution: Solution | null;
   onSave: (values: SolutionFormValues) => Promise<void>;
   saving: boolean;
 }
 
-const PublishTab: React.FC<PublishTabProps> = ({ 
-  solutionId, 
-  solution, 
-  onSave, 
-  saving 
+const PublishTab: React.FC<PublishTabProps> = ({
+  solutionId,
+  solution,
+  onSave,
+  saving,
 }) => {
   return (
-    <Card>
-      <CardContent className="p-6">
-        <PublishForm 
-          solution={solution}
-          onSave={onSave}
-          saving={saving}
-        />
-      </CardContent>
-    </Card>
+    <PublishSolutionForm 
+      solutionId={solutionId} 
+      solution={solution}
+      onSave={onSave} 
+      saving={saving} 
+    />
   );
 };
 

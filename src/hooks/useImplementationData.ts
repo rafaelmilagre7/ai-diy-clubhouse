@@ -123,27 +123,54 @@ export const useImplementationData = () => {
                 log("No completed_modules found in progress data, initializing as empty array");
                 setCompletedModules([]);
               }
+            } else {
+              // Create initial progress record if not exists
+              const { data: newProgress, error: createError } = await supabase
+                .from("progress")
+                .insert({
+                  user_id: user.id,
+                  solution_id: id,
+                  current_module: 0,
+                  is_completed: false,
+                  completed_modules: [], // Initialize as empty array
+                  last_activity: new Date().toISOString(),
+                })
+                .select()
+                .single();
+              
+              if (createError) {
+                logError("Erro ao criar progresso:", createError);
+              } else if (newProgress) {
+                setProgress(newProgress as Progress);
+                setCompletedModules([]);
+              }
             }
           } catch (progressError) {
             logError("Erro ao processar progresso:", progressError);
           }
         }
-      } catch (err) {
-        logError("Erro ao buscar dados da solução:", err);
+      } catch (error) {
+        logError("Error fetching data:", error);
+        toast({
+          title: "Erro ao carregar dados",
+          description: "Ocorreu um erro ao tentar carregar os dados da implementação.",
+          variant: "destructive",
+        });
+        navigate("/solutions");
       } finally {
         setLoading(false);
       }
     };
-
+    
     fetchData();
-  }, [id, user, isAdmin]);
-
+  }, [id, user, toast, navigate, isAdmin, profile?.role, log, logError]);
+  
   return {
     solution,
     modules,
     progress,
     completedModules,
-    loading,
-    isAdmin
+    setCompletedModules,
+    loading
   };
 };

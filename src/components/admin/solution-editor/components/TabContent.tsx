@@ -1,14 +1,15 @@
 
 import React from "react";
-import BasicInfoTab from "@/components/admin/solution-editor/tabs/BasicInfoTab";
-import ResourcesTab from "@/components/admin/solution-editor/tabs/ResourcesTab";
-import ToolsTab from "@/components/admin/solution-editor/tabs/ToolsTab";
-import VideoTab from "@/components/admin/solution-editor/tabs/VideoTab";
-import ModulesTab from "@/components/admin/solution-editor/tabs/ModulesTab";
-import ChecklistTab from "@/components/admin/solution-editor/tabs/ChecklistTab";
-import PublishTab from "@/components/admin/solution-editor/tabs/PublishTab";
-import { Solution } from "@/types/supabaseTypes";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Solution } from "@/lib/supabase";
 import { SolutionFormValues } from "@/components/admin/solution/form/solutionFormSchema";
+import BasicInfoTab from "../tabs/BasicInfoTab";
+import ResourcesTab from "../tabs/ResourcesTab";
+import ToolsTab from "../tabs/ToolsTab";
+import VideoTab from "../tabs/VideoTab";
+import ChecklistTab from "../tabs/ChecklistTab";
+import PublishTab from "../tabs/PublishTab";
+import ModulesTab from "../tabs/ModulesTab";
 
 interface TabContentProps {
   activeTab: string;
@@ -27,61 +28,182 @@ const TabContent: React.FC<TabContentProps> = ({
   onSubmit,
   saving
 }) => {
-  switch (activeTab) {
-    case "basic-info":
-      return (
-        <BasicInfoTab
-          defaultValues={currentValues}
-          currentValues={currentValues}
-          onSubmit={onSubmit}
-          saving={saving}
-        />
-      );
-    case "tools":
-      return solution ? (
-        <ToolsTab solution={solution} onSubmit={onSubmit} saving={saving} />
-      ) : null;
-    case "materials":
-      return solution ? (
-        <ResourcesTab
-          solutionId={solution.id}
-          onSave={() => onSubmit(currentValues)}
-          saving={saving}
-        />
-      ) : null;
-    case "videos":
-      return solution ? (
-        <VideoTab solution={solution} onSubmit={onSubmit} saving={saving} />
-      ) : null;
-    case "modules":
-      return solution ? (
-        <ModulesTab
-          solutionId={solution.id}
-          onSave={() => onSubmit(currentValues)}
-          saving={saving}
-          currentModuleStep={0}
-        />
-      ) : null;
-    case "checklist":
-      return solution ? (
-        <ChecklistTab
-          solutionId={solution.id}
-          onSave={() => onSubmit(currentValues)}
-          saving={saving}
-        />
-      ) : null;
-    case "publish":
-      return solution ? (
-        <PublishTab
-          solutionId={solution.id}
-          solution={solution}
-          onSave={onSubmit}
-          saving={saving}
-        />
-      ) : null;
-    default:
-      return <div>Tab não encontrada</div>;
+  const isValid = solution && solution.id;
+
+  // Verificar se a solução existe para exibir as abas que exigem ID
+  if (!isValid && currentStep > 0) {
+    return (
+      <Alert variant="destructive">
+        <AlertTitle>Solução não encontrada</AlertTitle>
+        <AlertDescription>
+          É necessário salvar as informações básicas antes de prosseguir.
+        </AlertDescription>
+      </Alert>
+    );
   }
+
+  // Render content based on step or active tab
+  if (currentStep === 0) {
+    // In step 0, show content based on active tab
+    switch (activeTab) {
+      case "basic":
+        return (
+          <BasicInfoTab 
+            currentValues={currentValues} 
+            onSubmit={onSubmit} 
+            saving={saving} 
+          />
+        );
+      case "resources":
+        if (isValid) {
+          return (
+            <ResourcesTab 
+              solutionId={solution?.id || null} 
+              onSave={() => onSubmit(currentValues)} 
+              saving={saving} 
+            />
+          );
+        }
+        break;
+      case "tools":
+        if (isValid) {
+          return (
+            <ToolsTab 
+              solutionId={solution?.id || null} 
+              onSave={() => onSubmit(currentValues)} 
+              saving={saving} 
+            />
+          );
+        }
+        break;
+      case "video":
+        if (isValid) {
+          return (
+            <VideoTab 
+              solutionId={solution?.id || null} 
+              onSave={() => onSubmit(currentValues)} 
+              saving={saving} 
+            />
+          );
+        }
+        break;
+      case "modules":
+        if (isValid) {
+          return (
+            <ModulesTab
+              solutionId={solution?.id || null}
+              onSave={() => onSubmit(currentValues)}
+              saving={saving}
+              currentModuleStep={0}
+            />
+          );
+        }
+        break;
+      case "checklist":
+        if (isValid) {
+          return (
+            <ChecklistTab 
+              solutionId={solution?.id || null} 
+              onSave={() => onSubmit(currentValues)} 
+              saving={saving} 
+            />
+          );
+        }
+        break;
+      case "publish":
+        if (isValid) {
+          return (
+            <PublishTab 
+              solutionId={solution?.id || null}
+              solution={solution}
+              onSave={onSubmit}
+              saving={saving}
+            />
+          );
+        }
+        break;
+    }
+  } else {
+    // For steps > 0, show content based on step
+    switch (currentStep) {
+      case 1:
+        return (
+          <ToolsTab 
+            solutionId={solution?.id || null} 
+            onSave={() => onSubmit(currentValues)} 
+            saving={saving}
+          />
+        );
+      
+      case 2:
+        return (
+          <ResourcesTab 
+            solutionId={solution?.id || null} 
+            onSave={() => onSubmit(currentValues)} 
+            saving={saving} 
+          />
+        );
+      
+      case 3:
+        return (
+          <VideoTab 
+            solutionId={solution?.id || null} 
+            onSave={() => onSubmit(currentValues)} 
+            saving={saving}
+          />
+        );
+      
+      case 4:
+        return (
+          <ModulesTab
+            solutionId={solution?.id || null}
+            onSave={() => onSubmit(currentValues)}
+            saving={saving}
+            currentModuleStep={currentStep}
+          />
+        );
+      
+      case 5:
+        return (
+          <ChecklistTab 
+            solutionId={solution?.id || null} 
+            onSave={() => onSubmit(currentValues)} 
+            saving={saving}
+          />
+        );
+      
+      case 6:
+        return (
+          <PublishTab 
+            solutionId={solution?.id || null}
+            solution={solution}
+            onSave={onSubmit}
+            saving={saving}
+          />
+        );
+    }
+  }
+  
+  // Default for step 0 if no valid tab is selected
+  if (currentStep === 0) {
+    return (
+      <BasicInfoTab 
+        currentValues={currentValues} 
+        onSubmit={onSubmit} 
+        saving={saving} 
+      />
+    );
+  }
+  
+  // Default alert for unrecognized steps
+  return (
+    <Alert variant="default" className="bg-amber-50 border-amber-200">
+      <AlertTitle>Etapa não reconhecida</AlertTitle>
+      <AlertDescription>
+        Por favor, volte para uma etapa válida ou recarregue a página.
+      </AlertDescription>
+    </Alert>
+  );
 };
 
 export default TabContent;

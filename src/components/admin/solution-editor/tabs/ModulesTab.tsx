@@ -1,32 +1,28 @@
 
 import React from "react";
-import { Card, CardContent } from "@/components/ui/card";
 import ModulesForm from "@/components/admin/solution/ModulesForm";
+import { moduleTypes } from "@/components/admin/solution/moduleTypes";
 
 interface ModulesTabProps {
-  solutionId: string;
-  onSave: () => Promise<void>;
+  solutionId: string | null;
+  onSave: () => void;
   saving: boolean;
   currentModuleStep: number;
 }
 
-const ModulesTab: React.FC<ModulesTabProps> = ({ 
-  solutionId, 
-  onSave, 
+const ModulesTab: React.FC<ModulesTabProps> = ({
+  solutionId,
+  onSave,
   saving,
-  currentModuleStep
+  currentModuleStep,
 }) => {
   return (
-    <Card>
-      <CardContent className="p-6">
-        <ModulesForm 
-          solutionId={solutionId}
-          onSave={onSave}
-          saving={saving}
-          currentModuleStep={currentModuleStep}
-        />
-      </CardContent>
-    </Card>
+    <ModulesForm 
+      solutionId={solutionId} 
+      onSave={onSave} 
+      saving={saving}
+      currentModuleStep={currentModuleStep - 1} // Adjust for 0-based index for modules
+    />
   );
 };
 

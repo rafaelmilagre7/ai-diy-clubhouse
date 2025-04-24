@@ -1,11 +1,15 @@
 
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Save, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { formatFileSize } from "./utils/resourceUtils";
 import { useResourcesManager } from "./hooks/useResourcesManager";
 import ResourceUploadCard from "./components/ResourceUploadCard";
 import ResourceList from "./components/ResourceList";
+import { supabase } from "@/lib/supabase";
+import { Resource } from "./types/ResourceTypes";
 
 interface ResourcesUploadFormProps {
   solutionId: string | null;
@@ -21,9 +25,10 @@ const ResourcesUploadForm: React.FC<ResourcesUploadFormProps> = ({
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
   
-  // Use hook para gerenciar recursos
+  // Use custom hooks
   const {
     resources,
+    setResources,
     loading,
     savingResources,
     setSavingResources,
@@ -31,22 +36,122 @@ const ResourcesUploadForm: React.FC<ResourcesUploadFormProps> = ({
     handleRemoveResource
   } = useResourcesManager(solutionId);
 
-  // Função para formatar o tamanho do arquivo
-  const formatFileSize = (bytes?: number) => {
-    if (!bytes) return "Desconhecido";
-    if (bytes < 1024) return bytes + " bytes";
-    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + " KB";
-    return (bytes / (1024 * 1024)).toFixed(2) + " MB";
+  // Function to extract YouTube video ID
+  const getYouTubeVideoId = (url: string) => {
+    let videoId = "";
+    
+    if (url.includes("youtube.com/watch")) {
+      videoId = new URL(url).searchParams.get("v") || "";
+    } else if (url.includes("youtu.be/")) {
+      videoId = url.split("youtu.be/")[1]?.split("?")[0] || "";
+    } else if (url.includes("youtube.com/embed/")) {
+      videoId = url.split("youtube.com/embed/")[1]?.split("?")[0] || "";
+    }
+    
+    return videoId;
   };
 
-  // Função para salvar e continuar
+  // Handle YouTube URL submission
+  const handleYoutubeUrlSubmit = async (url: string) => {
+    if (!solutionId) return;
+    
+    try {
+      const videoId = getYouTubeVideoId(url);
+      
+      if (!videoId) {
+        toast({
+          title: "URL inválido",
+          description: "Por favor, insira um URL válido do YouTube.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Create embed URL
+      const embedUrl = `https://www.youtube.com/embed/${videoId}`;
+      
+      // Create resource entry
+      const newResource = {
+        solution_id: solutionId,
+        name: `Vídeo do YouTube (${videoId})`,
+        url: embedUrl,
+        type: "video",
+        format: "Vídeo do YouTube",
+        metadata: JSON.stringify({
+          title: `Vídeo do YouTube (${videoId})`,
+          description: "Vídeo do YouTube",
+          url: embedUrl,
+          type: "video",
+          format: "Vídeo do YouTube",
+          tags: ["youtube", "video"],
+          order: 0,
+          downloads: 0,
+          size: 0,
+          version: "1.0"
+        }),
+        size: 0
+      };
+      
+      const { data, error } = await supabase
+        .from("solution_resources")
+        .insert(newResource)
+        .select()
+        .single();
+        
+      if (error) throw error;
+      
+      // Add to resources list
+      if (data) {
+        const resource: Resource = {
+          id: data.id,
+          name: data.name,
+          url: data.url,
+          type: "video",
+          format: data.format,
+          solution_id: data.solution_id,
+          metadata: {
+            title: `Vídeo do YouTube (${videoId})`,
+            description: "Vídeo do YouTube",
+            url: embedUrl,
+            type: "video",
+            format: "Vídeo do YouTube",
+            tags: ["youtube", "video"],
+            order: 0,
+            downloads: 0,
+            size: 0,
+            version: "1.0"
+          },
+          created_at: data.created_at,
+          updated_at: data.updated_at,
+          module_id: data.module_id,
+          size: data.size
+        };
+        
+        // Update resources state
+        setResources(prev => [...prev, resource]);
+      }
+      
+      toast({
+        title: "Vídeo adicionado",
+        description: "O vídeo do YouTube foi adicionado com sucesso.",
+      });
+      
+    } catch (error: any) {
+      console.error("Erro ao adicionar vídeo do YouTube:", error);
+      toast({
+        title: "Erro ao adicionar vídeo",
+        description: error.message || "Ocorreu um erro ao tentar adicionar o vídeo do YouTube.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const saveAndContinue = async () => {
     if (!solutionId) return;
     
     try {
       setSavingResources(true);
       
-      // Chamada da função para salvar fornecida via props
       onSave();
       
       toast({
@@ -65,12 +170,6 @@ const ResourcesUploadForm: React.FC<ResourcesUploadFormProps> = ({
     }
   };
 
-  // Filtrar recursos com base na pesquisa
-  const filteredResources = resources.filter(resource => 
-    resource.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  // Renderizar loading state
   if (loading) {
     return (
       <div className="flex justify-center items-center p-10">
@@ -81,23 +180,36 @@ const ResourcesUploadForm: React.FC<ResourcesUploadFormProps> = ({
 
   return (
     <div className="space-y-6">
-      <ResourceUploadCard 
-        handleUploadComplete={handleUploadComplete} 
-      />
-      
-      <ResourceList 
-        filteredResources={filteredResources} 
-        searchQuery={searchQuery} 
-        handleRemoveResource={handleRemoveResource}
-        formatFileSize={formatFileSize}
-      />
+      <Card className="border border-[#0ABAB5]/20">
+        <CardHeader>
+          <CardTitle>Materiais de Apoio</CardTitle>
+          <CardDescription>
+            Adicione documentos, templates e imagens que ajudarão o usuário a implementar a solução.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="mb-8">
+            <ResourceUploadCard 
+              handleUploadComplete={handleUploadComplete} 
+              handleYoutubeUrlSubmit={handleYoutubeUrlSubmit}
+            />
+          </div>
+          
+          <ResourceList 
+            filteredResources={resources} 
+            searchQuery={searchQuery} 
+            handleRemoveResource={handleRemoveResource}
+            formatFileSize={formatFileSize}
+          />
+        </CardContent>
+      </Card>
       
       <Button 
         onClick={saveAndContinue}
         disabled={savingResources || saving}
         className="w-full bg-[#0ABAB5] hover:bg-[#0ABAB5]/90"
       >
-        {savingResources || saving ? (
+        {savingResources ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             Salvando...

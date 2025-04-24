@@ -1,59 +1,54 @@
 
-import React from "react";
-import { TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileText, Wrench, FileArchive, Video, CheckSquare, Send } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { 
+  CircleHelp, 
+  FileSpreadsheet, 
+  Film, 
+  Folder, 
+  ListChecks, 
+  Package, 
+  Send 
+} from "lucide-react";
 
 interface TabNavProps {
   activeTab: string;
   setActiveTab: (value: string) => void;
 }
 
-const TabNav: React.FC<TabNavProps> = ({ activeTab, setActiveTab }) => {
+const TabNav = ({ activeTab, setActiveTab }: TabNavProps) => {
   const tabs = [
-    {
-      id: "basic-info",
-      label: "Informações",
-      icon: <FileText className="w-4 h-4 mr-2" />
-    },
-    {
-      id: "tools",
-      label: "Ferramentas",
-      icon: <Wrench className="w-4 h-4 mr-2" />
-    },
-    {
-      id: "materials",
-      label: "Materiais",
-      icon: <FileArchive className="w-4 h-4 mr-2" />
-    },
-    {
-      id: "videos",
-      label: "Vídeos",
-      icon: <Video className="w-4 h-4 mr-2" />
-    },
-    {
-      id: "checklist",
-      label: "Checklist",
-      icon: <CheckSquare className="w-4 h-4 mr-2" />
-    },
-    {
-      id: "publish",
-      label: "Publicar",
-      icon: <Send className="w-4 h-4 mr-2" />
-    }
+    { id: "basic", label: "Informações", icon: <CircleHelp className="h-4 w-4" /> },
+    { id: "tools", label: "Ferramentas", icon: <Package className="h-4 w-4" /> },
+    { id: "resources", label: "Materiais", icon: <FileSpreadsheet className="h-4 w-4" /> },
+    { id: "video", label: "Vídeos", icon: <Film className="h-4 w-4" /> },
+    { id: "modules", label: "Módulos", icon: <Folder className="h-4 w-4" /> },
+    { id: "checklist", label: "Checklist", icon: <ListChecks className="h-4 w-4" /> },
+    { id: "publish", label: "Publicar", icon: <Send className="h-4 w-4" /> },
   ];
 
   return (
-    <TabsList className="grid grid-cols-3 md:grid-cols-6 w-full">
+    <TabsList className="grid grid-cols-7 w-full">
       {tabs.map((tab) => (
-        <TabsTrigger
-          key={tab.id}
-          value={tab.id}
-          className="flex items-center"
-        >
-          {tab.icon}
-          <span className="hidden md:inline">{tab.label}</span>
-          <span className="inline md:hidden">{tab.label.split(" ")[0]}</span>
-        </TabsTrigger>
+        <TooltipProvider key={tab.id}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <TabsTrigger
+                value={tab.id}
+                className={`flex items-center gap-2 ${
+                  activeTab === tab.id ? "bg-[#0ABAB5]/10 text-[#0ABAB5]" : ""
+                }`}
+                onClick={() => setActiveTab(tab.id)}
+              >
+                {tab.icon}
+                <span className="hidden sm:inline">{tab.label}</span>
+              </TabsTrigger>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>{tab.label}</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       ))}
     </TabsList>
   );

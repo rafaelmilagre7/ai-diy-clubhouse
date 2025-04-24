@@ -102,13 +102,13 @@ const ResourceFormDialog: React.FC<ResourceFormDialogProps> = ({
           <div className="grid gap-2">
             <Label>Tipo de Arquivo</Label>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-              {(['document', 'spreadsheet', 'presentation', 'pdf', 'image', 'video', 'template', 'other'] as const).map((type) => (
+              {['document', 'spreadsheet', 'presentation', 'pdf', 'image', 'video', 'template', 'other'].map((type) => (
                 <Button
                   key={type}
                   type="button"
                   variant={newResource.type === type ? "default" : "outline"}
                   className="justify-start"
-                  onClick={() => setNewResource({...newResource, type: type})}
+                  onClick={() => setNewResource({...newResource, type: type as any})}
                 >
                   {getFileIcon(type)}
                   <span className="ml-2 capitalize">{type}</span>
@@ -151,12 +151,11 @@ const ResourceFormDialog: React.FC<ResourceFormDialogProps> = ({
               bucketName="solution_files"
               folder="documents"
               onUploadComplete={(url, fileName, fileSize) => {
-                const fileType = detectFileType(fileName);
                 setNewResource({
                   ...newResource,
                   title: fileName,
                   url: url,
-                  type: fileType,
+                  type: detectFileType(fileName),
                   format: getFileFormatName(fileName),
                   size: fileSize
                 });

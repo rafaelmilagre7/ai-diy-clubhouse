@@ -1,168 +1,151 @@
 
-import React from "react";
+import { Solution } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Award, Download, Users, Clock, CheckCircle, Loader2 } from "lucide-react";
-import { Progress } from "@/components/ui/progress";
-import { Card } from "@/components/ui/card";
-import { Solution } from "@/types/solution";
-import { cn } from "@/lib/utils";
-import { formatDate } from "@/utils/date";
+import { PlayCircle, CheckCircle, Award } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface SolutionSidebarProps {
   solution: Solution;
-  progress: any;
-  implementationMetrics?: any;
-  startImplementation: () => Promise<void>;
-  continueImplementation: () => Promise<void>;
-  initializing: boolean;
+  progress: any | null;
+  startImplementation: () => void;
+  continueImplementation: () => void;
+  initializing?: boolean;
 }
 
 export const SolutionSidebar = ({ 
-  solution,
-  progress,
-  implementationMetrics,
+  solution, 
+  progress, 
   startImplementation,
   continueImplementation,
-  initializing
+  initializing = false
 }: SolutionSidebarProps) => {
-  // Calcular percentual de conclusão
-  const completionPercentage = progress?.completion_percentage || 0;
-  const isCompleted = progress?.is_completed;
-  const hasStarted = progress !== null;
+  const navigate = useNavigate();
   
-  // Determinar o texto do botão principal
-  const getPrimaryButtonText = () => {
-    if (isCompleted) return "Ver Certificado";
-    if (hasStarted) return "Continuar Implementação";
-    return "Implementar Solução";
-  };
-  
-  // Definir a ação do botão principal
-  const handlePrimaryAction = () => {
-    if (isCompleted) {
-      // Lógica para ver certificado (a ser implementada)
-    } else if (hasStarted) {
+  // Handler para o botão de implementação
+  const handleImplementation = () => {
+    if (progress?.is_completed) {
+      navigate(`/implement/${solution.id}/0`);
+    } else if (progress) {
+      console.log("Chamando continueImplementation");
       continueImplementation();
     } else {
+      console.log("Chamando startImplementation");
       startImplementation();
     }
   };
   
   return (
-    <div className="space-y-6">
-      <Card className="p-5 border shadow-sm">
-        <div className="space-y-5">
-          <div>
-            <h3 className="font-semibold text-lg mb-3">Implementação</h3>
-            {hasStarted ? (
-              <div className="space-y-3">
-                <div className="flex justify-between text-sm text-muted-foreground mb-1">
-                  <span>Seu progresso</span>
-                  <span>{Math.round(completionPercentage)}%</span>
-                </div>
-                <Progress value={completionPercentage} className="h-2" />
-              </div>
-            ) : (
-              <p className="text-sm text-muted-foreground mb-4">
-                Implemente esta solução para alavancar seu negócio com IA.
+    <div className="bg-white p-6 rounded-lg shadow-sm space-y-6 hidden sm:block">
+      <div>
+        <h3 className="font-medium mb-2">Status de Implementação</h3>
+        {progress ? (
+          progress.is_completed ? (
+            <div className="flex items-center text-green-600">
+              <CheckCircle className="h-5 w-5 mr-2" />
+              <span>Implementação concluída</span>
+            </div>
+          ) : (
+            <div>
+              <p className="text-sm text-muted-foreground">
+                Implementação não concluída
               </p>
-            )}
-            
-            <div className="mt-4">
-              <Button 
-                onClick={handlePrimaryAction} 
-                className="w-full"
-                disabled={initializing}
-              >
-                {initializing ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Preparando...
-                  </>
-                ) : (
-                  <>
-                    {isCompleted ? <Award className="mr-2 h-4 w-4" /> : 
-                     hasStarted ? <ArrowRight className="mr-2 h-4 w-4" /> : 
-                     <ArrowRight className="mr-2 h-4 w-4" />}
-                    {getPrimaryButtonText()}
-                  </>
-                )}
-              </Button>
             </div>
-            
-            <div className="mt-3">
-              <Button 
-                variant="outline" 
-                className="w-full"
-                onClick={() => window.open("https://viderdeia.ai/contratar", "_blank")}
-              >
-                <Users className="mr-2 h-4 w-4" />
-                Contratar Implementação
-              </Button>
-            </div>
-            
-            {hasStarted && !isCompleted && progress?.last_activity && (
-              <div className="mt-4 text-xs text-muted-foreground text-center">
-                Última atividade: {formatDate(progress.last_activity)}
-              </div>
-            )}
-          </div>
-          
-          <hr />
-          
+          )
+        ) : (
+          <p className="text-sm text-muted-foreground">
+            Implementação não iniciada
+          </p>
+        )}
+      </div>
+      
+      <div className="pt-4 border-t">
+        {progress?.is_completed ? (
           <div className="space-y-3">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Dificuldade</span>
-              <span className={cn(
-                "font-medium",
-                solution.difficulty === "easy" && "text-green-500",
-                solution.difficulty === "medium" && "text-orange-500",
-                solution.difficulty === "advanced" && "text-red-500"
-              )}>
-                {solution.difficulty === "easy" && "Fácil"}
-                {solution.difficulty === "medium" && "Média"}
-                {solution.difficulty === "advanced" && "Avançada"}
+            <Button 
+              className="w-full bg-green-600 hover:bg-green-700"
+              onClick={() => navigate(`/implementation/${solution.id}/completed`)}
+            >
+              <Award className="mr-2 h-5 w-5" />
+              Ver Certificado
+            </Button>
+            <Button 
+              className="w-full" 
+              onClick={handleImplementation}
+              variant="outline"
+            >
+              <PlayCircle className="mr-2 h-5 w-5" />
+              Revisar Implementação
+            </Button>
+          </div>
+        ) : (
+          <Button 
+            className="w-full" 
+            onClick={handleImplementation} 
+            disabled={initializing}
+          >
+            <PlayCircle className="mr-2 h-5 w-5" />
+            {initializing ? 'Preparando...' : 'Implementar solução'}
+          </Button>
+        )}
+      </div>
+      
+      <div className="pt-4 border-t">
+        <h3 className="font-medium mb-2">Informações</h3>
+        <div className="space-y-2">
+          {solution.category && (
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Categoria:</span>
+              <span className="font-medium">
+                {solution.category === "revenue" && "Receita"}
+                {solution.category === "operational" && "Operacional"}
+                {solution.category === "strategy" && "Estratégia"}
               </span>
             </div>
-            
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Tempo estimado</span>
-              <span className="font-medium">{solution.estimated_time || "30"} min</span>
+          )}
+          {solution.difficulty && (
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Dificuldade:</span>
+              <span className="font-medium">
+                {solution.difficulty === "easy" && "Fácil"}
+                {solution.difficulty === "medium" && "Médio"}
+                {solution.difficulty === "advanced" && "Avançado"}
+              </span>
             </div>
-            
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Publicado em</span>
-              <span className="font-medium">{formatDate(solution.created_at)}</span>
+          )}
+          {solution.estimated_time && solution.estimated_time > 0 && (
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Tempo estimado:</span>
+              <span className="font-medium">
+                {solution.estimated_time} minutos
+              </span>
             </div>
-            
-            {implementationMetrics && (
-              <>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Implementações</span>
-                  <span className="font-medium">{implementationMetrics.total_completions || 0}</span>
-                </div>
-                
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Taxa de sucesso</span>
-                  <span className="font-medium">{solution.success_rate || 98}%</span>
-                </div>
-              </>
-            )}
-          </div>
-          
-          {isCompleted && (
-            <>
-              <hr />
-              <div className="flex items-center justify-center p-2 bg-green-50 rounded-lg">
-                <CheckCircle className="text-green-500 mr-2 h-5 w-5" />
-                <span className="text-green-700 text-sm font-medium">
-                  Implementado com sucesso!
-                </span>
-              </div>
-            </>
+          )}
+          {typeof solution.success_rate === "number" && solution.success_rate > 0 && (
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Taxa de sucesso:</span>
+              <span className="font-medium">
+                {solution.success_rate}%
+              </span>
+            </div>
           )}
         </div>
-      </Card>
+      </div>
+      
+      {solution.tags && solution.tags.length > 0 && (
+        <div className="pt-4 border-t">
+          <h3 className="font-medium mb-2">Tags</h3>
+          <div className="flex flex-wrap gap-2">
+            {solution.tags.map((tag, index) => (
+              <span 
+                key={index}
+                className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

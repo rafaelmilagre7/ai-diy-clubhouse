@@ -1,56 +1,51 @@
 
-import { useCallback } from "react";
+import { useEffect } from "react";
 import { supabase } from "@/lib/supabase";
-import { useLogging } from "@/hooks/useLogging";
 import { useAuth } from "@/contexts/auth";
+import { useLogging } from "@/hooks/useLogging";
+import { logProgressEvent } from "./utils/progressUtils";
 
-export const useModuleChangeTracking = (solutionId: string, moduleIdx: number) => {
-  const { log, logError } = useLogging("useModuleChangeTracking");
+/**
+ * Hook to track and update progress when module changes
+ */
+export const useModuleChangeTracking = (
+  moduleIdx: number,
+  progressId: string | undefined,
+  solutionId: string | undefined
+) => {
   const { user } = useAuth();
+  const { log, logError } = useLogging();
   
-  /**
-   * Registrar a visualização do módulo para fins de análise
-   */
-  const trackModuleView = useCallback((moduleIdx: number, moduleId: string) => {
-    if (!user || !solutionId || !moduleId) return;
-    
-    const trackView = async () => {
+  // Update progress when module changes
+  useEffect(() => {
+    const updateProgress = async () => {
+      if (!user || !solutionId || !progressId) return;
+      
       try {
-        // Inserir registro de visualização
+        logProgressEvent(log, "Updating progress for module change", { 
+          moduleIdx, 
+          progressId,
+          solution_id: solutionId
+        });
+        
         const { error } = await supabase
-          .from("module_views")
-          .insert({
-            user_id: user.id,
-            solution_id: solutionId,
-            module_id: moduleId,
-            module_idx: moduleIdx,
-            viewed_at: new Date().toISOString()
-          });
-          
+          .from("progress")
+          .update({ 
+            current_module: moduleIdx,
+            last_activity: new Date().toISOString()
+          })
+          .eq("id", progressId);
+        
         if (error) {
-          // Ignorar erros de duplicação (visualizações repetidas)
-          if (!error.message.includes("duplicate")) {
-            throw error;
-          }
+          throw error;
         }
         
-        // Registrar no log para diagnóstico
-        log("Visualização de módulo registrada", {
-          moduleIdx,
-          moduleId,
-          solutionId
-        });
+        log("Progress updated successfully");
       } catch (error) {
-        // Apenas registrar erro - não exibir ao usuário
-        logError("Erro ao registrar visualização", { error, moduleIdx });
+        logError("Error updating progress", error);
       }
     };
     
-    // Executar assincronamente
-    trackView();
-  }, [user, solutionId, log, logError]);
-
-  return {
-    trackModuleView
-  };
+    updateProgress();
+  }, [moduleIdx, user, solutionId, progressId, log, logError]);
 };

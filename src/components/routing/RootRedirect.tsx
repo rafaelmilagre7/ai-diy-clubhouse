@@ -7,9 +7,12 @@ import { toast } from "sonner";
 
 const RootRedirect = () => {
   const { user, profile, isAdmin, isLoading } = useAuth();
+  const navigate = useNavigate();
   const [timeoutExceeded, setTimeoutExceeded] = useState(false);
   const timeoutRef = useRef<number | null>(null);
-  const navigate = useNavigate();
+  
+  // Adicionar um debug log para ajudar a entender o estado
+  console.log("RootRedirect state:", { user, profile, isAdmin, isLoading, timeoutExceeded });
   
   // Handle timing out the loading state
   useEffect(() => {
@@ -20,8 +23,10 @@ const RootRedirect = () => {
     
     if (isLoading && !timeoutExceeded) {
       timeoutRef.current = window.setTimeout(() => {
-        console.log("RootRedirect: Loading timeout exceeded");
+        console.log("RootRedirect: Loading timeout exceeded, redirecting to /login");
         setTimeoutExceeded(true);
+        toast("Tempo de carregamento excedido, redirecionando para tela de login");
+        navigate('/login', { replace: true });
       }, 3000); // 3 segundos de timeout
     }
     
@@ -30,39 +35,37 @@ const RootRedirect = () => {
         clearTimeout(timeoutRef.current);
       }
     };
-  }, [isLoading, timeoutExceeded]);
+  }, [isLoading, navigate, timeoutExceeded]);
   
-  // Debug para problemas de roteamento
+  // Handle redirection based on user state
   useEffect(() => {
-    console.log("RootRedirect - Estado atual:", { 
-      user, 
-      isAdmin, 
-      isLoading, 
-      timeoutExceeded,
-      currentPath: window.location.pathname
-    });
-  }, [user, isAdmin, isLoading, timeoutExceeded]);
+    if (!isLoading) {
+      console.log("RootRedirect: Not loading anymore, checking user state");
+      
+      if (!user) {
+        console.log("RootRedirect: No user, redirecting to /login");
+        navigate('/login', { replace: true });
+        return;
+      }
+      
+      if (user && profile) {
+        console.log("RootRedirect: User and profile available, redirecting based on role");
+        if (profile.role === 'admin' || isAdmin) {
+          navigate('/admin', { replace: true });
+        } else {
+          navigate('/dashboard', { replace: true });
+        }
+      }
+    }
+  }, [user, profile, isAdmin, navigate, isLoading]);
   
   // Show loading screen during check
   if (isLoading && !timeoutExceeded) {
     return <LoadingScreen message="Preparando sua experiência..." />;
   }
   
-  // Se não houver usuário, redirecionar para login
-  if (!user) {
-    console.log("RootRedirect: Não há usuário autenticado, redirecionando para login");
-    return <Navigate to="/login" replace />;
-  }
-  
-  // Se for admin, redirecionar para área admin
-  if (isAdmin) {
-    console.log("RootRedirect: Usuário é admin, redirecionando para /admin");
-    return <Navigate to="/admin" replace />;
-  }
-  
-  // Para usuários autenticados, redirecionar para o dashboard
-  console.log("RootRedirect: Usuário normal autenticado, redirecionando para /dashboard");
-  return <Navigate to="/dashboard" replace />;
+  // Fallback redirect
+  return !user ? <Navigate to="/login" replace /> : <Navigate to="/dashboard" replace />;
 };
 
 export default RootRedirect;

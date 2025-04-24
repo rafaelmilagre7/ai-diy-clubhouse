@@ -7,57 +7,40 @@ import MaterialItem from "./MaterialItem";
 
 interface MaterialsListProps {
   materials: Resource[];
-  loading?: boolean;
-  searchQuery?: string;
+  loading: boolean;
   onRemove: (id: string) => Promise<void>;
 }
 
 const MaterialsList: React.FC<MaterialsListProps> = ({ 
   materials, 
-  searchQuery = "",
-  onRemove,
-  loading = false
+  loading, 
+  onRemove 
 }) => {
-  if (loading) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Materiais Adicionados</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex justify-center items-center py-10">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
   return (
     <Card>
       <CardHeader>
         <CardTitle className="text-base">Materiais Adicionados</CardTitle>
       </CardHeader>
       <CardContent>
-        {materials.length > 0 ? (
+        {loading ? (
+          <div className="flex justify-center items-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+          </div>
+        ) : materials.length > 0 ? (
           <ScrollArea className="h-[400px] pr-4">
             <div className="space-y-3">
-              {materials.map((resource) => (
+              {materials.map((material) => (
                 <MaterialItem 
-                  key={resource.id}
-                  material={resource}
-                  onRemove={() => resource.id && onRemove(resource.id)}
+                  key={material.id} 
+                  material={material} 
+                  onRemove={onRemove} 
                 />
               ))}
             </div>
           </ScrollArea>
         ) : (
           <div className="text-center py-10 text-muted-foreground">
-            {searchQuery ? (
-              <p>Nenhum resultado encontrado para "{searchQuery}"</p>
-            ) : (
-              <p>Nenhum material foi adicionado ainda.</p>
-            )}
+            <p>Nenhum material foi adicionado ainda.</p>
           </div>
         )}
       </CardContent>

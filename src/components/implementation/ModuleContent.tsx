@@ -1,42 +1,25 @@
-
-import React, { useEffect, useRef } from "react";
-import { Module, Solution } from "@/types/solution";
-import { ModuleTitle } from "./ModuleTitle";
-import { ModuleContentRenderer } from "./content/ModuleContentRenderer";
-import { Button } from "@/components/ui/button";
-import { CheckSquare } from "lucide-react";
+import React, { useEffect } from "react";
+import { Module } from "@/lib/supabase";
+import { LandingModule } from "./LandingModule";
+import { CelebrationModule } from "./CelebrationModule";
+import { DefaultModule } from "./DefaultModule";
+import { shouldAutoComplete } from "./content/ContentManager";
 import { useLogging } from "@/hooks/useLogging";
 
 interface ModuleContentProps {
   module: Module | null;
   onComplete: () => void;
   onError?: (error: any) => void;
-  solution?: Solution;
-  activeTab?: string;
-  moduleIdx?: number;
 }
 
-export const ModuleContent = ({ module, onComplete, onError, solution, activeTab }: ModuleContentProps) => {
+export const ModuleContent = ({ module, onComplete, onError }: ModuleContentProps) => {
   const { log, logError } = useLogging();
-  const hasAutoCompletedRef = useRef(false);
-  
-  // Resetar a flag de autocompletar quando o módulo mudar
-  useEffect(() => {
-    hasAutoCompletedRef.current = false;
-  }, [module?.id]);
   
   // Mark landing and celebration modules as automatically interacted with
   useEffect(() => {
-    if (module && shouldAutoComplete(module.type) && !hasAutoCompletedRef.current) {
+    if (module && shouldAutoComplete(module)) {
       log("Auto-completing module", { module_id: module.id, module_type: module.type });
-      
-      // Usar um pequeno timeout para evitar problemas de renderização
-      const timer = setTimeout(() => {
-        hasAutoCompletedRef.current = true;
-        onComplete();
-      }, 300);
-      
-      return () => clearTimeout(timer);
+      onComplete();
     }
   }, [module, onComplete, log]);
 
@@ -48,33 +31,19 @@ export const ModuleContent = ({ module, onComplete, onError, solution, activeTab
   try {
     // Renderiza o conteúdo apropriado com base no tipo do módulo
     log("Rendering module content", { module_type: module.type });
-    
     // Microanimação suave na troca de módulo (fade-in)
     return (
       <div className="animate-fade-in">
-        <h2 className="text-2xl font-semibold mb-6">
-          <ModuleTitle type={module.type} />
-        </h2>
-        
-        <ModuleContentRenderer 
-          module={module}
-          onInteraction={onComplete}
-        />
-        
-        <div className="pt-6 border-t mt-10">
-          <Button 
-            variant="outline" 
-            size="lg" 
-            className="w-full flex items-center justify-center gap-2"
-            onClick={onComplete}
-          >
-            <CheckSquare className="h-5 w-5" />
-            Concluir este módulo
-          </Button>
-          <p className="text-sm text-center text-muted-foreground mt-2">
-            Confirme que você concluiu este módulo para poder continuar.
-          </p>
-        </div>
+        {(() => {
+          switch (module.type) {
+            case "landing":
+              return <LandingModule module={module} onComplete={onComplete} />;
+            case "celebration":
+              return <CelebrationModule module={module} onComplete={onComplete} />;
+            default:
+              return <DefaultModule module={module} onComplete={onComplete} />;
+          }
+        })()}
       </div>
     );
   } catch (error) {
@@ -95,8 +64,3 @@ export const ModuleContent = ({ module, onComplete, onError, solution, activeTab
     );
   }
 };
-
-// Função para determinar se um módulo deve ser marcado como concluído automaticamente
-function shouldAutoComplete(moduleType: string): boolean {
-  return ['landing', 'celebration'].includes(moduleType);
-}
