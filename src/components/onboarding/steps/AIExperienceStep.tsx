@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { AIKnowledgeLevelField } from "./ai-experience/AIKnowledgeLevelField";
 import { AIToolsField } from "./ai-experience/AIToolsField";
@@ -42,13 +42,12 @@ export const AIExperienceStep: React.FC<AIExperienceStepProps> = ({
   isSubmitting,
   initialData,
 }) => {
+  const formInitialized = useRef(false);
+  const submitting = useRef(false);
+
   // Extrair os dados de experiência com IA do objeto inicial
-  const extractAIExperienceData = () => {
-    console.log("Extraindo dados de AI Experience de:", initialData);
-    
-    // Se não temos dados, retornar vazio
+  const extractAIExperienceData = useCallback(() => {
     if (!initialData) {
-      console.log("Sem dados iniciais, usando valores padrão");
       return null;
     }
     
@@ -58,7 +57,6 @@ export const AIExperienceStep: React.FC<AIExperienceStepProps> = ({
     // Verificar se temos um objeto ai_experience
     if (initialData.ai_experience) {
       aiExpData = initialData.ai_experience;
-      console.log("Dados encontrados em initialData.ai_experience:", aiExpData);
     } 
     // Verificar se os dados estão na raiz
     else if (
@@ -68,7 +66,6 @@ export const AIExperienceStep: React.FC<AIExperienceStepProps> = ({
       initialData.desired_ai_areas
     ) {
       aiExpData = initialData;
-      console.log("Dados encontrados diretamente na raiz:", aiExpData);
     }
     // Verificar se é um objeto com estrutura aninhada
     else if (typeof initialData === 'object') {
@@ -86,7 +83,6 @@ export const AIExperienceStep: React.FC<AIExperienceStepProps> = ({
           )
         ) {
           aiExpData = value;
-          console.log(`Dados encontrados em initialData.${key}:`, aiExpData);
           break;
         }
       }
@@ -96,7 +92,6 @@ export const AIExperienceStep: React.FC<AIExperienceStepProps> = ({
     if (typeof aiExpData === 'string') {
       try {
         aiExpData = JSON.parse(aiExpData);
-        console.log("Dados convertidos de string para objeto:", aiExpData);
       } catch (e) {
         console.warn("Não foi possível converter string para objeto:", e);
         return null;
@@ -104,15 +99,16 @@ export const AIExperienceStep: React.FC<AIExperienceStepProps> = ({
     }
     
     return aiExpData;
-  };
+  }, [initialData]);
 
   // Obter dados de experiência com IA
-  const aiExpData = extractAIExperienceData();
+  const aiExpData = useRef(extractAIExperienceData());
 
   // Valores iniciais considerando os dados extraídos
-  const getInitialValues = (): AIExperienceFormValues => {
+  const getInitialValues = useCallback((): AIExperienceFormValues => {
     // Se não temos dados extraídos, usar valores padrão
-    if (!aiExpData) {
+    const data = aiExpData.current;
+    if (!data) {
       return {
         knowledge_level: "",
         previous_tools: [],
@@ -125,47 +121,40 @@ export const AIExperienceStep: React.FC<AIExperienceStepProps> = ({
       };
     }
     
-    // Log para debug dos valores iniciais
-    console.log("Valores iniciais extraídos:", {
-      knowledge_level: aiExpData.knowledge_level || "",
-      previous_tools: Array.isArray(aiExpData.previous_tools) ? aiExpData.previous_tools : [],
-      has_implemented: aiExpData.has_implemented || "",
-      desired_ai_areas: Array.isArray(aiExpData.desired_ai_areas) ? aiExpData.desired_ai_areas : [],
-      completed_formation: aiExpData.completed_formation === true,
-      is_member_for_month: aiExpData.is_member_for_month === true,
-      nps_score: typeof aiExpData.nps_score === 'number' ? aiExpData.nps_score : 5,
-      improvement_suggestions: aiExpData.improvement_suggestions || "",
-    });
-    
     return {
-      knowledge_level: aiExpData.knowledge_level || "",
-      previous_tools: Array.isArray(aiExpData.previous_tools) ? aiExpData.previous_tools : [],
-      has_implemented: aiExpData.has_implemented || "",
-      desired_ai_areas: Array.isArray(aiExpData.desired_ai_areas) ? aiExpData.desired_ai_areas : [],
-      completed_formation: aiExpData.completed_formation === true,
-      is_member_for_month: aiExpData.is_member_for_month === true,
-      nps_score: typeof aiExpData.nps_score === 'number' ? aiExpData.nps_score : 5,
-      improvement_suggestions: aiExpData.improvement_suggestions || "",
+      knowledge_level: data.knowledge_level || "",
+      previous_tools: Array.isArray(data.previous_tools) ? data.previous_tools : [],
+      has_implemented: data.has_implemented || "",
+      desired_ai_areas: Array.isArray(data.desired_ai_areas) ? data.desired_ai_areas : [],
+      completed_formation: data.completed_formation === true,
+      is_member_for_month: data.is_member_for_month === true,
+      nps_score: typeof data.nps_score === 'number' ? data.nps_score : 5,
+      improvement_suggestions: data.improvement_suggestions || "",
     };
-  };
+  }, []);
 
   const { control, handleSubmit, watch, reset, formState: { errors } } = useForm<AIExperienceFormValues>({
     defaultValues: getInitialValues()
   });
 
-  // Atualizar valores iniciais quando os dados mudarem
+  // Atualizar valores iniciais apenas quando os dados mudarem e não estiver inicializado
   useEffect(() => {
-    console.log("initialData alterado, atualizando valores do formulário");
-    reset(getInitialValues());
-  }, [initialData, reset]);
-
-  // Valores do formulário para logging
-  const formValues = watch();
-  useEffect(() => {
-    console.log("Valores atuais do formulário de IA:", formValues);
-  }, [formValues]);
+    if (initialData && !formInitialized.current) {
+      console.log("Inicializando formulário com dados:", initialData);
+      aiExpData.current = extractAIExperienceData();
+      reset(getInitialValues());
+      formInitialized.current = true;
+    }
+  }, [initialData, reset, extractAIExperienceData, getInitialValues]);
 
   const onFormSubmit = (data: AIExperienceFormValues) => {
+    // Evitar múltiplos envios
+    if (submitting.current) {
+      return;
+    }
+    
+    submitting.current = true;
+
     // Formatar e enviar os dados
     const formattedData = {
       knowledge_level: data.knowledge_level,
@@ -178,12 +167,15 @@ export const AIExperienceStep: React.FC<AIExperienceStepProps> = ({
       improvement_suggestions: data.improvement_suggestions,
     };
     
-    console.log("Enviando dados formatados de AI Experience:", formattedData);
-    
     // Encapsular em ai_experience conforme esperado pelo backend
     onSubmit("ai_exp", {
       ai_experience: formattedData
     });
+    
+    // Resetar flag de submissão após um tempo para evitar bloqueios por erros
+    setTimeout(() => {
+      submitting.current = false;
+    }, 2000);
   };
 
   return (
@@ -228,7 +220,7 @@ export const AIExperienceStep: React.FC<AIExperienceStepProps> = ({
               />
             </div>
 
-            {/* Áreas desejadas para implementação - agora usando checkboxes para permitir múltiplas seleções */}
+            {/* Áreas desejadas para implementação - checkboxes para múltiplas seleções */}
             <div className="space-y-2 bg-gray-50 p-6 rounded-lg">
               <h3 className="text-lg font-medium text-gray-800">
                 Quais áreas você deseja implementar soluções de IA no seu negócio?
@@ -285,9 +277,9 @@ export const AIExperienceStep: React.FC<AIExperienceStepProps> = ({
           <Button
             type="submit"
             className="bg-[#0ABAB5] hover:bg-[#099388] text-white px-5 py-2"
-            disabled={isSubmitting}
+            disabled={isSubmitting || submitting.current}
           >
-            {isSubmitting ? (
+            {isSubmitting || submitting.current ? (
               "Salvando..."
             ) : (
               <span className="flex items-center gap-2">

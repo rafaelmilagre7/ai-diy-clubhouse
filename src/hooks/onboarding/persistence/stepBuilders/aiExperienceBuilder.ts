@@ -1,6 +1,46 @@
 
 import { OnboardingData, OnboardingProgress } from "@/types/onboarding";
-import { normalizeAIExperience } from "../utils/dataNormalization";
+
+/**
+ * Função para normalizar dados de experiência com IA
+ */
+function normalizeAIExperience(data: any): any {
+  if (!data || typeof data !== 'object') {
+    return {};
+  }
+
+  // Garantir que campos de array são realmente arrays
+  const ensureArray = (field: any) => Array.isArray(field) ? field : [];
+  
+  // Objeto normalizado
+  const normalized = { ...data };
+  
+  // Normalizar arrays
+  if ('previous_tools' in normalized) {
+    normalized.previous_tools = ensureArray(normalized.previous_tools);
+  }
+  
+  if ('desired_ai_areas' in normalized) {
+    normalized.desired_ai_areas = ensureArray(normalized.desired_ai_areas);
+  }
+  
+  // Normalizar valores booleanos
+  if ('completed_formation' in normalized) {
+    normalized.completed_formation = !!normalized.completed_formation;
+  }
+  
+  if ('is_member_for_month' in normalized) {
+    normalized.is_member_for_month = !!normalized.is_member_for_month;
+  }
+  
+  // Normalizar score numérico
+  if ('nps_score' in normalized) {
+    const score = normalized.nps_score;
+    normalized.nps_score = typeof score === 'string' ? parseInt(score, 10) || 0 : (score || 0);
+  }
+  
+  return normalized;
+}
 
 export function buildAiExperienceUpdate(data: Partial<OnboardingData>, progress: OnboardingProgress | null) {
   const updateObj: any = {};
@@ -33,7 +73,7 @@ export function buildAiExperienceUpdate(data: Partial<OnboardingData>, progress:
   if (typeof sourceData === 'object' && sourceData !== null) {
     // Processar campos de string
     ['knowledge_level', 'has_implemented', 'improvement_suggestions'].forEach(field => {
-      if (field in sourceData && sourceData[field as keyof typeof sourceData]) {
+      if (field in sourceData && sourceData[field as keyof typeof sourceData] !== undefined) {
         updateObj.ai_experience[field] = sourceData[field as keyof typeof sourceData];
       }
     });
@@ -45,7 +85,7 @@ export function buildAiExperienceUpdate(data: Partial<OnboardingData>, progress:
           sourceData[field as keyof typeof sourceData] : 
           [sourceData[field as keyof typeof sourceData]].filter(Boolean);
           
-        if (fieldValue.length > 0) {
+        if (fieldValue.length > 0 || Array.isArray(sourceData[field as keyof typeof sourceData])) {
           updateObj.ai_experience[field] = fieldValue;
         }
       }

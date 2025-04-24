@@ -1,16 +1,16 @@
 
-import React from "react";
+import React, { memo } from "react";
 import { Controller, FieldError } from "react-hook-form";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 
 interface AIFormationQuestionsProps {
   control: any;
-  completedFormationError?: FieldError | any; // Modificado para aceitar qualquer tipo de erro
-  isMemberError?: FieldError | any; // Modificado para aceitar qualquer tipo de erro
+  completedFormationError?: FieldError | any;
+  isMemberError?: FieldError | any;
 }
 
-export const AIFormationQuestions: React.FC<AIFormationQuestionsProps> = ({ 
+const AIFormationQuestionsComponent: React.FC<AIFormationQuestionsProps> = ({ 
   control, 
   completedFormationError, 
   isMemberError 
@@ -26,7 +26,7 @@ export const AIFormationQuestions: React.FC<AIFormationQuestionsProps> = ({
           <div className="flex flex-col space-y-2">
             <div className="flex items-center space-x-3">
               <Switch
-                checked={field.value}
+                checked={field.value || false}
                 onCheckedChange={field.onChange}
                 id="completed-formation"
               />
@@ -56,7 +56,7 @@ export const AIFormationQuestions: React.FC<AIFormationQuestionsProps> = ({
           <div className="flex flex-col space-y-2">
             <div className="flex items-center space-x-3">
               <Switch
-                checked={field.value}
+                checked={field.value || false}
                 onCheckedChange={field.onChange}
                 id="is-member-month"
               />
@@ -78,3 +78,6 @@ export const AIFormationQuestions: React.FC<AIFormationQuestionsProps> = ({
     </div>
   </div>
 );
+
+// Usar memo para evitar re-renderizações desnecessárias
+export const AIFormationQuestions = memo(AIFormationQuestionsComponent);

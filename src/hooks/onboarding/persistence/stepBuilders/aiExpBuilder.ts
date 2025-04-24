@@ -1,6 +1,47 @@
 
 import { OnboardingData, OnboardingProgress } from "@/types/onboarding";
 
+/**
+ * Função para normalizar dados de experiência com IA
+ */
+function normalizeAIExperience(data: any): any {
+  if (!data || typeof data !== 'object') {
+    return {};
+  }
+
+  // Garantir que campos de array são realmente arrays
+  const ensureArray = (field: any) => Array.isArray(field) ? field : [];
+  
+  // Objeto normalizado
+  const normalized = { ...data };
+  
+  // Normalizar arrays
+  if ('previous_tools' in normalized) {
+    normalized.previous_tools = ensureArray(normalized.previous_tools);
+  }
+  
+  if ('desired_ai_areas' in normalized) {
+    normalized.desired_ai_areas = ensureArray(normalized.desired_ai_areas);
+  }
+  
+  // Normalizar valores booleanos
+  if ('completed_formation' in normalized) {
+    normalized.completed_formation = !!normalized.completed_formation;
+  }
+  
+  if ('is_member_for_month' in normalized) {
+    normalized.is_member_for_month = !!normalized.is_member_for_month;
+  }
+  
+  // Normalizar score numérico
+  if ('nps_score' in normalized) {
+    const score = normalized.nps_score;
+    normalized.nps_score = typeof score === 'string' ? parseInt(score, 10) || 0 : (score || 0);
+  }
+  
+  return normalized;
+}
+
 export function buildAiExpUpdate(data: Partial<OnboardingData>, progress: OnboardingProgress | null) {
   const updateObj: any = {};
   
@@ -12,7 +53,7 @@ export function buildAiExpUpdate(data: Partial<OnboardingData>, progress: Onboar
     if (typeof progress.ai_experience === 'string') {
       try {
         // Verificar se é uma string válida antes de tentar trim
-        const stringValue = String(progress.ai_experience);
+        const stringValue = String(progress.ai_experience || '');
         const trimmedValue = stringValue && typeof stringValue.trim === 'function' ? 
           stringValue.trim() : 
           stringValue;
@@ -41,9 +82,7 @@ export function buildAiExpUpdate(data: Partial<OnboardingData>, progress: Onboar
         sourceData.previous_tools : 
         [sourceData.previous_tools].filter(Boolean);
         
-      if (previousTools.length > 0) {
-        updateObj.ai_experience.previous_tools = previousTools;
-      }
+      updateObj.ai_experience.previous_tools = previousTools;
     }
     
     // Processar campos de array para desired_ai_areas
@@ -52,9 +91,7 @@ export function buildAiExpUpdate(data: Partial<OnboardingData>, progress: Onboar
         sourceData.desired_ai_areas : 
         [sourceData.desired_ai_areas].filter(Boolean);
         
-      if (desiredAreas.length > 0) {
-        updateObj.ai_experience.desired_ai_areas = desiredAreas;
-      }
+      updateObj.ai_experience.desired_ai_areas = desiredAreas;
     }
     
     // Processar outros campos
@@ -78,6 +115,9 @@ export function buildAiExpUpdate(data: Partial<OnboardingData>, progress: Onboar
         sourceData.nps_score;
     }
   }
+  
+  // Normalizar dados finais
+  updateObj.ai_experience = normalizeAIExperience(updateObj.ai_experience);
   
   console.log("Objeto de atualização para ai_experience:", updateObj);
   

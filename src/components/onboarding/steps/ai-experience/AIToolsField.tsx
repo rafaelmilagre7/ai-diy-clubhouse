@@ -1,11 +1,11 @@
 
-import React from "react";
+import React, { memo } from "react";
 import { Controller, FieldError } from "react-hook-form";
 import { Checkbox } from "@/components/ui/checkbox";
 
 interface AIToolsFieldProps {
   control: any;
-  error?: FieldError | FieldError[] | any; // Modificado para aceitar qualquer tipo de erro
+  error?: FieldError | FieldError[] | any;
 }
 
 const toolsOptions = [
@@ -14,27 +14,26 @@ const toolsOptions = [
   "ManyChat", "N8N", "NicoChat",
 ];
 
-export const AIToolsField: React.FC<AIToolsFieldProps> = ({ control, error }) => (
+const AIToolsFieldComponent: React.FC<AIToolsFieldProps> = ({ control, error }) => (
   <div className="space-y-4 bg-gray-50 p-6 rounded-lg">
     <h3 className="text-lg font-medium text-gray-800">Ferramentas de IA que já utilizou</h3>
     <Controller
       control={control}
       name="previous_tools"
-      rules={{ required: "Selecione pelo menos uma opção" }}
+      rules={{ validate: (value) => (Array.isArray(value) && value.length > 0) || "Selecione pelo menos uma opção" }}
       render={({ field, fieldState }) => (
         <div className="space-y-3">
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
             {toolsOptions.map((tool) => (
               <label key={tool} className="flex items-center gap-2">
                 <Checkbox
-                  checked={field.value?.includes(tool)}
+                  checked={Array.isArray(field.value) && field.value.includes(tool)}
                   onCheckedChange={(checked) => {
+                    const currentValue = Array.isArray(field.value) ? field.value : [];
                     if (checked) {
-                      field.onChange([...(field.value || []), tool]);
+                      field.onChange([...currentValue, tool]);
                     } else {
-                      field.onChange(
-                        field.value?.filter((t: string) => t !== tool) || []
-                      );
+                      field.onChange(currentValue.filter((t: string) => t !== tool));
                     }
                   }}
                   id={`tool-${tool}`}
@@ -54,3 +53,6 @@ export const AIToolsField: React.FC<AIToolsFieldProps> = ({ control, error }) =>
     />
   </div>
 );
+
+// Usando memo para evitar re-renderizações desnecessárias
+export const AIToolsField = memo(AIToolsFieldComponent);

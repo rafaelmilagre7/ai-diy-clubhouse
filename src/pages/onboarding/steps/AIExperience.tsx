@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
 import { useOnboardingSteps } from "@/hooks/onboarding/useOnboardingSteps";
 import { AIExperienceStep } from "@/components/onboarding/steps/AIExperienceStep";
@@ -13,14 +13,20 @@ const AIExperience = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { isLoading, refreshProgress } = useProgress();
   const { log } = useLogging();
+  // Usar ref para controlar se o carregamento inicial já ocorreu
+  const initialLoadDone = useRef(false);
 
-  // Efeito para carregar dados mais recentes ao entrar na página
+  // Efeito para carregar dados mais recentes apenas uma vez ao entrar na página
   useEffect(() => {
-    console.log("AIExperience montado - carregando dados mais recentes");
-    refreshProgress();
+    if (!initialLoadDone.current) {
+      console.log("AIExperience montado - carregando dados mais recentes");
+      refreshProgress().then(() => {
+        initialLoadDone.current = true;
+      });
+    }
   }, [refreshProgress]);
 
-  // Validar dados iniciais
+  // Validar dados iniciais (sem disparar atualizações)
   useEffect(() => {
     if (progress) {
       console.log("Dados de AI Experience obtidos:", progress.ai_experience);
@@ -76,7 +82,7 @@ const AIExperience = () => {
         <MilagrinhoMessage
           message="Vamos conhecer um pouco sobre sua experiência com Inteligência Artificial. Isso nos ajudará a personalizar as recomendações e conteúdos mais adequados para o seu nível de conhecimento."
         />
-        {isLoading ? (
+        {isLoading && !initialLoadDone.current ? (
           <div className="flex justify-center py-10">
             <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-[#0ABAB5]"></div>
           </div>

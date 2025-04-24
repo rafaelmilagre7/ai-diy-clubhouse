@@ -1,14 +1,11 @@
 
-import React from "react";
+import React, { memo } from "react";
 import { Badge } from "@/components/ui/badge";
 import { OnboardingData } from "@/types/onboarding";
 
-export function getAIExperienceSummary(data: OnboardingData['ai_experience']) {
-  console.log("Renderizando summary para AI Experience com dados:", data);
-  
+function getAIExperienceSummaryComponent(data: OnboardingData['ai_experience']) {
   // Verificar se os dados estão em formato correto
   if (!data || typeof data === 'string' || Object.keys(data).length === 0) {
-    console.warn("Dados de AI Experience inválidos ou vazios:", data);
     return (
       <p className="text-gray-500 italic">
         Seção não preenchida ou dados incompletos. Clique em Editar para preencher.
@@ -21,9 +18,7 @@ export function getAIExperienceSummary(data: OnboardingData['ai_experience']) {
   if (typeof data === 'string') {
     try {
       processedData = JSON.parse(data);
-      console.log("Dados convertidos de string para objeto:", processedData);
     } catch (e) {
-      console.error("Erro ao converter string para objeto:", e);
       return (
         <p className="text-gray-500 italic">
           Erro ao processar dados. Clique em Editar para preencher novamente.
@@ -126,3 +121,13 @@ export function getAIExperienceSummary(data: OnboardingData['ai_experience']) {
     </div>
   );
 }
+
+// Exportar a função que retorna diretamente o componente para casos sem memoização
+export function getAIExperienceSummary(data: OnboardingData['ai_experience']) {
+  return getAIExperienceSummaryComponent(data);
+}
+
+// Exportar um componente memoizado para uso em componentes React
+export const AIExperienceSummary = memo(({ data }: { data: OnboardingData['ai_experience'] }) => {
+  return getAIExperienceSummaryComponent(data);
+});
