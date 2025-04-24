@@ -1,5 +1,5 @@
 
-import { FC } from "react";
+import { FC, memo } from "react";
 import { ActiveSolutions } from "./ActiveSolutions";
 import { CompletedSolutions } from "./CompletedSolutions";
 import { RecommendedSolutions } from "./RecommendedSolutions";
@@ -8,7 +8,13 @@ import { Solution } from "@/lib/supabase";
 import { ModernDashboardHeader } from "./ModernDashboardHeader";
 import { KpiGrid } from "./KpiGrid";
 import { useAuth } from "@/contexts/auth";
-import { AchievementsSummary } from "./AchievementsSummary"; // Adicionando a importação do componente
+import { AchievementsSummary } from "./AchievementsSummary"; 
+import { Suspense, lazy } from 'react';
+
+// Otimização: Lazy load componente AchievementsSummary
+const LazyAchievementsSummary = lazy(() => import('./AchievementsSummary').then(
+  module => ({ default: module.AchievementsSummary })
+));
 
 interface DashboardLayoutProps {
   active: Solution[];
@@ -19,7 +25,8 @@ interface DashboardLayoutProps {
   onSolutionClick: (solution: Solution) => void;
 }
 
-export const DashboardLayout: FC<DashboardLayoutProps> = ({
+// Otimização: Usar memo para evitar re-renderizações desnecessárias
+export const DashboardLayout: FC<DashboardLayoutProps> = memo(({
   active,
   completed,
   recommended,
@@ -29,16 +36,18 @@ export const DashboardLayout: FC<DashboardLayoutProps> = ({
 }) => {
   const hasNoSolutions = active.length === 0 && completed.length === 0 && recommended.length === 0;
   const { profile } = useAuth();
+  const userName = profile?.name?.split(" ")[0] || "Membro";
 
   return (
     <div className="space-y-8 md:pt-2 animate-fade-in">
       {/* HEADER IMERSIVO */}
-      <ModernDashboardHeader userName={profile?.name?.split(" ")[0] || "Membro"} />
+      <ModernDashboardHeader userName={userName} />
 
       {/* NOVO: Resumo gamificação - conquistas */}
       <div className="animate-fade-in">
-        {/* AchievementsSummary adiciona badges/conquistas com microinteração */}
-        <AchievementsSummary />
+        <Suspense fallback={<div className="h-20 w-full animate-pulse bg-gray-100 rounded-lg"></div>}>
+          <LazyAchievementsSummary />
+        </Suspense>
       </div>
 
       {/* CARDS DE PROGRESSO (KPI) */}
@@ -74,4 +83,6 @@ export const DashboardLayout: FC<DashboardLayoutProps> = ({
       )}
     </div>
   );
-};
+});
+
+DashboardLayout.displayName = 'DashboardLayout';

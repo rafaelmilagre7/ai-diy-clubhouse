@@ -18,7 +18,7 @@ export function buildBusinessGoalsUpdate(data: Partial<OnboardingData>, progress
   if (progress && progress.business_goals) {
     if (typeof progress.business_goals === 'string') {
       try {
-        existingBusinessGoals = JSON.parse(progress.business_goals as string);
+        existingBusinessGoals = JSON.parse(progress.business_goals);
         console.log("[businessGoalsBuilder] Convertido business_goals de string para objeto");
       } catch (e) {
         console.error("[businessGoalsBuilder] Erro ao converter business_goals de string para objeto:", e);

@@ -2,17 +2,22 @@
 import { OnboardingData, OnboardingProgress, ProfessionalDataInput } from "@/types/onboarding";
 import { normalizeField } from "../utils/dataNormalization";
 
+/**
+ * Constrói o objeto de atualização para dados profissionais
+ * Função otimizada para evitar recriação desnecessária de objetos
+ */
 export function buildProfessionalDataUpdate(data: Partial<OnboardingData> | ProfessionalDataInput, progress: OnboardingProgress | null) {
   const updateObj: Record<string, any> = {};
   
-  // Se temos dados profissionais diretos
+  // Verifica se temos campos específicos de profissional
   if ('company_name' in data || 'company_size' in data) {
-    updateObj.company_name = data.company_name as string;
-    updateObj.company_size = data.company_size as string;
-    updateObj.company_sector = data.company_sector as string;
-    updateObj.company_website = data.company_website as string;
-    updateObj.current_position = data.current_position as string;
-    updateObj.annual_revenue = data.annual_revenue as string;
+    const inputData = data as ProfessionalDataInput;
+    updateObj.company_name = inputData.company_name as string;
+    updateObj.company_size = inputData.company_size as string;
+    updateObj.company_sector = inputData.company_sector as string;
+    updateObj.company_website = inputData.company_website as string;
+    updateObj.current_position = inputData.current_position as string;
+    updateObj.annual_revenue = inputData.annual_revenue as string;
     
     // Também atualizar no objeto aninhado professional_info
     updateObj.professional_info = {

@@ -1,18 +1,32 @@
 
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useState, useRef } from "react";
 
 const Index = () => {
   const navigate = useNavigate();
+  const redirectTimerRef = useRef<number | null>(null);
+  const [isRedirecting, setIsRedirecting] = useState(false);
 
   // Redirecionar automaticamente para a página de autenticação após um breve delay
   useEffect(() => {
-    const timer = setTimeout(() => {
+    // Verificar se já há uma sessão no localStorage para redirecionamento mais rápido
+    const hasSession = !!localStorage.getItem('supabase.auth.token');
+    
+    // Redirecionar instantaneamente se já houver sessão, caso contrário aguardar
+    const redirectDelay = hasSession ? 500 : 2000;
+    
+    setIsRedirecting(true);
+    
+    redirectTimerRef.current = window.setTimeout(() => {
       navigate('/auth', { replace: true });
-    }, 2000);
+    }, redirectDelay);
 
-    return () => clearTimeout(timer);
+    return () => {
+      if (redirectTimerRef.current) {
+        clearTimeout(redirectTimerRef.current);
+      }
+    };
   }, [navigate]);
 
   return (
@@ -23,6 +37,7 @@ const Index = () => {
             className="mx-auto h-24 w-auto"
             src="https://milagredigital.com/wp-content/uploads/2025/04/viverdeiaclub.avif"
             alt="VIVER DE IA Club"
+            loading="eager" // Priorizar o carregamento da imagem de marca
           />
           <h1 className="mt-6 text-center text-4xl font-extrabold text-gray-900">
             VIVER DE IA Club
@@ -34,7 +49,10 @@ const Index = () => {
 
         <div className="mt-8 flex justify-center">
           <div className="inline-flex items-center px-4 py-2 border border-transparent text-base font-medium rounded-md text-white bg-viverblue">
-            Redirecionando para a página de login...
+            {isRedirecting ? 
+              'Redirecionando para a página de login...' : 
+              'Bem-vindo ao VIVER DE IA Club'
+            }
           </div>
         </div>
 

@@ -5,16 +5,38 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useAchievements } from "@/hooks/achievements/useAchievements";
 import { getAchievementIcon } from "@/components/achievements/utils/achievementUtils";
+import { memo, useMemo } from 'react';
 
-export function AchievementsSummary() {
+// Otimização: Componente memoizado para evitar re-renderizações desnecessárias 
+export const AchievementsSummary = memo(function AchievementsSummary() {
   const navigate = useNavigate();
   const { achievements, loading } = useAchievements();
 
-  // Pegue as 3 primeiras conquistas desbloqueadas e 3 a desbloquear
-  const unlocked = achievements.filter(a => a.isUnlocked).slice(0, 3);
-  const locked = achievements.filter(a => !a.isUnlocked).slice(0, 3);
-  const unlockedCount = achievements.filter(a => a.isUnlocked).length;
-  const percent = achievements.length > 0 ? Math.round((unlockedCount / achievements.length) * 100) : 0;
+  // Otimização: Usar useMemo para cálculos frequentes
+  const {
+    unlocked,
+    locked,
+    unlockedCount,
+    percent
+  } = useMemo(() => {
+    // Pegue as 3 primeiras conquistas desbloqueadas e 3 a desbloquear
+    const unlockedAchievements = achievements.filter(a => a.isUnlocked).slice(0, 3);
+    const lockedAchievements = achievements.filter(a => !a.isUnlocked).slice(0, 3);
+    const count = achievements.filter(a => a.isUnlocked).length;
+    const percentage = achievements.length > 0 ? Math.round((count / achievements.length) * 100) : 0;
+    
+    return {
+      unlocked: unlockedAchievements,
+      locked: lockedAchievements,
+      unlockedCount: count,
+      percent: percentage
+    };
+  }, [achievements]);
+
+  // Navegação para página de conquistas - memoizada
+  const handleViewAllClick = useMemo(() => () => {
+    navigate("/achievements");
+  }, [navigate]);
 
   if (loading) return (
     <div className="w-full flex justify-center py-8">
@@ -33,14 +55,17 @@ export function AchievementsSummary() {
           {unlockedCount} de {achievements.length} conquistas desbloqueadas
         </h2>
         <div className="relative w-full h-3 bg-muted rounded-full mt-2 mb-1 overflow-hidden">
-          <div className="absolute left-0 top-0 h-full rounded-full bg-gradient-to-r from-green-400 to-green-500 transition-all duration-700" style={{ width: `${percent}%` }} />
+          <div 
+            className="absolute left-0 top-0 h-full rounded-full bg-gradient-to-r from-green-400 to-green-500 transition-all duration-700" 
+            style={{ width: `${percent}%` }} 
+          />
         </div>
         <span className="text-xs text-muted-foreground">{percent}% conquistado</span>
         <Button 
           variant="secondary"
           size="sm"
           className="mt-3 md:mt-2 bg-viverblue/80 hover:bg-viverblue/90 focus:ring-2 focus:ring-viverblue animate-fade-in text-white"
-          onClick={() => navigate("/achievements")}
+          onClick={handleViewAllClick}
         >
           Ver todas conquistas
         </Button>
@@ -110,4 +135,7 @@ export function AchievementsSummary() {
       </div>
     </Card>
   );
-}
+});
+
+// Para compatibilidade com lazy loading
+export default { AchievementsSummary };
