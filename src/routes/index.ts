@@ -1,3 +1,4 @@
 
-// Arquivo simplificado
-export { default as AppRoutes } from '@/components/routing/AppRoutes';
+import { default as AppRoutes } from '@/components/routing/AppRoutes';
+
+export { AppRoutes };
