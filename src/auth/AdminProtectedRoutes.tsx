@@ -17,7 +17,7 @@ export const AdminProtectedRoutes = ({ children }: AdminProtectedRoutesProps = {
 
   console.log("AdminProtectedRoutes state:", { 
     path: location.pathname,
-    user, 
+    user: !!user, 
     isAdmin, 
     isLoading, 
     loadingTimeout 

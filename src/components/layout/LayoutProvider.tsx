@@ -1,97 +1,44 @@
 
-import { Navigate, useNavigate } from "react-router-dom";
-import { useEffect, useState, useRef, ReactNode } from "react";
+import { ReactNode } from "react";
+import Layout from "./Layout";
 import { useAuth } from "@/contexts/auth";
 import LoadingScreen from "@/components/common/LoadingScreen";
-import MemberLayout from "./MemberLayout";
+import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
-/**
- * LayoutProvider handles authentication checks and role-based routing
- * before rendering the appropriate layout component
- */
 interface LayoutProviderProps {
   children: ReactNode;
 }
 
 const LayoutProvider = ({ children }: LayoutProviderProps) => {
-  const {
-    user,
-    profile,
-    isAdmin,
-    isLoading,
-  } = useAuth();
+  const { user, isLoading } = useAuth();
   const navigate = useNavigate();
-  const [loadingTimeout, setLoadingTimeout] = useState(false);
-  const timeoutRef = useRef<number | null>(null);
   
-  // Debug logs
-  console.log("LayoutProvider state:", { user, profile, isAdmin, isLoading, loadingTimeout });
+  console.log("LayoutProvider renderizando:", {
+    user: !!user,
+    isLoading,
+    path: window.location.pathname,
+    url: window.location.href
+  });
 
-  // Configurar timeout de carregamento
-  useEffect(() => {
-    if (isLoading && !loadingTimeout) {
-      // Limpar qualquer timeout existente
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-      
-      timeoutRef.current = window.setTimeout(() => {
-        console.log("LayoutProvider: Loading timeout exceeded, redirecting to login");
-        setLoadingTimeout(true);
-        toast.error("Tempo limite de carregamento excedido, redirecionando para login");
-        navigate('/login', { replace: true });
-      }, 8000); // 8 segundos
-    }
-    
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
-  }, [isLoading, loadingTimeout, navigate]);
-
-  // Verificar autenticação
-  useEffect(() => {
-    if (!isLoading && !user) {
-      console.log("LayoutProvider: No authenticated user, redirecting to login");
-      navigate('/login', { replace: true });
-    }
-  }, [user, isLoading, navigate]);
-
-  // Verificar papel do usuário
-  useEffect(() => {
-    if (!isLoading && user && profile) {
-      if (isAdmin && window.location.pathname.indexOf('/admin') !== 0) {
-        console.log("LayoutProvider: Admin user detected, redirecting to admin area");
-        navigate('/admin', { replace: true });
-      }
-    }
-  }, [user, profile, isAdmin, isLoading, navigate]);
-
-  // Fast path for members - If we have user and profile, render immediately
-  if (user && profile && !isAdmin) {
-    console.log("LayoutProvider: Renderizando MemberLayout diretamente");
-    return <MemberLayout>{children}</MemberLayout>;
+  // Se estiver carregando, mostrar tela de carregamento
+  if (isLoading) {
+    console.log("LayoutProvider: Carregando...");
+    return <LoadingScreen message="Carregando seu conteúdo..." />;
   }
 
-  // Show loading screen while checking the session (but only if timeout not exceeded)
-  if ((isLoading || !profile) && !loadingTimeout) {
-    return <LoadingScreen message="Preparando seu dashboard..." />;
-  }
-
-  // Se não tiver usuário após carregamento, redirecionar para login
+  // Se não houver usuário, redirecionar para a página de login
   if (!user) {
-    return <Navigate to="/login" replace />;
+    console.log("LayoutProvider: Usuário não autenticado, redirecionando para login");
+    toast("Por favor, faça login para acessar esta página");
+    navigate("/login", { replace: true });
+    return <LoadingScreen message="Redirecionando para login..." />;
   }
 
-  // Se for admin, redirecionar para área admin
-  if (isAdmin) {
-    return <Navigate to="/admin" replace />;
-  }
-
-  // Default case: Render the member layout
-  return <MemberLayout>{children}</MemberLayout>;
+  console.log("LayoutProvider: Renderizando layout normal");
+  
+  // Se houver usuário, renderizar o layout com o conteúdo
+  return <Layout>{children}</Layout>;
 };
 
 export default LayoutProvider;

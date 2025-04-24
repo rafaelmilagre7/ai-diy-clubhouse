@@ -10,9 +10,8 @@ import {
   UserCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Separator } from "@/components/ui/separator";
-import { useEffect } from "react";
 
 interface AdminSidebarNavProps {
   sidebarOpen: boolean;
@@ -20,7 +19,6 @@ interface AdminSidebarNavProps {
 
 export const AdminSidebarNav = ({ sidebarOpen }: AdminSidebarNavProps) => {
   const location = useLocation();
-  const navigate = useNavigate();
   
   console.log("AdminSidebarNav renderizando, location:", location.pathname);
 
@@ -62,10 +60,11 @@ export const AdminSidebarNav = ({ sidebarOpen }: AdminSidebarNavProps) => {
   };
 
   const handleBackToDashboard = () => {
-    console.log("Redirecionando para dashboard de membro");
+    console.log("Redirecionando para dashboard de membro com redirecionamento forçado");
     
-    // Usando o método mais direto e confiável: redirecionamento completo
-    window.location.href = "/dashboard";
+    // Usar o método mais radical: redirecionamento completo com caminho absoluto
+    const baseUrl = window.location.origin;
+    window.location.href = `${baseUrl}/dashboard`;
   };
 
   return (

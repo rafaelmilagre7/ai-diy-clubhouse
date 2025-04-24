@@ -16,10 +16,11 @@ export const ProtectedRoutes = ({ children }: ProtectedRoutesProps = {}) => {
   const timeoutRef = useRef<number | null>(null);
 
   console.log("ProtectedRoutes state:", { 
-    user, 
+    user: !!user, 
     isLoading, 
     loadingTimeout,
-    path: location.pathname
+    path: location.pathname,
+    fullUrl: window.location.href
   });
   
   // Configurar timeout de carregamento
@@ -42,6 +43,17 @@ export const ProtectedRoutes = ({ children }: ProtectedRoutesProps = {}) => {
       }
     };
   }, [isLoading, loadingTimeout]);
+
+  // Verificação especial para o dashboard, para diagnóstico do problema
+  useEffect(() => {
+    if (location.pathname === "/dashboard") {
+      console.log("ProtectedRoutes: Estamos na rota de dashboard!", {
+        user: !!user,
+        isLoading,
+        timeoutExceeded: loadingTimeout
+      });
+    }
+  }, [location.pathname, user, isLoading, loadingTimeout]);
 
   // Mostrar tela de carregamento enquanto verifica autenticação (mas apenas se o timeout não foi excedido)
   if (isLoading && !loadingTimeout) {

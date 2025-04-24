@@ -1,15 +1,13 @@
 
 import { useState, useEffect, useRef } from "react";
-import { Navigate, useNavigate } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
 import LoadingScreen from "@/components/common/LoadingScreen";
-import { toast } from "sonner";
 
 const RootRedirect = () => {
   const { user, profile, isAdmin, isLoading } = useAuth();
   const [timeoutExceeded, setTimeoutExceeded] = useState(false);
   const timeoutRef = useRef<number | null>(null);
-  const navigate = useNavigate();
   
   // Handle timing out the loading state
   useEffect(() => {
@@ -35,13 +33,20 @@ const RootRedirect = () => {
   // Debug para problemas de roteamento
   useEffect(() => {
     console.log("RootRedirect - Estado atual:", { 
-      user, 
+      user: !!user, 
       isAdmin, 
       isLoading, 
       timeoutExceeded,
-      path: window.location.pathname 
+      path: window.location.pathname,
+      fullUrl: window.location.href
     });
   }, [user, isAdmin, isLoading, timeoutExceeded]);
+  
+  // Apenas redirecionar quando estamos na raiz exata "/"
+  if (window.location.pathname !== "/") {
+    console.log("RootRedirect: Não estamos na raiz, permitindo navegação normal");
+    return null;
+  }
   
   // Show loading screen during check
   if (isLoading && !timeoutExceeded) {
@@ -52,13 +57,6 @@ const RootRedirect = () => {
   if (!user) {
     console.log("RootRedirect: Não há usuário autenticado, redirecionando para login");
     return <Navigate to="/login" replace />;
-  }
-  
-  // NÃO REDIRECIONAR para outras rotas exceto para a raiz "/"
-  // Isso é crucial para não interferir na navegação normal
-  if (window.location.pathname !== "/") {
-    console.log("RootRedirect: Não estamos na raiz, permitindo navegação normal para:", window.location.pathname);
-    return null;
   }
   
   // Se for admin e estiver na raiz, redirecionar para área admin

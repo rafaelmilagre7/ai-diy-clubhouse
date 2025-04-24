@@ -13,6 +13,8 @@ const Dashboard = () => {
   
   // Debug extensivo para problemas de carregamento
   console.log("Dashboard de membro começou a renderizar - Caminho atual:", window.location.pathname);
+  console.log("URL completa:", window.location.href);
+  console.log("Search params:", Object.fromEntries([...searchParams]));
   
   // Usar nosso hook centralizado de dados com props corretas
   const { 
@@ -70,6 +72,7 @@ const Dashboard = () => {
     
     // Informar que chegou à página de dashboard
     console.log("Dashboard montado com sucesso. URL atual:", window.location.href);
+    console.log("Verificando se o componente está sendo renderizado corretamente");
   }, []);
 
   // Mostrar tela de carregamento enquanto os dados estão sendo carregados
