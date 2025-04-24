@@ -5,9 +5,9 @@
 export function normalizeExperiencePersonalization(data: any): Record<string, any> {
   console.log("Normalizando experience_personalization:", typeof data, data);
   
-  // Caso 1: Se for null ou undefined, retorna objeto vazio
+  // Caso 1: Se for null ou undefined, retorna objeto vazio com estrutura completa
   if (data === null || data === undefined) {
-    console.log("experience_personalization é null ou undefined, retornando objeto vazio");
+    console.log("experience_personalization é null ou undefined, retornando objeto padrão");
     return {
       interests: [],
       time_preference: [],
@@ -23,7 +23,7 @@ export function normalizeExperiencePersonalization(data: any): Record<string, an
     try {
       // Se for string vazia, retorna objeto vazio
       if (data.trim() === '') {
-        console.log("experience_personalization é string vazia, retornando objeto vazio");
+        console.log("experience_personalization é string vazia, retornando objeto padrão");
         return {
           interests: [],
           time_preference: [],
@@ -38,16 +38,8 @@ export function normalizeExperiencePersonalization(data: any): Record<string, an
       const parsedData = JSON.parse(data);
       console.log("experience_personalization convertido de string para objeto:", parsedData);
       
-      // Garante campos obrigatórios após conversão
-      return {
-        interests: Array.isArray(parsedData.interests) ? parsedData.interests : [],
-        time_preference: Array.isArray(parsedData.time_preference) ? parsedData.time_preference : [],
-        available_days: Array.isArray(parsedData.available_days) ? parsedData.available_days : [],
-        networking_availability: parsedData.networking_availability !== undefined ? 
-                                Number(parsedData.networking_availability) : 5,
-        skills_to_share: Array.isArray(parsedData.skills_to_share) ? parsedData.skills_to_share : [],
-        mentorship_topics: Array.isArray(parsedData.mentorship_topics) ? parsedData.mentorship_topics : [],
-      };
+      // Garantir que todos os campos são normalizados
+      return normalizeExperiencePersonalization(parsedData);
     } catch (e) {
       console.error("Erro ao converter experience_personalization de string para objeto:", e);
       return {

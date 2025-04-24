@@ -1,5 +1,5 @@
 
-import { useMemo, useEffect } from "react";
+import { useMemo, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 
 // Definindo um tipo para os nomes dos campos do formulário
@@ -24,17 +24,52 @@ export interface ExperienceFormData {
 export function useExperiencePersonalizationForm(initialData: Partial<ExperienceFormData> | null = {}) {
   // Garantir que initialData nunca seja nulo para evitar erros ao acessar propriedades
   const safeInitialData = initialData || {};
+  const initialized = useRef(false);
   
-  console.log("useExperiencePersonalizationForm initialData:", initialData);
+  // Extrair dados de personalização de forma segura
+  const experienceData = useMemo(() => {
+    // Se initialData tem experience_personalization, usar isso
+    if (initialData && initialData.experience_personalization) {
+      let expData = initialData.experience_personalization;
+      
+      // Se for string, tentar parsear
+      if (typeof expData === 'string') {
+        try {
+          expData = JSON.parse(expData);
+        } catch (e) {
+          console.error("Erro ao parsear experience_personalization:", e);
+          return {};
+        }
+      }
+      
+      return expData;
+    }
+    
+    // Caso contrário, usar o initialData diretamente se tiver as propriedades esperadas
+    if (initialData && 
+        (initialData.interests || 
+         initialData.time_preference || 
+         initialData.available_days || 
+         initialData.networking_availability !== undefined || 
+         initialData.skills_to_share || 
+         initialData.mentorship_topics)) {
+      return initialData;
+    }
+    
+    return {};
+  }, [initialData]);
+  
+  console.log("Dados processados para formulário:", experienceData);
   
   const form = useForm<ExperienceFormData>({
     defaultValues: {
-      interests: safeInitialData.interests || [],
-      time_preference: safeInitialData.time_preference || [],
-      available_days: safeInitialData.available_days || [],
-      networking_availability: typeof safeInitialData.networking_availability === "number" ? safeInitialData.networking_availability : 5,
-      skills_to_share: safeInitialData.skills_to_share || [],
-      mentorship_topics: safeInitialData.mentorship_topics || [],
+      interests: Array.isArray(experienceData.interests) ? experienceData.interests : [],
+      time_preference: Array.isArray(experienceData.time_preference) ? experienceData.time_preference : [],
+      available_days: Array.isArray(experienceData.available_days) ? experienceData.available_days : [],
+      networking_availability: typeof experienceData.networking_availability === "number" ? 
+                             experienceData.networking_availability : 5,
+      skills_to_share: Array.isArray(experienceData.skills_to_share) ? experienceData.skills_to_share : [],
+      mentorship_topics: Array.isArray(experienceData.mentorship_topics) ? experienceData.mentorship_topics : [],
     },
     mode: "onChange"
   });
@@ -42,25 +77,14 @@ export function useExperiencePersonalizationForm(initialData: Partial<Experience
   const { watch, setValue, trigger, formState } = form;
   const formValues = watch();
 
-  // Efeito para forçar validação quando o componente é montado
+  // Efeito para forçar validação quando o componente é montado, apenas uma vez
   useEffect(() => {
-    // Verificar se temos dados iniciais válidos
-    const hasInitialData = 
-      safeInitialData?.interests?.length > 0 && 
-      safeInitialData?.time_preference?.length > 0 && 
-      safeInitialData?.available_days?.length > 0 && 
-      safeInitialData?.skills_to_share?.length > 0 && 
-      safeInitialData?.mentorship_topics?.length > 0 && 
-      typeof safeInitialData?.networking_availability === 'number';
-    
-    if (hasInitialData) {
+    if (!initialized.current) {
       // Forçar validação para atualizar o estado isValid
       trigger();
+      initialized.current = true;
     }
-    
-    // Debug
-    console.log("Dados iniciais validados:", hasInitialData, safeInitialData);
-  }, [safeInitialData, trigger]);
+  }, [trigger]);
 
   // Função para verificar se todos os campos obrigatórios estão preenchidos
   const isValid = useMemo(() => {
@@ -82,16 +106,6 @@ export function useExperiencePersonalizationForm(initialData: Partial<Experience
       hasMentorshipTopics && 
       hasNetworkingAvailability;
     
-    console.log("Estado de validação dos campos:", {
-      hasInterests,
-      hasTimePreference,
-      hasAvailableDays,
-      hasSkillsToShare,
-      hasMentorshipTopics,
-      hasNetworkingAvailability,
-      allFieldsValid
-    });
-    
     return allFieldsValid;
   }, [formValues]);
 
@@ -112,8 +126,6 @@ export function useExperiencePersonalizationForm(initialData: Partial<Experience
         { shouldValidate: true, shouldDirty: true }
       );
     }
-    
-    console.log(`Campo ${field} atualizado:`, form.watch(field));
   }
 
   return {

@@ -9,7 +9,6 @@ export function buildExperiencePersonalizationUpdate(data: Partial<OnboardingDat
   
   // Log para debug
   console.log("Construindo atualização para experience_personalization com dados:", data);
-  console.log("Dados atuais de progresso:", progress?.experience_personalization);
   
   // Verificações iniciais
   if (!data) {
@@ -18,20 +17,35 @@ export function buildExperiencePersonalizationUpdate(data: Partial<OnboardingDat
   }
   
   // Garantir base consistente para os dados
-  let existingExperiencePersonalization = {};
+  let existingExperiencePersonalization: Record<string, any> = {
+    interests: [],
+    time_preference: [],
+    available_days: [],
+    networking_availability: 5,
+    skills_to_share: [],
+    mentorship_topics: []
+  };
   
-  // Verificar se temos dados de progresso válidos
+  // Verificar se temos dados de progresso válidos e extrair dados existentes
   if (progress && progress.experience_personalization) {
     if (typeof progress.experience_personalization === 'string') {
       try {
-        existingExperiencePersonalization = JSON.parse(progress.experience_personalization as string);
+        existingExperiencePersonalization = {
+          ...existingExperiencePersonalization,
+          ...JSON.parse(progress.experience_personalization as string)
+        };
       } catch (e) {
         console.error("Erro ao converter experience_personalization de string para objeto:", e);
       }
     } else if (typeof progress.experience_personalization === 'object') {
-      existingExperiencePersonalization = progress.experience_personalization;
+      existingExperiencePersonalization = {
+        ...existingExperiencePersonalization,
+        ...progress.experience_personalization
+      };
     }
   }
+  
+  console.log("Dados atuais de progresso:", existingExperiencePersonalization);
   
   // Verificar se estamos recebendo dados específicos de experience_personalization ou são dados aninhados
   const experiencePersonalizationData = data.experience_personalization || {};

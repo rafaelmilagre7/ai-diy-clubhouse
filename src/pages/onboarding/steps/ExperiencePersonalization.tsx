@@ -12,23 +12,27 @@ const ExperiencePersonalization = () => {
   const { saveStepData, progress, completeOnboarding } = useOnboardingSteps();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { isLoading, refreshProgress } = useProgress();
-  const [refreshCount, setRefreshCount] = useState(0);
+  const [refreshAttempted, setRefreshAttempted] = useState(false);
   const navigate = useNavigate();
 
-  // Efeito para carregar dados mais recentes ao entrar na página
+  // Efeito para carregar dados mais recentes ao entrar na página - modificado para evitar loop
   useEffect(() => {
-    console.log("ExperiencePersonalization montado - carregando dados mais recentes");
-    const loadData = async () => {
-      try {
-        await refreshProgress();
-        console.log("Dados atualizados para ExperiencePersonalization:", progress);
-      } catch (error) {
-        console.error("Erro ao carregar dados:", error);
-        toast.error("Erro ao carregar dados. Algumas informações podem estar desatualizadas.");
-      }
-    };
-    loadData();
-  }, [refreshProgress, refreshCount]);
+    if (!refreshAttempted) {
+      console.log("ExperiencePersonalization montado - carregando dados mais recentes");
+      const loadData = async () => {
+        try {
+          await refreshProgress();
+          console.log("Dados atualizados para ExperiencePersonalization:", progress);
+          setRefreshAttempted(true);
+        } catch (error) {
+          console.error("Erro ao carregar dados:", error);
+          toast.error("Erro ao carregar dados. Algumas informações podem estar desatualizadas.");
+          setRefreshAttempted(true);
+        }
+      };
+      loadData();
+    }
+  }, [refreshProgress, refreshAttempted]);
 
   const handleSaveData = async (data: any) => {
     setIsSubmitting(true);
@@ -46,9 +50,6 @@ const ExperiencePersonalization = () => {
       console.log("Dados de personalização salvos com sucesso");
       toast.success("Dados salvos com sucesso!");
       
-      // Forçar atualização dos dados após salvar
-      await refreshProgress();
-      
       // Navegar manualmente para a próxima página
       navigate("/onboarding/complementary");
     } catch (error) {
@@ -61,7 +62,7 @@ const ExperiencePersonalization = () => {
 
   // Função para tentar recarregar dados
   const handleRetry = () => {
-    setRefreshCount(prev => prev + 1);
+    setRefreshAttempted(false); // Resetar flag para permitir nova tentativa
   };
 
   return (
@@ -74,7 +75,7 @@ const ExperiencePersonalization = () => {
         <MilagrinhoMessage
           message="Vamos personalizar sua experiência no VIVER DE IA Club. Suas preferências nos ajudarão a entregar conteúdo e oportunidades que sejam mais relevantes para você."
         />
-        {isLoading ? (
+        {isLoading && !refreshAttempted ? (
           <div className="flex justify-center py-10">
             <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-[#0ABAB5]"></div>
           </div>
