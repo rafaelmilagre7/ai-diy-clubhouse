@@ -38,8 +38,10 @@ export const useUserStats = () => {
         inProgressSolutions
       );
 
-      // Find latest activity date
-      const lastActivity = findLatestActivity(userProgress);
+      // Find latest activity date - make sure it's converted to a Date object if it exists
+      const latestActivity = findLatestActivity(userProgress);
+      // Convert string date to Date object if it exists
+      const lastActivity = latestActivity ? new Date(latestActivity) : null;
 
       // Montando os dados de atividade recente
       const recentActivity = userProgress
