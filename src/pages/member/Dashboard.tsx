@@ -1,3 +1,4 @@
+
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useState, useCallback, useEffect } from "react";
 import { useCentralDataStore } from "@/hooks/useCentralDataStore";
@@ -10,12 +11,22 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   
+  // Debug para problemas de carregamento
+  console.log("Dashboard de membro renderizando");
+  
   // Usar nosso hook centralizado de dados com props corretas
   const { 
     solutions,
     loadingSolutions: isLoading,
     fetchSolutionDetails: prefetchSolution
   } = useCentralDataStore();
+  
+  useEffect(() => {
+    console.log("Dashboard carregado com status:", {
+      solutionsLoaded: solutions.length > 0,
+      isLoading: isLoading
+    });
+  }, [solutions, isLoading]);
   
   // Categorizar soluções
   const categorizedSolutions = {
@@ -38,7 +49,7 @@ const Dashboard = () => {
   const handleSolutionClick = useCallback((solution: Solution) => {
     // Prefetch dos dados da solução para carregamento rápido
     prefetchSolution(solution.id);
-    navigate(`/solution/${solution.id}`);
+    navigate(`/solutions/${solution.id}`);
   }, [navigate, prefetchSolution]);
 
   // Efeito para mostrar toast na primeira visita - executado apenas 1 vez
