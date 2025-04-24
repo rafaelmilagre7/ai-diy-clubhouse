@@ -8,11 +8,12 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Eye, AlertCircle, CheckCircle, AlertTriangle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Solution } from "@/types/supabaseTypes";
+import { SolutionFormValues } from "@/components/admin/solution/form/solutionFormSchema";
 
 interface PublishTabProps {
   solution: Solution;
-  currentValues: any;
-  onSubmit: (values: any) => Promise<void>;
+  currentValues: SolutionFormValues;
+  onSubmit: (values: SolutionFormValues) => Promise<void>;
   saving: boolean;
 }
 
@@ -23,33 +24,25 @@ const PublishTab: React.FC<PublishTabProps> = ({
   saving
 }) => {
   const navigate = useNavigate();
-  const isPublished = solution?.published || false;
+  const [isPublished, setIsPublished] = React.useState(solution?.published || false);
 
-  const handlePublishToggle = async () => {
+  const handlePublishToggle = (checked: boolean) => {
+    setIsPublished(checked);
+  };
+
+  const handleSave = async () => {
     try {
       await onSubmit({
         ...currentValues,
-        published: !isPublished
+        published: isPublished
       });
     } catch (error) {
-      console.error("Erro ao alterar estado de publicação:", error);
+      console.error("Erro ao salvar estado de publicação:", error);
     }
   };
 
   // Verificar se pode publicar (mínimo de dados necessários)
   const canPublish = solution?.title && solution?.description;
-
-  // Funções auxiliares para renderização
-  const getStatusIcon = (status: 'complete' | 'warning' | 'incomplete') => {
-    switch (status) {
-      case 'complete':
-        return <CheckCircle className="h-5 w-5 text-green-500" />;
-      case 'warning':
-        return <AlertTriangle className="h-5 w-5 text-amber-500" />;
-      case 'incomplete':
-        return <AlertCircle className="h-5 w-5 text-red-500" />;
-    }
-  };
 
   return (
     <div className="space-y-6">
@@ -121,19 +114,40 @@ const PublishTab: React.FC<PublishTabProps> = ({
               </div>
             </div>
 
-            <Button
-              variant="outline"
-              className="w-full"
-              onClick={() => navigate(`/solutions/${solution?.id}`)}
-            >
-              <Eye className="mr-2 h-4 w-4" />
-              Visualizar Solução
-            </Button>
+            <div className="flex gap-4">
+              <Button
+                className="flex-1"
+                onClick={handleSave}
+                disabled={saving}
+              >
+                Salvar Alterações
+              </Button>
+
+              <Button
+                variant="outline"
+                onClick={() => navigate(`/solutions/${solution?.id}`)}
+              >
+                <Eye className="mr-2 h-4 w-4" />
+                Visualizar Solução
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
     </div>
   );
+};
+
+// Funções auxiliares
+const getStatusIcon = (status: 'complete' | 'warning' | 'incomplete') => {
+  switch (status) {
+    case 'complete':
+      return <CheckCircle className="h-5 w-5 text-green-500" />;
+    case 'warning':
+      return <AlertTriangle className="h-5 w-5 text-amber-500" />;
+    case 'incomplete':
+      return <AlertCircle className="h-5 w-5 text-red-500" />;
+  }
 };
 
 export default PublishTab;

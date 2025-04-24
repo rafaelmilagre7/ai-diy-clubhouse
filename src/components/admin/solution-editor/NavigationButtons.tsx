@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, Globe } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface NavigationButtonsProps {
@@ -13,11 +13,6 @@ interface NavigationButtonsProps {
   saving: boolean;
 }
 
-/**
- * Componente de navegação entre etapas do editor de solução
- * Provê botões para avançar/retroceder nas etapas
- * Adapta-se ao contexto da etapa atual (última etapa mostra publicação)
- */
 const NavigationButtons: React.FC<NavigationButtonsProps> = ({
   currentStep,
   totalSteps,
@@ -30,9 +25,7 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
   const { toast } = useToast();
   
   const handleNext = () => {
-    // Primeiro salva os dados e depois avança
     onSave();
-    // Adicionamos um pequeno delay para garantir que o salvamento ocorra antes de avançar
     setTimeout(() => {
       onNext();
       toast({
@@ -41,6 +34,10 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
       });
     }, 500);
   };
+  
+  if (isLastStep) {
+    return null; // Não exibir botões de navegação na última aba (Publicar)
+  }
   
   return (
     <div className="flex justify-between mt-8">
@@ -54,25 +51,14 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({
         Anterior
       </Button>
       
-      {isLastStep ? (
-        <Button
-          onClick={onSave}
-          disabled={saving}
-          className="flex items-center bg-green-600 hover:bg-green-700"
-        >
-          <Globe className="w-4 h-4 mr-2" />
-          Publicar Solução
-        </Button>
-      ) : (
-        <Button
-          onClick={handleNext}
-          disabled={saving}
-          className="flex items-center bg-[#0ABAB5] hover:bg-[#0ABAB5]/90"
-        >
-          Próximo
-          <ChevronRight className="w-4 h-4 ml-2" />
-        </Button>
-      )}
+      <Button
+        onClick={handleNext}
+        disabled={saving}
+        className="flex items-center bg-[#0ABAB5] hover:bg-[#0ABAB5]/90"
+      >
+        Próximo
+        <ChevronRight className="w-4 h-4 ml-2" />
+      </Button>
     </div>
   );
 };
