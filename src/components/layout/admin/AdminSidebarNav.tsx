@@ -12,6 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Separator } from "@/components/ui/separator";
+import { useEffect } from "react";
 
 interface AdminSidebarNavProps {
   sidebarOpen: boolean;
@@ -60,10 +61,13 @@ export const AdminSidebarNav = ({ sidebarOpen }: AdminSidebarNavProps) => {
     return location.pathname === href || location.pathname.startsWith(href + '/');
   };
 
-  const handleBackToDashboard = (e: React.MouseEvent) => {
-    e.preventDefault();
-    console.log("Clique no botão 'Voltar ao Dashboard' detectado");
-    navigate("/dashboard");
+  const handleBackToDashboard = () => {
+    console.log("Função handleBackToDashboard executada");
+    // Usando um timeout para garantir que a navegação aconteça após qualquer outro processamento
+    setTimeout(() => {
+      console.log("Navegando para /dashboard");
+      navigate("/dashboard", { replace: true });
+    }, 0);
   };
 
   return (
@@ -96,6 +100,7 @@ export const AdminSidebarNav = ({ sidebarOpen }: AdminSidebarNavProps) => {
             !sidebarOpen && "justify-center"
           )}
           onClick={handleBackToDashboard}
+          type="button"
         >
           <ChevronLeft className="h-4 w-4" />
           {sidebarOpen && <span>Voltar ao Dashboard</span>}
