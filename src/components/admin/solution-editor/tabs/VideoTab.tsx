@@ -36,16 +36,25 @@ const VideoTab: React.FC<VideoTabProps> = ({
 
   // Forçar a atualização da lista de vídeos quando o componente é montado
   useEffect(() => {
-    console.log("VideoTab montado, buscando vídeos...");
+    console.log("[VideoTab] Componente montado, buscando vídeos...");
     fetchVideos();
+    
+    // Definir um intervalo para refrescar os vídeos a cada 5 segundos
+    // Isso ajuda a garantir que os vídeos apareçam mesmo se houver atraso no banco de dados
+    const refreshInterval = setInterval(() => {
+      console.log("[VideoTab] Intervalo de refresh acionado");
+      fetchVideos();
+    }, 5000);
+    
+    return () => clearInterval(refreshInterval);
   }, [solution?.id, fetchVideos]);
 
   const handleUploadFile = async (file: File) => {
-    console.log("Arquivo selecionado no VideoTab:", file.name);
+    console.log("[VideoTab] Arquivo selecionado:", file.name);
     const success = await handleFileUpload(file);
     
     if (success) {
-      console.log("Upload realizado com sucesso, recarregando vídeos");
+      console.log("[VideoTab] Upload realizado com sucesso, recarregando vídeos");
       await fetchVideos();
     }
   };
@@ -77,7 +86,14 @@ const VideoTab: React.FC<VideoTabProps> = ({
               uploading={uploading}
             />
           ) : (
-            <VideosList videos={videos} onRemove={handleRemoveVideo} />
+            <>
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-semibold text-[#0ABAB5]">
+                  Vídeos adicionados ({videos.length})
+                </h3>
+              </div>
+              <VideosList videos={videos} onRemove={handleRemoveVideo} />
+            </>
           )}
         </CardContent>
       </Card>

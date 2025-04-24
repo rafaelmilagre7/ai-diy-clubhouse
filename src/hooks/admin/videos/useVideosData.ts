@@ -11,21 +11,21 @@ export const useVideosData = (solutionId: string) => {
 
   // Atualiza o estado local quando os vídeos são carregados
   useEffect(() => {
-    console.log("useVideosData: atualizando vídeos do estado", fetchedVideos.length);
+    console.log("[useVideosData] atualizando vídeos do estado", fetchedVideos.length);
     setVideos(fetchedVideos);
   }, [fetchedVideos]);
 
   const handleRemove = async (id: string, url: string) => {
-    console.log("Removendo vídeo:", id);
+    console.log("[useVideosData] Removendo vídeo:", id);
     const { success } = await handleRemoveVideo(id, url);
     if (success) {
-      console.log("Vídeo removido com sucesso, atualizando lista");
+      console.log("[useVideosData] Vídeo removido com sucesso, atualizando lista");
       setVideos(prev => prev.filter(v => v.id !== id));
     }
   };
 
   const fetchVideos = useCallback(async () => {
-    console.log("useVideosData: fetchVideos chamado");
+    console.log("[useVideosData] fetchVideos chamado - realizando refetch explícito");
     await refetch();
   }, [refetch]);
 

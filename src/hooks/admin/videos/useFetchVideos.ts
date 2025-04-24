@@ -8,7 +8,7 @@ export const useFetchVideos = (solutionId: string): VideoFetchResponse & { refet
   const [videos, setVideos] = useState<VideoItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
-  const [lastFetch, setLastFetch] = useState<number>(Date.now());
+  const [refreshCounter, setRefreshCounter] = useState<number>(0);
 
   const fetchVideos = useCallback(async () => {
     if (!solutionId) {
@@ -18,7 +18,7 @@ export const useFetchVideos = (solutionId: string): VideoFetchResponse & { refet
 
     try {
       setLoading(true);
-      console.log("Buscando vídeos para solução:", solutionId, "Timestamp:", new Date().toISOString());
+      console.log("[useFetchVideos] Buscando vídeos para solução:", solutionId, "Timestamp:", new Date().toISOString());
       
       const { data, error } = await supabase
         .from("solution_resources")
@@ -29,15 +29,13 @@ export const useFetchVideos = (solutionId: string): VideoFetchResponse & { refet
 
       if (error) throw error;
       
-      console.log("Vídeos recebidos:", data?.length || 0);
-      if (data && data.length > 0) {
-        console.log("Primeiro vídeo:", data[0].name, "ID:", data[0].id);
-      }
+      console.log("[useFetchVideos] Vídeos recebidos:", data?.length || 0);
+      console.log("[useFetchVideos] Dados brutos:", JSON.stringify(data));
       
       setVideos(data || []);
       setError(null);
     } catch (err) {
-      console.error("Erro ao carregar vídeos:", err);
+      console.error("[useFetchVideos] Erro ao carregar vídeos:", err);
       setError(err as Error);
       toast("Erro ao carregar vídeos", {
         description: "Não foi possível carregar os vídeos desta solução."
@@ -47,16 +45,22 @@ export const useFetchVideos = (solutionId: string): VideoFetchResponse & { refet
     }
   }, [solutionId]); 
 
+  // Função refetch mais robusta que garante um refetch real
   const refetch = useCallback(async () => {
-    console.log("Forçando refetch de vídeos...");
-    setLastFetch(Date.now()); // Atualiza o timestamp para forçar um refetch
-    await fetchVideos(); // Chama diretamente a função fetchVideos
+    console.log("[useFetchVideos] Forçando refetch de vídeos...");
+    setRefreshCounter(prev => prev + 1); // Incrementa o contador para forçar refetch
+    try {
+      await fetchVideos(); // Chama diretamente a função fetchVideos
+      console.log("[useFetchVideos] Refetch concluído com sucesso");
+    } catch (err) {
+      console.error("[useFetchVideos] Erro durante refetch:", err);
+    }
   }, [fetchVideos]);
 
   useEffect(() => {
-    console.log("useEffect em useFetchVideos - buscando vídeos...");
+    console.log("[useFetchVideos] useEffect acionado - buscando vídeos...", { refreshCounter });
     fetchVideos();
-  }, [fetchVideos, lastFetch]);
+  }, [fetchVideos, refreshCounter]);
 
   return { videos, loading, error, refetch };
 };

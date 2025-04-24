@@ -8,28 +8,21 @@ import { toast } from "sonner";
 
 export const useVideoManagement = (solutionId: string) => {
   const [youtubeDialogOpen, setYoutubeDialogOpen] = useState(false);
-  const [videos, setVideos] = useState<VideoItem[]>([]);
   
   const { handleAddYouTube } = useYouTubeVideo(solutionId);
   const { uploading, uploadProgress, handleFileUpload } = useFileUpload(solutionId);
-  const { videos: fetchedVideos, loading, fetchVideos, handleRemoveVideo } = useVideosData(solutionId);
+  const { videos, loading, fetchVideos, handleRemoveVideo } = useVideosData(solutionId);
   
   // Função para atualizar explicitamente os vídeos
   const refreshVideos = useCallback(async () => {
-    console.log("Atualizando lista de vídeos explicitamente");
+    console.log("[useVideoManagement] Atualizando lista de vídeos explicitamente");
     await fetchVideos();
   }, [fetchVideos]);
-
-  // Sincronize os vídeos do useVideosData com o estado local
-  useEffect(() => {
-    console.log("Videos atualizados do backend:", fetchedVideos.length);
-    setVideos(fetchedVideos);
-  }, [fetchedVideos]);
 
   // Garantir que os vídeos são carregados quando o solutionId mudar
   useEffect(() => {
     if (solutionId) {
-      console.log("SolutionId mudou, buscando vídeos...", solutionId);
+      console.log("[useVideoManagement] SolutionId mudou, buscando vídeos...", solutionId);
       fetchVideos();
     }
   }, [solutionId, fetchVideos]);
@@ -38,13 +31,10 @@ export const useVideoManagement = (solutionId: string) => {
     try {
       const video = await handleAddYouTube(data);
       if (video) {
-        console.log("Vídeo do YouTube adicionado com sucesso:", video);
+        console.log("[useVideoManagement] Vídeo do YouTube adicionado com sucesso:", video);
         setYoutubeDialogOpen(false);
         
-        // Atualiza o estado local imediatamente para feedback visual
-        setVideos(prev => [video, ...prev]);
-        
-        // Também atualiza a lista completa do servidor
+        // Atualiza a lista completa do servidor após adicionar
         await refreshVideos();
         
         toast("Vídeo adicionado", {
@@ -52,7 +42,7 @@ export const useVideoManagement = (solutionId: string) => {
         });
       }
     } catch (error) {
-      console.error("Erro ao adicionar vídeo do YouTube:", error);
+      console.error("[useVideoManagement] Erro ao adicionar vídeo do YouTube:", error);
       toast("Erro", {
         description: "Não foi possível adicionar o vídeo do YouTube."
       });
@@ -61,14 +51,11 @@ export const useVideoManagement = (solutionId: string) => {
 
   const handleFileVideoUpload = async (file: File) => {
     try {
-      console.log("Iniciando upload de vídeo em useVideoManagement:", file.name);
+      console.log("[useVideoManagement] Iniciando upload de vídeo:", file.name);
       const video = await handleFileUpload(file);
       
       if (video) {
-        console.log("Upload bem-sucedido, atualizando lista de vídeos:", video);
-        
-        // Atualiza o estado local imediatamente para feedback visual
-        setVideos(prev => [video, ...prev]);
+        console.log("[useVideoManagement] Upload bem-sucedido:", video);
         
         // Recarrega a lista completa do servidor para garantir sincronização
         await refreshVideos();
@@ -82,7 +69,7 @@ export const useVideoManagement = (solutionId: string) => {
         throw new Error("Falha no upload - não retornou dados do vídeo");
       }
     } catch (error) {
-      console.error("Erro no upload de vídeo:", error);
+      console.error("[useVideoManagement] Erro no upload de vídeo:", error);
       toast("Erro no upload", {
         description: "Ocorreu um problema ao fazer upload do vídeo. Tente novamente."
       });

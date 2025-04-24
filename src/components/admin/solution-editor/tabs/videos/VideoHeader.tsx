@@ -21,12 +21,12 @@ const VideoHeader: React.FC<VideoHeaderProps> = ({
   uploadProgress
 }) => {
   const handleFileSelect = async (file: File) => {
-    console.log("Arquivo selecionado no VideoHeader:", file.name);
+    console.log("[VideoHeader] Arquivo selecionado:", file.name);
     if (file) {
       try {
         await onFileUpload(file);
       } catch (error) {
-        console.error("Erro ao fazer upload do arquivo:", error);
+        console.error("[VideoHeader] Erro ao fazer upload do arquivo:", error);
       }
     }
   };
