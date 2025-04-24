@@ -39,17 +39,28 @@ export const useCentralDataStore = () => {
   });
 
   // Pré-carregar detalhes de uma solução específica
-  const fetchSolutionDetails = async (solutionId: string) => {
+  const fetchSolutionDetails = async (solutionId: string): Promise<Solution | null> => {
     try {
       console.log(`Pré-carregando detalhes da solução: ${solutionId}`);
-      await supabase.from('solutions').select('*').eq('id', solutionId).single();
+      const { data, error } = await supabase
+        .from('solutions')
+        .select('*')
+        .eq('id', solutionId)
+        .single();
+      
+      if (error) {
+        console.error('Erro ao pré-carregar detalhes:', error);
+        return null;
+      }
       
       // Também podemos pré-carregar módulos relacionados
       await supabase.from('modules').select('*').eq('solution_id', solutionId);
       
       console.log('Pré-carregamento concluído com sucesso');
+      return data;
     } catch (error) {
       console.error('Erro ao pré-carregar detalhes:', error);
+      return null;
     }
   };
 

@@ -27,7 +27,9 @@ const SolutionDetails = () => {
     queryKey: ['solution', id],
     queryFn: async () => {
       if (!id) return null;
-      return await fetchSolutionDetails(id);
+      // Alteramos para garantir que retornamos os dados e não a função em si
+      const solutionData = await fetchSolutionDetails(id);
+      return solutionData;
     },
     enabled: !!id,
     staleTime: 5 * 60 * 1000
@@ -62,42 +64,41 @@ const SolutionDetails = () => {
     );
   }
 
+  // Mostrar erro se não encontrarmos a solução
+  if (!solution || error) {
+    return <SolutionNotFound />;
+  }
+
   // Mostramos diretamente o conteúdo com fade-in suave
   return (
     <div className="max-w-5xl mx-auto pb-12 animate-fade-in">
       <SolutionBackButton />
       
-      {error && <SolutionNotFound />}
+      <SolutionHeaderSection solution={solution} />
       
-      {solution && (
-        <>
-          <SolutionHeaderSection solution={solution} />
+      <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="md:col-span-2">
+          <SolutionTabsContent solution={solution} progress={progress} />
           
-          <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="md:col-span-2">
-              <SolutionTabsContent solution={solution} progress={progress} />
-              
-              <SolutionMobileActions 
-                solutionId={solution.id}
-                progress={progress}
-                startImplementation={startImplementation}
-                continueImplementation={continueImplementation}
-                initializing={initializing}
-              />
-            </div>
-            
-            <div className="md:col-span-1">
-              <SolutionSidebar 
-                solution={solution}
-                progress={progress}
-                startImplementation={startImplementation}
-                continueImplementation={continueImplementation}
-                initializing={initializing}
-              />
-            </div>
-          </div>
-        </>
-      )}
+          <SolutionMobileActions 
+            solutionId={solution.id}
+            progress={progress}
+            startImplementation={startImplementation}
+            continueImplementation={continueImplementation}
+            initializing={initializing}
+          />
+        </div>
+        
+        <div className="md:col-span-1">
+          <SolutionSidebar 
+            solution={solution}
+            progress={progress}
+            startImplementation={startImplementation}
+            continueImplementation={continueImplementation}
+            initializing={initializing}
+          />
+        </div>
+      </div>
     </div>
   );
 };
