@@ -7,22 +7,9 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { OnboardingData } from '@/types/onboarding';
 import { useFormNavigation } from '@/hooks/onboarding/useFormNavigation';
 import { useUserStats } from '@/hooks/useUserStats';
 import { useOnboarding } from '@/hooks/onboarding/useOnboarding';
-
-// Correção do erro de tipo aqui, usando Record<string, boolean> ao invés de string[]
-interface ExpectativasObjetivosStepProps {
-  onUpdateData: (data: Partial<OnboardingData>) => Promise<void>;
-  data?: Partial<OnboardingData>;
-  onSubmit?: (stepId: string, data: any) => Promise<void>;
-  isSubmitting?: boolean;
-  isLastStep?: boolean;
-  onComplete?: () => void;
-  initialData?: any;
-  personalInfo?: OnboardingData['personal_info'];
-}
 
 // Lista de objetivos para exibir
 const businessGoals = [
@@ -37,32 +24,29 @@ const businessGoals = [
   { id: 'inovacao', title: 'Criar novas soluções', category: 'strategy' }
 ];
 
+// Interface para a propriedade de dados
+interface ExpectativasObjetivosProps {
+  onUpdateData: (data: Record<string, unknown>) => Promise<void>;
+  data?: Record<string, unknown>;
+}
+
 // Componente memoizado para melhorar performance
-const ExpectativasObjetivosStep = React.memo(({ 
-  onUpdateData, 
-  data,
-  onSubmit,
-  isSubmitting = false,
-  isLastStep = false,
-  onComplete,
-  initialData,
-  personalInfo
-}: ExpectativasObjetivosStepProps) => {
+const ExpectativasObjetivosStep = React.memo(({ onUpdateData, data }: ExpectativasObjetivosProps) => {
   const { nextStep } = useFormNavigation();
   const { progress } = useOnboarding();
-  const form = useFormContext<OnboardingData>();
+  const form = useFormContext();
   const { stats } = useUserStats();
-  
+
   // Utilizamos Record<string, boolean> para definir o tipo correto
   const [selectedGoals, setSelectedGoals] = useState<Record<string, boolean>>({});
-  const [isPending, setIsPending] = useState(false);
-  
+  const [isPending, setIsPending] = useState<boolean>(false);
+
   // Usar useMemo para filtragem por categoria
   const goalsByCategory = useMemo(() => {
     const grouped = {
-      revenue: businessGoals.filter(goal => goal.category === 'revenue'),
-      operational: businessGoals.filter(goal => goal.category === 'operational'),
-      strategy: businessGoals.filter(goal => goal.category === 'strategy')
+      revenue: businessGoals.filter((goal) => goal.category === 'revenue'),
+      operational: businessGoals.filter((goal) => goal.category === 'operational'),
+      strategy: businessGoals.filter((goal) => goal.category === 'strategy')
     };
     return grouped;
   }, []);
@@ -74,19 +58,14 @@ const ExpectativasObjetivosStep = React.memo(({
 
   // Efeito para carregar dados existentes
   useEffect(() => {
-    // Se estamos recebendo dados de initialData, usar isso primeiro
-    if (initialData?.business_goals && typeof initialData.business_goals === 'object') {
-      setSelectedGoals(initialData.business_goals as Record<string, boolean>);
-    }
-    // Caso contrário, usar o data tradicional
-    else if (data?.business_goals && typeof data.business_goals === 'object') {
+    if (data?.business_goals && typeof data.business_goals === 'object') {
       setSelectedGoals(data.business_goals as Record<string, boolean>);
     }
-  }, [data?.business_goals, initialData?.business_goals]);
+  }, [data?.business_goals]);
 
   // Função para alternar a seleção de um objetivo
   const toggleGoal = useCallback((goalId: string) => {
-    setSelectedGoals(prev => ({
+    setSelectedGoals((prev) => ({
       ...prev,
       [goalId]: !prev[goalId]
     }));
@@ -96,7 +75,6 @@ const ExpectativasObjetivosStep = React.memo(({
   const handleSave = useCallback(async () => {
     try {
       setIsPending(true);
-
       // Se não há seleções, avisa o usuário
       if (selectedCount === 0) {
         alert('Por favor, selecione pelo menos um objetivo.');
@@ -104,25 +82,16 @@ const ExpectativasObjetivosStep = React.memo(({
         return;
       }
 
-      // Se estamos usando o novo padrão onSubmit (para páginas BusinessGoalsClub)
-      if (onSubmit) {
-        await onSubmit('business_goals', { 
-          business_goals: selectedGoals 
-        });
-      } 
-      // Caso contrário, usar o padrão original onUpdateData
-      else if (onUpdateData) {
-        await onUpdateData({ 
-          business_goals: selectedGoals 
-        });
-        nextStep();
-      }
+      await onUpdateData({
+        business_goals: selectedGoals
+      });
+      nextStep();
     } catch (error) {
       console.error('Erro ao salvar objetivos:', error);
     } finally {
       setIsPending(false);
     }
-  }, [selectedGoals, selectedCount, nextStep, onUpdateData, onSubmit]);
+  }, [selectedGoals, selectedCount, nextStep, onUpdateData]);
 
   return (
     <div className="space-y-6">
@@ -133,8 +102,9 @@ const ExpectativasObjetivosStep = React.memo(({
         </p>
       </div>
 
+      {/* Grid de categorias */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Seção de receita */}
+        {/* Categoria Receita */}
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center space-x-2 mb-4">
@@ -143,14 +113,14 @@ const ExpectativasObjetivosStep = React.memo(({
             </div>
             <Separator className="mb-4" />
             <div className="space-y-3">
-              {goalsByCategory.revenue.map(goal => (
+              {goalsByCategory.revenue.map((goal) => (
                 <div key={goal.id} className="flex items-start space-x-2">
-                  <Checkbox
+                  <Checkbox 
                     id={goal.id}
                     checked={!!selectedGoals[goal.id]}
                     onCheckedChange={() => toggleGoal(goal.id)}
                   />
-                  <label
+                  <label 
                     htmlFor={goal.id}
                     className={cn(
                       "text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer",
@@ -165,7 +135,7 @@ const ExpectativasObjetivosStep = React.memo(({
           </CardContent>
         </Card>
 
-        {/* Seção operacional */}
+        {/* Categoria Operacional */}
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center space-x-2 mb-4">
@@ -174,14 +144,14 @@ const ExpectativasObjetivosStep = React.memo(({
             </div>
             <Separator className="mb-4" />
             <div className="space-y-3">
-              {goalsByCategory.operational.map(goal => (
+              {goalsByCategory.operational.map((goal) => (
                 <div key={goal.id} className="flex items-start space-x-2">
-                  <Checkbox
+                  <Checkbox 
                     id={goal.id}
                     checked={!!selectedGoals[goal.id]}
                     onCheckedChange={() => toggleGoal(goal.id)}
                   />
-                  <label
+                  <label 
                     htmlFor={goal.id}
                     className={cn(
                       "text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer",
@@ -196,7 +166,7 @@ const ExpectativasObjetivosStep = React.memo(({
           </CardContent>
         </Card>
 
-        {/* Seção estratégica */}
+        {/* Categoria Estratégia */}
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center space-x-2 mb-4">
@@ -205,14 +175,14 @@ const ExpectativasObjetivosStep = React.memo(({
             </div>
             <Separator className="mb-4" />
             <div className="space-y-3">
-              {goalsByCategory.strategy.map(goal => (
+              {goalsByCategory.strategy.map((goal) => (
                 <div key={goal.id} className="flex items-start space-x-2">
-                  <Checkbox
+                  <Checkbox 
                     id={goal.id}
                     checked={!!selectedGoals[goal.id]}
                     onCheckedChange={() => toggleGoal(goal.id)}
                   />
-                  <label
+                  <label 
                     htmlFor={goal.id}
                     className={cn(
                       "text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer",
@@ -228,20 +198,20 @@ const ExpectativasObjetivosStep = React.memo(({
         </Card>
       </div>
 
+      {/* Botões de navegação */}
       <div className="flex justify-between mt-4 pt-4 border-t">
-        <Button
-          variant="outline"
-          onClick={() => nextStep(-1)}
-          disabled={isPending || isSubmitting}
+        <Button 
+          variant="outline" 
+          onClick={() => nextStep(-1)} 
+          disabled={isPending}
         >
           Voltar
         </Button>
-
         <Button 
-          onClick={handleSave}
-          disabled={isPending || isSubmitting || selectedCount === 0}
+          onClick={handleSave} 
+          disabled={isPending || selectedCount === 0}
         >
-          {isPending || isSubmitting ? "Salvando..." : "Continuar"}
+          {isPending ? "Salvando..." : "Continuar"}
         </Button>
       </div>
     </div>
@@ -249,5 +219,4 @@ const ExpectativasObjetivosStep = React.memo(({
 });
 
 ExpectativasObjetivosStep.displayName = 'ExpectativasObjetivosStep';
-
 export default ExpectativasObjetivosStep;

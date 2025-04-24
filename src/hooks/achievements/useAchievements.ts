@@ -7,6 +7,29 @@ import { useQuery } from '@tanstack/react-query';
 import { useToast } from '@/components/ui/use-toast';
 import { SolutionCategory } from '@/lib/types/categoryTypes';
 
+// Define TypeScript interfaces for the data returned from Supabase
+interface ProgressItem {
+  solution_id: string;
+  is_completed: boolean;
+  current_module: number;
+  solutions?: {
+    id: string;
+    category: string;
+  };
+}
+
+interface BadgeItem {
+  badge_id: string;
+  earned_at: string;
+  badges: {
+    id: string;
+    name: string;
+    description: string;
+    icon: string;
+    category: string;
+  };
+}
+
 export function useAchievements() {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -43,6 +66,10 @@ export function useAchievements() {
         .eq('user_id', user.id);
         
       if (badgesError) throw badgesError;
+
+      // Cast the data to the appropriate types
+      const typedProgressData = progressData as ProgressItem[];
+      const typedBadgesData = badgesData as BadgeItem[];
       
       // Construir conquistas com métricas do progresso atual
       const allAchievements: Achievement[] = [
@@ -52,8 +79,8 @@ export function useAchievements() {
           name: 'Iniciante',
           description: 'Começou sua jornada no clube ao iniciar sua primeira solução',
           category: "achievement",
-          isUnlocked: progressData && progressData.length > 0,
-          earnedAt: progressData && progressData.length > 0 ? new Date().toISOString() : undefined,
+          isUnlocked: typedProgressData && typedProgressData.length > 0,
+          earnedAt: typedProgressData && typedProgressData.length > 0 ? new Date().toISOString() : undefined,
         },
         // Conquista de Pioneiro (completa primeira solução)
         {
@@ -62,9 +89,9 @@ export function useAchievements() {
           description: 'Completou sua primeira implementação',
           category: "achievement",
           requiredCount: 1,
-          currentCount: progressData?.filter(p => p.is_completed)?.length || 0,
-          isUnlocked: progressData?.some(p => p.is_completed) || false,
-          earnedAt: progressData?.some(p => p.is_completed) ? new Date().toISOString() : undefined,
+          currentCount: typedProgressData?.filter(p => p.is_completed)?.length || 0,
+          isUnlocked: typedProgressData?.some(p => p.is_completed) || false,
+          earnedAt: typedProgressData?.some(p => p.is_completed) ? new Date().toISOString() : undefined,
         },
         // Especialista em Vendas (3+ soluções de receita)
         {
@@ -73,9 +100,9 @@ export function useAchievements() {
           description: 'Implementou 3 soluções da trilha de Receita',
           category: "revenue",
           requiredCount: 3,
-          currentCount: progressData?.filter(p => p.is_completed && p.solutions?.category === 'revenue')?.length || 0,
-          isUnlocked: (progressData?.filter(p => p.is_completed && p.solutions?.category === 'revenue')?.length || 0) >= 3,
-          earnedAt: (progressData?.filter(p => p.is_completed && p.solutions?.category === 'revenue')?.length || 0) >= 3 
+          currentCount: typedProgressData?.filter(p => p.is_completed && p.solutions?.category === 'revenue')?.length || 0,
+          isUnlocked: (typedProgressData?.filter(p => p.is_completed && p.solutions?.category === 'revenue')?.length || 0) >= 3,
+          earnedAt: (typedProgressData?.filter(p => p.is_completed && p.solutions?.category === 'revenue')?.length || 0) >= 3 
             ? new Date().toISOString() : undefined,
         },
         // Mestre em Automação (5+ soluções completas)
@@ -85,9 +112,9 @@ export function useAchievements() {
           description: 'Implementou 5 soluções com sucesso',
           category: "operational",
           requiredCount: 5,
-          currentCount: progressData?.filter(p => p.is_completed)?.length || 0,
-          isUnlocked: (progressData?.filter(p => p.is_completed)?.length || 0) >= 5,
-          earnedAt: (progressData?.filter(p => p.is_completed)?.length || 0) >= 5
+          currentCount: typedProgressData?.filter(p => p.is_completed)?.length || 0,
+          isUnlocked: (typedProgressData?.filter(p => p.is_completed)?.length || 0) >= 5,
+          earnedAt: (typedProgressData?.filter(p => p.is_completed)?.length || 0) >= 5
             ? new Date().toISOString() : undefined,
         },
         // Estrategista (completa solução de estratégia)
@@ -97,16 +124,16 @@ export function useAchievements() {
           description: 'Completou uma solução da trilha de Estratégia',
           category: "strategy",
           requiredCount: 1,
-          currentCount: progressData?.filter(p => p.is_completed && p.solutions?.category === 'strategy')?.length || 0,
-          isUnlocked: progressData?.some(p => p.is_completed && p.solutions?.category === 'strategy') || false,
-          earnedAt: progressData?.some(p => p.is_completed && p.solutions?.category === 'strategy')
+          currentCount: typedProgressData?.filter(p => p.is_completed && p.solutions?.category === 'strategy')?.length || 0,
+          isUnlocked: typedProgressData?.some(p => p.is_completed && p.solutions?.category === 'strategy') || false,
+          earnedAt: typedProgressData?.some(p => p.is_completed && p.solutions?.category === 'strategy')
             ? new Date().toISOString() : undefined,
         },
       ];
       
       // Incluir também badges específicos da tabela de badges (se houver)
-      if (badgesData && badgesData.length > 0) {
-        badgesData.forEach(badgeData => {
+      if (typedBadgesData && typedBadgesData.length > 0) {
+        typedBadgesData.forEach(badgeData => {
           if (badgeData.badges) {
             allAchievements.push({
               id: badgeData.badges.id,
