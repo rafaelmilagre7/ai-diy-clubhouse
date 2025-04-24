@@ -40,12 +40,26 @@ const SolutionDetails = () => {
     toggleFavorite, 
     downloadMaterials,
     progress
-  } = useSolutionInteractions(id || "", solution);
+  } = useSolutionInteractions(id || "", solution || null);
 
   // Verificar ID inválido ou ausente
   if (!id) {
     navigate("/solutions");
     return null;
+  }
+
+  // Mostrar carregamento para melhor experiência do usuário
+  if (isLoading) {
+    return (
+      <div className="max-w-5xl mx-auto pb-12">
+        <SolutionBackButton />
+        <div className="mt-8 flex justify-center">
+          <div className="animate-pulse text-center">
+            <p>Carregando solução...</p>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   // Mostramos diretamente o conteúdo com fade-in suave
