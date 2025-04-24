@@ -56,6 +56,20 @@ export function normalizeExperiencePersonalization(data: any): Record<string, an
   // Caso 3: Se for objeto, garante campos obrigatórios
   if (typeof data === 'object') {
     console.log("experience_personalization já é um objeto, normalizando campos");
+    
+    // Se data for um array, converte para objeto vazio (caso improvável mas possível)
+    if (Array.isArray(data)) {
+      console.warn("experience_personalization é um array, convertendo para objeto padrão");
+      return {
+        interests: [],
+        time_preference: [],
+        available_days: [],
+        networking_availability: 5,
+        skills_to_share: [],
+        mentorship_topics: [],
+      };
+    }
+    
     return {
       interests: Array.isArray(data.interests) ? data.interests : [],
       time_preference: Array.isArray(data.time_preference) ? data.time_preference : [],

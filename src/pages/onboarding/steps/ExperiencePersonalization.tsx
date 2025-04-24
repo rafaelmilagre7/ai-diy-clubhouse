@@ -15,24 +15,26 @@ const ExperiencePersonalization = () => {
   const [refreshAttempted, setRefreshAttempted] = useState(false);
   const navigate = useNavigate();
 
-  // Efeito para carregar dados mais recentes ao entrar na página - modificado para evitar loop
+  // Efeito para carregar dados mais recentes ao entrar na página - com controle para evitar loops
   useEffect(() => {
+    // Verificar se já tentou uma vez para não entrar em loop
     if (!refreshAttempted) {
       console.log("ExperiencePersonalization montado - carregando dados mais recentes");
       const loadData = async () => {
         try {
           await refreshProgress();
           console.log("Dados atualizados para ExperiencePersonalization:", progress);
-          setRefreshAttempted(true);
+          setRefreshAttempted(true); // Marcar que já tentamos atualizar
         } catch (error) {
           console.error("Erro ao carregar dados:", error);
           toast.error("Erro ao carregar dados. Algumas informações podem estar desatualizadas.");
-          setRefreshAttempted(true);
+          setRefreshAttempted(true); // Marcar que já tentamos, mesmo com erro
         }
       };
+      
       loadData();
     }
-  }, [refreshProgress, refreshAttempted]);
+  }, [refreshProgress, refreshAttempted]); // Dependências reduzidas
 
   const handleSaveData = async (data: any) => {
     setIsSubmitting(true);

@@ -1,6 +1,7 @@
 
 import { useMemo, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
+import { OnboardingData, OnboardingProgress } from "@/types/onboarding";
 
 // Definindo um tipo para os nomes dos campos do formulário
 export type FormFieldNames = 
@@ -21,7 +22,20 @@ export interface ExperienceFormData {
   mentorship_topics: string[];
 }
 
-export function useExperiencePersonalizationForm(initialData: Partial<ExperienceFormData> | null = {}) {
+// Interface que define a estrutura dos dados iniciais recebidos
+interface InitialFormData {
+  experience_personalization?: {
+    interests?: string[];
+    time_preference?: string[];
+    available_days?: string[];
+    networking_availability?: number;
+    skills_to_share?: string[];
+    mentorship_topics?: string[];
+  } | string;
+  [key: string]: any;
+}
+
+export function useExperiencePersonalizationForm(initialData: InitialFormData | null = {}) {
   // Garantir que initialData nunca seja nulo para evitar erros ao acessar propriedades
   const safeInitialData = initialData || {};
   const initialized = useRef(false);
