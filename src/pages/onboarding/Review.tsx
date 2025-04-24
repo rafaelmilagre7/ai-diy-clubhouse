@@ -15,6 +15,7 @@ const Review: React.FC = () => {
   const { currentStepIndex, steps, completeOnboarding } = useOnboardingSteps();
   const { progress, isLoading, refreshProgress } = useProgress();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [isInitialLoadAttempted, setIsInitialLoadAttempted] = React.useState(false);
   
   // Encontrar o índice correto do passo de revisão
   const reviewStepIndex = steps.findIndex(step => step.id === "review");
@@ -25,88 +26,39 @@ const Review: React.FC = () => {
       try {
         console.log("[Review] Carregando dados mais recentes para revisão...");
         // Forçar recarga dos dados do backend
-        await refreshProgress();
-        console.log("[Review] Dados atualizados para revisão:", progress);
+        const refreshedData = await refreshProgress();
+        setIsInitialLoadAttempted(true);
+        console.log("[Review] Dados atualizados para revisão:", refreshedData);
+        
+        if (!refreshedData) {
+          toast.error("Falha ao carregar seus dados. Tente novamente em alguns instantes.", {
+            id: "review-data-load-error",
+          });
+        }
       } catch (error) {
         console.error("[Review] Erro ao recarregar dados para revisão:", error);
-        toast.error("Falha ao carregar dados atualizados. Tente recarregar a página.");
+        setIsInitialLoadAttempted(true);
+        toast.error("Falha ao carregar dados atualizados. Tente recarregar a página.", {
+          id: "review-data-load-error",
+        });
       }
     };
     
-    // Executar carga imediatamente ao montar o componente
-    loadFreshData();
-    
-    // Adicionar um timer para garantir que os dados foram carregados, mesmo em caso de race conditions
-    const refreshTimer = setTimeout(() => {
-      if (!progress || Object.keys(progress).length === 0) {
-        console.log("[Review] Tentativa adicional de carga de dados após timeout...");
-        loadFreshData();
-      }
-    }, 1000);
-    
-    return () => clearTimeout(refreshTimer);
-  }, [refreshProgress]); // Dependência apenas em refreshProgress para executar uma vez na montagem
-  
-  // Validar e normalizar dados de progresso
-  useEffect(() => {
-    if (progress) {
-      console.log("[Review] Dados de progresso na tela de revisão:", progress);
-      
-      // Função para normalizar campos que podem estar como string
-      const normalizeField = (fieldName: string, value: any) => {
-        if (typeof value === 'string' && fieldName !== 'current_step' && fieldName !== 'user_id' && fieldName !== 'id') {
-          console.log(`[Review] Tentando normalizar campo ${fieldName} que está como string: "${value}"`);
-          
-          // Tentativa de converter string para objeto
-          try {
-            if (value && value !== "{}" && value !== "") {
-              const parsed = JSON.parse(value);
-              console.log(`[Review] Campo ${fieldName} convertido de string para objeto:`, parsed);
-              return parsed;
-            }
-          } catch (e) {
-            console.error(`[Review] Falha ao converter string para objeto no campo ${fieldName}:`, e);
-          }
-        }
-        return value;
-      };
-      
-      // Criar uma cópia do progresso para não modificar o original
-      const normalizedProgress = { ...progress };
-      
-      // Verificar e normalizar campos principais
-      const fieldsToNormalize = [
-        'ai_experience', 
-        'business_goals', 
-        'experience_personalization', 
-        'complementary_info',
-        'professional_info', 
-        'business_data', 
-        'business_context',
-        'personal_info'
-      ];
-      
-      // Aplicar normalização a todos os campos listados
-      fieldsToNormalize.forEach(field => {
-        if (progress[field as keyof typeof progress]) {
-          const normalizedValue = normalizeField(field, progress[field as keyof typeof progress]);
-          (normalizedProgress as any)[field] = normalizedValue;
-        }
-      });
-      
-      // Atualiza referência local temporária (não altera o estado global)
-      Object.keys(normalizedProgress).forEach(key => {
-        (progress as any)[key] = (normalizedProgress as any)[key];
-      });
+    // Executar carga apenas se ainda não tentamos e não temos dados
+    if (!isInitialLoadAttempted) {
+      loadFreshData();
     }
-  }, [progress]);
+  }, [refreshProgress, isInitialLoadAttempted]); // Dependência em isInitialLoadAttempted para evitar loops infinitos
   
   const handleNavigateToStep = (index: number) => {
     navigate(steps[index].path);
   };
   
   const handleComplete = async () => {
-    if (!progress) return;
+    if (!progress) {
+      toast.error("Dados incompletos. Por favor, recarregue a página antes de continuar.");
+      return;
+    }
     
     try {
       setIsSubmitting(true);
@@ -120,7 +72,7 @@ const Review: React.FC = () => {
   };
   
   // Verificar se temos dados para mostrar
-  if (isLoading) {
+  if (isLoading && !isInitialLoadAttempted) {
     return (
       <OnboardingLayout
         currentStep={reviewStepIndex + 1}
@@ -136,7 +88,7 @@ const Review: React.FC = () => {
   }
 
   // Verificação adicional para garantir que temos dados válidos
-  if (!progress) {
+  if (!progress && isInitialLoadAttempted) {
     return (
       <OnboardingLayout
         currentStep={reviewStepIndex + 1}
@@ -151,7 +103,10 @@ const Review: React.FC = () => {
           <div className="mt-4 flex gap-3">
             <Button 
               variant="outline"
-              onClick={() => window.location.reload()}
+              onClick={() => {
+                setIsInitialLoadAttempted(false); // Resetar flag para permitir nova tentativa
+                window.location.reload();
+              }}
               className="bg-white"
             >
               Recarregar página

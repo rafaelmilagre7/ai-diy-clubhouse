@@ -36,16 +36,21 @@ export function useProgressFetch(
       if (error) {
         console.error("Erro ao buscar progresso:", error);
         lastError.current = error instanceof Error ? error : new Error(String(error));
+        setIsLoading(false);
         return null;
       }
       
       if (data) {
-        if (!isMounted.current) return null;
+        if (!isMounted.current) {
+          setIsLoading(false);
+          return null;
+        }
         
         console.log("Progresso encontrado:", data);
         progressId.current = data.id;
         setProgress(data);
         retryCount.current = 0;
+        setIsLoading(false);
         return data;
       }
       
@@ -56,16 +61,21 @@ export function useProgressFetch(
       if (createError) {
         console.error("Erro ao criar progresso inicial:", createError);
         lastError.current = createError instanceof Error ? createError : new Error(String(createError));
+        setIsLoading(false);
         return null;
       }
       
-      if (!isMounted.current) return null;
+      if (!isMounted.current) {
+        setIsLoading(false);
+        return null;
+      }
       
       if (newData) {
         console.log("Novo progresso criado:", newData);
         progressId.current = newData.id;
         setProgress(newData);
         retryCount.current = 0;
+        setIsLoading(false);
         return newData;
       }
       

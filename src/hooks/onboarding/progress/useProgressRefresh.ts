@@ -2,13 +2,14 @@
 import { useCallback } from "react";
 import { useAuth } from "@/contexts/auth";
 import { refreshOnboardingProgress } from "../persistence/progressPersistence";
+import { OnboardingProgress } from "@/types/onboarding";
 
 export function useProgressRefresh(
   progressId: React.MutableRefObject<string | null>,
   setIsLoading: (loading: boolean) => void,
   lastError: React.MutableRefObject<Error | null>,
   isMounted: React.MutableRefObject<boolean>,
-  setProgress: (progress: any) => void,
+  setProgress: (progress: OnboardingProgress | null) => void,
   retryCount: React.MutableRefObject<number>,
   fetchProgress: () => Promise<any>,
   logDebugEvent: (action: string, data?: any) => void
@@ -32,12 +33,16 @@ export function useProgressRefresh(
       
       const { data, error } = await refreshOnboardingProgress(progressId.current);
 
-      if (!isMounted.current) return null;
+      if (!isMounted.current) {
+        setIsLoading(false);
+        return null;
+      }
 
       if (error) {
         console.error("[useProgressRefresh] Erro ao recarregar progresso:", error);
         lastError.current = new Error(error.message);
         logDebugEvent("refreshProgress_error", { error: error.message });
+        setIsLoading(false);
         
         if (retryCount.current < 3) {
           retryCount.current++;
@@ -61,9 +66,11 @@ export function useProgressRefresh(
         // Atualizar o estado com os dados normalizados
         setProgress(normalizedData);
         retryCount.current = 0;
+        setIsLoading(false);
         return normalizedData;
       } else {
         console.warn("[useProgressRefresh] Dados recarregados são nulos ou vazios");
+        setIsLoading(false);
         return null;
       }
     } catch (error) {
@@ -71,11 +78,8 @@ export function useProgressRefresh(
       logDebugEvent("refreshProgress_exception", { error: errorMessage });
       console.error("[useProgressRefresh] Erro ao recarregar progresso:", error);
       lastError.current = error instanceof Error ? error : new Error(String(error));
+      setIsLoading(false);
       return null;
-    } finally {
-      if (isMounted.current) {
-        setIsLoading(false);
-      }
     }
   }, [user, progressId, setIsLoading, lastError, isMounted, setProgress, retryCount, fetchProgress, logDebugEvent]);
 
