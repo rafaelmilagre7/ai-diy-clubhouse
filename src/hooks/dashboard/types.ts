@@ -7,7 +7,7 @@ export interface Solution extends Omit<SupabaseSolution, 'creator_id'> {
   title: string;
   description: string;
   category: string;
-  difficulty: string;
+  difficulty: "beginner" | "intermediate" | "advanced" | "easy" | "medium";
   published: boolean;
   created_at: string;
   updated_at: string;

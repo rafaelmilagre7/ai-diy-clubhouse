@@ -1,3 +1,4 @@
+
 import { Solution as SupabaseSolution, Module as SupabaseModule } from '@/types/supabaseTypes';
 import { Solution, Module, Progress, ModuleType } from '@/types/solution';
 
@@ -79,7 +80,8 @@ export const adaptModuleType = (module: SupabaseModule): Module => {
   // Garantir que o tipo do módulo seja um dos tipos válidos
   const validType = validateModuleType(module.type);
 
-  return {
+  // Criar o objeto Module com propriedades seguras
+  const adaptedModule: Module = {
     id: module.id,
     solution_id: module.solution_id,
     title: module.title,
@@ -87,11 +89,23 @@ export const adaptModuleType = (module: SupabaseModule): Module => {
     content: module.content || { blocks: [] },
     module_order: module.module_order,
     created_at: module.created_at,
-    updated_at: module.updated_at,
-    certificate_template: module.certificate_template,
-    estimated_time_minutes: module.estimated_time_minutes,
-    metrics: module.metrics,
+    updated_at: module.updated_at
   };
+
+  // Adicionar propriedades opcionais se existirem no módulo original
+  if ('certificate_template' in module) {
+    (adaptedModule as any).certificate_template = module.certificate_template;
+  }
+  
+  if ('estimated_time_minutes' in module) {
+    (adaptedModule as any).estimated_time_minutes = module.estimated_time_minutes;
+  }
+  
+  if ('metrics' in module) {
+    (adaptedModule as any).metrics = module.metrics;
+  }
+
+  return adaptedModule;
 };
 
 /**
