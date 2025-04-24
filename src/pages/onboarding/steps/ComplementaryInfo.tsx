@@ -12,30 +12,40 @@ const ComplementaryInfo = () => {
   const { saveStepData, progress, completeOnboarding } = useOnboardingSteps();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { isLoading, refreshProgress } = useProgress();
-  const [refreshCount, setRefreshCount] = useState(0);
+  const [refreshAttempted, setRefreshAttempted] = useState(false);
   const navigate = useNavigate();
 
-  // Efeito para carregar dados mais recentes ao entrar na página
+  // Efeito para carregar dados mais recentes ao entrar na página - com controle para evitar loops
   useEffect(() => {
-    console.log("ComplementaryInfo montado - carregando dados mais recentes");
-    const loadData = async () => {
-      try {
-        await refreshProgress();
-        console.log("Dados atualizados para ComplementaryInfo:", progress);
-      } catch (error) {
-        console.error("Erro ao carregar dados:", error);
-        toast.error("Erro ao carregar dados. Algumas informações podem estar desatualizadas.");
-      }
-    };
-    loadData();
-  }, [refreshProgress, refreshCount]);
+    // Verificar se já tentou uma vez para não entrar em loop
+    if (!refreshAttempted) {
+      console.log("ComplementaryInfo montado - carregando dados mais recentes");
+      refreshProgress()
+        .then(() => {
+          console.log("Dados atualizados para ComplementaryInfo:", progress);
+          setRefreshAttempted(true); // Marcar que já tentamos atualizar
+        })
+        .catch(error => {
+          console.error("Erro ao carregar dados:", error);
+          toast.error("Erro ao carregar dados. Algumas informações podem estar desatualizadas.");
+          setRefreshAttempted(true); // Marcar que já tentamos, mesmo com erro
+        });
+    }
+  }, [refreshAttempted]); // Dependência reduzida para evitar loop
 
   const handleSaveData = async (stepId: string, data: any) => {
     setIsSubmitting(true);
     try {
       console.log("Salvando informações complementares:", data);
-      // Usar a assinatura com stepId explícito
+      
+      // Verificar se temos dados válidos
+      if (!data) {
+        throw new Error("Dados complementares ausentes ou inválidos");
+      }
+      
+      // Usar a assinatura com stepId explícito para evitar problemas
       await saveStepData(stepId, data, false);
+      
       console.log("Informações complementares salvas com sucesso");
       toast.success("Dados salvos com sucesso!");
       
@@ -77,7 +87,7 @@ const ComplementaryInfo = () => {
         <MilagrinhoMessage
           message="Estamos quase finalizando! Estas são as últimas informações que precisamos para completar seu perfil no VIVER DE IA Club."
         />
-        {isLoading ? (
+        {isLoading && !refreshAttempted ? (
           <div className="flex justify-center py-10">
             <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-[#0ABAB5]"></div>
           </div>

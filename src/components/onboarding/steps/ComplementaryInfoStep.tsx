@@ -10,21 +10,38 @@ import { DiscoverySourceSection } from "./complementary-info/DiscoverySourceSect
 import { PriorityTopicsSection } from "./complementary-info/PriorityTopicsSection";
 import { PermissionsSection } from "./complementary-info/PermissionsSection";
 import { complementaryInfoSchema, type ComplementaryInfoFormData } from "@/schemas/complementaryInfoSchema";
+import { normalizeComplementaryInfo } from "@/hooks/onboarding/persistence/utils/complementaryInfoNormalization";
 
 export const ComplementaryInfoStep = ({ 
   onSubmit, 
   isSubmitting, 
   initialData 
 }: OnboardingStepProps) => {
+  // Processamento seguro dos dados iniciais
+  const processInitialData = () => {
+    let complementaryInfo = {};
+    
+    if (initialData?.complementary_info) {
+      complementaryInfo = normalizeComplementaryInfo(initialData.complementary_info);
+    }
+    
+    return {
+      how_found_us: complementaryInfo?.how_found_us || "",
+      referred_by: complementaryInfo?.referred_by || "",
+      authorize_case_usage: Boolean(complementaryInfo?.authorize_case_usage),
+      interested_in_interview: Boolean(complementaryInfo?.interested_in_interview),
+      priority_topics: Array.isArray(complementaryInfo?.priority_topics) ? 
+        complementaryInfo.priority_topics : []
+    };
+  };
+  
+  const initialValues = processInitialData();
+  
+  console.log("Valores iniciais para ComplementaryInfoStep:", initialValues);
+  
   const form = useForm<ComplementaryInfoFormData>({
     resolver: zodResolver(complementaryInfoSchema),
-    defaultValues: {
-      how_found_us: initialData?.complementary_info?.how_found_us || "",
-      referred_by: initialData?.complementary_info?.referred_by || "",
-      authorize_case_usage: initialData?.complementary_info?.authorize_case_usage || false,
-      interested_in_interview: initialData?.complementary_info?.interested_in_interview || false,
-      priority_topics: initialData?.complementary_info?.priority_topics || [],
-    }
+    defaultValues: initialValues
   });
 
   const handleFormSubmit = (data: ComplementaryInfoFormData) => {

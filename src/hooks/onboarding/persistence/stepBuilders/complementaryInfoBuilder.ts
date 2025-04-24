@@ -1,67 +1,44 @@
 
 import { OnboardingData, OnboardingProgress } from "@/types/onboarding";
+import { normalizeComplementaryInfo } from "../utils/complementaryInfoNormalization";
 
 export function buildComplementaryInfoUpdate(data: Partial<OnboardingData>, progress: OnboardingProgress | null) {
   const updateObj: any = {};
   
-  // Garantir uma base consistente para os dados
-  let existingInfo: any = {};
+  console.log("Construindo atualização para complementary_info com dados:", data);
   
-  // Verificar se temos dados válidos de progresso
-  if (progress) {
-    if (typeof progress.complementary_info === 'string') {
-      try {
-        // Verificar se é uma string válida antes de tentar trim
-        const stringValue = String(progress.complementary_info);
-        const trimmedValue = stringValue && typeof stringValue.trim === 'function' ? 
-          stringValue.trim() : 
-          stringValue;
-          
-        if (trimmedValue !== '') {
-          existingInfo = JSON.parse(trimmedValue);
-        }
-      } catch (e) {
-        console.error("Erro ao converter complementary_info de string para objeto:", e);
-      }
-    } else if (progress.complementary_info && typeof progress.complementary_info === 'object') {
-      existingInfo = progress.complementary_info;
-    }
+  // Verificações iniciais
+  if (!data) {
+    console.warn("Dados vazios recebidos em buildComplementaryInfoUpdate");
+    return updateObj;
   }
   
-  // Inicializar o objeto de atualização com os dados existentes
-  updateObj.complementary_info = {...existingInfo};
+  // Garantir base consistente para os dados
+  const existingComplementaryInfo = normalizeComplementaryInfo(
+    progress?.complementary_info || {}
+  );
   
-  // Verificar se estamos recebendo dados diretos ou em um objeto aninhado
-  const sourceData = data.complementary_info || data;
+  console.log("Dados atuais de progresso complementary_info:", existingComplementaryInfo);
   
-  if (typeof sourceData === 'object' && sourceData !== null) {
-    // Processar campos de array
-    if ('priority_topics' in sourceData) {
-      const priorityTopics = Array.isArray(sourceData.priority_topics) ? 
-        sourceData.priority_topics : 
-        [sourceData.priority_topics].filter(Boolean);
-        
-      if (priorityTopics.length > 0) {
-        updateObj.complementary_info.priority_topics = priorityTopics;
-      }
-    }
-    
-    // Processar campos de texto
-    ['how_found_us', 'referred_by'].forEach(field => {
-      if (field in sourceData && sourceData[field as keyof typeof sourceData] !== undefined) {
-        updateObj.complementary_info[field] = sourceData[field as keyof typeof sourceData];
-      }
-    });
-    
-    // Processar campos booleanos
-    ['authorize_case_usage', 'interested_in_interview'].forEach(field => {
-      if (field in sourceData && sourceData[field as keyof typeof sourceData] !== undefined) {
-        updateObj.complementary_info[field] = !!sourceData[field as keyof typeof sourceData];
-      }
-    });
+  // Verificar se estamos recebendo dados específicos de complementary_info
+  if (!data.complementary_info && typeof data !== 'object') {
+    console.warn("Nenhum dado específico de complementary_info encontrado para atualização");
+    return updateObj;
   }
   
-  console.log("Objeto de atualização para complementary_info:", updateObj);
+  // Extrair dados de complementary_info seja de data.complementary_info ou do próprio data
+  const complementaryInfoData = data.complementary_info || data;
+  
+  // Normalizar os dados recebidos
+  const normalizedData = normalizeComplementaryInfo(complementaryInfoData);
+  
+  // Construir objeto de atualização mesclando os dados existentes com os novos
+  updateObj.complementary_info = {
+    ...existingComplementaryInfo,
+    ...normalizedData
+  };
+  
+  console.log("Objeto final de atualização para complementary_info:", updateObj);
   
   return updateObj;
 }

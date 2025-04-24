@@ -2,22 +2,7 @@
 import React from "react";
 import { Badge } from "@/components/ui/badge";
 import { OnboardingData } from "@/types/onboarding";
-
-// Função para garantir que os dados são um objeto válido
-function ensureObject(data: any): Record<string, any> {
-  if (!data) return {};
-  
-  if (typeof data === 'string') {
-    try {
-      return JSON.parse(data);
-    } catch (e) {
-      console.error("Erro ao analisar string como JSON:", e);
-      return {};
-    }
-  }
-  
-  return data;
-}
+import { normalizeComplementaryInfo } from "@/hooks/onboarding/persistence/utils/complementaryInfoNormalization";
 
 export function getComplementaryInfoSummary(data: any) {
   console.log("Renderizando summary para seção complementary_info com dados:", data);
@@ -27,8 +12,8 @@ export function getComplementaryInfoSummary(data: any) {
     return <p className="text-gray-500 italic">Seção não preenchida. Clique em Editar para preencher.</p>;
   }
   
-  // Garantir que estamos trabalhando com um objeto
-  const processedData = ensureObject(data);
+  // Normalizar dados para garantir formato consistente
+  const processedData = normalizeComplementaryInfo(data);
   
   // Se mesmo após processamento os dados estiverem vazios
   if (Object.keys(processedData).length === 0) {
