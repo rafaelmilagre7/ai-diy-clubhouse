@@ -22,7 +22,9 @@ const VideoHeader: React.FC<VideoHeaderProps> = ({
 }) => {
   const handleFileSelect = async (file: File) => {
     console.log("Arquivo selecionado no VideoHeader:", file.name);
-    await onFileUpload(file);
+    if (file) {
+      await onFileUpload(file);
+    }
   };
 
   return (

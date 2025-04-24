@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
 import { useVideoManagement } from "@/hooks/admin/useVideoManagement";
@@ -7,7 +7,6 @@ import VideoHeader from "./videos/VideoHeader";
 import EmptyVideoState from "./components/EmptyVideoState";
 import VideosList from "./components/VideosList";
 import YouTubeVideoForm from "./components/YouTubeVideoForm";
-import { VideoItem } from "@/types/videoTypes";
 
 interface VideoTabProps {
   solution: any;
@@ -31,15 +30,27 @@ const VideoTab: React.FC<VideoTabProps> = ({
     setYoutubeDialogOpen,
     handleAddYouTube,
     handleFileUpload,
-    handleRemoveVideo
+    handleRemoveVideo,
+    fetchVideos
   } = useVideoManagement(solution?.id);
+
+  // Forçar a atualização da lista de vídeos quando o componente é montado
+  useEffect(() => {
+    console.log("VideoTab montado, buscando vídeos...");
+    fetchVideos();
+  }, [solution?.id, fetchVideos]);
+
+  const handleUploadFile = async (file: File) => {
+    console.log("Arquivo selecionado no VideoTab:", file.name);
+    await handleFileUpload(file);
+  };
 
   return (
     <div className="space-y-8">
       <VideoHeader
         solutionId={solution?.id}
         onYoutubeClick={() => setYoutubeDialogOpen(true)}
-        onFileUpload={handleFileUpload}
+        onFileUpload={handleUploadFile}
         isUploading={uploading}
         uploadProgress={uploadProgress}
       />

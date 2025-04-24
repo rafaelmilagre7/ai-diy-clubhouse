@@ -8,6 +8,7 @@ export const useFetchVideos = (solutionId: string): VideoFetchResponse & { refet
   const [videos, setVideos] = useState<VideoItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const [lastFetch, setLastFetch] = useState<number>(0); // Para forçar re-fetchs
 
   const fetchVideos = useCallback(async () => {
     if (!solutionId) {
@@ -17,7 +18,7 @@ export const useFetchVideos = (solutionId: string): VideoFetchResponse & { refet
 
     try {
       setLoading(true);
-      console.log("Buscando vídeos para solução:", solutionId);
+      console.log("Buscando vídeos para solução:", solutionId, "Timestamp:", new Date().toISOString());
       
       const { data, error } = await supabase
         .from("solution_resources")
@@ -38,7 +39,12 @@ export const useFetchVideos = (solutionId: string): VideoFetchResponse & { refet
     } finally {
       setLoading(false);
     }
-  }, [solutionId]);
+  }, [solutionId, lastFetch]); // Adicionando lastFetch como dependência
+
+  const refetch = useCallback(async () => {
+    console.log("Forçando refetch de vídeos...");
+    setLastFetch(Date.now()); // Atualiza o timestamp para forçar um refetch
+  }, []);
 
   useEffect(() => {
     fetchVideos();

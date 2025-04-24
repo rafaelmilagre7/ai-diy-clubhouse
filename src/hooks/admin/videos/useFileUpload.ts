@@ -9,7 +9,7 @@ export const useFileUpload = (solutionId: string) => {
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
 
-  const handleFileUpload = async (file: File) => {
+  const handleFileUpload = async (file: File): Promise<VideoItem | null> => {
     if (!solutionId) {
       toast("Erro", {
         description: "É necessário salvar a solução antes de adicionar vídeos."
@@ -52,14 +52,6 @@ export const useFileUpload = (solutionId: string) => {
         });
       }, 500);
 
-      // Verificamos primeiro se o bucket existe, se não, tentamos criá-lo
-      const { data: buckets } = await supabase.storage.listBuckets();
-      const bucketExists = buckets?.some(b => b.name === "videos");
-      
-      if (!bucketExists) {
-        console.log("Bucket 'videos' não encontrado, usando bucket padrão 'resources'");
-      }
-      
       // Usamos o bucket 'resources' que é um bucket padrão no Supabase
       console.log("Enviando arquivo para o bucket 'resources', caminho:", filePath);
       
@@ -136,7 +128,6 @@ export const useFileUpload = (solutionId: string) => {
   return {
     uploading,
     uploadProgress,
-    handleFileUpload,
-    setUploadProgress
+    handleFileUpload
   };
 };

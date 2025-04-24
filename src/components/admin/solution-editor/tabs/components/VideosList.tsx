@@ -58,8 +58,10 @@ const VideosList: React.FC<VideosListProps> = ({ videos, onRemove }) => {
   };
 
   const getVideoThumbnail = (video: Video) => {
-    if (video.metadata?.source === "youtube" && video.metadata?.youtube_id) {
-      return `https://img.youtube.com/vi/${video.metadata.youtube_id}/mqdefault.jpg`;
+    const isYoutube = video.metadata?.source === "youtube";
+    if (isYoutube && video.url.includes("youtube.com/embed/")) {
+      const youtubeId = video.url.split("/").pop()?.split("?")[0];
+      return `https://img.youtube.com/vi/${youtubeId}/mqdefault.jpg`;
     }
     return "https://placehold.co/320x180/e6f7ff/0abab5?text=Vídeo";
   };
