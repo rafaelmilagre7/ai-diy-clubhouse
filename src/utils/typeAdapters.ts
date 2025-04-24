@@ -1,152 +1,54 @@
 
-import { Solution as SupabaseSolution, Module as SupabaseModule } from '@/types/supabaseTypes';
-import { Solution, Module, Progress, ModuleType } from '@/types/solution';
+import { Solution as SupabaseSolution } from '@/lib/supabase/types';
+import { Solution, SolutionCategory } from '@/types/solution';
+import { toSolutionCategory } from '@/lib/types/categoryTypes';
 
 /**
  * Adapta o tipo Solution do Supabase para o tipo interno Solution
  */
 export const adaptSolutionType = (supaSolution: SupabaseSolution): Solution => {
-  // Garantir que o campo modules seja um array
-  const modules = Array.isArray(supaSolution.modules) 
-    ? supaSolution.modules.map(adaptModuleType)
-    : [];
-
-  // Adaptar o campo progress para garantir que contenha todas as propriedades necessárias
-  let progressData = null;
+  // Garantir que a categoria seja do tipo SolutionCategory
+  const category = toSolutionCategory(supaSolution.category || 'strategy');
   
-  if (supaSolution.progress) {
-    // Para lidar com a possível falta de propriedades, usamos uma asserção de tipo após verificar
-    const supaProgress = supaSolution.progress as any;
-    
-    // Criando um objeto Progress com valores padrão quando necessário
-    progressData = {
-      id: supaProgress.id || '',
-      user_id: supaProgress.user_id || '',
-      solution_id: supaProgress.solution_id || '',
-      implementation_status: supaProgress.implementation_status || 'not_started',
-      current_module: supaProgress.current_module || 0,
-      is_completed: supaProgress.is_completed || false,
-      completed_modules: supaProgress.completed_modules || [],
-      last_activity: supaProgress.last_activity || new Date().toISOString(),
-      completion_percentage: supaProgress.completion_percentage || 0,
-      completion_data: supaProgress.completion_data || {},
-      completed_at: supaProgress.completed_at || null
-    } as Progress;
-  }
-
-  // Garantir que category e difficulty sejam valores válidos para os tipos esperados
-  const category = (supaSolution.category === 'revenue' || 
-                 supaSolution.category === 'operational' || 
-                 supaSolution.category === 'strategy') ? 
-                 supaSolution.category : 'strategy';
-                 
-  const difficulty = (supaSolution.difficulty === 'easy' || 
-                   supaSolution.difficulty === 'medium' || 
-                   supaSolution.difficulty === 'advanced') ? 
-                   supaSolution.difficulty : 'medium';
-
-  // Criar o objeto Solution sem a propriedade completion_requirements se não estiver definido no tipo
+  // Garantir que o campo difficulty seja um dos tipos permitidos
+  const difficulty = (
+    supaSolution.difficulty === 'easy' || 
+    supaSolution.difficulty === 'medium' || 
+    supaSolution.difficulty === 'advanced'
+  ) ? supaSolution.difficulty : 'medium';
+  
+  // Construir objeto com o tipo correto
   const solution: Solution = {
     id: supaSolution.id,
     title: supaSolution.title,
     description: supaSolution.description || '',
-    category: category,
-    difficulty: difficulty,
+    category,
+    difficulty,
     published: supaSolution.published || false,
-    thumbnail_url: supaSolution.thumbnail_url,
+    thumbnail_url: supaSolution.thumbnail_url || '',
     created_at: supaSolution.created_at,
-    updated_at: supaSolution.updated_at,
+    updated_at: supaSolution.updated_at || '',
     slug: supaSolution.slug || '',
     implementation_steps: supaSolution.implementation_steps || [],
-    // Verificamos se checklist_items existe no objeto antes de usá-lo
-    checklist_items: supaSolution.checklist ? supaSolution.checklist : (supaSolution as any).checklist_items || [],
-    modules: modules,
-    progress: progressData,
-    overview: supaSolution.overview || '',
-    prerequisites: supaSolution.prerequisites || [],
-    completion_criteria: supaSolution.completion_criteria || [],
+    checklist_items: supaSolution.checklist_items || [],
+    modules: supaSolution.modules || [],
+    progress: supaSolution.progress || null,
+    prerequisites: [],
+    completion_criteria: [],
     estimated_time: supaSolution.estimated_time || 0,
     success_rate: supaSolution.success_rate || 0,
     tags: supaSolution.tags || [],
+    overview: ''
   };
 
   return solution;
 };
 
 /**
- * Adapta o tipo Module do Supabase para o tipo interno Module
+ * Adapta um objeto Progress do Supabase para o formato interno
  */
-export const adaptModuleType = (module: SupabaseModule): Module => {
-  // Garantir que o tipo do módulo seja um dos tipos válidos
-  const validType = validateModuleType(module.type);
-
-  // Criar o objeto Module com propriedades seguras
-  const adaptedModule: Module = {
-    id: module.id,
-    solution_id: module.solution_id,
-    title: module.title,
-    type: validType,
-    content: module.content || { blocks: [] },
-    module_order: module.module_order,
-    created_at: module.created_at,
-    updated_at: module.updated_at
-  };
-
-  // Adicionar propriedades opcionais se existirem no módulo original
-  if ('certificate_template' in module) {
-    (adaptedModule as any).certificate_template = module.certificate_template;
-  }
-  
-  if ('estimated_time_minutes' in module) {
-    (adaptedModule as any).estimated_time_minutes = module.estimated_time_minutes;
-  }
-  
-  if ('metrics' in module) {
-    (adaptedModule as any).metrics = module.metrics;
-  }
-
-  return adaptedModule;
-};
-
-/**
- * Valida o tipo do módulo para garantir que seja um dos tipos válidos
- */
-export const validateModuleType = (type: string): ModuleType => {
-  const validTypes: ModuleType[] = [
-    'landing',
-    'overview',
-    'preparation',
-    'implementation',
-    'verification',
-    'results',
-    'optimization',
-    'celebration'
-  ];
-
-  if (validTypes.includes(type as ModuleType)) {
-    return type as ModuleType;
-  }
-
-  // Retornar um tipo padrão se não for válido
-  return 'overview';
-};
-
-/**
- * Adapta o tipo Progress do Supabase para o tipo interno Progress
- */
-export const adaptProgressType = (progress: any): Progress => {
+export const adaptProgressType = (progress: any) => {
   return {
-    // Garantir que todos os campos obrigatórios da interface Progress estejam presentes
-    id: progress.id || '',
-    user_id: progress.user_id || '',
-    solution_id: progress.solution_id || '',
-    current_module: progress.current_module || 0,
-    is_completed: progress.is_completed || false,
-    completed_modules: progress.completed_modules || [],
-    last_activity: progress.last_activity || new Date().toISOString(),
-    implementation_status: progress.implementation_status || 'not_started',
-    completion_data: progress.completion_data || {},
-    completion_percentage: progress.completion_percentage || 0,
-    completed_at: progress.completed_at || null
+    ...progress
   };
 };

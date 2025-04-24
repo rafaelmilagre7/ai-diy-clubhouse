@@ -11,6 +11,8 @@ import { SolutionNotFound } from "@/components/solution/SolutionNotFound";
 import { useEffect } from "react";
 import { useLogging } from "@/hooks/useLogging";
 import { useQuery } from "@tanstack/react-query";
+import { adaptSolutionType } from "@/utils/typeAdapters";
+import { Solution } from "@/types/solution";
 
 const SolutionDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -20,7 +22,7 @@ const SolutionDetails = () => {
   const { fetchSolutionDetails } = useCentralDataStore();
   
   const { 
-    data: solution, 
+    data: solutionData, 
     isLoading,
     error
   } = useQuery({
@@ -35,6 +37,9 @@ const SolutionDetails = () => {
     staleTime: 5 * 60 * 1000
   });
   
+  // Adaptar o tipo de Solution do Supabase para o tipo Solution da aplicação
+  const solution: Solution | null = solutionData ? adaptSolutionType(solutionData) : null;
+  
   const { 
     initializing, 
     startImplementation, 
@@ -42,7 +47,7 @@ const SolutionDetails = () => {
     toggleFavorite, 
     downloadMaterials,
     progress
-  } = useSolutionInteractions(id || "", solution || null);
+  } = useSolutionInteractions(id || "", solution);
 
   // Verificar ID inválido ou ausente
   if (!id) {
