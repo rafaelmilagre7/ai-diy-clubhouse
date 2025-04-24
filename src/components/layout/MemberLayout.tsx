@@ -1,14 +1,19 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, ReactNode } from "react";
 import { useAuth } from "@/contexts/auth";
 import { MemberSidebar } from "./member/MemberSidebar";
 import { MemberContent } from "./member/MemberContent";
+import { Outlet } from "react-router-dom";
 
 /**
  * MemberLayout renderiza a estrutura de layout para usuários membros
  * Isso inclui a barra lateral e a área de conteúdo
  */
-const MemberLayout = ({ children }: { children: React.ReactNode }) => {
+interface MemberLayoutProps {
+  children?: ReactNode;
+}
+
+const MemberLayout = ({ children }: MemberLayoutProps) => {
   const { profile, signOut } = useAuth();
   
   // Estado para controlar a visibilidade da barra lateral
@@ -78,7 +83,7 @@ const MemberLayout = ({ children }: { children: React.ReactNode }) => {
         sidebarOpen={sidebarOpen} 
         setSidebarOpen={setSidebarOpen}
       >
-        {children}
+        {children || <Outlet />}
       </MemberContent>
     </div>
   );

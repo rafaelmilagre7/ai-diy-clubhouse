@@ -1,12 +1,13 @@
 
-import React from 'react';
+import React, { ReactNode } from 'react';
 import { OnboardingStep } from '@/types/onboarding';
 import { Progress } from '@/components/ui/progress';
 import MemberLayout from '@/components/layout/MemberLayout';
 import { StepIndicator } from './StepIndicator';
+import { WizardStepProgress } from './WizardStepProgress';
 
 export interface OnboardingLayoutProps {
-  children: React.ReactNode;
+  children: ReactNode;
   title: string;
   description?: string;
   currentStep: number;
@@ -36,58 +37,60 @@ const OnboardingLayout: React.FC<OnboardingLayoutProps> = ({
 }) => {
   return (
     <MemberLayout>
-      <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800">
-        <div className="container max-w-4xl mx-auto px-4 py-8">
-          <div className="mb-8 space-y-4">
-            <h1 className="text-3xl font-bold text-white">{title}</h1>
-            {description && <p className="text-gray-400">{description}</p>}
-            
-            {!hideProgress && (
-              <>
-                <div className="flex items-center justify-between mt-8">
-                  <p className="text-gray-400">
-                    Passo {currentStep} de {totalSteps}
-                  </p>
-                  <p className="text-gray-400">{Math.round(progress)}% concluído</p>
+      <div className="w-full min-h-screen bg-gradient-to-b from-white via-viverblue-lighter/10 to-viverblue/10">
+        <div className="w-full max-w-4xl mx-auto px-4 py-6 md:py-8">
+          <div className="w-full">
+            <div className="mb-6 md:mb-8 space-y-3">
+              <h1 className="text-2xl md:text-3xl font-bold text-viverblue-dark font-heading">{title}</h1>
+              {description && <p className="text-neutral-600">{description}</p>}
+              
+              {!hideProgress && (
+                <>
+                  <div className="flex items-center justify-between mt-4">
+                    <p className="text-neutral-600 font-medium">
+                      Passo {currentStep} de {totalSteps}
+                    </p>
+                    <p className="text-viverblue font-medium">{Math.round(progress)}% concluído</p>
+                  </div>
+                  
+                  <Progress 
+                    value={progress} 
+                    className="h-2 bg-neutral-200" 
+                    indicatorClassName="bg-viverblue" 
+                  />
+                </>
+              )}
+              
+              {stepTitles.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-4">
+                  {stepTitles.map((title, index) => (
+                    <StepIndicator 
+                      key={index}
+                      index={index + 1}
+                      title={title}
+                      isActive={index + 1 === currentStep}
+                      isCompleted={index + 1 < currentStep}
+                      onClick={onStepClick ? () => onStepClick(index) : undefined}
+                    />
+                  ))}
                 </div>
-                
-                <Progress value={progress} className="h-2" />
-              </>
-            )}
-            
-            {stepTitles.length > 0 && (
-              <div className="flex flex-wrap gap-2 mt-4">
-                {stepTitles.map((title, index) => (
-                  <StepIndicator 
-                    key={index}
-                    index={index + 1}
-                    title={title}
-                    isActive={index + 1 === currentStep}
-                    isCompleted={index + 1 < currentStep}
-                    onClick={onStepClick ? () => onStepClick(index) : undefined}
+              )}
+              
+              {steps.length > 0 && (
+                <div className="mt-6 w-full">
+                  <WizardStepProgress
+                    currentStep={currentStep}
+                    totalSteps={steps.length}
+                    stepTitles={steps.map(step => step.title)}
+                    onStepClick={onStepClick}
                   />
-                ))}
-              </div>
-            )}
+                </div>
+              )}
+            </div>
             
-            {steps.length > 0 && (
-              <div className="flex flex-wrap gap-2 mt-4">
-                {steps.map((step, index) => (
-                  <StepIndicator 
-                    key={step.id}
-                    index={index + 1}
-                    title={step.title}
-                    isActive={step.id === activeStep}
-                    isCompleted={index + 1 < currentStep}
-                    onClick={onStepClick ? () => onStepClick(index) : undefined}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
-          
-          <div className="bg-gray-800 p-8 rounded-lg shadow-lg">
-            {children}
+            <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 md:p-8 w-full">
+              {children}
+            </div>
           </div>
         </div>
       </div>

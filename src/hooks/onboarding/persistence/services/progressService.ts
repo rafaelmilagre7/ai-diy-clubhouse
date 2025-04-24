@@ -1,61 +1,107 @@
 
-import { supabase } from '@/lib/supabase';
+import { supabase } from "@/lib/supabase";
+import { useLogging } from "@/hooks/useLogging";
 
 /**
- * Marca uma etapa como concluída e avança para a próxima
+ * Atualiza o status do progresso de onboarding
+ */
+export async function updateOnboardingProgressStatus(
+  progressId: string,
+  statusUpdate: {
+    is_completed?: boolean;
+    completed_steps?: string[];
+  },
+  logError: ReturnType<typeof useLogging>["logError"]
+) {
+  try {
+    console.log(`Atualizando status de progresso ${progressId}:`, statusUpdate);
+    
+    const { data, error } = await supabase
+      .from('onboarding_progress')
+      .update(statusUpdate)
+      .eq('id', progressId)
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('Erro ao atualizar status de progresso:', error);
+      logError('update_progress_status_error', { error: error.message });
+      return { success: false, error };
+    }
+    
+    return { success: true, data };
+  } catch (error) {
+    console.error('Exceção ao atualizar status de progresso:', error);
+    logError('update_progress_status_exception', { 
+      error: error instanceof Error ? error.message : String(error)
+    });
+    return { success: false, error };
+  }
+}
+
+/**
+ * Marca uma etapa como concluída e atualiza o progresso
  */
 export async function markStepAsCompleted(
   progressId: string,
   stepId: string,
-  nextStepId: string,
-  logError: (event: string, data?: Record<string, any>) => void
+  nextStepId: string | null,
+  logError: ReturnType<typeof useLogging>["logError"]
 ) {
   try {
-    console.log(`Marcando etapa ${stepId} como concluída e avançando para ${nextStepId}`);
+    console.log(`Marcando etapa ${stepId} como concluída no progresso ${progressId}`);
     
-    // Buscar progresso atual primeiro
+    // Buscar o progresso atual para obter as etapas já concluídas
     const { data: currentProgress, error: fetchError } = await supabase
-      .from('onboarding')
-      .select('completed_steps')
+      .from('onboarding_progress')
+      .select('completed_steps, current_step')
       .eq('id', progressId)
       .single();
     
     if (fetchError) {
       console.error('Erro ao buscar progresso atual:', fetchError);
-      logError('mark_step_fetch_error', { error: fetchError.message });
+      logError('mark_step_completed_fetch_error', { error: fetchError.message });
       return { success: false, error: fetchError };
     }
     
-    // Garantir que completed_steps é um array e adicionar o step atual
-    const completedSteps = Array.isArray(currentProgress?.completed_steps) 
+    // Preparar as etapas concluídas
+    const completedSteps = Array.isArray(currentProgress.completed_steps) 
       ? [...currentProgress.completed_steps] 
       : [];
     
-    // Verificar se o step já foi concluído
+    // Adicionar a etapa atual se ainda não estiver na lista
     if (!completedSteps.includes(stepId)) {
       completedSteps.push(stepId);
     }
     
-    // Atualizar progresso
-    const { error: updateError } = await supabase
-      .from('onboarding')
-      .update({
-        completed_steps: completedSteps,
-        current_step: nextStepId,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', progressId);
+    // Preparar a atualização
+    const updateData: any = {
+      completed_steps: completedSteps
+    };
     
-    if (updateError) {
-      console.error('Erro ao atualizar progresso:', updateError);
-      logError('mark_step_update_error', { error: updateError.message });
-      return { success: false, error: updateError };
+    // Atualizar a próxima etapa, se fornecida
+    if (nextStepId) {
+      updateData.current_step = nextStepId;
     }
     
-    return { success: true };
+    // Atualizar o progresso
+    const { data, error } = await supabase
+      .from('onboarding_progress')
+      .update(updateData)
+      .eq('id', progressId)
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('Erro ao marcar etapa como concluída:', error);
+      logError('mark_step_completed_error', { error: error.message });
+      return { success: false, error };
+    }
+    
+    return { success: true, data };
   } catch (error) {
     console.error('Exceção ao marcar etapa como concluída:', error);
-    logError('mark_step_exception', { 
+    logError('mark_step_completed_exception', { 
       error: error instanceof Error ? error.message : String(error)
     });
     return { success: false, error };

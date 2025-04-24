@@ -1,15 +1,11 @@
 
-import { Navigate, useLocation } from "react-router-dom";
-import { useEffect, useState, useRef, ReactNode } from "react";
+import { Navigate, useLocation, Outlet } from "react-router-dom";
+import { useEffect, useState, useRef } from "react";
 import { useAuth } from "@/contexts/auth";
 import LoadingScreen from "@/components/common/LoadingScreen";
 import { toast } from "sonner";
 
-interface AdminProtectedRoutesProps {
-  children: ReactNode;
-}
-
-export const AdminProtectedRoutes = ({ children }: AdminProtectedRoutesProps) => {
+export const AdminProtectedRoutes = () => {
   const { user, isAdmin, isLoading } = useAuth();
   const location = useLocation();
   const [loadingTimeout, setLoadingTimeout] = useState(false);
@@ -56,5 +52,5 @@ export const AdminProtectedRoutes = ({ children }: AdminProtectedRoutesProps) =>
   }
 
   // Usuário é administrador, renderiza as rotas protegidas
-  return <>{children}</>;
+  return <Outlet />;
 };

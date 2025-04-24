@@ -7,14 +7,17 @@ export const steps: OnboardingStep[] = [
     id: "personal",
     title: "Dados Pessoais",
     section: "personal_info",
-    path: "/onboarding",
+    path: "/onboarding", 
+    pathAlias: "/onboarding/personal", // Adicionando alias para compatibilidade
     fields: ["name", "email", "phone", "ddi", "linkedin", "instagram", "country", "state", "city", "timezone"]
   },
   {
     id: "professional_data",
     title: "Dados Profissionais",
     section: "professional_info",
-    path: "/onboarding/professional-data",
+    // Define ambas as rotas como válidas para este ID
+    path: "/onboarding/professional-data", 
+    pathAlias: "/onboarding/professional", // Adicionando alias para compatibilidade
     fields: ["company_name", "company_size", "company_sector", "company_website", "current_position", "annual_revenue"]
   },
   {

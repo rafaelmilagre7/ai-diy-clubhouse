@@ -1,18 +1,24 @@
 
-import { useLocation } from "react-router-dom";
-import { useEffect } from "react";
+import React, { useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Home, LogOut } from "lucide-react";
+import { Home, LogOut, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 
-const NotFound = () => {
+export const NotFound: React.FC = () => {
   const location = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
     console.error(
-      "404 Error: User attempted to access non-existent route:",
+      "404 Error: Usuário tentou acessar rota inexistente:",
       location.pathname
     );
+    
+    // Se estamos em uma rota de onboarding, mostrar um toast informativo
+    if (location.pathname.includes('/onboarding/')) {
+      toast.error("Página de onboarding não encontrada. Redirecionando para opções válidas...");
+    }
   }, [location.pathname]);
 
   const handleLogout = () => {
@@ -29,26 +35,45 @@ const NotFound = () => {
     }
   };
 
+  const handleRedirectToOnboarding = () => {
+    navigate('/onboarding');
+  };
+  
+  const handleGoBack = () => {
+    navigate(-1); // Volta para a página anterior
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="text-center bg-white p-8 rounded-lg shadow-md">
+      <div className="text-center bg-white p-8 rounded-lg shadow-md max-w-md w-full">
         <h1 className="text-6xl font-bold mb-4 text-gray-800">404</h1>
-        <p className="text-xl text-gray-600 mb-6">Oops! Página não encontrada</p>
+        <p className="text-xl text-gray-600 mb-2">Oops! Página não encontrada</p>
+        <p className="text-gray-500 mb-6 text-sm">
+          A URL que você está tentando acessar ({location.pathname}) não existe.
+        </p>
         <div className="flex flex-col sm:flex-row justify-center gap-4">
           <Button 
-            className="flex items-center gap-2" 
-            onClick={() => window.location.href = '/'}
+            className="flex items-center gap-2 bg-[#0ABAB5] hover:bg-[#099388]" 
+            onClick={handleRedirectToOnboarding}
           >
             <Home className="h-4 w-4" />
-            Voltar para o Início
+            Onboarding
           </Button>
           <Button 
-            variant="destructive" 
-            className="flex items-center gap-2"
+            variant="outline" 
+            className="flex items-center gap-2 border-[#0ABAB5] text-[#0ABAB5]"
+            onClick={handleGoBack}
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Voltar
+          </Button>
+          <Button 
+            variant="outline" 
+            className="flex items-center gap-2 border-gray-300 text-gray-600"
             onClick={handleLogout}
           >
             <LogOut className="h-4 w-4" />
-            Ir para Login
+            Login
           </Button>
         </div>
       </div>

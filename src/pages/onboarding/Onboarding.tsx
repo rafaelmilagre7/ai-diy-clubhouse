@@ -14,20 +14,49 @@ import { PersonalizationForm } from '@/components/onboarding/forms/Personalizati
 import { ComplementaryForm } from '@/components/onboarding/forms/ComplementaryForm';
 import { ReviewStep } from '@/components/onboarding/forms/ReviewStep';
 import { useAuth } from '@/contexts/auth';
+import { toast } from 'sonner';
+import { useLogging } from '@/hooks/useLogging';
 
 const Onboarding: React.FC = () => {
+  const logger = useLogging("Onboarding");
   const { user } = useAuth();
   const { isLoading, data, currentStep, saveFormData, completeOnboarding, isSaving } = useOnboarding();
   const location = useLocation();
   const navigate = useNavigate();
   const routeStep = getStepFromRoute(location.pathname);
   
+  useEffect(() => {
+    logger.logInfo(`Onboarding renderizado. Rota atual: ${location.pathname}, routeStep mapeado: ${routeStep}, currentStep: ${currentStep}`);
+  }, [location.pathname, routeStep, currentStep]);
+  
   // Redirecionar para o passo atual se estiver em um passo incorreto
   useEffect(() => {
-    if (!isLoading && data && currentStep !== routeStep) {
-      navigate(`/onboarding/${currentStep === 'personal' ? '' : currentStep}`);
+    // Mapear as rotas antigas para as novas
+    const routeMapping: Record<string, string> = {
+      'professional': 'professional-data',
+      'business-goals': 'club-goals',
+      'personalization': 'customization'
+    };
+
+    if (!isLoading && data) {
+      // Log para diagnóstico
+      logger.logInfo(`Verificando redirecionamento. Rota atual: ${location.pathname}, currentStep: ${currentStep}`);
+      
+      // IMPORTANTE: Se estamos em /onboarding/professional, NÃO redirecionar
+      if (location.pathname === '/onboarding/professional') {
+        logger.logInfo('Detectada rota legacy /onboarding/professional - mantendo sem redirecionamento');
+        return;
+      }
+      
+      // Redirecionar se estivermos em um passo incorreto 
+      if (currentStep !== routeStep && 
+          routeStep !== 'professional_data' && 
+          routeStep !== 'professional') {
+        logger.logInfo(`Redirecionando para o passo correto: ${currentStep}`);
+        navigate(`/onboarding/${currentStep === 'personal' ? '' : currentStep}`, { replace: true });
+      }
     }
-  }, [isLoading, data, currentStep, routeStep, navigate]);
+  }, [isLoading, data, currentStep, routeStep, navigate, location.pathname]);
 
   // Verificar se o usuário está autenticado
   useEffect(() => {
@@ -38,8 +67,11 @@ const Onboarding: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <Loader2 className="h-12 w-12 animate-spin text-[#0ABAB5]" />
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-white to-viverblue/5">
+        <div className="text-center">
+          <Loader2 className="h-12 w-12 animate-spin text-viverblue mx-auto" />
+          <p className="mt-4 text-viverblue-dark font-medium">Carregando seus dados...</p>
+        </div>
       </div>
     );
   }
@@ -51,24 +83,37 @@ const Onboarding: React.FC = () => {
 
   // Renderizar o formulário adequado
   const renderStepForm = () => {
+    logger.logInfo(`Renderizando formulário para routeStep: ${routeStep}`);
+    
+    // Tratar especificamente o caso da rota /onboarding/professional
+    if (location.pathname === '/onboarding/professional') {
+      logger.logInfo('Renderizando formulário de dados profissionais (rota antiga)');
+      return <ProfessionalForm data={data} onSubmit={(formData) => saveFormData(formData, 'professional_data')} isSaving={isSaving} />;
+    }
+    
     switch (routeStep) {
       case 'personal':
         return <PersonalForm data={data} onSubmit={(formData) => saveFormData(formData, 'personal')} isSaving={isSaving} />;
       case 'professional':
-        return <ProfessionalForm data={data} onSubmit={(formData) => saveFormData(formData, 'professional')} isSaving={isSaving} />;
+      case 'professional_data':
+        console.log('Renderizando formulário de dados profissionais');
+        return <ProfessionalForm data={data} onSubmit={(formData) => saveFormData(formData, 'professional_data')} isSaving={isSaving} />;
       case 'business-context':
         return <BusinessContextForm data={data} onSubmit={(formData) => saveFormData(formData, 'business-context')} isSaving={isSaving} />;
       case 'business-goals':
+      case 'club-goals':
         return <BusinessGoalsForm data={data} onSubmit={(formData) => saveFormData(formData, 'business-goals')} isSaving={isSaving} />;
       case 'ai-experience':
         return <AIExperienceForm data={data} onSubmit={(formData) => saveFormData(formData, 'ai-experience')} isSaving={isSaving} />;
       case 'personalization':
+      case 'customization':
         return <PersonalizationForm data={data} onSubmit={(formData) => saveFormData(formData, 'personalization')} isSaving={isSaving} />;
       case 'complementary':
         return <ComplementaryForm data={data} onSubmit={(formData) => saveFormData(formData, 'complementary')} isSaving={isSaving} />;
       case 'review':
         return <ReviewStep data={data} onComplete={completeOnboarding} isSaving={isSaving} />;
       default:
+        console.log(`Rota não reconhecida: ${routeStep}, renderizando formulário pessoal padrão`);
         return <PersonalForm data={data} onSubmit={(formData) => saveFormData(formData, 'personal')} isSaving={isSaving} />;
     }
   };

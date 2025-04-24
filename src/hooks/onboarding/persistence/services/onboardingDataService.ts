@@ -62,4 +62,3 @@ export const fetchAllOnboardingData = async (progressId: string): Promise<Onboar
     return null;
   }
 };
-

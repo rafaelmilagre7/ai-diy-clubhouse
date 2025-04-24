@@ -17,6 +17,7 @@ import Achievements from "@/pages/member/Achievements";
 import Benefits from "@/pages/member/Benefits";
 
 import Onboarding from "@/pages/onboarding/Onboarding";
+import PersonalInfo from "@/pages/onboarding/steps/PersonalInfo";
 import ProfessionalData from "@/pages/onboarding/steps/ProfessionalData";
 import BusinessContext from "@/pages/onboarding/steps/BusinessContext";
 import AIExperience from "@/pages/onboarding/steps/AIExperience";
@@ -36,10 +37,12 @@ interface MemberRoutesProps {
 const MemberRoutes = ({ children }: MemberRoutesProps) => {
   return (
     <Routes>
-      <Route path="/" element={<MemberLayout>{children}</MemberLayout>}>
+      <Route element={<MemberLayout>{children}</MemberLayout>}>
         <Route index element={<Navigate to="/dashboard" replace />} />
         
         <Route path="onboarding" element={<Onboarding />} />
+        <Route path="onboarding/personal" element={<PersonalInfo />} />
+        <Route path="onboarding/professional" element={<ProfessionalData />} />
         <Route path="onboarding/professional-data" element={<ProfessionalData />} />
         <Route path="onboarding/business-context" element={<BusinessContext />} />
         <Route path="onboarding/ai-experience" element={<AIExperience />} />
