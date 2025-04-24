@@ -1,40 +1,30 @@
 
-import { ReactNode, useState, useEffect } from "react";
+import { ReactNode } from "react";
 import { Outlet } from "react-router-dom";
+import { useAuth } from "@/contexts/auth";
+import LoadingScreen from "@/components/common/LoadingScreen";
 import { AdminSidebar } from "./AdminSidebar";
-import { AdminHeader } from "./AdminHeader";
 import { AdminContent } from "./AdminContent";
-import { cn } from "@/lib/utils";
+import DiagnosticPanel from "@/components/common/DiagnosticPanel";
 
 interface AdminLayoutProps {
   children?: ReactNode;
 }
 
 const AdminLayout = ({ children }: AdminLayoutProps) => {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const { isLoading } = useAuth();
   
-  console.log("AdminLayout renderizando com sidebarOpen:", sidebarOpen);
-
-  // Forçar o sidebar a aparecer inicialmente no desktop
-  useEffect(() => {
-    const isMobile = window.innerWidth < 768;
-    setSidebarOpen(!isMobile);
-  }, []);
-
+  if (isLoading) {
+    return <LoadingScreen message="Carregando painel administrativo..." />;
+  }
+  
   return (
     <div className="flex h-screen bg-background overflow-hidden">
-      <AdminSidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
-      <div 
-        className={cn(
-          "flex-1 flex flex-col transition-all duration-300",
-          sidebarOpen ? "md:ml-64" : "md:ml-20"
-        )}
-      >
-        <AdminHeader sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
-        <AdminContent>
-          {children || <Outlet />}
-        </AdminContent>
-      </div>
+      <AdminSidebar />
+      <AdminContent>
+        {children || <Outlet />}
+      </AdminContent>
+      <DiagnosticPanel />
     </div>
   );
 };
