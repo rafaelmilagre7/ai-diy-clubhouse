@@ -106,9 +106,23 @@ export function useAchievements() {
       
       if (badgesResponse && badgesResponse.length > 0) {
         badgesResponse.forEach(badgeData => {
-          // Verifica se o badgeData.badges existe antes de tentar acessá-lo
-          if (badgeData.badges) {
-            // Corrigido: badges é um objeto, não um array, então podemos acessar diretamente suas propriedades
+          // Verifica se o badgeData.badges existe e é um array antes de processá-lo
+          if (badgeData.badges && Array.isArray(badgeData.badges)) {
+            // Itera sobre o array de badges
+            badgeData.badges.forEach(badge => {
+              allAchievements.push({
+                id: badge.id,
+                name: badge.name,
+                description: badge.description,
+                icon: badge.icon,
+                category: badge.category,
+                isUnlocked: true,
+                earnedAt: badgeData.earned_at,
+              });
+            });
+          } 
+          // Se badgeData.badges for um objeto único e não um array
+          else if (badgeData.badges) {
             allAchievements.push({
               id: badgeData.badges.id,
               name: badgeData.badges.name,
