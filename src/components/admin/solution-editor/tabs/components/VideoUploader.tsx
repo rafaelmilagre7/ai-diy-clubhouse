@@ -20,7 +20,7 @@ const VideoUploader: React.FC<VideoUploaderProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [dragActive, setDragActive] = useState(false);
 
-  // Função para acionar o clique no input quando o botão ou área de drop for clicada
+  // Função para acionar o clique no input quando o botão for clicado
   const handleButtonClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation(); 
@@ -41,7 +41,7 @@ const VideoUploader: React.FC<VideoUploaderProps> = ({
     
     const file = e.dataTransfer.files?.[0];
     if (file) {
-      console.log("Arquivo selecionado por drag & drop:", file.name);
+      console.log("[VideoUploader] Arquivo selecionado por drag & drop:", file.name);
       onFileSelect(file);
     }
   };
@@ -50,7 +50,7 @@ const VideoUploader: React.FC<VideoUploaderProps> = ({
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      console.log("Arquivo selecionado pelo input:", file.name);
+      console.log("[VideoUploader] Arquivo selecionado pelo input:", file.name);
       onFileSelect(file);
       // Limpar input para permitir selecionar o mesmo arquivo novamente
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -150,11 +150,7 @@ const VideoUploader: React.FC<VideoUploaderProps> = ({
           <div className="w-full mt-6 space-y-2">
             <Progress 
               value={uploadProgress} 
-              className="h-2 w-full"
-              // Mudar a cor para verde quando o upload estiver completo
-              style={{
-                "--bg-color": uploadProgress < 100 ? "#0ABAB5" : "#22c55e"
-              } as any}
+              className="h-2 w-full" 
             />
             <div className="flex justify-between">
               <span className="text-sm text-muted-foreground">Enviando vídeo...</span>

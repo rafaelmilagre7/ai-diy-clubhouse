@@ -28,37 +28,12 @@ export const useFileUpload = (solutionId: string) => {
       console.log(`[useFileUpload] Bucket '${bucketName}' existe:`, bucketExists);
       
       if (!bucketExists) {
-        // Se não existir, tentar criar
-        console.log(`[useFileUpload] Criando bucket '${bucketName}'...`);
-        const { error: createError } = await supabase.storage.createBucket(bucketName, {
-          public: true,
-          fileSizeLimit: 524288000 // 500MB em bytes
-        });
-        
-        if (createError) {
-          console.error("[useFileUpload] Erro ao criar bucket:", createError);
-          toast("Erro na configuração", {
-            description: "Não foi possível criar o bucket de armazenamento. Contate o administrador."
-          });
-          return false;
-        }
-        
-        console.log(`[useFileUpload] Bucket '${bucketName}' criado com sucesso!`);
-      } else {
-        // Atualizar configurações do bucket se já existir
-        const { error: updateError } = await supabase.storage.updateBucket(bucketName, {
-          public: true,
-          fileSizeLimit: 524288000 // 500MB em bytes
-        });
-        
-        if (updateError) {
-          console.warn("[useFileUpload] Aviso ao atualizar bucket:", updateError);
-        }
+        console.log(`[useFileUpload] Bucket '${bucketName}' não encontrado, mas já deve estar criado via migração SQL.`);
       }
       
       return true;
     } catch (err) {
-      console.error("[useFileUpload] Erro ao verificar/criar bucket:", err);
+      console.error("[useFileUpload] Erro ao verificar bucket:", err);
       return false;
     }
   };
@@ -85,7 +60,7 @@ export const useFileUpload = (solutionId: string) => {
       return null;
     }
 
-    // Aumentando o limite para 500MB
+    // Limite de 500MB
     const maxSize = 500 * 1024 * 1024;
     if (file.size > maxSize) {
       toast("Arquivo muito grande", {
@@ -103,12 +78,12 @@ export const useFileUpload = (solutionId: string) => {
         description: "Preparando para enviar o vídeo..."
       });
       
-      // Verificar/criar bucket antes do upload
+      // Verificar bucket antes do upload - usamos o bucket "public" configurado via SQL
       const bucketName = "public";
       const bucketReady = await ensureBucketExists(bucketName);
       
       if (!bucketReady) {
-        throw new Error("Não foi possível configurar o armazenamento para uploads.");
+        throw new Error("Não foi possível configurar o armazenamento para uploads. Verifique se o bucket 'public' existe.");
       }
       
       setUploadProgress(10);

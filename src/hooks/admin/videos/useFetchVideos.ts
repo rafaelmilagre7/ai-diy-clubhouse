@@ -21,7 +21,7 @@ export const useFetchVideos = (solutionId: string): VideoFetchResponse & { refet
       setLoading(true);
       console.log("[useFetchVideos] Buscando vídeos para solução:", solutionId, "Timestamp:", new Date().toISOString());
       
-      // Adicionando um timestamp para evitar cache do navegador ou do Supabase
+      // Adicionando um timestamp para evitar cache
       const { data, error } = await supabase
         .from("solution_resources")
         .select("*")
@@ -58,7 +58,7 @@ export const useFetchVideos = (solutionId: string): VideoFetchResponse & { refet
     setRefreshCounter(prev => prev + 1); // Incrementa o contador para forçar refetch
     
     try {
-      // Pequeno atraso para garantir que qualquer operação de banco de dados tenha tempo de propagar
+      // Pequeno atraso para garantir que operações de banco de dados tenham tempo de propagar
       await new Promise(resolve => setTimeout(resolve, 1000));
       await fetchVideos(); // Chama diretamente a função fetchVideos
       console.log("[useFetchVideos] Refetch concluído com sucesso");

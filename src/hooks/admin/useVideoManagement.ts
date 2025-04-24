@@ -58,7 +58,7 @@ export const useVideoManagement = (solutionId: string) => {
       if (video) {
         console.log("[useVideoManagement] Upload bem-sucedido:", video);
         
-        // Atraso estratégico para garantir que o banco de dados processe completamente a inserção
+        // Atraso para garantir que o banco de dados processe completamente a inserção
         setTimeout(async () => {
           console.log("[useVideoManagement] Atualizando lista após upload de arquivo");
           await refreshVideos();
