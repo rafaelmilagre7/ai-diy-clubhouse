@@ -42,7 +42,7 @@ const RootRedirect = () => {
     });
   }, [user, isAdmin, isLoading, timeoutExceeded]);
   
-  // Apenas redirecionar quando estamos na raiz exata "/"
+  // IMPORTANTE: Apenas redirecionar quando estamos na raiz exata "/"
   if (window.location.pathname !== "/") {
     console.log("RootRedirect: Não estamos na raiz, permitindo navegação normal");
     return null;

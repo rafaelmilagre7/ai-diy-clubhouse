@@ -1,5 +1,5 @@
 
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { ProtectedRoutes } from '@/auth/ProtectedRoutes';
 import { AdminProtectedRoutes } from '@/auth/AdminProtectedRoutes';
 import { memberRoutes } from './member.routes';
@@ -7,6 +7,7 @@ import { adminRoutes } from './admin.routes';
 import { authRoutes } from './auth.routes';
 import RootRedirect from '@/components/routing/RootRedirect';
 import { NotFound } from '@/pages/NotFound';
+import Dashboard from '@/pages/member/Dashboard';
 
 const AppRoutes = () => {
   console.log('AppRoutes renderizando - Rota atual:', window.location.pathname);
@@ -28,6 +29,9 @@ const AppRoutes = () => {
       <Route element={<AdminProtectedRoutes />}>
         {adminRoutes}
       </Route>
+      
+      {/* Rota de fallback de segurança para /dashboard */}
+      <Route path="/dashboard" element={<ProtectedRoutes><Dashboard /></ProtectedRoutes>} />
       
       {/* Fallback para qualquer outra rota */}
       <Route path="*" element={<NotFound />} />

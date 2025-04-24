@@ -10,17 +10,20 @@ import {
   UserCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Separator } from "@/components/ui/separator";
+import { useState } from "react";
+import { toast } from "sonner";
 
 interface AdminSidebarNavProps {
   sidebarOpen: boolean;
 }
 
 export const AdminSidebarNav = ({ sidebarOpen }: AdminSidebarNavProps) => {
-  const location = useLocation();
+  const navigate = useNavigate();
+  const [isRedirecting, setIsRedirecting] = useState(false);
   
-  console.log("AdminSidebarNav renderizando, location:", location.pathname);
+  console.log("AdminSidebarNav renderizando, location:", window.location.pathname);
 
   const menuItems = [
     {
@@ -56,15 +59,30 @@ export const AdminSidebarNav = ({ sidebarOpen }: AdminSidebarNavProps) => {
   ];
 
   const isActive = (href: string) => {
-    return location.pathname === href || location.pathname.startsWith(href + '/');
+    return window.location.pathname === href || window.location.pathname.startsWith(href + '/');
   };
 
   const handleBackToDashboard = () => {
-    console.log("Redirecionando para dashboard de membro com redirecionamento forçado");
-    
-    // Usar o método mais radical: redirecionamento completo com caminho absoluto
-    const baseUrl = window.location.origin;
-    window.location.href = `${baseUrl}/dashboard`;
+    try {
+      setIsRedirecting(true);
+      console.log("Redirecionando para dashboard de membro");
+      
+      toast("Redirecionando para área de membro...");
+      
+      // Usar navigate primeiro para tentar transição via React Router
+      navigate("/dashboard", { replace: true });
+      
+      // Forçar um redirecionamento após uma pequena pausa para garantir que a navegação aconteça
+      setTimeout(() => {
+        window.location.href = "/dashboard";
+        setIsRedirecting(false);
+      }, 100);
+    } catch (error) {
+      console.error("Erro ao redirecionar:", error);
+      // Fallback: se falhar, fazer redirecionamento direto
+      window.location.href = "/dashboard";
+      setIsRedirecting(false);
+    }
   };
 
   return (
@@ -97,10 +115,11 @@ export const AdminSidebarNav = ({ sidebarOpen }: AdminSidebarNavProps) => {
             !sidebarOpen && "justify-center"
           )}
           onClick={handleBackToDashboard}
+          disabled={isRedirecting}
           type="button"
         >
           <ChevronLeft className="h-4 w-4" />
-          {sidebarOpen && <span>Voltar ao Dashboard</span>}
+          {sidebarOpen && <span>{isRedirecting ? "Redirecionando..." : "Voltar ao Dashboard"}</span>}
         </Button>
       </div>
     </div>

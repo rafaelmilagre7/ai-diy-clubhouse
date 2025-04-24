@@ -62,10 +62,13 @@ export const ProtectedRoutes = ({ children }: ProtectedRoutesProps = {}) => {
 
   // Se o usuário não estiver autenticado, redireciona para a página de login
   if (!user) {
+    console.log("ProtectedRoutes: Usuário não autenticado, redirecionando para login");
     toast("Por favor, faça login para acessar esta página");
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
+  console.log("ProtectedRoutes: Usuário autenticado, renderizando conteúdo protegido");
+  
   // Usuário está autenticado, renderizar as rotas protegidas
   return children ? <>{children}</> : <Outlet />;
 };

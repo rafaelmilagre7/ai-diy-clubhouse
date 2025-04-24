@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/auth";
 import { FcGoogle } from "react-icons/fc";
@@ -14,6 +15,7 @@ const Login = () => {
   
   useEffect(() => {
     if (user) {
+      console.log("Login: Usuário já autenticado, redirecionando");
       navigate('/', { replace: true });
     }
   }, [user, navigate]);
@@ -22,7 +24,9 @@ const Login = () => {
     try {
       setIsLoading(true);
       setError(null);
+      console.log("Iniciando login com Google");
       await signIn();
+      console.log("Login com Google concluído com sucesso");
     } catch (err) {
       console.error("Erro ao fazer login:", err);
       setError("Ocorreu um erro durante o login. Por favor, tente novamente.");
@@ -35,7 +39,9 @@ const Login = () => {
     try {
       setIsLoading(true);
       setError(null);
+      console.log(`Iniciando login como ${userType}`);
       await loginFn();
+      console.log(`Login como ${userType} concluído, aguardando redirecionamento`);
     } catch (err: any) {
       console.error(`Erro ao fazer login como ${userType}:`, err);
       setError(err?.message || `Ocorreu um erro ao fazer login como ${userType}.`);
