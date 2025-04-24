@@ -1,4 +1,3 @@
-
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
@@ -62,23 +61,17 @@ export const AdminSidebarNav = ({ sidebarOpen }: AdminSidebarNavProps) => {
   };
 
   const handleBackToDashboard = () => {
-    console.log("Função handleBackToDashboard executada, redirecionando para o dashboard de membro");
+    console.log("Redirecionando para dashboard de membro");
     
-    // Usar uma combinação de abordagens para garantir o redirecionamento
-    try {
-      // Método 1: Navegação direta com história de navegação limpa
+    // Método direto - mais confiável para mudança completa de contexto
+    window.location.href = "/dashboard";
+    
+    // O código abaixo não será executado devido ao redirecionamento acima,
+    // mas serve como fallback caso o redirecionamento direto falhe por algum motivo
+    setTimeout(() => {
+      console.log("Fallback de redirecionamento para /dashboard");
       navigate("/dashboard", { replace: true });
-      
-      // Método 2: setTimeout para garantir que o redirecionamento aconteça após outros processos
-      setTimeout(() => {
-        // Método 3: Usar window.location como último recurso se a navegação falhar
-        window.location.href = "/dashboard";
-      }, 100);
-    } catch (error) {
-      console.error("Erro durante navegação para dashboard:", error);
-      // Fallback final
-      window.location.href = "/dashboard";
-    }
+    }, 0);
   };
 
   return (

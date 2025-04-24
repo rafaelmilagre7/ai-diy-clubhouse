@@ -12,7 +12,7 @@ const Dashboard = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   
   // Debug para problemas de carregamento
-  console.log("Dashboard de membro renderizando");
+  console.log("Dashboard de membro renderizando - Caminho atual:", window.location.pathname);
   
   // Usar nosso hook centralizado de dados com props corretas
   const { 
@@ -24,7 +24,8 @@ const Dashboard = () => {
   useEffect(() => {
     console.log("Dashboard carregado com status:", {
       solutionsLoaded: solutions.length > 0,
-      isLoading: isLoading
+      isLoading: isLoading,
+      path: window.location.pathname
     });
   }, [solutions, isLoading]);
   
@@ -36,7 +37,7 @@ const Dashboard = () => {
   };
   
   const [category, setCategory] = useState<string>(
-    searchParams.get("category") || "general"
+    searchParams.get("category") || "recommended"
   );
   
   // Função para lidar com a mudança de categoria
@@ -60,6 +61,9 @@ const Dashboard = () => {
       toast("Bem-vindo ao seu dashboard personalizado!");
       localStorage.setItem("firstDashboardVisit", "false");
     }
+    
+    // Informar que chegou à página de dashboard
+    console.log("Dashboard montado com sucesso. URL atual:", window.location.href);
   }, []);
 
   // Mostrar tela de carregamento enquanto os dados estão sendo carregados

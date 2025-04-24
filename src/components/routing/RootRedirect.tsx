@@ -39,7 +39,7 @@ const RootRedirect = () => {
       isAdmin, 
       isLoading, 
       timeoutExceeded,
-      currentPath: window.location.pathname
+      path: window.location.pathname 
     });
   }, [user, isAdmin, isLoading, timeoutExceeded]);
   
@@ -54,15 +54,27 @@ const RootRedirect = () => {
     return <Navigate to="/login" replace />;
   }
   
+  // Para rotas específicas como /dashboard, não redirecionar
+  if (window.location.pathname === "/dashboard") {
+    console.log("RootRedirect: Usuário já está na rota /dashboard, permitindo navegação");
+    return null;
+  }
+  
   // Se for admin, redirecionar para área admin
-  if (isAdmin) {
+  if (isAdmin && window.location.pathname === "/") {
     console.log("RootRedirect: Usuário é admin, redirecionando para /admin");
     return <Navigate to="/admin" replace />;
   }
   
   // Para usuários autenticados, redirecionar para o dashboard
-  console.log("RootRedirect: Usuário normal autenticado, redirecionando para /dashboard");
-  return <Navigate to="/dashboard" replace />;
+  if (window.location.pathname === "/") {
+    console.log("RootRedirect: Usuário normal autenticado, redirecionando para /dashboard");
+    return <Navigate to="/dashboard" replace />;
+  }
+  
+  // Se não for nenhuma das condições acima, não fazer redirecionamento
+  console.log("RootRedirect: Permitindo navegação para a rota atual:", window.location.pathname);
+  return null;
 };
 
 export default RootRedirect;
