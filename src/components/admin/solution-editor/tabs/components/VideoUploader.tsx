@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Upload, Loader2, Video, Youtube, Plus } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useAddVideo } from "@/hooks/admin/videos/useAddVideo";
 
 interface VideoUploaderProps {
   onFileSelect: (file: File) => void;
@@ -108,9 +109,21 @@ const VideoUploader: React.FC<VideoUploaderProps> = ({
             } ${disabled ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
             onClick={handleButtonClick}
             onDrop={handleFileDrop}
-            onDragOver={handleDragOver}
-            onDragEnter={handleDragEnter}
-            onDragLeave={handleDragLeave}
+            onDragOver={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              if (!disabled && !isUploading) setDragActive(true);
+            }}
+            onDragEnter={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              if (!disabled && !isUploading) setDragActive(true);
+            }}
+            onDragLeave={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setDragActive(false);
+            }}
             data-testid="video-upload-dropzone"
           >
             <input
@@ -146,7 +159,7 @@ const VideoUploader: React.FC<VideoUploaderProps> = ({
                 variant="outline"
                 className="gap-2"
                 onClick={(e) => {
-                  e.stopPropagation(); // Importante para evitar duplo acionamento
+                  e.stopPropagation();
                   handleButtonClick(e);
                 }}
                 disabled={disabled || isUploading}
@@ -155,7 +168,7 @@ const VideoUploader: React.FC<VideoUploaderProps> = ({
                 {isUploading ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin" />
-                    Enviando...
+                    Enviando... {uploadProgress}%
                   </>
                 ) : (
                   <>
