@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
 import { useOnboardingSteps } from "@/hooks/onboarding/useOnboardingSteps";
 import { ExpectativasObjetivosStep } from "@/components/onboarding/steps/ExpectativasObjetivosStep";
@@ -14,25 +14,20 @@ const BusinessGoalsClub = () => {
   const { saveStepData, completeOnboarding } = useOnboardingSteps();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { progress, isLoading, refreshProgress } = useProgress();
-  const [refreshCount, setRefreshCount] = useState(0);
   const [localDataReady, setLocalDataReady] = useState(false);
+  const initialLoadDone = useRef(false);
   const navigate = useNavigate();
 
-  // Efeito para carregar dados mais recentes ao entrar na página
+  // Efeito para carregar dados apenas uma vez ao entrar na página
   useEffect(() => {
     const loadData = async () => {
+      if (initialLoadDone.current) return;
+      
       setLocalDataReady(false);
       try {
-        console.log("Carregando dados atualizados para BusinessGoalsClub...");
+        console.log("Carregando dados iniciais para BusinessGoalsClub...");
         await refreshProgress();
-        
-        // Logs detalhados para diagnóstico
-        if (progress) {
-          console.log("Tipo de business_goals:", typeof progress.business_goals);
-          console.log("Conteúdo de business_goals:", JSON.stringify(progress.business_goals, null, 2));
-        }
-        
-        // Marcar dados como prontos
+        initialLoadDone.current = true;
         setLocalDataReady(true);
       } catch (error) {
         console.error("Erro ao carregar dados:", error);
@@ -42,7 +37,20 @@ const BusinessGoalsClub = () => {
     };
     
     loadData();
-  }, [refreshProgress, refreshCount]);
+  }, [refreshProgress]);
+
+  const handleRetry = async () => {
+    console.log("Tentando recarregar dados...");
+    setLocalDataReady(false);
+    try {
+      await refreshProgress();
+      setLocalDataReady(true);
+    } catch (error) {
+      console.error("Erro ao recarregar dados:", error);
+      toast.error("Erro ao recarregar seus dados. Tente novamente.");
+      setLocalDataReady(true);
+    }
+  };
 
   const handleSaveData = async (stepId: string, data: any) => {
     console.log(`Iniciando salvamento de dados para passo ${stepId}:`, JSON.stringify(data, null, 2));
@@ -111,12 +119,6 @@ const BusinessGoalsClub = () => {
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  // Função para tentar recarregar dados
-  const handleRetry = () => {
-    console.log("Tentando recarregar dados...");
-    setRefreshCount(prev => prev + 1);
   };
   
   // Processar dados para o componente

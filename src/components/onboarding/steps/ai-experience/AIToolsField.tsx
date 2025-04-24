@@ -54,5 +54,4 @@ const AIToolsFieldComponent: React.FC<AIToolsFieldProps> = ({ control, error }) 
   </div>
 );
 
-// Usando memo para evitar re-renderizações desnecessárias
 export const AIToolsField = memo(AIToolsFieldComponent);

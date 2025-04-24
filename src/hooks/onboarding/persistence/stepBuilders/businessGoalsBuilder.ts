@@ -5,10 +5,6 @@ import { normalizeBusinessGoals } from "../utils/dataNormalization";
 export function buildBusinessGoalsUpdate(data: Partial<OnboardingData>, progress: OnboardingProgress | null) {
   const updateObj: any = {};
   
-  // Log para debug
-  console.log("Construindo atualização para business_goals com dados:", data);
-  console.log("Dados atuais de progresso:", progress?.business_goals);
-  
   // Verificações iniciais
   if (!data) {
     console.warn("Dados vazios recebidos em buildBusinessGoalsUpdate");
@@ -72,8 +68,6 @@ export function buildBusinessGoalsUpdate(data: Partial<OnboardingData>, progress
   if (updateObj.business_goals.live_interest !== undefined) {
     updateObj.business_goals.live_interest = Number(updateObj.business_goals.live_interest);
   }
-  
-  console.log("Objeto final de atualização para business_goals:", updateObj);
   
   return updateObj;
 }

@@ -79,5 +79,4 @@ const AIFormationQuestionsComponent: React.FC<AIFormationQuestionsProps> = ({
   </div>
 );
 
-// Usar memo para evitar re-renderizações desnecessárias
 export const AIFormationQuestions = memo(AIFormationQuestionsComponent);

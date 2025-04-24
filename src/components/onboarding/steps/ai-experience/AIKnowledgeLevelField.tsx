@@ -51,5 +51,4 @@ const AIKnowledgeLevelFieldComponent: React.FC<AIKnowledgeLevelFieldProps> = ({ 
   </div>
 );
 
-// Usando memo para evitar re-renderizações desnecessárias
 export const AIKnowledgeLevelField = memo(AIKnowledgeLevelFieldComponent);

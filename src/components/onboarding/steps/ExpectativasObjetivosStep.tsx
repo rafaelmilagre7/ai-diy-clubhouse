@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { OnboardingData } from "@/types/onboarding";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
@@ -37,6 +37,7 @@ export const ExpectativasObjetivosStep = ({
   isLastStep,
 }: ExpectativasObjetivosStepProps) => {
   const [initializedForm, setInitializedForm] = useState(false);
+  const formInitAttempts = useRef(0);
   
   // Processar dados iniciais para garantir que temos um objeto válido
   const processInitialData = (data: any) => {
@@ -45,11 +46,8 @@ export const ExpectativasObjetivosStep = ({
       return {};
     }
     
-    console.log("ExpectativasObjetivosStep recebeu initialData:", data);
-    
     // Verificar se já temos dados normalizados
     if (data.business_goals && typeof data.business_goals === 'object') {
-      console.log("Usando business_goals como objeto:", data.business_goals);
       return data.business_goals;
     }
     
@@ -57,7 +55,6 @@ export const ExpectativasObjetivosStep = ({
     if (data.business_goals && typeof data.business_goals === 'string') {
       try {
         const parsedData = JSON.parse(data.business_goals);
-        console.log("business_goals parseado de string:", parsedData);
         return parsedData;
       } catch (e) {
         console.error("Erro ao parsear business_goals:", e);
@@ -66,13 +63,12 @@ export const ExpectativasObjetivosStep = ({
     }
     
     // Fallback para dados vazios
-    console.log("Nenhum dado válido de business_goals encontrado");
     return {};
   };
   
   const businessGoalsData = processInitialData(initialData);
   
-  const { control, handleSubmit, setValue, watch, reset, formState: { errors, isDirty } } = useForm<FormValues>({
+  const { control, handleSubmit, reset, watch, formState: { errors, isDirty } } = useForm<FormValues>({
     defaultValues: {
       primary_goal: "",
       expected_outcome_30days: "",
@@ -87,17 +83,17 @@ export const ExpectativasObjetivosStep = ({
 
   // Monitore o interesse em sessões ao vivo
   const liveInterest = watch("live_interest");
-  const formValues = watch();
-
-  // Depuração de valores do formulário
-  useEffect(() => {
-    console.log("Valores atuais do formulário:", formValues);
-  }, [formValues]);
 
   // Use efeito para inicializar dados se eles chegarem após o mount
   useEffect(() => {
+    // Limitar tentativas de inicialização para evitar ciclos
+    if (formInitAttempts.current > 3) {
+      console.log("Número máximo de tentativas de inicialização do formulário atingido");
+      return;
+    }
+    
     if (!initializedForm && initialData) {
-      console.log("Inicializando formulário com dados processados:", businessGoalsData);
+      formInitAttempts.current++;
       
       // Para prevenir problemas de timing ou dados vazios
       if (Object.keys(businessGoalsData).length === 0) {
@@ -174,8 +170,6 @@ export const ExpectativasObjetivosStep = ({
         content_formats: Array.isArray(data.content_formats) ? data.content_formats : [],
       },
     };
-    
-    console.log("Dados formatados para envio:", JSON.stringify(businessGoalsData, null, 2));
     
     // Enviar dados com o ID da etapa correto
     onSubmit("business_goals", businessGoalsData);
