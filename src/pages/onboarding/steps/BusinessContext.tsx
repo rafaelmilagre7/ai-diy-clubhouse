@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef } from "react";
 import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
 import { useProgress } from "@/hooks/onboarding/useProgress";
@@ -13,9 +12,7 @@ const BusinessContext = () => {
   const navigate = useNavigate();
   const hasLoadedData = useRef(false);
 
-  // Carregar dados apenas uma vez quando a página for carregada
   useEffect(() => {
-    // Usar uma ref para garantir que os dados são carregados apenas uma vez
     if (!hasLoadedData.current) {
       console.log("Carregando dados atualizados na página de contexto de negócio");
       refreshProgress().then(() => {
@@ -24,18 +21,14 @@ const BusinessContext = () => {
     }
   }, [refreshProgress]);
 
-  // Calcular progresso para exibição
   const progressPercentage = Math.round(((currentStepIndex + 1) / steps.length) * 100);
 
-  // Combinar dados de business_context e business_data para garantir compatibilidade
   const getInitialData = () => {
     if (!progress) return {};
     
-    // Verificar ambas as fontes de dados
     const fromContext = progress.business_context || {};
     const fromData = progress.business_data || {};
     
-    // Mesclar dados, priorizando business_context
     return {
       ...fromData,
       ...fromContext
@@ -46,15 +39,12 @@ const BusinessContext = () => {
     try {
       console.log("Salvando dados de contexto de negócio:", data);
       
-      // Formatar os dados com a estrutura esperada
       const formattedData = {
         business_context: data
       };
       
-      // Chamar saveStepData com o ID correto e os dados formatados
       await saveStepData("business_context", formattedData, true);
       
-      // Verificar se a navegação automática funcionou
       setTimeout(() => {
         const currentPath = window.location.pathname;
         if (currentPath === "/onboarding/business-context") {
@@ -83,7 +73,6 @@ const BusinessContext = () => {
     );
   }
 
-  // Obter dados combinados de todas as fontes possíveis
   const initialData = getInitialData();
   console.log("Dados iniciais para o formulário de contexto:", initialData);
 
@@ -93,7 +82,6 @@ const BusinessContext = () => {
       totalSteps={steps.length}
       title="Contexto do Negócio"
       backUrl="/onboarding/professional-data"
-      progress={progressPercentage}
     >
       <BusinessContextStep
         onSubmit={handleSave}

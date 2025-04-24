@@ -1,4 +1,3 @@
-
 import React, { useEffect } from "react";
 import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
 import { useOnboardingSteps } from "@/hooks/onboarding/useOnboardingSteps";
@@ -115,7 +114,6 @@ const Review: React.FC = () => {
         currentStep={reviewStepIndex + 1}
         totalSteps={steps.length}
         title="Revisar Informações"
-        progress={progressPercentage}
       >
         <div className="text-center py-8">
           <Loader2 className="animate-spin h-8 w-8 mx-auto text-gray-500" />
@@ -132,7 +130,6 @@ const Review: React.FC = () => {
         currentStep={reviewStepIndex + 1}
         totalSteps={steps.length}
         title="Revisar Informações"
-        progress={progressPercentage}
       >
         <div className="bg-amber-50 p-6 rounded-lg border border-amber-200">
           <h3 className="text-lg font-medium text-amber-800">Dados não disponíveis</h3>
@@ -166,7 +163,6 @@ const Review: React.FC = () => {
       totalSteps={steps.length}
       title="Revisar Informações"
       backUrl="/onboarding/complementary"
-      progress={progressPercentage}
     >
       <div className="space-y-6">
         <MilagrinhoMessage
