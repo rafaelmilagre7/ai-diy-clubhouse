@@ -1,20 +1,22 @@
 
-import { useParams } from "react-router-dom";
-import { useAuth } from "@/contexts/auth";
-import LoadingScreen from "@/components/common/LoadingScreen";
-import SolutionEditorHeader from "@/components/admin/solution-editor/SolutionEditorHeader";
-import SolutionEditorTabs from "@/components/admin/solution-editor/SolutionEditorTabs";
-import { Card, CardContent } from "@/components/ui/card";
-import NavigationButtons from "@/components/admin/solution-editor/NavigationButtons";
-import AuthError from "@/components/admin/solution-editor/AuthError";
-import { useToast } from "@/hooks/use-toast";
-import { useSolutionEditor } from "@/components/admin/solution-editor/useSolutionEditor";
-import { useEffect } from "react";
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/auth';
+import { supabase, Solution } from '@/lib/supabase';
+import LoadingScreen from '@/components/common/LoadingScreen';
+import SolutionEditorHeader from '@/components/admin/solution-editor/SolutionEditorHeader';
+import SolutionEditorTabs from '@/components/admin/solution-editor/SolutionEditorTabs';
+import { Card, CardContent } from '@/components/ui/card';
+import NavigationButtons from '@/components/admin/solution-editor/NavigationButtons';
+import AuthError from '@/components/admin/solution-editor/AuthError';
+import { useToast } from '@/hooks/use-toast';
+import { useSolutionEditor } from '@/components/admin/solution-editor/useSolutionEditor';
 
 const AdminSolutionEdit = () => {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
   
   const {
     solution,
@@ -26,28 +28,20 @@ const AdminSolutionEdit = () => {
     currentValues,
     currentStep,
     setCurrentStep,
-    totalSteps
+    totalSteps,
+    stepTitles
   } = useSolutionEditor(id, user);
   
   useEffect(() => {
-    console.log("Admin Solution Edit loaded with ID:", id);
-    
-    if (!solution && !loading && id) {
-      console.warn("Solução não encontrada para edição no admin:", id);
-    }
-    
-    // Log dos valores atuais do formulário para debug
-    if (solution) {
-      console.log("Solução carregada em AdminSolutionEdit:", {
-        id: solution.id,
-        title: solution.title,
-        currentValues
-      });
-    }
-  }, [id, solution, loading, currentValues]);
+    // Logging for debugging purposes
+    console.log("Solution Editor loaded with ID:", id);
+    console.log("Solution data:", solution);
+    console.log("Current step:", currentStep);
+    console.log("Active tab:", activeTab);
+  }, [id, solution, currentStep, activeTab]);
   
   if (loading) {
-    return <LoadingScreen message="Carregando editor de solução..." />;
+    return <LoadingScreen />;
   }
   
   // Função para mostrar toast explicitamente ao salvar

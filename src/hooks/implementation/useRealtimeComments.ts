@@ -1,5 +1,5 @@
 
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useQueryClient } from '@tanstack/react-query';
 import { useLogging } from '@/hooks/useLogging';
@@ -12,32 +12,17 @@ export const useRealtimeComments = (
 ) => {
   const queryClient = useQueryClient();
   const { log, logError } = useLogging();
-  const toastShownRef = useRef(false);
-  const channelsRef = useRef<any[]>([]);
-  const isSetupRef = useRef(false);
   
   useEffect(() => {
-    // Não configurar se já estiver configurado ou não estiver habilitado
-    if (isSetupRef.current || !isEnabled || !solutionId || !moduleId) {
+    if (!isEnabled || !solutionId || !moduleId) {
       return;
     }
     
-    // Marcar como configurado
-    isSetupRef.current = true;
-    
     log('Iniciando escuta de comentários em tempo real', { solutionId, moduleId });
-    
-    // Limpar canais anteriores para evitar múltiplas inscrições
-    if (channelsRef.current.length > 0) {
-      channelsRef.current.forEach(channel => {
-        supabase.removeChannel(channel);
-      });
-      channelsRef.current = [];
-    }
     
     // A combinação de canais separados por evento oferece mais estabilidade
     const insertChannel = supabase
-      .channel(`comments-insert-${solutionId}-${moduleId}`)
+      .channel(`comments-insert-${solutionId}`)
       .on('postgres_changes', { 
         event: 'INSERT', 
         schema: 'public', 
@@ -52,7 +37,7 @@ export const useRealtimeComments = (
       });
       
     const updateChannel = supabase
-      .channel(`comments-update-${solutionId}-${moduleId}`)
+      .channel(`comments-update-${solutionId}`)
       .on('postgres_changes', { 
         event: 'UPDATE', 
         schema: 'public', 
@@ -67,7 +52,7 @@ export const useRealtimeComments = (
       });
       
     const deleteChannel = supabase
-      .channel(`comments-delete-${solutionId}-${moduleId}`)
+      .channel(`comments-delete-${solutionId}`)
       .on('postgres_changes', { 
         event: 'DELETE', 
         schema: 'public', 
@@ -83,7 +68,7 @@ export const useRealtimeComments = (
       
     // Inscrever-se em mudanças na tabela de curtidas
     const likesChannel = supabase
-      .channel(`comment-likes-${solutionId}-${moduleId}`)
+      .channel(`comment-likes-${solutionId}`)
       .on('postgres_changes', {
         event: '*',
         schema: 'public',
@@ -96,14 +81,9 @@ export const useRealtimeComments = (
         handleSubscriptionStatus(status, 'LIKES');
       });
     
-    // Guardar referências para limpeza posterior
-    channelsRef.current = [insertChannel, updateChannel, deleteChannel, likesChannel];
-    
     const invalidateComments = () => {
-      // Usando staleTime para evitar refetches desnecessários
       queryClient.invalidateQueries({ 
-        queryKey: ['solution-comments', solutionId, moduleId],
-        refetchType: 'active' // Apenas refetch queries ativas
+        queryKey: ['solution-comments', solutionId, moduleId] 
       });
     };
     
@@ -115,27 +95,23 @@ export const useRealtimeComments = (
         logError(`Erro no canal de ${channelType}`, { status, solutionId, moduleId });
         
         // Mostra apenas um toast para evitar spam de erros
-        if (!toastShownRef.current) {
+        if (channelType === 'INSERT') {
           toast.error("Atualizações em tempo real indisponíveis", {
             description: "Os comentários precisarão ser atualizados manualmente.",
             duration: 5000,
             id: "realtime-error" // Previne múltiplos toasts do mesmo tipo
           });
-          toastShownRef.current = true;
         }
       }
     };
     
     // Cancelar inscrição ao desmontar
     return () => {
-      if (channelsRef.current.length > 0) {
-        log('Cancelando escuta de comentários', { solutionId, moduleId });
-        channelsRef.current.forEach(channel => {
-          supabase.removeChannel(channel);
-        });
-        channelsRef.current = [];
-        isSetupRef.current = false;
-      }
+      log('Cancelando escuta de comentários', { solutionId, moduleId });
+      supabase.removeChannel(insertChannel);
+      supabase.removeChannel(updateChannel);
+      supabase.removeChannel(deleteChannel);
+      supabase.removeChannel(likesChannel);
     };
   }, [solutionId, moduleId, queryClient, isEnabled, log, logError]);
 };

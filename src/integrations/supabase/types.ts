@@ -145,93 +145,6 @@ export type Database = {
           },
         ]
       }
-      implementation_profiles: {
-        Row: {
-          ai_knowledge_level: number | null
-          annual_revenue: string | null
-          business_challenges: string[] | null
-          city: string | null
-          company_name: string | null
-          company_sector: string | null
-          company_size: string | null
-          company_website: string | null
-          country: string | null
-          created_at: string | null
-          current_position: string | null
-          email: string | null
-          id: string
-          instagram: string | null
-          is_completed: boolean | null
-          linkedin: string | null
-          name: string | null
-          networking_interests: string[] | null
-          nps_score: number | null
-          phone: string | null
-          phone_country_code: string | null
-          primary_goal: string | null
-          state: string | null
-          updated_at: string | null
-          user_id: string | null
-          weekly_availability: string | null
-        }
-        Insert: {
-          ai_knowledge_level?: number | null
-          annual_revenue?: string | null
-          business_challenges?: string[] | null
-          city?: string | null
-          company_name?: string | null
-          company_sector?: string | null
-          company_size?: string | null
-          company_website?: string | null
-          country?: string | null
-          created_at?: string | null
-          current_position?: string | null
-          email?: string | null
-          id?: string
-          instagram?: string | null
-          is_completed?: boolean | null
-          linkedin?: string | null
-          name?: string | null
-          networking_interests?: string[] | null
-          nps_score?: number | null
-          phone?: string | null
-          phone_country_code?: string | null
-          primary_goal?: string | null
-          state?: string | null
-          updated_at?: string | null
-          user_id?: string | null
-          weekly_availability?: string | null
-        }
-        Update: {
-          ai_knowledge_level?: number | null
-          annual_revenue?: string | null
-          business_challenges?: string[] | null
-          city?: string | null
-          company_name?: string | null
-          company_sector?: string | null
-          company_size?: string | null
-          company_website?: string | null
-          country?: string | null
-          created_at?: string | null
-          current_position?: string | null
-          email?: string | null
-          id?: string
-          instagram?: string | null
-          is_completed?: boolean | null
-          linkedin?: string | null
-          name?: string | null
-          networking_interests?: string[] | null
-          nps_score?: number | null
-          phone?: string | null
-          phone_country_code?: string | null
-          primary_goal?: string | null
-          state?: string | null
-          updated_at?: string | null
-          user_id?: string | null
-          weekly_availability?: string | null
-        }
-        Relationships: []
-      }
       implementation_trails: {
         Row: {
           created_at: string
@@ -315,351 +228,6 @@ export type Database = {
           },
         ]
       }
-      onboarding: {
-        Row: {
-          additional_context: string | null
-          annual_revenue: string | null
-          authorize_case_usage: boolean | null
-          available_days: string[] | null
-          business_challenges: string[] | null
-          business_model: string | null
-          city: string | null
-          company_name: string | null
-          company_sector: string | null
-          company_size: string | null
-          company_website: string | null
-          completed_formation: boolean | null
-          completed_steps: string[] | null
-          content_formats: string[] | null
-          country: string | null
-          created_at: string | null
-          current_position: string | null
-          current_step: string | null
-          ddi: string | null
-          desired_ai_areas: string[] | null
-          email: string | null
-          expected_outcome_30days: string | null
-          expected_outcomes: string[] | null
-          has_implemented: string | null
-          how_found_us: string | null
-          how_implement: string | null
-          id: string
-          important_kpis: string[] | null
-          improvement_suggestions: string | null
-          instagram: string | null
-          interested_in_interview: boolean | null
-          interests: string[] | null
-          is_completed: boolean | null
-          is_member_for_month: boolean | null
-          knowledge_level: string | null
-          linkedin: string | null
-          live_interest: number | null
-          medium_term_goals: string[] | null
-          mentorship_topics: string[] | null
-          name: string | null
-          networking_availability: number | null
-          nps_score: number | null
-          phone: string | null
-          previous_tools: string[] | null
-          primary_goal: string | null
-          priority_solution_type: string | null
-          priority_topics: string[] | null
-          referred_by: string | null
-          short_term_goals: string[] | null
-          skills_to_share: string[] | null
-          state: string | null
-          time_preference: string[] | null
-          timeline: string | null
-          timezone: string | null
-          updated_at: string | null
-          user_id: string
-          week_availability: string | null
-        }
-        Insert: {
-          additional_context?: string | null
-          annual_revenue?: string | null
-          authorize_case_usage?: boolean | null
-          available_days?: string[] | null
-          business_challenges?: string[] | null
-          business_model?: string | null
-          city?: string | null
-          company_name?: string | null
-          company_sector?: string | null
-          company_size?: string | null
-          company_website?: string | null
-          completed_formation?: boolean | null
-          completed_steps?: string[] | null
-          content_formats?: string[] | null
-          country?: string | null
-          created_at?: string | null
-          current_position?: string | null
-          current_step?: string | null
-          ddi?: string | null
-          desired_ai_areas?: string[] | null
-          email?: string | null
-          expected_outcome_30days?: string | null
-          expected_outcomes?: string[] | null
-          has_implemented?: string | null
-          how_found_us?: string | null
-          how_implement?: string | null
-          id?: string
-          important_kpis?: string[] | null
-          improvement_suggestions?: string | null
-          instagram?: string | null
-          interested_in_interview?: boolean | null
-          interests?: string[] | null
-          is_completed?: boolean | null
-          is_member_for_month?: boolean | null
-          knowledge_level?: string | null
-          linkedin?: string | null
-          live_interest?: number | null
-          medium_term_goals?: string[] | null
-          mentorship_topics?: string[] | null
-          name?: string | null
-          networking_availability?: number | null
-          nps_score?: number | null
-          phone?: string | null
-          previous_tools?: string[] | null
-          primary_goal?: string | null
-          priority_solution_type?: string | null
-          priority_topics?: string[] | null
-          referred_by?: string | null
-          short_term_goals?: string[] | null
-          skills_to_share?: string[] | null
-          state?: string | null
-          time_preference?: string[] | null
-          timeline?: string | null
-          timezone?: string | null
-          updated_at?: string | null
-          user_id: string
-          week_availability?: string | null
-        }
-        Update: {
-          additional_context?: string | null
-          annual_revenue?: string | null
-          authorize_case_usage?: boolean | null
-          available_days?: string[] | null
-          business_challenges?: string[] | null
-          business_model?: string | null
-          city?: string | null
-          company_name?: string | null
-          company_sector?: string | null
-          company_size?: string | null
-          company_website?: string | null
-          completed_formation?: boolean | null
-          completed_steps?: string[] | null
-          content_formats?: string[] | null
-          country?: string | null
-          created_at?: string | null
-          current_position?: string | null
-          current_step?: string | null
-          ddi?: string | null
-          desired_ai_areas?: string[] | null
-          email?: string | null
-          expected_outcome_30days?: string | null
-          expected_outcomes?: string[] | null
-          has_implemented?: string | null
-          how_found_us?: string | null
-          how_implement?: string | null
-          id?: string
-          important_kpis?: string[] | null
-          improvement_suggestions?: string | null
-          instagram?: string | null
-          interested_in_interview?: boolean | null
-          interests?: string[] | null
-          is_completed?: boolean | null
-          is_member_for_month?: boolean | null
-          knowledge_level?: string | null
-          linkedin?: string | null
-          live_interest?: number | null
-          medium_term_goals?: string[] | null
-          mentorship_topics?: string[] | null
-          name?: string | null
-          networking_availability?: number | null
-          nps_score?: number | null
-          phone?: string | null
-          previous_tools?: string[] | null
-          primary_goal?: string | null
-          priority_solution_type?: string | null
-          priority_topics?: string[] | null
-          referred_by?: string | null
-          short_term_goals?: string[] | null
-          skills_to_share?: string[] | null
-          state?: string | null
-          time_preference?: string[] | null
-          timeline?: string | null
-          timezone?: string | null
-          updated_at?: string | null
-          user_id?: string
-          week_availability?: string | null
-        }
-        Relationships: []
-      }
-      onboarding_ai_experience: {
-        Row: {
-          completed_formation: boolean | null
-          created_at: string | null
-          desired_ai_areas: string[] | null
-          has_implemented: string | null
-          id: string
-          improvement_suggestions: string | null
-          is_member_for_month: boolean | null
-          knowledge_level: string | null
-          nps_score: number | null
-          previous_tools: string[] | null
-          progress_id: string
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          completed_formation?: boolean | null
-          created_at?: string | null
-          desired_ai_areas?: string[] | null
-          has_implemented?: string | null
-          id?: string
-          improvement_suggestions?: string | null
-          is_member_for_month?: boolean | null
-          knowledge_level?: string | null
-          nps_score?: number | null
-          previous_tools?: string[] | null
-          progress_id: string
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          completed_formation?: boolean | null
-          created_at?: string | null
-          desired_ai_areas?: string[] | null
-          has_implemented?: string | null
-          id?: string
-          improvement_suggestions?: string | null
-          is_member_for_month?: boolean | null
-          knowledge_level?: string | null
-          nps_score?: number | null
-          previous_tools?: string[] | null
-          progress_id?: string
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "onboarding_ai_experience_progress_id_fkey"
-            columns: ["progress_id"]
-            isOneToOne: false
-            referencedRelation: "onboarding_progress"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      onboarding_business_context: {
-        Row: {
-          additional_context: string | null
-          business_challenges: string[] | null
-          business_model: string | null
-          created_at: string | null
-          id: string
-          important_kpis: string[] | null
-          medium_term_goals: string[] | null
-          progress_id: string
-          short_term_goals: string[] | null
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          additional_context?: string | null
-          business_challenges?: string[] | null
-          business_model?: string | null
-          created_at?: string | null
-          id?: string
-          important_kpis?: string[] | null
-          medium_term_goals?: string[] | null
-          progress_id: string
-          short_term_goals?: string[] | null
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          additional_context?: string | null
-          business_challenges?: string[] | null
-          business_model?: string | null
-          created_at?: string | null
-          id?: string
-          important_kpis?: string[] | null
-          medium_term_goals?: string[] | null
-          progress_id?: string
-          short_term_goals?: string[] | null
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "onboarding_business_context_progress_id_fkey"
-            columns: ["progress_id"]
-            isOneToOne: false
-            referencedRelation: "onboarding_progress"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      onboarding_business_goals: {
-        Row: {
-          content_formats: string[] | null
-          created_at: string | null
-          expected_outcome_30days: string | null
-          expected_outcomes: string[] | null
-          how_implement: string | null
-          id: string
-          live_interest: number | null
-          primary_goal: string | null
-          priority_solution_type: string | null
-          progress_id: string
-          timeline: string | null
-          updated_at: string | null
-          user_id: string
-          week_availability: string | null
-        }
-        Insert: {
-          content_formats?: string[] | null
-          created_at?: string | null
-          expected_outcome_30days?: string | null
-          expected_outcomes?: string[] | null
-          how_implement?: string | null
-          id?: string
-          live_interest?: number | null
-          primary_goal?: string | null
-          priority_solution_type?: string | null
-          progress_id: string
-          timeline?: string | null
-          updated_at?: string | null
-          user_id: string
-          week_availability?: string | null
-        }
-        Update: {
-          content_formats?: string[] | null
-          created_at?: string | null
-          expected_outcome_30days?: string | null
-          expected_outcomes?: string[] | null
-          how_implement?: string | null
-          id?: string
-          live_interest?: number | null
-          primary_goal?: string | null
-          priority_solution_type?: string | null
-          progress_id?: string
-          timeline?: string | null
-          updated_at?: string | null
-          user_id?: string
-          week_availability?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "onboarding_business_goals_progress_id_fkey"
-            columns: ["progress_id"]
-            isOneToOne: false
-            referencedRelation: "onboarding_progress"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       onboarding_chat_messages: {
         Row: {
           created_at: string | null
@@ -723,56 +291,6 @@ export type Database = {
         }
         Relationships: []
       }
-      onboarding_experience_personalization: {
-        Row: {
-          available_days: string[] | null
-          created_at: string | null
-          id: string
-          interests: string[] | null
-          mentorship_topics: string[] | null
-          networking_availability: number | null
-          progress_id: string
-          skills_to_share: string[] | null
-          time_preference: string[] | null
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          available_days?: string[] | null
-          created_at?: string | null
-          id?: string
-          interests?: string[] | null
-          mentorship_topics?: string[] | null
-          networking_availability?: number | null
-          progress_id: string
-          skills_to_share?: string[] | null
-          time_preference?: string[] | null
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          available_days?: string[] | null
-          created_at?: string | null
-          id?: string
-          interests?: string[] | null
-          mentorship_topics?: string[] | null
-          networking_availability?: number | null
-          progress_id?: string
-          skills_to_share?: string[] | null
-          time_preference?: string[] | null
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "onboarding_experience_personalization_progress_id_fkey"
-            columns: ["progress_id"]
-            isOneToOne: false
-            referencedRelation: "onboarding_progress"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       onboarding_history: {
         Row: {
           created_at: string | null
@@ -802,68 +320,6 @@ export type Database = {
           {
             foreignKeyName: "onboarding_history_onboarding_id_fkey"
             columns: ["onboarding_id"]
-            isOneToOne: false
-            referencedRelation: "onboarding_progress"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      onboarding_personal_info: {
-        Row: {
-          city: string | null
-          country: string | null
-          created_at: string | null
-          ddi: string | null
-          email: string | null
-          id: string
-          instagram: string | null
-          linkedin: string | null
-          name: string | null
-          phone: string | null
-          progress_id: string
-          state: string | null
-          timezone: string | null
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          city?: string | null
-          country?: string | null
-          created_at?: string | null
-          ddi?: string | null
-          email?: string | null
-          id?: string
-          instagram?: string | null
-          linkedin?: string | null
-          name?: string | null
-          phone?: string | null
-          progress_id: string
-          state?: string | null
-          timezone?: string | null
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          city?: string | null
-          country?: string | null
-          created_at?: string | null
-          ddi?: string | null
-          email?: string | null
-          id?: string
-          instagram?: string | null
-          linkedin?: string | null
-          name?: string | null
-          phone?: string | null
-          progress_id?: string
-          state?: string | null
-          timezone?: string | null
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "onboarding_personal_info_progress_id_fkey"
-            columns: ["progress_id"]
             isOneToOne: false
             referencedRelation: "onboarding_progress"
             referencedColumns: ["id"]
@@ -1095,11 +551,9 @@ export type Database = {
         Row: {
           completed_at: string | null
           completed_modules: number[] | null
-          completion_data: Json | null
           created_at: string
           current_module: number
           id: string
-          implementation_status: string | null
           is_completed: boolean
           last_activity: string
           solution_id: string
@@ -1108,11 +562,9 @@ export type Database = {
         Insert: {
           completed_at?: string | null
           completed_modules?: number[] | null
-          completion_data?: Json | null
           created_at?: string
           current_module?: number
           id?: string
-          implementation_status?: string | null
           is_completed?: boolean
           last_activity?: string
           solution_id: string
@@ -1121,11 +573,9 @@ export type Database = {
         Update: {
           completed_at?: string | null
           completed_modules?: number[] | null
-          completion_data?: Json | null
           created_at?: string
           current_module?: number
           id?: string
-          implementation_status?: string | null
           is_completed?: boolean
           last_activity?: string
           solution_id?: string
@@ -1134,41 +584,6 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "progress_solution_id_fkey"
-            columns: ["solution_id"]
-            isOneToOne: false
-            referencedRelation: "solutions"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      solution_certificates: {
-        Row: {
-          certificate_data: Json | null
-          created_at: string | null
-          id: string
-          issued_at: string | null
-          solution_id: string | null
-          user_id: string | null
-        }
-        Insert: {
-          certificate_data?: Json | null
-          created_at?: string | null
-          id?: string
-          issued_at?: string | null
-          solution_id?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          certificate_data?: Json | null
-          created_at?: string | null
-          id?: string
-          issued_at?: string | null
-          solution_id?: string | null
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "solution_certificates_solution_id_fkey"
             columns: ["solution_id"]
             isOneToOne: false
             referencedRelation: "solutions"
@@ -1420,15 +835,12 @@ export type Database = {
       }
       solutions: {
         Row: {
-          category: Database["public"]["Enums"]["solution_category"]
-          checklist_items: Json | null
-          completion_requirements: Json | null
+          category: string
           created_at: string
           description: string
-          difficulty: Database["public"]["Enums"]["difficulty_level"]
+          difficulty: string
           estimated_time: number | null
           id: string
-          implementation_steps: Json | null
           published: boolean
           related_solutions: string[] | null
           slug: string
@@ -1439,15 +851,12 @@ export type Database = {
           updated_at: string
         }
         Insert: {
-          category: Database["public"]["Enums"]["solution_category"]
-          checklist_items?: Json | null
-          completion_requirements?: Json | null
+          category: string
           created_at?: string
           description: string
-          difficulty: Database["public"]["Enums"]["difficulty_level"]
+          difficulty: string
           estimated_time?: number | null
           id?: string
-          implementation_steps?: Json | null
           published?: boolean
           related_solutions?: string[] | null
           slug: string
@@ -1458,15 +867,12 @@ export type Database = {
           updated_at?: string
         }
         Update: {
-          category?: Database["public"]["Enums"]["solution_category"]
-          checklist_items?: Json | null
-          completion_requirements?: Json | null
+          category?: string
           created_at?: string
           description?: string
-          difficulty?: Database["public"]["Enums"]["difficulty_level"]
+          difficulty?: string
           estimated_time?: number | null
           id?: string
-          implementation_steps?: Json | null
           published?: boolean
           related_solutions?: string[] | null
           slug?: string
@@ -2081,14 +1487,12 @@ export type Database = {
       }
     }
     Enums: {
-      difficulty_level: "beginner" | "intermediate" | "advanced"
       notification_type:
         | "status_change"
         | "new_comment"
         | "new_vote"
         | "comment_reply"
         | "admin_response"
-      solution_category: "revenue" | "operational" | "strategic"
       suggestion_status:
         | "new"
         | "under_review"
@@ -2212,7 +1616,6 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      difficulty_level: ["beginner", "intermediate", "advanced"],
       notification_type: [
         "status_change",
         "new_comment",
@@ -2220,7 +1623,6 @@ export const Constants = {
         "comment_reply",
         "admin_response",
       ],
-      solution_category: ["revenue", "operational", "strategic"],
       suggestion_status: [
         "new",
         "under_review",

@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Solution } from "@/types/supabaseTypes";
+import { Solution } from "@/lib/supabase";
 import { SolutionFormValues } from "@/components/admin/solution/form/solutionFormSchema";
 import TabHeader from "./TabHeader";
 import TabBasedNavigation from "./components/TabBasedNavigation";

@@ -20,21 +20,21 @@ export const TableActions: React.FC<TableActionsProps> = ({
       <Button 
         variant="outline" 
         size="sm"
-        onClick={() => navigate(`/solutions/${solutionId}`)}
+        onClick={() => navigate(`/solution/${solutionId}`)}
       >
         <Eye className="h-4 w-4" />
       </Button>
       <Button 
         variant="outline" 
         size="sm"
-        onClick={() => navigate(`/admin/solutions/${solutionId}`)}
+        onClick={() => navigate(`/admin/solution/${solutionId}`)}
       >
         <Edit className="h-4 w-4" />
       </Button>
       <Button 
         variant="outline" 
         size="sm"
-        onClick={() => navigate(`/admin/analytics/${solutionId}`)}
+        onClick={() => navigate(`/admin/metrics/${solutionId}`)}
       >
         <BarChart2 className="h-4 w-4" />
       </Button>

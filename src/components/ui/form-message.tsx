@@ -1,45 +1,59 @@
 
-import { cn } from "@/lib/utils";
 import React from "react";
-import { CheckCircle, AlertCircle } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { AlertCircle, CheckCircle } from "lucide-react";
 
 interface FormMessageProps {
-  type?: "success" | "error" | "warning" | "info";
+  type?: "error" | "success" | "warning" | "info";
   message?: string;
+  children?: React.ReactNode;
   className?: string;
 }
 
 export const FormMessage: React.FC<FormMessageProps> = ({
   type = "error",
   message,
+  children,
   className,
 }) => {
-  if (!message) return null;
+  if (!message && !children) return null;
 
-  const iconMap = {
-    success: <CheckCircle className="h-4 w-4" />,
-    error: <AlertCircle className="h-4 w-4" />,
-    warning: <AlertCircle className="h-4 w-4" />,
-    info: <AlertCircle className="h-4 w-4" />,
+  const content = message || children;
+  
+  const getTypeStyles = () => {
+    switch (type) {
+      case "error":
+        return "text-red-500 flex items-center";
+      case "success":
+        return "text-green-600 flex items-center";
+      case "warning":
+        return "text-amber-500 flex items-center";
+      case "info":
+        return "text-blue-500 flex items-center";
+      default:
+        return "text-gray-500 flex items-center";
+    }
   };
 
-  const colorMap = {
-    success: "text-green-500",
-    error: "text-red-500",
-    warning: "text-yellow-500",
-    info: "text-blue-500",
+  const getIcon = () => {
+    switch (type) {
+      case "error":
+        return <AlertCircle className="h-3 w-3 mr-1.5" />;
+      case "success":
+        return <CheckCircle className="h-3 w-3 mr-1.5" />;
+      case "warning":
+        return <AlertCircle className="h-3 w-3 mr-1.5" />;
+      case "info":
+        return <AlertCircle className="h-3 w-3 mr-1.5" />;
+      default:
+        return null;
+    }
   };
 
   return (
-    <div
-      className={cn(
-        "flex items-center gap-2 text-sm mt-1",
-        colorMap[type],
-        className
-      )}
-    >
-      {iconMap[type]}
-      <span>{message}</span>
-    </div>
+    <p className={cn("text-xs mt-1", getTypeStyles(), className)}>
+      {getIcon()}
+      {content}
+    </p>
   );
 };

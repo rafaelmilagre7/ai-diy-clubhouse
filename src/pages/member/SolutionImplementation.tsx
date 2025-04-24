@@ -1,6 +1,6 @@
 
-import React, { useState, useEffect, useRef } from "react";
-import { useModuleImplementation } from "@/hooks/implementation/useModuleImplementation";
+import React, { useEffect, useState } from "react";
+import { useModuleImplementation } from "@/hooks/useModuleImplementation";
 import LoadingScreen from "@/components/common/LoadingScreen";
 import { ImplementationHeader } from "@/components/implementation/ImplementationHeader";
 import { ImplementationNotFound } from "@/components/implementation/ImplementationNotFound";
@@ -16,13 +16,8 @@ import { useSolutionCompletion } from "@/hooks/implementation/useSolutionComplet
 import { useRealtimeComments } from "@/hooks/implementation/useRealtimeComments";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { ImplementationTabsNavigation } from "@/components/implementation/ImplementationTabsNavigation";
-import ErrorBoundary from "@/components/ErrorBoundary";
 
 const SolutionImplementation = () => {
-  const initialLoadRef = useRef(true);
-  const loadAttemptRef = useRef(0);
-  
-  // Carregar dados do módulo
   const {
     solution,
     modules,
@@ -32,11 +27,9 @@ const SolutionImplementation = () => {
     progress
   } = useModuleImplementation();
   
-  // Estado da aba ativa
   const [activeTab, setActiveTab] = useState("tools");
-  const { log, logError } = useLogging("SolutionImplementation");
+  const { log, logError } = useLogging();
   
-  // Funcionalidade de conclusão
   const {
     isCompleting,
     isCompleted,
@@ -49,124 +42,105 @@ const SolutionImplementation = () => {
     setCompletedModules: () => {}
   });
   
-  // IDs para comentários em tempo real
   const solutionId = solution?.id || "";
   const moduleId = currentModule?.id || "";
   
-  // Controle de comentários em tempo real
   const enableRealtimeComments = !!solution && 
                                 !!currentModule && 
                                 activeTab === "comments";
   
   useRealtimeComments(solutionId, moduleId, enableRealtimeComments);
   
-  // Efeito para registrar primeira carga
   useEffect(() => {
-    if (initialLoadRef.current && !loading) {
-      initialLoadRef.current = false;
-      
-      if (solution) {
-        log("Página de implementação carregada com sucesso", {
-          solution_id: solution.id,
-          solution_title: solution.title,
-          module_count: modules?.length
-        });
-      }
+    if (activeTab === "comments" && solution && currentModule) {
+      log("Aba de comentários ativada", { 
+        solutionId: solution.id, 
+        moduleId: currentModule.id
+      });
     }
-  }, [loading, solution, modules, log]);
+  }, [activeTab, solution, currentModule, log]);
   
-  // Função para completar implementação
   const onComplete = async () => {
-    try {
-      if (!progress?.id) {
-        log("Progresso não encontrado, não é possível completar");
-        return;
-      }
-      await handleConfirmImplementation();
-    } catch (error) {
-      logError("Erro ao confirmar implementação", { error });
+    const success = await handleConfirmImplementation();
+    if (success) {
+      log("Implementation completed successfully", { solution_id: solution?.id });
     }
   };
   
-  // Verificar carregamento com limite de tentativas
-  if (loading && loadAttemptRef.current < 3) {
-    loadAttemptRef.current++;
+  useEffect(() => {
+    if (currentModule && solution) {
+      log("Module loaded", { 
+        solution_id: solution.id,
+        solution_title: solution.title,
+        module_id: currentModule.id,
+        module_title: currentModule.title,
+        module_type: currentModule.type,
+        has_content: !!currentModule.content,
+        content_keys: currentModule.content ? Object.keys(currentModule.content) : []
+      });
+    }
+  }, [currentModule, solution, log]);
+  
+  if (loading) {
     return <LoadingScreen />;
   }
   
-  // Se não encontrou solução
   if (!solution) {
-    logError("Solução não encontrada na implementação");
+    const errorMsg = "Solution not found";
+    logError("Implementation not found", { error: errorMsg, solution_id: solution?.id });
     return <ImplementationNotFound />;
   }
   
-  // Validar se temos um módulo atual
-  if (!currentModule) {
-    logError("Módulo atual não encontrado");
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-[#f8fdff] via-[#f0fafe] to-[#edf6fb] pb-16 flex items-center justify-center">
-        <div className="container max-w-4xl py-4 md:py-6">
-          <GlassCard className="p-6 md:p-8">
-            <h2 className="text-xl font-medium mb-4">Módulo não encontrado</h2>
-            <p>Não foi possível encontrar o módulo solicitado para esta solução.</p>
-          </GlassCard>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <ErrorBoundary>
-      <div className="min-h-screen bg-gradient-to-br from-[#f8fdff] via-[#f0fafe] to-[#edf6fb] pb-16">
-        <div className="container max-w-4xl py-4 md:py-6 animate-fade-in">
-          <GlassCard className="p-0 md:p-0 transition-all duration-300 shadow-xl border border-[#0ABAB5]/10 overflow-hidden">
-            <ImplementationHeader solution={solution} />
-            
-            <div className="mt-0 px-4 md:px-6 pb-6">
-              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <ImplementationTabsNavigation activeTab={activeTab} setActiveTab={setActiveTab} />
+    <div className="min-h-screen bg-gradient-to-br from-[#f8fdff] via-[#f0fafe] to-[#edf6fb] pb-16">
+      <div className="container max-w-4xl py-4 md:py-6 animate-fade-in">
+        <GlassCard className="p-0 md:p-0 transition-all duration-300 shadow-xl border border-[#0ABAB5]/10 overflow-hidden">
+          <ImplementationHeader solution={solution} />
+          
+          <div className="mt-0 px-4 md:px-6 pb-6">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <ImplementationTabsNavigation activeTab={activeTab} setActiveTab={setActiveTab} />
+              
+              <div className="bg-white/50 rounded-xl p-4 md:p-6 border border-[#0ABAB5]/5 min-h-[30vh]">
+                <TabsContent value="tools" className="mt-0">
+                  <ModuleContentTools module={currentModule} />
+                </TabsContent>
                 
-                <div className="bg-white/50 rounded-xl p-4 md:p-6 border border-[#0ABAB5]/5 min-h-[30vh]">
-                  <TabsContent value="tools" className="mt-0">
-                    <ModuleContentTools module={currentModule} />
-                  </TabsContent>
-                  
-                  <TabsContent value="materials" className="mt-0">
-                    <ModuleContentMaterials module={currentModule} />
-                  </TabsContent>
-                  
-                  <TabsContent value="videos" className="mt-0">
-                    <ModuleContentVideos module={currentModule} />
-                  </TabsContent>
-                  
-                  <TabsContent value="checklist" className="mt-0">
-                    <ModuleContentChecklist module={currentModule} />
-                  </TabsContent>
-                  
-                  <TabsContent value="comments" className="mt-0">
-                    {solution && currentModule && (
-                      <CommentsSection 
-                        solutionId={solution.id} 
-                        moduleId={currentModule.id} 
-                      />
-                    )}
-                  </TabsContent>
-                  
-                  <TabsContent value="complete" className="mt-0">
-                    <ImplementationComplete 
-                      solution={solution} 
-                      onComplete={onComplete} 
-                      isCompleting={isCompleting}
-                      isCompleted={isCompleted}
+                <TabsContent value="materials" className="mt-0">
+                  <ModuleContentMaterials module={currentModule} />
+                </TabsContent>
+                
+                <TabsContent value="videos" className="mt-0">
+                  <ModuleContentVideos module={currentModule} />
+                </TabsContent>
+                
+                <TabsContent value="checklist" className="mt-0">
+                  <ModuleContentChecklist module={currentModule} />
+                </TabsContent>
+                
+                <TabsContent value="comments" className="mt-0">
+                  {solution && currentModule && (
+                    <CommentsSection 
+                      solutionId={solution.id} 
+                      moduleId={currentModule.id} 
                     />
-                  </TabsContent>
-                </div>
-              </Tabs>
-            </div>
-          </GlassCard>
-        </div>
+                  )}
+                </TabsContent>
+                
+                <TabsContent value="complete" className="mt-0">
+                  <ImplementationComplete 
+                    solution={solution} 
+                    onComplete={onComplete} 
+                    isCompleting={isCompleting}
+                    isCompleted={isCompleted}
+                  />
+                </TabsContent>
+              </div>
+            </Tabs>
+          </div>
+        </GlassCard>
       </div>
-    </ErrorBoundary>
+    </div>
   );
 };
 

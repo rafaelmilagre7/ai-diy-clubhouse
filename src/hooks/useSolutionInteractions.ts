@@ -4,60 +4,28 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
-import { useLogging } from "@/hooks/useLogging";
 import { toast } from "sonner";
 
 export const useSolutionInteractions = (solutionId: string | undefined, progress: any) => {
   const { user } = useAuth();
   const { toast: uiToast } = useToast();
   const navigate = useNavigate();
-  const { log, logError } = useLogging("useSolutionInteractions");
   
   const [initializing, setInitializing] = useState(false);
   
-  const startImplementation = async (): Promise<void> => {
-    if (!user) {
-      uiToast({
-        title: "Autenticação necessária",
-        description: "Você precisa estar logado para implementar esta solução",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    if (!solutionId) {
-      uiToast({
-        title: "Erro",
-        description: "ID da solução não encontrado",
-        variant: "destructive"
-      });
+  const startImplementation = async () => {
+    if (!user || !solutionId) {
+      toast.error("Você precisa estar logado para implementar esta solução");
       return;
     }
     
     try {
       setInitializing(true);
-      log("Iniciando implementação da solução", { solutionId });
-      
-      // Verificar se a solução existe antes de prosseguir
-      const { data: solutionData, error: solutionError } = await supabase
-        .from("solutions")
-        .select("id, title")
-        .eq("id", solutionId)
-        .maybeSingle();
-        
-      if (solutionError || !solutionData) {
-        logError("Erro ao verificar solução", { error: solutionError });
-        uiToast({
-          title: "Solução não encontrada",
-          description: "Não foi possível encontrar a solução solicitada.",
-          variant: "destructive"
-        });
-        return;
-      }
+      console.log("Iniciando implementação da solução:", solutionId);
       
       // If there's no progress record yet, create one
       if (!progress) {
-        log("Criando novo registro de progresso", { userId: user.id, solutionId });
+        console.log("Criando novo registro de progresso");
         const { data, error } = await supabase
           .from("progress")
           .insert({
@@ -65,32 +33,28 @@ export const useSolutionInteractions = (solutionId: string | undefined, progress
             solution_id: solutionId,
             current_module: 0,
             is_completed: false,
-            completed_modules: [], 
+            completed_modules: [], // Initialize as empty array
             last_activity: new Date().toISOString(),
           })
           .select()
           .single();
         
         if (error) {
-          logError("Erro ao criar progresso", { error });
-          uiToast({
-            title: "Erro ao criar progresso",
-            description: "Ocorreu um erro ao tentar iniciar a implementação.",
-            variant: "destructive"
-          });
-          return;
+          console.error("Erro ao criar progresso:", error);
+          throw error;
         }
         
-        log("Progresso criado com sucesso", { data });
+        console.log("Progresso criado com sucesso:", data);
       } else {
-        log("Usando progresso existente", { progress });
+        console.log("Usando progresso existente:", progress);
       }
       
-      // Navegar para implementação
-      log("Redirecionando para", { path: `/implement/${solutionId}/0` });
+      // Navigate directly to the implementation page
+      toast.success("Redirecionando para a implementação...");
+      console.log("Redirecionando para /implement/" + solutionId + "/0");
       navigate(`/implement/${solutionId}/0`);
     } catch (error) {
-      logError("Erro ao iniciar implementação", { error });
+      console.error("Erro ao iniciar implementação:", error);
       uiToast({
         title: "Erro ao iniciar implementação",
         description: "Ocorreu um erro ao tentar iniciar a implementação da solução.",
@@ -101,43 +65,27 @@ export const useSolutionInteractions = (solutionId: string | undefined, progress
     }
   };
   
-  const continueImplementation = async (): Promise<void> => {
-    if (!solutionId) {
-      uiToast({
-        title: "Erro",
-        description: "ID da solução não encontrado",
-        variant: "destructive"
-      });
+  const continueImplementation = () => {
+    if (!solutionId || !progress) {
+      toast.error("Não foi possível continuar a implementação");
       return;
     }
     
-    if (!progress) {
-      // Se não há progresso, iniciar como novo
-      await startImplementation();
-      return;
-    }
-    
-    try {
-      // Navigate directly to the implementation page
-      const moduleIdx = progress.current_module || 0;
-      log("Continuando implementação no módulo", { moduleIdx });
-      navigate(`/implement/${solutionId}/${moduleIdx}`);
-    } catch (error) {
-      logError("Erro ao continuar implementação", { error });
-      uiToast({
-        title: "Erro ao continuar implementação",
-        description: "Ocorreu um erro ao continuar a implementação da solução.",
-        variant: "destructive"
-      });
-    }
+    // Navigate directly to the implementation page
+    console.log("Continuando implementação no módulo:", progress.current_module);
+    toast.success("Redirecionando para onde você parou...");
+    console.log("Redirecionando para /implement/" + solutionId + "/" + (progress.current_module || 0));
+    navigate(`/implement/${solutionId}/${progress.current_module || 0}`);
   };
   
-  const toggleFavorite = async (): Promise<void> => {
-    // Implementação futura
+  const toggleFavorite = () => {
+    toast.success("Solução adicionada aos favoritos!");
+    // Implementação futura para favoritar soluções
   };
   
-  const downloadMaterials = async (): Promise<void> => {
-    // Implementação futura
+  const downloadMaterials = () => {
+    toast.success("Baixando materiais de apoio...");
+    // Implementação futura para download de materiais
   };
   
   return {

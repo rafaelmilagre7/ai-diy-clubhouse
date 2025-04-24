@@ -1,28 +1,18 @@
 
-import React, { useEffect } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Home, LogOut, ArrowLeft } from "lucide-react";
+import { Home, LogOut } from "lucide-react";
 import { toast } from "sonner";
 
-export const NotFound: React.FC = () => {
+const NotFound = () => {
   const location = useLocation();
-  const navigate = useNavigate();
 
   useEffect(() => {
     console.error(
-      "404 Error: Usuário tentou acessar rota inexistente:",
+      "404 Error: User attempted to access non-existent route:",
       location.pathname
     );
-    
-    // Se estamos em uma rota de solução, mostrar um toast informativo específico
-    if (location.pathname.includes('/solution/')) {
-      toast.error("Solução não encontrada. Verifique o ID da solução ou navegue para todas as soluções.");
-    }
-    // Se estamos em uma rota de onboarding, mostrar um toast informativo
-    else if (location.pathname.includes('/onboarding/')) {
-      toast.error("Página de onboarding não encontrada. Redirecionando para opções válidas...");
-    }
   }, [location.pathname]);
 
   const handleLogout = () => {
@@ -39,45 +29,26 @@ export const NotFound: React.FC = () => {
     }
   };
 
-  const handleRedirectToSolutions = () => {
-    navigate('/solutions');
-  };
-  
-  const handleGoBack = () => {
-    navigate(-1); // Volta para a página anterior
-  };
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="text-center bg-white p-8 rounded-lg shadow-md max-w-md w-full">
+      <div className="text-center bg-white p-8 rounded-lg shadow-md">
         <h1 className="text-6xl font-bold mb-4 text-gray-800">404</h1>
-        <p className="text-xl text-gray-600 mb-2">Oops! Página não encontrada</p>
-        <p className="text-gray-500 mb-6 text-sm">
-          A URL que você está tentando acessar ({location.pathname}) não existe.
-        </p>
+        <p className="text-xl text-gray-600 mb-6">Oops! Página não encontrada</p>
         <div className="flex flex-col sm:flex-row justify-center gap-4">
           <Button 
-            className="flex items-center gap-2 bg-[#0ABAB5] hover:bg-[#099388]" 
-            onClick={handleRedirectToSolutions}
+            className="flex items-center gap-2" 
+            onClick={() => window.location.href = '/'}
           >
             <Home className="h-4 w-4" />
-            Soluções
+            Voltar para o Início
           </Button>
           <Button 
-            variant="outline" 
-            className="flex items-center gap-2 border-[#0ABAB5] text-[#0ABAB5]"
-            onClick={handleGoBack}
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Voltar
-          </Button>
-          <Button 
-            variant="outline" 
-            className="flex items-center gap-2 border-gray-300 text-gray-600"
+            variant="destructive" 
+            className="flex items-center gap-2"
             onClick={handleLogout}
           >
             <LogOut className="h-4 w-4" />
-            Login
+            Ir para Login
           </Button>
         </div>
       </div>

@@ -1,5 +1,5 @@
 
-import { PersonalInfo } from "@/types/onboarding";
+import { PersonalInfoData } from "@/types/onboarding";
 
 // Validador simples para formato de telefone brasileiro
 export const validateBrazilianPhone = (phone: string): boolean => {
@@ -21,7 +21,7 @@ export const validateInstagramHandle = (handle: string): boolean => {
   return handle.includes('instagram.com') || handle.startsWith('@');
 };
 
-export const validatePersonalInfoForm = (data: PersonalInfo) => {
+export const validatePersonalInfoForm = (data: PersonalInfoData) => {
   const errors: Record<string, string> = {};
 
   // Validar cidade e estado (obrigatórios)

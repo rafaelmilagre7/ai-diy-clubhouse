@@ -1,5 +1,5 @@
 
-import { UserRole } from '@/types/supabaseTypes';
+import { UserRole } from '@/lib/supabase';
 import { supabase } from '@/lib/supabase';
 
 /**

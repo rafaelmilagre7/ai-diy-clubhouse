@@ -1,51 +1,38 @@
 
-import { Toaster } from 'sonner';
-import AppRoutes from './routes';
-import { AuthProvider } from './contexts/auth';
-import ErrorBoundary from './components/ErrorBoundary';
-import { LoggingProvider } from './hooks/useLogging.tsx';
+import React from 'react';
+import { BrowserRouter } from 'react-router-dom';
+import { Toaster } from './components/ui/sonner';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+import { LoggingProvider } from './hooks/useLogging';
+import { AuthProvider } from './contexts/auth';
+import AppRoutes from './components/routing/AppRoutes';
 
-// Criar uma instância do QueryClient para toda a aplicação
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutes
       retry: 1,
-      refetchOnWindowFocus: false,
-      staleTime: 5 * 60 * 1000, // 5 minutos antes de considerar os dados obsoletos
-      gcTime: 10 * 60 * 1000, // 10 minutos antes de remover dados do cache
     },
   },
 });
 
-function App() {
+const App = () => {
+  console.log("Renderizando App.tsx");
+  
   return (
-    <ErrorBoundary>
-      <QueryClientProvider client={queryClient}>
-        <LoggingProvider>
-          <AuthProvider>
+    <QueryClientProvider client={queryClient}>
+      <LoggingProvider>
+        <AuthProvider>
+          <BrowserRouter>
             <AppRoutes />
-            {/* Usando apenas um toaster para toda a aplicação */}
-            <Toaster 
-              position="top-right" 
-              richColors 
-              closeButton 
-              duration={3000} // 3 segundos de duração padrão
-              toastOptions={{
-                className: 'toast-custom-class',
-                style: {
-                  background: 'white',
-                  color: 'black',
-                }
-              }}
-              visibleToasts={2}
-              pauseWhenPageIsHidden
-            />
-          </AuthProvider>
-        </LoggingProvider>
-      </QueryClientProvider>
-    </ErrorBoundary>
+            <Toaster position="top-right" />
+          </BrowserRouter>
+        </AuthProvider>
+      </LoggingProvider>
+      <ReactQueryDevtools initialIsOpen={false} />
+    </QueryClientProvider>
   );
-}
+};
 
 export default App;

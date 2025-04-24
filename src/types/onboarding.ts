@@ -1,92 +1,112 @@
-
-export interface OnboardingFormData {
-  // Dados pessoais
-  name?: string;
-  email?: string;
-  phone?: string;
-  ddi?: string;
-  linkedin?: string;
-  instagram?: string;
-  country?: string;
-  state?: string;
-  city?: string;
-  timezone?: string;
-  
-  // Dados profissionais
-  company_name?: string;
-  company_size?: string;
-  company_sector?: string;
-  company_website?: string;
-  current_position?: string;
-  annual_revenue?: string;
-  
-  // Contexto do negócio
-  business_model?: string;
-  business_challenges?: string[];
-  short_term_goals?: string[];
-  medium_term_goals?: string[];
-  important_kpis?: string[];
-  additional_context?: string;
-  
-  // Objetivos de negócio
-  primary_goal?: string;
-  expected_outcomes?: string[];
-  expected_outcome_30days?: string;
-  timeline?: string;
-  priority_solution_type?: string;
-  how_implement?: string;
-  week_availability?: string;
-  live_interest?: number;
-  content_formats?: string[];
-  
-  // Experiência com IA
-  knowledge_level?: string;
-  previous_tools?: string[];
-  has_implemented?: string;
-  desired_ai_areas?: string[];
-  completed_formation?: boolean;
-  is_member_for_month?: boolean;
-  nps_score?: number;
-  improvement_suggestions?: string;
-  
-  // Personalização da experiência
-  interests?: string[];
-  time_preference?: string[];
-  available_days?: string[];
-  networking_availability?: number;
-  skills_to_share?: string[];
-  mentorship_topics?: string[];
-  
-  // Complementares
-  how_found_us?: string;
-  referred_by?: string;
-  authorize_case_usage?: boolean;
-  interested_in_interview?: boolean;
-  priority_topics?: string[];
+export interface OnboardingData {
+  // 1. Dados Pessoais
+  personal_info: {
+    name?: string;
+    role?: string;
+    company_size?: string;
+    email?: string;
+    phone?: string;
+    ddi?: string;
+    linkedin?: string;
+    instagram?: string;
+    country?: string;
+    state?: string;
+    city?: string;
+    timezone?: string;
+  };
+  // 2. Dados Profissionais 
+  professional_info: {
+    company_name?: string;
+    company_size?: string;
+    company_sector?: string;
+    company_website?: string;
+    current_position?: string;
+    annual_revenue?: string;
+    metadata?: Record<string, any>;
+  };
+  // 3. Contexto do negócio
+  business_context: {
+    business_model?: string;
+    business_challenges?: string[];
+    short_term_goals?: string[];
+    medium_term_goals?: string[];
+    important_kpis?: string[];
+    additional_context?: string;
+  };
+  // 4. Objetivos de negócio / metas
+  business_goals: {
+    primary_goal?: string;
+    expected_outcomes?: string[];
+    expected_outcome_30days?: string; // Campo individual para verificação
+    timeline?: string;
+    priority_solution_type?: string;
+    how_implement?: string;
+    week_availability?: string;
+    live_interest?: number;
+    content_formats?: string[];
+  };
+  // 5. Experiência com IA
+  ai_experience: {
+    knowledge_level?: string;
+    previous_tools?: string[];
+    has_implemented?: string; // "sim" | "nao" ou "true" | "false"
+    desired_ai_areas?: string[]; // Agora array
+    completed_formation?: boolean;
+    is_member_for_month?: boolean;
+    nps_score?: number;
+    improvement_suggestions?: string;
+  };
+  // 6. Personalização da experiência
+  experience_personalization: {
+    interests?: string[];
+    time_preference?: string[];
+    available_days?: string[];
+    networking_availability?: number;
+    skills_to_share?: string[];
+    mentorship_topics?: string[];
+  };
+  // 7. Complementares
+  complementary_info: {
+    how_found_us?: string;
+    referred_by?: string;
+    authorize_case_usage?: boolean;
+    interested_in_interview?: boolean;
+    priority_topics?: string[];
+  };
+  // Campos para novas perguntas futuras 
+  industry_focus?: {
+    sector?: string;
+    target_market?: string;
+    main_challenges?: string[];
+  };
+  resources_needs?: {
+    budget_range?: string;
+    team_size?: string;
+    tech_stack?: string[];
+  };
+  team_info?: {
+    decision_makers?: string[];
+    technical_expertise?: string;
+    training_needs?: string[];
+  };
+  implementation_preferences?: {
+    priority_areas?: string[];
+    implementation_speed?: string;
+    support_level?: string;
+  };
 }
 
-export interface OnboardingData extends OnboardingFormData {
-  id: string;
-  user_id: string;
-  current_step: string;
-  completed_steps: string[];
-  is_completed: boolean;
-  created_at: string;
-  updated_at: string;
-  
-  // Dados agrupados por seção
-  personal_info?: PersonalInfo;
-  professional_info?: ProfessionalDataInput;
-  business_context?: BusinessContext;
-  business_goals?: BusinessGoals;
-  ai_experience?: AIExperience;
-  experience_personalization?: ExperiencePersonalization;
-  complementary_info?: ComplementaryInfo;
-  
-  // Adicionando campos para compatibilidade
-  business_data?: any;
-  review?: any;
-  trail_generation?: any;
+export interface PersonalInfoData {
+  name: string;
+  email: string;
+  phone: string;
+  ddi?: string;
+  linkedin: string;
+  instagram: string;
+  country: string;
+  state: string;
+  city: string;
+  timezone: string;
 }
 
 export interface OnboardingProgress {
@@ -95,19 +115,19 @@ export interface OnboardingProgress {
   current_step: string;
   completed_steps: string[];
   is_completed: boolean;
-  personal_info?: PersonalInfo;
-  professional_info?: ProfessionalDataInput;
-  business_context?: BusinessContext;
-  business_goals?: BusinessGoals;
-  ai_experience?: AIExperience;
-  experience_personalization?: ExperiencePersonalization;
-  complementary_info?: ComplementaryInfo;
-  created_at: string;
-  updated_at: string;
+  personal_info: OnboardingData['personal_info'];
+  professional_info: OnboardingData['professional_info'];
+  business_context?: OnboardingData['business_context'];
+  business_goals: OnboardingData['business_goals'];
+  ai_experience: OnboardingData['ai_experience'];
+  experience_personalization: OnboardingData['experience_personalization'];
+  complementary_info: OnboardingData['complementary_info'];
+  industry_focus?: OnboardingData['industry_focus'];
+  resources_needs?: OnboardingData['resources_needs'];
+  team_info?: OnboardingData['team_info'];
+  implementation_preferences?: OnboardingData['implementation_preferences'];
   
-  // Adicionando campos para compatibilidade com o modelo existente
-  review?: any;
-  trail_generation?: any;
+  // Campos legacy que precisam ser mantidos para compatibilidade
   business_data?: any;
   company_name?: string;
   company_size?: string;
@@ -115,107 +135,35 @@ export interface OnboardingProgress {
   company_website?: string;
   current_position?: string;
   annual_revenue?: string;
+
+  // Propriedades para trilhas futuras
+  trail_solutions?: any[];
+  trail_generated_at?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface OnboardingStepProps {
+  onSubmit: (stepId: string, data: any) => Promise<void>;
+  isSubmitting: boolean;
+  isLastStep?: boolean;
+  onComplete?: () => void;
+  initialData?: any;
+  personalInfo?: OnboardingData['personal_info'];
 }
 
 export interface OnboardingStep {
   id: string;
   title: string;
-  description?: string;
+  section: string;
   path: string;
-  pathAlias?: string; // Adicionando suporte para rota alternativa
-  section?: keyof OnboardingProgress;
-  fields: Array<keyof OnboardingFormData>;
-  isCompleted?: (data: OnboardingFormData) => boolean;
 }
 
-export interface OnboardingStepProps {
-  onSubmit: (stepId: string, data: Partial<OnboardingData>) => void;
-  isSubmitting: boolean;
-  isLastStep?: boolean;
-  onComplete?: () => void;
-  initialData?: any;
-  personalInfo?: PersonalInfo;
-  onPrevious?: () => void;
-}
-
-// Interface para dados pessoais
-export interface PersonalInfo {
-  name?: string;
-  email?: string;
-  phone?: string;
-  ddi?: string;
-  linkedin?: string;
-  instagram?: string;
-  country?: string;
-  state?: string;
-  city?: string;
-  timezone?: string;
-}
-
-// Alias para PersonalInfo para compatibilidade em locais que usam PersonalInfoData
-export type PersonalInfoData = PersonalInfo;
-
-// Interface para dados profissionais
-export interface ProfessionalDataInput {
-  company_name?: string;
-  company_size?: string;
-  company_sector?: string;
+export type ProfessionalDataInput = {
+  company_name: string;
+  company_size: string;
+  company_sector: string;
   company_website?: string;
-  current_position?: string;
-  annual_revenue?: string;
-}
-
-// Interface para contexto de negócios
-export interface BusinessContext {
-  business_model?: string;
-  business_challenges?: string[];
-  short_term_goals?: string[];
-  medium_term_goals?: string[];
-  important_kpis?: string[];
-  additional_context?: string;
-}
-
-// Interface para objetivos de negócios
-export interface BusinessGoals {
-  primary_goal?: string;
-  expected_outcomes?: string[];
-  expected_outcome_30days?: string;
-  timeline?: string;
-  priority_solution_type?: string;
-  how_implement?: string;
-  week_availability?: string;
-  live_interest?: number;
-  content_formats?: string[];
-}
-
-// Interface para experiência com IA
-export interface AIExperience {
-  knowledge_level?: string;
-  previous_tools?: string[];
-  has_implemented?: string;
-  desired_ai_areas?: string[];
-  completed_formation?: boolean;
-  is_member_for_month?: boolean;
-  nps_score?: number;
-  improvement_suggestions?: string;
-}
-
-// Interface para personalização da experiência
-export interface ExperiencePersonalization {
-  interests?: string[];
-  time_preference?: string[];
-  available_days?: string[];
-  networking_availability?: number;
-  skills_to_share?: string[];
-  mentorship_topics?: string[];
-}
-
-// Interface para informações complementares
-export interface ComplementaryInfo {
-  how_found_us?: string;
-  referred_by?: string;
-  authorize_case_usage?: boolean;
-  interested_in_interview?: boolean;
-  priority_topics?: string[];
-}
-
+  current_position: string;
+  annual_revenue: string;
+};

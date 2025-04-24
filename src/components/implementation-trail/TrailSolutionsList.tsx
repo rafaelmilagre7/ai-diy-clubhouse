@@ -1,13 +1,12 @@
 
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { Solution } from "@/types/supabaseTypes";
+import { Solution } from "@/lib/supabase";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Star } from "lucide-react";
 
-// Estenda o tipo Solution para incluir os campos específicos do TrailSolution
 interface TrailSolution extends Solution {
   priority: number;
   justification: string;
