@@ -1,13 +1,15 @@
 
 import { useState, useEffect, useRef } from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
 import LoadingScreen from "@/components/common/LoadingScreen";
+import { toast } from "sonner";
 
 const RootRedirect = () => {
   const { user, profile, isAdmin, isLoading } = useAuth();
   const [timeoutExceeded, setTimeoutExceeded] = useState(false);
   const timeoutRef = useRef<number | null>(null);
+  const navigate = useNavigate();
   
   // Handle timing out the loading state
   useEffect(() => {
@@ -33,20 +35,13 @@ const RootRedirect = () => {
   // Debug para problemas de roteamento
   useEffect(() => {
     console.log("RootRedirect - Estado atual:", { 
-      user: !!user, 
+      user, 
       isAdmin, 
       isLoading, 
       timeoutExceeded,
-      path: window.location.pathname,
-      fullUrl: window.location.href
+      currentPath: window.location.pathname
     });
   }, [user, isAdmin, isLoading, timeoutExceeded]);
-  
-  // IMPORTANTE: Apenas redirecionar quando estamos na raiz exata "/"
-  if (window.location.pathname !== "/") {
-    console.log("RootRedirect: Não estamos na raiz, permitindo navegação normal");
-    return null;
-  }
   
   // Show loading screen during check
   if (isLoading && !timeoutExceeded) {
@@ -59,14 +54,14 @@ const RootRedirect = () => {
     return <Navigate to="/login" replace />;
   }
   
-  // Se for admin e estiver na raiz, redirecionar para área admin
+  // Se for admin, redirecionar para área admin
   if (isAdmin) {
-    console.log("RootRedirect: Usuário é admin e está na raiz, redirecionando para /admin");
+    console.log("RootRedirect: Usuário é admin, redirecionando para /admin");
     return <Navigate to="/admin" replace />;
   }
   
-  // Para usuários normais na raiz, redirecionar para o dashboard
-  console.log("RootRedirect: Usuário normal na raiz, redirecionando para /dashboard");
+  // Para usuários autenticados, redirecionar para o dashboard
+  console.log("RootRedirect: Usuário normal autenticado, redirecionando para /dashboard");
   return <Navigate to="/dashboard" replace />;
 };
 

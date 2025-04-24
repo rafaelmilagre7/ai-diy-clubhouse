@@ -15,13 +15,7 @@ export const ProtectedRoutes = ({ children }: ProtectedRoutesProps = {}) => {
   const [loadingTimeout, setLoadingTimeout] = useState(false);
   const timeoutRef = useRef<number | null>(null);
 
-  console.log("ProtectedRoutes state:", { 
-    user: !!user, 
-    isLoading, 
-    loadingTimeout,
-    path: location.pathname,
-    fullUrl: window.location.href
-  });
+  console.log("ProtectedRoutes state:", { user, isLoading, loadingTimeout });
   
   // Configurar timeout de carregamento
   useEffect(() => {
@@ -44,17 +38,6 @@ export const ProtectedRoutes = ({ children }: ProtectedRoutesProps = {}) => {
     };
   }, [isLoading, loadingTimeout]);
 
-  // Verificação especial para o dashboard, para diagnóstico do problema
-  useEffect(() => {
-    if (location.pathname === "/dashboard") {
-      console.log("ProtectedRoutes: Estamos na rota de dashboard!", {
-        user: !!user,
-        isLoading,
-        timeoutExceeded: loadingTimeout
-      });
-    }
-  }, [location.pathname, user, isLoading, loadingTimeout]);
-
   // Mostrar tela de carregamento enquanto verifica autenticação (mas apenas se o timeout não foi excedido)
   if (isLoading && !loadingTimeout) {
     return <LoadingScreen message="Verificando autenticação..." />;
@@ -62,13 +45,10 @@ export const ProtectedRoutes = ({ children }: ProtectedRoutesProps = {}) => {
 
   // Se o usuário não estiver autenticado, redireciona para a página de login
   if (!user) {
-    console.log("ProtectedRoutes: Usuário não autenticado, redirecionando para login");
     toast("Por favor, faça login para acessar esta página");
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  console.log("ProtectedRoutes: Usuário autenticado, renderizando conteúdo protegido");
-  
   // Usuário está autenticado, renderizar as rotas protegidas
   return children ? <>{children}</> : <Outlet />;
 };

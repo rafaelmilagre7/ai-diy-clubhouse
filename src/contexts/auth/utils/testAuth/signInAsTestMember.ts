@@ -11,9 +11,6 @@ export const signInAsTestMember = async (): Promise<void> => {
     // Clear any previous session first
     await supabase.auth.signOut();
     
-    // Pequena pausa para garantir que o logout foi concluído
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
     const { data, error } = await supabase.auth.signInWithPassword({
       email: TEST_MEMBER.email,
       password: TEST_MEMBER.password,
@@ -60,11 +57,8 @@ export const signInAsTestMember = async (): Promise<void> => {
         description: "Você está logado como um membro de teste.",
       });
       
-      // Resetar a aplicação e forçar redirecionamento para o dashboard
-      console.log("Redirecionando para o dashboard do membro");
-      localStorage.setItem('forceNavigateToDashboard', 'true');
-      
-      // Usar rotas diretas para melhor compatibilidade
+      // Usar window.location para forçar um refresh completo,
+      // garantindo que o estado de autenticação seja atualizado em toda a aplicação
       window.location.href = '/dashboard';
     }
   } catch (error) {

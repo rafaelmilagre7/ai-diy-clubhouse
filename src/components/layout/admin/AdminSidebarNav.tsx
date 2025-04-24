@@ -10,20 +10,17 @@ import {
   UserCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Separator } from "@/components/ui/separator";
-import { useState } from "react";
-import { toast } from "sonner";
 
 interface AdminSidebarNavProps {
   sidebarOpen: boolean;
 }
 
 export const AdminSidebarNav = ({ sidebarOpen }: AdminSidebarNavProps) => {
-  const navigate = useNavigate();
-  const [isRedirecting, setIsRedirecting] = useState(false);
+  const location = useLocation();
   
-  console.log("AdminSidebarNav renderizando, location:", window.location.pathname);
+  console.log("AdminSidebarNav renderizando, location:", location.pathname);
 
   const menuItems = [
     {
@@ -59,30 +56,7 @@ export const AdminSidebarNav = ({ sidebarOpen }: AdminSidebarNavProps) => {
   ];
 
   const isActive = (href: string) => {
-    return window.location.pathname === href || window.location.pathname.startsWith(href + '/');
-  };
-
-  const handleBackToDashboard = () => {
-    try {
-      setIsRedirecting(true);
-      console.log("Redirecionando para dashboard de membro");
-      
-      toast("Redirecionando para área de membro...");
-      
-      // Usar navigate primeiro para tentar transição via React Router
-      navigate("/dashboard", { replace: true });
-      
-      // Forçar um redirecionamento após uma pequena pausa para garantir que a navegação aconteça
-      setTimeout(() => {
-        window.location.href = "/dashboard";
-        setIsRedirecting(false);
-      }, 100);
-    } catch (error) {
-      console.error("Erro ao redirecionar:", error);
-      // Fallback: se falhar, fazer redirecionamento direto
-      window.location.href = "/dashboard";
-      setIsRedirecting(false);
-    }
+    return location.pathname === href || location.pathname.startsWith(href + '/');
   };
 
   return (
@@ -114,12 +88,12 @@ export const AdminSidebarNav = ({ sidebarOpen }: AdminSidebarNavProps) => {
             "w-full justify-start gap-2",
             !sidebarOpen && "justify-center"
           )}
-          onClick={handleBackToDashboard}
-          disabled={isRedirecting}
-          type="button"
+          asChild
         >
-          <ChevronLeft className="h-4 w-4" />
-          {sidebarOpen && <span>{isRedirecting ? "Redirecionando..." : "Voltar ao Dashboard"}</span>}
+          <Link to="/dashboard">
+            <ChevronLeft className="h-4 w-4" />
+            {sidebarOpen && <span>Voltar ao Dashboard</span>}
+          </Link>
         </Button>
       </div>
     </div>
