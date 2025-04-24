@@ -1,5 +1,5 @@
 
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
 import { useProgress } from "@/hooks/onboarding/useProgress";
 import { BusinessContextStep } from "@/components/onboarding/steps/BusinessContextStep";
@@ -11,15 +11,17 @@ const BusinessContext = () => {
   const { progress, isLoading, refreshProgress } = useProgress();
   const { saveStepData, currentStepIndex, steps } = useOnboardingSteps();
   const navigate = useNavigate();
+  const hasLoadedData = useRef(false);
 
-  // Carregar dados atualizados quando a página for carregada
+  // Carregar dados apenas uma vez quando a página for carregada
   useEffect(() => {
-    const loadData = async () => {
+    // Usar uma ref para garantir que os dados são carregados apenas uma vez
+    if (!hasLoadedData.current) {
       console.log("Carregando dados atualizados na página de contexto de negócio");
-      await refreshProgress();
-    };
-    
-    loadData();
+      refreshProgress().then(() => {
+        hasLoadedData.current = true;
+      });
+    }
   }, [refreshProgress]);
 
   // Calcular progresso para exibição
@@ -44,16 +46,13 @@ const BusinessContext = () => {
     try {
       console.log("Salvando dados de contexto de negócio:", data);
       
-      // Evitar múltiplos salvamentos simultâneos
-      setTimeout(() => {
-        // Formatar os dados com a estrutura esperada
-        const formattedData = {
-          business_context: data
-        };
-        
-        // Chamar saveStepData com o ID correto e os dados formatados
-        saveStepData("business_context", formattedData, true);
-      }, 100);
+      // Formatar os dados com a estrutura esperada
+      const formattedData = {
+        business_context: data
+      };
+      
+      // Chamar saveStepData com o ID correto e os dados formatados
+      await saveStepData("business_context", formattedData, true);
       
       // Verificar se a navegação automática funcionou
       setTimeout(() => {
@@ -69,7 +68,7 @@ const BusinessContext = () => {
     }
   };
 
-  if (isLoading) {
+  if (isLoading && !hasLoadedData.current) {
     return (
       <OnboardingLayout
         currentStep={3}

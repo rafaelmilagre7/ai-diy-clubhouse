@@ -97,7 +97,7 @@ export function normalizeField(field: any, fieldName: string = 'field'): any {
 /**
  * Normaliza dados de experiência com IA
  */
-export function normalizeAIExperience(data: any): any {
+export function normalizeAIExperience(data: any): Record<string, any> {
   // Caso base: se não tiver dados, retorna objeto vazio
   if (!data) return {};
   
@@ -112,7 +112,7 @@ export function normalizeAIExperience(data: any): any {
   }
   
   // Inicializar com valores padrão
-  const normalized = {
+  const normalized: Record<string, any> = {
     knowledge_level: '',
     previous_tools: [],
     has_implemented: '',
@@ -129,18 +129,18 @@ export function normalizeAIExperience(data: any): any {
       if (data[key] !== undefined) {
         if (key === 'previous_tools' || key === 'desired_ai_areas') {
           // Garantir que são arrays
-          normalized[key as keyof typeof normalized] = Array.isArray(data[key]) ? 
+          normalized[key] = Array.isArray(data[key]) ? 
             data[key] : 
             [data[key]].filter(Boolean);
         } else if (key === 'completed_formation' || key === 'is_member_for_month') {
           // Converter para boolean
-          normalized[key as keyof typeof normalized] = !!data[key];
+          normalized[key] = !!data[key];
         } else if (key === 'nps_score') {
           // Converter para número
-          normalized[key as keyof typeof normalized] = Number(data[key] || 0);
+          normalized[key] = Number(data[key] || 0);
         } else {
           // Outros campos
-          normalized[key as keyof typeof normalized] = data[key];
+          normalized[key] = data[key];
         }
       }
     });
@@ -152,7 +152,7 @@ export function normalizeAIExperience(data: any): any {
 /**
  * Normaliza dados de objetivos de negócio
  */
-export function normalizeBusinessGoals(data: any): any {
+export function normalizeBusinessGoals(data: any): Record<string, any> {
   // Caso base: se não tiver dados, retorna objeto vazio
   if (!data) return {};
   
@@ -167,7 +167,7 @@ export function normalizeBusinessGoals(data: any): any {
   }
   
   // Inicializar com valores padrão
-  const normalized = {
+  const normalized: Record<string, any> = {
     primary_goal: '',
     expected_outcomes: [],
     expected_outcome_30days: '',
@@ -184,15 +184,15 @@ export function normalizeBusinessGoals(data: any): any {
       if (data[key] !== undefined) {
         if (key === 'expected_outcomes' || key === 'content_formats') {
           // Garantir que são arrays
-          normalized[key as keyof typeof normalized] = Array.isArray(data[key]) ? 
+          normalized[key] = Array.isArray(data[key]) ? 
             data[key] : 
             [data[key]].filter(Boolean);
         } else if (key === 'live_interest') {
           // Converter para número
-          normalized[key as keyof typeof normalized] = Number(data[key] || 5);
+          normalized[key] = Number(data[key] || 5);
         } else {
           // Outros campos
-          normalized[key as keyof typeof normalized] = data[key];
+          normalized[key] = data[key];
         }
       }
     });
@@ -204,7 +204,7 @@ export function normalizeBusinessGoals(data: any): any {
 /**
  * Normaliza dados de personalização de experiência
  */
-export function normalizeExperiencePersonalization(data: any): any {
+export function normalizeExperiencePersonalization(data: any): Record<string, any> {
   // Caso base: se não tiver dados, retorna objeto vazio
   if (!data) return {};
   
@@ -219,7 +219,7 @@ export function normalizeExperiencePersonalization(data: any): any {
   }
   
   // Inicializar com valores padrão
-  const normalized = {
+  const normalized: Record<string, any> = {
     interests: [],
     time_preference: [],
     available_days: [],
@@ -235,15 +235,15 @@ export function normalizeExperiencePersonalization(data: any): any {
         if (key === 'interests' || key === 'time_preference' || key === 'available_days' || 
             key === 'skills_to_share' || key === 'mentorship_topics') {
           // Garantir que são arrays
-          normalized[key as keyof typeof normalized] = Array.isArray(data[key]) ? 
+          normalized[key] = Array.isArray(data[key]) ? 
             data[key] : 
             [data[key]].filter(Boolean);
         } else if (key === 'networking_availability') {
           // Converter para número
-          normalized[key as keyof typeof normalized] = Number(data[key] || 5);
+          normalized[key] = Number(data[key] || 5);
         } else {
           // Outros campos
-          normalized[key as keyof typeof normalized] = data[key];
+          normalized[key] = data[key];
         }
       }
     });

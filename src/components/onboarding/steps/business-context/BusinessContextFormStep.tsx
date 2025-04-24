@@ -1,4 +1,5 @@
-import React, { useEffect } from "react";
+
+import React, { useEffect, useRef, useCallback } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { BusinessModelField } from "./inputs/BusinessModelField";
 import { BusinessChallengesField } from "./inputs/BusinessChallengesField";
@@ -27,9 +28,11 @@ interface FormValues {
 
 export const BusinessContextFormStep: React.FC<BusinessContextFormStepProps> = ({ progress, onSave }) => {
   const navigate = useNavigate();
+  const formInitialized = useRef(false);
+  const submitting = useRef(false);
   
   // Obter dados iniciais do contexto de negócios da coluna correta
-  const getInitialData = (): FormValues => {
+  const getInitialData = useCallback((): FormValues => {
     if (!progress) return {
       business_model: "",
       business_challenges: [],
@@ -42,51 +45,61 @@ export const BusinessContextFormStep: React.FC<BusinessContextFormStepProps> = (
     // Usar business_context para acessar os dados existentes
     const contextData = progress.business_context || {};
     
-    console.log("Dados iniciais do contexto de negócios:", contextData);
-    
     return {
       business_model: contextData.business_model || "",
-      business_challenges: contextData.business_challenges || [],
-      short_term_goals: contextData.short_term_goals || [],
-      medium_term_goals: contextData.medium_term_goals || [],
-      important_kpis: contextData.important_kpis || [],
+      business_challenges: Array.isArray(contextData.business_challenges) ? contextData.business_challenges : [],
+      short_term_goals: Array.isArray(contextData.short_term_goals) ? contextData.short_term_goals : [],
+      medium_term_goals: Array.isArray(contextData.medium_term_goals) ? contextData.medium_term_goals : [],
+      important_kpis: Array.isArray(contextData.important_kpis) ? contextData.important_kpis : [],
       additional_context: contextData.additional_context || "",
     };
-  };
+  }, [progress]);
   
   const methods = useForm<FormValues>({
     defaultValues: getInitialData(),
   });
   
-  // Atualizar formulário quando os dados do progresso mudarem
+  // Atualizar formulário apenas quando os dados do progresso mudarem e apenas uma vez
   useEffect(() => {
-    if (progress) {
+    if (progress && !formInitialized.current) {
       const initialData = getInitialData();
-      console.log("Atualizando formulário com dados iniciais:", initialData);
+      console.log("Inicializando formulário com dados:", initialData);
       methods.reset(initialData);
+      formInitialized.current = true;
     }
-  }, [progress]);
+  }, [progress, getInitialData, methods]);
 
   const handleSubmit = async (data: FormValues) => {
+    // Evitar envios múltiplos simultâneos
+    if (submitting.current) {
+      console.log("Já existe um envio em andamento, ignorando");
+      return;
+    }
+    
     try {
+      submitting.current = true;
       console.log("Enviando dados do contexto do negócio:", data);
       
       // Validar que os dados obrigatórios estão preenchidos
       if (!data.business_model) {
         toast.error("Por favor, selecione um modelo de negócio");
+        submitting.current = false;
         return;
       }
       
       if (!data.business_challenges || data.business_challenges.length === 0) {
         toast.error("Por favor, selecione pelo menos um desafio de negócio");
+        submitting.current = false;
         return;
       }
       
       // Chamar onSave com os dados completos e validados
       await onSave(data);
+      // Não definir submitting como false aqui, pois deve haver um redirecionamento após o salvamento
     } catch (error) {
       console.error("Erro ao salvar dados do contexto do negócio:", error);
       toast.error("Erro ao salvar dados. Tente novamente.");
+      submitting.current = false;
     }
   };
 
