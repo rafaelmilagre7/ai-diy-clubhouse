@@ -10,7 +10,7 @@ import {
   UserCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Separator } from "@/components/ui/separator";
 
 interface AdminSidebarNavProps {
@@ -19,6 +19,7 @@ interface AdminSidebarNavProps {
 
 export const AdminSidebarNav = ({ sidebarOpen }: AdminSidebarNavProps) => {
   const location = useLocation();
+  const navigate = useNavigate();
   
   console.log("AdminSidebarNav renderizando, location:", location.pathname);
 
@@ -59,6 +60,12 @@ export const AdminSidebarNav = ({ sidebarOpen }: AdminSidebarNavProps) => {
     return location.pathname === href || location.pathname.startsWith(href + '/');
   };
 
+  const handleBackToDashboard = (e: React.MouseEvent) => {
+    e.preventDefault();
+    console.log("Clique no botão 'Voltar ao Dashboard' detectado");
+    navigate("/dashboard");
+  };
+
   return (
     <div className="space-y-4 py-4">
       <div className="px-3 space-y-1">
@@ -88,12 +95,10 @@ export const AdminSidebarNav = ({ sidebarOpen }: AdminSidebarNavProps) => {
             "w-full justify-start gap-2",
             !sidebarOpen && "justify-center"
           )}
-          asChild
+          onClick={handleBackToDashboard}
         >
-          <Link to="/dashboard">
-            <ChevronLeft className="h-4 w-4" />
-            {sidebarOpen && <span>Voltar ao Dashboard</span>}
-          </Link>
+          <ChevronLeft className="h-4 w-4" />
+          {sidebarOpen && <span>Voltar ao Dashboard</span>}
         </Button>
       </div>
     </div>
