@@ -27,5 +27,7 @@ export interface UserStats {
   }[];
   totalTimeSpent?: number;
   avgTimePerSolution?: number;
-  lastActivity?: string | null;
+  lastActivity?: Date | null;
+  activeSolutions?: number;
+  achievements?: number;
 }

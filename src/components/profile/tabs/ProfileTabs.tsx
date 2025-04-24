@@ -6,7 +6,7 @@ import { StatsTabContent } from "./StatsTabContent";
 import { ImplementationsTabContent } from "./ImplementationsTabContent";
 import { AchievementGrid } from "@/components/achievements/AchievementGrid";
 import { Implementation, UserAchievement } from "@/hooks/useProfileData";
-import { UserStats } from "@/hooks/useUserStats";
+import { UserStats } from "@/hooks/useUserStats/types";
 
 interface ProfileTabsProps {
   defaultTab: string;

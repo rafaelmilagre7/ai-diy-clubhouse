@@ -1,13 +1,9 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/auth';
+import { UserStats } from '@/hooks/useUserStats/types';
 
-interface UserStats {
-  completedSolutions: number;
-  activeSolutions: number;
-  achievements: number;
-  lastActivity: Date | null;
-}
+export type { UserStats } from '@/hooks/useUserStats/types';
 
 export function useUserStats() {
   const { user } = useAuth();
@@ -15,7 +11,18 @@ export function useUserStats() {
     completedSolutions: 0,
     activeSolutions: 0,
     achievements: 0,
-    lastActivity: null
+    lastActivity: null,
+    totalSolutions: 0,
+    inProgressSolutions: 0,
+    completionRate: 0,
+    averageCompletionTime: null,
+    activeDays: 0,
+    categoryDistribution: {
+      revenue: { total: 0, completed: 0 },
+      operational: { total: 0, completed: 0 },
+      strategy: { total: 0, completed: 0 }
+    },
+    recentActivity: []
   });
   const [loading, setLoading] = useState(true);
 
@@ -39,7 +46,20 @@ export function useUserStats() {
           completedSolutions: 2,
           activeSolutions: 1,
           achievements: 3,
-          lastActivity: new Date()
+          lastActivity: new Date(),
+          totalSolutions: 3,
+          inProgressSolutions: 1,
+          completionRate: 66,
+          averageCompletionTime: 45,
+          activeDays: 5,
+          categoryDistribution: {
+            revenue: { total: 1, completed: 1 },
+            operational: { total: 1, completed: 1 },
+            strategy: { total: 1, completed: 0 }
+          },
+          recentActivity: [
+            { date: new Date().toISOString(), action: "Solução concluída", solution: "Assistente de IA no WhatsApp" }
+          ]
         });
       } catch (error) {
         console.error('Erro ao buscar estatísticas do usuário:', error);

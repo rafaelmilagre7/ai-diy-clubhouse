@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { BarChart, Clock, CheckCircle } from "lucide-react";
 import { formatDate } from "@/utils/dateUtils";
 import { Implementation } from "@/hooks/useProfileData";
-import { UserStats } from "@/hooks/useUserStats";
+import { UserStats } from "@/hooks/useUserStats/types";
 
 interface StatsTabContentProps {
   stats: UserStats;
