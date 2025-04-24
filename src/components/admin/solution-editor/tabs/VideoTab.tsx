@@ -1,7 +1,8 @@
 
 import React, { useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Loader2, RefreshCw } from "lucide-react";
 import { useVideoManagement } from "@/hooks/admin/useVideoManagement";
 import VideoHeader from "./videos/VideoHeader";
 import EmptyVideoState from "./components/EmptyVideoState";
@@ -38,15 +39,6 @@ const VideoTab: React.FC<VideoTabProps> = ({
   useEffect(() => {
     console.log("[VideoTab] Componente montado, buscando vídeos...");
     fetchVideos();
-    
-    // Definir um intervalo para refrescar os vídeos a cada 5 segundos
-    // Isso ajuda a garantir que os vídeos apareçam mesmo se houver atraso no banco de dados
-    const refreshInterval = setInterval(() => {
-      console.log("[VideoTab] Intervalo de refresh acionado");
-      fetchVideos();
-    }, 5000);
-    
-    return () => clearInterval(refreshInterval);
   }, [solution?.id, fetchVideos]);
 
   const handleUploadFile = async (file: File) => {
@@ -91,6 +83,15 @@ const VideoTab: React.FC<VideoTabProps> = ({
                 <h3 className="text-lg font-semibold text-[#0ABAB5]">
                   Vídeos adicionados ({videos.length})
                 </h3>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={fetchVideos}
+                  className="flex items-center gap-2"
+                >
+                  <RefreshCw className="h-4 w-4" />
+                  Atualizar lista
+                </Button>
               </div>
               <VideosList videos={videos} onRemove={handleRemoveVideo} />
             </>

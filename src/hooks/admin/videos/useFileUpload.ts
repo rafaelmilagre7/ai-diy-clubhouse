@@ -39,7 +39,7 @@ export const useFileUpload = (solutionId: string) => {
 
       const fileExt = file.name.split(".").pop();
       const fileName = `${uuidv4()}.${fileExt}`;
-      const filePath = `solution_videos/${solutionId}/${fileName}`;
+      const filePath = `videos/${solutionId}/${fileName}`;
 
       console.log("[useFileUpload] Iniciando upload do arquivo:", file.name, "tamanho:", file.size);
       console.log("[useFileUpload] Caminho no storage:", filePath);
@@ -52,16 +52,12 @@ export const useFileUpload = (solutionId: string) => {
           return prev;
         });
       }, 500);
-
-      // Verificando se o bucket existe
-      const { data: buckets } = await supabase.storage.listBuckets();
-      console.log("[useFileUpload] Buckets disponíveis:", buckets?.map(b => b.name));
       
-      // Usamos o bucket 'resources' que deve existir no Supabase
-      console.log("[useFileUpload] Enviando arquivo para o bucket 'resources', caminho:", filePath);
+      // Upload para o storage - usando bucket "public" que é o padrão do Supabase
+      console.log("[useFileUpload] Enviando arquivo para o bucket 'public', caminho:", filePath);
       
       const { error: uploadError, data: uploadData } = await supabase.storage
-        .from("resources")
+        .from("public")
         .upload(filePath, file, {
           cacheControl: '3600', // Adicionando cache control para evitar problemas de cache
           upsert: true, // Substituir o arquivo se já existir
@@ -78,7 +74,7 @@ export const useFileUpload = (solutionId: string) => {
       console.log("[useFileUpload] Upload concluído com sucesso:", uploadData);
 
       const { data: urlData } = supabase.storage
-        .from("resources")
+        .from("public")
         .getPublicUrl(filePath);
 
       if (!urlData) throw new Error("Não foi possível obter a URL do vídeo");

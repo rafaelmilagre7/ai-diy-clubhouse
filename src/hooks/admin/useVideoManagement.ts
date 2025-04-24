@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { VideoItem } from "@/types/videoTypes";
 import { useYouTubeVideo } from "./videos/useYouTubeVideo";
 import { useFileUpload } from "./videos/useFileUpload";
@@ -20,13 +20,6 @@ export const useVideoManagement = (solutionId: string) => {
   }, [fetchVideos]);
 
   // Garantir que os vídeos são carregados quando o solutionId mudar
-  useEffect(() => {
-    if (solutionId) {
-      console.log("[useVideoManagement] SolutionId mudou, buscando vídeos...", solutionId);
-      fetchVideos();
-    }
-  }, [solutionId, fetchVideos]);
-
   const handleYouTubeAdd = async (data: { name: string; url: string; description: string; }) => {
     try {
       const video = await handleAddYouTube(data);
