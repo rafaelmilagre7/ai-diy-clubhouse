@@ -218,7 +218,7 @@ const VideoUploader: React.FC<VideoUploaderProps> = ({
         </p>
       )}
           
-      {!solution?.id && (
+      {disabled && (
         <div className="flex items-center p-4 gap-2 bg-amber-50 border border-amber-200 rounded-md mt-4">
           <p className="text-sm text-amber-800">
             Salve as informações básicas antes de adicionar vídeos.
