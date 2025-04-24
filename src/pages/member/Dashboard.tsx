@@ -8,6 +8,9 @@ import { supabase } from "@/lib/supabase";
 import { Solution } from "@/lib/supabase/types";
 import { LoadingPage } from "@/components/ui/loading-states";
 import { useAuth } from "@/contexts/auth";
+import DiagnosticPanel from "@/components/common/DiagnosticPanel";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -16,28 +19,36 @@ const Dashboard = () => {
   
   // Estado para soluções
   const [solutions, setSolutions] = useState<Solution[]>([]);
+  const [hasError, setHasError] = useState(false);
   
   // Buscar soluções usando react-query
-  const { isLoading } = useQuery({
+  const { isLoading, error } = useQuery({
     queryKey: ['solutions'],
     queryFn: async () => {
       console.log("Buscando soluções...");
-      const { data, error } = await supabase
-        .from('solutions')
-        .select('*')
-        .eq('published', true);
-      
-      if (error) {
-        console.error("Erro ao buscar soluções:", error);
-        toast.error("Erro ao carregar soluções");
-        throw error;
+      try {
+        const { data, error } = await supabase
+          .from('solutions')
+          .select('*')
+          .eq('published', true);
+        
+        if (error) {
+          console.error("Erro ao buscar soluções:", error);
+          toast.error("Erro ao carregar soluções");
+          setHasError(true);
+          throw error;
+        }
+        
+        console.log("Soluções carregadas:", data);
+        setSolutions(data || []);
+        return data;
+      } catch (err) {
+        setHasError(true);
+        throw err;
       }
-      
-      console.log("Soluções carregadas:", data);
-      setSolutions(data || []);
-      return data;
     },
     enabled: !!user,
+    retry: 1,
   });
   
   // Categorizar soluções
@@ -90,13 +101,27 @@ const Dashboard = () => {
   console.log("Soluções categorizadas:", categorizedSolutions);
 
   return (
-    <DashboardLayout
-      solutions={categorizedSolutions}
-      isLoading={isLoading}
-      onCategoryChange={handleCategoryChange}
-      onSolutionClick={handleSolutionClick}
-      currentCategory={category}
-    />
+    <>
+      {hasError && (
+        <Alert variant="destructive" className="mb-6">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Erro de conexão</AlertTitle>
+          <AlertDescription>
+            Não conseguimos conectar ao servidor. Verifique as configurações e tente novamente.
+          </AlertDescription>
+        </Alert>
+      )}
+      
+      <DashboardLayout
+        solutions={categorizedSolutions}
+        isLoading={isLoading}
+        onCategoryChange={handleCategoryChange}
+        onSolutionClick={handleSolutionClick}
+        currentCategory={category}
+      />
+      
+      <DiagnosticPanel />
+    </>
   );
 };
 
