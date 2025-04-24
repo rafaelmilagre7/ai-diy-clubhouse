@@ -1,5 +1,5 @@
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback } from 'react';
 import { Achievement } from '@/types/achievementTypes';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/auth';
@@ -40,28 +40,24 @@ interface BadgeItem {
 export function useAchievements() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const achievementData = useAchievementData();
   
   const fetchAchievements = useCallback(async () => {
     if (!user) return [];
     
     try {
-      // Buscamos os dados usando o hook de dados de conquistas para usar os geradores
+      // Aguardamos os dados carregarem do hook useAchievementData
       const { 
         progressData, 
         solutions, 
         badgesData, 
         comments, 
         totalLikes,
-        loading: dataLoading,
-        error: dataError,
-        refetch: dataRefetch 
-      } = useAchievementData();
+        error: dataError
+      } = achievementData;
       
       if (dataError) throw new Error(dataError);
       
-      // Se ainda estamos carregando os dados, retorne uma lista vazia
-      if (dataLoading) return [];
-
       // Primeiro, tentamos buscar as conquistas reais do usuário
       const { data: progressResponse, error: progressError } = await supabase
         .from('progress')
@@ -187,6 +183,7 @@ export function useAchievements() {
         new Map(allAchievements.map(item => [item.id, item])).values()
       );
       
+      console.log("Conquistas carregadas:", uniqueAchievements.length, uniqueAchievements);
       return uniqueAchievements;
       
     } catch (error) {
@@ -218,7 +215,7 @@ export function useAchievements() {
         }
       ] as Achievement[];
     }
-  }, [user, toast]);
+  }, [user, toast, achievementData]);
   
   const { 
     data: achievements = [],
