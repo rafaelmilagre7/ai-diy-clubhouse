@@ -14,14 +14,22 @@ const ProfessionalData = () => {
   const { progress, isLoading, refreshProgress } = useProgress();
   const { saveStepData } = useOnboardingSteps();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [dataLoaded, setDataLoaded] = useState(false);
   const navigate = useNavigate();
   
+  // Carregar dados apenas uma vez na montagem
   useEffect(() => {
-    console.log("ProfessionalData montado - carregando dados mais recentes");
-    refreshProgress();
-  }, [refreshProgress]);
+    if (!dataLoaded) {
+      console.log("ProfessionalData montado - carregando dados mais recentes");
+      refreshProgress().then(() => {
+        setDataLoaded(true);
+      });
+    }
+  }, [refreshProgress, dataLoaded]);
 
   const handleSubmit = async (stepId: string, data: ProfessionalDataInput) => {
+    if (isSubmitting) return;
+    
     setIsSubmitting(true);
     try {
       console.log("ProfessionalData - Salvando dados:", data);
@@ -32,10 +40,9 @@ const ProfessionalData = () => {
         return;
       }
       
-      await saveStepData(stepId, data, true);
+      await saveStepData(stepId, data, false);
       
       // Navegar para a próxima página após salvar
-      // O toast de sucesso já será mostrado pelo hook useStepPersistenceCore
       console.log("Navegando para próxima etapa após salvar dados profissionais");
       navigateAfterStep(stepId, 1, navigate, true);
       
@@ -57,7 +64,7 @@ const ProfessionalData = () => {
         <MilagrinhoMessage
           message="Agora vamos conhecer um pouco sobre sua empresa e seu papel profissional. Estas informações nos ajudarão a personalizar as soluções que mais se adaptam ao seu contexto de negócio."
         />
-        {isLoading ? (
+        {isLoading && !dataLoaded ? (
           <div className="flex justify-center py-10">
             <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-[#0ABAB5]"></div>
           </div>

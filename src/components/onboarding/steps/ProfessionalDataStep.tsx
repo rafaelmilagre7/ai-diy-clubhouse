@@ -7,13 +7,10 @@ import { CompanySectorField } from "./professional-inputs/CompanySectorField";
 import { WebsiteField } from "./professional-inputs/WebsiteField";
 import { CurrentPositionField } from "./professional-inputs/CurrentPositionField";
 import { AnnualRevenueField } from "./professional-inputs/AnnualRevenueField";
-import { Button } from "@/components/ui/button";
-import { ArrowRight, AlertCircle, Building2 } from "lucide-react";
+import { AlertCircle, Building2 } from "lucide-react";
 import { OnboardingStepProps } from "@/types/onboarding";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import * as validations from "@/utils/professionalDataValidation";
-import { normalizeWebsiteUrl } from "@/utils/professionalDataValidation";
 import { NavigationButtons } from "@/components/onboarding/NavigationButtons";
 
 interface ProfessionalDataStepProps extends OnboardingStepProps {
@@ -30,6 +27,7 @@ export const ProfessionalDataStep: React.FC<ProfessionalDataStepProps> = ({
 }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
+  const [initialDataProcessed, setInitialDataProcessed] = useState(false);
   
   console.log("ProfessionalDataStep - initialData recebido:", initialData);
   
@@ -41,36 +39,34 @@ export const ProfessionalDataStep: React.FC<ProfessionalDataStepProps> = ({
     if (initialData.professional_info && 
         initialData.professional_info[field] !== undefined && 
         initialData.professional_info[field] !== null) {
-      console.log(`Valor para ${field} encontrado em professional_info:`, initialData.professional_info[field]);
       return initialData.professional_info[field];
     }
     
     // Depois verificar nos campos de nível superior
     if (initialData[field] !== undefined && initialData[field] !== null) {
-      console.log(`Valor para ${field} encontrado no nível superior:`, initialData[field]);
       return initialData[field];
     }
     
-    console.log(`Nenhum valor encontrado para ${field}`);
     return "";
   };
   
   // Inicializar formulário com métodos do react-hook-form
   const methods = useForm({
     defaultValues: {
-      company_name: getInitialValue('company_name'),
-      company_size: getInitialValue('company_size'),
-      company_sector: getInitialValue('company_sector'),
-      company_website: getInitialValue('company_website'),
-      current_position: getInitialValue('current_position'),
-      annual_revenue: getInitialValue('annual_revenue')
+      company_name: "",
+      company_size: "",
+      company_sector: "",
+      company_website: "",
+      current_position: "",
+      annual_revenue: ""
     },
     mode: "onChange"
   });
   
   // Efeito para atualizar o formulário quando os dados iniciais mudarem
+  // Com flag para evitar atualizações desnecessárias
   useEffect(() => {
-    if (initialData) {
+    if (initialData && !initialDataProcessed) {
       console.log("Atualizando formulário com dados iniciais:", initialData);
       
       // Resetar o formulário com os valores iniciais
@@ -82,6 +78,8 @@ export const ProfessionalDataStep: React.FC<ProfessionalDataStepProps> = ({
         current_position: getInitialValue('current_position'),
         annual_revenue: getInitialValue('annual_revenue')
       });
+      
+      setInitialDataProcessed(true);
     }
   }, [initialData]);
 
@@ -90,19 +88,14 @@ export const ProfessionalDataStep: React.FC<ProfessionalDataStepProps> = ({
     setValidationErrors([]);
     
     try {
-      // Validar todos os campos
+      // Verificação básica se os campos obrigatórios estão preenchidos
+      const requiredFields = ['company_name', 'company_size', 'company_sector', 'current_position', 'annual_revenue'];
       const errors: string[] = [];
-      const validationResults = {
-        company_name: validations.validateCompanyName(data.company_name),
-        company_website: validations.validateWebsite(data.company_website),
-        company_size: validations.validateCompanySize(data.company_size),
-        company_sector: validations.validateCompanySector(data.company_sector),
-        current_position: validations.validateCurrentPosition(data.current_position),
-        annual_revenue: validations.validateAnnualRevenue(data.annual_revenue)
-      };
-
-      Object.entries(validationResults).forEach(([field, error]) => {
-        if (error) errors.push(error);
+      
+      requiredFields.forEach(field => {
+        if (!data[field]) {
+          errors.push(`O campo ${field.replace('_', ' ')} é obrigatório`);
+        }
       });
 
       if (errors.length > 0) {

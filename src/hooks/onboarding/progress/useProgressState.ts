@@ -23,6 +23,8 @@ export function useProgressState() {
   
   // Função para registrar eventos de debug
   const logDebugEvent = (action: string, data: any = null) => {
+    if (!isMounted.current) return;
+    
     debugHistory.current.push({
       timestamp: Date.now(),
       action,
@@ -38,8 +40,10 @@ export function useProgressState() {
     console.log(`[DEBUG STATE] ${action}`, data);
   };
   
-  // Sobrescrevendo setProgress para logar alterações
+  // Sobrescrevendo setProgress para logar alterações e evitar atualizações quando desmontado
   const setProgressWithDebug = (newProgress: OnboardingProgress | null) => {
+    if (!isMounted.current) return;
+    
     logDebugEvent('setProgress', {
       previousId: progress?.id,
       newId: newProgress?.id,

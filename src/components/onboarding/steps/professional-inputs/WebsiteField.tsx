@@ -20,20 +20,15 @@ export const WebsiteField: React.FC = () => {
         )}
       >
         <Globe className="h-4 w-4" />
-        Site da Empresa
+        Website da Empresa
+        <span className="text-gray-400 text-sm font-normal">(opcional)</span>
         {touchedFields.company_website && !errors.company_website && (
-          <CheckCircle className="h-4 w-4 text-[#0ABAB5]" />
+          <CheckCircle className="ml-2 h-4 w-4 text-[#0ABAB5]" />
         )}
-        <span className="text-xs text-gray-500 ml-2">(opcional)</span>
       </Label>
       <Input
         placeholder="www.suaempresa.com.br"
-        {...register("company_website", { 
-          pattern: {
-            value: /^(https?:\/\/)?[\w.-]+\.[a-z]{2,}(\/.*)?$/i,
-            message: "URL inválida"
-          }
-        })}
+        {...register("company_website")}
         className={cn(
           "transition-all duration-200",
           errors.company_website ? "border-red-500" : 

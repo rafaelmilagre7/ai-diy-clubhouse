@@ -1,5 +1,5 @@
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useCallback } from "react";
 import { useAuth } from "@/contexts/auth";
 import { useProgressState } from "./progress/useProgressState";
 import { useProgressFetch } from "./progress/useProgressFetch";
@@ -9,6 +9,7 @@ import { toast } from "sonner";
 
 export const useProgress = () => {
   const { user } = useAuth();
+  const fetchInProgress = useRef(false);
   const {
     progress,
     setProgress,
@@ -34,16 +35,20 @@ export const useProgress = () => {
     logDebugEvent
   );
 
-  const { refreshProgress } = useProgressRefresh(
-    progressId,
-    setIsLoading,
-    lastError,
-    isMounted,
-    setProgress,
-    retryCount,
-    fetchProgress,
-    logDebugEvent
-  );
+  // Versão com debouncing para evitar chamadas múltiplas
+  const refreshProgress = useCallback(async () => {
+    if (fetchInProgress.current) {
+      console.log("Refresh já em andamento, ignorando nova solicitação");
+      return;
+    }
+    
+    try {
+      fetchInProgress.current = true;
+      await fetchProgress();
+    } finally {
+      fetchInProgress.current = false;
+    }
+  }, [fetchProgress]);
 
   const { updateProgress } = useProgressUpdate(
     progress,
@@ -91,6 +96,7 @@ export const useProgress = () => {
     }
   };
 
+  // Limpar flags de montagem ao desmontar
   useEffect(() => {
     isMounted.current = true;
     toastShownRef.current = false;
@@ -99,6 +105,7 @@ export const useProgress = () => {
     };
   }, []);
 
+  // Só carregar dados uma vez na montagem
   useEffect(() => {
     if (!user) {
       console.log("[DEBUG] Sem usuário autenticado, não buscando progresso");
