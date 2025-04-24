@@ -1,5 +1,6 @@
 import { CheckCircle, Clock, TrendingUp } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface KpiGridProps {
   completed: number;
