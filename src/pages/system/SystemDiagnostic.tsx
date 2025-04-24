@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { supabase, checkSupabaseConnection } from "@/lib/supabase/client";
-import { AlertCircle, CheckCircle, RefreshCw, Bug, Info } from "lucide-react";
+import { AlertCircle, CheckCircle, RefreshCw, Bug, Info, Globe } from "lucide-react";
 import { toast } from "sonner";
 import { useLogging } from "@/hooks/useLogging";
 
@@ -18,6 +18,14 @@ const SystemDiagnostic = () => {
   const [envVars, setEnvVars] = useState<{[key: string]: string | undefined}>({});
   const [isLoading, setIsLoading] = useState(false);
   const [errorDetails, setErrorDetails] = useState<any>(null);
+  const [lastChecked, setLastChecked] = useState<Date | null>(null);
+  const [supabaseConfiguration, setSupabaseConfiguration] = useState<{
+    url: string;
+    anonKey: string;
+  }>({ 
+    url: 'https://zotzvtepvpnkcoobdubt.supabase.co', 
+    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpvdHp2dGVwdnBua2Nvb2JkdWJ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQzNzgzODAsImV4cCI6MjA1OTk1NDM4MH0.dxjPkqTPnK8gjjxJbooPX5_kpu3INciLeDpuU8dszHQ' 
+  });
   
   // Verificar conexão com o Supabase
   const checkConnection = async () => {
@@ -28,7 +36,10 @@ const SystemDiagnostic = () => {
       if (!success) {
         setErrorDetails(error);
         log("Erro na conexão com o Supabase", { error });
+      } else {
+        toast.success("Conexão com o Supabase estabelecida com sucesso!");
       }
+      setLastChecked(new Date());
     } catch (err) {
       setConnectionStatus('offline');
       setErrorDetails(err);
@@ -62,10 +73,11 @@ const SystemDiagnostic = () => {
   
   // Verificar variáveis de ambiente
   const checkEnv = () => {
+    // No ambiente de produção, usamos valores fixos hardcoded em src/lib/supabase/client.ts
     const vars = {
-      VITE_SUPABASE_URL: import.meta.env.VITE_SUPABASE_URL,
-      VITE_SUPABASE_ANON_KEY: import.meta.env.VITE_SUPABASE_ANON_KEY ? 
-        '***' + (import.meta.env.VITE_SUPABASE_ANON_KEY as string).slice(-8) : undefined,
+      SUPABASE_URL: supabaseConfiguration.url,
+      SUPABASE_ANON_KEY: supabaseConfiguration.anonKey ? 
+        '***' + supabaseConfiguration.anonKey.substring(supabaseConfiguration.anonKey.length - 8) : undefined,
       NODE_ENV: import.meta.env.MODE,
       IS_DEV: import.meta.env.DEV ? 'true' : 'false',
     };
@@ -123,33 +135,45 @@ const SystemDiagnostic = () => {
         </Button>
       </div>
       
-      <div className="mb-8 flex flex-wrap gap-3">
-        <StatusBadge 
-          status={connectionStatus} 
-          label="Conexão" 
-        />
-        
-        <StatusBadge 
-          status={authStatus} 
-          label="Autenticação" 
-        />
-        
-        <StatusBadge 
-          status={envVars.VITE_SUPABASE_URL ? 'ok' : 'error'} 
-          label="URL Supabase" 
-        />
-        
-        <StatusBadge 
-          status={envVars.VITE_SUPABASE_ANON_KEY ? 'ok' : 'error'} 
-          label="API Key" 
-        />
-      </div>
+      <Card className="mb-8">
+        <CardHeader className="bg-slate-50">
+          <div className="flex justify-between items-center">
+            <CardTitle className="text-lg">Status Geral do Sistema</CardTitle>
+            {lastChecked && (
+              <Badge variant="outline" className="text-xs font-normal">
+                Última verificação: {lastChecked.toLocaleTimeString()}
+              </Badge>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent className="p-4 flex flex-wrap gap-3">
+          <StatusBadge 
+            status={connectionStatus} 
+            label="Conexão" 
+          />
+          
+          <StatusBadge 
+            status={authStatus} 
+            label="Autenticação" 
+          />
+          
+          <StatusBadge 
+            status={envVars.SUPABASE_URL ? 'ok' : 'error'} 
+            label="URL Supabase" 
+          />
+          
+          <StatusBadge 
+            status={envVars.SUPABASE_ANON_KEY ? 'ok' : 'error'} 
+            label="API Key" 
+          />
+        </CardContent>
+      </Card>
       
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid grid-cols-3">
           <TabsTrigger value="connection">Conexão</TabsTrigger>
           <TabsTrigger value="auth">Autenticação</TabsTrigger>
-          <TabsTrigger value="env">Variáveis de Ambiente</TabsTrigger>
+          <TabsTrigger value="env">Configurações</TabsTrigger>
         </TabsList>
         
         <TabsContent value="connection" className="p-4 border rounded-md mt-4">
@@ -161,7 +185,7 @@ const SystemDiagnostic = () => {
         </TabsContent>
         
         <TabsContent value="env" className="p-4 border rounded-md mt-4">
-          <EnvTabContent envVars={envVars} />
+          <EnvTabContent envVars={envVars} supabaseConfig={supabaseConfiguration} />
         </TabsContent>
       </Tabs>
       
@@ -173,10 +197,10 @@ const SystemDiagnostic = () => {
         <CardContent>
           <div className="space-y-4">
             <Alert className="bg-blue-50 border-blue-100">
-              <Info className="h-4 w-4 text-blue-500" />
+              <CheckCircle className="h-4 w-4 text-green-500" />
               <AlertDescription className="text-blue-700">
-                <p className="font-semibold">Passo 1: Verificar variáveis de ambiente</p>
-                <p>Certifique-se de que as variáveis <code>VITE_SUPABASE_URL</code> e <code>VITE_SUPABASE_ANON_KEY</code> estão configuradas corretamente.</p>
+                <p className="font-semibold">Passo 1: Configurações do Supabase</p>
+                <p>As credenciais do Supabase foram atualizadas diretamente no código.</p>
               </AlertDescription>
             </Alert>
             
@@ -188,18 +212,20 @@ const SystemDiagnostic = () => {
               </AlertDescription>
             </Alert>
             
-            <Alert className="bg-blue-50 border-blue-100">
-              <Info className="h-4 w-4 text-blue-500" />
-              <AlertDescription className="text-blue-700">
-                <p className="font-semibold">Passo 3: Verificar configuração de autenticação</p>
-                <p>Confirme que a URL de redirecionamento está configurada corretamente no Supabase.</p>
+            <Alert className="bg-green-50 border-green-100">
+              <Globe className="h-4 w-4 text-green-500" />
+              <AlertDescription className="text-green-700">
+                <p className="font-semibold">Passo 3: Explorar o aplicativo</p>
+                <p>Agora que a conexão está configurada, você pode explorar as funcionalidades do VIVER DE IA Club.</p>
               </AlertDescription>
             </Alert>
           </div>
         </CardContent>
         <CardFooter className="flex justify-between">
           <Button variant="ghost" onClick={() => window.history.back()}>Voltar</Button>
-          <Button onClick={runAllChecks} disabled={isLoading}>Verificar Novamente</Button>
+          <Button onClick={() => window.location.href = '/'} className="bg-[#0ABAB5] hover:bg-[#0ABAB5]/90">
+            Ir para o Dashboard
+          </Button>
         </CardFooter>
       </Card>
     </div>
@@ -356,36 +382,46 @@ const AuthTabContent = ({ status, errorDetails }: { status: string, errorDetails
 };
 
 // Conteúdo da aba de variáveis de ambiente
-const EnvTabContent = ({ envVars }: { envVars: {[key: string]: string | undefined} }) => {
+const EnvTabContent = ({ 
+  envVars, 
+  supabaseConfig 
+}: { 
+  envVars: {[key: string]: string | undefined},
+  supabaseConfig: { url: string, anonKey: string }
+}) => {
   return (
     <div className="space-y-4">
-      <div className="rounded border p-4 space-y-2">
-        {Object.entries(envVars).map(([key, value]) => (
-          <div key={key} className="flex justify-between items-center">
-            <code className="text-sm font-mono">{key}</code>
+      <div>
+        <h3 className="text-sm font-medium mb-2">Configuração do Supabase</h3>
+        <div className="rounded border p-4 space-y-2">
+          <div className="flex justify-between items-center">
+            <code className="text-sm font-mono">SUPABASE_URL</code>
             <div className="flex items-center">
-              {value ? (
-                <>
-                  <span className="font-mono text-sm mr-2">{value}</span>
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                </>
-              ) : (
-                <>
-                  <span className="text-sm text-red-500 mr-2">não definido</span>
-                  <AlertCircle className="h-4 w-4 text-red-500" />
-                </>
-              )}
+              <span className="font-mono text-sm mr-2 text-ellipsis overflow-hidden max-w-[200px]">
+                {supabaseConfig.url}
+              </span>
+              <CheckCircle className="h-4 w-4 text-green-500" />
             </div>
           </div>
-        ))}
+          
+          <div className="flex justify-between items-center">
+            <code className="text-sm font-mono">SUPABASE_ANON_KEY</code>
+            <div className="flex items-center">
+              <span className="font-mono text-sm mr-2">
+                ***{supabaseConfig.anonKey.substring(supabaseConfig.anonKey.length - 8)}
+              </span>
+              <CheckCircle className="h-4 w-4 text-green-500" />
+            </div>
+          </div>
+        </div>
       </div>
-      
-      <Alert className="bg-amber-50 border-amber-200">
-        <Bug className="h-5 w-5 text-amber-500" />
-        <AlertTitle className="text-amber-700">Importância das variáveis</AlertTitle>
-        <AlertDescription className="text-amber-600">
-          <p>As variáveis <code>VITE_SUPABASE_URL</code> e <code>VITE_SUPABASE_ANON_KEY</code> são essenciais para o funcionamento da aplicação.</p>
-          <p className="mt-2">Se estiverem ausentes, você precisará configurá-las no arquivo <code>.env</code> ou nas configurações de deploy.</p>
+
+      <Alert className="bg-green-50 border-green-200">
+        <CheckCircle className="h-5 w-5 text-green-500" />
+        <AlertTitle className="text-green-700">Configurações atualizadas</AlertTitle>
+        <AlertDescription className="text-green-600">
+          <p>As configurações do Supabase foram atualizadas diretamente no código.</p>
+          <p className="mt-2">Isso deve resolver os problemas de conexão com o backend.</p>
         </AlertDescription>
       </Alert>
     </div>

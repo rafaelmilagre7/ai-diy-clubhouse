@@ -5,8 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
 import ConnectionStatus from "./ConnectionStatus";
-import { Info, AlertCircle, ChevronDown, ChevronUp } from "lucide-react";
-import { supabase } from "@/lib/supabase/client";
+import { Info, AlertCircle, ChevronDown, ChevronUp, Globe } from "lucide-react";
 
 export const DiagnosticPanel = () => {
   const [expanded, setExpanded] = useState(false);
@@ -15,32 +14,14 @@ export const DiagnosticPanel = () => {
 
   const checkEnvironmentVars = () => {
     const vars = {
-      VITE_SUPABASE_URL: import.meta.env.VITE_SUPABASE_URL,
-      VITE_SUPABASE_ANON_KEY: import.meta.env.VITE_SUPABASE_ANON_KEY ? 
-        '***' + (import.meta.env.VITE_SUPABASE_ANON_KEY as string).slice(-8) : undefined,
+      SUPABASE_URL: 'https://zotzvtepvpnkcoobdubt.supabase.co',
+      SUPABASE_ANON_KEY: '***' + 'dxjPkqTPnK8gjjxJbooPX5_kpu3INciLeDpuU8dszHQ'.slice(-8),
       NODE_ENV: import.meta.env.MODE,
       IS_DEV: import.meta.env.DEV ? 'true' : 'false',
     };
     
     setEnvVars(vars);
     setShowEnvVars(true);
-  };
-
-  const checkAuthentication = async () => {
-    const { data, error } = await supabase.auth.getSession();
-    
-    if (error) {
-      console.error('Erro ao verificar autenticação:', error);
-      return {
-        isAuthenticated: false,
-        error
-      };
-    }
-
-    return {
-      isAuthenticated: !!data.session,
-      session: data.session
-    };
   };
 
   if (!expanded) {
@@ -104,10 +85,10 @@ export const DiagnosticPanel = () => {
             </div>
           )}
           
-          <Alert className="mt-3 bg-amber-50 border-amber-200">
-            <Info className="h-4 w-4 text-amber-600" />
-            <AlertDescription className="text-amber-700 text-sm">
-              As chaves de API do Supabase devem estar corretamente configuradas nas variáveis de ambiente.
+          <Alert className="mt-3 bg-green-50 border-green-200">
+            <Info className="h-4 w-4 text-green-600" />
+            <AlertDescription className="text-green-700 text-sm">
+              As chaves do Supabase foram configuradas diretamente no código.
             </AlertDescription>
           </Alert>
         </div>
@@ -115,12 +96,28 @@ export const DiagnosticPanel = () => {
         <Separator />
         
         <div className="mb-8">
-          <h3 className="text-sm font-medium mb-2">Próximos Passos</h3>
-          <ol className="list-decimal pl-5 space-y-2">
-            <li>Verifique se as variáveis de ambiente estão corretas</li>
-            <li>Verifique se o projeto do Supabase está ativo</li>
-            <li>Certifique-se de que as chaves de API são válidas</li>
-          </ol>
+          <h3 className="text-sm font-medium mb-2">Navegação</h3>
+          <div className="space-y-3">
+            <Button 
+              variant="outline" 
+              size="sm"
+              className="w-full justify-between"
+              onClick={() => window.location.href = '/'}
+            >
+              <span>Ir para Dashboard</span>
+              <Globe className="h-4 w-4" />
+            </Button>
+            
+            <Button 
+              variant="outline" 
+              size="sm"
+              className="w-full justify-between"
+              onClick={() => window.location.href = '/diagnostic'}
+            >
+              <span>Diagnóstico Completo</span>
+              <AlertCircle className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       </CardContent>
     </Card>
