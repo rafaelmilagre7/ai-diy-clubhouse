@@ -1,5 +1,6 @@
 
-import { supabase, UserRole } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase';
+import { UserRole } from '@/types/supabaseTypes';
 import { toast } from '@/hooks/use-toast';
 
 /**

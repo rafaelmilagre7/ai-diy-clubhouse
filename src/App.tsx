@@ -12,6 +12,8 @@ const queryClient = new QueryClient({
     queries: {
       retry: 1,
       refetchOnWindowFocus: false,
+      staleTime: 5 * 60 * 1000, // 5 minutos antes de considerar os dados obsoletos
+      gcTime: 10 * 60 * 1000, // 10 minutos antes de remover dados do cache
     },
   },
 });
@@ -23,7 +25,22 @@ function App() {
         <LoggingProvider>
           <AuthProvider>
             <AppRoutes />
-            <Toaster position="top-right" richColors />
+            {/* Usando apenas um toaster para toda a aplicação */}
+            <Toaster 
+              position="top-right" 
+              richColors 
+              closeButton 
+              duration={3000} // 3 segundos de duração padrão
+              toastOptions={{
+                className: 'toast-custom-class',
+                style: {
+                  background: 'white',
+                  color: 'black',
+                }
+              }}
+              visibleToasts={2}
+              pauseWhenPageIsHidden
+            />
           </AuthProvider>
         </LoggingProvider>
       </QueryClientProvider>

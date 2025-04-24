@@ -1,11 +1,15 @@
 
 import { Navigate, useLocation, Outlet } from "react-router-dom";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, ReactNode } from "react";
 import { useAuth } from "@/contexts/auth";
 import LoadingScreen from "@/components/common/LoadingScreen";
 import { toast } from "sonner";
 
-export const ProtectedRoutes = () => {
+interface ProtectedRoutesProps {
+  children?: ReactNode;
+}
+
+export const ProtectedRoutes = ({ children }: ProtectedRoutesProps = {}) => {
   const { user, isLoading } = useAuth();
   const location = useLocation();
   const [loadingTimeout, setLoadingTimeout] = useState(false);
@@ -46,5 +50,5 @@ export const ProtectedRoutes = () => {
   }
 
   // Usuário está autenticado, renderizar as rotas protegidas
-  return <Outlet />;
+  return children ? <>{children}</> : <Outlet />;
 };

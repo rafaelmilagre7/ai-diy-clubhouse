@@ -6,68 +6,98 @@ import { useLogging } from "@/hooks/useLogging";
 export interface Material {
   id: string;
   name: string;
-  url: string;
+  url?: string;
+  file_url?: string;
+  external_url?: string;
   type: string;
-  format: string | null;
-  solution_id: string;
-  module_id: string | null;
+  format: string;
+  size?: number;
+  module_id?: string;
+  solution_id?: string;
 }
 
 export const useMaterialsData = (module: Module) => {
   const [materials, setMaterials] = useState<Material[]>([]);
   const [loading, setLoading] = useState(true);
-  const { log, logError } = useLogging();
+  const { log, logError } = useLogging("useMaterialsData");
 
   useEffect(() => {
     const fetchMaterials = async () => {
+      if (!module || !module.solution_id) {
+        setLoading(false);
+        return;
+      }
+      
       try {
         setLoading(true);
+        log("Buscando materiais", { module_id: module.id, solution_id: module.solution_id });
         
-        // First try to find materials specific to this module
-        let { data: moduleData, error: moduleError } = await supabase
+        // Primeiro buscamos materiais específicos do módulo
+        const { data: moduleMaterials, error: moduleError } = await supabase
           .from("solution_resources")
           .select("*")
           .eq("module_id", module.id);
-        
-        // If no module-specific materials or error, fetch solution-level materials
-        if (moduleError || !moduleData || moduleData.length === 0) {
-          const { data: solutionData, error: solutionError } = await supabase
-            .from("solution_resources")
-            .select("*")
-            .eq("solution_id", module.solution_id)
-            .is("module_id", null);
           
-          if (solutionError) {
-            logError("Error fetching materials:", solutionError);
-            return;
-          }
-          
-          // Filter out video types - they should be in the Videos tab only
-          const filteredData = (solutionData || []).filter(
-            item => item.type !== 'video' && item.type !== 'youtube'
-          );
-          
-          setMaterials(filteredData);
-        } else {
-          // Filter out video types from module data too
-          const filteredModuleData = moduleData.filter(
-            item => item.type !== 'video' && item.type !== 'youtube'
-          );
-          
-          setMaterials(filteredModuleData);
+        if (moduleError) {
+          logError("Erro ao buscar materiais do módulo", { error: moduleError });
+          console.error("Erro ao buscar materiais do módulo:", moduleError);
         }
-      } catch (err) {
-        logError("Error in materials fetch:", err);
+        
+        // Depois buscamos materiais gerais da solução (exceto vídeos, que são tratados separadamente)
+        const { data: solutionMaterials, error: solutionError } = await supabase
+          .from("solution_resources")
+          .select("*")
+          .eq("solution_id", module.solution_id)
+          .is("module_id", null)
+          .not("type", "eq", "video");
+          
+        if (solutionError) {
+          logError("Erro ao buscar materiais da solução", { error: solutionError });
+          console.error("Erro ao buscar materiais da solução:", solutionError);
+        }
+        
+        // Combinamos os resultados
+        const allMaterials = [
+          ...(moduleMaterials || []),
+          ...(solutionMaterials || [])
+        ].filter(m => m.type !== "video"); // Garantir que vídeos não sejam incluídos aqui
+        
+        console.log("Materiais encontrados:", allMaterials);
+        
+        if (allMaterials.length > 0) {
+          log("Materiais encontrados", { count: allMaterials.length });
+          
+          // Formatar materiais para o formato esperado
+          const formattedMaterials = allMaterials.map(material => ({
+            id: material.id,
+            name: material.name,
+            url: material.url,
+            file_url: material.url, // Adicionando para compatibilidade
+            external_url: material.metadata?.external_url || null,
+            type: material.type || "document",
+            format: material.format || "Documento",
+            size: material.size,
+            module_id: material.module_id,
+            solution_id: material.solution_id
+          }));
+          
+          setMaterials(formattedMaterials);
+          log("Materiais formatados", { materials: formattedMaterials });
+        } else {
+          log("Nenhum material encontrado", { module_id: module.id });
+          setMaterials([]);
+        }
+      } catch (error) {
+        logError("Erro ao buscar materiais", { error });
+        console.error("Erro ao buscar materiais:", error);
+        setMaterials([]);
       } finally {
         setLoading(false);
       }
     };
-
+    
     fetchMaterials();
-  }, [module.id, module.solution_id, log, logError]);
-
-  return {
-    materials,
-    loading
-  };
+  }, [module, log, logError]);
+  
+  return { materials, loading };
 };

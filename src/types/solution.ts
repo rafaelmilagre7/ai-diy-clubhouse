@@ -1,21 +1,63 @@
-
-import { Solution as SupabaseSolution } from "@/lib/supabase";
-
-// Definição unificada de Solution que estende a SupabaseSolution
-export interface Solution extends Omit<SupabaseSolution, 'author_id'> {
+export interface Solution {
   id: string;
   title: string;
   description: string;
-  category: string;
-  difficulty: string;
+  category: 'revenue' | 'operations' | 'strategy';
+  difficulty: 'easy' | 'medium' | 'advanced';
   published: boolean;
+  thumbnail_url?: string;
   created_at: string;
   updated_at: string;
-  thumbnail_url?: string;
   slug: string;
-  tags?: string[];
-  estimated_time?: number;
-  success_rate?: number;
-  related_solutions?: string[];
-  author_id?: string; // Tornando author_id opcional para compatibilidade
+  implementation_steps?: any[];
+  checklist_items?: any[];
+  completion_requirements?: Record<string, any>;
+  modules?: Module[];
+  progress?: Progress;
+}
+
+export interface Module {
+  id: string;
+  solution_id: string;
+  title: string;
+  type: ModuleType;
+  content: ModuleContent;
+  module_order: number;
+  created_at: string;
+  updated_at: string;
+  certificate_template?: any;
+  estimated_time_minutes?: number;
+  metrics?: Record<string, any>;
+}
+
+export type ModuleType = 
+  | 'landing'
+  | 'overview'
+  | 'preparation'
+  | 'implementation'
+  | 'verification'
+  | 'results' 
+  | 'optimization'
+  | 'celebration';
+
+export interface ModuleContent {
+  blocks: ContentBlock[];
+}
+
+export interface ContentBlock {
+  id: string;
+  type: string;
+  data: Record<string, any>;
+}
+
+export interface Progress {
+  id: string;
+  user_id: string;
+  solution_id: string;
+  current_module: number;
+  implementation_status: 'not_started' | 'in_progress' | 'completed' | 'abandoned';
+  is_completed: boolean;
+  completed_modules: number[];
+  last_activity: string;
+  completion_data?: Record<string, any>;
 }

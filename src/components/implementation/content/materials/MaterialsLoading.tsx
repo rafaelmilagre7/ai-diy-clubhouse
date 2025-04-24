@@ -1,22 +1,19 @@
 
 import React from "react";
-import { Skeleton } from "@/components/ui/skeleton";
+import { GlassCard } from "@/components/ui/GlassCard";
 
 export const MaterialsLoading: React.FC = () => {
   return (
-    <div className="space-y-4 mt-8">
-      <h3 className="text-lg font-semibold">Materiais de Apoio</h3>
-      {[1, 2].map((i) => (
-        <div key={i} className="flex items-start p-4 border rounded-md">
-          <div className="bg-green-100 p-2 rounded mr-4">
-            <Skeleton className="h-5 w-5" />
+    <GlassCard className="p-6 animate-pulse">
+      <div className="h-4 w-48 bg-gray-200 rounded mb-6"></div>
+      <div className="space-y-4">
+        {[1, 2, 3].map((item) => (
+          <div key={item} className="flex items-center justify-between">
+            <div className="h-10 w-3/4 bg-gray-100 rounded"></div>
+            <div className="h-8 w-20 bg-gray-100 rounded"></div>
           </div>
-          <div className="space-y-2 flex-1">
-            <Skeleton className="h-5 w-48" />
-            <Skeleton className="h-4 w-full" />
-          </div>
-        </div>
-      ))}
-    </div>
+        ))}
+      </div>
+    </GlassCard>
   );
 };

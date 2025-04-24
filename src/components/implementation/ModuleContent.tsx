@@ -1,4 +1,5 @@
-import React, { useEffect } from "react";
+
+import React, { useEffect, useRef } from "react";
 import { Module } from "@/lib/supabase";
 import { LandingModule } from "./LandingModule";
 import { CelebrationModule } from "./CelebrationModule";
@@ -14,12 +15,25 @@ interface ModuleContentProps {
 
 export const ModuleContent = ({ module, onComplete, onError }: ModuleContentProps) => {
   const { log, logError } = useLogging();
+  const hasAutoCompletedRef = useRef(false);
+  
+  // Resetar a flag de autocompletar quando o módulo mudar
+  useEffect(() => {
+    hasAutoCompletedRef.current = false;
+  }, [module?.id]);
   
   // Mark landing and celebration modules as automatically interacted with
   useEffect(() => {
-    if (module && shouldAutoComplete(module)) {
+    if (module && shouldAutoComplete(module) && !hasAutoCompletedRef.current) {
       log("Auto-completing module", { module_id: module.id, module_type: module.type });
-      onComplete();
+      
+      // Usar um pequeno timeout para evitar problemas de renderização
+      const timer = setTimeout(() => {
+        hasAutoCompletedRef.current = true;
+        onComplete();
+      }, 300);
+      
+      return () => clearTimeout(timer);
     }
   }, [module, onComplete, log]);
 
@@ -31,6 +45,7 @@ export const ModuleContent = ({ module, onComplete, onError }: ModuleContentProp
   try {
     // Renderiza o conteúdo apropriado com base no tipo do módulo
     log("Rendering module content", { module_type: module.type });
+    
     // Microanimação suave na troca de módulo (fade-in)
     return (
       <div className="animate-fade-in">

@@ -49,7 +49,8 @@ const TabContent: React.FC<TabContentProps> = ({
       case "basic":
         return (
           <BasicInfoTab 
-            currentValues={currentValues} 
+            defaultValues={currentValues}
+            currentValues={currentValues}
             onSubmit={onSubmit} 
             saving={saving} 
           />
@@ -188,7 +189,8 @@ const TabContent: React.FC<TabContentProps> = ({
   if (currentStep === 0) {
     return (
       <BasicInfoTab 
-        currentValues={currentValues} 
+        defaultValues={currentValues}
+        currentValues={currentValues}
         onSubmit={onSubmit} 
         saving={saving} 
       />

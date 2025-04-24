@@ -2,92 +2,56 @@
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useLogging } from "@/hooks/useLogging";
-import { Material } from "./useMaterialsData";
 
 export const useFileDownload = () => {
-  const [downloading, setDownloading] = useState<string | null>(null);
+  const [downloading, setDownloading] = useState(false);
   const { toast } = useToast();
-  const { log, logError } = useLogging();
+  const { log, logError } = useLogging("useFileDownload");
 
-  const handleDownload = async (material: Material) => {
-    if (!material.url) {
-      toast({
-        title: "Erro ao baixar arquivo",
-        description: "URL do arquivo não disponível.",
-        variant: "destructive",
-      });
-      return;
-    }
-
+  const handleDownload = async (url: string, filename: string) => {
+    if (!url) return;
+    
     try {
-      setDownloading(material.id);
-      log("Starting file download", { 
-        material_id: material.id, 
-        material_name: material.name 
-      });
-
-      // Para vídeos embutidos do YouTube, abrir em uma nova aba
-      if (material.type === 'video' && (material.url.includes('youtube.com') || material.url.includes('youtu.be'))) {
-        window.open(material.url, '_blank');
-        toast({
-          title: "Vídeo aberto",
-          description: `O vídeo "${material.name}" foi aberto em uma nova aba.`,
-        });
-        return;
-      }
-
-      // Usa a API fetch para obter o arquivo
-      const response = await fetch(material.url);
+      setDownloading(true);
+      log("Iniciando download", { url, filename });
+      
+      const response = await fetch(url);
       
       if (!response.ok) {
-        throw new Error(`Erro ao baixar: ${response.statusText}`);
+        throw new Error(`Erro ao fazer download: ${response.statusText}`);
       }
       
-      // Converte para blob
       const blob = await response.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
       
-      // Cria um URL para o blob
-      const blobUrl = window.URL.createObjectURL(blob);
-      
-      // Cria um elemento <a> para download
-      const link = document.createElement("a");
-      link.href = blobUrl;
-      
-      // Extrai o nome do arquivo da URL, ou usa o título
-      const fileName = material.name || 
-                      material.url.split("/").pop() || 
-                      `arquivo-${material.id}`;
-                      
-      link.download = fileName;
-      
-      // Anexa e clica no link para iniciar o download
+      // Criar um link temporário para iniciar o download
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = filename;
       document.body.appendChild(link);
       link.click();
       
-      // Limpa
+      // Limpar o link temporário
+      window.URL.revokeObjectURL(downloadUrl);
       document.body.removeChild(link);
-      window.URL.revokeObjectURL(blobUrl);
       
-      log("File download completed", { material_id: material.id });
+      log("Download concluído", { filename });
       
       toast({
         title: "Download iniciado",
-        description: `O arquivo "${material.name}" está sendo baixado.`,
+        description: `O arquivo ${filename} está sendo baixado.`
       });
     } catch (error) {
-      logError("Error downloading file", error);
+      logError("Erro ao fazer download", { error, url, filename });
       toast({
-        title: "Erro ao baixar arquivo",
-        description: "Ocorreu um erro ao tentar baixar o arquivo. Tente novamente.",
-        variant: "destructive",
+        title: "Erro no download",
+        description: "Não foi possível baixar o arquivo.",
+        variant: "destructive"
       });
     } finally {
-      setDownloading(null);
+      setDownloading(false);
     }
   };
 
-  return {
-    handleDownload,
-    downloading
-  };
+  return { downloading, handleDownload };
 };

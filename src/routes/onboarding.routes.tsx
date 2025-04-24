@@ -1,71 +1,10 @@
 
 import { RouteObject } from 'react-router-dom';
-import Onboarding from '@/pages/onboarding/Onboarding';
-import OnboardingIntro from '@/pages/onboarding/OnboardingIntro';
-import Review from '@/pages/onboarding/Review'; 
-import PersonalInfo from '@/pages/onboarding/steps/PersonalInfo';
-import ProfessionalData from '@/pages/onboarding/steps/ProfessionalData';
-import BusinessContext from '@/pages/onboarding/steps/BusinessContext';
-import AIExperience from '@/pages/onboarding/steps/AIExperience';
-import BusinessGoalsClub from '@/pages/onboarding/steps/BusinessGoalsClub';
-import ExperiencePersonalization from '@/pages/onboarding/steps/ExperiencePersonalization';
-import ComplementaryInfo from '@/pages/onboarding/steps/ComplementaryInfo';
-import TrailGeneration from '@/pages/onboarding/steps/TrailGeneration';
 import { NotFound } from '@/pages/NotFound';
 
+// Como estamos removendo o onboarding, este arquivo apenas mantém a estrutura
+// mas não define mais nenhuma rota de onboarding
 export const onboardingRoutes: RouteObject[] = [
-  {
-    path: '/onboarding/intro',
-    element: <OnboardingIntro />,
-  },
-  {
-    path: '/onboarding',
-    element: <Onboarding />,
-  },
-  // Rota específica para dados pessoais
-  {
-    path: '/onboarding/personal',
-    element: <PersonalInfo />,
-  },
-  // Rota para dados profissionais (antiga)
-  {
-    path: '/onboarding/professional',
-    element: <ProfessionalData />,
-  },
-  // Rota para dados profissionais (nova)
-  {
-    path: '/onboarding/professional-data',
-    element: <ProfessionalData />,
-  },
-  {
-    path: '/onboarding/business-context',
-    element: <BusinessContext />,
-  },
-  {
-    path: '/onboarding/club-goals',
-    element: <BusinessGoalsClub />,
-  },
-  {
-    path: '/onboarding/ai-experience',
-    element: <AIExperience />,
-  },
-  {
-    path: '/onboarding/customization',
-    element: <ExperiencePersonalization />,
-  },
-  {
-    path: '/onboarding/complementary',
-    element: <ComplementaryInfo />,
-  },
-  {
-    path: '/onboarding/review',
-    element: <Review />,
-  },
-  {
-    path: '/onboarding/trail-generation',
-    element: <TrailGeneration />,
-  },
-  // Rota curinga para capturar URLs inválidas dentro do onboarding
   {
     path: '/onboarding/*',
     element: <NotFound />,

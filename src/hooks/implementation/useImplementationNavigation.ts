@@ -1,48 +1,69 @@
 
 import { useParams, useNavigate } from "react-router-dom";
+import { useEffect, useRef } from "react";
+import { useLogging } from "@/hooks/useLogging";
 
 export const useImplementationNavigation = () => {
-  const { id, moduleIndex, moduleIdx } = useParams<{ 
+  const { id, moduleIdx } = useParams<{ 
     id: string; 
-    moduleIndex: string;
-    moduleIdx: string;
+    moduleIdx: string; 
   }>();
   
-  // Normaliza os parâmetros, suportando tanto /implement/:id/:moduleIdx quanto /implementation/:id/:moduleIdx
-  const moduleIdxParam = moduleIndex || moduleIdx || "0";
-  const moduleIdxNumber = parseInt(moduleIdxParam);
-  const navigate = useNavigate();
+  const moduleIdxNumber = parseInt(moduleIdx || "0");
   
-  // Usa consistentemente o padrão /implement/:id/:moduleIdx para navegação
+  const { log } = useLogging("useImplementationNavigation");
+  const navigate = useNavigate();
+  const navigationAttempts = useRef(0);
+  
+  // Padronizamos para usar apenas o formato /implement/:id/:moduleIdx
   const basePath = "/implement";
   
+  // Verificar se temos um ID válido
+  useEffect(() => {
+    if (!id) {
+      log("ID da implementação não encontrado, redirecionando para dashboard");
+      navigate("/dashboard", { replace: true });
+      return;
+    }
+  }, [id, navigate, log]);
+
   // Navigate to next module
   const handleComplete = () => {
-    console.log(`Navegando para o próximo módulo: ${moduleIdxNumber + 1}`);
-    navigate(`${basePath}/${id}/${moduleIdxNumber + 1}`);
+    if (!id) {
+      log("ID da implementação não encontrado, não é possível avançar");
+      return;
+    }
+    navigate(`${basePath}/${id}/${moduleIdxNumber + 1}`, { replace: true });
   };
   
   // Navigate to previous module
   const handlePrevious = () => {
+    if (!id) {
+      log("ID da implementação não encontrado, não é possível retornar");
+      return;
+    }
+    
     if (moduleIdxNumber > 0) {
-      console.log(`Navegando para o módulo anterior: ${moduleIdxNumber - 1}`);
-      navigate(`${basePath}/${id}/${moduleIdxNumber - 1}`);
+      navigate(`${basePath}/${id}/${moduleIdxNumber - 1}`, { replace: true });
     } else {
-      console.log(`Voltando para a página de solução: ${id}`);
-      navigate(`/solution/${id}`);
+      navigate(`/solutions/${id}`, { replace: true });
     }
   };
   
   // Navigate to specific module
   const handleNavigateToModule = (moduleIdx: number) => {
-    console.log(`Navegando para o módulo específico: ${moduleIdx}`);
-    navigate(`${basePath}/${id}/${moduleIdx}`);
+    if (!id) {
+      log("ID da implementação não encontrado, não é possível navegar para módulo específico");
+      return;
+    }
+    navigate(`${basePath}/${id}/${moduleIdx}`, { replace: true });
   };
   
   return {
     handleComplete,
     handlePrevious,
     handleNavigateToModule,
-    currentModuleIdx: moduleIdxNumber
+    currentModuleIdx: moduleIdxNumber,
+    implementationId: id
   };
 };

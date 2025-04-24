@@ -2,6 +2,7 @@
 import { Fragment } from "react";
 import { Route } from "react-router-dom";
 import MemberLayout from "@/components/layout/MemberLayout";
+import MemberSolutionRedirect from "@/components/routing/MemberSolutionRedirect";
 
 // Páginas de membros
 import Dashboard from "@/pages/member/Dashboard";
@@ -18,59 +19,52 @@ import NewSuggestion from "@/pages/member/NewSuggestion";
 import Achievements from "@/pages/member/Achievements";
 import Benefits from "@/pages/member/Benefits";
 import ImplementationTrailPage from "@/pages/member/ImplementationTrailPage";
-import Onboarding from "@/pages/onboarding/Onboarding";
-import ProfessionalData from "@/pages/onboarding/steps/ProfessionalData";
-import BusinessContext from "@/pages/onboarding/steps/BusinessContext";
-import AIExperience from "@/pages/onboarding/steps/AIExperience";
-import BusinessGoalsClub from "@/pages/onboarding/steps/BusinessGoalsClub";
-import ExperiencePersonalization from "@/pages/onboarding/steps/ExperiencePersonalization";
-import ComplementaryInfo from "@/pages/onboarding/steps/ComplementaryInfo";
-import Review from "@/pages/onboarding/steps/Review";
-import TrailGeneration from "@/pages/onboarding/steps/TrailGeneration";
+import ImplementationProfilePage from "@/pages/ImplementationProfile";
+import { SolutionNotFound } from "@/components/solution/SolutionNotFound";
+import { NotFoundContent } from "@/components/implementation/NotFoundContent";
 
 export const memberRoutes = (
   <Fragment>
     <Route element={<MemberLayout />}>
       {/* Dashboard */}
-      <Route path="/dashboard" element={<Dashboard />} />
+      <Route path="dashboard" element={<Dashboard />} />
+      
+      {/* Perfil de Implementação */}
+      <Route path="perfil-de-implementacao" element={<ImplementationProfilePage />} />
       
       {/* Soluções */}
-      <Route path="/solutions" element={<Solutions />} />
-      <Route path="/solution/:id" element={<SolutionDetails />} />
-      <Route path="/implement/:id/:moduleIdx" element={<SolutionImplementation />} />
-      <Route path="/implementation/:id" element={<SolutionImplementation />} />
-      <Route path="/implementation/:id/:moduleIdx" element={<SolutionImplementation />} />
-      <Route path="/implementation-trail" element={<ImplementationTrailPage />} />
+      <Route path="solutions" element={<Solutions />} />
+      <Route path="solutions/:id" element={<SolutionDetails />} />
+      
+      {/* Compatibilidade com URL antiga - Redireciona para a nova estrutura */}
+      <Route path="solution/:id" element={<MemberSolutionRedirect />} />
+      
+      {/* Implementação - Consolidado para um único formato de URL */}
+      <Route path="implement/:id/:moduleIdx" element={<SolutionImplementation />} />
+      <Route path="implementation-trail" element={<ImplementationTrailPage />} />
+      
+      {/* Páginas de erro para soluções */}
+      <Route path="solution/not-found" element={<SolutionNotFound />} />
+      <Route path="implementation/not-found" element={<NotFoundContent />} />
       
       {/* Perfil */}
-      <Route path="/profile" element={<Profile />} />
-      <Route path="/profile/edit" element={<EditProfile />} />
+      <Route path="profile" element={<Profile />} />
+      <Route path="profile/edit" element={<EditProfile />} />
       
       {/* Ferramentas */}
-      <Route path="/tools" element={<Tools />} />
-      <Route path="/tools/:id" element={<ToolDetails />} />
+      <Route path="tools" element={<Tools />} />
+      <Route path="tools/:id" element={<ToolDetails />} />
       
       {/* Benefícios */}
-      <Route path="/benefits" element={<Benefits />} />
+      <Route path="benefits" element={<Benefits />} />
       
       {/* Sugestões */}
-      <Route path="/suggestions" element={<Suggestions />} />
-      <Route path="/suggestions/:id" element={<SuggestionDetails />} />
-      <Route path="/suggestions/new" element={<NewSuggestion />} />
+      <Route path="suggestions" element={<Suggestions />} />
+      <Route path="suggestions/:id" element={<SuggestionDetails />} />
+      <Route path="suggestions/new" element={<NewSuggestion />} />
       
       {/* Conquistas */}
-      <Route path="/achievements" element={<Achievements />} />
-      
-      {/* Onboarding */}
-      <Route path="/onboarding" element={<Onboarding />} />
-      <Route path="/onboarding/professional-data" element={<ProfessionalData />} />
-      <Route path="/onboarding/business-context" element={<BusinessContext />} />
-      <Route path="/onboarding/ai-experience" element={<AIExperience />} />
-      <Route path="/onboarding/club-goals" element={<BusinessGoalsClub />} />
-      <Route path="/onboarding/customization" element={<ExperiencePersonalization />} />
-      <Route path="/onboarding/complementary" element={<ComplementaryInfo />} />
-      <Route path="/onboarding/review" element={<Review />} />
-      <Route path="/onboarding/trail-generation" element={<TrailGeneration />} />
+      <Route path="achievements" element={<Achievements />} />
     </Route>
   </Fragment>
 );

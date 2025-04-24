@@ -1,80 +1,61 @@
 
-import { Solution } from "@/lib/supabase";
-import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
+import { Solution } from '@/lib/supabase';
+import { Badge } from '@/components/ui/badge';
+import { getDifficultyColor } from '@/utils/solution-helpers';
 
 interface SolutionHeaderSectionProps {
   solution: Solution;
+  implementationMetrics?: any;
 }
 
-const getDifficultyStyles = (difficulty: string) => {
-  switch (difficulty) {
-    case "easy":
-      return "bg-green-100 text-green-800 border-green-200";
-    case "medium":
-      return "bg-yellow-100 text-yellow-800 border-yellow-200";
-    case "advanced":
-      return "bg-red-100 text-red-800 border-red-200";
-    default:
-      return "bg-gray-100 text-gray-800 border-gray-200";
-  }
-};
+export const SolutionHeaderSection = ({ solution, implementationMetrics }: SolutionHeaderSectionProps) => {
+  // Determinar cor da badge de dificuldade
+  const difficultyColor = getDifficultyColor(solution.difficulty);
+  
+  // Mapear categoria para texto legível
+  const categoryText = {
+    'revenue': 'Aumento de Receita',
+    'operational': 'Otimização Operacional',
+    'strategy': 'Gestão Estratégica'
+  }[solution.category] || solution.category;
 
-export const SolutionHeaderSection = ({ solution }: SolutionHeaderSectionProps) => {
+  // Traduzir nível de dificuldade
+  const difficultyText = {
+    'easy': 'Fácil',
+    'medium': 'Intermediário',
+    'advanced': 'Avançado'
+  }[solution.difficulty] || solution.difficulty;
+  
   return (
-    <div className="space-y-4 animate-fade-in">
-      <div className="flex items-center gap-2">
-        <Badge 
-          variant="outline" 
-          className={`
-            px-3 py-1 rounded-full shadow-sm font-medium
-            ${solution.category === "revenue" ? "bg-gradient-to-r from-revenue to-revenue-light text-white border-0" : ""}
-            ${solution.category === "operational" ? "bg-gradient-to-r from-operational to-operational-light text-white border-0" : ""}
-            ${solution.category === "strategy" ? "bg-gradient-to-r from-strategy to-strategy-light text-white border-0" : ""}
-          `}
-        >
-          {solution.category === "revenue" ? "Receita" : 
-           solution.category === "operational" ? "Operacional" : 
-           "Estratégia"}
+    <div className="mt-6">
+      <div className="flex items-center gap-2 mb-2">
+        <Badge variant="outline" className="text-xs">
+          {categoryText}
         </Badge>
-        
-        <Badge 
-          variant="outline" 
-          className={cn(
-            "px-3 py-1 rounded-full shadow-sm font-medium border",
-            getDifficultyStyles(solution.difficulty)
-          )}
-        >
-          {solution.difficulty === "easy" ? "Fácil" :
-           solution.difficulty === "medium" ? "Médio" :
-           solution.difficulty === "advanced" ? "Avançado" : solution.difficulty}
+        <Badge className={`text-xs ${difficultyColor}`}>
+          {difficultyText}
         </Badge>
-        {/* Só mostra tempo estimado se existir e for maior que zero */}
-        {solution.estimated_time && solution.estimated_time > 0 && (
-          <Badge variant="outline" className="px-2 py-1 bg-slate-50 text-slate-700 border-slate-200">
-            {solution.estimated_time} min
-          </Badge>
-        )}
-        {/* Só mostra taxa de sucesso se existir e for maior que zero */}
-        {typeof solution.success_rate === "number" && solution.success_rate > 0 && (
-          <Badge variant="outline" className="px-2 py-1 bg-blue-50 text-blue-800 border-blue-200">
-            {solution.success_rate}% sucesso
+        {implementationMetrics?.completed_at && (
+          <Badge variant="outline" className="bg-green-100 text-green-800 text-xs">
+            Implementada
           </Badge>
         )}
       </div>
       
-      <h1 className="text-2xl md:text-3xl font-bold font-heading bg-clip-text text-transparent bg-gradient-to-r from-neutral-900 to-neutral-700">
-        {solution.title}
-      </h1>
+      <h1 className="text-3xl font-bold">{solution.title}</h1>
       
-      {solution.thumbnail_url && (
-        <div className="mt-6 relative overflow-hidden rounded-xl shadow-lg">
-          <img 
-            src={solution.thumbnail_url} 
-            alt={solution.title} 
-            className="w-full h-60 object-cover transition-transform duration-700 hover:scale-105"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-60"></div>
+      <p className="text-muted-foreground mt-3 text-lg">{solution.description}</p>
+      
+      {solution.overview && (
+        <div className="mt-4 p-4 bg-slate-50 rounded-lg border border-slate-100">
+          <p>{solution.overview}</p>
+        </div>
+      )}
+      
+      {implementationMetrics && implementationMetrics.completion_status === "in_progress" && (
+        <div className="mt-4 flex items-center gap-2 text-sm text-blue-600">
+          <div className="w-2 h-2 bg-blue-600 rounded-full animate-pulse"></div>
+          <span>Implementação em andamento</span>
         </div>
       )}
     </div>

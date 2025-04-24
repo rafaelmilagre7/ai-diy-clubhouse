@@ -10,11 +10,12 @@ import {
   ShieldCheck,
   User,
   Award,
-  BookOpen,
-  Map
+  Map,
+  ClipboardList
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "react-router-dom";
+import { useLogging } from "@/hooks/useLogging";
 
 interface SidebarNavProps {
   sidebarOpen: boolean;
@@ -23,9 +24,13 @@ interface SidebarNavProps {
 export const MemberSidebarNav = ({ sidebarOpen }: SidebarNavProps) => {
   const location = useLocation();
   const { isAdmin } = useAuth();
+  const { log } = useLogging("MemberSidebarNav");
 
-  // Log para verificar se o componente está sendo renderizado
-  console.log("MemberSidebarNav renderizando, sidebarOpen:", sidebarOpen);
+  // Log para verificar a renderização e o estado atual
+  log("Renderizando menu lateral", { 
+    sidebarOpen, 
+    currentPath: location.pathname
+  });
 
   const menuItems = [
     {
@@ -34,9 +39,9 @@ export const MemberSidebarNav = ({ sidebarOpen }: SidebarNavProps) => {
       icon: LayoutDashboard,
     },
     {
-      title: "Onboarding",
-      href: "/onboarding",
-      icon: BookOpen,
+      title: "Perfil de Implementação",
+      href: "/perfil-de-implementacao",
+      icon: ClipboardList,
     },
     {
       title: "Trilha de Implementação",
@@ -76,6 +81,23 @@ export const MemberSidebarNav = ({ sidebarOpen }: SidebarNavProps) => {
   ];
 
   const isActive = (href: string) => {
+    // Se for a rota de soluções, considerar ativa também para solution/:id e solutions/:id
+    if (href === "/solutions" && (
+      location.pathname.startsWith("/solution/") || 
+      location.pathname.startsWith("/solutions/")
+    )) {
+      return true;
+    }
+    
+    // Para caminhos como /implementation/:id ou /implement/:id
+    if (href === "/solutions" && (
+      location.pathname.startsWith("/implement/") ||
+      location.pathname.startsWith("/implementation/")
+    )) {
+      return true;
+    }
+    
+    // Verificação normal para outras rotas
     return location.pathname === href || location.pathname.startsWith(href + '/');
   };
 

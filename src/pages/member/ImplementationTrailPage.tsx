@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useProgress } from "@/hooks/onboarding/useProgress";
+import { useProgress } from "@/hooks/implementation/useProgress";
 import { ImplementationTrailCreator } from "@/components/implementation-trail/ImplementationTrailCreator";
 import { OnboardingIncompleteState } from "@/components/implementation-trail/OnboardingIncompleteState";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -33,7 +33,7 @@ const ImplementationTrailPage = () => {
     );
   }
 
-  // Se o onboarding não foi concluído, exibir mensagem orientando o usuário
+  // Se o onboarding não foi concluído, exibir mensagem orientando o usuário para o Perfil de Implementação
   if (isOnboardingComplete === false) {
     return (
       <div className="container py-8">
@@ -45,7 +45,7 @@ const ImplementationTrailPage = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <OnboardingIncompleteState onNavigateToOnboarding={() => navigate("/onboarding")} />
+            <OnboardingIncompleteState onNavigateToOnboarding={() => navigate("/perfil-de-implementacao")} />
           </CardContent>
         </Card>
       </div>

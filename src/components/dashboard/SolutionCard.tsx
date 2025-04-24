@@ -1,11 +1,12 @@
 
-import { Solution } from "@/hooks/dashboard/types";
+import { Solution } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { CardThumbnail } from "./CardThumbnail";
 import { CardHeader } from "./CardHeader";
 import { CardContentSection } from "./CardContent";
 import { CardFooterSection } from "./CardFooter";
+import { toSolutionCategory, SolutionCategory } from "@/lib/types/appTypes";
 
 interface SolutionCardProps {
   solution: Solution;
@@ -18,8 +19,11 @@ export const SolutionCard = ({ solution, onClick }: SolutionCardProps) => {
     onClick();
   };
 
+  // Converter a categoria para garantir que seja um tipo válido de SolutionCategory
+  const normalizedCategory = toSolutionCategory(solution.category);
+
   // Classes de gradiente baseadas na categoria
-  const categoryGradient = {
+  const categoryGradient: Record<SolutionCategory, string> = {
     revenue: "from-revenue-lighter to-white border-l-4 border-l-revenue",
     operational: "from-operational-lighter to-white border-l-4 border-l-operational",
     strategy: "from-strategy-lighter to-white border-l-4 border-l-strategy"
@@ -31,7 +35,7 @@ export const SolutionCard = ({ solution, onClick }: SolutionCardProps) => {
         "overflow-hidden rounded-xl shadow-md transition-all duration-300 cursor-pointer depth-effect",
         "hover:shadow-xl hover:translate-y-[-4px]",
         "bg-gradient-to-br",
-        categoryGradient[solution.category as keyof typeof categoryGradient]
+        categoryGradient[normalizedCategory]
       )}
       onClick={handleSelect}
     >
@@ -39,7 +43,7 @@ export const SolutionCard = ({ solution, onClick }: SolutionCardProps) => {
         <CardThumbnail thumbnailUrl={solution.thumbnail_url} />
         <div className="p-4 space-y-2">
           <CardHeader 
-            category={solution.category} 
+            category={normalizedCategory} 
             difficulty={solution.difficulty} 
           />
           <CardContentSection 

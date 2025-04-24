@@ -145,6 +145,93 @@ export type Database = {
           },
         ]
       }
+      implementation_profiles: {
+        Row: {
+          ai_knowledge_level: number | null
+          annual_revenue: string | null
+          business_challenges: string[] | null
+          city: string | null
+          company_name: string | null
+          company_sector: string | null
+          company_size: string | null
+          company_website: string | null
+          country: string | null
+          created_at: string | null
+          current_position: string | null
+          email: string | null
+          id: string
+          instagram: string | null
+          is_completed: boolean | null
+          linkedin: string | null
+          name: string | null
+          networking_interests: string[] | null
+          nps_score: number | null
+          phone: string | null
+          phone_country_code: string | null
+          primary_goal: string | null
+          state: string | null
+          updated_at: string | null
+          user_id: string | null
+          weekly_availability: string | null
+        }
+        Insert: {
+          ai_knowledge_level?: number | null
+          annual_revenue?: string | null
+          business_challenges?: string[] | null
+          city?: string | null
+          company_name?: string | null
+          company_sector?: string | null
+          company_size?: string | null
+          company_website?: string | null
+          country?: string | null
+          created_at?: string | null
+          current_position?: string | null
+          email?: string | null
+          id?: string
+          instagram?: string | null
+          is_completed?: boolean | null
+          linkedin?: string | null
+          name?: string | null
+          networking_interests?: string[] | null
+          nps_score?: number | null
+          phone?: string | null
+          phone_country_code?: string | null
+          primary_goal?: string | null
+          state?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          weekly_availability?: string | null
+        }
+        Update: {
+          ai_knowledge_level?: number | null
+          annual_revenue?: string | null
+          business_challenges?: string[] | null
+          city?: string | null
+          company_name?: string | null
+          company_sector?: string | null
+          company_size?: string | null
+          company_website?: string | null
+          country?: string | null
+          created_at?: string | null
+          current_position?: string | null
+          email?: string | null
+          id?: string
+          instagram?: string | null
+          is_completed?: boolean | null
+          linkedin?: string | null
+          name?: string | null
+          networking_interests?: string[] | null
+          nps_score?: number | null
+          phone?: string | null
+          phone_country_code?: string | null
+          primary_goal?: string | null
+          state?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          weekly_availability?: string | null
+        }
+        Relationships: []
+      }
       implementation_trails: {
         Row: {
           created_at: string
@@ -1008,9 +1095,11 @@ export type Database = {
         Row: {
           completed_at: string | null
           completed_modules: number[] | null
+          completion_data: Json | null
           created_at: string
           current_module: number
           id: string
+          implementation_status: string | null
           is_completed: boolean
           last_activity: string
           solution_id: string
@@ -1019,9 +1108,11 @@ export type Database = {
         Insert: {
           completed_at?: string | null
           completed_modules?: number[] | null
+          completion_data?: Json | null
           created_at?: string
           current_module?: number
           id?: string
+          implementation_status?: string | null
           is_completed?: boolean
           last_activity?: string
           solution_id: string
@@ -1030,9 +1121,11 @@ export type Database = {
         Update: {
           completed_at?: string | null
           completed_modules?: number[] | null
+          completion_data?: Json | null
           created_at?: string
           current_module?: number
           id?: string
+          implementation_status?: string | null
           is_completed?: boolean
           last_activity?: string
           solution_id?: string
@@ -1041,6 +1134,41 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "progress_solution_id_fkey"
+            columns: ["solution_id"]
+            isOneToOne: false
+            referencedRelation: "solutions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      solution_certificates: {
+        Row: {
+          certificate_data: Json | null
+          created_at: string | null
+          id: string
+          issued_at: string | null
+          solution_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          certificate_data?: Json | null
+          created_at?: string | null
+          id?: string
+          issued_at?: string | null
+          solution_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          certificate_data?: Json | null
+          created_at?: string | null
+          id?: string
+          issued_at?: string | null
+          solution_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "solution_certificates_solution_id_fkey"
             columns: ["solution_id"]
             isOneToOne: false
             referencedRelation: "solutions"
@@ -1292,12 +1420,15 @@ export type Database = {
       }
       solutions: {
         Row: {
-          category: string
+          category: Database["public"]["Enums"]["solution_category"]
+          checklist_items: Json | null
+          completion_requirements: Json | null
           created_at: string
           description: string
-          difficulty: string
+          difficulty: Database["public"]["Enums"]["difficulty_level"]
           estimated_time: number | null
           id: string
+          implementation_steps: Json | null
           published: boolean
           related_solutions: string[] | null
           slug: string
@@ -1308,12 +1439,15 @@ export type Database = {
           updated_at: string
         }
         Insert: {
-          category: string
+          category: Database["public"]["Enums"]["solution_category"]
+          checklist_items?: Json | null
+          completion_requirements?: Json | null
           created_at?: string
           description: string
-          difficulty: string
+          difficulty: Database["public"]["Enums"]["difficulty_level"]
           estimated_time?: number | null
           id?: string
+          implementation_steps?: Json | null
           published?: boolean
           related_solutions?: string[] | null
           slug: string
@@ -1324,12 +1458,15 @@ export type Database = {
           updated_at?: string
         }
         Update: {
-          category?: string
+          category?: Database["public"]["Enums"]["solution_category"]
+          checklist_items?: Json | null
+          completion_requirements?: Json | null
           created_at?: string
           description?: string
-          difficulty?: string
+          difficulty?: Database["public"]["Enums"]["difficulty_level"]
           estimated_time?: number | null
           id?: string
+          implementation_steps?: Json | null
           published?: boolean
           related_solutions?: string[] | null
           slug?: string
@@ -1944,12 +2081,14 @@ export type Database = {
       }
     }
     Enums: {
+      difficulty_level: "beginner" | "intermediate" | "advanced"
       notification_type:
         | "status_change"
         | "new_comment"
         | "new_vote"
         | "comment_reply"
         | "admin_response"
+      solution_category: "revenue" | "operational" | "strategic"
       suggestion_status:
         | "new"
         | "under_review"
@@ -2073,6 +2212,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      difficulty_level: ["beginner", "intermediate", "advanced"],
       notification_type: [
         "status_change",
         "new_comment",
@@ -2080,6 +2220,7 @@ export const Constants = {
         "comment_reply",
         "admin_response",
       ],
+      solution_category: ["revenue", "operational", "strategic"],
       suggestion_status: [
         "new",
         "under_review",

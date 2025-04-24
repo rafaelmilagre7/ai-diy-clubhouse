@@ -9,6 +9,7 @@ import NavigationButtons from "@/components/admin/solution-editor/NavigationButt
 import AuthError from "@/components/admin/solution-editor/AuthError";
 import { useToast } from "@/hooks/use-toast";
 import { useSolutionEditor } from "@/components/admin/solution-editor/useSolutionEditor";
+import { useEffect } from "react";
 
 const SolutionEditor = () => {
   const { id } = useParams<{ id: string }>();
@@ -25,12 +26,20 @@ const SolutionEditor = () => {
     currentValues,
     currentStep,
     setCurrentStep,
-    totalSteps,
-    stepTitles
+    totalSteps
   } = useSolutionEditor(id, user);
   
+  useEffect(() => {
+    // Logging for debugging purposes
+    console.log("Solution Editor loaded with ID:", id);
+    
+    if (!solution && !loading && id) {
+      console.warn("Solução não encontrada para edição:", id);
+    }
+  }, [id, solution, loading]);
+  
   if (loading) {
-    return <LoadingScreen />;
+    return <LoadingScreen message="Carregando editor de solução..." />;
   }
   
   // Função para mostrar toast explicitamente ao salvar

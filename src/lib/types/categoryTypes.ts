@@ -1,13 +1,22 @@
 
-// Type definitions for categories in the application
-export type SolutionCategory = "revenue" | "operational" | "strategy";
+/**
+ * Este arquivo é mantido para compatibilidade com código existente.
+ * Novas implementações devem usar src/lib/types/appTypes.ts
+ */
 
-// Helper function to validate if a string is a valid SolutionCategory
-export const isSolutionCategory = (category: string): category is SolutionCategory => {
-  return ["revenue", "operational", "strategy"].includes(category);
-};
+import { 
+  SolutionCategory, 
+  isSolutionCategory, 
+  toSolutionCategory, 
+  getCategoryDisplayName, 
+  getCategoryStyles 
+} from './appTypes';
 
-// Function to convert string to SolutionCategory, with a fallback
-export const toSolutionCategory = (category: string): SolutionCategory => {
-  return isSolutionCategory(category) ? category : "operational";
+// Usando export type para re-exportar tipos quando isolatedModules está ativado
+export type { SolutionCategory };
+export { 
+  isSolutionCategory,
+  toSolutionCategory,
+  getCategoryDisplayName,
+  getCategoryStyles
 };
