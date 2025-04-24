@@ -106,8 +106,9 @@ export function useAchievements() {
       
       if (badgesResponse && badgesResponse.length > 0) {
         badgesResponse.forEach(badgeData => {
+          // Verifica se o badgeData.badges existe antes de tentar acessá-lo
           if (badgeData.badges) {
-            // Correção: Acessando corretamente as propriedades do objeto badges
+            // Corrigido: badges é um objeto, não um array, então podemos acessar diretamente suas propriedades
             allAchievements.push({
               id: badgeData.badges.id,
               name: badgeData.badges.name,
