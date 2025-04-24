@@ -33,7 +33,7 @@ const ExperiencePersonalization = () => {
     }
   }, [refreshAttempted, refreshProgress]); // Adicionado refreshProgress como dependência
 
-  const handleSaveData = async (data: any) => {
+  const handleSaveData = async (data: any, stepId: string) => {
     setIsSubmitting(true);
     try {
       console.log("Salvando dados de personalização:", data);
@@ -43,9 +43,11 @@ const ExperiencePersonalization = () => {
         throw new Error("Dados de personalização ausentes ou inválidos");
       }
       
-      // CORREÇÃO: Garantir que os dados são enviados com a estrutura correta
-      // Enviar diretamente com o stepId "experience_personalization"
-      await saveStepData("experience_personalization", data, false);
+      // Usar o stepId fornecido ou fallback para "experience_personalization"
+      const targetStepId = stepId || "experience_personalization";
+      
+      // Enviar com o stepId recebido
+      await saveStepData(targetStepId, data, false);
       
       console.log("Dados de personalização salvos com sucesso");
       toast.success("Dados salvos com sucesso!");

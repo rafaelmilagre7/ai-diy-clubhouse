@@ -101,8 +101,8 @@ export const ExperiencePersonalizationStep: React.FC<OnboardingStepProps> = ({
     };
 
     console.log("Enviando dados de personalização:", data);
-    // Chamar onSubmit com os dados estruturados corretamente
-    onSubmit(data);
+    // CORREÇÃO: Passar o stepId como segundo parâmetro
+    onSubmit(data, "experience_personalization");
   };
 
   return (
