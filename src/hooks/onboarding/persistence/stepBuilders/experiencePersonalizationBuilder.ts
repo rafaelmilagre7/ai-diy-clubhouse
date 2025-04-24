@@ -24,25 +24,41 @@ export function buildExperiencePersonalizationUpdate(data: Partial<OnboardingDat
   
   console.log("Dados atuais de progresso:", existingExperiencePersonalization);
   
-  // Verificar se estamos recebendo dados específicos de experience_personalization
-  if (!data.experience_personalization && typeof data !== 'object') {
-    console.warn("Nenhum dado específico de experience_personalization encontrado para atualização");
+  // Se o payload já contém um objeto experience_personalization, usar diretamente
+  if (data.experience_personalization) {
+    console.log("Dados de experience_personalization encontrados diretamente no payload:", data.experience_personalization);
+    updateObj.experience_personalization = normalizeExperiencePersonalization(data.experience_personalization);
     return updateObj;
   }
   
-  // Extrair dados de experience_personalization seja de data.experience_personalization ou do próprio data
-  const experiencePersonalizationData = data.experience_personalization || data;
+  // Se não há dados específicos na estrutura esperada, verificar se os campos estão no nível raiz
+  const experienceFields = ['interests', 'time_preference', 'available_days', 
+                           'networking_availability', 'skills_to_share', 'mentorship_topics'];
   
-  // Normalizar os dados recebidos
-  const normalizedData = normalizeExperiencePersonalization(experiencePersonalizationData);
+  // Verificar se pelo menos um campo existe no nível raiz
+  const hasRootFields = experienceFields.some(field => field in data);
   
-  // Construir objeto de atualização mesclando os dados existentes com os novos
-  updateObj.experience_personalization = {
-    ...existingExperiencePersonalization,
-    ...normalizedData
-  };
+  if (hasRootFields) {
+    console.log("Campos de experience_personalization encontrados no nível raiz");
+    // Construir objeto com os campos encontrados no nível raiz
+    const experienceData: any = {};
+    
+    experienceFields.forEach(field => {
+      if (field in data) {
+        experienceData[field] = data[field as keyof typeof data];
+      }
+    });
+    
+    // Normalizar e mesclar com os dados existentes
+    updateObj.experience_personalization = {
+      ...existingExperiencePersonalization,
+      ...normalizeExperiencePersonalization(experienceData)
+    };
+    
+    return updateObj;
+  }
   
-  console.log("Objeto final de atualização para experience_personalization:", updateObj);
-  
+  // Se chegamos aqui, não encontramos dados válidos para atualizar
+  console.warn("Nenhum dado específico de experience_personalization encontrado para atualização");
   return updateObj;
 }

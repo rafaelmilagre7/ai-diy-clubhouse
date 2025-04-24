@@ -31,7 +31,7 @@ const ExperiencePersonalization = () => {
           setRefreshAttempted(true); // Marcar que já tentamos, mesmo com erro
         });
     }
-  }, [refreshAttempted]); // Dependência reduzida para evitar loop
+  }, [refreshAttempted, refreshProgress]); // Adicionado refreshProgress como dependência
 
   const handleSaveData = async (data: any) => {
     setIsSubmitting(true);
@@ -43,8 +43,9 @@ const ExperiencePersonalization = () => {
         throw new Error("Dados de personalização ausentes ou inválidos");
       }
       
-      // Usar a assinatura com stepId explícito para evitar problemas
-      await saveStepData("experience_personalization", { experience_personalization: data }, false);
+      // CORREÇÃO: Garantir que os dados são enviados com a estrutura correta
+      // Enviar diretamente com o stepId "experience_personalization"
+      await saveStepData("experience_personalization", data, false);
       
       console.log("Dados de personalização salvos com sucesso");
       toast.success("Dados salvos com sucesso!");
@@ -63,6 +64,15 @@ const ExperiencePersonalization = () => {
   const handleRetry = () => {
     setRefreshAttempted(false); // Resetar flag para permitir nova tentativa
   };
+
+  // Log para depuração
+  useEffect(() => {
+    if (progress?.experience_personalization) {
+      console.log("Dados de experience_personalization disponíveis:", progress.experience_personalization);
+    } else {
+      console.log("Nenhum dado de experience_personalization encontrado no progresso");
+    }
+  }, [progress]);
 
   return (
     <OnboardingLayout

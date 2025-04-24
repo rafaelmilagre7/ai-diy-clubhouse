@@ -76,18 +76,21 @@ export function normalizeExperiencePersonalization(data: any): Record<string, an
       return normalizeExperiencePersonalization(data.experience_personalization);
     }
     
+    // Garantir que todos os arrays sejam realmente arrays
+    const ensureArray = (value: any) => Array.isArray(value) ? value : [];
+    
     return {
-      interests: Array.isArray(data.interests) ? data.interests : [],
-      time_preference: Array.isArray(data.time_preference) ? data.time_preference : [],
-      available_days: Array.isArray(data.available_days) ? data.available_days : [],
+      interests: ensureArray(data.interests),
+      time_preference: ensureArray(data.time_preference),
+      available_days: ensureArray(data.available_days),
       networking_availability: data.networking_availability !== undefined ? 
                              Number(data.networking_availability) : 5,
-      skills_to_share: Array.isArray(data.skills_to_share) ? data.skills_to_share : [],
-      mentorship_topics: Array.isArray(data.mentorship_topics) ? data.mentorship_topics : [],
+      skills_to_share: ensureArray(data.skills_to_share),
+      mentorship_topics: ensureArray(data.mentorship_topics),
     };
   }
   
-  // Caso padrão: retorna objeto vazio
+  // Caso padrão: retorna objeto vazio com estrutura completa
   console.warn("Tipo de dados inesperado para experience_personalization:", typeof data);
   return {
     interests: [],

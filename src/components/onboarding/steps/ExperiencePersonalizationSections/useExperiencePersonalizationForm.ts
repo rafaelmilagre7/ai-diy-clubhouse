@@ -88,15 +88,18 @@ export function useExperiencePersonalizationForm(initialData: InitialFormData | 
   
   console.log("Dados processados para formulário:", experienceData);
   
+  // CORREÇÃO: Garantir que os arrays são realmente arrays
+  const ensureArray = (value: any) => Array.isArray(value) ? value : [];
+  
   const form = useForm<ExperienceFormData>({
     defaultValues: {
-      interests: Array.isArray(experienceData.interests) ? experienceData.interests : [],
-      time_preference: Array.isArray(experienceData.time_preference) ? experienceData.time_preference : [],
-      available_days: Array.isArray(experienceData.available_days) ? experienceData.available_days : [],
+      interests: ensureArray(experienceData.interests),
+      time_preference: ensureArray(experienceData.time_preference),
+      available_days: ensureArray(experienceData.available_days),
       networking_availability: typeof experienceData.networking_availability === "number" ? 
                              experienceData.networking_availability : 5,
-      skills_to_share: Array.isArray(experienceData.skills_to_share) ? experienceData.skills_to_share : [],
-      mentorship_topics: Array.isArray(experienceData.mentorship_topics) ? experienceData.mentorship_topics : [],
+      skills_to_share: ensureArray(experienceData.skills_to_share),
+      mentorship_topics: ensureArray(experienceData.mentorship_topics),
     },
     mode: "onChange"
   });
@@ -140,7 +143,7 @@ export function useExperiencePersonalizationForm(initialData: InitialFormData | 
   function toggleSelect(field: Exclude<FormFieldNames, "networking_availability">, value: string) {
     const currentValues = form.watch(field) as string[];
     
-    if (currentValues.includes(value)) {
+    if (currentValues && currentValues.includes(value)) {
       setValue(
         field, 
         currentValues.filter((v: string) => v !== value), 
@@ -149,7 +152,7 @@ export function useExperiencePersonalizationForm(initialData: InitialFormData | 
     } else {
       setValue(
         field, 
-        [...currentValues, value], 
+        [...(currentValues || []), value], 
         { shouldValidate: true, shouldDirty: true }
       );
     }

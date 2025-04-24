@@ -34,6 +34,17 @@ export const ExperiencePersonalizationStep: React.FC<OnboardingStepProps> = ({
       if (initialData.experience_personalization) {
         experienceData = initialData.experience_personalization;
         console.log("Dados de personalização encontrados:", experienceData);
+        
+        // Se for uma string, tentar converter para objeto
+        if (typeof experienceData === 'string' && experienceData.trim() !== '') {
+          try {
+            experienceData = JSON.parse(experienceData);
+            console.log("Dados de personalização convertidos de string para objeto:", experienceData);
+          } catch (e) {
+            console.error("Erro ao converter dados de personalização de string para objeto:", e);
+            experienceData = {};
+          }
+        }
       } else {
         console.log("Nenhum dado de personalização encontrado, iniciando com valores padrão");
         // Valores padrão para o formulário
@@ -75,19 +86,23 @@ export const ExperiencePersonalizationStep: React.FC<OnboardingStepProps> = ({
       return;
     }
 
+    // CORREÇÃO: Garantir que os dados estão sendo enviados na estrutura correta
     // Construir objeto de dados para envio
     const data = {
-      interests: formValues.interests || [],
-      time_preference: formValues.time_preference || [],
-      available_days: formValues.available_days || [],
-      networking_availability: typeof formValues.networking_availability === 'number' ? 
-                             formValues.networking_availability : 5,
-      skills_to_share: formValues.skills_to_share || [],
-      mentorship_topics: formValues.mentorship_topics || [],
+      experience_personalization: {
+        interests: formValues.interests || [],
+        time_preference: formValues.time_preference || [],
+        available_days: formValues.available_days || [],
+        networking_availability: typeof formValues.networking_availability === 'number' ? 
+                               formValues.networking_availability : 5,
+        skills_to_share: formValues.skills_to_share || [],
+        mentorship_topics: formValues.mentorship_topics || [],
+      }
     };
 
     console.log("Enviando dados de personalização:", data);
-    onSubmit("experience_personalization", data);
+    // Chamar onSubmit com os dados estruturados corretamente
+    onSubmit(data);
   };
 
   return (
