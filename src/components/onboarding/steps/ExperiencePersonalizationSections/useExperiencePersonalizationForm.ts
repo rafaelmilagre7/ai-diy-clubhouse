@@ -37,23 +37,30 @@ interface InitialFormData {
 
 // Função para extrair dados de um objeto ou string JSON
 function extractDataFromObject(data: any): Record<string, any> {
-  // CORREÇÃO: Melhorar diagnóstico de conversão
-  console.log("Extraindo dados do objeto ou string:", data, typeof data);
+  // Melhorar diagnóstico de conversão
+  console.log("[useExperiencePersonalizationForm] Extraindo dados:", data, typeof data);
+  
+  // Se for null ou undefined, retornar objeto vazio
+  if (data === null || data === undefined) {
+    console.log("[useExperiencePersonalizationForm] Dados nulos ou indefinidos, retornando objeto vazio");
+    return {};
+  }
   
   // Se for string, tentar parsear
   if (typeof data === 'string') {
     try {
+      // Se for string vazia, retornar objeto vazio
       if (data.trim() === '') {
-        console.log("String vazia, retornando objeto vazio");
+        console.log("[useExperiencePersonalizationForm] String vazia, retornando objeto vazio");
         return {};
       }
       
-      console.log("Tentando parsear string como JSON:", data);
+      console.log("[useExperiencePersonalizationForm] Tentando parsear string como JSON:", data);
       const parsed = JSON.parse(data);
-      console.log("String parseada com sucesso:", parsed);
+      console.log("[useExperiencePersonalizationForm] String parseada com sucesso:", parsed);
       return parsed;
     } catch (e) {
-      console.error("Erro ao parsear string como objeto:", e);
+      console.error("[useExperiencePersonalizationForm] Erro ao parsear string como objeto:", e);
       return {};
     }
   }
@@ -73,17 +80,16 @@ export function useExperiencePersonalizationForm(initialData: InitialFormData | 
   
   // Extrair dados de personalização de forma segura
   const experienceData = useMemo(() => {
-    console.log("Processando initialData em useExperiencePersonalizationForm:", initialData);
+    console.log("[useExperiencePersonalizationForm] Processando initialData:", initialData);
     
-    // CORREÇÃO: Melhor diagnóstico de inicialização do formulário
     // Se initialData tem experience_personalization, usar isso
     if (initialData && initialData.experience_personalization) {
       let expData = initialData.experience_personalization;
-      console.log("Dados de personalização encontrados:", expData, typeof expData);
+      console.log("[useExperiencePersonalizationForm] Dados de personalização encontrados:", expData, typeof expData);
       
       // Extrair dados do objeto ou string
       const extractedData = extractDataFromObject(expData);
-      console.log("Dados extraídos:", extractedData);
+      console.log("[useExperiencePersonalizationForm] Dados extraídos:", extractedData);
       return extractedData;
     }
     
@@ -95,23 +101,27 @@ export function useExperiencePersonalizationForm(initialData: InitialFormData | 
          'networking_availability' in initialData || 
          'skills_to_share' in initialData || 
          'mentorship_topics' in initialData)) {
-      console.log("Usando propriedades de raiz em initialData");
+      console.log("[useExperiencePersonalizationForm] Usando propriedades de raiz em initialData");
       return initialData;
     }
     
-    console.log("Sem dados de inicialização válidos, retornando objeto vazio");
+    console.log("[useExperiencePersonalizationForm] Sem dados de inicialização válidos, retornando objeto vazio");
     return {};
   }, [initialData]);
   
-  console.log("Dados processados para formulário:", experienceData);
+  console.log("[useExperiencePersonalizationForm] Dados processados para formulário:", experienceData);
   
-  // CORREÇÃO: Garantir que os arrays são realmente arrays
+  // Garantir que os arrays são realmente arrays
   const ensureArray = (value: any) => {
     // Se for array, retornar diretamente
-    if (Array.isArray(value)) return value;
+    if (Array.isArray(value)) {
+      return value;
+    }
     
     // Se for undefined ou null, retornar array vazio
-    if (value === undefined || value === null) return [];
+    if (value === undefined || value === null) {
+      return [];
+    }
     
     // Se for string, tentar parsear como JSON
     if (typeof value === 'string') {
@@ -123,7 +133,7 @@ export function useExperiencePersonalizationForm(initialData: InitialFormData | 
         return [parsed];
       } catch {
         // Se falhar ao parsear, tratar como valor único
-        return [value];
+        return value.trim() ? [value] : [];
       }
     }
     
@@ -131,8 +141,8 @@ export function useExperiencePersonalizationForm(initialData: InitialFormData | 
     return [value];
   };
   
-  // CORREÇÃO: Log detalhado dos valores iniciais
-  console.log("Inicializando formulário com valores:");
+  // Log detalhado dos valores iniciais
+  console.log("[useExperiencePersonalizationForm] Valores iniciais para formulário");
   console.log("interests:", experienceData.interests, typeof experienceData.interests);
   console.log("time_preference:", experienceData.time_preference, typeof experienceData.time_preference);
   console.log("available_days:", experienceData.available_days, typeof experienceData.available_days);
@@ -140,15 +150,30 @@ export function useExperiencePersonalizationForm(initialData: InitialFormData | 
   console.log("skills_to_share:", experienceData.skills_to_share, typeof experienceData.skills_to_share);
   console.log("mentorship_topics:", experienceData.mentorship_topics, typeof experienceData.mentorship_topics);
   
+  const interests = ensureArray(experienceData.interests);
+  const timePreference = ensureArray(experienceData.time_preference);
+  const availableDays = ensureArray(experienceData.available_days);
+  const skillsToShare = ensureArray(experienceData.skills_to_share);
+  const mentorshipTopics = ensureArray(experienceData.mentorship_topics);
+  const networkingAvailability = typeof experienceData.networking_availability === "number" ? 
+                              experienceData.networking_availability : 5;
+  
+  console.log("[useExperiencePersonalizationForm] Valores normalizados para formulário:");
+  console.log("interests:", interests);
+  console.log("time_preference:", timePreference);
+  console.log("available_days:", availableDays);
+  console.log("networking_availability:", networkingAvailability);
+  console.log("skills_to_share:", skillsToShare);
+  console.log("mentorship_topics:", mentorshipTopics);
+  
   const form = useForm<ExperienceFormData>({
     defaultValues: {
-      interests: ensureArray(experienceData.interests),
-      time_preference: ensureArray(experienceData.time_preference),
-      available_days: ensureArray(experienceData.available_days),
-      networking_availability: typeof experienceData.networking_availability === "number" ? 
-                             experienceData.networking_availability : 5,
-      skills_to_share: ensureArray(experienceData.skills_to_share),
-      mentorship_topics: ensureArray(experienceData.mentorship_topics),
+      interests: interests,
+      time_preference: timePreference,
+      available_days: availableDays,
+      networking_availability: networkingAvailability,
+      skills_to_share: skillsToShare,
+      mentorship_topics: mentorshipTopics,
     },
     mode: "onChange"
   });
@@ -192,7 +217,17 @@ export function useExperiencePersonalizationForm(initialData: InitialFormData | 
   function toggleSelect(field: Exclude<FormFieldNames, "networking_availability">, value: string) {
     const currentValues = form.watch(field) as string[];
     
-    if (currentValues && currentValues.includes(value)) {
+    if (!currentValues) {
+      // Se o campo estiver indefinido, inicialize com o valor
+      setValue(
+        field, 
+        [value], 
+        { shouldValidate: true, shouldDirty: true }
+      );
+      return;
+    }
+    
+    if (currentValues.includes(value)) {
       setValue(
         field, 
         currentValues.filter((v: string) => v !== value), 
@@ -201,7 +236,7 @@ export function useExperiencePersonalizationForm(initialData: InitialFormData | 
     } else {
       setValue(
         field, 
-        [...(currentValues || []), value], 
+        [...currentValues, value], 
         { shouldValidate: true, shouldDirty: true }
       );
     }

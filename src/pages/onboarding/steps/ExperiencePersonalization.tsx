@@ -19,14 +19,14 @@ const ExperiencePersonalization = () => {
   useEffect(() => {
     // Verificar se já tentou uma vez para não entrar em loop
     if (!refreshAttempted) {
-      console.log("ExperiencePersonalization montado - carregando dados mais recentes");
+      console.log("[ExperiencePersonalization] montado - carregando dados mais recentes");
       refreshProgress()
         .then(() => {
-          console.log("Dados atualizados para ExperiencePersonalization:", progress);
+          console.log("[ExperiencePersonalization] Dados atualizados:", progress);
           setRefreshAttempted(true); // Marcar que já tentamos atualizar
         })
         .catch(error => {
-          console.error("Erro ao carregar dados:", error);
+          console.error("[ExperiencePersonalization] Erro ao carregar dados:", error);
           toast.error("Erro ao carregar dados. Algumas informações podem estar desatualizadas.");
           setRefreshAttempted(true); // Marcar que já tentamos, mesmo com erro
         });
@@ -36,7 +36,8 @@ const ExperiencePersonalization = () => {
   const handleSaveData = async (stepId: string, data: any) => {
     setIsSubmitting(true);
     try {
-      console.log("Salvando dados de personalização:", data);
+      console.log("[ExperiencePersonalization] Salvando dados de personalização:", data);
+      console.log("[ExperiencePersonalization] StepId recebido:", stepId);
       
       // Verificar se temos dados válidos
       if (!data) {
@@ -46,20 +47,31 @@ const ExperiencePersonalization = () => {
       // Usar o stepId fornecido ou fallback para "experience_personalization"
       const targetStepId = stepId || "experience_personalization";
       
-      // CORREÇÃO: Garantir que os dados estão na estrutura correta e registrar o formato
-      console.log("Tipo de dados:", typeof data);
-      console.log("Estrutura dos dados:", JSON.stringify(data, null, 2));
+      // Garantir que os dados estão na estrutura correta e registrar o formato
+      console.log("[ExperiencePersonalization] Tipo de dados:", typeof data);
+      console.log("[ExperiencePersonalization] Estrutura dos dados:", JSON.stringify(data, null, 2));
+      
+      // CORREÇÃO: Verificar se os dados precisam ser estruturados corretamente
+      let dataToSave = data;
+      
+      // Se não for um objeto com experience_personalization, estruturar corretamente
+      if (!data.experience_personalization && typeof data === 'object') {
+        console.log("[ExperiencePersonalization] Reestruturando dados para formato correto");
+        dataToSave = {
+          experience_personalization: data
+        };
+      }
       
       // Enviar com o stepId recebido
-      await saveStepData(targetStepId, data, false);
+      await saveStepData(targetStepId, dataToSave, false);
       
-      console.log("Dados de personalização salvos com sucesso");
+      console.log("[ExperiencePersonalization] Dados salvos com sucesso");
       toast.success("Dados salvos com sucesso!");
       
       // Navegar manualmente para a próxima página
       navigate("/onboarding/complementary");
     } catch (error) {
-      console.error("Erro ao salvar dados:", error);
+      console.error("[ExperiencePersonalization] Erro ao salvar dados:", error);
       toast.error("Erro ao salvar dados. Por favor, tente novamente.");
     } finally {
       setIsSubmitting(false);
@@ -74,9 +86,10 @@ const ExperiencePersonalization = () => {
   // Log para depuração
   useEffect(() => {
     if (progress?.experience_personalization) {
-      console.log("Dados de experience_personalization disponíveis:", progress.experience_personalization);
+      console.log("[ExperiencePersonalization] Dados disponíveis:", progress.experience_personalization);
+      console.log("[ExperiencePersonalization] Tipo dos dados:", typeof progress.experience_personalization);
     } else {
-      console.log("Nenhum dado de experience_personalization encontrado no progresso");
+      console.log("[ExperiencePersonalization] Nenhum dado de experience_personalization encontrado no progresso");
     }
   }, [progress]);
 
