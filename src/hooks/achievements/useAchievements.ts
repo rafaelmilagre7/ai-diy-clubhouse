@@ -1,41 +1,21 @@
-
 import { useCallback } from 'react';
-import { Achievement } from '@/types/achievementTypes';
-import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/auth';
+import { useToast } from '@/hooks/use-toast';
+import { useAchievementData } from './useAchievementData';
+import { Achievement } from '@/types/achievementTypes';
 import { useQuery } from '@tanstack/react-query';
-import { useToast } from '@/components/ui/use-toast';
-import { SolutionCategory } from '@/lib/types/categoryTypes';
 import { 
+  fetchProgressData, 
+  fetchBadgesData, 
+  createFallbackAchievements,
+  removeDuplicateAchievements
+} from './utils/achievementUtils';
+import {
   generateImplementationAchievements,
   generateCategoryAchievements,
   generateEngagementAchievements,
   generateSocialAchievements
 } from '@/utils/achievements/achievementGenerators';
-import { useAchievementData } from './useAchievementData';
-
-// Define TypeScript interfaces para os dados retornados do Supabase
-interface ProgressItem {
-  solution_id: string;
-  is_completed: boolean;
-  current_module: number;
-  solutions?: {
-    id: string;
-    category: string;
-  };
-}
-
-interface BadgeItem {
-  badge_id: string;
-  earned_at: string;
-  badges: {
-    id: string;
-    name: string;
-    description: string;
-    icon: string;
-    category: string;
-  };
-}
 
 export function useAchievements() {
   const { user } = useAuth();
@@ -46,7 +26,6 @@ export function useAchievements() {
     if (!user) return [];
     
     try {
-      // Aguardamos os dados carregarem do hook useAchievementData
       const { 
         progressData, 
         solutions, 
@@ -58,39 +37,11 @@ export function useAchievements() {
       
       if (dataError) throw new Error(dataError);
       
-      // Primeiro, tentamos buscar as conquistas reais do usuário
-      const { data: progressResponse, error: progressError } = await supabase
-        .from('progress')
-        .select(`
-          solution_id,
-          is_completed,
-          current_module,
-          solutions (
-            id, category
-          )
-        `)
-        .eq('user_id', user.id);
-        
-      if (progressError) throw progressError;
-      
-      // Buscar badges já conquistados
-      const { data: badgesResponse, error: badgesError } = await supabase
-        .from('user_badges')
-        .select(`
-          badge_id,
-          earned_at,
-          badges (
-            id, name, description, icon, category
-          )
-        `)
-        .eq('user_id', user.id);
-        
-      if (badgesError) throw badgesError;
+      // Buscar dados do progresso e badges
+      const progressResponse = await fetchProgressData(user.id);
+      const badgesResponse = await fetchBadgesData(user.id);
 
-      const typedProgressData = progressResponse as unknown as ProgressItem[];
-      const typedBadgesData = badgesResponse as unknown as BadgeItem[];
-      
-      // Construir todas as conquistas utilizando os geradores
+      // Gerar todas as conquistas usando os geradores
       const generatedAchievements: Achievement[] = [
         ...generateImplementationAchievements(progressData, solutions),
         ...generateCategoryAchievements(progressData, solutions),
@@ -98,7 +49,7 @@ export function useAchievements() {
         ...generateSocialAchievements(progressData, comments, totalLikes)
       ];
 
-      // Conquista básica de iniciante (desbloqueia ao iniciar qualquer solução)
+      // Adicionar conquistas básicas
       const basicAchievements: Achievement[] = [
         // Conquista de iniciante (desbloqueia ao iniciar qualquer solução)
         {
@@ -158,19 +109,19 @@ export function useAchievements() {
         },
       ];
       
-      // Combinar conquistas básicas com as geradas
+      // Combinar todas as conquistas
       let allAchievements = [...basicAchievements, ...generatedAchievements];
       
-      // Incluir também badges específicos da tabela de badges (se houver)
-      if (typedBadgesData && typedBadgesData.length > 0) {
-        typedBadgesData.forEach(badgeData => {
+      // Incluir badges da tabela de badges
+      if (badgesResponse && badgesResponse.length > 0) {
+        badgesResponse.forEach(badgeData => {
           if (badgeData.badges) {
             allAchievements.push({
               id: badgeData.badges.id,
               name: badgeData.badges.name,
               description: badgeData.badges.description,
               icon: badgeData.badges.icon,
-              category: badgeData.badges.category as SolutionCategory | "achievement",
+              category: badgeData.badges.category,
               isUnlocked: true,
               earnedAt: badgeData.earned_at,
             });
@@ -178,11 +129,8 @@ export function useAchievements() {
         });
       }
       
-      // Garantir que não existam conquistas duplicadas (usando id como identificador único)
-      const uniqueAchievements = Array.from(
-        new Map(allAchievements.map(item => [item.id, item])).values()
-      );
-      
+      // Remover duplicatas e retornar
+      const uniqueAchievements = removeDuplicateAchievements(allAchievements);
       console.log("Conquistas carregadas:", uniqueAchievements.length, uniqueAchievements);
       return uniqueAchievements;
       
@@ -194,26 +142,7 @@ export function useAchievements() {
         variant: "destructive",
       });
       
-      // Fallback para alguns dados de exemplo em caso de erro
-      return [
-        {
-          id: 'achievement-beginner',
-          name: 'Iniciante',
-          description: 'Começou sua jornada no clube',
-          category: "achievement",
-          isUnlocked: true,
-          earnedAt: new Date().toISOString(),
-        },
-        {
-          id: 'achievement-pioneiro',
-          name: 'Pioneiro',
-          description: 'Completou sua primeira implementação',
-          category: "achievement", 
-          requiredCount: 1,
-          currentCount: 0,
-          isUnlocked: false,
-        }
-      ] as Achievement[];
+      return createFallbackAchievements();
     }
   }, [user, toast, achievementData]);
   
