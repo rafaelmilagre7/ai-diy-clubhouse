@@ -1,3 +1,4 @@
+
 import React, { useEffect } from "react";
 import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
 import { useOnboardingSteps } from "@/hooks/onboarding/useOnboardingSteps";
@@ -15,45 +16,56 @@ const Review: React.FC = () => {
   const { progress, isLoading, refreshProgress } = useProgress();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   
-  // Encontrar o índice correto do passo de revisão e calcular progresso arredondado
+  // Encontrar o índice correto do passo de revisão
   const reviewStepIndex = steps.findIndex(step => step.id === "review");
-  const progressPercentage = Math.round(((reviewStepIndex + 1) / steps.length) * 100);
   
-  // Efeito para atualizar dados ao entrar na página
+  // Efeito para garantir que os dados mais recentes sejam carregados ao entrar na página
   useEffect(() => {
     const loadFreshData = async () => {
       try {
-        console.log("Recarregando dados mais recentes para a revisão...");
+        console.log("[Review] Carregando dados mais recentes para revisão...");
+        // Forçar recarga dos dados do backend
         await refreshProgress();
-        console.log("Dados atualizados para revisão:", progress);
+        console.log("[Review] Dados atualizados para revisão:", progress);
       } catch (error) {
-        console.error("Erro ao recarregar dados para revisão:", error);
+        console.error("[Review] Erro ao recarregar dados para revisão:", error);
         toast.error("Falha ao carregar dados atualizados. Tente recarregar a página.");
       }
     };
     
+    // Executar carga imediatamente ao montar o componente
     loadFreshData();
-  }, [refreshProgress]);
+    
+    // Adicionar um timer para garantir que os dados foram carregados, mesmo em caso de race conditions
+    const refreshTimer = setTimeout(() => {
+      if (!progress || Object.keys(progress).length === 0) {
+        console.log("[Review] Tentativa adicional de carga de dados após timeout...");
+        loadFreshData();
+      }
+    }, 1000);
+    
+    return () => clearTimeout(refreshTimer);
+  }, [refreshProgress]); // Dependência apenas em refreshProgress para executar uma vez na montagem
   
   // Validar e normalizar dados de progresso
   useEffect(() => {
     if (progress) {
-      console.log("Dados de progresso na tela de revisão:", progress);
+      console.log("[Review] Dados de progresso na tela de revisão:", progress);
       
       // Função para normalizar campos que podem estar como string
       const normalizeField = (fieldName: string, value: any) => {
         if (typeof value === 'string' && fieldName !== 'current_step' && fieldName !== 'user_id' && fieldName !== 'id') {
-          console.log(`Tentando normalizar campo ${fieldName} que está como string: "${value}"`);
+          console.log(`[Review] Tentando normalizar campo ${fieldName} que está como string: "${value}"`);
           
           // Tentativa de converter string para objeto
           try {
             if (value && value !== "{}" && value !== "") {
               const parsed = JSON.parse(value);
-              console.log(`Campo ${fieldName} convertido de string para objeto:`, parsed);
+              console.log(`[Review] Campo ${fieldName} convertido de string para objeto:`, parsed);
               return parsed;
             }
           } catch (e) {
-            console.error(`Falha ao converter string para objeto no campo ${fieldName}:`, e);
+            console.error(`[Review] Falha ao converter string para objeto no campo ${fieldName}:`, e);
           }
         }
         return value;
@@ -100,7 +112,7 @@ const Review: React.FC = () => {
       setIsSubmitting(true);
       await completeOnboarding();
     } catch (error) {
-      console.error("Erro ao finalizar onboarding:", error);
+      console.error("[Review] Erro ao finalizar onboarding:", error);
       toast.error("Erro ao finalizar o onboarding. Por favor, tente novamente.");
     } finally {
       setIsSubmitting(false);

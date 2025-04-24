@@ -20,7 +20,7 @@ export function useProgressRefresh(
 
     if (!progressId.current) {
       logDebugEvent("refreshProgress_redirect_to_fetch", {});
-      console.log("ID de progresso não disponível, buscando dados iniciais");
+      console.log("[useProgressRefresh] ID de progresso não disponível, buscando dados iniciais");
       return await fetchProgress();
     }
 
@@ -28,20 +28,20 @@ export function useProgressRefresh(
       setIsLoading(true);
       lastError.current = null;
       logDebugEvent("refreshProgress_start", { progressId: progressId.current });
-      console.log("Atualizando dados do progresso:", progressId.current);
+      console.log("[useProgressRefresh] Atualizando dados do progresso:", progressId.current);
       
       const { data, error } = await refreshOnboardingProgress(progressId.current);
 
       if (!isMounted.current) return null;
 
       if (error) {
-        console.error("Erro ao recarregar progresso:", error);
+        console.error("[useProgressRefresh] Erro ao recarregar progresso:", error);
         lastError.current = new Error(error.message);
         logDebugEvent("refreshProgress_error", { error: error.message });
         
         if (retryCount.current < 3) {
           retryCount.current++;
-          console.log(`Tentando novamente (${retryCount.current}/3) em ${retryCount.current * 1000}ms...`);
+          console.log(`[useProgressRefresh] Tentando novamente (${retryCount.current}/3) em ${retryCount.current * 1000}ms...`);
           setTimeout(() => {
             refreshProgress();
           }, retryCount.current * 1000);
@@ -51,14 +51,25 @@ export function useProgressRefresh(
       }
 
       logDebugEvent("refreshProgress_success", { progressId: data?.id });
-      console.log("Progresso recarregado com sucesso:", data);
-      setProgress(data);
-      retryCount.current = 0;
-      return data;
+      console.log("[useProgressRefresh] Progresso recarregado com sucesso:", data);
+      
+      // Garantir que os dados não são nulos
+      if (data) {
+        // Normalizar dados antes de atualizar estado
+        const normalizedData = data;
+        
+        // Atualizar o estado com os dados normalizados
+        setProgress(normalizedData);
+        retryCount.current = 0;
+        return normalizedData;
+      } else {
+        console.warn("[useProgressRefresh] Dados recarregados são nulos ou vazios");
+        return null;
+      }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       logDebugEvent("refreshProgress_exception", { error: errorMessage });
-      console.error("Erro ao recarregar progresso:", error);
+      console.error("[useProgressRefresh] Erro ao recarregar progresso:", error);
       lastError.current = error instanceof Error ? error : new Error(String(error));
       return null;
     } finally {

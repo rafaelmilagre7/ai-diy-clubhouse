@@ -20,34 +20,69 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({
   isSubmitting,
   navigateToStep,
 }) => {
+  // Introduzir um hook para garantir renderização completa após dados carregados
+  const [processedData, setProcessedData] = React.useState<OnboardingProgress | null>(null);
+  
+  // Processar dados quando o progress mudar
+  React.useEffect(() => {
+    if (!progress) return;
+    
+    console.log("[ReviewStep] Processando dados de progresso:", progress);
+    
+    // Função para garantir que objetos JSONB sejam parseados corretamente
+    const processProgressData = (data: OnboardingProgress): OnboardingProgress => {
+      const processed = { ...data };
+      
+      // Lista de campos que podem precisar de processamento
+      const fieldsToProcess = [
+        'personal_info', 
+        'professional_info', 
+        'business_context',
+        'business_goals',
+        'ai_experience',
+        'experience_personalization',
+        'complementary_info'
+      ];
+      
+      // Processar cada campo
+      fieldsToProcess.forEach(field => {
+        const key = field as keyof OnboardingProgress;
+        const value = processed[key];
+        
+        if (value) {
+          // Se for string, tentar converter para objeto
+          if (typeof value === 'string' && value !== "") {
+            try {
+              processed[key] = JSON.parse(value) as any;
+              console.log(`[ReviewStep] Campo ${field} convertido de string para objeto:`, processed[key]);
+            } catch (e) {
+              console.error(`[ReviewStep] Erro ao converter string para objeto no campo ${field}:`, e);
+            }
+          } else if (typeof value === 'object') {
+            console.log(`[ReviewStep] Campo ${field} já é um objeto:`, value);
+          }
+        }
+      });
+      
+      return processed;
+    };
+    
+    // Processar dados e atualizar estado
+    const processed = processProgressData(progress);
+    setProcessedData(processed);
+    
+  }, [progress]);
+
   if (!progress) return <div>Carregando dados...</div>;
+  
+  // Usar dados processados ou fallback para dados originais
+  const dataToUse = processedData || progress;
 
   // Verifica se todos os passos necessários foram concluídos
   // Exclui etapas de review e geração de trilha
   const allStepsCompleted = steps
     .filter(step => step.id !== "review" && step.id !== "trail_generation")
     .every(step => progress.completed_steps && Array.isArray(progress.completed_steps) && progress.completed_steps.includes(step.id));
-
-  // Depurar progresso para entender melhor os dados disponíveis
-  console.log("Dados de progresso na ReviewStep:", progress);
-
-  // Função para normalizar dados antes de enviar para os cards
-  const normalizeSectionData = (sectionKey: string, data: any) => {
-    // Evitar processamento desnecessário
-    if (!data) return {};
-    
-    // Se for string, tentar converter para objeto
-    if (typeof data === 'string' && data !== "" && data !== "{}") {
-      try {
-        return JSON.parse(data);
-      } catch (e) {
-        console.error(`Erro ao converter string para objeto na seção ${sectionKey}:`, e);
-        return {};
-      }
-    }
-    
-    return data;
-  };
 
   return (
     <div className="space-y-6">
@@ -63,59 +98,70 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({
           .filter((step) => step.id !== "review" && step.id !== "trail_generation")
           .map((step, idx) => {
             const sectionKey = step.section as keyof OnboardingProgress;
-            let sectionData = progress[sectionKey];
+            let sectionData = dataToUse[sectionKey];
 
             // Log para depuração
-            console.log(`Passo ${step.id}, seção ${step.section}, dados originais:`, sectionData);
-            console.log(`Tipo de dados para ${step.section}:`, typeof sectionData);
+            console.log(`[ReviewStep] Processando seção ${step.id}, dados:`, sectionData);
+            console.log(`[ReviewStep] Tipo de dados para ${step.section}:`, typeof sectionData);
             
-            // Normalizar dados da seção
-            sectionData = normalizeSectionData(step.section, sectionData);
-            
-            // Log para dados normalizados
-            console.log(`Dados normalizados para ${step.section}:`, sectionData);
-
             // Tratamento especial para business_context que pode estar em business_data
             if (step.section === "business_context" && (!sectionData || Object.keys(sectionData || {}).length === 0)) {
-              let fallbackData = progress.business_data;
+              const fallbackData = dataToUse.business_data;
               if (fallbackData) {
-                sectionData = normalizeSectionData("business_data", fallbackData);
-                console.log("Usando business_data como fallback para business_context:", sectionData);
+                if (typeof fallbackData === 'string') {
+                  try {
+                    sectionData = JSON.parse(fallbackData);
+                    console.log("[ReviewStep] business_context parseado de string:", sectionData);
+                  } catch (e) {
+                    console.error("[ReviewStep] Erro ao parser business_data como fallback:", e);
+                  }
+                } else {
+                  sectionData = fallbackData;
+                  console.log("[ReviewStep] Usando business_data como fallback para business_context:", sectionData);
+                }
               }
             }
 
             // Tratamento especial para dados profissionais
             if (step.section === "professional_info" && (!sectionData || Object.keys(sectionData || {}).length === 0)) {
               // Construir um objeto com dados diretos como fallback
-              if (progress.company_name || progress.company_size || progress.company_sector) {
+              if (dataToUse.company_name || dataToUse.company_size || dataToUse.company_sector) {
                 const directData = {
-                  company_name: progress.company_name || "",
-                  company_size: progress.company_size || "",
-                  company_sector: progress.company_sector || "",
-                  company_website: progress.company_website || "",
-                  current_position: progress.current_position || "",
-                  annual_revenue: progress.annual_revenue || "",
+                  company_name: dataToUse.company_name || "",
+                  company_size: dataToUse.company_size || "",
+                  company_sector: dataToUse.company_sector || "",
+                  company_website: dataToUse.company_website || "",
+                  current_position: dataToUse.current_position || "",
+                  annual_revenue: dataToUse.annual_revenue || "",
                 };
                 
                 // Se algum dos campos diretos tiver valor, usar esses dados
                 if (Object.values(directData).some(value => !!value)) {
                   sectionData = directData;
-                  console.log("Usando dados diretos para professional_info:", sectionData);
+                  console.log("[ReviewStep] Usando dados diretos para professional_info:", sectionData);
                 }
+              }
+            }
+            
+            // Último esforço de normalização para garantir que temos um objeto e não uma string
+            if (typeof sectionData === 'string' && sectionData !== "" && sectionData !== "{}") {
+              try {
+                sectionData = JSON.parse(sectionData);
+                console.log(`[ReviewStep] Parseando string para objeto na renderização final:`, sectionData);
+              } catch (e) {
+                console.error(`[ReviewStep] Erro ao tentar parsear string:`, e, sectionData);
               }
             }
             
             // Passamos o índice real (começando em 1) para a UI
             const stepIndex = idx + 1;
 
-            console.log(`Renderizando seção ${step.id}, índice: ${stepIndex}`);
-
             return (
               <ReviewSectionCard
                 key={step.id}
                 step={step}
                 sectionData={sectionData || {}}
-                progress={progress}
+                progress={dataToUse}
                 stepIndex={stepIndex}
                 navigateToStep={navigateToStep}
               />

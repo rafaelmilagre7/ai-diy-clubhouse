@@ -16,23 +16,23 @@ import { getComplementaryInfoSummary } from "./review-sections/complementaryInfo
 
 // Função para determinar o componente de resumo correto com base na seção
 const getSummaryComponent = (section: string, data: any, progress: any) => {
-  console.log(`Renderizando summary para seção ${section} com dados:`, data);
+  console.log(`[ReviewSectionCard] Renderizando summary para seção ${section} com dados:`, data);
   
   // Verificações iniciais de sanidade dos dados
   if (!data) {
-    console.warn(`Dados NULOS para seção ${section}`);
+    console.warn(`[ReviewSectionCard] Dados NULOS para seção ${section}`);
     return <p className="text-gray-500 italic">Seção não preenchida. Clique em Editar para preencher.</p>;
   }
   
   // Verificar se é um objeto vazio
   if (typeof data === 'object' && Object.keys(data).length === 0) {
-    console.warn(`Objeto vazio para seção ${section}`);
+    console.warn(`[ReviewSectionCard] Objeto vazio para seção ${section}`);
     return <p className="text-gray-500 italic">Seção não preenchida. Clique em Editar para preencher.</p>;
   }
   
   // Verificar se é uma string vazia ou "{}"
   if (typeof data === 'string' && (data === "" || data === "{}")) {
-    console.warn(`String vazia ou "{}" para seção ${section}`);
+    console.warn(`[ReviewSectionCard] String vazia ou "{}" para seção ${section}`);
     return <p className="text-gray-500 italic">Seção não preenchida. Clique em Editar para preencher.</p>;
   }
   
@@ -40,16 +40,16 @@ const getSummaryComponent = (section: string, data: any, progress: any) => {
   if (typeof data === 'string' && data !== "" && data !== "{}") {
     try {
       data = JSON.parse(data);
-      console.log(`Convertido string para objeto na seção ${section}:`, data);
+      console.log(`[ReviewSectionCard] Convertido string para objeto na seção ${section}:`, data);
     } catch (e) {
-      console.error(`Erro ao converter string para objeto na seção ${section}:`, e);
+      console.error(`[ReviewSectionCard] Erro ao converter string para objeto na seção ${section}:`, e);
       return <p className="text-gray-500 italic">Erro ao processar dados. Clique em Editar para preencher novamente.</p>;
     }
   }
   
   // Verificação adicional após possível conversão
   if (typeof data === 'object' && Object.keys(data).length === 0) {
-    console.warn(`Objeto vazio após conversão para seção ${section}`);
+    console.warn(`[ReviewSectionCard] Objeto vazio após conversão para seção ${section}`);
     return <p className="text-gray-500 italic">Seção não preenchida. Clique em Editar para preencher.</p>;
   }
   
@@ -115,6 +115,7 @@ export const ReviewSectionCard: React.FC<ReviewSectionCardProps> = ({
         // Usar o objeto convertido para verificação específica de campos
         return checkSectionCompletion(step.section, parsedData);
       } catch (e) {
+        console.error(`[ReviewSectionCard] Erro ao parsear dados da seção ${step.section}:`, e);
         return false;
       }
     }
