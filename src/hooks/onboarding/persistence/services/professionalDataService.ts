@@ -1,102 +1,94 @@
 
 import { supabase } from "@/lib/supabase";
-import { ProfessionalDataInput } from "@/types/onboarding";
 import { normalizeField } from "../utils/dataNormalization";
-import { buildProfessionalDataUpdate } from "../stepBuilders/professionalDataBuilder";
+import { ProfessionalDataInput } from "@/types/onboarding";
 
 /**
- * Salva dados profissionais do usuário
- * @param userId ID do usuário
- * @param data Dados profissionais
+ * Salva os dados profissionais na tabela específica
  */
-export async function saveProfessionalData(userId: string, data: ProfessionalDataInput) {
+export const saveProfessionalData = async (
+  progressId: string,
+  userId: string,
+  data: Partial<ProfessionalDataInput>
+) => {
   try {
-    // Verificar se já existe um progresso para este usuário
-    const { data: progressData, error } = await supabase
-      .from('onboarding_progress')
-      .select('*')
-      .eq('user_id', userId)
-      .single();
+    console.log("Salvando dados profissionais:", { progressId, userId, data });
     
-    if (error && error.code !== 'PGRST116') {
-      console.error('Erro ao verificar progresso de onboarding:', error);
-      return { success: false, error };
-    }
+    // Estrutura de dados para inserção
+    const professionalData = {
+      progress_id: progressId,
+      user_id: userId,
+      company_name: data.company_name || null,
+      company_size: data.company_size || null,
+      company_sector: data.company_sector || null,
+      company_website: data.company_website || null,
+      current_position: data.current_position || null,
+      annual_revenue: data.annual_revenue || null,
+    };
     
-    // Se não existe, criar novo
-    if (!progressData) {
-      console.log('Criando novo registro de progresso para dados profissionais');
+    const { data: result, error } = await supabase
+      .from('professional_data')
+      .upsert(professionalData)
+      .select();
       
-      const professionalInfo = {
-        company_name: data.company_name,
-        company_size: data.company_size,
-        company_sector: data.company_sector,
-        company_website: data.company_website || '',
-        current_position: data.current_position,
-        annual_revenue: data.annual_revenue
-      };
-      
-      const { data: newProgress, error: createError } = await supabase
-        .from('onboarding_progress')
-        .insert([{
-          user_id: userId,
-          professional_info: professionalInfo,
-          company_name: data.company_name,
-          company_size: data.company_size,
-          company_sector: data.company_sector,
-          company_website: data.company_website || '',
-          current_position: data.current_position,
-          annual_revenue: data.annual_revenue,
-          current_step: 'business_context',
-          completed_steps: ['personal', 'professional_data']
-        }])
-        .select()
-        .single();
-      
-      if (createError) {
-        console.error('Erro ao criar novo progresso de onboarding:', createError);
-        return { success: false, error: createError };
-      }
-      
-      return { success: true, data: newProgress };
+    if (error) {
+      throw error;
     }
     
-    // Já existe, atualizar com os novos dados
-    console.log('Atualizando dados profissionais em progresso existente');
-    
-    // Construir objeto de atualização
-    const existingProfessionalInfo = normalizeField(progressData.professional_info);
-    const updateObj = buildProfessionalDataUpdate(data, progressData);
-    
-    // Atualizar também completed_steps se necessário
-    if (!progressData.completed_steps?.includes('professional_data')) {
-      updateObj.completed_steps = [
-        ...Array.from(new Set([...(progressData.completed_steps || []), 'professional_data']))
-      ];
-    }
-    
-    // Definir current_step para business_context se estiver vazio ou em professional_data
-    if (!progressData.current_step || progressData.current_step === 'professional_data') {
-      updateObj.current_step = 'business_context';
-    }
-    
-    // Atualizar no Supabase
-    const { data: updatedProgress, error: updateError } = await supabase
-      .from('onboarding_progress')
-      .update(updateObj)
-      .eq('id', progressData.id)
-      .select()
-      .single();
-    
-    if (updateError) {
-      console.error('Erro ao atualizar progresso de onboarding:', updateError);
-      return { success: false, error: updateError };
-    }
-    
-    return { success: true, data: updatedProgress };
-    
+    return result;
   } catch (error) {
-    console.error('Exceção ao salvar dados profissionais:', error);
-    return { success: false, error };
+    console.error("Erro ao salvar dados profissionais:", error);
+    throw error;
   }
-}
+};
+
+/**
+ * Busca os dados profissionais da tabela específica
+ */
+export const fetchProfessionalData = async (progressId: string) => {
+  try {
+    const { data, error } = await supabase
+      .from('professional_data')
+      .select('*')
+      .eq('progress_id', progressId)
+      .single();
+      
+    if (error) {
+      if (error.code === 'PGRST116') {
+        // Nenhum registro encontrado
+        console.log("Nenhum dado profissional encontrado para o progresso:", progressId);
+        return null;
+      }
+      throw error;
+    }
+    
+    return data;
+  } catch (error) {
+    console.error("Erro ao buscar dados profissionais:", error);
+    return null;
+  }
+};
+
+/**
+ * Formata os dados profissionais para incluir no objeto de progresso
+ */
+export const formatProfessionalData = (data: any) => {
+  if (!data) return {};
+  
+  return {
+    company_name: data.company_name || "",
+    company_size: data.company_size || "",
+    company_sector: data.company_sector || "",
+    company_website: data.company_website || "",
+    current_position: data.current_position || "",
+    annual_revenue: data.annual_revenue || "",
+    professional_info: {
+      company_name: data.company_name || "",
+      company_size: data.company_size || "",
+      company_sector: data.company_sector || "",
+      company_website: data.company_website || "",
+      current_position: data.current_position || "",
+      annual_revenue: data.annual_revenue || "",
+    }
+  };
+};

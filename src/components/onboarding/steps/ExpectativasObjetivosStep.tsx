@@ -105,11 +105,13 @@ export const ExpectativasObjetivosStep: React.FC<ExpectativasObjetivosStepProps>
       
       // Processar content_formats (array)
       if (businessGoals.content_formats) {
+        let formats: string[] = [];
         if (Array.isArray(businessGoals.content_formats)) {
-          formData.content_formats = businessGoals.content_formats;
+          formats = businessGoals.content_formats as string[];
         } else if (typeof businessGoals.content_formats === 'string') {
-          formData.content_formats = [businessGoals.content_formats];
+          formats = [businessGoals.content_formats];
         }
+        formData.content_formats = formats;
       }
       
       console.log("[ExpectativasObjetivos] Inicializando formulário com valores:", formData);
@@ -144,7 +146,7 @@ export const ExpectativasObjetivosStep: React.FC<ExpectativasObjetivosStepProps>
         how_implement: data.how_implement,
         week_availability: data.week_availability,
         live_interest: Number(data.live_interest || 5),
-        content_formats: Array.isArray(data.content_formats) ? [...data.content_formats] : [],
+        content_formats: Array.isArray(data.content_formats) ? data.content_formats : [],
       },
     };
     

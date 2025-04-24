@@ -1,3 +1,4 @@
+
 export interface OnboardingData {
   // 1. Dados Pessoais
   personal_info: {
@@ -160,10 +161,10 @@ export interface OnboardingStep {
 }
 
 export type ProfessionalDataInput = {
-  company_name: string;
-  company_size: string;
-  company_sector: string;
+  company_name?: string;
+  company_size?: string;
+  company_sector?: string;
   company_website?: string;
-  current_position: string;
-  annual_revenue: string;
+  current_position?: string;
+  annual_revenue?: string;
 };

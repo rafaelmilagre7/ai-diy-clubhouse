@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useSolutionsData } from '@/hooks/useSolutionsData';
 import { SolutionCard } from '@/components/solution/SolutionCard';
 import { Input } from '@/components/ui/input';
@@ -24,7 +24,7 @@ const Solutions = () => {
     setSearchQuery,
     activeCategory,
     setActiveCategory
-  } = useSolutionsData(null);
+  } = useSolutionsData();
 
   // Log data for debugging
   log("Solutions page loaded", { 

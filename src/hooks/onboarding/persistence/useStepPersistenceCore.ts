@@ -1,4 +1,3 @@
-
 import React, { useRef } from "react";
 import { useProgress } from "../useProgress";
 import { buildUpdateObject } from "./stepDataBuilder";
@@ -134,7 +133,7 @@ export function useStepPersistenceCore({
       if (shouldNavigate) {
         console.log("Tentando navegar para a próxima etapa...");
         // Usar o módulo de navegação por etapas
-        navigateAfterStep(stepId, currentStepIndex, navigate, shouldNavigate);
+        navigateAfterStep(stepId, currentStepIndex, navigate);
       } else {
         console.log("Navegação automática desativada, permanecendo na página atual");
       }
