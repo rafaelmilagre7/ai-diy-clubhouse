@@ -8,15 +8,15 @@
  * Normaliza um campo genérico, convertendo string JSON para objeto
  * e garantindo que temos pelo menos um objeto vazio
  */
-export function normalizeField<T extends object>(field: any, defaultValue: T = {} as T): T {
-  if (!field) return defaultValue;
+export function normalizeField<T = Record<string, any>>(field: any, defaultValue: T | Record<string, any> = {}): T {
+  if (!field) return defaultValue as T;
   
   if (typeof field === 'string') {
     try {
       return JSON.parse(field) as T;
     } catch (e) {
       console.error("Erro ao converter campo de string para objeto:", e);
-      return defaultValue;
+      return defaultValue as T;
     }
   }
   
@@ -24,7 +24,7 @@ export function normalizeField<T extends object>(field: any, defaultValue: T = {
     return field as T;
   }
   
-  return defaultValue;
+  return defaultValue as T;
 }
 
 /**
@@ -86,7 +86,8 @@ export function normalizeBusinessGoals(businessGoals: any): any {
   }
   
   // Garantir que live_interest é número
-  normalized.live_interest = Number(normalized.live_interest || 5);
+  const liveInterestNum = Number(normalized.live_interest || 5);
+  normalized.live_interest = isNaN(liveInterestNum) ? 5 : liveInterestNum;
   
   return normalized;
 }
@@ -126,7 +127,8 @@ export function normalizeExperiencePersonalization(experiencePersonalization: an
   }
   
   // Garantir que networking_availability é número
-  normalized.networking_availability = Number(normalized.networking_availability || 5);
+  const networkAvailNum = Number(normalized.networking_availability || 5);
+  normalized.networking_availability = isNaN(networkAvailNum) ? 5 : networkAvailNum;
   
   return normalized;
 }

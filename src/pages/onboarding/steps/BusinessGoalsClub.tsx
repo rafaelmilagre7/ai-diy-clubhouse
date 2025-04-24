@@ -14,54 +14,75 @@ const BusinessGoalsClub = () => {
   const { saveStepData, completeOnboarding } = useOnboardingSteps();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { progress, isLoading, refreshProgress } = useProgress();
-  const [localDataReady, setLocalDataReady] = useState(false);
-  const initialLoadDone = useRef(false);
+  const [dataReady, setDataReady] = useState(false);
+  const loadingRef = useRef(false);
+  const dataLoadedRef = useRef(false);
   const navigate = useNavigate();
+  const progressRef = useRef(progress);
 
-  // Efeito para carregar dados apenas uma vez ao entrar na página
+  // Atualizar a ref do progress quando ele mudar
   useEffect(() => {
-    const loadData = async () => {
-      if (initialLoadDone.current) return;
+    progressRef.current = progress;
+  }, [progress]);
+
+  // Efeito para carregar dados apenas uma vez ao montar o componente
+  useEffect(() => {
+    async function loadInitialData() {
+      // Se já estiver carregando ou já tiver carregado, não faz nada
+      if (loadingRef.current || dataLoadedRef.current) return;
       
-      setLocalDataReady(false);
       try {
-        console.log("Carregando dados iniciais para BusinessGoalsClub...");
+        loadingRef.current = true;
+        console.log("[BusinessGoalsClub] Carregando dados iniciais...");
         await refreshProgress();
-        initialLoadDone.current = true;
-        setLocalDataReady(true);
+        dataLoadedRef.current = true;
+        setDataReady(true);
       } catch (error) {
-        console.error("Erro ao carregar dados:", error);
-        toast.error("Erro ao carregar seus dados. Tente novamente.");
-        setLocalDataReady(true); // Mesmo com erro, permitir a renderização
+        console.error("[BusinessGoalsClub] Erro ao carregar dados:", error);
+        toast.error("Erro ao carregar dados. Tente novamente.");
+      } finally {
+        loadingRef.current = false;
       }
-    };
+    }
+
+    loadInitialData();
     
-    loadData();
-  }, [refreshProgress]);
+    // Cleanup ao desmontar o componente
+    return () => {
+      console.log("[BusinessGoalsClub] Componente desmontado, limpando referências");
+      dataLoadedRef.current = false;
+      loadingRef.current = false;
+    };
+  }, []); // Dependências vazias para executar apenas uma vez ao montar
 
   const handleRetry = async () => {
-    console.log("Tentando recarregar dados...");
-    setLocalDataReady(false);
+    if (loadingRef.current) return;
+    
     try {
+      loadingRef.current = true;
+      setDataReady(false);
+      console.log("[BusinessGoalsClub] Tentando recarregar dados...");
       await refreshProgress();
-      setLocalDataReady(true);
+      setDataReady(true);
     } catch (error) {
-      console.error("Erro ao recarregar dados:", error);
+      console.error("[BusinessGoalsClub] Erro ao recarregar dados:", error);
       toast.error("Erro ao recarregar seus dados. Tente novamente.");
-      setLocalDataReady(true);
+    } finally {
+      loadingRef.current = false;
     }
   };
 
   const handleSaveData = async (stepId: string, data: any) => {
-    console.log(`Iniciando salvamento de dados para passo ${stepId}:`, JSON.stringify(data, null, 2));
+    if (isSubmitting) return;
+    
+    console.log(`[BusinessGoalsClub] Iniciando salvamento de dados para passo ${stepId}:`, data);
     setIsSubmitting(true);
     
     try {
       // Verificações detalhadas antes de salvar
       if (!data.business_goals) {
-        console.error("Dados inválidos: business_goals não encontrado no objeto");
+        console.error("[BusinessGoalsClub] Dados inválidos: business_goals não encontrado no objeto");
         toast.error("Erro ao salvar: dados incompletos");
-        setIsSubmitting(false);
         return;
       }
       
@@ -72,9 +93,8 @@ const BusinessGoalsClub = () => {
       const missingFields = requiredFields.filter(field => !businessGoalsData[field]);
       
       if (missingFields.length > 0) {
-        console.warn("Campos obrigatórios não preenchidos:", missingFields);
+        console.warn("[BusinessGoalsClub] Campos obrigatórios não preenchidos:", missingFields);
         toast.warning("Por favor, preencha todos os campos obrigatórios");
-        setIsSubmitting(false);
         return;
       }
       
@@ -100,12 +120,9 @@ const BusinessGoalsClub = () => {
         }
       };
       
-      // Log detalhado dos dados formatados
-      console.log("Dados formatados para salvar:", JSON.stringify(formattedData, null, 2));
-      
-      // Salvar dados usando business_goals como stepId (importante!)
+      // Salvar dados usando business_goals como stepId
       await saveStepData("business_goals", formattedData, false);
-      console.log("Dados salvos com sucesso");
+      console.log("[BusinessGoalsClub] Dados salvos com sucesso");
       
       toast.success("Informações salvas com sucesso!");
       
@@ -114,27 +131,25 @@ const BusinessGoalsClub = () => {
         navigate("/onboarding/customization");
       }, 800);
     } catch (error) {
-      console.error("Erro ao salvar dados:", error);
+      console.error("[BusinessGoalsClub] Erro ao salvar dados:", error);
       toast.error("Erro ao salvar dados. Por favor, tente novamente.");
     } finally {
       setIsSubmitting(false);
     }
   };
   
-  // Processar dados para o componente
+  // Processar dados para o componente apenas quando necessário
   const processedData = React.useMemo(() => {
     if (!progress) return null;
     
-    console.log("Processando dados para ExpectativasObjetivosStep");
+    console.log("[BusinessGoalsClub] Processando dados para ExpectativasObjetivosStep");
     
     let businessGoalsData = progress.business_goals;
     
     // Normalizar business_goals se necessário
     if (typeof businessGoalsData === 'string' || !businessGoalsData) {
       businessGoalsData = normalizeBusinessGoals(businessGoalsData);
-      console.log("business_goals normalizado:", businessGoalsData);
-    } else {
-      console.log("business_goals já é um objeto, sem necessidade de normalização");
+      console.log("[BusinessGoalsClub] business_goals normalizado:", businessGoalsData);
     }
     
     return {
@@ -145,7 +160,7 @@ const BusinessGoalsClub = () => {
 
   return (
     <OnboardingLayout
-      currentStep={5} // Índice fixo para business_goals
+      currentStep={5}
       title="Expectativas e Objetivos com o Club"
       backUrl="/onboarding/ai-experience"
     >
@@ -153,7 +168,7 @@ const BusinessGoalsClub = () => {
         <MilagrinhoMessage
           message="Agora, gostaria de entender quais são suas expectativas e objetivos com o VIVER DE IA Club. Isso nos ajudará a personalizar sua experiência e garantir que você obtenha o máximo valor possível."
         />
-        {isLoading || !localDataReady ? (
+        {isLoading || !dataReady ? (
           <div className="flex justify-center py-10">
             <div className="flex flex-col items-center space-y-2">
               <Loader2 className="animate-spin h-10 w-10 text-[#0ABAB5]" />
@@ -175,6 +190,7 @@ const BusinessGoalsClub = () => {
           </div>
         ) : (
           <ExpectativasObjetivosStep
+            key="business-goals-step"
             onSubmit={handleSaveData}
             isSubmitting={isSubmitting}
             initialData={processedData}

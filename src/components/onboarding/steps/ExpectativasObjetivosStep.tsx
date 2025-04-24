@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from "react";
 import { OnboardingData } from "@/types/onboarding";
 import { Button } from "@/components/ui/button";
@@ -8,7 +9,6 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Slider } from "@/components/ui/slider";
-import { normalizeBusinessGoals } from "@/hooks/onboarding/persistence/utils/dataNormalization";
 
 interface ExpectativasObjetivosStepProps {
   onSubmit: (stepId: string, data: Partial<OnboardingData>) => void;
@@ -29,46 +29,27 @@ type FormValues = {
   content_formats: string[];
 };
 
-export const ExpectativasObjetivosStep = ({
+export const ExpectativasObjetivosStep: React.FC<ExpectativasObjetivosStepProps> = React.memo(({
   onSubmit,
   isSubmitting,
   initialData,
   onComplete,
   isLastStep,
-}: ExpectativasObjetivosStepProps) => {
-  const [initializedForm, setInitializedForm] = useState(false);
-  const formInitAttempts = useRef(0);
+}) => {
+  const [formInitialized, setFormInitialized] = useState(false);
+  const initAttempted = useRef(false);
+  const initialDataRef = useRef(initialData);
+
+  // Registrar quando o initialData muda para debug
+  if (initialDataRef.current !== initialData) {
+    console.log("[ExpectativasObjetivos] initialData mudou:", { 
+      old: initialDataRef.current?.business_goals ? 'tem dados' : 'sem dados', 
+      new: initialData?.business_goals ? 'tem dados' : 'sem dados' 
+    });
+    initialDataRef.current = initialData;
+  }
   
-  // Processar dados iniciais para garantir que temos um objeto válido
-  const processInitialData = (data: any) => {
-    if (!data) {
-      console.log("Nenhum dado inicial recebido");
-      return {};
-    }
-    
-    // Verificar se já temos dados normalizados
-    if (data.business_goals && typeof data.business_goals === 'object') {
-      return data.business_goals;
-    }
-    
-    // Se temos uma string, normalizar
-    if (data.business_goals && typeof data.business_goals === 'string') {
-      try {
-        const parsedData = JSON.parse(data.business_goals);
-        return parsedData;
-      } catch (e) {
-        console.error("Erro ao parsear business_goals:", e);
-        return {};
-      }
-    }
-    
-    // Fallback para dados vazios
-    return {};
-  };
-  
-  const businessGoalsData = processInitialData(initialData);
-  
-  const { control, handleSubmit, reset, watch, formState: { errors, isDirty } } = useForm<FormValues>({
+  const { control, handleSubmit, reset, watch, formState: { errors } } = useForm<FormValues>({
     defaultValues: {
       primary_goal: "",
       expected_outcome_30days: "",
@@ -83,81 +64,77 @@ export const ExpectativasObjetivosStep = ({
 
   // Monitore o interesse em sessões ao vivo
   const liveInterest = watch("live_interest");
-
-  // Use efeito para inicializar dados se eles chegarem após o mount
+  
+  // Processar dados iniciais uma vez apenas
   useEffect(() => {
-    // Limitar tentativas de inicialização para evitar ciclos
-    if (formInitAttempts.current > 3) {
-      console.log("Número máximo de tentativas de inicialização do formulário atingido");
-      return;
-    }
+    // Se já tentamos inicializar o form antes ou não temos dados, não tentar novamente
+    if (initAttempted.current || !initialData) return;
     
-    if (!initializedForm && initialData) {
-      formInitAttempts.current++;
-      
-      // Para prevenir problemas de timing ou dados vazios
-      if (Object.keys(businessGoalsData).length === 0) {
-        console.log("Dados processados vazios, não inicializando formulário");
-        setInitializedForm(true);
+    initAttempted.current = true;
+    console.log("[ExpectativasObjetivos] Iniciando processamento de dados iniciais");
+    
+    try {
+      const businessGoals = initialData?.business_goals || {};
+      if (!businessGoals || Object.keys(businessGoals).length === 0) {
+        console.log("[ExpectativasObjetivos] Sem dados de business_goals para inicializar formulário");
+        setFormInitialized(true);
         return;
       }
       
-      const fieldsToUpdate: Partial<FormValues> = {};
+      // Preparar dados para o formulário
+      const formData: Partial<FormValues> = {};
       
-      // Configurar os valores do formulário com base nos dados processados
-      if (businessGoalsData.primary_goal) fieldsToUpdate.primary_goal = businessGoalsData.primary_goal;
-      if (businessGoalsData.expected_outcome_30days) fieldsToUpdate.expected_outcome_30days = businessGoalsData.expected_outcome_30days;
-      if (businessGoalsData.priority_solution_type) fieldsToUpdate.priority_solution_type = businessGoalsData.priority_solution_type;
-      if (businessGoalsData.how_implement) fieldsToUpdate.how_implement = businessGoalsData.how_implement;
-      if (businessGoalsData.week_availability) fieldsToUpdate.week_availability = businessGoalsData.week_availability;
-      if (businessGoalsData.live_interest !== undefined) fieldsToUpdate.live_interest = Number(businessGoalsData.live_interest);
+      // Mapear campos simples
+      const stringFields = ['primary_goal', 'expected_outcome_30days', 'priority_solution_type', 
+                           'how_implement', 'week_availability'];
       
-      // Garantir que content_formats é um array
-      if (businessGoalsData.content_formats) {
-        if (Array.isArray(businessGoalsData.content_formats)) {
-          fieldsToUpdate.content_formats = businessGoalsData.content_formats;
-        } else if (typeof businessGoalsData.content_formats === 'string') {
-          fieldsToUpdate.content_formats = [businessGoalsData.content_formats];
+      stringFields.forEach(field => {
+        const value = businessGoals[field as keyof typeof businessGoals];
+        if (value && typeof value === 'string') {
+          formData[field as keyof FormValues] = value;
+        }
+      });
+      
+      // Processar live_interest (número)
+      if (businessGoals.live_interest !== undefined) {
+        const numericValue = Number(businessGoals.live_interest);
+        if (!isNaN(numericValue)) {
+          formData.live_interest = numericValue;
         }
       }
       
-      console.log("Atualizando formulário com valores:", fieldsToUpdate);
-      
-      // Verificar se temos valores para atualizar
-      if (Object.keys(fieldsToUpdate).length > 0) {
-        // Redefinir o formulário com os novos valores para garantir uma atualização completa
-        reset(fieldsToUpdate);
+      // Processar content_formats (array)
+      if (businessGoals.content_formats) {
+        if (Array.isArray(businessGoals.content_formats)) {
+          formData.content_formats = businessGoals.content_formats;
+        } else if (typeof businessGoals.content_formats === 'string') {
+          formData.content_formats = [businessGoals.content_formats];
+        }
       }
       
-      setInitializedForm(true);
+      console.log("[ExpectativasObjetivos] Inicializando formulário com valores:", formData);
+      reset(formData);
+      
+    } catch (error) {
+      console.error("[ExpectativasObjetivos] Erro ao processar dados iniciais:", error);
+    } finally {
+      setFormInitialized(true);
     }
-  }, [initialData, reset, initializedForm, businessGoalsData]);
+  }, [initialData, reset]);
 
   const onFormSubmit = (data: FormValues) => {
-    console.log("Enviando dados do formulário ExpectativasObjetivos:", data);
+    console.log("[ExpectativasObjetivos] Enviando formulário:", data);
     
-    // Verificar explicitamente cada campo para garantir que temos valores válidos
-    if (!data.primary_goal) {
-      console.warn("Campo obrigatório primary_goal não preenchido");
+    // Verificar campos obrigatórios explicitamente
+    const requiredFields = ['primary_goal', 'priority_solution_type', 'how_implement', 'week_availability'];
+    const missingFields = requiredFields.filter(field => !data[field as keyof FormValues]);
+    
+    if (missingFields.length > 0) {
+      console.warn("[ExpectativasObjetivos] Campos obrigatórios não preenchidos:", missingFields);
       return;
     }
     
-    if (!data.priority_solution_type) {
-      console.warn("Campo obrigatório priority_solution_type não preenchido");
-      return;
-    }
-    
-    if (!data.how_implement) {
-      console.warn("Campo obrigatório how_implement não preenchido");
-      return;
-    }
-    
-    if (!data.week_availability) {
-      console.warn("Campo obrigatório week_availability não preenchido");
-      return;
-    }
-    
-    // Estruturar dados para envio
+    // Estruturar dados para envio, evitando modificar o objeto original
     const businessGoalsData: Partial<OnboardingData> = {
       business_goals: {
         primary_goal: data.primary_goal,
@@ -167,13 +144,23 @@ export const ExpectativasObjetivosStep = ({
         how_implement: data.how_implement,
         week_availability: data.week_availability,
         live_interest: Number(data.live_interest || 5),
-        content_formats: Array.isArray(data.content_formats) ? data.content_formats : [],
+        content_formats: Array.isArray(data.content_formats) ? [...data.content_formats] : [],
       },
     };
     
-    // Enviar dados com o ID da etapa correto
     onSubmit("business_goals", businessGoalsData);
   };
+
+  if (!formInitialized) {
+    return (
+      <div className="flex justify-center p-8">
+        <div className="flex flex-col items-center">
+          <div className="animate-spin h-6 w-6 border-2 border-[#0ABAB5] border-t-transparent rounded-full"></div>
+          <p className="mt-2 text-sm text-gray-500">Preparando formulário...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -392,9 +379,9 @@ export const ExpectativasObjetivosStep = ({
                       <div key={format} className="flex items-center space-x-2">
                         <Checkbox 
                           id={format}
-                          checked={field.value?.includes(format)}
+                          checked={Array.isArray(field.value) && field.value.includes(format)}
                           onCheckedChange={(checked) => {
-                            const currentValue = field.value || [];
+                            const currentValue = Array.isArray(field.value) ? [...field.value] : [];
                             if (checked) {
                               field.onChange([...currentValue, format]);
                             } else {
@@ -437,4 +424,6 @@ export const ExpectativasObjetivosStep = ({
       </form>
     </div>
   );
-};
+});
+
+ExpectativasObjetivosStep.displayName = "ExpectativasObjetivosStep";

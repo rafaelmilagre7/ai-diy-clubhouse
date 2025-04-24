@@ -1,120 +1,102 @@
 
 import { supabase } from "@/lib/supabase";
-import { OnboardingData, OnboardingProgress, ProfessionalDataInput } from "@/types/onboarding";
-import { normalizeWebsite } from "../utils/dataNormalization";
+import { ProfessionalDataInput } from "@/types/onboarding";
+import { normalizeField } from "../utils/dataNormalization";
+import { buildProfessionalDataUpdate } from "../stepBuilders/professionalDataBuilder";
 
 /**
- * Salva os dados profissionais no novo esquema de banco de dados
+ * Salva dados profissionais do usuário
+ * @param userId ID do usuário
+ * @param data Dados profissionais
  */
-export async function saveProfessionalData(
-  progressId: string, 
-  userId: string, 
-  data: Partial<OnboardingData> | ProfessionalDataInput
-) {
-  if (!progressId || !userId) {
-    console.error("ID de progresso ou ID de usuário não fornecido");
-    throw new Error("Dados incompletos para salvar informações profissionais");
-  }
-
-  // Obter dados profissionais (seja de data.professional_info ou diretamente de data)
-  const profData = 'professional_info' in data && data.professional_info 
-    ? data.professional_info 
-    : data as ProfessionalDataInput;
-  
-  // Formatar dados - usar tipagem segura com as verificações adequadas
-  const professionalData = {
-    progress_id: progressId,
-    user_id: userId,
-    company_name: profData.company_name || null,
-    company_size: profData.company_size || null,
-    company_sector: profData.company_sector || null,
-    company_website: profData.company_website ? normalizeWebsite(profData.company_website) : null,
-    current_position: profData.current_position || null,
-    annual_revenue: profData.annual_revenue || null
-  };
-  
-  // Verificar se já existe um registro
-  const { data: existingData, error: queryError } = await supabase
-    .from("onboarding_professional_info")
-    .select("id")
-    .eq("progress_id", progressId)
-    .maybeSingle();
+export async function saveProfessionalData(userId: string, data: ProfessionalDataInput) {
+  try {
+    // Verificar se já existe um progresso para este usuário
+    const { data: progressData, error } = await supabase
+      .from('onboarding_progress')
+      .select('*')
+      .eq('user_id', userId)
+      .single();
     
-  if (queryError) {
-    console.error("Erro ao verificar dados profissionais existentes:", queryError);
-    throw queryError;
-  }
-  
-  // Atualizar ou inserir dependendo se já existe
-  if (existingData?.id) {
-    console.log("Atualizando dados profissionais existentes:", professionalData);
-    const { data, error } = await supabase
-      .from("onboarding_professional_info")
-      .update(professionalData)
-      .eq("id", existingData.id)
+    if (error && error.code !== 'PGRST116') {
+      console.error('Erro ao verificar progresso de onboarding:', error);
+      return { success: false, error };
+    }
+    
+    // Se não existe, criar novo
+    if (!progressData) {
+      console.log('Criando novo registro de progresso para dados profissionais');
+      
+      const professionalInfo = {
+        company_name: data.company_name,
+        company_size: data.company_size,
+        company_sector: data.company_sector,
+        company_website: data.company_website || '',
+        current_position: data.current_position,
+        annual_revenue: data.annual_revenue
+      };
+      
+      const { data: newProgress, error: createError } = await supabase
+        .from('onboarding_progress')
+        .insert([{
+          user_id: userId,
+          professional_info: professionalInfo,
+          company_name: data.company_name,
+          company_size: data.company_size,
+          company_sector: data.company_sector,
+          company_website: data.company_website || '',
+          current_position: data.current_position,
+          annual_revenue: data.annual_revenue,
+          current_step: 'business_context',
+          completed_steps: ['personal', 'professional_data']
+        }])
+        .select()
+        .single();
+      
+      if (createError) {
+        console.error('Erro ao criar novo progresso de onboarding:', createError);
+        return { success: false, error: createError };
+      }
+      
+      return { success: true, data: newProgress };
+    }
+    
+    // Já existe, atualizar com os novos dados
+    console.log('Atualizando dados profissionais em progresso existente');
+    
+    // Construir objeto de atualização
+    const existingProfessionalInfo = normalizeField(progressData.professional_info);
+    const updateObj = buildProfessionalDataUpdate(data, progressData);
+    
+    // Atualizar também completed_steps se necessário
+    if (!progressData.completed_steps?.includes('professional_data')) {
+      updateObj.completed_steps = [
+        ...Array.from(new Set([...(progressData.completed_steps || []), 'professional_data']))
+      ];
+    }
+    
+    // Definir current_step para business_context se estiver vazio ou em professional_data
+    if (!progressData.current_step || progressData.current_step === 'professional_data') {
+      updateObj.current_step = 'business_context';
+    }
+    
+    // Atualizar no Supabase
+    const { data: updatedProgress, error: updateError } = await supabase
+      .from('onboarding_progress')
+      .update(updateObj)
+      .eq('id', progressData.id)
       .select()
       .single();
-      
-    if (error) throw error;
-    return data;
-  } else {
-    console.log("Inserindo novos dados profissionais:", professionalData);
-    const { data, error } = await supabase
-      .from("onboarding_professional_info")
-      .insert(professionalData)
-      .select()
-      .single();
-      
-    if (error) throw error;
-    return data;
-  }
-}
-
-/**
- * Busca os dados profissionais do novo esquema de banco de dados
- */
-export async function fetchProfessionalData(progressId: string) {
-  if (!progressId) {
-    console.error("ID de progresso não fornecido");
-    throw new Error("ID de progresso obrigatório para buscar dados profissionais");
-  }
-  
-  const { data, error } = await supabase
-    .from("onboarding_professional_info")
-    .select("*")
-    .eq("progress_id", progressId)
-    .maybeSingle();
     
-  if (error) {
-    console.error("Erro ao buscar dados profissionais:", error);
-    throw error;
+    if (updateError) {
+      console.error('Erro ao atualizar progresso de onboarding:', updateError);
+      return { success: false, error: updateError };
+    }
+    
+    return { success: true, data: updatedProgress };
+    
+  } catch (error) {
+    console.error('Exceção ao salvar dados profissionais:', error);
+    return { success: false, error };
   }
-  
-  return data;
-}
-
-/**
- * Formata os dados profissionais para o formato esperado pela aplicação
- */
-export function formatProfessionalData(data: any): Partial<OnboardingProgress> {
-  if (!data) return { professional_info: {} };
-  
-  const professionalInfo = {
-    company_name: data.company_name || "",
-    company_size: data.company_size || "",
-    company_sector: data.company_sector || "",
-    company_website: data.company_website || "",
-    current_position: data.current_position || "",
-    annual_revenue: data.annual_revenue || ""
-  };
-  
-  return {
-    professional_info: professionalInfo,
-    company_name: data.company_name || "",
-    company_size: data.company_size || "",
-    company_sector: data.company_sector || "",
-    company_website: data.company_website || "",
-    current_position: data.current_position || "",
-    annual_revenue: data.annual_revenue || ""
-  };
 }

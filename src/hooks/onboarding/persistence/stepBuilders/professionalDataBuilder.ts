@@ -1,73 +1,44 @@
 
-import { OnboardingData, OnboardingProgress } from "@/types/onboarding";
-import { normalizeWebsite } from "../utils/dataNormalization";
+import { OnboardingData, OnboardingProgress, ProfessionalDataInput } from "@/types/onboarding";
+import { normalizeField } from "../utils/dataNormalization";
 
-export function buildProfessionalDataUpdate(data: Partial<OnboardingData>, progress: OnboardingProgress | null) {
-  // Criar um objeto de retorno com tipagem explícita
-  const updateObj: Partial<OnboardingProgress> = {};
+export function buildProfessionalDataUpdate(data: Partial<OnboardingData> | ProfessionalDataInput, progress: OnboardingProgress | null) {
+  const updateObj: Record<string, any> = {};
   
-  // Se tivermos um objeto de progresso existente, copiar campos relevantes
-  if (progress) {
-    updateObj.id = progress.id;
-    updateObj.user_id = progress.user_id;
-    updateObj.completed_steps = progress.completed_steps;
-    updateObj.is_completed = progress.is_completed;
+  // Se temos dados profissionais diretos
+  if ('company_name' in data || 'company_size' in data) {
+    updateObj.company_name = data.company_name as string;
+    updateObj.company_size = data.company_size as string;
+    updateObj.company_sector = data.company_sector as string;
+    updateObj.company_website = data.company_website as string;
+    updateObj.current_position = data.current_position as string;
+    updateObj.annual_revenue = data.annual_revenue as string;
     
-    // Inicializar o objeto professional_info se existir no progresso
-    updateObj.professional_info = progress.professional_info 
-      ? { ...progress.professional_info } 
-      : {};
-  } else {
-    // Inicializar objeto vazio se não tivermos progresso
-    updateObj.professional_info = {};
+    // Também atualizar no objeto aninhado professional_info
+    updateObj.professional_info = {
+      ...(progress?.professional_info || {}),
+      company_name: updateObj.company_name,
+      company_size: updateObj.company_size,
+      company_sector: updateObj.company_sector,
+      company_website: updateObj.company_website,
+      current_position: updateObj.current_position,
+      annual_revenue: updateObj.annual_revenue
+    };
   }
-  
-  // Verificar se temos dados diretos ou dentro do objeto professional_info
-  const professionalData = data.professional_info || data;
-  
-  // Criar objeto de dados profissionais temporário para manipulação
-  const professionalInfo: Record<string, any> = {
-    ...(updateObj.professional_info || {})
-  };
-
-  // Campos a serem verificados e atualizados
-  const fieldsToCheck = [
-    'company_name', 
-    'company_size', 
-    'company_sector', 
-    'company_website', 
-    'current_position', 
-    'annual_revenue'
-  ];
-  
-  // Verificar cada campo para atualização
-  let hasUpdates = false;
-  
-  fieldsToCheck.forEach(field => {
-    if (professionalData && typeof professionalData === 'object' && field in professionalData) {
-      const value = professionalData[field as keyof typeof professionalData];
-      
-      // Formatação especial para website
-      if (field === 'company_website' && value && typeof value === 'string') {
-        professionalInfo[field] = normalizeWebsite(value);
-        (updateObj as any)[field] = normalizeWebsite(value);
-      } else {
-        professionalInfo[field] = value;
-        
-        // Atualizar campo de nível superior com type assertion para evitar erros de tipagem
-        (updateObj as any)[field] = value;
-      }
-      
-      hasUpdates = true;
-    }
-  });
-  
-  // Adicionar objeto professional_info atualizado
-  if (hasUpdates) {
-    updateObj.professional_info = professionalInfo;
+  // Se temos dados aninhados em professional_info
+  else if ('professional_info' in data && data.professional_info) {
+    const professional_info = normalizeField(data.professional_info);
+    
+    updateObj.professional_info = professional_info;
+    
+    // Extrair também para os campos de nível superior para compatibilidade
+    updateObj.company_name = professional_info.company_name;
+    updateObj.company_size = professional_info.company_size;
+    updateObj.company_sector = professional_info.company_sector;
+    updateObj.company_website = professional_info.company_website;
+    updateObj.current_position = professional_info.current_position;
+    updateObj.annual_revenue = professional_info.annual_revenue;
   }
-  
-  console.log("Objeto de atualização para dados profissionais:", updateObj);
   
   return updateObj;
 }
