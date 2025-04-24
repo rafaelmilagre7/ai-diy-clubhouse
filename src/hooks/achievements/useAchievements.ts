@@ -106,10 +106,25 @@ export function useAchievements() {
       
       if (badgesResponse && badgesResponse.length > 0) {
         badgesResponse.forEach(badgeData => {
-          // Verifica se o badgeData.badges existe e é um array antes de processá-lo
-          if (badgeData.badges && Array.isArray(badgeData.badges)) {
-            // Itera sobre o array de badges
-            badgeData.badges.forEach(badge => {
+          // Verifica se o badgeData.badges existe antes de processá-lo
+          if (badgeData.badges) {
+            // Se for um array, iteramos sobre cada badge
+            if (Array.isArray(badgeData.badges)) {
+              badgeData.badges.forEach(badge => {
+                allAchievements.push({
+                  id: badge.id,
+                  name: badge.name,
+                  description: badge.description,
+                  icon: badge.icon,
+                  category: badge.category,
+                  isUnlocked: true,
+                  earnedAt: badgeData.earned_at,
+                });
+              });
+            } 
+            // Se for um objeto único, tratamos diretamente
+            else {
+              const badge = badgeData.badges;
               allAchievements.push({
                 id: badge.id,
                 name: badge.name,
@@ -119,19 +134,7 @@ export function useAchievements() {
                 isUnlocked: true,
                 earnedAt: badgeData.earned_at,
               });
-            });
-          } 
-          // Se badgeData.badges for um objeto único e não um array
-          else if (badgeData.badges) {
-            allAchievements.push({
-              id: badgeData.badges.id,
-              name: badgeData.badges.name,
-              description: badgeData.badges.description,
-              icon: badgeData.badges.icon,
-              category: badgeData.badges.category,
-              isUnlocked: true,
-              earnedAt: badgeData.earned_at,
-            });
+            }
           }
         });
       }
