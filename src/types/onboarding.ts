@@ -122,7 +122,6 @@ export interface OnboardingStep {
   title: string;
   description?: string;
   path: string;
-  pathAlias?: string; // Adicionando suporte para rota alternativa
   section?: keyof OnboardingProgress;
   fields: Array<keyof OnboardingFormData>;
   isCompleted?: (data: OnboardingFormData) => boolean;

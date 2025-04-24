@@ -10,11 +10,7 @@ import { toast } from "sonner";
  * LayoutProvider handles authentication checks and role-based routing
  * before rendering the appropriate layout component
  */
-interface LayoutProviderProps {
-  children: ReactNode;
-}
-
-const LayoutProvider = ({ children }: LayoutProviderProps) => {
+const LayoutProvider = ({ children }: { children: ReactNode }) => {
   const {
     user,
     profile,

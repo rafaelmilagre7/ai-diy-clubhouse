@@ -15,7 +15,16 @@ import SuggestionDetails from "@/pages/member/SuggestionDetails";
 import NewSuggestion from "@/pages/member/NewSuggestion";
 import Achievements from "@/pages/member/Achievements";
 import Benefits from "@/pages/member/Benefits";
-import ImplementationProfilePage from "@/pages/ImplementationProfile";
+
+import Onboarding from "@/pages/onboarding/Onboarding";
+import ProfessionalData from "@/pages/onboarding/steps/ProfessionalData";
+import BusinessContext from "@/pages/onboarding/steps/BusinessContext";
+import AIExperience from "@/pages/onboarding/steps/AIExperience";
+import BusinessGoalsClub from "@/pages/onboarding/steps/BusinessGoalsClub";
+import ExperiencePersonalization from "@/pages/onboarding/steps/ExperiencePersonalization";
+import ComplementaryInfo from "@/pages/onboarding/steps/ComplementaryInfo";
+import Review from "@/pages/onboarding/steps/Review";
+import TrailGeneration from "@/pages/onboarding/steps/TrailGeneration";
 
 interface MemberRoutesProps {
   children?: ReactNode;
@@ -27,11 +36,18 @@ interface MemberRoutesProps {
 const MemberRoutes = ({ children }: MemberRoutesProps) => {
   return (
     <Routes>
-      <Route element={<MemberLayout>{children}</MemberLayout>}>
+      <Route path="/" element={<MemberLayout>{children}</MemberLayout>}>
         <Route index element={<Navigate to="/dashboard" replace />} />
         
-        {/* Perfil de Implementação */}
-        <Route path="perfil-de-implementacao" element={<ImplementationProfilePage />} />
+        <Route path="onboarding" element={<Onboarding />} />
+        <Route path="onboarding/professional-data" element={<ProfessionalData />} />
+        <Route path="onboarding/business-context" element={<BusinessContext />} />
+        <Route path="onboarding/ai-experience" element={<AIExperience />} />
+        <Route path="onboarding/club-goals" element={<BusinessGoalsClub />} />
+        <Route path="onboarding/customization" element={<ExperiencePersonalization />} />
+        <Route path="onboarding/complementary" element={<ComplementaryInfo />} />
+        <Route path="onboarding/review" element={<Review />} />
+        <Route path="onboarding/trail-generation" element={<TrailGeneration />} />
 
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="solutions" element={<Solutions />} />

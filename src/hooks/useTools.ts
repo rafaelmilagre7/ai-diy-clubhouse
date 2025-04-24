@@ -35,9 +35,7 @@ export const useTools = () => {
 
       return data as Tool[];
     },
-    staleTime: 5 * 60 * 1000, // 5 minutos
-    retry: 2,
-    retryDelay: 1000
+    staleTime: 5 * 60 * 1000 // 5 minutos
   });
 
   return {

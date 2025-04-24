@@ -1,12 +1,38 @@
 
 import { RouteObject } from 'react-router-dom';
-import { NotFound } from '@/pages/NotFound';
+import Onboarding from '@/pages/onboarding/Onboarding';
 
-// Como estamos removendo o onboarding, este arquivo apenas mantém a estrutura
-// mas não define mais nenhuma rota de onboarding
 export const onboardingRoutes: RouteObject[] = [
   {
-    path: '/onboarding/*',
-    element: <NotFound />,
-  }
+    path: '/onboarding',
+    element: <Onboarding />,
+  },
+  {
+    path: '/onboarding/professional',
+    element: <Onboarding />,
+  },
+  {
+    path: '/onboarding/business-context',
+    element: <Onboarding />,
+  },
+  {
+    path: '/onboarding/business-goals',
+    element: <Onboarding />,
+  },
+  {
+    path: '/onboarding/ai-experience',
+    element: <Onboarding />,
+  },
+  {
+    path: '/onboarding/personalization',
+    element: <Onboarding />,
+  },
+  {
+    path: '/onboarding/complementary',
+    element: <Onboarding />,
+  },
+  {
+    path: '/onboarding/review',
+    element: <Onboarding />,
+  },
 ];

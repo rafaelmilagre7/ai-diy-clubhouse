@@ -81,8 +81,10 @@ export function useLogging(moduleName: string = '') {
   };
 }
 
-// Definição do tipo LoggingContextType para compartilhar com o useLogging.tsx
-export interface LoggingContextType {
+// Criando o Provider para o contexto de logs
+import React, { createContext, useContext, ReactNode } from 'react';
+
+interface LoggingContextType {
   logInfo: (message: string, data?: Record<string, any>) => void;
   logWarning: (message: string, data?: Record<string, any>) => void;
   logError: (message: string, data?: Record<string, any>) => void;
@@ -91,3 +93,25 @@ export interface LoggingContextType {
   logTimerAsync: (operationName: string, callback: () => Promise<any>) => Promise<any>;
   log: (message: string, data?: Record<string, any>) => void;
 }
+
+const LoggingContext = createContext<LoggingContextType | undefined>(undefined);
+
+export const LoggingProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const loggingService = useLogging();
+  
+  return (
+    <LoggingContext.Provider value={loggingService}>
+      {children}
+    </LoggingContext.Provider>
+  );
+};
+
+export const useLoggingContext = () => {
+  const context = useContext(LoggingContext);
+  
+  if (!context) {
+    throw new Error('useLoggingContext must be used within a LoggingProvider');
+  }
+  
+  return context;
+};

@@ -9,9 +9,6 @@ import {
   User,
   Award,
   Home,
-  Gift,
-  Map,
-  ClipboardList,
 } from "lucide-react";
 import { useAuth } from "@/contexts/auth";
 import { Button } from "@/components/ui/button";
@@ -38,11 +35,6 @@ export function MemberSidebarNav() {
       icon: Settings,
     },
     {
-      title: "Benefícios",
-      href: "/benefits",
-      icon: Gift,
-    },
-    {
       title: "Sugestões",
       href: "/suggestions",
       icon: MessageSquare,
@@ -51,16 +43,6 @@ export function MemberSidebarNav() {
       title: "Conquistas",
       href: "/achievements",
       icon: Award,
-    },
-    {
-      title: "Perfil de Implementação",
-      href: "/perfil-de-implementacao",
-      icon: ClipboardList,
-    },
-    {
-      title: "Trilha de Implementação",
-      href: "/implementation-trail",
-      icon: Map,
     },
     {
       title: "Perfil",

@@ -1,0 +1,277 @@
+
+import React, { useMemo, useState } from "react";
+import { CheckCircle, PenSquare, X } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { OnboardingStep } from "@/types/onboarding";
+import { getPersonalInfoSummary } from "./review-sections/personalInfoSummary";
+import { getProfessionalDataSummary } from "./review-sections/professionalDataSummary";
+import { getBusinessContextSummary } from "./review-sections/businessContextSummary";
+import { getAIExperienceSummary } from "./review-sections/aiExperienceSummary";
+import { getBusinessGoalsSummary } from "./review-sections/businessGoalsSummary";
+import { getExperiencePersonalizationSummary } from "./review-sections/experiencePersonalizationSummary";
+import { getComplementaryInfoSummary } from "./review-sections/complementaryInfoSummary";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { LoadingSpinner } from "@/components/common/LoadingSpinner";
+
+// Função para determinar o componente de resumo correto com base na seção
+const getSummaryComponent = (section: string, data: any, progress: any) => {
+  console.log(`Renderizando summary para seção ${section} com dados:`, data);
+  
+  // Verificações iniciais de sanidade dos dados
+  if (!data) {
+    console.warn(`Dados NULOS para seção ${section}`);
+    return <p className="text-gray-500 italic">Seção não preenchida. Clique em Editar para preencher.</p>;
+  }
+  
+  // Verificar se é um objeto vazio
+  if (typeof data === 'object' && Object.keys(data).length === 0) {
+    console.warn(`Objeto vazio para seção ${section}`);
+    return <p className="text-gray-500 italic">Seção não preenchida. Clique em Editar para preencher.</p>;
+  }
+  
+  // Verificar se é uma string vazia ou "{}"
+  if (typeof data === 'string' && (data === "" || data === "{}")) {
+    console.warn(`String vazia ou "{}" para seção ${section}`);
+    return <p className="text-gray-500 italic">Seção não preenchida. Clique em Editar para preencher.</p>;
+  }
+  
+  // Se data for uma string, tentar converter para objeto
+  if (typeof data === 'string' && data !== "" && data !== "{}") {
+    try {
+      data = JSON.parse(data);
+      console.log(`Convertido string para objeto na seção ${section}:`, data);
+    } catch (e) {
+      console.error(`Erro ao converter string para objeto na seção ${section}:`, e);
+      return <p className="text-gray-500 italic">Erro ao processar dados. Clique em Editar para preencher novamente.</p>;
+    }
+  }
+  
+  // Verificação adicional após possível conversão
+  if (typeof data === 'object' && Object.keys(data).length === 0) {
+    console.warn(`Objeto vazio após conversão para seção ${section}`);
+    return <p className="text-gray-500 italic">Seção não preenchida. Clique em Editar para preencher.</p>;
+  }
+  
+  // Selecionar o componente correto com base na seção
+  switch (section) {
+    case "personal_info":
+      return getPersonalInfoSummary(data);
+    case "professional_info":
+    case "professional_data":
+      return getProfessionalDataSummary(data);
+    case "business_context":
+      return getBusinessContextSummary(data);
+    case "ai_experience":
+      return getAIExperienceSummary(data);
+    case "business_goals":
+      return getBusinessGoalsSummary(data);
+    case "experience_personalization":
+      return getExperiencePersonalizationSummary(data);
+    case "complementary_info":
+      return getComplementaryInfoSummary(data);
+    default:
+      return <p>Seção não reconhecida.</p>;
+  }
+};
+
+interface ReviewSectionCardProps {
+  step: OnboardingStep;
+  sectionData: any;
+  progress: any;
+  stepIndex: number;
+  navigateToStep: (index: number) => void;
+  onEditStep?: (step: string, data: any) => Promise<void>;
+}
+
+export const ReviewSectionCard: React.FC<ReviewSectionCardProps> = ({
+  step,
+  sectionData,
+  progress,
+  stepIndex,
+  navigateToStep,
+  onEditStep
+}) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editableData, setEditableData] = useState<any>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Verificar se há dados válidos na seção
+  const isCompleted = useMemo(() => {
+    // Log dos dados da seção para verificação detalhada
+    console.log(`Analisando dados para seção ${step.section}:`, sectionData);
+    
+    // Se não temos dados, obviamente não está completo
+    if (!sectionData) {
+      console.warn(`Dados NULOS para seção ${step.section}`);
+      return false;
+    }
+    
+    // Verificar se é uma string vazia ou "{}"
+    if (typeof sectionData === 'string') {
+      if (sectionData === "" || sectionData === "{}") {
+        console.warn(`String vazia ou "{}" para seção ${step.section}`);
+        return false;
+      }
+      
+      // Tentar converter para objeto
+      try {
+        const parsedData = JSON.parse(sectionData);
+        console.log(`Convertido string para objeto na seção ${step.section}:`, parsedData);
+        
+        // Verificar se o objeto resultante tem dados
+        if (Object.keys(parsedData).length === 0) {
+          console.warn(`Objeto vazio após conversão para seção ${step.section}`);
+          return false;
+        }
+        
+        // Usar o objeto convertido para verificação
+        return checkSectionCompletion(step.section, parsedData);
+      } catch (e) {
+        console.error(`Erro ao converter string para objeto na seção ${step.section}:`, e);
+        return false;
+      }
+    }
+    
+    // Para objetos, verificar diretamente
+    return checkSectionCompletion(step.section, sectionData);
+  }, [step, sectionData]);
+  
+  // Função auxiliar para verificar critérios específicos de cada seção
+  function checkSectionCompletion(section: string, data: any): boolean {
+    if (section === 'personal_info') {
+      return !!data.name && !!data.email;
+    }
+    
+    if (section === 'professional_info' || section === 'professional_data') {
+      return !!data.company_name && !!data.company_size;
+    }
+    
+    if (section === 'business_context') {
+      return !!data.business_model;
+    }
+    
+    if (section === 'ai_experience') {
+      return !!data.knowledge_level;
+    }
+    
+    if (section === 'business_goals') {
+      // Verificação mais detalhada para business_goals
+      const requiredFields = ['primary_goal', 'priority_solution_type', 'how_implement', 'week_availability'];
+      const hasAllRequired = requiredFields.every(field => !!data[field]);
+      
+      if (!hasAllRequired) {
+        const missingFields = requiredFields.filter(field => !data[field]);
+        console.warn(`Campos obrigatórios ausentes em business_goals: ${missingFields.join(', ')}`);
+      }
+      
+      return hasAllRequired;
+    }
+    
+    if (section === 'experience_personalization') {
+      return Array.isArray(data.interests) && data.interests.length > 0;
+    }
+    
+    if (section === 'complementary_info') {
+      return !!data.how_found_us;
+    }
+    
+    // Verificação genérica para outras seções
+    return Object.keys(data).length > 0;
+  }
+
+  // Função para abrir o modal de edição
+  const handleEditClick = () => {
+    if (onEditStep) {
+      // Se temos uma função de edição, vamos para a página
+      navigateToStep(stepIndex - 1);
+    } else {
+      // Caso contrário, voltamos à etapa original
+      navigateToStep(stepIndex - 1);
+    }
+  };
+
+  // Função para salvar as alterações
+  const handleSaveChanges = async () => {
+    if (onEditStep && editableData) {
+      setIsSubmitting(true);
+      try {
+        await onEditStep(step.id, editableData);
+        setIsEditing(false);
+      } catch (error) {
+        console.error("Erro ao salvar alterações:", error);
+      } finally {
+        setIsSubmitting(false);
+      }
+    }
+  };
+
+  // Renderizar resumo com base na seção
+  const sectionSummary = useMemo(() => {
+    return getSummaryComponent(step.section, sectionData, progress);
+  }, [step, sectionData, progress]);
+
+  return (
+    <>
+      <Card className="overflow-hidden border-l-4 border-l-gray-200">
+        <CardHeader className="flex flex-row items-center justify-between bg-gray-50 py-2 px-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-50 text-primary-foreground">
+              <span className="text-sm font-medium">{stepIndex}</span>
+            </div>
+            <CardTitle className="text-lg font-medium">{step.title}</CardTitle>
+          </div>
+          <div className="flex items-center gap-2">
+            {isCompleted && (
+              <span className="flex items-center text-green-600">
+                <CheckCircle className="mr-1 h-4 w-4" />
+                <span className="text-xs">Completo</span>
+              </span>
+            )}
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-1"
+              onClick={handleEditClick}
+            >
+              <PenSquare className="h-4 w-4" />
+              <span>Editar</span>
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent className="p-4">{sectionSummary}</CardContent>
+      </Card>
+
+      {isEditing && onEditStep && (
+        <Dialog open={isEditing} onOpenChange={setIsEditing}>
+          <DialogContent className="max-w-3xl">
+            <DialogHeader>
+              <DialogTitle>Editar {step.title}</DialogTitle>
+            </DialogHeader>
+            <div className="py-4">
+              {isSubmitting ? (
+                <div className="flex justify-center items-center p-8">
+                  <LoadingSpinner size={8} />
+                  <p className="ml-3 text-gray-500">Salvando alterações...</p>
+                </div>
+              ) : (
+                <div>
+                  {/* Aqui entraria o componente específico para edição de cada tipo */}
+                </div>
+              )}
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setIsEditing(false)}>
+                <X className="h-4 w-4 mr-1" />
+                Cancelar
+              </Button>
+              <Button onClick={handleSaveChanges} disabled={isSubmitting}>
+                Salvar Alterações
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
+    </>
+  );
+};

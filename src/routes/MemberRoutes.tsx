@@ -18,84 +18,128 @@ const SuggestionDetails = lazy(() => import("@/pages/member/SuggestionDetails"))
 const NewSuggestion = lazy(() => import("@/pages/member/NewSuggestion"));
 const Achievements = lazy(() => import("@/pages/member/Achievements"));
 
-// Componente encapsulador para as rotas protegidas com MemberLayout
-interface ProtectedMemberRouteProps {
-  path: string;
-  element: React.ReactNode;
-}
-
-const ProtectedMemberRoute = ({ path, element }: ProtectedMemberRouteProps) => (
-  <Route
-    path={path}
-    element={
-      <ProtectedRoute>
-        <MemberLayout>{element}</MemberLayout>
-      </ProtectedRoute>
-    }
-  />
-);
-
 export const MemberRoutes = () => {
   return (
     <Fragment>
-      <ProtectedMemberRoute
+      <Route
         path="/dashboard"
-        element={<MemberDashboard />}
+        element={
+          <ProtectedRoute>
+            <MemberLayout>
+              <MemberDashboard />
+            </MemberLayout>
+          </ProtectedRoute>
+        }
       />
-      
-      <ProtectedMemberRoute
+      <Route
         path="/solutions"
-        element={<Solutions />}
+        element={
+          <ProtectedRoute>
+            <MemberLayout>
+              <Solutions />
+            </MemberLayout>
+          </ProtectedRoute>
+        }
       />
-      
-      <ProtectedMemberRoute
+      <Route
         path="/solutions/:id"
-        element={<SolutionDetails />}
+        element={
+          <ProtectedRoute>
+            <MemberLayout>
+              <SolutionDetails />
+            </MemberLayout>
+          </ProtectedRoute>
+        }
       />
-      
-      <ProtectedMemberRoute
+      <Route
         path="/implement/:id/:moduleIdx"
-        element={<SolutionImplementation />}
+        element={
+          <ProtectedRoute>
+            <MemberLayout>
+              <SolutionImplementation />
+            </MemberLayout>
+          </ProtectedRoute>
+        }
       />
-      
-      <ProtectedMemberRoute
+      <Route
         path="/profile"
-        element={<Profile />}
+        element={
+          <ProtectedRoute>
+            <MemberLayout>
+              <Profile />
+            </MemberLayout>
+          </ProtectedRoute>
+        }
       />
-      
-      <ProtectedMemberRoute
+      <Route
         path="/profile/edit"
-        element={<EditProfile />}
+        element={
+          <ProtectedRoute>
+            <MemberLayout>
+              <EditProfile />
+            </MemberLayout>
+          </ProtectedRoute>
+        }
       />
-      
-      <ProtectedMemberRoute
+      <Route
         path="/tools"
-        element={<Tools />}
+        element={
+          <ProtectedRoute>
+            <MemberLayout>
+              <Tools />
+            </MemberLayout>
+          </ProtectedRoute>
+        }
       />
-      
-      <ProtectedMemberRoute
+      <Route
         path="/tools/:id"
-        element={<ToolDetails />}
+        element={
+          <ProtectedRoute>
+            <MemberLayout>
+              <ToolDetails />
+            </MemberLayout>
+          </ProtectedRoute>
+        }
       />
-      
-      <ProtectedMemberRoute
+      <Route
         path="/suggestions"
-        element={<Suggestions />}
+        element={
+          <ProtectedRoute>
+            <MemberLayout>
+              <Suggestions />
+            </MemberLayout>
+          </ProtectedRoute>
+        }
       />
-      
-      <ProtectedMemberRoute
+      <Route
         path="/suggestions/:id"
-        element={<SuggestionDetails />}
+        element={
+          <ProtectedRoute>
+            <MemberLayout>
+              <SuggestionDetails />
+            </MemberLayout>
+          </ProtectedRoute>
+        }
       />
-      
-      <ProtectedMemberRoute
+      <Route
         path="/suggestions/new"
-        element={<NewSuggestion />}
+        element={
+          <ProtectedRoute>
+            <MemberLayout>
+              <NewSuggestion />
+            </MemberLayout>
+          </ProtectedRoute>
+        }
       />
-      
-      <ProtectedMemberRoute
+      <Route
         path="/achievements"
-        element={<Achievements />}
+        element={
+          <ProtectedRoute>
+            <MemberLayout>
+              <Achievements />
+            </MemberLayout>
+          </ProtectedRoute>
+        }
       />
     </Fragment>
   );

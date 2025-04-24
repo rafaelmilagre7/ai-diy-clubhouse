@@ -1,5 +1,3 @@
 
-import AppRoutes from './index.tsx';
-
-export default AppRoutes;
-export { AppRoutes };
+// Arquivo simplificado
+export { default as AppRoutes } from '@/components/routing/AppRoutes';

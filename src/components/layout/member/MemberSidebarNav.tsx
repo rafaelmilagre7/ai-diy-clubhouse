@@ -5,14 +5,14 @@ import {
   LayoutDashboard, 
   Lightbulb, 
   Settings, 
+  Trophy,
   Gift,
   MessageSquare,
   ShieldCheck,
   User,
   Award,
   BookOpen,
-  Map,
-  ClipboardList
+  Map
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "react-router-dom";
@@ -35,9 +35,9 @@ export const MemberSidebarNav = ({ sidebarOpen }: SidebarNavProps) => {
       icon: LayoutDashboard,
     },
     {
-      title: "Perfil de Implementação",
-      href: "/perfil-de-implementacao",
-      icon: ClipboardList,
+      title: "Onboarding",
+      href: "/onboarding",
+      icon: BookOpen,
     },
     {
       title: "Trilha de Implementação",
