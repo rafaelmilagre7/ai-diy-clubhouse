@@ -59,7 +59,8 @@ export const useFileUpload = (solutionId: string) => {
         .from("resources")
         .upload(filePath, file, {
           cacheControl: '3600', // Adicionando cache control para evitar problemas de cache
-          upsert: true // Substituir o arquivo se já existir
+          upsert: true, // Substituir o arquivo se já existir
+          contentType: file.type // Definir o tipo MIME do conteúdo corretamente
         });
 
       clearInterval(progressInterval);
@@ -99,14 +100,18 @@ export const useFileUpload = (solutionId: string) => {
       const { data, error } = await supabase
         .from("solution_resources")
         .insert(newVideo)
-        .select();
+        .select("*");
 
       if (error) {
         console.error("Erro ao inserir dados no banco:", error);
         throw error;
       }
 
-      console.log("Vídeo registrado com sucesso no banco:", data);
+      if (!data || data.length === 0) {
+        throw new Error("Banco de dados não retornou os dados após inserção");
+      }
+
+      console.log("Vídeo registrado com sucesso no banco:", data[0]);
 
       toast("Upload concluído", {
         description: "O vídeo foi adicionado com sucesso."

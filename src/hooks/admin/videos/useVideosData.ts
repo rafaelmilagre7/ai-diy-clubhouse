@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { VideoItem } from "@/types/videoTypes";
 import { useFetchVideos } from "./useFetchVideos";
 import { useVideoRemove } from "./useVideoRemove";
@@ -11,20 +11,23 @@ export const useVideosData = (solutionId: string) => {
 
   // Atualiza o estado local quando os vídeos são carregados
   useEffect(() => {
+    console.log("useVideosData: atualizando vídeos do estado", fetchedVideos.length);
     setVideos(fetchedVideos);
   }, [fetchedVideos]);
 
   const handleRemove = async (id: string, url: string) => {
+    console.log("Removendo vídeo:", id);
     const { success } = await handleRemoveVideo(id, url);
     if (success) {
+      console.log("Vídeo removido com sucesso, atualizando lista");
       setVideos(prev => prev.filter(v => v.id !== id));
     }
   };
 
-  const fetchVideos = async () => {
-    console.log("Recarregando vídeos...");
+  const fetchVideos = useCallback(async () => {
+    console.log("useVideosData: fetchVideos chamado");
     await refetch();
-  };
+  }, [refetch]);
 
   return {
     videos,

@@ -42,7 +42,12 @@ const VideoTab: React.FC<VideoTabProps> = ({
 
   const handleUploadFile = async (file: File) => {
     console.log("Arquivo selecionado no VideoTab:", file.name);
-    await handleFileUpload(file);
+    const success = await handleFileUpload(file);
+    
+    if (success) {
+      console.log("Upload realizado com sucesso, recarregando vídeos");
+      await fetchVideos();
+    }
   };
 
   return (
