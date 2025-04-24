@@ -3,7 +3,17 @@
  * Utilitário para normalizar dados de informações complementares
  * Garante formato consistente independente de como os dados foram armazenados
  */
-export function normalizeComplementaryInfo(data: any) {
+
+// Definindo e exportando o tipo para dados normalizados
+export interface NormalizedComplementaryInfo {
+  how_found_us: string;
+  referred_by: string;
+  authorize_case_usage: boolean;
+  interested_in_interview: boolean;
+  priority_topics: string[];
+}
+
+export function normalizeComplementaryInfo(data: any): NormalizedComplementaryInfo {
   // Se não temos dados, retornar objeto vazio
   if (!data) {
     return {
@@ -33,7 +43,7 @@ export function normalizeComplementaryInfo(data: any) {
   }
   
   // Garantir estrutura consistente
-  const normalizedData = {
+  const normalizedData: NormalizedComplementaryInfo = {
     how_found_us: data.how_found_us || "",
     referred_by: data.referred_by || "",
     authorize_case_usage: Boolean(data.authorize_case_usage),

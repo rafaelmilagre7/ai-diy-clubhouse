@@ -53,7 +53,7 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({
           // Se for string, tentar converter para objeto
           if (typeof value === 'string' && value !== "") {
             try {
-              processed[key] = JSON.parse(value) as any;
+              processed[key] = JSON.parse(value as string) as any;
               console.log(`[ReviewStep] Campo ${field} convertido de string para objeto:`, processed[key]);
             } catch (e) {
               console.error(`[ReviewStep] Erro ao converter string para objeto no campo ${field}:`, e);
