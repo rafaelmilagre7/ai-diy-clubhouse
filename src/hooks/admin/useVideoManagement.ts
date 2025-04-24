@@ -10,7 +10,7 @@ export const useVideoManagement = (solutionId: string) => {
   const [youtubeDialogOpen, setYoutubeDialogOpen] = useState(false);
   
   const { handleAddYouTube } = useYouTubeVideo(solutionId);
-  const { uploading, uploadProgress, handleFileUpload } = useFileUpload(solutionId);
+  const { uploading, uploadProgress, handleFileUpload, lastUploadedVideo } = useFileUpload(solutionId);
   const { videos, loading, fetchVideos, handleRemoveVideo } = useVideosData(solutionId);
   
   // Função para atualizar explicitamente os vídeos
@@ -28,6 +28,7 @@ export const useVideoManagement = (solutionId: string) => {
         setYoutubeDialogOpen(false);
         
         // Atualiza a lista completa do servidor após adicionar
+        console.log("[useVideoManagement] Atualizando lista após adicionar vídeo do YouTube");
         await refreshVideos();
         
         toast("Vídeo adicionado", {
@@ -51,10 +52,14 @@ export const useVideoManagement = (solutionId: string) => {
         console.log("[useVideoManagement] Upload bem-sucedido:", video);
         
         // Recarrega a lista completa do servidor para garantir sincronização
-        await refreshVideos();
+        console.log("[useVideoManagement] Atualizando lista após upload de arquivo");
+        setTimeout(async () => {
+          await refreshVideos();
+          console.log("[useVideoManagement] Lista atualizada após upload");
+        }, 1000);
         
         toast("Upload concluído", {
-          description: "O vídeo foi adicionado com sucesso."
+          description: "O vídeo foi adicionado com sucesso. Atualizando lista..."
         });
         
         return true;

@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
@@ -8,6 +8,7 @@ import { VideoItem } from "@/types/videoTypes";
 export const useFileUpload = (solutionId: string) => {
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [lastUploadedVideo, setLastUploadedVideo] = useState<VideoItem | null>(null);
 
   const handleFileUpload = async (file: File): Promise<VideoItem | null> => {
     if (!solutionId) {
@@ -116,13 +117,17 @@ export const useFileUpload = (solutionId: string) => {
         throw new Error("Banco de dados não retornou os dados após inserção");
       }
 
-      console.log("[useFileUpload] Vídeo registrado com sucesso no banco:", data[0]);
+      const uploadedVideo = data[0] as VideoItem;
+      console.log("[useFileUpload] Vídeo registrado com sucesso no banco:", uploadedVideo);
+      
+      // Armazenar o vídeo recém-enviado para verificação
+      setLastUploadedVideo(uploadedVideo);
 
       toast("Upload concluído", {
         description: "O vídeo foi adicionado com sucesso."
       });
 
-      return data[0] as VideoItem;
+      return uploadedVideo;
     } catch (error) {
       console.error("[useFileUpload] Erro no upload:", error);
       toast("Erro no upload", {
@@ -138,6 +143,7 @@ export const useFileUpload = (solutionId: string) => {
   return {
     uploading,
     uploadProgress,
+    lastUploadedVideo,
     handleFileUpload
   };
 };
