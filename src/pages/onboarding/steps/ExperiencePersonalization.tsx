@@ -33,7 +33,7 @@ const ExperiencePersonalization = () => {
     }
   }, [refreshAttempted, refreshProgress]); // Adicionado refreshProgress como dependência
 
-  const handleSaveData = async (data: any, stepId: string) => {
+  const handleSaveData = async (stepId: string, data: any) => {
     setIsSubmitting(true);
     try {
       console.log("Salvando dados de personalização:", data);
@@ -45,6 +45,10 @@ const ExperiencePersonalization = () => {
       
       // Usar o stepId fornecido ou fallback para "experience_personalization"
       const targetStepId = stepId || "experience_personalization";
+      
+      // CORREÇÃO: Garantir que os dados estão na estrutura correta e registrar o formato
+      console.log("Tipo de dados:", typeof data);
+      console.log("Estrutura dos dados:", JSON.stringify(data, null, 2));
       
       // Enviar com o stepId recebido
       await saveStepData(targetStepId, data, false);

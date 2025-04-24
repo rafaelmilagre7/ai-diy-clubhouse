@@ -34,6 +34,9 @@ export function normalizeExperiencePersonalization(data: any): Record<string, an
         };
       }
       
+      // CORREÇÃO: Adicionar mais logs de debug para diagnosticar problemas de conversão
+      console.log("Tentando converter string para objeto:", data);
+      
       // Tenta parsear a string como JSON
       const parsedData = JSON.parse(data);
       console.log("experience_personalization convertido de string para objeto:", parsedData);
@@ -76,9 +79,10 @@ export function normalizeExperiencePersonalization(data: any): Record<string, an
       return normalizeExperiencePersonalization(data.experience_personalization);
     }
     
-    // Garantir que todos os arrays sejam realmente arrays
-    const ensureArray = (value: any) => Array.isArray(value) ? value : [];
+    // CORREÇÃO: Garantir que todos os arrays sejam realmente arrays
+    const ensureArray = (value: any) => Array.isArray(value) ? value : (value ? [value] : []);
     
+    // CORREÇÃO: Garantir campos específicos
     return {
       interests: ensureArray(data.interests),
       time_preference: ensureArray(data.time_preference),

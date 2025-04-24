@@ -37,10 +37,21 @@ interface InitialFormData {
 
 // Função para extrair dados de um objeto ou string JSON
 function extractDataFromObject(data: any): Record<string, any> {
+  // CORREÇÃO: Melhorar diagnóstico de conversão
+  console.log("Extraindo dados do objeto ou string:", data, typeof data);
+  
   // Se for string, tentar parsear
   if (typeof data === 'string') {
     try {
-      return JSON.parse(data);
+      if (data.trim() === '') {
+        console.log("String vazia, retornando objeto vazio");
+        return {};
+      }
+      
+      console.log("Tentando parsear string como JSON:", data);
+      const parsed = JSON.parse(data);
+      console.log("String parseada com sucesso:", parsed);
+      return parsed;
     } catch (e) {
       console.error("Erro ao parsear string como objeto:", e);
       return {};
@@ -62,14 +73,18 @@ export function useExperiencePersonalizationForm(initialData: InitialFormData | 
   
   // Extrair dados de personalização de forma segura
   const experienceData = useMemo(() => {
-    console.log("Processando initialData:", initialData);
+    console.log("Processando initialData em useExperiencePersonalizationForm:", initialData);
     
+    // CORREÇÃO: Melhor diagnóstico de inicialização do formulário
     // Se initialData tem experience_personalization, usar isso
     if (initialData && initialData.experience_personalization) {
       let expData = initialData.experience_personalization;
+      console.log("Dados de personalização encontrados:", expData, typeof expData);
       
       // Extrair dados do objeto ou string
-      return extractDataFromObject(expData);
+      const extractedData = extractDataFromObject(expData);
+      console.log("Dados extraídos:", extractedData);
+      return extractedData;
     }
     
     // Caso contrário, verificar se initialData tem diretamente as propriedades esperadas
@@ -80,16 +95,50 @@ export function useExperiencePersonalizationForm(initialData: InitialFormData | 
          'networking_availability' in initialData || 
          'skills_to_share' in initialData || 
          'mentorship_topics' in initialData)) {
+      console.log("Usando propriedades de raiz em initialData");
       return initialData;
     }
     
+    console.log("Sem dados de inicialização válidos, retornando objeto vazio");
     return {};
   }, [initialData]);
   
   console.log("Dados processados para formulário:", experienceData);
   
   // CORREÇÃO: Garantir que os arrays são realmente arrays
-  const ensureArray = (value: any) => Array.isArray(value) ? value : [];
+  const ensureArray = (value: any) => {
+    // Se for array, retornar diretamente
+    if (Array.isArray(value)) return value;
+    
+    // Se for undefined ou null, retornar array vazio
+    if (value === undefined || value === null) return [];
+    
+    // Se for string, tentar parsear como JSON
+    if (typeof value === 'string') {
+      try {
+        const parsed = JSON.parse(value);
+        // Se o resultado for array, retornar
+        if (Array.isArray(parsed)) return parsed;
+        // Caso contrário, envolver em array
+        return [parsed];
+      } catch {
+        // Se falhar ao parsear, tratar como valor único
+        return [value];
+      }
+    }
+    
+    // Para outros tipos, envolver em array
+    return [value];
+  };
+  
+  // CORREÇÃO: Log detalhado dos valores iniciais
+  console.log("Inicializando formulário com valores:");
+  console.log("interests:", experienceData.interests, typeof experienceData.interests);
+  console.log("time_preference:", experienceData.time_preference, typeof experienceData.time_preference);
+  console.log("available_days:", experienceData.available_days, typeof experienceData.available_days);
+  console.log("networking_availability:", experienceData.networking_availability, typeof experienceData.networking_availability);
+  console.log("skills_to_share:", experienceData.skills_to_share, typeof experienceData.skills_to_share);
+  console.log("mentorship_topics:", experienceData.mentorship_topics, typeof experienceData.mentorship_topics);
   
   const form = useForm<ExperienceFormData>({
     defaultValues: {

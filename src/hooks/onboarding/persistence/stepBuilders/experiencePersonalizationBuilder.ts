@@ -24,10 +24,15 @@ export function buildExperiencePersonalizationUpdate(data: Partial<OnboardingDat
   
   console.log("Dados atuais de progresso:", existingExperiencePersonalization);
   
+  // CORREÇÃO: Melhor detecção do formato de dados enviados
   // Se o payload já contém um objeto experience_personalization, usar diretamente
   if (data.experience_personalization) {
     console.log("Dados de experience_personalization encontrados diretamente no payload:", data.experience_personalization);
+    console.log("Tipo dos dados:", typeof data.experience_personalization);
+    
+    // CORREÇÃO: Garantir normalização dos dados 
     updateObj.experience_personalization = normalizeExperiencePersonalization(data.experience_personalization);
+    console.log("Dados normalizados para atualização:", updateObj.experience_personalization);
     return updateObj;
   }
   
