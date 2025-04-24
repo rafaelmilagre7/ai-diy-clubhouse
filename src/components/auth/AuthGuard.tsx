@@ -5,6 +5,10 @@ import { useAuth } from "@/contexts/auth";
 import LoadingScreen from "@/components/common/LoadingScreen";
 import { toast } from "sonner";
 
+/**
+ * AuthGuard - Proteção básica de rotas autenticadas
+ * Verificar se o usuário está logado para acessar as rotas protegidas
+ */
 const AuthGuard = () => {
   const { user, isLoading } = useAuth();
   const location = useLocation();
@@ -12,16 +16,23 @@ const AuthGuard = () => {
   
   // Timer para não mostrar loading por muito tempo
   useEffect(() => {
+    let timer: NodeJS.Timeout | null = null;
+    
     if (isLoading) {
-      const timer = setTimeout(() => {
+      timer = setTimeout(() => {
         setShowLoading(false);
-      }, 3000);
-      
-      return () => clearTimeout(timer);
+      }, 2000);
     } else {
       setShowLoading(false);
     }
+    
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
   }, [isLoading]);
+  
+  // Debug log
+  console.log("AuthGuard:", { user, isLoading, path: location.pathname });
   
   // Se estiver carregando, mostrar loading screen
   if (isLoading && showLoading) {

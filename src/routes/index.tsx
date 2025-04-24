@@ -7,39 +7,34 @@ import { memberRoutes } from './member.routes';
 import { adminRoutes } from './admin.routes';
 import RootRedirect from '@/components/routing/RootRedirect';
 import { NotFound } from '@/pages/NotFound';
+import AuthGuard from '@/components/auth/AuthGuard';
 
-// Lazy-loaded layouts para melhor performance
-const AuthGuard = lazy(() => import('@/components/auth/AuthGuard'));
-const MemberGuard = lazy(() => import('@/components/auth/MemberGuard'));
-const AdminGuard = lazy(() => import('@/components/auth/AdminGuard'));
-
+/**
+ * AppRoutes - Configuração principal de rotas da aplicação
+ * Organiza as rotas públicas, de membros e administrativas
+ */
 const AppRoutes = () => {
   console.log('AppRoutes renderizando');
   
   return (
     <Routes>
-      {/* Autenticação */}
+      {/* Autenticação - Rotas públicas */}
       {authRoutes}
       
       {/* Rota raiz para redirecionar com base no tipo de usuário */}
       <Route path="/" element={<RootRedirect />} />
       
-      {/* Rotas de Membros */}
-      <Route element={
-        <Suspense fallback={<LoadingScreen message="Carregando..." />}>
-          <MemberGuard />
-        </Suspense>
-      }>
-        {memberRoutes}
-      </Route>
+      {/* Rotas protegidas - Requer autenticação */}
+      <Route element={<AuthGuard />}>
+        {/* Rotas de membros */}
+        <Route path="/dashboard/*" element={<Suspense fallback={<LoadingScreen message="Carregando dashboard..." />}>
+          <MemberRoutes />
+        </Suspense>} />
 
-      {/* Rotas Administrativas */}
-      <Route element={
-        <Suspense fallback={<LoadingScreen message="Verificando permissões administrativas..." />}>
-          <AdminGuard />
-        </Suspense>
-      }>
-        {adminRoutes}
+        {/* Rotas administrativas */}
+        <Route path="/admin/*" element={<Suspense fallback={<LoadingScreen message="Carregando área administrativa..." />}>
+          <AdminRoutes />
+        </Suspense>} />
       </Route>
       
       {/* Fallback para qualquer outra rota */}
@@ -47,5 +42,9 @@ const AppRoutes = () => {
     </Routes>
   );
 };
+
+// Componentes lazy-loaded para melhor performance
+const MemberRoutes = lazy(() => import('@/components/routing/MemberRoutes'));
+const AdminRoutes = lazy(() => import('@/components/routing/AdminRoutes'));
 
 export default AppRoutes;

@@ -1,19 +1,32 @@
 
 import { Navigate, Outlet } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
-import { toast } from "sonner";
 import AdminLayout from "@/components/layout/AdminLayout";
+import LoadingScreen from "@/components/common/LoadingScreen";
+import { toast } from "sonner";
 
+/**
+ * AdminGuard - Protege rotas administrativas
+ * Verifica se o usuário é administrador antes de permitir acesso
+ */
 const AdminGuard = () => {
-  const { isAdmin } = useAuth();
+  const { user, isAdmin, isLoading } = useAuth();
   
-  // Verificar se o usuário é administrador
+  // Debug log
+  console.log("AdminGuard:", { user: !!user, isAdmin, isLoading });
+  
+  // Se estiver carregando, mostrar loading
+  if (isLoading) {
+    return <LoadingScreen message="Verificando permissões administrativas..." />;
+  }
+  
+  // Se não for admin, redirecionar para dashboard
   if (!isAdmin) {
     toast.error("Você não tem permissão para acessar esta área");
     return <Navigate to="/dashboard" replace />;
   }
   
-  // Se for admin, aplicar layout administrativo
+  // Aplicar o layout para administradores
   return (
     <AdminLayout>
       <Outlet />
