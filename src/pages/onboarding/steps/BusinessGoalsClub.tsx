@@ -72,10 +72,10 @@ const BusinessGoalsClub = () => {
     }
   };
 
-  const handleSaveData = async (stepId: string, data: any) => {
+  const handleUpdateData = async (data: any) => {
     if (isSubmitting) return;
     
-    console.log(`[BusinessGoalsClub] Iniciando salvamento de dados para passo ${stepId}:`, data);
+    console.log(`[BusinessGoalsClub] Iniciando salvamento de dados:`, data);
     setIsSubmitting(true);
     
     try {
@@ -86,42 +86,10 @@ const BusinessGoalsClub = () => {
         return;
       }
       
-      // Verificar campos obrigatórios
       const businessGoalsData = data.business_goals;
       
-      const requiredFields = ['primary_goal', 'priority_solution_type', 'how_implement', 'week_availability'];
-      const missingFields = requiredFields.filter(field => !businessGoalsData[field]);
-      
-      if (missingFields.length > 0) {
-        console.warn("[BusinessGoalsClub] Campos obrigatórios não preenchidos:", missingFields);
-        toast.warning("Por favor, preencha todos os campos obrigatórios");
-        return;
-      }
-      
-      // Formatar dados antes de salvar para garantir estrutura consistente
-      const formattedData = {
-        business_goals: {
-          ...businessGoalsData,
-          // Garantir que expected_outcomes é um array
-          expected_outcomes: Array.isArray(businessGoalsData.expected_outcomes) 
-            ? businessGoalsData.expected_outcomes 
-            : [],
-            
-          // Adicionar expected_outcome_30days se existir
-          expected_outcome_30days: businessGoalsData.expected_outcome_30days || "",
-          
-          // Garantir que content_formats é um array
-          content_formats: Array.isArray(businessGoalsData.content_formats) 
-            ? businessGoalsData.content_formats 
-            : [],
-            
-          // Converter live_interest para número
-          live_interest: Number(businessGoalsData.live_interest || 5)
-        }
-      };
-      
       // Salvar dados usando business_goals como stepId
-      await saveStepData("business_goals", formattedData, false);
+      await saveStepData("business_goals", { business_goals: businessGoalsData }, false);
       console.log("[BusinessGoalsClub] Dados salvos com sucesso");
       
       toast.success("Informações salvas com sucesso!");
@@ -191,12 +159,8 @@ const BusinessGoalsClub = () => {
         ) : (
           <ExpectativasObjetivosStep
             key="business-goals-step"
-            onSubmit={handleSaveData}
-            isSubmitting={isSubmitting}
-            initialData={processedData}
-            isLastStep={false}
-            onComplete={completeOnboarding}
-            onUpdateData={async () => {}}
+            onUpdateData={handleUpdateData}
+            data={processedData}
           />
         )}
       </div>

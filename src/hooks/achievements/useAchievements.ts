@@ -7,7 +7,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useToast } from '@/components/ui/use-toast';
 import { SolutionCategory } from '@/lib/types/categoryTypes';
 
-// Define TypeScript interfaces for the data returned from Supabase
+// Define TypeScript interfaces para os dados retornados do Supabase
 interface ProgressItem {
   solution_id: string;
   is_completed: boolean;
@@ -67,9 +67,9 @@ export function useAchievements() {
         
       if (badgesError) throw badgesError;
 
-      // Cast the data to the appropriate types
-      const typedProgressData = progressData as ProgressItem[];
-      const typedBadgesData = badgesData as BadgeItem[];
+      // Cast the data to the appropriate types using type assertion
+      const typedProgressData = progressData as unknown as ProgressItem[];
+      const typedBadgesData = badgesData as unknown as BadgeItem[];
       
       // Construir conquistas com métricas do progresso atual
       const allAchievements: Achievement[] = [

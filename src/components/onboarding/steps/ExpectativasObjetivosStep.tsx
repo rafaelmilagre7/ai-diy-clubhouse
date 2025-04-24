@@ -25,7 +25,7 @@ const businessGoals = [
 ];
 
 // Interface para a propriedade de dados
-interface ExpectativasObjetivosProps {
+export interface ExpectativasObjetivosProps {
   onUpdateData: (data: Record<string, unknown>) => Promise<void>;
   data?: Record<string, unknown>;
 }

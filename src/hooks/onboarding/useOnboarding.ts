@@ -1,26 +1,46 @@
 
-import { useState, useEffect } from 'react';
-import { useProgress } from './useProgress';
+import { useCallback, useEffect, useState } from 'react';
+import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/contexts/auth';
 import { OnboardingProgress } from '@/types/onboarding';
+import { useQuery } from '@tanstack/react-query';
 
 export function useOnboarding() {
-  const { progress, isLoading, refreshProgress } = useProgress();
-  const [progressPercentage, setProgressPercentage] = useState(0);
+  const { user } = useAuth();
+  const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    if (progress) {
-      // Calcular a porcentagem de progresso com base nos passos completados
-      const totalSteps = 8; // Número total de etapas
-      const completedCount = progress.completed_steps?.length || 0;
-      const percentage = Math.min(Math.round((completedCount / totalSteps) * 100), 100);
-      setProgressPercentage(percentage);
+  const fetchProgress = useCallback(async () => {
+    if (!user) return null;
+    
+    try {
+      const { data, error } = await supabase
+        .from('onboarding_progress')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+        
+      if (error) {
+        console.error('Erro ao buscar progresso de onboarding:', error);
+        return null;
+      }
+      
+      return data as OnboardingProgress;
+    } catch (err) {
+      console.error('Erro na consulta de onboarding:', err);
+      return null;
     }
-  }, [progress]);
+  }, [user]);
+
+  const { data: progress, error, isLoading: queryLoading, refetch } = useQuery({
+    queryKey: ['onboarding-progress', user?.id],
+    queryFn: fetchProgress,
+    enabled: !!user,
+  });
 
   return {
     progress,
-    loading: isLoading,
-    progressPercentage,
-    refreshProgress
+    isLoading: isLoading || queryLoading,
+    error,
+    refreshProgress: refetch
   };
 }
