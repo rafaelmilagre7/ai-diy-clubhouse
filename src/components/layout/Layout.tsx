@@ -1,6 +1,6 @@
 
-import LayoutProvider from "./LayoutProvider";
 import { ReactNode } from "react";
+import LayoutProvider from "@/components/layout/LayoutProvider";
 
 /**
  * Layout is the main entry point for the member area layout
