@@ -107,23 +107,11 @@ const VideoUploader: React.FC<VideoUploaderProps> = ({
             className={`border-2 ${dragActive ? 'border-[#0ABAB5]' : 'border-dashed'} rounded-lg p-8 flex flex-col items-center justify-center transition-all ${
               dragActive ? 'bg-[#0ABAB5]/5' : 'bg-gray-50 hover:bg-gray-100'
             } ${disabled ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
-            onClick={handleButtonClick}
+            onClick={disabled || isUploading ? undefined : handleButtonClick}
             onDrop={handleFileDrop}
-            onDragOver={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              if (!disabled && !isUploading) setDragActive(true);
-            }}
-            onDragEnter={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              if (!disabled && !isUploading) setDragActive(true);
-            }}
-            onDragLeave={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              setDragActive(false);
-            }}
+            onDragOver={handleDragOver}
+            onDragEnter={handleDragEnter}
+            onDragLeave={handleDragLeave}
             data-testid="video-upload-dropzone"
           >
             <input
@@ -159,8 +147,11 @@ const VideoUploader: React.FC<VideoUploaderProps> = ({
                 variant="outline"
                 className="gap-2"
                 onClick={(e) => {
+                  e.preventDefault();
                   e.stopPropagation();
-                  handleButtonClick(e);
+                  if (!disabled && !isUploading && fileInputRef.current) {
+                    fileInputRef.current.click();
+                  }
                 }}
                 disabled={disabled || isUploading}
                 data-testid="video-upload-button"
