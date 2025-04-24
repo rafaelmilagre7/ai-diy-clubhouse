@@ -78,9 +78,9 @@ const TabBasedNavigation: React.FC<TabBasedNavigationProps> = ({
         </TabsContent>
         <TabsContent value="publish" className="mt-0">
           <PublishTab
-            solutionId={solutionId}
             solution={solution}
-            onSave={onSubmit}
+            currentValues={currentValues}
+            onSubmit={onSubmit}
             saving={saving}
           />
         </TabsContent>

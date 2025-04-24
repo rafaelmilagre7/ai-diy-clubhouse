@@ -72,9 +72,9 @@ const TabContent: React.FC<TabContentProps> = ({
       
       <TabsContent value="publish">
         <PublishTab
-          solutionId={solution?.id}
           solution={solution}
-          onSave={onSubmit}
+          currentValues={currentValues}
+          onSubmit={onSubmit}
           saving={saving}
         />
       </TabsContent>
