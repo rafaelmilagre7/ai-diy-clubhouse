@@ -24,67 +24,72 @@ export const useAchievementData = () => {
       setLoading(true);
       setError(null);
 
-      const [
-        progressResult, 
-        solutionsResult, 
-        checklistResult, 
-        badgesResult,
-        commentsResult,
-        likesResult
-      ] = await Promise.all([
-        supabase
-          .from("progress")
-          .select("*, solutions!inner(id, category)")
-          .eq("user_id", user.id),
+      // Buscar soluções publicadas
+      const { data: solutionsData, error: solutionsError } = await supabase
+        .from("solutions")
+        .select("*")
+        .eq("published", true);
 
-        supabase
-          .from("solutions")
-          .select("*")
-          .eq("published", true),
+      if (solutionsError) throw solutionsError;
+      setSolutions(solutionsData || []);
 
-        supabase
-          .from("user_checklists")
-          .select("*")
-          .eq("user_id", user.id),
+      // Buscar progresso do usuário
+      const { data: progressData, error: progressError } = await supabase
+        .from("progress")
+        .select("*, solutions!inner(id, category)")
+        .eq("user_id", user.id);
 
-        supabase
+      if (progressError) throw progressError;
+      setProgressData(progressData || []);
+
+      // Buscar checklists completados
+      const { data: checklistData, error: checklistError } = await supabase
+        .from("user_checklists")
+        .select("*")
+        .eq("user_id", user.id);
+
+      if (checklistError) throw checklistError;
+      setChecklistData(checklistData || []);
+
+      // Buscar badges conquistadas
+      try {
+        const { data: badgesData } = await supabase
           .from("user_badges")
           .select("*, badges(*)")
-          .eq("user_id", user.id),
+          .eq("user_id", user.id);
           
-        supabase
-          .from("solution_comments")
-          .select("*")
-          .eq("user_id", user.id),
-          
-        supabase
-          .from("solution_comments")
-          .select("likes_count")
-          .eq("user_id", user.id)
-      ]);
-
-      if (progressResult.error) throw progressResult.error;
-      if (solutionsResult.error) throw solutionsResult.error;
-      if (checklistResult.error) throw checklistResult.error;
-      if (commentsResult.error) throw commentsResult.error;
-      if (likesResult.error) throw likesResult.error;
+        setBadgesData(badgesData || []);
+      } catch (badgesError) {
+        console.warn("Tabela de badges não encontrada ou erro:", badgesError);
+        setBadgesData([]);
+      }
       
-      setProgressData(progressResult.data || []);
-      setSolutions(solutionsResult.data || []);
-      setChecklistData(checklistResult.data || []);
-      setBadgesData(badgesResult.data || []);
-      setComments(commentsResult.data || []);
-      setTotalLikes(
-        likesResult.data?.reduce((acc, comment) => acc + (comment.likes_count || 0), 0) || 0
-      );
+      // Buscar comentários feitos pelo usuário
+      const { data: commentsData, error: commentsError } = await supabase
+        .from("solution_comments")
+        .select("*")
+        .eq("user_id", user.id);
+        
+      if (commentsError) throw commentsError;
+      setComments(commentsData || []);
+      
+      // Buscar total de likes recebidos nos comentários
+      const { data: likesData, error: likesError } = await supabase
+        .from("solution_comments")
+        .select("likes_count")
+        .eq("user_id", user.id);
+      
+      if (likesError) throw likesError;
+      const totalLikes = (likesData || []).reduce((acc, comment) => acc + (comment.likes_count || 0), 0);
+      setTotalLikes(totalLikes);
 
     } catch (error: any) {
       console.error("Error in fetching achievements data:", error);
-      setError("Ocorreu um erro ao carregar suas conquistas");
+      setError("Ocorreu um erro ao carregar os dados de conquistas");
     } finally {
       setLoading(false);
     }
-  }, [user?.id]);
+  }, [user?.id, toast]);
 
   useEffect(() => {
     fetchData();

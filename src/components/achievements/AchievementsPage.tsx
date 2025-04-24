@@ -32,6 +32,8 @@ export const AchievementsPage = () => {
     return <ErrorState error={error} onRetry={handleRefresh} />;
   }
 
+  console.log("Conquistas carregadas:", achievements.length, achievements);
+
   if (!achievements || achievements.length === 0) {
     return (
       <div className="space-y-8">
