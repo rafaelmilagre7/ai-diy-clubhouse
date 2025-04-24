@@ -13,6 +13,7 @@ export const useFetchVideos = (solutionId: string): VideoFetchResponse & { refet
   const fetchVideos = useCallback(async () => {
     if (!solutionId) {
       setLoading(false);
+      setVideos([]);
       return;
     }
 
@@ -20,8 +21,8 @@ export const useFetchVideos = (solutionId: string): VideoFetchResponse & { refet
       setLoading(true);
       console.log("[useFetchVideos] Buscando vídeos para solução:", solutionId, "Timestamp:", new Date().toISOString());
       
-      // Adicionando um valor aleatório para evitar cache do navegador ou do Supabase
-      const randomParam = Math.random().toString(36).substring(7);
+      // Adicionando um timestamp para evitar cache do navegador ou do Supabase
+      const cacheBuster = `nocache=${Date.now()}`;
       
       const { data, error } = await supabase
         .from("solution_resources")
@@ -33,7 +34,10 @@ export const useFetchVideos = (solutionId: string): VideoFetchResponse & { refet
       if (error) throw error;
       
       console.log("[useFetchVideos] Vídeos recebidos:", data?.length || 0);
-      console.log("[useFetchVideos] Dados brutos:", JSON.stringify(data));
+      
+      if (data && data.length > 0) {
+        console.log("[useFetchVideos] Primeiro vídeo da lista:", data[0]);
+      }
       
       setVideos(data || []);
       setError(null);
@@ -54,7 +58,7 @@ export const useFetchVideos = (solutionId: string): VideoFetchResponse & { refet
     setRefreshCounter(prev => prev + 1); // Incrementa o contador para forçar refetch
     
     // Pequeno atraso para garantir que qualquer operação de banco de dados tenha tempo de propagar
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await new Promise(resolve => setTimeout(resolve, 800));
     
     try {
       await fetchVideos(); // Chama diretamente a função fetchVideos
@@ -65,9 +69,11 @@ export const useFetchVideos = (solutionId: string): VideoFetchResponse & { refet
   }, [fetchVideos]);
 
   useEffect(() => {
-    console.log("[useFetchVideos] useEffect acionado - buscando vídeos...", { refreshCounter });
-    fetchVideos();
-  }, [fetchVideos, refreshCounter]);
+    console.log("[useFetchVideos] useEffect acionado - buscando vídeos...", { refreshCounter, solutionId });
+    if (solutionId) {
+      fetchVideos();
+    }
+  }, [fetchVideos, refreshCounter, solutionId]);
 
   return { videos, loading, error, refetch };
 };

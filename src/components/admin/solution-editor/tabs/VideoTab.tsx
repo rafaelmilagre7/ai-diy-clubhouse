@@ -75,7 +75,7 @@ const VideoTab: React.FC<VideoTabProps> = ({
 
   return (
     <div className="space-y-8">
-      {/* Área de Upload Principal */}
+      {/* Área de Upload Principal - Sempre visível */}
       <Card className="border-2 border-[#0ABAB5]/10 shadow-sm">
         <CardContent className="p-6">
           <VideoUploader

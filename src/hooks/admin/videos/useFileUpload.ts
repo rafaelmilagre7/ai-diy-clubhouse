@@ -9,11 +9,19 @@ export const useFileUpload = (solutionId: string) => {
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [lastUploadedVideo, setLastUploadedVideo] = useState<VideoItem | null>(null);
+  const uploadInProgressRef = useRef(false);
 
   const handleFileUpload = async (file: File): Promise<VideoItem | null> => {
     if (!solutionId) {
       toast("Erro", {
         description: "É necessário salvar a solução antes de adicionar vídeos."
+      });
+      return null;
+    }
+
+    if (uploadInProgressRef.current) {
+      toast("Upload em andamento", {
+        description: "Aguarde o término do upload atual."
       });
       return null;
     }
@@ -35,38 +43,60 @@ export const useFileUpload = (solutionId: string) => {
     }
 
     try {
+      uploadInProgressRef.current = true;
       setUploading(true);
       setUploadProgress(0);
 
       const fileExt = file.name.split(".").pop();
-      const fileName = `${uuidv4()}.${fileExt}`;
+      const fileName = `${uuidv4()}-${Date.now()}.${fileExt}`;
       const filePath = `videos/${solutionId}/${fileName}`;
 
       console.log("[useFileUpload] Iniciando upload do arquivo:", file.name, "tamanho:", file.size);
       console.log("[useFileUpload] Caminho no storage:", filePath);
 
-      // Simulando progresso de upload para feedback visual
+      // Atualizar o progresso a cada 1 segundo para feedback visual
       const progressInterval = setInterval(() => {
         setUploadProgress(prev => {
-          // Não chega a 100% até que o upload realmente termine
-          if (prev < 80) return prev + 5;
+          if (prev < 85) return prev + 2;
           return prev;
         });
-      }, 500);
+      }, 1000);
       
-      // Verificamos se o bucket existe antes de fazer o upload
+      // Verificar se o bucket public existe
       const { data: buckets } = await supabase.storage.listBuckets();
-      console.log("[useFileUpload] Buckets disponíveis:", buckets?.map(b => b.name));
+      const bucketExists = buckets?.some(b => b.name === 'public');
       
-      // Upload para o storage - usando bucket "public" que foi criado no Supabase
-      console.log("[useFileUpload] Enviando arquivo para o bucket 'public', caminho:", filePath);
+      console.log("[useFileUpload] Bucket 'public' existe:", bucketExists);
       
+      if (!bucketExists) {
+        // Se não existir, tentamos criar
+        console.log("[useFileUpload] Tentando criar bucket 'public'...");
+        try {
+          const { data, error } = await supabase.storage.createBucket('public', {
+            public: true,
+            fileSizeLimit: 524288000 // 500MB em bytes
+          });
+          
+          if (error) {
+            console.error("[useFileUpload] Erro ao criar bucket:", error);
+            throw new Error("Não foi possível criar o bucket de armazenamento.");
+          }
+          console.log("[useFileUpload] Bucket criado com sucesso:", data);
+        } catch (err) {
+          console.error("[useFileUpload] Erro ao tentar criar bucket:", err);
+          throw new Error("Ocorreu um erro ao configurar o armazenamento.");
+        }
+      }
+      
+      console.log("[useFileUpload] Enviando arquivo para o storage...");
+      
+      // Upload para o storage
       const { error: uploadError, data: uploadData } = await supabase.storage
         .from("public")
         .upload(filePath, file, {
-          cacheControl: '3600', // Adicionando cache control para evitar problemas de cache
-          upsert: true, // Substituir o arquivo se já existir
-          contentType: file.type // Definir o tipo MIME do conteúdo corretamente
+          cacheControl: '3600',
+          upsert: true,
+          contentType: file.type
         });
 
       clearInterval(progressInterval);
@@ -77,6 +107,7 @@ export const useFileUpload = (solutionId: string) => {
       }
 
       console.log("[useFileUpload] Upload concluído com sucesso:", uploadData);
+      setUploadProgress(90);
 
       const { data: urlData } = supabase.storage
         .from("public")
@@ -85,9 +116,9 @@ export const useFileUpload = (solutionId: string) => {
       if (!urlData) throw new Error("Não foi possível obter a URL do vídeo");
 
       console.log("[useFileUpload] URL pública obtida:", urlData.publicUrl);
+      setUploadProgress(95);
 
-      setUploadProgress(100); // Completar progresso ao finalizar
-
+      // Criar registro do vídeo no banco de dados
       const videoData = {
         solution_id: solutionId,
         name: file.name,
@@ -97,7 +128,8 @@ export const useFileUpload = (solutionId: string) => {
           source: "upload",
           format: fileExt,
           size: file.size,
-          description: `Vídeo: ${file.name}`
+          description: `Vídeo: ${file.name}`,
+          uploaded_at: new Date().toISOString()
         }
       };
 
@@ -106,37 +138,35 @@ export const useFileUpload = (solutionId: string) => {
       const { data, error } = await supabase
         .from("solution_resources")
         .insert(videoData)
-        .select("*");
+        .select("*")
+        .single();
 
       if (error) {
         console.error("[useFileUpload] Erro ao inserir dados no banco:", error);
         throw error;
       }
 
-      if (!data || data.length === 0) {
-        throw new Error("Banco de dados não retornou os dados após inserção");
-      }
-
-      const uploadedVideo = data[0] as VideoItem;
-      console.log("[useFileUpload] Vídeo registrado com sucesso no banco:", uploadedVideo);
+      console.log("[useFileUpload] Vídeo registrado com sucesso no banco:", data);
+      setUploadProgress(100);
       
-      // Armazenar o vídeo recém-enviado para verificação
-      setLastUploadedVideo(uploadedVideo);
+      // Armazenar o vídeo recém-enviado
+      setLastUploadedVideo(data as VideoItem);
 
       toast("Upload concluído", {
         description: "O vídeo foi adicionado com sucesso."
       });
 
-      return uploadedVideo;
-    } catch (error) {
+      return data as VideoItem;
+    } catch (error: any) {
       console.error("[useFileUpload] Erro no upload:", error);
       toast("Erro no upload", {
-        description: "Ocorreu um erro ao tentar fazer o upload do vídeo."
+        description: error.message || "Ocorreu um erro ao tentar fazer o upload do vídeo."
       });
       return null;
     } finally {
+      uploadInProgressRef.current = false;
       setUploading(false);
-      setTimeout(() => setUploadProgress(0), 2000); // Reset do progresso após um tempo
+      setTimeout(() => setUploadProgress(0), 2000);
     }
   };
 

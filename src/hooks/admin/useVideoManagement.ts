@@ -51,12 +51,13 @@ export const useVideoManagement = (solutionId: string) => {
       if (video) {
         console.log("[useVideoManagement] Upload bem-sucedido:", video);
         
-        // Recarrega a lista completa do servidor para garantir sincronização
-        console.log("[useVideoManagement] Atualizando lista após upload de arquivo");
+        // Adicionamos um atraso antes de recarregar a lista para garantir que o banco de dados
+        // tenha tempo de processar a inserção
         setTimeout(async () => {
+          console.log("[useVideoManagement] Atualizando lista após upload de arquivo");
           await refreshVideos();
           console.log("[useVideoManagement] Lista atualizada após upload");
-        }, 1000);
+        }, 1500);
         
         toast("Upload concluído", {
           description: "O vídeo foi adicionado com sucesso. Atualizando lista..."

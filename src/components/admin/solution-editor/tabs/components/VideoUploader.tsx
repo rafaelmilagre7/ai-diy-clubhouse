@@ -43,7 +43,8 @@ const VideoUploader: React.FC<VideoUploaderProps> = ({
     if (file) {
       console.log("Arquivo selecionado pelo input:", file.name);
       onFileSelect(file);
-      e.target.value = ""; // Limpar input para permitir selecionar o mesmo arquivo novamente
+      // Limpar input para permitir selecionar o mesmo arquivo novamente
+      e.target.value = "";
     }
   };
   
@@ -56,11 +57,12 @@ const VideoUploader: React.FC<VideoUploaderProps> = ({
     <div className="w-full">
       <div 
         className={`border-2 border-dashed rounded-lg p-8 flex flex-col items-center justify-center bg-gray-50 hover:bg-gray-100 transition-colors ${disabled ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
-        onClick={!disabled && !isUploading ? handleButtonClick : undefined}
+        onClick={handleButtonClick}
         onDrop={handleFileDrop}
         onDragOver={preventDefaults}
         onDragEnter={preventDefaults}
         onDragLeave={preventDefaults}
+        data-testid="video-upload-dropzone"
       >
         <input
           ref={fileInputRef}
@@ -70,6 +72,7 @@ const VideoUploader: React.FC<VideoUploaderProps> = ({
           className="hidden"
           onChange={handleFileChange}
           disabled={disabled || isUploading}
+          data-testid="video-file-input"
         />
         
         <div className="flex flex-col items-center text-center">
@@ -93,8 +96,12 @@ const VideoUploader: React.FC<VideoUploaderProps> = ({
             type="button"
             variant="outline"
             className="gap-2"
-            onClick={handleButtonClick}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleButtonClick();
+            }}
             disabled={disabled || isUploading}
+            data-testid="video-upload-button"
           >
             {isUploading ? (
               <>
