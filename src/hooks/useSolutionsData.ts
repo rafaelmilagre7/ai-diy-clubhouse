@@ -19,7 +19,7 @@ export function useSolutionsData(initialCategory: string | null = 'all') {
         .from('solutions')
         .select('*')
         .eq('published', true)
-        .order('priority', { ascending: true });
+        .order('created_at', { ascending: false }); // Mudado de 'priority' para 'created_at'
       
       if (error) throw error;
       

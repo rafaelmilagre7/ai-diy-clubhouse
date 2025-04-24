@@ -7,12 +7,12 @@ import { useAchievements } from "@/hooks/achievements/useAchievements";
 import { getAchievementIcon } from "@/components/achievements/utils/achievementUtils";
 import { memo, useMemo } from 'react';
 
-// Otimização: Componente memoizado para evitar re-renderizações desnecessárias 
+// Componente memoizado para evitar re-renderizações desnecessárias
 export const AchievementsSummary = memo(function AchievementsSummary() {
   const navigate = useNavigate();
   const { achievements, loading } = useAchievements();
 
-  // Otimização: Usar useMemo para cálculos frequentes
+  // Usar useMemo para cálculos frequentes
   const {
     unlocked,
     locked,
@@ -20,10 +20,10 @@ export const AchievementsSummary = memo(function AchievementsSummary() {
     percent
   } = useMemo(() => {
     // Pegue as 3 primeiras conquistas desbloqueadas e 3 a desbloquear
-    const unlockedAchievements = achievements.filter(a => a.isUnlocked).slice(0, 3);
-    const lockedAchievements = achievements.filter(a => !a.isUnlocked).slice(0, 3);
-    const count = achievements.filter(a => a.isUnlocked).length;
-    const percentage = achievements.length > 0 ? Math.round((count / achievements.length) * 100) : 0;
+    const unlockedAchievements = achievements?.filter(a => a?.isUnlocked)?.slice(0, 3) || [];
+    const lockedAchievements = achievements?.filter(a => !a?.isUnlocked)?.slice(0, 3) || [];
+    const count = achievements?.filter(a => a?.isUnlocked)?.length || 0;
+    const percentage = achievements?.length > 0 ? Math.round((count / achievements.length) * 100) : 0;
     
     return {
       unlocked: unlockedAchievements,
@@ -52,7 +52,7 @@ export const AchievementsSummary = memo(function AchievementsSummary() {
       <div className="flex-1 flex flex-col items-center md:items-start justify-center gap-1">
         <span className="text-xs text-muted-foreground font-medium mb-1">Minhas Conquistas</span>
         <h2 className="text-lg md:text-xl font-bold text-foreground drop-shadow">
-          {unlockedCount} de {achievements.length} conquistas desbloqueadas
+          {unlockedCount} de {achievements?.length || 0} conquistas desbloqueadas
         </h2>
         <div className="relative w-full h-3 bg-muted rounded-full mt-2 mb-1 overflow-hidden">
           <div 
@@ -137,5 +137,5 @@ export const AchievementsSummary = memo(function AchievementsSummary() {
   );
 });
 
-// Para compatibilidade com lazy loading
-export default { AchievementsSummary };
+// Exportação padrão para compatibilidade com import padrão
+export default AchievementsSummary;

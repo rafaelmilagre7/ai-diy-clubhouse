@@ -11,11 +11,6 @@ import { useAuth } from "@/contexts/auth";
 import { AchievementsSummary } from "./AchievementsSummary"; 
 import { Suspense, lazy } from 'react';
 
-// Otimização: Lazy load componente AchievementsSummary
-const LazyAchievementsSummary = lazy(() => import('./AchievementsSummary').then(
-  module => ({ default: module.AchievementsSummary })
-));
-
 interface DashboardLayoutProps {
   active: Solution[];
   completed: Solution[];
@@ -43,10 +38,10 @@ export const DashboardLayout: FC<DashboardLayoutProps> = memo(({
       {/* HEADER IMERSIVO */}
       <ModernDashboardHeader userName={userName} />
 
-      {/* NOVO: Resumo gamificação - conquistas */}
+      {/* Resumo gamificação - conquistas */}
       <div className="animate-fade-in">
         <Suspense fallback={<div className="h-20 w-full animate-pulse bg-gray-100 rounded-lg"></div>}>
-          <LazyAchievementsSummary />
+          <AchievementsSummary />
         </Suspense>
       </div>
 

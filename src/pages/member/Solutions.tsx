@@ -9,8 +9,12 @@ import LoadingScreen from '@/components/common/LoadingScreen';
 import { Solution } from '@/lib/supabase';
 import { useToolsData } from '@/hooks/useToolsData';
 import { useLogging } from '@/contexts/logging';
+import { useDocumentTitle } from '@/hooks/use-document-title';
 
 const Solutions = () => {
+  // Definir título da página
+  useDocumentTitle('Soluções | VIVER DE IA Club');
+  
   // Logger para depuração
   const { log } = useLogging();
   

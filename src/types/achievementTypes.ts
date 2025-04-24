@@ -22,7 +22,7 @@ export interface ProgressData {
   is_completed: boolean;
   completed_at?: string;
   created_at: string;
-  solutions: {
+  solutions?: {
     id: string;
     category: string;
   };
