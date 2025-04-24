@@ -1,12 +1,17 @@
 
 import { Routes, Route } from 'react-router-dom';
-import { ProtectedRoutes } from '@/auth/ProtectedRoutes';
-import { AdminProtectedRoutes } from '@/auth/AdminProtectedRoutes';
+import { Suspense, lazy } from 'react';
+import LoadingScreen from '@/components/common/LoadingScreen';
+import { authRoutes } from './auth.routes';
 import { memberRoutes } from './member.routes';
 import { adminRoutes } from './admin.routes';
-import { authRoutes } from './auth.routes';
 import RootRedirect from '@/components/routing/RootRedirect';
 import { NotFound } from '@/pages/NotFound';
+
+// Lazy-loaded layouts para melhor performance
+const AuthGuard = lazy(() => import('@/components/auth/AuthGuard'));
+const MemberGuard = lazy(() => import('@/components/auth/MemberGuard'));
+const AdminGuard = lazy(() => import('@/components/auth/AdminGuard'));
 
 const AppRoutes = () => {
   console.log('AppRoutes renderizando');
@@ -20,12 +25,20 @@ const AppRoutes = () => {
       <Route path="/" element={<RootRedirect />} />
       
       {/* Rotas de Membros */}
-      <Route element={<ProtectedRoutes />}>
+      <Route element={
+        <Suspense fallback={<LoadingScreen message="Carregando..." />}>
+          <MemberGuard />
+        </Suspense>
+      }>
         {memberRoutes}
       </Route>
 
       {/* Rotas Administrativas */}
-      <Route element={<AdminProtectedRoutes />}>
+      <Route element={
+        <Suspense fallback={<LoadingScreen message="Verificando permissões administrativas..." />}>
+          <AdminGuard />
+        </Suspense>
+      }>
         {adminRoutes}
       </Route>
       

@@ -1,35 +1,33 @@
 
 import { Fragment } from "react";
 import { Route } from "react-router-dom";
-import PublicRoute from "@/components/auth/PublicRoute";
-
-// Páginas de autenticação
 import Login from "@/pages/auth/Login";
 import Register from "@/pages/auth/Register";
 import ResetPassword from "@/pages/auth/ResetPassword";
 import SetNewPassword from "@/pages/auth/SetNewPassword";
+import PublicLayout from "@/components/layout/PublicLayout";
 
 export const authRoutes = (
   <Fragment>
     <Route path="/login" element={
-      <PublicRoute>
+      <PublicLayout>
         <Login />
-      </PublicRoute>
+      </PublicLayout>
     } />
     <Route path="/register" element={
-      <PublicRoute>
+      <PublicLayout>
         <Register />
-      </PublicRoute>
+      </PublicLayout>
     } />
     <Route path="/reset-password" element={
-      <PublicRoute>
+      <PublicLayout>
         <ResetPassword />
-      </PublicRoute>
+      </PublicLayout>
     } />
     <Route path="/set-new-password" element={
-      <PublicRoute>
+      <PublicLayout>
         <SetNewPassword />
-      </PublicRoute>
+      </PublicLayout>
     } />
   </Fragment>
 );

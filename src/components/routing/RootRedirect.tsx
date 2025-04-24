@@ -1,50 +1,13 @@
 
-import { useState, useEffect, useRef } from "react";
-import { Navigate, useNavigate } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
 import LoadingScreen from "@/components/common/LoadingScreen";
-import { toast } from "sonner";
 
 const RootRedirect = () => {
-  const { user, profile, isAdmin, isLoading } = useAuth();
-  const [timeoutExceeded, setTimeoutExceeded] = useState(false);
-  const timeoutRef = useRef<number | null>(null);
-  const navigate = useNavigate();
+  const { user, isAdmin, isLoading } = useAuth();
   
-  // Handle timing out the loading state
-  useEffect(() => {
-    // Clear any existing timeout
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-    }
-    
-    if (isLoading && !timeoutExceeded) {
-      timeoutRef.current = window.setTimeout(() => {
-        console.log("RootRedirect: Loading timeout exceeded");
-        setTimeoutExceeded(true);
-      }, 3000); // 3 segundos de timeout
-    }
-    
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
-  }, [isLoading, timeoutExceeded]);
-  
-  // Debug para problemas de roteamento
-  useEffect(() => {
-    console.log("RootRedirect - Estado atual:", { 
-      user, 
-      isAdmin, 
-      isLoading, 
-      timeoutExceeded,
-      currentPath: window.location.pathname
-    });
-  }, [user, isAdmin, isLoading, timeoutExceeded]);
-  
-  // Show loading screen during check
-  if (isLoading && !timeoutExceeded) {
+  // Mostrar loading screen enquanto verifica autenticação
+  if (isLoading) {
     return <LoadingScreen message="Preparando sua experiência..." />;
   }
   
