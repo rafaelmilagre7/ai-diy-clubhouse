@@ -107,6 +107,7 @@ export function useAchievements() {
       if (badgesResponse && badgesResponse.length > 0) {
         badgesResponse.forEach(badgeData => {
           if (badgeData.badges) {
+            // Correção: Acessando corretamente as propriedades do objeto badges
             allAchievements.push({
               id: badgeData.badges.id,
               name: badgeData.badges.name,
