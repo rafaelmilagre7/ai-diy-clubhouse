@@ -1,6 +1,6 @@
 
 import { OnboardingData, OnboardingProgress } from "@/types/onboarding";
-import { normalizeComplementaryInfo } from "../utils/complementaryInfoNormalization";
+import { normalizeComplementaryInfo, NormalizedComplementaryInfo } from "../utils/complementaryInfoNormalization";
 
 export function buildComplementaryInfoUpdate(data: Partial<OnboardingData>, progress: OnboardingProgress | null) {
   const updateObj: any = {};
@@ -14,7 +14,7 @@ export function buildComplementaryInfoUpdate(data: Partial<OnboardingData>, prog
   }
   
   // Garantir base consistente para os dados
-  const existingComplementaryInfo = normalizeComplementaryInfo(
+  const existingComplementaryInfo: NormalizedComplementaryInfo = normalizeComplementaryInfo(
     progress?.complementary_info || {}
   );
   

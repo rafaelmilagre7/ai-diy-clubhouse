@@ -64,7 +64,8 @@ const ComplementaryInfo = () => {
   
   // Função para tentar recarregar dados
   const handleRetry = () => {
-    setRefreshCount(prev => prev + 1);
+    setRefreshAttempted(false); // Resetar para tentar novamente
+    refreshProgress();
   };
   
   // Verificar se temos dados válidos para complementary_info

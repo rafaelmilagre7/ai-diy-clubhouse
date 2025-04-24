@@ -10,7 +10,7 @@ import { DiscoverySourceSection } from "./complementary-info/DiscoverySourceSect
 import { PriorityTopicsSection } from "./complementary-info/PriorityTopicsSection";
 import { PermissionsSection } from "./complementary-info/PermissionsSection";
 import { complementaryInfoSchema, type ComplementaryInfoFormData } from "@/schemas/complementaryInfoSchema";
-import { normalizeComplementaryInfo } from "@/hooks/onboarding/persistence/utils/complementaryInfoNormalization";
+import { normalizeComplementaryInfo, NormalizedComplementaryInfo } from "@/hooks/onboarding/persistence/utils/complementaryInfoNormalization";
 
 export const ComplementaryInfoStep = ({ 
   onSubmit, 
@@ -18,21 +18,34 @@ export const ComplementaryInfoStep = ({
   initialData 
 }: OnboardingStepProps) => {
   // Processamento seguro dos dados iniciais
-  const processInitialData = () => {
-    let complementaryInfo = {};
-    
-    if (initialData?.complementary_info) {
-      complementaryInfo = normalizeComplementaryInfo(initialData.complementary_info);
+  const processInitialData = (): ComplementaryInfoFormData => {
+    try {
+      // Usar a função de normalização para garantir dados consistentes
+      const normalizedData: NormalizedComplementaryInfo = normalizeComplementaryInfo(
+        initialData?.complementary_info || {}
+      );
+      
+      console.log("Dados normalizados para ComplementaryInfoStep:", normalizedData);
+      
+      return {
+        how_found_us: normalizedData.how_found_us || "",
+        referred_by: normalizedData.referred_by || "",
+        authorize_case_usage: Boolean(normalizedData.authorize_case_usage),
+        interested_in_interview: Boolean(normalizedData.interested_in_interview),
+        priority_topics: Array.isArray(normalizedData.priority_topics) ? 
+          normalizedData.priority_topics : []
+      };
+    } catch (error) {
+      console.error("Erro ao processar dados iniciais:", error);
+      // Retornar valores padrão em caso de erro
+      return {
+        how_found_us: "",
+        referred_by: "",
+        authorize_case_usage: false,
+        interested_in_interview: false,
+        priority_topics: []
+      };
     }
-    
-    return {
-      how_found_us: complementaryInfo?.how_found_us || "",
-      referred_by: complementaryInfo?.referred_by || "",
-      authorize_case_usage: Boolean(complementaryInfo?.authorize_case_usage),
-      interested_in_interview: Boolean(complementaryInfo?.interested_in_interview),
-      priority_topics: Array.isArray(complementaryInfo?.priority_topics) ? 
-        complementaryInfo.priority_topics : []
-    };
   };
   
   const initialValues = processInitialData();

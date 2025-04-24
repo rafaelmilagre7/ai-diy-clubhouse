@@ -15,8 +15,9 @@ export function getComplementaryInfoSummary(data: any) {
   // Normalizar dados para garantir formato consistente
   const processedData = normalizeComplementaryInfo(data);
   
-  // Se mesmo após processamento os dados estiverem vazios
-  if (Object.keys(processedData).length === 0) {
+  // Se mesmo após processamento os dados estiverem vazios ou não tiverem informações relevantes
+  if (!processedData.how_found_us && !processedData.referred_by && 
+      processedData.priority_topics.length === 0) {
     return <p className="text-gray-500 italic">Seção não preenchida. Clique em Editar para preencher.</p>;
   }
 
