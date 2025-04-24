@@ -3,7 +3,7 @@ import { useCallback } from 'react';
 import { useAuth } from '@/contexts/auth';
 import { useToast } from '@/hooks/use-toast';
 import { useAchievementData } from './useAchievementData';
-import { Achievement } from '@/types/achievementTypes';
+import { Achievement, BadgeData } from '@/types/achievementTypes';
 import { useQuery } from '@tanstack/react-query';
 import { 
   fetchProgressData, 
@@ -17,6 +17,15 @@ import {
   generateEngagementAchievements,
   generateSocialAchievements
 } from '@/utils/achievements/achievementGenerators';
+
+// Interface para o tipo Badge utilizado no processamento de conquistas
+interface Badge {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  category: string;
+}
 
 export function useAchievements() {
   const { user } = useAuth();
@@ -110,7 +119,7 @@ export function useAchievements() {
           if (badgeData.badges) {
             // Se for um array, iteramos sobre cada badge
             if (Array.isArray(badgeData.badges)) {
-              badgeData.badges.forEach(badge => {
+              badgeData.badges.forEach((badge: Badge) => {
                 allAchievements.push({
                   id: badge.id,
                   name: badge.name,
@@ -124,7 +133,7 @@ export function useAchievements() {
             } 
             // Se for um objeto único, tratamos diretamente
             else {
-              const badge = badgeData.badges;
+              const badge = badgeData.badges as Badge;
               allAchievements.push({
                 id: badge.id,
                 name: badge.name,
