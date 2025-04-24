@@ -1,55 +1,21 @@
-
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useState, useCallback, useEffect } from "react";
+import { useCentralDataStore } from "@/hooks/useCentralDataStore";
 import { toast } from "sonner";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/lib/supabase";
-import { Solution } from "@/lib/supabase/types";
+import { Solution } from "@/lib/supabase";
 import { LoadingPage } from "@/components/ui/loading-states";
-import { useAuth } from "@/contexts/auth";
-import DiagnosticPanel from "@/components/common/DiagnosticPanel";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
 
 const Dashboard = () => {
-  const { user } = useAuth();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   
-  // Estado para soluções
-  const [solutions, setSolutions] = useState<Solution[]>([]);
-  const [hasError, setHasError] = useState(false);
-  
-  // Buscar soluções usando react-query
-  const { isLoading, error } = useQuery({
-    queryKey: ['solutions'],
-    queryFn: async () => {
-      console.log("Buscando soluções...");
-      try {
-        const { data, error } = await supabase
-          .from('solutions')
-          .select('*')
-          .eq('published', true);
-        
-        if (error) {
-          console.error("Erro ao buscar soluções:", error);
-          toast.error("Erro ao carregar soluções");
-          setHasError(true);
-          throw error;
-        }
-        
-        console.log("Soluções carregadas:", data);
-        setSolutions(data || []);
-        return data;
-      } catch (err) {
-        setHasError(true);
-        throw err;
-      }
-    },
-    enabled: !!user,
-    retry: 1,
-  });
+  // Usar nosso hook centralizado de dados com props corretas
+  const { 
+    solutions,
+    loadingSolutions: isLoading,
+    fetchSolutionDetails: prefetchSolution
+  } = useCentralDataStore();
   
   // Categorizar soluções
   const categorizedSolutions = {
@@ -59,21 +25,21 @@ const Dashboard = () => {
   };
   
   const [category, setCategory] = useState<string>(
-    searchParams.get("category") || "recommended"
+    searchParams.get("category") || "general"
   );
   
   // Função para lidar com a mudança de categoria
   const handleCategoryChange = useCallback((newCategory: string) => {
-    console.log("Mudando categoria para:", newCategory);
     setCategory(newCategory);
     setSearchParams({ category: newCategory });
   }, [setSearchParams]);
 
   // Função para navegar para a página de detalhes da solução
   const handleSolutionClick = useCallback((solution: Solution) => {
-    console.log("Clicou na solução:", solution.id);
-    navigate(`/solutions/${solution.id}`);
-  }, [navigate]);
+    // Prefetch dos dados da solução para carregamento rápido
+    prefetchSolution(solution.id);
+    navigate(`/solution/${solution.id}`);
+  }, [navigate, prefetchSolution]);
 
   // Efeito para mostrar toast na primeira visita - executado apenas 1 vez
   useEffect(() => {
@@ -83,8 +49,6 @@ const Dashboard = () => {
       toast("Bem-vindo ao seu dashboard personalizado!");
       localStorage.setItem("firstDashboardVisit", "false");
     }
-    
-    console.log("Dashboard montado");
   }, []);
 
   // Mostrar tela de carregamento enquanto os dados estão sendo carregados
@@ -97,31 +61,14 @@ const Dashboard = () => {
     );
   }
 
-  console.log("Renderizando dashboard com categoria:", category);
-  console.log("Soluções categorizadas:", categorizedSolutions);
-
   return (
-    <>
-      {hasError && (
-        <Alert variant="destructive" className="mb-6">
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Erro de conexão</AlertTitle>
-          <AlertDescription>
-            Não conseguimos conectar ao servidor. Verifique as configurações e tente novamente.
-          </AlertDescription>
-        </Alert>
-      )}
-      
-      <DashboardLayout
-        solutions={categorizedSolutions}
-        isLoading={isLoading}
-        onCategoryChange={handleCategoryChange}
-        onSolutionClick={handleSolutionClick}
-        currentCategory={category}
-      />
-      
-      <DiagnosticPanel />
-    </>
+    <DashboardLayout
+      solutions={categorizedSolutions}
+      isLoading={isLoading}
+      onCategoryChange={handleCategoryChange}
+      onSolutionClick={handleSolutionClick}
+      currentCategory={category}
+    />
   );
 };
 

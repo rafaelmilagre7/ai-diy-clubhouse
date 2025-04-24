@@ -1,15 +1,23 @@
 
-import AppRoutes from './routes';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'sonner';
+import AppRoutes from './routes';
+import { AuthProvider } from './contexts/auth';
 import ErrorBoundary from './components/ErrorBoundary';
 import { LoggingProvider } from './hooks/useLogging.tsx';
-import { AuthProvider } from './contexts/auth';
-import { QueryClientProvider } from '@tanstack/react-query';
-import { queryClient } from './lib/react-query';
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+      staleTime: 5 * 60 * 1000,
+      gcTime: 10 * 60 * 1000,
+    },
+  },
+});
 
 function App() {
-  console.log("App renderizando");
-  
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>

@@ -1,6 +1,6 @@
 
 import { useQuery } from '@tanstack/react-query';
-import { Solution } from '@/lib/supabase/types';
+import { Solution } from '@/lib/supabase';
 import { supabase } from '@/lib/supabase';
 import { useLogging } from '@/hooks/useLogging';
 import { useState, useEffect } from 'react';
@@ -18,7 +18,6 @@ export const useSolutionData = (solutionId: string) => {
   const [connectionStatus, setConnectionStatus] = useState<'online' | 'offline' | 'checking'>('checking');
   const [implementationMetrics, setImplementationMetrics] = useState<any | null>(null);
   const [isMounted, setIsMounted] = useState(false);
-  const [solutionProgress, setSolutionProgress] = useState<any>(null);
 
   // Assegurar que estamos montados para evitar atualizações de estado em componentes desmontados
   useEffect(() => {
@@ -61,9 +60,6 @@ export const useSolutionData = (solutionId: string) => {
           
           if (isMounted) {
             setSolution(normalizedSolution);
-            if (cachedData.progress) {
-              setSolutionProgress(cachedData.progress);
-            }
           }
           return normalizedSolution;
         }
@@ -87,23 +83,10 @@ export const useSolutionData = (solutionId: string) => {
           modules: data.modules?.length || 0
         });
         
-        // Também buscar o progresso do usuário para esta solução, se disponível
-        const { data: progressData } = await supabase
-          .from('progress')
-          .select('*')
-          .eq('solution_id', solutionId)
-          .maybeSingle();
-          
-        if (progressData) {
-          log('Progresso encontrado para a solução', { progressData });
-          setSolutionProgress(progressData);
-        }
-        
         // Normalizar a categoria para garantir compatibilidade
         const normalizedSolution = {
           ...data,
-          category: toSolutionCategory(data.category),
-          progress: progressData
+          category: toSolutionCategory(data.category)
         } as Solution;
         
         if (isMounted) {
@@ -173,6 +156,9 @@ export const useSolutionData = (solutionId: string) => {
     }
   };
 
+  // Para manter compatibilidade com o código existente
+  const progress = data?.progress || null;
+
   // Para compatibilidade com componentes que usam a antiga API
   return { 
     solution: solution || data, // Usar state local primeiro, depois dados da query
@@ -182,7 +168,7 @@ export const useSolutionData = (solutionId: string) => {
     error: error || errorHandling,
     networkError,
     notFoundError,
-    progress: solutionProgress,
+    progress,
     refetch,
     setSolution: (updatedSolution: Solution) => {
       // Garantir que a categoria esteja normalizada

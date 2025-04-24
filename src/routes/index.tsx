@@ -1,44 +1,32 @@
 
 import { Routes, Route } from 'react-router-dom';
-import { Suspense, lazy } from 'react';
-import LoadingScreen from '@/components/common/LoadingScreen';
+import { ProtectedRoutes } from '@/auth/ProtectedRoutes';
+import { AdminProtectedRoutes } from '@/auth/AdminProtectedRoutes';
+import { memberRoutes } from './member.routes';
+import { adminRoutes } from './admin.routes';
 import { authRoutes } from './auth.routes';
 import RootRedirect from '@/components/routing/RootRedirect';
 import { NotFound } from '@/pages/NotFound';
-import AuthGuard from '@/components/auth/AuthGuard';
-import MemberRoutes from '@/components/routing/MemberRoutes';
-import AdminRoutes from '@/components/routing/AdminRoutes';
 
-/**
- * AppRoutes - Configuração principal de rotas da aplicação
- * Organiza as rotas públicas, de membros e administrativas
- */
 const AppRoutes = () => {
   console.log('AppRoutes renderizando');
   
   return (
     <Routes>
-      {/* Autenticação - Rotas públicas */}
+      {/* Autenticação */}
       {authRoutes}
       
       {/* Rota raiz para redirecionar com base no tipo de usuário */}
       <Route path="/" element={<RootRedirect />} />
       
-      {/* Rotas protegidas - Requer autenticação */}
-      <Route element={<AuthGuard />}>
-        {/* Rotas de membros */}
-        <Route path="/dashboard/*" element={
-          <Suspense fallback={<LoadingScreen message="Carregando dashboard..." />}>
-            <MemberRoutes />
-          </Suspense>
-        } />
+      {/* Rotas de Membros */}
+      <Route element={<ProtectedRoutes />}>
+        {memberRoutes}
+      </Route>
 
-        {/* Rotas administrativas */}
-        <Route path="/admin/*" element={
-          <Suspense fallback={<LoadingScreen message="Carregando área administrativa..." />}>
-            <AdminRoutes />
-          </Suspense>
-        } />
+      {/* Rotas Administrativas */}
+      <Route element={<AdminProtectedRoutes />}>
+        {adminRoutes}
       </Route>
       
       {/* Fallback para qualquer outra rota */}

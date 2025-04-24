@@ -179,8 +179,8 @@ const SolutionDetails = () => {
           <SolutionMobileActions 
             solutionId={solution?.id}
             progress={progress}
-            startImplementation={() => startImplementation()}
-            continueImplementation={() => continueImplementation()}
+            startImplementation={startImplementation}
+            continueImplementation={continueImplementation}
             initializing={initializing}
             completionPercentage={progress?.completion_percentage || 0}
           />
@@ -190,8 +190,8 @@ const SolutionDetails = () => {
           <SolutionSidebar 
             solution={solution}
             progress={progress}
-            startImplementation={() => startImplementation()}
-            continueImplementation={() => continueImplementation()}
+            startImplementation={startImplementation}
+            continueImplementation={continueImplementation}
             initializing={initializing}
             implementationMetrics={implementationMetrics}
           />

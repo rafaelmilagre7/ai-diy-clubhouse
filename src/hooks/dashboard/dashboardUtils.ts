@@ -1,5 +1,5 @@
 
-import { Solution } from "@/lib/supabase/types";
+import { Solution } from "@/lib/supabase";
 
 // Fallback solutions data for when API calls fail
 export const fallbackSolutionsData: Solution[] = [
@@ -9,14 +9,14 @@ export const fallbackSolutionsData: Solution[] = [
     description: "Implemente um assistente de IA para atendimento automatizado via WhatsApp",
     thumbnail_url: "/images/whatsapp-ai.jpg",
     category: "operational",
-    difficulty: "beginner",
+    difficulty: "easy",
     slug: "whatsapp-ai-assistant",
     estimated_time: 45,
     success_rate: 95,
     tags: ["whatsapp", "automation", "ai"],
     related_solutions: [],
     published: true,
-    creator_id: "",
+    author_id: "",
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString()
   },
@@ -26,14 +26,14 @@ export const fallbackSolutionsData: Solution[] = [
     description: "Crie um chatbot para qualificar e capturar leads no seu site",
     thumbnail_url: "/images/chatbot-leads.jpg",
     category: "revenue",
-    difficulty: "intermediate",
+    difficulty: "medium",
     slug: "chatbot-lead-generation",
     estimated_time: 60,
     success_rate: 80,
     tags: ["chatbot", "lead generation", "sales"],
     related_solutions: [],
     published: true,
-    creator_id: "",
+    author_id: "",
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString()
   },
@@ -50,7 +50,7 @@ export const fallbackSolutionsData: Solution[] = [
     tags: ["sentiment analysis", "customer satisfaction", "retention"],
     related_solutions: [],
     published: true,
-    creator_id: "",
+    author_id: "",
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString()
   }
@@ -60,10 +60,10 @@ export const fallbackSolutionsData: Solution[] = [
 export const sortSolutionsByDifficulty = (solutions: Solution[]): Solution[] => {
   return [...solutions].sort((a, b) => {
     // Sort by difficulty
-    const difficultyOrder = { "beginner": 0, "intermediate": 1, "advanced": 2 };
-    const diffA = a.difficulty as "beginner" | "intermediate" | "advanced" || "beginner";
-    const diffB = b.difficulty as "beginner" | "intermediate" | "advanced" || "beginner";
-    return (difficultyOrder[diffA] || 0) - (difficultyOrder[diffB] || 0);
+    const difficultyOrder = { "easy": 0, "medium": 1, "advanced": 2 };
+    const diffA = a.difficulty as "easy" | "medium" | "advanced";
+    const diffB = b.difficulty as "easy" | "medium" | "advanced";
+    return difficultyOrder[diffA] - difficultyOrder[diffB];
   });
 };
 

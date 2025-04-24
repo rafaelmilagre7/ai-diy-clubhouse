@@ -1,119 +1,151 @@
 
-import { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { toast } from 'sonner';
-import { supabase } from '@/lib/supabase';
-import { useLogging } from '@/hooks/useLogging';
-import { Progress, Solution } from '@/types/solution';
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/auth";
+import { supabase } from "@/lib/supabase";
+import { useToast } from "@/hooks/use-toast";
+import { useLogging } from "@/hooks/useLogging";
+import { toast } from "sonner";
 
-export const useSolutionInteractions = (solutionId: string, solution: Solution | null) => {
+export const useSolutionInteractions = (solutionId: string | undefined, progress: any) => {
+  const { user } = useAuth();
+  const { toast: uiToast } = useToast();
   const navigate = useNavigate();
-  const { log } = useLogging('SolutionInteractions');
-  const [initializing, setInitializing] = useState(false);
-  const [progress, setProgress] = useState<Progress | null>(null);
-
-  // Fetch progress on mount
-  useEffect(() => {
-    const fetchProgress = async () => {
-      if (!solutionId) return;
-      
-      try {
-        const { data, error } = await supabase
-          .from('progress')
-          .select('*')
-          .eq('solution_id', solutionId)
-          .eq('user_id', (await supabase.auth.getUser()).data.user?.id)
-          .maybeSingle();
-          
-        if (error) throw error;
-        setProgress(data);
-      } catch (err) {
-        console.error('Erro ao buscar progresso:', err);
-      }
-    };
-    
-    fetchProgress();
-  }, [solutionId]);
+  const { log, logError } = useLogging("useSolutionInteractions");
   
-  // Iniciar implementação de uma solução
-  const startImplementation = useCallback(async (): Promise<void> => {
-    if (!solutionId || !solution) return;
+  const [initializing, setInitializing] = useState(false);
+  
+  const startImplementation = async (): Promise<void> => {
+    if (!user) {
+      uiToast({
+        title: "Autenticação necessária",
+        description: "Você precisa estar logado para implementar esta solução",
+        variant: "destructive"
+      });
+      return;
+    }
     
-    setInitializing(true);
+    if (!solutionId) {
+      uiToast({
+        title: "Erro",
+        description: "ID da solução não encontrado",
+        variant: "destructive"
+      });
+      return;
+    }
     
     try {
-      // Criar registro de progresso
-      const { data: newProgress, error } = await supabase
-        .from('progress')
-        .insert({
-          solution_id: solutionId,
-          current_module: 0,
-          is_completed: false,
-          completed_modules: [],
-          last_activity: new Date().toISOString(),
-          implementation_status: 'in_progress',
-          user_id: (await supabase.auth.getUser()).data.user?.id
-        })
-        .select('*')
-        .single();
+      setInitializing(true);
+      log("Iniciando implementação da solução", { solutionId });
       
-      if (error) throw error;
+      // Verificar se a solução existe antes de prosseguir
+      const { data: solutionData, error: solutionError } = await supabase
+        .from("solutions")
+        .select("id, title")
+        .eq("id", solutionId)
+        .maybeSingle();
+        
+      if (solutionError || !solutionData) {
+        logError("Erro ao verificar solução", { error: solutionError });
+        uiToast({
+          title: "Solução não encontrada",
+          description: "Não foi possível encontrar a solução solicitada.",
+          variant: "destructive"
+        });
+        return;
+      }
       
-      // Registrar evento analítico
-      await supabase.from('analytics').insert({
-        event_type: 'solution_started',
-        solution_id: solutionId,
-        user_id: (await supabase.auth.getUser()).data.user?.id,
-        event_data: { solution_name: solution.title }
-      });
+      // If there's no progress record yet, create one
+      if (!progress) {
+        log("Criando novo registro de progresso", { userId: user.id, solutionId });
+        const { data, error } = await supabase
+          .from("progress")
+          .insert({
+            user_id: user.id,
+            solution_id: solutionId,
+            current_module: 0,
+            is_completed: false,
+            completed_modules: [], 
+            last_activity: new Date().toISOString(),
+          })
+          .select()
+          .single();
+        
+        if (error) {
+          logError("Erro ao criar progresso", { error });
+          uiToast({
+            title: "Erro ao criar progresso",
+            description: "Ocorreu um erro ao tentar iniciar a implementação.",
+            variant: "destructive"
+          });
+          return;
+        }
+        
+        log("Progresso criado com sucesso", { data });
+      } else {
+        log("Usando progresso existente", { progress });
+      }
       
-      // Incrementar métricas
-      await supabase.rpc('increment', {
-        row_id: solutionId,
-        table_name: 'solution_metrics',
-        column_name: 'total_starts'
-      });
-      
-      setProgress(newProgress);
-      navigate(`/implementation/${solutionId}/0`);
-      
-      toast.success('Implementação iniciada!', {
-        description: `Vamos começar a implementar ${solution.title}`,
-      });
-    } catch (err) {
-      console.error('Erro ao iniciar implementação:', err);
-      toast.error('Erro ao iniciar', {
-        description: 'Não foi possível iniciar a implementação. Tente novamente.',
+      // Navegar para implementação
+      log("Redirecionando para", { path: `/implement/${solutionId}/0` });
+      navigate(`/implement/${solutionId}/0`);
+    } catch (error) {
+      logError("Erro ao iniciar implementação", { error });
+      uiToast({
+        title: "Erro ao iniciar implementação",
+        description: "Ocorreu um erro ao tentar iniciar a implementação da solução.",
+        variant: "destructive",
       });
     } finally {
       setInitializing(false);
     }
-  }, [solutionId, solution, navigate]);
+  };
   
-  // Continuar uma implementação em andamento
-  const continueImplementation = useCallback(async (): Promise<void> => {
-    if (!solutionId || !progress) return;
-    navigate(`/implementation/${solutionId}/${progress.current_module}`);
-  }, [solutionId, progress, navigate]);
-
-  // Toggle favorito
-  const toggleFavorite = useCallback(async (): Promise<void> => {
+  const continueImplementation = async (): Promise<void> => {
+    if (!solutionId) {
+      uiToast({
+        title: "Erro",
+        description: "ID da solução não encontrado",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    if (!progress) {
+      // Se não há progresso, iniciar como novo
+      await startImplementation();
+      return;
+    }
+    
+    try {
+      // Navigate directly to the implementation page
+      const moduleIdx = progress.current_module || 0;
+      log("Continuando implementação no módulo", { moduleIdx });
+      navigate(`/implement/${solutionId}/${moduleIdx}`);
+    } catch (error) {
+      logError("Erro ao continuar implementação", { error });
+      uiToast({
+        title: "Erro ao continuar implementação",
+        description: "Ocorreu um erro ao continuar a implementação da solução.",
+        variant: "destructive"
+      });
+    }
+  };
+  
+  const toggleFavorite = async (): Promise<void> => {
     // Implementação futura
-    toast.info('Funcionalidade em desenvolvimento');
-  }, []);
-
-  // Download de materiais
-  const downloadMaterials = useCallback(async (): Promise<void> => {
+  };
+  
+  const downloadMaterials = async (): Promise<void> => {
     // Implementação futura
-    toast.info('Funcionalidade em desenvolvimento');
-  }, []);
+  };
   
   return {
     initializing,
-    progress,
     startImplementation,
     continueImplementation,
     toggleFavorite,
-    downloadMaterials
+    downloadMaterials,
+    progress // Adicionando explicitamente o progress ao retorno
   };
 };

@@ -1,87 +1,85 @@
 
+import { UserRole } from '@/types/supabaseTypes';
 import { supabase } from '@/lib/supabase';
-import { UserProfile } from '@/lib/supabase/types';
-
-// Lista de emails conhecidos para super admins
-const SUPER_ADMIN_EMAILS = [
-  'admin@viverdeia.ai',
-  'admin@teste.com',
-  'admin@viver.ai'
-];
 
 /**
- * Verifica se um email pertence a um super admin
+ * Determines the user role based on email address
  */
-export const isSuperAdmin = (email: string): boolean => {
-  return SUPER_ADMIN_EMAILS.includes(email.toLowerCase());
+export const determineRoleFromEmail = (email: string | undefined | null): UserRole => {
+  if (!email) return 'member';
+  
+  // Lista de emails administrativos
+  const isAdminEmail = email === 'admin@teste.com' || 
+                        email === 'admin@viverdeia.ai' || 
+                        email === 'rafael@viverdeia.ai' ||
+                        email?.endsWith('@viverdeia.ai');
+                        
+  return isAdminEmail ? 'admin' : 'member';
 };
 
 /**
- * Determina o papel/role do usuário com base no email
- * Esta função é usada ao criar um novo perfil para determinação inicial do papel
+ * Verifica se um usuário é o Super Admin (rafael@viverdeia.ai)
  */
-export const determineRoleFromEmail = (email: string): 'admin' | 'member' => {
-  // Se o email pertence ao domínio viverdeia.ai ou é um email de teste admin, é considerado admin
-  if (
-    email.toLowerCase().endsWith('@viverdeia.ai') ||
-    SUPER_ADMIN_EMAILS.includes(email.toLowerCase())
-  ) {
-    return 'admin';
-  }
-  
-  // Caso contrário, é um membro comum
-  return 'member';
+export const isSuperAdmin = (email: string | undefined | null): boolean => {
+  return email === 'rafael@viverdeia.ai';
 };
 
 /**
- * Valida se o papel atual do usuário é apropriado
- * Se necessário, atualiza o papel no banco de dados
+ * Validates if a user has the correct role and updates if needed
  */
-export const validateUserRole = async (
-  profileId: string,
-  currentRole: 'admin' | 'member',
-  email?: string | null
-): Promise<'admin' | 'member'> => {
-  // Se não temos email, manter o papel atual
-  if (!email) {
-    console.log(`Sem email para validar papel para perfil: ${profileId}`);
-    return currentRole;
-  }
+export const validateUserRole = async (profileId: string, currentRole: UserRole, email: string | null): Promise<UserRole> => {
+  if (!email) return currentRole;
   
-  // Determinar o papel esperado com base no email
-  const expectedRole = determineRoleFromEmail(email);
+  const correctRole = determineRoleFromEmail(email);
   
-  // Se o papel atual é diferente do esperado, atualizamos no banco de dados
-  if (currentRole !== expectedRole) {
-    console.log(`Papel atual (${currentRole}) diferente do esperado (${expectedRole}) para ${email}. Atualizando...`);
+  // Se role não corresponde ao email, atualizar no banco de dados
+  if (currentRole !== correctRole) {
+    console.log(`Atualizando papel de ${currentRole} para ${correctRole}...`);
     
     try {
-      // Atualizar o papel no perfil
       const { error } = await supabase
         .from('profiles')
-        .update({ role: expectedRole })
+        .update({ role: correctRole })
         .eq('id', profileId);
       
       if (error) {
-        console.error('Erro ao atualizar papel do usuário:', error);
-        // Em caso de erro, mantemos o papel atual para não interromper o fluxo
-        return currentRole;
+        console.error(`Erro ao atualizar papel para ${correctRole}:`, error);
+        return currentRole; // Manter papel existente em caso de erro
       }
       
-      console.log(`Papel atualizado com sucesso para ${expectedRole}`);
+      console.log(`Papel atualizado para ${correctRole} no banco de dados`);
       
-      // Atualizar metadados do usuário para manter consistência
-      await supabase.auth.updateUser({
-        data: { role: expectedRole }
-      });
+      // Também atualizar metadados do usuário
+      await updateUserMetadata(correctRole);
       
-      return expectedRole;
+      return correctRole;
     } catch (error) {
-      console.error('Erro inesperado ao atualizar papel:', error);
-      return currentRole;
+      console.error(`Erro ao atualizar papel para ${correctRole}:`, error);
+      return currentRole; // Manter papel existente em caso de erro
     }
   }
   
-  // Se o papel é o mesmo que o esperado, apenas retornamos
   return currentRole;
+};
+
+/**
+ * Updates the user metadata with role information
+ */
+export const updateUserMetadata = async (role: UserRole): Promise<boolean> => {
+  try {
+    const { error } = await supabase.auth.updateUser({
+      data: { role }
+    });
+    
+    if (error) {
+      console.error("Erro ao atualizar metadata do usuário:", error);
+      return false;
+    }
+    
+    console.log(`Metadata do usuário atualizada com papel: ${role}`);
+    return true;
+  } catch (error) {
+    console.error("Erro ao atualizar metadata do usuário:", error);
+    return false;
+  }
 };

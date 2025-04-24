@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Solution } from '@/lib/supabase/types';
+import { Solution } from '@/types/solution';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { SolutionsGrid } from './SolutionsGrid';
 import { Skeleton } from '@/components/ui/skeleton';

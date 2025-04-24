@@ -1,13 +1,13 @@
 
-import { Solution as SupabaseSolution } from "@/lib/supabase/types";
+import { Solution as SupabaseSolution } from "@/lib/supabase";
 
-// Definir tipo Solution compatível com a definição do Supabase
-export interface Solution extends Omit<SupabaseSolution, 'creator_id'> {
+// Definir tipo Solution que estende a SupabaseSolution mas torna author_id opcional
+export interface Solution extends Omit<SupabaseSolution, 'author_id'> {
   id: string;
   title: string;
   description: string;
   category: string;
-  difficulty: "beginner" | "intermediate" | "advanced" | "easy" | "medium";
+  difficulty: string;
   published: boolean;
   created_at: string;
   updated_at: string;

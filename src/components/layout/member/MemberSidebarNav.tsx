@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "react-router-dom";
+import { useLogging } from "@/hooks/useLogging";
 
 interface SidebarNavProps {
   sidebarOpen: boolean;
@@ -23,6 +24,13 @@ interface SidebarNavProps {
 export const MemberSidebarNav = ({ sidebarOpen }: SidebarNavProps) => {
   const location = useLocation();
   const { isAdmin } = useAuth();
+  const { log } = useLogging("MemberSidebarNav");
+
+  // Log para verificar a renderização e o estado atual
+  log("Renderizando menu lateral", { 
+    sidebarOpen, 
+    currentPath: location.pathname
+  });
 
   const menuItems = [
     {
@@ -31,9 +39,29 @@ export const MemberSidebarNav = ({ sidebarOpen }: SidebarNavProps) => {
       icon: LayoutDashboard,
     },
     {
+      title: "Perfil de Implementação",
+      href: "/perfil-de-implementacao",
+      icon: ClipboardList,
+    },
+    {
+      title: "Trilha de Implementação",
+      href: "/implementation-trail",
+      icon: Map,
+    },
+    {
       title: "Soluções",
       href: "/solutions",
       icon: Lightbulb,
+    },
+    {
+      title: "Ferramentas",
+      href: "/tools",
+      icon: Settings,
+    },
+    {
+      title: "Benefícios",
+      href: "/benefits",
+      icon: Gift,
     },
     {
       title: "Sugestões",
@@ -57,6 +85,14 @@ export const MemberSidebarNav = ({ sidebarOpen }: SidebarNavProps) => {
     if (href === "/solutions" && (
       location.pathname.startsWith("/solution/") || 
       location.pathname.startsWith("/solutions/")
+    )) {
+      return true;
+    }
+    
+    // Para caminhos como /implementation/:id ou /implement/:id
+    if (href === "/solutions" && (
+      location.pathname.startsWith("/implement/") ||
+      location.pathname.startsWith("/implementation/")
     )) {
       return true;
     }

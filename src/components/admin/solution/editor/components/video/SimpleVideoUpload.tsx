@@ -1,12 +1,12 @@
 
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import FileVideoUploader from "./FileVideoUploader";
-import YouTubeVideoForm from "./YouTubeVideoForm";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Upload, Youtube, Loader2 } from "lucide-react";
 import { useVideoUpload } from "./useVideoUpload";
-import { Plus, Upload, Youtube } from "lucide-react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface SimpleVideoUploadProps {
   solutionId: string | undefined;
@@ -14,7 +14,12 @@ interface SimpleVideoUploadProps {
 
 export const SimpleVideoUpload: React.FC<SimpleVideoUploadProps> = ({ solutionId }) => {
   const [youtubeOpen, setYoutubeOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<string>("upload");
+  const [youtubeData, setYoutubeData] = useState({
+    name: "",
+    url: "",
+    description: ""
+  });
+
   const {
     handleFileUpload,
     handleYoutubeUpload,
@@ -22,80 +27,96 @@ export const SimpleVideoUpload: React.FC<SimpleVideoUploadProps> = ({ solutionId
     uploadProgress
   } = useVideoUpload({ solutionId });
 
-  // Wrapper para adaptar a tipagem de retorno
-  const handleYouTubeFormSubmit = async (data: { name: string; url: string; description: string; }) => {
-    await handleYoutubeUpload(data);
-    return; // Garantir que retorna void
-  };
-
-  // Função de manipulação para o upload de arquivo
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      handleFileUpload(file);
-    }
-  };
-
   return (
-    <Card className="border shadow-sm">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-xl font-bold">Adicionar Vídeos</CardTitle>
-        <CardDescription>
-          Adicione vídeos para enriquecer sua solução de IA
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <Tabs defaultValue="upload" value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid grid-cols-2 mb-4">
-            <TabsTrigger value="upload" disabled={!solutionId}>
-              <Upload className="h-4 w-4 mr-2" />
-              Upload de Arquivo
-            </TabsTrigger>
-            <TabsTrigger value="youtube" disabled={!solutionId}>
-              <Youtube className="h-4 w-4 mr-2" />
-              Vídeo do YouTube
-            </TabsTrigger>
-          </TabsList>
+    <div className="flex items-center gap-4">
+      <label htmlFor="video-upload">
+        <Input
+          id="video-upload"
+          type="file"
+          accept="video/*"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) handleFileUpload(file);
+          }}
+          className="hidden"
+          disabled={uploading || !solutionId}
+        />
+        <Button asChild>
+          <span>
+            {uploading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                {uploadProgress.toFixed(0)}%
+              </>
+            ) : (
+              <>
+                <Upload className="mr-2 h-4 w-4" />
+                Upload de Vídeo
+              </>
+            )}
+          </span>
+        </Button>
+      </label>
 
-          <TabsContent value="upload" className="space-y-4">
-            <div className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
-              <FileVideoUploader
-                onFileChange={handleFileChange}
-                isUploading={uploading}
-                uploadProgress={uploadProgress}
-                disabled={!solutionId}
+      <Button onClick={() => setYoutubeOpen(true)} variant="outline">
+        <Youtube className="mr-2 h-4 w-4" />
+        Adicionar do YouTube
+      </Button>
+
+      <Dialog open={youtubeOpen} onOpenChange={setYoutubeOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Adicionar vídeo do YouTube</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="youtube-name">Título do vídeo</Label>
+              <Input
+                id="youtube-name"
+                placeholder="Título do vídeo"
+                value={youtubeData.name}
+                onChange={(e) => setYoutubeData({ ...youtubeData, name: e.target.value })}
               />
             </div>
-          </TabsContent>
-
-          <TabsContent value="youtube" className="space-y-4">
-            <div className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-300 rounded-lg">
-              <Button 
-                onClick={() => setYoutubeOpen(true)} 
-                variant="outline" 
-                disabled={!solutionId || uploading}
-                className="gap-2"
-              >
-                <Plus className="h-4 w-4" />
-                Adicionar vídeo do YouTube
-              </Button>
+            <div className="space-y-2">
+              <Label htmlFor="youtube-url">URL do YouTube</Label>
+              <Input
+                id="youtube-url"
+                placeholder="https://www.youtube.com/watch?v=..."
+                value={youtubeData.url}
+                onChange={(e) => setYoutubeData({ ...youtubeData, url: e.target.value })}
+              />
             </div>
-          </TabsContent>
-        </Tabs>
-
-        {!solutionId && (
-          <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded text-amber-800 text-sm">
-            Salve as informações básicas da solução antes de adicionar vídeos.
+            <div className="space-y-2">
+              <Label htmlFor="youtube-description">Descrição (opcional)</Label>
+              <Textarea
+                id="youtube-description"
+                placeholder="Descrição do vídeo"
+                value={youtubeData.description}
+                onChange={(e) => setYoutubeData({ ...youtubeData, description: e.target.value })}
+              />
+            </div>
+            <Button
+              className="w-full"
+              onClick={() => {
+                handleYoutubeUpload(youtubeData);
+                setYoutubeOpen(false);
+                setYoutubeData({ name: "", url: "", description: "" });
+              }}
+              disabled={uploading || !youtubeData.name || !youtubeData.url}
+            >
+              {uploading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Adicionando...
+                </>
+              ) : (
+                "Adicionar Vídeo"
+              )}
+            </Button>
           </div>
-        )}
-      </CardContent>
-      
-      <YouTubeVideoForm
-        onAddYouTube={handleYouTubeFormSubmit}
-        isOpen={youtubeOpen}
-        onOpenChange={setYoutubeOpen}
-        isUploading={uploading}
-      />
-    </Card>
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 };

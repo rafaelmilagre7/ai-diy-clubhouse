@@ -1,57 +1,90 @@
 
-import { ReactNode, useState } from "react";
-import { Outlet } from "react-router-dom";
-import { MemberSidebar } from "./member/MemberSidebar";
-import { MemberHeader } from "./member/MemberHeader";
-import { cn } from "@/lib/utils";
+import { useState, useEffect, ReactNode } from "react";
 import { useAuth } from "@/contexts/auth";
-import LoadingScreen from "@/components/common/LoadingScreen";
-import DiagnosticPanel from "@/components/common/DiagnosticPanel";
+import { MemberSidebar } from "./member/MemberSidebar";
 import { MemberContent } from "./member/MemberContent";
+import { Outlet } from "react-router-dom";
 
+/**
+ * MemberLayout renderiza a estrutura de layout para usuários membros
+ * Isso inclui a barra lateral e a área de conteúdo
+ */
 interface MemberLayoutProps {
   children?: ReactNode;
 }
 
 const MemberLayout = ({ children }: MemberLayoutProps) => {
-  const { isLoading, user, isAdmin, signOut } = useAuth();
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const { profile, signOut } = useAuth();
   
-  // Função para extrair iniciais do nome do usuário
+  // Estado para controlar a visibilidade da barra lateral
+  const [sidebarOpen, setSidebarOpen] = useState(() => {
+    // Recuperar estado do localStorage, padrão é aberto em desktop
+    const savedState = localStorage.getItem("sidebarOpen");
+    console.log("Estado inicial da sidebar recuperado:", savedState);
+    return savedState !== null ? savedState === "true" : window.innerWidth >= 768;
+  });
+
+  // Efeito para persistir o estado da barra lateral
+  useEffect(() => {
+    console.log("Persistindo estado da sidebar:", sidebarOpen);
+    localStorage.setItem("sidebarOpen", String(sidebarOpen));
+  }, [sidebarOpen]);
+
+  // Função para obter iniciais do nome do usuário
   const getInitials = (name: string | null) => {
     if (!name) return "U";
     return name
       .split(" ")
-      .map(n => n[0])
+      .map((n) => n[0])
       .join("")
       .toUpperCase()
       .substring(0, 2);
   };
-  
-  if (isLoading) {
-    return <LoadingScreen message="Carregando..." />;
-  }
+
+  // Detectar tamanho de tela e ajustar barra lateral em dispositivos móveis
+  useEffect(() => {
+    const handleResize = () => {
+      const isMobile = window.innerWidth < 768;
+      console.log("Detectado redimensionamento:", { isMobile, width: window.innerWidth });
+      
+      if (isMobile && sidebarOpen) {
+        setSidebarOpen(false);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    // Executar verificação inicial
+    handleResize();
+    
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [sidebarOpen]);
+
+  // Log para debugging
+  console.log("MemberLayout renderizando com sidebarOpen:", sidebarOpen);
+  console.log("Perfil do usuário:", profile);
 
   return (
-    <div className="flex h-screen bg-background overflow-hidden">
+    <div className="flex min-h-screen bg-background overflow-hidden">
+      {/* Barra lateral garantida para ser renderizada sempre */}
       <MemberSidebar 
-        sidebarOpen={sidebarOpen}
+        sidebarOpen={sidebarOpen} 
         setSidebarOpen={setSidebarOpen}
-        profileName={user?.user_metadata?.name || null}
-        profileEmail={user?.email || null}
-        profileAvatar={user?.user_metadata?.avatar_url}
+        profileName={profile?.name || null}
+        profileEmail={profile?.email || null}
+        profileAvatar={profile?.avatar_url}
         getInitials={getInitials}
         signOut={signOut}
       />
+      
+      {/* Conteúdo principal */}
       <MemberContent 
-        sidebarOpen={sidebarOpen}
+        sidebarOpen={sidebarOpen} 
         setSidebarOpen={setSidebarOpen}
       >
         {children || <Outlet />}
       </MemberContent>
-      
-      {/* Painel de diagnóstico */}
-      <DiagnosticPanel />
     </div>
   );
 };

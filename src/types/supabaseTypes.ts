@@ -1,9 +1,8 @@
 
 import { Database } from '@/lib/supabase/types';
-import { Solution as SupabaseSolution, UserProfile as SupabaseUserProfile } from '@/lib/supabase/types';
 
 // Definição do tipo Solution a partir das tabelas do Supabase
-export type Solution = SupabaseSolution & {
+export type Solution = Database['public']['Tables']['solutions']['Row'] & {
   modules?: Module[];
   progress?: {
     current_module: number;
@@ -62,29 +61,18 @@ export interface UserChecklist {
 }
 
 // Definição do tipo Module a partir das tabelas do Supabase
-export type Module = {
-  id: string;
-  solution_id: string;
-  title: string;
-  content: any;
-  type: 'landing' | 'overview' | 'preparation' | 'implementation' | 'verification' | 'results' | 'optimization' | 'celebration';
-  module_order: number;
-  created_at: string;
-  updated_at: string;
+export type Module = Database['public']['Tables']['modules']['Row'] & {
   solution?: Solution;
   order_position?: number;
   prerequisites?: Prerequisite[];
   status?: 'draft' | 'published' | 'archived';
 };
 
-// Definição do tipo UserProfile que extende UserProfile do Supabase
-export type UserProfile = SupabaseUserProfile & {
-  company_name?: string | null;
-  industry?: string | null;
-};
+// Definição do tipo UserProfile a partir das tabelas do Supabase
+export type UserProfile = Database['public']['Tables']['profiles']['Row'];
 
 // Definição do tipo UserRole
-export type UserRole = 'admin' | 'member';
+export type UserRole = 'admin' | 'member' | 'moderator';
 
 // Definição de métricas de implementação
 export interface ImplementationMetrics {
@@ -100,84 +88,16 @@ export interface ImplementationMetrics {
 }
 
 // Tipos auxiliares para recursos e ferramentas relacionadas
-export type SolutionResource = {
-  id: string;
-  solution_id: string;
-  title: string;
-  description?: string | null;
-  type: 'link' | 'pdf' | 'video' | 'image' | 'document';
-  url: string;
-  created_at: string;
-  updated_at: string | null;
-};
-
-export type SolutionTool = {
-  id: string;
-  solution_id: string;
-  tool_name: string;
-  tool_url?: string | null;
-  is_required?: boolean;
-  created_at: string;
-};
-
-export type Badge = {
-  id: string;
-  name: string;
-  description: string;
-  image_url: string;
-  category: string;
-  created_at: string;
-};
-
-export type UserBadge = {
-  id: string;
-  user_id: string;
-  badge_id: string;
-  earned_at: string;
-};
-
-export type Progress = {
-  id: string;
-  solution_id: string;
-  user_id: string;
-  current_module: number;
-  is_completed: boolean;
-  completed_modules?: number[];
-  last_activity: string;
+export type SolutionResource = Database['public']['Tables']['solution_resources']['Row'];
+export type SolutionTool = Database['public']['Tables']['solution_tools']['Row'];
+export type Badge = Database['public']['Tables']['badges']['Row'];
+export type UserBadge = Database['public']['Tables']['user_badges']['Row'];
+export type Progress = Database['public']['Tables']['progress']['Row'] & {
   completion_percentage?: number;
   last_interaction_at?: string;
   failed_attempts?: any[];
 };
+export type ImplementationCheckpoint = Database['public']['Tables']['implementation_checkpoints']['Row'];
+export type ImplementationProfile = Database['public']['Tables']['implementation_profiles']['Row'];
+export type ImplementationTrail = Database['public']['Tables']['implementation_trails']['Row'];
 
-export type ImplementationCheckpoint = {
-  id: string;
-  solution_id?: string;
-  description: string;
-  checkpoint_order: number;
-  created_at: string;
-};
-
-export type ImplementationProfile = {
-  id: string;
-  user_id?: string;
-  company_name?: string;
-  company_size?: string;
-  company_sector?: string;
-  company_website?: string;
-  current_position?: string;
-  annual_revenue?: string;
-  created_at: string;
-  updated_at: string;
-  is_completed?: boolean;
-};
-
-export type ImplementationTrail = {
-  id: string;
-  user_id: string;
-  trail_data: any;
-  status: string;
-  error_message?: string;
-  generation_attempts: number;
-  created_at: string;
-  updated_at: string;
-};

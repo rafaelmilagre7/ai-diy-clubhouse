@@ -1,7 +1,7 @@
 
 import React from "react";
-import { TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileText, Wrench, FileArchive, Video, CheckSquare, Send } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { FileText, Wrench, FileArchive, Video, CheckSquare, Upload, Send } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface SolutionEditorTabsProps {
@@ -64,23 +64,25 @@ const SolutionEditorTabs: React.FC<SolutionEditorTabsProps> = ({
 
   return (
     <div className="px-1">
-      <TabsList className="grid grid-cols-3 md:grid-cols-6">
-        {tabs.map((tab) => (
-          <TabsTrigger
-            key={tab.id}
-            value={tab.id}
-            className={cn(
-              "flex items-center",
-              tab.step > currentStep && "opacity-70",
-              tab.step === currentStep && "font-medium"
-            )}
-          >
-            {tab.icon}
-            <span className="hidden md:inline">{tab.label}</span>
-            <span className="inline md:hidden">{tab.label.split(" ")[0]}</span>
-          </TabsTrigger>
-        ))}
-      </TabsList>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid grid-cols-3 md:grid-cols-6">
+          {tabs.map((tab) => (
+            <TabsTrigger
+              key={tab.id}
+              value={tab.id}
+              className={cn(
+                "flex items-center",
+                tab.step > currentStep && "opacity-70",
+                tab.step === currentStep && "font-medium"
+              )}
+            >
+              {tab.icon}
+              <span className="hidden md:inline">{tab.label}</span>
+              <span className="inline md:hidden">{tab.label.split(" ")[0]}</span>
+            </TabsTrigger>
+          ))}
+        </TabsList>
+      </Tabs>
     </div>
   );
 };
