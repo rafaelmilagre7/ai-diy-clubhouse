@@ -1,18 +1,16 @@
 
-import { Database } from "@supabase/supabase-js";
-
 // Tipo de perfil do usuário
 export interface UserProfile {
   id: string;
-  user_id: string;
+  user_id?: string;
   name: string | null;
   email: string | null;
   avatar_url: string | null;
   role: 'admin' | 'member';
-  company: string | null;
-  position: string | null;
+  company_name?: string | null;
+  industry?: string | null;
   created_at: string;
-  updated_at: string | null;
+  updated_at?: string | null;
 }
 
 // Tipo de solução
@@ -24,11 +22,16 @@ export interface Solution {
   published: boolean;
   created_at: string;
   updated_at: string | null;
-  creator_id: string | null;
+  creator_id?: string | null;
   category?: string | null;
-  difficulty?: 'beginner' | 'intermediate' | 'advanced' | null;
+  difficulty?: 'beginner' | 'intermediate' | 'advanced' | 'easy' | 'medium' | null;
   implementation_time?: number | null;
   tags?: string[] | null;
+  slug?: string;
+  success_rate?: number;
+  estimated_time?: number;
+  related_solutions?: string[];
+  progress?: any;
 }
 
 // Tipo de módulo
@@ -84,4 +87,8 @@ export interface Resource {
 }
 
 // Tipo de Database do Supabase para tipar as queries
-export type SupabaseDatabase = Database;
+// Simulando que Database é um tipo vindo do Supabase
+export type Database = any;
+
+// Tipo UserRole para usar em todo o sistema
+export type UserRole = 'admin' | 'member';

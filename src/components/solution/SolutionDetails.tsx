@@ -25,7 +25,7 @@ const SolutionDetails = () => {
     error
   } = useQuery({
     queryKey: ['solution', id],
-    queryFn: () => fetchSolutionDetails(id || ''),
+    queryFn: async () => id ? fetchSolutionDetails(id) : null,
     enabled: !!id,
     staleTime: 5 * 60 * 1000
   });
@@ -37,7 +37,7 @@ const SolutionDetails = () => {
     toggleFavorite, 
     downloadMaterials,
     progress
-  } = useSolutionInteractions(id, null);
+  } = useSolutionInteractions(id || "", null);
 
   // Verificar ID inválido ou ausente
   if (!id) {

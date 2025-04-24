@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
-import { Solution } from "@/lib/supabase";
+import { Solution } from "@/lib/supabase/types";
 import { LoadingPage } from "@/components/ui/loading-states";
 import { useAuth } from "@/contexts/auth";
 

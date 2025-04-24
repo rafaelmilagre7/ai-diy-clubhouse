@@ -6,7 +6,7 @@ import { CheckCircle, Award, Download, Loader2 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/contexts/auth';
 import confetti from 'canvas-confetti';
-import { Solution } from '@/types/solution';
+import { Solution } from '@/lib/supabase/types';
 
 interface ImplementationCompleteProps {
   solution: Solution;
@@ -54,7 +54,7 @@ export const ImplementationComplete: React.FC<ImplementationCompleteProps> = ({
         <CardContent className="space-y-4">
           <div className="flex items-center gap-4 p-3 bg-muted/50 rounded-lg">
             <Avatar className="h-12 w-12 border-2 border-white shadow-sm">
-              <AvatarImage src={profile?.avatar_url} alt={profile?.name} />
+              <AvatarImage src={profile?.avatar_url || undefined} alt={profile?.name || "Usuário"} />
               <AvatarFallback>{profile?.name?.[0] || "U"}</AvatarFallback>
             </Avatar>
             <div>

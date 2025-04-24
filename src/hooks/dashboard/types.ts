@@ -1,8 +1,8 @@
 
-import { Solution as SupabaseSolution } from "@/lib/supabase";
+import { Solution as SupabaseSolution } from "@/lib/supabase/types";
 
-// Definir tipo Solution que estende a SupabaseSolution mas torna author_id opcional
-export interface Solution extends Omit<SupabaseSolution, 'author_id'> {
+// Definir tipo Solution compatível com a definição do Supabase
+export interface Solution extends Omit<SupabaseSolution, 'creator_id'> {
   id: string;
   title: string;
   description: string;
