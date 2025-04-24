@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/auth';
 import { useQuery } from '@tanstack/react-query';
 import { useToast } from '@/components/ui/use-toast';
+import { SolutionCategory } from '@/lib/types/categoryTypes';
 
 export function useAchievements() {
   const { user } = useAuth();
@@ -50,7 +51,7 @@ export function useAchievements() {
           id: 'achievement-beginner',
           name: 'Iniciante',
           description: 'Começou sua jornada no clube ao iniciar sua primeira solução',
-          category: 'achievement',
+          category: "achievement",
           isUnlocked: progressData && progressData.length > 0,
           earnedAt: progressData && progressData.length > 0 ? new Date().toISOString() : undefined,
         },
@@ -59,7 +60,7 @@ export function useAchievements() {
           id: 'achievement-pioneer',
           name: 'Pioneiro',
           description: 'Completou sua primeira implementação',
-          category: 'achievement',
+          category: "achievement",
           requiredCount: 1,
           currentCount: progressData?.filter(p => p.is_completed)?.length || 0,
           isUnlocked: progressData?.some(p => p.is_completed) || false,
@@ -70,7 +71,7 @@ export function useAchievements() {
           id: 'achievement-sales-expert',
           name: 'Especialista em Vendas',
           description: 'Implementou 3 soluções da trilha de Receita',
-          category: 'revenue',
+          category: "revenue",
           requiredCount: 3,
           currentCount: progressData?.filter(p => p.is_completed && p.solutions?.category === 'revenue')?.length || 0,
           isUnlocked: (progressData?.filter(p => p.is_completed && p.solutions?.category === 'revenue')?.length || 0) >= 3,
@@ -82,7 +83,7 @@ export function useAchievements() {
           id: 'achievement-automation-master',
           name: 'Mestre em Automação',
           description: 'Implementou 5 soluções com sucesso',
-          category: 'operational',
+          category: "operational",
           requiredCount: 5,
           currentCount: progressData?.filter(p => p.is_completed)?.length || 0,
           isUnlocked: (progressData?.filter(p => p.is_completed)?.length || 0) >= 5,
@@ -94,7 +95,7 @@ export function useAchievements() {
           id: 'achievement-strategist',
           name: 'Estrategista',
           description: 'Completou uma solução da trilha de Estratégia',
-          category: 'strategy',
+          category: "strategy",
           requiredCount: 1,
           currentCount: progressData?.filter(p => p.is_completed && p.solutions?.category === 'strategy')?.length || 0,
           isUnlocked: progressData?.some(p => p.is_completed && p.solutions?.category === 'strategy') || false,
@@ -112,7 +113,7 @@ export function useAchievements() {
               name: badgeData.badges.name,
               description: badgeData.badges.description,
               icon: badgeData.badges.icon,
-              category: badgeData.badges.category as any,
+              category: badgeData.badges.category as SolutionCategory | "achievement",
               isUnlocked: true,
               earnedAt: badgeData.earned_at,
             });
@@ -136,7 +137,7 @@ export function useAchievements() {
           id: 'achievement-beginner',
           name: 'Iniciante',
           description: 'Começou sua jornada no clube',
-          category: 'achievement',
+          category: "achievement",
           isUnlocked: true,
           earnedAt: new Date().toISOString(),
         },
@@ -144,12 +145,12 @@ export function useAchievements() {
           id: 'achievement-pioneiro',
           name: 'Pioneiro',
           description: 'Completou sua primeira implementação',
-          category: 'achievement', 
+          category: "achievement", 
           requiredCount: 1,
           currentCount: 0,
           isUnlocked: false,
         }
-      ];
+      ] as Achievement[];
     }
   }, [user, toast]);
   

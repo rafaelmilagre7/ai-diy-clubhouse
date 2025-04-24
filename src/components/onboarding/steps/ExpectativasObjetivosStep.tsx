@@ -16,6 +16,12 @@ import { useOnboarding } from '@/hooks/onboarding/useOnboarding';
 interface ExpectativasObjetivosStepProps {
   onUpdateData: (data: Partial<OnboardingData>) => Promise<void>;
   data?: Partial<OnboardingData>;
+  onSubmit?: (stepId: string, data: any) => Promise<void>;
+  isSubmitting?: boolean;
+  isLastStep?: boolean;
+  onComplete?: () => void;
+  initialData?: any;
+  personalInfo?: OnboardingData['personal_info'];
 }
 
 // Lista de objetivos para exibir
@@ -32,7 +38,16 @@ const businessGoals = [
 ];
 
 // Componente memoizado para melhorar performance
-const ExpectativasObjetivosStep = React.memo(({ onUpdateData, data }: ExpectativasObjetivosStepProps) => {
+const ExpectativasObjetivosStep = React.memo(({ 
+  onUpdateData, 
+  data,
+  onSubmit,
+  isSubmitting = false,
+  isLastStep = false,
+  onComplete,
+  initialData,
+  personalInfo
+}: ExpectativasObjetivosStepProps) => {
   const { nextStep } = useFormNavigation();
   const { progress } = useOnboarding();
   const form = useFormContext<OnboardingData>();
@@ -59,10 +74,15 @@ const ExpectativasObjetivosStep = React.memo(({ onUpdateData, data }: Expectativ
 
   // Efeito para carregar dados existentes
   useEffect(() => {
-    if (data?.business_goals && typeof data.business_goals === 'object') {
+    // Se estamos recebendo dados de initialData, usar isso primeiro
+    if (initialData?.business_goals && typeof initialData.business_goals === 'object') {
+      setSelectedGoals(initialData.business_goals as Record<string, boolean>);
+    }
+    // Caso contrário, usar o data tradicional
+    else if (data?.business_goals && typeof data.business_goals === 'object') {
       setSelectedGoals(data.business_goals as Record<string, boolean>);
     }
-  }, [data?.business_goals]);
+  }, [data?.business_goals, initialData?.business_goals]);
 
   // Função para alternar a seleção de um objetivo
   const toggleGoal = useCallback((goalId: string) => {
@@ -84,17 +104,25 @@ const ExpectativasObjetivosStep = React.memo(({ onUpdateData, data }: Expectativ
         return;
       }
 
-      await onUpdateData({ 
-        business_goals: selectedGoals 
-      });
-      
-      nextStep();
+      // Se estamos usando o novo padrão onSubmit (para páginas BusinessGoalsClub)
+      if (onSubmit) {
+        await onSubmit('business_goals', { 
+          business_goals: selectedGoals 
+        });
+      } 
+      // Caso contrário, usar o padrão original onUpdateData
+      else if (onUpdateData) {
+        await onUpdateData({ 
+          business_goals: selectedGoals 
+        });
+        nextStep();
+      }
     } catch (error) {
       console.error('Erro ao salvar objetivos:', error);
     } finally {
       setIsPending(false);
     }
-  }, [selectedGoals, selectedCount, nextStep, onUpdateData]);
+  }, [selectedGoals, selectedCount, nextStep, onUpdateData, onSubmit]);
 
   return (
     <div className="space-y-6">
@@ -204,16 +232,16 @@ const ExpectativasObjetivosStep = React.memo(({ onUpdateData, data }: Expectativ
         <Button
           variant="outline"
           onClick={() => nextStep(-1)}
-          disabled={isPending}
+          disabled={isPending || isSubmitting}
         >
           Voltar
         </Button>
 
         <Button 
           onClick={handleSave}
-          disabled={isPending || selectedCount === 0}
+          disabled={isPending || isSubmitting || selectedCount === 0}
         >
-          {isPending ? "Salvando..." : "Continuar"}
+          {isPending || isSubmitting ? "Salvando..." : "Continuar"}
         </Button>
       </div>
     </div>

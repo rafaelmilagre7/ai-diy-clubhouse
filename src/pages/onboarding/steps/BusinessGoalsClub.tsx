@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
 import { useOnboardingSteps } from "@/hooks/onboarding/useOnboardingSteps";
-import { ExpectativasObjetivosStep } from "@/components/onboarding/steps/ExpectativasObjetivosStep";
+import ExpectativasObjetivosStep from "@/components/onboarding/steps/ExpectativasObjetivosStep";
 import { MilagrinhoMessage } from "@/components/onboarding/MilagrinhoMessage";
 import { useProgress } from "@/hooks/onboarding/useProgress";
 import { toast } from "sonner";
@@ -196,6 +196,7 @@ const BusinessGoalsClub = () => {
             initialData={processedData}
             isLastStep={false}
             onComplete={completeOnboarding}
+            onUpdateData={async () => {}}
           />
         )}
       </div>

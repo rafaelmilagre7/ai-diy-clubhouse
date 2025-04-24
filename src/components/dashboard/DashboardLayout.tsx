@@ -9,7 +9,6 @@ import { ModernDashboardHeader } from "./ModernDashboardHeader";
 import { KpiGrid } from "./KpiGrid";
 import { useAuth } from "@/contexts/auth";
 import { AchievementsSummary } from "./AchievementsSummary"; 
-import { Suspense, lazy } from 'react';
 
 interface DashboardLayoutProps {
   active: Solution[];
@@ -40,9 +39,7 @@ export const DashboardLayout: FC<DashboardLayoutProps> = memo(({
 
       {/* Resumo gamificação - conquistas */}
       <div className="animate-fade-in">
-        <Suspense fallback={<div className="h-20 w-full animate-pulse bg-gray-100 rounded-lg"></div>}>
-          <AchievementsSummary />
-        </Suspense>
+        <AchievementsSummary />
       </div>
 
       {/* CARDS DE PROGRESSO (KPI) */}
