@@ -7,7 +7,9 @@ import './index.css';
 const root = document.getElementById("root");
 
 if (root) {
-  createRoot(root).render(<App />);
+  createRoot(root).render(
+    <App />
+  );
 } else {
   console.error("Root element not found");
 }

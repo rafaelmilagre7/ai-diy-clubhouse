@@ -22,19 +22,17 @@ const App = () => {
   console.log("Renderizando App.tsx");
   
   return (
-    <React.StrictMode>
-      <QueryClientProvider client={queryClient}>
-        <BrowserRouter>
-          <LoggingProvider>
-            <AuthProvider>
-              <AppRoutes />
-              <Toaster />
-            </AuthProvider>
-          </LoggingProvider>
-        </BrowserRouter>
-        <ReactQueryDevtools initialIsOpen={false} />
-      </QueryClientProvider>
-    </React.StrictMode>
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <LoggingProvider>
+          <AuthProvider>
+            <AppRoutes />
+            <Toaster />
+            <ReactQueryDevtools initialIsOpen={false} />
+          </AuthProvider>
+        </LoggingProvider>
+      </BrowserRouter>
+    </QueryClientProvider>
   );
 };
 

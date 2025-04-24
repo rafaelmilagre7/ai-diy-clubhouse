@@ -14,6 +14,7 @@ export const ProtectedRoutes = ({ children }: ProtectedRoutesProps) => {
   const location = useLocation();
   const [loadingTimeout, setLoadingTimeout] = useState(false);
   const timeoutRef = useRef<number | null>(null);
+  const hasToastShown = useRef(false);
 
   console.log("ProtectedRoutes state:", { user, isLoading, loadingTimeout });
   
@@ -28,7 +29,7 @@ export const ProtectedRoutes = ({ children }: ProtectedRoutesProps) => {
       timeoutRef.current = window.setTimeout(() => {
         console.log("ProtectedRoutes: Loading timeout exceeded");
         setLoadingTimeout(true);
-      }, 3000); // 3 segundos
+      }, 5000); // Aumentado para 5 segundos
     }
     
     return () => {
@@ -38,14 +39,18 @@ export const ProtectedRoutes = ({ children }: ProtectedRoutesProps) => {
     };
   }, [isLoading, loadingTimeout]);
 
-  // Mostrar tela de carregamento enquanto verifica autenticação (mas apenas se o timeout não foi excedido)
+  // Mostrar tela de carregamento enquanto verifica autenticação
   if (isLoading && !loadingTimeout) {
     return <LoadingScreen message="Verificando autenticação..." />;
   }
 
   // Se o usuário não estiver autenticado, redireciona para a página de login
   if (!user) {
-    toast("Por favor, faça login para acessar esta página");
+    // Exibir toast apenas uma vez
+    if (!hasToastShown.current) {
+      toast("Por favor, faça login para acessar esta página");
+      hasToastShown.current = true;
+    }
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
