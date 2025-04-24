@@ -18,20 +18,20 @@ export function buildExperiencePersonalizationUpdate(data: Partial<OnboardingDat
   }
   
   // Garantir base consistente para os dados
-  let existingExperiencePersonalization = normalizeExperiencePersonalization(
+  const existingExperiencePersonalization = normalizeExperiencePersonalization(
     progress?.experience_personalization || {}
   );
   
   console.log("Dados atuais de progresso:", existingExperiencePersonalization);
   
-  // Verificar se estamos recebendo dados específicos de experience_personalization ou são dados aninhados
-  const experiencePersonalizationData = data.experience_personalization || {};
-  
-  // Se não tivermos dados específicos, não fazer atualização
-  if (Object.keys(experiencePersonalizationData).length === 0) {
+  // Verificar se estamos recebendo dados específicos de experience_personalization
+  if (!data.experience_personalization && typeof data !== 'object') {
     console.warn("Nenhum dado específico de experience_personalization encontrado para atualização");
     return updateObj;
   }
+  
+  // Extrair dados de experience_personalization seja de data.experience_personalization ou do próprio data
+  const experiencePersonalizationData = data.experience_personalization || data;
   
   // Normalizar os dados recebidos
   const normalizedData = normalizeExperiencePersonalization(experiencePersonalizationData);

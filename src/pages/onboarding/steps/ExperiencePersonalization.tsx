@@ -20,21 +20,18 @@ const ExperiencePersonalization = () => {
     // Verificar se já tentou uma vez para não entrar em loop
     if (!refreshAttempted) {
       console.log("ExperiencePersonalization montado - carregando dados mais recentes");
-      const loadData = async () => {
-        try {
-          await refreshProgress();
+      refreshProgress()
+        .then(() => {
           console.log("Dados atualizados para ExperiencePersonalization:", progress);
           setRefreshAttempted(true); // Marcar que já tentamos atualizar
-        } catch (error) {
+        })
+        .catch(error => {
           console.error("Erro ao carregar dados:", error);
           toast.error("Erro ao carregar dados. Algumas informações podem estar desatualizadas.");
           setRefreshAttempted(true); // Marcar que já tentamos, mesmo com erro
-        }
-      };
-      
-      loadData();
+        });
     }
-  }, [refreshProgress, refreshAttempted]); // Dependências reduzidas
+  }, [refreshAttempted]); // Dependência reduzida para evitar loop
 
   const handleSaveData = async (data: any) => {
     setIsSubmitting(true);
@@ -42,7 +39,7 @@ const ExperiencePersonalization = () => {
       console.log("Salvando dados de personalização:", data);
       
       // Verificar se temos dados válidos
-      if (!data || !data.experience_personalization) {
+      if (!data) {
         throw new Error("Dados de personalização ausentes ou inválidos");
       }
       

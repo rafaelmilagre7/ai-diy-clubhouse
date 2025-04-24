@@ -35,6 +35,26 @@ interface InitialFormData {
   [key: string]: any;
 }
 
+// Função para extrair dados de um objeto ou string JSON
+function extractDataFromObject(data: any): Record<string, any> {
+  // Se for string, tentar parsear
+  if (typeof data === 'string') {
+    try {
+      return JSON.parse(data);
+    } catch (e) {
+      console.error("Erro ao parsear string como objeto:", e);
+      return {};
+    }
+  }
+  
+  // Se for objeto, retornar diretamente
+  if (data && typeof data === 'object') {
+    return data;
+  }
+  
+  return {};
+}
+
 export function useExperiencePersonalizationForm(initialData: InitialFormData | null = {}) {
   // Garantir que initialData nunca seja nulo para evitar erros ao acessar propriedades
   const safeInitialData = initialData || {};
@@ -46,27 +66,18 @@ export function useExperiencePersonalizationForm(initialData: InitialFormData | 
     if (initialData && initialData.experience_personalization) {
       let expData = initialData.experience_personalization;
       
-      // Se for string, tentar parsear
-      if (typeof expData === 'string') {
-        try {
-          expData = JSON.parse(expData);
-        } catch (e) {
-          console.error("Erro ao parsear experience_personalization:", e);
-          return {};
-        }
-      }
-      
-      return expData;
+      // Extrair dados do objeto ou string
+      return extractDataFromObject(expData);
     }
     
-    // Caso contrário, usar o initialData diretamente se tiver as propriedades esperadas
+    // Caso contrário, verificar se initialData tem diretamente as propriedades esperadas
     if (initialData && 
-        (initialData.interests || 
-         initialData.time_preference || 
-         initialData.available_days || 
-         initialData.networking_availability !== undefined || 
-         initialData.skills_to_share || 
-         initialData.mentorship_topics)) {
+        ('interests' in initialData || 
+         'time_preference' in initialData || 
+         'available_days' in initialData || 
+         'networking_availability' in initialData || 
+         'skills_to_share' in initialData || 
+         'mentorship_topics' in initialData)) {
       return initialData;
     }
     
