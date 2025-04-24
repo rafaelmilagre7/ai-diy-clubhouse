@@ -15,7 +15,12 @@ export const ProtectedRoutes = ({ children }: ProtectedRoutesProps = {}) => {
   const [loadingTimeout, setLoadingTimeout] = useState(false);
   const timeoutRef = useRef<number | null>(null);
 
-  console.log("ProtectedRoutes state:", { user, isLoading, loadingTimeout });
+  console.log("ProtectedRoutes state:", { 
+    user, 
+    isLoading, 
+    loadingTimeout,
+    path: location.pathname
+  });
   
   // Configurar timeout de carregamento
   useEffect(() => {

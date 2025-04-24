@@ -1,3 +1,4 @@
+
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
@@ -63,15 +64,8 @@ export const AdminSidebarNav = ({ sidebarOpen }: AdminSidebarNavProps) => {
   const handleBackToDashboard = () => {
     console.log("Redirecionando para dashboard de membro");
     
-    // Método direto - mais confiável para mudança completa de contexto
+    // Usando o método mais direto e confiável: redirecionamento completo
     window.location.href = "/dashboard";
-    
-    // O código abaixo não será executado devido ao redirecionamento acima,
-    // mas serve como fallback caso o redirecionamento direto falhe por algum motivo
-    setTimeout(() => {
-      console.log("Fallback de redirecionamento para /dashboard");
-      navigate("/dashboard", { replace: true });
-    }, 0);
   };
 
   return (

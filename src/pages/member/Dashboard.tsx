@@ -11,8 +11,8 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   
-  // Debug para problemas de carregamento
-  console.log("Dashboard de membro renderizando - Caminho atual:", window.location.pathname);
+  // Debug extensivo para problemas de carregamento
+  console.log("Dashboard de membro começou a renderizar - Caminho atual:", window.location.pathname);
   
   // Usar nosso hook centralizado de dados com props corretas
   const { 
@@ -24,9 +24,15 @@ const Dashboard = () => {
   useEffect(() => {
     console.log("Dashboard carregado com status:", {
       solutionsLoaded: solutions.length > 0,
-      isLoading: isLoading,
-      path: window.location.pathname
+      isLoading,
+      path: window.location.pathname,
+      url: window.location.href
     });
+    
+    // Log detalhado das soluções para debug
+    if (solutions.length > 0) {
+      console.log("Primeiras soluções carregadas:", solutions.slice(0, 2));
+    }
   }, [solutions, isLoading]);
   
   // Categorizar soluções
@@ -75,6 +81,8 @@ const Dashboard = () => {
       />
     );
   }
+
+  console.log("Dashboard renderizando com dados carregados");
 
   return (
     <DashboardLayout
