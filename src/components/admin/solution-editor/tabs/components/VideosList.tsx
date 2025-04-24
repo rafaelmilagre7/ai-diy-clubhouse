@@ -1,6 +1,7 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Trash2, Video, Youtube } from "lucide-react";
 import { VideoItem } from "@/types/videoTypes";
 import Image from "./Image";
@@ -96,15 +97,35 @@ const VideosList: React.FC<VideosListProps> = ({ videos, onRemove }) => {
                 </div>
                 
                 <div className="mt-4 flex justify-end">
-                  <Button
-                    size="sm"
-                    variant="destructive"
-                    className="flex items-center gap-2"
-                    onClick={() => onRemove(video.id, video.url)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                    Remover
-                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        className="flex items-center gap-2"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        Remover
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Remover vídeo</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Tem certeza que deseja remover este vídeo? Esta ação não pode ser desfeita.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                        <AlertDialogAction 
+                          className="bg-red-500 hover:bg-red-600"
+                          onClick={() => onRemove(video.id, video.url)}
+                        >
+                          Remover
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </div>
               </div>
             </div>

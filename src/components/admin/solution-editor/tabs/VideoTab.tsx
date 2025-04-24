@@ -73,25 +73,9 @@ const VideoTab: React.FC<VideoTabProps> = ({
     }
   };
 
-  // Informação de debug sobre o bucket atual
-  const verifyStorageBuckets = async () => {
-    try {
-      const { data: buckets, error } = await supabase.storage.listBuckets();
-      
-      if (error) throw error;
-      
-      console.log("[VideoTab] Buckets disponíveis:", buckets);
-      toast("Buckets verificados", {
-        description: `Existem ${buckets?.length || 0} buckets. Verifique o console para detalhes.`,
-      });
-    } catch (error) {
-      console.error("[VideoTab] Erro ao listar buckets:", error);
-    }
-  };
-
   return (
     <div className="space-y-8">
-      {/* Área de Upload SEMPRE em primeiro lugar */}
+      {/* Área de Upload SEMPRE visível */}
       <Card className="border-2 border-[#0ABAB5]/10 shadow-sm">
         <CardContent className="p-6">
           <VideoUploader
@@ -100,14 +84,6 @@ const VideoTab: React.FC<VideoTabProps> = ({
             uploadProgress={uploadProgress}
             disabled={!solution?.id}
           />
-          
-          {!solution?.id && (
-            <div className="flex items-center p-4 gap-2 bg-amber-50 border border-amber-200 rounded-md mt-4">
-              <p className="text-sm text-amber-800">
-                Salve as informações básicas antes de adicionar vídeos.
-              </p>
-            </div>
-          )}
         </CardContent>
       </Card>
 
@@ -140,14 +116,6 @@ const VideoTab: React.FC<VideoTabProps> = ({
           </Button>
           <Button
             variant="outline"
-            size="sm" 
-            onClick={verifyStorageBuckets}
-            title="Verificar buckets de armazenamento"
-          >
-            Verificar Buckets
-          </Button>
-          <Button
-            variant="outline"
             size="sm"
             onClick={() => setYoutubeDialogOpen(true)}
             disabled={!solution?.id || uploading}
@@ -157,23 +125,27 @@ const VideoTab: React.FC<VideoTabProps> = ({
         </div>
       </div>
 
-      {/* Lista de Vídeos - Aparece DEPOIS dos controles e da área de upload */}
-      {videos.length > 0 && (
-        <Card className="border-2 border-[#0ABAB5]/10 shadow-sm">
-          <CardContent className="p-6">
-            {loading ? (
-              <div className="flex items-center justify-center py-12">
-                <div className="flex flex-col items-center">
-                  <Loader2 className="h-8 w-8 animate-spin text-[#0ABAB5]" />
-                  <span className="mt-2 text-sm text-muted-foreground">Carregando vídeos...</span>
-                </div>
+      {/* Lista de Vídeos - Sempre visível, mesmo vazia */}
+      <Card className="border-2 border-[#0ABAB5]/10 shadow-sm">
+        <CardContent className="p-6">
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="flex flex-col items-center">
+                <Loader2 className="h-8 w-8 animate-spin text-[#0ABAB5]" />
+                <span className="mt-2 text-sm text-muted-foreground">Carregando vídeos...</span>
               </div>
-            ) : (
-              <VideosList videos={videos} onRemove={handleRemoveVideo} />
-            )}
-          </CardContent>
-        </Card>
-      )}
+            </div>
+          ) : videos.length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-muted-foreground">
+                Nenhum vídeo adicionado. Use os controles acima para adicionar vídeos.
+              </p>
+            </div>
+          ) : (
+            <VideosList videos={videos} onRemove={handleRemoveVideo} />
+          )}
+        </CardContent>
+      </Card>
 
       <YouTubeVideoForm
         isOpen={youtubeDialogOpen}

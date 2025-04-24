@@ -1,14 +1,13 @@
 
-import React from "react";
-import { Tabs, TabsContent } from "@/components/ui/tabs";
-import TabNav from "../TabNav";
+import React, { useState } from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import BasicInfoTab from "../tabs/BasicInfoTab";
 import ToolsTab from "../tabs/ToolsTab";
 import ResourcesTab from "../tabs/ResourcesTab";
+import VideoTab from "../tabs/VideoTab";
+import ModulesTab from "../tabs/ModulesTab";
 import ChecklistTab from "../tabs/ChecklistTab";
 import PublishTab from "../tabs/PublishTab";
-import ModulesTab from "../tabs/ModulesTab";
-import VideosTab from "../../solution/editor/components/VideosTab";
 
 interface TabBasedNavigationProps {
   activeTab: string;
@@ -29,67 +28,37 @@ const TabBasedNavigation: React.FC<TabBasedNavigationProps> = ({
 }) => {
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-      <TabNav activeTab={activeTab} setActiveTab={setActiveTab} />
-      
+      <TabsList className="grid grid-cols-3 md:grid-cols-7">
+        <TabsTrigger value="basic">Básico</TabsTrigger>
+        <TabsTrigger value="tools">Ferramentas</TabsTrigger>
+        <TabsTrigger value="resources">Recursos</TabsTrigger>
+        <TabsTrigger value="videos">Vídeos</TabsTrigger>
+        <TabsTrigger value="modules">Módulos</TabsTrigger>
+        <TabsTrigger value="checklist">Checklist</TabsTrigger>
+        <TabsTrigger value="publish">Publicar</TabsTrigger>
+      </TabsList>
+
       <div className="mt-6">
-        <TabsContent value="basic-info">
-          <BasicInfoTab
-            defaultValues={currentValues}
-            currentValues={currentValues}
-            onSubmit={onSubmit}
-            saving={saving}
-          />
+        <TabsContent value="basic" className="mt-0">
+          <BasicInfoTab solution={solution} currentValues={currentValues} onSubmit={onSubmit} saving={saving} />
         </TabsContent>
-        
-        <TabsContent value="tools">
-          <ToolsTab
-            solution={solution}
-            onSubmit={onSubmit}
-            saving={saving}
-          />
+        <TabsContent value="tools" className="mt-0">
+          <ToolsTab solution={solution} currentValues={currentValues} onSubmit={onSubmit} saving={saving} />
         </TabsContent>
-        
-        <TabsContent value="materials">
-          <ResourcesTab
-            solutionId={solution?.id}
-            onSave={() => onSubmit(currentValues)}
-            saving={saving}
-          />
+        <TabsContent value="resources" className="mt-0">
+          <ResourcesTab solution={solution} currentValues={currentValues} onSubmit={onSubmit} saving={saving} />
         </TabsContent>
-        
-        <TabsContent value="videos">
-          <VideosTab
-            solution={solution}
-            currentValues={currentValues}
-            onSubmit={onSubmit}
-            saving={saving}
-          />
+        <TabsContent value="videos" className="mt-0">
+          <VideoTab solution={solution} currentValues={currentValues} onSubmit={onSubmit} saving={saving} />
         </TabsContent>
-        
-        <TabsContent value="checklist">
-          <ChecklistTab
-            solutionId={solution?.id}
-            onSave={() => onSubmit(currentValues)}
-            saving={saving}
-          />
+        <TabsContent value="modules" className="mt-0">
+          <ModulesTab solution={solution} currentValues={currentValues} onSubmit={onSubmit} saving={saving} />
         </TabsContent>
-        
-        <TabsContent value="modules">
-          <ModulesTab 
-            solutionId={solution?.id}
-            onSave={() => onSubmit(currentValues)} 
-            saving={saving}
-            currentModuleStep={0}
-          />
+        <TabsContent value="checklist" className="mt-0">
+          <ChecklistTab solution={solution} currentValues={currentValues} onSubmit={onSubmit} saving={saving} />
         </TabsContent>
-        
-        <TabsContent value="publish">
-          <PublishTab
-            solutionId={solution?.id}
-            solution={solution}
-            onSave={onSubmit}
-            saving={saving}
-          />
+        <TabsContent value="publish" className="mt-0">
+          <PublishTab solution={solution} currentValues={currentValues} onSubmit={onSubmit} saving={saving} />
         </TabsContent>
       </div>
     </Tabs>

@@ -10,7 +10,7 @@ export const useVideoManagement = (solutionId: string) => {
   const [youtubeDialogOpen, setYoutubeDialogOpen] = useState(false);
   
   const { handleAddYouTube } = useYouTubeVideo(solutionId);
-  const { uploading, uploadProgress, handleFileUpload, lastUploadedVideo } = useFileUpload(solutionId);
+  const { uploading, uploadProgress, handleFileUpload } = useFileUpload(solutionId);
   const { videos, loading, fetchVideos, handleRemoveVideo } = useVideosData(solutionId);
   
   // Ouvir o evento personalizado para abrir o diálogo do YouTube
@@ -66,10 +66,10 @@ export const useVideoManagement = (solutionId: string) => {
   const handleFileVideoUpload = async (file: File) => {
     try {
       console.log("[useVideoManagement] Iniciando upload de vídeo:", file.name);
-      const video = await handleFileUpload(file);
+      const result = await handleFileUpload(file);
       
-      if (video) {
-        console.log("[useVideoManagement] Upload bem-sucedido:", video);
+      if (result) {
+        console.log("[useVideoManagement] Upload bem-sucedido");
         
         // Atraso para garantir que o banco de dados processe completamente a inserção
         setTimeout(async () => {
