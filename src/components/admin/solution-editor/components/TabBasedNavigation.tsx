@@ -5,7 +5,6 @@ import BasicInfoTab from "../tabs/BasicInfoTab";
 import ToolsTab from "../tabs/ToolsTab";
 import ResourcesTab from "../tabs/ResourcesTab";
 import VideoTab from "../tabs/VideoTab";
-import ModulesTab from "../tabs/ModulesTab";
 import ChecklistTab from "../tabs/ChecklistTab";
 import PublishTab from "../tabs/PublishTab";
 
@@ -26,17 +25,15 @@ const TabBasedNavigation: React.FC<TabBasedNavigationProps> = ({
   onSubmit,
   saving
 }) => {
-  // Verificar se a solução tem um ID válido
   const solutionId = solution?.id || "";
 
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-      <TabsList className="grid grid-cols-3 md:grid-cols-7">
+      <TabsList className="grid grid-cols-3 md:grid-cols-6">
         <TabsTrigger value="basic">Básico</TabsTrigger>
         <TabsTrigger value="tools">Ferramentas</TabsTrigger>
         <TabsTrigger value="resources">Recursos</TabsTrigger>
         <TabsTrigger value="videos">Vídeos</TabsTrigger>
-        <TabsTrigger value="modules">Módulos</TabsTrigger>
         <TabsTrigger value="checklist">Checklist</TabsTrigger>
         <TabsTrigger value="publish">Publicar</TabsTrigger>
       </TabsList>
@@ -72,14 +69,6 @@ const TabBasedNavigation: React.FC<TabBasedNavigationProps> = ({
             saving={saving} 
           />
         </TabsContent>
-        <TabsContent value="modules" className="mt-0">
-          <ModulesTab 
-            solutionId={solutionId} 
-            onSave={() => onSubmit(currentValues)} 
-            saving={saving}
-            currentModuleStep={0}
-          />
-        </TabsContent>
         <TabsContent value="checklist" className="mt-0">
           <ChecklistTab 
             solutionId={solutionId} 
@@ -88,11 +77,11 @@ const TabBasedNavigation: React.FC<TabBasedNavigationProps> = ({
           />
         </TabsContent>
         <TabsContent value="publish" className="mt-0">
-          <PublishTab 
+          <PublishTab
             solutionId={solutionId}
-            solution={solution} 
-            onSave={onSubmit} 
-            saving={saving} 
+            solution={solution}
+            onSave={onSubmit}
+            saving={saving}
           />
         </TabsContent>
       </div>

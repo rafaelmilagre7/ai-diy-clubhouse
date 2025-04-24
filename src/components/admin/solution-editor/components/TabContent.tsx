@@ -6,7 +6,6 @@ import ToolsTab from "../tabs/ToolsTab";
 import ResourcesTab from "../tabs/ResourcesTab";
 import ChecklistTab from "../tabs/ChecklistTab";
 import PublishTab from "../tabs/PublishTab";
-import ModulesTab from "../tabs/ModulesTab";
 import VideoTab from "../tabs/VideoTab";
 import { Solution } from "@/types/supabaseTypes";
 import { SolutionFormValues } from "@/components/admin/solution/form/solutionFormSchema";
@@ -26,7 +25,6 @@ const TabContent: React.FC<TabContentProps> = ({
   currentValues,
   onSubmit,
   saving,
-  currentStep,
 }) => {
   return (
     <>
@@ -69,15 +67,6 @@ const TabContent: React.FC<TabContentProps> = ({
           solutionId={solution?.id}
           onSave={() => onSubmit(currentValues)}
           saving={saving}
-        />
-      </TabsContent>
-      
-      <TabsContent value="modules">
-        <ModulesTab 
-          solutionId={solution?.id}
-          onSave={() => onSubmit(currentValues)} 
-          saving={saving}
-          currentModuleStep={0}
         />
       </TabsContent>
       
