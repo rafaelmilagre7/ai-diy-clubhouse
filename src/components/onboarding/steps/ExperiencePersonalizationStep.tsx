@@ -77,15 +77,13 @@ export const ExperiencePersonalizationStep: React.FC<OnboardingStepProps> = ({
 
     // Construir objeto de dados para envio
     const data = {
-      experience_personalization: {
-        interests: formValues.interests || [],
-        time_preference: formValues.time_preference || [],
-        available_days: formValues.available_days || [],
-        networking_availability: typeof formValues.networking_availability === 'number' ? 
-                               formValues.networking_availability : 5,
-        skills_to_share: formValues.skills_to_share || [],
-        mentorship_topics: formValues.mentorship_topics || [],
-      },
+      interests: formValues.interests || [],
+      time_preference: formValues.time_preference || [],
+      available_days: formValues.available_days || [],
+      networking_availability: typeof formValues.networking_availability === 'number' ? 
+                             formValues.networking_availability : 5,
+      skills_to_share: formValues.skills_to_share || [],
+      mentorship_topics: formValues.mentorship_topics || [],
     };
 
     console.log("Enviando dados de personalização:", data);

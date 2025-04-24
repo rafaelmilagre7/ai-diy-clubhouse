@@ -62,6 +62,8 @@ export function useExperiencePersonalizationForm(initialData: InitialFormData | 
   
   // Extrair dados de personalização de forma segura
   const experienceData = useMemo(() => {
+    console.log("Processando initialData:", initialData);
+    
     // Se initialData tem experience_personalization, usar isso
     if (initialData && initialData.experience_personalization) {
       let expData = initialData.experience_personalization;

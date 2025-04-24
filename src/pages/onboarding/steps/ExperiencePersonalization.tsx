@@ -44,7 +44,7 @@ const ExperiencePersonalization = () => {
       }
       
       // Usar a assinatura com stepId explícito para evitar problemas
-      await saveStepData("experience_personalization", data, false);
+      await saveStepData("experience_personalization", { experience_personalization: data }, false);
       
       console.log("Dados de personalização salvos com sucesso");
       toast.success("Dados salvos com sucesso!");

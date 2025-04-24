@@ -70,6 +70,12 @@ export function normalizeExperiencePersonalization(data: any): Record<string, an
       };
     }
     
+    // Verificar se estamos recebendo um formato aninhado com o campo experience_personalization
+    if (data.experience_personalization && typeof data.experience_personalization === 'object') {
+      console.log("Detectado formato aninhado, extraindo dados de experience_personalization");
+      return normalizeExperiencePersonalization(data.experience_personalization);
+    }
+    
     return {
       interests: Array.isArray(data.interests) ? data.interests : [],
       time_preference: Array.isArray(data.time_preference) ? data.time_preference : [],
