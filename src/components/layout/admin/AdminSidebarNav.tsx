@@ -62,12 +62,16 @@ export const AdminSidebarNav = ({ sidebarOpen }: AdminSidebarNavProps) => {
   };
 
   const handleBackToDashboard = () => {
-    console.log("Função handleBackToDashboard executada");
-    // Usando um timeout para garantir que a navegação aconteça após qualquer outro processamento
+    console.log("Função handleBackToDashboard executada, redirecionando para o dashboard de membro");
+    
+    // Forçar a navegação para a área de membro, usando window.location para garantir um redirecionamento completo
+    window.location.href = "/dashboard";
+    
+    // Backup com React Router caso o redirecionamento direto falhe
     setTimeout(() => {
-      console.log("Navegando para /dashboard");
+      console.log("Tentativa de navegação com React Router para /dashboard");
       navigate("/dashboard", { replace: true });
-    }, 0);
+    }, 100);
   };
 
   return (
