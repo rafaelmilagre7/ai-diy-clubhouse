@@ -22,8 +22,6 @@ export const useFetchVideos = (solutionId: string): VideoFetchResponse & { refet
       console.log("[useFetchVideos] Buscando vídeos para solução:", solutionId, "Timestamp:", new Date().toISOString());
       
       // Adicionando um timestamp para evitar cache do navegador ou do Supabase
-      const cacheBuster = `nocache=${Date.now()}`;
-      
       const { data, error } = await supabase
         .from("solution_resources")
         .select("*")

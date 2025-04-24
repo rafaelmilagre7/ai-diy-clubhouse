@@ -86,6 +86,22 @@ export const useFileUpload = (solutionId: string) => {
           console.error("[useFileUpload] Erro ao tentar criar bucket:", err);
           throw new Error("Ocorreu um erro ao configurar o armazenamento.");
         }
+      } else {
+        // Se o bucket já existe, vamos verificar se está com acesso público
+        try {
+          console.log("[useFileUpload] Bucket 'public' já existe, verificando configurações...");
+          // Atualizar para garantir que esteja público e com o limite correto
+          const { error } = await supabase.storage.updateBucket('public', {
+            public: true,
+            fileSizeLimit: 524288000 // 500MB em bytes
+          });
+          
+          if (error) {
+            console.warn("[useFileUpload] Aviso ao atualizar bucket:", error);
+          }
+        } catch (err) {
+          console.warn("[useFileUpload] Aviso ao verificar bucket:", err);
+        }
       }
       
       console.log("[useFileUpload] Enviando arquivo para o storage...");
@@ -166,6 +182,7 @@ export const useFileUpload = (solutionId: string) => {
     } finally {
       uploadInProgressRef.current = false;
       setUploading(false);
+      // Resetar o progresso após 2 segundos para uma melhor experiência do usuário
       setTimeout(() => setUploadProgress(0), 2000);
     }
   };

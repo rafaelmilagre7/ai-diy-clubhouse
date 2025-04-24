@@ -95,56 +95,58 @@ const VideoTab: React.FC<VideoTabProps> = ({
         </CardContent>
       </Card>
 
-      {/* Lista de Vídeos */}
-      <Card className="border-2 border-[#0ABAB5]/10 shadow-sm">
-        <CardContent className="p-6">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-semibold text-[#0ABAB5]">
-              {videos.length > 0 ? `Vídeos adicionados (${videos.length})` : "Vídeos"}
-            </h3>
-            <div className="flex gap-2">
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={fetchVideos}
-                className="flex items-center gap-2"
-              >
-                <RefreshCw className="h-4 w-4" />
-                Atualizar lista
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={verifyDatabaseRecords}
-                disabled={isVerifying}
-                className="flex items-center gap-2"
-              >
-                {isVerifying ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-                Verificar BD
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setYoutubeDialogOpen(true)}
-                disabled={!solution?.id || uploading}
-              >
-                Adicionar do YouTube
-              </Button>
-            </div>
-          </div>
-          
-          {loading ? (
-            <div className="flex items-center justify-center py-20">
-              <div className="flex flex-col items-center">
-                <Loader2 className="h-8 w-8 animate-spin text-[#0ABAB5]" />
-                <span className="mt-2 text-sm text-muted-foreground">Carregando vídeos...</span>
+      {/* Lista de Vídeos - Separada do upload */}
+      {videos.length > 0 && (
+        <Card className="border-2 border-[#0ABAB5]/10 shadow-sm">
+          <CardContent className="p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-[#0ABAB5]">
+                Vídeos adicionados ({videos.length})
+              </h3>
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={fetchVideos}
+                  className="flex items-center gap-2"
+                >
+                  <RefreshCw className="h-4 w-4" />
+                  Atualizar lista
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={verifyDatabaseRecords}
+                  disabled={isVerifying}
+                  className="flex items-center gap-2"
+                >
+                  {isVerifying ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                  Verificar BD
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setYoutubeDialogOpen(true)}
+                  disabled={!solution?.id || uploading}
+                >
+                  Adicionar do YouTube
+                </Button>
               </div>
             </div>
-          ) : (
-            <VideosList videos={videos} onRemove={handleRemoveVideo} />
-          )}
-        </CardContent>
-      </Card>
+            
+            {loading ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="flex flex-col items-center">
+                  <Loader2 className="h-8 w-8 animate-spin text-[#0ABAB5]" />
+                  <span className="mt-2 text-sm text-muted-foreground">Carregando vídeos...</span>
+                </div>
+              </div>
+            ) : (
+              <VideosList videos={videos} onRemove={handleRemoveVideo} />
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       <YouTubeVideoForm
         isOpen={youtubeDialogOpen}

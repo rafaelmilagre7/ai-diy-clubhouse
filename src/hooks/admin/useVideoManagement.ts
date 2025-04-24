@@ -19,7 +19,6 @@ export const useVideoManagement = (solutionId: string) => {
     await fetchVideos();
   }, [fetchVideos]);
 
-  // Garantir que os vídeos são carregados quando o solutionId mudar
   const handleYouTubeAdd = async (data: { name: string; url: string; description: string; }) => {
     try {
       const video = await handleAddYouTube(data);
