@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { RefreshCw, AlertTriangle, CheckCircle, Coffee } from "lucide-react";
+import { RefreshCw, AlertTriangle, CheckCircle, Coffee, Database } from "lucide-react";
 import { checkSupabaseConnection } from "@/lib/supabase/client";
 import { toast } from "sonner";
 
@@ -19,14 +19,17 @@ export const ConnectionStatus = () => {
       if (success) {
         setStatus('online');
         setErrorDetails(null);
+        toast.success("Conexão com o Supabase estabelecida!");
       } else {
         setStatus('offline');
         setErrorDetails(error);
+        toast.error("Falha na conexão com o Supabase");
       }
       setLastChecked(new Date());
     } catch (error) {
       setStatus('offline');
       setErrorDetails(error);
+      toast.error("Erro ao verificar conexão");
       setLastChecked(new Date());
     }
   };
@@ -53,7 +56,17 @@ export const ConnectionStatus = () => {
         <CheckCircle className="h-4 w-4 text-green-600" />
         <AlertTitle className="text-green-700">Conexão estabelecida</AlertTitle>
         <AlertDescription className="text-green-600">
-          A conexão com o servidor está funcionando corretamente.
+          <p>A conexão com o servidor está funcionando corretamente.</p>
+          <div className="mt-2">
+            <Button 
+              variant="outline" 
+              size="sm"
+              className="border-green-300 text-green-700 hover:bg-green-50"
+              onClick={checkConnection}
+            >
+              <RefreshCw className="mr-2 h-4 w-4" /> Verificar novamente
+            </Button>
+          </div>
         </AlertDescription>
       </Alert>
     );

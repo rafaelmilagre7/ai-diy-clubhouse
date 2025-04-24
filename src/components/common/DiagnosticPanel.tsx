@@ -5,12 +5,15 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
 import ConnectionStatus from "./ConnectionStatus";
-import { Info, AlertCircle, ChevronDown, ChevronUp, Globe } from "lucide-react";
+import { Info, AlertCircle, ChevronDown, ChevronUp, Globe, LayoutDashboard, Database } from "lucide-react";
+import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 export const DiagnosticPanel = () => {
   const [expanded, setExpanded] = useState(false);
   const [envVars, setEnvVars] = useState<{[key: string]: string | undefined}>({});
   const [showEnvVars, setShowEnvVars] = useState(false);
+  const navigate = useNavigate();
 
   const checkEnvironmentVars = () => {
     const vars = {
@@ -22,6 +25,12 @@ export const DiagnosticPanel = () => {
     
     setEnvVars(vars);
     setShowEnvVars(true);
+    toast.success("Variáveis de ambiente verificadas");
+  };
+
+  const navigateTo = (path: string) => {
+    navigate(path);
+    setExpanded(false);
   };
 
   if (!expanded) {
@@ -29,10 +38,10 @@ export const DiagnosticPanel = () => {
       <Button 
         variant="outline" 
         onClick={() => setExpanded(true)}
-        className="fixed bottom-4 right-4 z-50 bg-white shadow-lg"
+        className="fixed bottom-4 right-4 z-50 bg-white shadow-lg flex items-center"
       >
         <AlertCircle className="mr-2 h-4 w-4" />
-        Diagnosticar problemas
+        Diagnóstico
       </Button>
     );
   }
@@ -51,7 +60,7 @@ export const DiagnosticPanel = () => {
           </Button>
         </div>
         <CardDescription>
-          Use esse painel para diagnosticar problemas na aplicação
+          Ferramenta para diagnosticar problemas da aplicação
         </CardDescription>
       </CardHeader>
       
@@ -95,24 +104,34 @@ export const DiagnosticPanel = () => {
         
         <Separator />
         
-        <div className="mb-8">
+        <div className="mb-4">
           <h3 className="text-sm font-medium mb-2">Navegação</h3>
           <div className="space-y-3">
             <Button 
               variant="outline" 
               size="sm"
               className="w-full justify-between"
-              onClick={() => window.location.href = '/'}
+              onClick={() => navigateTo('/dashboard')}
             >
-              <span>Ir para Dashboard</span>
-              <Globe className="h-4 w-4" />
+              <span>Dashboard do Membro</span>
+              <LayoutDashboard className="h-4 w-4" />
             </Button>
             
             <Button 
               variant="outline" 
               size="sm"
               className="w-full justify-between"
-              onClick={() => window.location.href = '/diagnostic'}
+              onClick={() => navigateTo('/admin')}
+            >
+              <span>Dashboard Admin</span>
+              <Database className="h-4 w-4" />
+            </Button>
+            
+            <Button 
+              variant="outline" 
+              size="sm"
+              className="w-full justify-between"
+              onClick={() => navigateTo('/diagnostic')}
             >
               <span>Diagnóstico Completo</span>
               <AlertCircle className="h-4 w-4" />
