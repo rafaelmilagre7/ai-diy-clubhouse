@@ -36,7 +36,7 @@ export const useSolutionInteractions = (solutionId: string, solution: Solution |
   }, [solutionId]);
   
   // Iniciar implementação de uma solução
-  const startImplementation = useCallback(async () => {
+  const startImplementation = useCallback(async (): Promise<void> => {
     if (!solutionId || !solution) return;
     
     setInitializing(true);
@@ -91,19 +91,19 @@ export const useSolutionInteractions = (solutionId: string, solution: Solution |
   }, [solutionId, solution, navigate]);
   
   // Continuar uma implementação em andamento
-  const continueImplementation = useCallback(() => {
+  const continueImplementation = useCallback(async (): Promise<void> => {
     if (!solutionId || !progress) return;
     navigate(`/implementation/${solutionId}/${progress.current_module}`);
   }, [solutionId, progress, navigate]);
 
   // Toggle favorito
-  const toggleFavorite = useCallback(async () => {
+  const toggleFavorite = useCallback(async (): Promise<void> => {
     // Implementação futura
     toast.info('Funcionalidade em desenvolvimento');
   }, []);
 
   // Download de materiais
-  const downloadMaterials = useCallback(async () => {
+  const downloadMaterials = useCallback(async (): Promise<void> => {
     // Implementação futura
     toast.info('Funcionalidade em desenvolvimento');
   }, []);

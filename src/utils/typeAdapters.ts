@@ -29,9 +29,9 @@ export const adaptSolutionType = (supaSolution: SupabaseSolution): Solution => {
     created_at: supaSolution.created_at,
     updated_at: supaSolution.updated_at || '',
     slug: supaSolution.slug || '',
-    implementation_steps: supaSolution.implementation_steps || [],
-    checklist_items: supaSolution.checklist_items || [],
-    modules: supaSolution.modules || [],
+    implementation_steps: [], // Inicializa como array vazio
+    checklist_items: [], // Inicializa como array vazio
+    modules: [], // Inicializa como array vazio
     progress: supaSolution.progress || null,
     prerequisites: [],
     completion_criteria: [],

@@ -88,8 +88,8 @@ const SolutionDetails = () => {
           <SolutionMobileActions 
             solutionId={solution.id}
             progress={progress}
-            startImplementation={startImplementation}
-            continueImplementation={continueImplementation}
+            startImplementation={() => startImplementation()}
+            continueImplementation={() => continueImplementation()}
             initializing={initializing}
           />
         </div>
@@ -98,8 +98,8 @@ const SolutionDetails = () => {
           <SolutionSidebar 
             solution={solution}
             progress={progress}
-            startImplementation={startImplementation}
-            continueImplementation={continueImplementation}
+            startImplementation={() => startImplementation()}
+            continueImplementation={() => continueImplementation()}
             initializing={initializing}
           />
         </div>
