@@ -31,6 +31,24 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({
   // Depurar progresso para entender melhor os dados disponíveis
   console.log("Dados de progresso na ReviewStep:", progress);
 
+  // Função para normalizar dados antes de enviar para os cards
+  const normalizeSectionData = (sectionKey: string, data: any) => {
+    // Evitar processamento desnecessário
+    if (!data) return {};
+    
+    // Se for string, tentar converter para objeto
+    if (typeof data === 'string' && data !== "" && data !== "{}") {
+      try {
+        return JSON.parse(data);
+      } catch (e) {
+        console.error(`Erro ao converter string para objeto na seção ${sectionKey}:`, e);
+        return {};
+      }
+    }
+    
+    return data;
+  };
+
   return (
     <div className="space-y-6">
       <Card className="bg-[#0ABAB5]/10 p-4 rounded-md border border-[#0ABAB5]/20">
@@ -48,53 +66,28 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({
             let sectionData = progress[sectionKey];
 
             // Log para depuração
-            console.log(`Passo ${step.id}, seção ${step.section}, dados:`, sectionData);
+            console.log(`Passo ${step.id}, seção ${step.section}, dados originais:`, sectionData);
             console.log(`Tipo de dados para ${step.section}:`, typeof sectionData);
+            
+            // Normalizar dados da seção
+            sectionData = normalizeSectionData(step.section, sectionData);
+            
+            // Log para dados normalizados
+            console.log(`Dados normalizados para ${step.section}:`, sectionData);
 
             // Tratamento especial para business_context que pode estar em business_data
             if (step.section === "business_context" && (!sectionData || Object.keys(sectionData || {}).length === 0)) {
-              sectionData = progress.business_data;
-              console.log("Usando business_data como fallback para business_context:", sectionData);
-            }
-
-            // Tratamento especial para business_goals
-            if (step.section === "business_goals" && (!sectionData || Object.keys(sectionData || {}).length === 0)) {
-              console.log("Verificando dados brutos de business_goals:", progress.business_goals);
-              
-              // Tentar converter se for string
-              if (typeof progress.business_goals === 'string') {
-                try {
-                  sectionData = JSON.parse(progress.business_goals);
-                  console.log("Business goals convertido de string:", sectionData);
-                } catch (e) {
-                  console.error("Erro ao converter business_goals:", e);
-                }
-              }
-            }
-            
-            // Tratamento especial para experience_personalization
-            if (step.section === "experience_personalization" && (!sectionData || Object.keys(sectionData || {}).length === 0)) {
-              console.log("Verificando dados brutos de experience_personalization:", progress.experience_personalization);
-              
-              // Tentar converter se for string
-              if (typeof progress.experience_personalization === 'string') {
-                try {
-                  sectionData = JSON.parse(progress.experience_personalization);
-                  console.log("Experience personalization convertido de string:", sectionData);
-                } catch (e) {
-                  console.error("Erro ao converter experience_personalization:", e);
-                }
+              let fallbackData = progress.business_data;
+              if (fallbackData) {
+                sectionData = normalizeSectionData("business_data", fallbackData);
+                console.log("Usando business_data como fallback para business_context:", sectionData);
               }
             }
 
             // Tratamento especial para dados profissionais
             if (step.section === "professional_info" && (!sectionData || Object.keys(sectionData || {}).length === 0)) {
-              // Verificar se há dados no campo professional_info primeiro
-              if (progress.professional_info && Object.keys(progress.professional_info).length > 0) {
-                sectionData = progress.professional_info;
-              } 
-              // Verificar se há dados diretos no progresso como fallback
-              else if (progress.company_name || progress.company_size || progress.company_sector) {
+              // Construir um objeto com dados diretos como fallback
+              if (progress.company_name || progress.company_size || progress.company_sector) {
                 const directData = {
                   company_name: progress.company_name || "",
                   company_size: progress.company_size || "",

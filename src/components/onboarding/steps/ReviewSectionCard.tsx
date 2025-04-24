@@ -4,6 +4,8 @@ import { CheckCircle, PenSquare } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { OnboardingStep } from "@/types/onboarding";
+
+// Importando os componentes de resumo para cada seção
 import { getPersonalInfoSummary } from "./review-sections/personalInfoSummary";
 import { getProfessionalDataSummary } from "./review-sections/professionalDataSummary";
 import { getBusinessContextSummary } from "./review-sections/businessContextSummary";
@@ -88,39 +90,31 @@ export const ReviewSectionCard: React.FC<ReviewSectionCardProps> = ({
   stepIndex,
   navigateToStep,
 }) => {
-  // Verificar se há dados válidos na seção
+  // Verificar se há dados válidos na seção com tratamento de tipos
   const isCompleted = useMemo(() => {
-    // Log dos dados da seção para verificação detalhada
-    console.log(`Analisando dados para seção ${step.section}:`, sectionData);
-    
     // Se não temos dados, obviamente não está completo
     if (!sectionData) {
-      console.warn(`Dados NULOS para seção ${step.section}`);
       return false;
     }
     
-    // Verificar se é uma string vazia ou "{}"
+    // Verificar se é uma string e tentar converter
     if (typeof sectionData === 'string') {
       if (sectionData === "" || sectionData === "{}") {
-        console.warn(`String vazia ou "{}" para seção ${step.section}`);
         return false;
       }
       
       // Tentar converter para objeto
       try {
         const parsedData = JSON.parse(sectionData);
-        console.log(`Convertido string para objeto na seção ${step.section}:`, parsedData);
         
         // Verificar se o objeto resultante tem dados
-        if (Object.keys(parsedData).length === 0) {
-          console.warn(`Objeto vazio após conversão para seção ${step.section}`);
+        if (!parsedData || Object.keys(parsedData).length === 0) {
           return false;
         }
         
-        // Usar o objeto convertido para verificação
+        // Usar o objeto convertido para verificação específica de campos
         return checkSectionCompletion(step.section, parsedData);
       } catch (e) {
-        console.error(`Erro ao converter string para objeto na seção ${step.section}:`, e);
         return false;
       }
     }
@@ -131,6 +125,7 @@ export const ReviewSectionCard: React.FC<ReviewSectionCardProps> = ({
   
   // Função auxiliar para verificar critérios específicos de cada seção
   function checkSectionCompletion(section: string, data: any): boolean {
+    // Verificações específicas por tipo de seção
     if (section === 'personal_info') {
       return !!data.name && !!data.email;
     }
@@ -149,15 +144,7 @@ export const ReviewSectionCard: React.FC<ReviewSectionCardProps> = ({
     
     if (section === 'business_goals') {
       // Verificação mais detalhada para business_goals
-      const requiredFields = ['primary_goal', 'priority_solution_type', 'how_implement', 'week_availability'];
-      const hasAllRequired = requiredFields.every(field => !!data[field]);
-      
-      if (!hasAllRequired) {
-        const missingFields = requiredFields.filter(field => !data[field]);
-        console.warn(`Campos obrigatórios ausentes em business_goals: ${missingFields.join(', ')}`);
-      }
-      
-      return hasAllRequired;
+      return !!data.primary_goal;
     }
     
     if (section === 'experience_personalization') {
@@ -165,7 +152,7 @@ export const ReviewSectionCard: React.FC<ReviewSectionCardProps> = ({
     }
     
     if (section === 'complementary_info') {
-      return !!data.how_found_us;
+      return data.how_found_us !== undefined;
     }
     
     // Verificação genérica para outras seções
