@@ -1,4 +1,3 @@
-
 import { useCallback } from 'react';
 import { useAuth } from '@/contexts/auth';
 import { useToast } from '@/hooks/use-toast';
@@ -38,11 +37,9 @@ export function useAchievements() {
       
       if (dataError) throw new Error(dataError);
       
-      // Buscar dados do progresso e badges
       const progressResponse = await fetchProgressData(user.id);
       const badgesResponse = await fetchBadgesData(user.id);
 
-      // Gerar todas as conquistas usando os geradores
       const generatedAchievements: Achievement[] = [
         ...generateImplementationAchievements(progressData, solutions),
         ...generateCategoryAchievements(progressData, solutions),
@@ -50,9 +47,7 @@ export function useAchievements() {
         ...generateSocialAchievements(progressData, comments, totalLikes)
       ];
 
-      // Adicionar conquistas básicas
       const basicAchievements: Achievement[] = [
-        // Conquista de iniciante (desbloqueia ao iniciar qualquer solução)
         {
           id: 'achievement-beginner',
           name: 'Iniciante',
@@ -61,7 +56,6 @@ export function useAchievements() {
           isUnlocked: progressData && progressData.length > 0,
           earnedAt: progressData && progressData.length > 0 ? new Date().toISOString() : undefined,
         },
-        // Conquista de Pioneiro (completa primeira solução)
         {
           id: 'achievement-pioneer',
           name: 'Pioneiro',
@@ -72,7 +66,6 @@ export function useAchievements() {
           isUnlocked: progressData?.some(p => p.is_completed) || false,
           earnedAt: progressData?.some(p => p.is_completed) ? new Date().toISOString() : undefined,
         },
-        // Especialista em Vendas (3+ soluções de receita)
         {
           id: 'achievement-sales-expert',
           name: 'Especialista em Vendas',
@@ -84,7 +77,6 @@ export function useAchievements() {
           earnedAt: (progressData?.filter(p => p.is_completed && p.solutions?.category === 'revenue')?.length || 0) >= 3 
             ? new Date().toISOString() : undefined,
         },
-        // Mestre em Automação (5+ soluções completas)
         {
           id: 'achievement-automation-master',
           name: 'Mestre em Automação',
@@ -96,7 +88,6 @@ export function useAchievements() {
           earnedAt: (progressData?.filter(p => p.is_completed)?.length || 0) >= 5
             ? new Date().toISOString() : undefined,
         },
-        // Estrategista (completa solução de estratégia)
         {
           id: 'achievement-strategist',
           name: 'Estrategista',
@@ -110,10 +101,8 @@ export function useAchievements() {
         },
       ];
       
-      // Combinar todas as conquistas
       let allAchievements = [...basicAchievements, ...generatedAchievements];
       
-      // Incluir badges da tabela de badges
       if (badgesResponse && badgesResponse.length > 0) {
         badgesResponse.forEach(badgeData => {
           if (badgeData.badges) {
@@ -130,7 +119,6 @@ export function useAchievements() {
         });
       }
       
-      // Remover duplicatas e retornar
       const uniqueAchievements = removeDuplicateAchievements(allAchievements);
       console.log("Conquistas carregadas:", uniqueAchievements.length, uniqueAchievements);
       return uniqueAchievements;
