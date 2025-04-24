@@ -24,10 +24,7 @@ const VideoUploader: React.FC<VideoUploaderProps> = ({
   const [activeTab, setActiveTab] = useState<string>("upload");
 
   // Função para acionar o clique no input quando o botão for clicado
-  const handleButtonClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation(); 
-    
+  const handleButtonClick = () => {
     if (!disabled && !isUploading && fileInputRef.current) {
       console.log("[VideoUploader] Clique no botão de upload detectado");
       fileInputRef.current.click();
@@ -149,9 +146,7 @@ const VideoUploader: React.FC<VideoUploaderProps> = ({
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  if (!disabled && !isUploading && fileInputRef.current) {
-                    fileInputRef.current.click();
-                  }
+                  handleButtonClick();
                 }}
                 disabled={disabled || isUploading}
                 data-testid="video-upload-button"
