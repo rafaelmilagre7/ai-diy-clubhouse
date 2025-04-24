@@ -1,178 +1,117 @@
 
-import React, { useState } from "react";
-import { 
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle
-} from "@/components/ui/alert-dialog";
+import React from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { FileVideo, Youtube, Trash2, PlayCircle, ExternalLink } from "lucide-react";
-
-interface Video {
-  id: string;
-  name: string;
-  url: string;
-  type?: string;
-  metadata?: {
-    source?: "youtube" | "upload";
-    youtube_id?: string;
-    thumbnail_url?: string;
-    description?: string;
-    format?: string;
-    size?: number;
-  };
-}
+import { Trash2, Video, Youtube } from "lucide-react";
+import { VideoItem } from "@/types/videoTypes";
+import Image from "./Image";
 
 interface VideosListProps {
-  videos: Video[];
-  onRemove: (id: string, url: string) => Promise<void>;
+  videos: VideoItem[];
+  onRemove: (id: string, url: string) => void;
 }
 
 const VideosList: React.FC<VideosListProps> = ({ videos, onRemove }) => {
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [videoToDelete, setVideoToDelete] = useState<{ id: string; name: string; url: string } | null>(null);
+  // Função para extrair o tipo adequado do vídeo
+  const getVideoType = (video: VideoItem) => {
+    if (video.metadata?.source === "youtube" || video.url.includes("youtube")) {
+      return "youtube";
+    }
+    return "upload";
+  };
   
-  console.log("Videos na lista:", videos.length, videos);
-
-  const handleDelete = (video: Video) => {
-    setVideoToDelete({
-      id: video.id,
-      name: video.name,
-      url: video.url
-    });
-    setDeleteDialogOpen(true);
-  };
-
-  const confirmDelete = async () => {
-    if (videoToDelete) {
-      await onRemove(videoToDelete.id, videoToDelete.url);
-      setDeleteDialogOpen(false);
-      setVideoToDelete(null);
+  // Função para obter a thumbnail do vídeo
+  const getVideoThumbnail = (video: VideoItem) => {
+    if (video.metadata?.thumbnail_url) {
+      return video.metadata.thumbnail_url;
     }
-  };
-
-  const getVideoThumbnail = (video: Video) => {
-    const isYoutube = video.metadata?.source === "youtube";
-    if (isYoutube && video.url.includes("youtube.com/embed/")) {
-      const youtubeId = video.url.split("/").pop()?.split("?")[0];
-      return `https://img.youtube.com/vi/${youtubeId}/mqdefault.jpg`;
+    
+    if (video.metadata?.youtube_id) {
+      return `https://img.youtube.com/vi/${video.metadata.youtube_id}/mqdefault.jpg`;
     }
-    return "https://placehold.co/320x180/e6f7ff/0abab5?text=Vídeo";
+    
+    // Extrair ID do YouTube da URL
+    if (video.url.includes("youtube.com/embed/")) {
+      const youtubeId = video.url.split("youtube.com/embed/")[1]?.split('?')[0];
+      if (youtubeId) {
+        return `https://img.youtube.com/vi/${youtubeId}/mqdefault.jpg`;
+      }
+    }
+    
+    return null;
   };
-
-  const formatFileSize = (bytes?: number) => {
-    if (!bytes) return "";
-    if (bytes < 1024) return bytes + " B";
-    else if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
-    else if (bytes < 1024 * 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(1) + " MB";
-    else return (bytes / (1024 * 1024 * 1024)).toFixed(1) + " GB";
-  };
-
-  if (videos.length === 0) {
-    return (
-      <div className="text-center p-8 border border-dashed rounded-lg">
-        <p className="text-muted-foreground">Nenhum vídeo adicionado ainda</p>
-      </div>
-    );
-  }
 
   return (
-    <>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {videos.map((video) => (
-          <Card key={video.id} className="overflow-hidden hover:shadow-md transition-shadow">
-            <div className="relative aspect-video bg-gray-100">
-              <img
-                src={getVideoThumbnail(video)}
-                alt={video.name}
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 hover:opacity-100 transition-opacity">
-                <a
-                  href={video.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="p-2 bg-white/90 rounded-full"
-                >
-                  <PlayCircle className="h-10 w-10 text-[#0ABAB5]" />
-                </a>
-              </div>
-              <div className="absolute top-2 right-2 flex gap-1">
-                <span className={`flex items-center gap-1 py-1 px-2 rounded-full text-xs ${
-                  video.metadata?.source === "youtube" 
-                    ? "bg-red-100 text-red-700" 
-                    : "bg-blue-100 text-blue-700"
-                }`}>
-                  {video.metadata?.source === "youtube" ? (
-                    <Youtube className="h-3 w-3" />
+    <div className="space-y-6">
+      <p className="text-muted-foreground text-sm mb-4">
+        {videos.length} {videos.length === 1 ? 'vídeo encontrado' : 'vídeos encontrados'}
+      </p>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {videos.map((video) => {
+          const videoType = getVideoType(video);
+          const thumbnailUrl = getVideoThumbnail(video);
+          
+          return (
+            <div 
+              key={video.id} 
+              className="border rounded-lg overflow-hidden shadow-sm bg-white hover:shadow-md transition-shadow"
+            >
+              <div className="aspect-video bg-gray-100 relative">
+                {thumbnailUrl ? (
+                  <img 
+                    src={thumbnailUrl}
+                    alt={video.name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-gray-200">
+                    <Video className="h-12 w-12 text-gray-400" />
+                  </div>
+                )}
+                <div className="absolute top-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded-md flex items-center gap-1">
+                  {videoType === "youtube" ? (
+                    <>
+                      <Youtube className="h-3 w-3" />
+                      YouTube
+                    </>
                   ) : (
-                    <FileVideo className="h-3 w-3" />
+                    <>
+                      <Video className="h-3 w-3" />
+                      Upload
+                    </>
                   )}
-                  <span>{video.metadata?.source === "youtube" ? "YouTube" : "Arquivo"}</span>
-                </span>
+                </div>
+              </div>
+              
+              <div className="p-4">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <h4 className="font-medium text-gray-900 truncate">{video.name}</h4>
+                    {video.metadata?.description && (
+                      <p className="text-sm text-gray-600 line-clamp-2 mt-1">
+                        {video.metadata.description}
+                      </p>
+                    )}
+                  </div>
+                </div>
+                
+                <div className="mt-4 flex justify-end">
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    className="flex items-center gap-2"
+                    onClick={() => onRemove(video.id, video.url)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Remover
+                  </Button>
+                </div>
               </div>
             </div>
-            <CardContent className="pt-4">
-              <h3 className="font-medium text-base line-clamp-2 mb-1" title={video.name}>{video.name}</h3>
-              {video.metadata?.size && (
-                <p className="text-xs text-muted-foreground mb-1">
-                  {video.metadata?.format?.toUpperCase()} • {formatFileSize(video.metadata?.size)}
-                </p>
-              )}
-              <p className="text-sm text-muted-foreground line-clamp-2 mb-3" title={video.metadata?.description || ""}>
-                {video.metadata?.description || "Sem descrição"}
-              </p>
-              <div className="flex justify-between items-center">
-                <a
-                  href={video.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm text-[#0ABAB5] hover:underline flex items-center gap-1"
-                >
-                  <ExternalLink className="h-3 w-3" />
-                  Ver vídeo
-                </a>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                  onClick={() => handleDelete(video)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+          );
+        })}
       </div>
-
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Remover vídeo</AlertDialogTitle>
-            <AlertDialogDescription>
-              Tem certeza que deseja remover o vídeo "{videoToDelete?.name}"?
-              Esta ação não pode ser desfeita.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={confirmDelete}
-              className="bg-red-500 hover:bg-red-600"
-            >
-              Remover
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </>
+    </div>
   );
 };
 

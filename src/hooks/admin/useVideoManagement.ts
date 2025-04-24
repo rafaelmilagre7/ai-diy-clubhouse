@@ -1,5 +1,5 @@
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { VideoItem } from "@/types/videoTypes";
 import { useYouTubeVideo } from "./videos/useYouTubeVideo";
 import { useFileUpload } from "./videos/useFileUpload";
@@ -12,6 +12,19 @@ export const useVideoManagement = (solutionId: string) => {
   const { handleAddYouTube } = useYouTubeVideo(solutionId);
   const { uploading, uploadProgress, handleFileUpload, lastUploadedVideo } = useFileUpload(solutionId);
   const { videos, loading, fetchVideos, handleRemoveVideo } = useVideosData(solutionId);
+  
+  // Ouvir o evento personalizado para abrir o diálogo do YouTube
+  useEffect(() => {
+    const handleOpenYouTubeDialog = () => {
+      setYoutubeDialogOpen(true);
+    };
+
+    document.addEventListener('openYouTubeDialog', handleOpenYouTubeDialog);
+    
+    return () => {
+      document.removeEventListener('openYouTubeDialog', handleOpenYouTubeDialog);
+    };
+  }, []);
   
   // Função para atualizar explicitamente os vídeos
   const refreshVideos = useCallback(async () => {

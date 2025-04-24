@@ -158,26 +158,22 @@ const VideoTab: React.FC<VideoTabProps> = ({
       </div>
 
       {/* Lista de Vídeos - Aparece DEPOIS dos controles e da área de upload */}
-      <Card className="border-2 border-[#0ABAB5]/10 shadow-sm">
-        <CardContent className="p-6">
-          {loading ? (
-            <div className="flex items-center justify-center py-12">
-              <div className="flex flex-col items-center">
-                <Loader2 className="h-8 w-8 animate-spin text-[#0ABAB5]" />
-                <span className="mt-2 text-sm text-muted-foreground">Carregando vídeos...</span>
+      {videos.length > 0 && (
+        <Card className="border-2 border-[#0ABAB5]/10 shadow-sm">
+          <CardContent className="p-6">
+            {loading ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="flex flex-col items-center">
+                  <Loader2 className="h-8 w-8 animate-spin text-[#0ABAB5]" />
+                  <span className="mt-2 text-sm text-muted-foreground">Carregando vídeos...</span>
+                </div>
               </div>
-            </div>
-          ) : videos.length > 0 ? (
-            <VideosList videos={videos} onRemove={handleRemoveVideo} />
-          ) : (
-            <div className="text-center p-6">
-              <p className="text-muted-foreground">
-                Nenhum vídeo adicionado ainda. Use o formulário acima para fazer upload.
-              </p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+            ) : (
+              <VideosList videos={videos} onRemove={handleRemoveVideo} />
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       <YouTubeVideoForm
         isOpen={youtubeDialogOpen}
