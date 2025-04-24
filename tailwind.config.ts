@@ -97,6 +97,9 @@ export default {
         'operational': '#8E24AA',
         'strategy': '#00897B'
       },
+      borderWidth: {
+        '4': '4px'
+      },
       borderRadius: {
         lg: 'var(--radius)',
         md: 'calc(var(--radius) - 2px)',
@@ -189,5 +192,24 @@ export default {
       }
     }
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [
+    require("tailwindcss-animate"),
+    function({ addUtilities }) {
+      const newUtilities = {
+        '.border-l-revenue': {
+          borderLeftColor: '#3949AB',
+          borderLeftWidth: '4px'
+        },
+        '.border-l-operational': {
+          borderLeftColor: '#8E24AA',
+          borderLeftWidth: '4px'
+        },
+        '.border-l-strategy': {
+          borderLeftColor: '#00897B',
+          borderLeftWidth: '4px'
+        }
+      }
+      addUtilities(newUtilities)
+    }
+  ]
 } satisfies Config;
