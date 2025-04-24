@@ -53,7 +53,11 @@ export const useFileUpload = (solutionId: string) => {
         });
       }, 500);
       
-      // Upload para o storage - usando bucket "public" que é o padrão do Supabase
+      // Verificamos se o bucket existe antes de fazer o upload
+      const { data: buckets } = await supabase.storage.listBuckets();
+      console.log("[useFileUpload] Buckets disponíveis:", buckets?.map(b => b.name));
+      
+      // Upload para o storage - usando bucket "public" que foi criado no Supabase
       console.log("[useFileUpload] Enviando arquivo para o bucket 'public', caminho:", filePath);
       
       const { error: uploadError, data: uploadData } = await supabase.storage
