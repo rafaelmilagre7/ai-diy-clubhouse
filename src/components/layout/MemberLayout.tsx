@@ -14,6 +14,7 @@ interface MemberLayoutProps {
 }
 
 const MemberLayout = ({ children }: MemberLayoutProps) => {
+  console.log("MemberLayout renderizando");
   const { profile, signOut } = useAuth();
   
   // Estado para controlar a visibilidade da barra lateral
@@ -60,10 +61,6 @@ const MemberLayout = ({ children }: MemberLayoutProps) => {
       window.removeEventListener('resize', handleResize);
     };
   }, [sidebarOpen]);
-
-  // Log para debugging
-  console.log("MemberLayout renderizando com sidebarOpen:", sidebarOpen);
-  console.log("Perfil do usuário:", profile);
 
   return (
     <div className="flex min-h-screen bg-background overflow-hidden">

@@ -8,6 +8,8 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from './lib/react-query';
 
 function App() {
+  console.log("App renderizando");
+  
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
