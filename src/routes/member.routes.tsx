@@ -15,7 +15,7 @@ import SuggestionDetails from "@/pages/member/SuggestionDetails";
 
 export const memberRoutes = (
   <Fragment>
-    <Route path="/" element={<LayoutProvider><Dashboard /></LayoutProvider>} />
+    {/* Rotas principais */}
     <Route path="/dashboard" element={<LayoutProvider><Dashboard /></LayoutProvider>} />
     <Route path="/solutions/:id" element={<LayoutProvider><SolutionDetails /></LayoutProvider>} />
     <Route path="/solutions/:id/implementation" element={<LayoutProvider><SolutionImplementation /></LayoutProvider>} />
@@ -28,5 +28,12 @@ export const memberRoutes = (
     
     {/* Redirecionamento para URLs antigas */}
     <Route path="/solution/:id" element={<MemberSolutionRedirect />} />
+    
+    {/* Verificação das outras rotas na navegação */}
+    <Route path="/solutions" element={<LayoutProvider><Dashboard /></LayoutProvider>} />
+    <Route path="/implementation-trail" element={<LayoutProvider><Dashboard /></LayoutProvider>} />
+    <Route path="/perfil-de-implementacao" element={<LayoutProvider><Dashboard /></LayoutProvider>} />
+    <Route path="/tools" element={<LayoutProvider><Dashboard /></LayoutProvider>} />
+    <Route path="/benefits" element={<LayoutProvider><Dashboard /></LayoutProvider>} />
   </Fragment>
 );

@@ -82,6 +82,10 @@ export const MemberSidebarNav = ({ sidebarOpen }: SidebarNavProps) => {
 
   const isActive = (href: string) => {
     // Se for a rota de soluções, considerar ativa também para solution/:id e solutions/:id
+    if (href === "/dashboard" && location.pathname === "/") {
+      return true;
+    }
+    
     if (href === "/solutions" && (
       location.pathname.startsWith("/solution/") || 
       location.pathname.startsWith("/solutions/")

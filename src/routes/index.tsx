@@ -9,7 +9,7 @@ import RootRedirect from '@/components/routing/RootRedirect';
 import { NotFound } from '@/pages/NotFound';
 
 const AppRoutes = () => {
-  console.log('AppRoutes renderizando');
+  console.log('AppRoutes renderizando - Rota atual:', window.location.pathname);
   
   return (
     <Routes>
@@ -19,12 +19,12 @@ const AppRoutes = () => {
       {/* Rota raiz para redirecionar com base no tipo de usuário */}
       <Route path="/" element={<RootRedirect />} />
       
-      {/* Rotas de Membros */}
+      {/* Rotas de Membros - com proteção de autenticação */}
       <Route element={<ProtectedRoutes />}>
         {memberRoutes}
       </Route>
 
-      {/* Rotas Administrativas */}
+      {/* Rotas Administrativas - com proteção de admin */}
       <Route element={<AdminProtectedRoutes />}>
         {adminRoutes}
       </Route>
