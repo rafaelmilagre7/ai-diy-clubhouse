@@ -4,7 +4,6 @@ import { Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { WizardStepProgress } from './WizardStepProgress';
 import MemberLayout from '@/components/layout/MemberLayout';
-import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 
 interface OnboardingLayoutProps {
@@ -16,8 +15,7 @@ interface OnboardingLayoutProps {
   totalSteps?: number;
   stepTitles?: string[];
   onStepClick?: (step: number) => void;
-  hideProgress?: boolean; // Novo atributo para controlar a visibilidade
-  progress?: number;
+  hideProgress?: boolean;
 }
 
 export const OnboardingLayout = ({
@@ -38,8 +36,7 @@ export const OnboardingLayout = ({
     "Revisão"
   ],
   onStepClick,
-  hideProgress = false, // Valor padrão para manter compatibilidade
-  progress
+  hideProgress = false
 }: OnboardingLayoutProps) => {
   return (
     <MemberLayout>
@@ -64,23 +61,12 @@ export const OnboardingLayout = ({
             </div>
             
             {!hideProgress && (
-              <div className="space-y-4">
-                <WizardStepProgress
-                  currentStep={currentStep}
-                  totalSteps={totalSteps}
-                  stepTitles={stepTitles}
-                  onStepClick={onStepClick}
-                />
-                
-                {progress !== undefined && (
-                  <div className="space-y-2">
-                    <Progress value={progress} className="h-2" />
-                    <p className="text-sm text-gray-600 dark:text-gray-400 text-center">
-                      {progress}% completo
-                    </p>
-                  </div>
-                )}
-              </div>
+              <WizardStepProgress
+                currentStep={currentStep}
+                totalSteps={totalSteps}
+                stepTitles={stepTitles}
+                onStepClick={onStepClick}
+              />
             )}
           </header>
           
