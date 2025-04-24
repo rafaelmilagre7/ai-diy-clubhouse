@@ -24,21 +24,31 @@ export function buildExperiencePersonalizationUpdate(data: Partial<OnboardingDat
   
   console.log("[buildExperiencePersonalizationUpdate] Dados atuais de progresso:", existingExperiencePersonalization);
   
-  // CORREÇÃO: Verificar a estrutura dos dados recebidos
-  // Se o payload já contém um objeto experience_personalization, usar diretamente
+  // CORREÇÃO: Primeiro, verificar se o payload contém dados específicos para experience_personalization
   if (data.experience_personalization) {
-    console.log("[buildExperiencePersonalizationUpdate] Dados encontrados diretamente no payload:", data.experience_personalization);
-    console.log("[buildExperiencePersonalizationUpdate] Tipo dos dados:", typeof data.experience_personalization);
+    console.log("[buildExperiencePersonalizationUpdate] Dados encontrados diretamente no payload:", 
+      typeof data.experience_personalization, data.experience_personalization);
     
-    // Garantir normalização dos dados 
-    const normalizedData = normalizeExperiencePersonalization(data.experience_personalization);
-    updateObj.experience_personalization = normalizedData;
-    console.log("[buildExperiencePersonalizationUpdate] Dados normalizados para atualização:", updateObj.experience_personalization);
+    // Verificar se é uma string e tentar parseá-la
+    if (typeof data.experience_personalization === 'string') {
+      try {
+        const parsedData = JSON.parse(data.experience_personalization);
+        updateObj.experience_personalization = normalizeExperiencePersonalization(parsedData);
+      } catch (error) {
+        console.error("[buildExperiencePersonalizationUpdate] Erro ao parsear string:", error);
+        updateObj.experience_personalization = normalizeExperiencePersonalization(data.experience_personalization);
+      }
+    } else {
+      // Já é um objeto, normalizar diretamente
+      updateObj.experience_personalization = normalizeExperiencePersonalization(data.experience_personalization);
+    }
+    
+    console.log("[buildExperiencePersonalizationUpdate] Dados normalizados para atualização:", 
+      updateObj.experience_personalization);
     return updateObj;
   }
   
-  // CORREÇÃO: Se não há dados específicos na estrutura esperada, verificar se os campos estão no nível raiz
-  // Verificar se temos os campos esperados diretamente no objeto raiz
+  // CORREÇÃO: Verificar se há campos esperados diretamente no objeto raiz
   const experienceFields = [
     'interests', 
     'time_preference', 
@@ -76,19 +86,19 @@ export function buildExperiencePersonalizationUpdate(data: Partial<OnboardingDat
     return updateObj;
   }
   
-  // Se chegamos aqui, verificar se o objeto data é ele mesmo dados de personalização de experiência
-  // (ou seja, o objeto root já é o que esperamos)
-  if (experienceFields.some(field => field in data)) {
-    console.log("[buildExperiencePersonalizationUpdate] Objeto raiz parece ser dados de personalização");
+  // NOVA CORREÇÃO: Se o payload é o próprio objeto de dados
+  // Verificar se o próprio data já parece ser o objeto experience_personalization
+  const isExperienceData = experienceFields.some(field => field in data);
+  if (isExperienceData) {
+    console.log("[buildExperiencePersonalizationUpdate] O payload parece ser diretamente o objeto de personalização");
     
-    // Normalizar e mesclar com os dados existentes
     const normalizedData = normalizeExperiencePersonalization({
       ...existingExperiencePersonalization,
       ...data
     });
     
     updateObj.experience_personalization = normalizedData;
-    console.log("[buildExperiencePersonalizationUpdate] Dados finais da atualização (de objeto raiz):", updateObj.experience_personalization);
+    console.log("[buildExperiencePersonalizationUpdate] Dados finais após normalização:", updateObj.experience_personalization);
     return updateObj;
   }
   

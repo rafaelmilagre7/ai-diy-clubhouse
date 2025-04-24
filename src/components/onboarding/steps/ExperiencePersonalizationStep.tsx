@@ -28,22 +28,34 @@ export const ExperiencePersonalizationStep: React.FC<OnboardingStepProps> = ({
     if (initialData) {
       console.log("[ExperiencePersonalizationStep] Dados iniciais recebidos:", initialData);
       
+      // CORREÇÃO: Verificação mais detalhada dos dados disponíveis
+      console.log("[ExperiencePersonalizationStep] Conteúdo de initialData:", JSON.stringify(initialData, null, 2));
+      
       // Extrair dados de experiência de personalização do initialData
       let experienceData = null;
       
       if (initialData.experience_personalization) {
         experienceData = initialData.experience_personalization;
-        console.log("[ExperiencePersonalizationStep] Dados de personalização encontrados:", experienceData);
-        console.log("[ExperiencePersonalizationStep] Tipo dos dados:", typeof experienceData);
+        console.log("[ExperiencePersonalizationStep] Dados de personalização encontrados:", 
+          typeof experienceData, experienceData);
         
         // Se for uma string, tentar converter para objeto
         if (typeof experienceData === 'string' && experienceData.trim() !== '') {
           try {
             experienceData = JSON.parse(experienceData);
-            console.log("[ExperiencePersonalizationStep] Dados de personalização convertidos de string para objeto:", experienceData);
+            console.log("[ExperiencePersonalizationStep] Dados de personalização convertidos de string para objeto:", 
+              experienceData);
           } catch (e) {
             console.error("[ExperiencePersonalizationStep] Erro ao converter dados de personalização de string para objeto:", e);
-            experienceData = {};
+            // CORREÇÃO: Em caso de erro de parse, criar objeto vazio estruturado
+            experienceData = {
+              interests: [],
+              time_preference: [],
+              available_days: [],
+              networking_availability: 5,
+              skills_to_share: [],
+              mentorship_topics: []
+            };
           }
         } else if (experienceData === null || experienceData === undefined) {
           console.log("[ExperiencePersonalizationStep] Dados de personalização nulos ou indefinidos, usando valores padrão");
@@ -69,7 +81,8 @@ export const ExperiencePersonalizationStep: React.FC<OnboardingStepProps> = ({
         };
       }
       
-      console.log("[ExperiencePersonalizationStep] Dados finais de personalização para inicialização do formulário:", experienceData);
+      console.log("[ExperiencePersonalizationStep] Dados finais de personalização para inicialização do formulário:", 
+        experienceData);
       setFormData(experienceData);
     }
   }, [initialData]);
@@ -110,7 +123,7 @@ export const ExperiencePersonalizationStep: React.FC<OnboardingStepProps> = ({
     };
 
     console.log("[ExperiencePersonalizationStep] Enviando dados de personalização:", data);
-    // Passar o stepId como primeiro parâmetro e os dados como segundo
+    // CORREÇÃO: Garantir que o stepId seja passado primeiro e depois os dados
     onSubmit("experience_personalization", data);
   };
 

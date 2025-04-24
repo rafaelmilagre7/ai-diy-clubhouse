@@ -40,37 +40,47 @@ function extractDataFromObject(data: any): Record<string, any> {
   // Melhorar diagnóstico de conversão
   console.log("[useExperiencePersonalizationForm] Extraindo dados:", data, typeof data);
   
-  // Se for null ou undefined, retornar objeto vazio
+  // CORREÇÃO: Valores padrão para os campos do formulário
+  const defaultValues = {
+    interests: [],
+    time_preference: [],
+    available_days: [],
+    networking_availability: 5,
+    skills_to_share: [],
+    mentorship_topics: []
+  };
+  
+  // Se for null ou undefined, retornar valores padrão
   if (data === null || data === undefined) {
-    console.log("[useExperiencePersonalizationForm] Dados nulos ou indefinidos, retornando objeto vazio");
-    return {};
+    console.log("[useExperiencePersonalizationForm] Dados nulos ou indefinidos, retornando valores padrão");
+    return { ...defaultValues };
   }
   
   // Se for string, tentar parsear
   if (typeof data === 'string') {
     try {
-      // Se for string vazia, retornar objeto vazio
+      // Se for string vazia, retornar valores padrão
       if (data.trim() === '') {
-        console.log("[useExperiencePersonalizationForm] String vazia, retornando objeto vazio");
-        return {};
+        console.log("[useExperiencePersonalizationForm] String vazia, retornando valores padrão");
+        return { ...defaultValues };
       }
       
       console.log("[useExperiencePersonalizationForm] Tentando parsear string como JSON:", data);
       const parsed = JSON.parse(data);
       console.log("[useExperiencePersonalizationForm] String parseada com sucesso:", parsed);
-      return parsed;
+      return { ...defaultValues, ...parsed };
     } catch (e) {
       console.error("[useExperiencePersonalizationForm] Erro ao parsear string como objeto:", e);
-      return {};
+      return { ...defaultValues };
     }
   }
   
-  // Se for objeto, retornar diretamente
+  // Se for objeto, mesclar com valores padrão e retornar
   if (data && typeof data === 'object') {
-    return data;
+    return { ...defaultValues, ...data };
   }
   
-  return {};
+  return { ...defaultValues };
 }
 
 export function useExperiencePersonalizationForm(initialData: InitialFormData | null = {}) {
@@ -78,14 +88,31 @@ export function useExperiencePersonalizationForm(initialData: InitialFormData | 
   const safeInitialData = initialData || {};
   const initialized = useRef(false);
   
+  // CORREÇÃO: Log completo dos dados iniciais
+  console.log("[useExperiencePersonalizationForm] Dados iniciais completos:", safeInitialData);
+  
   // Extrair dados de personalização de forma segura
   const experienceData = useMemo(() => {
     console.log("[useExperiencePersonalizationForm] Processando initialData:", initialData);
     
+    // CORREÇÃO: Se initialData é nulo ou undefined, retornar valores padrão
+    if (!initialData) {
+      console.log("[useExperiencePersonalizationForm] initialData é nulo ou undefined, retornando valores padrão");
+      return {
+        interests: [],
+        time_preference: [],
+        available_days: [],
+        networking_availability: 5,
+        skills_to_share: [],
+        mentorship_topics: []
+      };
+    }
+    
     // Se initialData tem experience_personalization, usar isso
     if (initialData && initialData.experience_personalization) {
       let expData = initialData.experience_personalization;
-      console.log("[useExperiencePersonalizationForm] Dados de personalização encontrados:", expData, typeof expData);
+      console.log("[useExperiencePersonalizationForm] Dados de personalização encontrados:", 
+        typeof expData, expData);
       
       // Extrair dados do objeto ou string
       const extractedData = extractDataFromObject(expData);
@@ -102,20 +129,29 @@ export function useExperiencePersonalizationForm(initialData: InitialFormData | 
          'skills_to_share' in initialData || 
          'mentorship_topics' in initialData)) {
       console.log("[useExperiencePersonalizationForm] Usando propriedades de raiz em initialData");
-      return initialData;
+      const extractedData = extractDataFromObject(initialData);
+      console.log("[useExperiencePersonalizationForm] Dados extraídos de raiz:", extractedData);
+      return extractedData;
     }
     
-    console.log("[useExperiencePersonalizationForm] Sem dados de inicialização válidos, retornando objeto vazio");
-    return {};
+    console.log("[useExperiencePersonalizationForm] Sem dados de inicialização válidos, retornando valores padrão");
+    return {
+      interests: [],
+      time_preference: [],
+      available_days: [],
+      networking_availability: 5,
+      skills_to_share: [],
+      mentorship_topics: []
+    };
   }, [initialData]);
   
   console.log("[useExperiencePersonalizationForm] Dados processados para formulário:", experienceData);
   
-  // Garantir que os arrays são realmente arrays
+  // CORREÇÃO: Função melhorada para garantir arrays válidos
   const ensureArray = (value: any) => {
     // Se for array, retornar diretamente
     if (Array.isArray(value)) {
-      return value;
+      return value.length > 0 ? value : [];
     }
     
     // Se for undefined ou null, retornar array vazio
@@ -125,10 +161,16 @@ export function useExperiencePersonalizationForm(initialData: InitialFormData | 
     
     // Se for string, tentar parsear como JSON
     if (typeof value === 'string') {
+      if (value.trim() === '') {
+        return [];
+      }
+      
       try {
         const parsed = JSON.parse(value);
         // Se o resultado for array, retornar
-        if (Array.isArray(parsed)) return parsed;
+        if (Array.isArray(parsed)) {
+          return parsed.length > 0 ? parsed : [];
+        }
         // Caso contrário, envolver em array
         return [parsed];
       } catch {
@@ -137,8 +179,8 @@ export function useExperiencePersonalizationForm(initialData: InitialFormData | 
       }
     }
     
-    // Para outros tipos, envolver em array
-    return [value];
+    // Para outros tipos, envolver em array se não for vazio
+    return value ? [value] : [];
   };
   
   // Log detalhado dos valores iniciais
@@ -150,6 +192,7 @@ export function useExperiencePersonalizationForm(initialData: InitialFormData | 
   console.log("skills_to_share:", experienceData.skills_to_share, typeof experienceData.skills_to_share);
   console.log("mentorship_topics:", experienceData.mentorship_topics, typeof experienceData.mentorship_topics);
   
+  // CORREÇÃO: Garantir que os valores sejam do tipo esperado
   const interests = ensureArray(experienceData.interests);
   const timePreference = ensureArray(experienceData.time_preference);
   const availableDays = ensureArray(experienceData.available_days);
@@ -166,6 +209,7 @@ export function useExperiencePersonalizationForm(initialData: InitialFormData | 
   console.log("skills_to_share:", skillsToShare);
   console.log("mentorship_topics:", mentorshipTopics);
   
+  // CORREÇÃO: Inicializar formulário com valores garantidamente válidos
   const form = useForm<ExperienceFormData>({
     defaultValues: {
       interests: interests,
@@ -184,11 +228,14 @@ export function useExperiencePersonalizationForm(initialData: InitialFormData | 
   // Efeito para forçar validação quando o componente é montado, apenas uma vez
   useEffect(() => {
     if (!initialized.current) {
+      // CORREÇÃO: Log dos valores iniciais do formulário após inicialização
+      console.log("[useExperiencePersonalizationForm] Valores iniciais após inicialização:", formValues);
+      
       // Forçar validação para atualizar o estado isValid
       trigger();
       initialized.current = true;
     }
-  }, [trigger]);
+  }, [trigger, formValues]);
 
   // Função para verificar se todos os campos obrigatórios estão preenchidos
   const isValid = useMemo(() => {
@@ -217,8 +264,8 @@ export function useExperiencePersonalizationForm(initialData: InitialFormData | 
   function toggleSelect(field: Exclude<FormFieldNames, "networking_availability">, value: string) {
     const currentValues = form.watch(field) as string[];
     
-    if (!currentValues) {
-      // Se o campo estiver indefinido, inicialize com o valor
+    if (!currentValues || !Array.isArray(currentValues)) {
+      // CORREÇÃO: Se o campo estiver indefinido ou não for array, inicialize com o valor
       setValue(
         field, 
         [value], 

@@ -5,33 +5,29 @@
 export function normalizeExperiencePersonalization(data: any): Record<string, any> {
   console.log("[normalizeExperiencePersonalization] Normalizando dados:", typeof data, data);
   
-  // Caso 1: Se for null ou undefined, retorna objeto vazio com estrutura completa
+  // Valores padrão que serão usados quando necessário
+  const defaultValues = {
+    interests: [],
+    time_preference: [],
+    available_days: [],
+    networking_availability: 5,
+    skills_to_share: [],
+    mentorship_topics: [],
+  };
+  
+  // Caso 1: Se for null ou undefined, retorna objeto com valores padrão
   if (data === null || data === undefined) {
-    console.log("[normalizeExperiencePersonalization] Dados nulos ou indefinidos, retornando objeto padrão");
-    return {
-      interests: [],
-      time_preference: [],
-      available_days: [],
-      networking_availability: 5,
-      skills_to_share: [],
-      mentorship_topics: [],
-    };
+    console.log("[normalizeExperiencePersonalization] Dados nulos ou indefinidos, retornando valores padrão");
+    return { ...defaultValues };
   }
   
   // Caso 2: Se for string, tenta converter para objeto
   if (typeof data === 'string') {
     try {
-      // Se for string vazia, retorna objeto vazio
+      // Se for string vazia, retorna objeto com valores padrão
       if (data.trim() === '') {
-        console.log("[normalizeExperiencePersonalization] String vazia, retornando objeto padrão");
-        return {
-          interests: [],
-          time_preference: [],
-          available_days: [],
-          networking_availability: 5,
-          skills_to_share: [],
-          mentorship_topics: [],
-        };
+        console.log("[normalizeExperiencePersonalization] String vazia, retornando valores padrão");
+        return { ...defaultValues };
       }
       
       // Tentar parsear a string como JSON
@@ -44,14 +40,7 @@ export function normalizeExperiencePersonalization(data: any): Record<string, an
       return normalizeExperiencePersonalization(parsedData);
     } catch (e) {
       console.error("[normalizeExperiencePersonalization] Erro ao converter dados de string para objeto:", e);
-      return {
-        interests: [],
-        time_preference: [],
-        available_days: [],
-        networking_availability: 5,
-        skills_to_share: [],
-        mentorship_topics: [],
-      };
+      return { ...defaultValues };
     }
   }
   
@@ -59,17 +48,10 @@ export function normalizeExperiencePersonalization(data: any): Record<string, an
   if (typeof data === 'object') {
     console.log("[normalizeExperiencePersonalization] Dados já são um objeto, normalizando campos");
     
-    // Se data for um array, converte para objeto vazio (caso improvável mas possível)
+    // Se data for um array, converte para objeto com valores padrão
     if (Array.isArray(data)) {
-      console.warn("[normalizeExperiencePersonalization] Dados são um array, convertendo para objeto padrão");
-      return {
-        interests: [],
-        time_preference: [],
-        available_days: [],
-        networking_availability: 5,
-        skills_to_share: [],
-        mentorship_topics: [],
-      };
+      console.warn("[normalizeExperiencePersonalization] Dados são um array, convertendo para valores padrão");
+      return { ...defaultValues };
     }
     
     // Verificar se estamos recebendo um formato aninhado com o campo experience_personalization
@@ -96,7 +78,7 @@ export function normalizeExperiencePersonalization(data: any): Record<string, an
           return [parsed];
         } catch (e) {
           // Se falhar ao parsear, trata como valor único
-          return [value];
+          return value.trim() ? [value] : [];
         }
       }
       
@@ -104,13 +86,14 @@ export function normalizeExperiencePersonalization(data: any): Record<string, an
       return [value];
     };
     
-    // Criar novo objeto normalizado
+    // Criar novo objeto normalizado com valores padrão como base
     const normalizedData = {
+      ...defaultValues,
       interests: ensureArray(data.interests),
       time_preference: ensureArray(data.time_preference),
       available_days: ensureArray(data.available_days),
       networking_availability: data.networking_availability !== undefined ? 
-                             Number(data.networking_availability) : 5,
+                             Number(data.networking_availability) : defaultValues.networking_availability,
       skills_to_share: ensureArray(data.skills_to_share),
       mentorship_topics: ensureArray(data.mentorship_topics),
     };
@@ -119,14 +102,7 @@ export function normalizeExperiencePersonalization(data: any): Record<string, an
     return normalizedData;
   }
   
-  // Caso padrão: retorna objeto vazio com estrutura completa
+  // Caso padrão: retorna objeto com valores padrão
   console.warn("[normalizeExperiencePersonalization] Tipo de dados inesperado:", typeof data);
-  return {
-    interests: [],
-    time_preference: [],
-    available_days: [],
-    networking_availability: 5,
-    skills_to_share: [],
-    mentorship_topics: [],
-  };
+  return { ...defaultValues };
 }
