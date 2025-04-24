@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { memo } from "react";
 import { cn } from "@/lib/utils";
 import { CheckCircle, AlertCircle } from "lucide-react";
 
@@ -9,7 +9,7 @@ interface FormMessageProps {
   className?: string;
 }
 
-export const FormMessage: React.FC<FormMessageProps> = ({ 
+export const FormMessage: React.FC<FormMessageProps> = memo(({ 
   message, 
   type = "error", 
   className 
@@ -32,4 +32,6 @@ export const FormMessage: React.FC<FormMessageProps> = ({
       <span>{message}</span>
     </div>
   );
-};
+});
+
+FormMessage.displayName = "FormMessage";

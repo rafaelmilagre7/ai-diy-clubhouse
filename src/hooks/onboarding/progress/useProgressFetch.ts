@@ -1,82 +1,85 @@
 
-import { useCallback } from "react";
+import { MutableRefObject, useCallback } from "react";
 import { useAuth } from "@/contexts/auth";
+import { OnboardingProgress } from "@/types/onboarding";
 import { fetchOnboardingProgress, createInitialOnboardingProgress } from "../persistence/progressPersistence";
 
 export function useProgressFetch(
-  isMounted: React.MutableRefObject<boolean>,
-  setProgress: (progress: any) => void,
+  isMounted: MutableRefObject<boolean>,
+  setProgress: (progress: OnboardingProgress | null) => void,
   setIsLoading: (loading: boolean) => void,
-  progressId: React.MutableRefObject<string | null>,
-  lastError: React.MutableRefObject<Error | null>,
-  retryCount: React.MutableRefObject<number>,
+  progressId: MutableRefObject<string | null>,
+  lastError: MutableRefObject<Error | null>,
+  retryCount: MutableRefObject<number>,
   logDebugEvent: (action: string, data?: any) => void
 ) {
   const { user } = useAuth();
-
-  const fetchProgress = useCallback(async () => {
+  
+  const fetchProgress = useCallback(async (): Promise<OnboardingProgress | null> => {
     if (!user) {
-      console.warn("[DEBUG] Tentativa de buscar progresso sem usuário autenticado");
+      console.log("Usuário não autenticado, não buscando progresso");
       return null;
     }
-
+    
+    if (!isMounted.current) {
+      console.log("Componente desmontado, cancelando busca de progresso");
+      return null;
+    }
+    
+    setIsLoading(true);
+    logDebugEvent("fetchProgress", { userId: user?.id });
+    
     try {
-      setIsLoading(true);
-      logDebugEvent("fetchProgress_start", { userId: user.id });
-      console.log("[DEBUG] Buscando progresso para o usuário:", user.id);
-      
+      // Buscar progresso existente
       const { data, error } = await fetchOnboardingProgress(user.id);
-
-      if (!isMounted.current) return null;
-
+      
       if (error) {
-        console.error("[ERRO] Erro ao buscar progresso:", error);
-        lastError.current = error;
-        logDebugEvent("fetchProgress_error", { error: error.message });
+        console.error("Erro ao buscar progresso:", error);
+        lastError.current = error instanceof Error ? error : new Error(String(error));
         return null;
       }
-
-      if (!data) {
-        console.log("[DEBUG] Nenhum progresso encontrado. Criando progresso inicial...");
-        logDebugEvent("createInitialProgress_start", { userId: user.id });
-        
-        const { data: newData, error: newError } = await createInitialOnboardingProgress(user);
-
+      
+      if (data) {
         if (!isMounted.current) return null;
-
-        if (newError) {
-          console.error("[ERRO] Erro ao criar progresso inicial:", newError);
-          lastError.current = newError;
-          logDebugEvent("createInitialProgress_error", { error: newError.message });
-          return null;
-        }
-
-        logDebugEvent("createInitialProgress_success", { progressId: newData?.id });
-        console.log("[DEBUG] Novo progresso criado com sucesso:", newData);
-        progressId.current = newData?.id || null;
-        setProgress(newData);
-        return newData;
+        
+        console.log("Progresso encontrado:", data);
+        progressId.current = data.id;
+        setProgress(data);
+        retryCount.current = 0;
+        return data;
       }
-
-      logDebugEvent("fetchProgress_success", { progressId: data.id });
-      console.log("[DEBUG] Progresso encontrado:", data);
-      progressId.current = data.id;
-      setProgress(data);
-      return data;
-    } catch (error) {
+      
+      // Se não encontrou dados, cria um perfil inicial
+      console.log("Nenhum progresso encontrado, criando inicial");
+      const { data: newData, error: createError } = await createInitialOnboardingProgress(user);
+      
+      if (createError) {
+        console.error("Erro ao criar progresso inicial:", createError);
+        lastError.current = createError instanceof Error ? createError : new Error(String(createError));
+        return null;
+      }
+      
       if (!isMounted.current) return null;
       
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      logDebugEvent("fetchProgress_exception", { error: errorMessage });
-      console.error("[ERRO] Erro ao buscar ou criar progresso:", error);
+      if (newData) {
+        console.log("Novo progresso criado:", newData);
+        progressId.current = newData.id;
+        setProgress(newData);
+        retryCount.current = 0;
+        return newData;
+      }
+      
+    } catch (error) {
+      console.error("Exceção ao buscar progresso:", error);
       lastError.current = error instanceof Error ? error : new Error(String(error));
-      return null;
     } finally {
       if (isMounted.current) {
         setIsLoading(false);
       }
     }
-  }, [user, setProgress, setIsLoading, isMounted, progressId, lastError, retryCount, logDebugEvent]);
-
+    
+    return null;
+  }, [user, isMounted, setProgress, setIsLoading, progressId, lastError, retryCount, logDebugEvent]);
+  
   return { fetchProgress };
 }

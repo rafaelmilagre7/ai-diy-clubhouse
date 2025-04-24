@@ -6,6 +6,7 @@ import { useProgressFetch } from "./progress/useProgressFetch";
 import { useProgressUpdate } from "./progress/useProgressUpdate";
 import { useProgressRefresh } from "./progress/useProgressRefresh";
 import { toast } from "sonner";
+import { OnboardingProgress } from "@/types/onboarding";
 
 export const useProgress = () => {
   const { user } = useAuth();
@@ -36,19 +37,20 @@ export const useProgress = () => {
   );
 
   // Versão com debouncing para evitar chamadas múltiplas
-  const refreshProgress = useCallback(async () => {
+  const refreshProgress = useCallback(async (): Promise<OnboardingProgress | null> => {
     if (fetchInProgress.current) {
       console.log("Refresh já em andamento, ignorando nova solicitação");
-      return;
+      return progress;
     }
     
     try {
       fetchInProgress.current = true;
-      await fetchProgress();
+      const refreshedProgress = await fetchProgress();
+      return refreshedProgress || null;
     } finally {
       fetchInProgress.current = false;
     }
-  }, [fetchProgress]);
+  }, [fetchProgress, progress]);
 
   const { updateProgress } = useProgressUpdate(
     progress,

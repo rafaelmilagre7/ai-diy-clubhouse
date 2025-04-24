@@ -1,8 +1,10 @@
+
 import { useEffect, useState } from "react";
 import { steps } from "./useStepDefinitions";
 import { useProgress } from "./useProgress";
 import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "sonner";
+import { OnboardingProgress } from "@/types/onboarding";
 
 export const useStepNavigation = () => {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
@@ -37,7 +39,7 @@ export const useStepNavigation = () => {
           console.log(`Definindo etapa atual baseada na URL: ${currentStepId} (índice ${stepIndexByPath})`);
           setCurrentStepIndex(stepIndexByPath);
         }
-      } else if (refreshedProgress?.current_step) {
+      } else if (refreshedProgress && refreshedProgress.current_step) {
         const stepIndex = steps.findIndex(step => step.id === refreshedProgress.current_step);
         
         if (stepIndex !== -1) {

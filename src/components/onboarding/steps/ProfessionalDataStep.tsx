@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { CompanyNameField } from "./professional-inputs/CompanyNameField";
 import { CompanySizeField } from "./professional-inputs/CompanySizeField";
@@ -27,11 +27,9 @@ export const ProfessionalDataStep: React.FC<ProfessionalDataStepProps> = ({
 }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
-  const [initialDataProcessed, setInitialDataProcessed] = useState(false);
+  const initialDataProcessedRef = useRef(false);
   
-  console.log("ProfessionalDataStep - initialData recebido:", initialData);
-  
-  // Função aprimorada para extrair dados iniciais do objeto
+  // Função melhorada para extrair dados iniciais do objeto
   const getInitialValue = (field: string) => {
     if (!initialData) return "";
     
@@ -64,9 +62,9 @@ export const ProfessionalDataStep: React.FC<ProfessionalDataStepProps> = ({
   });
   
   // Efeito para atualizar o formulário quando os dados iniciais mudarem
-  // Com flag para evitar atualizações desnecessárias
+  // Com ref para evitar atualizações desnecessárias
   useEffect(() => {
-    if (initialData && !initialDataProcessed) {
+    if (initialData && !initialDataProcessedRef.current) {
       console.log("Atualizando formulário com dados iniciais:", initialData);
       
       // Resetar o formulário com os valores iniciais
@@ -79,9 +77,9 @@ export const ProfessionalDataStep: React.FC<ProfessionalDataStepProps> = ({
         annual_revenue: getInitialValue('annual_revenue')
       });
       
-      setInitialDataProcessed(true);
+      initialDataProcessedRef.current = true;
     }
-  }, [initialData]);
+  }, [initialData, methods]);
 
   const handleSubmit = async (data: any) => {
     setIsLoading(true);

@@ -6,9 +6,28 @@ import { Label } from "@/components/ui/label";
 import { FormMessage } from "@/components/ui/form-message";
 import { CheckCircle, Globe } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { validateWebsite, normalizeWebsiteUrl } from "@/utils/professionalDataValidation";
 
 export const WebsiteField: React.FC = () => {
-  const { register, formState: { errors, touchedFields } } = useFormContext();
+  const { 
+    register,
+    formState: { errors, touchedFields },
+    setValue,
+    trigger
+  } = useFormContext();
+
+  // Registra o input com validação personalizada
+  const registerOptions = {
+    required: false,
+    validate: validateWebsite,
+    setValueAs: (value: string) => value ? normalizeWebsiteUrl(value) : "",
+    onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
+      // Permite que a validação aconteça após a digitação
+      setTimeout(() => {
+        trigger("company_website");
+      }, 200);
+    }
+  };
 
   return (
     <div className="space-y-2">
@@ -28,7 +47,7 @@ export const WebsiteField: React.FC = () => {
       </Label>
       <Input
         placeholder="www.suaempresa.com.br"
-        {...register("company_website")}
+        {...register("company_website", registerOptions)}
         className={cn(
           "transition-all duration-200",
           errors.company_website ? "border-red-500" : 

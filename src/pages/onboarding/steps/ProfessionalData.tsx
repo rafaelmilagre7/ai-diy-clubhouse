@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
 import { ProfessionalDataStep } from "@/components/onboarding/steps/ProfessionalDataStep";
 import { useProgress } from "@/hooks/onboarding/useProgress";
@@ -17,15 +17,22 @@ const ProfessionalData = () => {
   const [dataLoaded, setDataLoaded] = useState(false);
   const navigate = useNavigate();
   
-  // Carregar dados apenas uma vez na montagem
-  useEffect(() => {
-    if (!dataLoaded) {
-      console.log("ProfessionalData montado - carregando dados mais recentes");
-      refreshProgress().then(() => {
-        setDataLoaded(true);
-      });
+  // Carregar dados apenas uma vez na montagem usando useCallback para estabilizar a função
+  const loadInitialData = useCallback(async () => {
+    if (dataLoaded) return;
+    
+    try {
+      console.log("ProfessionalData - carregando dados mais recentes");
+      await refreshProgress();
+      setDataLoaded(true);
+    } catch (error) {
+      console.error("Erro ao carregar dados iniciais:", error);
     }
   }, [refreshProgress, dataLoaded]);
+  
+  useEffect(() => {
+    loadInitialData();
+  }, [loadInitialData]);
 
   const handleSubmit = async (stepId: string, data: ProfessionalDataInput) => {
     if (isSubmitting) return;
@@ -37,6 +44,7 @@ const ProfessionalData = () => {
       // Validar campos obrigatórios
       if (!data.company_name || !data.company_size || !data.company_sector || !data.current_position || !data.annual_revenue) {
         toast.error("Por favor, preencha todos os campos obrigatórios");
+        setIsSubmitting(false);
         return;
       }
       
