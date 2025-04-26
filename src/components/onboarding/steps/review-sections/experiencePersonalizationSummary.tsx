@@ -67,7 +67,7 @@ function ensureObject(data: any): Record<string, any> {
     try {
       return JSON.parse(data);
     } catch (e) {
-      console.error("Erro ao analisar string como JSON:", e);
+      console.error("[experiencePersonalizationSummary] Erro ao analisar string como JSON:", e);
       return {};
     }
   }
@@ -76,21 +76,21 @@ function ensureObject(data: any): Record<string, any> {
 }
 
 export function getExperiencePersonalizationSummary(data: any) {
-  console.log("Renderizando summary para seção experience_personalization com dados:", data);
+  console.log("[experiencePersonalizationSummary] Renderizando summary com dados:", data);
   
   // Verificação de dados
   if (!data) {
-    console.warn("Dados vazios para seção experience_personalization");
+    console.warn("[experiencePersonalizationSummary] Dados vazios para seção experience_personalization");
     return <p className="text-gray-500 italic">Seção não preenchida. Clique em Editar para preencher.</p>;
   }
   
   // Garantir que estamos trabalhando com um objeto
   const personalization = ensureObject(data);
-  console.log("Dados processados para experience_personalization:", personalization);
+  console.log("[experiencePersonalizationSummary] Dados processados para experience_personalization:", personalization);
   
   // Se mesmo após processamento os dados estiverem vazios
   if (Object.keys(personalization).length === 0) {
-    console.warn("Objeto vazio após processamento para seção experience_personalization");
+    console.warn("[experiencePersonalizationSummary] Objeto vazio após processamento para seção experience_personalization");
     return <p className="text-gray-500 italic">Seção não preenchida. Clique em Editar para preencher.</p>;
   }
 
