@@ -4,11 +4,16 @@ import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
 
 interface AuthProtectedRoutesProps {
-  children: ReactNode;
+  children: ReactNode; // Propriedade children é obrigatória
 }
 
 /**
  * AuthProtectedRoutes protege rotas que requerem autenticação básica
+ * 
+ * IMPORTANTE: Este componente SEMPRE deve ser usado envolvendo um componente filho:
+ * <AuthProtectedRoutes>
+ *   <SeuComponente />
+ * </AuthProtectedRoutes>
  */
 const AuthProtectedRoutes = ({ children }: AuthProtectedRoutesProps) => {
   const { user, isLoading } = useAuth();

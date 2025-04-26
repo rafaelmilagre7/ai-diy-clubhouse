@@ -5,9 +5,17 @@ import { useAuth } from "@/contexts/auth";
 import { toast } from "sonner";
 
 interface ProtectedRoutesProps {
-  children: ReactNode;
+  children: ReactNode; // Propriedade children é obrigatória
 }
 
+/**
+ * ProtectedRoutes - Componente de proteção para rotas de membros
+ * 
+ * IMPORTANTE: Este componente SEMPRE deve ser usado envolvendo um componente filho:
+ * <ProtectedRoutes>
+ *   <SeuComponente />
+ * </ProtectedRoutes>
+ */
 export const ProtectedRoutes = ({ children }: ProtectedRoutesProps) => {
   const { user, isLoading } = useAuth();
   const location = useLocation();

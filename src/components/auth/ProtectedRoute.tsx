@@ -5,11 +5,19 @@ import { useAuth } from "@/contexts/auth";
 import { toast } from "sonner";
 
 interface ProtectedRouteProps {
-  children: React.ReactNode;
+  children: React.ReactNode; // Propriedade children é obrigatória
   requireAdmin?: boolean;
   requiredRole?: string;
 }
 
+/**
+ * ProtectedRoute - Componente de proteção para rotas
+ * 
+ * IMPORTANTE: Este componente SEMPRE deve ser usado envolvendo um componente filho:
+ * <ProtectedRoute>
+ *   <SeuComponente />
+ * </ProtectedRoute>
+ */
 const ProtectedRoute = ({ 
   children, 
   requireAdmin = false,

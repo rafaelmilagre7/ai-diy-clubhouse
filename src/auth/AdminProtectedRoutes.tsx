@@ -5,9 +5,17 @@ import { useAuth } from "@/contexts/auth";
 import { toast } from "sonner";
 
 interface AdminProtectedRoutesProps {
-  children: ReactNode;
+  children: ReactNode; // Propriedade children é obrigatória
 }
 
+/**
+ * AdminProtectedRoutes - Componente de proteção para rotas de administradores
+ * 
+ * IMPORTANTE: Este componente SEMPRE deve ser usado envolvendo um componente filho:
+ * <AdminProtectedRoutes>
+ *   <SeuComponenteAdmin />
+ * </AdminProtectedRoutes>
+ */
 export const AdminProtectedRoutes = ({ children }: AdminProtectedRoutesProps) => {
   const { user, isAdmin, isLoading } = useAuth();
   const location = useLocation();
