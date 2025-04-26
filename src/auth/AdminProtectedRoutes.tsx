@@ -15,7 +15,7 @@ export const AdminProtectedRoutes = ({ children }: AdminProtectedRoutesProps) =>
   // Debug log
   useEffect(() => {
     console.log("AdminProtectedRoutes state:", { 
-      user: !!user, 
+      user: !!user, // Logamos apenas se o usuário existe
       isAdmin, 
       isLoading, 
       path: location.pathname 

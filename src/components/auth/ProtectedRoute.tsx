@@ -1,33 +1,50 @@
 
-import { ReactNode, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useEffect } from 'react';
+import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from "@/contexts/auth";
+import { toast } from "sonner";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
   requireAdmin?: boolean;
+  requiredRole?: string;
 }
 
-export const ProtectedRoute = ({ 
+const ProtectedRoute = ({ 
   children, 
-  requireAdmin = false 
+  requireAdmin = false,
+  requiredRole
 }: ProtectedRouteProps) => {
   const { user, isAdmin, isLoading } = useAuth();
-  const navigate = useNavigate();
+  const location = useLocation();
   
-  // Navigation logic - Always runs regardless of conditions
+  // Debug logs
   useEffect(() => {
-    if (!isLoading) {
-      if (!user) {
-        console.log("ProtectedRoute: No user, redirecting to auth");
-        navigate('/auth', { replace: true });
-      } else if (requireAdmin && !isAdmin) {
-        console.log("ProtectedRoute: User is not admin, redirecting to dashboard");
-        navigate('/dashboard', { replace: true });
-      }
-    }
-  }, [user, isAdmin, isLoading, requireAdmin, navigate]);
+    console.log("ProtectedRoute:", { 
+      user: !!user, // Logamos apenas a existência do usuário, não seus dados
+      isAdmin, 
+      isLoading, 
+      requireAdmin, 
+      requiredRole, 
+      path: location.pathname 
+    });
+  }, [user, isAdmin, isLoading, requireAdmin, requiredRole, location.pathname]);
+  
+  // Se não houver usuário autenticado após verificação, redireciona para login
+  if (!isLoading && !user) {
+    console.log("ProtectedRoute: No user, redirecting to login");
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+  
+  // Verificar com base em requiredRole ou requireAdmin após verificação
+  if (!isLoading && user && ((requiredRole === 'admin' || requireAdmin) && !isAdmin)) {
+    console.log("Usuário não é admin, redirecionando para dashboard");
+    toast.error("Você não tem permissão para acessar esta área");
+    return <Navigate to="/dashboard" replace />;
+  }
 
-  // Sempre renderiza o conteúdo (rendering otimista)
+  // Renderização otimista - sempre mostra o conteúdo enquanto verifica a autenticação
   return <>{children}</>;
 };
+
+export default ProtectedRoute;

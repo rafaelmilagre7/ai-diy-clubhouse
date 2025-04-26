@@ -14,7 +14,11 @@ export const ProtectedRoutes = ({ children }: ProtectedRoutesProps) => {
   
   // Debug log
   useEffect(() => {
-    console.log("ProtectedRoutes state:", { user, isLoading, path: location.pathname });
+    console.log("ProtectedRoutes state:", { 
+      user: !!user, // Logamos apenas a existência do usuário, não seus dados 
+      isLoading, 
+      path: location.pathname 
+    });
   }, [user, isLoading, location.pathname]);
 
   // Se o usuário não estiver autenticado após verificação, redireciona para a página de login
