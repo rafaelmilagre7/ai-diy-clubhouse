@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Link, NavLink } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -114,9 +115,12 @@ export const MemberSidebar = ({
       >
         {/* Cabeçalho com botão de toggle */}
         <div className="flex items-center justify-between h-16 px-4 border-b">
-          <Link to="/" className="flex items-center text-xl font-semibold">
-            <img src="/logo.svg" alt="VIVER DE IA Club" className="h-8 w-auto mr-2" />
-            {sidebarOpen && <span>VIVER DE IA</span>}
+          <Link to="/" className="flex items-center justify-center">
+            <img 
+              src="/logo.svg" 
+              alt="VIVER DE IA Club" 
+              className="h-8 w-auto" 
+            />
           </Link>
           <button
             onClick={toggleSidebar}

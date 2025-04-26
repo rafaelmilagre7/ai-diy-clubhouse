@@ -13,9 +13,9 @@ export const SidebarLogo = ({ sidebarOpen, setSidebarOpen }: SidebarLogoProps) =
   
   return (
     <div className="flex h-16 shrink-0 items-center justify-between px-3">
-      <div className="flex items-center">
+      <div className="flex items-center justify-center">
         <img
-          src="https://milagredigital.com/wp-content/uploads/2025/04/viverdeiaclub.avif"
+          src="/logo.svg"
           alt="VIVER DE IA Club"
           className="h-8 w-auto"
         />

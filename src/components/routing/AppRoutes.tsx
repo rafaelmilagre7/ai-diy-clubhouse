@@ -36,6 +36,7 @@ import AdminUsers from '@/pages/admin/AdminUsers';
 import AdminSolutions from '@/pages/admin/AdminSolutions';
 import AdminAnalytics from '@/pages/admin/AdminAnalytics';
 import AdminSettings from '@/pages/admin/AdminSettings';
+import PersonalInfo from '@/pages/onboarding/steps/PersonalInfo';
 
 const AppRoutes = () => {
   return (
@@ -69,7 +70,8 @@ const AppRoutes = () => {
         
         {/* Rotas de Onboarding */}
         <Route path="onboarding" element={<OnboardingIntro />} />
-        <Route path="onboarding/personal-info" element={<Onboarding />} />
+        <Route path="onboarding/personal-info" element={<PersonalInfo />} />
+        <Route path="onboarding/personal-data" element={<Onboarding />} />
         <Route path="onboarding/professional-data" element={<Onboarding />} />
         <Route path="onboarding/business-context" element={<Onboarding />} />
         <Route path="onboarding/ai-experience" element={<Onboarding />} />

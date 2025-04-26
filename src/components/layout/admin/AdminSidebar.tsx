@@ -38,8 +38,12 @@ export const AdminSidebar = ({ sidebarOpen, setSidebarOpen }: AdminSidebarProps)
       >
         {/* Cabeçalho com botão de toggle */}
         <div className="flex items-center justify-between h-16 px-4 border-b">
-          <NavLink to="/admin" className="flex items-center text-xl font-semibold">
-            {sidebarOpen && <span>Admin Panel</span>}
+          <NavLink to="/admin" className="flex items-center justify-center">
+            <img 
+              src="/logo.svg" 
+              alt="VIVER DE IA Club" 
+              className="h-8 w-auto" 
+            />
           </NavLink>
           <button
             onClick={toggleSidebar}
