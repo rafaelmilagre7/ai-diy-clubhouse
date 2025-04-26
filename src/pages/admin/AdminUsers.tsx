@@ -24,6 +24,7 @@ const AdminUsers = () => {
     setNewRole,
     saving,
     handleUpdateRole,
+    cleanupOverlays, // Importamos a função de limpeza
   } = useUsers();
 
   const [isAdminMaster, setIsAdminMaster] = useState(false);
@@ -40,27 +41,43 @@ const AdminUsers = () => {
     setEditRoleOpen(true);
   };
 
-  // Função para garantir que o modal seja fechado corretamente
+  // Função robusta para garantir que o modal seja fechado corretamente
   const handleCloseModal = useCallback(() => {
-    console.log('Fechando modal através do handleCloseModal');
+    console.log('Fechando modal através do handleCloseModal em AdminUsers');
     setEditRoleOpen(false);
     
-    // Limpar backdrops persistentes após um pequeno delay
+    // Sequência de limpeza com timeouts para garantir que tudo seja removido
     setTimeout(() => {
-      const backdrops = document.querySelectorAll('.bg-black[data-state="open"], .MuiBackdrop-root');
-      backdrops.forEach(el => {
-        if (el.parentNode) {
-          console.log('Removendo backdrop persistente');
-          el.parentNode.removeChild(el);
-        }
-      });
+      cleanupOverlays();
       
-      // Restaurar scroll se necessário
-      if (document.body.style.overflow === 'hidden') {
-        document.body.style.overflow = '';
+      // Verificação adicional após um tempo para garantir limpeza completa
+      setTimeout(() => {
+        const remainingBackdrops = document.querySelectorAll('.MuiBackdrop-root, [data-state="open"].bg-black');
+        if (remainingBackdrops.length > 0) {
+          console.log(`Ainda existem ${remainingBackdrops.length} backdrops. Removendo forçadamente.`);
+          remainingBackdrops.forEach(el => el.remove());
+        }
+        
+        // Restaurar scroll se necessário
+        if (document.body.style.overflow === 'hidden') {
+          document.body.style.overflow = '';
+          document.body.style.paddingRight = '';
+        }
+        
+        console.log('Backdrop removido:', document.querySelectorAll('.MuiBackdrop-root').length === 0);
+      }, 300);
+    }, 100);
+  }, [setEditRoleOpen, cleanupOverlays]);
+
+  // Garantir limpeza se o componente desmontar enquanto o modal estiver aberto
+  useEffect(() => {
+    return () => {
+      if (editRoleOpen) {
+        console.log('AdminUsers desmontado com modal aberto, forçando limpeza');
+        setTimeout(cleanupOverlays, 10);
       }
-    }, 150);
-  }, [setEditRoleOpen]);
+    };
+  }, [editRoleOpen, cleanupOverlays]);
 
   return (
     <div className="space-y-6">
@@ -80,7 +97,7 @@ const AdminUsers = () => {
         />
       </div>
       
-      {/* O modal deve ser renderizado apenas quando necessário */}
+      {/* O modal é renderizado condicionalmente e com garantia de limpeza */}
       {editRoleOpen && (
         <UserRoleDialog
           open={editRoleOpen}

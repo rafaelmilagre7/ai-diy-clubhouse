@@ -13,30 +13,56 @@ export const useUsers = () => {
   const [newRole, setNewRole] = useState<'admin' | 'member'>('member');
   const [saving, setSaving] = useState(false);
 
-  // Função para limpar overlays persistentes
+  // Função robusta para limpar overlays persistentes
   const cleanupOverlays = useCallback(() => {
     console.log('Executando limpeza de overlays no hook useUsers');
     
     // Remove portais Radix
     const overlays = document.querySelectorAll('[data-radix-portal]');
+    console.log(`Encontrados ${overlays.length} portais Radix`);
     overlays.forEach(el => {
       if (el && el.parentNode) {
+        console.log('Removendo portal Radix');
         el.parentNode.removeChild(el);
       }
     });
     
-    // Remove backdrops
-    const backdrops = document.querySelectorAll('.bg-black[data-state="open"], .MuiBackdrop-root');
-    backdrops.forEach(el => {
+    // Remove backdrops Radix
+    const radixBackdrops = document.querySelectorAll("[data-state='open'].bg-black");
+    console.log(`Encontrados ${radixBackdrops.length} backdrops Radix`);
+    radixBackdrops.forEach(el => {
       if (el && el.parentNode) {
+        console.log('Removendo backdrop Radix');
         el.parentNode.removeChild(el);
       }
     });
     
-    // Verifica se o body tem overflow hidden e restaura
+    // Remove backdrops MUI (abordagem direta)
+    const muiBackdrops = document.querySelectorAll('.MuiBackdrop-root');
+    console.log(`Encontrados ${muiBackdrops.length} backdrops MUI`);
+    muiBackdrops.forEach(el => {
+      console.log('Removendo backdrop MUI diretamente');
+      el.remove();
+    });
+    
+    // Limpa portais MUI
+    const muiPortals = document.querySelectorAll('#mui-modal-root > div');
+    console.log(`Encontrados ${muiPortals.length} portais MUI`);
+    muiPortals.forEach(el => {
+      console.log('Removendo portal MUI');
+      el.remove();
+    });
+    
+    // Restaura scroll se necessário
     if (document.body.style.overflow === 'hidden') {
+      console.log('Restaurando overflow do body');
       document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
     }
+    
+    // Logs finais para confirmar remoção
+    console.log('Backdrop removido:', document.querySelectorAll('.MuiBackdrop-root').length);
+    console.log('Portals Radix restantes:', document.querySelectorAll('[data-radix-portal]').length);
   }, []);
 
   const fetchUsers = async () => {
@@ -68,7 +94,8 @@ export const useUsers = () => {
   const handleUpdateRole = async () => {
     if (!selectedUser || !newRole || newRole === selectedUser.role) {
       setEditRoleOpen(false);
-      cleanupOverlays();
+      // Mesmo se não houver alteração, garantir limpeza de overlays
+      setTimeout(cleanupOverlays, 100);
       return;
     }
     
@@ -82,6 +109,7 @@ export const useUsers = () => {
       
       if (error) throw error;
       
+      // Atualiza a lista de usuários com o novo papel
       setUsers(prevUsers => 
         prevUsers.map(user => 
           user.id === selectedUser.id ? { ...user, role: newRole } : user
@@ -101,16 +129,27 @@ export const useUsers = () => {
       });
     } finally {
       setSaving(false);
-      // Fechar modal e limpar overlays com pequeno delay
+      // Fechar modal e executar limpeza completa com timeouts encadeados
       setTimeout(() => {
         setEditRoleOpen(false);
-        // Pequeno delay para garantir que todas as operações assíncronas foram concluídas
-        setTimeout(cleanupOverlays, 100);
-      }, 50);
+        // Esperar animação de fechamento completar
+        setTimeout(() => {
+          console.log("Executando limpeza final após salvar/fechar");
+          cleanupOverlays();
+          // Verificação adicional após um tempo
+          setTimeout(() => {
+            const remainingBackdrops = document.querySelectorAll('.MuiBackdrop-root, [data-state="open"].bg-black');
+            if (remainingBackdrops.length > 0) {
+              console.log(`Ainda existem ${remainingBackdrops.length} backdrops. Fazendo limpeza forçada.`);
+              remainingBackdrops.forEach(el => el.remove());
+            }
+          }, 500);
+        }, 200);
+      }, 100);
     }
   };
 
-  // Garantir que qualquer overlay ou backdrop persistente seja removido quando componente for desmontado
+  // Garantir limpeza quando o componente for desmontado
   useEffect(() => {
     return () => {
       console.log('Hook useUsers desmontado, executando limpeza final');
@@ -118,17 +157,19 @@ export const useUsers = () => {
     };
   }, [cleanupOverlays]);
 
-  useEffect(() => {
-    fetchUsers();
-  }, []);
-
-  // Monitorar fechamento do modal para garantir limpeza
+  // Monitorar estado do modal e garantir limpeza quando fechado
   useEffect(() => {
     if (!editRoleOpen) {
       console.log('Modal detectado como fechado no hook, executando limpeza');
-      cleanupOverlays();
+      // Pequeno delay para permitir que animações terminem
+      setTimeout(cleanupOverlays, 200);
     }
   }, [editRoleOpen, cleanupOverlays]);
+
+  // Efeito para carregar usuários inicialmente
+  useEffect(() => {
+    fetchUsers();
+  }, []);
 
   return {
     users,
@@ -144,5 +185,6 @@ export const useUsers = () => {
     setNewRole,
     saving,
     handleUpdateRole,
+    cleanupOverlays, // Exportamos a função para uso externo
   };
 };
