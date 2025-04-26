@@ -1,4 +1,3 @@
-
 import React from "react";
 import { UseFormReturn } from "react-hook-form";
 import { SolutionFormValues } from "./solutionFormSchema";
@@ -17,6 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { difficultyLabels, getDifficultyColor } from "@/utils/difficultyUtils";
 
 interface BasicInfoRightColumnProps {
   form: UseFormReturn<SolutionFormValues>;
@@ -27,26 +27,6 @@ const BasicInfoRightColumn: React.FC<BasicInfoRightColumnProps> = ({
   form,
   difficulty
 }) => {
-  // Função para obter a cor correspondente à dificuldade
-  const getDifficultyColor = (diff: string) => {
-    switch (diff) {
-      case "easy": return "bg-green-500 text-white";
-      case "medium": return "bg-yellow-500 text-white";
-      case "advanced": return "bg-orange-500 text-white";
-      default: return "bg-gray-500 text-white";
-    }
-  };
-
-  // Função para obter texto traduzido de dificuldade
-  const getDifficultyText = (diff: string) => {
-    switch (diff) {
-      case "easy": return "Fácil";
-      case "medium": return "Normal";
-      case "advanced": return "Avançado";
-      default: return diff;
-    }
-  };
-
   return (
     <div className="space-y-6">
       <FormField
@@ -93,7 +73,7 @@ const BasicInfoRightColumn: React.FC<BasicInfoRightColumnProps> = ({
                   className={field.value ? `${getDifficultyColor(field.value)} border-0` : ""}
                 >
                   <SelectValue placeholder="Selecione uma dificuldade">
-                    {field.value ? getDifficultyText(field.value) : ""}
+                    {field.value ? difficultyLabels[field.value] : ""}
                   </SelectValue>
                 </SelectTrigger>
               </FormControl>

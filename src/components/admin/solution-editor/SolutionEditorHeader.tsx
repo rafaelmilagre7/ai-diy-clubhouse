@@ -3,6 +3,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { SaveIcon, ArrowLeftIcon } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { difficultyLabels, getDifficultyColor } from '@/utils/difficultyUtils';
 
 interface SolutionEditorHeaderProps {
   id?: string;
@@ -10,8 +11,6 @@ interface SolutionEditorHeaderProps {
   onSave: () => void;
   title?: string;
   difficulty?: string;
-  difficultyColor?: string;
-  difficultyText?: string; // Prop para texto traduzido
 }
 
 const SolutionEditorHeader: React.FC<SolutionEditorHeaderProps> = ({
@@ -19,24 +18,10 @@ const SolutionEditorHeader: React.FC<SolutionEditorHeaderProps> = ({
   saving,
   onSave,
   title,
-  difficulty,
-  difficultyColor,
-  difficultyText
+  difficulty
 }) => {
   const navigate = useNavigate();
-
-  // Tradução fallback caso não seja fornecido o difficultyText
-  const getDifficultyDisplayText = () => {
-    if (difficultyText) return difficultyText;
-    
-    switch (difficulty) {
-      case 'easy': return 'Fácil';
-      case 'medium': return 'Normal';
-      case 'advanced': return 'Avançado';
-      default: return difficulty;
-    }
-  };
-
+  
   return (
     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-4 rounded-lg shadow-sm">
       <div className="flex items-center gap-2">
@@ -55,11 +40,9 @@ const SolutionEditorHeader: React.FC<SolutionEditorHeaderProps> = ({
           {difficulty && (
             <div className="flex items-center mt-1">
               <span
-                className={`${
-                  difficultyColor || 'bg-gray-500'
-                } text-white text-xs px-2 py-0.5 rounded-full`}
+                className={`${getDifficultyColor(difficulty)} text-xs px-2 py-0.5 rounded-full`}
               >
-                {getDifficultyDisplayText()}
+                {difficultyLabels[difficulty]}
               </span>
             </div>
           )}
