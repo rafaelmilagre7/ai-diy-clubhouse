@@ -51,7 +51,6 @@ export function useSolutionsData(initialCategory: string | null = 'all') {
     queryFn: fetchSolutions,
     staleTime: 5 * 60 * 1000, // 5 minutos de cache
     refetchOnWindowFocus: false, // Não refetch ao focar a janela
-    keepPreviousData: true, // Mantém dados anteriores enquanto recarrega
     placeholderData: (previousData) => previousData, // Usa dados anteriores como placeholder
   });
 

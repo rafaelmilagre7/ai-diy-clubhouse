@@ -1,4 +1,3 @@
-
 import { QueryClient } from "@tanstack/react-query";
 
 // Configuração otimizada do Query Client para experiência instant-on
@@ -17,8 +16,8 @@ export const queryClient = new QueryClient({
       // Retry apenas 1 vez para melhorar a percepção de velocidade
       retry: 1,
       
-      // Mostrar dados obsoletos enquanto recarrega
-      keepPreviousData: true,
+      // Mostrar dados obsoletos enquanto recarrega (substituindo keepPreviousData)
+      placeholderData: (previousData) => previousData,
       
       // Sempre usar cache se disponível e atualizar em background
       refetchOnMount: "always",

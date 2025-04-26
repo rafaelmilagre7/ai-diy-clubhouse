@@ -42,7 +42,6 @@ export const useDashboardProgress = (solutions: Solution[] = []) => {
     refetchOnWindowFocus: false, // Desativar refetch ao focar a janela
     refetchInterval: false, // Desativar refetch automático baseado em intervalo
     placeholderData: cachedProgressData, // Usar dados em cache como placeholder
-    keepPreviousData: true, // Manter dados anteriores enquanto busca novos
   });
 
   // Usar useMemo para processar os dados apenas quando necessário

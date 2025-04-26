@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useTools } from '@/hooks/useTools';
 import { ToolGrid } from '@/components/tools/ToolGrid';
 import { ToolsHeader } from '@/components/tools/ToolsHeader';
@@ -7,6 +7,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQueryClient } from '@tanstack/react-query';
 import { Tool } from '@/types/toolTypes';
+import { supabase } from '@/lib/supabase';
 
 const Tools = () => {
   const [searchQuery, setSearchQuery] = useState('');
