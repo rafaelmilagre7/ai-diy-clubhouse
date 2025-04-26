@@ -3,7 +3,6 @@ import { Navigate, useNavigate } from "react-router-dom";
 import { useEffect, useState, ReactNode } from "react";
 import { useAuth } from "@/contexts/auth";
 import MemberLayout from "./MemberLayout";
-import { Skeleton } from "@/components/ui/skeleton";
 
 /**
  * LayoutProvider handles authentication checks and role-based routing
@@ -17,14 +16,10 @@ const LayoutProvider = ({ children }: { children: ReactNode }) => {
     isLoading,
   } = useAuth();
   const navigate = useNavigate();
-  
-  // Debug logs
-  console.log("LayoutProvider state:", { user, profile, isAdmin, isLoading });
 
   // Verificar autenticação
   useEffect(() => {
     if (!isLoading && !user) {
-      console.log("LayoutProvider: No authenticated user, redirecting to login");
       navigate('/login', { replace: true });
     }
   }, [user, isLoading, navigate]);
@@ -33,7 +28,6 @@ const LayoutProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     if (!isLoading && user && profile) {
       if (isAdmin && window.location.pathname.indexOf('/admin') !== 0) {
-        console.log("LayoutProvider: Admin user detected, redirecting to admin area");
         navigate('/admin', { replace: true });
       }
     }

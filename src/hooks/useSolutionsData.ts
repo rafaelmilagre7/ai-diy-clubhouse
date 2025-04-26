@@ -1,12 +1,12 @@
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Solution } from '@/lib/supabase';
 import { useToast } from '@/components/ui/use-toast';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 
-// Hook otimizado para carregamento e cache eficiente de soluções
+// Hook super otimizado para carregamento instantâneo de soluções
 export function useSolutionsData(initialCategory: string | null = 'all') {
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState('');
@@ -45,35 +45,56 @@ export function useSolutionsData(initialCategory: string | null = 'all') {
     }
   }, [toast, queryClient]);
 
-  // Verificar se temos dados em cache primeiro
+  // Verificar se temos dados em cache antes de qualquer renderização
   const cachedSolutions = queryClient.getQueryData<Solution[]>(['solutions']);
 
-  // Usar React Query para cache e refetch
-  const { data: solutions = [], isLoading, error, isFetched } = useQuery({
+  // Usar React Query para cache ultra agressivo e refetch controlado
+  const { 
+    data: solutions = cachedSolutions || [],
+    isLoading,
+    error,
+    refetch
+  } = useQuery({
     queryKey: ['solutions'],
     queryFn: fetchSolutions,
-    staleTime: 5 * 60 * 1000, // 5 minutos de cache
-    refetchOnWindowFocus: false, // Não refetch ao focar a janela
-    placeholderData: (previousData) => previousData || cachedSolutions, // Usar dados anteriores como placeholder
+    staleTime: 10 * 60 * 1000, // 10 minutos de cache - reduz drasticamente fetches
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    enabled: !cachedSolutions, // Não executar consulta se já tivermos dados em cache
+    placeholderData: (previousData) => previousData || cachedSolutions,
   });
 
-  // Prefetch lógica para melhorar carregamento de detalhes
-  const prefetchSolutionDetails = useCallback((solutionId: string) => {
-    queryClient.prefetchQuery({
-      queryKey: ['solution', solutionId],
-      queryFn: async () => {
-        const { data, error } = await supabase
-          .from('solutions')
-          .select('*')
-          .eq('id', solutionId)
-          .single();
-        
-        if (error) throw error;
-        return data;
-      },
-      staleTime: 60 * 1000, // 1 minuto
-    });
-  }, [queryClient]);
+  // Prefetch agressivo para detalhes - carrega TODOS os detalhes antes mesmo do clique
+  const prefetchAllDetails = useCallback(() => {
+    if (solutions) {
+      solutions.forEach(solution => {
+        queryClient.prefetchQuery({
+          queryKey: ['solution', solution.id],
+          queryFn: async () => {
+            // Se já temos os dados completos, retorne-os imediatamente
+            const existingData = queryClient.getQueryData(['solution', solution.id]);
+            if (existingData) return existingData;
+            
+            // Caso contrário, faça o fetch
+            const { data } = await supabase
+              .from('solutions')
+              .select('*')
+              .eq('id', solution.id)
+              .single();
+            return data;
+          },
+          staleTime: 5 * 60 * 1000, // 5 minutos
+        });
+      });
+    }
+  }, [solutions, queryClient]);
+
+  // Carregue os detalhes de todas as soluções logo após obter a lista
+  useEffect(() => {
+    if (solutions && solutions.length > 0 && !isLoading) {
+      prefetchAllDetails();
+    }
+  }, [solutions, isLoading, prefetchAllDetails]);
 
   // Filtrar soluções por categoria e pesquisa
   const filteredSolutions = useMemo(() => {
@@ -101,23 +122,19 @@ export function useSolutionsData(initialCategory: string | null = 'all') {
     return filtered;
   }, [solutions, activeCategory, searchQuery]);
 
-  // Retorna objeto com lógica estendida para navegação e prefetch
   return {
     solutions,
     filteredSolutions,
-    loading: isLoading && !cachedSolutions, // Somente loading se não tiver cache
-    isFetched,
+    loading: isLoading && !cachedSolutions, // Usando cache para eliminar sensação de loading
     error: error ? String(error) : null,
     searchQuery,
     setSearchQuery,
     activeCategory,
     setActiveCategory,
-    prefetchSolutionDetails,
-    // Método para navegação com prefetch
+    // Navegação otimizada com dados já pré-carregados
     navigateToSolution: (id: string) => {
-      prefetchSolutionDetails(id);
       navigate(`/solution/${id}`);
     },
-    refreshSolutions: fetchSolutions
+    refreshSolutions: refetch
   };
 }

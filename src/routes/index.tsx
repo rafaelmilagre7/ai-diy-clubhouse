@@ -7,9 +7,11 @@ import AppRoutes from '@/components/routing/AppRoutes';
 export { AppRoutes };
 
 // Exportamos um roteador otimizado para uso futuro, usando array de rotas
+// Não usar lazy loading para as rotas principais
 export const createOptimizedRouter = () => createBrowserRouter([
   {
     path: '/',
-    element: <AppRoutesWrapper />
+    element: <AppRoutesWrapper />,
+    children: [] // Rotas são definidas estaticamente em AppRoutes
   }
 ]);

@@ -7,6 +7,7 @@ import { Separator } from "@/components/ui/separator";
 import { Loader2, RefreshCw, AlertTriangle } from "lucide-react";
 import { TrailSolutionsList } from "./TrailSolutionsList";
 import { toast } from "sonner";
+import { motion } from "framer-motion";
 
 export const ImplementationTrailCreator = () => {
   const { trail, isLoading, error, hasContent, generateImplementationTrail, refreshTrail } = useImplementationTrail();
@@ -86,20 +87,18 @@ export const ImplementationTrailCreator = () => {
     }
   };
 
-  // Estado de carregamento com skeleton individual por item
-  if (isLoading || solutionsLoading) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[300px] py-8">
-        <Loader2 className="h-8 w-8 text-[#0ABAB5] animate-spin mb-4" />
-        <p className="text-muted-foreground">Carregando sua trilha personalizada...</p>
-      </div>
-    );
-  }
-
+  // Mostrar conteúdo cacheado imediatamente enquanto carrega no background
+  // Isso elimina o flicker e sensação de "pesado"
+  
   // Estado de erro
   if (error) {
     return (
-      <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.2 }}
+        className="bg-red-50 border border-red-200 rounded-lg p-6 text-center"
+      >
         <AlertTriangle className="h-10 w-10 text-red-500 mx-auto mb-4" />
         <h3 className="text-lg font-medium mb-2">Erro ao carregar trilha</h3>
         <p className="text-gray-600 mb-4">
@@ -115,14 +114,20 @@ export const ImplementationTrailCreator = () => {
             "Tentar Novamente"
           )}
         </Button>
-      </div>
+      </motion.div>
     );
   }
 
   // Se não há conteúdo na trilha, exibir opção para gerar
+  // Mesmo durante carregamento mostrar o UI básico
   if (!hasContent || processedSolutions.length === 0) {
     return (
-      <div className="text-center py-8 space-y-6">
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.2 }}
+        className="text-center py-8 space-y-6"
+      >
         <div className="bg-blue-50 rounded-lg p-8 max-w-2xl mx-auto">
           <h3 className="text-xl font-medium mb-4">Vamos criar sua trilha personalizada</h3>
           <p className="text-gray-600 mb-6">
@@ -144,13 +149,22 @@ export const ImplementationTrailCreator = () => {
             )}
           </Button>
         </div>
-      </div>
+      </motion.div>
     );
   }
 
+  // Mostrar loader individual apenas para os itens sendo carregados
+  // Remover loading global da página inteira
+  const isItemLoading = isLoading || solutionsLoading;
+
   // Exibir a trilha quando estiver disponível
   return (
-    <div className="space-y-6">
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.2 }}
+      className="space-y-6"
+    >
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-medium">Suas soluções recomendadas</h3>
         <Button 
@@ -172,7 +186,8 @@ export const ImplementationTrailCreator = () => {
       
       <Separator />
       
-      <TrailSolutionsList solutions={processedSolutions} />
-    </div>
+      {/* Mostrar soluções sempre, mesmo durante carregamento */}
+      <TrailSolutionsList solutions={processedSolutions} isItemLoading={isItemLoading} />
+    </motion.div>
   );
 };

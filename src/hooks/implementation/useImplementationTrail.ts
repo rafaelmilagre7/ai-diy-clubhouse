@@ -1,10 +1,10 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/auth";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { sanitizeTrailData } from "./useImplementationTrail.utils";
 import { useProgress } from "@/hooks/onboarding/useProgress";
+import { useQueryClient } from '@tanstack/react-query';
 
 export type ImplementationRecommendation = {
   solutionId: string;
@@ -23,6 +23,7 @@ export const useImplementationTrail = () => {
   const [trail, setTrail] = useState<ImplementationTrail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
   // Verificar se a trilha tem conteúdo
   const hasContent = useCallback(() => {
@@ -36,7 +37,7 @@ export const useImplementationTrail = () => {
     return totalItems > 0;
   }, [trail]);
 
-  // Carregar trilha existente
+  // Carregar trilha existente com suporte para cache
   const loadExistingTrail = useCallback(async (forceRefresh = false) => {
     if (!user) {
       setIsLoading(false);
@@ -45,43 +46,76 @@ export const useImplementationTrail = () => {
     }
 
     try {
-      if (!forceRefresh && trail && hasContent()) {
-        return trail;
-      }
-
-      setIsLoading(true);
-      setError(null);
-
-      const { data, error: loadError } = await supabase
-        .from("implementation_trails")
-        .select("*")
-        .eq("user_id", user.id)
-        .eq("status", "completed")
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      if (loadError) {
-        console.error("Erro ao carregar trilha:", loadError);
-        setError("Erro ao carregar sua trilha");
-        return null;
-      }
-
-      if (data?.trail_data) {
-        const sanitizedData = sanitizeTrailData(data.trail_data as ImplementationTrail);
+      // Verificar cache primeiro para uso imediato
+      const cachedTrail = queryClient.getQueryData<any>(['implementation-trail']);
+      
+      // Se temos dados em cache e não é forçado refresh, use-os imediatamente
+      if (!forceRefresh && cachedTrail?.trail_data) {
+        const sanitizedData = sanitizeTrailData(cachedTrail.trail_data as ImplementationTrail);
         setTrail(sanitizedData);
+        setIsLoading(false);
+        
+        // Ainda assim, faça um refresh em background se dados tiverem mais de 5 minutos
+        const lastFetched = queryClient.getQueryState(['implementation-trail'])?.dataUpdatedAt;
+        const isStale = !lastFetched || (Date.now() - lastFetched > 5 * 60 * 1000);
+        
+        if (isStale) {
+          // Não mostrar loading, mas atualizar em background
+          fetchTrailData(user.id).then(data => {
+            if (data?.trail_data) {
+              const refreshedData = sanitizeTrailData(data.trail_data as ImplementationTrail);
+              setTrail(refreshedData);
+              queryClient.setQueryData(['implementation-trail'], data);
+            }
+          });
+        }
+        
         return sanitizedData;
       }
 
+      // Se não temos cache ou é refresh forçado, busque dados
+      setIsLoading(true);
+      setError(null);
+
+      const data = await fetchTrailData(user.id);
+      
+      if (data?.trail_data) {
+        const sanitizedData = sanitizeTrailData(data.trail_data as ImplementationTrail);
+        setTrail(sanitizedData);
+        queryClient.setQueryData(['implementation-trail'], data);
+        setIsLoading(false);
+        return sanitizedData;
+      }
+
+      setIsLoading(false);
       return null;
     } catch (error) {
       console.error("Erro ao carregar trilha:", error);
       setError("Erro ao carregar sua trilha");
-      return null;
-    } finally {
       setIsLoading(false);
+      return null;
     }
-  }, [user, trail, hasContent]);
+  }, [user, queryClient]);
+
+  // Função auxiliar para buscar dados da trilha
+  const fetchTrailData = async (userId: string) => {
+    const { data, error: loadError } = await supabase
+      .from("implementation_trails")
+      .select("*")
+      .eq("user_id", userId)
+      .eq("status", "completed")
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+      
+    if (loadError) {
+      console.error("Erro ao carregar trilha:", loadError);
+      setError("Erro ao carregar sua trilha");
+      return null;
+    }
+    
+    return data;
+  };
 
   // Recarregar trilha (com opção de força)
   const refreshTrail = useCallback(async (forceRefresh = false) => {
@@ -218,10 +252,19 @@ export const useImplementationTrail = () => {
     };
   };
 
-  // Efeito para carregar a trilha ao montar
+  // Efeito para carregar a trilha ao montar - com prefetch e cache
   useEffect(() => {
+    // Buscar dados do cache primeiro, se houver
+    const cachedData = queryClient.getQueryData<any>(['implementation-trail']);
+    if (cachedData?.trail_data) {
+      const sanitizedData = sanitizeTrailData(cachedData.trail_data as ImplementationTrail);
+      setTrail(sanitizedData);
+      setIsLoading(false);
+    }
+    
+    // Carregar dados frescos ou atualizar cache
     loadExistingTrail();
-  }, [loadExistingTrail]);
+  }, [loadExistingTrail, queryClient]);
 
   return {
     trail,

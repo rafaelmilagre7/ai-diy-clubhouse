@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { useAuth } from "@/contexts/auth";
 import { supabase } from "@/lib/supabase";
 import { Solution } from "@/lib/supabase";
@@ -8,9 +8,6 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 export const useDashboardProgress = (solutions: Solution[] = []) => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  
-  // Verificar se temos dados em cache primeiro
-  const cachedProgressData = queryClient.getQueryData<any[]>(['progress', user?.id]);
   
   // Função para buscar o progresso - separada para facilitar cache
   const fetchProgress = useCallback(async () => {
@@ -40,24 +37,21 @@ export const useDashboardProgress = (solutions: Solution[] = []) => {
     queryFn: fetchProgress,
     staleTime: 5 * 60 * 1000, // 5 minutos de cache
     enabled: !!user && solutions.length > 0,
-    refetchOnWindowFocus: false, // Desativar refetch ao focar a janela
-    refetchInterval: false, // Desativar refetch automático baseado em intervalo
-    placeholderData: cachedProgressData, // Usar dados em cache como placeholder
+    refetchOnWindowFocus: false, 
+    refetchInterval: false, 
+    placeholderData: (previousData) => previousData, // Usar dados anteriores como placeholder
   });
 
   // Usar useMemo para processar os dados apenas quando necessário
   const { active, completed, recommended } = useMemo(() => {
-    // Usar dados em cache ou recém-buscados - para renderização instantânea
-    const dataToUse = progressData || cachedProgressData;
-    
     // Se não tivermos dados ou soluções, retornar objetos vazios
-    if (!solutions || solutions.length === 0 || !dataToUse) {
+    if (!solutions || solutions.length === 0 || !progressData) {
       return { active: [], completed: [], recommended: [] };
     }
 
     // Soluções ativas (em progresso)
     const activeSolutions = solutions.filter(solution => 
-      dataToUse.some(
+      progressData.some(
         progress => 
           progress.solution_id === solution.id && 
           !progress.is_completed
@@ -66,7 +60,7 @@ export const useDashboardProgress = (solutions: Solution[] = []) => {
 
     // Soluções completas
     const completedSolutions = solutions.filter(solution => 
-      dataToUse.some(
+      progressData.some(
         progress => 
           progress.solution_id === solution.id && 
           progress.is_completed
@@ -84,7 +78,7 @@ export const useDashboardProgress = (solutions: Solution[] = []) => {
       completed: completedSolutions,
       recommended: recommendedSolutions
     };
-  }, [solutions, progressData, cachedProgressData]);
+  }, [solutions, progressData]);
 
   const refreshProgress = useCallback(() => {
     return refetch();
@@ -94,7 +88,7 @@ export const useDashboardProgress = (solutions: Solution[] = []) => {
     active,
     completed,
     recommended,
-    loading: isLoading && !cachedProgressData, // Só considera loading se não tiver cache
+    loading: isLoading,
     refreshProgress
   };
 };

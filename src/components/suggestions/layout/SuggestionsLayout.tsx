@@ -3,12 +3,10 @@ import React from 'react';
 import { useSuggestions, SuggestionFilter } from '@/hooks/suggestions/useSuggestions';
 import { SuggestionsHeader } from './SuggestionsHeader';
 import { SuggestionsContent } from './SuggestionsContent';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Card } from '@/components/ui/card';
-import { toast } from 'sonner';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { motion } from 'framer-motion';
 
 const SuggestionsLayout = () => {
   const {
@@ -22,16 +20,7 @@ const SuggestionsLayout = () => {
     error
   } = useSuggestions();
 
-  // Tentativa automática de busca de dados quando o componente monta
-  React.useEffect(() => {
-    console.log("Componente SuggestionsLayout montado, buscando sugestões...");
-    refetch().catch(error => {
-      console.error("Erro ao buscar sugestões:", error);
-    });
-  }, [refetch]);
-
   const handleRetry = () => {
-    toast.info("Tentando buscar sugestões novamente...");
     refetch();
   };
 
@@ -39,16 +28,21 @@ const SuggestionsLayout = () => {
     setFilter(value);
   };
 
-  React.useEffect(() => {
-    console.log("Quantidade de sugestões carregadas:", suggestions?.length || 0);
-    if (suggestions && suggestions.length > 0) {
-      console.log("Primeira sugestão:", suggestions[0]);
-    }
-  }, [suggestions]);
-
-  const renderContent = () => {
-    if (error) {
-      return (
+  return (
+    <motion.div 
+      className="container py-6 space-y-6"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.2 }}
+    >
+      <SuggestionsHeader 
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        filter={filter}
+        onFilterChange={handleFilterChange}
+      />
+      
+      {error ? (
         <Alert variant="destructive" className="mb-4">
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>Erro ao carregar sugestões</AlertTitle>
@@ -60,29 +54,14 @@ const SuggestionsLayout = () => {
             </Button>
           </AlertDescription>
         </Alert>
-      );
-    }
-
-    return (
-      <SuggestionsContent 
-        suggestions={suggestions || []} 
-        searchQuery={searchQuery}
-        isLoading={isLoading}
-      />
-    );
-  };
-
-  return (
-    <div className="container py-6 space-y-6 animate-fade-in">
-      <SuggestionsHeader 
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        filter={filter}
-        onFilterChange={handleFilterChange}
-      />
-      
-      {renderContent()}
-    </div>
+      ) : (
+        <SuggestionsContent 
+          suggestions={suggestions || []} 
+          searchQuery={searchQuery}
+          isLoading={isLoading}
+        />
+      )}
+    </motion.div>
   );
 };
 

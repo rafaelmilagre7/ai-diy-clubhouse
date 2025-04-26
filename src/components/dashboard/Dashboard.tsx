@@ -12,6 +12,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ children }) => {
   const [showOnboardingAlert, setShowOnboardingAlert] = useState(false);
 
   // Verificar se deve mostrar alerta de onboarding incompleto
+  // sem causar re-renders desnecessários
   useEffect(() => {
     if (!isLoading && progress) {
       setShowOnboardingAlert(!progress.is_completed);

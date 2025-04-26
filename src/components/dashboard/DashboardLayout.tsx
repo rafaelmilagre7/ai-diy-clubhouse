@@ -9,7 +9,6 @@ import { ModernDashboardHeader } from "./ModernDashboardHeader";
 import { KpiGrid } from "./KpiGrid";
 import { useAuth } from "@/contexts/auth";
 import { AchievementsSummary } from "./AchievementsSummary"; 
-import { SolutionsGridLoader } from "./SolutionsGridLoader";
 import { useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 
@@ -23,25 +22,25 @@ interface DashboardLayoutProps {
   isLoading?: boolean;
 }
 
-// Animações de entrada
+// Animações de entrada otimizadas para performance
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
     transition: {
       when: "beforeChildren",
-      staggerChildren: 0.1,
-      duration: 0.3
+      staggerChildren: 0.05,
+      duration: 0.2
     }
   }
 };
 
 const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
+  hidden: { opacity: 0, y: 10 },
   visible: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.4 }
+    transition: { duration: 0.2 }
   }
 };
 
@@ -60,17 +59,39 @@ export const DashboardLayout: FC<DashboardLayoutProps> = memo(({
   const userName = profile?.name?.split(" ")[0] || "Membro";
   const queryClient = useQueryClient();
   
-  // Prefetch detalhes das soluções para navegação instantânea
+  // Prefetch agressivo para navegação instantânea
   useEffect(() => {
+    // Prefetch de todos os detalhes de solução em background
     const allSolutions = [...active, ...completed, ...recommended];
     
-    // Prefetch em background com baixa prioridade
     allSolutions.forEach(solution => {
       queryClient.prefetchQuery({
         queryKey: ['solution', solution.id],
         queryFn: async () => solution,
         staleTime: 5 * 60 * 1000 // 5 minutos
       });
+    });
+    
+    // Prefetch trilha de implementação para transição instantânea
+    queryClient.prefetchQuery({
+      queryKey: ['implementation-trail'],
+      queryFn: async () => {
+        const { supabase } = await import('@/lib/supabase');
+        const { user } = queryClient.getQueryData(['auth']) || { user: null };
+        if (!user) return null;
+        
+        const { data } = await supabase
+          .from("implementation_trails")
+          .select("*")
+          .eq("user_id", user.id)
+          .eq("status", "completed")
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        
+        return data;
+      },
+      staleTime: 1 * 60 * 1000 // 1 minuto
     });
   }, [active, completed, recommended, queryClient]);
 
@@ -82,7 +103,9 @@ export const DashboardLayout: FC<DashboardLayoutProps> = memo(({
       animate="visible"
     >
       {/* HEADER IMERSIVO */}
-      <ModernDashboardHeader userName={userName} />
+      <motion.div variants={itemVariants}>
+        <ModernDashboardHeader userName={userName} />
+      </motion.div>
 
       {/* Resumo gamificação - conquistas */}
       <motion.div variants={itemVariants}>
@@ -99,7 +122,7 @@ export const DashboardLayout: FC<DashboardLayoutProps> = memo(({
         />
       </motion.div>
 
-      {/* Mostrar loaders enquanto carrega, ou conteúdo quando pronto */}
+      {/* Mostrar conteúdo existente primeiro, atualizar conforme dados chegam */}
       {hasNoSolutions ? (
         <motion.div variants={itemVariants}>
           <NoSolutionsPlaceholder />
@@ -130,17 +153,6 @@ export const DashboardLayout: FC<DashboardLayoutProps> = memo(({
                 solutions={recommended} 
                 onSolutionClick={onSolutionClick} 
               />
-            </motion.div>
-          )}
-          
-          {/* Renderização condicional inline de loaders apenas quando necessário */}
-          {isLoading && (
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.2 }}
-            >
-              <SolutionsGridLoader />
             </motion.div>
           )}
         </>
