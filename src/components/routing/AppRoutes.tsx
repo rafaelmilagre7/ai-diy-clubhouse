@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { AdminProtectedRoutes } from '@/auth/AdminProtectedRoutes';
 import { ProtectedRoutes } from '@/auth/ProtectedRoutes';
 
@@ -8,7 +8,7 @@ import { ProtectedRoutes } from '@/auth/ProtectedRoutes';
 import MemberLayout from '@/components/layout/MemberLayout';
 import AdminLayout from '@/components/layout/admin/AdminLayout';
 
-// Todas as páginas carregadas estaticamente (sem lazy loading)
+// Todas as páginas carregadas estaticamente
 import Dashboard from '@/pages/member/Dashboard';
 import AdminDashboard from '@/pages/admin/AdminDashboard';
 import AdminTools from '@/pages/admin/AdminTools';
@@ -77,3 +77,4 @@ const AppRoutes = () => {
 };
 
 export default AppRoutes;
+
