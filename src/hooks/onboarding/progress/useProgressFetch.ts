@@ -18,6 +18,7 @@ export function useProgressFetch(
   const fetchProgress = useCallback(async (): Promise<OnboardingProgress | null> => {
     if (!user) {
       console.log("Usuário não autenticado, não buscando progresso");
+      lastError.current = new Error("Usuário não autenticado");
       return null;
     }
     
@@ -26,30 +27,34 @@ export function useProgressFetch(
       return null;
     }
     
-    setIsLoading(true);
-    logDebugEvent("fetchProgress", { userId: user?.id });
-    
     try {
+      setIsLoading(true);
+      logDebugEvent("fetchProgress", { userId: user?.id });
+      
       // Buscar progresso existente
       const { data, error } = await fetchOnboardingProgress(user.id);
+      
+      // Garantir que o componente ainda está montado após a requisição
+      if (!isMounted.current) {
+        console.log("Componente desmontado após requisição, cancelando atualização");
+        return null;
+      }
       
       // Verificar se houve erro na busca
       if (error) {
         console.error("Erro ao buscar progresso:", error);
         lastError.current = error instanceof Error ? error : new Error(String(error));
+        setIsLoading(false);
         return null;
       }
       
       // Verificar se dados foram encontrados
       if (data) {
-        if (!isMounted.current) {
-          return null;
-        }
-        
         console.log("Progresso encontrado:", data);
         progressId.current = data.id;
         setProgress(data);
         retryCount.current = 0;
+        setIsLoading(false);
         return data;
       }
       
@@ -57,13 +62,16 @@ export function useProgressFetch(
       console.log("Nenhum progresso encontrado, criando inicial");
       const { data: newData, error: createError } = await createInitialOnboardingProgress(user);
       
-      if (createError) {
-        console.error("Erro ao criar progresso inicial:", createError);
-        lastError.current = createError instanceof Error ? createError : new Error(String(createError));
+      // Verificar novamente se o componente está montado
+      if (!isMounted.current) {
+        console.log("Componente desmontado após criar perfil inicial, cancelando atualização");
         return null;
       }
       
-      if (!isMounted.current) {
+      if (createError) {
+        console.error("Erro ao criar progresso inicial:", createError);
+        lastError.current = createError instanceof Error ? createError : new Error(String(createError));
+        setIsLoading(false);
         return null;
       }
       
@@ -75,16 +83,17 @@ export function useProgressFetch(
         return newData;
       }
       
+      return null;
     } catch (error) {
       console.error("Exceção ao buscar progresso:", error);
       lastError.current = error instanceof Error ? error : new Error(String(error));
+      return null;
     } finally {
+      // Garantir que isLoading é sempre atualizado corretamente
       if (isMounted.current) {
         setIsLoading(false);
       }
     }
-    
-    return null;
   }, [user, isMounted, setProgress, setIsLoading, progressId, lastError, retryCount, logDebugEvent]);
   
   return { fetchProgress };
