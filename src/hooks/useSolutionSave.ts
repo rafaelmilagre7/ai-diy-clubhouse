@@ -25,6 +25,18 @@ export const useSolutionSave = (
       console.log("Valores recebidos para salvar:", values);
       console.log("Dificuldade:", values.difficulty);
       
+      // Validar o valor da dificuldade antes de salvar
+      if (values.difficulty !== "easy" && values.difficulty !== "medium" && values.difficulty !== "advanced") {
+        console.error(`Valor inválido para dificuldade: "${values.difficulty}". Deve ser "easy", "medium" ou "advanced"`);
+        toast({
+          title: "Erro na validação",
+          description: `Valor de dificuldade inválido: "${values.difficulty}". Valores aceitos: "easy", "medium", "advanced"`,
+          variant: "destructive",
+        });
+        setSaving(false);
+        return;
+      }
+      
       // Preparar dados para salvar
       const solutionData = {
         title: values.title,
