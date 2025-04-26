@@ -55,7 +55,7 @@ export const DashboardLayout: FC<DashboardLayoutProps> = memo(({
   isLoading = false
 }) => {
   const hasNoSolutions = !isLoading && active.length === 0 && completed.length === 0 && recommended.length === 0;
-  const { profile } = useAuth();
+  const { profile, user } = useAuth();
   const userName = profile?.name?.split(" ")[0] || "Membro";
   const queryClient = useQueryClient();
   
@@ -77,7 +77,6 @@ export const DashboardLayout: FC<DashboardLayoutProps> = memo(({
       queryKey: ['implementation-trail'],
       queryFn: async () => {
         const { supabase } = await import('@/lib/supabase');
-        const { user } = queryClient.getQueryData(['auth']) || { user: null };
         if (!user) return null;
         
         const { data } = await supabase
@@ -93,7 +92,7 @@ export const DashboardLayout: FC<DashboardLayoutProps> = memo(({
       },
       staleTime: 1 * 60 * 1000 // 1 minuto
     });
-  }, [active, completed, recommended, queryClient]);
+  }, [active, completed, recommended, queryClient, user]);
 
   return (
     <motion.div 

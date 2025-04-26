@@ -187,7 +187,10 @@ export const ImplementationTrailCreator = () => {
       <Separator />
       
       {/* Mostrar soluções sempre, mesmo durante carregamento */}
-      <TrailSolutionsList solutions={processedSolutions} isItemLoading={isItemLoading} />
+      <TrailSolutionsList 
+        solutions={processedSolutions} 
+        isItemLoading={isItemLoading} 
+      />
     </motion.div>
   );
 };

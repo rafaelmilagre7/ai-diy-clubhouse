@@ -14,7 +14,7 @@ const Dashboard = () => {
   const queryClient = useQueryClient();
   
   // Otimização: Usar useMemo para lembrar o valor da categoria entre renderizações
-  const initialCategory = useMemo(() => searchParams.get("category") || "general", []);
+  const initialCategory = useMemo(() => searchParams.get("category") || "general", [searchParams]);
   const [category, setCategory] = useState<string>(initialCategory);
   
   // Verifica e usa dados em cache para renderização instantânea

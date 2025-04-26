@@ -1,5 +1,5 @@
 
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Solution } from '@/lib/supabase';
 import { useToast } from '@/components/ui/use-toast';
@@ -53,7 +53,8 @@ export function useSolutionsData(initialCategory: string | null = 'all') {
     data: solutions = cachedSolutions || [],
     isLoading,
     error,
-    refetch
+    refetch,
+    isFetched
   } = useQuery({
     queryKey: ['solutions'],
     queryFn: fetchSolutions,
@@ -65,26 +66,24 @@ export function useSolutionsData(initialCategory: string | null = 'all') {
   });
 
   // Prefetch agressivo para detalhes - carrega TODOS os detalhes antes mesmo do clique
-  const prefetchAllDetails = useCallback(() => {
+  const prefetchSolutionDetails = useCallback((solutionId: string) => {
     if (solutions) {
-      solutions.forEach(solution => {
-        queryClient.prefetchQuery({
-          queryKey: ['solution', solution.id],
-          queryFn: async () => {
-            // Se já temos os dados completos, retorne-os imediatamente
-            const existingData = queryClient.getQueryData(['solution', solution.id]);
-            if (existingData) return existingData;
-            
-            // Caso contrário, faça o fetch
-            const { data } = await supabase
-              .from('solutions')
-              .select('*')
-              .eq('id', solution.id)
-              .single();
-            return data;
-          },
-          staleTime: 5 * 60 * 1000, // 5 minutos
-        });
+      queryClient.prefetchQuery({
+        queryKey: ['solution', solutionId],
+        queryFn: async () => {
+          // Se já temos os dados completos, retorne-os imediatamente
+          const existingData = queryClient.getQueryData(['solution', solutionId]);
+          if (existingData) return existingData;
+          
+          // Caso contrário, faça o fetch
+          const { data } = await supabase
+            .from('solutions')
+            .select('*')
+            .eq('id', solutionId)
+            .single();
+          return data;
+        },
+        staleTime: 5 * 60 * 1000, // 5 minutos
       });
     }
   }, [solutions, queryClient]);
@@ -92,9 +91,11 @@ export function useSolutionsData(initialCategory: string | null = 'all') {
   // Carregue os detalhes de todas as soluções logo após obter a lista
   useEffect(() => {
     if (solutions && solutions.length > 0 && !isLoading) {
-      prefetchAllDetails();
+      solutions.forEach(solution => {
+        prefetchSolutionDetails(solution.id);
+      });
     }
-  }, [solutions, isLoading, prefetchAllDetails]);
+  }, [solutions, isLoading, prefetchSolutionDetails]);
 
   // Filtrar soluções por categoria e pesquisa
   const filteredSolutions = useMemo(() => {
@@ -135,6 +136,9 @@ export function useSolutionsData(initialCategory: string | null = 'all') {
     navigateToSolution: (id: string) => {
       navigate(`/solution/${id}`);
     },
-    refreshSolutions: refetch
+    refreshSolutions: refetch,
+    // Retornar novas propriedades necessárias para os componentes
+    isFetched,
+    prefetchSolutionDetails
   };
 }

@@ -25,12 +25,12 @@ const Solutions = () => {
   const { 
     filteredSolutions, 
     loading, 
-    isFetched,
     searchQuery, 
     setSearchQuery,
     activeCategory,
     setActiveCategory,
-    prefetchSolutionDetails
+    prefetchSolutionDetails,
+    isFetched
   } = useSolutionsData();
 
   // Log data for debugging
@@ -38,7 +38,7 @@ const Solutions = () => {
     solutionsCount: filteredSolutions?.length || 0, 
     activeCategory,
     isLoading: loading || toolsDataLoading,
-    isFetched
+    isFetched: isFetched || false
   });
 
   const categories = [

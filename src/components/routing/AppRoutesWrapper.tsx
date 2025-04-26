@@ -4,11 +4,13 @@ import AppRoutes from '@/components/routing/AppRoutes';
 import { useQueryClient } from '@tanstack/react-query';
 import { useLocation } from 'react-router-dom';
 import { useEffect } from 'react';
+import { useAuth } from '@/contexts/auth';
 
 // Componente otimizado para prefetch de dados durante navegação
 const AppRoutesWrapper = () => {
   const queryClient = useQueryClient();
   const location = useLocation();
+  const { user } = useAuth();
   
   // Prefetch agressivo baseado na rota atual
   useEffect(() => {
@@ -42,7 +44,6 @@ const AppRoutesWrapper = () => {
           queryFn: async () => {
             // Somente se não já estiver em cache
             const { supabase } = await import('@/lib/supabase');
-            const { user } = queryClient.getQueryData(['auth']) || { user: null };
             if (!user) return null;
             
             const { data } = await supabase
@@ -72,7 +73,7 @@ const AppRoutesWrapper = () => {
     
     prefetchCommonData();
     prefetchRouteData();
-  }, [location.pathname, queryClient]);
+  }, [location.pathname, queryClient, user]);
   
   // Renderizar rotas imediatamente - sem loading global
   return <AppRoutes />;
