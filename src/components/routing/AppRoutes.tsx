@@ -1,3 +1,4 @@
+
 import { Routes, Route } from 'react-router-dom';
 import { AdminProtectedRoutes } from '@/auth/AdminProtectedRoutes';
 import { ProtectedRoutes } from '@/auth/ProtectedRoutes';
@@ -78,6 +79,7 @@ const AppRoutes = () => {
       <Route path="/implementation/completed/:id" element={<ProtectedRoutes><MemberLayout><ImplementationCompleted /></MemberLayout></ProtectedRoutes>} />
       <Route path="/benefits" element={<ProtectedRoutes><MemberLayout><Benefits /></MemberLayout></ProtectedRoutes>} />
       <Route path="/achievements" element={<ProtectedRoutes><MemberLayout><Achievements /></MemberLayout></ProtectedRoutes>} />
+      <Route path="/events" element={<ProtectedRoutes><MemberLayout><Events /></MemberLayout></ProtectedRoutes>} />
       
       {/* Sugestões Routes */}
       <Route path="/suggestions" element={<ProtectedRoutes><MemberLayout><Suggestions /></MemberLayout></ProtectedRoutes>} />
