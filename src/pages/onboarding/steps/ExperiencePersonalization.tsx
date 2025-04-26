@@ -15,52 +15,45 @@ const ExperiencePersonalization = () => {
   const [refreshAttempted, setRefreshAttempted] = useState(false);
   const navigate = useNavigate();
 
-  // Efeito para carregar dados mais recentes ao entrar na página - com controle para evitar loops
+  // Efeito para carregar dados ao entrar na página
   useEffect(() => {
-    // Verificar se já tentou uma vez para não entrar em loop
     if (!refreshAttempted) {
-      console.log("[ExperiencePersonalization] montado - carregando dados mais recentes");
+      console.log("[ExperiencePersonalization] Carregando dados mais recentes...");
       refreshProgress()
         .then((refreshedData) => {
           console.log("[ExperiencePersonalization] Dados atualizados:", refreshedData || progress);
-          setRefreshAttempted(true); // Marcar que já tentamos atualizar
+          setRefreshAttempted(true);
         })
         .catch(error => {
           console.error("[ExperiencePersonalization] Erro ao carregar dados:", error);
           toast.error("Erro ao carregar dados. Algumas informações podem estar desatualizadas.");
-          setRefreshAttempted(true); // Marcar que já tentamos, mesmo com erro
+          setRefreshAttempted(true);
         });
     }
-  }, [refreshAttempted, refreshProgress]); // Dependência reduzida para evitar loops
+  }, [refreshAttempted, refreshProgress, progress]);
 
+  // Função para salvar dados do formulário
   const handleSaveData = async (stepId: string, data: any) => {
     setIsSubmitting(true);
+    
     try {
       console.log("[ExperiencePersonalization] Salvando dados:", data);
       
-      // Verificar se temos dados válidos
-      if (!data) {
+      // Verificar dados válidos
+      if (!data || !data.experience_personalization) {
         throw new Error("Dados de personalização ausentes ou inválidos");
       }
       
-      // Garantir que os dados são enviados com o formato esperado pelo builder
-      // Importante: o builder espera um objeto com a chave experience_personalization
-      const formattedData = {
-        experience_personalization: data
-      };
-      
-      console.log("[ExperiencePersonalization] Dados formatados para envio:", formattedData);
-      
-      // Usar o stepId correto e passar os dados formatados
-      await saveStepData("experience_personalization", formattedData);
+      // Salvar dados no formato esperado pelo builder
+      await saveStepData(stepId, data);
       
       console.log("[ExperiencePersonalization] Dados salvos com sucesso");
-      toast.success("Dados salvos com sucesso!");
+      toast.success("Suas preferências foram salvas com sucesso!");
       
       // Forçar atualização dos dados locais após salvar
       await refreshProgress();
       
-      // Navegar manualmente para a próxima página
+      // Navegar para a próxima etapa
       navigate("/onboarding/complementary");
     } catch (error) {
       console.error("[ExperiencePersonalization] Erro ao salvar dados:", error);
@@ -72,19 +65,9 @@ const ExperiencePersonalization = () => {
 
   // Função para tentar recarregar dados
   const handleRetry = () => {
-    setRefreshAttempted(false); // Resetar flag para permitir nova tentativa
+    setRefreshAttempted(false);
     refreshProgress();
   };
-
-  // Log para depuração
-  useEffect(() => {
-    if (progress?.experience_personalization) {
-      console.log("[ExperiencePersonalization] Dados disponíveis:", progress.experience_personalization);
-      console.log("[ExperiencePersonalization] Tipo dos dados:", typeof progress.experience_personalization);
-    } else {
-      console.log("[ExperiencePersonalization] Nenhum dado de experience_personalization encontrado no progresso");
-    }
-  }, [progress]);
 
   return (
     <OnboardingLayout
@@ -96,6 +79,7 @@ const ExperiencePersonalization = () => {
         <MilagrinhoMessage
           message="Vamos personalizar sua experiência no VIVER DE IA Club. Suas preferências nos ajudarão a entregar conteúdo e oportunidades que sejam mais relevantes para você."
         />
+        
         {isLoading && !refreshAttempted ? (
           <div className="flex justify-center py-10">
             <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-[#0ABAB5]"></div>

@@ -61,13 +61,15 @@ function translateMentorshipTopic(value: string): string {
 
 // Função para garantir que os dados são um objeto válido
 function ensureObject(data: any): Record<string, any> {
+  console.log("[experiencePersonalizationSummary] Verificando dados:", data, typeof data);
+  
   if (!data) return {};
   
   if (typeof data === 'string') {
     try {
       return JSON.parse(data);
     } catch (e) {
-      console.error("[experiencePersonalizationSummary] Erro ao analisar string como JSON:", e);
+      console.error("[experiencePersonalizationSummary] Erro ao analisar string:", e);
       return {};
     }
   }
@@ -76,31 +78,39 @@ function ensureObject(data: any): Record<string, any> {
 }
 
 export function getExperiencePersonalizationSummary(data: any) {
-  console.log("[experiencePersonalizationSummary] Renderizando summary com dados:", data);
+  console.log("[experiencePersonalizationSummary] Renderizando summary:", data);
   
   // Verificação de dados
   if (!data) {
-    console.warn("[experiencePersonalizationSummary] Dados vazios para seção experience_personalization");
+    console.warn("[experiencePersonalizationSummary] Dados vazios");
     return <p className="text-gray-500 italic">Seção não preenchida. Clique em Editar para preencher.</p>;
   }
   
   // Garantir que estamos trabalhando com um objeto
   const personalization = ensureObject(data);
-  console.log("[experiencePersonalizationSummary] Dados processados para experience_personalization:", personalization);
+  console.log("[experiencePersonalizationSummary] Dados processados:", personalization);
   
-  // Se mesmo após processamento os dados estiverem vazios
+  // Se após processamento os dados estiverem vazios
   if (Object.keys(personalization).length === 0) {
-    console.warn("[experiencePersonalizationSummary] Objeto vazio após processamento para seção experience_personalization");
+    console.warn("[experiencePersonalizationSummary] Objeto vazio após processamento");
     return <p className="text-gray-500 italic">Seção não preenchida. Clique em Editar para preencher.</p>;
   }
 
+  // Verificar dados antigos e novos formatos para compatibilidade
+  const interests = personalization.interests || [];
+  const preferredTimes = personalization.preferred_times || personalization.time_preference || [];
+  const daysAvailable = personalization.days_available || personalization.available_days || [];
+  const networkingLevel = personalization.networking_level || personalization.networking_availability || 0;
+  const shareableSkills = personalization.shareable_skills || personalization.skills_to_share || [];
+  const mentorshipTopics = personalization.mentorship_topics || [];
+
   return (
     <div className="space-y-3 text-sm">
-      {personalization.interests && personalization.interests.length > 0 && (
+      {interests.length > 0 && (
         <div>
           <span className="font-medium">Interesses em IA:</span>
           <div className="flex flex-wrap gap-1 mt-1">
-            {personalization.interests.map((interest: string, index: number) => (
+            {interests.map((interest: string, index: number) => (
               <Badge key={index} variant="outline" className="bg-gray-100">
                 {translateInterest(interest)}
               </Badge>
@@ -109,11 +119,11 @@ export function getExperiencePersonalizationSummary(data: any) {
         </div>
       )}
 
-      {personalization.time_preference && personalization.time_preference.length > 0 && (
+      {preferredTimes.length > 0 && (
         <div>
           <span className="font-medium">Preferências de horário:</span>
           <div className="flex flex-wrap gap-1 mt-1">
-            {personalization.time_preference.map((pref: string, index: number) => (
+            {preferredTimes.map((pref: string, index: number) => (
               <Badge key={index} variant="outline" className="bg-gray-100">
                 {translateTimePreference(pref)}
               </Badge>
@@ -122,11 +132,11 @@ export function getExperiencePersonalizationSummary(data: any) {
         </div>
       )}
 
-      {personalization.available_days && personalization.available_days.length > 0 && (
+      {daysAvailable.length > 0 && (
         <div>
           <span className="font-medium">Dias disponíveis:</span>
           <div className="flex flex-wrap gap-1 mt-1">
-            {personalization.available_days.map((day: string, index: number) => (
+            {daysAvailable.map((day: string, index: number) => (
               <Badge key={index} variant="outline" className="bg-gray-100">
                 {day}
               </Badge>
@@ -135,17 +145,17 @@ export function getExperiencePersonalizationSummary(data: any) {
         </div>
       )}
 
-      {personalization.networking_availability !== undefined && (
+      {networkingLevel !== undefined && (
         <p>
-          <span className="font-medium">Disponibilidade para networking:</span> {personalization.networking_availability}/10
+          <span className="font-medium">Disponibilidade para networking:</span> {networkingLevel}/10
         </p>
       )}
 
-      {personalization.skills_to_share && personalization.skills_to_share.length > 0 && (
+      {shareableSkills.length > 0 && (
         <div>
           <span className="font-medium">Habilidades para compartilhar:</span>
           <div className="flex flex-wrap gap-1 mt-1">
-            {personalization.skills_to_share.map((skill: string, index: number) => (
+            {shareableSkills.map((skill: string, index: number) => (
               <Badge key={index} variant="outline" className="bg-gray-100">
                 {translateSkill(skill)}
               </Badge>
@@ -154,17 +164,23 @@ export function getExperiencePersonalizationSummary(data: any) {
         </div>
       )}
 
-      {personalization.mentorship_topics && personalization.mentorship_topics.length > 0 && (
+      {mentorshipTopics.length > 0 && (
         <div>
           <span className="font-medium">Tópicos para mentoria:</span>
           <div className="flex flex-wrap gap-1 mt-1">
-            {personalization.mentorship_topics.map((topic: string, index: number) => (
+            {mentorshipTopics.map((topic: string, index: number) => (
               <Badge key={index} variant="outline" className="bg-gray-100">
                 {translateMentorshipTopic(topic)}
               </Badge>
             ))}
           </div>
         </div>
+      )}
+
+      {/* Exibir mensagem se nenhum dado válido foi encontrado */}
+      {!interests.length && !preferredTimes.length && !daysAvailable.length && 
+       !shareableSkills.length && !mentorshipTopics.length && networkingLevel === undefined && (
+        <p className="text-gray-500 italic">Dados incompletos. Clique em Editar para preencher.</p>
       )}
     </div>
   );

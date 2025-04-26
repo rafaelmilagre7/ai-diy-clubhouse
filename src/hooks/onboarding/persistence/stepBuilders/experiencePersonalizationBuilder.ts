@@ -9,11 +9,11 @@ export function buildExperiencePersonalizationUpdate(data: Partial<OnboardingDat
   const updateObj: any = {};
   
   // Log para debug
-  console.log("[buildExperiencePersonalizationUpdate] Construindo atualização com dados:", data);
+  console.log("[buildExperiencePersonalizationBuilder] Dados recebidos:", data);
   
   // Verificações iniciais
   if (!data) {
-    console.warn("[buildExperiencePersonalizationUpdate] Dados vazios recebidos");
+    console.warn("[buildExperiencePersonalizationBuilder] Dados vazios recebidos");
     return updateObj;
   }
   
@@ -22,21 +22,21 @@ export function buildExperiencePersonalizationUpdate(data: Partial<OnboardingDat
     progress?.experience_personalization || {}
   );
   
-  console.log("[buildExperiencePersonalizationUpdate] Dados atuais de progresso:", existingExperiencePersonalization);
+  console.log("[buildExperiencePersonalizationBuilder] Dados atuais:", existingExperiencePersonalization);
   
   // VERIFICAÇÃO 1: verificar dados no formato esperado (com chave experience_personalization)
   if (data.experience_personalization) {
-    console.log("[buildExperiencePersonalizationUpdate] Dados específicos encontrados no payload:", 
-      typeof data.experience_personalization, data.experience_personalization);
+    console.log("[buildExperiencePersonalizationBuilder] Dados encontrados com chave 'experience_personalization':", 
+      typeof data.experience_personalization);
     
     // Se for string, tenta converter para objeto
     let experienceData = data.experience_personalization;
     if (typeof experienceData === 'string') {
       try {
         experienceData = JSON.parse(experienceData);
-        console.log("[buildExperiencePersonalizationUpdate] Dados convertidos de string para objeto:", experienceData);
+        console.log("[buildExperiencePersonalizationBuilder] Dados convertidos de string para objeto");
       } catch (e) {
-        console.error("[buildExperiencePersonalizationUpdate] Erro ao converter dados de string para objeto:", e);
+        console.error("[buildExperiencePersonalizationBuilder] Erro ao converter string:", e);
       }
     }
     
@@ -46,24 +46,24 @@ export function buildExperiencePersonalizationUpdate(data: Partial<OnboardingDat
       ...experienceData
     });
     
-    console.log("[buildExperiencePersonalizationUpdate] Objeto final de atualização:", updateObj);
+    console.log("[buildExperiencePersonalizationBuilder] Objeto atualizado:", updateObj);
     return updateObj;
   }
   
   // VERIFICAÇÃO 2: verificar se os campos específicos estão no nível raiz
   const experienceFields = [
     'interests', 
-    'time_preference', 
-    'available_days', 
-    'networking_availability', 
-    'skills_to_share', 
+    'preferred_times', 
+    'days_available', 
+    'networking_level', 
+    'shareable_skills', 
     'mentorship_topics'
   ];
   
   const hasDirectFields = experienceFields.some(field => field in data);
   
   if (hasDirectFields) {
-    console.log("[buildExperiencePersonalizationUpdate] Campos encontrados diretamente no payload");
+    console.log("[buildExperiencePersonalizationBuilder] Campos encontrados no nível raiz");
     
     // Extrair os campos diretos para montar o objeto de experiência
     const experienceData: any = {};
@@ -80,11 +80,11 @@ export function buildExperiencePersonalizationUpdate(data: Partial<OnboardingDat
       ...experienceData
     });
     
-    console.log("[buildExperiencePersonalizationUpdate] Objeto de atualização final:", updateObj);
+    console.log("[buildExperiencePersonalizationBuilder] Objeto final com campos diretos:", updateObj);
     return updateObj;
   }
   
   // Se chegou aqui, não encontrou dados relevantes
-  console.warn("[buildExperiencePersonalizationUpdate] Nenhum dado relevante encontrado para atualização");
+  console.warn("[buildExperiencePersonalizationBuilder] Nenhum dado relevante encontrado para atualização");
   return updateObj;
 }
