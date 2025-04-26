@@ -148,14 +148,14 @@ export function useProgressFetch(
       }
     });
     
-    // Adicionar metadata para controle
-    return {
+    // Adicionar informações de debug no console mas não no objeto
+    console.log("[processProgressData] Dados normalizados:", {
       ...processedData,
-      _metadata: {
-        normalized_at: new Date().toISOString(),
-        normalized_version: '2.1'
-      }
-    };
+      _normalized_at: new Date().toISOString(),
+      _normalized_version: '2.1'
+    });
+    
+    return processedData;
   }
   
   return { fetchProgress };

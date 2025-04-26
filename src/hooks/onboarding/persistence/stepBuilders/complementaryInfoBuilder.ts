@@ -79,13 +79,13 @@ export function buildComplementaryInfoUpdate(data: Partial<OnboardingData>, prog
     return updateObj;
   }
   
-  // CORREÇÃO 3: Verificação extra para o campo how_found_us especificamente
-  if (data.how_found_us !== undefined) {
-    console.log("[buildComplementaryInfoUpdate] Campo how_found_us encontrado diretamente:", data.how_found_us);
+  // CORREÇÃO 3: Verificação para campos específicos com tratamento seguro de tipagem
+  if ('how_found_us' in data) {
+    console.log("[buildComplementaryInfoUpdate] Campo how_found_us encontrado diretamente:", (data as any).how_found_us);
     
     updateObj.complementary_info = {
       ...existingComplementaryInfo,
-      how_found_us: data.how_found_us
+      how_found_us: (data as any).how_found_us
     };
     
     console.log("[buildComplementaryInfoUpdate] Objeto final de atualização para how_found_us:", updateObj);
