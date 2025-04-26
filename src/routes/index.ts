@@ -1,8 +1,9 @@
 
-import { lazy, Suspense } from 'react';
+import React, { lazy, Suspense } from 'react';
 import { createBrowserRouter } from 'react-router-dom';
+import LoadingScreen from '@/components/common/LoadingSpinner';
 
-// Lazy loading dos componentes de layout
+// Lazy loading do componente principal de rotas
 const AppRoutes = lazy(() => import('@/components/routing/AppRoutes'));
 
 // Exportamos as rotas principais
@@ -13,7 +14,7 @@ export const createOptimizedRouter = () => createBrowserRouter([
   {
     path: '/',
     element: (
-      <Suspense fallback={<div>Carregando...</div>}>
+      <Suspense fallback={<LoadingScreen />}>
         <AppRoutes />
       </Suspense>
     ),
