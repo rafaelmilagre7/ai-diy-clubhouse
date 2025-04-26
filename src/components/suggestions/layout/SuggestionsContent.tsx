@@ -13,6 +13,12 @@ interface SuggestionsContentProps {
   isLoading: boolean;
 }
 
+// Função utilitária para renderizar a categoria de forma segura
+const renderCategory = (category: string | { name: string } | undefined): string => {
+  if (!category) return '';
+  return typeof category === 'string' ? category : category.name;
+};
+
 export const SuggestionsContent: React.FC<SuggestionsContentProps> = ({ 
   suggestions,
   searchQuery,
@@ -66,7 +72,7 @@ export const SuggestionsContent: React.FC<SuggestionsContentProps> = ({
               <CardDescription className="flex gap-2 items-center flex-wrap">
                 {suggestion.category && (
                   <Badge variant="outline" className="bg-muted/50">
-                    {suggestion.category}
+                    {renderCategory(suggestion.category)}
                   </Badge>
                 )}
                 {suggestion.is_implemented && (

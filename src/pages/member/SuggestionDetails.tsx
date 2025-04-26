@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useAuth } from '@/contexts/auth';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -13,24 +12,19 @@ import SuggestionLoadingState from '@/components/suggestions/states/SuggestionLo
 import SuggestionErrorState from '@/components/suggestions/states/SuggestionErrorState';
 import { UserVote, Suggestion } from '@/types/suggestionTypes';
 
-// Função auxiliar para formatar a categoria para o formato esperado pelos componentes
-const formatSuggestionCategory = (suggestion: Suggestion | null) => {
+// Função helper para garantir que category seja sempre um objeto
+const normalizeSuggestionCategory = (suggestion: Suggestion | null) => {
   if (!suggestion) return null;
   
-  // Criamos uma cópia para não modificar o objeto original
-  const formattedSuggestion = { ...suggestion };
+  const normalizedSuggestion = { ...suggestion };
   
-  // Se category é uma string, convertemos para o formato de objeto
-  if (typeof formattedSuggestion.category === 'string') {
-    formattedSuggestion.category = { name: formattedSuggestion.category };
+  if (typeof normalizedSuggestion.category === 'string') {
+    normalizedSuggestion.category = { name: normalizedSuggestion.category };
+  } else if (!normalizedSuggestion.category && normalizedSuggestion.category_id) {
+    normalizedSuggestion.category = { name: '' };
   }
   
-  // Se category é undefined mas temos category_id, definimos um objeto vazio
-  if (!formattedSuggestion.category && formattedSuggestion.category_id) {
-    formattedSuggestion.category = { name: '' };
-  }
-  
-  return formattedSuggestion;
+  return normalizedSuggestion;
 };
 
 const SuggestionDetailsPage = () => {
@@ -50,8 +44,8 @@ const SuggestionDetailsPage = () => {
     refetch
   } = useSuggestionDetails();
 
-  // Usamos a função auxiliar para garantir que a categoria esteja no formato correto
-  const suggestion = formatSuggestionCategory(rawSuggestion);
+  // Normalize suggestion data before using
+  const suggestion = normalizeSuggestionCategory(rawSuggestion);
 
   const { removeSuggestion, updateSuggestionStatus, loading: adminActionLoading } = useAdminSuggestions();
 
@@ -129,7 +123,7 @@ const SuggestionDetailsPage = () => {
         onSubmitComment={handleSubmitComment}
         onVote={handleVote}
         isOwner={isOwner}
-        userVote={userVote as UserVote | null}
+        userVote={userVote}
         voteLoading={voteLoading}
       />
 
