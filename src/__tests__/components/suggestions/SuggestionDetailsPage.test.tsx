@@ -142,4 +142,41 @@ describe('SuggestionDetailsPage', () => {
 
     expect(screen.getByText(/Erro: Erro ao carregar sugestão/i)).toBeInTheDocument();
   });
+
+  it('deve lidar corretamente com suggestion quando category é undefined', () => {
+    // Configurando o mock para retornar category como undefined
+    (useSuggestionDetails as jest.Mock).mockReturnValue({
+      suggestion: {
+        id: 'sug-123',
+        title: 'Sugestão Sem Categoria',
+        description: 'Descrição da sugestão sem categoria',
+        status: 'new',
+        user_id: 'user-123',
+        created_at: '2023-01-01T00:00:00.000Z',
+        upvotes: 5,
+        downvotes: 1,
+        comment_count: 2,
+        category_id: 'cat-123',
+        // category está ausente intencionalmente
+        updated_at: '2023-01-01T00:00:00.000Z',
+        is_pinned: false,
+        is_hidden: false
+      },
+      isLoading: false,
+      error: null,
+      userVote: null,
+      voteLoading: false,
+      handleVote: jest.fn(),
+      refetch: jest.fn()
+    });
+
+    render(
+      <BrowserRouter>
+        <SuggestionDetailsPage />
+      </BrowserRouter>
+    );
+
+    // Verificando se o componente renderizou sem erros mesmo com category undefined
+    expect(screen.getByText('Sugestão Sem Categoria')).toBeInTheDocument();
+  });
 });

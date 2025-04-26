@@ -115,7 +115,22 @@ const SuggestionDetailsPage = () => {
       />
 
       <SuggestionContent
-        suggestion={suggestion}
+        suggestion={{
+          id: suggestion.id,
+          title: suggestion.title,
+          description: suggestion.description,
+          status: suggestion.status,
+          created_at: suggestion.created_at,
+          category: typeof suggestion.category === 'string' 
+            ? { name: suggestion.category } 
+            : suggestion.category || { name: '' },
+          category_id: suggestion.category_id,
+          upvotes: suggestion.upvotes,
+          downvotes: suggestion.downvotes,
+          user_id: suggestion.user_id,
+          user_name: suggestion.user_name,
+          user_avatar: suggestion.user_avatar
+        }}
         comment={comment}
         comments={comments}
         isSubmitting={isSubmitting}
