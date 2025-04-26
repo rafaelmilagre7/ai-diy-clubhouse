@@ -36,9 +36,8 @@ export const useUsers = () => {
     }
   };
 
-  // Função simplificada para atualizar função do usuário
   const handleUpdateRole = async () => {
-    if (!selectedUser || !newRole || newRole === selectedUser.role) {
+    if (!selectedUser || !newRole || newRole === selectedUser.role || saving) {
       setEditRoleOpen(false);
       return;
     }
@@ -63,12 +62,10 @@ export const useUsers = () => {
       // Primeiro fechamos o modal
       setEditRoleOpen(false);
       
-      // Depois exibimos o toast
-      setTimeout(() => {
-        toast.success("Função atualizada", {
-          description: `A função do usuário ${selectedUser.name || selectedUser.email} foi atualizada para ${newRole === "admin" ? "Administrador" : "Membro"}.`,
-        });
-      }, 100);
+      // Exibimos o toast após o modal fechar
+      toast.success("Função atualizada", {
+        description: `A função do usuário ${selectedUser.name || selectedUser.email} foi atualizada para ${newRole === "admin" ? "Administrador" : "Membro"}.`
+      });
       
     } catch (error: any) {
       console.error("Erro ao atualizar função:", error.message);
@@ -76,11 +73,9 @@ export const useUsers = () => {
       // Fechar modal antes de mostrar erro
       setEditRoleOpen(false);
       
-      setTimeout(() => {
-        toast.error("Erro ao atualizar função", {
-          description: error.message || "Não foi possível atualizar a função do usuário."
-        });
-      }, 100);
+      toast.error("Erro ao atualizar função", {
+        description: error.message || "Não foi possível atualizar a função do usuário."
+      });
     } finally {
       setSaving(false);
     }

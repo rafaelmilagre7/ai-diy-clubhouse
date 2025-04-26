@@ -37,29 +37,12 @@ export const UserRoleDialog = ({
   onUpdateRole,
   saving,
 }: UserRoleDialogProps) => {
-  // Função simplificada para fechar o modal
-  const handleCloseModal = () => {
-    if (!saving) {
-      onOpenChange(false);
-    }
-  };
-  
-  // Função simplificada para salvar e fechar
-  const handleUpdateRole = () => {
-    if (saving) return;
-    onUpdateRole();
-  };
-
   return (
     <Dialog 
       open={open} 
       onOpenChange={onOpenChange}
     >
-      <DialogContent 
-        className="z-50 relative"
-        onEscapeKeyDown={handleCloseModal}
-        onInteractOutside={handleCloseModal}
-      >
+      <DialogContent className="z-50">
         <DialogHeader>
           <DialogTitle>Alterar Função do Usuário</DialogTitle>
           <DialogDescription>
@@ -92,14 +75,14 @@ export const UserRoleDialog = ({
         <DialogFooter>
           <Button 
             variant="outline" 
-            onClick={handleCloseModal} 
+            onClick={() => onOpenChange(false)} 
             disabled={saving}
             type="button"
           >
             Cancelar
           </Button>
           <Button 
-            onClick={handleUpdateRole} 
+            onClick={onUpdateRole} 
             disabled={saving}
           >
             {saving ? 'Salvando...' : 'Salvar'}
