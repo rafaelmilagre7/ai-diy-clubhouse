@@ -64,9 +64,11 @@ export const SuggestionsContent: React.FC<SuggestionsContentProps> = ({
             <CardHeader>
               <CardTitle className="line-clamp-2">{suggestion.title}</CardTitle>
               <CardDescription className="flex gap-2 items-center flex-wrap">
-                <Badge variant="outline" className="bg-muted/50">
-                  {suggestion.category}
-                </Badge>
+                {suggestion.category && (
+                  <Badge variant="outline" className="bg-muted/50">
+                    {suggestion.category}
+                  </Badge>
+                )}
                 {suggestion.is_implemented && (
                   <Badge variant="secondary" className="bg-green-50 text-green-700 hover:bg-green-100">
                     Implementado

@@ -21,6 +21,9 @@ export interface Suggestion {
     avatar_url: string;
   };
   replies?: Suggestion[];
+  // Adicionando as propriedades que estavam faltando
+  category?: string; // Nome da categoria
+  is_implemented?: boolean; // Indica se a sugestão foi implementada
 }
 
 export interface SuggestionComment {
@@ -77,4 +80,3 @@ export interface UserVote {
   id: string;
   vote_type: VoteType;
 }
-

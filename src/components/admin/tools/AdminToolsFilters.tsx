@@ -5,11 +5,14 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card } from '@/components/ui/card';
 
+// Definindo um tipo para as categorias de ferramentas
+export type ToolCategory = string | null;
+
 interface AdminToolsFiltersProps {
   searchQuery: string;
   onSearchChange: (value: string) => void;
-  selectedCategory: string | null;
-  onCategoryChange: (value: string | null) => void;
+  selectedCategory: ToolCategory;
+  onCategoryChange: (value: ToolCategory) => void;
 }
 
 export const AdminToolsFilters = ({
