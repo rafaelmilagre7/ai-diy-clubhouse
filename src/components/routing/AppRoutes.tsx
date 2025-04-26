@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { lazy } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { AdminProtectedRoutes } from '@/auth/AdminProtectedRoutes';
 import { ProtectedRoutes } from '@/auth/ProtectedRoutes';
-import LoadingScreen from '@/components/common/LoadingSpinner';
+import { Skeleton } from "@/components/ui/skeleton";
 
 // Layout Components - Carregados diretamente por serem críticos
 import MemberLayout from '@/components/layout/MemberLayout';
@@ -13,20 +13,17 @@ import Dashboard from '@/pages/member/Dashboard';
 import AdminDashboard from '@/pages/admin/AdminDashboard';
 import AdminTools from '@/pages/admin/AdminTools';
 import Tools from '@/pages/member/Tools';
+import Profile from '@/pages/member/Profile';
+import Solutions from '@/pages/member/Solutions';
+import SolutionDetails from '@/pages/member/SolutionDetails';
+import Login from '@/pages/auth/Login';
+import Register from '@/pages/auth/Register';
 
-// Auth Pages - Carregados sob demanda, mas preparados antes
-import { lazy, Suspense } from 'react';
-const Login = lazy(() => import('@/pages/auth/Login'));
-const Register = lazy(() => import('@/pages/auth/Register'));
+// Páginas e componentes menos acessados - mantidos com lazy loading
 const ResetPassword = lazy(() => import('@/pages/auth/ResetPassword'));
 const SetNewPassword = lazy(() => import('@/pages/auth/SetNewPassword'));
 const NotFound = lazy(() => import('@/pages/NotFound'));
-
-// Páginas e componentes menos acessados - mantidos com lazy loading
-const Profile = lazy(() => import('@/pages/member/Profile'));
 const EditProfile = lazy(() => import('@/pages/member/EditProfile'));
-const Solutions = lazy(() => import('@/pages/member/Solutions'));
-const SolutionDetails = lazy(() => import('@/pages/member/SolutionDetails'));
 const SolutionImplementation = lazy(() => import('@/pages/member/SolutionImplementation'));
 const ImplementationCompleted = lazy(() => import('@/pages/member/ImplementationCompleted'));
 const ImplementationTrailPage = lazy(() => import('@/pages/member/ImplementationTrailPage'));
@@ -61,30 +58,41 @@ const AdminSuggestionDetails = lazy(() => import('@/pages/admin/AdminSuggestionD
 const AdminOnboarding = lazy(() => import('@/pages/admin/AdminOnboarding'));
 const AdminAnalytics = lazy(() => import('@/pages/admin/AdminAnalytics'));
 
-// Component Loader com fallback mais otimizado (aparecendo apenas após um delay mínimo)
-const SuspenseLoader = ({ children }: { children: React.ReactNode }) => (
-  <Suspense fallback={
-    <div className="min-h-[200px] flex items-center justify-center">
-      <LoadingScreen />
+// Componente de carregamento otimista que não bloqueia a interface
+const OptimisticLoading = ({ children }: { children: React.ReactNode }) => (
+  <React.Suspense fallback={
+    <div className="min-h-[200px] animate-in fade-in duration-300">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-4">
+        {[1, 2, 3, 4, 5, 6].map((i) => (
+          <div key={i} className="border rounded-lg overflow-hidden">
+            <Skeleton className="h-40 w-full" />
+            <div className="p-4 space-y-2">
+              <Skeleton className="h-4 w-3/4" />
+              <Skeleton className="h-3 w-full" />
+              <Skeleton className="h-3 w-full" />
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   }>
     {children}
-  </Suspense>
+  </React.Suspense>
 );
 
 const AppRoutes = () => {
   return (
     <Routes>
       {/* Auth Routes - Sem layout ou proteção */}
-      <Route path="/login" element={<SuspenseLoader><Login /></SuspenseLoader>} />
-      <Route path="/register" element={<SuspenseLoader><Register /></SuspenseLoader>} />
-      <Route path="/reset-password" element={<SuspenseLoader><ResetPassword /></SuspenseLoader>} />
-      <Route path="/set-new-password" element={<SuspenseLoader><SetNewPassword /></SuspenseLoader>} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
+      <Route path="/reset-password" element={<OptimisticLoading><ResetPassword /></OptimisticLoading>} />
+      <Route path="/set-new-password" element={<OptimisticLoading><SetNewPassword /></OptimisticLoading>} />
       
       {/* Redirecionamento da raiz para dashboard */}
       <Route path="/" element={<Navigate to="/dashboard" replace />} />
 
-      {/* Member Routes com Layout - Carregamento eager para Dashboard */}
+      {/* Member Routes - Carregamento eager para páginas principais */}
       <Route path="/dashboard" element={
         <ProtectedRoutes>
           <MemberLayout>
@@ -93,7 +101,14 @@ const AppRoutes = () => {
         </ProtectedRoutes>
       } />
 
-      {/* Tools - Carregamento eager para melhor experiência */}
+      <Route path="/solutions" element={
+        <ProtectedRoutes>
+          <MemberLayout>
+            <Solutions />
+          </MemberLayout>
+        </ProtectedRoutes>
+      } />
+
       <Route path="/tools" element={
         <ProtectedRoutes>
           <MemberLayout>
@@ -101,246 +116,229 @@ const AppRoutes = () => {
           </MemberLayout>
         </ProtectedRoutes>
       } />
-
-      {/* Rotas secundárias com lazy loading */}
-      <Route path="/implementation-trail" element={
+      
+      <Route path="/profile" element={
         <ProtectedRoutes>
-          <SuspenseLoader>
-            <MemberLayout>
-              <ImplementationTrailPage />
-            </MemberLayout>
-          </SuspenseLoader>
+          <MemberLayout>
+            <Profile />
+          </MemberLayout>
         </ProtectedRoutes>
       } />
 
-      {/* Rotas de Perfil */}
-      <Route path="/profile" element={
+      <Route path="/solution/:id" element={
         <ProtectedRoutes>
-          <SuspenseLoader>
-            <MemberLayout>
-              <Profile />
-            </MemberLayout>
-          </SuspenseLoader>
+          <MemberLayout>
+            <SolutionDetails />
+          </MemberLayout>
+        </ProtectedRoutes>
+      } />
+
+      {/* Rotas secundárias com lazy loading e carregamento otimista */}
+      <Route path="/implementation-trail" element={
+        <ProtectedRoutes>
+          <MemberLayout>
+            <OptimisticLoading>
+              <ImplementationTrailPage />
+            </OptimisticLoading>
+          </MemberLayout>
         </ProtectedRoutes>
       } />
       
       <Route path="/profile/edit" element={
         <ProtectedRoutes>
-          <SuspenseLoader>
-            <MemberLayout>
+          <MemberLayout>
+            <OptimisticLoading>
               <EditProfile />
-            </MemberLayout>
-          </SuspenseLoader>
-        </ProtectedRoutes>
-      } />
-
-      {/* Rotas de Soluções */}
-      <Route path="/solutions" element={
-        <ProtectedRoutes>
-          <SuspenseLoader>
-            <MemberLayout>
-              <Solutions />
-            </MemberLayout>
-          </SuspenseLoader>
-        </ProtectedRoutes>
-      } />
-      
-      <Route path="/solution/:id" element={
-        <ProtectedRoutes>
-          <SuspenseLoader>
-            <MemberLayout>
-              <SolutionDetails />
-            </MemberLayout>
-          </SuspenseLoader>
+            </OptimisticLoading>
+          </MemberLayout>
         </ProtectedRoutes>
       } />
       
       <Route path="/implement/:id/:moduleIdx" element={
         <ProtectedRoutes>
-          <SuspenseLoader>
-            <MemberLayout>
+          <MemberLayout>
+            <OptimisticLoading>
               <SolutionImplementation />
-            </MemberLayout>
-          </SuspenseLoader>
+            </OptimisticLoading>
+          </MemberLayout>
         </ProtectedRoutes>
       } />
       
       <Route path="/implementation/:id" element={
         <ProtectedRoutes>
-          <SuspenseLoader>
-            <MemberLayout>
+          <MemberLayout>
+            <OptimisticLoading>
               <SolutionImplementation />
-            </MemberLayout>
-          </SuspenseLoader>
+            </OptimisticLoading>
+          </MemberLayout>
         </ProtectedRoutes>
       } />
       
       <Route path="/implementation/:id/:moduleIdx" element={
         <ProtectedRoutes>
-          <SuspenseLoader>
-            <MemberLayout>
+          <MemberLayout>
+            <OptimisticLoading>
               <SolutionImplementation />
-            </MemberLayout>
-          </SuspenseLoader>
+            </OptimisticLoading>
+          </MemberLayout>
         </ProtectedRoutes>
       } />
       
       <Route path="/implementation/completed/:id" element={
         <ProtectedRoutes>
-          <SuspenseLoader>
-            <MemberLayout>
+          <MemberLayout>
+            <OptimisticLoading>
               <ImplementationCompleted />
-            </MemberLayout>
-          </SuspenseLoader>
+            </OptimisticLoading>
+          </MemberLayout>
         </ProtectedRoutes>
       } />
 
-      {/* Rotas de Ferramentas */}
-      
+      {/* Rotas de Ferramentas */}      
       <Route path="/tools/:id" element={
         <ProtectedRoutes>
-          <SuspenseLoader>
-            <MemberLayout>
+          <MemberLayout>
+            <OptimisticLoading>
               <ToolDetails />
-            </MemberLayout>
-          </SuspenseLoader>
+            </OptimisticLoading>
+          </MemberLayout>
         </ProtectedRoutes>
       } />
 
       {/* Benefícios e Conquistas */}
       <Route path="/benefits" element={
         <ProtectedRoutes>
-          <SuspenseLoader>
-            <MemberLayout>
+          <MemberLayout>
+            <OptimisticLoading>
               <Benefits />
-            </MemberLayout>
-          </SuspenseLoader>
+            </OptimisticLoading>
+          </MemberLayout>
         </ProtectedRoutes>
       } />
       
       <Route path="/achievements" element={
         <ProtectedRoutes>
-          <SuspenseLoader>
-            <MemberLayout>
+          <MemberLayout>
+            <OptimisticLoading>
               <Achievements />
-            </MemberLayout>
-          </SuspenseLoader>
+            </OptimisticLoading>
+          </MemberLayout>
         </ProtectedRoutes>
       } />
       
       {/* Rotas de Sugestões */}
       <Route path="/suggestions" element={
         <ProtectedRoutes>
-          <SuspenseLoader>
-            <MemberLayout>
+          <MemberLayout>
+            <OptimisticLoading>
               <Suggestions />
-            </MemberLayout>
-          </SuspenseLoader>
+            </OptimisticLoading>
+          </MemberLayout>
         </ProtectedRoutes>
       } />
       
       <Route path="/suggestions/:id" element={
         <ProtectedRoutes>
-          <SuspenseLoader>
-            <MemberLayout>
+          <MemberLayout>
+            <OptimisticLoading>
               <SuggestionDetails />
-            </MemberLayout>
-          </SuspenseLoader>
+            </OptimisticLoading>
+          </MemberLayout>
         </ProtectedRoutes>
       } />
       
       <Route path="/suggestions/new" element={
         <ProtectedRoutes>
-          <SuspenseLoader>
-            <MemberLayout>
+          <MemberLayout>
+            <OptimisticLoading>
               <NewSuggestion />
-            </MemberLayout>
-          </SuspenseLoader>
+            </OptimisticLoading>
+          </MemberLayout>
         </ProtectedRoutes>
       } />
       
       {/* Rotas de Onboarding */}
       <Route path="/onboarding" element={
         <ProtectedRoutes>
-          <SuspenseLoader>
+          <OptimisticLoading>
             <OnboardingIntro />
-          </SuspenseLoader>
+          </OptimisticLoading>
         </ProtectedRoutes>
       } />
       
       <Route path="/onboarding/personal-info" element={
         <ProtectedRoutes>
-          <SuspenseLoader>
+          <OptimisticLoading>
             <PersonalInfo />
-          </SuspenseLoader>
+          </OptimisticLoading>
         </ProtectedRoutes>
       } />
       
       <Route path="/onboarding/professional-data" element={
         <ProtectedRoutes>
-          <SuspenseLoader>
+          <OptimisticLoading>
             <ProfessionalData />
-          </SuspenseLoader>
+          </OptimisticLoading>
         </ProtectedRoutes>
       } />
       
       <Route path="/onboarding/business-context" element={
         <ProtectedRoutes>
-          <SuspenseLoader>
+          <OptimisticLoading>
             <BusinessContext />
-          </SuspenseLoader>
+          </OptimisticLoading>
         </ProtectedRoutes>
       } />
       
       <Route path="/onboarding/ai-experience" element={
         <ProtectedRoutes>
-          <SuspenseLoader>
+          <OptimisticLoading>
             <AIExperience />
-          </SuspenseLoader>
+          </OptimisticLoading>
         </ProtectedRoutes>
       } />
       
       <Route path="/onboarding/club-goals" element={
         <ProtectedRoutes>
-          <SuspenseLoader>
+          <OptimisticLoading>
             <BusinessGoalsClub />
-          </SuspenseLoader>
+          </OptimisticLoading>
         </ProtectedRoutes>
       } />
       
       <Route path="/onboarding/customization" element={
         <ProtectedRoutes>
-          <SuspenseLoader>
+          <OptimisticLoading>
             <ExperiencePersonalization />
-          </SuspenseLoader>
+          </OptimisticLoading>
         </ProtectedRoutes>
       } />
       
       <Route path="/onboarding/complementary" element={
         <ProtectedRoutes>
-          <SuspenseLoader>
+          <OptimisticLoading>
             <ComplementaryInfo />
-          </SuspenseLoader>
+          </OptimisticLoading>
         </ProtectedRoutes>
       } />
       
       <Route path="/onboarding/review" element={
         <ProtectedRoutes>
-          <SuspenseLoader>
+          <OptimisticLoading>
             <Review />
-          </SuspenseLoader>
+          </OptimisticLoading>
         </ProtectedRoutes>
       } />
       
       <Route path="/onboarding/trail-generation" element={
         <ProtectedRoutes>
-          <SuspenseLoader>
+          <OptimisticLoading>
             <TrailGeneration />
-          </SuspenseLoader>
+          </OptimisticLoading>
         </ProtectedRoutes>
       } />
       
-      {/* Rotas Admin - Eager loading para páginas principais */}
+      {/* Admin Routes */}
       <Route path="/admin" element={
         <AdminProtectedRoutes>
           <AdminLayout>
@@ -359,117 +357,117 @@ const AppRoutes = () => {
       
       <Route path="/admin/users" element={
         <AdminProtectedRoutes>
-          <SuspenseLoader>
+          <OptimisticLoading>
             <AdminLayout>
               <AdminUsers />
             </AdminLayout>
-          </SuspenseLoader>
+          </OptimisticLoading>
         </AdminProtectedRoutes>
       } />
       
       <Route path="/admin/solutions" element={
         <AdminProtectedRoutes>
-          <SuspenseLoader>
+          <OptimisticLoading>
             <AdminLayout>
               <AdminSolutions />
             </AdminLayout>
-          </SuspenseLoader>
+          </OptimisticLoading>
         </AdminProtectedRoutes>
       } />
       
       <Route path="/admin/solutions/new" element={
         <AdminProtectedRoutes>
-          <SuspenseLoader>
+          <OptimisticLoading>
             <AdminLayout>
               <AdminSolutionCreate />
             </AdminLayout>
-          </SuspenseLoader>
+          </OptimisticLoading>
         </AdminProtectedRoutes>
       } />
       
       <Route path="/admin/solutions/:id" element={
         <AdminProtectedRoutes>
-          <SuspenseLoader>
+          <OptimisticLoading>
             <AdminLayout>
               <AdminSolutionEdit />
             </AdminLayout>
-          </SuspenseLoader>
+          </OptimisticLoading>
         </AdminProtectedRoutes>
       } />
       
       <Route path="/admin/solutions/:id/editor" element={
         <AdminProtectedRoutes>
-          <SuspenseLoader>
+          <OptimisticLoading>
             <AdminLayout>
               <AdminSolutionEditor />
             </AdminLayout>
-          </SuspenseLoader>
+          </OptimisticLoading>
         </AdminProtectedRoutes>
       } />
       
       
       <Route path="/admin/tools/new" element={
         <AdminProtectedRoutes>
-          <SuspenseLoader>
+          <OptimisticLoading>
             <AdminLayout>
               <AdminToolEdit />
             </AdminLayout>
-          </SuspenseLoader>
+          </OptimisticLoading>
         </AdminProtectedRoutes>
       } />
       
       <Route path="/admin/tools/:id" element={
         <AdminProtectedRoutes>
-          <SuspenseLoader>
+          <OptimisticLoading>
             <AdminLayout>
               <AdminToolEdit />
             </AdminLayout>
-          </SuspenseLoader>
+          </OptimisticLoading>
         </AdminProtectedRoutes>
       } />
       
       <Route path="/admin/suggestions" element={
         <AdminProtectedRoutes>
-          <SuspenseLoader>
+          <OptimisticLoading>
             <AdminLayout>
               <AdminSuggestions />
             </AdminLayout>
-          </SuspenseLoader>
+          </OptimisticLoading>
         </AdminProtectedRoutes>
       } />
       
       <Route path="/admin/suggestions/:id" element={
         <AdminProtectedRoutes>
-          <SuspenseLoader>
+          <OptimisticLoading>
             <AdminLayout>
               <AdminSuggestionDetails />
             </AdminLayout>
-          </SuspenseLoader>
+          </OptimisticLoading>
         </AdminProtectedRoutes>
       } />
       
       <Route path="/admin/onboarding" element={
         <AdminProtectedRoutes>
-          <SuspenseLoader>
+          <OptimisticLoading>
             <AdminLayout>
               <AdminOnboarding />
             </AdminLayout>
-          </SuspenseLoader>
+          </OptimisticLoading>
         </AdminProtectedRoutes>
       } />
       
       <Route path="/admin/analytics" element={
         <AdminProtectedRoutes>
-          <SuspenseLoader>
+          <OptimisticLoading>
             <AdminLayout>
               <AdminAnalytics />
             </AdminLayout>
-          </SuspenseLoader>
+          </OptimisticLoading>
         </AdminProtectedRoutes>
       } />
       
       {/* Fallback para rotas não encontradas */}
-      <Route path="*" element={<SuspenseLoader><NotFound /></SuspenseLoader>} />
+      <Route path="*" element={<OptimisticLoading><NotFound /></OptimisticLoading>} />
     </Routes>
   );
 };

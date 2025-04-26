@@ -19,29 +19,31 @@ const ProtectedRoute = ({
   const location = useLocation();
   
   // Debug logs
-  console.log("ProtectedRoute:", { 
-    user, 
-    isAdmin, 
-    isLoading, 
-    requireAdmin, 
-    requiredRole, 
-    path: location.pathname 
-  });
+  useEffect(() => {
+    console.log("ProtectedRoute:", { 
+      user: !!user, 
+      isAdmin, 
+      isLoading, 
+      requireAdmin, 
+      requiredRole, 
+      path: location.pathname 
+    });
+  }, [user, isAdmin, isLoading, requireAdmin, requiredRole, location.pathname]);
   
-  // Se não houver usuário autenticado, redireciona para login
+  // Se não houver usuário autenticado após verificação, redireciona para login
   if (!isLoading && !user) {
     console.log("ProtectedRoute: No user, redirecting to login");
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
   
-  // Verificar com base em requiredRole ou requireAdmin
+  // Verificar com base em requiredRole ou requireAdmin após verificação
   if (!isLoading && user && ((requiredRole === 'admin' || requireAdmin) && !isAdmin)) {
     console.log("Usuário não é admin, redirecionando para dashboard");
     toast.error("Você não tem permissão para acessar esta área");
     return <Navigate to="/dashboard" replace />;
   }
 
-  // Usuário está autenticado ou ainda está carregando (renderização otimista)
+  // Renderização otimista - sempre mostra o conteúdo enquanto verifica a autenticação
   return <>{children}</>;
 };
 

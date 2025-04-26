@@ -3,7 +3,7 @@ import React from 'react';
 import AppRoutes from '@/components/routing/AppRoutes';
 
 const AppRoutesWrapper = () => {
-  // Removido o componente de carregamento global
+  // Renderização imediata, sem nenhum loading global
   return <AppRoutes />;
 };
 

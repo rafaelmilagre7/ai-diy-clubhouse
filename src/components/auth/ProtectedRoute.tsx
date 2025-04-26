@@ -2,7 +2,6 @@
 import { ReactNode, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
-import { toast } from "sonner";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -29,7 +28,6 @@ export const ProtectedRoute = ({
     }
   }, [user, isAdmin, isLoading, requireAdmin, navigate]);
 
-  // Always render children (otimista) - authz failures will be caught by useEffect
-  // We let the layout/component handle its own loading states
+  // Sempre renderiza o conteúdo (rendering otimista)
   return <>{children}</>;
 };

@@ -15,7 +15,7 @@ const PublicRoute: React.FC<PublicRouteProps> = ({ children }) => {
     return <Navigate to="/dashboard" replace />;
   }
   
-  // Se não estiver autenticado ou ainda está carregando, permite o acesso à rota pública
+  // Renderização otimista - mostra o conteúdo enquanto verifica a autenticação
   return <>{children}</>;
 };
 

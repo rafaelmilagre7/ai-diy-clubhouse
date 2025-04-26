@@ -1,6 +1,6 @@
 
 import { Navigate, useLocation } from "react-router-dom";
-import { ReactNode } from "react";
+import { ReactNode, useEffect } from "react";
 import { useAuth } from "@/contexts/auth";
 import { toast } from "sonner";
 
@@ -12,14 +12,19 @@ export const ProtectedRoutes = ({ children }: ProtectedRoutesProps) => {
   const { user, isLoading } = useAuth();
   const location = useLocation();
   
-  console.log("ProtectedRoutes state:", { user, isLoading });
+  // Debug log
+  useEffect(() => {
+    console.log("ProtectedRoutes state:", { user, isLoading, path: location.pathname });
+  }, [user, isLoading, location.pathname]);
 
   // Se o usuário não estiver autenticado após verificação, redireciona para a página de login
   if (!isLoading && !user) {
+    console.log("ProtectedRoutes: Não autenticado, redirecionando para login");
     toast("Por favor, faça login para acessar esta página");
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  // Renderiza as rotas protegidas (mesmo durante carregamento para UX otimista)
+  // Sempre renderiza o conteúdo (renderização otimista), a verificação de autenticação
+  // acontece em background e o redirecionamento ocorrerá quando necessário
   return <>{children}</>;
 };
