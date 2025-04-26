@@ -5,7 +5,7 @@ import { OnboardingData } from "@/types/onboarding";
 import { normalizeComplementaryInfo } from "@/hooks/onboarding/persistence/utils/complementaryInfoNormalization";
 
 export function getComplementaryInfoSummary(data: any) {
-  console.log("Renderizando summary para seção complementary_info com dados:", data);
+  console.log("[ComplementaryInfoSummary] Renderizando summary para seção complementary_info com dados:", data);
   
   // Verificação de dados
   if (!data) {
@@ -17,7 +17,7 @@ export function getComplementaryInfoSummary(data: any) {
   
   // Se mesmo após processamento os dados estiverem vazios ou não tiverem informações relevantes
   if (!processedData.how_found_us && !processedData.referred_by && 
-      processedData.priority_topics.length === 0) {
+      processedData.priority_topics?.length === 0) {
     return <p className="text-gray-500 italic">Seção não preenchida. Clique em Editar para preencher.</p>;
   }
 
@@ -66,12 +66,27 @@ export function getComplementaryInfoSummary(data: any) {
 
   return (
     <div className="space-y-2 text-sm">
-      <p><span className="font-medium">Como nos conheceu:</span> {processedData.how_found_us ? getDiscoverySourceLabel(processedData.how_found_us) : "Não preenchido"}</p>
-      {processedData.how_found_us === "recommendation" && processedData.referred_by && (
-        <p><span className="font-medium">Indicado por:</span> {processedData.referred_by}</p>
+      <p>
+        <span className="font-medium">Como nos conheceu:</span>{" "}
+        {processedData.how_found_us ? getDiscoverySourceLabel(processedData.how_found_us) : "Não preenchido"}
+      </p>
+      
+      {processedData.how_found_us === "recommendation" && (
+        <p>
+          <span className="font-medium">Indicado por:</span>{" "}
+          {processedData.referred_by || "Não informado"}
+        </p>
       )}
-      <p><span className="font-medium">Autoriza uso do caso:</span> {processedData.authorize_case_usage ? "Sim" : "Não"}</p>
-      <p><span className="font-medium">Interesse em entrevista:</span> {processedData.interested_in_interview ? "Sim" : "Não"}</p>
+      
+      <p>
+        <span className="font-medium">Autoriza uso do caso:</span>{" "}
+        {processedData.authorize_case_usage ? "Sim" : "Não"}
+      </p>
+      
+      <p>
+        <span className="font-medium">Interesse em entrevista:</span>{" "}
+        {processedData.interested_in_interview ? "Sim" : "Não"}
+      </p>
       
       {processedData.priority_topics && processedData.priority_topics.length > 0 && (
         <div>

@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState, useMemo, useRef } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { OnboardingProgress } from "@/types/onboarding";
 import { ReviewData } from "@/types/reviewTypes";
 import { steps } from "@/hooks/onboarding/useStepDefinitions";
@@ -24,12 +24,12 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({
   // Estado com tipagem explícita para dados processados
   const [processedData, setProcessedData] = useState<ReviewData | null>(null);
   const [processingComplete, setProcessingComplete] = useState<boolean>(false);
-  const dataProcessedRef = useRef(false);
   
-  // Efeito para processar dados apenas quando progresso mudar e não repetir o processamento
+  // Efeito para processar dados quando progresso mudar
   useEffect(() => {
-    if (!progress || dataProcessedRef.current) {
-      console.log("[ReviewStep] Dados já processados ou não disponíveis:", { dataProcessed: dataProcessedRef.current, hasProgress: !!progress });
+    if (!progress) {
+      console.log("[ReviewStep] Dados não disponíveis:", { hasProgress: !!progress });
+      setProcessingComplete(true);
       return;
     }
     
@@ -56,7 +56,7 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({
       };
       
       // Criar uma cópia profunda do progresso para não modificar o original
-      const normalizedProgress = { ...progress };
+      const normalizedProgress = JSON.parse(JSON.stringify(progress));
       
       // Verificar e normalizar campos principais
       const fieldsToNormalize = [
@@ -65,7 +65,6 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({
         'experience_personalization', 
         'complementary_info',
         'professional_info', 
-        'business_data', 
         'business_context',
         'personal_info'
       ];
@@ -78,8 +77,8 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({
         }
       });
       
+      console.log("[ReviewStep] Dados normalizados:", normalizedProgress);
       setProcessedData(normalizedProgress as ReviewData);
-      dataProcessedRef.current = true;
     } catch (error) {
       console.error("[ReviewStep] Erro ao processar dados:", error);
     } finally {
@@ -136,43 +135,71 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({
             // Log para depuração
             console.log(`[ReviewStep] Processando seção ${step.id}, dados:`, sectionData);
             
-            // Tratamento especial para business_context que pode estar em business_data
-            if (step.section === "business_context" && (!sectionData || Object.keys(sectionData || {}).length === 0)) {
-              const fallbackData = dataToUse?.business_data;
-              if (fallbackData) {
-                if (typeof fallbackData === 'string') {
-                  try {
-                    sectionData = JSON.parse(fallbackData);
-                    console.log("[ReviewStep] business_context parseado de string:", sectionData);
-                  } catch (e) {
-                    console.error("[ReviewStep] Erro ao parser business_data como fallback:", e);
+            // Tratamento para dados específicos
+            switch (step.section) {
+              // Tratamento especial para business_context que pode estar em business_data
+              case 'business_context':
+                if (!sectionData || Object.keys(sectionData || {}).length === 0) {
+                  const fallbackData = dataToUse?.business_data;
+                  if (fallbackData) {
+                    if (typeof fallbackData === 'string') {
+                      try {
+                        sectionData = JSON.parse(fallbackData);
+                      } catch (e) {
+                        console.error("[ReviewStep] Erro ao parser business_data como fallback:", e);
+                      }
+                    } else {
+                      sectionData = fallbackData;
+                    }
+                    console.log("[ReviewStep] Usando business_data como fallback para business_context:", sectionData);
                   }
+                }
+                break;
+              
+              // Tratamento especial para dados profissionais
+              case 'professional_info':
+                if (!sectionData || Object.keys(sectionData || {}).length === 0) {
+                  // Construir um objeto com dados diretos como fallback
+                  if (dataToUse?.company_name || dataToUse?.company_size || dataToUse?.company_sector) {
+                    const directData = {
+                      company_name: dataToUse?.company_name || "",
+                      company_size: dataToUse?.company_size || "",
+                      company_sector: dataToUse?.company_sector || "",
+                      company_website: dataToUse?.company_website || "",
+                      current_position: dataToUse?.current_position || "",
+                      annual_revenue: dataToUse?.annual_revenue || "",
+                    };
+                    
+                    // Se algum dos campos diretos tiver valor, usar esses dados
+                    if (Object.values(directData).some(value => !!value)) {
+                      sectionData = directData;
+                      console.log("[ReviewStep] Usando dados diretos para professional_info:", sectionData);
+                    }
+                  }
+                }
+                break;
+              
+              // Garantir tratamento correto para business_goals
+              case 'business_goals':
+                if (!sectionData || Object.keys(sectionData || {}).length === 0) {
+                  console.log("[ReviewStep] Dados de business_goals vazios", sectionData);
                 } else {
-                  sectionData = fallbackData;
-                  console.log("[ReviewStep] Usando business_data como fallback para business_context:", sectionData);
+                  console.log("[ReviewStep] Dados de business_goals encontrados:", sectionData);
                 }
-              }
-            }
-
-            // Tratamento especial para dados profissionais
-            if (step.section === "professional_info" && (!sectionData || Object.keys(sectionData || {}).length === 0)) {
-              // Construir um objeto com dados diretos como fallback
-              if (dataToUse?.company_name || dataToUse?.company_size || dataToUse?.company_sector) {
-                const directData = {
-                  company_name: dataToUse?.company_name || "",
-                  company_size: dataToUse?.company_size || "",
-                  company_sector: dataToUse?.company_sector || "",
-                  company_website: dataToUse?.company_website || "",
-                  current_position: dataToUse?.current_position || "",
-                  annual_revenue: dataToUse?.annual_revenue || "",
-                };
+                break;
                 
-                // Se algum dos campos diretos tiver valor, usar esses dados
-                if (Object.values(directData).some(value => !!value)) {
-                  sectionData = directData;
-                  console.log("[ReviewStep] Usando dados diretos para professional_info:", sectionData);
+              // Garantir tratamento correto para complementary_info
+              case 'complementary_info':
+                if (!sectionData || Object.keys(sectionData || {}).length === 0) {
+                  console.log("[ReviewStep] Dados de complementary_info vazios", sectionData);
+                } else {
+                  console.log("[ReviewStep] Dados de complementary_info encontrados:", sectionData);
                 }
-              }
+                break;
+                
+              default:
+                // Nenhum tratamento especial para outras seções
+                break;
             }
             
             // Último esforço de normalização para garantir que temos um objeto e não uma string
@@ -228,4 +255,4 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({
       </div>
     </div>
   );
-};
+}

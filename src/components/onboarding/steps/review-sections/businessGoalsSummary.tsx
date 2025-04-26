@@ -1,152 +1,153 @@
 
 import React from "react";
 import { Badge } from "@/components/ui/badge";
-import { OnboardingData } from "@/types/onboarding";
+import { normalizeBusinessGoals } from "@/hooks/onboarding/persistence/utils/dataNormalization";
 
-// Função para garantir que os dados são um objeto válido
-function ensureObject(data: any): Record<string, any> {
-  if (!data) return {};
-  
-  if (typeof data === 'string') {
-    try {
-      return JSON.parse(data);
-    } catch (e) {
-      console.error("Erro ao analisar string como JSON:", e);
-      return {};
-    }
-  }
-  
-  return data;
-}
-
-export function getBusinessGoalsSummary(data: OnboardingData['business_goals'] | any) {
-  console.log("Renderizando summary para seção business_goals com dados:", data);
+export function getBusinessGoalsSummary(data: any) {
+  console.log("[BusinessGoalsSummary] Renderizando com dados:", data);
   
   // Verificação de dados
   if (!data) {
-    console.warn("Dados vazios para seção business_goals");
     return <p className="text-gray-500 italic">Seção não preenchida. Clique em Editar para preencher.</p>;
   }
-
-  // Garantir que estamos trabalhando com um objeto
-  const processedData = ensureObject(data);
-  console.log("Dados processados para business_goals:", processedData);
-
-  // Se mesmo após processamento os dados estiverem vazios
-  if (Object.keys(processedData).length === 0) {
-    console.warn("Objeto vazio após processamento para seção business_goals");
-    return <p className="text-gray-500 italic">Seção não preenchida. Clique em Editar para preencher.</p>;
-  }
-
-  // Verificação extra para campos obrigatórios
-  const requiredFields = ['primary_goal', 'priority_solution_type', 'how_implement', 'week_availability'];
-  const missingRequiredFields = requiredFields.filter(field => !processedData[field]);
   
-  if (missingRequiredFields.length > 0) {
-    console.warn(`Campos obrigatórios ausentes: ${missingRequiredFields.join(', ')}`);
-    return <p className="text-gray-500 italic">Dados incompletos. Clique em Editar para preencher corretamente.</p>;
+  // Normalizar dados para garantir formato consistente
+  const processedData = normalizeBusinessGoals(data);
+  
+  // Se mesmo após processamento os dados estiverem vazios ou não tiverem informações relevantes
+  if (!processedData.primary_goal && processedData.expected_outcomes.length === 0) {
+    return <p className="text-gray-500 italic">Seção não preenchida. Clique em Editar para preencher.</p>;
   }
 
-  // Mapeamento para exibições mais amigáveis
-  const howImplementMap: Record<string, string> = {
-    'delegar_time': 'Colocar pessoa do time',
-    'eu_mesmo': 'Eu mesmo vou implementar',
-    'contratar_equipe': 'Contratar equipe VIVER DE IA'
+  // Funções para mapear valores para rótulos mais legíveis
+  const getPrimaryGoalLabel = (value: string) => {
+    const map: Record<string, string> = {
+      "improve_marketing": "Melhorar marketing e vendas",
+      "optimize_workflow": "Otimizar fluxo de trabalho",
+      "enhance_product": "Aprimorar produto ou serviço",
+      "customer_service": "Melhorar atendimento ao cliente",
+      "reduce_costs": "Reduzir custos operacionais",
+      "other": "Outro objetivo"
+    };
+    return map[value] || value;
   };
-
-  // Mapeamento para exibição de motivos
-  const motivosMap: Record<string, string> = {
-    'networking': 'Networking com outros empresários',
-    'aprofundar_conhecimento': 'Aprofundar conhecimento em IA',
-    'implementar_solucoes': 'Implementar soluções concretas',
-    'be_atualizado': 'Manter-me atualizado sobre IA',
-    'mentoria': 'Mentoria para implementar IA',
-    'aprender_ferramentas': 'Aprender ferramentas práticas',
-    'capacitar_time': 'Capacitar meu time em IA',
-    'comunidade': 'Fazer parte de uma comunidade de IA'
+  
+  const getImplementationLabel = (value: string) => {
+    const map: Record<string, string> = {
+      "myself": "Implementar sozinho",
+      "with_team": "Implementar com minha equipe",
+      "hire_developer": "Contratar desenvolvedor",
+      "undecided": "Ainda não decidi"
+    };
+    return map[value] || value;
   };
-
-  // Mapeamento para formatação de conteúdo
-  const formatosMap: Record<string, string> = {
-    'video': 'Vídeo',
-    'texto': 'Texto',
-    'audio': 'Áudio',
-    'ao_vivo': 'Ao vivo',
-    'workshop': 'Workshop prático'
+  
+  const getTimelineLabel = (value: string) => {
+    const map: Record<string, string> = {
+      "asap": "O mais rápido possível",
+      "30days": "Próximos 30 dias",
+      "60days": "Próximos 60 dias",
+      "90days": "Próximos 90 dias",
+      "learn_only": "Apenas aprendizado"
+    };
+    return map[value] || value;
   };
-
-  // Mapeamento para tipos de soluções prioritárias
-  const solucoesPrioritariasMap: Record<string, string> = {
-    'aumento_vendas': 'Aumento de vendas/receita',
-    'reducao_custos': 'Redução de custos/otimização',
-    'automacao_processos': 'Automação de processos', 
-    'melhorar_experiencia': 'Melhorar experiência do cliente',
-    'analitica_decisao': 'Análise de dados para decisões',
-    'inovacao_produtos': 'Inovação em produtos/serviços'
+  
+  const getSolutionTypeLabel = (value: string) => {
+    const map: Record<string, string> = {
+      "implementation": "Implementação rápida",
+      "personalized": "Solução personalizada",
+      "learning": "Aprendizado e formação",
+      "unsure": "Não tenho certeza"
+    };
+    return map[value] || value;
   };
-
-  // Mapeamento para disponibilidade semanal
-  const disponibilidadeMap: Record<string, string> = {
-    'menos_1h': 'Menos de 1 hora',
-    '1-3h': '1-3 horas',
-    '4-7h': '4-7 horas',
-    '8h+': '8+ horas'
+  
+  const getWeekAvailabilityLabel = (value: string) => {
+    const map: Record<string, string> = {
+      "1-2h": "1-2 horas por semana",
+      "3-5h": "3-5 horas por semana",
+      "6-10h": "6-10 horas por semana",
+      "10+h": "Mais de 10 horas por semana"
+    };
+    return map[value] || value;
+  };
+  
+  const getContentFormatLabel = (value: string) => {
+    const map: Record<string, string> = {
+      "videos": "Vídeos",
+      "articles": "Artigos",
+      "workshops": "Workshops",
+      "live_events": "Eventos ao vivo",
+      "templates": "Templates",
+      "guides": "Guias práticos",
+      "community": "Discussões na comunidade"
+    };
+    return map[value] || value;
   };
 
   return (
-    <div className="space-y-2 text-sm">
-      {processedData.primary_goal && (
-        <p>
-          <span className="font-medium">Objetivo principal:</span> {
-            motivosMap[processedData.primary_goal] || processedData.primary_goal
-          }
-        </p>
+    <div className="space-y-3 text-sm">
+      <p>
+        <span className="font-medium">Objetivo principal:</span>{" "}
+        {processedData.primary_goal ? getPrimaryGoalLabel(processedData.primary_goal) : "Não preenchido"}
+      </p>
+      
+      {processedData.expected_outcomes && processedData.expected_outcomes.length > 0 && (
+        <div>
+          <span className="font-medium">Resultados esperados:</span>
+          <div className="flex flex-wrap gap-1 mt-1">
+            {processedData.expected_outcomes.map((outcome: string, index: number) => (
+              <Badge key={index} variant="outline" className="bg-gray-100">
+                {outcome}
+              </Badge>
+            ))}
+          </div>
+        </div>
       )}
       
       {processedData.expected_outcome_30days && (
         <p>
-          <span className="font-medium">Resultado esperado em 30 dias:</span> {processedData.expected_outcome_30days}
+          <span className="font-medium">Resultado em 30 dias:</span>{" "}
+          {processedData.expected_outcome_30days}
         </p>
       )}
       
-      {processedData.priority_solution_type && (
+      <p>
+        <span className="font-medium">Prazo de implementação:</span>{" "}
+        {processedData.timeline ? getTimelineLabel(processedData.timeline) : "Não definido"}
+      </p>
+      
+      <p>
+        <span className="font-medium">Tipo de solução prioritária:</span>{" "}
+        {processedData.priority_solution_type ? getSolutionTypeLabel(processedData.priority_solution_type) : "Não definido"}
+      </p>
+      
+      <p>
+        <span className="font-medium">Como pretende implementar:</span>{" "}
+        {processedData.how_implement ? getImplementationLabel(processedData.how_implement) : "Não definido"}
+      </p>
+      
+      <p>
+        <span className="font-medium">Disponibilidade semanal:</span>{" "}
+        {processedData.week_availability ? getWeekAvailabilityLabel(processedData.week_availability) : "Não definido"}
+      </p>
+      
+      {typeof processedData.live_interest === 'number' && (
         <p>
-          <span className="font-medium">Tipo de solução prioritária:</span> {
-            solucoesPrioritariasMap[processedData.priority_solution_type] || processedData.priority_solution_type
-          }
+          <span className="font-medium">Interesse em lives:</span>{" "}
+          {processedData.live_interest}/10
         </p>
       )}
       
-      {processedData.how_implement && (
-        <p>
-          <span className="font-medium">Como pretende implementar:</span> {
-            howImplementMap[processedData.how_implement] || processedData.how_implement
-          }
-        </p>
-      )}
-      
-      {processedData.week_availability && (
-        <p>
-          <span className="font-medium">Disponibilidade semanal:</span> {
-            disponibilidadeMap[processedData.week_availability] || processedData.week_availability
-          }
-        </p>
-      )}
-      
-      {processedData.live_interest !== undefined && (
-        <p>
-          <span className="font-medium">Interesse em sessões ao vivo:</span> {processedData.live_interest}/10
-        </p>
-      )}
-      
-      {processedData.content_formats && Array.isArray(processedData.content_formats) && processedData.content_formats.length > 0 && (
+      {processedData.content_formats && processedData.content_formats.length > 0 && (
         <div>
           <span className="font-medium">Formatos de conteúdo preferidos:</span>
           <div className="flex flex-wrap gap-1 mt-1">
             {processedData.content_formats.map((format: string, index: number) => (
-              <Badge key={index} variant="outline" className="bg-gray-100">{
-                formatosMap[format] || format
-              }</Badge>
+              <Badge key={index} variant="outline" className="bg-gray-100">
+                {getContentFormatLabel(format)}
+              </Badge>
             ))}
           </div>
         </div>

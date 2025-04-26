@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useRef } from "react";
 import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
 import { useOnboardingSteps } from "@/hooks/onboarding/useOnboardingSteps";
@@ -59,7 +58,13 @@ const Review: React.FC = () => {
   }, []); // Dependência vazia garante que carregue apenas uma vez
   
   const handleNavigateToStep = (index: number) => {
-    navigate(steps[index].path);
+    console.log("[Review] Navegando para etapa:", index, steps[index]);
+    if (steps[index]) {
+      navigate(steps[index].path);
+    } else {
+      console.error("[Review] Tentativa de navegar para etapa inválida:", index);
+      toast.error("Erro ao navegar. Etapa não encontrada.");
+    }
   };
   
   const handleComplete = async () => {
