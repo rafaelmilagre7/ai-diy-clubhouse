@@ -1,4 +1,3 @@
-
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
@@ -9,6 +8,7 @@ import {
   ChevronLeft,
   BookOpen,
   Gauge,
+  Calendar,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "react-router-dom";
@@ -28,6 +28,11 @@ export const AdminSidebarNav = ({ sidebarOpen }: AdminSidebarNavProps) => {
       title: "Dashboard",
       href: "/admin",
       icon: LayoutDashboard,
+    },
+    {
+      title: "Eventos",
+      href: "/admin/events",
+      icon: Calendar,
     },
     {
       title: "Usuários",

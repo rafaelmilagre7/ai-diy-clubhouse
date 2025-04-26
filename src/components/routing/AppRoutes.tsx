@@ -1,4 +1,3 @@
-
 import { Routes, Route } from 'react-router-dom';
 import { AdminProtectedRoutes } from '@/auth/AdminProtectedRoutes';
 import { ProtectedRoutes } from '@/auth/ProtectedRoutes';
@@ -37,6 +36,7 @@ import { Navigate } from 'react-router-dom';
 import MemberLayout from '@/components/layout/MemberLayout';
 import AdminLayout from '@/components/layout/admin/AdminLayout';
 import ImplementationTrailPage from '@/pages/member/ImplementationTrailPage';
+import AdminEvents from '@/pages/admin/AdminEvents';
 
 // Onboarding
 import OnboardingIntro from '@/pages/onboarding/OnboardingIntro';
@@ -100,6 +100,13 @@ const AppRoutes = () => {
         <AdminProtectedRoutes>
           <AdminLayout>
             <AdminDashboard />
+          </AdminLayout>
+        </AdminProtectedRoutes>
+      } />
+      <Route path="/admin/events" element={
+        <AdminProtectedRoutes>
+          <AdminLayout>
+            <AdminEvents />
           </AdminLayout>
         </AdminProtectedRoutes>
       } />
