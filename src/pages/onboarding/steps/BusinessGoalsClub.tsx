@@ -79,17 +79,33 @@ const BusinessGoalsClub = () => {
     setIsSubmitting(true);
     
     try {
+      // Aqui está o problema: precisamos garantir que dados sejam corretamente 
+      // estruturados conforme esperado pelo mecanismo de salvamento
+      
       // Verificações detalhadas antes de salvar
       if (!data.business_goals) {
         console.error("[BusinessGoalsClub] Dados inválidos: business_goals não encontrado no objeto");
         toast.error("Erro ao salvar: dados incompletos");
+        setIsSubmitting(false);
         return;
       }
       
-      const businessGoalsData = data.business_goals;
+      // Converter os objetivos selecionados para o formato esperado pelo modelo de dados
+      const selectedGoals = data.business_goals;
+      
+      // Criar objeto de dados padronizado para o builder
+      const formattedData = {
+        business_goals: {
+          primary_goal: "custom", // Valor padrão para objetivos personalizados
+          expected_outcomes: Object.keys(selectedGoals).filter(key => selectedGoals[key] === true),
+          timeline: "30days" // Valor padrão para timeline
+        }
+      };
+      
+      console.log("[BusinessGoalsClub] Dados formatados para salvar:", formattedData);
       
       // Salvar dados usando business_goals como stepId
-      await saveStepData("business_goals", { business_goals: businessGoalsData }, false);
+      await saveStepData("business_goals", formattedData, false);
       console.log("[BusinessGoalsClub] Dados salvos com sucesso");
       
       toast.success("Informações salvas com sucesso!");
@@ -120,9 +136,23 @@ const BusinessGoalsClub = () => {
       console.log("[BusinessGoalsClub] business_goals normalizado:", businessGoalsData);
     }
     
+    // Se temos expected_outcomes, converter para o formato de seleção
+    let selectedGoals: Record<string, boolean> = {};
+    
+    if (businessGoalsData && Array.isArray(businessGoalsData.expected_outcomes)) {
+      // Converter de array para objeto com booleanos para o componente de seleção
+      businessGoalsData.expected_outcomes.forEach((outcome: string) => {
+        if (outcome) {
+          selectedGoals[outcome] = true;
+        }
+      });
+      
+      console.log("[BusinessGoalsClub] Objetivos convertidos para formato de seleção:", selectedGoals);
+    }
+    
     return {
       ...progress,
-      business_goals: businessGoalsData
+      business_goals: selectedGoals // Passar os objetivos no formato esperado pelo componente
     };
   }, [progress]);
 

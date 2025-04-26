@@ -16,19 +16,37 @@ export function getBusinessGoalsSummary(data: any) {
   console.log("[BusinessGoalsSummary] Dados após normalização:", processedData);
   
   // Se mesmo após processamento os dados estiverem vazios ou não tiverem informações relevantes
-  // Verificação mais robusta para todos os campos relevantes
-  const hasNoData = 
-    (!processedData.primary_goal || processedData.primary_goal === '') && 
+  // Verificação mais robusta considerando tanto arrays vazios quanto objetivos selecionados
+  const hasNoRelevantData = 
     (!processedData.expected_outcomes || processedData.expected_outcomes.length === 0) &&
-    (!processedData.timeline || processedData.timeline === '');
-    
-  if (hasNoData) {
+    // Verificar objetivos do formato antigo também
+    (typeof processedData === 'object' && Object.keys(processedData)
+      .filter(key => key !== 'primary_goal' && key !== 'timeline' && processedData[key] === true)
+      .length === 0);
+
+  if (hasNoRelevantData) {
     return <p className="text-gray-500 italic">Seção não preenchida. Clique em Editar para preencher.</p>;
   }
 
-  // Funções para mapear valores para rótulos mais legíveis
-  const getPrimaryGoalLabel = (value: string) => {
-    const map: Record<string, string> = {
+  // Verificar se temos dados no formato de objetivos booleanos (novo formato)
+  const hasObjectiveSelections = typeof processedData === 'object' && 
+    Object.keys(processedData).some(key => key !== 'primary_goal' && key !== 'timeline' && processedData[key] === true);
+
+  // Função para obter rótulos legíveis para cada ID de objetivo
+  const getGoalLabel = (goalId: string) => {
+    const labels: Record<string, string> = {
+      // Objetivos de negócio
+      'vendas': 'Aumentar vendas',
+      'leads': 'Gerar mais leads',
+      'marketing': 'Otimizar marketing',
+      'automacao': 'Automatizar processos',
+      'atendimento': 'Melhorar atendimento',
+      'processos': 'Aprimorar processos',
+      'decisoes': 'Melhorar decisões',
+      'escala': 'Escalar operações',
+      'inovacao': 'Criar novas soluções',
+      
+      // Formato legado
       "improve_marketing": "Melhorar marketing e vendas",
       "optimize_workflow": "Otimizar fluxo de trabalho",
       "enhance_product": "Aprimorar produto ou serviço",
@@ -36,129 +54,55 @@ export function getBusinessGoalsSummary(data: any) {
       "reduce_costs": "Reduzir custos operacionais",
       "other": "Outro objetivo"
     };
-    return map[value] || value;
-  };
-  
-  const getImplementationLabel = (value: string) => {
-    const map: Record<string, string> = {
-      "myself": "Implementar sozinho",
-      "with_team": "Implementar com minha equipe",
-      "hire_developer": "Contratar desenvolvedor",
-      "undecided": "Ainda não decidi"
-    };
-    return map[value] || value;
-  };
-  
-  const getTimelineLabel = (value: string) => {
-    const map: Record<string, string> = {
-      "asap": "O mais rápido possível",
-      "30days": "Próximos 30 dias",
-      "60days": "Próximos 60 dias",
-      "90days": "Próximos 90 dias",
-      "learn_only": "Apenas aprendizado"
-    };
-    return map[value] || value;
-  };
-  
-  const getSolutionTypeLabel = (value: string) => {
-    const map: Record<string, string> = {
-      "implementation": "Implementação rápida",
-      "personalized": "Solução personalizada",
-      "learning": "Aprendizado e formação",
-      "unsure": "Não tenho certeza"
-    };
-    return map[value] || value;
-  };
-  
-  const getWeekAvailabilityLabel = (value: string) => {
-    const map: Record<string, string> = {
-      "1-2h": "1-2 horas por semana",
-      "3-5h": "3-5 horas por semana",
-      "6-10h": "6-10 horas por semana",
-      "10+h": "Mais de 10 horas por semana"
-    };
-    return map[value] || value;
-  };
-  
-  const getContentFormatLabel = (value: string) => {
-    const map: Record<string, string> = {
-      "videos": "Vídeos",
-      "articles": "Artigos",
-      "workshops": "Workshops",
-      "live_events": "Eventos ao vivo",
-      "templates": "Templates",
-      "guides": "Guias práticos",
-      "community": "Discussões na comunidade"
-    };
-    return map[value] || value;
+    return labels[goalId] || goalId;
   };
 
-  return (
-    <div className="space-y-3 text-sm">
-      <p>
-        <span className="font-medium">Objetivo principal:</span>{" "}
-        {processedData.primary_goal ? getPrimaryGoalLabel(processedData.primary_goal) : "Não preenchido"}
-      </p>
-      
-      {processedData.expected_outcomes && processedData.expected_outcomes.length > 0 && (
+  // Se estamos usando o formato antigo (com expected_outcomes como array)
+  if (Array.isArray(processedData.expected_outcomes) && processedData.expected_outcomes.length > 0) {
+    return (
+      <div className="space-y-3 text-sm">
         <div>
-          <span className="font-medium">Resultados esperados:</span>
+          <span className="font-medium">Objetivos selecionados:</span>
           <div className="flex flex-wrap gap-1 mt-1">
             {processedData.expected_outcomes.map((outcome: string, index: number) => (
               <Badge key={index} variant="outline" className="bg-gray-100">
-                {outcome}
+                {getGoalLabel(outcome)}
               </Badge>
             ))}
           </div>
         </div>
-      )}
+      </div>
+    );
+  }
+  
+  // Se estamos usando o novo formato (com objetivos como chaves booleanas)
+  if (hasObjectiveSelections) {
+    // Filtrar apenas as chaves que são true (objetivos selecionados)
+    const selectedObjectives = Object.keys(processedData)
+      .filter(key => key !== 'primary_goal' && key !== 'timeline' && processedData[key] === true);
       
-      {processedData.expected_outcome_30days && (
-        <p>
-          <span className="font-medium">Resultado em 30 dias:</span>{" "}
-          {processedData.expected_outcome_30days}
-        </p>
-      )}
-      
-      <p>
-        <span className="font-medium">Prazo de implementação:</span>{" "}
-        {processedData.timeline ? getTimelineLabel(processedData.timeline) : "Não definido"}
-      </p>
-      
-      <p>
-        <span className="font-medium">Tipo de solução prioritária:</span>{" "}
-        {processedData.priority_solution_type ? getSolutionTypeLabel(processedData.priority_solution_type) : "Não definido"}
-      </p>
-      
-      <p>
-        <span className="font-medium">Como pretende implementar:</span>{" "}
-        {processedData.how_implement ? getImplementationLabel(processedData.how_implement) : "Não definido"}
-      </p>
-      
-      <p>
-        <span className="font-medium">Disponibilidade semanal:</span>{" "}
-        {processedData.week_availability ? getWeekAvailabilityLabel(processedData.week_availability) : "Não definido"}
-      </p>
-      
-      {typeof processedData.live_interest === 'number' && (
-        <p>
-          <span className="font-medium">Interesse em lives:</span>{" "}
-          {processedData.live_interest}/10
-        </p>
-      )}
-      
-      {processedData.content_formats && processedData.content_formats.length > 0 && (
+    return (
+      <div className="space-y-3 text-sm">
         <div>
-          <span className="font-medium">Formatos de conteúdo preferidos:</span>
+          <span className="font-medium">Objetivos selecionados:</span>
           <div className="flex flex-wrap gap-1 mt-1">
-            {processedData.content_formats.map((format: string, index: number) => (
+            {selectedObjectives.map((goalId: string, index: number) => (
               <Badge key={index} variant="outline" className="bg-gray-100">
-                {getContentFormatLabel(format)}
+                {getGoalLabel(goalId)}
               </Badge>
             ))}
           </div>
         </div>
-      )}
+      </div>
+    );
+  }
+
+  // Fallback para outros formatos ou dados não reconhecidos
+  return (
+    <div className="space-y-3 text-sm">
+      <p>
+        <span className="font-medium">Dados enviados em formato alternativo.</span>
+      </p>
     </div>
   );
 }

@@ -77,6 +77,13 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({
         }
       });
       
+      // Log adicional especialmente para business_goals
+      console.log("[ReviewStep] Verificação especial de business_goals:", {
+        original: progress.business_goals,
+        normalized: normalizedProgress.business_goals,
+        hasFields: normalizedProgress.business_goals && Object.keys(normalizedProgress.business_goals).length > 0
+      });
+      
       console.log("[ReviewStep] Dados normalizados:", normalizedProgress);
       setProcessedData(normalizedProgress as ReviewData);
     } catch (error) {
@@ -128,6 +135,16 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({
             // Log para depuração
             console.log(`[ReviewStep] Processando seção ${step.id}, dados:`, sectionData);
             
+            // Log especial para business_goals
+            if (step.section === 'business_goals') {
+              console.log("[ReviewStep] Detalhes extras para business_goals:", {
+                sectionData,
+                sectionType: typeof sectionData,
+                rawData: dataToUse?.business_goals,
+                keys: sectionData ? Object.keys(sectionData) : []
+              });
+            }
+            
             // Tratamento para dados específicos
             switch (step.section) {
               // Tratamento especial para business_context que pode estar em business_data
@@ -178,6 +195,32 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({
                   console.log("[ReviewStep] Dados de business_goals vazios", sectionData);
                 } else {
                   console.log("[ReviewStep] Dados de business_goals encontrados:", sectionData);
+                  
+                  // Se for string, tentar converter para objeto
+                  if (typeof sectionData === 'string') {
+                    try {
+                      sectionData = JSON.parse(sectionData);
+                      console.log("[ReviewStep] business_goals convertido de string para objeto:", sectionData);
+                    } catch (e) {
+                      console.error("[ReviewStep] Erro ao converter business_goals de string para objeto:", e);
+                    }
+                  }
+                  
+                  // Verificar se temos dados no formato correto
+                  const hasExpectedOutcomes = sectionData.expected_outcomes && 
+                    Array.isArray(sectionData.expected_outcomes) && 
+                    sectionData.expected_outcomes.length > 0;
+                  
+                  // Ou se temos dados no formato de booleanos
+                  const hasObjectiveSelections = Object.entries(sectionData).some(
+                    ([key, value]) => key !== 'primary_goal' && key !== 'timeline' && value === true
+                  );
+                  
+                  console.log("[ReviewStep] Análise de business_goals:", {
+                    hasExpectedOutcomes,
+                    hasObjectiveSelections,
+                    keysWithTrueValues: Object.keys(sectionData).filter(key => sectionData[key] === true)
+                  });
                 }
                 break;
                 

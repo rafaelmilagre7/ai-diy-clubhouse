@@ -14,6 +14,7 @@ export interface NormalizedBusinessGoals {
   week_availability?: string;
   live_interest?: number;
   content_formats?: string[];
+  [key: string]: any; // Para permitir campos dinâmicos (como objetivos booleanos)
 }
 
 /**
@@ -104,12 +105,20 @@ export function normalizeBusinessGoals(data: any): NormalizedBusinessGoals {
       const num = Number(value);
       return isNaN(num) ? undefined : num;
     };
+
+    // Verificar se estamos usando o novo formato (objetivos como valores booleanos)
+    const isUsingNewFormat = Object.entries(data).some(([key, value]) => 
+      key !== 'primary_goal' && 
+      key !== 'expected_outcomes' && 
+      key !== 'timeline' && 
+      typeof value === 'boolean'
+    );
     
     // Criar novo objeto normalizado
     const normalizedData: NormalizedBusinessGoals = {
-      primary_goal: ensureString(data.primary_goal),
+      primary_goal: ensureString(data.primary_goal || 'custom'),
       expected_outcomes: ensureArray(data.expected_outcomes || []),
-      timeline: ensureString(data.timeline),
+      timeline: ensureString(data.timeline || '30days'),
       expected_outcome_30days: ensureString(data.expected_outcome_30days),
       priority_solution_type: ensureString(data.priority_solution_type),
       how_implement: ensureString(data.how_implement),
@@ -117,6 +126,20 @@ export function normalizeBusinessGoals(data: any): NormalizedBusinessGoals {
       live_interest: ensureNumber(data.live_interest),
       content_formats: ensureArray(data.content_formats || []),
     };
+    
+    // Se estamos usando o novo formato, adicionar os objetivos como chaves booleanas
+    if (isUsingNewFormat) {
+      Object.entries(data).forEach(([key, value]) => {
+        if (key !== 'primary_goal' && key !== 'expected_outcomes' && key !== 'timeline') {
+          normalizedData[key] = value;
+          
+          // Se o valor é true, adicionar à lista de expected_outcomes
+          if (value === true && !normalizedData.expected_outcomes.includes(key)) {
+            normalizedData.expected_outcomes.push(key);
+          }
+        }
+      });
+    }
     
     // Adicionar expected_outcome_30days aos expected_outcomes se existir
     if (normalizedData.expected_outcome_30days && 
