@@ -135,3 +135,148 @@ export function normalizeBusinessGoals(data: any): NormalizedBusinessGoals {
   console.warn("[normalizeBusinessGoals] Tipo de dados inesperado:", typeof data);
   return { ...defaultValues };
 }
+
+/**
+ * Função para normalizar campos genéricos
+ * @param value Valor a ser normalizado
+ * @returns Valor normalizado como string
+ */
+export function normalizeField(value: any): any {
+  // Se for null ou undefined, retorna string vazia
+  if (value === null || value === undefined) {
+    return "";
+  }
+  
+  // Se for string, apenas faz trim
+  if (typeof value === "string") {
+    return value.trim();
+  }
+  
+  // Se for número, converte para string
+  if (typeof value === "number") {
+    return value.toString();
+  }
+  
+  // Se for objeto, converte para JSON string
+  if (typeof value === "object") {
+    // Se for um objeto vazio, retorna string vazia
+    if (Object.keys(value).length === 0) {
+      return "";
+    }
+    
+    try {
+      return value; // Retorna o objeto como está para manter na estrutura JSONB
+    } catch (e) {
+      console.error("[normalizeField] Erro ao converter objeto:", e);
+      return "";
+    }
+  }
+  
+  // Caso padrão, retorna string vazia
+  return "";
+}
+
+/**
+ * Função para normalizar experiência com IA
+ * @param data Dados de experiência com IA
+ * @returns Objeto normalizado
+ */
+export function normalizeAIExperience(data: any): any {
+  // Se for null ou undefined, retorna objeto vazio
+  if (data === null || data === undefined) {
+    return {};
+  }
+  
+  // Se for string, tenta converter para objeto
+  if (typeof data === "string") {
+    try {
+      return normalizeAIExperience(JSON.parse(data));
+    } catch (e) {
+      console.error("[normalizeAIExperience] Erro ao converter string:", e);
+      return {};
+    }
+  }
+  
+  // Se não for objeto, retorna objeto vazio
+  if (typeof data !== "object") {
+    return {};
+  }
+  
+  // Garantir arrays para campos tipo array
+  const ensureArray = (value: any): any[] => {
+    if (Array.isArray(value)) return value;
+    if (value === null || value === undefined) return [];
+    if (typeof value === "string") {
+      try {
+        const parsed = JSON.parse(value);
+        return Array.isArray(parsed) ? parsed : [value];
+      } catch (e) {
+        return value.trim() ? [value] : [];
+      }
+    }
+    return [value];
+  };
+  
+  // Normalizar campos
+  return {
+    knowledge_level: data.knowledge_level || data.ai_usage_level || "",
+    previous_tools: ensureArray(data.previous_tools || data.tools_used || []),
+    desired_ai_areas: ensureArray(data.desired_ai_areas || data.interest_areas || []),
+    has_implemented: data.has_implemented || data.has_implemented_ai || false,
+    nps_score: Number(data.nps_score) || 0,
+    completed_formation: Boolean(data.completed_formation || data.completed_training),
+    improvement_suggestions: data.improvement_suggestions || data.suggestions || "",
+  };
+}
+
+/**
+ * Função para normalizar personalização de experiência
+ * @param data Dados de personalização de experiência
+ * @returns Objeto normalizado
+ */
+export function normalizeExperiencePersonalization(data: any): any {
+  // Se for null ou undefined, retorna objeto vazio
+  if (data === null || data === undefined) {
+    return {};
+  }
+  
+  // Se for string, tenta converter para objeto
+  if (typeof data === "string") {
+    try {
+      return normalizeExperiencePersonalization(JSON.parse(data));
+    } catch (e) {
+      console.error("[normalizeExperiencePersonalization] Erro ao converter string:", e);
+      return {};
+    }
+  }
+  
+  // Se não for objeto, retorna objeto vazio
+  if (typeof data !== "object") {
+    return {};
+  }
+  
+  // Garantir arrays para campos tipo array
+  const ensureArray = (value: any): any[] => {
+    if (Array.isArray(value)) return value;
+    if (value === null || value === undefined) return [];
+    if (typeof value === "string") {
+      try {
+        const parsed = JSON.parse(value);
+        return Array.isArray(parsed) ? parsed : [value];
+      } catch (e) {
+        return value.trim() ? [value] : [];
+      }
+    }
+    return [value];
+  };
+  
+  // Normalizar campos
+  return {
+    interests: ensureArray(data.interests || []),
+    time_preference: ensureArray(data.time_preference || data.preferred_times || []),
+    available_days: ensureArray(data.available_days || data.days_available || []),
+    networking_availability: Number(data.networking_availability || data.networking_level || 0),
+    skills_to_share: ensureArray(data.skills_to_share || data.shareable_skills || []),
+    mentorship_topics: ensureArray(data.mentorship_topics || []),
+  };
+}
