@@ -75,7 +75,8 @@ export const ExperiencePersonalizationStep: React.FC<OnboardingStepProps> = ({
 
     console.log("[ExperiencePersonalizationStep] Enviando dados de personalização:", data);
     
-    // CORREÇÃO: Garantir que os dados são enviados com a estrutura correta
+    // Enviar dados diretamente, sem encapsular em um objeto experience_personalization
+    // A página ExperiencePersonalization.tsx cuidará de formatar corretamente para o builder
     onSubmit("experience_personalization", data);
   };
 

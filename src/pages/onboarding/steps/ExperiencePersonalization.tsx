@@ -43,10 +43,11 @@ const ExperiencePersonalization = () => {
         throw new Error("Dados de personalização ausentes ou inválidos");
       }
       
-      // CORREÇÃO: Força o formato correto para os dados
-      const formattedData = data.experience_personalization 
-        ? data // Já está no formato correto
-        : { experience_personalization: data }; // Garante formato correto
+      // CORREÇÃO: Enviar os dados diretamente com a chave experience_personalization
+      // para que o builder possa processá-los corretamente
+      const formattedData = {
+        experience_personalization: data
+      };
       
       console.log("[ExperiencePersonalization] Dados formatados para envio:", formattedData);
       
