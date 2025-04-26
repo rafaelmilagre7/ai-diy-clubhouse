@@ -45,7 +45,7 @@ export const getDifficultyColor = (difficulty: string): string => {
   }
 };
 
-// Nova função para converter texto traduzido de volta para o enum
+// Função para converter texto traduzido de volta para o enum
 export const translateDifficultyToEnum = (difficulty: string): "easy" | "medium" | "advanced" => {
   if (!difficulty) return "medium";
   

@@ -53,6 +53,9 @@ export const useSolutionEditor = (id: string | undefined, user: any) => {
       difficulty: normalizeDifficulty(values.difficulty)
     };
     
+    console.log("useSolutionEditor handleSubmit - valores originais:", values);
+    console.log("useSolutionEditor handleSubmit - valores normalizados:", normalizedValues);
+    
     return onSubmit(normalizedValues);
   };
 
