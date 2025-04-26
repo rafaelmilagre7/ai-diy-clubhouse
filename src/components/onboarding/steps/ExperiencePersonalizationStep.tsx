@@ -7,10 +7,8 @@ import { AvailableDaysSection } from "./ExperiencePersonalizationSections/Availa
 import { NetworkingAvailabilitySection } from "./ExperiencePersonalizationSections/NetworkingAvailabilitySection";
 import { SkillsToShareSection } from "./ExperiencePersonalizationSections/SkillsToShareSection";
 import { MentorshipTopicsSection } from "./ExperiencePersonalizationSections/MentorshipTopicsSection";
-import { Button } from "@/components/ui/button";
-import { ArrowRight } from "lucide-react";
-import { useExperiencePersonalizationForm } from "./ExperiencePersonalizationSections/useExperiencePersonalizationForm";
 import { NavigationButtons } from "@/components/onboarding/NavigationButtons";
+import { useExperiencePersonalizationForm } from "./ExperiencePersonalizationSections/useExperiencePersonalizationForm";
 import { normalizeExperiencePersonalization } from "@/hooks/onboarding/persistence/utils/experiencePersonalizationNormalization";
 
 export const ExperiencePersonalizationStep: React.FC<OnboardingStepProps> = ({
@@ -75,8 +73,7 @@ export const ExperiencePersonalizationStep: React.FC<OnboardingStepProps> = ({
 
     console.log("[ExperiencePersonalizationStep] Enviando dados de personalização:", data);
     
-    // Enviar dados diretamente - sem encapsular em um objeto experience_personalization
-    // A página ExperiencePersonalization.tsx cuidará de formatar corretamente para o builder
+    // Enviar dados diretamente
     onSubmit("experience_personalization", data);
   };
 

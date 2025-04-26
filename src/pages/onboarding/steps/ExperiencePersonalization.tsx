@@ -43,16 +43,16 @@ const ExperiencePersonalization = () => {
         throw new Error("Dados de personalização ausentes ou inválidos");
       }
       
-      // Garantir que os dados são enviados diretamente
-      // Este é um ponto crucial - enviar um objeto com a chave experience_personalization
+      // Garantir que os dados são enviados com o formato esperado pelo builder
+      // Importante: o builder espera um objeto com a chave experience_personalization
       const formattedData = {
         experience_personalization: data
       };
       
       console.log("[ExperiencePersonalization] Dados formatados para envio:", formattedData);
       
-      // Explicitamente passar o step ID e os dados formatados
-      await saveStepData("experience_personalization", formattedData, false);
+      // Usar o stepId correto e passar os dados formatados
+      await saveStepData("experience_personalization", formattedData);
       
       console.log("[ExperiencePersonalization] Dados salvos com sucesso");
       toast.success("Dados salvos com sucesso!");

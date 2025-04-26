@@ -24,7 +24,7 @@ export function buildExperiencePersonalizationUpdate(data: Partial<OnboardingDat
   
   console.log("[buildExperiencePersonalizationUpdate] Dados atuais de progresso:", existingExperiencePersonalization);
   
-  // CORREÇÃO 1: Verificação mais robusta para dados de experience_personalization
+  // VERIFICAÇÃO 1: verificar dados no formato esperado (com chave experience_personalization)
   if (data.experience_personalization) {
     console.log("[buildExperiencePersonalizationUpdate] Dados específicos encontrados no payload:", 
       typeof data.experience_personalization, data.experience_personalization);
@@ -50,7 +50,7 @@ export function buildExperiencePersonalizationUpdate(data: Partial<OnboardingDat
     return updateObj;
   }
   
-  // CORREÇÃO 2: Verificar se os campos estão no nível raiz do objeto data
+  // VERIFICAÇÃO 2: verificar se os campos específicos estão no nível raiz
   const experienceFields = [
     'interests', 
     'time_preference', 
