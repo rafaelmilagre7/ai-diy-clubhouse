@@ -1,9 +1,8 @@
-
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { edit, trash2 } from "lucide-react";
+import { Edit, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { useEvents } from "@/hooks/useEvents";
 import { EventFormDialog } from "./EventFormDialog";
@@ -69,14 +68,14 @@ export const EventsTable = () => {
                     size="icon"
                     onClick={() => setEditingEvent(event)}
                   >
-                    <edit className="h-4 w-4" />
+                    <Edit className="h-4 w-4" />
                   </Button>
                   <Button
                     variant="outline"
                     size="icon"
                     onClick={() => handleDelete(event.id)}
                   >
-                    <trash2 className="h-4 w-4" />
+                    <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
               </TableCell>
