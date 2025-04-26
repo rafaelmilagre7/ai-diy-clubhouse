@@ -1,11 +1,9 @@
 
-import { Link } from "react-router-dom";
-import { useAuth } from "@/contexts/auth";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { ChevronLeft, Menu } from "lucide-react";
-import { AdminSidebarNav } from "./AdminSidebarNav";
-import { AdminUserMenu } from "./AdminUserMenu";
+import { useState } from 'react';
+import { NavLink } from 'react-router-dom';
+import { cn } from '@/lib/utils';
+import { Menu, X } from 'lucide-react';
+import { AdminSidebarNav } from './AdminSidebarNav';
 
 interface AdminSidebarProps {
   sidebarOpen: boolean;
@@ -13,66 +11,50 @@ interface AdminSidebarProps {
 }
 
 export const AdminSidebar = ({ sidebarOpen, setSidebarOpen }: AdminSidebarProps) => {
-  const { profile } = useAuth();
+  const [isHovering, setIsHovering] = useState(false);
   
-  console.log("AdminSidebar renderizando, sidebarOpen:", sidebarOpen);
-
-  const getInitials = (name: string | null) => {
-    if (!name) return "U";
-    return name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase()
-      .substring(0, 2);
+  const toggleSidebar = () => {
+    setSidebarOpen(!sidebarOpen);
   };
 
   return (
-    <aside
-      className={cn(
-        "fixed inset-y-0 left-0 z-20 flex h-full flex-col border-r bg-background shadow-sm transition-all duration-300 ease-in-out",
-        sidebarOpen ? "w-64" : "w-20"
+    <>
+      {/* Overlay para dispositivos móveis */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-30 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        ></div>
       )}
-      style={{ transform: "translateX(0)" }} // Garante que o sidebar seja visível
-    >
-      <div className="flex h-16 items-center justify-between px-4">
-        {sidebarOpen ? (
-          <Link to="/admin" className="flex items-center">
-            <img
-              src="https://milagredigital.com/wp-content/uploads/2025/04/viverdeiaclub.avif"
-              alt="VIVER DE IA Club"
-              className="h-8 w-auto"
-            />
-          </Link>
-        ) : (
-          <Link to="/admin" className="mx-auto">
-            <div className="h-8 w-8 flex items-center justify-center bg-viverblue rounded-full text-white font-bold">
-              VI
-            </div>
-          </Link>
+      
+      {/* Sidebar principal */}
+      <aside
+        className={cn(
+          "fixed top-0 left-0 z-40 h-full bg-white dark:bg-gray-800 shadow-md transition-all duration-300 ease-in-out flex flex-col",
+          sidebarOpen ? "w-64" : "w-20"
         )}
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-          className={sidebarOpen ? "ml-auto" : "mx-auto mt-2"}
-          aria-label={sidebarOpen ? "Colapsar menu" : "Expandir menu"}
-        >
-          {sidebarOpen ? <ChevronLeft size={20} /> : <Menu size={20} />}
-        </Button>
-      </div>
-
-      <div className="flex-1 overflow-auto">
-        <AdminSidebarNav sidebarOpen={sidebarOpen} />
-      </div>
-
-      <AdminUserMenu
-        sidebarOpen={sidebarOpen}
-        profileName={profile?.name}
-        profileEmail={profile?.email}
-        profileAvatar={profile?.avatar_url}
-        getInitials={getInitials}
-      />
-    </aside>
+        onMouseEnter={() => setIsHovering(true)}
+        onMouseLeave={() => setIsHovering(false)}
+      >
+        {/* Cabeçalho com botão de toggle */}
+        <div className="flex items-center justify-between h-16 px-4 border-b">
+          <NavLink to="/admin" className="flex items-center text-xl font-semibold">
+            {sidebarOpen && <span>Admin Panel</span>}
+          </NavLink>
+          <button
+            onClick={toggleSidebar}
+            className="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700"
+            aria-label="Toggle sidebar"
+          >
+            {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
+          </button>
+        </div>
+        
+        {/* Links de navegação */}
+        <div className="flex-1 overflow-y-auto px-3 py-4">
+          <AdminSidebarNav expanded={sidebarOpen} />
+        </div>
+      </aside>
+    </>
   );
 };

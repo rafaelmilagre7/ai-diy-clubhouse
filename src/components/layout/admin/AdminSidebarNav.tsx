@@ -1,107 +1,81 @@
 
-import { cn } from "@/lib/utils";
-import {
-  LayoutDashboard,
-  Users,
-  Lightbulb,
-  Settings,
-  MessageSquare,
-  ChevronLeft,
-  BookOpen,
-  Gauge,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Link, useLocation } from "react-router-dom";
-import { Separator } from "@/components/ui/separator";
+import { NavLink } from 'react-router-dom';
+import { cn } from '@/lib/utils';
+import { 
+  LayoutDashboard, 
+  UsersRound, 
+  Settings, 
+  Tool, 
+  FileText,
+  BarChart2,
+  MessageSquare
+} from 'lucide-react';
 
 interface AdminSidebarNavProps {
-  sidebarOpen: boolean;
+  expanded: boolean;
 }
 
-export const AdminSidebarNav = ({ sidebarOpen }: AdminSidebarNavProps) => {
-  const location = useLocation();
-  
-  console.log("AdminSidebarNav renderizando, location:", location.pathname);
-
-  const menuItems = [
+export const AdminSidebarNav = ({ expanded }: AdminSidebarNavProps) => {
+  const navItems = [
     {
-      title: "Dashboard",
-      href: "/admin",
-      icon: LayoutDashboard,
+      name: 'Dashboard',
+      icon: <LayoutDashboard size={20} />,
+      path: '/admin/dashboard',
     },
     {
-      title: "Usuários",
-      href: "/admin/users",
-      icon: Users,
+      name: 'Ferramentas',
+      icon: <Tool size={20} />,
+      path: '/admin/tools',
     },
     {
-      title: "Soluções",
-      href: "/admin/solutions",
-      icon: Lightbulb,
+      name: 'Sugestões',
+      icon: <MessageSquare size={20} />,
+      path: '/admin/suggestions',
     },
     {
-      title: "Ferramentas",
-      href: "/admin/tools",
-      icon: Settings,
+      name: 'Usuários',
+      icon: <UsersRound size={20} />,
+      path: '/admin/users',
     },
     {
-      title: "Sugestões",
-      href: "/admin/suggestions",
-      icon: MessageSquare,
+      name: 'Soluções',
+      icon: <FileText size={20} />,
+      path: '/admin/solutions',
     },
     {
-      title: "Onboarding",
-      href: "/admin/onboarding",
-      icon: BookOpen,
+      name: 'Analytics',
+      icon: <BarChart2 size={20} />,
+      path: '/admin/analytics',
     },
     {
-      title: "Analytics",
-      href: "/admin/analytics",
-      icon: Gauge,
+      name: 'Configurações',
+      icon: <Settings size={20} />,
+      path: '/admin/settings',
     },
   ];
 
-  const isActive = (href: string) => {
-    return location.pathname === href || location.pathname.startsWith(href + '/');
-  };
-
   return (
-    <div className="space-y-4 py-4">
-      <div className="px-3 space-y-1">
-        {menuItems.map((item) => (
-          <Button
-            key={item.href}
-            variant={isActive(item.href) ? "default" : "ghost"}
-            className={cn(
-              "w-full justify-start gap-2",
-              !sidebarOpen && "justify-center",
-              isActive(item.href) && "bg-viverblue hover:bg-viverblue/90"
-            )}
-            asChild
-          >
-            <Link to={item.href}>
-              <item.icon className="h-4 w-4" />
-              {sidebarOpen && <span>{item.title}</span>}
-            </Link>
-          </Button>
+    <nav>
+      <ul className="space-y-2">
+        {navItems.map((item) => (
+          <li key={item.path}>
+            <NavLink
+              to={item.path}
+              className={({ isActive }) =>
+                cn(
+                  'flex items-center p-2 rounded-lg transition-colors',
+                  isActive 
+                    ? 'bg-primary/10 text-primary' 
+                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                )
+              }
+            >
+              <span className="flex items-center justify-center w-8">{item.icon}</span>
+              {expanded && <span className="ml-3 text-sm font-medium">{item.name}</span>}
+            </NavLink>
+          </li>
         ))}
-
-        <Separator className="my-4" />
-
-        <Button
-          variant="outline"
-          className={cn(
-            "w-full justify-start gap-2",
-            !sidebarOpen && "justify-center"
-          )}
-          asChild
-        >
-          <Link to="/dashboard">
-            <ChevronLeft className="h-4 w-4" />
-            {sidebarOpen && <span>Voltar ao Dashboard</span>}
-          </Link>
-        </Button>
-      </div>
-    </div>
+      </ul>
+    </nav>
   );
 };

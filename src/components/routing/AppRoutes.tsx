@@ -28,6 +28,14 @@ import ImplementationTrailPage from '@/pages/member/ImplementationTrailPage';
 import SuggestionsPage from '@/pages/member/Suggestions';
 import AdminSuggestions from '@/pages/admin/AdminSuggestions';
 import AdminSuggestionDetails from '@/pages/admin/AdminSuggestionDetails';
+import Onboarding from '@/pages/onboarding/Onboarding';
+import OnboardingIntro from '@/pages/onboarding/OnboardingIntro';
+import Review from '@/pages/onboarding/Review';
+import Achievements from '@/pages/member/Achievements';
+import AdminUsers from '@/pages/admin/AdminUsers';
+import AdminSolutions from '@/pages/admin/AdminSolutions';
+import AdminAnalytics from '@/pages/admin/AdminAnalytics';
+import AdminSettings from '@/pages/admin/AdminSettings';
 
 const AppRoutes = () => {
   return (
@@ -57,6 +65,18 @@ const AppRoutes = () => {
         <Route path="implementation-trail" element={<ImplementationTrailPage />} />
         <Route path="solution/:id/implementation/:moduleId" element={<SolutionImplementation />} />
         <Route path="solution/:id/completed" element={<ImplementationCompleted />} />
+        <Route path="achievements" element={<Achievements />} />
+        
+        {/* Rotas de Onboarding */}
+        <Route path="onboarding" element={<OnboardingIntro />} />
+        <Route path="onboarding/personal-info" element={<Onboarding />} />
+        <Route path="onboarding/professional-data" element={<Onboarding />} />
+        <Route path="onboarding/business-context" element={<Onboarding />} />
+        <Route path="onboarding/ai-experience" element={<Onboarding />} />
+        <Route path="onboarding/business-goals" element={<Onboarding />} />
+        <Route path="onboarding/experience-personalization" element={<Onboarding />} />
+        <Route path="onboarding/complementary" element={<Onboarding />} />
+        <Route path="onboarding/review" element={<Review />} />
       </Route>
       
       {/* Rotas protegidas para admins */}
@@ -72,6 +92,10 @@ const AppRoutes = () => {
         <Route path="tools" element={<AdminTools />} />
         <Route path="suggestions" element={<AdminSuggestions />} />
         <Route path="suggestions/:id" element={<AdminSuggestionDetails />} />
+        <Route path="users" element={<AdminUsers />} />
+        <Route path="solutions" element={<AdminSolutions />} />
+        <Route path="analytics" element={<AdminAnalytics />} />
+        <Route path="settings" element={<AdminSettings />} />
       </Route>
       
       {/* Rota 404 */}
