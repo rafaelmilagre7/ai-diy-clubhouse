@@ -11,7 +11,7 @@ interface SolutionEditorHeaderProps {
   title?: string;
   difficulty?: string;
   difficultyColor?: string;
-  difficultyText?: string; // Nova prop para texto traduzido
+  difficultyText?: string; // Prop para texto traduzido
 }
 
 const SolutionEditorHeader: React.FC<SolutionEditorHeaderProps> = ({

@@ -33,12 +33,12 @@ const AdminSolutionEdit = () => {
   } = useSolutionEditor(id, user);
   
   useEffect(() => {
-    // Logging for debugging purposes
-    console.log("Solution Editor loaded with ID:", id);
-    console.log("Solution data:", solution);
-    console.log("Current step:", currentStep);
-    console.log("Active tab:", activeTab);
-    console.log("Current values:", currentValues);
+    // Logging para depuração
+    console.log("Solution Editor carregado com ID:", id);
+    console.log("Dados da solução:", solution);
+    console.log("Etapa atual:", currentStep);
+    console.log("Aba ativa:", activeTab);
+    console.log("Valores atuais:", currentValues);
   }, [id, solution, currentStep, activeTab, currentValues]);
   
   if (loading) {

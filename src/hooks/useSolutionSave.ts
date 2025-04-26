@@ -21,17 +21,24 @@ export const useSolutionSave = (
       // Gerar um slug único a partir do título com timestamp
       const slug = values.slug || slugify(values.title, true);
       
+      // Log dos valores recebidos para depuração
+      console.log("Valores recebidos para salvar:", values);
+      console.log("Dificuldade:", values.difficulty);
+      
       // Preparar dados para salvar
       const solutionData = {
         title: values.title,
         description: values.description,
         category: values.category,
-        difficulty: values.difficulty, // Sempre salva o valor enum (easy, medium, advanced)
+        difficulty: values.difficulty, // Valores da enum: easy, medium, advanced
         slug: slug,
         thumbnail_url: values.thumbnail_url || null,
         published: values.published || false,
         updated_at: new Date().toISOString(),
       };
+      
+      // Log dos dados preparados para salvar
+      console.log("Dados preparados para salvar:", solutionData);
       
       // Tentar salvar com retry para contornar possíveis erros de RLS
       let retryCount = 0;
