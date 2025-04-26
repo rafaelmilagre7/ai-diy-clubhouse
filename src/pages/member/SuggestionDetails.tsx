@@ -11,7 +11,27 @@ import { DeleteSuggestionDialog } from '@/components/suggestions/details/DeleteS
 import { SuggestionDetailsHeader } from '@/components/suggestions/details/SuggestionDetailsHeader';
 import SuggestionLoadingState from '@/components/suggestions/states/SuggestionLoadingState';
 import SuggestionErrorState from '@/components/suggestions/states/SuggestionErrorState';
-import { UserVote } from '@/types/suggestionTypes';
+import { UserVote, Suggestion } from '@/types/suggestionTypes';
+
+// Função auxiliar para formatar a categoria para o formato esperado pelos componentes
+const formatSuggestionCategory = (suggestion: Suggestion | null) => {
+  if (!suggestion) return null;
+  
+  // Criamos uma cópia para não modificar o objeto original
+  const formattedSuggestion = { ...suggestion };
+  
+  // Se category é uma string, convertemos para o formato de objeto
+  if (typeof formattedSuggestion.category === 'string') {
+    formattedSuggestion.category = { name: formattedSuggestion.category };
+  }
+  
+  // Se category é undefined mas temos category_id, definimos um objeto vazio
+  if (!formattedSuggestion.category && formattedSuggestion.category_id) {
+    formattedSuggestion.category = { name: '' };
+  }
+  
+  return formattedSuggestion;
+};
 
 const SuggestionDetailsPage = () => {
   const { user, isAdmin } = useAuth();
@@ -21,7 +41,7 @@ const SuggestionDetailsPage = () => {
   const isAdminView = location.pathname.includes('/admin/');
 
   const {
-    suggestion,
+    suggestion: rawSuggestion,
     isLoading,
     error,
     userVote,
@@ -29,6 +49,9 @@ const SuggestionDetailsPage = () => {
     handleVote,
     refetch
   } = useSuggestionDetails();
+
+  // Usamos a função auxiliar para garantir que a categoria esteja no formato correto
+  const suggestion = formatSuggestionCategory(rawSuggestion);
 
   const { removeSuggestion, updateSuggestionStatus, loading: adminActionLoading } = useAdminSuggestions();
 

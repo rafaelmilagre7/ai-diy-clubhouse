@@ -14,7 +14,7 @@ interface SuggestionContainerProps {
     description: string;
     status: string;
     created_at: string;
-    category?: { name: string };
+    category?: string | { name: string };
     category_id?: string;
     upvotes: number;
     downvotes: number;
@@ -48,7 +48,11 @@ const SuggestionContainer = ({
   voteLoading = false
 }: SuggestionContainerProps) => {
   const voteBalance = suggestion.upvotes - suggestion.downvotes;
-  const categoryName = suggestion.category?.name || '';
+  
+  // Garantir que category seja sempre objeto com propriedade name
+  const categoryName = typeof suggestion.category === 'string' 
+    ? suggestion.category 
+    : suggestion.category?.name || '';
 
   return (
     <Card>

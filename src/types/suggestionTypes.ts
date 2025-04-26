@@ -1,4 +1,5 @@
 
+
 export interface Suggestion {
   id: string;
   title: string;
@@ -21,8 +22,9 @@ export interface Suggestion {
     avatar_url: string;
   };
   replies?: Suggestion[];
-  // Adicionando as propriedades que estavam faltando
-  category?: string; // Nome da categoria
+  // Modificando a propriedade category para ser um objeto ou string
+  // para manter compatibilidade com dados existentes
+  category?: string | { name: string };
   is_implemented?: boolean; // Indica se a sugestão foi implementada
 }
 
@@ -80,3 +82,4 @@ export interface UserVote {
   id: string;
   vote_type: VoteType;
 }
+
