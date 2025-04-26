@@ -19,6 +19,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/lib/supabase';
 import { useAdminTools } from '@/hooks/useAdminTools';
+import { AdminToolsFilters } from './AdminToolsFilters';
 
 interface AdminToolListProps {
   tools: Tool[];
