@@ -37,6 +37,16 @@ const BasicInfoRightColumn: React.FC<BasicInfoRightColumnProps> = ({
     }
   };
 
+  // Função para obter texto traduzido de dificuldade
+  const getDifficultyText = (diff: string) => {
+    switch (diff) {
+      case "easy": return "Fácil";
+      case "medium": return "Normal";
+      case "advanced": return "Avançado";
+      default: return diff;
+    }
+  };
+
   return (
     <div className="space-y-6">
       <FormField
@@ -82,7 +92,9 @@ const BasicInfoRightColumn: React.FC<BasicInfoRightColumnProps> = ({
                 <SelectTrigger 
                   className={field.value ? `${getDifficultyColor(field.value)} border-0` : ""}
                 >
-                  <SelectValue placeholder="Selecione uma dificuldade" />
+                  <SelectValue placeholder="Selecione uma dificuldade">
+                    {field.value ? getDifficultyText(field.value) : ""}
+                  </SelectValue>
                 </SelectTrigger>
               </FormControl>
               <SelectContent>

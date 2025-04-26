@@ -57,7 +57,7 @@ const difficultyLabel = (difficulty: string) => {
     case "easy":
       return "Fácil";
     case "medium":
-      return "Médio";
+      return "Normal";
     case "advanced":
       return "Avançado";
     default:
@@ -356,7 +356,7 @@ const SolutionsList = () => {
                   <SelectContent>
                     <SelectItem value="all">Todas dificuldades</SelectItem>
                     <SelectItem value="easy">Fácil</SelectItem>
-                    <SelectItem value="medium">Médio</SelectItem>
+                    <SelectItem value="medium">Normal</SelectItem>
                     <SelectItem value="advanced">Avançado</SelectItem>
                   </SelectContent>
                 </Select>
@@ -437,7 +437,7 @@ const SolutionsList = () => {
                   </TableCell>
                   <TableCell>
                     {solution.difficulty === "easy" ? "Fácil" : 
-                     solution.difficulty === "medium" ? "Médio" : 
+                     solution.difficulty === "medium" ? "Normal" : 
                      solution.difficulty === "advanced" ? "Avançado" : solution.difficulty}
                   </TableCell>
                   <TableCell>

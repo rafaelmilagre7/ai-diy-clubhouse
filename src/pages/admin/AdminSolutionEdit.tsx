@@ -38,7 +38,8 @@ const AdminSolutionEdit = () => {
     console.log("Solution data:", solution);
     console.log("Current step:", currentStep);
     console.log("Active tab:", activeTab);
-  }, [id, solution, currentStep, activeTab]);
+    console.log("Current values:", currentValues);
+  }, [id, solution, currentStep, activeTab, currentValues]);
   
   if (loading) {
     return <LoadingScreen />;
@@ -89,11 +90,21 @@ const AdminSolutionEdit = () => {
       case "easy":
         return "bg-green-500";
       case "medium":
-        return "bg-orange-500";
+        return "bg-yellow-500";
       case "advanced":
-        return "bg-red-500";
+        return "bg-orange-500";
       default:
         return "bg-gray-500";
+    }
+  };
+  
+  // Obtém o texto traduzido para a dificuldade
+  const getDifficultyText = (difficulty: string) => {
+    switch (difficulty) {
+      case "easy": return "Fácil";
+      case "medium": return "Normal";
+      case "advanced": return "Avançado";
+      default: return difficulty;
     }
   };
   
@@ -106,6 +117,7 @@ const AdminSolutionEdit = () => {
         title={currentValues.title}
         difficulty={currentValues.difficulty}
         difficultyColor={getDifficultyColor()}
+        difficultyText={getDifficultyText(currentValues.difficulty)}
       />
       
       {!user && <AuthError />}

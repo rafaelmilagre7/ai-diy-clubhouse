@@ -26,7 +26,7 @@ export const useSolutionSave = (
         title: values.title,
         description: values.description,
         category: values.category,
-        difficulty: values.difficulty,
+        difficulty: values.difficulty, // Sempre salva o valor enum (easy, medium, advanced)
         slug: slug,
         thumbnail_url: values.thumbnail_url || null,
         published: values.published || false,
