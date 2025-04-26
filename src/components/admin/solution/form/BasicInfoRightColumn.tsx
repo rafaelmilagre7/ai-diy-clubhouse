@@ -31,8 +31,8 @@ const BasicInfoRightColumn: React.FC<BasicInfoRightColumnProps> = ({
   const getDifficultyColor = (diff: string) => {
     switch (diff) {
       case "easy": return "bg-green-500 text-white";
-      case "medium": return "bg-orange-500 text-white";
-      case "advanced": return "bg-red-500 text-white";
+      case "medium": return "bg-yellow-500 text-white";
+      case "advanced": return "bg-orange-500 text-white";
       default: return "bg-gray-500 text-white";
     }
   };
@@ -89,10 +89,10 @@ const BasicInfoRightColumn: React.FC<BasicInfoRightColumnProps> = ({
                 <SelectItem value="easy" className="bg-green-100 hover:bg-green-200">
                   Fácil
                 </SelectItem>
-                <SelectItem value="medium" className="bg-orange-100 hover:bg-orange-200">
-                  Médio
+                <SelectItem value="medium" className="bg-yellow-100 hover:bg-yellow-200">
+                  Normal
                 </SelectItem>
-                <SelectItem value="advanced" className="bg-red-100 hover:bg-red-200">
+                <SelectItem value="advanced" className="bg-orange-100 hover:bg-orange-200">
                   Avançado
                 </SelectItem>
               </SelectContent>

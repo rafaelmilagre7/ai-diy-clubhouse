@@ -13,7 +13,7 @@ export const DifficultyBadge = ({ difficulty }: DifficultyBadgeProps) => {
       case "medium":
         return "bg-gradient-to-r from-yellow-100 to-yellow-50 text-yellow-800 border-yellow-200";
       case "advanced":
-        return "bg-gradient-to-r from-red-100 to-red-50 text-red-800 border-red-200";
+        return "bg-gradient-to-r from-orange-100 to-orange-50 text-orange-800 border-orange-200";
       default:
         return "bg-gradient-to-r from-gray-100 to-gray-50 text-gray-800 border-gray-200";
     }
@@ -24,7 +24,7 @@ export const DifficultyBadge = ({ difficulty }: DifficultyBadgeProps) => {
       case "easy":
         return "Fácil";
       case "medium":
-        return "Médio";
+        return "Normal";
       case "advanced":
         return "Avançado";
       default:
