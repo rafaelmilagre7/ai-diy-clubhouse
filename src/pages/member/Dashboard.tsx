@@ -6,17 +6,22 @@ import { useDashboardProgress } from "@/hooks/useDashboardProgress";
 import { toast } from "sonner";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { Solution } from "@/lib/supabase";
+import { useQueryClient } from "@tanstack/react-query";
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const queryClient = useQueryClient();
   
   // Otimização: Usar useMemo para lembrar o valor da categoria entre renderizações
   const initialCategory = useMemo(() => searchParams.get("category") || "general", []);
   const [category, setCategory] = useState<string>(initialCategory);
   
-  // Otimização: Adicionar configuração de staleTime mais longa para reduzir requisições
-  const { solutions, loading: solutionsLoading } = useSolutionsData();
+  // Configurações otimizadas para o React Query
+  const { solutions, loading: solutionsLoading } = useSolutionsData({
+    staleTime: 1000 * 60 * 10, // 10 minutos para melhorar o cache
+    enabled: true, // Sempre carregado na dashboard
+  });
   
   // Otimização: Usar useMemo para o array de soluções para evitar recálculos desnecessários
   const filteredSolutions = useMemo(() => {
@@ -42,8 +47,13 @@ const Dashboard = () => {
 
   // Função para navegar para a página de detalhes da solução - memoizada
   const handleSolutionClick = useCallback((solution: Solution) => {
+    // Pré-fetch dos dados da solução para melhorar UX
+    queryClient.prefetchQuery({
+      queryKey: ['solution', solution.id],
+      staleTime: 1000 * 60 * 5 // 5 minutos
+    });
     navigate(`/solution/${solution.id}`);
-  }, [navigate]);
+  }, [navigate, queryClient]);
 
   // Controle para exibir toast apenas na primeira visita usando localStorage
   useEffect(() => {
