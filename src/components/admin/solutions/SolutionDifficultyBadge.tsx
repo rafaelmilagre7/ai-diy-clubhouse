@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
-import { difficultyLabels } from '@/utils/difficultyUtils';
+import { getDifficultyLabel } from '@/utils/difficultyUtils';
 
 interface SolutionDifficultyBadgeProps {
   difficulty: string;
@@ -19,7 +19,7 @@ export const SolutionDifficultyBadge: React.FC<SolutionDifficultyBadgeProps> = (
 
   return (
     <Badge className={getDifficultyColor(difficulty)}>
-      {difficultyLabels[difficulty] || difficulty}
+      {getDifficultyLabel(difficulty)}
     </Badge>
   );
 };

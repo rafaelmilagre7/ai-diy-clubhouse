@@ -3,7 +3,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { SaveIcon, ArrowLeftIcon } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { difficultyLabels, getDifficultyColor } from '@/utils/difficultyUtils';
+import { getDifficultyLabel, getDifficultyColor } from '@/utils/difficultyUtils';
 
 interface SolutionEditorHeaderProps {
   id?: string;
@@ -42,7 +42,7 @@ const SolutionEditorHeader: React.FC<SolutionEditorHeaderProps> = ({
               <span
                 className={`${getDifficultyColor(difficulty)} text-xs px-2 py-0.5 rounded-full`}
               >
-                {difficultyLabels[difficulty]}
+                {getDifficultyLabel(difficulty)}
               </span>
             </div>
           )}

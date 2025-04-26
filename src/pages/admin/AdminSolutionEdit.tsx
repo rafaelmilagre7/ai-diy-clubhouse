@@ -82,31 +82,6 @@ const AdminSolutionEdit = () => {
       setCurrentStep(currentStep - 1);
     }
   };
-
-  // Determina a cor do nível de dificuldade
-  const getDifficultyColor = () => {
-    const difficulty = currentValues.difficulty;
-    switch (difficulty) {
-      case "easy":
-        return "bg-green-500";
-      case "medium":
-        return "bg-yellow-500";
-      case "advanced":
-        return "bg-orange-500";
-      default:
-        return "bg-gray-500";
-    }
-  };
-  
-  // Obtém o texto traduzido para a dificuldade
-  const getDifficultyText = (difficulty: string) => {
-    switch (difficulty) {
-      case "easy": return "Fácil";
-      case "medium": return "Normal";
-      case "advanced": return "Avançado";
-      default: return difficulty;
-    }
-  };
   
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-10">
@@ -116,8 +91,6 @@ const AdminSolutionEdit = () => {
         onSave={handleSaveWithToast}
         title={currentValues.title}
         difficulty={currentValues.difficulty}
-        difficultyColor={getDifficultyColor()}
-        difficultyText={getDifficultyText(currentValues.difficulty)}
       />
       
       {!user && <AuthError />}
