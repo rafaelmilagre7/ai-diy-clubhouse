@@ -1,22 +1,64 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Loader2 } from 'lucide-react';
 import { theme } from '@/lib/theme';
 import MemberLayout from '@/components/layout/MemberLayout';
+import { useOnboarding } from '@/hooks/onboarding/useOnboarding';
+import { OnboardingCompleted } from '@/components/onboarding/OnboardingCompleted';
+import { motion } from 'framer-motion';
 
 const OnboardingIntro = () => {
   const navigate = useNavigate();
+  const { progress, isLoading, refreshProgress } = useOnboarding();
+  const [isCompleted, setIsCompleted] = useState<boolean | null>(null);
+
+  // Efeito para detectar se o onboarding está completo
+  useEffect(() => {
+    if (!isLoading && progress) {
+      setIsCompleted(progress.is_completed || false);
+    }
+  }, [progress, isLoading]);
 
   const handleStartOnboarding = () => {
     navigate('/onboarding/personal-info');
   };
 
+  const handleReviewOnboarding = () => {
+    navigate('/onboarding/review');
+  };
+
+  // Estado de carregamento
+  if (isLoading) {
+    return (
+      <MemberLayout>
+        <div className="container flex items-center justify-center h-[70vh]">
+          <Loader2 className="h-8 w-8 text-[#0ABAB5] animate-spin" />
+        </div>
+      </MemberLayout>
+    );
+  }
+
+  // Se o onboarding já foi concluído, mostrar a tela de onboarding concluído
+  if (isCompleted) {
+    return (
+      <MemberLayout>
+        <OnboardingCompleted onReview={handleReviewOnboarding} />
+      </MemberLayout>
+    );
+  }
+
+  // Tela para iniciar o onboarding (primeiro acesso)
   return (
     <MemberLayout>
       <div className="container max-w-4xl mx-auto py-16 px-4">
-        <div className="bg-gray-800 rounded-lg p-8 shadow-xl">
+        <motion.div 
+          className="bg-gray-800 rounded-lg p-8 shadow-xl"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+        >
           <div className="text-center mb-10">
             <h1 className="text-3xl font-bold text-white mb-4">Bem-vindo ao VIVER DE IA Club</h1>
             <p className="text-xl text-gray-300">
@@ -55,7 +97,7 @@ const OnboardingIntro = () => {
               </span>
             </Button>
           </div>
-        </div>
+        </motion.div>
       </div>
     </MemberLayout>
   );

@@ -45,13 +45,16 @@ export function useSolutionsData(initialCategory: string | null = 'all') {
     }
   }, [toast, queryClient]);
 
+  // Verificar se temos dados em cache primeiro
+  const cachedSolutions = queryClient.getQueryData<Solution[]>(['solutions']);
+
   // Usar React Query para cache e refetch
   const { data: solutions = [], isLoading, error, isFetched } = useQuery({
     queryKey: ['solutions'],
     queryFn: fetchSolutions,
     staleTime: 5 * 60 * 1000, // 5 minutos de cache
     refetchOnWindowFocus: false, // Não refetch ao focar a janela
-    placeholderData: (previousData) => previousData, // Usa dados anteriores como placeholder
+    placeholderData: (previousData) => previousData || cachedSolutions, // Usar dados anteriores como placeholder
   });
 
   // Prefetch lógica para melhorar carregamento de detalhes
@@ -74,6 +77,8 @@ export function useSolutionsData(initialCategory: string | null = 'all') {
 
   // Filtrar soluções por categoria e pesquisa
   const filteredSolutions = useMemo(() => {
+    if (!solutions || solutions.length === 0) return [];
+    
     let filtered = [...solutions];
     
     // Filtrar por categoria
@@ -100,7 +105,7 @@ export function useSolutionsData(initialCategory: string | null = 'all') {
   return {
     solutions,
     filteredSolutions,
-    loading: isLoading,
+    loading: isLoading && !cachedSolutions, // Somente loading se não tiver cache
     isFetched,
     error: error ? String(error) : null,
     searchQuery,
@@ -112,6 +117,7 @@ export function useSolutionsData(initialCategory: string | null = 'all') {
     navigateToSolution: (id: string) => {
       prefetchSolutionDetails(id);
       navigate(`/solution/${id}`);
-    }
+    },
+    refreshSolutions: fetchSolutions
   };
 }

@@ -33,7 +33,8 @@ export const useDashboardProgress = (solutions: Solution[] = []) => {
   // Usar React Query para cache e controle de estado
   const { 
     data: progressData,
-    isLoading
+    isLoading,
+    refetch
   } = useQuery({
     queryKey: ['progress', user?.id],
     queryFn: fetchProgress,
@@ -85,10 +86,15 @@ export const useDashboardProgress = (solutions: Solution[] = []) => {
     };
   }, [solutions, progressData, cachedProgressData]);
 
+  const refreshProgress = useCallback(() => {
+    return refetch();
+  }, [refetch]);
+
   return {
     active,
     completed,
     recommended,
-    loading: isLoading && !cachedProgressData // Só considera loading se não tiver cache
+    loading: isLoading && !cachedProgressData, // Só considera loading se não tiver cache
+    refreshProgress
   };
 };

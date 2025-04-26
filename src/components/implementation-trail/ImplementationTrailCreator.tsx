@@ -24,6 +24,7 @@ export const ImplementationTrailCreator = () => {
 
       const result = [];
       
+      // Para cada nível de prioridade, processar as soluções
       ["priority1", "priority2", "priority3"].forEach((priority, idx) => {
         const items = (trail as any)[priority] || [];
         items.forEach((item: any) => {
@@ -32,7 +33,8 @@ export const ImplementationTrailCreator = () => {
             result.push({
               ...solution,
               ...item,
-              priority: idx + 1
+              priority: idx + 1,
+              justification: item.justification || "Recomendação baseada no seu perfil" // Garantir justificativa
             });
           }
         });
@@ -48,6 +50,12 @@ export const ImplementationTrailCreator = () => {
   const handleGenerateTrail = async () => {
     try {
       setIsGenerating(true);
+      
+      // Exibir toast informativo
+      toast.info("Gerando sua trilha personalizada...", {
+        duration: 2000,
+      });
+      
       await generateImplementationTrail({});
       toast.success("Trilha de implementação gerada com sucesso!");
     } catch (error) {
@@ -62,6 +70,12 @@ export const ImplementationTrailCreator = () => {
   const handleRefreshTrail = async () => {
     try {
       setIsGenerating(true);
+      
+      // Exibir toast informativo
+      toast.info("Atualizando sua trilha personalizada...", {
+        duration: 2000,
+      });
+      
       await refreshTrail(true);
       toast.success("Trilha atualizada com sucesso!");
     } catch (error) {
@@ -72,7 +86,7 @@ export const ImplementationTrailCreator = () => {
     }
   };
 
-  // Estado de carregamento
+  // Estado de carregamento com skeleton individual por item
   if (isLoading || solutionsLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[300px] py-8">

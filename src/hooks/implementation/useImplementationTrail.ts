@@ -4,6 +4,7 @@ import { useAuth } from "@/contexts/auth";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { sanitizeTrailData } from "./useImplementationTrail.utils";
+import { useProgress } from "@/hooks/onboarding/useProgress";
 
 export type ImplementationRecommendation = {
   solutionId: string;
@@ -18,6 +19,7 @@ export type ImplementationTrail = {
 
 export const useImplementationTrail = () => {
   const { user } = useAuth();
+  const { progress: onboardingProgress } = useProgress();
   const [trail, setTrail] = useState<ImplementationTrail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -87,7 +89,7 @@ export const useImplementationTrail = () => {
   }, [loadExistingTrail]);
 
   // Gerar nova trilha
-  const generateImplementationTrail = async (onboardingData: any) => {
+  const generateImplementationTrail = async (options: any = {}) => {
     if (!user) {
       setError("Usuário não autenticado");
       return null;
@@ -96,6 +98,12 @@ export const useImplementationTrail = () => {
     try {
       setIsLoading(true);
       setError(null);
+
+      // Verificar se o onboarding está completo
+      if (onboardingProgress && !onboardingProgress.is_completed) {
+        toast.error("É necessário completar o onboarding antes de gerar uma trilha personalizada.");
+        throw new Error("Onboarding não completo");
+      }
 
       // Buscar trilha existente
       const { data: existingTrail } = await supabase
@@ -107,7 +115,7 @@ export const useImplementationTrail = () => {
         .limit(1)
         .maybeSingle();
 
-      if (existingTrail) {
+      if (existingTrail && !options.forceRegenerate) {
         const sanitizedData = sanitizeTrailData(existingTrail.trail_data as ImplementationTrail);
         setTrail(sanitizedData);
         return sanitizedData;
@@ -124,7 +132,18 @@ export const useImplementationTrail = () => {
 
       if (updateError) throw updateError;
 
-      // Chamar função de geração
+      // Buscar dados do onboarding para gerar recomendações
+      const { data: onboardingData, error: onboardingError } = await supabase
+        .from("onboarding_progress")
+        .select("*")
+        .eq("user_id", user.id)
+        .single();
+
+      if (onboardingError) {
+        throw new Error("Erro ao recuperar dados do onboarding");
+      }
+
+      // Chamar função de geração (edge function)
       const { data: generatedData, error: fnError } = await supabase.functions.invoke(
         "generate-implementation-trail",
         {
@@ -136,73 +155,70 @@ export const useImplementationTrail = () => {
 
       if (fnError) throw fnError;
 
-      // Como a edge function ainda não está implementada, vamos criar dados mockados
-      const mockRecommendations = {
-        priority1: [
-          {
-            solutionId: "mock-solution-1",
-            justification: "Esta solução é perfeita para seu negócio B2B e pode ajudar a otimizar seus processos de vendas."
-          },
-          {
-            solutionId: "mock-solution-2",
-            justification: "Considerando seu foco em automação, esta solução trará ganhos imediatos de produtividade."
-          }
-        ],
-        priority2: [
-          {
-            solutionId: "mock-solution-3",
-            justification: "Com seu conhecimento avançado em IA, você poderá implementar esta solução rapidamente."
-          }
-        ],
-        priority3: [
-          {
-            solutionId: "mock-solution-4",
-            justification: "Para complementar sua estratégia de marketing com IA, esta ferramenta será muito útil."
-          }
-        ]
-      };
+      // Processar dados gerados ou usar mockup se a função ainda não estiver implementada
+      let trailData = generatedData?.trail || createMockTrail(onboardingData);
 
-      const recommendationsToSave = generatedData?.recommendations || mockRecommendations;
-
-      // Salvar trilha gerada
+      // Atualizar no banco de dados
       const { error: saveError } = await supabase
         .from("implementation_trails")
         .update({
-          trail_data: recommendationsToSave,
           status: "completed",
-          updated_at: new Date().toISOString()
+          trail_data: trailData,
+          updated_at: new Date()
         })
         .eq("user_id", user.id)
         .eq("status", "pending");
 
       if (saveError) throw saveError;
 
-      const sanitizedData = sanitizeTrailData(recommendationsToSave);
+      // Atualizar estado
+      const sanitizedData = sanitizeTrailData(trailData as ImplementationTrail);
       setTrail(sanitizedData);
-      
       return sanitizedData;
     } catch (error: any) {
       console.error("Erro ao gerar trilha:", error);
-      setError(error.message || "Erro ao gerar trilha");
-      
-      // Registrar erro
-      await supabase
-        .from("implementation_trails")
-        .update({
-          status: "error",
-          error_message: error.message,
-        })
-        .eq("user_id", user.id)
-        .eq("status", "pending");
-
-      toast.error("Não foi possível gerar sua trilha");
+      setError(error.message || "Erro ao gerar sua trilha");
       return null;
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Carregar trilha ao montar o componente
+  // Função auxiliar para criar uma trilha mockada se necessário (temporário)
+  const createMockTrail = (userData: any) => {
+    // Identificar áreas de interesse ou necessidades baseadas nas respostas
+    const businessChallenges = userData?.business_context?.business_challenges || [];
+    const aiExperience = userData?.ai_experience?.knowledge_level || 'iniciante';
+    const primaryGoal = userData?.business_goals?.primary_goal || '';
+    
+    // Criar mockup de trilha baseado nas informações do usuário
+    return {
+      priority1: [
+        {
+          solutionId: "mock-solution-1",
+          justification: `Esta solução é ideal para ${primaryGoal} e ajudará a resolver ${businessChallenges[0] || 'desafios iniciais'} com IA.`
+        },
+        {
+          solutionId: "mock-solution-2",
+          justification: `Como você tem experiência ${aiExperience} em IA, esta solução é um passo importante para avançar.`
+        }
+      ],
+      priority2: [
+        {
+          solutionId: "mock-solution-3",
+          justification: "Esta solução complementa perfeitamente seu objetivo principal e tem boa sinergia com as soluções prioritárias."
+        }
+      ],
+      priority3: [
+        {
+          solutionId: "mock-solution-4",
+          justification: "Para uma visão mais completa, esta solução ajudará a expandir o alcance de sua estratégia de IA no futuro."
+        }
+      ]
+    };
+  };
+
+  // Efeito para carregar a trilha ao montar
   useEffect(() => {
     loadExistingTrail();
   }, [loadExistingTrail]);
