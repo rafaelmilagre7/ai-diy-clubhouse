@@ -9,17 +9,20 @@ import { AuthProvider } from './contexts/auth';
 import { AppRoutes } from './routes';
 
 // Criar uma instância do QueryClient fora do componente para evitar recriação a cada render
+// Com configurações otimizadas para melhor caching e performance
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 1000 * 60 * 5, // 5 minutos
       retry: 1,
+      refetchOnWindowFocus: false, // Desativado para reduzir chamadas desnecessárias
+      refetchOnMount: true, // Ativo apenas no primeiro mount
     },
   },
 });
 
 const App = () => {
-  console.log("Renderizando App.tsx");
+  // Removido console.log que afeta performance em produção
   
   return (
     <QueryClientProvider client={queryClient}>
@@ -41,7 +44,10 @@ const App = () => {
               visibleToasts={3}
               duration={3000}
             />
-            <ReactQueryDevtools initialIsOpen={false} />
+            {/* Devtools disponível apenas em dev */}
+            {process.env.NODE_ENV === 'development' && (
+              <ReactQueryDevtools initialIsOpen={false} />
+            )}
           </AuthProvider>
         </LoggingProvider>
       </BrowserRouter>

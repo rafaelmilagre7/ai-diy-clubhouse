@@ -12,7 +12,7 @@ const Dashboard = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   
   // Otimização: Usar useMemo para lembrar o valor da categoria entre renderizações
-  const initialCategory = useMemo(() => searchParams.get("category") || "general", [searchParams]);
+  const initialCategory = useMemo(() => searchParams.get("category") || "general", []);
   const [category, setCategory] = useState<string>(initialCategory);
   
   // Otimização: Adicionar configuração de staleTime mais longa para reduzir requisições

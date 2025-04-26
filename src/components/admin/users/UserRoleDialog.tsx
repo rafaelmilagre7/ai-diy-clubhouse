@@ -1,4 +1,5 @@
 
+import React, { memo } from "react";
 import {
   Dialog,
   DialogContent,
@@ -28,7 +29,8 @@ interface UserRoleDialogProps {
   saving: boolean;
 }
 
-export const UserRoleDialog = ({
+// Componente com memo para evitar re-renderizações desnecessárias
+export const UserRoleDialog = memo(({
   open,
   onOpenChange,
   selectedUser,
@@ -37,6 +39,20 @@ export const UserRoleDialog = ({
   onUpdateRole,
   saving,
 }: UserRoleDialogProps) => {
+  // Handler simples para cancelar
+  const handleCancel = () => {
+    if (!saving) {
+      onOpenChange(false);
+    }
+  };
+
+  // Handler simples para salvar
+  const handleSave = () => {
+    if (!saving) {
+      onUpdateRole();
+    }
+  };
+
   return (
     <Dialog 
       open={open} 
@@ -75,14 +91,14 @@ export const UserRoleDialog = ({
         <DialogFooter>
           <Button 
             variant="outline" 
-            onClick={() => onOpenChange(false)} 
+            onClick={handleCancel}
             disabled={saving}
             type="button"
           >
             Cancelar
           </Button>
           <Button 
-            onClick={onUpdateRole} 
+            onClick={handleSave}
             disabled={saving}
           >
             {saving ? 'Salvando...' : 'Salvar'}
@@ -91,4 +107,6 @@ export const UserRoleDialog = ({
       </DialogContent>
     </Dialog>
   );
-};
+});
+
+UserRoleDialog.displayName = 'UserRoleDialog';

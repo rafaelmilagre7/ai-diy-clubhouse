@@ -1,5 +1,5 @@
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, memo } from "react";
 import { useAuth } from "@/contexts/auth";
 import { isSuperAdmin } from "@/contexts/auth/utils/profileUtils/roleValidation";
 import { useUsers } from "@/hooks/admin/useUsers";
@@ -34,7 +34,7 @@ const AdminUsers = () => {
     }
   }, [user]);
 
-  // Função simplificada para abrir o modal de edição
+  // Função memoizada para abrir o modal de edição
   const handleEditRole = useCallback((user: UserProfile) => {
     setSelectedUser(user);
     setNewRole(user.role as 'admin' | 'member');
@@ -74,4 +74,5 @@ const AdminUsers = () => {
   );
 };
 
-export default AdminUsers;
+// Exportamos um componente memorizado para evitar re-renderizações desnecessárias
+export default memo(AdminUsers);
