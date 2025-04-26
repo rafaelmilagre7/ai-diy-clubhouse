@@ -17,13 +17,8 @@ const Dashboard = () => {
   const initialCategory = useMemo(() => searchParams.get("category") || "general", []);
   const [category, setCategory] = useState<string>(initialCategory);
   
-  // Corrigir a chamada de useSolutionsData para usar parâmetros corretos
-  const { solutions, loading: solutionsLoading } = useSolutionsData({
-    queryOptions: {
-      staleTime: 1000 * 60 * 10, // 10 minutos para melhorar o cache
-      enabled: true, // Sempre carregado na dashboard
-    }
-  });
+  // Corrigir a chamada de useSolutionsData para atender a assinatura esperada
+  const { solutions, loading: solutionsLoading } = useSolutionsData(category);
   
   // Otimização: Usar useMemo para o array de soluções para evitar recálculos desnecessários
   const filteredSolutions = useMemo(() => {
