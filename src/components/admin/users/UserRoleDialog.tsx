@@ -45,6 +45,12 @@ export const UserRoleDialog = ({
   const cleanupOverlays = useCallback(() => {
     console.log('Executando limpeza de overlays no UserRoleDialog');
     
+    // Primeiro, restaurar os estilos do body
+    document.body.style.overflow = '';
+    document.body.style.pointerEvents = '';
+    document.body.removeAttribute('aria-hidden');
+    document.body.style.paddingRight = '';
+    
     // Remove todos os backdrops do Radix UI
     const radixBackdrops = document.querySelectorAll("[data-state='open'].bg-black");
     console.log('Radix backdrops encontrados:', radixBackdrops.length);
@@ -80,24 +86,6 @@ export const UserRoleDialog = ({
       console.log('Removendo portal MUI');
       el.remove();
     });
-
-    // Restaura overflow do body se necessário
-    if (document.body.style.overflow === 'hidden') {
-      console.log('Restaurando overflow do body');
-      document.body.style.overflow = '';
-      document.body.style.paddingRight = '';
-    }
-    
-    // Remove quaisquer atributos que possam estar bloqueando interações
-    if (document.body.hasAttribute('aria-hidden')) {
-      document.body.removeAttribute('aria-hidden');
-    }
-    if (document.body.style.pointerEvents === 'none') {
-      document.body.style.pointerEvents = '';
-    }
-    
-    console.log('Backdrop removido:', document.querySelectorAll('.MuiBackdrop-root').length);
-    console.log('Portals Radix restantes:', document.querySelectorAll('[data-radix-portal]').length);
   }, []);
 
   // Garantir limpeza ao desmontar o componente
@@ -105,8 +93,7 @@ export const UserRoleDialog = ({
     return () => {
       isMounted.current = false;
       console.log('UserRoleDialog desmontado, executando limpeza final');
-      // Pequeno delay para garantir que desmontagem termine primeiro
-      setTimeout(cleanupOverlays, 10);
+      cleanupOverlays();
     };
   }, [cleanupOverlays]);
 
@@ -114,62 +101,67 @@ export const UserRoleDialog = ({
   useEffect(() => {
     if (!open && isMounted.current) {
       console.log('Modal fechado no efeito, executando limpeza');
-      // Pequeno delay para permitir animação de fechamento
-      setTimeout(cleanupOverlays, 100);
+      // Limpeza imediata
+      cleanupOverlays();
       
-      // Verificação adicional para garantir limpeza completa
-      setTimeout(() => {
-        // Forçar restauração da interatividade da página
-        document.body.style.pointerEvents = '';
-        document.body.style.overflow = '';
-        document.body.removeAttribute('aria-hidden');
-      }, 300);
+      // Verificação adicional após animação
+      setTimeout(cleanupOverlays, 300);
     }
   }, [open, cleanupOverlays]);
 
   // Função para fechar o modal com segurança
   const handleCloseModal = useCallback(() => {
     console.log('Fechamento de modal solicitado');
-    onOpenChange(false);
-    // Executar limpeza após transição do modal
-    setTimeout(cleanupOverlays, 200);
     
-    // Verificação final para garantir interatividade
+    // Limpar overlays antes de fechar
+    cleanupOverlays();
+    
+    // Fechar modal após limpeza
     setTimeout(() => {
-      if (document.body.style.overflow === 'hidden' || 
-          document.body.hasAttribute('aria-hidden') ||
-          document.body.style.pointerEvents === 'none') {
-        console.log('Forçando restauração final da interatividade');
-        document.body.style.overflow = '';
-        document.body.style.pointerEvents = '';
-        document.body.removeAttribute('aria-hidden');
-        document.body.style.paddingRight = '';
-      }
-    }, 500);
+      onOpenChange(false);
+      
+      // Verificar novamente após animação
+      setTimeout(cleanupOverlays, 300);
+    }, 50);
   }, [onOpenChange, cleanupOverlays]);
 
-  // Função para lidar com salvamento e fechamento
+  // Função para lidar com salvamento
   const handleUpdateAndClose = useCallback(() => {
-    console.log('Salvamento solicitado');
+    if (saving) return;
+    
+    console.log('Salvamento solicitado - limpando overlays antes');
+    
+    // Limpar qualquer overlay existente primeiro
+    cleanupOverlays();
+    
+    // Chamar função de atualização, que deve fechar o modal e mostrar toast
     onUpdateRole();
-    // Apenas executar se não estiver salvando
-    if (!saving) {
-      // Fechar modal
-      setTimeout(() => {
-        onOpenChange(false);
-        // Agendar limpeza para após animação fechar
-        setTimeout(cleanupOverlays, 300);
-      }, 100);
-    }
-  }, [onUpdateRole, saving, onOpenChange, cleanupOverlays]);
+    
+    // Verificação adicional após pequeno delay
+    setTimeout(cleanupOverlays, 300);
+  }, [onUpdateRole, saving, cleanupOverlays]);
 
   return (
-    <Dialog open={open} onOpenChange={handleCloseModal}>
+    <Dialog 
+      open={open} 
+      onOpenChange={() => {
+        // Ao tentar fechar o modal, limpar overlays primeiro
+        cleanupOverlays();
+        // Pequeno delay antes de chamar o onOpenChange
+        setTimeout(() => onOpenChange(false), 50);
+      }}
+    >
       <DialogContent 
         onEscapeKeyDown={handleCloseModal}
         onInteractOutside={handleCloseModal}
         onPointerDownOutside={handleCloseModal}
         className="z-40"
+        // Quando o conteúdo é removido, limpar overlays
+        onCloseAutoFocus={(e) => {
+          e.preventDefault();
+          console.log("Dialog content fechado, limpando overlays");
+          cleanupOverlays();
+        }}
       >
         <DialogHeader>
           <DialogTitle>Alterar Função do Usuário</DialogTitle>

@@ -27,7 +27,8 @@ const App = () => {
         <LoggingProvider>
           <AuthProvider>
             <AppRoutes />
-            {/* Configuração do Toaster do Sonner para não bloquear cliques */}
+            {/* Configuração do Toaster do Sonner com configurações que garantem 
+                que não bloqueie interações e tenha z-index apropriado */}
             <Toaster 
               position="bottom-right" 
               toastOptions={{
