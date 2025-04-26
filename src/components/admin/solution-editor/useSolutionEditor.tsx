@@ -5,6 +5,7 @@ import { useSolutionData } from "@/hooks/useSolutionData";
 import { useSolutionSave } from "@/hooks/useSolutionSave";
 import { useSolutionSteps } from "@/hooks/useSolutionSteps";
 import { Solution } from "@/lib/supabase";
+import { translateDifficultyToEnum } from "@/utils/difficultyUtils";
 
 export const useSolutionEditor = (id: string | undefined, user: any) => {
   // Get solution data
@@ -29,16 +30,7 @@ export const useSolutionEditor = (id: string | undefined, user: any) => {
   
   // Normaliza a dificuldade para compatibilidade
   const normalizeDifficulty = (difficulty: string): "easy" | "medium" | "advanced" => {
-    if (difficulty === "beginner") return "easy";
-    if (difficulty === "intermediate") return "medium";
-    
-    // Garantir que o valor esteja entre os aceitos
-    if (["easy", "medium", "advanced"].includes(difficulty)) {
-      return difficulty as "easy" | "medium" | "advanced";
-    }
-    
-    // Valor padrão caso nenhum dos anteriores seja válido
-    return "medium";
+    return translateDifficultyToEnum(difficulty);
   };
   
   const currentValues: SolutionFormValues = solution

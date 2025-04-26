@@ -5,6 +5,7 @@ import { supabase, Solution } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 import { SolutionFormValues } from "@/components/admin/solution/form/solutionFormSchema";
 import { slugify } from "@/utils/slugify";
+import { translateDifficultyToEnum } from "@/utils/difficultyUtils";
 
 export const useSolutionSave = (
   id: string | undefined,
@@ -16,19 +17,7 @@ export const useSolutionSave = (
 
   // Função para normalizar o valor da difficulty para o formato esperado pelo backend
   const normalizeDifficulty = (difficulty: string): "easy" | "medium" | "advanced" => {
-    switch (difficulty) {
-      case "beginner":
-        return "easy";
-      case "intermediate":
-        return "medium";
-      case "easy":
-      case "medium":
-      case "advanced":
-        return difficulty as "easy" | "medium" | "advanced";
-      default:
-        console.warn(`Valor inesperado para dificuldade: "${difficulty}". Usando "medium" como padrão.`);
-        return "medium";
-    }
+    return translateDifficultyToEnum(difficulty);
   };
 
   const onSubmit = async (values: SolutionFormValues) => {
@@ -40,10 +29,11 @@ export const useSolutionSave = (
       
       // Log dos valores recebidos para depuração
       console.log("Valores recebidos para salvar:", values);
-      console.log("Dificuldade:", values.difficulty);
+      console.log("Dificuldade bruta:", values.difficulty);
       
       // Normalizar o valor da dificuldade antes de salvar
       const normalizedDifficulty = normalizeDifficulty(values.difficulty);
+      console.log("Dificuldade normalizada:", normalizedDifficulty);
       
       // Validar o valor da dificuldade antes de salvar
       if (normalizedDifficulty !== "easy" && normalizedDifficulty !== "medium" && normalizedDifficulty !== "advanced") {

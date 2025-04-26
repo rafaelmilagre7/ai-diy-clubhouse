@@ -44,3 +44,26 @@ export const getDifficultyColor = (difficulty: string): string => {
       return "bg-gray-500 text-white";
   }
 };
+
+// Nova função para converter texto traduzido de volta para o enum
+export const translateDifficultyToEnum = (difficulty: string): "easy" | "medium" | "advanced" => {
+  if (!difficulty) return "medium";
+  
+  // Se for um valor enum válido, retorna diretamente
+  if (["easy", "medium", "advanced"].includes(difficulty)) {
+    return difficulty as "easy" | "medium" | "advanced";
+  }
+  
+  // Converte texto traduzido para enum
+  switch (difficulty.toLowerCase()) {
+    case "fácil":
+      return "easy";
+    case "normal":
+      return "medium";
+    case "avançado":
+      return "advanced";
+    default:
+      console.warn(`Valor traduzido inesperado: "${difficulty}". Usando "medium" como padrão.`);
+      return "medium";
+  }
+};

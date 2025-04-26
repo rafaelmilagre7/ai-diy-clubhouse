@@ -17,7 +17,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { difficultyLabels, getDifficultyColor } from "@/utils/difficultyUtils";
+import { 
+  difficultyLabels, 
+  getDifficultyColor, 
+  translateDifficultyToEnum 
+} from "@/utils/difficultyUtils";
 
 interface BasicInfoRightColumnProps {
   form: UseFormReturn<SolutionFormValues>;
@@ -62,40 +66,48 @@ const BasicInfoRightColumn: React.FC<BasicInfoRightColumnProps> = ({
       <FormField
         control={form.control}
         name="difficulty"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Dificuldade</FormLabel>
-            <Select
-              onValueChange={field.onChange}
-              value={field.value}
-            >
-              <FormControl>
-                <SelectTrigger 
-                  className={field.value ? `${getDifficultyColor(field.value)} border-0` : ""}
-                >
-                  <SelectValue placeholder="Selecione uma dificuldade">
-                    {field.value ? difficultyLabels[field.value] : ""}
-                  </SelectValue>
-                </SelectTrigger>
-              </FormControl>
-              <SelectContent>
-                <SelectItem value="easy" className="bg-green-100 hover:bg-green-200">
-                  Fácil
-                </SelectItem>
-                <SelectItem value="medium" className="bg-yellow-100 hover:bg-yellow-200">
-                  Normal
-                </SelectItem>
-                <SelectItem value="advanced" className="bg-orange-100 hover:bg-orange-200">
-                  Avançado
-                </SelectItem>
-              </SelectContent>
-            </Select>
-            <FormDescription>
-              O nível de dificuldade de implementação da solução.
-            </FormDescription>
-            <FormMessage />
-          </FormItem>
-        )}
+        render={({ field }) => {
+          // Garantir que o valor armazenado no formulário é sempre o enum
+          const normalizedValue = translateDifficultyToEnum(field.value);
+          
+          return (
+            <FormItem>
+              <FormLabel>Dificuldade</FormLabel>
+              <Select
+                onValueChange={(value) => {
+                  // Garantir que o valor definido é sempre o enum
+                  field.onChange(translateDifficultyToEnum(value));
+                }}
+                value={normalizedValue}
+              >
+                <FormControl>
+                  <SelectTrigger 
+                    className={normalizedValue ? `${getDifficultyColor(normalizedValue)} border-0` : ""}
+                  >
+                    <SelectValue placeholder="Selecione uma dificuldade">
+                      {normalizedValue ? difficultyLabels[normalizedValue] : ""}
+                    </SelectValue>
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="easy" className="bg-green-100 hover:bg-green-200">
+                    Fácil
+                  </SelectItem>
+                  <SelectItem value="medium" className="bg-yellow-100 hover:bg-yellow-200">
+                    Normal
+                  </SelectItem>
+                  <SelectItem value="advanced" className="bg-orange-100 hover:bg-orange-200">
+                    Avançado
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+              <FormDescription>
+                O nível de dificuldade de implementação da solução.
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          );
+        }}
       />
     </div>
   );
