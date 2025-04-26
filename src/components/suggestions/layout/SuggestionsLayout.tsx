@@ -46,40 +46,9 @@ const SuggestionsLayout = () => {
     }
   }, [suggestions]);
 
-  if (isLoading) {
-    return (
-      <div className="container py-6 space-y-6">
-        <SuggestionsHeader 
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          filter={filter}
-          onFilterChange={handleFilterChange}
-        />
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[1, 2, 3, 4, 5, 6].map((i) => (
-            <Card key={i}>
-              <div className="p-4 space-y-3">
-                <Skeleton className="h-6 w-4/5 mb-2" />
-                <Skeleton className="h-4 w-2/5" />
-                <Skeleton className="h-20 w-full" />
-              </div>
-            </Card>
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="container py-6 space-y-6">
-      <SuggestionsHeader 
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        filter={filter}
-        onFilterChange={handleFilterChange}
-      />
-      
-      {error ? (
+  const renderContent = () => {
+    if (error) {
+      return (
         <Alert variant="destructive" className="mb-4">
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>Erro ao carregar sugestões</AlertTitle>
@@ -91,12 +60,28 @@ const SuggestionsLayout = () => {
             </Button>
           </AlertDescription>
         </Alert>
-      ) : (
-        <SuggestionsContent 
-          suggestions={suggestions} 
-          searchQuery={searchQuery}
-        />
-      )}
+      );
+    }
+
+    return (
+      <SuggestionsContent 
+        suggestions={suggestions || []} 
+        searchQuery={searchQuery}
+        isLoading={isLoading}
+      />
+    );
+  };
+
+  return (
+    <div className="container py-6 space-y-6 animate-fade-in">
+      <SuggestionsHeader 
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        filter={filter}
+        onFilterChange={handleFilterChange}
+      />
+      
+      {renderContent()}
     </div>
   );
 };

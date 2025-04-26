@@ -1,9 +1,9 @@
 
 import React from 'react';
-import { LoadingScreen } from '@/components/common/LoadingSpinner';
 import AppRoutes from '@/components/routing/AppRoutes';
 
 const AppRoutesWrapper = () => {
+  // Removido o componente de carregamento global
   return <AppRoutes />;
 };
 

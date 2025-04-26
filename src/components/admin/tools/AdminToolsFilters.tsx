@@ -1,76 +1,76 @@
 
 import React from 'react';
-import { Search } from 'lucide-react';
+import { Search, Filter } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { ToolCategory } from '@/types/toolTypes';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Card } from '@/components/ui/card';
 
 interface AdminToolsFiltersProps {
-  onCategoryChange: (category: ToolCategory | null) => void;
-  onSearchChange: (query: string) => void;
-  selectedCategory: ToolCategory | null;
   searchQuery: string;
+  onSearchChange: (value: string) => void;
+  selectedCategory: string | null;
+  onCategoryChange: (value: string | null) => void;
 }
 
-export const AdminToolsFilters: React.FC<AdminToolsFiltersProps> = ({
-  onCategoryChange,
+export const AdminToolsFilters = ({
+  searchQuery,
   onSearchChange,
   selectedCategory,
-  searchQuery
-}) => {
-  const categories: ToolCategory[] = [
-    'Modelos de IA e Interfaces',
-    'Geração de Conteúdo Visual',
-    'Geração e Processamento de Áudio',
-    'Automação e Integrações',
-    'Comunicação e Atendimento',
-    'Captura e Análise de Dados',
-    'Pesquisa e Síntese de Informações',
-    'Gestão de Documentos e Conteúdo',
-    'Marketing e CRM',
-    'Produtividade e Organização',
-    'Desenvolvimento e Código',
-    'Plataformas de Mídia',
-    'Outros'
+  onCategoryChange
+}: AdminToolsFiltersProps) => {
+  const categories = [
+    { value: null, label: 'Todas categorias' },
+    { value: 'AI', label: 'Inteligência Artificial' },
+    { value: 'Marketing', label: 'Marketing' },
+    { value: 'Analytics', label: 'Analytics' },
+    { value: 'Produtividade', label: 'Produtividade' },
+    { value: 'CRM', label: 'CRM' },
+    { value: 'Vendas', label: 'Vendas' },
+    { value: 'Design', label: 'Design' },
+    { value: 'Outros', label: 'Outros' }
   ];
 
+  const handleCategoryChange = (value: string) => {
+    onCategoryChange(value === 'null' ? null : value);
+  };
+
   return (
-    <div className="flex gap-4 mb-6">
-      <div className="flex-1">
-        <div className="relative">
+    <Card className="p-4 shadow-sm">
+      <div className="flex flex-col sm:flex-row gap-4">
+        <div className="relative flex-1">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
-            type="search"
-            placeholder="Buscar ferramenta..."
+            type="text"
+            placeholder="Buscar ferramentas..."
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
             className="pl-8"
+            data-testid="tool-search-input"
           />
         </div>
+        
+        <div className="w-full sm:w-64">
+          <Select 
+            onValueChange={handleCategoryChange} 
+            value={selectedCategory === null ? 'null' : selectedCategory}
+            data-testid="category-select"
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Filtrar por categoria" />
+            </SelectTrigger>
+            <SelectContent>
+              {categories.map((category) => (
+                <SelectItem 
+                  key={category.label} 
+                  value={category.value === null ? 'null' : category.value}
+                >
+                  {category.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
-      
-      <Select
-        value={selectedCategory || 'all'}
-        onValueChange={(value) => onCategoryChange(value === 'all' ? null : value as ToolCategory)}
-      >
-        <SelectTrigger className="w-[200px]">
-          <SelectValue placeholder="Todas as categorias" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">Todas as categorias</SelectItem>
-          {categories.map((category) => (
-            <SelectItem key={category} value={category}>
-              {category}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </div>
+    </Card>
   );
 };

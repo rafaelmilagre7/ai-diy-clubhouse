@@ -1,12 +1,10 @@
 
-import React, { Suspense, lazy } from "react";
+import React from "react";
 import { DashboardHeader } from "./DashboardHeader";
 import { StatsOverview } from "./StatsOverview";
+import { DashboardCharts } from "./DashboardCharts";
+import { RecentActivity } from "./RecentActivity";
 import { Skeleton } from "@/components/ui/skeleton";
-
-// Lazy load dos componentes menos críticos
-const DashboardCharts = lazy(() => import("./DashboardCharts").then((module) => ({ default: module.DashboardCharts })));
-const RecentActivity = lazy(() => import("./RecentActivity").then((module) => ({ default: module.RecentActivity })));
 
 interface AdminDashboardLayoutProps {
   timeRange: string;
@@ -17,22 +15,6 @@ interface AdminDashboardLayoutProps {
   recentActivities: any[];
   loading: boolean;
 }
-
-// Componente de fallback para carregamento
-const ChartsFallback = () => (
-  <div className="space-y-6">
-    <Skeleton className="h-[300px] w-full rounded-md" />
-  </div>
-);
-
-const ActivityFallback = () => (
-  <div className="space-y-3">
-    <Skeleton className="h-6 w-1/3" />
-    <Skeleton className="h-20 w-full" />
-    <Skeleton className="h-20 w-full" />
-    <Skeleton className="h-20 w-full" />
-  </div>
-);
 
 export const AdminDashboardLayout = ({
   timeRange,
@@ -50,22 +32,18 @@ export const AdminDashboardLayout = ({
         setTimeRange={setTimeRange}
       />
 
-      {/* Componente de estatísticas crítico carregado imediatamente */}
+      {/* Componente de estatísticas carregado imediatamente com skeleton fallback */}
       <StatsOverview data={statsData} loading={loading} />
       
-      {/* Gráficos carregados de forma preguiçosa */}
-      <Suspense fallback={<ChartsFallback />}>
-        <DashboardCharts 
-          engagementData={engagementData} 
-          completionRateData={completionRateData}
-          loading={loading}
-        />
-      </Suspense>
+      {/* Gráficos carregados com skeletons */}
+      <DashboardCharts 
+        engagementData={engagementData} 
+        completionRateData={completionRateData}
+        loading={loading}
+      />
       
-      {/* Atividades recentes carregadas por último */}
-      <Suspense fallback={<ActivityFallback />}>
-        <RecentActivity activities={recentActivities} loading={loading} />
-      </Suspense>
+      {/* Atividades recentes com skeletons */}
+      <RecentActivity activities={recentActivities} loading={loading} />
     </div>
   );
 };
