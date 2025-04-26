@@ -33,20 +33,16 @@ const App = () => {
               position="bottom-right" 
               toastOptions={{
                 style: { 
-                  zIndex: 1000,
-                  pointerEvents: 'auto' // Garantir que o toast seja interativo, mas não o backdrop
+                  zIndex: 9999,
+                  pointerEvents: 'auto' // Garantir que o toast seja interativo
                 },
-                className: 'z-50 pointer-events-auto'
+                className: 'z-50 pointer-events-auto toast-container'
               }}
               closeButton
               richColors
               expand={false}
-              visibleToasts={1}
+              visibleToasts={3}
               duration={3000}
-              // Container personalizado para evitar bloqueios
-              containerStyle={{
-                pointerEvents: 'none' // Container não bloqueia interações
-              }}
             />
             <ReactQueryDevtools initialIsOpen={false} />
           </AuthProvider>

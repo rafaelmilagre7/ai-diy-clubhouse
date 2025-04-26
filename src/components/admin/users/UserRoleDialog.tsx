@@ -95,12 +95,12 @@ export const UserRoleDialog = ({
   const handleCloseModal = useCallback(() => {
     if (saving) return;
     
-    // Primeiro limpamos overlays
-    cleanupOverlays();
+    // Primeiro notificamos a mudança de estado
+    onOpenChange(false);
     
-    // Depois fechamos o modal
+    // Logo em seguida limpamos overlays
     setTimeout(() => {
-      onOpenChange(false);
+      cleanupOverlays();
     }, 50);
   }, [onOpenChange, cleanupOverlays, saving]);
   
@@ -108,12 +108,13 @@ export const UserRoleDialog = ({
   const handleUpdateRole = useCallback(() => {
     if (saving) return;
     
-    // Primeiro limpamos qualquer overlay existente
-    cleanupOverlays();
-    
-    // Disparamos a função de atualização
-    // O hook useUsers vai fechar o modal e exibir o toast depois
+    // Executamos a função de atualização - ela já cuida de fechar o modal
     onUpdateRole();
+    
+    // Limpeza extra como garantia
+    setTimeout(() => {
+      cleanupOverlays();
+    }, 150);
   }, [onUpdateRole, saving, cleanupOverlays]);
 
   return (
@@ -121,9 +122,13 @@ export const UserRoleDialog = ({
       open={open} 
       onOpenChange={(newOpenState) => {
         if (!newOpenState && !saving) {
-          // Se estiver fechando, limpar overlays primeiro
-          cleanupOverlays();
-          setTimeout(() => onOpenChange(false), 50);
+          // Se estiver fechando, primeiro notificamos a mudança
+          onOpenChange(false);
+          
+          // Depois limpamos overlays
+          setTimeout(() => {
+            cleanupOverlays();
+          }, 50);
         } else {
           onOpenChange(newOpenState);
         }

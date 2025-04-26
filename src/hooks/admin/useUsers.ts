@@ -62,6 +62,15 @@ export const useUsers = () => {
         if (el.parentNode) el.parentNode.removeChild(el);
       });
     }
+
+    // Remover qualquer elemento com z-index alto que possa estar bloqueando
+    const highZIndexElements = document.querySelectorAll('[style*="z-index: 1300"]');
+    if (highZIndexElements.length > 0) {
+      console.log(`Removendo ${highZIndexElements.length} elementos com z-index alto`);
+      highZIndexElements.forEach(el => {
+        if (el.parentNode) el.parentNode.removeChild(el);
+      });
+    }
     
     // Log final de confirmação
     console.log('Backdrop removido:', document.querySelectorAll('.MuiBackdrop-root, [data-state="open"].bg-black').length);
