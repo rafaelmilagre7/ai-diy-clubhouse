@@ -1,5 +1,5 @@
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useAuth } from "@/contexts/auth";
 import { isSuperAdmin } from "@/contexts/auth/utils/profileUtils/roleValidation";
 import { useUsers } from "@/hooks/admin/useUsers";
@@ -41,9 +41,26 @@ const AdminUsers = () => {
   };
 
   // Função para garantir que o modal seja fechado corretamente
-  const handleCloseModal = () => {
+  const handleCloseModal = useCallback(() => {
+    console.log('Fechando modal através do handleCloseModal');
     setEditRoleOpen(false);
-  };
+    
+    // Limpar backdrops persistentes após um pequeno delay
+    setTimeout(() => {
+      const backdrops = document.querySelectorAll('.bg-black[data-state="open"], .MuiBackdrop-root');
+      backdrops.forEach(el => {
+        if (el.parentNode) {
+          console.log('Removendo backdrop persistente');
+          el.parentNode.removeChild(el);
+        }
+      });
+      
+      // Restaurar scroll se necessário
+      if (document.body.style.overflow === 'hidden') {
+        document.body.style.overflow = '';
+      }
+    }, 150);
+  }, [setEditRoleOpen]);
 
   return (
     <div className="space-y-6">
