@@ -41,7 +41,9 @@ const AppRoutes = () => {
       {/* Rotas protegidas para membros */}
       <Route path="/" element={
         <ProtectedRoutes>
-          <MemberLayout />
+          <MemberLayout>
+            <Outlet />
+          </MemberLayout>
         </ProtectedRoutes>
       }>
         <Route index element={<Dashboard />} />
@@ -60,7 +62,9 @@ const AppRoutes = () => {
       {/* Rotas protegidas para admins */}
       <Route path="/admin" element={
         <AdminProtectedRoutes>
-          <AdminLayout />
+          <AdminLayout>
+            <Outlet />
+          </AdminLayout>
         </AdminProtectedRoutes>
       }>
         <Route index element={<AdminDashboard />} />
@@ -77,4 +81,3 @@ const AppRoutes = () => {
 };
 
 export default AppRoutes;
-
