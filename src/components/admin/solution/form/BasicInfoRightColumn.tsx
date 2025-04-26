@@ -75,10 +75,8 @@ const BasicInfoRightColumn: React.FC<BasicInfoRightColumnProps> = ({
               <FormLabel>Dificuldade</FormLabel>
               <Select
                 onValueChange={(value) => {
-                  console.log("Select onValueChange - valor selecionado:", value);
                   // Garantir que o valor definido é sempre o enum
                   const enumValue = translateDifficultyToEnum(value);
-                  console.log("Valor convertido para enum:", enumValue);
                   field.onChange(enumValue);
                 }}
                 value={normalizedValue}
