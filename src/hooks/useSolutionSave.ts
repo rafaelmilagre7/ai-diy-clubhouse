@@ -29,8 +29,8 @@ export const useSolutionSave = (
       const solutionData = {
         title: values.title,
         description: values.description,
-        category: values.category,
-        difficulty: values.difficulty, // Valores da enum: easy, medium, advanced
+        category: values.category as "revenue" | "operational" | "strategy",
+        difficulty: values.difficulty as "easy" | "medium" | "advanced", // Garantir que é um dos valores válidos da enum
         slug: slug,
         thumbnail_url: values.thumbnail_url || null,
         published: values.published || false,
@@ -104,6 +104,16 @@ export const useSolutionSave = (
             continue;
           }
           
+          // Se for um erro com a enum de dificuldade, mostre um erro específico
+          if (error.message?.includes('invalid input value for enum difficulty_level')) {
+            toast({
+              title: "Erro com valor de dificuldade",
+              description: `Valor de dificuldade inválido: ${values.difficulty}. Valores aceitos: "easy", "medium", "advanced"`,
+              variant: "destructive",
+            });
+            break;
+          }
+          
           // Se não for um erro de política ou recursão ou duplicação, não tente novamente
           if (!error.message?.includes('infinite recursion') && 
               !error.message?.includes('policy') && 
@@ -133,6 +143,12 @@ export const useSolutionSave = (
         toast({
           title: "Erro ao salvar solução",
           description: "Já existe uma solução com este slug. Tente modificar o título para criar um slug único.",
+          variant: "destructive",
+        });
+      } else if (error.message?.includes('invalid input value for enum difficulty_level')) {
+        toast({
+          title: "Erro ao salvar solução",
+          description: `Valor de dificuldade inválido. Valores aceitos: "easy", "medium", "advanced"`,
           variant: "destructive",
         });
       } else if (error.message?.includes('infinite recursion') || 
