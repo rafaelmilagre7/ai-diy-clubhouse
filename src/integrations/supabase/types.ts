@@ -113,6 +113,42 @@ export type Database = {
           },
         ]
       }
+      events: {
+        Row: {
+          cover_image_url: string | null
+          created_at: string
+          created_by: string
+          description: string | null
+          end_time: string
+          id: string
+          location_link: string | null
+          start_time: string
+          title: string
+        }
+        Insert: {
+          cover_image_url?: string | null
+          created_at?: string
+          created_by: string
+          description?: string | null
+          end_time: string
+          id?: string
+          location_link?: string | null
+          start_time: string
+          title: string
+        }
+        Update: {
+          cover_image_url?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          end_time?: string
+          id?: string
+          location_link?: string | null
+          start_time?: string
+          title?: string
+        }
+        Relationships: []
+      }
       implementation_checkpoints: {
         Row: {
           checkpoint_order: number
@@ -1425,7 +1461,7 @@ export type Database = {
           completion_requirements: Json | null
           created_at: string
           description: string
-          difficulty: Database["public"]["Enums"]["difficulty_level"]
+          difficulty: Database["public"]["Enums"]["difficulty_level_new"]
           estimated_time: number | null
           id: string
           implementation_steps: Json | null
@@ -1444,7 +1480,7 @@ export type Database = {
           completion_requirements?: Json | null
           created_at?: string
           description: string
-          difficulty: Database["public"]["Enums"]["difficulty_level"]
+          difficulty: Database["public"]["Enums"]["difficulty_level_new"]
           estimated_time?: number | null
           id?: string
           implementation_steps?: Json | null
@@ -1463,7 +1499,7 @@ export type Database = {
           completion_requirements?: Json | null
           created_at?: string
           description?: string
-          difficulty?: Database["public"]["Enums"]["difficulty_level"]
+          difficulty?: Database["public"]["Enums"]["difficulty_level_new"]
           estimated_time?: number | null
           id?: string
           implementation_steps?: Json | null
@@ -2082,6 +2118,7 @@ export type Database = {
     }
     Enums: {
       difficulty_level: "beginner" | "intermediate" | "advanced"
+      difficulty_level_new: "easy" | "medium" | "advanced"
       notification_type:
         | "status_change"
         | "new_comment"
@@ -2213,6 +2250,7 @@ export const Constants = {
   public: {
     Enums: {
       difficulty_level: ["beginner", "intermediate", "advanced"],
+      difficulty_level_new: ["easy", "medium", "advanced"],
       notification_type: [
         "status_change",
         "new_comment",

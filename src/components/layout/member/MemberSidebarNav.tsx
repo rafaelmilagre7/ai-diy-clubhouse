@@ -1,4 +1,3 @@
-
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/auth";
 import { 
@@ -12,7 +11,8 @@ import {
   User,
   Award,
   BookOpen,
-  Map
+  Map,
+  Calendar
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "react-router-dom";
@@ -73,6 +73,11 @@ export const MemberSidebarNav = ({ sidebarOpen }: SidebarNavProps) => {
       title: "Perfil",
       href: "/profile",
       icon: User,
+    },
+    {
+      title: "Eventos",
+      href: "/events",
+      icon: Calendar,
     }
   ];
 
