@@ -1,5 +1,5 @@
 
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import { useSolutionsData } from '@/hooks/useSolutionsData';
 import { SolutionCard } from '@/components/solution/SolutionCard';
 import { Input } from '@/components/ui/input';
@@ -10,7 +10,6 @@ import { useToolsData } from '@/hooks/useToolsData';
 import { useLogging } from '@/contexts/logging';
 import { useDocumentTitle } from '@/hooks/use-document-title';
 import { SolutionCardSkeleton } from '@/components/dashboard/SolutionsGridLoader';
-import { motion } from 'framer-motion';
 
 const Solutions = () => {
   // Definir título da página
@@ -29,8 +28,6 @@ const Solutions = () => {
     setSearchQuery,
     activeCategory,
     setActiveCategory,
-    prefetchSolutionDetails,
-    isFetched
   } = useSolutionsData();
 
   // Log data for debugging
@@ -38,7 +35,6 @@ const Solutions = () => {
     solutionsCount: filteredSolutions?.length || 0, 
     activeCategory,
     isLoading: loading || toolsDataLoading,
-    isFetched: isFetched || false
   });
 
   const categories = [
@@ -48,15 +44,10 @@ const Solutions = () => {
     { id: 'strategy', name: 'Estratégia' }
   ];
 
-  // Otimiza o prefetch para detalhes da solução
-  const handlePrefetch = useCallback((solution: Solution) => {
-    return () => prefetchSolutionDetails(solution.id);
-  }, [prefetchSolutionDetails]);
-
-  // Renderização da lista de soluções com carregamento otimizado
+  // Renderização da lista de soluções com carregamento simplificado
   const renderSolutionsList = () => {
-    // Se não houver nada, mesmo depois de ter tentado buscar dados
-    if (isFetched && filteredSolutions?.length === 0) {
+    // Se não houver nada, mostra msg amigável
+    if (!loading && filteredSolutions?.length === 0) {
       return (
         <div className="text-center py-8 bg-white rounded-lg border border-dashed">
           <div className="flex flex-col items-center px-4">
@@ -70,18 +61,17 @@ const Solutions = () => {
       );
     }
 
-    // Grid de placeholders ou soluções reais (ou mistura dos dois durante carregamento)
+    // Grid de placeholders ou soluções reais
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {loading && !isFetched
-          ? // Se está carregando pela primeira vez, mostre placeholders
+        {loading
+          ? // Se está carregando, mostre placeholders
             Array(6).fill(0).map((_, index) => <SolutionCardSkeleton key={`skeleton-${index}`} />)
           : // Caso contrário, mostre os dados já carregados
             filteredSolutions?.map((solution: Solution) => (
               <SolutionCard 
                 key={solution.id}
                 solution={solution} 
-                onPrefetch={handlePrefetch(solution)}
                 isLoading={false}
               />
             ))
@@ -91,12 +81,7 @@ const Solutions = () => {
   };
 
   return (
-    <motion.div 
-      className="space-y-6"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.3 }}
-    >
+    <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold">Soluções</h1>
@@ -138,7 +123,7 @@ const Solutions = () => {
           </TabsContent>
         ))}
       </Tabs>
-    </motion.div>
+    </div>
   );
 };
 

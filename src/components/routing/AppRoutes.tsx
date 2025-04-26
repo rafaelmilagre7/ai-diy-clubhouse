@@ -39,7 +39,11 @@ const AppRoutes = () => {
       <Route path="/set-new-password" element={<SetNewPassword />} />
       
       {/* Rotas protegidas para membros */}
-      <Route path="/" element={<ProtectedRoutes outlet={<MemberLayout />} />}>
+      <Route path="/" element={
+        <ProtectedRoutes>
+          <MemberLayout />
+        </ProtectedRoutes>
+      }>
         <Route index element={<Dashboard />} />
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="profile" element={<Profile />} />
@@ -54,7 +58,11 @@ const AppRoutes = () => {
       </Route>
       
       {/* Rotas protegidas para admins */}
-      <Route path="/admin" element={<AdminProtectedRoutes outlet={<AdminLayout />} />}>
+      <Route path="/admin" element={
+        <AdminProtectedRoutes>
+          <AdminLayout />
+        </AdminProtectedRoutes>
+      }>
         <Route index element={<AdminDashboard />} />
         <Route path="dashboard" element={<AdminDashboard />} />
         <Route path="tools" element={<AdminTools />} />
