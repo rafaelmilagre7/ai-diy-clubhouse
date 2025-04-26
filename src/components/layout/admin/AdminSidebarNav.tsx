@@ -1,11 +1,10 @@
-
 import { NavLink } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { 
   LayoutDashboard, 
   UsersRound, 
   Settings, 
-  Tool, 
+  Wrench,
   FileText,
   BarChart2,
   MessageSquare
@@ -24,7 +23,7 @@ export const AdminSidebarNav = ({ expanded }: AdminSidebarNavProps) => {
     },
     {
       name: 'Ferramentas',
-      icon: <Tool size={20} />,
+      icon: <Wrench size={20} />,
       path: '/admin/tools',
     },
     {

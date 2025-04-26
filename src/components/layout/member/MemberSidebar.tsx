@@ -11,7 +11,7 @@ import {
   X,
   User,
   BarChart2,
-  Tool,
+  Wrench,
   Lightbulb,
   MessageSquare,
   Award,
@@ -62,7 +62,7 @@ export const MemberSidebar = ({
     },
     {
       name: "Ferramentas",
-      icon: <Tool size={20} />,
+      icon: <Wrench size={20} />,
       path: "/tools",
     },
     {
