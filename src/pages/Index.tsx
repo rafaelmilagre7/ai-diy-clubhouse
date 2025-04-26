@@ -2,11 +2,13 @@
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useState, useRef } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const Index = () => {
   const navigate = useNavigate();
   const redirectTimerRef = useRef<number | null>(null);
   const [isRedirecting, setIsRedirecting] = useState(false);
+  const [hasStartedRedirect, setHasStartedRedirect] = useState(false);
 
   // Redirecionar automaticamente para a página de autenticação após um breve delay
   useEffect(() => {
@@ -16,29 +18,41 @@ const Index = () => {
     // Redirecionar instantaneamente se já houver sessão, caso contrário aguardar
     const redirectDelay = hasSession ? 500 : 2000;
     
-    setIsRedirecting(true);
-    
-    redirectTimerRef.current = window.setTimeout(() => {
-      navigate('/auth', { replace: true });
-    }, redirectDelay);
+    if (!hasStartedRedirect) {
+      setIsRedirecting(true);
+      setHasStartedRedirect(true);
+      
+      redirectTimerRef.current = window.setTimeout(() => {
+        navigate('/auth', { replace: true });
+      }, redirectDelay);
+    }
 
     return () => {
       if (redirectTimerRef.current) {
         clearTimeout(redirectTimerRef.current);
       }
     };
-  }, [navigate]);
+  }, [navigate, hasStartedRedirect]);
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
-          <img
-            className="mx-auto h-24 w-auto"
-            src="https://milagredigital.com/wp-content/uploads/2025/04/viverdeiaclub.avif"
-            alt="VIVER DE IA Club"
-            loading="eager" // Priorizar o carregamento da imagem de marca
-          />
+          {/* Imagem que carrega imediatamente ou skeleton */}
+          <div className="mx-auto h-24 w-auto">
+            <img
+              className="mx-auto h-24 w-auto"
+              src="https://milagredigital.com/wp-content/uploads/2025/04/viverdeiaclub.avif"
+              alt="VIVER DE IA Club"
+              loading="eager" // Priorizar o carregamento da imagem de marca
+              onError={(e) => {
+                // Em caso de erro mostrar fallback
+                e.currentTarget.style.display = 'none';
+                // Mostrar uma versão básica sem imagem
+              }}
+            />
+          </div>
+          
           <h1 className="mt-6 text-center text-4xl font-extrabold text-gray-900">
             VIVER DE IA Club
           </h1>

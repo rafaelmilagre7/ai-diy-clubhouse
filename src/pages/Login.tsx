@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/auth";
 import { FcGoogle } from "react-icons/fc";
@@ -52,6 +53,11 @@ const Login = () => {
             className="mx-auto h-20 w-auto"
             src="https://milagredigital.com/wp-content/uploads/2025/04/viverdeiaclub.avif"
             alt="VIVER DE IA Club"
+            loading="eager"
+            onError={(e) => {
+              // Fallback silencioso em caso de erro de carregamento da imagem
+              e.currentTarget.style.display = 'none';
+            }}
           />
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
             VIVER DE IA Club

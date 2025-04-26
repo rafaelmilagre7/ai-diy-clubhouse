@@ -68,12 +68,12 @@ const Dashboard = () => {
     }
   }, []);
 
-  // Renderizar o layout diretamente, sem usar um componente de carregamento bloqueante
+  // Sempre renderiza o layout, mesmo durante carregamento
   return (
     <DashboardLayout
-      active={active}
-      completed={completed}
-      recommended={recommended}
+      active={active || []}
+      completed={completed || []}
+      recommended={recommended || []}
       category={category}
       onCategoryChange={handleCategoryChange}
       onSolutionClick={handleSolutionClick}

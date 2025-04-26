@@ -3,7 +3,6 @@ import { useEffect } from 'react';
 import { useAuth } from '@/contexts/auth';
 import { supabase } from '@/lib/supabase';
 import { processUserProfile } from '@/hooks/auth/utils/authSessionUtils';
-import LoadingScreen from '@/components/common/LoadingScreen';
 
 const AuthSession = () => {
   const { 
@@ -43,10 +42,7 @@ const AuthSession = () => {
     }
   }, [user, setProfile, setIsLoading]);
   
-  if (isLoading) {
-    return <LoadingScreen />;
-  }
-  
+  // Removido o retorno de Loading Screen para permitir renderização otimista
   return null;
 };
 

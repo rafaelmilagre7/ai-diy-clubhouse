@@ -1,8 +1,7 @@
 
 import { Navigate, useLocation } from "react-router-dom";
-import { useEffect, useState, useRef, ReactNode } from "react";
+import { ReactNode } from "react";
 import { useAuth } from "@/contexts/auth";
-import LoadingScreen from "@/components/common/LoadingScreen";
 import { toast } from "sonner";
 
 interface ProtectedRoutesProps {
@@ -12,48 +11,15 @@ interface ProtectedRoutesProps {
 export const ProtectedRoutes = ({ children }: ProtectedRoutesProps) => {
   const { user, isLoading } = useAuth();
   const location = useLocation();
-  const [loadingTimeout, setLoadingTimeout] = useState(false);
-  const timeoutRef = useRef<number | null>(null);
-  const hasToastShown = useRef(false);
-
-  console.log("ProtectedRoutes state:", { user, isLoading, loadingTimeout });
   
-  // Configurar timeout de carregamento
-  useEffect(() => {
-    if (isLoading && !loadingTimeout) {
-      // Limpar qualquer timeout existente
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-      
-      timeoutRef.current = window.setTimeout(() => {
-        console.log("ProtectedRoutes: Loading timeout exceeded");
-        setLoadingTimeout(true);
-      }, 5000); // Aumentado para 5 segundos
-    }
-    
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
-  }, [isLoading, loadingTimeout]);
+  console.log("ProtectedRoutes state:", { user, isLoading });
 
-  // Mostrar tela de carregamento enquanto verifica autenticação
-  if (isLoading && !loadingTimeout) {
-    return <LoadingScreen message="Verificando autenticação..." />;
-  }
-
-  // Se o usuário não estiver autenticado, redireciona para a página de login
-  if (!user) {
-    // Exibir toast apenas uma vez
-    if (!hasToastShown.current) {
-      toast("Por favor, faça login para acessar esta página");
-      hasToastShown.current = true;
-    }
+  // Se o usuário não estiver autenticado após verificação, redireciona para a página de login
+  if (!isLoading && !user) {
+    toast("Por favor, faça login para acessar esta página");
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  // Usuário está autenticado, renderizar as rotas protegidas
+  // Renderiza as rotas protegidas (mesmo durante carregamento para UX otimista)
   return <>{children}</>;
 };

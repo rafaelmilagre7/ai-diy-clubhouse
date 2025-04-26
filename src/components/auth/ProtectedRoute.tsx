@@ -1,8 +1,8 @@
 
-import { useState, useEffect, useRef } from "react";
+import { ReactNode, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
-import LoadingScreen from "@/components/common/LoadingScreen";
+import { toast } from "sonner";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -13,46 +13,12 @@ export const ProtectedRoute = ({
   children, 
   requireAdmin = false 
 }: ProtectedRouteProps) => {
-  const { user, isAdmin, isLoading, setIsLoading } = useAuth();
+  const { user, isAdmin, isLoading } = useAuth();
   const navigate = useNavigate();
-  const [loadingTimeout, setLoadingTimeout] = useState(false);
-  const timeoutRef = useRef<number | null>(null);
   
-  // Clean up on unmount
-  useEffect(() => {
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
-  }, []);
-  
-  // Handle loading timeout - Always runs regardless of conditions
-  useEffect(() => {
-    if (isLoading) {
-      // Clear any existing timeout
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-      
-      timeoutRef.current = window.setTimeout(() => {
-        console.log("ProtectedRoute: Loading timeout exceeded");
-        setLoadingTimeout(true);
-        setIsLoading(false);
-        navigate('/auth', { replace: true });
-      }, 2000); // Longer timeout for better UX
-    }
-    
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
-  }, [isLoading, navigate, setIsLoading]);
-
   // Navigation logic - Always runs regardless of conditions
   useEffect(() => {
-    if (!isLoading && !loadingTimeout) {
+    if (!isLoading) {
       if (!user) {
         console.log("ProtectedRoute: No user, redirecting to auth");
         navigate('/auth', { replace: true });
@@ -61,18 +27,9 @@ export const ProtectedRoute = ({
         navigate('/dashboard', { replace: true });
       }
     }
-  }, [user, isAdmin, isLoading, loadingTimeout, requireAdmin, navigate]);
+  }, [user, isAdmin, isLoading, requireAdmin, navigate]);
 
-  // Show loading screen during the loading state
-  if (isLoading && !loadingTimeout) {
-    return <LoadingScreen message="Verificando sua autenticação..." />;
-  }
-
-  // Only render children if conditions are met
-  if (user && ((!requireAdmin) || (requireAdmin && isAdmin))) {
-    return <>{children}</>;
-  }
-
-  // Return loading screen as fallback while navigation happens
-  return <LoadingScreen message="Redirecionando..." />;
+  // Always render children (otimista) - authz failures will be caught by useEffect
+  // We let the layout/component handle its own loading states
+  return <>{children}</>;
 };

@@ -74,14 +74,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     };
     
-    // Configurar um timeout para garantir que isLoading não fique preso
+    // Configurar um timeout mais curto para garantir que isLoading não fique preso
     initTimeout = window.setTimeout(() => {
       if (isMounted && isLoading) {
         console.log("AuthProvider: Init timeout, forcing isLoading=false");
         setIsLoading(false);
         setInitComplete(true);
       }
-    }, 3000); // 3 segundos
+    }, 1500); // Reduzido para 1.5 segundos
     
     initAuth();
     

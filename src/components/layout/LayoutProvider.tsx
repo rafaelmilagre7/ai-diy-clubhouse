@@ -2,9 +2,9 @@
 import { Navigate, useNavigate } from "react-router-dom";
 import { useEffect, useState, useRef, ReactNode } from "react";
 import { useAuth } from "@/contexts/auth";
-import LoadingScreen from "@/components/common/LoadingScreen";
 import MemberLayout from "./MemberLayout";
 import { toast } from "sonner";
+import { Skeleton } from "@/components/ui/skeleton";
 
 /**
  * LayoutProvider handles authentication checks and role-based routing
@@ -18,34 +18,9 @@ const LayoutProvider = ({ children }: { children: ReactNode }) => {
     isLoading,
   } = useAuth();
   const navigate = useNavigate();
-  const [loadingTimeout, setLoadingTimeout] = useState(false);
-  const timeoutRef = useRef<number | null>(null);
   
   // Debug logs
-  console.log("LayoutProvider state:", { user, profile, isAdmin, isLoading, loadingTimeout });
-
-  // Configurar timeout de carregamento
-  useEffect(() => {
-    if (isLoading && !loadingTimeout) {
-      // Limpar qualquer timeout existente
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-      
-      timeoutRef.current = window.setTimeout(() => {
-        console.log("LayoutProvider: Loading timeout exceeded, redirecting to login");
-        setLoadingTimeout(true);
-        toast.error("Tempo limite de carregamento excedido, redirecionando para login");
-        navigate('/login', { replace: true });
-      }, 8000); // 8 segundos
-    }
-    
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
-  }, [isLoading, loadingTimeout, navigate]);
+  console.log("LayoutProvider state:", { user, profile, isAdmin, isLoading });
 
   // Verificar autenticação
   useEffect(() => {
@@ -65,24 +40,50 @@ const LayoutProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [user, profile, isAdmin, isLoading, navigate]);
 
-  // Fast path for members - If we have user and profile, render immediately
-  if (user && profile && !isAdmin) {
-    console.log("LayoutProvider: Renderizando MemberLayout diretamente");
-    return <MemberLayout>{children}</MemberLayout>;
-  }
-
-  // Show loading screen while checking the session (but only if timeout not exceeded)
-  if ((isLoading || !profile) && !loadingTimeout) {
-    return <LoadingScreen message="Preparando seu dashboard..." />;
+  // Renderizar o layout com placeholder ou conteúdo real
+  if (!user && isLoading) {
+    // Renderizar estrutura básica do layout com skeletons em vez de tela de loading completa
+    return (
+      <div className="min-h-screen flex bg-background">
+        {/* Sidebar skeleton */}
+        <div className="w-64 border-r border-border bg-muted/30 hidden md:block">
+          <div className="p-4">
+            <Skeleton className="h-10 w-32 mb-8" />
+            <div className="space-y-4">
+              {[1, 2, 3, 4, 5].map(i => (
+                <Skeleton key={i} className="h-8 w-full" />
+              ))}
+            </div>
+          </div>
+        </div>
+        
+        {/* Main content skeleton */}
+        <div className="flex-1">
+          <div className="border-b p-4 flex justify-between items-center">
+            <Skeleton className="h-8 w-32" />
+            <Skeleton className="h-8 w-8 rounded-full" />
+          </div>
+          
+          <div className="p-6">
+            <Skeleton className="h-12 w-3/4 mb-6" />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {[1, 2, 3].map(i => (
+                <Skeleton key={i} className="h-48 w-full rounded-lg" />
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   // Se não tiver usuário após carregamento, redirecionar para login
-  if (!user) {
+  if (!isLoading && !user) {
     return <Navigate to="/login" replace />;
   }
 
   // Se for admin, redirecionar para área admin
-  if (isAdmin) {
+  if (!isLoading && user && isAdmin) {
     return <Navigate to="/admin" replace />;
   }
 
