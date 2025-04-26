@@ -27,10 +27,17 @@ export function useProgressFetch(
       return null;
     }
     
-    try {
+    // Evitar atualizações de loading desnecessárias se já tivermos dados
+    // e o componente estiver apenas sendo re-renderizado
+    if (progressId.current) {
+      console.log(`Já temos ID de progresso (${progressId.current}), não precisamos atualizar loading`);
+    } else {
       setIsLoading(true);
-      logDebugEvent("fetchProgress", { userId: user?.id });
-      
+    }
+    
+    logDebugEvent("fetchProgress", { userId: user?.id });
+    
+    try {
       // Buscar progresso existente
       const { data, error } = await fetchOnboardingProgress(user.id);
       
@@ -52,10 +59,20 @@ export function useProgressFetch(
       if (data) {
         console.log("Progresso encontrado:", data);
         progressId.current = data.id;
-        setProgress(data);
+        
+        // Adicionar metadata para controle de normalização
+        const normalizedData = {
+          ...data,
+          _metadata: {
+            normalized_at: new Date().toISOString(),
+            normalized_version: '2.0'
+          }
+        };
+        
+        setProgress(normalizedData);
         retryCount.current = 0;
         setIsLoading(false);
-        return data;
+        return normalizedData;
       }
       
       // Se não encontrou dados, cria um perfil inicial
@@ -78,21 +95,31 @@ export function useProgressFetch(
       if (newData) {
         console.log("Novo progresso criado:", newData);
         progressId.current = newData.id;
-        setProgress(newData);
+        
+        // Adicionar metadata para controle de normalização
+        const normalizedNewData = {
+          ...newData,
+          _metadata: {
+            normalized_at: new Date().toISOString(),
+            normalized_version: '2.0'
+          }
+        };
+        
+        setProgress(normalizedNewData);
         retryCount.current = 0;
-        return newData;
+        setIsLoading(false);
+        return normalizedNewData;
       }
       
+      setIsLoading(false);
       return null;
     } catch (error) {
       console.error("Exceção ao buscar progresso:", error);
       lastError.current = error instanceof Error ? error : new Error(String(error));
-      return null;
-    } finally {
-      // Garantir que isLoading é sempre atualizado corretamente
       if (isMounted.current) {
         setIsLoading(false);
       }
+      return null;
     }
   }, [user, isMounted, setProgress, setIsLoading, progressId, lastError, retryCount, logDebugEvent]);
   

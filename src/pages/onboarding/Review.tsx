@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { OnboardingLayout } from "@/components/onboarding/OnboardingLayout";
 import { useOnboardingSteps } from "@/hooks/onboarding/useOnboardingSteps";
 import { MilagrinhoMessage } from "@/components/onboarding/MilagrinhoMessage";
@@ -17,21 +17,24 @@ const Review: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isInitialLoadAttempted, setIsInitialLoadAttempted] = useState(false);
   const [loadError, setLoadError] = useState<Error | null>(null);
+  const initialLoadRef = useRef(false);
   
   // Encontrar o índice correto do passo de revisão
   const reviewStepIndex = steps.findIndex(step => step.id === "review");
   
-  // Efeito para garantir que os dados mais recentes sejam carregados ao entrar na página
-  // Uma única vez e com melhor tratamento de erros
+  // Efeito para carregar dados apenas uma vez, com proteção contra recarregamentos
   useEffect(() => {
-    // Evitar carregar novamente se já tentamos ou se já temos dados
-    if (isInitialLoadAttempted) {
+    // Evitar múltiplos carregamentos
+    if (initialLoadRef.current || isInitialLoadAttempted) {
+      console.log("[Review] Carregamento inicial já foi tentado, ignorando");
       return;
     }
     
+    initialLoadRef.current = true;
+    
     const loadFreshData = async () => {
       try {
-        console.log("[Review] Carregando dados mais recentes para revisão...");
+        console.log("[Review] Carregando dados para revisão...");
         
         // Forçar recarga dos dados do backend
         const refreshedData = await refreshProgress();
@@ -53,7 +56,7 @@ const Review: React.FC = () => {
     };
     
     loadFreshData();
-  }, [refreshProgress]); // Dependência apenas em refreshProgress
+  }, []); // Dependência vazia garante que carregue apenas uma vez
   
   const handleNavigateToStep = (index: number) => {
     navigate(steps[index].path);
@@ -76,7 +79,7 @@ const Review: React.FC = () => {
     }
   };
   
-  // Verificar se temos dados para mostrar
+  // Mostrar estado de carregamento apenas na primeira carga
   if (isLoading && !isInitialLoadAttempted) {
     return (
       <OnboardingLayout
@@ -109,6 +112,7 @@ const Review: React.FC = () => {
             <Button 
               variant="outline"
               onClick={() => {
+                initialLoadRef.current = false;
                 setIsInitialLoadAttempted(false); // Resetar flag para permitir nova tentativa
                 setLoadError(null);
                 window.location.reload();
@@ -143,12 +147,15 @@ const Review: React.FC = () => {
         />
         
         <div className="bg-gray-50 rounded-lg p-6">
-          <ReviewStep 
-            progress={progress}
-            onComplete={handleComplete}
-            isSubmitting={isSubmitting}
-            navigateToStep={handleNavigateToStep}
-          />
+          {/* Apenas renderizar ReviewStep se tivermos dados de progresso */}
+          {progress && (
+            <ReviewStep 
+              progress={progress}
+              onComplete={handleComplete}
+              isSubmitting={isSubmitting}
+              navigateToStep={handleNavigateToStep}
+            />
+          )}
         </div>
       </div>
     </OnboardingLayout>

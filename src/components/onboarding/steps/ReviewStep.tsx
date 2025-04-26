@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useRef } from "react";
 import { OnboardingProgress } from "@/types/onboarding";
 import { ReviewData } from "@/types/reviewTypes";
 import { steps } from "@/hooks/onboarding/useStepDefinitions";
@@ -24,12 +24,12 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({
   // Estado com tipagem explícita para dados processados
   const [processedData, setProcessedData] = useState<ReviewData | null>(null);
   const [processingComplete, setProcessingComplete] = useState<boolean>(false);
+  const dataProcessedRef = useRef(false);
   
-  // Efeito para processar dados apenas quando progresso mudar, com manejo de erros
+  // Efeito para processar dados apenas quando progresso mudar e não repetir o processamento
   useEffect(() => {
-    if (!progress) {
-      console.warn("[ReviewStep] Dados de progresso não disponíveis");
-      setProcessingComplete(true);
+    if (!progress || dataProcessedRef.current) {
+      console.log("[ReviewStep] Dados já processados ou não disponíveis:", { dataProcessed: dataProcessedRef.current, hasProgress: !!progress });
       return;
     }
     
@@ -79,6 +79,7 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({
       });
       
       setProcessedData(normalizedProgress as ReviewData);
+      dataProcessedRef.current = true;
     } catch (error) {
       console.error("[ReviewStep] Erro ao processar dados:", error);
     } finally {
@@ -184,6 +185,9 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({
               }
             }
             
+            // Garante que sectionData seja sempre um objeto (nunca undefined ou null)
+            const safeData = sectionData || {};
+            
             // Passamos o índice real (começando em 1) para a UI
             const stepIndex = idx + 1;
 
@@ -191,7 +195,7 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({
               <ReviewSectionCard
                 key={step.id}
                 step={step}
-                sectionData={sectionData || {}}
+                sectionData={safeData}
                 progress={dataToUse}
                 stepIndex={stepIndex}
                 navigateToStep={navigateToStep}
