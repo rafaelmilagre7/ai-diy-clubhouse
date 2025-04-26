@@ -17,7 +17,7 @@ export function getComplementaryInfoSummary(data: any) {
   
   // Se mesmo após processamento os dados estiverem vazios ou não tiverem informações relevantes
   if (!processedData.how_found_us && !processedData.referred_by && 
-      processedData.priority_topics?.length === 0) {
+      (!processedData.priority_topics || processedData.priority_topics.length === 0)) {
     return <p className="text-gray-500 italic">Seção não preenchida. Clique em Editar para preencher.</p>;
   }
 
@@ -71,10 +71,11 @@ export function getComplementaryInfoSummary(data: any) {
         {processedData.how_found_us ? getDiscoverySourceLabel(processedData.how_found_us) : "Não preenchido"}
       </p>
       
-      {processedData.how_found_us === "recommendation" && (
+      {/* Exibir campo "Indicado por" independentemente da fonte de descoberta */}
+      {processedData.referred_by && (
         <p>
           <span className="font-medium">Indicado por:</span>{" "}
-          {processedData.referred_by || "Não informado"}
+          {processedData.referred_by}
         </p>
       )}
       

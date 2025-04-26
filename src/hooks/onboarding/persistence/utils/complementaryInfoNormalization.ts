@@ -102,7 +102,7 @@ export function normalizeComplementaryInfo(data: any): NormalizedComplementaryIn
       return Boolean(value);
     };
     
-    // Criar novo objeto normalizado
+    // Criar novo objeto normalizado com múltiplos campos de origem possíveis
     const normalizedData: NormalizedComplementaryInfo = {
       how_found_us: data.how_found_us || data.how_discovered || '',
       referred_by: data.referred_by || data.referral_name || '',

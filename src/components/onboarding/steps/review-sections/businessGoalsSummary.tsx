@@ -13,9 +13,11 @@ export function getBusinessGoalsSummary(data: any) {
   
   // Normalizar dados para garantir formato consistente
   const processedData = normalizeBusinessGoals(data);
+  console.log("[BusinessGoalsSummary] Dados após normalização:", processedData);
   
   // Se mesmo após processamento os dados estiverem vazios ou não tiverem informações relevantes
-  if (!processedData.primary_goal && processedData.expected_outcomes.length === 0) {
+  if ((!processedData.primary_goal || processedData.primary_goal === '') && 
+      (!processedData.expected_outcomes || processedData.expected_outcomes.length === 0)) {
     return <p className="text-gray-500 italic">Seção não preenchida. Clique em Editar para preencher.</p>;
   }
 
