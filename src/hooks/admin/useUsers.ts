@@ -12,76 +12,59 @@ export const useUsers = () => {
   const [newRole, setNewRole] = useState<'admin' | 'member'>('member');
   const [saving, setSaving] = useState(false);
 
-  // Função robusta para limpar overlays persistentes
+  // Função otimizada para limpar overlays persistentes
   const cleanupOverlays = useCallback(() => {
-    console.log('Executando limpeza de overlays no hook useUsers');
+    console.log('Executando limpeza de overlays');
     
-    // Primeiro, restaurar os estilos do body que podem estar bloqueando interações
+    // Restaurar interatividade do body
     document.body.style.overflow = '';
     document.body.style.paddingRight = '';
     document.body.style.pointerEvents = '';
     document.body.removeAttribute('aria-hidden');
     
-    // Remove portais Radix
-    const overlays = document.querySelectorAll('[data-radix-portal]');
-    console.log(`Encontrados ${overlays.length} portais Radix`);
-    overlays.forEach(el => {
-      if (el && el.parentNode) {
-        console.log('Removendo portal Radix');
-        el.parentNode.removeChild(el);
-      }
-    });
-    
-    // Remove backdrops Radix
+    // Remover backdrops do Radix UI
     const radixBackdrops = document.querySelectorAll("[data-state='open'].bg-black");
-    console.log(`Encontrados ${radixBackdrops.length} backdrops Radix`);
-    radixBackdrops.forEach(el => {
-      if (el && el.parentNode) {
-        console.log('Removendo backdrop Radix');
-        el.parentNode.removeChild(el);
-      }
-    });
+    if (radixBackdrops.length > 0) {
+      console.log(`Removendo ${radixBackdrops.length} backdrops Radix`);
+      radixBackdrops.forEach(el => {
+        if (el.parentNode) el.parentNode.removeChild(el);
+      });
+    }
     
-    // Remove backdrops MUI (abordagem direta)
+    // Remover portais Radix
+    const radixPortals = document.querySelectorAll('[data-radix-portal]');
+    if (radixPortals.length > 0) {
+      console.log(`Removendo ${radixPortals.length} portais Radix`);
+      radixPortals.forEach(el => {
+        if (el.parentNode) el.parentNode.removeChild(el);
+      });
+    }
+    
+    // Remover backdrops MUI
     const muiBackdrops = document.querySelectorAll('.MuiBackdrop-root');
-    console.log(`Encontrados ${muiBackdrops.length} backdrops MUI`);
-    muiBackdrops.forEach(el => {
-      console.log('Removendo backdrop MUI diretamente');
-      el.remove();
-    });
+    if (muiBackdrops.length > 0) {
+      console.log(`Removendo ${muiBackdrops.length} backdrops MUI`);
+      muiBackdrops.forEach(el => el.remove());
+    }
     
-    // Limpa portais MUI
+    // Remover portais MUI
     const muiPortals = document.querySelectorAll('#mui-modal-root > div');
-    console.log(`Encontrados ${muiPortals.length} portais MUI`);
-    muiPortals.forEach(el => {
-      console.log('Removendo portal MUI');
-      el.remove();
-    });
+    if (muiPortals.length > 0) {
+      console.log(`Removendo ${muiPortals.length} portais MUI`);
+      muiPortals.forEach(el => el.remove());
+    }
     
-    // Limpa toasts do Radix UI que podem estar travando a tela
-    const radixToasts = document.querySelectorAll('[role="status"]');
-    console.log(`Encontrados ${radixToasts.length} toasts Radix`);
-    radixToasts.forEach(el => {
-      console.log('Removendo toast Radix');
-      if (el.parentNode) {
-        el.parentNode.removeChild(el);
-      }
-    });
-
-    // Limpa qualquer portal de toast
-    const toastPortals = document.querySelectorAll('[id*="toast"]');
-    console.log(`Encontrados ${toastPortals.length} portais de toast`);
-    toastPortals.forEach(el => {
-      console.log('Removendo portal de toast');
-      if (el.parentNode && !el.id.includes("sonner")) {
-        el.parentNode.removeChild(el);
-      }
-    });
+    // Remover qualquer backdrop genérico
+    const genericBackdrops = document.querySelectorAll('.backdrop, [role="presentation"]');
+    if (genericBackdrops.length > 0) {
+      console.log(`Removendo ${genericBackdrops.length} backdrops genéricos`);
+      genericBackdrops.forEach(el => {
+        if (el.parentNode) el.parentNode.removeChild(el);
+      });
+    }
     
-    // Logs finais para confirmar remoção
-    console.log('Backdrop removido:', document.querySelectorAll('.MuiBackdrop-root').length);
-    console.log('Portals Radix restantes:', document.querySelectorAll('[data-radix-portal]').length);
-    console.log('Toasts restantes:', document.querySelectorAll('[role="status"]').length);
+    // Log final de confirmação
+    console.log('Backdrop removido:', document.querySelectorAll('.MuiBackdrop-root, [data-state="open"].bg-black').length);
   }, []);
 
   const fetchUsers = async () => {
@@ -108,19 +91,12 @@ export const useUsers = () => {
     }
   };
 
+  // Função otimizada para atualizar função do usuário
   const handleUpdateRole = async () => {
     if (!selectedUser || !newRole || newRole === selectedUser.role) {
-      // Fechar modal sem atualizar, mas garantir limpeza
+      // Fechar modal e limpar overlays
       setEditRoleOpen(false);
-      
-      // Limpar imediatamente qualquer backdrop ou overlay
       cleanupOverlays();
-      
-      // Verificação adicional após um tempo
-      setTimeout(() => {
-        cleanupOverlays();
-      }, 500);
-      
       return;
     }
     
@@ -141,93 +117,67 @@ export const useUsers = () => {
         )
       );
       
-      // IMPORTANTE: Primeiro fechamos o modal e limpamos qualquer backdrop
+      // CRUCIAL: Primeiro fechamos o modal
       setEditRoleOpen(false);
       
-      // Executamos limpeza imediata
+      // Limpamos TODOS os overlays ANTES de exibir o toast
       cleanupOverlays();
       
-      // Verificação adicional após pequeno delay para garantir que animações foram concluídas
+      // Pequeno delay para garantir que a animação do modal concluiu
       setTimeout(() => {
+        // Segunda limpeza para garantir que não sobraram elementos
         cleanupOverlays();
         
-        // Somente após garantir que backdrops foram removidos, exibir o toast
+        // Só exibimos o toast DEPOIS da limpeza completa
         setTimeout(() => {
-          // Usar toast do Sonner sem bloqueio de interação
           toast.success("Função atualizada", {
             description: `A função do usuário ${selectedUser.name || selectedUser.email} foi atualizada para ${newRole === "admin" ? "Administrador" : "Membro"}.`,
-            position: "bottom-right",
             duration: 3000,
           });
-          
-          // Verificação final para garantir que não há overlays bloqueando
-          setTimeout(cleanupOverlays, 300);
-        }, 200);
+        }, 100);
       }, 100);
       
     } catch (error: any) {
       console.error("Erro ao atualizar função:", error.message);
       
-      // Primeiro limpamos overlays
+      // Fechar modal e limpar tudo antes de mostrar erro
+      setEditRoleOpen(false);
       cleanupOverlays();
       
-      // Depois exibimos o toast de erro
       setTimeout(() => {
         toast.error("Erro ao atualizar função", {
           description: error.message || "Não foi possível atualizar a função do usuário."
         });
-      }, 200);
+      }, 100);
     } finally {
       setSaving(false);
       
-      // Garantir que modal está fechado
-      setEditRoleOpen(false);
-      
-      // Forçar uma verificação final após 2 segundos (fallback automático)
+      // Verificação final (fallback automático)
       setTimeout(() => {
-        const remainingBackdrops = document.querySelectorAll('.MuiBackdrop-root, [data-state="open"].bg-black');
-        if (remainingBackdrops.length > 0) {
-          console.log(`FALLBACK: Ainda existem ${remainingBackdrops.length} backdrops após 2s. Remoção forçada.`);
-          remainingBackdrops.forEach(el => el.remove());
-          
-          // Forçar restauração da interatividade da página
-          document.body.style.pointerEvents = '';
-          document.body.style.overflow = '';
-          document.body.style.paddingRight = '';
-          document.body.removeAttribute('aria-hidden');
+        if (document.querySelectorAll('.MuiBackdrop-root, [data-state="open"].bg-black, .backdrop').length > 0) {
+          console.log(`Fallback acionado: Limpeza forçada de overlays remanescentes`);
+          cleanupOverlays();
         }
-        
-        console.log('Estado final do body após fallback:', {
-          overflow: document.body.style.overflow,
-          pointerEvents: document.body.style.pointerEvents,
-          ariaHidden: document.body.getAttribute('aria-hidden'),
-          paddingRight: document.body.style.paddingRight
-        });
       }, 2000);
     }
   };
 
-  // Garantir limpeza quando o componente for desmontado
+  // Efeito para garantir limpeza quando o componente é desmontado
   useEffect(() => {
     return () => {
-      console.log('Hook useUsers desmontado, executando limpeza final');
       cleanupOverlays();
     };
   }, [cleanupOverlays]);
 
-  // Monitorar estado do modal e garantir limpeza quando fechado
+  // Efeito para monitorar mudanças no estado do modal
   useEffect(() => {
     if (!editRoleOpen) {
-      console.log('Modal detectado como fechado no hook, executando limpeza');
-      // Limpeza imediata
+      // Quando o modal fecha, limpamos os overlays
       cleanupOverlays();
-      
-      // Verificação adicional após animações
-      setTimeout(cleanupOverlays, 300);
     }
   }, [editRoleOpen, cleanupOverlays]);
 
-  // Efeito para carregar usuários inicialmente
+  // Efeito para buscar usuários
   useEffect(() => {
     fetchUsers();
   }, []);
