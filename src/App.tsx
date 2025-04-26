@@ -18,7 +18,7 @@ const queryClient = new QueryClient({
       refetchOnMount: true,
       // Novas configurações para melhorar a performance
       refetchOnReconnect: 'always',
-      cacheTime: 1000 * 60 * 30, // 30 minutos
+      gcTime: 1000 * 60 * 30, // 30 minutos (substituindo cacheTime que está obsoleto)
     },
   },
 });

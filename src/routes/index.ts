@@ -3,12 +3,13 @@ import { createBrowserRouter } from 'react-router-dom';
 import AppRoutesWrapper from '@/components/routing/AppRoutesWrapper';
 
 // Lazy loading implementado no wrapper
-export { AppRoutes } from '@/components/routing/AppRoutes';
+import AppRoutes from '@/components/routing/AppRoutes';
+export { AppRoutes };
 
 // Exportamos um roteador otimizado para uso futuro
 export const createOptimizedRouter = () => createBrowserRouter([
   {
     path: '/',
-    element: AppRoutesWrapper()
+    element: <AppRoutesWrapper />
   }
 ]);

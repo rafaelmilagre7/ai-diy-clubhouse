@@ -17,10 +17,12 @@ const Dashboard = () => {
   const initialCategory = useMemo(() => searchParams.get("category") || "general", []);
   const [category, setCategory] = useState<string>(initialCategory);
   
-  // Configurações otimizadas para o React Query
+  // Corrigir a chamada de useSolutionsData para usar parâmetros corretos
   const { solutions, loading: solutionsLoading } = useSolutionsData({
-    staleTime: 1000 * 60 * 10, // 10 minutos para melhorar o cache
-    enabled: true, // Sempre carregado na dashboard
+    queryOptions: {
+      staleTime: 1000 * 60 * 10, // 10 minutos para melhorar o cache
+      enabled: true, // Sempre carregado na dashboard
+    }
   });
   
   // Otimização: Usar useMemo para o array de soluções para evitar recálculos desnecessários
