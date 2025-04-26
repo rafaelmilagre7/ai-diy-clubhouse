@@ -40,6 +40,11 @@ const AdminUsers = () => {
     setEditRoleOpen(true);
   };
 
+  // Função para garantir que o modal seja fechado corretamente
+  const handleCloseModal = () => {
+    setEditRoleOpen(false);
+  };
+
   return (
     <div className="space-y-6">
       <UsersHeader
@@ -58,15 +63,18 @@ const AdminUsers = () => {
         />
       </div>
       
-      <UserRoleDialog
-        open={editRoleOpen}
-        onOpenChange={setEditRoleOpen}
-        selectedUser={selectedUser}
-        newRole={newRole}
-        onRoleChange={(value) => setNewRole(value as 'admin' | 'member')}
-        onUpdateRole={handleUpdateRole}
-        saving={saving}
-      />
+      {/* O modal deve ser renderizado apenas quando necessário */}
+      {editRoleOpen && (
+        <UserRoleDialog
+          open={editRoleOpen}
+          onOpenChange={handleCloseModal}
+          selectedUser={selectedUser}
+          newRole={newRole}
+          onRoleChange={(value) => setNewRole(value as 'admin' | 'member')}
+          onUpdateRole={handleUpdateRole}
+          saving={saving}
+        />
+      )}
     </div>
   );
 };

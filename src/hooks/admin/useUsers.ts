@@ -74,9 +74,32 @@ export const useUsers = () => {
       });
     } finally {
       setSaving(false);
+      // Garantir que o modal seja fechado completamente
       setEditRoleOpen(false);
+      // Pequeno delay para garantir que todas as operações assíncronas foram concluídas
+      setTimeout(() => {
+        // Limpar qualquer backdrop persistente
+        const overlays = document.querySelectorAll('[data-radix-portal]');
+        overlays.forEach(el => {
+          if (el && el.parentNode) {
+            el.parentNode.removeChild(el);
+          }
+        });
+      }, 100);
     }
   };
+
+  // Garantir que qualquer overlay ou backdrop persistente seja removido quando componente for desmontado
+  useEffect(() => {
+    return () => {
+      const overlays = document.querySelectorAll('[data-radix-portal]');
+      overlays.forEach(el => {
+        if (el && el.parentNode) {
+          el.parentNode.removeChild(el);
+        }
+      });
+    };
+  }, []);
 
   useEffect(() => {
     fetchUsers();

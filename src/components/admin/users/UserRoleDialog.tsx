@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/select";
 import { Shield, User } from "lucide-react";
 import { UserProfile } from "@/lib/supabase";
+import { useEffect } from "react";
 
 interface UserRoleDialogProps {
   open: boolean;
@@ -37,9 +38,22 @@ export const UserRoleDialog = ({
   onUpdateRole,
   saving,
 }: UserRoleDialogProps) => {
+  // Garantir que o modal seja completamente fechado quando a prop open mudar para false
+  useEffect(() => {
+    if (!open) {
+      // Forçar limpeza de qualquer backdrop ou overlay persistente
+      const backdrops = document.querySelectorAll("[data-state='open'].bg-black");
+      backdrops.forEach(el => {
+        if (el.parentNode) {
+          el.parentNode.removeChild(el);
+        }
+      });
+    }
+  }, [open]);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent onEscapeKeyDown={() => onOpenChange(false)} onInteractOutside={() => onOpenChange(false)}>
         <DialogHeader>
           <DialogTitle>Alterar Função do Usuário</DialogTitle>
           <DialogDescription>
@@ -70,10 +84,24 @@ export const UserRoleDialog = ({
         </div>
         
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>
+          <Button 
+            variant="outline" 
+            onClick={() => onOpenChange(false)} 
+            disabled={saving}
+            type="button"
+          >
             Cancelar
           </Button>
-          <Button onClick={onUpdateRole} disabled={saving}>
+          <Button 
+            onClick={() => {
+              onUpdateRole();
+              // Garantir que o modal feche após salvar
+              if (!saving) {
+                onOpenChange(false);
+              }
+            }} 
+            disabled={saving}
+          >
             {saving ? 'Salvando...' : 'Salvar'}
           </Button>
         </DialogFooter>
