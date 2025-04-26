@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import { useExperiencePersonalizationForm } from "./ExperiencePersonalizationSections/useExperiencePersonalizationForm";
 import { NavigationButtons } from "@/components/onboarding/NavigationButtons";
+import { normalizeExperiencePersonalization } from "@/hooks/onboarding/persistence/utils/experiencePersonalizationNormalization";
 
 export const ExperiencePersonalizationStep: React.FC<OnboardingStepProps> = ({
   onSubmit,
@@ -28,60 +29,10 @@ export const ExperiencePersonalizationStep: React.FC<OnboardingStepProps> = ({
     if (initialData) {
       console.log("[ExperiencePersonalizationStep] Dados iniciais recebidos:", initialData);
       
-      // CORREÇÃO: Verificação mais detalhada dos dados disponíveis
-      console.log("[ExperiencePersonalizationStep] Conteúdo de initialData:", JSON.stringify(initialData, null, 2));
+      // Extrair dados de experiência de personalização do initialData usando função de normalização
+      const experienceData = normalizeExperiencePersonalization(initialData.experience_personalization);
       
-      // Extrair dados de experiência de personalização do initialData
-      let experienceData = null;
-      
-      if (initialData.experience_personalization) {
-        experienceData = initialData.experience_personalization;
-        console.log("[ExperiencePersonalizationStep] Dados de personalização encontrados:", 
-          typeof experienceData, experienceData);
-        
-        // Se for uma string, tentar converter para objeto
-        if (typeof experienceData === 'string' && experienceData.trim() !== '') {
-          try {
-            experienceData = JSON.parse(experienceData);
-            console.log("[ExperiencePersonalizationStep] Dados de personalização convertidos de string para objeto:", 
-              experienceData);
-          } catch (e) {
-            console.error("[ExperiencePersonalizationStep] Erro ao converter dados de personalização de string para objeto:", e);
-            // CORREÇÃO: Em caso de erro de parse, criar objeto vazio estruturado
-            experienceData = {
-              interests: [],
-              time_preference: [],
-              available_days: [],
-              networking_availability: 5,
-              skills_to_share: [],
-              mentorship_topics: []
-            };
-          }
-        } else if (experienceData === null || experienceData === undefined) {
-          console.log("[ExperiencePersonalizationStep] Dados de personalização nulos ou indefinidos, usando valores padrão");
-          experienceData = {
-            interests: [],
-            time_preference: [],
-            available_days: [],
-            networking_availability: 5,
-            skills_to_share: [],
-            mentorship_topics: []
-          };
-        }
-      } else {
-        console.log("[ExperiencePersonalizationStep] Nenhum dado de personalização encontrado, iniciando com valores padrão");
-        // Valores padrão para o formulário
-        experienceData = {
-          interests: [],
-          time_preference: [],
-          available_days: [],
-          networking_availability: 5,
-          skills_to_share: [],
-          mentorship_topics: []
-        };
-      }
-      
-      console.log("[ExperiencePersonalizationStep] Dados finais de personalização para inicialização do formulário:", 
+      console.log("[ExperiencePersonalizationStep] Dados normalizados para inicialização do formulário:", 
         experienceData);
       setFormData(experienceData);
     }
@@ -124,10 +75,8 @@ export const ExperiencePersonalizationStep: React.FC<OnboardingStepProps> = ({
 
     console.log("[ExperiencePersonalizationStep] Enviando dados de personalização:", data);
     
-    // CORREÇÃO: Enviar os dados no formato correto, com a chave experience_personalization
-    onSubmit("experience_personalization", {
-      experience_personalization: data
-    });
+    // CORREÇÃO: Garantir que os dados são enviados com a estrutura correta
+    onSubmit("experience_personalization", data);
   };
 
   return (

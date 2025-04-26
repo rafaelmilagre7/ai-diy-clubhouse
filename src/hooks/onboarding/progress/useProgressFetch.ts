@@ -60,19 +60,13 @@ export function useProgressFetch(
         console.log("Progresso encontrado:", data);
         progressId.current = data.id;
         
-        // Adicionar metadata para controle de normalização
-        const normalizedData = {
-          ...data,
-          _metadata: {
-            normalized_at: new Date().toISOString(),
-            normalized_version: '2.0'
-          }
-        };
+        // Processar e normalizar dados específicos que podem estar como string
+        const processedData = processProgressData(data);
         
-        setProgress(normalizedData);
+        setProgress(processedData);
         retryCount.current = 0;
         setIsLoading(false);
-        return normalizedData;
+        return processedData;
       }
       
       // Se não encontrou dados, cria um perfil inicial
@@ -97,18 +91,12 @@ export function useProgressFetch(
         progressId.current = newData.id;
         
         // Adicionar metadata para controle de normalização
-        const normalizedNewData = {
-          ...newData,
-          _metadata: {
-            normalized_at: new Date().toISOString(),
-            normalized_version: '2.0'
-          }
-        };
+        const processedNewData = processProgressData(newData);
         
-        setProgress(normalizedNewData);
+        setProgress(processedNewData);
         retryCount.current = 0;
         setIsLoading(false);
-        return normalizedNewData;
+        return processedNewData;
       }
       
       setIsLoading(false);
@@ -122,6 +110,53 @@ export function useProgressFetch(
       return null;
     }
   }, [user, isMounted, setProgress, setIsLoading, progressId, lastError, retryCount, logDebugEvent]);
+  
+  // Função auxiliar para processar e normalizar os dados do progresso
+  function processProgressData(data: OnboardingProgress): OnboardingProgress {
+    // Criar uma cópia profunda para não modificar o original
+    const processedData = JSON.parse(JSON.stringify(data)) as OnboardingProgress;
+    
+    // Lista de campos que podem precisar de normalização
+    const fieldsToCheck = [
+      'experience_personalization',
+      'complementary_info',
+      'ai_experience',
+      'business_goals',
+      'professional_info',
+      'business_context',
+      'personal_info'
+    ];
+    
+    // Normalizar cada campo
+    fieldsToCheck.forEach(field => {
+      const fieldData = (processedData as any)[field];
+      
+      // Se o campo for uma string, tentar converter para objeto
+      if (typeof fieldData === 'string' && fieldData.trim() !== '') {
+        try {
+          (processedData as any)[field] = JSON.parse(fieldData);
+          console.log(`Campo ${field} convertido de string para objeto:`, (processedData as any)[field]);
+        } catch (e) {
+          console.error(`Erro ao converter campo ${field} de string para objeto:`, e);
+          // Manter o valor original em caso de erro
+        }
+      }
+      
+      // Garantir que o campo seja um objeto (não nulo)
+      if (!fieldData) {
+        (processedData as any)[field] = {};
+      }
+    });
+    
+    // Adicionar metadata para controle
+    return {
+      ...processedData,
+      _metadata: {
+        normalized_at: new Date().toISOString(),
+        normalized_version: '2.1'
+      }
+    };
+  }
   
   return { fetchProgress };
 }

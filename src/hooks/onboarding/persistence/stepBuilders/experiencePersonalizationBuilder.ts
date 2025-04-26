@@ -24,13 +24,29 @@ export function buildExperiencePersonalizationUpdate(data: Partial<OnboardingDat
   
   console.log("[buildExperiencePersonalizationUpdate] Dados atuais de progresso:", existingExperiencePersonalization);
   
-  // CORREÇÃO 1: Primeiro, verificar se experience_personalization existe no payload
+  // CORREÇÃO 1: Verificação mais robusta para dados de experience_personalization
   if (data.experience_personalization) {
-    console.log("[buildExperiencePersonalizationUpdate] Dados específicos encontrados no payload:", data.experience_personalization);
+    console.log("[buildExperiencePersonalizationUpdate] Dados específicos encontrados no payload:", 
+      typeof data.experience_personalization, data.experience_personalization);
+    
+    // Se for string, tenta converter para objeto
+    let experienceData = data.experience_personalization;
+    if (typeof experienceData === 'string') {
+      try {
+        experienceData = JSON.parse(experienceData);
+        console.log("[buildExperiencePersonalizationUpdate] Dados convertidos de string para objeto:", experienceData);
+      } catch (e) {
+        console.error("[buildExperiencePersonalizationUpdate] Erro ao converter dados de string para objeto:", e);
+      }
+    }
+    
+    // Normalizar e mesclar com dados existentes
     updateObj.experience_personalization = normalizeExperiencePersonalization({
       ...existingExperiencePersonalization,
-      ...data.experience_personalization
+      ...experienceData
     });
+    
+    console.log("[buildExperiencePersonalizationUpdate] Objeto final de atualização:", updateObj);
     return updateObj;
   }
   

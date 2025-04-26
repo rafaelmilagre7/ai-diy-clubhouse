@@ -5,11 +5,11 @@ import { normalizeComplementaryInfo, NormalizedComplementaryInfo } from "../util
 export function buildComplementaryInfoUpdate(data: Partial<OnboardingData>, progress: OnboardingProgress | null) {
   const updateObj: any = {};
   
-  console.log("Construindo atualização para complementary_info com dados:", data);
+  console.log("[buildComplementaryInfoUpdate] Construindo atualização com dados:", data);
   
   // Verificações iniciais
   if (!data) {
-    console.warn("Dados vazios recebidos em buildComplementaryInfoUpdate");
+    console.warn("[buildComplementaryInfoUpdate] Dados vazios recebidos");
     return updateObj;
   }
   
@@ -18,23 +18,35 @@ export function buildComplementaryInfoUpdate(data: Partial<OnboardingData>, prog
     progress?.complementary_info || {}
   );
   
-  console.log("Dados atuais de progresso complementary_info:", existingComplementaryInfo);
+  console.log("[buildComplementaryInfoUpdate] Dados atuais de progresso complementary_info:", existingComplementaryInfo);
   
-  // CORREÇÃO: Verificar primeiro se temos dados específicos no campo complementary_info
+  // CORREÇÃO 1: Verificação mais robusta para dados de complementary_info
   if (data.complementary_info) {
-    console.log("Dados específicos encontrados no campo complementary_info:", data.complementary_info);
+    console.log("[buildComplementaryInfoUpdate] Dados específicos encontrados:", 
+      typeof data.complementary_info, data.complementary_info);
+    
+    // Se for string, tenta converter para objeto
+    let complementaryData = data.complementary_info;
+    if (typeof complementaryData === 'string') {
+      try {
+        complementaryData = JSON.parse(complementaryData);
+        console.log("[buildComplementaryInfoUpdate] Dados convertidos de string para objeto:", complementaryData);
+      } catch (e) {
+        console.error("[buildComplementaryInfoUpdate] Erro ao converter dados de string para objeto:", e);
+      }
+    }
     
     // Normalizar e mesclar com dados existentes
     updateObj.complementary_info = {
       ...existingComplementaryInfo,
-      ...normalizeComplementaryInfo(data.complementary_info)
+      ...normalizeComplementaryInfo(complementaryData)
     };
     
-    console.log("Objeto final de atualização para complementary_info:", updateObj);
+    console.log("[buildComplementaryInfoUpdate] Objeto final de atualização:", updateObj);
     return updateObj;
   }
   
-  // CORREÇÃO: Verificar se os dados estão no nível raiz do objeto
+  // CORREÇÃO 2: Verificar se os dados estão no nível raiz do objeto
   const complementaryFields = [
     'how_found_us',
     'referred_by',
@@ -46,7 +58,7 @@ export function buildComplementaryInfoUpdate(data: Partial<OnboardingData>, prog
   const hasRootFields = complementaryFields.some(field => field in data);
   
   if (hasRootFields) {
-    console.log("Dados complementares encontrados no nível raiz:", data);
+    console.log("[buildComplementaryInfoUpdate] Dados complementares encontrados no nível raiz:", data);
     
     // Extrair dados relevantes
     const complementaryData: any = {};
@@ -63,13 +75,26 @@ export function buildComplementaryInfoUpdate(data: Partial<OnboardingData>, prog
       ...normalizeComplementaryInfo(complementaryData)
     };
     
-    console.log("Objeto final de atualização para complementary_info:", updateObj);
+    console.log("[buildComplementaryInfoUpdate] Objeto final de atualização:", updateObj);
+    return updateObj;
+  }
+  
+  // CORREÇÃO 3: Verificação extra para o campo how_found_us especificamente
+  if (data.how_found_us !== undefined) {
+    console.log("[buildComplementaryInfoUpdate] Campo how_found_us encontrado diretamente:", data.how_found_us);
+    
+    updateObj.complementary_info = {
+      ...existingComplementaryInfo,
+      how_found_us: data.how_found_us
+    };
+    
+    console.log("[buildComplementaryInfoUpdate] Objeto final de atualização para how_found_us:", updateObj);
     return updateObj;
   }
   
   // Se o próprio objeto data parece ser os dados complementares
   if (Object.keys(data).some(key => complementaryFields.includes(key))) {
-    console.log("O payload parece ser diretamente os dados complementares:", data);
+    console.log("[buildComplementaryInfoUpdate] O payload parece ser diretamente os dados complementares:", data);
     
     // Normalizar e mesclar com dados existentes
     updateObj.complementary_info = {
@@ -77,10 +102,10 @@ export function buildComplementaryInfoUpdate(data: Partial<OnboardingData>, prog
       ...normalizeComplementaryInfo(data)
     };
     
-    console.log("Objeto final de atualização para complementary_info:", updateObj);
+    console.log("[buildComplementaryInfoUpdate] Objeto final de atualização:", updateObj);
     return updateObj;
   }
   
-  console.warn("Nenhum dado específico de complementary_info encontrado para atualização");
+  console.warn("[buildComplementaryInfoUpdate] Nenhum dado específico encontrado para atualização");
   return updateObj;
 }

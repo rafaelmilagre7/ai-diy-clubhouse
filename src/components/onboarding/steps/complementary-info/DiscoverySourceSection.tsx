@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -30,7 +30,13 @@ const discoverOptions = [
 ];
 
 export const DiscoverySourceSection = ({ form }: DiscoverySourceSectionProps) => {
-  const { register, setValue, formState: { errors } } = form;
+  const { register, setValue, getValues, formState: { errors } } = form;
+  
+  // Efeito para log de debug do valor atual
+  useEffect(() => {
+    const currentValue = getValues("how_found_us");
+    console.log("[DiscoverySourceSection] Valor atual de how_found_us:", currentValue);
+  }, [getValues]);
 
   return (
     <div className="bg-card p-6 rounded-lg border border-border space-y-4">
@@ -39,7 +45,12 @@ export const DiscoverySourceSection = ({ form }: DiscoverySourceSectionProps) =>
       </Label>
       
       <Select
-        onValueChange={(value) => setValue("how_found_us", value)}
+        onValueChange={(value) => {
+          console.log("[DiscoverySourceSection] Selecionando novo valor:", value);
+          setValue("how_found_us", value, { shouldValidate: true });
+        }}
+        value={getValues("how_found_us") || ""}
+        defaultValue={getValues("how_found_us") || ""}
       >
         <SelectTrigger className="w-full">
           <SelectValue placeholder="Selecione uma opção" />

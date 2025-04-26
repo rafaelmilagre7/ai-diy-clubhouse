@@ -21,8 +21,8 @@ const ExperiencePersonalization = () => {
     if (!refreshAttempted) {
       console.log("[ExperiencePersonalization] montado - carregando dados mais recentes");
       refreshProgress()
-        .then(() => {
-          console.log("[ExperiencePersonalization] Dados atualizados:", progress);
+        .then((refreshedData) => {
+          console.log("[ExperiencePersonalization] Dados atualizados:", refreshedData || progress);
           setRefreshAttempted(true); // Marcar que já tentamos atualizar
         })
         .catch(error => {
@@ -31,20 +31,26 @@ const ExperiencePersonalization = () => {
           setRefreshAttempted(true); // Marcar que já tentamos, mesmo com erro
         });
     }
-  }, [refreshAttempted, refreshProgress]); // CORREÇÃO: removida a dependência progress para evitar loops
+  }, [refreshAttempted, refreshProgress]); // Dependência reduzida para evitar loops
 
   const handleSaveData = async (stepId: string, data: any) => {
     setIsSubmitting(true);
     try {
-      console.log("[ExperiencePersonalization] Salvando dados de personalização:", data);
-      console.log("[ExperiencePersonalization] StepId recebido:", stepId);
+      console.log("[ExperiencePersonalization] Salvando dados:", data);
       
       // Verificar se temos dados válidos
       if (!data) {
         throw new Error("Dados de personalização ausentes ou inválidos");
       }
       
-      await saveStepData(stepId, data, false);
+      // CORREÇÃO: Força o formato correto para os dados
+      const formattedData = data.experience_personalization 
+        ? data // Já está no formato correto
+        : { experience_personalization: data }; // Garante formato correto
+      
+      console.log("[ExperiencePersonalization] Dados formatados para envio:", formattedData);
+      
+      await saveStepData(stepId, formattedData, false);
       
       console.log("[ExperiencePersonalization] Dados salvos com sucesso");
       toast.success("Dados salvos com sucesso!");

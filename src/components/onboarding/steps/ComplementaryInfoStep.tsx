@@ -20,14 +20,14 @@ export const ComplementaryInfoStep = ({
   // Processamento seguro dos dados iniciais
   const processInitialData = (): ComplementaryInfoFormData => {
     try {
-      console.log("Processando dados iniciais para ComplementaryInfoStep:", initialData);
+      console.log("[ComplementaryInfoStep] Processando dados iniciais:", initialData);
       
       // CORREÇÃO: Usar a função de normalização para garantir dados consistentes
       const normalizedData: NormalizedComplementaryInfo = normalizeComplementaryInfo(
         initialData?.complementary_info || {}
       );
       
-      console.log("Dados normalizados para ComplementaryInfoStep:", normalizedData);
+      console.log("[ComplementaryInfoStep] Dados normalizados:", normalizedData);
       
       return {
         how_found_us: normalizedData.how_found_us || "",
@@ -38,7 +38,7 @@ export const ComplementaryInfoStep = ({
           normalizedData.priority_topics : []
       };
     } catch (error) {
-      console.error("Erro ao processar dados iniciais:", error);
+      console.error("[ComplementaryInfoStep] Erro ao processar dados iniciais:", error);
       // Retornar valores padrão em caso de erro
       return {
         how_found_us: "",
@@ -52,7 +52,7 @@ export const ComplementaryInfoStep = ({
   
   const initialValues = processInitialData();
   
-  console.log("Valores iniciais para ComplementaryInfoStep:", initialValues);
+  console.log("[ComplementaryInfoStep] Valores iniciais:", initialValues);
   
   const form = useForm<ComplementaryInfoFormData>({
     resolver: zodResolver(complementaryInfoSchema),
@@ -60,8 +60,9 @@ export const ComplementaryInfoStep = ({
   });
 
   const handleFormSubmit = (data: ComplementaryInfoFormData) => {
-    console.log("Enviando dados complementary_info:", { complementary_info: data });
-    // CORREÇÃO: Enviar dados no formato correto, com a chave complementary_info
+    console.log("[ComplementaryInfoStep] Enviando dados:", data);
+    
+    // CORREÇÃO: Garantir que os dados são enviados no formato e caminho corretos
     onSubmit('complementary_info', {
       complementary_info: data
     });
