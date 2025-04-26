@@ -2,15 +2,38 @@
 export const difficultyLabels: Record<string, string> = {
   easy: "Fácil",
   medium: "Normal", 
-  advanced: "Avançado"
+  advanced: "Avançado",
+  // Mapeamentos para valores legados
+  beginner: "Fácil",
+  intermediate: "Normal"
 } as const;
+
+// Função para converter e normalizar valores de dificuldade legados
+export const normalizeDifficulty = (difficulty: string): "easy" | "medium" | "advanced" => {
+  switch (difficulty) {
+    case "beginner":
+      return "easy";
+    case "intermediate":
+      return "medium";
+    case "easy":
+    case "medium":
+    case "advanced":
+      return difficulty as "easy" | "medium" | "advanced";
+    default:
+      console.warn(`Valor inesperado para dificuldade: "${difficulty}". Usando "medium" como padrão.`);
+      return "medium";
+  }
+};
 
 export const getDifficultyLabel = (difficulty: string): string => {
   return difficultyLabels[difficulty] || difficulty;
 };
 
 export const getDifficultyColor = (difficulty: string): string => {
-  switch (difficulty) {
+  // Normalizar o valor da dificuldade antes de obter a cor
+  const normalizedDifficulty = normalizeDifficulty(difficulty);
+  
+  switch (normalizedDifficulty) {
     case "easy":
       return "bg-green-500 text-white";
     case "medium":

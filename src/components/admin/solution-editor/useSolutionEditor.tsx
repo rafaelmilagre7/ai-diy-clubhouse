@@ -27,12 +27,26 @@ export const useSolutionEditor = (id: string | undefined, user: any) => {
     slug: "",
   };
   
+  // Normaliza a dificuldade para compatibilidade
+  const normalizeDifficulty = (difficulty: string): "easy" | "medium" | "advanced" => {
+    if (difficulty === "beginner") return "easy";
+    if (difficulty === "intermediate") return "medium";
+    
+    // Garantir que o valor esteja entre os aceitos
+    if (["easy", "medium", "advanced"].includes(difficulty)) {
+      return difficulty as "easy" | "medium" | "advanced";
+    }
+    
+    // Valor padrão caso nenhum dos anteriores seja válido
+    return "medium";
+  };
+  
   const currentValues: SolutionFormValues = solution
     ? {
         title: solution.title,
         description: solution.description,
         category: solution.category as "revenue" | "operational" | "strategy",
-        difficulty: solution.difficulty as "easy" | "medium" | "advanced",
+        difficulty: normalizeDifficulty(solution.difficulty),
         thumbnail_url: solution.thumbnail_url || "",
         published: solution.published,
         slug: solution.slug,
@@ -41,7 +55,13 @@ export const useSolutionEditor = (id: string | undefined, user: any) => {
 
   // Create a submit handler that uses our onSubmit function
   const handleSubmit = (values: SolutionFormValues) => {
-    return onSubmit(values);
+    // Garantir que difficulty seja normalizado antes de enviar
+    const normalizedValues = {
+      ...values,
+      difficulty: normalizeDifficulty(values.difficulty)
+    };
+    
+    return onSubmit(normalizedValues);
   };
 
   return {
