@@ -31,7 +31,7 @@ const ExperiencePersonalization = () => {
           setRefreshAttempted(true); // Marcar que já tentamos, mesmo com erro
         });
     }
-  }, [refreshAttempted, refreshProgress, progress]); // CORREÇÃO: Adicionado progress como dependência
+  }, [refreshAttempted, refreshProgress]); // CORREÇÃO: removida a dependência progress para evitar loops
 
   const handleSaveData = async (stepId: string, data: any) => {
     setIsSubmitting(true);
@@ -44,35 +44,13 @@ const ExperiencePersonalization = () => {
         throw new Error("Dados de personalização ausentes ou inválidos");
       }
       
-      // Usar o stepId fornecido ou fallback para "experience_personalization"
-      const targetStepId = stepId || "experience_personalization";
-      
-      // Garantir que os dados estão na estrutura correta e registrar o formato
-      console.log("[ExperiencePersonalization] Tipo de dados:", typeof data);
-      console.log("[ExperiencePersonalization] Estrutura dos dados:", JSON.stringify(data, null, 2));
-      
-      // CORREÇÃO: Garantir estrutura consistente dos dados
-      let dataToSave = data;
-      
-      // Se for um objeto plano com os campos esperados, estruturar corretamente
-      const isDirectExperienceData = ['interests', 'time_preference', 'available_days', 
-                                  'networking_availability', 'skills_to_share', 
-                                  'mentorship_topics'].some(field => field in data);
-      
-      // Se não for um objeto com experience_personalization, estruturar corretamente
-      if (isDirectExperienceData && !data.experience_personalization) {
-        console.log("[ExperiencePersonalization] Reestruturando dados para formato correto");
-        dataToSave = {
-          experience_personalization: data
-        };
-      }
-      
-      // Enviar com o stepId recebido e garantir que formatação é consistente
-      console.log("[ExperiencePersonalization] Enviando dados finais:", dataToSave);
-      await saveStepData(targetStepId, dataToSave, false);
+      await saveStepData(stepId, data, false);
       
       console.log("[ExperiencePersonalization] Dados salvos com sucesso");
       toast.success("Dados salvos com sucesso!");
+      
+      // Forçar atualização dos dados locais após salvar
+      await refreshProgress();
       
       // Navegar manualmente para a próxima página
       navigate("/onboarding/complementary");
@@ -87,6 +65,7 @@ const ExperiencePersonalization = () => {
   // Função para tentar recarregar dados
   const handleRetry = () => {
     setRefreshAttempted(false); // Resetar flag para permitir nova tentativa
+    refreshProgress();
   };
 
   // Log para depuração
@@ -94,19 +73,6 @@ const ExperiencePersonalization = () => {
     if (progress?.experience_personalization) {
       console.log("[ExperiencePersonalization] Dados disponíveis:", progress.experience_personalization);
       console.log("[ExperiencePersonalization] Tipo dos dados:", typeof progress.experience_personalization);
-      
-      // CORREÇÃO: Logando estrutura detalhada para debug
-      if (typeof progress.experience_personalization === 'string') {
-        try {
-          console.log("[ExperiencePersonalization] Tentando parsear string:", 
-            JSON.parse(progress.experience_personalization));
-        } catch (e) {
-          console.error("[ExperiencePersonalization] Erro ao parsear string:", e);
-        }
-      } else if (typeof progress.experience_personalization === 'object') {
-        console.log("[ExperiencePersonalization] Campos no objeto:", 
-          Object.keys(progress.experience_personalization));
-      }
     } else {
       console.log("[ExperiencePersonalization] Nenhum dado de experience_personalization encontrado no progresso");
     }

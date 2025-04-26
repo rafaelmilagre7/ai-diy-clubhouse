@@ -24,31 +24,17 @@ export function buildExperiencePersonalizationUpdate(data: Partial<OnboardingDat
   
   console.log("[buildExperiencePersonalizationUpdate] Dados atuais de progresso:", existingExperiencePersonalization);
   
-  // CORREÇÃO: Primeiro, verificar se o payload contém dados específicos para experience_personalization
+  // CORREÇÃO 1: Primeiro, verificar se experience_personalization existe no payload
   if (data.experience_personalization) {
-    console.log("[buildExperiencePersonalizationUpdate] Dados encontrados diretamente no payload:", 
-      typeof data.experience_personalization, data.experience_personalization);
-    
-    // Verificar se é uma string e tentar parseá-la
-    if (typeof data.experience_personalization === 'string') {
-      try {
-        const parsedData = JSON.parse(data.experience_personalization);
-        updateObj.experience_personalization = normalizeExperiencePersonalization(parsedData);
-      } catch (error) {
-        console.error("[buildExperiencePersonalizationUpdate] Erro ao parsear string:", error);
-        updateObj.experience_personalization = normalizeExperiencePersonalization(data.experience_personalization);
-      }
-    } else {
-      // Já é um objeto, normalizar diretamente
-      updateObj.experience_personalization = normalizeExperiencePersonalization(data.experience_personalization);
-    }
-    
-    console.log("[buildExperiencePersonalizationUpdate] Dados normalizados para atualização:", 
-      updateObj.experience_personalization);
+    console.log("[buildExperiencePersonalizationUpdate] Dados específicos encontrados no payload:", data.experience_personalization);
+    updateObj.experience_personalization = normalizeExperiencePersonalization({
+      ...existingExperiencePersonalization,
+      ...data.experience_personalization
+    });
     return updateObj;
   }
   
-  // CORREÇÃO: Verificar se há campos esperados diretamente no objeto raiz
+  // CORREÇÃO 2: Verificar se os campos estão no nível raiz do objeto data
   const experienceFields = [
     'interests', 
     'time_preference', 
@@ -58,13 +44,12 @@ export function buildExperiencePersonalizationUpdate(data: Partial<OnboardingDat
     'mentorship_topics'
   ];
   
-  // Verificar se pelo menos um campo esperado existe no nível raiz
-  const hasRootFields = experienceFields.some(field => field in data);
+  const hasDirectFields = experienceFields.some(field => field in data);
   
-  if (hasRootFields) {
-    console.log("[buildExperiencePersonalizationUpdate] Campos encontrados no nível raiz");
+  if (hasDirectFields) {
+    console.log("[buildExperiencePersonalizationUpdate] Campos encontrados diretamente no payload");
     
-    // Construir objeto com os campos encontrados
+    // Extrair os campos diretos para montar o objeto de experiência
     const experienceData: any = {};
     
     experienceFields.forEach(field => {
@@ -73,36 +58,17 @@ export function buildExperiencePersonalizationUpdate(data: Partial<OnboardingDat
       }
     });
     
-    console.log("[buildExperiencePersonalizationUpdate] Dados extraídos do nível raiz:", experienceData);
-    
-    // Normalizar e mesclar com os dados existentes
-    const normalizedData = normalizeExperiencePersonalization({
+    // Mesclar com dados existentes e normalizar
+    updateObj.experience_personalization = normalizeExperiencePersonalization({
       ...existingExperiencePersonalization,
       ...experienceData
     });
     
-    updateObj.experience_personalization = normalizedData;
-    console.log("[buildExperiencePersonalizationUpdate] Dados finais para atualização:", updateObj.experience_personalization);
+    console.log("[buildExperiencePersonalizationUpdate] Objeto de atualização final:", updateObj);
     return updateObj;
   }
   
-  // NOVA CORREÇÃO: Se o payload é o próprio objeto de dados
-  // Verificar se o próprio data já parece ser o objeto experience_personalization
-  const isExperienceData = experienceFields.some(field => field in data);
-  if (isExperienceData) {
-    console.log("[buildExperiencePersonalizationUpdate] O payload parece ser diretamente o objeto de personalização");
-    
-    const normalizedData = normalizeExperiencePersonalization({
-      ...existingExperiencePersonalization,
-      ...data
-    });
-    
-    updateObj.experience_personalization = normalizedData;
-    console.log("[buildExperiencePersonalizationUpdate] Dados finais após normalização:", updateObj.experience_personalization);
-    return updateObj;
-  }
-  
-  // Se chegamos aqui, não encontramos dados válidos para atualizar
-  console.warn("[buildExperiencePersonalizationUpdate] Nenhum dado específico encontrado para atualização");
+  // Se chegou aqui, não encontrou dados relevantes
+  console.warn("[buildExperiencePersonalizationUpdate] Nenhum dado relevante encontrado para atualização");
   return updateObj;
 }

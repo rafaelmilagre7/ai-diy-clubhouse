@@ -1,21 +1,25 @@
 
 /**
- * Utilitário para normalizar dados de informações complementares
- * Garante formato consistente independente de como os dados foram armazenados
+ * Tipo normalizado para informações complementares
  */
-
-// Definindo e exportando o tipo para dados normalizados
 export interface NormalizedComplementaryInfo {
-  how_found_us: string;
-  referred_by: string;
-  authorize_case_usage: boolean;
-  interested_in_interview: boolean;
-  priority_topics: string[];
+  how_found_us?: string;
+  referred_by?: string;
+  authorize_case_usage?: boolean;
+  interested_in_interview?: boolean;
+  priority_topics?: string[];
+  [key: string]: any;
 }
 
+/**
+ * Normaliza os dados de informações complementares
+ * @param data Dados brutos a serem normalizados
+ * @returns Dados normalizados
+ */
 export function normalizeComplementaryInfo(data: any): NormalizedComplementaryInfo {
-  // Se não temos dados, retornar objeto vazio
-  if (!data) {
+  // Se não houver dados ou não for um objeto, retornar objeto padrão
+  if (!data || typeof data !== 'object') {
+    console.warn("Normalização recebeu dados inválidos:", data);
     return {
       how_found_us: "",
       referred_by: "",
@@ -25,13 +29,12 @@ export function normalizeComplementaryInfo(data: any): NormalizedComplementaryIn
     };
   }
   
-  // Se for string, tentar converter para objeto
-  if (typeof data === 'string' && data !== "" && data !== "{}") {
+  // Se for string, tentar parsear
+  if (typeof data === 'string') {
     try {
       data = JSON.parse(data);
-      console.log("[normalizeComplementaryInfo] Dados convertidos de string:", data);
     } catch (e) {
-      console.error("[normalizeComplementaryInfo] Erro ao converter string para objeto:", e);
+      console.error("Erro ao parsear string para objeto:", e);
       return {
         how_found_us: "",
         referred_by: "",
@@ -42,14 +45,13 @@ export function normalizeComplementaryInfo(data: any): NormalizedComplementaryIn
     }
   }
   
-  // Garantir estrutura consistente
-  const normalizedData: NormalizedComplementaryInfo = {
+  // Normalização de dados
+  return {
     how_found_us: data.how_found_us || "",
     referred_by: data.referred_by || "",
     authorize_case_usage: Boolean(data.authorize_case_usage),
     interested_in_interview: Boolean(data.interested_in_interview),
-    priority_topics: Array.isArray(data.priority_topics) ? data.priority_topics : []
+    priority_topics: Array.isArray(data.priority_topics) ? data.priority_topics : [],
+    ...data, // Manter outros campos personalizados
   };
-  
-  return normalizedData;
 }

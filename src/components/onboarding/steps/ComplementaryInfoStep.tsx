@@ -20,7 +20,9 @@ export const ComplementaryInfoStep = ({
   // Processamento seguro dos dados iniciais
   const processInitialData = (): ComplementaryInfoFormData => {
     try {
-      // Usar a função de normalização para garantir dados consistentes
+      console.log("Processando dados iniciais para ComplementaryInfoStep:", initialData);
+      
+      // CORREÇÃO: Usar a função de normalização para garantir dados consistentes
       const normalizedData: NormalizedComplementaryInfo = normalizeComplementaryInfo(
         initialData?.complementary_info || {}
       );
@@ -59,6 +61,7 @@ export const ComplementaryInfoStep = ({
 
   const handleFormSubmit = (data: ComplementaryInfoFormData) => {
     console.log("Enviando dados complementary_info:", { complementary_info: data });
+    // CORREÇÃO: Enviar dados no formato correto, com a chave complementary_info
     onSubmit('complementary_info', {
       complementary_info: data
     });
