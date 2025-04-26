@@ -1,42 +1,59 @@
 
 import { Navigate, useLocation } from "react-router-dom";
-import { ReactNode, useEffect } from "react";
+import { useEffect, useState, useRef, ReactNode } from "react";
 import { useAuth } from "@/contexts/auth";
+import LoadingScreen from "@/components/common/LoadingScreen";
 import { toast } from "sonner";
 
 interface ProtectedRoutesProps {
-  children: ReactNode; // Propriedade children é obrigatória
+  children: ReactNode;
 }
 
-/**
- * ProtectedRoutes - Componente de proteção para rotas de membros
- * 
- * IMPORTANTE: Este componente SEMPRE deve ser usado envolvendo um componente filho:
- * <ProtectedRoutes>
- *   <SeuComponente />
- * </ProtectedRoutes>
- */
 export const ProtectedRoutes = ({ children }: ProtectedRoutesProps) => {
   const { user, isLoading } = useAuth();
   const location = useLocation();
-  
-  // Debug log
-  useEffect(() => {
-    console.log("ProtectedRoutes state:", { 
-      user: !!user, // Logamos apenas a existência do usuário, não seus dados 
-      isLoading, 
-      path: location.pathname 
-    });
-  }, [user, isLoading, location.pathname]);
+  const [loadingTimeout, setLoadingTimeout] = useState(false);
+  const timeoutRef = useRef<number | null>(null);
+  const hasToastShown = useRef(false);
 
-  // Se o usuário não estiver autenticado após verificação, redireciona para a página de login
-  if (!isLoading && !user) {
-    console.log("ProtectedRoutes: Não autenticado, redirecionando para login");
-    toast("Por favor, faça login para acessar esta página");
+  console.log("ProtectedRoutes state:", { user, isLoading, loadingTimeout });
+  
+  // Configurar timeout de carregamento
+  useEffect(() => {
+    if (isLoading && !loadingTimeout) {
+      // Limpar qualquer timeout existente
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+      
+      timeoutRef.current = window.setTimeout(() => {
+        console.log("ProtectedRoutes: Loading timeout exceeded");
+        setLoadingTimeout(true);
+      }, 5000); // Aumentado para 5 segundos
+    }
+    
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, [isLoading, loadingTimeout]);
+
+  // Mostrar tela de carregamento enquanto verifica autenticação
+  if (isLoading && !loadingTimeout) {
+    return <LoadingScreen message="Verificando autenticação..." />;
+  }
+
+  // Se o usuário não estiver autenticado, redireciona para a página de login
+  if (!user) {
+    // Exibir toast apenas uma vez
+    if (!hasToastShown.current) {
+      toast("Por favor, faça login para acessar esta página");
+      hasToastShown.current = true;
+    }
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  // Sempre renderiza o conteúdo (renderização otimista), a verificação de autenticação
-  // acontece em background e o redirecionamento ocorrerá quando necessário
+  // Usuário está autenticado, renderizar as rotas protegidas
   return <>{children}</>;
 };

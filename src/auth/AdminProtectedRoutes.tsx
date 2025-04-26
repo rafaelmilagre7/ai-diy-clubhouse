@@ -1,49 +1,60 @@
 
 import { Navigate, useLocation } from "react-router-dom";
-import { useEffect, ReactNode } from "react";
+import { useEffect, useState, useRef, ReactNode } from "react";
 import { useAuth } from "@/contexts/auth";
+import LoadingScreen from "@/components/common/LoadingScreen";
 import { toast } from "sonner";
 
 interface AdminProtectedRoutesProps {
-  children: ReactNode; // Propriedade children é obrigatória
+  children: ReactNode;
 }
 
-/**
- * AdminProtectedRoutes - Componente de proteção para rotas de administradores
- * 
- * IMPORTANTE: Este componente SEMPRE deve ser usado envolvendo um componente filho:
- * <AdminProtectedRoutes>
- *   <SeuComponenteAdmin />
- * </AdminProtectedRoutes>
- */
 export const AdminProtectedRoutes = ({ children }: AdminProtectedRoutesProps) => {
   const { user, isAdmin, isLoading } = useAuth();
   const location = useLocation();
-  
-  // Debug log
-  useEffect(() => {
-    console.log("AdminProtectedRoutes state:", { 
-      user: !!user, // Logamos apenas se o usuário existe
-      isAdmin, 
-      isLoading, 
-      path: location.pathname 
-    });
-  }, [user, isAdmin, isLoading, location.pathname]);
+  const [loadingTimeout, setLoadingTimeout] = useState(false);
+  const timeoutRef = useRef<number | null>(null);
 
-  // Se o usuário não estiver autenticado após verificação, redireciona para login
-  if (!isLoading && !user) {
-    console.log("AdminProtectedRoutes: Não autenticado, redirecionando para login");
+  console.log("AdminProtectedRoutes state:", { user, isAdmin, isLoading, loadingTimeout });
+  
+  // Configurar timeout de carregamento
+  useEffect(() => {
+    if (isLoading && !loadingTimeout) {
+      // Limpar qualquer timeout existente
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+      
+      timeoutRef.current = window.setTimeout(() => {
+        console.log("AdminProtectedRoutes: Loading timeout exceeded");
+        setLoadingTimeout(true);
+      }, 5000); // 5 segundos para maior tolerância
+    }
+    
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, [isLoading, loadingTimeout]);
+
+  // Mostrar tela de carregamento enquanto verifica autenticação (mas apenas se o timeout não foi excedido)
+  if (isLoading && !loadingTimeout) {
+    return <LoadingScreen message="Verificando permissões de administrador..." />;
+  }
+
+  // Se o usuário não estiver autenticado, redireciona para a página de login
+  if (!user) {
     toast.error("Por favor, faça login para acessar esta página");
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  // Se o usuário não for administrador após verificação, redireciona para dashboard
-  if (!isLoading && user && !isAdmin) {
-    console.log("AdminProtectedRoutes: Usuário não é admin, redirecionando para dashboard");
+  // Se o usuário não for administrador, redireciona para o dashboard
+  if (!isAdmin) {
     toast.error("Você não tem permissão para acessar esta área");
     return <Navigate to="/dashboard" replace />;
   }
 
-  // Renderização otimista - sempre renderiza o conteúdo enquanto verifica a autenticação
+  // Usuário é administrador, renderiza as rotas protegidas
   return <>{children}</>;
 };

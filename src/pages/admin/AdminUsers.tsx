@@ -1,5 +1,5 @@
 
-import { useEffect, useState, useCallback, memo } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/auth";
 import { isSuperAdmin } from "@/contexts/auth/utils/profileUtils/roleValidation";
 import { useUsers } from "@/hooks/admin/useUsers";
@@ -34,12 +34,11 @@ const AdminUsers = () => {
     }
   }, [user]);
 
-  // Função memoizada para abrir o modal de edição
-  const handleEditRole = useCallback((user: UserProfile) => {
+  const handleEditRole = (user: UserProfile) => {
     setSelectedUser(user);
     setNewRole(user.role as 'admin' | 'member');
     setEditRoleOpen(true);
-  }, [setSelectedUser, setNewRole, setEditRoleOpen]);
+  };
 
   return (
     <div className="space-y-6">
@@ -59,20 +58,17 @@ const AdminUsers = () => {
         />
       </div>
       
-      {selectedUser && (
-        <UserRoleDialog
-          open={editRoleOpen}
-          onOpenChange={setEditRoleOpen}
-          selectedUser={selectedUser}
-          newRole={newRole}
-          onRoleChange={(value) => setNewRole(value as 'admin' | 'member')}
-          onUpdateRole={handleUpdateRole}
-          saving={saving}
-        />
-      )}
+      <UserRoleDialog
+        open={editRoleOpen}
+        onOpenChange={setEditRoleOpen}
+        selectedUser={selectedUser}
+        newRole={newRole}
+        onRoleChange={(value) => setNewRole(value as 'admin' | 'member')}
+        onUpdateRole={handleUpdateRole}
+        saving={saving}
+      />
     </div>
   );
 };
 
-// Exportamos um componente memorizado para evitar re-renderizações desnecessárias
-export default memo(AdminUsers);
+export default AdminUsers;

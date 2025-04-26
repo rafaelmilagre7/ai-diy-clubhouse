@@ -11,22 +11,7 @@ import { DeleteSuggestionDialog } from '@/components/suggestions/details/DeleteS
 import { SuggestionDetailsHeader } from '@/components/suggestions/details/SuggestionDetailsHeader';
 import SuggestionLoadingState from '@/components/suggestions/states/SuggestionLoadingState';
 import SuggestionErrorState from '@/components/suggestions/states/SuggestionErrorState';
-import { UserVote, Suggestion } from '@/types/suggestionTypes';
-
-// Função helper para garantir que category seja sempre um objeto
-const normalizeSuggestionCategory = (suggestion: Suggestion | null) => {
-  if (!suggestion) return null;
-  
-  const normalizedSuggestion = { ...suggestion };
-  
-  if (typeof normalizedSuggestion.category === 'string') {
-    normalizedSuggestion.category = { name: normalizedSuggestion.category };
-  } else if (!normalizedSuggestion.category && normalizedSuggestion.category_id) {
-    normalizedSuggestion.category = { name: '' };
-  }
-  
-  return normalizedSuggestion;
-};
+import { UserVote } from '@/types/suggestionTypes';
 
 const SuggestionDetailsPage = () => {
   const { user, isAdmin } = useAuth();
@@ -36,7 +21,7 @@ const SuggestionDetailsPage = () => {
   const isAdminView = location.pathname.includes('/admin/');
 
   const {
-    suggestion: rawSuggestion,
+    suggestion,
     isLoading,
     error,
     userVote,
@@ -44,9 +29,6 @@ const SuggestionDetailsPage = () => {
     handleVote,
     refetch
   } = useSuggestionDetails();
-
-  // Normalize suggestion data before using
-  const suggestion = normalizeSuggestionCategory(rawSuggestion);
 
   const { removeSuggestion, updateSuggestionStatus, loading: adminActionLoading } = useAdminSuggestions();
 
@@ -115,22 +97,7 @@ const SuggestionDetailsPage = () => {
       />
 
       <SuggestionContent
-        suggestion={{
-          id: suggestion.id,
-          title: suggestion.title,
-          description: suggestion.description,
-          status: suggestion.status,
-          created_at: suggestion.created_at,
-          category: typeof suggestion.category === 'string' 
-            ? { name: suggestion.category } 
-            : suggestion.category || { name: '' },
-          category_id: suggestion.category_id,
-          upvotes: suggestion.upvotes,
-          downvotes: suggestion.downvotes,
-          user_id: suggestion.user_id,
-          user_name: suggestion.user_name,
-          user_avatar: suggestion.user_avatar
-        }}
+        suggestion={suggestion}
         comment={comment}
         comments={comments}
         isSubmitting={isSubmitting}
@@ -139,7 +106,7 @@ const SuggestionDetailsPage = () => {
         onSubmitComment={handleSubmitComment}
         onVote={handleVote}
         isOwner={isOwner}
-        userVote={userVote}
+        userVote={userVote as UserVote | null}
         voteLoading={voteLoading}
       />
 

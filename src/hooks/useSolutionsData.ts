@@ -1,26 +1,25 @@
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Solution } from '@/lib/supabase';
 import { useToast } from '@/components/ui/use-toast';
 import { useQuery } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
 
-// Hook simplificado sem cache agressivo ou prefetching
+// Otimização: Usar React Query para cache e gerenciamento de estado
 export function useSolutionsData(initialCategory: string | null = 'all') {
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState(initialCategory || 'all');
-  const navigate = useNavigate();
 
-  // Implementação simplificada da função de fetching
+  // Implementar função de fetching separadamente para melhor controle
   const fetchSolutions = useCallback(async () => {
     try {
+      console.log('Fetching solutions from database...');
       const { data, error } = await supabase
         .from('solutions')
         .select('*')
         .eq('published', true)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }); // Mudado de 'priority' para 'created_at'
       
       if (error) throw error;
       
@@ -36,27 +35,27 @@ export function useSolutionsData(initialCategory: string | null = 'all') {
     }
   }, [toast]);
 
-  // Consulta simplificada com configurações básicas
-  const { 
-    data: solutions = [],
-    isLoading,
-    error,
-    refetch
-  } = useQuery({
+  // Usar React Query para cache e refetch
+  const { data: solutions = [], isLoading, error } = useQuery({
     queryKey: ['solutions'],
     queryFn: fetchSolutions,
-    refetchOnWindowFocus: false
+    staleTime: 5 * 60 * 1000, // 5 minutos de cache
+    refetchOnWindowFocus: false, // Não refetch ao focar a janela
   });
 
-  // Filtrar soluções
-  const filteredSolutions = solutions.filter(solution => {
-    if (activeCategory !== 'all' && solution.category !== activeCategory) {
-      return false;
+  // Filtrar soluções por categoria e pesquisa
+  const filteredSolutions = useMemo(() => {
+    let filtered = [...solutions];
+    
+    // Filtrar por categoria
+    if (activeCategory !== 'all') {
+      filtered = filtered.filter(solution => solution.category === activeCategory);
     }
     
+    // Filtrar por pesquisa
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase().trim();
-      return (
+      filtered = filtered.filter(solution => 
         solution.title.toLowerCase().includes(query) || 
         solution.description.toLowerCase().includes(query) ||
         (solution.tags && solution.tags.some(tag => 
@@ -65,8 +64,8 @@ export function useSolutionsData(initialCategory: string | null = 'all') {
       );
     }
     
-    return true;
-  });
+    return filtered;
+  }, [solutions, activeCategory, searchQuery]);
 
   return {
     solutions,
@@ -76,10 +75,6 @@ export function useSolutionsData(initialCategory: string | null = 'all') {
     searchQuery,
     setSearchQuery,
     activeCategory,
-    setActiveCategory,
-    navigateToSolution: (id: string) => {
-      navigate(`/solution/${id}`);
-    },
-    refreshSolutions: refetch
+    setActiveCategory
   };
 }

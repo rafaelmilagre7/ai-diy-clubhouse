@@ -1,58 +1,78 @@
 
-import React, { useEffect } from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
+import { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
-import { toast } from "sonner";
+import LoadingScreen from "@/components/common/LoadingScreen";
 
 interface ProtectedRouteProps {
-  children: React.ReactNode; // Propriedade children é obrigatória
+  children: React.ReactNode;
   requireAdmin?: boolean;
-  requiredRole?: string;
 }
 
-/**
- * ProtectedRoute - Componente de proteção para rotas
- * 
- * IMPORTANTE: Este componente SEMPRE deve ser usado envolvendo um componente filho:
- * <ProtectedRoute>
- *   <SeuComponente />
- * </ProtectedRoute>
- */
-const ProtectedRoute = ({ 
+export const ProtectedRoute = ({ 
   children, 
-  requireAdmin = false,
-  requiredRole
+  requireAdmin = false 
 }: ProtectedRouteProps) => {
-  const { user, isAdmin, isLoading } = useAuth();
-  const location = useLocation();
+  const { user, isAdmin, isLoading, setIsLoading } = useAuth();
+  const navigate = useNavigate();
+  const [loadingTimeout, setLoadingTimeout] = useState(false);
+  const timeoutRef = useRef<number | null>(null);
   
-  // Debug logs
+  // Clean up on unmount
   useEffect(() => {
-    console.log("ProtectedRoute:", { 
-      user: !!user, // Logamos apenas a existência do usuário, não seus dados
-      isAdmin, 
-      isLoading, 
-      requireAdmin, 
-      requiredRole, 
-      path: location.pathname 
-    });
-  }, [user, isAdmin, isLoading, requireAdmin, requiredRole, location.pathname]);
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
   
-  // Se não houver usuário autenticado após verificação, redireciona para login
-  if (!isLoading && !user) {
-    console.log("ProtectedRoute: No user, redirecting to login");
-    return <Navigate to="/login" state={{ from: location }} replace />;
-  }
-  
-  // Verificar com base em requiredRole ou requireAdmin após verificação
-  if (!isLoading && user && ((requiredRole === 'admin' || requireAdmin) && !isAdmin)) {
-    console.log("Usuário não é admin, redirecionando para dashboard");
-    toast.error("Você não tem permissão para acessar esta área");
-    return <Navigate to="/dashboard" replace />;
+  // Handle loading timeout - Always runs regardless of conditions
+  useEffect(() => {
+    if (isLoading) {
+      // Clear any existing timeout
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+      
+      timeoutRef.current = window.setTimeout(() => {
+        console.log("ProtectedRoute: Loading timeout exceeded");
+        setLoadingTimeout(true);
+        setIsLoading(false);
+        navigate('/auth', { replace: true });
+      }, 2000); // Longer timeout for better UX
+    }
+    
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, [isLoading, navigate, setIsLoading]);
+
+  // Navigation logic - Always runs regardless of conditions
+  useEffect(() => {
+    if (!isLoading && !loadingTimeout) {
+      if (!user) {
+        console.log("ProtectedRoute: No user, redirecting to auth");
+        navigate('/auth', { replace: true });
+      } else if (requireAdmin && !isAdmin) {
+        console.log("ProtectedRoute: User is not admin, redirecting to dashboard");
+        navigate('/dashboard', { replace: true });
+      }
+    }
+  }, [user, isAdmin, isLoading, loadingTimeout, requireAdmin, navigate]);
+
+  // Show loading screen during the loading state
+  if (isLoading && !loadingTimeout) {
+    return <LoadingScreen message="Verificando sua autenticação..." />;
   }
 
-  // Renderização otimista - sempre mostra o conteúdo enquanto verifica a autenticação
-  return <>{children}</>;
+  // Only render children if conditions are met
+  if (user && ((!requireAdmin) || (requireAdmin && isAdmin))) {
+    return <>{children}</>;
+  }
+
+  // Return loading screen as fallback while navigation happens
+  return <LoadingScreen message="Redirecionando..." />;
 };
-
-export default ProtectedRoute;

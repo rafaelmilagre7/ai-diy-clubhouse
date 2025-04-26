@@ -1,5 +1,5 @@
 
-import { FC } from "react";
+import { FC, memo } from "react";
 import { ActiveSolutions } from "./ActiveSolutions";
 import { CompletedSolutions } from "./CompletedSolutions";
 import { RecommendedSolutions } from "./RecommendedSolutions";
@@ -9,6 +9,7 @@ import { ModernDashboardHeader } from "./ModernDashboardHeader";
 import { KpiGrid } from "./KpiGrid";
 import { useAuth } from "@/contexts/auth";
 import { AchievementsSummary } from "./AchievementsSummary"; 
+import { SolutionsGridLoader } from "./SolutionsGridLoader";
 
 interface DashboardLayoutProps {
   active: Solution[];
@@ -17,10 +18,11 @@ interface DashboardLayoutProps {
   category: string;
   onCategoryChange: (category: string) => void;
   onSolutionClick: (solution: Solution) => void;
-  isLoading?: boolean;
+  isLoading?: boolean; // Nova prop para indicar se os dados estão carregando
 }
 
-export const DashboardLayout: FC<DashboardLayoutProps> = ({
+// Otimização: Usar memo para evitar re-renderizações desnecessárias
+export const DashboardLayout: FC<DashboardLayoutProps> = memo(({
   active,
   completed,
   recommended,
@@ -34,12 +36,14 @@ export const DashboardLayout: FC<DashboardLayoutProps> = ({
   const userName = profile?.name?.split(" ")[0] || "Membro";
 
   return (
-    <div className="space-y-8 md:pt-2">
-      {/* HEADER */}
+    <div className="space-y-8 md:pt-2 animate-fade-in">
+      {/* HEADER IMERSIVO */}
       <ModernDashboardHeader userName={userName} />
 
-      {/* Resumo de conquistas */}
-      <AchievementsSummary />
+      {/* Resumo gamificação - conquistas */}
+      <div className="animate-fade-in">
+        <AchievementsSummary />
+      </div>
 
       {/* CARDS DE PROGRESSO (KPI) */}
       <KpiGrid 
@@ -49,7 +53,10 @@ export const DashboardLayout: FC<DashboardLayoutProps> = ({
         isLoading={isLoading}
       />
 
-      {hasNoSolutions ? (
+      {/* Mostrar loaders enquanto carrega, ou conteúdo quando pronto */}
+      {isLoading ? (
+        <SolutionsGridLoader />
+      ) : hasNoSolutions ? (
         <NoSolutionsPlaceholder />
       ) : (
         <>
@@ -59,14 +66,12 @@ export const DashboardLayout: FC<DashboardLayoutProps> = ({
               onSolutionClick={onSolutionClick} 
             />
           )}
-          
           {completed.length > 0 && (
             <CompletedSolutions 
               solutions={completed} 
               onSolutionClick={onSolutionClick} 
             />
           )}
-          
           {recommended.length > 0 && (
             <RecommendedSolutions 
               solutions={recommended} 
@@ -77,6 +82,6 @@ export const DashboardLayout: FC<DashboardLayoutProps> = ({
       )}
     </div>
   );
-};
+});
 
 DashboardLayout.displayName = 'DashboardLayout';

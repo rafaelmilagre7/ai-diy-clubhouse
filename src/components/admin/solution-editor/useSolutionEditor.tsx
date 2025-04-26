@@ -5,7 +5,6 @@ import { useSolutionData } from "@/hooks/useSolutionData";
 import { useSolutionSave } from "@/hooks/useSolutionSave";
 import { useSolutionSteps } from "@/hooks/useSolutionSteps";
 import { Solution } from "@/lib/supabase";
-import { translateDifficultyToEnum } from "@/utils/difficultyUtils";
 
 export const useSolutionEditor = (id: string | undefined, user: any) => {
   // Get solution data
@@ -28,17 +27,12 @@ export const useSolutionEditor = (id: string | undefined, user: any) => {
     slug: "",
   };
   
-  // Normaliza a dificuldade para compatibilidade
-  const normalizeDifficulty = (difficulty: string): "easy" | "medium" | "advanced" => {
-    return translateDifficultyToEnum(difficulty);
-  };
-  
   const currentValues: SolutionFormValues = solution
     ? {
         title: solution.title,
         description: solution.description,
         category: solution.category as "revenue" | "operational" | "strategy",
-        difficulty: normalizeDifficulty(solution.difficulty),
+        difficulty: solution.difficulty as "easy" | "medium" | "advanced",
         thumbnail_url: solution.thumbnail_url || "",
         published: solution.published,
         slug: solution.slug,
@@ -47,13 +41,7 @@ export const useSolutionEditor = (id: string | undefined, user: any) => {
 
   // Create a submit handler that uses our onSubmit function
   const handleSubmit = (values: SolutionFormValues) => {
-    // Garantir que difficulty seja normalizado antes de enviar
-    const normalizedValues = {
-      ...values,
-      difficulty: normalizeDifficulty(values.difficulty)
-    };
-    
-    return onSubmit(normalizedValues);
+    return onSubmit(values);
   };
 
   return {

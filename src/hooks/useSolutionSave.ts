@@ -5,7 +5,6 @@ import { supabase, Solution } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 import { SolutionFormValues } from "@/components/admin/solution/form/solutionFormSchema";
 import { slugify } from "@/utils/slugify";
-import { translateDifficultyToEnum } from "@/utils/difficultyUtils";
 
 export const useSolutionSave = (
   id: string | undefined,
@@ -14,11 +13,6 @@ export const useSolutionSave = (
   const { toast } = useToast();
   const navigate = useNavigate();
   const [saving, setSaving] = useState(false);
-
-  // Função para normalizar o valor da difficulty para o formato esperado pelo backend
-  const normalizeDifficulty = (difficulty: string): "easy" | "medium" | "advanced" => {
-    return translateDifficultyToEnum(difficulty);
-  };
 
   const onSubmit = async (values: SolutionFormValues) => {
     try {
@@ -29,14 +23,10 @@ export const useSolutionSave = (
       
       // Log dos valores recebidos para depuração
       console.log("Valores recebidos para salvar:", values);
-      console.log("Dificuldade bruta:", values.difficulty);
-      
-      // Normalizar o valor da dificuldade antes de salvar
-      const normalizedDifficulty = normalizeDifficulty(values.difficulty);
-      console.log("Dificuldade normalizada:", normalizedDifficulty);
+      console.log("Dificuldade:", values.difficulty);
       
       // Validar o valor da dificuldade antes de salvar
-      if (normalizedDifficulty !== "easy" && normalizedDifficulty !== "medium" && normalizedDifficulty !== "advanced") {
+      if (values.difficulty !== "easy" && values.difficulty !== "medium" && values.difficulty !== "advanced") {
         console.error(`Valor inválido para dificuldade: "${values.difficulty}". Deve ser "easy", "medium" ou "advanced"`);
         toast({
           title: "Erro na validação",
@@ -47,12 +37,12 @@ export const useSolutionSave = (
         return;
       }
       
-      // Preparar dados para salvar com o valor normalizado de difficulty
+      // Preparar dados para salvar
       const solutionData = {
         title: values.title,
         description: values.description,
         category: values.category as "revenue" | "operational" | "strategy",
-        difficulty: normalizedDifficulty,
+        difficulty: values.difficulty as "easy" | "medium" | "advanced", // Garantir que é um dos valores válidos da enum
         slug: slug,
         thumbnail_url: values.thumbnail_url || null,
         published: values.published || false,
@@ -130,7 +120,7 @@ export const useSolutionSave = (
           if (error.message?.includes('invalid input value for enum difficulty_level')) {
             toast({
               title: "Erro com valor de dificuldade",
-              description: `Valor de dificuldade inválido: ${normalizedDifficulty}. Valores aceitos: "easy", "medium", "advanced"`,
+              description: `Valor de dificuldade inválido: ${values.difficulty}. Valores aceitos: "easy", "medium", "advanced"`,
               variant: "destructive",
             });
             break;

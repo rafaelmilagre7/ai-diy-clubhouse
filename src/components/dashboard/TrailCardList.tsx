@@ -1,89 +1,79 @@
 
-import React from "react";
 import { Button } from "@/components/ui/button";
-import { Solution } from "@/lib/supabase";
-import { ChevronRight, ExternalLink } from "lucide-react";
+import { TrailSolutionCard } from "./TrailSolutionCard";
 import { Badge } from "@/components/ui/badge";
-import { SolutionCardSkeleton } from "./SolutionsGridLoader";
-import { motion } from "framer-motion";
 
 interface TrailCardListProps {
-  solutions: Solution[];
+  solutions: (any & { priority: number; justification: string })[];
   onSolutionClick: (id: string) => void;
   onSeeAll: () => void;
-  isLoading?: boolean;
 }
 
-export const TrailCardList: React.FC<TrailCardListProps> = ({ 
-  solutions, 
-  onSolutionClick, 
-  onSeeAll,
-  isLoading = false 
-}) => {
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.07
-      }
-    }
+export function TrailCardList({ solutions, onSolutionClick, onSeeAll }: TrailCardListProps) {
+  // Verificar se temos soluções
+  if (!solutions || solutions.length === 0) {
+    return (
+      <div className="text-center py-4">
+        <p className="text-gray-500">Nenhuma solução encontrada em sua trilha.</p>
+        <Button 
+          onClick={onSeeAll}
+          variant="outline"
+          className="mt-4"
+        >
+          Ver todas as soluções disponíveis
+        </Button>
+      </div>
+    );
+  }
+
+  // Ordenar soluções por prioridade
+  const sortedSolutions = [...solutions].sort((a, b) => a.priority - b.priority);
+
+  // Separar por prioridade
+  const priority1 = sortedSolutions.filter(s => s.priority === 1);
+  const priority2 = sortedSolutions.filter(s => s.priority === 2);
+  const priority3 = sortedSolutions.filter(s => s.priority === 3);
+
+  // Renderizar grupo visual para cada prioridade
+  const renderPriorityGroup = (title: string, solutions: any[], color: string) => {
+    if (solutions.length === 0) return null;
+
+    return (
+      <div className="mb-8">
+        <div className="flex items-center gap-2 mb-4">
+          <Badge className={`${color} text-white font-medium px-3 py-1 rounded-full text-sm`} variant="outline">
+            {title}
+          </Badge>
+          <span className="flex-1 border-t border-[#0ABAB5]/10"></span>
+        </div>
+        <div className="space-y-4">
+          {solutions.map(solution => (
+            <TrailSolutionCard
+              key={solution.solutionId}
+              solution={solution}
+              onClick={onSolutionClick}
+            />
+          ))}
+        </div>
+      </div>
+    );
   };
 
-  const itemVariants = {
-    hidden: { opacity: 0, y: 10 },
-    visible: { opacity: 1, y: 0 }
-  };
-
-  // Renderiza cards individuais com animação suave
   return (
-    <div className="space-y-4">
-      <motion.div 
-        className="space-y-3"
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
-      >
-        {solutions.map((solution: any, index) => (
-          <motion.div 
-            key={solution.id}
-            variants={itemVariants}
-            className="p-4 border rounded-lg hover:bg-gray-50 transition-all cursor-pointer"
-            onClick={() => onSolutionClick(solution.id)}
-          >
-            <div className="flex justify-between items-start">
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-1">
-                  <Badge variant={solution.priority === 1 ? "destructive" : solution.priority === 2 ? "default" : "outline"}>
-                    Prioridade {solution.priority}
-                  </Badge>
-                  <span className="text-xs text-gray-500">{solution.category}</span>
-                </div>
-                <h3 className="text-lg font-medium text-gray-800">{solution.title}</h3>
-                <p className="text-sm text-gray-600 mt-1 line-clamp-2">
-                  {solution.justification || "Recomendada para seu negócio"}
-                </p>
-              </div>
-              <ChevronRight className="h-5 w-5 text-gray-400 mt-1 flex-shrink-0" />
-            </div>
-          </motion.div>
-        ))}
+    <div className="space-y-2">
+      {renderPriorityGroup("Alta Prioridade", priority1, "bg-[#0ABAB5]")}
+      {renderPriorityGroup("Prioridade Média", priority2, "bg-amber-500")}
+      {renderPriorityGroup("Complementar", priority3, "bg-gray-500")}
 
-        {/* Renderizar skeletons individuais para itens em carregamento */}
-        {isLoading && solutions.length === 0 && (
-          <>
-            <SolutionCardSkeleton />
-            <SolutionCardSkeleton />
-          </>
-        )}
-      </motion.div>
-
-      <div className="flex justify-end pt-2">
-        <Button variant="ghost" size="sm" onClick={onSeeAll} className="gap-1">
+      <div className="mt-8 text-center">
+        <Button
+          variant="outline"
+          onClick={onSeeAll}
+          className="text-[#0ABAB5] border-[#0ABAB5] hover:bg-[#0ABAB5]/10"
+        >
           Ver todas as soluções
-          <ExternalLink className="h-3 w-3" />
         </Button>
       </div>
     </div>
   );
-};
+}

@@ -5,11 +5,11 @@ import { SolutionCard } from '@/components/solution/SolutionCard';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Search, Filter } from 'lucide-react';
+import LoadingScreen from '@/components/common/LoadingScreen';
 import { Solution } from '@/lib/supabase';
 import { useToolsData } from '@/hooks/useToolsData';
 import { useLogging } from '@/contexts/logging';
 import { useDocumentTitle } from '@/hooks/use-document-title';
-import { SolutionCardSkeleton } from '@/components/dashboard/SolutionsGridLoader';
 
 const Solutions = () => {
   // Definir título da página
@@ -27,14 +27,14 @@ const Solutions = () => {
     searchQuery, 
     setSearchQuery,
     activeCategory,
-    setActiveCategory,
+    setActiveCategory
   } = useSolutionsData();
 
   // Log data for debugging
   log("Solutions page loaded", { 
     solutionsCount: filteredSolutions?.length || 0, 
     activeCategory,
-    isLoading: loading || toolsDataLoading,
+    isLoading: loading || toolsDataLoading
   });
 
   const categories = [
@@ -44,41 +44,11 @@ const Solutions = () => {
     { id: 'strategy', name: 'Estratégia' }
   ];
 
-  // Renderização da lista de soluções com carregamento simplificado
-  const renderSolutionsList = () => {
-    // Se não houver nada, mostra msg amigável
-    if (!loading && filteredSolutions?.length === 0) {
-      return (
-        <div className="text-center py-8 bg-white rounded-lg border border-dashed">
-          <div className="flex flex-col items-center px-4">
-            <Filter className="h-10 w-10 text-muted-foreground mb-3" />
-            <h3 className="text-lg font-medium">Nenhuma solução encontrada</h3>
-            <p className="text-muted-foreground text-sm mt-1 max-w-md">
-              Não encontramos soluções com esse filtro. Tente selecionar outra categoria ou ajuste sua busca.
-            </p>
-          </div>
-        </div>
-      );
-    }
-
-    // Grid de placeholders ou soluções reais
-    return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {loading
-          ? // Se está carregando, mostre placeholders
-            Array(6).fill(0).map((_, index) => <SolutionCardSkeleton key={`skeleton-${index}`} />)
-          : // Caso contrário, mostre os dados já carregados
-            filteredSolutions?.map((solution: Solution) => (
-              <SolutionCard 
-                key={solution.id}
-                solution={solution} 
-                isLoading={false}
-              />
-            ))
-        }
-      </div>
-    );
-  };
+  // Se estiver carregando as soluções, mostrar tela de carregamento
+  // Mas não bloquear se apenas as ferramentas estiverem carregando
+  if (loading) {
+    return <LoadingScreen message="Carregando soluções..." />;
+  }
 
   return (
     <div className="space-y-6">
@@ -119,7 +89,23 @@ const Solutions = () => {
 
         {categories.map((category) => (
           <TabsContent key={category.id} value={category.id} className="mt-0">
-            {renderSolutionsList()}
+            {filteredSolutions?.length === 0 ? (
+              <div className="text-center py-8 bg-white rounded-lg border border-dashed">
+                <div className="flex flex-col items-center px-4">
+                  <Filter className="h-10 w-10 text-muted-foreground mb-3" />
+                  <h3 className="text-lg font-medium">Nenhuma solução encontrada</h3>
+                  <p className="text-muted-foreground text-sm mt-1 max-w-md">
+                    Não encontramos soluções com esse filtro. Tente selecionar outra categoria ou ajuste sua busca.
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredSolutions?.map((solution: Solution) => (
+                  <SolutionCard key={solution.id} solution={solution} />
+                ))}
+              </div>
+            )}
           </TabsContent>
         ))}
       </Tabs>

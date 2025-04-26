@@ -1,32 +1,42 @@
 
 import { useState, useMemo } from 'react';
-import { Tool } from '@/types/toolTypes';
-import { ToolCategory } from '@/components/admin/tools/AdminToolsFilters';
+import { useTools } from '@/hooks/useTools';
+import { Tool, ToolCategory } from '@/types/toolTypes';
 
-export function useAdminTools(initialTools: Tool[] = []) {
-  const [searchQuery, setSearchQuery] = useState<string>('');
-  const [selectedCategory, setSelectedCategory] = useState<ToolCategory>(null);
+export const useAdminTools = () => {
+  const { tools, isLoading, error, refetch } = useTools();
+  const [selectedCategory, setSelectedCategory] = useState<ToolCategory | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
-  const tools = useMemo(() => {
-    return initialTools.filter((tool) => {
-      // Filtro por busca
-      const matchesSearch = searchQuery === '' || 
-        tool.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        tool.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        tool.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
-      
-      // Filtro por categoria
-      const matchesCategory = !selectedCategory || tool.category === selectedCategory;
-      
-      return matchesSearch && matchesCategory;
-    });
-  }, [initialTools, searchQuery, selectedCategory]);
+  const filteredTools = useMemo(() => {
+    let result = [...tools];
+    
+    // Filtrar por categoria
+    if (selectedCategory) {
+      result = result.filter(tool => tool.category === selectedCategory);
+    }
+    
+    // Filtrar por busca
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      result = result.filter(tool => 
+        tool.name.toLowerCase().includes(query) ||
+        tool.description.toLowerCase().includes(query)
+      );
+    }
+    
+    // Ordenar alfabeticamente
+    return result.sort((a, b) => a.name.localeCompare(b.name));
+  }, [tools, selectedCategory, searchQuery]);
 
   return {
-    tools,
-    searchQuery,
-    setSearchQuery,
+    tools: filteredTools,
+    isLoading,
+    error,
+    refetch,
     selectedCategory,
-    setSelectedCategory
+    setSelectedCategory,
+    searchQuery,
+    setSearchQuery
   };
-}
+};

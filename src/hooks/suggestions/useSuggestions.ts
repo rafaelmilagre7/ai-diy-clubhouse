@@ -18,19 +18,21 @@ export const useSuggestions = () => {
   } = useQuery({
     queryKey: ['suggestions', filter, searchQuery],
     queryFn: async () => {
+      console.log('Buscando sugestões...', { filter, searchQuery });
+      
       try {
-        // Busca simplificada
+        // Usamos a view suggestions_with_profiles que já conecta os dados de perfil
         let query = supabase
           .from('suggestions_with_profiles')
           .select('*')
-          .eq('is_hidden', false);
+          .eq('is_hidden', false); // Apenas sugestões não ocultas
 
         // Filtragem por termo de busca
         if (searchQuery) {
           query = query.or(`title.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%`);
         }
 
-        // Ordenação básica
+        // Ordenação
         if (filter === 'popular') {
           query = query.order('upvotes', { ascending: false });
         } else if (filter === 'recent') {
@@ -39,14 +41,21 @@ export const useSuggestions = () => {
 
         const { data, error } = await query;
 
-        if (error) throw error;
-        
+        if (error) {
+          console.error('Erro ao buscar sugestões:', error);
+          throw error;
+        }
+
+        console.log('Sugestões encontradas:', data?.length, data);
         return data || [];
       } catch (error) {
         console.error('Erro na consulta de sugestões:', error);
         throw error;
       }
     },
+    refetchOnWindowFocus: false,
+    staleTime: 1000 * 60 * 1, // 1 minuto
+    refetchOnMount: true,
   });
 
   return {

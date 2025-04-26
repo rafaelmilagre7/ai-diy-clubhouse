@@ -1,6 +1,6 @@
-
 import { CheckCircle, Clock, TrendingUp } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface KpiGridProps {
   completed: number;
@@ -15,16 +15,21 @@ export const KpiGrid: React.FC<KpiGridProps> = ({
   total,
   isLoading = false 
 }) => {
-  // Se estiver carregando, não exibe nada ou exibe mensagem simples
   if (isLoading) {
-    return <div>Carregando dados de progresso...</div>;
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {[1, 2, 3].map((i) => (
+          <Skeleton key={i} className="h-24 rounded-lg" />
+        ))}
+      </div>
+    );
   }
 
   const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-      <Card className="border-0 overflow-hidden">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 animate-fade-in mb-6">
+      <Card className="glassmorphism border-0 overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-green-400 to-green-600"></div>
         <CardContent className="pt-6 flex items-center gap-4">
           <span className="rounded-full bg-gradient-to-br from-green-500/20 to-green-400/5 p-3">
@@ -37,7 +42,7 @@ export const KpiGrid: React.FC<KpiGridProps> = ({
         </CardContent>
       </Card>
       
-      <Card className="border-0 overflow-hidden">
+      <Card className="glassmorphism border-0 overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-viverblue to-viverblue-light"></div>
         <CardContent className="pt-6 flex items-center gap-4">
           <span className="rounded-full bg-gradient-to-br from-viverblue/20 to-viverblue-light/5 p-3">
@@ -50,7 +55,7 @@ export const KpiGrid: React.FC<KpiGridProps> = ({
         </CardContent>
       </Card>
       
-      <Card className="border-0 overflow-hidden">
+      <Card className="glassmorphism border-0 overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 to-purple-500"></div>
         <CardContent className="pt-6 flex items-center gap-4">
           <span className="rounded-full bg-gradient-to-br from-indigo-500/20 to-purple-500/5 p-3">

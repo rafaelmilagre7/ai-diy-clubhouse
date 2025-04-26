@@ -69,6 +69,21 @@ const SolutionEditor = () => {
       setCurrentStep(currentStep - 1);
     }
   };
+
+  // Determina a cor do nível de dificuldade
+  const getDifficultyColor = () => {
+    const difficulty = currentValues.difficulty;
+    switch (difficulty) {
+      case "easy":
+        return "bg-green-500";
+      case "medium":
+        return "bg-orange-500";
+      case "advanced":
+        return "bg-red-500";
+      default:
+        return "bg-gray-500";
+    }
+  };
   
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-10">
@@ -78,6 +93,7 @@ const SolutionEditor = () => {
         onSave={handleSaveWithToast}
         title={currentValues.title}
         difficulty={currentValues.difficulty}
+        difficultyColor={getDifficultyColor()}
       />
       
       {!user && <AuthError />}

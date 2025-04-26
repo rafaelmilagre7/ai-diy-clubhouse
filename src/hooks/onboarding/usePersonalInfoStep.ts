@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { useProgress } from "./useProgress";
 import { toast } from "sonner";
@@ -33,7 +32,7 @@ export const usePersonalInfoStep = () => {
     // Garantir que sempre carrega só do personal_info
     const userName = profile?.name || user?.user_metadata?.name || "";
     const userEmail = profile?.email || user?.email || "";
-    
+
     if (progress?.personal_info) {
       let ddi = progress.personal_info.ddi || "+55";
       if (ddi) {
@@ -54,8 +53,8 @@ export const usePersonalInfoStep = () => {
     } else {
       setFormData(prev => ({
         ...prev,
-        name: userName || "",
-        email: userEmail || ""
+        name: userName,
+        email: userEmail
       }));
     }
     setInitialDataLoaded(true);

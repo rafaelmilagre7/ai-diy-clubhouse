@@ -17,11 +17,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { 
-  difficultyLabels, 
-  getDifficultyColor, 
-  translateDifficultyToEnum 
-} from "@/utils/difficultyUtils";
 
 interface BasicInfoRightColumnProps {
   form: UseFormReturn<SolutionFormValues>;
@@ -32,6 +27,26 @@ const BasicInfoRightColumn: React.FC<BasicInfoRightColumnProps> = ({
   form,
   difficulty
 }) => {
+  // Função para obter a cor correspondente à dificuldade
+  const getDifficultyColor = (diff: string) => {
+    switch (diff) {
+      case "easy": return "bg-green-500 text-white";
+      case "medium": return "bg-yellow-500 text-white";
+      case "advanced": return "bg-orange-500 text-white";
+      default: return "bg-gray-500 text-white";
+    }
+  };
+
+  // Função para obter texto traduzido de dificuldade
+  const getDifficultyText = (diff: string) => {
+    switch (diff) {
+      case "easy": return "Fácil";
+      case "medium": return "Normal";
+      case "advanced": return "Avançado";
+      default: return diff;
+    }
+  };
+
   return (
     <div className="space-y-6">
       <FormField
@@ -66,49 +81,40 @@ const BasicInfoRightColumn: React.FC<BasicInfoRightColumnProps> = ({
       <FormField
         control={form.control}
         name="difficulty"
-        render={({ field }) => {
-          // Garantir que o valor armazenado no formulário é sempre o enum
-          const normalizedValue = translateDifficultyToEnum(field.value);
-          
-          return (
-            <FormItem>
-              <FormLabel>Dificuldade</FormLabel>
-              <Select
-                onValueChange={(value) => {
-                  // Garantir que o valor definido é sempre o enum
-                  const enumValue = translateDifficultyToEnum(value);
-                  field.onChange(enumValue);
-                }}
-                value={normalizedValue}
-              >
-                <FormControl>
-                  <SelectTrigger 
-                    className={normalizedValue ? `${getDifficultyColor(normalizedValue)} border-0` : ""}
-                  >
-                    <SelectValue placeholder="Selecione uma dificuldade">
-                      {normalizedValue ? difficultyLabels[normalizedValue] : ""}
-                    </SelectValue>
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="easy" className="bg-green-100 hover:bg-green-200">
-                    Fácil
-                  </SelectItem>
-                  <SelectItem value="medium" className="bg-yellow-100 hover:bg-yellow-200">
-                    Normal
-                  </SelectItem>
-                  <SelectItem value="advanced" className="bg-orange-100 hover:bg-orange-200">
-                    Avançado
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-              <FormDescription>
-                O nível de dificuldade de implementação da solução.
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          );
-        }}
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Dificuldade</FormLabel>
+            <Select
+              onValueChange={field.onChange}
+              value={field.value}
+            >
+              <FormControl>
+                <SelectTrigger 
+                  className={field.value ? `${getDifficultyColor(field.value)} border-0` : ""}
+                >
+                  <SelectValue placeholder="Selecione uma dificuldade">
+                    {field.value ? getDifficultyText(field.value) : ""}
+                  </SelectValue>
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent>
+                <SelectItem value="easy" className="bg-green-100 hover:bg-green-200">
+                  Fácil
+                </SelectItem>
+                <SelectItem value="medium" className="bg-yellow-100 hover:bg-yellow-200">
+                  Normal
+                </SelectItem>
+                <SelectItem value="advanced" className="bg-orange-100 hover:bg-orange-200">
+                  Avançado
+                </SelectItem>
+              </SelectContent>
+            </Select>
+            <FormDescription>
+              O nível de dificuldade de implementação da solução.
+            </FormDescription>
+            <FormMessage />
+          </FormItem>
+        )}
       />
     </div>
   );

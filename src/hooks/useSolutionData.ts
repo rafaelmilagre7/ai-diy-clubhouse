@@ -60,19 +60,7 @@ export const useSolutionData = (id: string | undefined) => {
         
         if (data) {
           log("Dados da solução encontrados:", { solution: data });
-          
-          // Normalizar o valor de dificuldade: converter "beginner" para "easy"
-          const normalizedSolution = { ...data };
-          
-          if (normalizedSolution.difficulty === "beginner") {
-            log("Normalizando dificuldade 'beginner' para 'easy'", { 
-              original: normalizedSolution.difficulty,
-              normalized: "easy"
-            });
-            normalizedSolution.difficulty = "easy";
-          }
-          
-          setSolution(normalizedSolution as Solution);
+          setSolution(data as Solution);
           
           // Fetch progress for this solution and user if user is authenticated
           if (user) {

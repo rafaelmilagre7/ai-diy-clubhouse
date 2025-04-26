@@ -6,7 +6,6 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Star } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
 
 interface TrailSolution extends Solution {
   priority: number;
@@ -15,13 +14,9 @@ interface TrailSolution extends Solution {
 
 interface TrailSolutionsListProps {
   solutions: TrailSolution[];
-  isItemLoading?: boolean; // Adicionado como opcional para compatibilidade
 }
 
-export const TrailSolutionsList: React.FC<TrailSolutionsListProps> = ({ 
-  solutions,
-  isItemLoading = false
-}) => {
+export const TrailSolutionsList: React.FC<TrailSolutionsListProps> = ({ solutions }) => {
   const navigate = useNavigate();
   
   // Agrupar soluções por prioridade
@@ -82,37 +77,21 @@ export const TrailSolutionsList: React.FC<TrailSolutionsListProps> = ({
               {prioritySolutions.map((solution) => (
                 <Card key={solution.id} className="border border-gray-200 hover:border-[#0ABAB5]/30 transition-all">
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-lg">
-                      {isItemLoading ? <Skeleton className="h-6 w-3/4" /> : solution.title}
-                    </CardTitle>
-                    <CardDescription className="line-clamp-2">
-                      {isItemLoading ? <Skeleton className="h-4 w-full" /> : solution.description}
-                    </CardDescription>
+                    <CardTitle className="text-lg">{solution.title}</CardTitle>
+                    <CardDescription className="line-clamp-2">{solution.description}</CardDescription>
                   </CardHeader>
                   
                   <CardContent>
-                    {isItemLoading ? (
-                      <Skeleton className="h-12 w-full mb-2" />
-                    ) : (
-                      <div className="text-sm text-gray-600 italic mb-2">
-                        "{solution.justification}"
-                      </div>
-                    )}
+                    <div className="text-sm text-gray-600 italic mb-2">
+                      "{solution.justification}"
+                    </div>
                     
                     <div className="flex flex-wrap gap-2 mt-2">
-                      {isItemLoading ? (
-                        <>
-                          <Skeleton className="h-5 w-16" />
-                          <Skeleton className="h-5 w-20" />
-                          <Skeleton className="h-5 w-14" />
-                        </>
-                      ) : (
-                        solution.tags?.slice(0, 3).map((tag, i) => (
-                          <Badge key={i} variant="secondary" className="text-xs">
-                            {tag}
-                          </Badge>
-                        ))
-                      )}
+                      {solution.tags?.slice(0, 3).map((tag, i) => (
+                        <Badge key={i} variant="secondary" className="text-xs">
+                          {tag}
+                        </Badge>
+                      ))}
                     </div>
                   </CardContent>
                   
@@ -120,16 +99,9 @@ export const TrailSolutionsList: React.FC<TrailSolutionsListProps> = ({
                     <Button
                       onClick={() => handleSolutionClick(solution.id)}
                       className="w-full bg-[#0ABAB5] hover:bg-[#0ABAB5]/90"
-                      disabled={isItemLoading}
                     >
-                      {isItemLoading ? (
-                        <Skeleton className="h-4 w-24" />
-                      ) : (
-                        <>
-                          Ver Solução
-                          <ArrowRight className="ml-2 h-4 w-4" />
-                        </>
-                      )}
+                      Ver Solução
+                      <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
                   </CardFooter>
                 </Card>

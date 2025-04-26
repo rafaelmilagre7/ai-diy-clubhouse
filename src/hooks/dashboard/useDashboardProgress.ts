@@ -1,13 +1,12 @@
 
-import { useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useAuth } from "@/contexts/auth";
 import { supabase } from "@/lib/supabase";
 import { Solution } from "@/lib/supabase";
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 
 export const useDashboardProgress = (solutions: Solution[] = []) => {
   const { user } = useAuth();
-  const queryClient = useQueryClient();
   
   // Função para buscar o progresso - separada para facilitar cache
   const fetchProgress = useCallback(async () => {
@@ -30,21 +29,18 @@ export const useDashboardProgress = (solutions: Solution[] = []) => {
   // Usar React Query para cache e controle de estado
   const { 
     data: progressData,
-    isLoading,
-    refetch
+    isLoading
   } = useQuery({
     queryKey: ['progress', user?.id],
     queryFn: fetchProgress,
     staleTime: 5 * 60 * 1000, // 5 minutos de cache
     enabled: !!user && solutions.length > 0,
-    refetchOnWindowFocus: false, 
-    refetchInterval: false, 
-    placeholderData: (previousData) => previousData, // Usar dados anteriores como placeholder
+    refetchOnWindowFocus: false, // Desativar refetch ao focar a janela
+    refetchInterval: false // Desativar refetch automático baseado em intervalo
   });
 
   // Usar useMemo para processar os dados apenas quando necessário
   const { active, completed, recommended } = useMemo(() => {
-    // Se não tivermos dados ou soluções, retornar objetos vazios
     if (!solutions || solutions.length === 0 || !progressData) {
       return { active: [], completed: [], recommended: [] };
     }
@@ -80,15 +76,10 @@ export const useDashboardProgress = (solutions: Solution[] = []) => {
     };
   }, [solutions, progressData]);
 
-  const refreshProgress = useCallback(() => {
-    return refetch();
-  }, [refetch]);
-
   return {
     active,
     completed,
     recommended,
-    loading: isLoading,
-    refreshProgress
+    loading: isLoading
   };
 };

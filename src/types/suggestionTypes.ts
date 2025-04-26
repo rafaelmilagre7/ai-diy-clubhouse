@@ -1,5 +1,4 @@
 
-
 export interface Suggestion {
   id: string;
   title: string;
@@ -22,10 +21,6 @@ export interface Suggestion {
     avatar_url: string;
   };
   replies?: Suggestion[];
-  // Modificando a propriedade category para ser um objeto ou string
-  // para manter compatibilidade com dados existentes
-  category?: string | { name: string };
-  is_implemented?: boolean; // Indica se a sugestão foi implementada
 }
 
 export interface SuggestionComment {

@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Tool } from '@/types/toolTypes';
 import { Link } from 'react-router-dom';
@@ -27,15 +26,15 @@ interface AdminToolListProps {
   refreshTrigger?: number;
 }
 
-export const AdminToolList = ({ tools: initialTools, refreshTrigger }: AdminToolListProps) => {
+export const AdminToolList = ({ refreshTrigger }: AdminToolListProps) => {
   const { 
     tools, 
+    isLoading, 
     selectedCategory, 
     setSelectedCategory, 
     searchQuery, 
     setSearchQuery 
-  } = useAdminTools(initialTools);
-  
+  } = useAdminTools();
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const { toast } = useToast();
 
@@ -66,6 +65,14 @@ export const AdminToolList = ({ tools: initialTools, refreshTrigger }: AdminTool
       setDeletingId(null);
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="text-center py-8">
+        <p className="text-muted-foreground">Carregando ferramentas...</p>
+      </div>
+    );
+  }
 
   if (tools.length === 0) {
     return (
