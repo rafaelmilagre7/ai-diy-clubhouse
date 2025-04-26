@@ -24,7 +24,6 @@ const AdminUsers = () => {
     setNewRole,
     saving,
     handleUpdateRole,
-    cleanupOverlays, 
   } = useUsers();
 
   const [isAdminMaster, setIsAdminMaster] = useState(false);
@@ -37,53 +36,10 @@ const AdminUsers = () => {
 
   // Função simplificada para abrir o modal de edição
   const handleEditRole = useCallback((user: UserProfile) => {
-    // Limpar overlays existentes primeiro
-    cleanupOverlays();
-    
-    // Configurar e abrir o modal
     setSelectedUser(user);
     setNewRole(user.role as 'admin' | 'member');
-    
-    // Pequeno delay para garantir limpeza antes de abrir
-    setTimeout(() => {
-      setEditRoleOpen(true);
-    }, 50);
-  }, [setSelectedUser, setNewRole, setEditRoleOpen, cleanupOverlays]);
-
-  // Monitorar quando a página carrega para garantir limpeza inicial
-  useEffect(() => {
-    // Verificação inicial para remover qualquer overlay persistente
-    cleanupOverlays();
-    
-    // Verificar overlays periodicamente (a cada 4 segundos) como garantia
-    const cleanupInterval = setInterval(() => {
-      const overlays = document.querySelectorAll('.MuiBackdrop-root, [data-state="open"].bg-black, .backdrop, [role="presentation"]');
-      if (overlays.length > 0) {
-        console.log(`Limpeza periódica: ${overlays.length} overlays encontrados`);
-        cleanupOverlays();
-      }
-    }, 4000);
-    
-    // Adicionar listener para botões ou cliques que exigem limpeza
-    const handleDocumentClick = (e: MouseEvent) => {
-      // Verificar se depois de um clique ainda existem backdrops
-      setTimeout(() => {
-        const overlays = document.querySelectorAll('.MuiBackdrop-root, [data-state="open"].bg-black, .backdrop');
-        if (overlays.length > 0 && !editRoleOpen) {
-          console.log('Overlay detectado após clique. Limpando...');
-          cleanupOverlays();
-        }
-      }, 300);
-    };
-    
-    document.addEventListener('click', handleDocumentClick);
-    
-    return () => {
-      clearInterval(cleanupInterval);
-      document.removeEventListener('click', handleDocumentClick);
-      cleanupOverlays();
-    };
-  }, [cleanupOverlays, editRoleOpen]);
+    setEditRoleOpen(true);
+  }, [setSelectedUser, setNewRole, setEditRoleOpen]);
 
   return (
     <div className="space-y-6">
@@ -106,19 +62,7 @@ const AdminUsers = () => {
       {selectedUser && (
         <UserRoleDialog
           open={editRoleOpen}
-          onOpenChange={(open) => {
-            if (!open) {
-              // Se estiver fechando, primeiro limpar overlays
-              cleanupOverlays();
-              setTimeout(() => {
-                setEditRoleOpen(false);
-                // Segunda limpeza após fechar completamente
-                setTimeout(cleanupOverlays, 100);
-              }, 50);
-            } else {
-              setEditRoleOpen(open);
-            }
-          }}
+          onOpenChange={setEditRoleOpen}
           selectedUser={selectedUser}
           newRole={newRole}
           onRoleChange={(value) => setNewRole(value as 'admin' | 'member')}

@@ -28,15 +28,12 @@ const App = () => {
           <AuthProvider>
             <AppRoutes />
             
-            {/* Configuração otimizada do Toaster para evitar bloqueio de interações */}
+            {/* Configuração simplificada do Toaster */}
             <Toaster 
-              position="bottom-right" 
+              position="bottom-right"
               toastOptions={{
-                style: { 
-                  zIndex: 9999,
-                  pointerEvents: 'auto' // Garantir que o toast seja interativo
-                },
-                className: 'z-50 pointer-events-auto toast-container'
+                style: { zIndex: 9999 },
+                className: "z-50"
               }}
               closeButton
               richColors

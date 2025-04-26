@@ -17,7 +17,6 @@ import {
 } from "@/components/ui/select";
 import { Shield, User } from "lucide-react";
 import { UserProfile } from "@/lib/supabase";
-import { useEffect, useCallback, useRef } from "react";
 
 interface UserRoleDialogProps {
   open: boolean;
@@ -38,110 +37,28 @@ export const UserRoleDialog = ({
   onUpdateRole,
   saving,
 }: UserRoleDialogProps) => {
-  // Ref para controlar se o componente está montado
-  const isMounted = useRef(true);
-  
-  // Função otimizada para limpar elementos que podem bloquear a interface
-  const cleanupOverlays = useCallback(() => {
-    console.log('Limpando overlays no UserRoleDialog');
-    
-    // Restaurar estilos do body
-    document.body.style.overflow = '';
-    document.body.style.pointerEvents = '';
-    document.body.removeAttribute('aria-hidden');
-    document.body.style.paddingRight = '';
-    
-    // Remover backdrops
-    const backdrops = document.querySelectorAll('.MuiBackdrop-root, [data-state="open"].bg-black, .backdrop');
-    if (backdrops.length > 0) {
-      console.log(`Removendo ${backdrops.length} backdrops`);
-      backdrops.forEach(el => {
-        if (el.parentNode) el.parentNode.removeChild(el);
-        else el.remove();
-      });
+  // Função simplificada para fechar o modal
+  const handleCloseModal = () => {
+    if (!saving) {
+      onOpenChange(false);
     }
-    
-    // Remover portais
-    const portals = document.querySelectorAll('[data-radix-portal], #mui-modal-root > div');
-    if (portals.length > 0) {
-      console.log(`Removendo ${portals.length} portais`);
-      portals.forEach(el => {
-        if (el.parentNode) el.parentNode.removeChild(el);
-      });
-    }
-    
-    console.log('Status após limpeza:', {
-      backdrops: document.querySelectorAll('.MuiBackdrop-root, [data-state="open"].bg-black, .backdrop').length,
-      portals: document.querySelectorAll('[data-radix-portal], #mui-modal-root > div').length
-    });
-  }, []);
+  };
   
-  // Garantir limpeza quando o componente é desmontado
-  useEffect(() => {
-    return () => {
-      isMounted.current = false;
-      cleanupOverlays();
-    };
-  }, [cleanupOverlays]);
-  
-  // Garantir limpeza quando o modal é fechado
-  useEffect(() => {
-    if (!open) {
-      cleanupOverlays();
-    }
-  }, [open, cleanupOverlays]);
-  
-  // Função para fechar o modal corretamente
-  const handleCloseModal = useCallback(() => {
+  // Função simplificada para salvar e fechar
+  const handleUpdateRole = () => {
     if (saving) return;
-    
-    // Primeiro notificamos a mudança de estado
-    onOpenChange(false);
-    
-    // Logo em seguida limpamos overlays
-    setTimeout(() => {
-      cleanupOverlays();
-    }, 50);
-  }, [onOpenChange, cleanupOverlays, saving]);
-  
-  // Função para salvar e fechar
-  const handleUpdateRole = useCallback(() => {
-    if (saving) return;
-    
-    // Executamos a função de atualização - ela já cuida de fechar o modal
     onUpdateRole();
-    
-    // Limpeza extra como garantia
-    setTimeout(() => {
-      cleanupOverlays();
-    }, 150);
-  }, [onUpdateRole, saving, cleanupOverlays]);
+  };
 
   return (
     <Dialog 
       open={open} 
-      onOpenChange={(newOpenState) => {
-        if (!newOpenState && !saving) {
-          // Se estiver fechando, primeiro notificamos a mudança
-          onOpenChange(false);
-          
-          // Depois limpamos overlays
-          setTimeout(() => {
-            cleanupOverlays();
-          }, 50);
-        } else {
-          onOpenChange(newOpenState);
-        }
-      }}
+      onOpenChange={onOpenChange}
     >
       <DialogContent 
+        className="z-50 relative"
         onEscapeKeyDown={handleCloseModal}
         onInteractOutside={handleCloseModal}
-        onCloseAutoFocus={(e) => {
-          e.preventDefault();
-          cleanupOverlays();
-        }}
-        className="z-40 relative"
       >
         <DialogHeader>
           <DialogTitle>Alterar Função do Usuário</DialogTitle>
