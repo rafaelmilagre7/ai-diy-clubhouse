@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { BrowserRouter } from 'react-router-dom';
-import { Toaster } from './components/ui/toaster';
+import { Toaster } from 'sonner'; // Usando Sonner para toasts
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { LoggingProvider } from './hooks/useLogging';
@@ -27,7 +27,19 @@ const App = () => {
         <LoggingProvider>
           <AuthProvider>
             <AppRoutes />
-            <Toaster />
+            {/* Configuração do Toaster do Sonner para não bloquear cliques */}
+            <Toaster 
+              position="bottom-right" 
+              toastOptions={{
+                style: { zIndex: 1000 },
+                className: 'z-50 pointer-events-auto'
+              }}
+              closeButton
+              richColors
+              expand={false}
+              visibleToasts={1}
+              duration={3000}
+            />
             <ReactQueryDevtools initialIsOpen={false} />
           </AuthProvider>
         </LoggingProvider>

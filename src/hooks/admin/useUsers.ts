@@ -1,10 +1,9 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { supabase, UserProfile } from '@/lib/supabase';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 export const useUsers = () => {
-  const { toast } = useToast();
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -53,16 +52,45 @@ export const useUsers = () => {
       el.remove();
     });
     
+    // Limpa toasts do Radix UI que podem estar travando a tela
+    const radixToasts = document.querySelectorAll('[role="status"]');
+    console.log(`Encontrados ${radixToasts.length} toasts Radix`);
+    radixToasts.forEach(el => {
+      console.log('Removendo toast Radix');
+      if (el.parentNode) {
+        el.parentNode.removeChild(el);
+      }
+    });
+
+    // Limpa qualquer portal de toast
+    const toastPortals = document.querySelectorAll('[id*="toast"]');
+    console.log(`Encontrados ${toastPortals.length} portais de toast`);
+    toastPortals.forEach(el => {
+      console.log('Removendo portal de toast');
+      if (el.parentNode && !el.id.includes("sonner")) {
+        el.parentNode.removeChild(el);
+      }
+    });
+    
     // Restaura scroll se necessário
     if (document.body.style.overflow === 'hidden') {
       console.log('Restaurando overflow do body');
       document.body.style.overflow = '';
       document.body.style.paddingRight = '';
     }
+
+    // Verifica se há estilos globais adicionados ao body que possam estar bloqueando interações
+    if (document.body.hasAttribute('aria-hidden') || 
+        document.body.style.pointerEvents === 'none') {
+      console.log('Removendo atributos de bloqueio do body');
+      document.body.removeAttribute('aria-hidden');
+      document.body.style.pointerEvents = '';
+    }
     
     // Logs finais para confirmar remoção
     console.log('Backdrop removido:', document.querySelectorAll('.MuiBackdrop-root').length);
     console.log('Portals Radix restantes:', document.querySelectorAll('[data-radix-portal]').length);
+    console.log('Toasts restantes:', document.querySelectorAll('[role="status"]').length);
   }, []);
 
   const fetchUsers = async () => {
@@ -81,10 +109,8 @@ export const useUsers = () => {
       setUsers(data as UserProfile[]);
     } catch (error: any) {
       console.error("Erro ao buscar usuários:", error.message);
-      toast({
-        title: "Erro ao carregar usuários",
-        description: "Não foi possível carregar a lista de usuários.",
-        variant: "destructive",
+      toast.error("Erro ao carregar usuários", {
+        description: "Não foi possível carregar a lista de usuários."
       });
     } finally {
       setLoading(false);
@@ -116,16 +142,14 @@ export const useUsers = () => {
         )
       );
       
-      toast({
-        title: "Função atualizada",
-        description: `A função do usuário ${selectedUser.name || selectedUser.email} foi atualizada para ${newRole === "admin" ? "Administrador" : "Membro"}.`,
+      // Usar toast do Sonner em vez do Radix para evitar conflitos
+      toast.success("Função atualizada", {
+        description: `A função do usuário ${selectedUser.name || selectedUser.email} foi atualizada para ${newRole === "admin" ? "Administrador" : "Membro"}.`
       });
     } catch (error: any) {
       console.error("Erro ao atualizar função:", error.message);
-      toast({
-        title: "Erro ao atualizar função",
-        description: error.message || "Não foi possível atualizar a função do usuário.",
-        variant: "destructive",
+      toast.error("Erro ao atualizar função", {
+        description: error.message || "Não foi possível atualizar a função do usuário."
       });
     } finally {
       setSaving(false);
@@ -143,6 +167,19 @@ export const useUsers = () => {
               console.log(`Ainda existem ${remainingBackdrops.length} backdrops. Fazendo limpeza forçada.`);
               remainingBackdrops.forEach(el => el.remove());
             }
+
+            // Forçar restauração da interatividade da página
+            document.body.style.pointerEvents = '';
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+            document.body.removeAttribute('aria-hidden');
+            
+            console.log('Estado final do body:', {
+              overflow: document.body.style.overflow,
+              pointerEvents: document.body.style.pointerEvents,
+              ariaHidden: document.body.getAttribute('aria-hidden'),
+              paddingRight: document.body.style.paddingRight
+            });
           }, 500);
         }, 200);
       }, 100);
@@ -185,6 +222,6 @@ export const useUsers = () => {
     setNewRole,
     saving,
     handleUpdateRole,
-    cleanupOverlays, // Exportamos a função para uso externo
+    cleanupOverlays,
   };
 };

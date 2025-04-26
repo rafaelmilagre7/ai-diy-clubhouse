@@ -80,11 +80,20 @@ export const UserRoleDialog = ({
       console.log('Removendo portal MUI');
       el.remove();
     });
-    
+
     // Restaura overflow do body se necessário
     if (document.body.style.overflow === 'hidden') {
       console.log('Restaurando overflow do body');
       document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
+    }
+    
+    // Remove quaisquer atributos que possam estar bloqueando interações
+    if (document.body.hasAttribute('aria-hidden')) {
+      document.body.removeAttribute('aria-hidden');
+    }
+    if (document.body.style.pointerEvents === 'none') {
+      document.body.style.pointerEvents = '';
     }
     
     console.log('Backdrop removido:', document.querySelectorAll('.MuiBackdrop-root').length);
@@ -107,6 +116,14 @@ export const UserRoleDialog = ({
       console.log('Modal fechado no efeito, executando limpeza');
       // Pequeno delay para permitir animação de fechamento
       setTimeout(cleanupOverlays, 100);
+      
+      // Verificação adicional para garantir limpeza completa
+      setTimeout(() => {
+        // Forçar restauração da interatividade da página
+        document.body.style.pointerEvents = '';
+        document.body.style.overflow = '';
+        document.body.removeAttribute('aria-hidden');
+      }, 300);
     }
   }, [open, cleanupOverlays]);
 
@@ -116,6 +133,19 @@ export const UserRoleDialog = ({
     onOpenChange(false);
     // Executar limpeza após transição do modal
     setTimeout(cleanupOverlays, 200);
+    
+    // Verificação final para garantir interatividade
+    setTimeout(() => {
+      if (document.body.style.overflow === 'hidden' || 
+          document.body.hasAttribute('aria-hidden') ||
+          document.body.style.pointerEvents === 'none') {
+        console.log('Forçando restauração final da interatividade');
+        document.body.style.overflow = '';
+        document.body.style.pointerEvents = '';
+        document.body.removeAttribute('aria-hidden');
+        document.body.style.paddingRight = '';
+      }
+    }, 500);
   }, [onOpenChange, cleanupOverlays]);
 
   // Função para lidar com salvamento e fechamento
@@ -125,9 +155,11 @@ export const UserRoleDialog = ({
     // Apenas executar se não estiver salvando
     if (!saving) {
       // Fechar modal
-      onOpenChange(false);
-      // Agendar limpeza para após animação fechar
-      setTimeout(cleanupOverlays, 300);
+      setTimeout(() => {
+        onOpenChange(false);
+        // Agendar limpeza para após animação fechar
+        setTimeout(cleanupOverlays, 300);
+      }, 100);
     }
   }, [onUpdateRole, saving, onOpenChange, cleanupOverlays]);
 
@@ -137,7 +169,7 @@ export const UserRoleDialog = ({
         onEscapeKeyDown={handleCloseModal}
         onInteractOutside={handleCloseModal}
         onPointerDownOutside={handleCloseModal}
-        className="z-50"
+        className="z-40"
       >
         <DialogHeader>
           <DialogTitle>Alterar Função do Usuário</DialogTitle>

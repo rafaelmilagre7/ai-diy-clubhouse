@@ -24,7 +24,7 @@ const AdminUsers = () => {
     setNewRole,
     saving,
     handleUpdateRole,
-    cleanupOverlays, // Importamos a função de limpeza
+    cleanupOverlays, 
   } = useUsers();
 
   const [isAdminMaster, setIsAdminMaster] = useState(false);
@@ -58,13 +58,16 @@ const AdminUsers = () => {
           remainingBackdrops.forEach(el => el.remove());
         }
         
-        // Restaurar scroll se necessário
-        if (document.body.style.overflow === 'hidden') {
+        // Restaurar scroll e interatividade se necessário
+        if (document.body.style.overflow === 'hidden' ||
+            document.body.hasAttribute('aria-hidden') ||
+            document.body.style.pointerEvents === 'none') {
           document.body.style.overflow = '';
           document.body.style.paddingRight = '';
+          document.body.style.pointerEvents = '';
+          document.body.removeAttribute('aria-hidden');
+          console.log('Restauração forçada da interatividade da página');
         }
-        
-        console.log('Backdrop removido:', document.querySelectorAll('.MuiBackdrop-root').length === 0);
       }, 300);
     }, 100);
   }, [setEditRoleOpen, cleanupOverlays]);
@@ -78,6 +81,30 @@ const AdminUsers = () => {
       }
     };
   }, [editRoleOpen, cleanupOverlays]);
+
+  // Verificação adicional para remover qualquer backdrop ou overlay que possa estar travando a página
+  useEffect(() => {
+    const cleanBodyAfterInteraction = () => {
+      // Se houver alguma interação do usuário e ainda tiver backdrops, remove-los
+      const backdrops = document.querySelectorAll('.MuiBackdrop-root, [data-state="open"].bg-black');
+      if (backdrops.length > 0) {
+        console.log('Limpeza forçada após interação do usuário');
+        backdrops.forEach(el => el.remove());
+        document.body.style.overflow = '';
+        document.body.style.pointerEvents = '';
+        document.body.removeAttribute('aria-hidden');
+      }
+    };
+
+    // Adiciona listeners para detectar interação do usuário
+    document.addEventListener('click', cleanBodyAfterInteraction);
+    document.addEventListener('keydown', cleanBodyAfterInteraction);
+
+    return () => {
+      document.removeEventListener('click', cleanBodyAfterInteraction);
+      document.removeEventListener('keydown', cleanBodyAfterInteraction);
+    };
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -97,8 +124,8 @@ const AdminUsers = () => {
         />
       </div>
       
-      {/* O modal é renderizado condicionalmente e com garantia de limpeza */}
-      {editRoleOpen && (
+      {/* O modal é renderizado condicionalmente */}
+      {selectedUser && (
         <UserRoleDialog
           open={editRoleOpen}
           onOpenChange={handleCloseModal}
