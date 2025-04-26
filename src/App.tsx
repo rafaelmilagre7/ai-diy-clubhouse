@@ -1,5 +1,5 @@
 
-import React, { Suspense, lazy } from 'react';
+import React from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import { Toaster } from 'sonner';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -15,24 +15,32 @@ const queryClient = new QueryClient({
       staleTime: 1000 * 60 * 5, // 5 minutos
       retry: 1,
       refetchOnWindowFocus: false,
-      refetchOnMount: true,
-      // Novas configurações para melhorar a performance
-      refetchOnReconnect: 'always',
-      gcTime: 1000 * 60 * 30, // 30 minutos (substituindo cacheTime que está obsoleto)
+      refetchOnMount: false, // Não buscar novamente ao montar, usar o cache
+      refetchOnReconnect: false, // Não buscar novamente ao reconectar, evitar recarregamentos
+      gcTime: 1000 * 60 * 60, // 60 minutos (substituindo cacheTime que está obsoleto)
     },
   },
 });
 
-// Lazy loading do ReactQueryDevtools para reduzir o bundle principal
-const ReactQueryDevToolsLazy = lazy(() => 
-  process.env.NODE_ENV === 'development' 
-    ? import('@tanstack/react-query-devtools').then(({ ReactQueryDevtools }) => ({
-        default: ReactQueryDevtools,
-      }))
-    : Promise.resolve({ default: () => null })
-);
+// ReactQueryDevtools será carregado apenas no ambiente de desenvolvimento
+const ReactQueryDevToolsLazy = process.env.NODE_ENV === 'development' 
+  ? React.lazy(() => import('@tanstack/react-query-devtools').then(
+      ({ ReactQueryDevtools }) => ({ default: ReactQueryDevtools })
+    ))
+  : null;
+
+// Pré-carregar dados comuns que serão usados em várias páginas
+const prefetchCommonData = () => {
+  // Pré-carregar dados comuns aqui
+  console.log('Pré-carregando dados comuns para a aplicação...');
+};
 
 const App = () => {
+  // Executar prefetch ao iniciar a aplicação
+  React.useEffect(() => {
+    prefetchCommonData();
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
@@ -54,11 +62,11 @@ const App = () => {
               duration={3000}
             />
             
-            {/* Carregamento condicional e lazy do ReactQueryDevtools */}
-            {process.env.NODE_ENV === 'development' && (
-              <Suspense fallback={null}>
+            {/* Carregamento condicional do ReactQueryDevtools apenas em desenvolvimento */}
+            {ReactQueryDevToolsLazy && process.env.NODE_ENV === 'development' && (
+              <React.Suspense fallback={null}>
                 <ReactQueryDevToolsLazy initialIsOpen={false} />
-              </Suspense>
+              </React.Suspense>
             )}
           </AuthProvider>
         </LoggingProvider>

@@ -19,22 +19,21 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/lib/supabase';
 import { useAdminTools } from '@/hooks/useAdminTools';
-import { AdminToolsFilters } from './AdminToolsFilters';
 
 interface AdminToolListProps {
   tools: Tool[];
   refreshTrigger?: number;
 }
 
-export const AdminToolList = ({ refreshTrigger }: AdminToolListProps) => {
+export const AdminToolList = ({ tools: initialTools, refreshTrigger }: AdminToolListProps) => {
   const { 
     tools, 
-    isLoading, 
     selectedCategory, 
     setSelectedCategory, 
     searchQuery, 
     setSearchQuery 
-  } = useAdminTools();
+  } = useAdminTools(initialTools);
+  
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const { toast } = useToast();
 
@@ -65,14 +64,6 @@ export const AdminToolList = ({ refreshTrigger }: AdminToolListProps) => {
       setDeletingId(null);
     }
   };
-
-  if (isLoading) {
-    return (
-      <div className="text-center py-8">
-        <p className="text-muted-foreground">Carregando ferramentas...</p>
-      </div>
-    );
-  }
 
   if (tools.length === 0) {
     return (

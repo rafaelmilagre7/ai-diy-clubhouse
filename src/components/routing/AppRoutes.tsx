@@ -1,52 +1,43 @@
-
-import React, { lazy, Suspense } from 'react';
+import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { AdminProtectedRoutes } from '@/auth/AdminProtectedRoutes';
 import { ProtectedRoutes } from '@/auth/ProtectedRoutes';
 import LoadingScreen from '@/components/common/LoadingSpinner';
 
-// Component Loader com fallback consistente
-const SuspenseLoader = ({ children }: { children: React.ReactNode }) => (
-  <Suspense fallback={<LoadingScreen />}>{children}</Suspense>
-);
+// Layout Components - Carregados diretamente por serem críticos
+import MemberLayout from '@/components/layout/MemberLayout';
+import AdminLayout from '@/components/layout/admin/AdminLayout';
 
-// Layout Components - Carregados antecipadamente pois são frequentemente usados
-const MemberLayout = lazy(() => import('@/components/layout/MemberLayout'));
-const AdminLayout = lazy(() => import('@/components/layout/admin/AdminLayout'));
+// Eager loading para páginas principais (alta frequência de acesso)
+import Dashboard from '@/pages/member/Dashboard';
+import AdminDashboard from '@/pages/admin/AdminDashboard';
+import AdminTools from '@/pages/admin/AdminTools';
+import Tools from '@/pages/member/Tools';
 
-// Auth Pages - Prioritários no carregamento
+// Auth Pages - Carregados sob demanda, mas preparados antes
+import { lazy, Suspense } from 'react';
 const Login = lazy(() => import('@/pages/auth/Login'));
 const Register = lazy(() => import('@/pages/auth/Register'));
 const ResetPassword = lazy(() => import('@/pages/auth/ResetPassword'));
 const SetNewPassword = lazy(() => import('@/pages/auth/SetNewPassword'));
 const NotFound = lazy(() => import('@/pages/NotFound'));
 
-// Member Pages - Agrupados por funcionalidade para melhor code splitting
-const Dashboard = lazy(() => import('@/pages/member/Dashboard'));
+// Páginas e componentes menos acessados - mantidos com lazy loading
 const Profile = lazy(() => import('@/pages/member/Profile'));
 const EditProfile = lazy(() => import('@/pages/member/EditProfile'));
-
-// Solution Related Pages
 const Solutions = lazy(() => import('@/pages/member/Solutions'));
 const SolutionDetails = lazy(() => import('@/pages/member/SolutionDetails'));
 const SolutionImplementation = lazy(() => import('@/pages/member/SolutionImplementation'));
 const ImplementationCompleted = lazy(() => import('@/pages/member/ImplementationCompleted'));
 const ImplementationTrailPage = lazy(() => import('@/pages/member/ImplementationTrailPage'));
-
-// Tools Related Pages
-const Tools = lazy(() => import('@/pages/member/Tools'));
 const ToolDetails = lazy(() => import('@/pages/member/ToolDetails'));
-
-// Benefits & Achievements
 const Benefits = lazy(() => import('@/pages/member/Benefits'));
 const Achievements = lazy(() => import('@/pages/member/Achievements'));
-
-// Suggestions Related Pages
 const Suggestions = lazy(() => import('@/pages/member/Suggestions'));
 const SuggestionDetails = lazy(() => import('@/pages/member/SuggestionDetails'));
 const NewSuggestion = lazy(() => import('@/pages/member/NewSuggestion'));
 
-// Onboarding Pages
+// Onboarding - menos frequente, mantém lazy loading
 const OnboardingIntro = lazy(() => import('@/pages/onboarding/OnboardingIntro'));
 const PersonalInfo = lazy(() => import('@/pages/onboarding/steps/PersonalInfo'));
 const ProfessionalData = lazy(() => import('@/pages/onboarding/steps/ProfessionalData'));
@@ -58,21 +49,28 @@ const ComplementaryInfo = lazy(() => import('@/pages/onboarding/steps/Complement
 const Review = lazy(() => import('@/pages/onboarding/steps/Review'));
 const TrailGeneration = lazy(() => import('@/pages/onboarding/steps/TrailGeneration'));
 
-// Admin Pages - Carregados apenas quando necessário
-const AdminPages = {
-  Dashboard: lazy(() => import('@/pages/admin/AdminDashboard')),
-  Users: lazy(() => import('@/pages/admin/AdminUsers')),
-  Solutions: lazy(() => import('@/pages/admin/AdminSolutions')),
-  SolutionCreate: lazy(() => import('@/pages/admin/AdminSolutionCreate')),
-  SolutionEdit: lazy(() => import('@/pages/admin/AdminSolutionEdit')),
-  SolutionEditor: lazy(() => import('@/pages/admin/SolutionEditor')),
-  Tools: lazy(() => import('@/pages/admin/AdminTools')),
-  ToolEdit: lazy(() => import('@/pages/admin/AdminToolEdit')),
-  Suggestions: lazy(() => import('@/pages/admin/AdminSuggestions')),
-  SuggestionDetails: lazy(() => import('@/pages/admin/AdminSuggestionDetails')),
-  Onboarding: lazy(() => import('@/pages/admin/AdminOnboarding')),
-  Analytics: lazy(() => import('@/pages/admin/AdminAnalytics'))
-};
+// Admin Pages secundárias - mantidas com lazy loading
+const AdminUsers = lazy(() => import('@/pages/admin/AdminUsers'));
+const AdminSolutions = lazy(() => import('@/pages/admin/AdminSolutions'));
+const AdminSolutionCreate = lazy(() => import('@/pages/admin/AdminSolutionCreate'));
+const AdminSolutionEdit = lazy(() => import('@/pages/admin/AdminSolutionEdit'));
+const AdminSolutionEditor = lazy(() => import('@/pages/admin/SolutionEditor'));
+const AdminToolEdit = lazy(() => import('@/pages/admin/AdminToolEdit'));
+const AdminSuggestions = lazy(() => import('@/pages/admin/AdminSuggestions'));
+const AdminSuggestionDetails = lazy(() => import('@/pages/admin/AdminSuggestionDetails'));
+const AdminOnboarding = lazy(() => import('@/pages/admin/AdminOnboarding'));
+const AdminAnalytics = lazy(() => import('@/pages/admin/AdminAnalytics'));
+
+// Component Loader com fallback mais otimizado (aparecendo apenas após um delay mínimo)
+const SuspenseLoader = ({ children }: { children: React.ReactNode }) => (
+  <Suspense fallback={
+    <div className="min-h-[200px] flex items-center justify-center">
+      <LoadingScreen />
+    </div>
+  }>
+    {children}
+  </Suspense>
+);
 
 const AppRoutes = () => {
   return (
@@ -86,17 +84,25 @@ const AppRoutes = () => {
       {/* Redirecionamento da raiz para dashboard */}
       <Route path="/" element={<Navigate to="/dashboard" replace />} />
 
-      {/* Member Routes com Layout */}
+      {/* Member Routes com Layout - Carregamento eager para Dashboard */}
       <Route path="/dashboard" element={
         <ProtectedRoutes>
-          <SuspenseLoader>
-            <MemberLayout>
-              <Dashboard />
-            </MemberLayout>
-          </SuspenseLoader>
+          <MemberLayout>
+            <Dashboard />
+          </MemberLayout>
         </ProtectedRoutes>
       } />
 
+      {/* Tools - Carregamento eager para melhor experiência */}
+      <Route path="/tools" element={
+        <ProtectedRoutes>
+          <MemberLayout>
+            <Tools />
+          </MemberLayout>
+        </ProtectedRoutes>
+      } />
+
+      {/* Rotas secundárias com lazy loading */}
       <Route path="/implementation-trail" element={
         <ProtectedRoutes>
           <SuspenseLoader>
@@ -190,15 +196,6 @@ const AppRoutes = () => {
       } />
 
       {/* Rotas de Ferramentas */}
-      <Route path="/tools" element={
-        <ProtectedRoutes>
-          <SuspenseLoader>
-            <MemberLayout>
-              <Tools />
-            </MemberLayout>
-          </SuspenseLoader>
-        </ProtectedRoutes>
-      } />
       
       <Route path="/tools/:id" element={
         <ProtectedRoutes>
@@ -343,14 +340,20 @@ const AppRoutes = () => {
         </ProtectedRoutes>
       } />
       
-      {/* Rotas Admin - Agrupadas e com lazy loading específico */}
+      {/* Rotas Admin - Eager loading para páginas principais */}
       <Route path="/admin" element={
         <AdminProtectedRoutes>
-          <SuspenseLoader>
-            <AdminLayout>
-              <AdminPages.Dashboard />
-            </AdminLayout>
-          </SuspenseLoader>
+          <AdminLayout>
+            <AdminDashboard />
+          </AdminLayout>
+        </AdminProtectedRoutes>
+      } />
+      
+      <Route path="/admin/tools" element={
+        <AdminProtectedRoutes>
+          <AdminLayout>
+            <AdminTools />
+          </AdminLayout>
         </AdminProtectedRoutes>
       } />
       
@@ -358,7 +361,7 @@ const AppRoutes = () => {
         <AdminProtectedRoutes>
           <SuspenseLoader>
             <AdminLayout>
-              <AdminPages.Users />
+              <AdminUsers />
             </AdminLayout>
           </SuspenseLoader>
         </AdminProtectedRoutes>
@@ -368,7 +371,7 @@ const AppRoutes = () => {
         <AdminProtectedRoutes>
           <SuspenseLoader>
             <AdminLayout>
-              <AdminPages.Solutions />
+              <AdminSolutions />
             </AdminLayout>
           </SuspenseLoader>
         </AdminProtectedRoutes>
@@ -378,7 +381,7 @@ const AppRoutes = () => {
         <AdminProtectedRoutes>
           <SuspenseLoader>
             <AdminLayout>
-              <AdminPages.SolutionCreate />
+              <AdminSolutionCreate />
             </AdminLayout>
           </SuspenseLoader>
         </AdminProtectedRoutes>
@@ -388,7 +391,7 @@ const AppRoutes = () => {
         <AdminProtectedRoutes>
           <SuspenseLoader>
             <AdminLayout>
-              <AdminPages.SolutionEdit />
+              <AdminSolutionEdit />
             </AdminLayout>
           </SuspenseLoader>
         </AdminProtectedRoutes>
@@ -398,27 +401,18 @@ const AppRoutes = () => {
         <AdminProtectedRoutes>
           <SuspenseLoader>
             <AdminLayout>
-              <AdminPages.SolutionEditor />
+              <AdminSolutionEditor />
             </AdminLayout>
           </SuspenseLoader>
         </AdminProtectedRoutes>
       } />
       
-      <Route path="/admin/tools" element={
-        <AdminProtectedRoutes>
-          <SuspenseLoader>
-            <AdminLayout>
-              <AdminPages.Tools />
-            </AdminLayout>
-          </SuspenseLoader>
-        </AdminProtectedRoutes>
-      } />
       
       <Route path="/admin/tools/new" element={
         <AdminProtectedRoutes>
           <SuspenseLoader>
             <AdminLayout>
-              <AdminPages.ToolEdit />
+              <AdminToolEdit />
             </AdminLayout>
           </SuspenseLoader>
         </AdminProtectedRoutes>
@@ -428,7 +422,7 @@ const AppRoutes = () => {
         <AdminProtectedRoutes>
           <SuspenseLoader>
             <AdminLayout>
-              <AdminPages.ToolEdit />
+              <AdminToolEdit />
             </AdminLayout>
           </SuspenseLoader>
         </AdminProtectedRoutes>
@@ -438,7 +432,7 @@ const AppRoutes = () => {
         <AdminProtectedRoutes>
           <SuspenseLoader>
             <AdminLayout>
-              <AdminPages.Suggestions />
+              <AdminSuggestions />
             </AdminLayout>
           </SuspenseLoader>
         </AdminProtectedRoutes>
@@ -448,7 +442,7 @@ const AppRoutes = () => {
         <AdminProtectedRoutes>
           <SuspenseLoader>
             <AdminLayout>
-              <AdminPages.SuggestionDetails />
+              <AdminSuggestionDetails />
             </AdminLayout>
           </SuspenseLoader>
         </AdminProtectedRoutes>
@@ -458,7 +452,7 @@ const AppRoutes = () => {
         <AdminProtectedRoutes>
           <SuspenseLoader>
             <AdminLayout>
-              <AdminPages.Onboarding />
+              <AdminOnboarding />
             </AdminLayout>
           </SuspenseLoader>
         </AdminProtectedRoutes>
@@ -468,7 +462,7 @@ const AppRoutes = () => {
         <AdminProtectedRoutes>
           <SuspenseLoader>
             <AdminLayout>
-              <AdminPages.Analytics />
+              <AdminAnalytics />
             </AdminLayout>
           </SuspenseLoader>
         </AdminProtectedRoutes>

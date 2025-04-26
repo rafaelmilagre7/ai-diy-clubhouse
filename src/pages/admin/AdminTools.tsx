@@ -1,24 +1,17 @@
 
-import React, { useState } from "react";
+import React from "react";
 import { useTools } from "@/hooks/useTools";
 import { AdminToolList } from "@/components/admin/tools/AdminToolList";
 import { AdminToolsHeader } from "@/components/admin/tools/AdminToolsHeader";
-import LoadingScreen from "@/components/common/LoadingScreen";
 import { Button } from "@/components/ui/button";
 import { RefreshCcw } from "lucide-react";
 
 const AdminTools = () => {
-  const { tools, isLoading, error, refetch } = useTools();
-  const [refreshCounter, setRefreshCounter] = useState(0);
+  const { tools, error, refetch } = useTools();
 
   const handleRefresh = () => {
-    setRefreshCounter(prev => prev + 1);
     refetch();
   };
-
-  if (isLoading) {
-    return <LoadingScreen message="Carregando ferramentas..." />;
-  }
 
   if (error) {
     return (
@@ -43,7 +36,7 @@ const AdminTools = () => {
   return (
     <div className="container py-8">
       <AdminToolsHeader onRefreshRequest={handleRefresh} />
-      <AdminToolList tools={tools} refreshTrigger={refreshCounter} />
+      <AdminToolList tools={tools} />
     </div>
   );
 };

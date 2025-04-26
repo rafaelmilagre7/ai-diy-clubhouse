@@ -1,10 +1,10 @@
 
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Tool } from '@/types/toolTypes';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ExternalLink, Gift } from 'lucide-react';
+import { ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { BenefitBadge } from './BenefitBadge';
 
@@ -13,6 +13,16 @@ interface ToolGridProps {
 }
 
 export const ToolGrid = ({ tools }: ToolGridProps) => {
+  // Pré-carregar imagens das ferramentas
+  useEffect(() => {
+    tools.forEach(tool => {
+      if (tool.logo_url) {
+        const img = new Image();
+        img.src = tool.logo_url;
+      }
+    });
+  }, [tools]);
+
   if (tools.length === 0) {
     return (
       <div className="text-center py-10">
@@ -35,35 +45,43 @@ interface ToolCardProps {
 }
 
 const ToolCard = ({ tool }: ToolCardProps) => {
-  console.log("Renderizando ToolCard", { 
-    name: tool.name, 
-    logo: tool.logo_url, 
-    has_logo: !!tool.logo_url 
-  });
+  const imgRef = useRef<HTMLImageElement>(null);
+  
+  // Implementar fallback logo imediatamente, sem esperar erro de carregamento
+  const showInitials = !tool.logo_url;
+  const initials = tool.name.substring(0, 2).toUpperCase();
   
   return (
     <Card className="flex flex-col h-full border overflow-hidden hover:shadow-md transition-shadow">
       <CardHeader className="pb-3 pt-6 px-6 flex-row items-center gap-4 relative">
         <div className="h-12 w-12 rounded-lg bg-gray-100 border flex items-center justify-center overflow-hidden flex-shrink-0">
-          {tool.logo_url ? (
-            <img 
-              src={tool.logo_url} 
-              alt={tool.name} 
-              className="h-full w-full object-contain" 
-              onError={(e) => {
-                console.error(`Erro ao carregar logo: ${tool.logo_url}`);
-                e.currentTarget.src = "";
-                e.currentTarget.classList.add("hidden");
-                // Mostrar o elemento pai para que o fallback seja exibido
-                const parent = e.currentTarget.parentElement;
-                if (parent) {
-                  parent.innerHTML = `<div class="text-xl font-bold text-[#0ABAB5]">${tool.name.substring(0, 2).toUpperCase()}</div>`;
-                }
-              }}
-            />
+          {!showInitials ? (
+            <>
+              <img 
+                ref={imgRef}
+                src={tool.logo_url || ''} 
+                alt={tool.name} 
+                className="h-full w-full object-contain" 
+                loading="eager"
+                onError={() => {
+                  if (imgRef.current) {
+                    imgRef.current.style.display = 'none';
+                    // Mostrar iniciais como fallback
+                    const parent = imgRef.current.parentElement;
+                    if (parent) {
+                      parent.innerHTML = `<div class="text-xl font-bold text-[#0ABAB5]">${initials}</div>`;
+                    }
+                  }
+                }}
+              />
+              {/* Backup para caso o onError não dispare */}
+              <div className="text-xl font-bold text-[#0ABAB5] absolute opacity-0">
+                {initials}
+              </div>
+            </>
           ) : (
             <div className="text-xl font-bold text-[#0ABAB5]">
-              {tool.name.substring(0, 2).toUpperCase()}
+              {initials}
             </div>
           )}
         </div>

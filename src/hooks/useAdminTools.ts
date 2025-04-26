@@ -3,13 +3,17 @@ import { useState, useMemo } from 'react';
 import { useTools } from '@/hooks/useTools';
 import { Tool, ToolCategory } from '@/types/toolTypes';
 
-export const useAdminTools = () => {
-  const { tools, isLoading, error, refetch } = useTools();
+export const useAdminTools = (initialTools: Tool[] = []) => {
+  // Usar as ferramentas iniciais se fornecidas, caso contrário buscar
+  const { tools: fetchedTools, isLoading, error, refetch } = useTools();
   const [selectedCategory, setSelectedCategory] = useState<ToolCategory | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
 
+  // Usar as ferramentas passadas como prop ou as buscadas do hook
+  const baseTools = initialTools.length > 0 ? initialTools : fetchedTools;
+
   const filteredTools = useMemo(() => {
-    let result = [...tools];
+    let result = [...baseTools];
     
     // Filtrar por categoria
     if (selectedCategory) {
@@ -27,7 +31,7 @@ export const useAdminTools = () => {
     
     // Ordenar alfabeticamente
     return result.sort((a, b) => a.name.localeCompare(b.name));
-  }, [tools, selectedCategory, searchQuery]);
+  }, [baseTools, selectedCategory, searchQuery]);
 
   return {
     tools: filteredTools,

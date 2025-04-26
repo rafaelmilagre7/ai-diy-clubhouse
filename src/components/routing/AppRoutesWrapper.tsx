@@ -1,16 +1,10 @@
 
-import React, { Suspense, lazy } from 'react';
+import React from 'react';
 import { LoadingScreen } from '@/components/common/LoadingSpinner';
-
-// Lazy loading do componente principal de rotas
-const AppRoutes = lazy(() => import('@/components/routing/AppRoutes'));
+import AppRoutes from '@/components/routing/AppRoutes';
 
 const AppRoutesWrapper = () => {
-  return (
-    <Suspense fallback={<LoadingScreen />}>
-      <AppRoutes />
-    </Suspense>
-  );
+  return <AppRoutes />;
 };
 
 export default AppRoutesWrapper;

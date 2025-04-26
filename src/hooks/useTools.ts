@@ -1,11 +1,46 @@
 
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { Tool } from '@/types/toolTypes';
 import { useLogging } from '@/hooks/useLogging';
+import { useEffect } from 'react';
 
 export const useTools = () => {
   const { log, logError } = useLogging();
+  const queryClient = useQueryClient();
+
+  // Prefetch e prime do cache para melhorar a experiência do usuário
+  useEffect(() => {
+    // Trigger prefetch
+    prefetchTools();
+  }, []);
+
+  // Função para prefetch isolada para reuso
+  const prefetchTools = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('tools')
+        .select('*')
+        .order('name');
+      
+      if (error) throw error;
+      
+      // Atualiza o cache diretamente
+      queryClient.setQueryData(['tools'], data);
+      
+      // Prefetch de imagens (logos das ferramentas)
+      data?.forEach(tool => {
+        if (tool.logo_url) {
+          const img = new Image();
+          img.src = tool.logo_url;
+        }
+      });
+      
+      log('Ferramentas pré-carregadas com sucesso', { count: data?.length || 0 });
+    } catch (err) {
+      logError('Erro no pré-carregamento de ferramentas:', err);
+    }
+  };
 
   const query = useQuery<Tool[], Error>({
     queryKey: ['tools'],
@@ -14,7 +49,6 @@ export const useTools = () => {
       const { data, error } = await supabase
         .from('tools')
         .select('*')
-        .eq('status', true)
         .order('name');
 
       if (error) {
@@ -22,20 +56,18 @@ export const useTools = () => {
         throw error;
       }
 
-      const toolsWithLogosInfo = data.map(tool => ({
-        ...tool,
-        has_valid_logo: !!tool.logo_url
-      }));
-
       log('Ferramentas encontradas:', { 
         total: data.length,
-        comLogo: toolsWithLogosInfo.filter(t => t.has_valid_logo).length,
-        semLogo: toolsWithLogosInfo.filter(t => !t.has_valid_logo).length
+        comLogo: data.filter(t => t.logo_url).length,
+        semLogo: data.filter(t => !t.logo_url).length
       });
 
       return data as Tool[];
     },
-    staleTime: 5 * 60 * 1000 // 5 minutos
+    staleTime: Infinity, // Manter em cache até invalidação manual
+    gcTime: Infinity, // Não remover do cache automaticamente
+    refetchOnWindowFocus: false, // Não buscar novamente ao focar a janela
+    refetchOnMount: false // Usar cache quando disponível
   });
 
   return {
