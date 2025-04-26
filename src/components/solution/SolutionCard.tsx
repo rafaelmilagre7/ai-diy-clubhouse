@@ -1,14 +1,18 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Solution } from '@/lib/supabase';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Clock, BarChart, TrendingUp, Settings, Zap } from 'lucide-react';
+import { SolutionCardSkeleton } from '@/components/dashboard/SolutionsGridLoader';
+import { motion } from 'framer-motion';
 
 interface SolutionCardProps {
   solution: Solution;
+  onPrefetch?: () => void;
+  isLoading?: boolean;
 }
 
 const getDifficultyBadgeStyle = (difficulty: string) => {
@@ -24,7 +28,39 @@ const getDifficultyBadgeStyle = (difficulty: string) => {
   }
 };
 
-export const SolutionCard: React.FC<SolutionCardProps> = ({ solution }) => {
+export const SolutionCard: React.FC<SolutionCardProps> = ({ solution, onPrefetch, isLoading }) => {
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
+
+  // Estado para detectar quando o componente está visível na viewport
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          if (onPrefetch) onPrefetch();
+        }
+      },
+      { threshold: 0.1 }
+    );
+    
+    const currentElement = document.getElementById(`solution-card-${solution.id}`);
+    if (currentElement) {
+      observer.observe(currentElement);
+    }
+
+    return () => {
+      if (currentElement) {
+        observer.unobserve(currentElement);
+      }
+    };
+  }, [solution.id, onPrefetch]);
+  
+  // Se estiver carregando, mostrar o skeleton
+  if (isLoading) {
+    return <SolutionCardSkeleton />;
+  }
+
   const getCategoryDetails = (category: string) => {
     switch (category) {
       case 'revenue':
@@ -54,67 +90,84 @@ export const SolutionCard: React.FC<SolutionCardProps> = ({ solution }) => {
     }
   };
 
+  // Animação para revelar suavemente quando o componente aparece na tela
   return (
-    <Link to={`/solution/${solution.id}`} className="block">
-      <Card className="h-full overflow-hidden transition-shadow hover:shadow-md">
-        <CardHeader className="p-0">
-          <div className="aspect-video bg-muted relative overflow-hidden">
-            {solution.thumbnail_url ? (
-              <img 
-                src={solution.thumbnail_url} 
-                alt={solution.title} 
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#0ABAB5]/20 to-[#0ABAB5]/10">
-                <div className="text-[#0ABAB5] font-medium">{solution.title.charAt(0)}</div>
+    <motion.div
+      id={`solution-card-${solution.id}`}
+      initial={{ opacity: 0, y: 20 }}
+      animate={isVisible ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+      transition={{ duration: 0.3 }}
+      whileHover={{ scale: 1.02, transition: { duration: 0.2 } }}
+    >
+      <Link to={`/solution/${solution.id}`} className="block">
+        <Card className="h-full overflow-hidden transition-shadow hover:shadow-md">
+          <CardHeader className="p-0">
+            <div className="aspect-video bg-muted relative overflow-hidden">
+              {solution.thumbnail_url ? (
+                <>
+                  {!imageLoaded && (
+                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#0ABAB5]/20 to-[#0ABAB5]/10">
+                      <div className="text-[#0ABAB5] font-medium">{solution.title.charAt(0)}</div>
+                    </div>
+                  )}
+                  <img 
+                    src={solution.thumbnail_url} 
+                    alt={solution.title} 
+                    className={`w-full h-full object-cover transition-opacity duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
+                    onLoad={() => setImageLoaded(true)}
+                  />
+                </>
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#0ABAB5]/20 to-[#0ABAB5]/10">
+                  <div className="text-[#0ABAB5] font-medium">{solution.title.charAt(0)}</div>
+                </div>
+              )}
+              <Badge 
+                variant="outline"
+                className={`absolute top-2 left-2 ${getCategoryDetails(solution.category).color}`}
+              >
+                <span className="flex items-center">
+                  {getCategoryDetails(solution.category).icon}
+                  <span className="ml-1">{getCategoryDetails(solution.category).name}</span>
+                </span>
+              </Badge>
+            </div>
+          </CardHeader>
+          <CardContent className="p-4">
+            <h3 className="font-semibold text-lg mb-1 line-clamp-1">{solution.title}</h3>
+            <ScrollArea className="h-14 w-full">
+              <p className="text-sm text-muted-foreground line-clamp-2">
+                {solution.description}
+              </p>
+            </ScrollArea>
+          </CardContent>
+          <CardFooter className="p-4 pt-0 flex gap-2 flex-wrap justify-between text-xs text-muted-foreground">
+            {solution.estimated_time && solution.estimated_time > 0 && (
+              <div className="flex items-center">
+                <Clock className="h-3 w-3 mr-1" />
+                <span>{solution.estimated_time} min</span>
               </div>
             )}
-            <Badge 
+            <Badge
               variant="outline"
-              className={`absolute top-2 left-2 ${getCategoryDetails(solution.category).color}`}
+              className={`font-medium ${getDifficultyBadgeStyle(solution.difficulty)}`}
             >
-              <span className="flex items-center">
-                {getCategoryDetails(solution.category).icon}
-                <span className="ml-1">{getCategoryDetails(solution.category).name}</span>
-              </span>
+              {solution.difficulty === "easy"
+                ? "Fácil"
+                : solution.difficulty === "medium"
+                ? "Médio"
+                : solution.difficulty === "advanced"
+                ? "Avançado"
+                : solution.difficulty}
             </Badge>
-          </div>
-        </CardHeader>
-        <CardContent className="p-4">
-          <h3 className="font-semibold text-lg mb-1 line-clamp-1">{solution.title}</h3>
-          <ScrollArea className="h-14 w-full">
-            <p className="text-sm text-muted-foreground line-clamp-2">
-              {solution.description}
-            </p>
-          </ScrollArea>
-        </CardContent>
-        <CardFooter className="p-4 pt-0 flex gap-2 flex-wrap justify-between text-xs text-muted-foreground">
-          {solution.estimated_time && solution.estimated_time > 0 && (
-            <div className="flex items-center">
-              <Clock className="h-3 w-3 mr-1" />
-              <span>{solution.estimated_time} min</span>
-            </div>
-          )}
-          <Badge
-            variant="outline"
-            className={`font-medium ${getDifficultyBadgeStyle(solution.difficulty)}`}
-          >
-            {solution.difficulty === "easy"
-              ? "Fácil"
-              : solution.difficulty === "medium"
-              ? "Médio"
-              : solution.difficulty === "advanced"
-              ? "Avançado"
-              : solution.difficulty}
-          </Badge>
-          {typeof solution.success_rate === "number" && solution.success_rate > 0 && (
-            <Badge variant="outline" className="bg-blue-50 text-blue-800 border-blue-200">
-              {solution.success_rate}% sucesso
-            </Badge>
-          )}
-        </CardFooter>
-      </Card>
-    </Link>
+            {typeof solution.success_rate === "number" && solution.success_rate > 0 && (
+              <Badge variant="outline" className="bg-blue-50 text-blue-800 border-blue-200">
+                {solution.success_rate}% sucesso
+              </Badge>
+            )}
+          </CardFooter>
+        </Card>
+      </Link>
+    </motion.div>
   );
 };

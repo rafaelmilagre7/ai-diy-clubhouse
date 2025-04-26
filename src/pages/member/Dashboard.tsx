@@ -17,18 +17,27 @@ const Dashboard = () => {
   const initialCategory = useMemo(() => searchParams.get("category") || "general", []);
   const [category, setCategory] = useState<string>(initialCategory);
   
+  // Verifica e usa dados em cache para renderização instantânea
+  const cachedSolutions = queryClient.getQueryData<Solution[]>(['solutions']);
+  
   // Corrigir a chamada de useSolutionsData para atender a assinatura esperada
-  const { solutions, loading: solutionsLoading } = useSolutionsData(category);
+  const { solutions, loading: solutionsLoading, isFetched } = useSolutionsData(category);
   
   // Otimização: Usar useMemo para o array de soluções para evitar recálculos desnecessários
   const filteredSolutions = useMemo(() => {
-    if (!solutions || solutions.length === 0) return [];
+    // Usar cache ou dados recém buscados - estratégia de stale-while-revalidate
+    const solutionsToUse = solutions && solutions.length > 0 
+      ? solutions 
+      : (cachedSolutions || []);
+      
+    if (!solutionsToUse || solutionsToUse.length === 0) return [];
+    
     return category !== "general" 
-      ? solutions.filter(s => s.category === category)
-      : solutions;
-  }, [solutions, category]);
+      ? solutionsToUse.filter(s => s.category === category)
+      : solutionsToUse;
+  }, [solutions, cachedSolutions, category]);
   
-  // Usar as soluções filtradas para obter o progresso
+  // Usar as soluções filtradas para obter o progresso - com preferência por cache
   const { 
     active, 
     completed, 
@@ -42,7 +51,20 @@ const Dashboard = () => {
     setSearchParams({ category: newCategory });
   }, [setSearchParams]);
 
-  // Função para navegar para a página de detalhes da solução - memoizada
+  // Prefetch de dados para transição instantânea
+  useEffect(() => {
+    // Prefetch dados de solução para navegação instantânea
+    const allSolutions = [...(active || []), ...(completed || []), ...(recommended || [])];
+    
+    allSolutions.forEach(solution => {
+      queryClient.prefetchQuery({
+        queryKey: ['solution', solution.id],
+        staleTime: 1000 * 60 * 5 // 5 minutos
+      });
+    });
+  }, [active, completed, recommended, queryClient]);
+
+  // Função para navegar para a página de detalhes da solução - memoizada e com prefetch
   const handleSolutionClick = useCallback((solution: Solution) => {
     // Pré-fetch dos dados da solução para melhorar UX
     queryClient.prefetchQuery({
@@ -56,7 +78,7 @@ const Dashboard = () => {
   useEffect(() => {
     const isFirstVisit = localStorage.getItem("firstDashboardVisit") !== "false";
     
-    if (isFirstVisit) {
+    if (isFirstVisit && isFetched) {
       // Atrasar ligeiramente o toast para evitar conflito com renderização inicial
       const timeoutId = setTimeout(() => {
         toast("Bem-vindo ao seu dashboard personalizado!");
@@ -66,7 +88,7 @@ const Dashboard = () => {
       // Limpeza do timeout quando o componente é desmontado
       return () => clearTimeout(timeoutId);
     }
-  }, []);
+  }, [isFetched]);
 
   // Sempre renderiza o layout, mesmo durante carregamento
   return (

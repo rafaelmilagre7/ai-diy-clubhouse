@@ -42,6 +42,9 @@ export const useTools = () => {
     }
   };
 
+  // Verificar se existem ferramentas em cache
+  const cachedTools = queryClient.getQueryData<Tool[]>(['tools']);
+
   const query = useQuery<Tool[], Error>({
     queryKey: ['tools'],
     queryFn: async () => {
@@ -64,16 +67,18 @@ export const useTools = () => {
 
       return data as Tool[];
     },
-    staleTime: Infinity, // Manter em cache até invalidação manual
-    gcTime: Infinity, // Não remover do cache automaticamente
+    placeholderData: cachedTools, // Usar dados em cache para renderização instantânea
+    staleTime: 1000 * 60 * 10, // 10 minutos
+    gcTime: 1000 * 60 * 30, // 30 minutos
     refetchOnWindowFocus: false, // Não buscar novamente ao focar a janela
-    refetchOnMount: false // Usar cache quando disponível
   });
 
   return {
     tools: query.data || [],
-    isLoading: query.isLoading,
+    isLoading: query.isLoading && !cachedTools, // Somente loading se não tiver cache
     error: query.error,
-    refetch: query.refetch
+    refetch: query.refetch,
+    prefetchTools,
+    isFetched: query.isFetched
   };
 };

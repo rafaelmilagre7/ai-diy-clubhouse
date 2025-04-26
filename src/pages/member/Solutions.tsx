@@ -1,15 +1,16 @@
 
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useSolutionsData } from '@/hooks/useSolutionsData';
 import { SolutionCard } from '@/components/solution/SolutionCard';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Search, Filter } from 'lucide-react';
-import LoadingScreen from '@/components/common/LoadingScreen';
 import { Solution } from '@/lib/supabase';
 import { useToolsData } from '@/hooks/useToolsData';
 import { useLogging } from '@/contexts/logging';
 import { useDocumentTitle } from '@/hooks/use-document-title';
+import { SolutionCardSkeleton } from '@/components/dashboard/SolutionsGridLoader';
+import { motion } from 'framer-motion';
 
 const Solutions = () => {
   // Definir título da página
@@ -24,17 +25,20 @@ const Solutions = () => {
   const { 
     filteredSolutions, 
     loading, 
+    isFetched,
     searchQuery, 
     setSearchQuery,
     activeCategory,
-    setActiveCategory
+    setActiveCategory,
+    prefetchSolutionDetails
   } = useSolutionsData();
 
   // Log data for debugging
   log("Solutions page loaded", { 
     solutionsCount: filteredSolutions?.length || 0, 
     activeCategory,
-    isLoading: loading || toolsDataLoading
+    isLoading: loading || toolsDataLoading,
+    isFetched
   });
 
   const categories = [
@@ -44,14 +48,55 @@ const Solutions = () => {
     { id: 'strategy', name: 'Estratégia' }
   ];
 
-  // Se estiver carregando as soluções, mostrar tela de carregamento
-  // Mas não bloquear se apenas as ferramentas estiverem carregando
-  if (loading) {
-    return <LoadingScreen message="Carregando soluções..." />;
-  }
+  // Otimiza o prefetch para detalhes da solução
+  const handlePrefetch = useCallback((solution: Solution) => {
+    return () => prefetchSolutionDetails(solution.id);
+  }, [prefetchSolutionDetails]);
+
+  // Renderização da lista de soluções com carregamento otimizado
+  const renderSolutionsList = () => {
+    // Se não houver nada, mesmo depois de ter tentado buscar dados
+    if (isFetched && filteredSolutions?.length === 0) {
+      return (
+        <div className="text-center py-8 bg-white rounded-lg border border-dashed">
+          <div className="flex flex-col items-center px-4">
+            <Filter className="h-10 w-10 text-muted-foreground mb-3" />
+            <h3 className="text-lg font-medium">Nenhuma solução encontrada</h3>
+            <p className="text-muted-foreground text-sm mt-1 max-w-md">
+              Não encontramos soluções com esse filtro. Tente selecionar outra categoria ou ajuste sua busca.
+            </p>
+          </div>
+        </div>
+      );
+    }
+
+    // Grid de placeholders ou soluções reais (ou mistura dos dois durante carregamento)
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {loading && !isFetched
+          ? // Se está carregando pela primeira vez, mostre placeholders
+            Array(6).fill(0).map((_, index) => <SolutionCardSkeleton key={`skeleton-${index}`} />)
+          : // Caso contrário, mostre os dados já carregados
+            filteredSolutions?.map((solution: Solution) => (
+              <SolutionCard 
+                key={solution.id}
+                solution={solution} 
+                onPrefetch={handlePrefetch(solution)}
+                isLoading={false}
+              />
+            ))
+        }
+      </div>
+    );
+  };
 
   return (
-    <div className="space-y-6">
+    <motion.div 
+      className="space-y-6"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.3 }}
+    >
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold">Soluções</h1>
@@ -89,27 +134,11 @@ const Solutions = () => {
 
         {categories.map((category) => (
           <TabsContent key={category.id} value={category.id} className="mt-0">
-            {filteredSolutions?.length === 0 ? (
-              <div className="text-center py-8 bg-white rounded-lg border border-dashed">
-                <div className="flex flex-col items-center px-4">
-                  <Filter className="h-10 w-10 text-muted-foreground mb-3" />
-                  <h3 className="text-lg font-medium">Nenhuma solução encontrada</h3>
-                  <p className="text-muted-foreground text-sm mt-1 max-w-md">
-                    Não encontramos soluções com esse filtro. Tente selecionar outra categoria ou ajuste sua busca.
-                  </p>
-                </div>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredSolutions?.map((solution: Solution) => (
-                  <SolutionCard key={solution.id} solution={solution} />
-                ))}
-              </div>
-            )}
+            {renderSolutionsList()}
           </TabsContent>
         ))}
       </Tabs>
-    </div>
+    </motion.div>
   );
 };
 
