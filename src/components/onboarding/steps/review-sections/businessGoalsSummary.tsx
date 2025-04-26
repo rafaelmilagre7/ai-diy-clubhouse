@@ -16,8 +16,13 @@ export function getBusinessGoalsSummary(data: any) {
   console.log("[BusinessGoalsSummary] Dados após normalização:", processedData);
   
   // Se mesmo após processamento os dados estiverem vazios ou não tiverem informações relevantes
-  if ((!processedData.primary_goal || processedData.primary_goal === '') && 
-      (!processedData.expected_outcomes || processedData.expected_outcomes.length === 0)) {
+  // Verificação mais robusta para todos os campos relevantes
+  const hasNoData = 
+    (!processedData.primary_goal || processedData.primary_goal === '') && 
+    (!processedData.expected_outcomes || processedData.expected_outcomes.length === 0) &&
+    (!processedData.timeline || processedData.timeline === '');
+    
+  if (hasNoData) {
     return <p className="text-gray-500 italic">Seção não preenchida. Clique em Editar para preencher.</p>;
   }
 

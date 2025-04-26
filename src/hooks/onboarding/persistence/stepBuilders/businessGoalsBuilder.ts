@@ -71,6 +71,14 @@ export function buildBusinessGoalsUpdate(data: Partial<OnboardingData>, progress
     mergedData.live_interest = isNaN(numericValue) ? 5 : numericValue;
   }
   
+  // Garantir que campos de string não sejam null ou undefined
+  const stringFields = ['primary_goal', 'timeline', 'priority_solution_type', 'how_implement', 'week_availability'];
+  stringFields.forEach(field => {
+    if (mergedData[field] === null || mergedData[field] === undefined) {
+      mergedData[field] = '';
+    }
+  });
+  
   // Atribuir ao objeto de atualização
   updateObj.business_goals = mergedData;
   

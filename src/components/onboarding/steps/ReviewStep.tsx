@@ -118,13 +118,6 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({
 
   return (
     <div className="space-y-6">
-      <Card className="bg-[#0ABAB5]/10 p-4 rounded-md border border-[#0ABAB5]/20">
-        <p className="text-gray-700">
-          Revise todas as informações preenchidas. Após confirmar, sua trilha personalizada será gerada automaticamente.
-          Esta trilha será única e adaptada para o seu perfil de negócios.
-        </p>
-      </Card>
-
       <div className="space-y-4">
         {steps
           .filter((step) => step.id !== "review" && step.id !== "trail_generation")

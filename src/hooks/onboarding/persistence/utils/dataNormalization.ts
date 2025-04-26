@@ -1,134 +1,137 @@
 
-/**
- * Utilitários para normalização de dados do onboarding
- * Garantindo que todos os campos estão no formato correto independente da fonte
- */
+import { OnboardingData } from "@/types/onboarding";
 
 /**
- * Normaliza um campo genérico, convertendo string JSON para objeto
- * e garantindo que temos pelo menos um objeto vazio
+ * Interface para as metas de negócios normalizadas
  */
-export function normalizeField<T = Record<string, any>>(field: any, defaultValue: T | Record<string, any> = {}): T {
-  if (!field) return defaultValue as T;
+export interface NormalizedBusinessGoals {
+  primary_goal: string;
+  expected_outcomes: string[];
+  timeline: string;
+  expected_outcome_30days?: string;
+  priority_solution_type?: string;
+  how_implement?: string;
+  week_availability?: string;
+  live_interest?: number;
+  content_formats?: string[];
+}
+
+/**
+ * Normaliza os dados de metas de negócios
+ * @param data Dados a serem normalizados
+ * @returns Objeto com dados normalizados
+ */
+export function normalizeBusinessGoals(data: any): NormalizedBusinessGoals {
+  console.log("[normalizeBusinessGoals] Normalizando dados:", typeof data, data);
   
-  if (typeof field === 'string') {
+  // Valores padrão para campos obrigatórios
+  const defaultValues: NormalizedBusinessGoals = {
+    primary_goal: '',
+    expected_outcomes: [],
+    timeline: '',
+  };
+  
+  // Caso 1: Se for null ou undefined, retorna objeto com valores padrão
+  if (data === null || data === undefined) {
+    console.log("[normalizeBusinessGoals] Dados nulos, retornando valores padrão");
+    return { ...defaultValues };
+  }
+  
+  // Caso 2: Se for string, tenta converter para objeto
+  if (typeof data === 'string') {
     try {
-      return JSON.parse(field) as T;
+      // Se for string vazia, retorna objeto com valores padrão
+      if (data.trim() === '') {
+        console.log("[normalizeBusinessGoals] String vazia, retornando valores padrão");
+        return { ...defaultValues };
+      }
+      
+      // Tentar parsear a string como JSON
+      const parsedData = JSON.parse(data);
+      console.log("[normalizeBusinessGoals] String convertida para objeto");
+      
+      // Continuar normalização com o dado parseado
+      return normalizeBusinessGoals(parsedData);
     } catch (e) {
-      console.error("Erro ao converter campo de string para objeto:", e);
-      return defaultValue as T;
+      console.error("[normalizeBusinessGoals] Erro ao converter string:", e);
+      return { ...defaultValues };
     }
   }
   
-  if (typeof field === 'object') {
-    return field as T;
+  // Caso 3: Se for objeto, garante campos obrigatórios
+  if (typeof data === 'object') {
+    console.log("[normalizeBusinessGoals] Normalizando campos do objeto");
+    
+    // Se data for um array, converte para objeto com valores padrão
+    if (Array.isArray(data)) {
+      console.warn("[normalizeBusinessGoals] Dados são um array, convertendo");
+      return { ...defaultValues };
+    }
+    
+    // Verificar formato aninhado com o campo business_goals
+    if (data.business_goals && typeof data.business_goals === 'object') {
+      console.log("[normalizeBusinessGoals] Formato aninhado detectado");
+      return normalizeBusinessGoals(data.business_goals);
+    }
+    
+    // Garantir que arrays sejam realmente arrays
+    const ensureArray = (value: any): string[] => {
+      if (Array.isArray(value)) return value;
+      if (value === undefined || value === null) return [];
+      
+      if (typeof value === 'string') {
+        try {
+          const parsed = JSON.parse(value);
+          return Array.isArray(parsed) ? parsed : [value];
+        } catch (e) {
+          return value.trim() ? [value] : [];
+        }
+      }
+      
+      return [value];
+    };
+    
+    // Garantir valores string mesmo que sejam nulos
+    const ensureString = (value: any): string => {
+      if (value === undefined || value === null) return '';
+      return String(value);
+    };
+    
+    // Garantir valores numéricos
+    const ensureNumber = (value: any): number | undefined => {
+      if (value === undefined || value === null) return undefined;
+      
+      const num = Number(value);
+      return isNaN(num) ? undefined : num;
+    };
+    
+    // Criar novo objeto normalizado
+    const normalizedData: NormalizedBusinessGoals = {
+      primary_goal: ensureString(data.primary_goal),
+      expected_outcomes: ensureArray(data.expected_outcomes || []),
+      timeline: ensureString(data.timeline),
+      expected_outcome_30days: ensureString(data.expected_outcome_30days),
+      priority_solution_type: ensureString(data.priority_solution_type),
+      how_implement: ensureString(data.how_implement),
+      week_availability: ensureString(data.week_availability),
+      live_interest: ensureNumber(data.live_interest),
+      content_formats: ensureArray(data.content_formats || []),
+    };
+    
+    // Adicionar expected_outcome_30days aos expected_outcomes se existir
+    if (normalizedData.expected_outcome_30days && 
+        !normalizedData.expected_outcomes.includes(normalizedData.expected_outcome_30days)) {
+      normalizedData.expected_outcomes = [
+        ...normalizedData.expected_outcomes,
+        normalizedData.expected_outcome_30days
+      ].filter(Boolean);
+    }
+    
+    console.log("[normalizeBusinessGoals] Dados normalizados:", normalizedData);
+    return normalizedData;
   }
   
-  return defaultValue as T;
-}
-
-/**
- * Normaliza os dados de experiência com IA
- */
-export function normalizeAIExperience(aiExperience: any): any {
-  const normalized = normalizeField(aiExperience, {
-    knowledge_level: '',
-    previous_tools: [],
-    has_implemented: '',
-    desired_ai_areas: [],
-    completed_formation: false,
-    is_member_for_month: false,
-    nps_score: 5,
-    improvement_suggestions: ''
-  });
-  
-  // Garantir que listas são arrays
-  if (!Array.isArray(normalized.previous_tools)) {
-    normalized.previous_tools = normalized.previous_tools ? [normalized.previous_tools] : [];
-  }
-  
-  if (!Array.isArray(normalized.desired_ai_areas)) {
-    normalized.desired_ai_areas = normalized.desired_ai_areas ? [normalized.desired_ai_areas] : [];
-  }
-  
-  // Converter valores booleanos
-  normalized.completed_formation = Boolean(normalized.completed_formation);
-  normalized.is_member_for_month = Boolean(normalized.is_member_for_month);
-  
-  // Garantir valor numérico para NPS
-  normalized.nps_score = Number(normalized.nps_score || 5);
-  
-  return normalized;
-}
-
-/**
- * Normaliza os dados de objetivos de negócio
- */
-export function normalizeBusinessGoals(businessGoals: any): any {
-  const normalized = normalizeField(businessGoals, {
-    primary_goal: '',
-    expected_outcomes: [],
-    expected_outcome_30days: '',
-    priority_solution_type: '',
-    how_implement: '',
-    week_availability: '',
-    live_interest: 5,
-    content_formats: []
-  });
-  
-  // Garantir que listas são arrays
-  if (!Array.isArray(normalized.expected_outcomes)) {
-    normalized.expected_outcomes = normalized.expected_outcomes ? [normalized.expected_outcomes] : [];
-  }
-  
-  if (!Array.isArray(normalized.content_formats)) {
-    normalized.content_formats = normalized.content_formats ? [normalized.content_formats] : [];
-  }
-  
-  // Garantir que live_interest é número
-  const liveInterestNum = Number(normalized.live_interest || 5);
-  normalized.live_interest = isNaN(liveInterestNum) ? 5 : liveInterestNum;
-  
-  return normalized;
-}
-
-/**
- * Normaliza os dados de personalização da experiência
- */
-export function normalizeExperiencePersonalization(experiencePersonalization: any): any {
-  const normalized = normalizeField(experiencePersonalization, {
-    interests: [],
-    time_preference: [],
-    available_days: [],
-    networking_availability: 5,
-    skills_to_share: [],
-    mentorship_topics: []
-  });
-  
-  // Garantir que listas são arrays
-  if (!Array.isArray(normalized.interests)) {
-    normalized.interests = normalized.interests ? [normalized.interests] : [];
-  }
-  
-  if (!Array.isArray(normalized.time_preference)) {
-    normalized.time_preference = normalized.time_preference ? [normalized.time_preference] : [];
-  }
-  
-  if (!Array.isArray(normalized.available_days)) {
-    normalized.available_days = normalized.available_days ? [normalized.available_days] : [];
-  }
-  
-  if (!Array.isArray(normalized.skills_to_share)) {
-    normalized.skills_to_share = normalized.skills_to_share ? [normalized.skills_to_share] : [];
-  }
-  
-  if (!Array.isArray(normalized.mentorship_topics)) {
-    normalized.mentorship_topics = normalized.mentorship_topics ? [normalized.mentorship_topics] : [];
-  }
-  
-  // Garantir que networking_availability é número
-  const networkAvailNum = Number(normalized.networking_availability || 5);
-  normalized.networking_availability = isNaN(networkAvailNum) ? 5 : networkAvailNum;
-  
-  return normalized;
+  // Caso padrão: retorna objeto com valores padrão
+  console.warn("[normalizeBusinessGoals] Tipo de dados inesperado:", typeof data);
+  return { ...defaultValues };
 }
