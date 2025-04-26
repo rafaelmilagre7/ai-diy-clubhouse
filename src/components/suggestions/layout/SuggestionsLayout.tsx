@@ -6,7 +6,6 @@ import { SuggestionsContent } from './SuggestionsContent';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { motion } from 'framer-motion';
 
 const SuggestionsLayout = () => {
   const {
@@ -29,12 +28,7 @@ const SuggestionsLayout = () => {
   };
 
   return (
-    <motion.div 
-      className="container py-6 space-y-6"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.2 }}
-    >
+    <div className="container py-6 space-y-6">
       <SuggestionsHeader 
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
@@ -61,7 +55,7 @@ const SuggestionsLayout = () => {
           isLoading={isLoading}
         />
       )}
-    </motion.div>
+    </div>
   );
 };
 
