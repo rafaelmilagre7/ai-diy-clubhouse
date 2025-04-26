@@ -37,6 +37,7 @@ import MemberLayout from '@/components/layout/MemberLayout';
 import AdminLayout from '@/components/layout/admin/AdminLayout';
 import ImplementationTrailPage from '@/pages/member/ImplementationTrailPage';
 import AdminEvents from '@/pages/admin/AdminEvents';
+import Events from '@/pages/member/Events';
 
 // Onboarding
 import OnboardingIntro from '@/pages/onboarding/OnboardingIntro';
