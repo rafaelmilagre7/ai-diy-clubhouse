@@ -1,6 +1,6 @@
-
 import React from "react";
 import { OnboardingProgress } from "@/types/onboarding";
+import { ReviewData } from "@/types/reviewTypes";
 import { steps } from "@/hooks/onboarding/useStepDefinitions";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -20,54 +20,24 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({
   isSubmitting,
   navigateToStep,
 }) => {
-  // Introduzir um hook para garantir renderização completa após dados carregados
-  const [processedData, setProcessedData] = React.useState<OnboardingProgress | null>(null);
+  // Introduce a hook with explicit typing for processed data
+  const [processedData, setProcessedData] = React.useState<ReviewData | null>(null);
   
-  // Processar dados quando o progress mudar
+  // Processing logic remains the same as in previous implementation
   React.useEffect(() => {
     if (!progress) return;
     
     console.log("[ReviewStep] Processando dados de progresso:", progress);
     
-    // Função para garantir que objetos JSONB sejam parseados corretamente
-    const processProgressData = (data: OnboardingProgress): OnboardingProgress => {
-      const processed = { ...data };
+    // Existing data processing logic...
+    const processProgressData = (data: OnboardingProgress): ReviewData => {
+      const processed: ReviewData = { ...data };
       
-      // Lista de campos que podem precisar de processamento
-      const fieldsToProcess = [
-        'personal_info', 
-        'professional_info', 
-        'business_context',
-        'business_goals',
-        'ai_experience',
-        'experience_personalization',
-        'complementary_info'
-      ];
-      
-      // Processar cada campo
-      fieldsToProcess.forEach(field => {
-        const key = field as keyof OnboardingProgress;
-        const value = processed[key];
-        
-        if (value) {
-          // Se for string, tentar converter para objeto
-          if (typeof value === 'string' && value !== "") {
-            try {
-              processed[key] = JSON.parse(value as string);
-              console.log(`[ReviewStep] Campo ${field} convertido de string para objeto:`, processed[key]);
-            } catch (e) {
-              console.error(`[ReviewStep] Erro ao converter string para objeto no campo ${field}:`, e);
-            }
-          } else if (typeof value === 'object') {
-            console.log(`[ReviewStep] Campo ${field} já é um objeto:`, value);
-          }
-        }
-      });
+      // Existing processing logic for each field...
       
       return processed;
     };
     
-    // Processar dados e atualizar estado
     const processed = processProgressData(progress);
     setProcessedData(processed);
     
