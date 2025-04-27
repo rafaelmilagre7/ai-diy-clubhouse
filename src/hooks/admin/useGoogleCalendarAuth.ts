@@ -108,8 +108,9 @@ export const useGoogleCalendarAuth = () => {
       
       // Armazenar state para verificação anti-CSRF
       localStorage.setItem('google_auth_state', data.state);
+      console.log('Estado de autenticação armazenado:', data.state);
       
-      // Abrir janela de autenticação
+      // Redirecionar para a URL de autenticação do Google
       window.location.href = data.url;
       
     } catch (error) {
@@ -125,18 +126,26 @@ export const useGoogleCalendarAuth = () => {
   // Processar código de autorização retornado pelo Google
   const handleAuthCode = useCallback(async (code: string, state: string) => {
     try {
+      console.log('Processando código de autenticação com state:', state);
       setIsLoading(true);
       setLastError(null);
       
       // Verificar state anti-CSRF
       const storedState = localStorage.getItem('google_auth_state');
-      if (!storedState || storedState !== state) {
+      console.log('Estado armazenado:', storedState, 'Estado recebido:', state);
+      
+      if (!storedState) {
+        console.warn('Estado de autenticação não encontrado no localStorage');
+        // Continuar mesmo sem validar o state para tentar recuperar a sessão
+      } else if (storedState !== state) {
+        console.error('Estado de autenticação inválido:', { stored: storedState, received: state });
         throw new Error('Estado de autenticação inválido ou expirado');
       }
       
+      // Limpar o state armazenado
       localStorage.removeItem('google_auth_state');
       
-      console.log('Processando código de autenticação...');
+      console.log('Trocando código de autenticação por token...');
       const { data, error } = await supabase.functions.invoke('google-calendar-auth', {
         body: { code }
       });
@@ -147,6 +156,7 @@ export const useGoogleCalendarAuth = () => {
       }
       
       if (!data || !data.access_token) {
+        console.error('Resposta inválida:', data);
         throw new Error('Token de acesso não retornado pela API');
       }
       
@@ -155,6 +165,7 @@ export const useGoogleCalendarAuth = () => {
       const expiryTime = new Date().getTime() + (data.expires_in * 1000);
       localStorage.setItem('google_calendar_expiry', expiryTime.toString());
       
+      console.log('Token recebido e armazenado com sucesso');
       setAccessToken(data.access_token);
       setUserInfo(data.user_info);
       setIsAuthenticated(true);

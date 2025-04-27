@@ -24,15 +24,16 @@ serve(async (req) => {
   const state = url.searchParams.get('state');
   const error = url.searchParams.get('error');
   
-  // Extrair a origem da aplicação para fazer o redirecionamento
-  // Usamos o origin da URL da requisição como fallback
-  const appOrigin = url.origin;
+  // IMPORTANTE: Usar uma URL fixa para redirecionamento em vez de tentar extrair do request
+  // Isso resolve o problema do "Project not specified"
+  const appOrigin = 'https://viverdeia-club.vercel.app'; 
 
   console.log('Google Calendar Callback recebido:', { 
     code: code ? '[código presente]' : 'ausente', 
     state, 
     error,
-    origin: appOrigin
+    requestOrigin: url.origin,
+    redirectingTo: appOrigin
   });
 
   // Se houver erro no callback do OAuth

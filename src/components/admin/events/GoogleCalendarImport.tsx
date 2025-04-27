@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useGoogleCalendarAuth, type GoogleEvent } from '@/hooks/admin/useGoogleCalendarAuth';
 import { Button } from '@/components/ui/button';
@@ -40,19 +39,26 @@ export const GoogleCalendarImport = ({ onEventsSelected }: GoogleCalendarImportP
     convertSelectedEvents
   } = useGoogleCalendarAuth();
   
-  // Verificar parâmetros de URL para código de autenticação
   useEffect(() => {
     const url = new URL(window.location.href);
     const code = url.searchParams.get('code');
     const state = url.searchParams.get('state');
+    const authError = url.searchParams.get('authError');
+    
+    if (authError) {
+      console.error('Erro de autenticação retornado:', authError);
+      setAuthFailed(true);
+      window.history.replaceState({}, document.title, window.location.pathname);
+      toast.error(`Falha na autenticação: ${authError}`);
+      return;
+    }
     
     if (code && state) {
-      // Limpar parâmetros da URL por segurança
       window.history.replaceState({}, document.title, window.location.pathname);
       console.log('Código de autenticação detectado, processando...');
       
-      // Processar o código de autenticação
       handleAuthCode(code, state).then(success => {
+        console.log('Resultado da autenticação:', success ? 'sucesso' : 'falha');
         setAuthSuccess(success);
         setAuthFailed(!success);
         if (success) {
@@ -62,20 +68,12 @@ export const GoogleCalendarImport = ({ onEventsSelected }: GoogleCalendarImportP
     }
   }, [handleAuthCode]);
 
-  // Carregar eventos quando autenticado
   useEffect(() => {
-    if (isAuthenticated && events.length === 0) {
-      console.log('Usuário autenticado, carregando eventos...');
+    if (isAuthenticated && isImportDialogOpen && events.length === 0) {
+      console.log('Usuário autenticado e diálogo aberto, carregando eventos...');
       fetchEvents();
     }
-  }, [isAuthenticated, events.length, fetchEvents]);
-
-  // Carregar eventos quando o diálogo é aberto
-  useEffect(() => {
-    if (isImportDialogOpen && isAuthenticated && events.length === 0) {
-      fetchEvents();
-    }
-  }, [isImportDialogOpen, isAuthenticated, events.length, fetchEvents]);
+  }, [isAuthenticated, isImportDialogOpen, events.length, fetchEvents]);
 
   const handleImport = () => {
     if (selectedEvents.size === 0) {
