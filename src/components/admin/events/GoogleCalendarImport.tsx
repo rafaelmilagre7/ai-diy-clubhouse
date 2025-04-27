@@ -27,22 +27,24 @@ export const GoogleCalendarImport = ({
     }
 
     try {
-      const events = await fetchEvents();
-      if (events && events.length > 0) {
-        const formattedEvents = events.map((event: GoogleEvent) => ({
-          title: event.summary || '',
-          description: event.description || '',
-          start_time: event.start?.dateTime || event.start?.date || '',
-          end_time: event.end?.dateTime || event.end?.date || '',
-          physical_location: event.location || '',
-          location_link: event.hangoutLink || event.conferenceData?.entryPoints?.[0]?.uri || ''
-        }));
-        
-        onEventsSelected(formattedEvents);
-        toast.success(`${events.length} eventos encontrados no Google Calendar`);
-      } else {
+      const importedEvents = await fetchEvents();
+      
+      if (!importedEvents || importedEvents.length === 0) {
         toast.info('Nenhum evento encontrado no Google Calendar');
+        return;
       }
+
+      const formattedEvents: EventFormData[] = importedEvents.map((event: GoogleEvent) => ({
+        title: event.summary || '',
+        description: event.description || '',
+        start_time: event.start?.dateTime || event.start?.date || '',
+        end_time: event.end?.dateTime || event.end?.date || '',
+        physical_location: event.location || '',
+        location_link: event.hangoutLink || event.conferenceData?.entryPoints?.[0]?.uri || ''
+      }));
+      
+      onEventsSelected(formattedEvents);
+      toast.success(`${formattedEvents.length} eventos encontrados no Google Calendar`);
     } catch (error) {
       console.error('Erro ao buscar eventos:', error);
       toast.error('Não foi possível carregar os eventos do Google Calendar');
