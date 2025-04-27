@@ -2,11 +2,11 @@
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { UseFormReturn } from "react-hook-form";
 import type { EventFormData } from "./EventFormSchema";
-import { uploadImageToImgBB } from "@/components/ui/file/services/imgbb";
 import { Button } from "@/components/ui/button";
 import { Upload, Loader2 } from "lucide-react";
 import { useState, useRef } from "react";
 import { toast } from "sonner";
+import { supabase } from "@/lib/supabase";
 
 interface EventCoverImageProps {
   form: UseFormReturn<EventFormData>;
@@ -17,10 +17,23 @@ export const EventCoverImage = ({ form }: EventCoverImageProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleImageUpload = async (file: File) => {
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error("A imagem deve ter no máximo 2MB");
+      return;
+    }
+
     setIsUploading(true);
     try {
-      const { publicUrl } = await uploadImageToImgBB(file, "YOUR_IMGBB_API_KEY");
-      form.setValue("cover_image_url", publicUrl);
+      const formData = new FormData();
+      formData.append('image', file);
+
+      const { data, error } = await supabase.functions.invoke('upload-image', {
+        body: formData
+      });
+
+      if (error) throw error;
+
+      form.setValue("cover_image_url", data.publicUrl);
       toast.success("Imagem carregada com sucesso!");
     } catch (error) {
       console.error("Erro ao fazer upload da imagem:", error);
@@ -33,10 +46,6 @@ export const EventCoverImage = ({ form }: EventCoverImageProps) => {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 2 * 1024 * 1024) {
-        toast.error("A imagem deve ter no máximo 2MB");
-        return;
-      }
       handleImageUpload(file);
     }
   };
