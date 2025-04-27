@@ -1,7 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Calendar } from "lucide-react";
-import { useGoogleCalendarAuth, type GoogleEvent } from "@/hooks/admin/useGoogleCalendarAuth";
+import { useGoogleCalendarAuth } from "@/hooks/admin/useGoogleCalendarAuth";
 import { useGoogleCalendarEvents } from "@/hooks/admin/useGoogleCalendarEvents";
 import { toast } from "sonner";
 import { type EventFormData } from "./form/EventFormSchema";

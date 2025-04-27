@@ -37,7 +37,8 @@ export const useHandleGoogleCalendarAuth = () => {
 
       if (!storedTokens || !expiryString) return;
 
-      const expiryTime = parseInt(expiryString);
+      // Converter explicitamente para número usando parseInt com base 10
+      const expiryTime = parseInt(expiryString, 10);
       const now = new Date().getTime();
 
       // Se o token vai expirar em breve ou já expirou
