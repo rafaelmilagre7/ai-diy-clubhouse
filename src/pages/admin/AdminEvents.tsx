@@ -15,8 +15,9 @@ const AdminEvents = () => {
   useEffect(() => {
     if (searchParams.has('code') || searchParams.has('state') || searchParams.has('error')) {
       // Limpa os parâmetros da URL após processar
-      const cleanParams = new URLSearchParams();
-      setSearchParams(cleanParams, { replace: true });
+      // Corrigido: Criando um objeto URLSearchParams vazio para limpar parâmetros
+      // e garantindo que o tipo é compatível com o esperado
+      setSearchParams(new URLSearchParams(), { replace: true });
     }
   }, [searchParams, setSearchParams]);
   
