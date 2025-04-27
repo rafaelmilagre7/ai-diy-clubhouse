@@ -10,7 +10,7 @@ import { memo, useMemo } from 'react';
 // Componente memoizado para evitar re-renderizações desnecessárias
 export const AchievementsSummary = memo(function AchievementsSummary() {
   const navigate = useNavigate();
-  const { achievements, loading } = useAchievements();
+  const { data: achievements = [], isLoading } = useAchievements();
 
   // Usar useMemo para cálculos frequentes
   const {
@@ -38,7 +38,7 @@ export const AchievementsSummary = memo(function AchievementsSummary() {
     navigate("/achievements");
   }, [navigate]);
 
-  if (loading) return (
+  if (isLoading) return (
     <div className="w-full flex justify-center py-8">
       <div className="h-8 w-8 rounded-full border-t-2 border-b-2 border-viverblue animate-spin" />
     </div>

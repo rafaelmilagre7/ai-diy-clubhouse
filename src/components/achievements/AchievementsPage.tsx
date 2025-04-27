@@ -13,7 +13,12 @@ export const AchievementsPage = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
   const [activeCategory, setActiveCategory] = useState("all");
-  const { achievements, loading, error, refetch } = useAchievements();
+  const { 
+    data: achievements = [], 
+    isLoading, 
+    error,
+    refetch 
+  } = useAchievements();
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
@@ -24,12 +29,12 @@ export const AchievementsPage = () => {
     }
   };
 
-  if (loading) {
+  if (isLoading) {
     return <LoadingState />;
   }
 
   if (error) {
-    return <ErrorState error={error} onRetry={handleRefresh} />;
+    return <ErrorState error={error.message || "Erro ao carregar conquistas"} onRetry={handleRefresh} />;
   }
 
   console.log("Conquistas carregadas:", achievements.length, achievements);
@@ -49,7 +54,7 @@ export const AchievementsPage = () => {
         <AchievementsHeader />
         <AchievementsActions 
           isRefreshing={isRefreshing}
-          loading={loading}
+          loading={isLoading}
           filterOpen={filterOpen}
           setFilterOpen={setFilterOpen}
           achievements={achievements}
