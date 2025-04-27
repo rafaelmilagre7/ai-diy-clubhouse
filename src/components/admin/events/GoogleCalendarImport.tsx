@@ -2,6 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { Calendar } from "lucide-react";
 import { useGoogleCalendarAuth, type GoogleEvent } from "@/hooks/admin/useGoogleCalendarAuth";
+import { useGoogleCalendarEvents } from "@/hooks/admin/useGoogleCalendarEvents";
 import { toast } from "sonner";
 import { type EventFormData } from "./form/EventFormSchema";
 
@@ -16,9 +17,15 @@ export const GoogleCalendarImport = ({
 }: GoogleCalendarImportProps) => {
   const { 
     initiateLogin,
-    fetchEvents,
-    isLoading
+    accessToken,
+    isLoading: isAuthLoading
   } = useGoogleCalendarAuth();
+
+  const {
+    fetchEvents,
+    formatEvents,
+    isLoading: isEventsLoading
+  } = useGoogleCalendarEvents(accessToken);
 
   const handleImportClick = async () => {
     if (!isAuthenticated) {
@@ -27,22 +34,14 @@ export const GoogleCalendarImport = ({
     }
 
     try {
-      const importedEvents = await fetchEvents();
+      const events = await fetchEvents();
       
-      if (!importedEvents || importedEvents.length === 0) {
+      if (!events || events.length === 0) {
         toast.info('Nenhum evento encontrado no Google Calendar');
         return;
       }
 
-      const formattedEvents: EventFormData[] = importedEvents.map((event: GoogleEvent) => ({
-        title: event.summary || '',
-        description: event.description || '',
-        start_time: event.start?.dateTime || event.start?.date || '',
-        end_time: event.end?.dateTime || event.end?.date || '',
-        physical_location: event.location || '',
-        location_link: event.hangoutLink || event.conferenceData?.entryPoints?.[0]?.uri || ''
-      }));
-      
+      const formattedEvents = formatEvents(events);      
       onEventsSelected(formattedEvents);
       toast.success(`${formattedEvents.length} eventos encontrados no Google Calendar`);
     } catch (error) {
@@ -51,12 +50,14 @@ export const GoogleCalendarImport = ({
     }
   };
 
+  const isLoadingState = isAuthLoading || isEventsLoading;
+
   return (
     <Button
       variant="outline"
       className="bg-white border-gray-200 hover:bg-gray-100 gap-2"
       onClick={handleImportClick}
-      disabled={isLoading}
+      disabled={isLoadingState}
     >
       <Calendar className="h-4 w-4" />
       {isAuthenticated 
