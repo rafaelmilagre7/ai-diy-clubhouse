@@ -1,8 +1,8 @@
-
 import { useState } from 'react';
 import { Calendar } from '@/components/ui/calendar';
 import { useEvents } from '@/hooks/useEvents';
 import { EventModal } from './EventModal';
+import { EventsListModal } from './EventsListModal';
 import { Event } from '@/types/events';
 import { format, isSameDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -24,29 +24,24 @@ export const EventCalendar = () => {
     );
     
     if (eventsOnSelectedDay.length === 1) {
-      // Se tiver apenas um evento, abre o modal do evento diretamente
       setSelectedEvent(eventsOnSelectedDay[0]);
     }
   };
 
-  // Função para obter eventos por dia
   const getEventsForDay = (day: Date): Event[] => {
     return events.filter(event => isSameDay(new Date(event.start_time), day));
   };
 
-  // Função para renderizar o conteúdo dentro de cada dia do calendário
   const renderDay = (day: Date, events: Event[]) => {
     if (events.length === 0) return null;
     
     return <EventDay events={events} />;
   };
 
-  // Fechamento do modal de evento
   const handleCloseEventModal = () => {
     setSelectedEvent(null);
   };
 
-  // Obter eventos para o dia selecionado
   const eventsOnSelectedDate = selectedDate 
     ? events.filter(event => isSameDay(new Date(event.start_time), selectedDate))
     : [];
@@ -82,7 +77,6 @@ export const EventCalendar = () => {
         />
       </div>
       
-      {/* Modal para exibir um único evento */}
       {selectedEvent && (
         <EventModal
           event={selectedEvent}
@@ -90,7 +84,6 @@ export const EventCalendar = () => {
         />
       )}
       
-      {/* Modal para exibir múltiplos eventos do dia */}
       {selectedDate && !selectedEvent && eventsOnSelectedDate.length > 0 && (
         <EventsListModal 
           date={selectedDate} 
