@@ -175,23 +175,11 @@ export function useAchievements() {
     }
   }, [user, toast, achievementData]);
   
-  const { 
-    data: achievements = [],
-    isLoading: loading,
-    error,
-    refetch
-  } = useQuery({
+  return useQuery({
     queryKey: ['achievements', user?.id],
     queryFn: fetchAchievements,
     enabled: !!user,
     staleTime: 5 * 60 * 1000, // 5 minutos
     refetchOnWindowFocus: false,
   });
-  
-  return { 
-    achievements, 
-    loading,
-    error: error ? String(error) : null,
-    refetch
-  };
 }

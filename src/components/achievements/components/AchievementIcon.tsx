@@ -1,6 +1,7 @@
+
 import { cn } from "@/lib/utils";
 import { Achievement } from "@/types/achievementTypes";
-import { getAchievementIcon } from "../utils/achievementUtils";
+import { Rocket, Award, BadgeCheck, Medal, Star, CheckCheck, Clock, Users, FileCheck, CalendarCheck, Trophy } from "lucide-react";
 import React, { useEffect, useRef } from "react";
 
 interface AchievementIconProps {
@@ -8,7 +9,6 @@ interface AchievementIconProps {
 }
 
 export const AchievementIcon = ({ achievement }: AchievementIconProps) => {
-  const Icon = getAchievementIcon(achievement);
   const iconRef = useRef<SVGSVGElement>(null);
 
   useEffect(() => {
@@ -17,6 +17,31 @@ export const AchievementIcon = ({ achievement }: AchievementIconProps) => {
       setTimeout(() => iconRef.current?.classList.remove("item-pop"), 650);
     }
   }, [achievement.isUnlocked]);
+
+  // Função para determinar qual ícone usar baseado na conquista
+  const getIconComponent = () => {
+    // IDs específicos
+    if (achievement.id.includes("primeira") || achievement.id === 'achievement-pioneer') return Rocket;
+    if (achievement.id.includes("streak")) return CalendarCheck;
+    if (achievement.id.includes("completo")) return FileCheck;
+    if (achievement.id.includes("implementacao")) return CheckCheck;
+    if (achievement.id.includes("social") || achievement.id.includes("comentario")) return Users;
+    if (achievement.id.includes("tempo") || achievement.id.includes("dias")) return Clock;
+    
+    // Baseado na categoria
+    switch (achievement.category) {
+      case "revenue":
+        return Star;
+      case "operational":
+        return CheckCheck;
+      case "strategy":
+        return FileCheck;
+      case "achievement":
+        return Award;
+      default:
+        return Trophy; // Ícone padrão
+    }
+  };
 
   const getIconColor = () => {
     if (!achievement.isUnlocked) return "text-gray-400";
@@ -51,6 +76,8 @@ export const AchievementIcon = ({ achievement }: AchievementIconProps) => {
         return "from-viverblue/20 to-viverblue/10 shadow-viverblue/20";
     }
   };
+
+  const Icon = getIconComponent();
 
   return (
     <div className={cn(
