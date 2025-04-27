@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
@@ -59,7 +58,6 @@ export const useGoogleCalendarAuth = () => {
   const [lastError, setLastError] = useState<string | null>(null);
   const [isAuthInitiating, setIsAuthInitiating] = useState(false);
 
-  // Verificar autenticação existente no localStorage
   useEffect(() => {
     const storedTokenData = localStorage.getItem('google_calendar_auth');
     if (storedTokenData) {
@@ -73,7 +71,6 @@ export const useGoogleCalendarAuth = () => {
           setIsAuthenticated(true);
           console.log('Sessão do Google Calendar restaurada');
         } else {
-          // Token expirado, remover
           console.log('Token expirado, removendo...');
           localStorage.removeItem('google_calendar_auth');
           localStorage.removeItem('google_calendar_expiry');
@@ -86,7 +83,6 @@ export const useGoogleCalendarAuth = () => {
     }
   }, []);
 
-  // Inicia o fluxo de autenticação do Google
   const initiateLogin = useCallback(async () => {
     try {
       setIsLoading(true);
@@ -106,11 +102,9 @@ export const useGoogleCalendarAuth = () => {
         throw new Error('URL de autenticação não retornada pela API');
       }
       
-      // Armazenar state para verificação anti-CSRF
       localStorage.setItem('google_auth_state', data.state);
       console.log('Estado de autenticação armazenado:', data.state);
       
-      // Redirecionar para a URL de autenticação do Google
       window.location.href = data.url;
       
     } catch (error) {
@@ -123,26 +117,22 @@ export const useGoogleCalendarAuth = () => {
     }
   }, []);
 
-  // Processar código de autorização retornado pelo Google
   const handleAuthCode = useCallback(async (code: string, state: string) => {
     try {
       console.log('Processando código de autenticação com state:', state);
       setIsLoading(true);
       setLastError(null);
       
-      // Verificar state anti-CSRF
       const storedState = localStorage.getItem('google_auth_state');
       console.log('Estado armazenado:', storedState, 'Estado recebido:', state);
       
       if (!storedState) {
         console.warn('Estado de autenticação não encontrado no localStorage');
-        // Continuar mesmo sem validar o state para tentar recuperar a sessão
       } else if (storedState !== state) {
         console.error('Estado de autenticação inválido:', { stored: storedState, received: state });
         throw new Error('Estado de autenticação inválido ou expirado');
       }
       
-      // Limpar o state armazenado
       localStorage.removeItem('google_auth_state');
       
       console.log('Trocando código de autenticação por token...');
@@ -160,7 +150,6 @@ export const useGoogleCalendarAuth = () => {
         throw new Error('Token de acesso não retornado pela API');
       }
       
-      // Armazenar token com expiração
       localStorage.setItem('google_calendar_auth', JSON.stringify(data));
       const expiryTime = new Date().getTime() + (data.expires_in * 1000);
       localStorage.setItem('google_calendar_expiry', expiryTime.toString());
@@ -183,7 +172,6 @@ export const useGoogleCalendarAuth = () => {
     }
   }, []);
 
-  // Buscar eventos do calendário
   const fetchEvents = useCallback(async (maxResults = 30) => {
     if (!accessToken) {
       toast.error('Você precisa estar autenticado para buscar eventos');
@@ -231,7 +219,6 @@ export const useGoogleCalendarAuth = () => {
     }
   }, [accessToken]);
 
-  // Desconectar da conta Google
   const logout = useCallback(() => {
     localStorage.removeItem('google_calendar_auth');
     localStorage.removeItem('google_calendar_expiry');
@@ -244,7 +231,6 @@ export const useGoogleCalendarAuth = () => {
     toast.success('Desconectado do Google Calendar');
   }, []);
 
-  // Selecionar/desselecionar evento
   const toggleEventSelection = useCallback((eventId: string) => {
     setSelectedEvents(prev => {
       const newSet = new Set(prev);
@@ -257,16 +243,14 @@ export const useGoogleCalendarAuth = () => {
     });
   }, []);
 
-  // Converter eventos do Google para o formato da plataforma
   const convertSelectedEvents = useCallback(() => {
     return events
       .filter(event => selectedEvents.has(event.id))
       .map(event => {
-        // Determinar o link de conferência (priorizar hangoutLink ou conferenceData)
         const meetingLink = event.hangoutLink || 
                            (event.conferenceData?.entryPoints?.find(ep => ep.entryPointType === 'video')?.uri) || 
                            '';
-
+        
         return {
           title: event.summary || '',
           description: event.description || '',
@@ -274,7 +258,6 @@ export const useGoogleCalendarAuth = () => {
           end_time: event.end?.dateTime || event.end?.date || '',
           location_link: meetingLink,
           physical_location: event.location || '',
-          // Imagem de capa não está disponível no Google Calendar
           cover_image_url: ''
         };
       });
