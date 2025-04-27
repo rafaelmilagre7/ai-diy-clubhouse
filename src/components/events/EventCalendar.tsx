@@ -1,12 +1,11 @@
+
 import { useState } from 'react';
 import { Calendar } from '@/components/ui/calendar';
 import { useEvents } from '@/hooks/useEvents';
 import { EventModal } from './EventModal';
-import { EventsListModal } from './EventsListModal';
 import { Event } from '@/types/events';
 import { format, isSameDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Badge } from '@/components/ui/badge';
 import { EventDay } from './EventDay';
 
 export const EventCalendar = () => {
@@ -17,38 +16,27 @@ export const EventCalendar = () => {
   const handleDayClick = (day: Date | undefined) => {
     if (!day) return;
     
-    setSelectedDate(day);
-    
     const eventsOnSelectedDay = events.filter(event => 
       isSameDay(new Date(event.start_time), day)
     );
     
     if (eventsOnSelectedDay.length === 1) {
       setSelectedEvent(eventsOnSelectedDay[0]);
+    } else if (eventsOnSelectedDay.length > 1) {
+      setSelectedDate(day);
+      // Seleciona automaticamente o primeiro evento do dia
+      setSelectedEvent(eventsOnSelectedDay[0]);
     }
-  };
-
-  const getEventsForDay = (day: Date): Event[] => {
-    return events.filter(event => isSameDay(new Date(event.start_time), day));
-  };
-
-  const renderDay = (day: Date, events: Event[]) => {
-    if (events.length === 0) return null;
-    
-    return <EventDay events={events} />;
   };
 
   const handleCloseEventModal = () => {
     setSelectedEvent(null);
+    setSelectedDate(undefined); // Reseta também a data selecionada
   };
 
-  const eventsOnSelectedDate = selectedDate 
-    ? events.filter(event => isSameDay(new Date(event.start_time), selectedDate))
-    : [];
-
   return (
-    <div className="space-y-4">
-      <div className="rounded-md border shadow bg-card">
+    <div className="space-y-6">
+      <div className="rounded-lg border shadow-lg bg-card min-h-[600px] w-full max-w-5xl mx-auto">
         <Calendar
           mode="single"
           locale={ptBR}
@@ -60,20 +48,22 @@ export const EventCalendar = () => {
             )
           }}
           modifiersClassNames={{
-            event: 'bg-viverblue/20 font-bold text-viverblue hover:bg-viverblue/30 relative'
+            event: 'bg-viverblue/10 font-medium text-viverblue hover:bg-viverblue/20 transition-colors relative'
           }}
           components={{
             DayContent: (props) => {
-              const dayEvents = getEventsForDay(props.date);
+              const dayEvents = events.filter(event => 
+                isSameDay(new Date(event.start_time), props.date)
+              );
               return (
-                <div className="relative w-full h-full flex flex-col items-center">
-                  <div>{props.date.getDate()}</div>
-                  {renderDay(props.date, dayEvents)}
+                <div className="relative w-full h-full flex flex-col items-center p-1">
+                  <div className="text-sm mb-1">{props.date.getDate()}</div>
+                  <EventDay events={dayEvents} />
                 </div>
               );
             }
           }}
-          className="p-0"
+          className="p-4"
         />
       </div>
       
@@ -81,15 +71,6 @@ export const EventCalendar = () => {
         <EventModal
           event={selectedEvent}
           onClose={handleCloseEventModal}
-        />
-      )}
-      
-      {selectedDate && !selectedEvent && eventsOnSelectedDate.length > 0 && (
-        <EventsListModal 
-          date={selectedDate} 
-          events={eventsOnSelectedDate} 
-          onSelectEvent={setSelectedEvent}
-          onClose={() => setSelectedDate(undefined)}
         />
       )}
     </div>
