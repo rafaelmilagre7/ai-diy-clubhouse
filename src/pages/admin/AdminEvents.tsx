@@ -1,3 +1,4 @@
+
 import { useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { AdminEventsHeader } from "@/components/admin/events/AdminEventsHeader";
@@ -13,8 +14,9 @@ const AdminEvents = () => {
   
   useEffect(() => {
     if (searchParams.has('code') || searchParams.has('state') || searchParams.has('error')) {
-      const cleanSearchParams = new URLSearchParams();
-      setSearchParams(cleanSearchParams);
+      // Limpa os parâmetros da URL após processar
+      const cleanParams = new URLSearchParams();
+      setSearchParams(cleanParams, { replace: true });
     }
   }, [searchParams, setSearchParams]);
   
@@ -45,3 +47,4 @@ const AdminEvents = () => {
 };
 
 export default AdminEvents;
+
