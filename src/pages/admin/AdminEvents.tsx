@@ -1,4 +1,3 @@
-
 import { useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { AdminEventsHeader } from "@/components/admin/events/AdminEventsHeader";
@@ -14,10 +13,8 @@ const AdminEvents = () => {
   
   useEffect(() => {
     if (searchParams.has('code') || searchParams.has('state') || searchParams.has('error')) {
-      // Aqui estamos criando um novo objeto vazio de URLSearchParams
-      // e aplicando-o para substituir os parâmetros existentes,
-      // efetivamente limpando-os da URL
-      setSearchParams({}, { replace: true });
+      const cleanSearchParams = new URLSearchParams();
+      setSearchParams(cleanSearchParams);
     }
   }, [searchParams, setSearchParams]);
   
