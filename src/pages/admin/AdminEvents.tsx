@@ -15,6 +15,9 @@ const AdminEvents = () => {
   useEffect(() => {
     // Limpar parâmetros da URL sem recarregar a página
     if (searchParams.has('code') || searchParams.has('state') || searchParams.has('error')) {
+      // Aqui estamos criando um novo objeto vazio de URLSearchParams
+      // e aplicando-o para substituir os parâmetros existentes,
+      // efetivamente limpando-os da URL
       setSearchParams({}, { replace: true });
     }
   }, [searchParams, setSearchParams]);
