@@ -1,11 +1,6 @@
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 
-// Configurações OAuth2
-const CLIENT_ID = Deno.env.get('GOOGLE_CLIENT_ID');
-const CLIENT_SECRET = Deno.env.get('GOOGLE_CLIENT_SECRET');
-const REDIRECT_URI = Deno.env.get('GOOGLE_REDIRECT_URI') || 'https://viverdeia-club.functions.supabase.co/google-calendar-callback';
-
 // Cabeçalhos CORS para permitir chamadas do frontend
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
