@@ -1,29 +1,17 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
 import { Button } from "@/components/ui/button";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { Form } from "@/components/ui/form";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import type { Event } from "@/types/events";
 import { useQueryClient } from "@tanstack/react-query";
-import { uploadImageToImgBB } from "@/components/ui/file/services/imgbb";
-import { FileUpload } from "@/components/ui/file-upload";
-
-const eventSchema = z.object({
-  title: z.string().min(3, "Título deve ter pelo menos 3 caracteres"),
-  description: z.string().optional(),
-  start_time: z.string(),
-  end_time: z.string(),
-  location_link: z.string().url("Link inválido"),
-  physical_location: z.string().optional(),
-  cover_image_url: z.string().optional()
-});
-
-type FormData = z.infer<typeof eventSchema>;
+import { eventSchema, type EventFormData } from "./form/EventFormSchema";
+import { EventBasicInfo } from "./form/EventBasicInfo";
+import { EventDateTime } from "./form/EventDateTime";
+import { EventLocation } from "./form/EventLocation";
+import { EventCoverImage } from "./form/EventCoverImage";
 
 interface EventFormProps {
   event?: Event;
@@ -34,7 +22,7 @@ export const EventForm = ({ event, onSuccess }: EventFormProps) => {
   const queryClient = useQueryClient();
   const isEditing = !!event;
 
-  const form = useForm<FormData>({
+  const form = useForm<EventFormData>({
     resolver: zodResolver(eventSchema),
     defaultValues: event || {
       title: "",
@@ -47,7 +35,7 @@ export const EventForm = ({ event, onSuccess }: EventFormProps) => {
     }
   });
 
-  const onSubmit = async (data: FormData) => {
+  const onSubmit = async (data: EventFormData) => {
     try {
       if (isEditing) {
         const { error } = await supabase
@@ -80,126 +68,11 @@ export const EventForm = ({ event, onSuccess }: EventFormProps) => {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <FormField
-          control={form.control}
-          name="title"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Título</FormLabel>
-              <FormControl>
-                <Input {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="description"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Descrição</FormLabel>
-              <FormControl>
-                <Textarea {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <div className="grid grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="start_time"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Data/Hora Início</FormLabel>
-                <FormControl>
-                  <Input type="datetime-local" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="end_time"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Data/Hora Fim</FormLabel>
-                <FormControl>
-                  <Input type="datetime-local" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
-        <FormField
-          control={form.control}
-          name="location_link"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Link do Call</FormLabel>
-              <FormControl>
-                <Input placeholder="https://" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="physical_location"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Localização Presencial (opcional)</FormLabel>
-              <FormControl>
-                <Input placeholder="Endereço do evento" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="cover_image_url"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Imagem de Capa</FormLabel>
-              <FormControl>
-                <div>
-                  {field.value && (
-                    <div className="mb-2">
-                      <img 
-                        src={field.value} 
-                        alt="Prévia" 
-                        className="w-32 h-32 object-cover rounded-lg border"
-                      />
-                    </div>
-                  )}
-                  <FileUpload
-                    bucketName="event_covers"
-                    folder="covers"
-                    onUploadComplete={(url) => field.onChange(url)}
-                    accept="image/*"
-                    maxSize={2}
-                    buttonText="Upload da Imagem de Capa"
-                    fieldLabel="Selecione uma imagem"
-                    initialFileUrl={field.value}
-                  />
-                </div>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
+        <EventBasicInfo form={form} />
+        <EventDateTime form={form} />
+        <EventLocation form={form} />
+        <EventCoverImage form={form} />
+        
         <div className="flex justify-end gap-2">
           <Button type="button" variant="outline" onClick={onSuccess}>
             Cancelar
