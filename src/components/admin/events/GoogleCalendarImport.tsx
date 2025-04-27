@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useGoogleCalendarAuth, type GoogleEvent } from '@/hooks/admin/useGoogleCalendarAuth';
 import { Button } from '@/components/ui/button';
@@ -14,12 +13,14 @@ import { type EventFormData } from './form/EventFormSchema';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useSearchParams } from 'react-router-dom';
 
 interface GoogleCalendarImportProps {
   onEventsSelected: (events: EventFormData[]) => void;
 }
 
 export const GoogleCalendarImport = ({ onEventsSelected }: GoogleCalendarImportProps) => {
+  const [searchParams] = useSearchParams();
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
   const [authSuccess, setAuthSuccess] = useState(false);
   const [authFailed, setAuthFailed] = useState(false);
@@ -43,24 +44,11 @@ export const GoogleCalendarImport = ({ onEventsSelected }: GoogleCalendarImportP
   
   useEffect(() => {
     // Capturar parâmetros da URL após o redirecionamento do OAuth
-    const url = new URL(window.location.href);
-    const code = url.searchParams.get('code');
-    const state = url.searchParams.get('state');
-    const authError = url.searchParams.get('authError');
+    const code = searchParams.get('code');
+    const state = searchParams.get('state');
+    const authError = searchParams.get('authError');
     
-    // Limpar os parâmetros da URL sem recarregar a página
-    if (code || state || authError) {
-      window.history.replaceState({}, document.title, window.location.pathname);
-    }
-    
-    if (authError) {
-      console.error('Erro de autenticação retornado:', authError);
-      setAuthFailed(true);
-      setAuthErrorMessage(authError);
-      toast.error(`Falha na autenticação: ${authError}`);
-      return;
-    }
-    
+    // Se tivermos um código e estado na URL, processamos a autenticação
     if (code && state) {
       console.log('Código e estado de autenticação detectados, processando...');
       
@@ -72,8 +60,14 @@ export const GoogleCalendarImport = ({ onEventsSelected }: GoogleCalendarImportP
           setIsImportDialogOpen(true);
         }
       });
+    } 
+    else if (authError) {
+      console.error('Erro de autenticação retornado:', authError);
+      setAuthFailed(true);
+      setAuthErrorMessage(authError);
+      toast.error(`Falha na autenticação: ${authError}`);
     }
-  }, [handleAuthCode]);
+  }, [searchParams, handleAuthCode]);
 
   useEffect(() => {
     if (isAuthenticated && isImportDialogOpen && events.length === 0) {

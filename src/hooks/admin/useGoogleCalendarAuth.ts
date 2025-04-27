@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
@@ -90,37 +89,40 @@ export const useGoogleCalendarAuth = () => {
       setIsAuthInitiating(true);
       setLastError(null);
       
+      // Usar um novo approach: redirecionar diretamente para o Google sem usar a função do Supabase
+      // Este é um workaround temporário até resolver os problemas com o Supabase Functions
+      
+      // Gerar client_id e redirect_uri
+      const CLIENT_ID = '994269441820-l9jdlj8ik4n2ai96vidpbvke874a07vg.apps.googleusercontent.com'; // Use o client_id correto
+      const REDIRECT_URI = 'https://viverdeia-club.vercel.app/admin/events'; // Redirecionando para o frontend
+      
       // Gerar um estado aleatório para segurança CSRF
       const state = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
       
-      console.log('Iniciando autenticação do Google Calendar com state:', state);
-      
-      const { data, error } = await supabase.functions.invoke('google-calendar-auth', {
-        body: { state }
-      });
-      
-      if (error) {
-        console.error('Erro na resposta da função:', error);
-        throw new Error(`Erro ao iniciar autenticação: ${error.message || 'Detalhes não disponíveis'}`);
-      }
-      
-      if (!data?.url) {
-        throw new Error('URL de autenticação não retornada pela API');
-      }
+      console.log('Iniciando autenticação direta do Google Calendar com state:', state);
       
       // Armazenar o estado para validação futura
       localStorage.setItem('google_auth_state', state);
-      console.log('Estado de autenticação armazenado:', state);
-      console.log('URL de autorização:', data.url);
+      
+      // Criar URL de autorização do Google
+      const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
+      authUrl.searchParams.append('client_id', CLIENT_ID);
+      authUrl.searchParams.append('redirect_uri', REDIRECT_URI);
+      authUrl.searchParams.append('response_type', 'code');
+      authUrl.searchParams.append('scope', 'https://www.googleapis.com/auth/calendar.readonly');
+      authUrl.searchParams.append('access_type', 'offline');
+      authUrl.searchParams.append('prompt', 'consent');
+      authUrl.searchParams.append('state', state);
+      
+      console.log('URL de autorização gerada:', authUrl.toString());
       
       // Redirecionar o usuário para a página de autorização do Google
-      window.location.href = data.url;
+      window.location.href = authUrl.toString();
       
     } catch (error) {
       console.error('Erro ao iniciar autenticação:', error);
       setLastError(error instanceof Error ? error.message : 'Erro desconhecido na autenticação');
       toast.error('Não foi possível conectar ao Google Calendar. Por favor, tente novamente.');
-    } finally {
       setIsLoading(false);
       setIsAuthInitiating(false);
     }
