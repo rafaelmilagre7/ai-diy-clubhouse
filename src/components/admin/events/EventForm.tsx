@@ -173,25 +173,27 @@ export const EventForm = ({ event, onSuccess }: EventFormProps) => {
             <FormItem>
               <FormLabel>Imagem de Capa</FormLabel>
               <FormControl>
-                {field.value && (
-                  <div className="mb-2">
-                    <img 
-                      src={field.value} 
-                      alt="Prévia" 
-                      className="w-32 h-32 object-cover rounded-lg border"
-                    />
-                  </div>
-                )}
-                <FileUpload
-                  bucketName="event_covers"
-                  folder="covers"
-                  onUploadComplete={(url) => field.onChange(url)}
-                  accept="image/*"
-                  maxSize={2}
-                  buttonText="Upload da Imagem de Capa"
-                  fieldLabel="Selecione uma imagem"
-                  initialFileUrl={field.value}
-                />
+                <div>
+                  {field.value && (
+                    <div className="mb-2">
+                      <img 
+                        src={field.value} 
+                        alt="Prévia" 
+                        className="w-32 h-32 object-cover rounded-lg border"
+                      />
+                    </div>
+                  )}
+                  <FileUpload
+                    bucketName="event_covers"
+                    folder="covers"
+                    onUploadComplete={(url) => field.onChange(url)}
+                    accept="image/*"
+                    maxSize={2}
+                    buttonText="Upload da Imagem de Capa"
+                    fieldLabel="Selecione uma imagem"
+                    initialFileUrl={field.value}
+                  />
+                </div>
               </FormControl>
               <FormMessage />
             </FormItem>
