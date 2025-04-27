@@ -122,6 +122,7 @@ export type Database = {
           end_time: string
           id: string
           location_link: string | null
+          physical_location: string | null
           start_time: string
           title: string
         }
@@ -133,6 +134,7 @@ export type Database = {
           end_time: string
           id?: string
           location_link?: string | null
+          physical_location?: string | null
           start_time: string
           title: string
         }
@@ -144,6 +146,7 @@ export type Database = {
           end_time?: string
           id?: string
           location_link?: string | null
+          physical_location?: string | null
           start_time?: string
           title?: string
         }

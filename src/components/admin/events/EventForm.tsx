@@ -10,14 +10,17 @@ import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import type { Event } from "@/types/events";
 import { useQueryClient } from "@tanstack/react-query";
+import { uploadImageToImgBB } from "@/components/ui/file/services/imgbb";
+import { FileUpload } from "@/components/ui/file-upload";
 
 const eventSchema = z.object({
   title: z.string().min(3, "Título deve ter pelo menos 3 caracteres"),
   description: z.string().optional(),
   start_time: z.string(),
   end_time: z.string(),
-  location_link: z.string().url("Link inválido").optional().or(z.literal("")),
-  cover_image_url: z.string().url("Link inválido").optional().or(z.literal(""))
+  location_link: z.string().url("Link inválido"),
+  physical_location: z.string().optional(),
+  cover_image_url: z.string().optional()
 });
 
 type FormData = z.infer<typeof eventSchema>;
@@ -39,6 +42,7 @@ export const EventForm = ({ event, onSuccess }: EventFormProps) => {
       start_time: "",
       end_time: "",
       location_link: "",
+      physical_location: "",
       cover_image_url: ""
     }
   });
@@ -56,7 +60,10 @@ export const EventForm = ({ event, onSuccess }: EventFormProps) => {
       } else {
         const { error } = await supabase
           .from("events")
-          .insert([data]);
+          .insert([{
+            ...data,
+            created_by: (await supabase.auth.getUser()).data.user?.id
+          }]);
 
         if (error) throw error;
         toast.success("Evento criado com sucesso!");
@@ -136,9 +143,23 @@ export const EventForm = ({ event, onSuccess }: EventFormProps) => {
           name="location_link"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Link da Localização</FormLabel>
+              <FormLabel>Link do Call</FormLabel>
               <FormControl>
                 <Input placeholder="https://" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="physical_location"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Localização Presencial (opcional)</FormLabel>
+              <FormControl>
+                <Input placeholder="Endereço do evento" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -150,9 +171,27 @@ export const EventForm = ({ event, onSuccess }: EventFormProps) => {
           name="cover_image_url"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>URL da Imagem de Capa</FormLabel>
+              <FormLabel>Imagem de Capa</FormLabel>
               <FormControl>
-                <Input placeholder="https://" {...field} />
+                {field.value && (
+                  <div className="mb-2">
+                    <img 
+                      src={field.value} 
+                      alt="Prévia" 
+                      className="w-32 h-32 object-cover rounded-lg border"
+                    />
+                  </div>
+                )}
+                <FileUpload
+                  bucketName="event_covers"
+                  folder="covers"
+                  onUploadComplete={(url) => field.onChange(url)}
+                  accept="image/*"
+                  maxSize={2}
+                  buttonText="Upload da Imagem de Capa"
+                  fieldLabel="Selecione uma imagem"
+                  initialFileUrl={field.value}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
