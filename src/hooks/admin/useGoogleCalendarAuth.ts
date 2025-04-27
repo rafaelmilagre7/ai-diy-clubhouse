@@ -127,6 +127,7 @@ export const useGoogleCalendarAuth = () => {
       if (user.data.user) {
         secureStorage.removeItem('google_calendar_auth');
       } else {
+        // Fallback caso não consiga obter usuário
         secureStorage.removeItem('google_calendar_auth');
       }
       

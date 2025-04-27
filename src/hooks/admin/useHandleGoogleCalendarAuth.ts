@@ -142,6 +142,8 @@ export const useHandleGoogleCalendarAuth = () => {
 
         // Armazena tokens de forma segura com userId
         secureStorage.setItem('google_calendar_auth', tokens, user.data.user.id);
+        
+        // Salva expiryTime como number e converte para string no localStorage
         const expiryTime = new Date().getTime() + (tokens.expires_in * 1000);
         localStorage.setItem('google_calendar_expiry', expiryTime.toString());
 
