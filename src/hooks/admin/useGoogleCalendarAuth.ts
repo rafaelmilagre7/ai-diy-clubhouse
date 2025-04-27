@@ -90,8 +90,13 @@ export const useGoogleCalendarAuth = () => {
       setIsAuthInitiating(true);
       setLastError(null);
       
+      // Gerar um estado aleatório para segurança CSRF
+      const state = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+      
+      console.log('Iniciando autenticação do Google Calendar com state:', state);
+      
       const { data, error } = await supabase.functions.invoke('google-calendar-auth', {
-        body: {}
+        body: { state }
       });
       
       if (error) {
@@ -103,9 +108,12 @@ export const useGoogleCalendarAuth = () => {
         throw new Error('URL de autenticação não retornada pela API');
       }
       
-      localStorage.setItem('google_auth_state', data.state);
-      console.log('Estado de autenticação armazenado:', data.state);
+      // Armazenar o estado para validação futura
+      localStorage.setItem('google_auth_state', state);
+      console.log('Estado de autenticação armazenado:', state);
+      console.log('URL de autorização:', data.url);
       
+      // Redirecionar o usuário para a página de autorização do Google
       window.location.href = data.url;
       
     } catch (error) {
@@ -124,6 +132,7 @@ export const useGoogleCalendarAuth = () => {
       setIsLoading(true);
       setLastError(null);
       
+      // Verificar se o estado armazenado corresponde ao estado recebido
       const storedState = localStorage.getItem('google_auth_state');
       console.log('Estado armazenado:', storedState, 'Estado recebido:', state);
       
@@ -134,6 +143,7 @@ export const useGoogleCalendarAuth = () => {
         throw new Error('Estado de autenticação inválido ou expirado');
       }
       
+      // Limpar o estado armazenado após a validação
       localStorage.removeItem('google_auth_state');
       
       console.log('Trocando código de autenticação por token...');

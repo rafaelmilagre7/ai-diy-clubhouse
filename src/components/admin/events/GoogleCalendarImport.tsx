@@ -23,6 +23,7 @@ export const GoogleCalendarImport = ({ onEventsSelected }: GoogleCalendarImportP
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
   const [authSuccess, setAuthSuccess] = useState(false);
   const [authFailed, setAuthFailed] = useState(false);
+  const [authErrorMessage, setAuthErrorMessage] = useState<string | null>(null);
   
   const {
     isLoading,
@@ -41,22 +42,27 @@ export const GoogleCalendarImport = ({ onEventsSelected }: GoogleCalendarImportP
   } = useGoogleCalendarAuth();
   
   useEffect(() => {
+    // Capturar parâmetros da URL após o redirecionamento do OAuth
     const url = new URL(window.location.href);
     const code = url.searchParams.get('code');
     const state = url.searchParams.get('state');
     const authError = url.searchParams.get('authError');
     
+    // Limpar os parâmetros da URL sem recarregar a página
+    if (code || state || authError) {
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+    
     if (authError) {
       console.error('Erro de autenticação retornado:', authError);
       setAuthFailed(true);
-      window.history.replaceState({}, document.title, window.location.pathname);
+      setAuthErrorMessage(authError);
       toast.error(`Falha na autenticação: ${authError}`);
       return;
     }
     
     if (code && state) {
-      window.history.replaceState({}, document.title, window.location.pathname);
-      console.log('Código de autenticação detectado, processando...');
+      console.log('Código e estado de autenticação detectados, processando...');
       
       handleAuthCode(code, state).then(success => {
         console.log('Resultado da autenticação:', success ? 'sucesso' : 'falha');
@@ -90,6 +96,7 @@ export const GoogleCalendarImport = ({ onEventsSelected }: GoogleCalendarImportP
 
   const handleImportClick = () => {
     setAuthFailed(false);
+    setAuthErrorMessage(null);
     if (!isAuthenticated) {
       initiateLogin();
     } else {
@@ -99,6 +106,7 @@ export const GoogleCalendarImport = ({ onEventsSelected }: GoogleCalendarImportP
 
   const handleRetryAuth = () => {
     setAuthFailed(false);
+    setAuthErrorMessage(null);
     initiateLogin();
   };
 
@@ -170,6 +178,15 @@ export const GoogleCalendarImport = ({ onEventsSelected }: GoogleCalendarImportP
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
                 Erro: {lastError}
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {authErrorMessage && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                Erro de autenticação: {authErrorMessage}
               </AlertDescription>
             </Alert>
           )}
