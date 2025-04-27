@@ -17,7 +17,8 @@ const AdminEvents = () => {
       // Limpa os parâmetros da URL após processar
       // Corrigido: Criando um objeto URLSearchParams vazio para limpar parâmetros
       // e garantindo que o tipo é compatível com o esperado
-      setSearchParams(new URLSearchParams(), { replace: true });
+      const emptyParams = new URLSearchParams();
+      setSearchParams(emptyParams, { replace: true });
     }
   }, [searchParams, setSearchParams]);
   
