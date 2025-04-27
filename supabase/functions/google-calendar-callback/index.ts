@@ -41,7 +41,7 @@ serve(async (req) => {
   // Se não tiver o código ou state, retorna erro
   if (!code || !state) {
     console.error('Parâmetros inválidos no callback:', { code: !!code, state: !!state });
-    return Response.redirect(`${appOrigin}/admin/events?authError=parametros_invalidos`);
+    return Response.redirect(`${appOrigin}/admin/events?authError=${encodeURIComponent('parametros_invalidos')}`);
   }
 
   try {
