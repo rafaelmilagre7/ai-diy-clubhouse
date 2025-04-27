@@ -102,6 +102,43 @@ serve(async (req) => {
       );
     }
 
+    // Renovação de token
+    if (body.refresh_token && body.grant_type === 'refresh_token') {
+      const refreshToken = body.refresh_token;
+      
+      console.log('Renovando token com refresh_token');
+
+      const refreshResponse = await fetch('https://oauth2.googleapis.com/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          client_id: CLIENT_ID,
+          client_secret: CLIENT_SECRET,
+          refresh_token: refreshToken,
+          grant_type: 'refresh_token',
+        }),
+      });
+
+      const refreshData = await refreshResponse.json();
+      
+      if (!refreshResponse.ok) {
+        console.error('Erro na renovação do token:', refreshData);
+        throw new Error(`Erro ao renovar token: ${JSON.stringify(refreshData)}`);
+      }
+
+      console.log('Token renovado com sucesso');
+      
+      // Preservar o refresh_token original caso a API não o devolva
+      if (!refreshData.refresh_token) {
+        refreshData.refresh_token = refreshToken;
+      }
+
+      return new Response(
+        JSON.stringify(refreshData),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     // Buscar eventos do calendário
     if (body.access_token) {
       const accessToken = body.access_token;
