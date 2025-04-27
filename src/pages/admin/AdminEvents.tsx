@@ -6,10 +6,11 @@ import { EventsTable } from "@/components/admin/events/EventsTable";
 import { useHandleGoogleCalendarAuth } from "@/hooks/admin/useHandleGoogleCalendarAuth";
 import { AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { LoadingSpinner } from "@/components/common/LoadingSpinner";
 
 const AdminEvents = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const { isProcessing, authError } = useHandleGoogleCalendarAuth();
+  const { isProcessing, authError, isAuthenticated } = useHandleGoogleCalendarAuth();
   
   useEffect(() => {
     // Limpar parâmetros da URL sem recarregar a página
@@ -20,6 +21,15 @@ const AdminEvents = () => {
   
   return (
     <div className="space-y-6">
+      {isProcessing && (
+        <Alert>
+          <LoadingSpinner size="sm" />
+          <AlertDescription>
+            Processando autenticação do Google Calendar...
+          </AlertDescription>
+        </Alert>
+      )}
+      
       {authError && (
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
@@ -28,7 +38,8 @@ const AdminEvents = () => {
           </AlertDescription>
         </Alert>
       )}
-      <AdminEventsHeader />
+
+      <AdminEventsHeader isCalendarAuthenticated={isAuthenticated} />
       <EventsTable />
     </div>
   );
