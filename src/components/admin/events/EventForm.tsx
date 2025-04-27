@@ -12,19 +12,21 @@ import { EventBasicInfo } from "./form/EventBasicInfo";
 import { EventDateTime } from "./form/EventDateTime";
 import { EventLocation } from "./form/EventLocation";
 import { EventCoverImage } from "./form/EventCoverImage";
+import { useEffect } from "react";
 
 interface EventFormProps {
   event?: Event;
+  initialData?: EventFormData | null;
   onSuccess: () => void;
 }
 
-export const EventForm = ({ event, onSuccess }: EventFormProps) => {
+export const EventForm = ({ event, initialData, onSuccess }: EventFormProps) => {
   const queryClient = useQueryClient();
   const isEditing = !!event;
 
   const form = useForm<EventFormData>({
     resolver: zodResolver(eventSchema),
-    defaultValues: event || {
+    defaultValues: event || initialData || {
       title: "",
       description: "",
       start_time: "",
@@ -34,6 +36,26 @@ export const EventForm = ({ event, onSuccess }: EventFormProps) => {
       cover_image_url: ""
     }
   });
+
+  // Atualizar o formulário quando recebermos dados iniciais do importador
+  useEffect(() => {
+    if (initialData) {
+      Object.entries(initialData).forEach(([key, value]) => {
+        if (value) {
+          form.setValue(key as any, value);
+        }
+      });
+      
+      // Se tivermos datas em formatos diferentes, precisamos convertê-las
+      if (initialData.start_time && !initialData.start_time.includes('T')) {
+        form.setValue('start_time', `${initialData.start_time}T00:00`);
+      }
+      
+      if (initialData.end_time && !initialData.end_time.includes('T')) {
+        form.setValue('end_time', `${initialData.end_time}T00:00`);
+      }
+    }
+  }, [initialData]);
 
   const onSubmit = async (data: EventFormData) => {
     try {
