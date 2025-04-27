@@ -4,7 +4,8 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 // Configurações OAuth2
 const CLIENT_ID = Deno.env.get('GOOGLE_CLIENT_ID');
 const CLIENT_SECRET = Deno.env.get('GOOGLE_CLIENT_SECRET');
-const REDIRECT_URI = Deno.env.get('GOOGLE_REDIRECT_URI');
+const REDIRECT_URI = Deno.env.get('GOOGLE_REDIRECT_URI') || 'https://viverdeia-club.functions.supabase.co/google-calendar-callback';
+
 const SCOPES = ['https://www.googleapis.com/auth/calendar.readonly'];
 
 // Cabeçalhos CORS para permitir chamadas do frontend
@@ -30,6 +31,8 @@ serve(async (req) => {
       if (!CLIENT_ID || !REDIRECT_URI) {
         throw new Error('Configuração de autenticação incompleta');
       }
+
+      console.log('Gerando URL de autorização com redirect URI:', REDIRECT_URI);
 
       const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
       authUrl.searchParams.append('client_id', CLIENT_ID);
@@ -58,7 +61,7 @@ serve(async (req) => {
         throw new Error('Dados insuficientes para completar autenticação');
       }
 
-      console.log('Trocando código por token:', { code });
+      console.log('Trocando código por token:', { code, redirect_uri: REDIRECT_URI });
 
       const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
         method: 'POST',

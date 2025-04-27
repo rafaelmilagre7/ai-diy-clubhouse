@@ -57,6 +57,7 @@ export const useGoogleCalendarAuth = () => {
   const [selectedEvents, setSelectedEvents] = useState<Set<string>>(new Set());
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [lastError, setLastError] = useState<string | null>(null);
+  const [isAuthInitiating, setIsAuthInitiating] = useState(false);
 
   // Verificar autenticação existente no localStorage
   useEffect(() => {
@@ -89,13 +90,21 @@ export const useGoogleCalendarAuth = () => {
   const initiateLogin = useCallback(async () => {
     try {
       setIsLoading(true);
+      setIsAuthInitiating(true);
       setLastError(null);
       
       const { data, error } = await supabase.functions.invoke('google-calendar-auth', {
         body: {}
       });
       
-      if (error) throw error;
+      if (error) {
+        console.error('Erro na resposta da função:', error);
+        throw new Error(`Erro ao iniciar autenticação: ${error.message || 'Detalhes não disponíveis'}`);
+      }
+      
+      if (!data?.url) {
+        throw new Error('URL de autenticação não retornada pela API');
+      }
       
       // Armazenar state para verificação anti-CSRF
       localStorage.setItem('google_auth_state', data.state);
@@ -105,10 +114,11 @@ export const useGoogleCalendarAuth = () => {
       
     } catch (error) {
       console.error('Erro ao iniciar autenticação:', error);
-      setLastError(error instanceof Error ? error.message : 'Erro desconhecido');
-      toast.error('Não foi possível conectar ao Google Calendar.');
+      setLastError(error instanceof Error ? error.message : 'Erro desconhecido na autenticação');
+      toast.error('Não foi possível conectar ao Google Calendar. Por favor, tente novamente.');
     } finally {
       setIsLoading(false);
+      setIsAuthInitiating(false);
     }
   }, []);
 
@@ -121,7 +131,7 @@ export const useGoogleCalendarAuth = () => {
       // Verificar state anti-CSRF
       const storedState = localStorage.getItem('google_auth_state');
       if (!storedState || storedState !== state) {
-        throw new Error('Estado de autenticação inválido');
+        throw new Error('Estado de autenticação inválido ou expirado');
       }
       
       localStorage.removeItem('google_auth_state');
@@ -131,7 +141,14 @@ export const useGoogleCalendarAuth = () => {
         body: { code }
       });
       
-      if (error) throw error;
+      if (error) {
+        console.error('Erro na função de autenticação:', error);
+        throw new Error(`Erro ao obter token: ${error.message || 'Detalhes não disponíveis'}`);
+      }
+      
+      if (!data || !data.access_token) {
+        throw new Error('Token de acesso não retornado pela API');
+      }
       
       // Armazenar token com expiração
       localStorage.setItem('google_calendar_auth', JSON.stringify(data));
@@ -148,7 +165,7 @@ export const useGoogleCalendarAuth = () => {
     } catch (error) {
       console.error('Erro ao processar código de autorização:', error);
       setLastError(error instanceof Error ? error.message : 'Erro desconhecido');
-      toast.error('Não foi possível completar a autenticação.');
+      toast.error('Não foi possível completar a autenticação. Por favor, tente novamente.');
       return false;
     } finally {
       setIsLoading(false);
@@ -175,9 +192,12 @@ export const useGoogleCalendarAuth = () => {
         }
       });
       
-      if (error) throw error;
+      if (error) {
+        console.error('Erro ao invocar função para buscar eventos:', error);
+        throw new Error(`Erro ao buscar eventos: ${error.message || 'Detalhes não disponíveis'}`);
+      }
       
-      if (data.items && Array.isArray(data.items)) {
+      if (data?.items && Array.isArray(data.items)) {
         console.log(`${data.items.length} eventos encontrados`);
         setEvents(data.items || []);
         
@@ -186,7 +206,7 @@ export const useGoogleCalendarAuth = () => {
         }
       } else {
         console.warn('Resposta de eventos inválida:', data);
-        toast.warning('Resposta de eventos inválida');
+        toast.warning('Formato de resposta inválido ao buscar eventos');
         setEvents([]);
       }
       
@@ -256,6 +276,7 @@ export const useGoogleCalendarAuth = () => {
     events,
     selectedEvents,
     lastError,
+    isAuthInitiating,
     initiateLogin,
     handleAuthCode,
     fetchEvents,

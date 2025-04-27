@@ -22,6 +22,7 @@ interface GoogleCalendarImportProps {
 export const GoogleCalendarImport = ({ onEventsSelected }: GoogleCalendarImportProps) => {
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
   const [authSuccess, setAuthSuccess] = useState(false);
+  const [authFailed, setAuthFailed] = useState(false);
   
   const {
     isLoading,
@@ -30,6 +31,7 @@ export const GoogleCalendarImport = ({ onEventsSelected }: GoogleCalendarImportP
     events,
     selectedEvents,
     lastError,
+    isAuthInitiating,
     initiateLogin,
     handleAuthCode,
     fetchEvents,
@@ -52,6 +54,7 @@ export const GoogleCalendarImport = ({ onEventsSelected }: GoogleCalendarImportP
       // Processar o código de autenticação
       handleAuthCode(code, state).then(success => {
         setAuthSuccess(success);
+        setAuthFailed(!success);
         if (success) {
           setIsImportDialogOpen(true);
         }
@@ -87,11 +90,17 @@ export const GoogleCalendarImport = ({ onEventsSelected }: GoogleCalendarImportP
   };
 
   const handleImportClick = () => {
+    setAuthFailed(false);
     if (!isAuthenticated) {
       initiateLogin();
     } else {
       setIsImportDialogOpen(true);
     }
+  };
+
+  const handleRetryAuth = () => {
+    setAuthFailed(false);
+    initiateLogin();
   };
 
   const formatDateTime = (dateTimeStr: string | undefined) => {
@@ -112,8 +121,13 @@ export const GoogleCalendarImport = ({ onEventsSelected }: GoogleCalendarImportP
           variant="outline"
           className="bg-white border-gray-200 hover:bg-gray-100 gap-2"
           onClick={handleImportClick}
+          disabled={isAuthInitiating}
         >
-          <Calendar className="h-4 w-4" />
+          {isAuthInitiating ? (
+            <RefreshCw className="h-4 w-4 animate-spin" />
+          ) : (
+            <Calendar className="h-4 w-4" />
+          )}
           Importar do Google Calendar
         </Button>
       </DialogTrigger>
@@ -159,6 +173,20 @@ export const GoogleCalendarImport = ({ onEventsSelected }: GoogleCalendarImportP
                 Erro: {lastError}
               </AlertDescription>
             </Alert>
+          )}
+
+          {authFailed && (
+            <div className="text-center py-10">
+              <AlertCircle className="mx-auto h-12 w-12 text-red-500" />
+              <h3 className="mt-4 text-lg font-medium">Falha na conexão com o Google</h3>
+              <p className="mt-1 text-sm text-gray-500 max-w-md mx-auto">
+                Não foi possível conectar com sua conta do Google Calendar. 
+                Verifique se você concedeu as permissões necessárias.
+              </p>
+              <Button variant="default" className="mt-4" onClick={handleRetryAuth}>
+                Tentar novamente
+              </Button>
+            </div>
           )}
 
           {isLoading ? (
