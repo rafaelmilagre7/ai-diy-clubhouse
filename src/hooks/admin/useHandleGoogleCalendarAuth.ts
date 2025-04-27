@@ -33,11 +33,11 @@ export const useHandleGoogleCalendarAuth = () => {
       if (!user.data.user) return;
 
       const storedTokens = secureStorage.getItem('google_calendar_auth', user.data.user.id) as GoogleCalendarTokens | null;
-      const expiry = localStorage.getItem('google_calendar_expiry');
+      const expiryString = localStorage.getItem('google_calendar_expiry');
 
-      if (!storedTokens || !expiry) return;
+      if (!storedTokens || !expiryString) return;
 
-      const expiryTime = parseInt(expiry);
+      const expiryTime = parseInt(expiryString);
       const now = new Date().getTime();
 
       // Se o token vai expirar em breve ou já expirou

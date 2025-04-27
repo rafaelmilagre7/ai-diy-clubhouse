@@ -6,7 +6,11 @@ import { EventFormDialog } from "./EventFormDialog";
 import { GoogleCalendarImport } from "./GoogleCalendarImport";
 import { type EventFormData } from "./form/EventFormSchema";
 
-export const AdminEventsHeader = () => {
+interface AdminEventsHeaderProps {
+  isCalendarAuthenticated?: boolean;
+}
+
+export const AdminEventsHeader = ({ isCalendarAuthenticated = false }: AdminEventsHeaderProps) => {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [importedEvent, setImportedEvent] = useState<EventFormData | null>(null);
 
@@ -32,7 +36,10 @@ export const AdminEventsHeader = () => {
         </p>
       </div>
       <div className="flex gap-2">
-        <GoogleCalendarImport onEventsSelected={handleEventsImported} />
+        <GoogleCalendarImport 
+          onEventsSelected={handleEventsImported} 
+          isAuthenticated={isCalendarAuthenticated}
+        />
         <Button onClick={() => setShowCreateDialog(true)}>
           <Plus className="h-4 w-4 mr-2" />
           Novo Evento
