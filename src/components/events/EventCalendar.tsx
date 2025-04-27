@@ -4,7 +4,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { useEvents } from '@/hooks/useEvents';
 import { EventModal } from './EventModal';
 import { Event } from '@/types/events';
-import { format, isSameDay } from 'date-fns';
+import { format, isSameDay, startOfMonth, endOfMonth, eachDayOfInterval } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { EventDay } from './EventDay';
 
@@ -23,20 +23,25 @@ export const EventCalendar = () => {
     if (eventsOnSelectedDay.length === 1) {
       setSelectedEvent(eventsOnSelectedDay[0]);
     } else if (eventsOnSelectedDay.length > 1) {
-      setSelectedDate(day);
-      // Seleciona automaticamente o primeiro evento do dia
+      // Ao clicar em um dia com múltiplos eventos, mostra o primeiro
       setSelectedEvent(eventsOnSelectedDay[0]);
     }
+    setSelectedDate(day);
   };
 
   const handleCloseEventModal = () => {
     setSelectedEvent(null);
-    setSelectedDate(undefined); // Reseta também a data selecionada
+    setSelectedDate(undefined);
   };
+
+  const today = new Date();
+  const monthStart = startOfMonth(today);
+  const monthEnd = endOfMonth(today);
+  const daysInMonth = eachDayOfInterval({ start: monthStart, end: monthEnd });
 
   return (
     <div className="space-y-6">
-      <div className="rounded-lg border shadow-lg bg-card min-h-[600px] w-full max-w-5xl mx-auto">
+      <div className="rounded-lg border shadow-lg bg-card w-full max-w-6xl mx-auto">
         <Calendar
           mode="single"
           locale={ptBR}
@@ -48,7 +53,23 @@ export const EventCalendar = () => {
             )
           }}
           modifiersClassNames={{
-            event: 'bg-viverblue/10 font-medium text-viverblue hover:bg-viverblue/20 transition-colors relative'
+            event: 'bg-viverblue/10 font-medium text-viverblue hover:bg-viverblue/20 transition-colors'
+          }}
+          className="w-full min-h-[700px] p-6"
+          classNames={{
+            months: "w-full grid grid-cols-1",
+            month: "space-y-4 w-full",
+            caption: "flex justify-center pt-1 relative items-center mb-4",
+            caption_label: "text-lg font-medium",
+            table: "w-full border-collapse h-full",
+            head_row: "grid grid-cols-7 gap-1",
+            head_cell: "text-muted-foreground rounded-md font-normal text-[0.9rem] h-10 flex items-center justify-center",
+            row: "grid grid-cols-7 gap-1 h-[100px]",
+            cell: "relative p-0 text-center text-sm focus-within:relative focus-within:z-20 [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md",
+            day: "h-full w-full p-2 font-normal hover:bg-accent/50 rounded-md transition-colors flex flex-col items-center justify-start",
+            day_today: "bg-accent/30",
+            day_selected: "bg-viverblue/20 text-viverblue hover:bg-viverblue/30",
+            day_outside: "opacity-50",
           }}
           components={{
             DayContent: (props) => {
@@ -56,14 +77,13 @@ export const EventCalendar = () => {
                 isSameDay(new Date(event.start_time), props.date)
               );
               return (
-                <div className="relative w-full h-full flex flex-col items-center p-1">
-                  <div className="text-sm mb-1">{props.date.getDate()}</div>
+                <div className="w-full h-full flex flex-col items-center">
+                  <span className="text-sm mb-1">{props.date.getDate()}</span>
                   <EventDay events={dayEvents} />
                 </div>
               );
             }
           }}
-          className="p-4"
         />
       </div>
       

@@ -13,7 +13,7 @@ export const EventDay = ({ events }: EventDayProps) => {
   if (events.length === 0) return null;
 
   return (
-    <div className="w-full flex flex-col gap-0.5">
+    <div className="w-full flex flex-col gap-0.5 overflow-hidden">
       {events.length === 1 ? (
         <div className="flex flex-col gap-0.5">
           <Badge 

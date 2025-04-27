@@ -8,8 +8,8 @@ const Events = () => {
 
   return (
     <div className="container py-8 px-4">
-      <div className="max-w-5xl mx-auto">
-        <div className="flex items-center gap-3 mb-6">
+      <div className="max-w-6xl mx-auto">
+        <div className="flex items-center gap-3 mb-8">
           <div className="p-2 rounded-full bg-viverblue/10">
             <CalendarIcon className="w-6 h-6 text-viverblue" />
           </div>
@@ -22,7 +22,7 @@ const Events = () => {
         </div>
         
         {isLoading ? (
-          <div className="flex justify-center items-center h-[600px]">
+          <div className="flex justify-center items-center h-[700px]">
             <Loader2 className="h-8 w-8 animate-spin text-viverblue" />
           </div>
         ) : (
