@@ -1,3 +1,4 @@
+
 import { useEffect, useState, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
@@ -37,7 +38,7 @@ export const useHandleGoogleCalendarAuth = () => {
       if (!storedTokens || !expiryString) return;
 
       // Converter explicitamente para número usando parseInt com base 10
-      const expiryTime = parseInt(expiryString, 10);
+      const expiryTime = expiryString ? parseInt(expiryString, 10) : 0;
       const now = new Date().getTime();
 
       // Se o token vai expirar em breve ou já expirou
