@@ -1,5 +1,5 @@
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 
@@ -58,7 +58,7 @@ export const useGoogleCalendarAuth = () => {
   const [accessToken, setAccessToken] = useState<string | null>(null);
 
   // Verificar autenticação existente no localStorage
-  useState(() => {
+  useEffect(() => {
     const storedTokenData = localStorage.getItem('google_calendar_auth');
     if (storedTokenData) {
       try {
@@ -88,8 +88,7 @@ export const useGoogleCalendarAuth = () => {
       setIsLoading(true);
       
       const { data, error } = await supabase.functions.invoke('google-calendar-auth', {
-        body: {},
-        path: 'auth-url'
+        body: {}
       });
       
       if (error) throw error;
@@ -122,8 +121,7 @@ export const useGoogleCalendarAuth = () => {
       localStorage.removeItem('google_auth_state');
       
       const { data, error } = await supabase.functions.invoke('google-calendar-auth', {
-        body: { code },
-        path: 'callback'
+        body: { code }
       });
       
       if (error) throw error;
@@ -162,8 +160,7 @@ export const useGoogleCalendarAuth = () => {
           access_token: accessToken,
           calendar_id: 'primary',
           max_results: maxResults
-        },
-        path: 'events'
+        }
       });
       
       if (error) throw error;

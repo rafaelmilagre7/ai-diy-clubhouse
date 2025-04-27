@@ -22,9 +22,10 @@ serve(async (req) => {
   try {
     const url = new URL(req.url);
     const path = url.pathname.split('/').pop();
+    const body = await req.json().catch(() => ({}));
 
     // Gerar URL de autorização do Google
-    if (path === 'auth-url') {
+    if (Object.keys(body).length === 0) {
       if (!CLIENT_ID || !REDIRECT_URI) {
         throw new Error('Configuração de autenticação incompleta');
       }
@@ -47,9 +48,8 @@ serve(async (req) => {
     }
 
     // Trocar código por token
-    if (path === 'callback') {
-      const params = await req.json();
-      const code = params.code;
+    if (body.code) {
+      const code = body.code;
       
       if (!code || !CLIENT_ID || !CLIENT_SECRET || !REDIRECT_URI) {
         throw new Error('Dados insuficientes para completar autenticação');
@@ -70,7 +70,7 @@ serve(async (req) => {
       const tokenData = await tokenResponse.json();
       
       if (!tokenResponse.ok) {
-        throw new Error(`Error ao obter token: ${JSON.stringify(tokenData)}`);
+        throw new Error(`Erro ao obter token: ${JSON.stringify(tokenData)}`);
       }
 
       // Obter informações do usuário
@@ -91,16 +91,15 @@ serve(async (req) => {
     }
 
     // Buscar eventos do calendário
-    if (path === 'events') {
-      const params = await req.json();
-      const accessToken = params.access_token;
+    if (body.access_token) {
+      const accessToken = body.access_token;
       
       if (!accessToken) {
         throw new Error('Token de acesso não fornecido');
       }
 
-      const calendarId = encodeURIComponent(params.calendar_id || 'primary');
-      const maxResults = params.max_results || 10;
+      const calendarId = encodeURIComponent(body.calendar_id || 'primary');
+      const maxResults = body.max_results || 10;
       const timeMin = encodeURIComponent(new Date().toISOString());
 
       const eventsUrl = `https://www.googleapis.com/calendar/v3/calendars/${calendarId}/events?maxResults=${maxResults}&timeMin=${timeMin}&orderBy=startTime&singleEvents=true`;
@@ -124,8 +123,8 @@ serve(async (req) => {
 
     // Endpoint não encontrado
     return new Response(
-      JSON.stringify({ error: 'Endpoint não encontrado' }),
-      { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      JSON.stringify({ error: 'Requisição inválida' }),
+      { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
   } catch (error) {

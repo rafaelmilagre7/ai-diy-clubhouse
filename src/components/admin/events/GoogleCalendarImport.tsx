@@ -28,6 +28,7 @@ export const GoogleCalendarImport = ({ onEventsSelected }: GoogleCalendarImportP
     events,
     selectedEvents,
     initiateLogin,
+    handleAuthCode,
     fetchEvents,
     logout,
     toggleEventSelection,
@@ -44,20 +45,16 @@ export const GoogleCalendarImport = ({ onEventsSelected }: GoogleCalendarImportP
       // Limpar parâmetros da URL por segurança
       window.history.replaceState({}, document.title, window.location.pathname);
       // Processar o código de autenticação
-      const handleAuth = async () => {
-        await handleAuthCode(code, state);
-        fetchEvents();
-      };
-      handleAuth();
+      handleAuthCode(code, state);
     }
-  }, []);
+  }, [handleAuthCode]);
 
   // Carregar eventos quando autenticado
   useEffect(() => {
     if (isAuthenticated && events.length === 0) {
       fetchEvents();
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, events.length, fetchEvents]);
 
   const handleImport = () => {
     if (selectedEvents.size === 0) {
