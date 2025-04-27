@@ -98,7 +98,7 @@ const AppRoutes = () => {
       <Route path="/onboarding/review" element={<ProtectedRoutes><Review /></ProtectedRoutes>} />
       <Route path="/onboarding/trail-generation" element={<ProtectedRoutes><TrailGeneration /></ProtectedRoutes>} />
       
-      {/* Admin Routes - Corrigido para usar AdminLayout */}
+      {/* Admin Routes */}
       <Route path="/admin" element={
         <AdminProtectedRoutes>
           <AdminLayout>
