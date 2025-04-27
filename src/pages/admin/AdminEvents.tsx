@@ -3,30 +3,31 @@ import { useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { AdminEventsHeader } from "@/components/admin/events/AdminEventsHeader";
 import { EventsTable } from "@/components/admin/events/EventsTable";
-import { toast } from "sonner";
+import { useHandleGoogleCalendarAuth } from "@/hooks/admin/useHandleGoogleCalendarAuth";
+import { AlertCircle } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const AdminEvents = () => {
   const [searchParams, setSearchParams] = useSearchParams();
+  const { isProcessing, authError } = useHandleGoogleCalendarAuth();
   
   useEffect(() => {
-    // Capturar parâmetros de autenticação do Google Calendar
-    const code = searchParams.get('code');
-    const state = searchParams.get('state');
-    const authError = searchParams.get('authError');
-    
-    // Limpar os parâmetros da URL sem recarregar a página
-    if (code || state || authError) {
+    // Limpar parâmetros da URL sem recarregar a página
+    if (searchParams.has('code') || searchParams.has('state') || searchParams.has('error')) {
       setSearchParams({}, { replace: true });
-    }
-    
-    if (authError) {
-      console.error('Erro de autenticação retornado:', authError);
-      toast.error(`Falha na autenticação: ${authError}`);
     }
   }, [searchParams, setSearchParams]);
   
   return (
     <div className="space-y-6">
+      {authError && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            Erro na autenticação do Google Calendar: {authError}
+          </AlertDescription>
+        </Alert>
+      )}
       <AdminEventsHeader />
       <EventsTable />
     </div>

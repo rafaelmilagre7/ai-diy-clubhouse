@@ -89,22 +89,14 @@ export const useGoogleCalendarAuth = () => {
       setIsAuthInitiating(true);
       setLastError(null);
       
-      // Usar um novo approach: redirecionar diretamente para o Google sem usar a função do Supabase
-      // Este é um workaround temporário até resolver os problemas com o Supabase Functions
+      const CLIENT_ID = '994269441820-l9jdlj8ik4n2ai96vidpbvke874a07vg.apps.googleusercontent.com';
+      const REDIRECT_URI = 'https://viverdeia-club.vercel.app/admin/events';
       
-      // Gerar client_id e redirect_uri
-      const CLIENT_ID = '994269441820-l9jdlj8ik4n2ai96vidpbvke874a07vg.apps.googleusercontent.com'; // Use o client_id correto
-      const REDIRECT_URI = 'https://viverdeia-club.vercel.app/admin/events'; // Redirecionando para o frontend
-      
-      // Gerar um estado aleatório para segurança CSRF
       const state = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
       
       console.log('Iniciando autenticação direta do Google Calendar com state:', state);
-      
-      // Armazenar o estado para validação futura
       localStorage.setItem('google_auth_state', state);
       
-      // Criar URL de autorização do Google
       const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
       authUrl.searchParams.append('client_id', CLIENT_ID);
       authUrl.searchParams.append('redirect_uri', REDIRECT_URI);
@@ -115,8 +107,6 @@ export const useGoogleCalendarAuth = () => {
       authUrl.searchParams.append('state', state);
       
       console.log('URL de autorização gerada:', authUrl.toString());
-      
-      // Redirecionar o usuário para a página de autorização do Google
       window.location.href = authUrl.toString();
       
     } catch (error) {
@@ -134,7 +124,6 @@ export const useGoogleCalendarAuth = () => {
       setIsLoading(true);
       setLastError(null);
       
-      // Verificar se o estado armazenado corresponde ao estado recebido
       const storedState = localStorage.getItem('google_auth_state');
       console.log('Estado armazenado:', storedState, 'Estado recebido:', state);
       
@@ -145,7 +134,6 @@ export const useGoogleCalendarAuth = () => {
         throw new Error('Estado de autenticação inválido ou expirado');
       }
       
-      // Limpar o estado armazenado após a validação
       localStorage.removeItem('google_auth_state');
       
       console.log('Trocando código de autenticação por token...');
