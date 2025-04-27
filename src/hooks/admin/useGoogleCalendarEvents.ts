@@ -11,7 +11,7 @@ export const useGoogleCalendarEvents = (accessToken: string | null) => {
   const fetchEvents = async (): Promise<GoogleEvent[]> => {
     if (!accessToken) {
       toast.error('Token de acesso não disponível');
-      return [];
+      throw new Error('Token de acesso não disponível');
     }
 
     try {

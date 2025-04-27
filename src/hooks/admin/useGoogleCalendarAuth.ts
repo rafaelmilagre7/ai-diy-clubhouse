@@ -68,7 +68,8 @@ export const useGoogleCalendarAuth = () => {
         const expiryString = localStorage.getItem('google_calendar_expiry');
 
         if (storedTokens && expiryString) {
-          const expiryTime = parseInt(expiryString, 10); // Convertendo explicitamente para number
+          // Convertendo explicitamente para number usando parseInt com base 10
+          const expiryTime = parseInt(expiryString, 10);
           const now = new Date().getTime();
           
           if (now < expiryTime) {
@@ -121,19 +122,24 @@ export const useGoogleCalendarAuth = () => {
   }, []);
 
   const handleLogout = useCallback(async () => {
-    const user = await supabase.auth.getUser();
-    if (user.data.user) {
-      secureStorage.removeItem('google_calendar_auth', user.data.user.id);
-    } else {
-      secureStorage.removeItem('google_calendar_auth');
+    try {
+      const user = await supabase.auth.getUser();
+      if (user.data.user) {
+        secureStorage.removeItem('google_calendar_auth');
+      } else {
+        secureStorage.removeItem('google_calendar_auth');
+      }
+      
+      localStorage.removeItem('google_calendar_expiry');
+      setAccessToken(null);
+      setUserInfo(null);
+      setIsAuthenticated(false);
+      setLastError(null);
+      toast.success('Desconectado do Google Calendar');
+    } catch (error) {
+      console.error('Erro ao fazer logout:', error);
+      toast.error('Erro ao desconectar do Google Calendar');
     }
-    
-    localStorage.removeItem('google_calendar_expiry');
-    setAccessToken(null);
-    setUserInfo(null);
-    setIsAuthenticated(false);
-    setLastError(null);
-    toast.success('Desconectado do Google Calendar');
   }, []);
 
   return {

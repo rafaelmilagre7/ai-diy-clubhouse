@@ -58,6 +58,7 @@ export const useHandleGoogleCalendarAuth = () => {
 
             const newExpiryTime = new Date().getTime() + (newTokens.expires_in * 1000);
             
+            // Aqui vamos garantir que o userId é passado corretamente
             secureStorage.setItem('google_calendar_auth', newTokens, user.data.user.id);
             localStorage.setItem('google_calendar_expiry', newExpiryTime.toString());
             
@@ -139,7 +140,7 @@ export const useHandleGoogleCalendarAuth = () => {
           throw new Error('Token de acesso não retornado pela API');
         }
 
-        // Armazena tokens de forma segura
+        // Armazena tokens de forma segura com userId
         secureStorage.setItem('google_calendar_auth', tokens, user.data.user.id);
         const expiryTime = new Date().getTime() + (tokens.expires_in * 1000);
         localStorage.setItem('google_calendar_expiry', expiryTime.toString());
