@@ -7,12 +7,13 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/componen
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { Calendar, Clock, MapPin, VideoIcon, ExternalLink, RefreshCw, LogOut } from 'lucide-react';
+import { Calendar, Clock, MapPin, VideoIcon, ExternalLink, RefreshCw, LogOut, AlertCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { type EventFormData } from './form/EventFormSchema';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface GoogleCalendarImportProps {
   onEventsSelected: (events: EventFormData[]) => void;
@@ -20,6 +21,7 @@ interface GoogleCalendarImportProps {
 
 export const GoogleCalendarImport = ({ onEventsSelected }: GoogleCalendarImportProps) => {
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
+  const [authSuccess, setAuthSuccess] = useState(false);
   
   const {
     isLoading,
@@ -27,6 +29,7 @@ export const GoogleCalendarImport = ({ onEventsSelected }: GoogleCalendarImportP
     userInfo,
     events,
     selectedEvents,
+    lastError,
     initiateLogin,
     handleAuthCode,
     fetchEvents,
@@ -44,17 +47,32 @@ export const GoogleCalendarImport = ({ onEventsSelected }: GoogleCalendarImportP
     if (code && state) {
       // Limpar parâmetros da URL por segurança
       window.history.replaceState({}, document.title, window.location.pathname);
+      console.log('Código de autenticação detectado, processando...');
+      
       // Processar o código de autenticação
-      handleAuthCode(code, state);
+      handleAuthCode(code, state).then(success => {
+        setAuthSuccess(success);
+        if (success) {
+          setIsImportDialogOpen(true);
+        }
+      });
     }
   }, [handleAuthCode]);
 
   // Carregar eventos quando autenticado
   useEffect(() => {
     if (isAuthenticated && events.length === 0) {
+      console.log('Usuário autenticado, carregando eventos...');
       fetchEvents();
     }
   }, [isAuthenticated, events.length, fetchEvents]);
+
+  // Carregar eventos quando o diálogo é aberto
+  useEffect(() => {
+    if (isImportDialogOpen && isAuthenticated && events.length === 0) {
+      fetchEvents();
+    }
+  }, [isImportDialogOpen, isAuthenticated, events.length, fetchEvents]);
 
   const handleImport = () => {
     if (selectedEvents.size === 0) {
@@ -66,6 +84,14 @@ export const GoogleCalendarImport = ({ onEventsSelected }: GoogleCalendarImportP
     onEventsSelected(formattedEvents);
     setIsImportDialogOpen(false);
     toast.success(`${formattedEvents.length} evento(s) importado(s) com sucesso!`);
+  };
+
+  const handleImportClick = () => {
+    if (!isAuthenticated) {
+      initiateLogin();
+    } else {
+      setIsImportDialogOpen(true);
+    }
   };
 
   const formatDateTime = (dateTimeStr: string | undefined) => {
@@ -85,13 +111,7 @@ export const GoogleCalendarImport = ({ onEventsSelected }: GoogleCalendarImportP
         <Button
           variant="outline"
           className="bg-white border-gray-200 hover:bg-gray-100 gap-2"
-          onClick={() => {
-            if (!isAuthenticated) {
-              initiateLogin();
-            } else {
-              setIsImportDialogOpen(true);
-            }
-          }}
+          onClick={handleImportClick}
         >
           <Calendar className="h-4 w-4" />
           Importar do Google Calendar
@@ -132,6 +152,15 @@ export const GoogleCalendarImport = ({ onEventsSelected }: GoogleCalendarImportP
         </DialogHeader>
         
         <ScrollArea className="h-[calc(100%-120px)] pr-4">
+          {lastError && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                Erro: {lastError}
+              </AlertDescription>
+            </Alert>
+          )}
+
           {isLoading ? (
             <div className="space-y-4 mt-2">
               {[...Array(3)].map((_, i) => (
@@ -152,8 +181,9 @@ export const GoogleCalendarImport = ({ onEventsSelected }: GoogleCalendarImportP
             <div className="text-center py-10">
               <Calendar className="mx-auto h-12 w-12 text-gray-300" />
               <p className="mt-4 text-gray-500">Nenhum evento encontrado no calendário</p>
-              <Button variant="outline" className="mt-4" onClick={() => fetchEvents()}>
-                Atualizar eventos
+              <p className="mt-1 text-sm text-gray-400">Verifique se existem eventos futuros no seu Google Calendar.</p>
+              <Button variant="outline" className="mt-4" onClick={() => fetchEvents(50)}>
+                Buscar mais eventos (até 50)
               </Button>
             </div>
           ) : (

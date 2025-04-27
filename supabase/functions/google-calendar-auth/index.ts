@@ -21,8 +21,9 @@ serve(async (req) => {
 
   try {
     const url = new URL(req.url);
-    const path = url.pathname.split('/').pop();
     const body = await req.json().catch(() => ({}));
+
+    console.log('Google Calendar Auth Request:', { url: url.toString(), body });
 
     // Gerar URL de autorização do Google
     if (Object.keys(body).length === 0) {
@@ -41,6 +42,8 @@ serve(async (req) => {
       const state = crypto.randomUUID();
       authUrl.searchParams.append('state', state);
 
+      console.log('Auth URL gerada:', authUrl.toString());
+
       return new Response(
         JSON.stringify({ url: authUrl.toString(), state }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -54,6 +57,8 @@ serve(async (req) => {
       if (!code || !CLIENT_ID || !CLIENT_SECRET || !REDIRECT_URI) {
         throw new Error('Dados insuficientes para completar autenticação');
       }
+
+      console.log('Trocando código por token:', { code });
 
       const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
         method: 'POST',
@@ -70,8 +75,11 @@ serve(async (req) => {
       const tokenData = await tokenResponse.json();
       
       if (!tokenResponse.ok) {
+        console.error('Erro na resposta do token:', tokenData);
         throw new Error(`Erro ao obter token: ${JSON.stringify(tokenData)}`);
       }
+
+      console.log('Token obtido com sucesso');
 
       // Obter informações do usuário
       const userInfoResponse = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
@@ -79,6 +87,7 @@ serve(async (req) => {
       });
 
       const userInfo = await userInfoResponse.json();
+      console.log('Informações do usuário obtidas:', userInfo);
 
       // Retornar tokens e informações do usuário
       return new Response(
@@ -99,10 +108,26 @@ serve(async (req) => {
       }
 
       const calendarId = encodeURIComponent(body.calendar_id || 'primary');
-      const maxResults = body.max_results || 10;
-      const timeMin = encodeURIComponent(new Date().toISOString());
+      const maxResults = body.max_results || 30; // Aumentado para 30 eventos
+      
+      // Definir o período para buscar eventos (próximos 12 meses)
+      const today = new Date();
+      const nextYear = new Date(today);
+      nextYear.setFullYear(today.getFullYear() + 1);
+      
+      const timeMin = encodeURIComponent(today.toISOString());
+      const timeMax = encodeURIComponent(nextYear.toISOString());
 
-      const eventsUrl = `https://www.googleapis.com/calendar/v3/calendars/${calendarId}/events?maxResults=${maxResults}&timeMin=${timeMin}&orderBy=startTime&singleEvents=true`;
+      console.log('Buscando eventos com parâmetros:', { 
+        calendarId, 
+        maxResults, 
+        timeMin, 
+        timeMax 
+      });
+
+      const eventsUrl = `https://www.googleapis.com/calendar/v3/calendars/${calendarId}/events?maxResults=${maxResults}&timeMin=${timeMin}&timeMax=${timeMax}&orderBy=startTime&singleEvents=true`;
+
+      console.log('URL de eventos:', eventsUrl);
 
       const eventsResponse = await fetch(eventsUrl, {
         headers: { Authorization: `Bearer ${accessToken}` },
@@ -110,10 +135,12 @@ serve(async (req) => {
 
       if (!eventsResponse.ok) {
         const errorData = await eventsResponse.json();
+        console.error('Erro na resposta de eventos:', errorData);
         throw new Error(`Erro ao obter eventos: ${JSON.stringify(errorData)}`);
       }
 
       const eventsData = await eventsResponse.json();
+      console.log(`Eventos encontrados: ${eventsData.items?.length || 0}`);
 
       return new Response(
         JSON.stringify(eventsData),
