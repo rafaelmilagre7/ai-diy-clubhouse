@@ -18,7 +18,7 @@ const OnboardingIntro = () => {
     if (isCompleted) {
       navigate('/onboarding/review');
     } else {
-      navigate('/onboarding/personal-info');
+      navigate('/onboarding/steps/personal');
     }
   };
 
