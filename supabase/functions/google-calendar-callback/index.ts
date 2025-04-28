@@ -11,7 +11,14 @@ const corsHeaders = {
 function getProjectId(): string {
   console.log('Obtendo PROJECT_ID de variáveis de ambiente');
   
-  // Tentar extrair do PROJECT_ID explícito
+  // Primeiro, tentar extrair do SUPABASE_PROJECT_ID explícito (prioridade máxima)
+  const projectIdFromEnv = Deno.env.get('SUPABASE_PROJECT_ID');
+  if (projectIdFromEnv) {
+    console.log(`SUPABASE_PROJECT_ID encontrado: ${projectIdFromEnv}`);
+    return projectIdFromEnv;
+  }
+  
+  // Tentar extrair de PROJECT_ID (compatibilidade)
   const projectId = Deno.env.get('PROJECT_ID');
   if (projectId) {
     console.log(`PROJECT_ID encontrado: ${projectId}`);
@@ -30,8 +37,9 @@ function getProjectId(): string {
   }
   
   // Valor padrão do projeto
-  console.log('Usando PROJECT_ID padrão: zotzvtepvpnkcoobdubt');
-  return 'zotzvtepvpnkcoobdubt';
+  const defaultProjectId = 'zotzvtepvpnkcoobdubt';
+  console.log(`ATENÇÃO: Usando PROJECT_ID padrão: ${defaultProjectId}`);
+  return defaultProjectId;
 }
 
 // Configuração de URLs e IDs do projeto

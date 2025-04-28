@@ -97,8 +97,15 @@ export const useHandleGoogleCalendarAuth = () => {
       const code = searchParams.get('code');
       const receivedState = searchParams.get('state');
       const error = searchParams.get('error');
-      const storedState = localStorage.getItem('google_auth_state');
+      const authErrorParam = searchParams.get('authError');
 
+      if (authErrorParam) {
+        console.error('Erro de autenticação retornado:', authErrorParam);
+        setAuthError(authErrorParam);
+        toast.error(`Falha na autenticação: ${authErrorParam}`);
+        return;
+      }
+      
       if (error) {
         console.error('Erro de autenticação retornado:', error);
         setAuthError(error);
@@ -111,6 +118,7 @@ export const useHandleGoogleCalendarAuth = () => {
       }
 
       // Validação do state para prevenir CSRF
+      const storedState = localStorage.getItem('google_auth_state');
       if (!storedState || storedState !== receivedState) {
         console.error('Estado inválido detectado:', { stored: storedState, received: receivedState });
         setAuthError('Erro de segurança: estado inválido');

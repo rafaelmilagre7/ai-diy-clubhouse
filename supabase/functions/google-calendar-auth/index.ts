@@ -326,7 +326,7 @@ serve(async (req) => {
     console.error('Erro na função Google Calendar Auth:', error);
     return new Response(
       JSON.stringify({ 
-        error: error.message,
+        error: error instanceof Error ? error.message : String(error),
         details: {
           project_id: PROJECT_ID,
           redirect_uri: REDIRECT_URI,
