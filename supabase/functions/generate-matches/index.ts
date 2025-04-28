@@ -1,4 +1,5 @@
 
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.7'
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import "https://deno.land/x/xhr@0.1.0/mod.ts"
 
@@ -14,29 +15,38 @@ serve(async (req) => {
 
   try {
     const { user_id } = await req.json()
-    const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY')
+    console.log("Gerando matches para usuário:", user_id)
+
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
     )
 
-    // Buscar dados do usuário atual e todos os outros usuários
+    // Buscar dados do usuário atual
     const { data: currentUser, error: currentUserError } = await supabaseClient
       .from('onboarding_progress')
       .select('*, profiles:profiles(*)')
       .eq('user_id', user_id)
       .single()
 
-    if (currentUserError) throw currentUserError
+    if (currentUserError) {
+      console.error("Erro ao buscar usuário atual:", currentUserError)
+      throw currentUserError
+    }
 
+    // Buscar outros usuários
     const { data: otherUsers, error: otherUsersError } = await supabaseClient
       .from('onboarding_progress')
       .select('*, profiles:profiles(*)')
       .neq('user_id', user_id)
+      .limit(20)
 
-    if (otherUsersError) throw otherUsersError
+    if (otherUsersError) {
+      console.error("Erro ao buscar outros usuários:", otherUsersError)
+      throw otherUsersError
+    }
 
-    // Preparar dados para enviar à OpenAI
+    // Preparar dados para OpenAI
     const userProfiles = otherUsers.map(user => ({
       id: user.user_id,
       name: user.profiles?.name,
@@ -47,7 +57,7 @@ serve(async (req) => {
       industry: user.professional_info?.company_sector,
     }))
 
-    // Enviar para OpenAI para gerar matches
+    const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY')
     const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -89,12 +99,33 @@ serve(async (req) => {
       }),
     })
 
+    if (!openAIResponse.ok) {
+      const error = await openAIResponse.text()
+      console.error("Erro na resposta da OpenAI:", error)
+      throw new Error(`OpenAI API error: ${error}`)
+    }
+
     const aiData = await openAIResponse.json()
-    const matches = JSON.parse(aiData.choices[0].message.content)
+    console.log("Resposta da OpenAI:", aiData)
+
+    if (!aiData.choices?.[0]?.message?.content) {
+      throw new Error('Formato inválido na resposta da OpenAI')
+    }
+
+    let matches
+    try {
+      matches = JSON.parse(aiData.choices[0].message.content)
+      if (!Array.isArray(matches)) {
+        throw new Error('A resposta não é um array')
+      }
+    } catch (error) {
+      console.error("Erro ao fazer parse da resposta:", error)
+      throw new Error('Erro ao processar resposta da OpenAI')
+    }
 
     // Inserir ou atualizar matches no banco
     for (const match of matches) {
-      await supabaseClient
+      const { error: upsertError } = await supabaseClient
         .from('network_matches')
         .upsert({
           user_id,
@@ -107,16 +138,25 @@ serve(async (req) => {
           is_viewed: false,
           updated_at: new Date().toISOString(),
         })
+
+      if (upsertError) {
+        console.error("Erro ao inserir match:", upsertError)
+        throw upsertError
+      }
     }
 
-    return new Response(JSON.stringify({ success: true, matches }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
+    return new Response(
+      JSON.stringify({ success: true, matches }), 
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    )
   } catch (error) {
-    console.error('Error:', error)
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
+    console.error('Erro:', error)
+    return new Response(
+      JSON.stringify({ error: error.message }), 
+      { 
+        status: 500, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
+    )
   }
 })

@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react'
+import React from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import { NetworkMatchCard } from '@/components/networking/NetworkMatchCard'
@@ -9,6 +9,7 @@ import { Loader2 } from 'lucide-react'
 
 const NetworkingPage = () => {
   const { toast } = useToast()
+  const [isGenerating, setIsGenerating] = React.useState(false)
 
   const { data: matches, isLoading, refetch } = useQuery({
     queryKey: ['network-matches'],
@@ -25,13 +26,20 @@ const NetworkingPage = () => {
 
   const generateMatches = async () => {
     try {
+      setIsGenerating(true)
       const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
       
-      if (sessionError || !sessionData.session) throw new Error('Usuário não autenticado')
+      if (sessionError || !sessionData.session) {
+        throw new Error('Usuário não autenticado')
+      }
 
-      await supabase.functions.invoke('generate-matches', {
+      const response = await supabase.functions.invoke('generate-matches', {
         body: { user_id: sessionData.session.user.id },
       })
+
+      if (response.error) {
+        throw new Error(response.error.message || 'Erro ao gerar matches')
+      }
 
       toast({
         title: 'Matches atualizados!',
@@ -43,9 +51,11 @@ const NetworkingPage = () => {
       console.error('Error generating matches:', error)
       toast({
         title: 'Erro ao gerar matches',
-        description: 'Não foi possível atualizar suas conexões no momento.',
+        description: 'Não foi possível atualizar suas conexões no momento. Tente novamente mais tarde.',
         variant: 'destructive',
       })
+    } finally {
+      setIsGenerating(false)
     }
   }
 
@@ -58,11 +68,15 @@ const NetworkingPage = () => {
             Descubra conexões relevantes baseadas no seu perfil e interesses
           </p>
         </div>
-        <Button onClick={generateMatches} className="bg-viverblue hover:bg-viverblue/90">
-          {isLoading ? (
+        <Button 
+          onClick={generateMatches} 
+          className="bg-viverblue hover:bg-viverblue/90"
+          disabled={isGenerating}
+        >
+          {isGenerating ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Atualizando...
+              Gerando Conexões...
             </>
           ) : (
             'Encontrar Novas Conexões'
