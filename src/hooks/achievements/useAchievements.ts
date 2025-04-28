@@ -1,3 +1,4 @@
+
 import { useCallback } from 'react';
 import { useAuth } from '@/contexts/auth';
 import { useToast } from '@/hooks/use-toast';
@@ -53,16 +54,37 @@ export function useAchievements() {
         error: dataError
       } = achievementData;
       
-      if (dataError) throw new Error(dataError);
+      // Adicionando logs detalhados para diagnóstico
+      console.log('Dados carregados:');
+      console.log('- progressData:', progressData?.length || 0, 'itens');
+      console.log('- solutions:', solutions?.length || 0, 'itens');
+      console.log('- badgesData:', badgesData?.length || 0, 'itens');
+      console.log('- comments:', comments?.length || 0, 'itens');
+      console.log('- totalLikes:', totalLikes);
       
-      const adaptedSolutions = adaptSolutions(solutions);
+      if (dataError) {
+        console.error('Erro nos dados:', dataError);
+        throw new Error(dataError);
+      }
+      
+      if (!solutions || solutions.length === 0) {
+        console.warn('Atenção: Nenhuma solução encontrada para processar conquistas');
+      }
+      
+      if (!progressData || progressData.length === 0) {
+        console.warn('Atenção: Nenhum dado de progresso encontrado para processar conquistas');
+      }
+      
+      const adaptedSolutions = adaptSolutions(solutions || []);
+      console.log('Soluções adaptadas:', adaptedSolutions?.length);
       
       const generatedAchievements: Achievement[] = [
-        ...generateImplementationAchievements(progressData, adaptedSolutions),
-        ...generateCategoryAchievements(progressData, adaptedSolutions),
-        ...generateEngagementAchievements(progressData, adaptedSolutions),
-        ...generateSocialAchievements(progressData, comments, totalLikes)
+        ...generateImplementationAchievements(progressData || [], adaptedSolutions),
+        ...generateCategoryAchievements(progressData || [], adaptedSolutions),
+        ...generateEngagementAchievements(progressData || [], adaptedSolutions),
+        ...generateSocialAchievements(progressData || [], comments || [], totalLikes || 0)
       ];
+      console.log('Conquistas geradas:', generatedAchievements.length);
 
       const basicAchievements: Achievement[] = [
         {
@@ -117,14 +139,20 @@ export function useAchievements() {
             ? new Date().toISOString() : undefined,
         },
       ];
+      console.log('Conquistas básicas:', basicAchievements.length);
+      console.log('Conquista básica desbloqueada:', basicAchievements.filter(a => a.isUnlocked).length);
       
       let allAchievements = [...basicAchievements, ...generatedAchievements];
+      console.log('Total de conquistas antes de processar badges:', allAchievements.length);
       
       if (badgesData && badgesData.length > 0) {
-        badgesData.forEach(badgeData => {
+        console.log('Processando', badgesData.length, 'badges');
+        badgesData.forEach((badgeData, index) => {
+          console.log(`Processando badge ${index + 1}:`, badgeData);
           if (badgeData.badges) {
             try {
               if (Array.isArray(badgeData.badges)) {
+                console.log(`Badge ${index + 1} é um array com ${badgeData.badges.length} itens`);
                 badgeData.badges.forEach((badge: Badge) => {
                   const validCategories: ("achievement" | SolutionCategory)[] = [
                     "achievement", "revenue", "operational", "strategy"
@@ -145,6 +173,7 @@ export function useAchievements() {
                   });
                 });
               } else if (typeof badgeData.badges === 'object' && badgeData.badges !== null) {
+                console.log(`Badge ${index + 1} é um objeto único`);
                 const badge = badgeData.badges as Badge;
                 
                 const validCategories: ("achievement" | SolutionCategory)[] = [
@@ -164,16 +193,50 @@ export function useAchievements() {
                   isUnlocked: true,
                   earnedAt: badgeData.earned_at,
                 });
+              } else {
+                console.warn(`Badge ${index + 1} não é um array nem um objeto:`, badgeData.badges);
               }
             } catch (error) {
-              console.error('Erro ao processar badges:', error);
+              console.error('Erro ao processar badge:', error, badgeData);
             }
+          } else {
+            console.warn(`Badge ${index + 1} não possui propriedade badges:`, badgeData);
           }
         });
+      } else {
+        console.log('Nenhum badge encontrado para processar');
       }
       
       const uniqueAchievements = removeDuplicateAchievements(allAchievements);
-      console.log("Total de conquistas carregadas:", uniqueAchievements.length);
+      console.log("Total de conquistas carregadas após remoção de duplicatas:", uniqueAchievements.length);
+      console.log("Conquistas desbloqueadas:", uniqueAchievements.filter(a => a.isUnlocked).length);
+      
+      if (uniqueAchievements.length === 0) {
+        console.warn("ALERTA: Nenhuma conquista foi carregada! Verificando dados de entrada novamente:");
+        console.log("Progresso:", progressData);
+        console.log("Soluções:", solutions);
+        console.log("Badges:", badgesData);
+        
+        // Se não tiver nenhuma conquista, tentamos garantir pelo menos as básicas
+        if (progressData && progressData.length > 0) {
+          console.log("Há progresso registrado, adicionando pelo menos a conquista 'Iniciante'");
+          return [
+            {
+              id: 'achievement-beginner',
+              name: 'Iniciante',
+              description: 'Começou sua jornada no clube ao iniciar sua primeira solução',
+              category: "achievement",
+              isUnlocked: true,
+              earnedAt: new Date().toISOString(),
+            }
+          ];
+        } else {
+          // Se realmente não houver nada, retornamos as conquistas de fallback
+          console.log("Usando conquistas de fallback como último recurso");
+          return createFallbackAchievements();
+        }
+      }
+      
       return uniqueAchievements;
       
     } catch (error) {

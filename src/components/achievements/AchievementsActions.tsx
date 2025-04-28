@@ -16,11 +16,33 @@ interface AchievementsActionsProps {
 export const AchievementsActions = ({ 
   filterOpen, 
   setFilterOpen, 
-  achievements 
+  achievements,
+  isRefreshing,
+  onRefresh 
 }: AchievementsActionsProps) => {
   return (
     <div className="flex items-center gap-4">
-      {/* Botão de atualizar removido conforme solicitado */}
+      {onRefresh && (
+        <Button 
+          variant="outline"
+          size="sm"
+          onClick={onRefresh}
+          disabled={isRefreshing}
+          className="flex items-center gap-2"
+        >
+          {isRefreshing ? (
+            <>
+              <div className="h-4 w-4 border-2 border-t-transparent border-current rounded-full animate-spin" />
+              <span>Atualizando...</span>
+            </>
+          ) : (
+            <>
+              <RefreshCcw className="h-4 w-4" />
+              <span>Atualizar Conquistas</span>
+            </>
+          )}
+        </Button>
+      )}
     </div>
   );
 };
