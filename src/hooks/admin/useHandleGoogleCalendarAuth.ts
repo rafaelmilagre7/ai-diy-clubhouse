@@ -25,6 +25,8 @@ export const useHandleGoogleCalendarAuth = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
   const [tokens, setTokens] = useState<GoogleCalendarTokens | null>(null);
+  // Definindo explicitamente isAuthenticated como booleano
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
   // Verificar e renovar token periodicamente
   useEffect(() => {
@@ -35,11 +37,17 @@ export const useHandleGoogleCalendarAuth = () => {
       const storedTokens = secureStorage.getItem('google_calendar_auth', user.data.user.id) as GoogleCalendarTokens | null;
       const expiryString = localStorage.getItem('google_calendar_expiry');
 
-      if (!storedTokens || !expiryString) return;
+      if (!storedTokens || !expiryString) {
+        setIsAuthenticated(false);
+        return;
+      }
 
       // Converter explicitamente para número usando parseInt com base 10
       const expiryTime = parseInt(expiryString, 10) || 0;
       const now = new Date().getTime();
+
+      // Atualizar estado de autenticação
+      setIsAuthenticated(true);
 
       // Se o token vai expirar em breve ou já expirou
       if (now + TOKEN_REFRESH_MARGIN >= expiryTime) {
@@ -63,6 +71,7 @@ export const useHandleGoogleCalendarAuth = () => {
             localStorage.setItem('google_calendar_expiry', newExpiryTime.toString());
             
             setTokens(newTokens);
+            setIsAuthenticated(true);
             console.log('Token renovado com sucesso');
           } catch (error) {
             console.error('Erro ao renovar token:', error);
@@ -89,6 +98,7 @@ export const useHandleGoogleCalendarAuth = () => {
     localStorage.removeItem('google_calendar_expiry');
     setTokens(null);
     setAuthError(null);
+    setIsAuthenticated(false);
   }, []);
 
   // Processar código de autorização
@@ -156,6 +166,7 @@ export const useHandleGoogleCalendarAuth = () => {
         localStorage.setItem('google_calendar_expiry', expiryTime.toString());
 
         setTokens(tokens);
+        setIsAuthenticated(true); // Define explicitamente como true
         console.log('Token recebido e armazenado com sucesso');
         toast.success('Conectado ao Google Calendar!');
         
@@ -164,6 +175,7 @@ export const useHandleGoogleCalendarAuth = () => {
       } catch (error) {
         console.error('Erro ao processar código de autorização:', error);
         setAuthError(error instanceof Error ? error.message : 'Erro desconhecido');
+        setIsAuthenticated(false); // Garante que seja false em caso de erro
         toast.error('Não foi possível completar a autenticação. Por favor, tente novamente.');
         return false;
       } finally {
@@ -179,6 +191,6 @@ export const useHandleGoogleCalendarAuth = () => {
     authError,
     tokens,
     handleLogout,
-    isAuthenticated: !!tokens
+    isAuthenticated // Retornando explicitamente como boolean
   };
 };

@@ -7,7 +7,8 @@ import { GoogleCalendarImport } from "./GoogleCalendarImport";
 import { type EventFormData } from "./form/EventFormSchema";
 
 interface AdminEventsHeaderProps {
-  isCalendarAuthenticated?: boolean;
+  // Corrigindo a tipagem para aceitar explicitamente boolean
+  isCalendarAuthenticated: boolean;
 }
 
 export const AdminEventsHeader = ({ isCalendarAuthenticated = false }: AdminEventsHeaderProps) => {
