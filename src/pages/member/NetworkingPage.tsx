@@ -25,11 +25,12 @@ const NetworkingPage = () => {
 
   const generateMatches = async () => {
     try {
-      const { user, error: userError } = await supabase.auth.getUser()
-      if (userError) throw userError
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
+      
+      if (sessionError || !sessionData.session) throw new Error('Usuário não autenticado')
 
       await supabase.functions.invoke('generate-matches', {
-        body: { user_id: user.id },
+        body: { user_id: sessionData.session.user.id },
       })
 
       toast({

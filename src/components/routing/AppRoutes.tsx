@@ -1,3 +1,4 @@
+
 import { Routes, Route } from 'react-router-dom';
 import { AdminProtectedRoutes } from '@/auth/AdminProtectedRoutes';
 import { ProtectedRoutes } from '@/auth/ProtectedRoutes';
@@ -40,6 +41,9 @@ import AdminEvents from '@/pages/admin/AdminEvents';
 import Events from '@/pages/member/Events';
 import NetworkingPage from '@/pages/member/NetworkingPage';
 
+// Importar os componentes de Onboarding a partir do caminho correto
+import Onboarding from '@/pages/onboarding/Onboarding';
+
 const AppRoutes = () => {
   console.log("Renderizando AppRoutes");
   
@@ -81,17 +85,9 @@ const AppRoutes = () => {
       <Route path="/suggestions/:id" element={<ProtectedRoutes><MemberLayout><SuggestionDetails /></MemberLayout></ProtectedRoutes>} />
       <Route path="/suggestions/new" element={<ProtectedRoutes><MemberLayout><NewSuggestion /></MemberLayout></ProtectedRoutes>} />
       
-      {/* Onboarding Routes */}
-      <Route path="/onboarding" element={<ProtectedRoutes><OnboardingIntro /></ProtectedRoutes>} />
-      <Route path="/onboarding/personal-info" element={<ProtectedRoutes><PersonalInfo /></ProtectedRoutes>} />
-      <Route path="/onboarding/professional-data" element={<ProtectedRoutes><ProfessionalData /></ProtectedRoutes>} />
-      <Route path="/onboarding/business-context" element={<ProtectedRoutes><BusinessContext /></ProtectedRoutes>} />
-      <Route path="/onboarding/ai-experience" element={<ProtectedRoutes><AIExperience /></ProtectedRoutes>} />
-      <Route path="/onboarding/club-goals" element={<ProtectedRoutes><BusinessGoalsClub /></ProtectedRoutes>} />
-      <Route path="/onboarding/customization" element={<ProtectedRoutes><ExperiencePersonalization /></ProtectedRoutes>} />
-      <Route path="/onboarding/complementary" element={<ProtectedRoutes><ComplementaryInfo /></ProtectedRoutes>} />
-      <Route path="/onboarding/review" element={<ProtectedRoutes><Review /></ProtectedRoutes>} />
-      <Route path="/onboarding/trail-generation" element={<ProtectedRoutes><TrailGeneration /></ProtectedRoutes>} />
+      {/* Onboarding Routes - Simplificado para o componente principal */}
+      <Route path="/onboarding" element={<ProtectedRoutes><Onboarding /></ProtectedRoutes>} />
+      <Route path="/onboarding/*" element={<ProtectedRoutes><Onboarding /></ProtectedRoutes>} />
       
       {/* Admin Routes */}
       <Route path="/admin" element={

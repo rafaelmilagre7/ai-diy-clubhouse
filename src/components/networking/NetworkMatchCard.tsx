@@ -29,13 +29,14 @@ export const NetworkMatchCard = ({ match }: NetworkMatchCardProps) => {
 
   const connectWithUser = async () => {
     try {
-      const { user } = await supabase.auth.getUser()
-      if (!user) throw new Error('Usuário não autenticado')
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
+      
+      if (sessionError || !sessionData.session) throw new Error('Usuário não autenticado')
 
       const { error: connectionError } = await supabase
         .from('network_connections')
         .insert({
-          requester_id: user.id,
+          requester_id: sessionData.session.user.id,
           recipient_id: match.matched_user_id,
           status: 'pending',
         })
