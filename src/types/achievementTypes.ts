@@ -27,18 +27,18 @@ export interface ProgressData {
   current_module: number;
   is_completed: boolean;
   completed_at?: string;
-  created_at: string; // Mantendo como obrigatório pois é usado em vários lugares
+  created_at: string; 
   last_activity?: string;
   completed_modules?: number[];
-  solutions?: SolutionData | SolutionData[]; // Pode ser um objeto ou um array
+  solutions?: SolutionData | SolutionData[]; 
 }
 
 export interface ChecklistData {
   id: string;
   user_id: string;
   solution_id: string;
-  checklist_id?: string; // Campo opcional, definido explicitamente
-  checked_items?: any; // Campo pode não existir
+  checklist_id?: string; 
+  checked_items?: any; 
   is_completed: boolean;
   completed_at?: string;
 }
@@ -48,7 +48,7 @@ export interface BadgeData {
   user_id: string; 
   badge_id: string;
   earned_at: string;
-  badges: { // Modificando para aceitar tanto objeto quanto array
+  badges: {
     id: string;
     name: string;
     description: string;
@@ -107,8 +107,8 @@ export function getSolutionCategory(solutions: SolutionData | SolutionData[] | u
   if (!solutions) return "";
   
   if (isSolutionsArray(solutions)) {
-    return solutions.length > 0 ? solutions[0].category : "";
+    return solutions.length > 0 ? solutions[0].category || "" : "";
   }
   
-  return solutions.category;
+  return solutions.category || "";
 }

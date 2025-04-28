@@ -22,9 +22,39 @@ interface AchievementCardProps {
 export const AchievementCard = ({ achievement, shouldAnimate = false }: AchievementCardProps) => {
   const isMobile = useIsMobile();
   const cardRef = useRef<HTMLDivElement>(null);
+  
+  // Adicionar estilo global para animação
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.innerHTML = `
+      @keyframes highlight-flash {
+        0%, 100% { box-shadow: 0 0 0 rgba(0,0,0,0); }
+        50% { box-shadow: 0 0 15px 5px rgba(35, 197, 200, 0.6); }
+      }
+      
+      .highlight-flash {
+        animation: highlight-flash 1.2s ease-in-out;
+      }
+
+      @keyframes pulse-light {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.03); box-shadow: 0 0 15px rgba(35, 197, 200, 0.4); }
+        100% { transform: scale(1); }
+      }
+
+      .animate-pulse-light {
+        animation: pulse-light 1.5s infinite;
+      }
+    `;
+    document.head.appendChild(style);
+    
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
 
   useEffect(() => {
-    if ((shouldAnimate || achievement.isUnlocked) && cardRef.current) {
+    if (shouldAnimate && cardRef.current) {
       cardRef.current.classList.add("highlight-flash");
       setTimeout(() => {
         cardRef.current?.classList.remove("highlight-flash");

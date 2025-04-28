@@ -1,3 +1,4 @@
+
 import { useCallback, useEffect } from 'react';
 import { useAuth } from '@/contexts/auth';
 import { useToast } from '@/hooks/use-toast';
@@ -7,7 +8,8 @@ import {
   ensureValidCategory, 
   isValidCategory, 
   achievementCache,
-  getSolutionCategory 
+  getSolutionCategory,
+  isSolutionsArray
 } from '@/types/achievementTypes';
 import { SolutionCategory } from '@/lib/types/categoryTypes';
 import { useQuery } from '@tanstack/react-query';
@@ -83,7 +85,7 @@ export function useAchievements() {
       // Se os dados ainda estão carregando e não temos cache, indicamos carregamento
       if (dataLoading) {
         console.log('Dados de conquistas carregando pela primeira vez');
-        return null;
+        return [];
       }
       
       console.log('Dados carregados:');
@@ -137,17 +139,32 @@ export function useAchievements() {
           currentCount: progressData?.filter(p => p.is_completed)?.length || 0,
           isUnlocked: progressData?.some(p => p.is_completed) || false,
           earnedAt: progressData?.some(p => p.is_completed) ? new Date().toISOString() : undefined,
-        },
+        }
+      ];
+      
+      // Adicionando conquistas por categoria - utilizando o helper getSolutionCategory
+      const completedRevenueCount = progressData?.filter(p => 
+        p.is_completed && getSolutionCategory(p.solutions) === 'revenue'
+      ).length || 0;
+      
+      const completedOperationalCount = progressData?.filter(p => 
+        p.is_completed && getSolutionCategory(p.solutions) === 'operational'
+      ).length || 0;
+      
+      const completedStrategyCount = progressData?.filter(p => 
+        p.is_completed && getSolutionCategory(p.solutions) === 'strategy'
+      ).length || 0;
+      
+      const categoryAchievements: Achievement[] = [
         {
           id: 'achievement-sales-expert',
           name: 'Especialista em Vendas',
           description: 'Implementou 3 soluções da trilha de Receita',
           category: "revenue",
           requiredCount: 3,
-          currentCount: progressData?.filter(p => p.is_completed && getSolutionCategory(p.solutions) === 'revenue')?.length || 0,
-          isUnlocked: (progressData?.filter(p => p.is_completed && getSolutionCategory(p.solutions) === 'revenue')?.length || 0) >= 3,
-          earnedAt: (progressData?.filter(p => p.is_completed && getSolutionCategory(p.solutions) === 'revenue')?.length || 0) >= 3 
-            ? new Date().toISOString() : undefined,
+          currentCount: completedRevenueCount,
+          isUnlocked: completedRevenueCount >= 3,
+          earnedAt: completedRevenueCount >= 3 ? new Date().toISOString() : undefined,
         },
         {
           id: 'achievement-automation-master',
@@ -166,16 +183,18 @@ export function useAchievements() {
           description: 'Completou uma solução da trilha de Estratégia',
           category: "strategy",
           requiredCount: 1,
-          currentCount: progressData?.filter(p => p.is_completed && getSolutionCategory(p.solutions) === 'strategy')?.length || 0,
-          isUnlocked: progressData?.some(p => p.is_completed && getSolutionCategory(p.solutions) === 'strategy') || false,
-          earnedAt: progressData?.some(p => p.is_completed && getSolutionCategory(p.solutions) === 'strategy')
-            ? new Date().toISOString() : undefined,
+          currentCount: completedStrategyCount,
+          isUnlocked: completedStrategyCount >= 1,
+          earnedAt: completedStrategyCount >= 1 ? new Date().toISOString() : undefined,
         },
       ];
-      console.log('Conquistas básicas:', basicAchievements.length);
-      console.log('Conquista básica desbloqueada:', basicAchievements.filter(a => a.isUnlocked).length);
       
-      let allAchievements: Achievement[] = [...basicAchievements, ...generatedAchievements];
+      console.log('Conquistas básicas:', basicAchievements.length);
+      console.log('Conquistas de categoria:', categoryAchievements.length);
+      console.log('Conquistas básicas desbloqueadas:', basicAchievements.filter(a => a.isUnlocked).length);
+      console.log('Conquistas de categoria desbloqueadas:', categoryAchievements.filter(a => a.isUnlocked).length);
+      
+      let allAchievements: Achievement[] = [...basicAchievements, ...categoryAchievements, ...generatedAchievements];
       console.log('Total de conquistas antes de processar badges:', allAchievements.length);
       
       // Processa os badges e os converte em conquistas
@@ -188,9 +207,12 @@ export function useAchievements() {
           try {
             if (badgeData.badges) {
               // Lidar com o caso de badges ser um objeto ou um array
-              const badge = Array.isArray(badgeData.badges) 
-                ? badgeData.badges[0] 
-                : badgeData.badges;
+              let badge;
+              if (Array.isArray(badgeData.badges)) {
+                badge = badgeData.badges[0];
+              } else {
+                badge = badgeData.badges;
+              }
               
               if (badge) {
                 const category = ensureValidCategory(badge.category);
@@ -202,6 +224,7 @@ export function useAchievements() {
                   category: category,
                   isUnlocked: true,
                   earnedAt: badgeData.earned_at,
+                  icon: badge.icon
                 });
                 
                 console.log(`Badge ${index + 1} processado com sucesso:`, badge.name);
@@ -224,7 +247,7 @@ export function useAchievements() {
       // Processa as conquistas para preservar estados de desbloqueio anteriores
       const processedAchievements = processAchievements(uniqueAchievements, achievementCache.achievements);
       
-      // Garantir conquistas mínimas se o usuário tiver algum progresso
+      // Garantir conquista mínima se o usuário tem algum progresso
       if (processedAchievements.length === 0 && progressData && progressData.length > 0) {
         console.log("Adicionando conquista 'Iniciante' como fallback");
         const fallbackAchievements = [
@@ -278,6 +301,14 @@ export function useAchievements() {
       achievementCache.clear();
     }
   }, [user?.id]);
+  
+  // Força uma refetch inicial mesmo que os dados estejam em cache
+  useEffect(() => {
+    if (user) {
+      console.log('Forçando primeira busca de conquistas ao montar componente');
+      achievementCache.clear(); // Limpa o cache para garantir dados frescos
+    }
+  }, []);
   
   return useQuery({
     queryKey: ['achievements', user?.id],

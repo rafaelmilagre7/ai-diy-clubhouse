@@ -1,8 +1,9 @@
+
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useAuth } from "@/contexts/auth";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
-import { ProgressData, ChecklistData, BadgeData, SolutionData } from "@/types/achievementTypes";
+import { ProgressData, ChecklistData, BadgeData, SolutionData, isSolutionsArray } from "@/types/achievementTypes";
 import { Solution } from "@/types/solution";
 import { 
   fetchProgressData, 
@@ -50,7 +51,7 @@ export const useAchievementData = () => {
       
       setError(null);
 
-      // Buscar soluções publicadas usando join para otimizar
+      // Buscar soluções publicadas
       const { data: solutionsData, error: solutionsError } = await supabase
         .from("solutions")
         .select("*")
@@ -60,7 +61,7 @@ export const useAchievementData = () => {
       console.log('Soluções encontradas:', solutionsData?.length || 0);
       setSolutions(solutionsData || []);
 
-      // Buscar progresso do usuário com join otimizado
+      // Buscar progresso do usuário
       const progressResult = await fetchProgressData(user.id);
       console.log('Progresso encontrado:', progressResult?.length || 0);
       
@@ -71,14 +72,12 @@ export const useAchievementData = () => {
         
         if (item.solutions) {
           if (Array.isArray(item.solutions)) {
-            // Se for um array, garantir que cada elemento tenha os campos necessários
             solutionsData = item.solutions.map((sol: any) => ({
               id: sol?.id || '',
               category: sol?.category || '',
               title: sol?.title || undefined
             }));
           } else {
-            // Se for um objeto único
             const solData = item.solutions as any;
             solutionsData = {
               id: solData?.id || '',
@@ -113,8 +112,6 @@ export const useAchievementData = () => {
         id: item.id || '',
         user_id: item.user_id || '',
         solution_id: item.solution_id || '',
-        // O campo checklist_id pode não existir em alguns registros
-        // Vamos tratá-lo explicitamente como opcional
         checklist_id: item.checklist_id,
         checked_items: item.checked_items || {},
         is_completed: item.is_completed || false,

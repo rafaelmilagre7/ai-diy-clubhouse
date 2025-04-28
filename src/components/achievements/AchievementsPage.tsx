@@ -10,7 +10,7 @@ import { ErrorState } from "./states/ErrorState";
 import { AchievementsActions } from "./AchievementsActions";
 import { useToast } from "@/hooks/use-toast";
 import { Achievement } from "@/types/achievementTypes";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 export const AchievementsPage = () => {
   const [filterOpen, setFilterOpen] = useState(false);
@@ -18,6 +18,7 @@ export const AchievementsPage = () => {
   const [animateNewAchievements, setAnimateNewAchievements] = useState<string[]>([]);
   const { toast } = useToast();
   const location = useLocation();
+  const navigate = useNavigate();
   
   // React Query já fará o fetch automático ao montar o componente
   const { 
@@ -96,13 +97,14 @@ export const AchievementsPage = () => {
 
   // Garantir que achievements seja um array antes de verificar length
   const achievementsArray = Array.isArray(achievements) ? achievements : [];
-
+  
   // Exibir estado vazio se não houver conquistas
+  // Forçar o usuário a ter pelo menos a conquista "Iniciante" se tiver algum progresso
   if (!achievements || achievementsArray.length === 0) {
     return (
       <div className="space-y-8">
         <AchievementsHeader />
-        <EmptyState />
+        <EmptyState onExploreClick={() => navigate("/dashboard")} />
       </div>
     );
   }
