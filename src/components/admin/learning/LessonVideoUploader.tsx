@@ -46,7 +46,7 @@ export function LessonVideoUploader({ lessonId }: LessonVideoUploaderProps) {
     try {
       setIsAdding(true);
       
-      await addVideo({
+      await addVideo.mutateAsync({
         lesson_id: lessonId,
         title,
         description,
@@ -66,7 +66,7 @@ export function LessonVideoUploader({ lessonId }: LessonVideoUploaderProps) {
   
   const handleRemoveVideo = async (videoId: string) => {
     try {
-      await removeVideo(videoId);
+      await removeVideo.mutateAsync(videoId);
       toast.success("Vídeo removido com sucesso");
     } catch (error) {
       toast.error("Erro ao remover vídeo");

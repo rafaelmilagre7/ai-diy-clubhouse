@@ -12,9 +12,9 @@ import { LessonResource } from "@/types/learningTypes";
 import { 
   FileIcon, 
   FileText, 
-  FileArchive, 
-  FilePdf, 
-  FileImage, 
+  Archive, 
+  File as FileIcon2, 
+  Image, 
   File,
   Loader2, 
   Plus, 
@@ -52,10 +52,10 @@ export function LessonResourceUploader({ lessonId }: LessonResourceUploaderProps
   const getFileIcon = (fileType: string | null) => {
     if (!fileType) return <File className="h-6 w-6" />;
     
-    if (fileType.includes('pdf')) return <FilePdf className="h-6 w-6" />;
-    if (fileType.includes('image')) return <FileImage className="h-6 w-6" />;
+    if (fileType.includes('pdf')) return <FileText className="h-6 w-6" />;
+    if (fileType.includes('image')) return <Image className="h-6 w-6" />;
     if (fileType.includes('text') || fileType.includes('document')) return <FileText className="h-6 w-6" />;
-    if (fileType.includes('zip') || fileType.includes('rar') || fileType.includes('tar')) return <FileArchive className="h-6 w-6" />;
+    if (fileType.includes('zip') || fileType.includes('rar') || fileType.includes('tar')) return <Archive className="h-6 w-6" />;
     
     return <FileIcon className="h-6 w-6" />;
   };
@@ -69,7 +69,7 @@ export function LessonResourceUploader({ lessonId }: LessonResourceUploaderProps
     try {
       setIsAdding(true);
       
-      await addResource({
+      await addResource.mutateAsync({
         lesson_id: lessonId,
         name,
         description,
@@ -90,7 +90,7 @@ export function LessonResourceUploader({ lessonId }: LessonResourceUploaderProps
   
   const handleRemoveResource = async (resourceId: string) => {
     try {
-      await removeResource(resourceId);
+      await removeResource.mutateAsync(resourceId);
       toast.success("Recurso removido com sucesso");
     } catch (error) {
       toast.error("Erro ao remover recurso");
