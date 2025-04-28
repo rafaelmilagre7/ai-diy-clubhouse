@@ -1,7 +1,6 @@
 import { useOnboardingSteps } from "@/hooks/onboarding/useOnboardingSteps";
 import { PersonalInfoStep } from "./steps/PersonalInfoStep";
 import { usePersonalInfoStep } from "@/hooks/onboarding/usePersonalInfoStep";
-import OnboardingCompleted from "./OnboardingCompleted";
 import { BusinessGoalsStep } from "./steps/BusinessGoalsStep";
 import { BusinessContextStep } from "./steps/BusinessContextStep";
 import { AIExperienceStep } from "./steps/AIExperienceStep";
@@ -12,7 +11,6 @@ import { Progress } from "@/components/ui/progress";
 import { OnboardingData } from "@/types/onboarding";
 import { ProfessionalDataStep } from "./steps/ProfessionalDataStep";
 import { useLocation } from "react-router-dom";
-import { useEffect, useState } from "react";
 
 export const OnboardingSteps = () => {
   const {
@@ -37,13 +35,6 @@ export const OnboardingSteps = () => {
   } = usePersonalInfoStep();
   
   const location = useLocation();
-  const [showCompletedScreen, setShowCompletedScreen] = useState(false);
-  
-  useEffect(() => {
-    if (progress?.is_completed) {
-      setShowCompletedScreen(true);
-    }
-  }, [progress]);
   
   const pathToStepComponent = {
     "/onboarding": "personal",
@@ -67,10 +58,6 @@ export const OnboardingSteps = () => {
   const adaptedPersonalHandleSubmit = async (): Promise<void> => {
     await personalHandleSubmit();
   };
-  
-  if (showCompletedScreen) {
-    return <OnboardingCompleted />;
-  }
 
   const stepComponents: Record<string, any> = {
     personal: () => (
