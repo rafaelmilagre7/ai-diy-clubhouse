@@ -2,29 +2,8 @@ import { useCallback } from 'react';
 import { useAuth } from '@/contexts/auth';
 import { useToast } from '@/hooks/use-toast';
 import { useAchievementData } from './useAchievementData';
-import { Achievement, BadgeData } from '@/types/achievementTypes';
-import { SolutionCategory } from '@/lib/types/categoryTypes';
+import { Achievement } from '@/types/achievementTypes';
 import { useQuery } from '@tanstack/react-query';
-import { 
-  fetchProgressData, 
-  fetchBadgesData, 
-  createFallbackAchievements,
-  removeDuplicateAchievements
-} from './utils/achievementUtils';
-import {
-  generateImplementationAchievements,
-  generateCategoryAchievements,
-  generateEngagementAchievements,
-  generateSocialAchievements
-} from '@/utils/achievements/achievementGenerators';
-
-// Interface para o tipo Badge utilizado no processamento de conquistas
-interface Badge {
-  id: string;
-  name: string;
-  description: string;
-  category: "achievement" | SolutionCategory;
-}
 
 export function useAchievements() {
   const { user } = useAuth();
@@ -179,7 +158,7 @@ export function useAchievements() {
     queryKey: ['achievements', user?.id],
     queryFn: fetchAchievements,
     enabled: !!user,
-    staleTime: 5 * 60 * 1000, // 5 minutos
+    staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
   });
 }
