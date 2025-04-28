@@ -22,16 +22,6 @@ export const AchievementsPage = () => {
     refetch 
   } = useAchievements();
 
-  // Handler para atualização manual via botão
-  const handleRefresh = async () => {
-    setIsRefreshing(true);
-    try {
-      await refetch();
-    } finally {
-      setIsRefreshing(false);
-    }
-  };
-
   // Exibir estado de carregamento inicial
   if (isLoading) {
     return <LoadingState />;
@@ -39,7 +29,7 @@ export const AchievementsPage = () => {
 
   // Exibir estado de erro se algo falhar
   if (error) {
-    return <ErrorState error={error.message || "Erro ao carregar conquistas"} onRetry={handleRefresh} />;
+    return <ErrorState error={error.message || "Erro ao carregar conquistas"} onRetry={() => refetch()} />;
   }
 
   console.log("Conquistas carregadas:", achievements.length, achievements);
@@ -64,7 +54,6 @@ export const AchievementsPage = () => {
           filterOpen={filterOpen}
           setFilterOpen={setFilterOpen}
           achievements={achievements}
-          onRefresh={handleRefresh}
           onCategoryChange={setActiveCategory}
         />
       </div>

@@ -1,8 +1,10 @@
+
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/auth";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 import { ProgressData, ChecklistData, BadgeData } from "@/types/achievementTypes";
+import { Solution } from "@/types/solutionTypes";
 
 export const useAchievementData = () => {
   const { user } = useAuth();
