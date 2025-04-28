@@ -6,6 +6,10 @@ const CLIENT_ID = Deno.env.get('GOOGLE_CLIENT_ID');
 const CLIENT_SECRET = Deno.env.get('GOOGLE_CLIENT_SECRET');
 const REDIRECT_URI = Deno.env.get('GOOGLE_REDIRECT_URI') || 'https://viverdeia-club.functions.supabase.co/google-calendar-callback';
 
+// Informações do projeto (importante para resolver o erro "Project not specified")
+const PROJECT_ID = Deno.env.get('SUPABASE_PROJECT_ID') || 'zotzvtepvpnkcoobdubt';
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL') || 'https://zotzvtepvpnkcoobdubt.supabase.co';
+
 const SCOPES = ['https://www.googleapis.com/auth/calendar.readonly'];
 
 // Cabeçalhos CORS para permitir chamadas do frontend
@@ -24,12 +28,17 @@ serve(async (req) => {
     const url = new URL(req.url);
     const body = await req.json().catch(() => ({}));
 
-    console.log('Google Calendar Auth Request:', { url: url.toString(), body });
+    console.log('Google Calendar Auth Request:', { 
+      url: url.toString(), 
+      body: JSON.stringify(body),
+      projectId: PROJECT_ID,
+      redirectUri: REDIRECT_URI
+    });
 
     // Gerar URL de autorização do Google
     if (Object.keys(body).length === 0) {
       if (!CLIENT_ID || !REDIRECT_URI) {
-        throw new Error('Configuração de autenticação incompleta');
+        throw new Error('Configuração de autenticação incompleta: CLIENT_ID ou REDIRECT_URI não configurados');
       }
 
       console.log('Gerando URL de autorização com redirect URI:', REDIRECT_URI);
@@ -58,10 +67,19 @@ serve(async (req) => {
       const code = body.code;
       
       if (!code || !CLIENT_ID || !CLIENT_SECRET || !REDIRECT_URI) {
-        throw new Error('Dados insuficientes para completar autenticação');
+        const missingParams = [];
+        if (!code) missingParams.push('code');
+        if (!CLIENT_ID) missingParams.push('CLIENT_ID');
+        if (!CLIENT_SECRET) missingParams.push('CLIENT_SECRET');
+        if (!REDIRECT_URI) missingParams.push('REDIRECT_URI');
+        
+        throw new Error(`Dados insuficientes para completar autenticação: ${missingParams.join(', ')}`);
       }
 
-      console.log('Trocando código por token:', { code, redirect_uri: REDIRECT_URI });
+      console.log('Trocando código por token:', { 
+        code: code.substring(0, 10) + '...',
+        redirect_uri: REDIRECT_URI 
+      });
 
       const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
         method: 'POST',
@@ -82,7 +100,11 @@ serve(async (req) => {
         throw new Error(`Erro ao obter token: ${JSON.stringify(tokenData)}`);
       }
 
-      console.log('Token obtido com sucesso');
+      console.log('Token obtido com sucesso: ', {
+        access_token: tokenData.access_token ? 'presente' : 'ausente',
+        refresh_token: tokenData.refresh_token ? 'presente' : 'ausente',
+        expires_in: tokenData.expires_in
+      });
 
       // Obter informações do usuário
       const userInfoResponse = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
@@ -90,7 +112,10 @@ serve(async (req) => {
       });
 
       const userInfo = await userInfoResponse.json();
-      console.log('Informações do usuário obtidas:', userInfo);
+      console.log('Informações do usuário obtidas:', {
+        email: userInfo.email,
+        name: userInfo.name
+      });
 
       // Retornar tokens e informações do usuário
       return new Response(
@@ -107,6 +132,10 @@ serve(async (req) => {
       const refreshToken = body.refresh_token;
       
       console.log('Renovando token com refresh_token');
+
+      if (!CLIENT_ID || !CLIENT_SECRET) {
+        throw new Error('CLIENT_ID ou CLIENT_SECRET não configurados para renovação de token');
+      }
 
       const refreshResponse = await fetch('https://oauth2.googleapis.com/token', {
         method: 'POST',
@@ -126,7 +155,10 @@ serve(async (req) => {
         throw new Error(`Erro ao renovar token: ${JSON.stringify(refreshData)}`);
       }
 
-      console.log('Token renovado com sucesso');
+      console.log('Token renovado com sucesso: ', {
+        access_token: refreshData.access_token ? 'presente' : 'ausente',
+        expires_in: refreshData.expires_in
+      });
       
       // Preservar o refresh_token original caso a API não o devolva
       if (!refreshData.refresh_token) {
@@ -197,7 +229,13 @@ serve(async (req) => {
   } catch (error) {
     console.error('Erro na função Google Calendar:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message,
+        project_id: PROJECT_ID,
+        redirect_uri: REDIRECT_URI,
+        has_client_id: !!CLIENT_ID,
+        has_client_secret: !!CLIENT_SECRET
+      }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

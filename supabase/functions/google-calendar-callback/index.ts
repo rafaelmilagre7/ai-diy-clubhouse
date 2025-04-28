@@ -7,10 +7,18 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// URL fixa para redirecionamento - crucial para evitar problemas de "Project not specified"
-const APP_URL = 'https://viverdeia-club.vercel.app';
+// Informações do projeto (importante para resolver o erro "Project not specified")
+const PROJECT_ID = Deno.env.get('SUPABASE_PROJECT_ID') || 'zotzvtepvpnkcoobdubt';
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL') || 'https://zotzvtepvpnkcoobdubt.supabase.co';
 
-console.log('Google Calendar Callback function loaded and initialized');
+// URL fixa para redirecionamento - crucial para evitar problemas de "Project not specified"
+const APP_URL = Deno.env.get('APP_URL') || 'https://viverdeia-club.vercel.app';
+
+console.log('Google Calendar Callback function carregada e inicializada', {
+  projectId: PROJECT_ID,
+  supabaseUrl: SUPABASE_URL,
+  appUrl: APP_URL
+});
 
 serve(async (req) => {
   console.log('===== Google Calendar Callback: Requisição recebida =====');
@@ -33,27 +41,36 @@ serve(async (req) => {
     console.log('Parâmetros recebidos:', { 
       code: code ? '[código presente]' : 'ausente',
       state: state || 'ausente', 
-      error: error || 'nenhum'
+      error: error || 'nenhum',
+      projectId: PROJECT_ID
     });
     
     // Se houver erro no callback do OAuth
     if (error) {
       console.error('Erro explícito no callback OAuth:', error);
-      return Response.redirect(`${APP_URL}/admin/events?authError=${encodeURIComponent(error)}`);
+      const redirectUrl = `${APP_URL}/admin/events?authError=${encodeURIComponent(error)}`;
+      console.log('Redirecionando para:', redirectUrl);
+      return Response.redirect(redirectUrl);
     }
 
     // Se não tiver o código ou state, retorna erro
     if (!code || !state) {
       console.error('Parâmetros inválidos no callback:', { code: !!code, state: !!state });
-      return Response.redirect(`${APP_URL}/admin/events?authError=${encodeURIComponent('parametros_invalidos')}`);
+      const redirectUrl = `${APP_URL}/admin/events?authError=${encodeURIComponent('parametros_invalidos')}`;
+      console.log('Redirecionando para:', redirectUrl);
+      return Response.redirect(redirectUrl);
     }
 
     console.log('Código e state válidos, redirecionando para a aplicação');
     // Redireciona de volta para a aplicação com os parâmetros necessários
-    return Response.redirect(`${APP_URL}/admin/events?code=${encodeURIComponent(code)}&state=${encodeURIComponent(state)}`);
+    const redirectUrl = `${APP_URL}/admin/events?code=${encodeURIComponent(code)}&state=${encodeURIComponent(state)}`;
+    console.log('Redirecionando para:', redirectUrl);
+    return Response.redirect(redirectUrl);
     
   } catch (error) {
     console.error('Erro ao processar callback:', error);
-    return Response.redirect(`${APP_URL}/admin/events?authError=${encodeURIComponent('erro_interno')}`);
+    const redirectUrl = `${APP_URL}/admin/events?authError=${encodeURIComponent('erro_interno')}`;
+    console.log('Redirecionando com erro para:', redirectUrl);
+    return Response.redirect(redirectUrl);
   }
 });
