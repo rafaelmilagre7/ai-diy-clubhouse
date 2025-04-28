@@ -1,4 +1,3 @@
-
 import { SolutionCategory } from "@/lib/types/categoryTypes";
 
 export interface Achievement {
@@ -28,7 +27,11 @@ export interface ProgressData {
     id: string;
     category: string;
     title?: string; // Adicionando campo que pode vir do Supabase
-  };
+  } | {
+    id: string;
+    category: string;
+    title?: string; // Adicionando campo que pode vir do Supabase
+  }[]; // Adicionando suporte para ser um objeto ou array
 }
 
 export interface ChecklistData {

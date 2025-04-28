@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useAuth } from "@/contexts/auth";
 import { supabase } from "@/lib/supabase";
@@ -66,18 +65,39 @@ export const useAchievementData = () => {
       console.log('Progresso encontrado:', progressResult?.length || 0);
       
       // Adaptador para garantir compatibilidade com a interface ProgressData
-      const adaptedProgressData: ProgressData[] = (progressResult || []).map(item => ({
-        id: item.id,
-        user_id: item.user_id,
-        solution_id: item.solution_id,
-        current_module: item.current_module,
-        is_completed: item.is_completed,
-        completed_at: item.completed_at,
-        created_at: new Date().toISOString(), // Valor padrão se não existir
-        last_activity: item.last_activity,
-        completed_modules: item.completed_modules,
-        solutions: item.solutions
-      }));
+      const adaptedProgressData: ProgressData[] = (progressResult || []).map(item => {
+        // Converter solutions para o formato correto, seja objeto único ou um array
+        let solutionsData;
+        if (Array.isArray(item.solutions)) {
+          // Se for um array, garantir que cada elemento tenha os campos necessários
+          solutionsData = item.solutions.map(sol => ({
+            id: sol.id || '',
+            category: sol.category || '',
+            title: sol.title
+          }));
+        } else if (item.solutions) {
+          // Se for um objeto único
+          solutionsData = {
+            id: item.solutions.id || '',
+            category: item.solutions.category || '',
+            title: item.solutions.title
+          };
+        }
+        
+        return {
+          id: item.id,
+          user_id: item.user_id,
+          solution_id: item.solution_id,
+          current_module: item.current_module,
+          is_completed: item.is_completed,
+          completed_at: item.completed_at,
+          created_at: item.created_at || new Date().toISOString(),
+          last_activity: item.last_activity,
+          completed_modules: item.completed_modules,
+          solutions: solutionsData
+        };
+      });
+      
       setProgressData(adaptedProgressData);
 
       // Buscar checklists completados
@@ -89,11 +109,11 @@ export const useAchievementData = () => {
         id: item.id,
         user_id: item.user_id,
         solution_id: item.solution_id,
-        checklist_id: item.checklist_id || '', // Valor padrão se não existir
         checked_items: item.checked_items,
         is_completed: item.is_completed,
         completed_at: item.completed_at
       }));
+      
       setChecklistData(adaptedChecklistData);
 
       // Buscar badges conquistadas
@@ -108,6 +128,7 @@ export const useAchievementData = () => {
         earned_at: item.earned_at,
         badges: item.badges
       }));
+      
       setBadgesData(adaptedBadgesData);
       
       // Buscar dados sociais (comentários e likes)
