@@ -17,46 +17,47 @@ export const useRealtimeStats = () => {
     queryKey: ['realtime-stats'],
     queryFn: async () => {
       try {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
         // Buscar dados em paralelo para melhor performance
-        const [profilesResponse, progressResponse, completionResponse] = await Promise.all([
+        const [profilesResponse, progressResponse, completionResponse, activeProgressResponse] = await Promise.all([
           // Total de usuários
           supabase.from('profiles').select('id', { count: 'exact', head: true }),
           
-          // Implementações hoje
-          supabase.from('progress')
+          // Implementações iniciadas hoje
+          supabase
+            .from('progress')
             .select('id', { count: 'exact', head: true })
-            .gte('created_at', new Date(new Date().setHours(0, 0, 0, 0)).toISOString()),
+            .gte('created_at', today.toISOString()),
           
-          // Taxa de conclusão média
-          supabase.from('progress')
-            .select('is_completed')
+          // Implementações totais para taxa de conclusão
+          supabase
+            .from('progress')
+            .select('is_completed'),
+          
+          // Usuários ativos nos últimos 7 dias
+          supabase
+            .from('progress')
+            .select('user_id')
+            .gte('last_activity', sevenDaysAgo.toISOString())
         ]);
         
         // Verificar erros
         if (profilesResponse.error) throw profilesResponse.error;
         if (progressResponse.error) throw progressResponse.error;
         if (completionResponse.error) throw completionResponse.error;
+        if (activeProgressResponse.error) throw activeProgressResponse.error;
 
         // Calcular estatísticas
         const totalUsers = profilesResponse.count || 0;
         const implementationsToday = progressResponse.count || 0;
         
-        // Calcular usuários ativos (com alguma atividade nos últimos 7 dias)
-        const sevenDaysAgo = new Date();
-        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-        
-        // Modificação aqui: transformando a consulta distinct para evitar o erro de tipo
-        // Primeiro busca todos os registros de progresso dos últimos 7 dias
-        const { data: activeUserData, error: activeError } = await supabase
-          .from('progress')
-          .select('user_id')
-          .gte('last_activity', sevenDaysAgo.toISOString());
-          
-        if (activeError) throw activeError;
-        
-        // Agora calcula usuários distintos em JavaScript ao invés de no banco de dados
+        // Calcular usuários ativos únicos
         const uniqueUserIds = new Set();
-        activeUserData?.forEach(item => uniqueUserIds.add(item.user_id));
+        activeProgressResponse.data?.forEach(item => uniqueUserIds.add(item.user_id));
         const activeUsers = uniqueUserIds.size;
         
         // Calcular taxa média de conclusão
@@ -79,12 +80,7 @@ export const useRealtimeStats = () => {
           description: "Não foi possível carregar as estatísticas em tempo real.",
           variant: "destructive"
         });
-        return {
-          activeUsers: 0,
-          totalUsers: 0,
-          implementationsToday: 0,
-          averageCompletionRate: 0
-        };
+        throw error; // Propagar erro para o React Query lidar
       }
     },
     staleTime: 30 * 1000, // 30 segundos
