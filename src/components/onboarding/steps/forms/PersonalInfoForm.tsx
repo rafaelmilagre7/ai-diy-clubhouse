@@ -9,14 +9,23 @@ interface PersonalInfoFormProps {
   onChange: (field: keyof PersonalInfoData, value: string) => void;
   errors: Record<string, string>;
   isSubmitting: boolean;
+  onSubmit?: () => void;
 }
 
 export const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({
   formData,
   onChange,
   errors,
-  isSubmitting
+  isSubmitting,
+  onSubmit
 }) => {
+  const handleFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (onSubmit) {
+      onSubmit();
+    }
+  };
+
   return (
     <div className="space-y-6">
       <PersonalInfoInputs
@@ -31,6 +40,7 @@ export const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({
           type="submit" 
           disabled={isSubmitting}
           className="bg-[#0ABAB5] hover:bg-[#0ABAB5]/90"
+          onClick={onSubmit ? handleFormSubmit : undefined}
         >
           {isSubmitting ? "Salvando..." : "Continuar"}
         </Button>

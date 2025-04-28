@@ -1,3 +1,4 @@
+
 import { useOnboardingSteps } from "@/hooks/onboarding/useOnboardingSteps";
 import { PersonalInfoStep } from "./steps/PersonalInfoStep";
 import { usePersonalInfoStep } from "@/hooks/onboarding/usePersonalInfoStep";
@@ -18,12 +19,23 @@ export const OnboardingSteps = () => {
     currentStepIndex,
     currentStep,
     steps,
-    isSubmitting,
+    isSubmitting: globalIsSubmitting,
     saveStepData,
     completeOnboarding,
     progress,
     navigateToStep
   } = useOnboardingSteps();
+
+  // Importar o hook usePersonalInfoStep para ter acesso às funções e dados necessários
+  const {
+    formData: personalFormData,
+    errors: personalErrors,
+    isSubmitting: personalIsSubmitting,
+    handleChange: personalHandleChange,
+    handleSubmit: personalHandleSubmit,
+    isSaving: personalIsSaving,
+    lastSaveTime: personalLastSaveTime
+  } = usePersonalInfoStep();
   
   const location = useLocation();
   
@@ -36,7 +48,8 @@ export const OnboardingSteps = () => {
     "/onboarding/customization": "experience_personalization",
     "/onboarding/complementary": "complementary_info",
     "/onboarding/review": "review",
-    "/onboarding/trail-generation": "trail_generation"
+    "/onboarding/trail-generation": "trail_generation",
+    "/onboarding/steps": "personal"  // Adicionar correspondência para /onboarding/steps
   };
 
   const currentPathStepId = pathToStepComponent[location.pathname as keyof typeof pathToStepComponent] || currentStep.id;
@@ -46,7 +59,17 @@ export const OnboardingSteps = () => {
   }, [location.pathname, currentPathStepId, currentStep.id]);
 
   const stepComponents = {
-    personal: PersonalInfoStep,
+    personal: () => (
+      <PersonalInfoStep
+        onSubmit={personalHandleSubmit}
+        isSubmitting={personalIsSubmitting}
+        formData={personalFormData}
+        errors={personalErrors || {}}
+        onChange={personalHandleChange}
+        isSaving={personalIsSaving}
+        lastSaveTime={personalLastSaveTime}
+      />
+    ),
     professional_data: ProfessionalDataStep,
     business_context: BusinessContextStep,
     ai_exp: AIExperienceStep,
@@ -57,36 +80,56 @@ export const OnboardingSteps = () => {
       <ReviewStep 
         progress={progress} 
         onComplete={completeOnboarding} 
-        isSubmitting={isSubmitting}
+        isSubmitting={globalIsSubmitting}
         navigateToStep={(index: number) => navigateToStep(index)}
       />
     ),
   };
 
   const getCurrentStepComponent = () => {
+    // Usar a função para etapa personal em vez de acessar variáveis diretamente
     if (currentPathStepId === "personal" || currentStep.id === "personal") {
-      return (
-        <PersonalInfoStep
-          onSubmit={handleSubmit}
-          isSubmitting={isSubmitting}
-          formData={formData}
-          errors={errors || {}}
-          onChange={handleChange}
-          isSaving={isSaving}
-          lastSaveTime={lastSaveTime}
-        />
-      );
+      return stepComponents.personal();
     }
     
-    const CurrentStepComponent = stepComponents[currentPathStepId as keyof typeof stepComponents] || 
-                             stepComponents[currentStep.id as keyof typeof stepComponents];
+    const StepComponent = stepComponents[currentPathStepId as keyof typeof stepComponents] || 
+                       stepComponents[currentStep.id as keyof typeof stepComponents];
     
-    if (!CurrentStepComponent) {
+    if (!StepComponent) {
       console.warn(`Componente não encontrado para etapa: ${currentPathStepId || currentStep.id}`);
       return null;
     }
 
-    return CurrentStepComponent;
+    // Se StepComponent for uma função (como no caso do review), chamá-la
+    // caso contrário, passar as props padrão
+    if (typeof StepComponent === 'function' && StepComponent !== stepComponents.personal) {
+      if (StepComponent === stepComponents.review) {
+        return <StepComponent />;
+      }
+      
+      return (
+        <StepComponent
+          onSubmit={saveStepData}
+          isSubmitting={globalIsSubmitting}
+          isLastStep={currentStepIndex === steps.length - 1}
+          onComplete={completeOnboarding}
+          initialData={getInitialDataForCurrentStep()}
+          personalInfo={progress?.personal_info}
+        />
+      );
+    }
+
+    // Se for um componente, renderizá-lo com as props
+    return (
+      <StepComponent
+        onSubmit={saveStepData}
+        isSubmitting={globalIsSubmitting}
+        isLastStep={currentStepIndex === steps.length - 1}
+        onComplete={completeOnboarding}
+        initialData={getInitialDataForCurrentStep()}
+        personalInfo={progress?.personal_info}
+      />
+    );
   };
 
   const progressPercentage = ((currentStepIndex + 1) / steps.length) * 100;
@@ -103,37 +146,6 @@ export const OnboardingSteps = () => {
     
     const sectionKey = currentStep.section as keyof OnboardingData;
     return progress[sectionKey as keyof typeof progress];
-  };
-
-  const supportsPersonalInfo = (stepId: string) => {
-    return [
-      "professional_data",
-      "business_context",
-      "ai_exp",
-      "business_goals",
-      "experience_personalization",
-      "complementary_info",
-      "review"
-    ].includes(stepId);
-  };
-
-  const getPropsForCurrentStep = () => {
-    const baseProps = {
-      onSubmit: saveStepData,
-      isSubmitting: isSubmitting,
-      isLastStep: currentStepIndex === steps.length - 1,
-      onComplete: completeOnboarding,
-      initialData: getInitialDataForCurrentStep(),
-    };
-
-    if (supportsPersonalInfo(currentPathStepId || currentStep.id)) {
-      return {
-        ...baseProps,
-        personalInfo: progress?.personal_info,
-      };
-    }
-
-    return baseProps;
   };
 
   return (
