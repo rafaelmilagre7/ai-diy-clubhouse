@@ -1,47 +1,45 @@
-
-import { useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
-import { AdminEventsHeader } from "@/components/admin/events/AdminEventsHeader";
-import { EventsTable } from "@/components/admin/events/EventsTable";
-import { useHandleGoogleCalendarAuth } from "@/hooks/admin/useHandleGoogleCalendarAuth";
-import { AlertCircle } from "lucide-react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { LoadingSpinner } from "@/components/common/LoadingSpinner";
+import React from 'react';
+import { Calendar } from "@/components/ui/calendar"
+import { CalendarIcon } from "lucide-react"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
+import { useAuth } from '@/contexts/auth';
 
 const AdminEvents = () => {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const { isProcessing, authError, isAuthenticated } = useHandleGoogleCalendarAuth();
+  const { isLoading: isAuthenticated } = useAuth();
   
-  useEffect(() => {
-    if (searchParams.has('code') || searchParams.has('state') || searchParams.has('error') || searchParams.has('authError')) {
-      const emptyParams = new URLSearchParams();
-      setSearchParams(emptyParams, { replace: true });
-    }
-  }, [searchParams, setSearchParams]);
-  
-  return (
-    <div className="space-y-6">
-      {isProcessing && (
-        <Alert>
-          <LoadingSpinner size="sm" />
-          <AlertDescription>
-            Processando autenticação do Google Calendar...
-          </AlertDescription>
-        </Alert>
-      )}
-      
-      {authError && (
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            Erro na autenticação do Google Calendar: {authError}
-          </AlertDescription>
-        </Alert>
-      )}
+  if (!isAuthenticated) {
+    return null;
+  }
 
-      {/* Garantindo que o valor passado seja explicitamente um booleano */}
-      <AdminEventsHeader isCalendarAuthenticated={!!isAuthenticated} />
-      <EventsTable />
+  return (
+    <div className="mx-auto py-10">
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button
+            variant={"outline"}
+            className={cn(
+              "w-[300px] justify-start text-left font-normal",
+              !Date && "text-muted-foreground"
+            )}
+          >
+            <CalendarIcon className="mr-2 h-4 w-4" />
+            <span>Pick a date</span>
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-auto p-0" align="start">
+          <Calendar
+            mode="single"
+            // selected={date}
+            // onSelect={setDate}
+            disabled={(date) =>
+              date > new Date() || date < new Date("2023-01-01")
+            }
+            initialFocus
+          />
+        </PopoverContent>
+      </Popover>
     </div>
   );
 };
