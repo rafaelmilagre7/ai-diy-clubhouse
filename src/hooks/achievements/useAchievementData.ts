@@ -62,19 +62,53 @@ export const useAchievementData = () => {
       setSolutions(solutionsData || []);
 
       // Buscar progresso do usuário com join otimizado
-      const progressData = await fetchProgressData(user.id);
-      console.log('Progresso encontrado:', progressData?.length || 0);
-      setProgressData(progressData || []);
+      const progressResult = await fetchProgressData(user.id);
+      console.log('Progresso encontrado:', progressResult?.length || 0);
+      
+      // Adaptador para garantir compatibilidade com a interface ProgressData
+      const adaptedProgressData: ProgressData[] = (progressResult || []).map(item => ({
+        id: item.id,
+        user_id: item.user_id,
+        solution_id: item.solution_id,
+        current_module: item.current_module,
+        is_completed: item.is_completed,
+        completed_at: item.completed_at,
+        created_at: new Date().toISOString(), // Valor padrão se não existir
+        last_activity: item.last_activity,
+        completed_modules: item.completed_modules,
+        solutions: item.solutions
+      }));
+      setProgressData(adaptedProgressData);
 
       // Buscar checklists completados
-      const checklistData = await fetchChecklistData(user.id);
-      console.log('Checklists encontrados:', checklistData?.length || 0);
-      setChecklistData(checklistData || []);
+      const checklistResult = await fetchChecklistData(user.id);
+      console.log('Checklists encontrados:', checklistResult?.length || 0);
+      
+      // Adaptador para garantir compatibilidade com a interface ChecklistData
+      const adaptedChecklistData: ChecklistData[] = (checklistResult || []).map(item => ({
+        id: item.id,
+        user_id: item.user_id,
+        solution_id: item.solution_id,
+        checklist_id: item.checklist_id || '', // Valor padrão se não existir
+        checked_items: item.checked_items,
+        is_completed: item.is_completed,
+        completed_at: item.completed_at
+      }));
+      setChecklistData(adaptedChecklistData);
 
       // Buscar badges conquistadas
-      const badgesData = await fetchBadgesData(user.id);
-      console.log('Badges encontrados:', badgesData?.length || 0);
-      setBadgesData(badgesData || []);
+      const badgesResult = await fetchBadgesData(user.id);
+      console.log('Badges encontrados:', badgesResult?.length || 0);
+      
+      // Adaptador para garantir compatibilidade com a interface BadgeData
+      const adaptedBadgesData: BadgeData[] = (badgesResult || []).map(item => ({
+        id: item.id,
+        user_id: user.id, // Usando o ID do usuário atual
+        badge_id: item.badge_id,
+        earned_at: item.earned_at,
+        badges: item.badges
+      }));
+      setBadgesData(adaptedBadgesData);
       
       // Buscar dados sociais (comentários e likes)
       const socialData = await fetchSocialData(user.id);

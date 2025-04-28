@@ -1,4 +1,3 @@
-
 import { Achievement, ensureValidCategory, achievementCache } from '@/types/achievementTypes';
 import { supabase } from '@/lib/supabase';
 
@@ -25,47 +24,57 @@ export const fetchProgressData = async (userId: string) => {
 };
 
 export const fetchBadgesData = async (userId: string) => {
-  const { data, error } = await supabase
-    .from('user_badges')
-    .select(`
-      id,
-      badge_id,
-      earned_at,
-      badges (
-        id, name, description, category, icon
-      )
-    `)
-    .eq('user_id', userId);
+  try {
+    const { data, error } = await supabase
+      .from('user_badges')
+      .select(`
+        id,
+        badge_id,
+        earned_at,
+        badges (
+          id, name, description, category, icon
+        )
+      `)
+      .eq('user_id', userId);
+      
+    // Se ocorrer um erro, retornar um array vazio em vez de lançar o erro
+    // Isso evitará que a falha na tabela badges quebre o carregamento do dashboard
+    if (error) {
+      console.warn("Erro ao carregar badges (pode ser que a tabela não existe):", error);
+      return [];
+    }
     
-  // Se ocorrer um erro, retornar um array vazio em vez de lançar o erro
-  // Isso evitará que a falha na tabela badges quebre o carregamento do dashboard
-  if (error) {
-    console.warn("Erro ao carregar badges (pode ser que a tabela não existe):", error);
-    return [];
+    return data;
+  } catch (err) {
+    console.error("Erro ao buscar badges:", err);
+    return []; // Retornar array vazio para evitar quebrar o fluxo
   }
-  
-  return data;
 };
 
 export const fetchChecklistData = async (userId: string) => {
-  const { data, error } = await supabase
-    .from('user_checklists')
-    .select(`
-      id,
-      user_id,
-      solution_id,
-      checked_items,
-      is_completed,
-      completed_at
-    `)
-    .eq('user_id', userId);
+  try {
+    const { data, error } = await supabase
+      .from('user_checklists')
+      .select(`
+        id,
+        user_id,
+        solution_id,
+        checked_items,
+        is_completed,
+        completed_at
+      `)
+      .eq('user_id', userId);
+      
+    if (error) {
+      console.warn("Erro ao carregar checklists:", error);
+      return [];
+    }
     
-  if (error) {
-    console.warn("Erro ao carregar checklists:", error);
+    return data;
+  } catch (err) {
+    console.error("Erro ao buscar checklists:", err);
     return [];
   }
-  
-  return data;
 };
 
 export const fetchSocialData = async (userId: string) => {

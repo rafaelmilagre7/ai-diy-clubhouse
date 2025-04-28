@@ -1,4 +1,3 @@
-
 import { useCallback, useEffect } from 'react';
 import { useAuth } from '@/contexts/auth';
 import { useToast } from '@/hooks/use-toast';
@@ -183,6 +182,7 @@ export function useAchievements() {
         badgesData.forEach((badgeData, index) => {
           try {
             if (badgeData.badges) {
+              // Lidar com o caso de badges ser um objeto ou um array
               const badge = Array.isArray(badgeData.badges) 
                 ? badgeData.badges[0] 
                 : badgeData.badges;

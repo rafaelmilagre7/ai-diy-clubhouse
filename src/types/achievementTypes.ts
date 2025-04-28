@@ -21,34 +21,44 @@ export interface ProgressData {
   current_module: number;
   is_completed: boolean;
   completed_at?: string;
-  created_at: string;
+  created_at?: string; // Tornando opcional para compatibilidade
+  last_activity?: string; // Adicionando campo que vem do Supabase
+  completed_modules?: number[]; // Adicionando campo que vem do Supabase
   solutions?: {
     id: string;
     category: string;
+    title?: string; // Adicionando campo que pode vir do Supabase
   };
 }
 
 export interface ChecklistData {
   id: string;
   user_id: string;
-  checklist_id: string;
   solution_id: string;
-  is_completed: boolean;
+  checklist_id?: string; // Tornando opcional
+  checked_items?: any; // Adicionando campo que vem do Supabase
+  is_completed?: boolean; // Adicionando campo que vem do Supabase
   completed_at?: string;
 }
 
 export interface BadgeData {
   id: string;
-  user_id: string;
+  user_id?: string; // Tornando opcional
   badge_id: string;
   earned_at: string;
-  badges: {
+  badges: { // Modificando para aceitar tanto objeto quanto array
     id: string;
     name: string;
     description: string;
     icon: string;
     category: string;
-  };
+  } | {
+    id: string;
+    name: string;
+    description: string;
+    icon: string;
+    category: string;
+  }[];
 }
 
 // Utilitário para verificar se uma string é uma categoria de solução válida
