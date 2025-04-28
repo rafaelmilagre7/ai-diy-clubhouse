@@ -9,6 +9,7 @@ export { default as ResetPassword } from './Auth';
 export { default as AdminDashboard } from './admin/AdminDashboard';
 export { default as SolutionEditor } from './admin/SolutionEditor';
 export { default as SolutionsList } from './admin/SolutionsList';
+export { default as AdminLearning } from './admin/learning';
 
 // Member
 export { default as Dashboard } from './member/Dashboard';

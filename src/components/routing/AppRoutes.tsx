@@ -39,6 +39,7 @@ import AdminLayout from '@/components/layout/admin/AdminLayout';
 import ImplementationTrailPage from '@/pages/member/ImplementationTrailPage';
 import AdminEvents from '@/pages/admin/AdminEvents';
 import Events from '@/pages/member/Events';
+import AdminLearningPage from '@/pages/admin/learning/index';
 
 // Onboarding
 import OnboardingIntro from '@/pages/onboarding/OnboardingIntro';
@@ -103,6 +104,13 @@ const AppRoutes = () => {
         <AdminProtectedRoutes>
           <AdminLayout>
             <AdminDashboard />
+          </AdminLayout>
+        </AdminProtectedRoutes>
+      } />
+      <Route path="/admin/learning" element={
+        <AdminProtectedRoutes>
+          <AdminLayout>
+            <AdminLearningPage />
           </AdminLayout>
         </AdminProtectedRoutes>
       } />
