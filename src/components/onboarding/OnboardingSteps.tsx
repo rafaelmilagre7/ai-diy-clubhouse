@@ -1,3 +1,4 @@
+
 import { useOnboardingSteps } from "@/hooks/onboarding/useOnboardingSteps";
 import { PersonalInfoStep } from "./steps/PersonalInfoStep";
 import { usePersonalInfoStep } from "@/hooks/onboarding/usePersonalInfoStep";
@@ -11,6 +12,7 @@ import { Progress } from "@/components/ui/progress";
 import { OnboardingData } from "@/types/onboarding";
 import { ProfessionalDataStep } from "./steps/ProfessionalDataStep";
 import { useLocation } from "react-router-dom";
+import { useEffect } from "react";
 
 export const OnboardingSteps = () => {
   const {
