@@ -1,9 +1,7 @@
+
 import { ReactNode } from "react";
 import { Route, Routes, Navigate } from "react-router-dom";
 import MemberLayout from "@/components/layout/MemberLayout";
-import OnboardingIntro from "@/pages/onboarding/OnboardingIntro";
-import Onboarding from "@/pages/onboarding/Onboarding";
-
 import Dashboard from "@/pages/member/Dashboard";
 import Solutions from "@/pages/member/Solutions";
 import SolutionDetails from "@/pages/member/SolutionDetails";
@@ -18,6 +16,7 @@ import NewSuggestion from "@/pages/member/NewSuggestion";
 import Achievements from "@/pages/member/Achievements";
 import Benefits from "@/pages/member/Benefits";
 
+import Onboarding from "@/pages/onboarding/Onboarding";
 import ProfessionalData from "@/pages/onboarding/steps/ProfessionalData";
 import BusinessContext from "@/pages/onboarding/steps/BusinessContext";
 import AIExperience from "@/pages/onboarding/steps/AIExperience";
@@ -40,9 +39,16 @@ const MemberRoutes = ({ children }: MemberRoutesProps) => {
       <Route path="/" element={<MemberLayout>{children}</MemberLayout>}>
         <Route index element={<Navigate to="/dashboard" replace />} />
         
-        <Route path="onboarding" element={<OnboardingIntro />} />
-        <Route path="onboarding/*" element={<Onboarding />} />
-        
+        <Route path="onboarding" element={<Onboarding />} />
+        <Route path="onboarding/professional-data" element={<ProfessionalData />} />
+        <Route path="onboarding/business-context" element={<BusinessContext />} />
+        <Route path="onboarding/ai-experience" element={<AIExperience />} />
+        <Route path="onboarding/club-goals" element={<BusinessGoalsClub />} />
+        <Route path="onboarding/customization" element={<ExperiencePersonalization />} />
+        <Route path="onboarding/complementary" element={<ComplementaryInfo />} />
+        <Route path="onboarding/review" element={<Review />} />
+        <Route path="onboarding/trail-generation" element={<TrailGeneration />} />
+
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="solutions" element={<Solutions />} />
         <Route path="solution/:id" element={<SolutionDetails />} />

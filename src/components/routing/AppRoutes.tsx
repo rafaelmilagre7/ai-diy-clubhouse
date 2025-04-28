@@ -39,10 +39,18 @@ import AdminLayout from '@/components/layout/admin/AdminLayout';
 import ImplementationTrailPage from '@/pages/member/ImplementationTrailPage';
 import AdminEvents from '@/pages/admin/AdminEvents';
 import Events from '@/pages/member/Events';
-import NetworkingPage from '@/pages/member/NetworkingPage';
 
-// Importar os componentes de Onboarding a partir do caminho correto
-import Onboarding from '@/pages/onboarding/Onboarding';
+// Onboarding
+import OnboardingIntro from '@/pages/onboarding/OnboardingIntro';
+import PersonalInfo from '@/pages/onboarding/steps/PersonalInfo';
+import ProfessionalData from '@/pages/onboarding/steps/ProfessionalData';
+import BusinessContext from '@/pages/onboarding/steps/BusinessContext';
+import AIExperience from '@/pages/onboarding/steps/AIExperience';
+import BusinessGoalsClub from '@/pages/onboarding/steps/BusinessGoalsClub';
+import ExperiencePersonalization from '@/pages/onboarding/steps/ExperiencePersonalization';
+import ComplementaryInfo from '@/pages/onboarding/steps/ComplementaryInfo';
+import Review from '@/pages/onboarding/steps/Review';
+import TrailGeneration from '@/pages/onboarding/steps/TrailGeneration';
 
 const AppRoutes = () => {
   console.log("Renderizando AppRoutes");
@@ -72,22 +80,23 @@ const AppRoutes = () => {
       <Route path="/benefits" element={<ProtectedRoutes><MemberLayout><Benefits /></MemberLayout></ProtectedRoutes>} />
       <Route path="/achievements" element={<ProtectedRoutes><MemberLayout><Achievements /></MemberLayout></ProtectedRoutes>} />
       <Route path="/events" element={<ProtectedRoutes><MemberLayout><Events /></MemberLayout></ProtectedRoutes>} />
-      <Route path="/networking" element={
-        <ProtectedRoutes>
-          <MemberLayout>
-            <NetworkingPage />
-          </MemberLayout>
-        </ProtectedRoutes>
-      } />
       
       {/* Sugestões Routes */}
       <Route path="/suggestions" element={<ProtectedRoutes><MemberLayout><Suggestions /></MemberLayout></ProtectedRoutes>} />
       <Route path="/suggestions/:id" element={<ProtectedRoutes><MemberLayout><SuggestionDetails /></MemberLayout></ProtectedRoutes>} />
       <Route path="/suggestions/new" element={<ProtectedRoutes><MemberLayout><NewSuggestion /></MemberLayout></ProtectedRoutes>} />
       
-      {/* Onboarding Routes - Simplificado para o componente principal */}
-      <Route path="/onboarding" element={<ProtectedRoutes><Onboarding /></ProtectedRoutes>} />
-      <Route path="/onboarding/*" element={<ProtectedRoutes><Onboarding /></ProtectedRoutes>} />
+      {/* Onboarding Routes */}
+      <Route path="/onboarding" element={<ProtectedRoutes><OnboardingIntro /></ProtectedRoutes>} />
+      <Route path="/onboarding/personal-info" element={<ProtectedRoutes><PersonalInfo /></ProtectedRoutes>} />
+      <Route path="/onboarding/professional-data" element={<ProtectedRoutes><ProfessionalData /></ProtectedRoutes>} />
+      <Route path="/onboarding/business-context" element={<ProtectedRoutes><BusinessContext /></ProtectedRoutes>} />
+      <Route path="/onboarding/ai-experience" element={<ProtectedRoutes><AIExperience /></ProtectedRoutes>} />
+      <Route path="/onboarding/club-goals" element={<ProtectedRoutes><BusinessGoalsClub /></ProtectedRoutes>} />
+      <Route path="/onboarding/customization" element={<ProtectedRoutes><ExperiencePersonalization /></ProtectedRoutes>} />
+      <Route path="/onboarding/complementary" element={<ProtectedRoutes><ComplementaryInfo /></ProtectedRoutes>} />
+      <Route path="/onboarding/review" element={<ProtectedRoutes><Review /></ProtectedRoutes>} />
+      <Route path="/onboarding/trail-generation" element={<ProtectedRoutes><TrailGeneration /></ProtectedRoutes>} />
       
       {/* Admin Routes */}
       <Route path="/admin" element={

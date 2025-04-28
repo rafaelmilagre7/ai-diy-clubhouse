@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
@@ -24,69 +25,45 @@ export const PersonalInfoFormController = () => {
 
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [lastAttemptTimestamp, setLastAttemptTimestamp] = useState<number | null>(null);
-  const [isInitialLoadAttempted, setIsInitialLoadAttempted] = useState(false);
 
+  // Carregamento inicial de dados, sem salvamento automático
   useEffect(() => {
-    if (!isInitialLoadAttempted) {
-      console.log("Tentando carregar dados iniciais");
-      setIsInitialLoadAttempted(true);
+    if (formDataLoaded && progress?.id && !isSubmitting) {
+      console.log("Dados iniciais carregados");
     }
-  }, [isInitialLoadAttempted]);
-
-  useEffect(() => {
-    if (formDataLoaded && progress?.id && !isSubmitting && lastAttemptTimestamp === null) {
-      console.log("Dados iniciais carregados com sucesso");
-      setLastAttemptTimestamp(Date.now());
-    }
-  }, [formDataLoaded, progress?.id, isSubmitting, lastAttemptTimestamp]);
+  }, [formDataLoaded, progress?.id]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isSubmitting) return;
-
     const errors = validatePersonalInfoForm(formData);
     if (Object.keys(errors).length > 0) {
       setFormErrors(errors);
-      toast.error("Por favor, corrija os erros no formulário", {
-        description: "Todos os campos marcados são obrigatórios"
-      });
+      toast.error("Por favor, corrija os erros no formulário");
       return;
     }
-
     setIsSubmitting(true);
-    setLastAttemptTimestamp(Date.now());
 
     try {
       const fullName = profile?.name || user?.user_metadata?.name || formData.name;
       const email = profile?.email || user?.email || formData.email;
-      
-      const personalInfo = {
-        ...formData,
-        name: fullName,
-        email: email
-      };
-
+      const personalInfo = { ...formData, name: fullName, email: email };
       await updateProgress({
         personal_info: personalInfo,
         current_step: "professional_data",
         completed_steps: [...(progress?.completed_steps || []), "personal"],
       });
-
       toast.success("Dados salvos com sucesso!");
       navigate("/onboarding/professional-data", { replace: true });
-
     } catch (error) {
       console.error("Erro ao salvar dados:", error);
-      toast.error("Erro ao salvar dados. Tente novamente.", {
-        description: "Verifique sua conexão e tente novamente em alguns instantes"
-      });
+      toast.error("Erro ao salvar dados. Tente novamente.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  if (isLoading || !isInitialLoadAttempted) {
+  if (isLoading) {
     return (
       <div className="flex justify-center items-center h-24">
         <LoadingSpinner size={8} />
@@ -103,10 +80,7 @@ export const PersonalInfoFormController = () => {
         readOnly 
         errors={formErrors}
       />
-      <NavigationButtons 
-        isSubmitting={isSubmitting} 
-        showPrevious={false}
-      />
+      <NavigationButtons isSubmitting={isSubmitting} />
     </form>
   );
 };

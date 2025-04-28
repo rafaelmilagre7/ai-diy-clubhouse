@@ -5,26 +5,30 @@ import { PersonalInfoInputs } from "../PersonalInfoInputs";
 import { PersonalInfoData } from "@/types/onboarding";
 
 interface PersonalInfoFormProps {
+  validation: any;
+  register: any;
+  errors: Record<string, string>;
+  touchedFields: any;
+  isSubmitting: boolean;
+  initialData?: any;
   formData: PersonalInfoData;
   onChange: (field: keyof PersonalInfoData, value: string) => void;
-  errors: Record<string, string>;
-  isSubmitting: boolean;
-  onSubmit?: () => Promise<void>;
 }
 
 export const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({
-  formData,
-  onChange,
+  validation,
+  register,
   errors,
+  touchedFields,
   isSubmitting,
-  onSubmit
+  initialData,
+  formData,
+  onChange
 }) => {
-  // Garantindo que não haja condicionais na chamada de handleFormSubmit
-  const handleFormSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (onSubmit) {
-      onSubmit();
-    }
+  // Combinar erros do react-hook-form e da validação personalizada
+  const combinedErrors = {
+    ...errors,
+    ...validation.errors
   };
 
   return (
@@ -33,15 +37,14 @@ export const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({
         formData={formData}
         onChange={onChange}
         disabled={isSubmitting}
-        errors={errors}
+        errors={combinedErrors}
       />
       
       <div className="flex justify-end pt-4">
         <Button 
           type="submit" 
           disabled={isSubmitting}
-          className="bg-[#0ABAB5] hover:bg-[#0ABAB5]/90"
-          onClick={handleFormSubmit}
+          className="w-full sm:w-auto"
         >
           {isSubmitting ? "Salvando..." : "Continuar"}
         </Button>

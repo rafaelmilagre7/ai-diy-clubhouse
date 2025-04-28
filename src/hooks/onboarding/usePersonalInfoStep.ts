@@ -12,8 +12,8 @@ export const usePersonalInfoStep = () => {
   const { progress, updateProgress, refreshProgress } = useProgress();
   const { user, profile } = useAuth();
   const [formData, setFormData] = useState<PersonalInfoData>({
-    name: profile?.name || user?.user_metadata?.name || "",
-    email: profile?.email || user?.email || "",
+    name: "",
+    email: "",
     phone: "",
     ddi: "+55",
     linkedin: "",
@@ -29,34 +29,36 @@ export const usePersonalInfoStep = () => {
 
   // Função para carregar dados iniciais do banco
   const loadInitialData = useCallback(() => {
-    if (!initialDataLoaded) {
-      console.log("Carregando dados iniciais do usuário:", { profile, user });
-      
-      const userName = profile?.name || user?.user_metadata?.name || "";
-      const userEmail = profile?.email || user?.email || "";
+    // Garantir que sempre carrega só do personal_info
+    const userName = profile?.name || user?.user_metadata?.name || "";
+    const userEmail = profile?.email || user?.email || "";
 
-      if (progress?.personal_info) {
-        console.log("Dados do progresso encontrados:", progress.personal_info);
-        
-        setFormData(prevData => ({
-          ...prevData,
-          ...progress.personal_info,
-          name: userName || progress.personal_info.name || "",
-          email: userEmail || progress.personal_info.email || "",
-          ddi: progress.personal_info.ddi || "+55",
-        }));
-      } else {
-        console.log("Nenhum dado de progresso encontrado, usando dados do usuário");
-        setFormData(prevData => ({
-          ...prevData,
-          name: userName,
-          email: userEmail,
-        }));
+    if (progress?.personal_info) {
+      let ddi = progress.personal_info.ddi || "+55";
+      if (ddi) {
+        ddi = "+" + ddi.replace(/\+/g, '').replace(/\D/g, '');
       }
-      
-      setInitialDataLoaded(true);
+      setFormData({
+        name: userName || progress.personal_info.name || "",
+        email: userEmail || progress.personal_info.email || "",
+        phone: progress.personal_info.phone || "",
+        ddi: ddi,
+        linkedin: progress.personal_info.linkedin || "",
+        instagram: progress.personal_info.instagram || "",
+        country: progress.personal_info.country || "Brasil",
+        state: progress.personal_info.state || "",
+        city: progress.personal_info.city || "",
+        timezone: progress.personal_info.timezone || "GMT-3"
+      });
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        name: userName,
+        email: userEmail
+      }));
     }
-  }, [progress, profile, user, initialDataLoaded]);
+    setInitialDataLoaded(true);
+  }, [progress, profile, user]);
 
   // Inicializar com dados vazios se não houver progresso após 3 segundos
   useEffect(() => {

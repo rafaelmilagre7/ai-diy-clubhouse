@@ -354,108 +354,6 @@ export type Database = {
           },
         ]
       }
-      network_connections: {
-        Row: {
-          created_at: string
-          id: string
-          recipient_id: string
-          requester_id: string
-          status: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          recipient_id: string
-          requester_id: string
-          status?: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          recipient_id?: string
-          requester_id?: string
-          status?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      network_matches: {
-        Row: {
-          compatibility_score: number
-          created_at: string
-          id: string
-          is_viewed: boolean
-          match_reason: string | null
-          match_strengths: Json | null
-          matched_user_id: string
-          status: string
-          suggested_topics: Json | null
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          compatibility_score: number
-          created_at?: string
-          id?: string
-          is_viewed?: boolean
-          match_reason?: string | null
-          match_strengths?: Json | null
-          matched_user_id: string
-          status?: string
-          suggested_topics?: Json | null
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          compatibility_score?: number
-          created_at?: string
-          id?: string
-          is_viewed?: boolean
-          match_reason?: string | null
-          match_strengths?: Json | null
-          matched_user_id?: string
-          status?: string
-          suggested_topics?: Json | null
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      networking_preferences: {
-        Row: {
-          created_at: string
-          exclude_sectors: string[] | null
-          is_active: boolean | null
-          looking_for: Json | null
-          min_compatibility: number | null
-          preferred_connections_per_week: number | null
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          exclude_sectors?: string[] | null
-          is_active?: boolean | null
-          looking_for?: Json | null
-          min_compatibility?: number | null
-          preferred_connections_per_week?: number | null
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          exclude_sectors?: string[] | null
-          is_active?: boolean | null
-          looking_for?: Json | null
-          min_compatibility?: number | null
-          preferred_connections_per_week?: number | null
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       onboarding: {
         Row: {
           additional_context: string | null
@@ -687,13 +585,6 @@ export type Database = {
             foreignKeyName: "onboarding_ai_experience_progress_id_fkey"
             columns: ["progress_id"]
             isOneToOne: false
-            referencedRelation: "onboarding_profile_view"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "onboarding_ai_experience_progress_id_fkey"
-            columns: ["progress_id"]
-            isOneToOne: false
             referencedRelation: "onboarding_progress"
             referencedColumns: ["id"]
           },
@@ -740,13 +631,6 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "onboarding_business_context_progress_id_fkey"
-            columns: ["progress_id"]
-            isOneToOne: false
-            referencedRelation: "onboarding_profile_view"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "onboarding_business_context_progress_id_fkey"
             columns: ["progress_id"]
@@ -806,13 +690,6 @@ export type Database = {
           week_availability?: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: "onboarding_business_goals_progress_id_fkey"
-            columns: ["progress_id"]
-            isOneToOne: false
-            referencedRelation: "onboarding_profile_view"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "onboarding_business_goals_progress_id_fkey"
             columns: ["progress_id"]
@@ -930,13 +807,6 @@ export type Database = {
             foreignKeyName: "onboarding_experience_personalization_progress_id_fkey"
             columns: ["progress_id"]
             isOneToOne: false
-            referencedRelation: "onboarding_profile_view"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "onboarding_experience_personalization_progress_id_fkey"
-            columns: ["progress_id"]
-            isOneToOne: false
             referencedRelation: "onboarding_progress"
             referencedColumns: ["id"]
           },
@@ -968,13 +838,6 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "onboarding_history_onboarding_id_fkey"
-            columns: ["onboarding_id"]
-            isOneToOne: false
-            referencedRelation: "onboarding_profile_view"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "onboarding_history_onboarding_id_fkey"
             columns: ["onboarding_id"]
@@ -1041,13 +904,6 @@ export type Database = {
             foreignKeyName: "onboarding_personal_info_progress_id_fkey"
             columns: ["progress_id"]
             isOneToOne: false
-            referencedRelation: "onboarding_profile_view"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "onboarding_personal_info_progress_id_fkey"
-            columns: ["progress_id"]
-            isOneToOne: false
             referencedRelation: "onboarding_progress"
             referencedColumns: ["id"]
           },
@@ -1094,13 +950,6 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "onboarding_professional_info_progress_id_fkey"
-            columns: ["progress_id"]
-            isOneToOne: false
-            referencedRelation: "onboarding_profile_view"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "onboarding_professional_info_progress_id_fkey"
             columns: ["progress_id"]
@@ -2167,31 +2016,6 @@ export type Database = {
       }
     }
     Views: {
-      network_match_view: {
-        Row: {
-          compatibility_score: number | null
-          created_at: string | null
-          id: string | null
-          interests: string | null
-          is_viewed: boolean | null
-          match_reason: string | null
-          match_strengths: Json | null
-          matched_user_avatar: string | null
-          matched_user_company: string | null
-          matched_user_id: string | null
-          matched_user_name: string | null
-          matched_user_position: string | null
-          skills_to_share: string | null
-          status: string | null
-          suggested_topics: Json | null
-          updated_at: string | null
-          user_avatar: string | null
-          user_company: string | null
-          user_id: string | null
-          user_name: string | null
-        }
-        Relationships: []
-      }
       onboarding_analytics: {
         Row: {
           ai_experience: Json | null
@@ -2207,57 +2031,6 @@ export type Database = {
           resources_needs: Json | null
           started_at: string | null
           team_info: Json | null
-          user_id: string | null
-        }
-        Relationships: []
-      }
-      onboarding_profile_view: {
-        Row: {
-          ai_experience: Json | null
-          ai_knowledge_level: string | null
-          annual_revenue: string | null
-          budget_range: string | null
-          business_context: Json | null
-          business_data: Json | null
-          business_goals: Json | null
-          company_data: Json | null
-          company_name: string | null
-          company_sector: string | null
-          company_size: string | null
-          company_website: string | null
-          complementary_info: Json | null
-          completed_steps: string[] | null
-          created_at: string | null
-          current_position: string | null
-          current_step: string | null
-          debug_logs: Json | null
-          decision_makers: string[] | null
-          experience_personalization: Json | null
-          goals: string[] | null
-          id: string | null
-          implementation_preferences: Json | null
-          implementation_speed: string | null
-          industry_focus: Json | null
-          is_completed: boolean | null
-          last_error: string | null
-          last_sync_at: string | null
-          personal_info: Json | null
-          priority_areas: string[] | null
-          professional_data: Json | null
-          professional_info: Json | null
-          profile_avatar: string | null
-          profile_company: string | null
-          profile_name: string | null
-          resources_needs: Json | null
-          support_level: string | null
-          sync_status: string | null
-          target_market: string | null
-          team_info: Json | null
-          team_size: string | null
-          tech_stack: string[] | null
-          technical_expertise: string | null
-          training_needs: string[] | null
-          updated_at: string | null
           user_id: string | null
         }
         Relationships: []

@@ -7,10 +7,9 @@ import { SocialInputs } from "./inputs/SocialInputs";
 import { LocationInputs } from "./inputs/LocationInputs";
 import { TimezoneInput } from "./inputs/TimezoneInput";
 import { useAuth } from "@/contexts/auth";
-import { LoadingSpinner } from "@/components/common/LoadingSpinner";
 
 interface PersonalInfoInputsProps {
-  formData?: {
+  formData: {
     name: string;
     email: string;
     phone: string;
@@ -36,15 +35,6 @@ export const PersonalInfoInputs = ({
   errors = {} 
 }: PersonalInfoInputsProps) => {
   const { user } = useAuth();
-
-  if (!formData) {
-    return (
-      <div className="flex justify-center items-center py-8">
-        <LoadingSpinner size={6} />
-        <span className="ml-3 text-sm text-gray-500">Carregando dados...</span>
-      </div>
-    );
-  }
   
   // Usar os valores do usuário autenticado como fallback
   const userName = formData.name || user?.user_metadata?.name || '';

@@ -1,7 +1,5 @@
-
 import { useOnboardingSteps } from "@/hooks/onboarding/useOnboardingSteps";
 import { PersonalInfoStep } from "./steps/PersonalInfoStep";
-import { usePersonalInfoStep } from "@/hooks/onboarding/usePersonalInfoStep";
 import { BusinessGoalsStep } from "./steps/BusinessGoalsStep";
 import { BusinessContextStep } from "./steps/BusinessContextStep";
 import { AIExperienceStep } from "./steps/AIExperienceStep";
@@ -19,22 +17,12 @@ export const OnboardingSteps = () => {
     currentStepIndex,
     currentStep,
     steps,
-    isSubmitting: globalIsSubmitting,
+    isSubmitting,
     saveStepData,
     completeOnboarding,
     progress,
     navigateToStep
   } = useOnboardingSteps();
-
-  const {
-    formData: personalFormData,
-    errors: personalErrors,
-    isSubmitting: personalIsSubmitting,
-    handleChange: personalHandleChange,
-    handleSubmit: personalHandleSubmit,
-    isSaving: personalIsSaving,
-    lastSaveTime: personalLastSaveTime
-  } = usePersonalInfoStep();
   
   const location = useLocation();
   
@@ -46,33 +34,17 @@ export const OnboardingSteps = () => {
     "/onboarding/club-goals": "business_goals",
     "/onboarding/customization": "experience_personalization",
     "/onboarding/complementary": "complementary_info",
-    "/onboarding/review": "review",
-    "/onboarding/trail-generation": "trail_generation",
-    "/onboarding/steps": "personal"
+    "/onboarding/review": "review"
   };
 
   const currentPathStepId = pathToStepComponent[location.pathname as keyof typeof pathToStepComponent] || currentStep.id;
   
   useEffect(() => {
-    console.log(`Rota atual: ${location.pathname}, stepId: ${currentPathStepId}, currentStep.id: ${currentStep.id}`);
+    console.log(`Rota atual: ${location.pathname}, stepId mapeado: ${currentPathStepId}, currentStep.id: ${currentStep.id}`);
   }, [location.pathname, currentPathStepId, currentStep.id]);
 
-  const adaptedPersonalHandleSubmit = async (): Promise<void> => {
-    await personalHandleSubmit();
-  };
-
-  const stepComponents: Record<string, any> = {
-    personal: () => (
-      <PersonalInfoStep
-        onSubmit={adaptedPersonalHandleSubmit}
-        isSubmitting={personalIsSubmitting}
-        formData={personalFormData}
-        errors={personalErrors || {}}
-        onChange={personalHandleChange}
-        isSaving={personalIsSaving}
-        lastSaveTime={personalLastSaveTime}
-      />
-    ),
+  const stepComponents = {
+    personal: PersonalInfoStep,
     professional_data: ProfessionalDataStep,
     business_context: BusinessContextStep,
     ai_exp: AIExperienceStep,
@@ -83,66 +55,63 @@ export const OnboardingSteps = () => {
       <ReviewStep 
         progress={progress} 
         onComplete={completeOnboarding} 
-        isSubmitting={globalIsSubmitting}
+        isSubmitting={isSubmitting}
         navigateToStep={(index: number) => navigateToStep(index)}
       />
     ),
   };
 
-  const getCurrentStepComponent = () => {
-    if (currentPathStepId === "personal" || currentStep.id === "personal") {
-      return stepComponents.personal();
-    }
-    
-    const StepComponent = stepComponents[currentPathStepId as keyof typeof stepComponents] || 
-                       stepComponents[currentStep.id as keyof typeof stepComponents];
-    
-    if (!StepComponent) {
-      console.warn(`Componente não encontrado para etapa: ${currentPathStepId || currentStep.id}`);
-      return null;
-    }
-
-    if (typeof StepComponent === 'function' && StepComponent !== stepComponents.personal) {
-      if (StepComponent === stepComponents.review) {
-        return <StepComponent />;
-      }
-      
-      return (
-        <StepComponent
-          onSubmit={saveStepData}
-          isSubmitting={globalIsSubmitting}
-          isLastStep={currentStepIndex === steps.length - 1}
-          onComplete={completeOnboarding}
-          initialData={getInitialDataForCurrentStep()}
-        />
-      );
-    }
-
-    return (
-      <StepComponent
-        onSubmit={saveStepData}
-        isSubmitting={globalIsSubmitting}
-        isLastStep={currentStepIndex === steps.length - 1}
-        onComplete={completeOnboarding}
-        initialData={getInitialDataForCurrentStep()}
-      />
-    );
-  };
+  const CurrentStepComponent = stepComponents[currentPathStepId as keyof typeof stepComponents] || 
+                              stepComponents[currentStep.id as keyof typeof stepComponents];
+  
+  if (!CurrentStepComponent) {
+    console.warn(`Componente não encontrado para etapa: ${currentPathStepId || currentStep.id}`);
+    return null;
+  }
 
   const progressPercentage = ((currentStepIndex + 1) / steps.length) * 100;
 
   const getInitialDataForCurrentStep = () => {
     if (!progress) return undefined;
-    
     if (currentPathStepId === "professional_data" || currentStep.id === "professional_data") {
       return progress.professional_info;
     }
     if (currentPathStepId === "business_context" || currentStep.id === "business_context") {
       return progress.business_context;
     }
-    
     const sectionKey = currentStep.section as keyof OnboardingData;
     return progress[sectionKey as keyof typeof progress];
+  };
+
+  const supportsPersonalInfo = (stepId: string) => {
+    return (
+      stepId === "professional_data" || 
+      stepId === "business_context" || 
+      stepId === "ai_exp" || 
+      stepId === "business_goals" || 
+      stepId === "experience_personalization" || 
+      stepId === "complementary_info" || 
+      stepId === "review"
+    );
+  };
+
+  const getPropsForCurrentStep = () => {
+    const baseProps = {
+      onSubmit: saveStepData,
+      isSubmitting: isSubmitting,
+      isLastStep: currentStepIndex === steps.length - 1,
+      onComplete: completeOnboarding,
+      initialData: getInitialDataForCurrentStep(),
+    };
+
+    if (supportsPersonalInfo(currentPathStepId || currentStep.id)) {
+      return {
+        ...baseProps,
+        personalInfo: progress?.personal_info,
+      };
+    }
+
+    return baseProps;
   };
 
   return (
@@ -163,7 +132,9 @@ export const OnboardingSteps = () => {
       </div>
 
       <div className="bg-gray-800 p-6 rounded-lg">
-        {getCurrentStepComponent()}
+        <CurrentStepComponent
+          {...getPropsForCurrentStep()}
+        />
       </div>
     </div>
   );

@@ -1,5 +1,5 @@
 
-import { useQuery } from '@tanstack/react-query';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 import { 
@@ -26,11 +26,20 @@ interface AnalyticsFilters {
 
 export const useAnalyticsData = (filters: AnalyticsFilters) => {
   const { toast } = useToast();
+  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState<AnalyticsData>({
+    usersByTime: [],
+    solutionPopularity: [],
+    implementationsByCategory: [],
+    userCompletionRate: [],
+    dayOfWeekActivity: []
+  });
 
-  return useQuery({
-    queryKey: ['analytics-data', filters],
-    queryFn: async () => {
+  useEffect(() => {
+    const fetchAnalyticsData = async () => {
       try {
+        setLoading(true);
+
         // Calcular a data de início com base no timeRange
         const getStartDate = () => {
           if (filters.timeRange === 'all') return null;
@@ -75,7 +84,7 @@ export const useAnalyticsData = (filters: AnalyticsFilters) => {
         if (solutionsError) throw solutionsError;
 
         // IDs das soluções filtradas para usar na consulta de progresso
-        const filteredSolutionIds = solutionsData?.map(s => s.id) || [];
+        const filteredSolutionIds = solutionsData.map(s => s.id);
 
         // Buscar dados de progresso com filtros
         let progressQuery = supabase
@@ -94,34 +103,35 @@ export const useAnalyticsData = (filters: AnalyticsFilters) => {
         
         if (progressError) throw progressError;
 
-        // Processar dados para gráficos usando memoização
+        // Processar dados para gráficos
         const usersByTime = processUsersByTime(userData || []);
         const solutionPopularity = processSolutionPopularity(progressData || [], solutionsData || []);
         const implementationsByCategory = processImplementationsByCategory(progressData || [], solutionsData || []);
         const userCompletionRate = processCompletionRate(progressData || []);
         const dayOfWeekActivity = processDayOfWeekActivity(progressData || []);
 
-        return {
+        setData({
           usersByTime,
           solutionPopularity,
           implementationsByCategory,
           userCompletionRate,
           dayOfWeekActivity
-        } as AnalyticsData;
+        });
 
-      } catch (error: any) {
+      } catch (error) {
         console.error("Erro ao carregar dados de análise:", error);
         toast({
           title: "Erro ao carregar análises",
-          description: "Não foi possível carregar os dados de análise. Tentando novamente...",
+          description: "Não foi possível carregar os dados de análise.",
           variant: "destructive"
         });
-        throw error;
+      } finally {
+        setLoading(false);
       }
-    },
-    staleTime: 5 * 60 * 1000, // 5 minutos
-    retry: 2,
-    refetchOnWindowFocus: false,
-    refetchOnMount: true
-  });
+    };
+
+    fetchAnalyticsData();
+  }, [toast, filters]);
+
+  return { data, loading };
 };

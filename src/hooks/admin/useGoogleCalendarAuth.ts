@@ -3,7 +3,6 @@ import { useState, useCallback, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { secureStorage } from '@/utils/tokenEncryption';
-import { useLocation } from 'react-router-dom';
 
 export interface GoogleEvent {
   id: string;
@@ -58,76 +57,6 @@ export const useGoogleCalendarAuth = () => {
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [lastError, setLastError] = useState<string | null>(null);
   const [isAuthInitiating, setIsAuthInitiating] = useState(false);
-  const location = useLocation();
-
-  // Processar callback params do OAuth quando retornar a esta página
-  useEffect(() => {
-    const processCallbackParams = async () => {
-      const searchParams = new URLSearchParams(location.search);
-      const code = searchParams.get('code');
-      const state = searchParams.get('state');
-      const authError = searchParams.get('authError');
-      
-      if (authError) {
-        console.error('Erro de autenticação do Google Calendar:', authError);
-        toast.error(`Erro na autenticação: ${authError}`);
-        return;
-      }
-      
-      if (code && state) {
-        try {
-          setIsLoading(true);
-          
-          // Verificar se o state corresponde ao que armazenamos
-          const storedState = localStorage.getItem('google_auth_state');
-          if (storedState !== state) {
-            console.error('State mismatch, possível ataque CSRF');
-            toast.error('Erro de segurança na autenticação');
-            return;
-          }
-          
-          // Trocar código por tokens
-          const { data, error } = await supabase.functions.invoke<GoogleCalendarTokens>('google-calendar-auth', {
-            body: { 
-              code 
-            }
-          });
-          
-          if (error || !data) {
-            throw error || new Error('Não foi possível obter tokens');
-          }
-          
-          // Armazenar tokens
-          const user = await supabase.auth.getUser();
-          if (user.data?.user) {
-            secureStorage.setItem('google_calendar_auth', data, user.data.user.id);
-            
-            // Calcular expiração
-            const expiryTime = new Date().getTime() + (data.expires_in * 1000);
-            localStorage.setItem('google_calendar_expiry', expiryTime.toString());
-            
-            setAccessToken(data.access_token);
-            setUserInfo(data.user_info);
-            setIsAuthenticated(true);
-            
-            toast.success('Conectado com sucesso ao Google Calendar!');
-          }
-          
-          // Limpar parâmetros da URL
-          window.history.replaceState({}, document.title, window.location.pathname);
-          
-        } catch (error) {
-          console.error('Erro ao processar callback do OAuth:', error);
-          setLastError(error instanceof Error ? error.message : 'Erro desconhecido');
-          toast.error('Falha ao conectar com o Google Calendar');
-        } finally {
-          setIsLoading(false);
-        }
-      }
-    };
-    
-    processCallbackParams();
-  }, [location]);
 
   useEffect(() => {
     const checkStoredAuth = async () => {
@@ -196,7 +125,10 @@ export const useGoogleCalendarAuth = () => {
     try {
       const user = await supabase.auth.getUser();
       if (user.data.user) {
-        secureStorage.removeItem('google_calendar_auth', user.data.user.id);
+        secureStorage.removeItem('google_calendar_auth');
+      } else {
+        // Fallback caso não consiga obter usuário
+        secureStorage.removeItem('google_calendar_auth');
       }
       
       localStorage.removeItem('google_calendar_expiry');
@@ -217,7 +149,7 @@ export const useGoogleCalendarAuth = () => {
     userInfo,
     lastError,
     isAuthInitiating,
-    accessToken,
+    accessToken, // Exportando explicitamente o accessToken
     initiateLogin,
     handleLogout
   };

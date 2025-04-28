@@ -1,4 +1,3 @@
-
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/auth";
 import { 
@@ -13,8 +12,7 @@ import {
   Award,
   BookOpen,
   Map,
-  Calendar,
-  Users
+  Calendar
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "react-router-dom";
@@ -26,6 +24,9 @@ interface SidebarNavProps {
 export const MemberSidebarNav = ({ sidebarOpen }: SidebarNavProps) => {
   const location = useLocation();
   const { isAdmin } = useAuth();
+
+  // Log para verificar se o componente está sendo renderizado
+  console.log("MemberSidebarNav renderizando, sidebarOpen:", sidebarOpen);
 
   const menuItems = [
     {
@@ -77,11 +78,6 @@ export const MemberSidebarNav = ({ sidebarOpen }: SidebarNavProps) => {
       title: "Eventos",
       href: "/events",
       icon: Calendar,
-    },
-    {
-      title: "Networking",
-      href: "/networking",
-      icon: Users,
     }
   ];
 
