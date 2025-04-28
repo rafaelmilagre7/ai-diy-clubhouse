@@ -1,7 +1,6 @@
 
 import React from 'react';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import { ChartBarIcon } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
 
 interface PlaceholderTabContentProps {
   title: string;
@@ -10,19 +9,14 @@ interface PlaceholderTabContentProps {
 
 export const PlaceholderTabContent = ({ title, description }: PlaceholderTabContentProps) => {
   return (
-    <div className="grid gap-4">
-      <Card>
-        <CardHeader>
-          <CardTitle>{title}</CardTitle>
-          <CardDescription>{description}</CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-col items-center justify-center h-[400px] text-muted-foreground">
-          <ChartBarIcon className="h-16 w-16 mb-4 opacity-30" />
-          <p className="text-center max-w-md">
-            Esta seção está em desenvolvimento. Em breve, você poderá visualizar análises detalhadas aqui.
-          </p>
-        </CardContent>
-      </Card>
-    </div>
+    <Card>
+      <CardContent className="flex flex-col items-center justify-center py-12">
+        <h3 className="text-lg font-semibold">{title}</h3>
+        <p className="text-muted-foreground text-center max-w-md mt-2">{description}</p>
+        <p className="text-muted-foreground text-center max-w-md mt-4">
+          Esta seção está em desenvolvimento e estará disponível em breve.
+        </p>
+      </CardContent>
+    </Card>
   );
 };

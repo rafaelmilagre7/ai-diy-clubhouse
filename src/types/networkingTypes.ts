@@ -39,4 +39,3 @@ export interface NetworkMatch {
   suggested_topics: string[];
   status: string;
 }
-
