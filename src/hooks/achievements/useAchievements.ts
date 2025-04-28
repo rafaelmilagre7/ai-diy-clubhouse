@@ -100,6 +100,13 @@ export function useAchievements() {
         throw new Error(dataError);
       }
       
+      // Se não temos dados suficientes, mas temos cache, usamos o cache
+      if ((!solutions || solutions.length === 0 || !progressData || progressData.length === 0) && 
+          achievementCache.achievements.length > 0) {
+        console.log('Dados insuficientes, usando cache existente');
+        return achievementCache.achievements;
+      }
+      
       if (!solutions || solutions.length === 0) {
         console.warn('Atenção: Nenhuma solução encontrada para processar conquistas');
       }
@@ -294,31 +301,27 @@ export function useAchievements() {
     }
   }, [user, toast, achievementData]);
   
-  // Efeito para limpar o cache quando o usuário muda
+  // Não limparemos mais o cache sempre que o usuário mudar
+  // Apenas quando realmente necessário
   useEffect(() => {
-    if (user) {
-      console.log('Usuário alterado, limpando cache de conquistas');
+    if (!user || !achievementCache.lastUpdatedUserId || 
+        user.id !== achievementCache.lastUpdatedUserId) {
+      console.log('Usuário diferente detectado, limpando cache de conquistas');
       achievementCache.clear();
     }
   }, [user?.id]);
-  
-  // Força uma refetch inicial mesmo que os dados estejam em cache
-  useEffect(() => {
-    if (user) {
-      console.log('Forçando primeira busca de conquistas ao montar componente');
-      achievementCache.clear(); // Limpa o cache para garantir dados frescos
-    }
-  }, []);
   
   return useQuery({
     queryKey: ['achievements', user?.id],
     queryFn: fetchAchievements,
     enabled: !!user,
-    staleTime: 30000, // 30 segundos
-    refetchOnWindowFocus: true,
+    staleTime: 300000, // 5 minutos (aumentado de 30 segundos)
+    gcTime: 600000, // 10 minutos - mantém o cache por mais tempo
+    refetchOnWindowFocus: false, // Reduzir refetches desnecessários
     refetchOnMount: true,
     refetchOnReconnect: true,
-    refetchInterval: 60000, // Refetch automático a cada 60 segundos
-    retry: 3
+    refetchInterval: 120000, // Refetch automático a cada 2 minutos (aumentado)
+    retry: 3,
+    retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
   });
 }

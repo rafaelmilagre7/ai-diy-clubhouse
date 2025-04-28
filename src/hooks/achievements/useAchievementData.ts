@@ -12,6 +12,33 @@ import {
   fetchSocialData
 } from "./utils/achievementUtils";
 
+// Interface para os dados em cache
+interface CachedData {
+  timestamp: number;
+  data: any;
+}
+
+// Cache para reduzir consultas ao banco de dados
+const dataCache: Record<string, CachedData> = {
+  progressData: { timestamp: 0, data: null },
+  solutions: { timestamp: 0, data: null },
+  checklistData: { timestamp: 0, data: null },
+  badgesData: { timestamp: 0, data: null },
+  socialData: { timestamp: 0, data: null }
+};
+
+// Tempo de validade do cache em ms (5 minutos)
+const CACHE_TTL = 5 * 60 * 1000; 
+
+// Função para verificar se o cache é válido
+const isCacheValid = (key: string): boolean => {
+  return (
+    dataCache[key]?.data !== null && 
+    dataCache[key]?.timestamp > 0 && 
+    Date.now() - dataCache[key].timestamp < CACHE_TTL
+  );
+};
+
 export const useAchievementData = () => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -27,8 +54,9 @@ export const useAchievementData = () => {
   const isInitialFetchRef = useRef(true);
   const lastFetchTimestampRef = useRef<number>(0);
   const realtimeUpdatePendingRef = useRef(false);
+  const fetchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Função para buscar dados de conquistas
+  // Função para buscar dados de conquistas com throttling e cache
   const fetchData = useCallback(async (force = false) => {
     if (!user?.id) return;
 
@@ -36,6 +64,15 @@ export const useAchievementData = () => {
     const now = Date.now();
     if (!force && now - lastFetchTimestampRef.current < 2000) {
       console.log('Ignorando requisição muito próxima da anterior');
+      
+      // Programar uma única atualização para depois
+      if (fetchTimeoutRef.current === null) {
+        fetchTimeoutRef.current = setTimeout(() => {
+          fetchTimeoutRef.current = null;
+          fetchData(true);
+        }, 2000);
+      }
+      
       return;
     }
 
@@ -51,18 +88,45 @@ export const useAchievementData = () => {
       
       setError(null);
 
-      // Buscar soluções publicadas
-      const { data: solutionsData, error: solutionsError } = await supabase
-        .from("solutions")
-        .select("*")
-        .eq("published", true);
+      // Buscar soluções publicadas (com cache)
+      let solutionsData;
+      if (!force && isCacheValid('solutions')) {
+        solutionsData = dataCache.solutions.data;
+        console.log('Usando cache para soluções');
+      } else {
+        const { data, error: solutionsError } = await supabase
+          .from("solutions")
+          .select("*")
+          .eq("published", true);
 
-      if (solutionsError) throw solutionsError;
+        if (solutionsError) throw solutionsError;
+        solutionsData = data || [];
+        
+        // Atualizar cache
+        dataCache.solutions = {
+          timestamp: Date.now(),
+          data: solutionsData
+        };
+      }
+      
       console.log('Soluções encontradas:', solutionsData?.length || 0);
       setSolutions(solutionsData || []);
 
-      // Buscar progresso do usuário
-      const progressResult = await fetchProgressData(user.id);
+      // Buscar progresso do usuário (com cache)
+      let progressResult;
+      if (!force && isCacheValid('progressData')) {
+        progressResult = dataCache.progressData.data;
+        console.log('Usando cache para dados de progresso');
+      } else {
+        progressResult = await fetchProgressData(user.id);
+        
+        // Atualizar cache
+        dataCache.progressData = {
+          timestamp: Date.now(),
+          data: progressResult
+        };
+      }
+      
       console.log('Progresso encontrado:', progressResult?.length || 0);
       
       // Adaptador para garantir compatibilidade com a interface ProgressData
@@ -103,8 +167,21 @@ export const useAchievementData = () => {
       
       setProgressData(adaptedProgressData);
 
-      // Buscar checklists completados
-      const checklistResult = await fetchChecklistData(user.id);
+      // Buscar checklists completados (com cache)
+      let checklistResult;
+      if (!force && isCacheValid('checklistData')) {
+        checklistResult = dataCache.checklistData.data;
+        console.log('Usando cache para dados de checklist');
+      } else {
+        checklistResult = await fetchChecklistData(user.id);
+        
+        // Atualizar cache
+        dataCache.checklistData = {
+          timestamp: Date.now(),
+          data: checklistResult
+        };
+      }
+      
       console.log('Checklists encontrados:', checklistResult?.length || 0);
       
       // Adaptador para garantir compatibilidade com a interface ChecklistData
@@ -120,8 +197,21 @@ export const useAchievementData = () => {
       
       setChecklistData(adaptedChecklistData);
 
-      // Buscar badges conquistadas
-      const badgesResult = await fetchBadgesData(user.id);
+      // Buscar badges conquistadas (com cache)
+      let badgesResult;
+      if (!force && isCacheValid('badgesData')) {
+        badgesResult = dataCache.badgesData.data;
+        console.log('Usando cache para dados de badges');
+      } else {
+        badgesResult = await fetchBadgesData(user.id);
+        
+        // Atualizar cache
+        dataCache.badgesData = {
+          timestamp: Date.now(),
+          data: badgesResult
+        };
+      }
+      
       console.log('Badges encontrados:', badgesResult?.length || 0);
       
       // Adaptador para garantir compatibilidade com a interface BadgeData
@@ -145,8 +235,21 @@ export const useAchievementData = () => {
       
       setBadgesData(adaptedBadgesData);
       
-      // Buscar dados sociais (comentários e likes)
-      const socialData = await fetchSocialData(user.id);
+      // Buscar dados sociais (comentários e likes) (com cache)
+      let socialData;
+      if (!force && isCacheValid('socialData')) {
+        socialData = dataCache.socialData.data;
+        console.log('Usando cache para dados sociais');
+      } else {
+        socialData = await fetchSocialData(user.id);
+        
+        // Atualizar cache
+        dataCache.socialData = {
+          timestamp: Date.now(),
+          data: socialData
+        };
+      }
+      
       setComments(socialData.comments || []);
       setTotalLikes(socialData.totalLikes || 0);
       console.log('Dados sociais encontrados:', 
@@ -187,6 +290,23 @@ export const useAchievementData = () => {
     subscriptionsRef.current = [];
   }, []);
 
+  // Limpar cache quando o usuário muda
+  useEffect(() => {
+    if (user?.id) {
+      // Verificar se o usuário mudou
+      const currentUserId = localStorage.getItem('current_achievement_user');
+      
+      if (currentUserId !== user.id) {
+        // Usuário diferente, limpar cache
+        Object.keys(dataCache).forEach(key => {
+          dataCache[key] = { timestamp: 0, data: null };
+        });
+        
+        localStorage.setItem('current_achievement_user', user.id);
+      }
+    }
+  }, [user?.id]);
+
   // Inscrever-se para atualizações em tempo real
   const subscribeToUpdates = useCallback(() => {
     if (!user?.id) return;
@@ -207,8 +327,14 @@ export const useAchievementData = () => {
       console.log('Atualização detectada via Realtime - atualizando dados');
       realtimeUpdatePendingRef.current = true;
       
+      // Limpar cache para forçar recarregamento
+      const keysToInvalidate = ['progressData', 'badgesData', 'checklistData'];
+      keysToInvalidate.forEach(key => {
+        dataCache[key] = { timestamp: 0, data: null };
+      });
+      
       // Pequeno delay para evitar múltiplas atualizações simultâneas
-      setTimeout(() => fetchData(), 500);
+      setTimeout(() => fetchData(true), 500);
     };
     
     // Inscrição para mudanças na tabela progress
@@ -302,6 +428,12 @@ export const useAchievementData = () => {
     
     return () => {
       if (unsubscribe) unsubscribe();
+      
+      // Limpar timeout pendente
+      if (fetchTimeoutRef.current) {
+        clearTimeout(fetchTimeoutRef.current);
+        fetchTimeoutRef.current = null;
+      }
     };
   }, [fetchData, subscribeToUpdates]);
 
@@ -309,8 +441,17 @@ export const useAchievementData = () => {
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
-        console.log('Página reativada, atualizando dados');
-        fetchData(true);
+        // Verificar se o cache está expirado
+        const needsRefresh = Object.keys(dataCache).some(
+          key => !isCacheValid(key)
+        );
+        
+        if (needsRefresh) {
+          console.log('Página reativada e cache expirado, atualizando dados');
+          fetchData(true);
+        } else {
+          console.log('Página reativada, mas cache ainda é válido');
+        }
       }
     };
     

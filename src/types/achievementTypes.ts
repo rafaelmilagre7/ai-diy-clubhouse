@@ -83,17 +83,22 @@ export function ensureValidCategory(category: string): "achievement" | SolutionC
 export const achievementCache = {
   achievements: [] as Achievement[],
   lastUpdated: 0,
+  lastUpdatedUserId: null as string | null, // Adicionar ID do usuário para controle
   isValid(): boolean {
-    // Cache válido por 5 minutos
+    // Cache válido por 5 minutos (aumentado de forma significativa)
     return this.achievements.length > 0 && (Date.now() - this.lastUpdated < 300000);
   },
-  update(achievements: Achievement[]): void {
+  update(achievements: Achievement[], userId?: string): void {
     this.achievements = achievements;
     this.lastUpdated = Date.now();
+    if (userId) {
+      this.lastUpdatedUserId = userId;
+    }
   },
   clear(): void {
     this.achievements = [];
     this.lastUpdated = 0;
+    this.lastUpdatedUserId = null;
   }
 };
 

@@ -9,13 +9,14 @@ import { EmptyState } from "./states/EmptyState";
 import { ErrorState } from "./states/ErrorState";
 import { AchievementsActions } from "./AchievementsActions";
 import { useToast } from "@/hooks/use-toast";
-import { Achievement } from "@/types/achievementTypes";
+import { Achievement, achievementCache } from "@/types/achievementTypes";
 import { useLocation, useNavigate } from "react-router-dom";
 
 export const AchievementsPage = () => {
   const [filterOpen, setFilterOpen] = useState(false);
   const [activeCategory, setActiveCategory] = useState("all");
   const [animateNewAchievements, setAnimateNewAchievements] = useState<string[]>([]);
+  const [showLoadingTimeout, setShowLoadingTimeout] = useState(true);
   const { toast } = useToast();
   const location = useLocation();
   const navigate = useNavigate();
@@ -28,6 +29,15 @@ export const AchievementsPage = () => {
     error,
     refetch 
   } = useAchievements();
+
+  // Mostrar estado de carregamento por um tempo mínimo para evitar flashes
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowLoadingTimeout(false);
+    }, 1500); // Aumentamos o tempo mínimo de carregamento para 1.5s
+
+    return () => clearTimeout(timer);
+  }, []);
 
   // Efeito para registrar logs no carregamento
   useEffect(() => {
@@ -42,8 +52,9 @@ export const AchievementsPage = () => {
   
   // Efeito para detectar novas conquistas desbloqueadas
   useEffect(() => {
-    const unlockedAchievements = Array.isArray(achievements) ? 
-      achievements.filter(a => a.isUnlocked) : [];
+    if (!Array.isArray(achievements) || achievements.length === 0) return;
+    
+    const unlockedAchievements = achievements.filter(a => a.isUnlocked);
     
     // Armazena IDs das conquistas já vistas nesta sessão
     const seenAchievements = sessionStorage.getItem('seen_achievements');
@@ -78,15 +89,20 @@ export const AchievementsPage = () => {
     }
   }, [achievements, toast]);
   
-  // Efeito para recarregar ao retornar à página
+  // Prefetch de dados ao navegar para esta página
   useEffect(() => {
     // Quando o usuário navega para esta página
-    console.log('Página de conquistas ativada, atualizando dados');
-    refetch();
+    if (location.pathname === "/achievements") {
+      console.log('Página de conquistas ativada, atualizando dados');
+      // Verificar se o cache está expirado antes de refetch
+      if (!achievementCache.isValid()) {
+        refetch();
+      }
+    }
   }, [location.pathname, refetch]);
 
   // Estado para exibição durante o primeiro carregamento
-  if (isLoading && (!achievements || achievements.length === 0)) {
+  if ((isLoading && showLoadingTimeout) || (isLoading && (!achievements || achievements.length === 0))) {
     return <LoadingState />;
   }
 
@@ -129,7 +145,7 @@ export const AchievementsPage = () => {
       
       {/* Indicador de atualização em tempo real */}
       {isFetching && !isLoading && (
-        <div className="fixed bottom-4 right-4 bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium animate-pulse">
+        <div className="fixed bottom-4 right-4 bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium animate-pulse z-50">
           Atualizando conquistas...
         </div>
       )}
