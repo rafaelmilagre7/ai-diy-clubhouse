@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { useCoursesAdmin } from "@/hooks/learning/useCoursesAdmin";
 import { Plus } from "lucide-react";
-import { AdminLayout } from "@/components/layout/admin/AdminLayout";
+import AdminLayout from "@/components/layout/admin/AdminLayout";
 import { CreateCourseDialog } from "@/components/admin/learning/CreateCourseDialog";
 import { CourseList } from "@/components/admin/learning/CourseList";
 

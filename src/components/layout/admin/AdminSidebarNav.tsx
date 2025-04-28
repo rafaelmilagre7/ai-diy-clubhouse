@@ -1,3 +1,4 @@
+
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
@@ -9,6 +10,7 @@ import {
   BookOpen,
   Gauge,
   Calendar,
+  GraduationCap
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "react-router-dom";
@@ -21,13 +23,16 @@ interface AdminSidebarNavProps {
 export const AdminSidebarNav = ({ sidebarOpen }: AdminSidebarNavProps) => {
   const location = useLocation();
   
-  console.log("AdminSidebarNav renderizando, location:", location.pathname);
-
   const menuItems = [
     {
       title: "Dashboard",
       href: "/admin",
       icon: LayoutDashboard,
+    },
+    {
+      title: "Formação Viver de IA",
+      href: "/admin/learning",
+      icon: GraduationCap,
     },
     {
       title: "Eventos",
