@@ -10,16 +10,20 @@ import { ErrorState } from "./states/ErrorState";
 import { AchievementsActions } from "./AchievementsActions";
 import { useToast } from "@/hooks/use-toast";
 import { Achievement } from "@/types/achievementTypes";
+import { useLocation } from "react-router-dom";
 
 export const AchievementsPage = () => {
   const [filterOpen, setFilterOpen] = useState(false);
   const [activeCategory, setActiveCategory] = useState("all");
+  const [animateNewAchievements, setAnimateNewAchievements] = useState<string[]>([]);
   const { toast } = useToast();
+  const location = useLocation();
   
   // React Query já fará o fetch automático ao montar o componente
   const { 
     data: achievements = [], 
     isLoading,
+    isFetching,
     error,
     refetch 
   } = useAchievements();
@@ -28,25 +32,69 @@ export const AchievementsPage = () => {
   useEffect(() => {
     console.log("AchievementsPage renderizada");
     console.log("Estado de carregamento:", isLoading);
+    console.log("Está buscando dados:", isFetching);
     console.log("Conquistas carregadas:", Array.isArray(achievements) ? achievements.length : 0);
     if (error) {
       console.error("Erro no carregamento:", error);
     }
-  }, [achievements, isLoading, error]);
+  }, [achievements, isLoading, isFetching, error]);
+  
+  // Efeito para detectar novas conquistas desbloqueadas
+  useEffect(() => {
+    const unlockedAchievements = Array.isArray(achievements) ? 
+      achievements.filter(a => a.isUnlocked) : [];
+    
+    // Armazena IDs das conquistas já vistas nesta sessão
+    const seenAchievements = sessionStorage.getItem('seen_achievements');
+    const seenIds = seenAchievements ? JSON.parse(seenAchievements) : [];
+    
+    // Encontra conquistas recentemente desbloqueadas
+    const newlyUnlocked = unlockedAchievements
+      .filter(a => a.isUnlocked && !seenIds.includes(a.id))
+      .map(a => a.id);
+    
+    if (newlyUnlocked.length > 0) {
+      console.log('Novas conquistas desbloqueadas:', newlyUnlocked);
+      
+      // Atualiza a lista de conquistas vistas
+      const updatedSeenIds = [...seenIds, ...newlyUnlocked];
+      sessionStorage.setItem('seen_achievements', JSON.stringify(updatedSeenIds));
+      
+      // Define quais conquistas devem ser animadas
+      setAnimateNewAchievements(newlyUnlocked);
+      
+      // Mostra toast para cada nova conquista
+      newlyUnlocked.forEach(id => {
+        const achievement = achievements.find(a => a.id === id);
+        if (achievement) {
+          toast({
+            title: `🏆 Nova conquista: ${achievement.name}`,
+            description: achievement.description,
+            variant: "default",
+          });
+        }
+      });
+    }
+  }, [achievements, toast]);
+  
+  // Efeito para recarregar ao retornar à página
+  useEffect(() => {
+    // Quando o usuário navega para esta página
+    console.log('Página de conquistas ativada, atualizando dados');
+    refetch();
+  }, [location.pathname, refetch]);
 
-  // Exibir estado de carregamento inicial
-  if (isLoading) {
+  // Estado para exibição durante o primeiro carregamento
+  if (isLoading && (!achievements || achievements.length === 0)) {
     return <LoadingState />;
   }
 
   // Exibir estado de erro se algo falhar
-  if (error) {
+  if (error && (!achievements || achievements.length === 0)) {
     return <ErrorState error={(error as Error).message || "Erro ao carregar conquistas"} onRetry={() => refetch()} />;
   }
 
-  console.log("Conquistas carregadas:", Array.isArray(achievements) ? achievements.length : 0, achievements);
-
-  // Garantir que achievements é um array antes de verificar length
+  // Garantir que achievements seja um array antes de verificar length
   const achievementsArray = Array.isArray(achievements) ? achievements : [];
 
   // Exibir estado vazio se não houver conquistas
@@ -74,7 +122,15 @@ export const AchievementsPage = () => {
       <AchievementsTabsContainer 
         achievements={achievementsArray} 
         onCategoryChange={setActiveCategory}
+        animateIds={animateNewAchievements}
       />
+      
+      {/* Indicador de atualização em tempo real */}
+      {isFetching && !isLoading && (
+        <div className="fixed bottom-4 right-4 bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium animate-pulse">
+          Atualizando conquistas...
+        </div>
+      )}
     </div>
   );
 };

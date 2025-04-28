@@ -1,9 +1,9 @@
 
-import { useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
 import { useAuth } from '@/contexts/auth';
 import { useToast } from '@/hooks/use-toast';
 import { useAchievementData } from './useAchievementData';
-import { Achievement, ensureValidCategory, isValidCategory } from '@/types/achievementTypes';
+import { Achievement, ensureValidCategory, isValidCategory, achievementCache } from '@/types/achievementTypes';
 import { SolutionCategory } from '@/lib/types/categoryTypes';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -14,7 +14,8 @@ import {
 } from '@/utils/achievements/achievementGenerators';
 import {
   createFallbackAchievements,
-  removeDuplicateAchievements
+  removeDuplicateAchievements,
+  processAchievements
 } from './utils/achievementUtils';
 import { Solution as SupabaseSolution } from '@/lib/supabase';
 import { Solution } from '@/types/solution';
@@ -53,6 +54,12 @@ export function useAchievements() {
     try {
       console.log('Buscando conquistas para o usuário:', user.id);
       
+      // Se o cache é válido e estamos apenas revalidando, retornamos o cache
+      if (achievementCache.isValid() && !achievementData.loading) {
+        console.log('Usando cache de conquistas válido');
+        return achievementCache.achievements;
+      }
+      
       const { 
         progressData, 
         solutions, 
@@ -63,12 +70,18 @@ export function useAchievements() {
         loading: dataLoading
       } = achievementData;
 
-      // Se os dados ainda estão carregando, retorne null para indicar carregamento
+      // Se os dados ainda estão carregando e já temos dados em cache, use o cache
+      if (dataLoading && achievementCache.achievements.length > 0) {
+        console.log('Dados ainda carregando, retornando cache temporário');
+        return achievementCache.achievements;
+      }
+      
+      // Se os dados ainda estão carregando e não temos cache, indicamos carregamento
       if (dataLoading) {
+        console.log('Dados de conquistas carregando pela primeira vez');
         return null;
       }
       
-      // Adicionando logs detalhados para diagnóstico
       console.log('Dados carregados:');
       console.log('- progressData:', progressData?.length || 0, 'itens');
       console.log('- solutions:', solutions?.length || 0, 'itens');
@@ -92,6 +105,7 @@ export function useAchievements() {
       const adaptedSolutions = adaptSolutions(solutions || []);
       console.log('Soluções adaptadas:', adaptedSolutions?.length);
       
+      // Gerar conquistas baseadas nos dados
       const generatedAchievements = adaptAchievements([
         ...generateImplementationAchievements(progressData || [], adaptedSolutions),
         ...generateCategoryAchievements(progressData || [], adaptedSolutions),
@@ -100,6 +114,7 @@ export function useAchievements() {
       ]);
       console.log('Conquistas geradas:', generatedAchievements.length);
 
+      // Conquistas básicas que são sempre verificadas
       const basicAchievements: Achievement[] = [
         {
           id: 'achievement-beginner',
@@ -166,10 +181,8 @@ export function useAchievements() {
         console.log('Processando', badgesData.length, 'badges');
         
         badgesData.forEach((badgeData, index) => {
-          console.log(`Processando badge ${index + 1}:`, badgeData);
-          
-          if (badgeData.badges) {
-            try {
+          try {
+            if (badgeData.badges) {
               const badge = Array.isArray(badgeData.badges) 
                 ? badgeData.badges[0] 
                 : badgeData.badges;
@@ -188,9 +201,9 @@ export function useAchievements() {
                 
                 console.log(`Badge ${index + 1} processado com sucesso:`, badge.name);
               }
-            } catch (error) {
-              console.error(`Erro ao processar badge ${index + 1}:`, error);
             }
+          } catch (error) {
+            console.error(`Erro ao processar badge ${index + 1}:`, error);
           }
         });
       }
@@ -198,14 +211,18 @@ export function useAchievements() {
       // Adiciona os badges processados ao conjunto de conquistas
       allAchievements = [...allAchievements, ...processedBadges];
       
+      // Remove duplicatas
       const uniqueAchievements = removeDuplicateAchievements(allAchievements);
       console.log("Total de conquistas carregadas após remoção de duplicatas:", uniqueAchievements.length);
       console.log("Conquistas desbloqueadas:", uniqueAchievements.filter(a => a.isUnlocked).length);
       
-      // Garantir que temos pelo menos uma conquista básica se o usuário tiver algum progresso
-      if (uniqueAchievements.length === 0 && progressData && progressData.length > 0) {
+      // Processa as conquistas para preservar estados de desbloqueio anteriores
+      const processedAchievements = processAchievements(uniqueAchievements, achievementCache.achievements);
+      
+      // Garantir conquistas mínimas se o usuário tiver algum progresso
+      if (processedAchievements.length === 0 && progressData && progressData.length > 0) {
         console.log("Adicionando conquista 'Iniciante' como fallback");
-        return [
+        const fallbackAchievements = [
           {
             id: 'achievement-beginner',
             name: 'Iniciante',
@@ -215,13 +232,19 @@ export function useAchievements() {
             earnedAt: new Date().toISOString(),
           }
         ];
-      } else if (uniqueAchievements.length === 0) {
+        achievementCache.update(fallbackAchievements);
+        return fallbackAchievements;
+      } else if (processedAchievements.length === 0) {
         // Se não houver conquistas e nem progresso, use conquistas de fallback
         console.log("Usando conquistas de fallback como último recurso");
-        return createFallbackAchievements();
+        const fallbacks = createFallbackAchievements();
+        achievementCache.update(fallbacks);
+        return fallbacks;
       }
       
-      return uniqueAchievements;
+      // Atualiza o cache
+      achievementCache.update(processedAchievements);
+      return processedAchievements;
       
     } catch (error) {
       console.error('Erro ao carregar conquistas:', error);
@@ -231,18 +254,37 @@ export function useAchievements() {
         variant: "destructive",
       });
       
-      return createFallbackAchievements();
+      // Se o cache existe, use-o como fallback quando ocorrer um erro
+      if (achievementCache.achievements.length > 0) {
+        return achievementCache.achievements;
+      }
+      
+      // Caso contrário, use conquistas de fallback
+      const fallbacks = createFallbackAchievements();
+      achievementCache.update(fallbacks);
+      return fallbacks;
     }
   }, [user, toast, achievementData]);
   
-  return useQuery({
+  // Efeito para limpar o cache quando o usuário muda
+  useEffect(() => {
+    if (user) {
+      console.log('Usuário alterado, limpando cache de conquistas');
+      achievementCache.clear();
+    }
+  }, [user?.id]);
+  
+  const result = useQuery({
     queryKey: ['achievements', user?.id],
     queryFn: fetchAchievements,
     enabled: !!user,
-    staleTime: 5000, // Reduzimos o staleTime para atualizar com mais frequência
+    staleTime: 30000, // 30 segundos
     refetchOnWindowFocus: true,
     refetchOnMount: true,
     refetchOnReconnect: true,
-    retry: 2,
+    refetchInterval: 60000, // Refetch automático a cada 60 segundos
+    retry: 3
   });
+  
+  return result;
 }

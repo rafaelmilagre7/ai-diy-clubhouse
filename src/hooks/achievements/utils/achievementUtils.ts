@@ -1,16 +1,21 @@
 
-import { Achievement, ensureValidCategory } from '@/types/achievementTypes';
+import { Achievement, ensureValidCategory, achievementCache } from '@/types/achievementTypes';
 import { supabase } from '@/lib/supabase';
 
 export const fetchProgressData = async (userId: string) => {
   const { data, error } = await supabase
     .from('progress')
     .select(`
+      id,
+      user_id,
       solution_id,
       is_completed,
       current_module,
+      last_activity,
+      completed_at,
+      completed_modules,
       solutions (
-        id, category
+        id, category, title
       )
     `)
     .eq('user_id', userId);
@@ -23,10 +28,11 @@ export const fetchBadgesData = async (userId: string) => {
   const { data, error } = await supabase
     .from('user_badges')
     .select(`
+      id,
       badge_id,
       earned_at,
       badges (
-        id, name, description, category
+        id, name, description, category, icon
       )
     `)
     .eq('user_id', userId);
@@ -39,6 +45,60 @@ export const fetchBadgesData = async (userId: string) => {
   }
   
   return data;
+};
+
+export const fetchChecklistData = async (userId: string) => {
+  const { data, error } = await supabase
+    .from('user_checklists')
+    .select(`
+      id,
+      user_id,
+      solution_id,
+      checked_items,
+      is_completed,
+      completed_at
+    `)
+    .eq('user_id', userId);
+    
+  if (error) {
+    console.warn("Erro ao carregar checklists:", error);
+    return [];
+  }
+  
+  return data;
+};
+
+export const fetchSocialData = async (userId: string) => {
+  try {
+    // Buscar comentários do usuário
+    const { data: comments, error: commentsError } = await supabase
+      .from("solution_comments")
+      .select("*")
+      .eq("user_id", userId);
+      
+    if (commentsError) throw commentsError;
+    
+    // Buscar likes nos comentários
+    const { data: likes, error: likesError } = await supabase
+      .from("solution_comment_likes")
+      .select("comment_id")
+      .eq("user_id", userId);
+      
+    if (likesError) throw likesError;
+    
+    return {
+      comments: comments || [],
+      totalComments: (comments || []).length,
+      totalLikes: (likes || []).length
+    };
+  } catch (error) {
+    console.error("Erro ao buscar dados sociais:", error);
+    return {
+      comments: [],
+      totalComments: 0,
+      totalLikes: 0
+    };
+  }
 };
 
 export const createFallbackAchievements = (): Achievement[] => {
@@ -97,4 +157,32 @@ const isToday = (date: Date): boolean => {
 // Mapeamento de categorias para garantir que os valores sejam válidos
 export const mapToValidCategory = (category: string): "achievement" | "revenue" | "operational" | "strategy" => {
   return ensureValidCategory(category);
+};
+
+// Novo: Função para tratar o processamento de conquistas com persistência
+export const processAchievements = (
+  achievements: Achievement[], 
+  previousAchievements: Achievement[]
+): Achievement[] => {
+  // Se não havia conquistas anteriores, apenas retornamos as atuais
+  if (!previousAchievements || previousAchievements.length === 0) {
+    return achievements;
+  }
+
+  // Preservamos o estado de desbloqueio para conquistas que podem ter sido temporariamente perdidas
+  // durante uma reconexão ou recarga parcial de dados
+  return achievements.map(achievement => {
+    const previousAchievement = previousAchievements.find(a => a.id === achievement.id);
+    
+    // Se a conquista já estava desbloqueada anteriormente, mantemos esse estado
+    if (previousAchievement && previousAchievement.isUnlocked && !achievement.isUnlocked) {
+      return {
+        ...achievement,
+        isUnlocked: true,
+        earnedAt: previousAchievement.earnedAt
+      };
+    }
+    
+    return achievement;
+  });
 };

@@ -1,3 +1,4 @@
+
 import { cn } from "@/lib/utils";
 import { Achievement } from "@/types/achievementTypes";
 import { Card, CardContent } from "@/components/ui/card";
@@ -15,20 +16,21 @@ import React, { useEffect, useRef } from "react";
 
 interface AchievementCardProps {
   achievement: Achievement;
+  shouldAnimate?: boolean;
 }
 
-export const AchievementCard = ({ achievement }: AchievementCardProps) => {
+export const AchievementCard = ({ achievement, shouldAnimate = false }: AchievementCardProps) => {
   const isMobile = useIsMobile();
   const cardRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (achievement.isUnlocked && cardRef.current) {
+    if ((shouldAnimate || achievement.isUnlocked) && cardRef.current) {
       cardRef.current.classList.add("highlight-flash");
       setTimeout(() => {
         cardRef.current?.classList.remove("highlight-flash");
       }, 1200);
     }
-  }, [achievement.isUnlocked]);
+  }, [achievement.isUnlocked, shouldAnimate]);
 
   const cardContent = (
     <Card ref={cardRef} className={cn(
@@ -40,7 +42,8 @@ export const AchievementCard = ({ achievement }: AchievementCardProps) => {
       achievement.isUnlocked && achievement.category === "revenue" && "shadow-revenue/10",
       achievement.isUnlocked && achievement.category === "operational" && "shadow-operational/10",
       achievement.isUnlocked && achievement.category === "strategy" && "shadow-strategy/10",
-      achievement.isUnlocked && achievement.category === "achievement" && "shadow-viverblue/10"
+      achievement.isUnlocked && achievement.category === "achievement" && "shadow-viverblue/10",
+      shouldAnimate && "animate-pulse-light"
     )}>
       <div className={cn(
         "absolute inset-0 opacity-10 pointer-events-none",

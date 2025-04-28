@@ -66,3 +66,21 @@ export function ensureValidCategory(category: string): "achievement" | SolutionC
   }
   return "achievement"; // Valor padrão seguro
 }
+
+// Novo: Cache de conquistas para persistir durante navegação
+export const achievementCache = {
+  achievements: [] as Achievement[],
+  lastUpdated: 0,
+  isValid(): boolean {
+    // Cache válido por 5 minutos
+    return this.achievements.length > 0 && (Date.now() - this.lastUpdated < 300000);
+  },
+  update(achievements: Achievement[]): void {
+    this.achievements = achievements;
+    this.lastUpdated = Date.now();
+  },
+  clear(): void {
+    this.achievements = [];
+    this.lastUpdated = 0;
+  }
+};
