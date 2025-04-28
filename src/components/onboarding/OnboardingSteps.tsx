@@ -13,9 +13,10 @@ import { Progress } from "@/components/ui/progress";
 import { OnboardingData } from "@/types/onboarding";
 import { ProfessionalDataStep } from "./steps/ProfessionalDataStep";
 import { useLocation } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 export const OnboardingSteps = () => {
+  // IMPORTANTE: Todos os hooks devem ser chamados no topo antes de qualquer condicional
   const {
     currentStepIndex,
     currentStep,
@@ -27,7 +28,6 @@ export const OnboardingSteps = () => {
     navigateToStep
   } = useOnboardingSteps();
 
-  // IMPORTANTE: Todos os hooks devem ser chamados no topo antes de qualquer condicional
   // Importar o hook usePersonalInfoStep para ter acesso às funções e dados necessários
   const {
     formData: personalFormData,
@@ -40,10 +40,17 @@ export const OnboardingSteps = () => {
   } = usePersonalInfoStep();
   
   const location = useLocation();
+  const [showCompletedScreen, setShowCompletedScreen] = useState(false);
   
-  // Se o onboarding estiver concluído, mostrar a tela de conclusão
-  // Este trecho deve vir DEPOIS de declarar todos os hooks
-  if (progress?.is_completed) {
+  // Efeito para verificar se o onboarding está completo
+  useEffect(() => {
+    if (progress?.is_completed) {
+      setShowCompletedScreen(true);
+    }
+  }, [progress]);
+  
+  // Renderização condicional para tela de conclusão (agora usando state)
+  if (showCompletedScreen) {
     return <OnboardingCompleted />;
   }
   

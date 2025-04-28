@@ -25,6 +25,7 @@ export const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
   isSaving = false,
   lastSaveTime = null,
 }) => {
+  // IMPORTANTE: Todos os hooks devem ser chamados no topo e de forma consistente
   const [validationAttempted, setValidationAttempted] = useState(false);
   const [isFormLoaded, setIsFormLoaded] = useState(false);
 
@@ -50,6 +51,7 @@ export const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
     }
   };
 
+  // Computed values após todos os hooks
   const hasValidationErrors = validationAttempted && Object.keys(errors || {}).length > 0;
 
   return (
