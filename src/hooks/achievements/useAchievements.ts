@@ -119,9 +119,11 @@ export function useAchievements() {
                     "achievement", "revenue", "operational", "strategy"
                   ];
                   
-                  const category = validCategories.includes(badge.category as any) 
-                    ? badge.category 
-                    : "achievement";
+                  // Correção: Verificar e converter a categoria para o tipo adequado
+                  const category: "achievement" | SolutionCategory = 
+                    (validCategories.includes(badge.category as any)) 
+                      ? (badge.category as "achievement" | SolutionCategory)
+                      : "achievement";
   
                   allAchievements.push({
                     id: badge.id,
@@ -139,9 +141,11 @@ export function useAchievements() {
                   "achievement", "revenue", "operational", "strategy"
                 ];
                 
-                const category = validCategories.includes(badge.category as any) 
-                  ? badge.category 
-                  : "achievement";
+                // Correção: Verificar e converter a categoria para o tipo adequado
+                const category: "achievement" | SolutionCategory = 
+                  (validCategories.includes(badge.category as any)) 
+                    ? (badge.category as "achievement" | SolutionCategory)
+                    : "achievement";
   
                 allAchievements.push({
                   id: badge.id,
