@@ -1,6 +1,6 @@
-
 import { useOnboardingSteps } from "@/hooks/onboarding/useOnboardingSteps";
 import { PersonalInfoStep } from "./steps/PersonalInfoStep";
+import { usePersonalInfoStep } from "@/hooks/onboarding/usePersonalInfoStep";
 import { BusinessGoalsStep } from "./steps/BusinessGoalsStep";
 import { BusinessContextStep } from "./steps/BusinessContextStep";
 import { AIExperienceStep } from "./steps/AIExperienceStep";
@@ -63,14 +63,31 @@ export const OnboardingSteps = () => {
     ),
   };
 
-  // Usar o componente baseado na rota atual ou fallback para o step atual
-  const CurrentStepComponent = stepComponents[currentPathStepId as keyof typeof stepComponents] || 
+  const getCurrentStepComponent = () => {
+    if (currentPathStepId === "personal" || currentStep.id === "personal") {
+      return (
+        <PersonalInfoStep
+          onSubmit={handleSubmit}
+          isSubmitting={isSubmitting}
+          formData={formData}
+          errors={errors || {}}
+          onChange={handleChange}
+          isSaving={isSaving}
+          lastSaveTime={lastSaveTime}
+        />
+      );
+    }
+    
+    const CurrentStepComponent = stepComponents[currentPathStepId as keyof typeof stepComponents] || 
                              stepComponents[currentStep.id as keyof typeof stepComponents];
-  
-  if (!CurrentStepComponent) {
-    console.warn(`Componente não encontrado para etapa: ${currentPathStepId || currentStep.id}`);
-    return null;
-  }
+    
+    if (!CurrentStepComponent) {
+      console.warn(`Componente não encontrado para etapa: ${currentPathStepId || currentStep.id}`);
+      return null;
+    }
+
+    return CurrentStepComponent;
+  };
 
   const progressPercentage = ((currentStepIndex + 1) / steps.length) * 100;
 
@@ -137,9 +154,7 @@ export const OnboardingSteps = () => {
       </div>
 
       <div className="bg-gray-800 p-6 rounded-lg">
-        <CurrentStepComponent
-          {...getPropsForCurrentStep()}
-        />
+        {getCurrentStepComponent()}
       </div>
     </div>
   );
