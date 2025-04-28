@@ -7,6 +7,7 @@ import { useAnalyticsData } from '@/hooks/analytics/useAnalyticsData';
 import { OverviewTabContent } from '@/components/admin/analytics/OverviewTabContent';
 import { AnalyticsHeader } from '@/components/admin/analytics/AnalyticsHeader';
 import { PlaceholderTabContent } from '@/components/admin/analytics/PlaceholderTabContent';
+import { RealtimeStats } from '@/components/admin/analytics/RealtimeStats';
 
 const AdminAnalytics = () => {
   const [timeRange, setTimeRange] = useState('7d');
@@ -27,6 +28,8 @@ const AdminAnalytics = () => {
         timeRange={timeRange}
         setTimeRange={setTimeRange}
       />
+      
+      <RealtimeStats />
       
       <div className="flex flex-col sm:flex-row gap-4 items-center">
         <div className="w-full sm:w-auto">
