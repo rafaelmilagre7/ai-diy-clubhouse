@@ -1,5 +1,5 @@
 
-import { Achievement } from '@/types/achievementTypes';
+import { Achievement, ensureValidCategory } from '@/types/achievementTypes';
 import { supabase } from '@/lib/supabase';
 
 export const fetchProgressData = async (userId: string) => {
@@ -92,4 +92,9 @@ const isToday = (date: Date): boolean => {
   return date.getDate() === today.getDate() &&
     date.getMonth() === today.getMonth() &&
     date.getFullYear() === today.getFullYear();
+};
+
+// Mapeamento de categorias para garantir que os valores sejam válidos
+export const mapToValidCategory = (category: string): "achievement" | "revenue" | "operational" | "strategy" => {
+  return ensureValidCategory(category);
 };

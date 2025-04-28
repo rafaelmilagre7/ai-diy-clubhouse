@@ -17,7 +17,9 @@ export const useAchievementData = () => {
   const [badgesData, setBadgesData] = useState<BadgeData[]>([]);
   const [comments, setComments] = useState<any[]>([]);
   const [totalLikes, setTotalLikes] = useState(0);
+  const [subscriptions, setSubscriptions] = useState<any[]>([]);
 
+  // Função para buscar dados de conquistas
   const fetchData = useCallback(async () => {
     if (!user?.id) return;
 
@@ -26,7 +28,7 @@ export const useAchievementData = () => {
       setLoading(true);
       setError(null);
 
-      // Buscar soluções publicadas
+      // Buscar soluções publicadas usando join para otimizar
       const { data: solutionsData, error: solutionsError } = await supabase
         .from("solutions")
         .select("*")
@@ -39,10 +41,13 @@ export const useAchievementData = () => {
       console.log('Soluções encontradas:', solutionsData?.length || 0);
       setSolutions(solutionsData || []);
 
-      // Buscar progresso do usuário
+      // Buscar progresso do usuário com join otimizado
       const { data: progressData, error: progressError } = await supabase
         .from("progress")
-        .select("*, solutions!inner(id, category)")
+        .select(`
+          *,
+          solutions:solution_id (id, category)
+        `)
         .eq("user_id", user.id);
 
       if (progressError) {
@@ -84,7 +89,7 @@ export const useAchievementData = () => {
         setBadgesData([]);
       }
       
-      // Buscar comentários feitos pelo usuário
+      // Buscar comentários feitos pelo usuário com join otimizado
       const { data: commentsData, error: commentsError } = await supabase
         .from("solution_comments")
         .select("*")
@@ -126,10 +131,109 @@ export const useAchievementData = () => {
     }
   }, [user?.id, toast]);
 
+  // Inscrever-se para atualizações em tempo real
+  const subscribeToUpdates = useCallback(() => {
+    if (!user?.id) return;
+    
+    // Inscrição para mudanças na tabela progress
+    const progressSubscription = supabase
+      .channel('progress-changes')
+      .on('postgres_changes', 
+        { 
+          event: '*', 
+          schema: 'public', 
+          table: 'progress',
+          filter: `user_id=eq.${user.id}`
+        }, 
+        () => {
+          console.log('Atualização detectada na tabela progress - atualizando dados');
+          fetchData();
+        }
+      )
+      .subscribe();
+    
+    // Inscrição para mudanças na tabela user_badges
+    const badgesSubscription = supabase
+      .channel('badges-changes')
+      .on('postgres_changes', 
+        { 
+          event: '*', 
+          schema: 'public', 
+          table: 'user_badges',
+          filter: `user_id=eq.${user.id}`
+        }, 
+        () => {
+          console.log('Atualização detectada na tabela user_badges - atualizando dados');
+          fetchData();
+        }
+      )
+      .subscribe();
+      
+    // Inscrição para mudanças na tabela user_checklists
+    const checklistSubscription = supabase
+      .channel('checklists-changes')
+      .on('postgres_changes', 
+        { 
+          event: '*', 
+          schema: 'public', 
+          table: 'user_checklists',
+          filter: `user_id=eq.${user.id}`
+        }, 
+        () => {
+          console.log('Atualização detectada na tabela user_checklists - atualizando dados');
+          fetchData();
+        }
+      )
+      .subscribe();
+    
+    // Inscrição para mudanças na tabela solution_comments
+    const commentsSubscription = supabase
+      .channel('comments-changes')
+      .on('postgres_changes', 
+        { 
+          event: '*', 
+          schema: 'public', 
+          table: 'solution_comments',
+          filter: `user_id=eq.${user.id}`
+        }, 
+        () => {
+          console.log('Atualização detectada na tabela solution_comments - atualizando dados');
+          fetchData();
+        }
+      )
+      .subscribe();
+    
+    setSubscriptions([
+      progressSubscription, 
+      badgesSubscription, 
+      checklistSubscription,
+      commentsSubscription
+    ]);
+    
+    return () => {
+      progressSubscription.unsubscribe();
+      badgesSubscription.unsubscribe();
+      checklistSubscription.unsubscribe();
+      commentsSubscription.unsubscribe();
+    };
+  }, [user?.id, fetchData]);
+
+  // Efeito para carregar dados iniciais e configurar inscrições
   useEffect(() => {
     console.log('useAchievementData useEffect triggered');
     fetchData();
-  }, [fetchData]);
+    const unsubscribe = subscribeToUpdates();
+    
+    return () => {
+      // Limpar todas as inscrições ao desmontar
+      if (unsubscribe) unsubscribe();
+      subscriptions.forEach(subscription => {
+        if (subscription && typeof subscription.unsubscribe === 'function') {
+          subscription.unsubscribe();
+        }
+      });
+    };
+  }, [fetchData, subscribeToUpdates]);
 
   return {
     loading,

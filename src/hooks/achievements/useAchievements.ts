@@ -3,7 +3,7 @@ import { useCallback } from 'react';
 import { useAuth } from '@/contexts/auth';
 import { useToast } from '@/hooks/use-toast';
 import { useAchievementData } from './useAchievementData';
-import { Achievement } from '@/types/achievementTypes';
+import { Achievement, ensureValidCategory, isValidCategory } from '@/types/achievementTypes';
 import { SolutionCategory } from '@/lib/types/categoryTypes';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -34,6 +34,14 @@ const adaptSolutions = (solutions: Solution[]): SupabaseSolution[] => {
   })) as SupabaseSolution[];
 };
 
+// Adaptador para garantir que as conquistas geradas tenham categorias válidas
+const adaptAchievements = (achievements: any[]): Achievement[] => {
+  return achievements.map(achievement => ({
+    ...achievement,
+    category: ensureValidCategory(achievement.category)
+  }));
+};
+
 export function useAchievements() {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -51,8 +59,14 @@ export function useAchievements() {
         badgesData, 
         comments, 
         totalLikes,
-        error: dataError
+        error: dataError,
+        loading: dataLoading
       } = achievementData;
+
+      // Se os dados ainda estão carregando, retorne null para indicar carregamento
+      if (dataLoading) {
+        return null;
+      }
       
       // Adicionando logs detalhados para diagnóstico
       console.log('Dados carregados:');
@@ -78,12 +92,12 @@ export function useAchievements() {
       const adaptedSolutions = adaptSolutions(solutions || []);
       console.log('Soluções adaptadas:', adaptedSolutions?.length);
       
-      const generatedAchievements: Achievement[] = [
+      const generatedAchievements = adaptAchievements([
         ...generateImplementationAchievements(progressData || [], adaptedSolutions),
         ...generateCategoryAchievements(progressData || [], adaptedSolutions),
         ...generateEngagementAchievements(progressData || [], adaptedSolutions),
         ...generateSocialAchievements(progressData || [], comments || [], totalLikes || 0)
-      ];
+      ]);
       console.log('Conquistas geradas:', generatedAchievements.length);
 
       const basicAchievements: Achievement[] = [
@@ -142,50 +156,28 @@ export function useAchievements() {
       console.log('Conquistas básicas:', basicAchievements.length);
       console.log('Conquista básica desbloqueada:', basicAchievements.filter(a => a.isUnlocked).length);
       
-      let allAchievements = [...basicAchievements, ...generatedAchievements];
+      let allAchievements: Achievement[] = [...basicAchievements, ...generatedAchievements];
       console.log('Total de conquistas antes de processar badges:', allAchievements.length);
+      
+      // Processa os badges e os converte em conquistas
+      const processedBadges: Achievement[] = [];
       
       if (badgesData && badgesData.length > 0) {
         console.log('Processando', badgesData.length, 'badges');
+        
         badgesData.forEach((badgeData, index) => {
           console.log(`Processando badge ${index + 1}:`, badgeData);
+          
           if (badgeData.badges) {
             try {
-              if (Array.isArray(badgeData.badges)) {
-                console.log(`Badge ${index + 1} é um array com ${badgeData.badges.length} itens`);
-                badgeData.badges.forEach((badge: Badge) => {
-                  const validCategories: ("achievement" | SolutionCategory)[] = [
-                    "achievement", "revenue", "operational", "strategy"
-                  ];
-                  
-                  const category: "achievement" | SolutionCategory = 
-                    (validCategories.includes(badge.category as any)) 
-                      ? (badge.category as "achievement" | SolutionCategory)
-                      : "achievement";
-  
-                  allAchievements.push({
-                    id: badge.id,
-                    name: badge.name,
-                    description: badge.description,
-                    category: category,
-                    isUnlocked: true,
-                    earnedAt: badgeData.earned_at,
-                  });
-                });
-              } else if (typeof badgeData.badges === 'object' && badgeData.badges !== null) {
-                console.log(`Badge ${index + 1} é um objeto único`);
-                const badge = badgeData.badges as Badge;
+              const badge = Array.isArray(badgeData.badges) 
+                ? badgeData.badges[0] 
+                : badgeData.badges;
+              
+              if (badge) {
+                const category = ensureValidCategory(badge.category);
                 
-                const validCategories: ("achievement" | SolutionCategory)[] = [
-                  "achievement", "revenue", "operational", "strategy"
-                ];
-                
-                const category: "achievement" | SolutionCategory = 
-                  (validCategories.includes(badge.category as any)) 
-                    ? (badge.category as "achievement" | SolutionCategory)
-                    : "achievement";
-  
-                allAchievements.push({
+                processedBadges.push({
                   id: badge.id,
                   name: badge.name,
                   description: badge.description,
@@ -193,48 +185,40 @@ export function useAchievements() {
                   isUnlocked: true,
                   earnedAt: badgeData.earned_at,
                 });
-              } else {
-                console.warn(`Badge ${index + 1} não é um array nem um objeto:`, badgeData.badges);
+                
+                console.log(`Badge ${index + 1} processado com sucesso:`, badge.name);
               }
             } catch (error) {
-              console.error('Erro ao processar badge:', error, badgeData);
+              console.error(`Erro ao processar badge ${index + 1}:`, error);
             }
-          } else {
-            console.warn(`Badge ${index + 1} não possui propriedade badges:`, badgeData);
           }
         });
-      } else {
-        console.log('Nenhum badge encontrado para processar');
       }
+      
+      // Adiciona os badges processados ao conjunto de conquistas
+      allAchievements = [...allAchievements, ...processedBadges];
       
       const uniqueAchievements = removeDuplicateAchievements(allAchievements);
       console.log("Total de conquistas carregadas após remoção de duplicatas:", uniqueAchievements.length);
       console.log("Conquistas desbloqueadas:", uniqueAchievements.filter(a => a.isUnlocked).length);
       
-      if (uniqueAchievements.length === 0) {
-        console.warn("ALERTA: Nenhuma conquista foi carregada! Verificando dados de entrada novamente:");
-        console.log("Progresso:", progressData);
-        console.log("Soluções:", solutions);
-        console.log("Badges:", badgesData);
-        
-        // Se não tiver nenhuma conquista, tentamos garantir pelo menos as básicas
-        if (progressData && progressData.length > 0) {
-          console.log("Há progresso registrado, adicionando pelo menos a conquista 'Iniciante'");
-          return [
-            {
-              id: 'achievement-beginner',
-              name: 'Iniciante',
-              description: 'Começou sua jornada no clube ao iniciar sua primeira solução',
-              category: "achievement",
-              isUnlocked: true,
-              earnedAt: new Date().toISOString(),
-            }
-          ];
-        } else {
-          // Se realmente não houver nada, retornamos as conquistas de fallback
-          console.log("Usando conquistas de fallback como último recurso");
-          return createFallbackAchievements();
-        }
+      // Garantir que temos pelo menos uma conquista básica se o usuário tiver algum progresso
+      if (uniqueAchievements.length === 0 && progressData && progressData.length > 0) {
+        console.log("Adicionando conquista 'Iniciante' como fallback");
+        return [
+          {
+            id: 'achievement-beginner',
+            name: 'Iniciante',
+            description: 'Começou sua jornada no clube ao iniciar sua primeira solução',
+            category: "achievement" as const,
+            isUnlocked: true,
+            earnedAt: new Date().toISOString(),
+          }
+        ];
+      } else if (uniqueAchievements.length === 0) {
+        // Se não houver conquistas e nem progresso, use conquistas de fallback
+        console.log("Usando conquistas de fallback como último recurso");
+        return createFallbackAchievements();
       }
       
       return uniqueAchievements;
@@ -255,8 +239,10 @@ export function useAchievements() {
     queryKey: ['achievements', user?.id],
     queryFn: fetchAchievements,
     enabled: !!user,
-    staleTime: 1000 * 60,
-    refetchOnMount: true,
+    staleTime: 5000, // Reduzimos o staleTime para atualizar com mais frequência
     refetchOnWindowFocus: true,
+    refetchOnMount: true,
+    refetchOnReconnect: true,
+    retry: 2,
   });
 }

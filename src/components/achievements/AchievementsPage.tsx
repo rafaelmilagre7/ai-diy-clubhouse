@@ -9,9 +9,9 @@ import { EmptyState } from "./states/EmptyState";
 import { ErrorState } from "./states/ErrorState";
 import { AchievementsActions } from "./AchievementsActions";
 import { useToast } from "@/hooks/use-toast";
+import { Achievement } from "@/types/achievementTypes";
 
 export const AchievementsPage = () => {
-  const [isRefreshing, setIsRefreshing] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
   const [activeCategory, setActiveCategory] = useState("all");
   const { toast } = useToast();
@@ -24,31 +24,11 @@ export const AchievementsPage = () => {
     refetch 
   } = useAchievements();
 
-  const handleRefresh = async () => {
-    try {
-      setIsRefreshing(true);
-      await refetch();
-      toast({
-        title: "Conquistas atualizadas",
-        description: "Suas conquistas foram atualizadas com sucesso",
-      });
-    } catch (err) {
-      console.error("Erro ao atualizar conquistas:", err);
-      toast({
-        title: "Erro ao atualizar",
-        description: "Não foi possível atualizar as conquistas. Tente novamente.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsRefreshing(false);
-    }
-  };
-
   // Efeito para registrar logs no carregamento
   useEffect(() => {
     console.log("AchievementsPage renderizada");
     console.log("Estado de carregamento:", isLoading);
-    console.log("Conquistas carregadas:", achievements.length);
+    console.log("Conquistas carregadas:", Array.isArray(achievements) ? achievements.length : 0);
     if (error) {
       console.error("Erro no carregamento:", error);
     }
@@ -61,35 +41,20 @@ export const AchievementsPage = () => {
 
   // Exibir estado de erro se algo falhar
   if (error) {
-    return <ErrorState error={error.message || "Erro ao carregar conquistas"} onRetry={() => refetch()} />;
+    return <ErrorState error={(error as Error).message || "Erro ao carregar conquistas"} onRetry={() => refetch()} />;
   }
 
-  console.log("Conquistas carregadas:", achievements.length, achievements);
+  console.log("Conquistas carregadas:", Array.isArray(achievements) ? achievements.length : 0, achievements);
+
+  // Garantir que achievements é um array antes de verificar length
+  const achievementsArray = Array.isArray(achievements) ? achievements : [];
 
   // Exibir estado vazio se não houver conquistas
-  if (!achievements || achievements.length === 0) {
+  if (!achievements || achievementsArray.length === 0) {
     return (
       <div className="space-y-8">
         <AchievementsHeader />
         <EmptyState />
-        <div className="flex justify-center mt-8">
-          <button 
-            className="px-4 py-2 bg-viverblue text-white rounded-md hover:bg-viverblue/90 flex items-center gap-2"
-            onClick={handleRefresh}
-            disabled={isRefreshing}
-          >
-            {isRefreshing ? (
-              <>
-                <div className="h-4 w-4 border-2 border-t-transparent border-white rounded-full animate-spin" />
-                Atualizando...
-              </>
-            ) : (
-              <>
-                Tentar Novamente
-              </>
-            )}
-          </button>
-        </div>
       </div>
     );
   }
@@ -99,18 +64,15 @@ export const AchievementsPage = () => {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <AchievementsHeader />
         <AchievementsActions 
-          isRefreshing={isRefreshing}
-          loading={isLoading}
           filterOpen={filterOpen}
           setFilterOpen={setFilterOpen}
-          achievements={achievements}
+          achievements={achievementsArray}
           onCategoryChange={setActiveCategory}
-          onRefresh={handleRefresh}
         />
       </div>
-      <AchievementsProgressCard achievements={achievements} />
+      <AchievementsProgressCard achievements={achievementsArray} />
       <AchievementsTabsContainer 
-        achievements={achievements} 
+        achievements={achievementsArray} 
         onCategoryChange={setActiveCategory}
       />
     </div>

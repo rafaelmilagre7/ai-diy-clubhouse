@@ -50,3 +50,19 @@ export interface BadgeData {
     category: string;
   };
 }
+
+// Utilitário para verificar se uma string é uma categoria de solução válida
+export function isValidCategory(category: string): category is "achievement" | SolutionCategory {
+  return category === "achievement" || 
+         category === "revenue" || 
+         category === "operational" || 
+         category === "strategy";
+}
+
+// Utilitário para garantir que uma categoria de badge seja válida
+export function ensureValidCategory(category: string): "achievement" | SolutionCategory {
+  if (isValidCategory(category)) {
+    return category;
+  }
+  return "achievement"; // Valor padrão seguro
+}
