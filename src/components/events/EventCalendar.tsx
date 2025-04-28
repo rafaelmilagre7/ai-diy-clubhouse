@@ -1,98 +1,150 @@
 
 import { useState } from 'react';
-import { Calendar } from '@/components/ui/calendar';
+import { Calendar } from "@/components/ui/calendar";
 import { useEvents } from '@/hooks/useEvents';
-import { EventModal } from './EventModal';
-import { Event } from '@/types/events';
-import { format, isSameDay, startOfMonth, endOfMonth, eachDayOfInterval } from 'date-fns';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { EventDay } from './EventDay';
+import { Loader2, CalendarIcon, MapPin, Link as LinkIcon, Clock } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import type { Event } from '@/types/events';
 
-export const EventCalendar = () => {
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
-  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+export function EventCalendar() {
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const { data: events = [], isLoading } = useEvents();
   
-  const handleDayClick = (day: Date | undefined) => {
-    if (!day) return;
-    
-    const eventsOnSelectedDay = events.filter(event => 
-      isSameDay(new Date(event.start_time), day)
+  // Filtrar eventos para o dia selecionado
+  const eventsOnSelectedDay = selectedDate 
+    ? events.filter(event => {
+        const eventDate = new Date(event.start_time);
+        return eventDate.getDate() === selectedDate.getDate() && 
+               eventDate.getMonth() === selectedDate.getMonth() && 
+               eventDate.getFullYear() === selectedDate.getFullYear();
+      })
+    : [];
+
+  // Função para determinar os dias com eventos
+  const isDayWithEvent = (date: Date) => {
+    return events.some(event => {
+      const eventDate = new Date(event.start_time);
+      return eventDate.getDate() === date.getDate() && 
+             eventDate.getMonth() === date.getMonth() && 
+             eventDate.getFullYear() === date.getFullYear();
+    });
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin text-viverblue" />
+      </div>
     );
-    
-    if (eventsOnSelectedDay.length === 1) {
-      setSelectedEvent(eventsOnSelectedDay[0]);
-    } else if (eventsOnSelectedDay.length > 1) {
-      // Ao clicar em um dia com múltiplos eventos, mostra o primeiro
-      setSelectedEvent(eventsOnSelectedDay[0]);
-    }
-    setSelectedDate(day);
-  };
-
-  const handleCloseEventModal = () => {
-    setSelectedEvent(null);
-    setSelectedDate(undefined);
-  };
-
-  const today = new Date();
-  const monthStart = startOfMonth(today);
-  const monthEnd = endOfMonth(today);
-  const daysInMonth = eachDayOfInterval({ start: monthStart, end: monthEnd });
+  }
 
   return (
-    <div className="space-y-6">
-      <div className="rounded-lg border shadow-lg bg-card w-full max-w-6xl mx-auto">
-        <Calendar
-          mode="single"
-          locale={ptBR}
-          onDayClick={handleDayClick}
-          selected={selectedDate}
-          modifiers={{
-            event: (date) => events.some(event => 
-              isSameDay(new Date(event.start_time), date)
-            )
-          }}
-          modifiersClassNames={{
-            event: 'bg-viverblue/10 font-medium text-viverblue hover:bg-viverblue/20 transition-colors'
-          }}
-          className="w-full min-h-[700px] p-6"
-          classNames={{
-            months: "w-full grid grid-cols-1",
-            month: "space-y-4 w-full",
-            caption: "flex justify-center pt-1 relative items-center mb-4",
-            caption_label: "text-lg font-medium",
-            table: "w-full border-collapse h-full",
-            head_row: "grid grid-cols-7 gap-1",
-            head_cell: "text-muted-foreground rounded-md font-normal text-[0.9rem] h-10 flex items-center justify-center",
-            row: "grid grid-cols-7 gap-1 h-[100px]",
-            cell: "relative p-0 text-center text-sm focus-within:relative focus-within:z-20 [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md",
-            day: "h-full w-full p-2 font-normal hover:bg-accent/50 rounded-md transition-colors flex flex-col items-center justify-start",
-            day_today: "bg-accent/30",
-            day_selected: "bg-viverblue/20 text-viverblue hover:bg-viverblue/30",
-            day_outside: "opacity-50",
-          }}
-          components={{
-            DayContent: (props) => {
-              const dayEvents = events.filter(event => 
-                isSameDay(new Date(event.start_time), props.date)
-              );
-              return (
-                <div className="w-full h-full flex flex-col items-center">
-                  <span className="text-sm mb-1">{props.date.getDate()}</span>
-                  <EventDay events={dayEvents} />
-                </div>
-              );
-            }
-          }}
-        />
+    <div className="grid grid-cols-1 md:grid-cols-[350px_1fr] gap-6">
+      <div>
+        <Card>
+          <CardContent className="p-3">
+            <Calendar
+              mode="single"
+              selected={selectedDate}
+              onSelect={setSelectedDate}
+              className="rounded-md border"
+              locale={ptBR}
+              modifiers={{
+                event: (date) => isDayWithEvent(date),
+              }}
+              modifiersClassNames={{
+                event: "bg-viverblue/10 font-bold text-viverblue",
+              }}
+            />
+          </CardContent>
+        </Card>
       </div>
       
-      {selectedEvent && (
-        <EventModal
-          event={selectedEvent}
-          onClose={handleCloseEventModal}
-        />
-      )}
+      <div>
+        <Card className="h-full">
+          <CardHeader>
+            <CardTitle>
+              {selectedDate ? format(selectedDate, "PPPP", { locale: ptBR }) : "Selecione uma data"}
+            </CardTitle>
+            <CardDescription>
+              {eventsOnSelectedDay.length === 0 
+                ? "Sem eventos para esta data" 
+                : `${eventsOnSelectedDay.length} evento${eventsOnSelectedDay.length > 1 ? 's' : ''}`}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {eventsOnSelectedDay.length === 0 ? (
+              <div className="flex flex-col items-center justify-center text-center h-[300px] text-muted-foreground">
+                <CalendarIcon className="h-12 w-12 mb-4 opacity-30" />
+                <p>Nenhum evento agendado para esta data.</p>
+              </div>
+            ) : (
+              <ScrollArea className="h-[400px] pr-4">
+                <div className="space-y-6">
+                  {eventsOnSelectedDay.map((event) => (
+                    <EventCard key={event.id} event={event} />
+                  ))}
+                </div>
+              </ScrollArea>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
-};
+}
+
+interface EventCardProps {
+  event: Event;
+}
+
+function EventCard({ event }: EventCardProps) {
+  return (
+    <Card className="overflow-hidden">
+      {event.cover_image_url && (
+        <div className="w-full h-40 bg-cover bg-center"
+          style={{ backgroundImage: `url(${event.cover_image_url})` }} />
+      )}
+      <CardHeader className={cn(event.cover_image_url ? "pt-4" : "")}>
+        <CardTitle className="text-xl">{event.title}</CardTitle>
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Clock className="h-4 w-4" />
+          <span>
+            {format(new Date(event.start_time), "HH:mm", { locale: ptBR })} - 
+            {format(new Date(event.end_time), "HH:mm", { locale: ptBR })}
+          </span>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {event.description && (
+          <p className="text-muted-foreground">{event.description}</p>
+        )}
+        
+        <div className="space-y-2">
+          {event.physical_location && (
+            <div className="flex items-center gap-2 text-sm">
+              <MapPin className="h-4 w-4 text-muted-foreground" />
+              <span>{event.physical_location}</span>
+            </div>
+          )}
+          
+          {event.location_link && (
+            <div className="flex">
+              <Button variant="outline" size="sm" className="mt-2" asChild>
+                <a href={event.location_link} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2">
+                  <LinkIcon className="h-4 w-4" />
+                  <span>Acessar evento online</span>
+                </a>
+              </Button>
+            </div>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}

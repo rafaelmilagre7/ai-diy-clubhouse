@@ -1,45 +1,29 @@
-import React from 'react';
-import { Calendar } from "@/components/ui/calendar"
-import { CalendarIcon } from "lucide-react"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
-import { useAuth } from '@/contexts/auth';
+
+import React, { useState } from 'react';
+import { AdminEventsHeader } from '@/components/admin/events/AdminEventsHeader';
+import { EventsTable } from '@/components/admin/events/EventsTable';
+import { useEvents } from '@/hooks/useEvents';
+import { Loader2 } from 'lucide-react';
+import { useGoogleCalendarAuth } from '@/hooks/admin/useGoogleCalendarAuth';
 
 const AdminEvents = () => {
-  const { isLoading: isAuthenticated } = useAuth();
-  
-  if (!isAuthenticated) {
-    return null;
-  }
+  const { data: events, isLoading } = useEvents();
+  const { isAuthenticated } = useGoogleCalendarAuth();
 
   return (
-    <div className="mx-auto py-10">
-      <Popover>
-        <PopoverTrigger asChild>
-          <Button
-            variant={"outline"}
-            className={cn(
-              "w-[300px] justify-start text-left font-normal",
-              !Date && "text-muted-foreground"
-            )}
-          >
-            <CalendarIcon className="mr-2 h-4 w-4" />
-            <span>Pick a date</span>
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-auto p-0" align="start">
-          <Calendar
-            mode="single"
-            // selected={date}
-            // onSelect={setDate}
-            disabled={(date) =>
-              date > new Date() || date < new Date("2023-01-01")
-            }
-            initialFocus
-          />
-        </PopoverContent>
-      </Popover>
+    <div className="container mx-auto py-6">
+      <AdminEventsHeader isCalendarAuthenticated={isAuthenticated} />
+      
+      <div className="mt-6">
+        {isLoading ? (
+          <div className="flex justify-center items-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-viverblue" />
+            <span className="ml-2 text-muted-foreground">Carregando eventos...</span>
+          </div>
+        ) : (
+          <EventsTable />
+        )}
+      </div>
     </div>
   );
 };
