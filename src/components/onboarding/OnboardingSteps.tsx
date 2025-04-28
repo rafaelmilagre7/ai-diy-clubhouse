@@ -1,3 +1,4 @@
+
 import { useOnboardingSteps } from "@/hooks/onboarding/useOnboardingSteps";
 import { PersonalInfoStep } from "./steps/PersonalInfoStep";
 import { BusinessGoalsStep } from "./steps/BusinessGoalsStep";
@@ -10,7 +11,8 @@ import { Progress } from "@/components/ui/progress";
 import { OnboardingData } from "@/types/onboarding";
 import { ProfessionalDataStep } from "./steps/ProfessionalDataStep";
 import { useLocation } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { Loader2 } from "lucide-react";
 
 export const OnboardingSteps = () => {
   const {
@@ -21,10 +23,12 @@ export const OnboardingSteps = () => {
     saveStepData,
     completeOnboarding,
     progress,
-    navigateToStep
+    navigateToStep,
+    isLoading
   } = useOnboardingSteps();
   
   const location = useLocation();
+  const [componentLoading, setComponentLoading] = useState(true);
   
   const pathToStepComponent = {
     "/onboarding": "personal",
@@ -41,6 +45,13 @@ export const OnboardingSteps = () => {
   
   useEffect(() => {
     console.log(`Rota atual: ${location.pathname}, stepId mapeado: ${currentPathStepId}, currentStep.id: ${currentStep.id}`);
+    
+    // Após o carregamento inicial, desativar o estado de loading
+    const timer = setTimeout(() => {
+      setComponentLoading(false);
+    }, 500);
+    
+    return () => clearTimeout(timer);
   }, [location.pathname, currentPathStepId, currentStep.id]);
 
   const stepComponents = {
@@ -64,9 +75,20 @@ export const OnboardingSteps = () => {
   const CurrentStepComponent = stepComponents[currentPathStepId as keyof typeof stepComponents] || 
                               stepComponents[currentStep.id as keyof typeof stepComponents];
   
+  // Se não encontrou o componente, mostrar mensagem
   if (!CurrentStepComponent) {
     console.warn(`Componente não encontrado para etapa: ${currentPathStepId || currentStep.id}`);
-    return null;
+    return (
+      <div className="text-center p-6 bg-amber-50 border border-amber-200 rounded-lg">
+        <p className="text-amber-700">Etapa não encontrada. Por favor, volte para a página inicial do onboarding.</p>
+        <button 
+          onClick={() => navigateToStep(0)} 
+          className="mt-4 px-4 py-2 bg-amber-600 text-white rounded-md hover:bg-amber-700"
+        >
+          Voltar ao Início
+        </button>
+      </div>
+    );
   }
 
   const progressPercentage = ((currentStepIndex + 1) / steps.length) * 100;
@@ -114,8 +136,17 @@ export const OnboardingSteps = () => {
     return baseProps;
   };
 
+  if (isLoading || componentLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center p-8 animate-fade-in">
+        <Loader2 className="h-10 w-10 text-gray-400 animate-spin mb-4" />
+        <p className="text-gray-500">Carregando etapa...</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 animate-fade-in">
       <div className="flex justify-between items-center">
         <div className="space-y-1">
           <h2 className="text-2xl font-semibold text-white">

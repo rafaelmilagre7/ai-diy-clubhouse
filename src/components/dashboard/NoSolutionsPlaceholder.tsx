@@ -6,11 +6,15 @@ import { RefreshCw, Settings, FileQuestion } from "lucide-react";
 
 interface NoSolutionsPlaceholderProps {
   onRefresh?: () => void;
+  isLoading?: boolean;
 }
 
-export const NoSolutionsPlaceholder: FC<NoSolutionsPlaceholderProps> = ({ onRefresh }) => {
+export const NoSolutionsPlaceholder: FC<NoSolutionsPlaceholderProps> = ({ 
+  onRefresh,
+  isLoading = false
+}) => {
   return (
-    <Card className="border-dashed">
+    <Card className="border-dashed animate-fade-in">
       <CardContent className="py-10 flex flex-col items-center text-center">
         <div className="rounded-full bg-muted p-6 mb-4">
           <FileQuestion className="h-12 w-12 text-muted-foreground" />
@@ -20,7 +24,7 @@ export const NoSolutionsPlaceholder: FC<NoSolutionsPlaceholderProps> = ({ onRefr
         
         <p className="text-muted-foreground mb-6 max-w-md">
           Não encontramos nenhuma solução disponível neste momento. 
-          Isto pode ser devido a um problema temporário ou à sua conta estar aguardando ativação.
+          Isto pode ser devido a um problema temporário, ao seu onboarding incompleto ou sua conta estar aguardando ativação.
         </p>
         
         <div className="flex flex-col sm:flex-row gap-3">
@@ -29,19 +33,21 @@ export const NoSolutionsPlaceholder: FC<NoSolutionsPlaceholderProps> = ({ onRefr
               variant="default" 
               onClick={onRefresh}
               className="flex items-center gap-2"
+              disabled={isLoading}
             >
-              <RefreshCw className="h-4 w-4" />
-              Atualizar
+              <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+              {isLoading ? "Atualizando..." : "Atualizar"}
             </Button>
           )}
           
           <Button 
             variant="outline" 
-            onClick={() => window.location.href = '/profile'}
+            onClick={() => window.location.href = '/onboarding-intro'}
             className="flex items-center gap-2"
+            disabled={isLoading}
           >
             <Settings className="h-4 w-4" />
-            Verificar configurações
+            Completar Onboarding
           </Button>
         </div>
       </CardContent>

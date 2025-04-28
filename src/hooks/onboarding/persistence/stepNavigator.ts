@@ -51,5 +51,7 @@ export function navigateAfterStep(
     return;
   }
   
-  console.warn("Não foi possível determinar a próxima etapa, permanecendo na página atual");
+  // Adicionar um fallback em caso de erro na determinação de rota
+  console.warn("Não foi possível determinar a próxima etapa, assumindo primeira etapa");
+  navigate('/onboarding');
 }

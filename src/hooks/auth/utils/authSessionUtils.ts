@@ -21,9 +21,9 @@ export const processUserProfile = async (
       .from('profiles')
       .select('*')
       .eq('id', userId)
-      .single();
+      .maybeSingle(); // Usando maybeSingle em vez de single para evitar erros
     
-    if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116 é "não encontrado"
+    if (fetchError) {
       console.error('Erro ao buscar perfil:', fetchError);
       throw fetchError;
     }
@@ -60,10 +60,64 @@ export const processUserProfile = async (
     }
     
     console.log('Novo perfil criado:', newProfile);
+    
+    // Inicializar o progresso de onboarding para o novo usuário
+    await initializeOnboardingProgress(userId);
+    
     return newProfile;
     
   } catch (error) {
     console.error('Erro ao processar perfil:', error);
     throw error;
+  }
+};
+
+/**
+ * Inicializa o registro de progresso de onboarding para um novo usuário
+ */
+const initializeOnboardingProgress = async (userId: string) => {
+  try {
+    // Verificar se já existe um registro de progresso
+    const { data: existingProgress } = await supabase
+      .from('onboarding_progress')
+      .select('id')
+      .eq('user_id', userId)
+      .maybeSingle();
+      
+    if (existingProgress) {
+      console.log('Progresso de onboarding já existe:', existingProgress.id);
+      return existingProgress;
+    }
+    
+    // Criar registro de progresso inicial
+    const { data: newProgress, error } = await supabase
+      .from('onboarding_progress')
+      .insert([{
+        user_id: userId,
+        current_step: 'personal',
+        completed_steps: [],
+        is_completed: false,
+        personal_info: {},
+        professional_info: {},
+        business_context: {},
+        business_goals: {},
+        ai_experience: {},
+        experience_personalization: {},
+        complementary_info: {}
+      }])
+      .select()
+      .single();
+      
+    if (error) {
+      console.error('Erro ao inicializar progresso de onboarding:', error);
+      throw error;
+    }
+    
+    console.log('Progresso de onboarding inicializado:', newProgress.id);
+    return newProgress;
+  } catch (error) {
+    console.error('Falha ao inicializar progresso de onboarding:', error);
+    // Não propagar erro para não bloquear fluxo de autenticação
+    return null;
   }
 };

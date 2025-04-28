@@ -3,7 +3,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export const SolutionsGridLoader = () => {
   return (
-    <div className="space-y-12">
+    <div className="space-y-12 animate-fade-in">
+      {/* Texto explicativo */}
+      <div className="text-center text-gray-500 mb-4">
+        <p>Carregando suas soluções personalizadas...</p>
+      </div>
+      
       {/* Primeira seção */}
       <div>
         <Skeleton className="h-8 w-64 mb-2" />
