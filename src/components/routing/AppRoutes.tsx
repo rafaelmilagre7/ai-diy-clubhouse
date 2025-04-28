@@ -1,4 +1,3 @@
-
 import { Routes, Route } from 'react-router-dom';
 import { AdminProtectedRoutes } from '@/auth/AdminProtectedRoutes';
 import { ProtectedRoutes } from '@/auth/ProtectedRoutes';
@@ -40,18 +39,8 @@ import ImplementationTrailPage from '@/pages/member/ImplementationTrailPage';
 import AdminEvents from '@/pages/admin/AdminEvents';
 import Events from '@/pages/member/Events';
 import AdminLearningPage from '@/pages/admin/learning/index';
-
-// Onboarding
-import OnboardingIntro from '@/pages/onboarding/OnboardingIntro';
-import PersonalInfo from '@/pages/onboarding/steps/PersonalInfo';
-import ProfessionalData from '@/pages/onboarding/steps/ProfessionalData';
-import BusinessContext from '@/pages/onboarding/steps/BusinessContext';
-import AIExperience from '@/pages/onboarding/steps/AIExperience';
-import BusinessGoalsClub from '@/pages/onboarding/steps/BusinessGoalsClub';
-import ExperiencePersonalization from '@/pages/onboarding/steps/ExperiencePersonalization';
-import ComplementaryInfo from '@/pages/onboarding/steps/ComplementaryInfo';
-import Review from '@/pages/onboarding/steps/Review';
-import TrailGeneration from '@/pages/onboarding/steps/TrailGeneration';
+import CourseDetails from '@/pages/admin/learning/[id]';
+import ModuleDetails from '@/pages/admin/learning/module/[id]';
 
 const AppRoutes = () => {
   console.log("Renderizando AppRoutes");
@@ -111,6 +100,20 @@ const AppRoutes = () => {
         <AdminProtectedRoutes>
           <AdminLayout>
             <AdminLearningPage />
+          </AdminLayout>
+        </AdminProtectedRoutes>
+      } />
+      <Route path="/admin/learning/:id" element={
+        <AdminProtectedRoutes>
+          <AdminLayout>
+            <CourseDetails />
+          </AdminLayout>
+        </AdminProtectedRoutes>
+      } />
+      <Route path="/admin/learning/module/:id" element={
+        <AdminProtectedRoutes>
+          <AdminLayout>
+            <ModuleDetails />
           </AdminLayout>
         </AdminProtectedRoutes>
       } />
