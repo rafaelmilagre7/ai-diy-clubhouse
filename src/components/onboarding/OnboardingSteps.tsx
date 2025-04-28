@@ -1,3 +1,4 @@
+
 import { useOnboardingSteps } from "@/hooks/onboarding/useOnboardingSteps";
 import { PersonalInfoStep } from "./steps/PersonalInfoStep";
 import { usePersonalInfoStep } from "@/hooks/onboarding/usePersonalInfoStep";
@@ -26,11 +27,7 @@ export const OnboardingSteps = () => {
     navigateToStep
   } = useOnboardingSteps();
 
-  // Se o onboarding estiver concluído, mostrar a tela de conclusão
-  if (progress?.is_completed) {
-    return <OnboardingCompleted />;
-  }
-
+  // IMPORTANTE: Todos os hooks devem ser chamados no topo antes de qualquer condicional
   // Importar o hook usePersonalInfoStep para ter acesso às funções e dados necessários
   const {
     formData: personalFormData,
@@ -43,6 +40,12 @@ export const OnboardingSteps = () => {
   } = usePersonalInfoStep();
   
   const location = useLocation();
+  
+  // Se o onboarding estiver concluído, mostrar a tela de conclusão
+  // Este trecho deve vir DEPOIS de declarar todos os hooks
+  if (progress?.is_completed) {
+    return <OnboardingCompleted />;
+  }
   
   const pathToStepComponent = {
     "/onboarding": "personal",
