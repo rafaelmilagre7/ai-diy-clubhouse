@@ -39,7 +39,7 @@ export const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
     e.preventDefault();
     setValidationAttempted(true);
 
-    if (Object.keys(errors).length > 0) {
+    if (Object.keys(errors || {}).length > 0) {
       return;
     }
 
@@ -50,7 +50,7 @@ export const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
     }
   };
 
-  const hasValidationErrors = validationAttempted && Object.keys(errors).length > 0;
+  const hasValidationErrors = validationAttempted && Object.keys(errors || {}).length > 0;
 
   return (
     <form onSubmit={handleFormSubmit} className="space-y-6 animate-fade-in">
@@ -79,8 +79,9 @@ export const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
       <PersonalInfoForm
         formData={formData}
         onChange={onChange}
-        errors={errors}
+        errors={errors || {}}
         isSubmitting={isSubmitting}
+        onSubmit={onSubmit}
       />
     </form>
   );

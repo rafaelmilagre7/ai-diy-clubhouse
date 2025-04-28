@@ -9,7 +9,7 @@ interface PersonalInfoFormProps {
   onChange: (field: keyof PersonalInfoData, value: string) => void;
   errors: Record<string, string>;
   isSubmitting: boolean;
-  onSubmit?: () => void;
+  onSubmit?: () => Promise<void>;
 }
 
 export const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({

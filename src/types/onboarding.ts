@@ -156,7 +156,6 @@ export interface OnboardingStepProps {
   isLastStep?: boolean;
   onComplete?: () => void;
   initialData?: any;
-  personalInfo?: OnboardingData['personal_info'];
 }
 
 export interface OnboardingStep {

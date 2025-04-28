@@ -58,10 +58,15 @@ export const OnboardingSteps = () => {
     console.log(`Rota atual: ${location.pathname}, stepId: ${currentPathStepId}, currentStep.id: ${currentStep.id}`);
   }, [location.pathname, currentPathStepId, currentStep.id]);
 
-  const stepComponents = {
+  // Adaptador para transformar Promise<boolean> em Promise<void>
+  const adaptedPersonalHandleSubmit = async (): Promise<void> => {
+    await personalHandleSubmit();
+  };
+
+  const stepComponents: Record<string, any> = {
     personal: () => (
       <PersonalInfoStep
-        onSubmit={personalHandleSubmit}
+        onSubmit={adaptedPersonalHandleSubmit}
         isSubmitting={personalIsSubmitting}
         formData={personalFormData}
         errors={personalErrors || {}}
@@ -107,6 +112,7 @@ export const OnboardingSteps = () => {
         return <StepComponent />;
       }
       
+      // Passando apenas as propriedades que o componente espera
       return (
         <StepComponent
           onSubmit={saveStepData}
@@ -114,7 +120,6 @@ export const OnboardingSteps = () => {
           isLastStep={currentStepIndex === steps.length - 1}
           onComplete={completeOnboarding}
           initialData={getInitialDataForCurrentStep()}
-          personalInfo={progress?.personal_info}
         />
       );
     }
@@ -127,7 +132,6 @@ export const OnboardingSteps = () => {
         isLastStep={currentStepIndex === steps.length - 1}
         onComplete={completeOnboarding}
         initialData={getInitialDataForCurrentStep()}
-        personalInfo={progress?.personal_info}
       />
     );
   };
