@@ -15,6 +15,8 @@ import {
   createFallbackAchievements,
   removeDuplicateAchievements
 } from './utils/achievementUtils';
+import { Solution as SupabaseSolution } from '@/lib/supabase';
+import { Solution } from '@/types/solution';
 
 type Badge = {
   id: string;
@@ -22,6 +24,13 @@ type Badge = {
   description: string;
   icon?: string;
   category: string;
+};
+
+const adaptSolutions = (solutions: Solution[]): SupabaseSolution[] => {
+  return solutions.map(solution => ({
+    ...solution,
+    author_id: solution.author_id || '' // Adicionando a propriedade necessária
+  })) as SupabaseSolution[];
 };
 
 export function useAchievements() {
@@ -46,10 +55,12 @@ export function useAchievements() {
       
       if (dataError) throw new Error(dataError);
       
+      const adaptedSolutions = adaptSolutions(solutions);
+      
       const generatedAchievements: Achievement[] = [
-        ...generateImplementationAchievements(progressData, solutions),
-        ...generateCategoryAchievements(progressData, solutions),
-        ...generateEngagementAchievements(progressData, solutions),
+        ...generateImplementationAchievements(progressData, adaptedSolutions),
+        ...generateCategoryAchievements(progressData, adaptedSolutions),
+        ...generateEngagementAchievements(progressData, adaptedSolutions),
         ...generateSocialAchievements(progressData, comments, totalLikes)
       ];
 
