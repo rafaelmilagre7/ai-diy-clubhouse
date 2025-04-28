@@ -45,12 +45,19 @@ export const useRealtimeStats = () => {
         const sevenDaysAgo = new Date();
         sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
         
-        const { count: activeUsersCount, error: activeError } = await supabase
+        // Modificação aqui: transformando a consulta distinct para evitar o erro de tipo
+        // Primeiro busca todos os registros de progresso dos últimos 7 dias
+        const { data: activeUserData, error: activeError } = await supabase
           .from('progress')
-          .select('user_id', { count: 'exact', head: true, distinct: true })
+          .select('user_id')
           .gte('last_activity', sevenDaysAgo.toISOString());
           
         if (activeError) throw activeError;
+        
+        // Agora calcula usuários distintos em JavaScript ao invés de no banco de dados
+        const uniqueUserIds = new Set();
+        activeUserData?.forEach(item => uniqueUserIds.add(item.user_id));
+        const activeUsers = uniqueUserIds.size;
         
         // Calcular taxa média de conclusão
         const completions = completionResponse.data || [];
@@ -60,7 +67,7 @@ export const useRealtimeStats = () => {
           : 0;
         
         return {
-          activeUsers: activeUsersCount || 0,
+          activeUsers,
           totalUsers,
           implementationsToday,
           averageCompletionRate
