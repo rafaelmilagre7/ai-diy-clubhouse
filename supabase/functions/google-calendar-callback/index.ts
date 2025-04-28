@@ -7,20 +7,30 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Extrair PROJECT_ID de várias fontes possíveis para garantir que sempre tenhamos um valor
+// Função robusta para extrair PROJECT_ID de várias fontes possíveis
 function getProjectId(): string {
+  console.log('Obtendo PROJECT_ID de variáveis de ambiente');
+  
   // Tentar extrair do PROJECT_ID explícito
   const projectId = Deno.env.get('PROJECT_ID');
-  if (projectId) return projectId;
+  if (projectId) {
+    console.log(`PROJECT_ID encontrado: ${projectId}`);
+    return projectId;
+  }
   
   // Tentar extrair de SUPABASE_URL (formato: https://[project-id].supabase.co)
   const supabaseUrl = Deno.env.get('SUPABASE_URL');
   if (supabaseUrl) {
+    console.log(`SUPABASE_URL encontrado: ${supabaseUrl}`);
     const match = supabaseUrl.match(/https:\/\/([^.]+)\.supabase\.co/);
-    if (match && match[1]) return match[1];
+    if (match && match[1]) {
+      console.log(`PROJECT_ID extraído de SUPABASE_URL: ${match[1]}`);
+      return match[1];
+    }
   }
   
-  // Valor padrão se tudo falhar (pode ser substituído por um valor específico do seu projeto)
+  // Valor padrão do projeto
+  console.log('Usando PROJECT_ID padrão: zotzvtepvpnkcoobdubt');
   return 'zotzvtepvpnkcoobdubt';
 }
 
