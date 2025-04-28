@@ -1,7 +1,6 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/auth";
-import { supabase, Solution } from "@/lib/supabase";
+import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 import { ProgressData, ChecklistData, BadgeData } from "@/types/achievementTypes";
 
@@ -21,6 +20,7 @@ export const useAchievementData = () => {
     if (!user?.id) return;
 
     try {
+      console.log('Iniciando busca de dados de conquistas');
       setLoading(true);
       setError(null);
 
@@ -83,6 +83,12 @@ export const useAchievementData = () => {
       const totalLikes = (likesData || []).reduce((acc, comment) => acc + (comment.likes_count || 0), 0);
       setTotalLikes(totalLikes);
 
+      // Adicionando logs para debug
+      console.log('Progresso carregado:', progressData?.length || 0, 'registros');
+      console.log('Badges carregados:', badgesData?.length || 0, 'registros');
+      console.log('Comentários carregados:', commentsData?.length || 0, 'registros');
+      console.log('Total de likes:', totalLikes);
+
     } catch (error: any) {
       console.error("Error in fetching achievements data:", error);
       setError("Ocorreu um erro ao carregar os dados de conquistas");
@@ -92,17 +98,14 @@ export const useAchievementData = () => {
   }, [user?.id, toast]);
 
   useEffect(() => {
+    console.log('useAchievementData useEffect triggered');
     fetchData();
-  }, [fetchData]);
-
-  const refetch = useCallback(async () => {
-    await fetchData();
   }, [fetchData]);
 
   return {
     loading,
     error,
-    refetch,
+    refetch: fetchData,
     progressData,
     solutions,
     checklistData,

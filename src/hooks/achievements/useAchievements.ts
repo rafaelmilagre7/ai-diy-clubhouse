@@ -1,4 +1,3 @@
-
 import { useCallback } from 'react';
 import { useAuth } from '@/contexts/auth';
 import { useToast } from '@/hooks/use-toast';
@@ -17,7 +16,6 @@ import {
   removeDuplicateAchievements
 } from './utils/achievementUtils';
 
-// Definindo o tipo Badge internamente, já que ele não é exportado pelo módulo
 type Badge = {
   id: string;
   name: string;
@@ -35,6 +33,8 @@ export function useAchievements() {
     if (!user) return [];
     
     try {
+      console.log('Buscando conquistas para o usuário:', user.id);
+      
       const { 
         progressData, 
         solutions, 
@@ -119,7 +119,6 @@ export function useAchievements() {
                     "achievement", "revenue", "operational", "strategy"
                   ];
                   
-                  // Correção: Verificar e converter a categoria para o tipo adequado
                   const category: "achievement" | SolutionCategory = 
                     (validCategories.includes(badge.category as any)) 
                       ? (badge.category as "achievement" | SolutionCategory)
@@ -141,7 +140,6 @@ export function useAchievements() {
                   "achievement", "revenue", "operational", "strategy"
                 ];
                 
-                // Correção: Verificar e converter a categoria para o tipo adequado
                 const category: "achievement" | SolutionCategory = 
                   (validCategories.includes(badge.category as any)) 
                     ? (badge.category as "achievement" | SolutionCategory)
@@ -164,7 +162,7 @@ export function useAchievements() {
       }
       
       const uniqueAchievements = removeDuplicateAchievements(allAchievements);
-      console.log("Conquistas carregadas:", uniqueAchievements.length);
+      console.log("Total de conquistas carregadas:", uniqueAchievements.length);
       return uniqueAchievements;
       
     } catch (error) {
@@ -183,7 +181,8 @@ export function useAchievements() {
     queryKey: ['achievements', user?.id],
     queryFn: fetchAchievements,
     enabled: !!user,
-    staleTime: 5 * 60 * 1000,
-    refetchOnWindowFocus: false,
+    staleTime: 1000 * 60,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
   });
 }
