@@ -27,9 +27,9 @@ export interface ProgressData {
   current_module: number;
   is_completed: boolean;
   completed_at?: string;
-  created_at?: string; // Tornando opcional para compatibilidade
-  last_activity?: string; // Adicionando campo que vem do Supabase
-  completed_modules?: number[]; // Adicionando campo que vem do Supabase
+  created_at: string; // Mantendo como obrigatório pois é usado em vários lugares
+  last_activity?: string;
+  completed_modules?: number[];
   solutions?: SolutionData | SolutionData[]; // Pode ser um objeto ou um array
 }
 
@@ -37,15 +37,15 @@ export interface ChecklistData {
   id: string;
   user_id: string;
   solution_id: string;
-  checklist_id?: string; // Tornando opcional
-  checked_items?: any; // Adicionando campo que vem do Supabase
-  is_completed?: boolean; // Adicionando campo que vem do Supabase
+  checklist_id?: string; // Campo opcional, definido explicitamente
+  checked_items?: any; // Campo pode não existir
+  is_completed: boolean;
   completed_at?: string;
 }
 
 export interface BadgeData {
   id: string;
-  user_id?: string; // Tornando opcional
+  user_id: string; 
   badge_id: string;
   earned_at: string;
   badges: { // Modificando para aceitar tanto objeto quanto array
@@ -79,7 +79,7 @@ export function ensureValidCategory(category: string): "achievement" | SolutionC
   return "achievement"; // Valor padrão seguro
 }
 
-// Novo: Cache de conquistas para persistir durante navegação
+// Cache de conquistas para persistir durante navegação
 export const achievementCache = {
   achievements: [] as Achievement[],
   lastUpdated: 0,

@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useAuth } from "@/contexts/auth";
 import { supabase } from "@/lib/supabase";
@@ -66,7 +65,7 @@ export const useAchievementData = () => {
       console.log('Progresso encontrado:', progressResult?.length || 0);
       
       // Adaptador para garantir compatibilidade com a interface ProgressData
-      const adaptedProgressData: ProgressData[] = (progressResult || []).map(item => {
+      const adaptedProgressData: ProgressData[] = (progressResult || []).map((item: any) => {
         // Converter solutions para o formato correto, seja objeto único ou um array
         let solutionsData: SolutionData | SolutionData[] | undefined = undefined;
         
@@ -76,14 +75,15 @@ export const useAchievementData = () => {
             solutionsData = item.solutions.map((sol: any) => ({
               id: sol?.id || '',
               category: sol?.category || '',
-              title: sol?.title
+              title: sol?.title || undefined
             }));
           } else {
             // Se for um objeto único
+            const solData = item.solutions as any;
             solutionsData = {
-              id: item.solutions?.id || '',
-              category: item.solutions?.category || '',
-              title: item.solutions?.title
+              id: solData?.id || '',
+              category: solData?.category || '',
+              title: solData?.title || undefined
             };
           }
         }
@@ -109,11 +109,13 @@ export const useAchievementData = () => {
       console.log('Checklists encontrados:', checklistResult?.length || 0);
       
       // Adaptador para garantir compatibilidade com a interface ChecklistData
-      const adaptedChecklistData: ChecklistData[] = (checklistResult || []).map(item => ({
+      const adaptedChecklistData: ChecklistData[] = (checklistResult || []).map((item: any) => ({
         id: item.id || '',
         user_id: item.user_id || '',
         solution_id: item.solution_id || '',
-        checklist_id: item.checklist_id, // Pode ser undefined
+        // O campo checklist_id pode não existir em alguns registros
+        // Vamos tratá-lo explicitamente como opcional
+        checklist_id: item.checklist_id,
         checked_items: item.checked_items || {},
         is_completed: item.is_completed || false,
         completed_at: item.completed_at
@@ -126,13 +128,23 @@ export const useAchievementData = () => {
       console.log('Badges encontrados:', badgesResult?.length || 0);
       
       // Adaptador para garantir compatibilidade com a interface BadgeData
-      const adaptedBadgesData: BadgeData[] = (badgesResult || []).map(item => ({
-        id: item.id || '',
-        user_id: user.id, // Usando o ID do usuário atual
-        badge_id: item.badge_id || '',
-        earned_at: item.earned_at || new Date().toISOString(),
-        badges: item.badges || { id: '', name: '', description: '', icon: '', category: '' }
-      }));
+      const adaptedBadgesData: BadgeData[] = (badgesResult || []).map((item: any) => {
+        const badgeInfo = item.badges || { 
+          id: '', 
+          name: '', 
+          description: '', 
+          icon: '', 
+          category: '' 
+        };
+        
+        return {
+          id: item.id || '',
+          user_id: user.id,
+          badge_id: item.badge_id || '',
+          earned_at: item.earned_at || new Date().toISOString(),
+          badges: badgeInfo
+        };
+      });
       
       setBadgesData(adaptedBadgesData);
       

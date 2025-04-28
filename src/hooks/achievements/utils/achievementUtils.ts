@@ -37,8 +37,6 @@ export const fetchBadgesData = async (userId: string) => {
       `)
       .eq('user_id', userId);
       
-    // Se ocorrer um erro, retornar um array vazio em vez de lançar o erro
-    // Isso evitará que a falha na tabela badges quebre o carregamento do dashboard
     if (error) {
       console.warn("Erro ao carregar badges (pode ser que a tabela não existe):", error);
       return [];
@@ -79,7 +77,6 @@ export const fetchChecklistData = async (userId: string) => {
 
 export const fetchSocialData = async (userId: string) => {
   try {
-    // Buscar comentários do usuário
     const { data: comments, error: commentsError } = await supabase
       .from("solution_comments")
       .select("*")
@@ -87,7 +84,6 @@ export const fetchSocialData = async (userId: string) => {
       
     if (commentsError) throw commentsError;
     
-    // Buscar likes nos comentários
     const { data: likes, error: likesError } = await supabase
       .from("solution_comment_likes")
       .select("comment_id")
@@ -141,10 +137,8 @@ export const formatDate = (dateString?: string): string => {
   
   try {
     const date = new Date(dateString);
-    // Se for hoje, retornar "hoje"
     if (isToday(date)) return 'hoje';
     
-    // Caso contrário, formatar como DD/MM/YYYY
     return date.toLocaleDateString('pt-BR', {
       day: '2-digit',
       month: '2-digit',
@@ -155,7 +149,6 @@ export const formatDate = (dateString?: string): string => {
   }
 };
 
-// Função auxiliar para verificar se uma data é hoje
 const isToday = (date: Date): boolean => {
   const today = new Date();
   return date.getDate() === today.getDate() &&
@@ -163,27 +156,21 @@ const isToday = (date: Date): boolean => {
     date.getFullYear() === today.getFullYear();
 };
 
-// Mapeamento de categorias para garantir que os valores sejam válidos
 export const mapToValidCategory = (category: string): "achievement" | "revenue" | "operational" | "strategy" => {
   return ensureValidCategory(category);
 };
 
-// Novo: Função para tratar o processamento de conquistas com persistência
 export const processAchievements = (
   achievements: Achievement[], 
   previousAchievements: Achievement[]
 ): Achievement[] => {
-  // Se não havia conquistas anteriores, apenas retornamos as atuais
   if (!previousAchievements || previousAchievements.length === 0) {
     return achievements;
   }
 
-  // Preservamos o estado de desbloqueio para conquistas que podem ter sido temporariamente perdidas
-  // durante uma reconexão ou recarga parcial de dados
   return achievements.map(achievement => {
     const previousAchievement = previousAchievements.find(a => a.id === achievement.id);
     
-    // Se a conquista já estava desbloqueada anteriormente, mantemos esse estado
     if (previousAchievement && previousAchievement.isUnlocked && !achievement.isUnlocked) {
       return {
         ...achievement,
