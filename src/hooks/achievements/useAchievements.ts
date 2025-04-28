@@ -2,7 +2,13 @@ import { useCallback, useEffect } from 'react';
 import { useAuth } from '@/contexts/auth';
 import { useToast } from '@/hooks/use-toast';
 import { useAchievementData } from './useAchievementData';
-import { Achievement, ensureValidCategory, isValidCategory, achievementCache } from '@/types/achievementTypes';
+import { 
+  Achievement, 
+  ensureValidCategory, 
+  isValidCategory, 
+  achievementCache,
+  getSolutionCategory 
+} from '@/types/achievementTypes';
 import { SolutionCategory } from '@/lib/types/categoryTypes';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -139,9 +145,9 @@ export function useAchievements() {
           description: 'Implementou 3 soluções da trilha de Receita',
           category: "revenue",
           requiredCount: 3,
-          currentCount: progressData?.filter(p => p.is_completed && p.solutions?.category === 'revenue')?.length || 0,
-          isUnlocked: (progressData?.filter(p => p.is_completed && p.solutions?.category === 'revenue')?.length || 0) >= 3,
-          earnedAt: (progressData?.filter(p => p.is_completed && p.solutions?.category === 'revenue')?.length || 0) >= 3 
+          currentCount: progressData?.filter(p => p.is_completed && getSolutionCategory(p.solutions) === 'revenue')?.length || 0,
+          isUnlocked: (progressData?.filter(p => p.is_completed && getSolutionCategory(p.solutions) === 'revenue')?.length || 0) >= 3,
+          earnedAt: (progressData?.filter(p => p.is_completed && getSolutionCategory(p.solutions) === 'revenue')?.length || 0) >= 3 
             ? new Date().toISOString() : undefined,
         },
         {
@@ -161,9 +167,9 @@ export function useAchievements() {
           description: 'Completou uma solução da trilha de Estratégia',
           category: "strategy",
           requiredCount: 1,
-          currentCount: progressData?.filter(p => p.is_completed && p.solutions?.category === 'strategy')?.length || 0,
-          isUnlocked: progressData?.some(p => p.is_completed && p.solutions?.category === 'strategy') || false,
-          earnedAt: progressData?.some(p => p.is_completed && p.solutions?.category === 'strategy')
+          currentCount: progressData?.filter(p => p.is_completed && getSolutionCategory(p.solutions) === 'strategy')?.length || 0,
+          isUnlocked: progressData?.some(p => p.is_completed && getSolutionCategory(p.solutions) === 'strategy') || false,
+          earnedAt: progressData?.some(p => p.is_completed && getSolutionCategory(p.solutions) === 'strategy')
             ? new Date().toISOString() : undefined,
         },
       ];
@@ -274,7 +280,7 @@ export function useAchievements() {
     }
   }, [user?.id]);
   
-  const result = useQuery({
+  return useQuery({
     queryKey: ['achievements', user?.id],
     queryFn: fetchAchievements,
     enabled: !!user,
@@ -285,6 +291,4 @@ export function useAchievements() {
     refetchInterval: 60000, // Refetch automático a cada 60 segundos
     retry: 3
   });
-  
-  return result;
 }

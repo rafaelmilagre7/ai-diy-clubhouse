@@ -1,3 +1,4 @@
+
 import { SolutionCategory } from "@/lib/types/categoryTypes";
 
 export interface Achievement {
@@ -13,6 +14,12 @@ export interface Achievement {
   level?: number;
 }
 
+export interface SolutionData {
+  id: string;
+  category: string;
+  title?: string;
+}
+
 export interface ProgressData {
   id: string;
   user_id: string;
@@ -23,15 +30,7 @@ export interface ProgressData {
   created_at?: string; // Tornando opcional para compatibilidade
   last_activity?: string; // Adicionando campo que vem do Supabase
   completed_modules?: number[]; // Adicionando campo que vem do Supabase
-  solutions?: {
-    id: string;
-    category: string;
-    title?: string; // Adicionando campo que pode vir do Supabase
-  } | {
-    id: string;
-    category: string;
-    title?: string; // Adicionando campo que pode vir do Supabase
-  }[]; // Adicionando suporte para ser um objeto ou array
+  solutions?: SolutionData | SolutionData[]; // Pode ser um objeto ou um array
 }
 
 export interface ChecklistData {
@@ -97,3 +96,19 @@ export const achievementCache = {
     this.lastUpdated = 0;
   }
 };
+
+// Helper para verificar se o objeto solutions é um array
+export function isSolutionsArray(solutions: SolutionData | SolutionData[] | undefined): solutions is SolutionData[] {
+  return Array.isArray(solutions);
+}
+
+// Helper para obter a categoria da solução de forma segura
+export function getSolutionCategory(solutions: SolutionData | SolutionData[] | undefined): string {
+  if (!solutions) return "";
+  
+  if (isSolutionsArray(solutions)) {
+    return solutions.length > 0 ? solutions[0].category : "";
+  }
+  
+  return solutions.category;
+}

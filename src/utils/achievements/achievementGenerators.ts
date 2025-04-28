@@ -1,6 +1,6 @@
 
 import { v4 as uuidv4 } from "uuid";
-import { Achievement, ProgressData } from "@/types/achievementTypes";
+import { Achievement, ProgressData, getSolutionCategory } from "@/types/achievementTypes";
 import { Solution } from "@/lib/supabase";
 import { SolutionCategory } from "@/lib/types/categoryTypes";
 
@@ -74,7 +74,7 @@ export const generateCategoryAchievements = (progress: ProgressData[], solutions
   const getCompletedByCategory = (category: string) => {
     return progress.filter(p => 
       p.is_completed && 
-      p.solutions?.category === category
+      getSolutionCategory(p.solutions) === category
     ).length;
   };
   
