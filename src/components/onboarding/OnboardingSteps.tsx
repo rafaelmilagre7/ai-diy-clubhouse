@@ -49,11 +49,6 @@ export const OnboardingSteps = () => {
     }
   }, [progress]);
   
-  // Renderização condicional para tela de conclusão (agora usando state)
-  if (showCompletedScreen) {
-    return <OnboardingCompleted />;
-  }
-  
   const pathToStepComponent = {
     "/onboarding": "personal",
     "/onboarding/professional-data": "professional_data", 
@@ -77,6 +72,11 @@ export const OnboardingSteps = () => {
   const adaptedPersonalHandleSubmit = async (): Promise<void> => {
     await personalHandleSubmit();
   };
+  
+  // Renderização condicional para tela de conclusão (agora usando state)
+  if (showCompletedScreen) {
+    return <OnboardingCompleted />;
+  }
 
   const stepComponents: Record<string, any> = {
     personal: () => (

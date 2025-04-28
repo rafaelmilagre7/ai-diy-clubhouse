@@ -19,6 +19,7 @@ export const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({
   isSubmitting,
   onSubmit
 }) => {
+  // Garantindo que não haja condicionais na chamada de handleFormSubmit
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (onSubmit) {
