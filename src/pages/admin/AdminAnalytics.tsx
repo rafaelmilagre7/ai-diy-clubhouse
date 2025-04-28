@@ -1,13 +1,25 @@
 
 import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useAnalyticsData } from '@/hooks/analytics/useAnalyticsData';
 import { OverviewTabContent } from '@/components/admin/analytics/OverviewTabContent';
 import { AnalyticsHeader } from '@/components/admin/analytics/AnalyticsHeader';
 import { PlaceholderTabContent } from '@/components/admin/analytics/PlaceholderTabContent';
 
 const AdminAnalytics = () => {
   const [timeRange, setTimeRange] = useState('7d');
+  const [category, setCategory] = useState('all');
+  const [difficulty, setDifficulty] = useState('all');
+  
+  const filters = {
+    timeRange,
+    category,
+    difficulty
+  };
+  
+  const { data, loading } = useAnalyticsData(filters);
 
   return (
     <div className="space-y-6">
@@ -15,6 +27,51 @@ const AdminAnalytics = () => {
         timeRange={timeRange}
         setTimeRange={setTimeRange}
       />
+      
+      <div className="flex flex-col sm:flex-row gap-4 items-center">
+        <div className="w-full sm:w-auto">
+          <Select value={timeRange} onValueChange={setTimeRange}>
+            <SelectTrigger className="w-full sm:w-[180px]">
+              <SelectValue placeholder="Período" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="7d">Últimos 7 dias</SelectItem>
+              <SelectItem value="30d">Últimos 30 dias</SelectItem>
+              <SelectItem value="90d">Últimos 90 dias</SelectItem>
+              <SelectItem value="365d">Último ano</SelectItem>
+              <SelectItem value="all">Todo o período</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        
+        <div className="w-full sm:w-auto">
+          <Select value={category} onValueChange={setCategory}>
+            <SelectTrigger className="w-full sm:w-[180px]">
+              <SelectValue placeholder="Categoria" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas as categorias</SelectItem>
+              <SelectItem value="revenue">Aumento de Receita</SelectItem>
+              <SelectItem value="operational">Otimização Operacional</SelectItem>
+              <SelectItem value="strategy">Gestão Estratégica</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        
+        <div className="w-full sm:w-auto">
+          <Select value={difficulty} onValueChange={setDifficulty}>
+            <SelectTrigger className="w-full sm:w-[180px]">
+              <SelectValue placeholder="Dificuldade" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas as dificuldades</SelectItem>
+              <SelectItem value="easy">Fácil</SelectItem>
+              <SelectItem value="medium">Média</SelectItem>
+              <SelectItem value="hard">Difícil</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
 
       <Tabs defaultValue="overview" className="space-y-4">
         <TabsList>
@@ -26,7 +83,7 @@ const AdminAnalytics = () => {
         </TabsList>
         
         <TabsContent value="overview" className="space-y-4">
-          <OverviewTabContent timeRange={timeRange} />
+          <OverviewTabContent timeRange={timeRange} loading={loading} data={data} />
         </TabsContent>
         
         <TabsContent value="users" className="space-y-4">
