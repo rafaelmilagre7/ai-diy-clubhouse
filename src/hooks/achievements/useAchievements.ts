@@ -1,9 +1,21 @@
+
 import { useCallback } from 'react';
 import { useAuth } from '@/contexts/auth';
 import { useToast } from '@/hooks/use-toast';
 import { useAchievementData } from './useAchievementData';
-import { Achievement } from '@/types/achievementTypes';
+import { Achievement, Badge } from '@/types/achievementTypes';
+import { SolutionCategory } from '@/lib/types/categoryTypes';
 import { useQuery } from '@tanstack/react-query';
+import {
+  generateImplementationAchievements,
+  generateCategoryAchievements,
+  generateEngagementAchievements,
+  generateSocialAchievements
+} from '@/utils/achievements/achievementGenerators';
+import {
+  createFallbackAchievements,
+  removeDuplicateAchievements
+} from './utils/achievementUtils';
 
 export function useAchievements() {
   const { user } = useAuth();
