@@ -1,4 +1,3 @@
-
 import { useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { AdminEventsHeader } from "@/components/admin/events/AdminEventsHeader";
@@ -14,7 +13,6 @@ const AdminEvents = () => {
   
   useEffect(() => {
     if (searchParams.has('code') || searchParams.has('state') || searchParams.has('error') || searchParams.has('authError')) {
-      // Limpa os parâmetros da URL após processar
       const emptyParams = new URLSearchParams();
       setSearchParams(emptyParams, { replace: true });
     }
@@ -40,7 +38,7 @@ const AdminEvents = () => {
         </Alert>
       )}
 
-      <AdminEventsHeader isCalendarAuthenticated={!!isAuthenticated} />
+      <AdminEventsHeader isCalendarAuthenticated={Boolean(isAuthenticated)} />
       <EventsTable />
     </div>
   );
