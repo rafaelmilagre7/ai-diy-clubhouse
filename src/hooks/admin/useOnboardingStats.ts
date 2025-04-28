@@ -41,38 +41,33 @@ export const useOnboardingStats = () => {
     const fetchStats = async () => {
       try {
         setLoading(true);
+        console.log("Iniciando busca de dados de onboarding...");
 
-        // Buscar dados detalhados dos usuários com onboarding
-        const { data: onboardingData, error: onboardingError } = await supabase
-          .from('onboarding_progress')
-          .select(`
-            id,
-            user_id,
-            current_step,
-            is_completed,
-            created_at,
-            updated_at,
-            personal_info,
-            professional_info,
-            profiles:user_id (
-              name,
-              email,
-              company_name
-            )
-          `);
+        // Buscar dados direto da view onboarding_analytics que já contém os relacionamentos
+        const { data: onboardingData, error } = await supabase
+          .from('onboarding_analytics')
+          .select('*');
 
-        if (onboardingError) throw onboardingError;
+        if (error) {
+          console.error('Erro ao buscar dados de onboarding:', error);
+          throw error;
+        }
 
-        const formattedUsers: OnboardingUserData[] = onboardingData?.map((user: any) => ({
+        console.log("Dados de onboarding recebidos:", onboardingData);
+
+        // Se não houver dados, inicializar com array vazio
+        const formattedUsers: OnboardingUserData[] = onboardingData ? onboardingData.map((user: any) => ({
           id: user.user_id,
-          name: user.profiles?.name || 'Usuário sem nome',
-          email: user.profiles?.email || 'Email não definido',
+          name: user.email?.split('@')[0] || 'Usuário sem nome', // Usar parte do email como nome se não tiver nome
+          email: user.email || 'Email não definido',
           current_step: user.current_step || 'Não iniciado',
           is_completed: user.is_completed || false,
-          started_at: user.created_at,
-          last_activity: user.updated_at,
-          company_name: user.professional_info?.company_name || user.profiles?.company_name
-        })) || [];
+          started_at: user.started_at,
+          last_activity: user.last_activity,
+          company_name: user.company_name || 
+                       (user.personal_info && typeof user.personal_info === 'object' ? 
+                         user.personal_info.company_name : null)
+        })) : [];
 
         const totalUsers = formattedUsers.length;
         const completedOnboarding = formattedUsers.filter(user => user.is_completed).length;
@@ -80,20 +75,27 @@ export const useOnboardingStats = () => {
         const completionRate = totalUsers > 0 ? (completedOnboarding / totalUsers) * 100 : 0;
 
         // Calcular distribuição de usuários por etapa
-        const usersByStep = formattedUsers.reduce((acc: Record<string, number>, user) => {
-          const currentStep = user.current_step;
-          acc[currentStep] = (acc[currentStep] || 0) + 1;
-          return acc;
-        }, {});
+        const usersByStep: Record<string, number> = {};
+        formattedUsers.forEach(user => {
+          const step = user.current_step;
+          usersByStep[step] = (usersByStep[step] || 0) + 1;
+        });
 
         setStats({
           totalUsers,
           completedOnboarding,
           pendingUsers,
           completionRate,
-          averageCompletionTime: 0,
+          averageCompletionTime: 0, // Podemos implementar este cálculo no futuro
           usersByStep,
           users: formattedUsers
+        });
+
+        console.log("Dados processados com sucesso:", {
+          totalUsers,
+          completedOnboarding,
+          pendingUsers,
+          usersByStep
         });
 
       } catch (error: any) {
