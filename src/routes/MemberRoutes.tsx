@@ -1,3 +1,4 @@
+
 import { Fragment } from "react";
 import { Route } from "react-router-dom";
 import { lazy } from "react";
@@ -17,6 +18,7 @@ const SuggestionDetails = lazy(() => import("@/pages/member/SuggestionDetails"))
 const NewSuggestion = lazy(() => import("@/pages/member/NewSuggestion"));
 const Achievements = lazy(() => import("@/pages/member/Achievements"));
 const Events = lazy(() => import("@/pages/member/Events"));
+const NetworkingPage = lazy(() => import("@/pages/member/NetworkingPage"));
 
 export const MemberRoutes = () => {
   return (
@@ -147,6 +149,16 @@ export const MemberRoutes = () => {
           <ProtectedRoute>
             <MemberLayout>
               <Events />
+            </MemberLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/networking"
+        element={
+          <ProtectedRoute>
+            <MemberLayout>
+              <NetworkingPage />
             </MemberLayout>
           </ProtectedRoute>
         }

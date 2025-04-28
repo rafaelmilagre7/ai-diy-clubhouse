@@ -86,16 +86,18 @@ export const NetworkMatchCard = ({ match }: NetworkMatchCardProps) => {
         <p className="text-sm text-muted-foreground">{match.match_reason}</p>
       </div>
 
-      <div>
-        <h4 className="text-sm font-medium mb-2">Tópicos sugeridos</h4>
-        <div className="flex flex-wrap gap-2">
-          {match.suggested_topics?.map((topic, index) => (
-            <Badge key={index} variant="outline">
-              {topic}
-            </Badge>
-          ))}
+      {match.suggested_topics && match.suggested_topics.length > 0 && (
+        <div>
+          <h4 className="text-sm font-medium mb-2">Tópicos sugeridos</h4>
+          <div className="flex flex-wrap gap-2">
+            {match.suggested_topics.map((topic, index) => (
+              <Badge key={index} variant="outline">
+                {topic}
+              </Badge>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       <div className="flex space-x-2 pt-4">
         <Button
