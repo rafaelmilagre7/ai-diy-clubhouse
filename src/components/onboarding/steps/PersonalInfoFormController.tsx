@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
@@ -26,10 +25,18 @@ export const PersonalInfoFormController = () => {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [lastAttemptTimestamp, setLastAttemptTimestamp] = useState<number | null>(null);
+  const [isInitialLoadAttempted, setIsInitialLoadAttempted] = useState(false);
+
+  useEffect(() => {
+    if (!isInitialLoadAttempted) {
+      console.log("Tentando carregar dados iniciais");
+      setIsInitialLoadAttempted(true);
+    }
+  }, [isInitialLoadAttempted]);
 
   useEffect(() => {
     if (formDataLoaded && progress?.id && !isSubmitting && lastAttemptTimestamp === null) {
-      console.log("Dados iniciais carregados");
+      console.log("Dados iniciais carregados com sucesso");
       setLastAttemptTimestamp(Date.now());
     }
   }, [formDataLoaded, progress?.id, isSubmitting, lastAttemptTimestamp]);
@@ -79,7 +86,7 @@ export const PersonalInfoFormController = () => {
     }
   };
 
-  if (isLoading) {
+  if (isLoading || !isInitialLoadAttempted) {
     return (
       <div className="flex justify-center items-center h-24">
         <LoadingSpinner size={8} />
