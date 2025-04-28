@@ -1,4 +1,3 @@
-
 import { useOnboardingSteps } from "@/hooks/onboarding/useOnboardingSteps";
 import { PersonalInfoStep } from "./steps/PersonalInfoStep";
 import { usePersonalInfoStep } from "@/hooks/onboarding/usePersonalInfoStep";
@@ -16,7 +15,6 @@ import { useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 
 export const OnboardingSteps = () => {
-  // IMPORTANTE: Todos os hooks devem ser chamados no topo antes de qualquer condicional
   const {
     currentStepIndex,
     currentStep,
@@ -28,7 +26,6 @@ export const OnboardingSteps = () => {
     navigateToStep
   } = useOnboardingSteps();
 
-  // Importar o hook usePersonalInfoStep para ter acesso às funções e dados necessários
   const {
     formData: personalFormData,
     errors: personalErrors,
@@ -42,7 +39,6 @@ export const OnboardingSteps = () => {
   const location = useLocation();
   const [showCompletedScreen, setShowCompletedScreen] = useState(false);
   
-  // Efeito para verificar se o onboarding está completo
   useEffect(() => {
     if (progress?.is_completed) {
       setShowCompletedScreen(true);
@@ -59,7 +55,7 @@ export const OnboardingSteps = () => {
     "/onboarding/complementary": "complementary_info",
     "/onboarding/review": "review",
     "/onboarding/trail-generation": "trail_generation",
-    "/onboarding/steps": "personal"  // Adicionar correspondência para /onboarding/steps
+    "/onboarding/steps": "personal"
   };
 
   const currentPathStepId = pathToStepComponent[location.pathname as keyof typeof pathToStepComponent] || currentStep.id;
@@ -68,12 +64,10 @@ export const OnboardingSteps = () => {
     console.log(`Rota atual: ${location.pathname}, stepId: ${currentPathStepId}, currentStep.id: ${currentStep.id}`);
   }, [location.pathname, currentPathStepId, currentStep.id]);
 
-  // Adaptador para transformar Promise<boolean> em Promise<void>
   const adaptedPersonalHandleSubmit = async (): Promise<void> => {
     await personalHandleSubmit();
   };
   
-  // Renderização condicional para tela de conclusão (agora usando state)
   if (showCompletedScreen) {
     return <OnboardingCompleted />;
   }
@@ -107,7 +101,6 @@ export const OnboardingSteps = () => {
   };
 
   const getCurrentStepComponent = () => {
-    // Usar a função para etapa personal em vez de acessar variáveis diretamente
     if (currentPathStepId === "personal" || currentStep.id === "personal") {
       return stepComponents.personal();
     }
@@ -120,14 +113,11 @@ export const OnboardingSteps = () => {
       return null;
     }
 
-    // Se StepComponent for uma função (como no caso do review), chamá-la
-    // caso contrário, passar as props padrão
     if (typeof StepComponent === 'function' && StepComponent !== stepComponents.personal) {
       if (StepComponent === stepComponents.review) {
         return <StepComponent />;
       }
       
-      // Passando apenas as propriedades que o componente espera
       return (
         <StepComponent
           onSubmit={saveStepData}
@@ -139,7 +129,6 @@ export const OnboardingSteps = () => {
       );
     }
 
-    // Se for um componente, renderizá-lo com as props
     return (
       <StepComponent
         onSubmit={saveStepData}

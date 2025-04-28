@@ -1,8 +1,7 @@
 
 import React from "react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, Edit, Map } from "lucide-react";
+import { Edit, Map } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const OnboardingCompleted = () => {
@@ -10,22 +9,14 @@ const OnboardingCompleted = () => {
   
   return (
     <div className="max-w-4xl mx-auto py-8">
-      {/* Alerta de Sucesso */}
-      <Alert className="mb-6 bg-green-50 border-green-200">
-        <CheckCircle2 className="h-4 w-4 text-green-600" />
-        <AlertDescription className="text-green-700">
-          Seu onboarding está concluído! Você pode editar suas informações ou acessar sua trilha personalizada.
-        </AlertDescription>
-      </Alert>
-
-      {/* Card Principal */}
+      {/* Card Principal com fundo escuro */}
       <div className="bg-gray-800 rounded-lg p-8 shadow-lg text-center space-y-6">
         <h2 className="text-3xl font-bold text-white">Gerenciar Perfil</h2>
         <p className="text-gray-300 text-lg">
           Atualize suas informações ou acesse sua trilha personalizada
         </p>
 
-        {/* Botões */}
+        {/* Botões com espaçamento corrigido */}
         <div className="flex justify-center gap-4 pt-4">
           <Button
             variant="secondary"
