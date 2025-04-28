@@ -1,3 +1,4 @@
+
 import { useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { AdminEventsHeader } from "@/components/admin/events/AdminEventsHeader";
@@ -38,7 +39,7 @@ const AdminEvents = () => {
         </Alert>
       )}
 
-      <AdminEventsHeader isCalendarAuthenticated={Boolean(isAuthenticated)} />
+      <AdminEventsHeader isCalendarAuthenticated={!!isAuthenticated} />
       <EventsTable />
     </div>
   );
