@@ -3,6 +3,7 @@ import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
 
 interface AnalyticsFiltersProps {
   timeRange: string;
@@ -21,20 +22,23 @@ export const AnalyticsFilters = ({
   difficulty,
   setDifficulty
 }: AnalyticsFiltersProps) => {
+  const isMobile = useMediaQuery("(max-width: 768px)");
+  
   return (
     <Card className="mb-6">
-      <CardContent className="pt-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <CardContent className="pt-6 pb-4">
+        <div className={`grid ${isMobile ? 'grid-cols-1 gap-4' : 'grid-cols-3 gap-6'}`}>
           <div className="space-y-2">
             <Label htmlFor="timeRange">Período</Label>
             <Select value={timeRange} onValueChange={setTimeRange}>
-              <SelectTrigger id="timeRange">
+              <SelectTrigger id="timeRange" className="w-full">
                 <SelectValue placeholder="Selecione o período" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="7d">Últimos 7 dias</SelectItem>
                 <SelectItem value="30d">Últimos 30 dias</SelectItem>
                 <SelectItem value="90d">Últimos 90 dias</SelectItem>
+                <SelectItem value="365d">Último ano</SelectItem>
                 <SelectItem value="all">Todo o período</SelectItem>
               </SelectContent>
             </Select>
@@ -43,7 +47,7 @@ export const AnalyticsFilters = ({
           <div className="space-y-2">
             <Label htmlFor="category">Categoria</Label>
             <Select value={category} onValueChange={setCategory}>
-              <SelectTrigger id="category">
+              <SelectTrigger id="category" className="w-full">
                 <SelectValue placeholder="Selecione a categoria" />
               </SelectTrigger>
               <SelectContent>
@@ -58,7 +62,7 @@ export const AnalyticsFilters = ({
           <div className="space-y-2">
             <Label htmlFor="difficulty">Dificuldade</Label>
             <Select value={difficulty} onValueChange={setDifficulty}>
-              <SelectTrigger id="difficulty">
+              <SelectTrigger id="difficulty" className="w-full">
                 <SelectValue placeholder="Selecione a dificuldade" />
               </SelectTrigger>
               <SelectContent>
