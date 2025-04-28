@@ -70,30 +70,32 @@ export const useAchievementData = () => {
         // Converter solutions para o formato correto, seja objeto único ou um array
         let solutionsData: SolutionData | SolutionData[] | undefined = undefined;
         
-        if (Array.isArray(item.solutions)) {
-          // Se for um array, garantir que cada elemento tenha os campos necessários
-          solutionsData = item.solutions.map((sol: any) => ({
-            id: sol?.id || '',
-            category: sol?.category || '',
-            title: sol?.title
-          }));
-        } else if (item.solutions) {
-          // Se for um objeto único
-          solutionsData = {
-            id: item.solutions?.id || '',
-            category: item.solutions?.category || '',
-            title: item.solutions?.title
-          };
+        if (item.solutions) {
+          if (Array.isArray(item.solutions)) {
+            // Se for um array, garantir que cada elemento tenha os campos necessários
+            solutionsData = item.solutions.map((sol: any) => ({
+              id: sol?.id || '',
+              category: sol?.category || '',
+              title: sol?.title
+            }));
+          } else {
+            // Se for um objeto único
+            solutionsData = {
+              id: item.solutions?.id || '',
+              category: item.solutions?.category || '',
+              title: item.solutions?.title
+            };
+          }
         }
         
         return {
-          id: item.id,
-          user_id: item.user_id,
-          solution_id: item.solution_id,
-          current_module: item.current_module,
-          is_completed: item.is_completed,
+          id: item.id || '',
+          user_id: item.user_id || '',
+          solution_id: item.solution_id || '',
+          current_module: item.current_module || 0,
+          is_completed: item.is_completed || false,
           completed_at: item.completed_at,
-          created_at: item?.created_at || new Date().toISOString(),
+          created_at: item.created_at || new Date().toISOString(),
           last_activity: item.last_activity,
           completed_modules: item.completed_modules,
           solutions: solutionsData
@@ -108,12 +110,12 @@ export const useAchievementData = () => {
       
       // Adaptador para garantir compatibilidade com a interface ChecklistData
       const adaptedChecklistData: ChecklistData[] = (checklistResult || []).map(item => ({
-        id: item.id,
-        user_id: item.user_id,
-        solution_id: item.solution_id,
-        checklist_id: undefined, // Definimos como undefined já que não vem da API
-        checked_items: item.checked_items,
-        is_completed: item.is_completed,
+        id: item.id || '',
+        user_id: item.user_id || '',
+        solution_id: item.solution_id || '',
+        checklist_id: item.checklist_id, // Pode ser undefined
+        checked_items: item.checked_items || {},
+        is_completed: item.is_completed || false,
         completed_at: item.completed_at
       }));
       
@@ -125,11 +127,11 @@ export const useAchievementData = () => {
       
       // Adaptador para garantir compatibilidade com a interface BadgeData
       const adaptedBadgesData: BadgeData[] = (badgesResult || []).map(item => ({
-        id: item.id,
+        id: item.id || '',
         user_id: user.id, // Usando o ID do usuário atual
-        badge_id: item.badge_id,
-        earned_at: item.earned_at,
-        badges: item.badges
+        badge_id: item.badge_id || '',
+        earned_at: item.earned_at || new Date().toISOString(),
+        badges: item.badges || { id: '', name: '', description: '', icon: '', category: '' }
       }));
       
       setBadgesData(adaptedBadgesData);

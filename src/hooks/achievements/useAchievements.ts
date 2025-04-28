@@ -40,7 +40,6 @@ const adaptSolutions = (solutions: Solution[]): SupabaseSolution[] => {
   })) as SupabaseSolution[];
 };
 
-// Adaptador para garantir que as conquistas geradas tenham categorias válidas
 const adaptAchievements = (achievements: any[]): Achievement[] => {
   return achievements.map(achievement => ({
     ...achievement,
