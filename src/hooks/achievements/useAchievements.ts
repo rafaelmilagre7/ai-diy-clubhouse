@@ -3,7 +3,7 @@ import { useCallback } from 'react';
 import { useAuth } from '@/contexts/auth';
 import { useToast } from '@/hooks/use-toast';
 import { useAchievementData } from './useAchievementData';
-import { Achievement, Badge } from '@/types/achievementTypes';
+import { Achievement } from '@/types/achievementTypes';
 import { SolutionCategory } from '@/lib/types/categoryTypes';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -16,6 +16,15 @@ import {
   createFallbackAchievements,
   removeDuplicateAchievements
 } from './utils/achievementUtils';
+
+// Definindo o tipo Badge internamente, já que ele não é exportado pelo módulo
+type Badge = {
+  id: string;
+  name: string;
+  description: string;
+  icon?: string;
+  category: string;
+};
 
 export function useAchievements() {
   const { user } = useAuth();
