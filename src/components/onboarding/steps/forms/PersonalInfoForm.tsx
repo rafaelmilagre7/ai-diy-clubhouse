@@ -40,7 +40,7 @@ export const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({
           type="submit" 
           disabled={isSubmitting}
           className="bg-[#0ABAB5] hover:bg-[#0ABAB5]/90"
-          onClick={onSubmit ? handleFormSubmit : undefined}
+          onClick={handleFormSubmit}
         >
           {isSubmitting ? "Salvando..." : "Continuar"}
         </Button>

@@ -36,6 +36,9 @@ export const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
     return () => clearTimeout(timer);
   }, []);
 
+  // Computed values após todos os hooks
+  const hasValidationErrors = validationAttempted && Object.keys(errors || {}).length > 0;
+
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setValidationAttempted(true);
@@ -50,9 +53,6 @@ export const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({
       console.error("Erro ao salvar dados:", error);
     }
   };
-
-  // Computed values após todos os hooks
-  const hasValidationErrors = validationAttempted && Object.keys(errors || {}).length > 0;
 
   return (
     <form onSubmit={handleFormSubmit} className="space-y-6 animate-fade-in">

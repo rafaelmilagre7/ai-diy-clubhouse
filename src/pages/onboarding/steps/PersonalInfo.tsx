@@ -11,6 +11,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertTriangle } from "lucide-react";
 
 const PersonalInfo = () => {
+  // IMPORTANTE: Todos os hooks devem ser chamados no início do componente
   const navigate = useNavigate();
   const [loadingAttempts, setLoadingAttempts] = useState(0);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -94,30 +95,19 @@ const PersonalInfo = () => {
   // Se houver um erro de carregamento ou erro no último progresso
   const hasError = loadError || lastError;
 
-  if (progressLoading && !showForceButton) {
-    console.log("[DEBUG] Exibindo spinner de carregamento");
-    return (
-      <OnboardingLayout 
-        currentStep={1} 
-        title="Dados Pessoais" 
-        backUrl="/"
-      >
+  // Renderização condicional com base no estado
+  const renderContent = () => {
+    if (progressLoading && !showForceButton) {
+      return (
         <div className="flex justify-center items-center py-20">
           <LoadingSpinner size={10} />
           <p className="ml-4 text-gray-400">Carregando seus dados...</p>
         </div>
-      </OnboardingLayout>
-    );
-  }
+      );
+    }
 
-  // Se houver erro, mostramos uma mensagem de erro com opção para tentar novamente
-  if (hasError) {
-    return (
-      <OnboardingLayout 
-        currentStep={1} 
-        title="Dados Pessoais" 
-        backUrl="/"
-      >
+    if (hasError) {
+      return (
         <div className="space-y-6">
           <Alert variant="destructive" className="bg-red-50 border-red-200">
             <AlertTriangle className="h-5 w-5" />
@@ -135,18 +125,11 @@ const PersonalInfo = () => {
             </button>
           </div>
         </div>
-      </OnboardingLayout>
-    );
-  }
+      );
+    }
 
-  // Se tentou várias vezes e ainda está carregando, permitir continuar mesmo assim
-  if (showForceButton) {
-    return (
-      <OnboardingLayout 
-        currentStep={1} 
-        title="Dados Pessoais" 
-        backUrl="/"
-      >
+    if (showForceButton) {
+      return (
         <div className="space-y-6">
           <Alert className="bg-yellow-50 border-yellow-200">
             <AlertTriangle className="h-5 w-5 text-yellow-600" />
@@ -174,16 +157,10 @@ const PersonalInfo = () => {
             </button>
           </div>
         </div>
-      </OnboardingLayout>
-    );
-  }
+      );
+    }
 
-  return (
-    <OnboardingLayout 
-      currentStep={1} 
-      title="Dados Pessoais" 
-      backUrl="/"
-    >
+    return (
       <PersonalInfoStep
         onSubmit={handleSuccess}
         isSubmitting={isSubmitting}
@@ -193,6 +170,16 @@ const PersonalInfo = () => {
         isSaving={isSaving}
         lastSaveTime={lastSaveTime}
       />
+    );
+  };
+
+  return (
+    <OnboardingLayout 
+      currentStep={1} 
+      title="Dados Pessoais" 
+      backUrl="/"
+    >
+      {renderContent()}
     </OnboardingLayout>
   );
 };
