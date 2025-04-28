@@ -1,53 +1,52 @@
 
-import React, { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import React from "react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, Edit, Map } from "lucide-react";
-import confetti from "canvas-confetti";
+import { useNavigate } from "react-router-dom";
 
-export const OnboardingCompleted = () => {
+const OnboardingCompleted = () => {
   const navigate = useNavigate();
-
-  useEffect(() => {
-    // Trigger confetti effect when component mounts
-    confetti({
-      particleCount: 100,
-      spread: 70,
-      origin: { y: 0.6 },
-      colors: ['#0ABAB5', '#6de2de', '#9EECEA']
-    });
-  }, []);
   
   return (
-    <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-sm p-8 text-center space-y-6">
-      <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mx-auto">
-        <CheckCircle2 className="h-10 w-10 text-green-600" />
-      </div>
-      
-      <h3 className="text-2xl font-bold">Onboarding Concluído!</h3>
-      
-      <p className="text-gray-600 max-w-md mx-auto">
-        Obrigado por compartilhar suas informações. Agora você pode acessar sua trilha personalizada de implementação ou revisar suas respostas.
-      </p>
-      
-      <div className="flex flex-col md:flex-row justify-center gap-4 pt-4">
-        <Button
-          variant="outline"
-          onClick={() => navigate("/onboarding/review")}
-          className="flex items-center gap-2"
-        >
-          <Edit className="h-4 w-4" />
-          Revisar/Editar Respostas
-        </Button>
-        
-        <Button
-          onClick={() => navigate("/implementation-trail")}
-          className="bg-[#0ABAB5] hover:bg-[#0ABAB5]/90 flex items-center gap-2"
-        >
-          <Map className="h-4 w-4" />
-          Acessar Minha Trilha
-        </Button>
+    <div className="max-w-4xl mx-auto py-8">
+      {/* Alerta de Sucesso */}
+      <Alert className="mb-6 bg-green-50 border-green-200">
+        <CheckCircle2 className="h-4 w-4 text-green-600" />
+        <AlertDescription className="text-green-700">
+          Seu onboarding está concluído! Você pode editar suas informações ou acessar sua trilha personalizada.
+        </AlertDescription>
+      </Alert>
+
+      {/* Card Principal */}
+      <div className="bg-gray-800 rounded-lg p-8 shadow-lg text-center space-y-6">
+        <h2 className="text-3xl font-bold text-white">Gerenciar Perfil</h2>
+        <p className="text-gray-300 text-lg">
+          Atualize suas informações ou acesse sua trilha personalizada
+        </p>
+
+        {/* Botões */}
+        <div className="flex justify-center gap-4 pt-4">
+          <Button
+            variant="secondary"
+            onClick={() => navigate("/profile/edit")}
+            className="px-6 py-2 text-base flex items-center gap-2"
+          >
+            <Edit className="h-5 w-5" />
+            Editar Informações
+          </Button>
+
+          <Button
+            onClick={() => navigate("/implementation-trail")}
+            className="px-6 py-2 text-base bg-[#0ABAB5] hover:bg-[#0ABAB5]/90 flex items-center gap-2"
+          >
+            <Map className="h-5 w-5" />
+            Acessar Trilha
+          </Button>
+        </div>
       </div>
     </div>
   );
 };
+
+export default OnboardingCompleted;

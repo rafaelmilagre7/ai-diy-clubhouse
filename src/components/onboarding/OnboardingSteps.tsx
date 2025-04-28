@@ -1,7 +1,7 @@
-
 import { useOnboardingSteps } from "@/hooks/onboarding/useOnboardingSteps";
 import { PersonalInfoStep } from "./steps/PersonalInfoStep";
 import { usePersonalInfoStep } from "@/hooks/onboarding/usePersonalInfoStep";
+import OnboardingCompleted from "./OnboardingCompleted";
 import { BusinessGoalsStep } from "./steps/BusinessGoalsStep";
 import { BusinessContextStep } from "./steps/BusinessContextStep";
 import { AIExperienceStep } from "./steps/AIExperienceStep";
@@ -25,6 +25,11 @@ export const OnboardingSteps = () => {
     progress,
     navigateToStep
   } = useOnboardingSteps();
+
+  // Se o onboarding estiver concluído, mostrar a tela de conclusão
+  if (progress?.is_completed) {
+    return <OnboardingCompleted />;
+  }
 
   // Importar o hook usePersonalInfoStep para ter acesso às funções e dados necessários
   const {
