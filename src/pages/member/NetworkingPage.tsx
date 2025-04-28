@@ -19,7 +19,15 @@ const NetworkingPage = () => {
         .select('*')
         .order('compatibility_score', { ascending: false })
 
-      if (error) throw error
+      if (error) {
+        console.error('Error fetching matches:', error)
+        toast({
+          title: 'Erro ao carregar conexões',
+          description: 'Não foi possível carregar suas conexões. Tente novamente mais tarde.',
+          variant: 'destructive',
+        })
+        throw error
+      }
       return data
     },
   })

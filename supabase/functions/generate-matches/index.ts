@@ -22,10 +22,10 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
     )
 
-    // Buscar dados do usuário atual
+    // Buscar dados do usuário atual usando a nova view
     const { data: currentUser, error: currentUserError } = await supabaseClient
-      .from('onboarding_progress')
-      .select('*, profiles:profiles(*)')
+      .from('onboarding_profile_view')
+      .select('*')
       .eq('user_id', user_id)
       .single()
 
@@ -34,10 +34,10 @@ serve(async (req) => {
       throw currentUserError
     }
 
-    // Buscar outros usuários
+    // Buscar outros usuários usando a nova view
     const { data: otherUsers, error: otherUsersError } = await supabaseClient
-      .from('onboarding_progress')
-      .select('*, profiles:profiles(*)')
+      .from('onboarding_profile_view')
+      .select('*')
       .neq('user_id', user_id)
       .limit(20)
 
@@ -46,11 +46,11 @@ serve(async (req) => {
       throw otherUsersError
     }
 
-    // Preparar dados para OpenAI
+    // Preparar dados para OpenAI com informações mais completas
     const userProfiles = otherUsers.map(user => ({
       id: user.user_id,
-      name: user.profiles?.name,
-      company: user.profiles?.company_name,
+      name: user.profile_name,
+      company: user.profile_company,
       position: user.professional_info?.current_position,
       interests: user.experience_personalization?.interests,
       skills: user.experience_personalization?.skills_to_share,
@@ -76,8 +76,8 @@ serve(async (req) => {
             content: `Analise o perfil do usuário atual e encontre os melhores matches baseado em seus interesses, habilidades e objetivos.
             
             Usuário atual:
-            Nome: ${currentUser.profiles?.name}
-            Empresa: ${currentUser.profiles?.company_name}
+            Nome: ${currentUser.profile_name}
+            Empresa: ${currentUser.profile_company}
             Cargo: ${currentUser.professional_info?.current_position}
             Interesses: ${JSON.stringify(currentUser.experience_personalization?.interests)}
             Habilidades: ${JSON.stringify(currentUser.experience_personalization?.skills_to_share)}
