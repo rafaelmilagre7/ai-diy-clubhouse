@@ -25,39 +25,55 @@ export const PersonalInfoFormController = () => {
 
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [lastAttemptTimestamp, setLastAttemptTimestamp] = useState<number | null>(null);
 
-  // Carregamento inicial de dados, sem salvamento automático
   useEffect(() => {
-    if (formDataLoaded && progress?.id && !isSubmitting) {
+    if (formDataLoaded && progress?.id && !isSubmitting && lastAttemptTimestamp === null) {
       console.log("Dados iniciais carregados");
+      setLastAttemptTimestamp(Date.now());
     }
-  }, [formDataLoaded, progress?.id]);
+  }, [formDataLoaded, progress?.id, isSubmitting, lastAttemptTimestamp]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isSubmitting) return;
+
     const errors = validatePersonalInfoForm(formData);
     if (Object.keys(errors).length > 0) {
       setFormErrors(errors);
-      toast.error("Por favor, corrija os erros no formulário");
+      toast.error("Por favor, corrija os erros no formulário", {
+        description: "Todos os campos marcados são obrigatórios"
+      });
       return;
     }
+
     setIsSubmitting(true);
+    setLastAttemptTimestamp(Date.now());
 
     try {
       const fullName = profile?.name || user?.user_metadata?.name || formData.name;
       const email = profile?.email || user?.email || formData.email;
-      const personalInfo = { ...formData, name: fullName, email: email };
+      
+      const personalInfo = {
+        ...formData,
+        name: fullName,
+        email: email
+      };
+
       await updateProgress({
         personal_info: personalInfo,
         current_step: "professional_data",
         completed_steps: [...(progress?.completed_steps || []), "personal"],
       });
+
       toast.success("Dados salvos com sucesso!");
       navigate("/onboarding/professional-data", { replace: true });
+
     } catch (error) {
       console.error("Erro ao salvar dados:", error);
-      toast.error("Erro ao salvar dados. Tente novamente.");
+      toast.error("Erro ao salvar dados. Tente novamente.", {
+        description: "Verifique sua conexão e tente novamente em alguns instantes"
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -80,7 +96,10 @@ export const PersonalInfoFormController = () => {
         readOnly 
         errors={formErrors}
       />
-      <NavigationButtons isSubmitting={isSubmitting} />
+      <NavigationButtons 
+        isSubmitting={isSubmitting} 
+        showPrevious={false}
+      />
     </form>
   );
 };

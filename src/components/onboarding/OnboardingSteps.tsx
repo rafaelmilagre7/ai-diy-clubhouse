@@ -1,3 +1,4 @@
+
 import { useOnboardingSteps } from "@/hooks/onboarding/useOnboardingSteps";
 import { PersonalInfoStep } from "./steps/PersonalInfoStep";
 import { BusinessGoalsStep } from "./steps/BusinessGoalsStep";
@@ -34,13 +35,14 @@ export const OnboardingSteps = () => {
     "/onboarding/club-goals": "business_goals",
     "/onboarding/customization": "experience_personalization",
     "/onboarding/complementary": "complementary_info",
-    "/onboarding/review": "review"
+    "/onboarding/review": "review",
+    "/onboarding/trail-generation": "trail_generation"
   };
 
   const currentPathStepId = pathToStepComponent[location.pathname as keyof typeof pathToStepComponent] || currentStep.id;
   
   useEffect(() => {
-    console.log(`Rota atual: ${location.pathname}, stepId mapeado: ${currentPathStepId}, currentStep.id: ${currentStep.id}`);
+    console.log(`Rota atual: ${location.pathname}, stepId: ${currentPathStepId}, currentStep.id: ${currentStep.id}`);
   }, [location.pathname, currentPathStepId, currentStep.id]);
 
   const stepComponents = {
@@ -61,8 +63,9 @@ export const OnboardingSteps = () => {
     ),
   };
 
+  // Usar o componente baseado na rota atual ou fallback para o step atual
   const CurrentStepComponent = stepComponents[currentPathStepId as keyof typeof stepComponents] || 
-                              stepComponents[currentStep.id as keyof typeof stepComponents];
+                             stepComponents[currentStep.id as keyof typeof stepComponents];
   
   if (!CurrentStepComponent) {
     console.warn(`Componente não encontrado para etapa: ${currentPathStepId || currentStep.id}`);
@@ -73,26 +76,28 @@ export const OnboardingSteps = () => {
 
   const getInitialDataForCurrentStep = () => {
     if (!progress) return undefined;
+    
     if (currentPathStepId === "professional_data" || currentStep.id === "professional_data") {
       return progress.professional_info;
     }
     if (currentPathStepId === "business_context" || currentStep.id === "business_context") {
       return progress.business_context;
     }
+    
     const sectionKey = currentStep.section as keyof OnboardingData;
     return progress[sectionKey as keyof typeof progress];
   };
 
   const supportsPersonalInfo = (stepId: string) => {
-    return (
-      stepId === "professional_data" || 
-      stepId === "business_context" || 
-      stepId === "ai_exp" || 
-      stepId === "business_goals" || 
-      stepId === "experience_personalization" || 
-      stepId === "complementary_info" || 
-      stepId === "review"
-    );
+    return [
+      "professional_data",
+      "business_context",
+      "ai_exp",
+      "business_goals",
+      "experience_personalization",
+      "complementary_info",
+      "review"
+    ].includes(stepId);
   };
 
   const getPropsForCurrentStep = () => {
