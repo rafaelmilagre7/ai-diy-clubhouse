@@ -1,4 +1,3 @@
-
 import { useLocation } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -10,7 +9,8 @@ import {
   Gift, 
   Award,
   MessageSquarePlus,
-  Calendar
+  Calendar,
+  Users
 } from "lucide-react";
 
 const navItems = [
@@ -48,6 +48,11 @@ const navItems = [
     title: "Sugestões",
     icon: MessageSquarePlus,
     href: "/suggestions",
+  },
+  {
+    title: "Networking",
+    icon: Users,
+    href: "/networking",
   },
 ];
 

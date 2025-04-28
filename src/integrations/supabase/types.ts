@@ -354,6 +354,108 @@ export type Database = {
           },
         ]
       }
+      network_connections: {
+        Row: {
+          created_at: string
+          id: string
+          recipient_id: string
+          requester_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          recipient_id: string
+          requester_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          recipient_id?: string
+          requester_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      network_matches: {
+        Row: {
+          compatibility_score: number
+          created_at: string
+          id: string
+          is_viewed: boolean
+          match_reason: string | null
+          match_strengths: Json | null
+          matched_user_id: string
+          status: string
+          suggested_topics: Json | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          compatibility_score: number
+          created_at?: string
+          id?: string
+          is_viewed?: boolean
+          match_reason?: string | null
+          match_strengths?: Json | null
+          matched_user_id: string
+          status?: string
+          suggested_topics?: Json | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          compatibility_score?: number
+          created_at?: string
+          id?: string
+          is_viewed?: boolean
+          match_reason?: string | null
+          match_strengths?: Json | null
+          matched_user_id?: string
+          status?: string
+          suggested_topics?: Json | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      networking_preferences: {
+        Row: {
+          created_at: string
+          exclude_sectors: string[] | null
+          is_active: boolean | null
+          looking_for: Json | null
+          min_compatibility: number | null
+          preferred_connections_per_week: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          exclude_sectors?: string[] | null
+          is_active?: boolean | null
+          looking_for?: Json | null
+          min_compatibility?: number | null
+          preferred_connections_per_week?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          exclude_sectors?: string[] | null
+          is_active?: boolean | null
+          looking_for?: Json | null
+          min_compatibility?: number | null
+          preferred_connections_per_week?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       onboarding: {
         Row: {
           additional_context: string | null
@@ -2016,6 +2118,31 @@ export type Database = {
       }
     }
     Views: {
+      network_match_view: {
+        Row: {
+          compatibility_score: number | null
+          created_at: string | null
+          id: string | null
+          interests: string | null
+          is_viewed: boolean | null
+          match_reason: string | null
+          match_strengths: Json | null
+          matched_user_avatar: string | null
+          matched_user_company: string | null
+          matched_user_id: string | null
+          matched_user_name: string | null
+          matched_user_position: string | null
+          skills_to_share: string | null
+          status: string | null
+          suggested_topics: Json | null
+          updated_at: string | null
+          user_avatar: string | null
+          user_company: string | null
+          user_id: string | null
+          user_name: string | null
+        }
+        Relationships: []
+      }
       onboarding_analytics: {
         Row: {
           ai_experience: Json | null

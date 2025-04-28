@@ -1,4 +1,3 @@
-
 import { Routes, Route } from 'react-router-dom';
 import { AdminProtectedRoutes } from '@/auth/AdminProtectedRoutes';
 import { ProtectedRoutes } from '@/auth/ProtectedRoutes';
@@ -39,18 +38,7 @@ import AdminLayout from '@/components/layout/admin/AdminLayout';
 import ImplementationTrailPage from '@/pages/member/ImplementationTrailPage';
 import AdminEvents from '@/pages/admin/AdminEvents';
 import Events from '@/pages/member/Events';
-
-// Onboarding
-import OnboardingIntro from '@/pages/onboarding/OnboardingIntro';
-import PersonalInfo from '@/pages/onboarding/steps/PersonalInfo';
-import ProfessionalData from '@/pages/onboarding/steps/ProfessionalData';
-import BusinessContext from '@/pages/onboarding/steps/BusinessContext';
-import AIExperience from '@/pages/onboarding/steps/AIExperience';
-import BusinessGoalsClub from '@/pages/onboarding/steps/BusinessGoalsClub';
-import ExperiencePersonalization from '@/pages/onboarding/steps/ExperiencePersonalization';
-import ComplementaryInfo from '@/pages/onboarding/steps/ComplementaryInfo';
-import Review from '@/pages/onboarding/steps/Review';
-import TrailGeneration from '@/pages/onboarding/steps/TrailGeneration';
+import NetworkingPage from '@/pages/member/NetworkingPage';
 
 const AppRoutes = () => {
   console.log("Renderizando AppRoutes");
@@ -80,6 +68,13 @@ const AppRoutes = () => {
       <Route path="/benefits" element={<ProtectedRoutes><MemberLayout><Benefits /></MemberLayout></ProtectedRoutes>} />
       <Route path="/achievements" element={<ProtectedRoutes><MemberLayout><Achievements /></MemberLayout></ProtectedRoutes>} />
       <Route path="/events" element={<ProtectedRoutes><MemberLayout><Events /></MemberLayout></ProtectedRoutes>} />
+      <Route path="/networking" element={
+        <ProtectedRoutes>
+          <MemberLayout>
+            <NetworkingPage />
+          </MemberLayout>
+        </ProtectedRoutes>
+      } />
       
       {/* Sugestões Routes */}
       <Route path="/suggestions" element={<ProtectedRoutes><MemberLayout><Suggestions /></MemberLayout></ProtectedRoutes>} />
