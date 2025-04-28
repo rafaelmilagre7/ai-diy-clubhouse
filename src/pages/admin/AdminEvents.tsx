@@ -39,7 +39,7 @@ const AdminEvents = () => {
         </Alert>
       )}
 
-      <AdminEventsHeader isCalendarAuthenticated={!!isAuthenticated} />
+      <AdminEventsHeader isCalendarAuthenticated={Boolean(isAuthenticated)} />
       <EventsTable />
     </div>
   );
