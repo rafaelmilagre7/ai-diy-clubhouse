@@ -1,79 +1,69 @@
 
-import { supabase, UserProfile } from "@/lib/supabase";
-import { createUserProfileIfNeeded, fetchUserProfile } from "@/contexts/auth/utils/profileUtils";
-import { determineRoleFromEmail, validateUserRole } from "@/contexts/auth/utils/profileUtils/roleValidation";
+import { supabase } from '@/lib/supabase';
 
 /**
- * Processa o perfil do usuário durante a inicialização da sessão
- * Busca o perfil existente ou cria um novo se necessário
+ * Processa ou cria o perfil do usuário após login bem-sucedido
+ * @param userId ID do usuário autenticado
+ * @param email Email do usuário
+ * @param name Nome do usuário (opcional)
+ * @returns O perfil do usuário processado ou criado
  */
 export const processUserProfile = async (
   userId: string,
-  email: string | undefined | null,
-  name: string | undefined | null
-): Promise<UserProfile | null> => {
+  email: string | undefined,
+  name?: string
+) => {
   try {
-    if (!userId) {
-      console.error("ID de usuário não fornecido para processamento de perfil");
-      return null;
+    console.log(`Processando perfil para usuário ${userId}`);
+    
+    // Buscar perfil existente
+    const { data: existingProfile, error: fetchError } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .single();
+    
+    if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116 é "não encontrado"
+      console.error('Erro ao buscar perfil:', fetchError);
+      throw fetchError;
     }
     
-    // Tentar buscar perfil existente
-    let profile = await fetchUserProfile(userId);
-    
-    // Se não encontrou perfil, criar um novo
-    if (!profile) {
-      console.log("Nenhum perfil encontrado, criando novo perfil para", email);
-      profile = await createUserProfileIfNeeded(userId, email || "", name || "Usuário");
-      
-      if (!profile) {
-        console.error("Falha ao criar perfil para", email);
-        return null;
-      }
+    // Se o perfil existir, retornar
+    if (existingProfile) {
+      console.log('Perfil existente encontrado:', existingProfile);
+      return existingProfile;
     }
     
-    // Verificar e atualizar o papel do usuário se necessário
-    if (profile.role) {
-      const validatedRole = await validateUserRole(profile.id, profile.role, email);
-      if (validatedRole !== profile.role) {
-        profile.role = validatedRole;
-      }
-    }
+    console.log('Perfil não encontrado, criando novo perfil');
     
-    return profile;
-  } catch (error) {
-    console.error("Erro ao processar perfil do usuário:", error);
-    return null;
-  }
-};
-
-/**
- * Inicializa um novo perfil com valores padrão
- */
-export const initializeNewProfile = async (userId: string, email: string, name: string): Promise<UserProfile | null> => {
-  try {
-    const role = determineRoleFromEmail(email);
+    // Determinar papel (role) do usuário
+    const isAdmin = email?.endsWith('@viverdeia.ai') || email === 'admin@teste.com';
+    const role = isAdmin ? 'admin' : 'member';
     
-    const { data, error } = await supabase
-      .from("profiles")
-      .insert({
-        id: userId,
-        email,
-        name,
-        role,
-        created_at: new Date().toISOString(),
-      })
+    // Criar perfil se não existir
+    const { data: newProfile, error: insertError } = await supabase
+      .from('profiles')
+      .insert([
+        {
+          id: userId,
+          email: email || '',
+          name: name || 'Usuário',
+          role: role
+        }
+      ])
       .select()
       .single();
     
-    if (error) {
-      console.error("Erro ao inicializar novo perfil:", error);
-      return null;
+    if (insertError) {
+      console.error('Erro ao criar perfil:', insertError);
+      throw insertError;
     }
     
-    return data as UserProfile;
+    console.log('Novo perfil criado:', newProfile);
+    return newProfile;
+    
   } catch (error) {
-    console.error("Erro inesperado ao inicializar perfil:", error);
-    return null;
+    console.error('Erro ao processar perfil:', error);
+    throw error;
   }
 };

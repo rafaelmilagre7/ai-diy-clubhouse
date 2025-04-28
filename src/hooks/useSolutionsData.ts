@@ -2,49 +2,51 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Solution } from '@/lib/supabase';
-import { useToast } from '@/components/ui/use-toast';
+import { toast } from 'sonner';
 import { useQuery } from '@tanstack/react-query';
 
-// Otimização: Usar React Query para cache e gerenciamento de estado
 export function useSolutionsData(initialCategory: string | null = 'all') {
-  const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState(initialCategory || 'all');
 
   // Implementar função de fetching separadamente para melhor controle
   const fetchSolutions = useCallback(async () => {
     try {
-      console.log('Fetching solutions from database...');
+      console.log('Buscando soluções do banco de dados...');
       const { data, error } = await supabase
         .from('solutions')
         .select('*')
         .eq('published', true)
-        .order('created_at', { ascending: false }); // Mudado de 'priority' para 'created_at'
+        .order('created_at', { ascending: false });
       
-      if (error) throw error;
+      if (error) {
+        console.error('Erro ao buscar soluções:', error);
+        toast("Erro ao carregar soluções. Por favor, tente novamente.");
+        throw error;
+      }
       
-      return data as Solution[];
+      console.log(`Encontradas ${data?.length || 0} soluções`);
+      return data as Solution[] || [];
     } catch (error: any) {
       console.error('Erro ao buscar soluções:', error);
-      toast({
-        title: 'Erro ao carregar soluções',
-        description: 'Não foi possível carregar as soluções disponíveis.',
-        variant: 'destructive',
-      });
+      toast("Não foi possível carregar as soluções disponíveis.");
       return [];
     }
-  }, [toast]);
+  }, []);
 
   // Usar React Query para cache e refetch
-  const { data: solutions = [], isLoading, error } = useQuery({
+  const { data: solutions = [], isLoading, error, refetch } = useQuery({
     queryKey: ['solutions'],
     queryFn: fetchSolutions,
     staleTime: 5 * 60 * 1000, // 5 minutos de cache
     refetchOnWindowFocus: false, // Não refetch ao focar a janela
+    retry: 2, // Limitar número de tentativas
   });
 
   // Filtrar soluções por categoria e pesquisa
   const filteredSolutions = useMemo(() => {
+    console.log(`Filtrando ${solutions.length} soluções por categoria: ${activeCategory} e busca: "${searchQuery}"`);
+    
     let filtered = [...solutions];
     
     // Filtrar por categoria
@@ -56,16 +58,23 @@ export function useSolutionsData(initialCategory: string | null = 'all') {
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase().trim();
       filtered = filtered.filter(solution => 
-        solution.title.toLowerCase().includes(query) || 
-        solution.description.toLowerCase().includes(query) ||
+        solution.title?.toLowerCase().includes(query) || 
+        solution.description?.toLowerCase().includes(query) ||
         (solution.tags && solution.tags.some(tag => 
           tag.toLowerCase().includes(query)
         ))
       );
     }
     
+    console.log(`Filtragem resultou em ${filtered.length} soluções`);
     return filtered;
   }, [solutions, activeCategory, searchQuery]);
+
+  // Fornecer função para forçar recarga de dados
+  const refreshSolutions = useCallback(() => {
+    console.log('Forçando recarga de soluções...');
+    refetch();
+  }, [refetch]);
 
   return {
     solutions,
@@ -75,6 +84,7 @@ export function useSolutionsData(initialCategory: string | null = 'all') {
     searchQuery,
     setSearchQuery,
     activeCategory,
-    setActiveCategory
+    setActiveCategory,
+    refreshSolutions
   };
 }

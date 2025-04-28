@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { toast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { processUserProfile } from './utils/authSessionUtils';
 
 export const useAuthSession = () => {
@@ -13,7 +13,7 @@ export const useAuthSession = () => {
   useEffect(() => {
     const initSession = async () => {
       try {
-        console.info('Initializing authentication session...');
+        console.info('Inicializando sessão de autenticação...');
         
         const { data: { session }, error } = await supabase.auth.getSession();
         
@@ -32,6 +32,8 @@ export const useAuthSession = () => {
           
           // Processar perfil do usuário
           await processUserProfile(userId, email, name);
+        } else {
+          console.info('Nenhuma sessão ativa encontrada');
         }
         
       } catch (error: any) {
@@ -42,14 +44,9 @@ export const useAuthSession = () => {
         if (retryCount < maxRetries) {
           console.warn(`Tentando reinicializar sessão (${retryCount + 1}/${maxRetries})...`);
           setRetryCount(prev => prev + 1);
-          // Não definir isInitializing como false ainda, para tentar novamente
           return;
         } else {
-          toast({
-            title: 'Erro de autenticação',
-            description: 'Não foi possível inicializar sua sessão. Por favor, tente novamente mais tarde.',
-            variant: 'destructive',
-          });
+          toast("Erro de autenticação. Tente fazer login novamente.");
         }
       } finally {
         // Marcar inicialização como concluída apenas se não estiver tentando novamente
