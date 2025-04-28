@@ -5,22 +5,29 @@ import { supabase } from '@/lib/supabase'
 import { NetworkMatchCard } from '@/components/networking/NetworkMatchCard'
 import { Button } from '@/components/ui/button'
 import { useToast } from '@/components/ui/use-toast'
-import { Loader2 } from 'lucide-react'
+import { Loader2, RefreshCcw } from 'lucide-react'
+import { useLogging } from '@/hooks/useLogging'
 
 const NetworkingPage = () => {
   const { toast } = useToast()
+  const { logError } = useLogging()
   const [isGenerating, setIsGenerating] = React.useState(false)
+  const [retryCount, setRetryCount] = React.useState(0)
+  const maxRetries = 3
 
   const { data: matches, isLoading, refetch } = useQuery({
     queryKey: ['network-matches'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('network_match_view')
-        .select('*')
-        .order('compatibility_score', { ascending: false })
+      try {
+        const { data, error } = await supabase
+          .from('network_match_view')
+          .select('*')
+          .order('compatibility_score', { ascending: false })
 
-      if (error) {
-        console.error('Error fetching matches:', error)
+        if (error) throw error
+        return data
+      } catch (error) {
+        logError('fetch-matches', error)
         toast({
           title: 'Erro ao carregar conexões',
           description: 'Não foi possível carregar suas conexões. Tente novamente mais tarde.',
@@ -28,13 +35,14 @@ const NetworkingPage = () => {
         })
         throw error
       }
-      return data
     },
   })
 
   const generateMatches = async () => {
     try {
       setIsGenerating(true)
+      setRetryCount(0)
+      
       const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
       
       if (sessionError || !sessionData.session) {
@@ -46,6 +54,15 @@ const NetworkingPage = () => {
       })
 
       if (response.error) {
+        // Se o erro for relacionado ao perfil incompleto, mostrar mensagem específica
+        if (response.error.message?.includes('Perfil incompleto')) {
+          toast({
+            title: 'Perfil incompleto',
+            description: response.error.message,
+            variant: 'destructive',
+          })
+          return
+        }
         throw new Error(response.error.message || 'Erro ao gerar matches')
       }
 
@@ -57,13 +74,28 @@ const NetworkingPage = () => {
       refetch()
     } catch (error) {
       console.error('Error generating matches:', error)
+      
+      // Implementar retry logic para erros temporários
+      if (retryCount < maxRetries) {
+        setRetryCount(prev => prev + 1)
+        toast({
+          title: 'Tentando novamente...',
+          description: `Tentativa ${retryCount + 1} de ${maxRetries}`,
+        })
+        setTimeout(() => generateMatches(), 2000) // Esperar 2 segundos antes de tentar novamente
+        return
+      }
+
+      logError('generate-matches', error)
       toast({
         title: 'Erro ao gerar matches',
-        description: 'Não foi possível atualizar suas conexões no momento. Tente novamente mais tarde.',
+        description: error instanceof Error ? error.message : 'Erro desconhecido. Tente novamente mais tarde.',
         variant: 'destructive',
       })
     } finally {
-      setIsGenerating(false)
+      if (retryCount >= maxRetries) {
+        setIsGenerating(false)
+      }
     }
   }
 
@@ -78,16 +110,19 @@ const NetworkingPage = () => {
         </div>
         <Button 
           onClick={generateMatches} 
-          className="bg-viverblue hover:bg-viverblue/90"
+          className="bg-viverblue hover:bg-viverblue/90 gap-2"
           disabled={isGenerating}
         >
           {isGenerating ? (
             <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Gerando Conexões...
+              <Loader2 className="h-4 w-4 animate-spin" />
+              {retryCount > 0 ? `Tentativa ${retryCount}/${maxRetries}` : 'Gerando Conexões...'}
             </>
           ) : (
-            'Encontrar Novas Conexões'
+            <>
+              <RefreshCcw className="h-4 w-4" />
+              Encontrar Novas Conexões
+            </>
           )}
         </Button>
       </div>
@@ -97,10 +132,11 @@ const NetworkingPage = () => {
           <Loader2 className="h-8 w-8 animate-spin" />
         </div>
       ) : matches?.length === 0 ? (
-        <div className="text-center py-12">
+        <div className="text-center py-12 bg-muted/20 rounded-lg">
           <h3 className="text-lg font-semibold">Nenhuma conexão encontrada</h3>
-          <p className="text-muted-foreground mt-2">
-            Clique em "Encontrar Novas Conexões" para descobrir pessoas interessantes
+          <p className="text-muted-foreground mt-2 max-w-md mx-auto">
+            Clique em "Encontrar Novas Conexões" para descobrir pessoas interessantes 
+            baseadas no seu perfil e interesses.
           </p>
         </div>
       ) : (

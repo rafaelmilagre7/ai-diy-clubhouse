@@ -15,7 +15,7 @@ serve(async (req) => {
 
   try {
     const { user_id } = await req.json()
-    console.log("Gerando matches para usuário:", user_id)
+    console.log("Iniciando geração de matches para usuário:", user_id)
 
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -27,11 +27,22 @@ serve(async (req) => {
       .from('onboarding_profile_view')
       .select('*')
       .eq('user_id', user_id)
-      .single()
+      .maybeSingle()
 
     if (currentUserError) {
       console.error("Erro ao buscar usuário atual:", currentUserError)
-      throw currentUserError
+      throw new Error('Erro ao buscar dados do usuário')
+    }
+
+    if (!currentUser) {
+      console.error("Usuário não encontrado ou sem dados de onboarding")
+      throw new Error('Perfil incompleto. Por favor, complete seu onboarding primeiro.')
+    }
+
+    // Validar dados essenciais do usuário
+    if (!currentUser.experience_personalization?.interests || 
+        !currentUser.experience_personalization?.skills_to_share) {
+      throw new Error('Perfil incompleto. Atualize seus interesses e habilidades.')
     }
 
     // Buscar outros usuários usando a nova view
@@ -39,25 +50,36 @@ serve(async (req) => {
       .from('onboarding_profile_view')
       .select('*')
       .neq('user_id', user_id)
+      .not('experience_personalization', 'is', null)
       .limit(20)
 
     if (otherUsersError) {
       console.error("Erro ao buscar outros usuários:", otherUsersError)
-      throw otherUsersError
+      throw new Error('Erro ao buscar potenciais conexões')
     }
 
-    // Preparar dados para OpenAI com informações mais completas
+    if (!otherUsers || otherUsers.length === 0) {
+      throw new Error('Não encontramos usuários compatíveis no momento')
+    }
+
+    // Preparar dados para OpenAI com validação
     const userProfiles = otherUsers.map(user => ({
       id: user.user_id,
-      name: user.profile_name,
-      company: user.profile_company,
-      position: user.professional_info?.current_position,
-      interests: user.experience_personalization?.interests,
-      skills: user.experience_personalization?.skills_to_share,
-      industry: user.professional_info?.company_sector,
+      name: user.profile_name || 'Usuário',
+      company: user.profile_company || 'Empresa não informada',
+      position: user.professional_info?.current_position || 'Cargo não informado',
+      interests: user.experience_personalization?.interests || [],
+      skills: user.experience_personalization?.skills_to_share || [],
+      industry: user.professional_info?.company_sector || 'Setor não informado',
     }))
 
+    console.log("Enviando request para OpenAI com dados validados")
+
     const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY')
+    if (!OPENAI_API_KEY) {
+      throw new Error('Configuração do OpenAI ausente')
+    }
+
     const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -77,21 +99,21 @@ serve(async (req) => {
             
             Usuário atual:
             Nome: ${currentUser.profile_name}
-            Empresa: ${currentUser.profile_company}
-            Cargo: ${currentUser.professional_info?.current_position}
-            Interesses: ${JSON.stringify(currentUser.experience_personalization?.interests)}
-            Habilidades: ${JSON.stringify(currentUser.experience_personalization?.skills_to_share)}
+            Empresa: ${currentUser.profile_company || 'Não informada'}
+            Cargo: ${currentUser.professional_info?.current_position || 'Não informado'}
+            Interesses: ${JSON.stringify(currentUser.experience_personalization?.interests || [])}
+            Habilidades: ${JSON.stringify(currentUser.experience_personalization?.skills_to_share || [])}
             
             Potenciais conexões:
             ${JSON.stringify(userProfiles, null, 2)}
             
-            Retorne apenas um JSON array com os 5 melhores matches, cada um contendo:
+            Retorne um array JSON com os 5 melhores matches. Para cada match inclua:
             {
-              id: ID do usuário,
-              compatibility_score: número entre 0 e 1,
-              match_reason: texto explicando por que essa conexão é relevante,
-              match_strengths: array de pontos fortes do match,
-              suggested_topics: array de tópicos sugeridos para iniciar a conversa
+              "id": string (ID do usuário),
+              "compatibility_score": número entre 0 e 1,
+              "match_reason": string explicando por que essa conexão é relevante,
+              "match_strengths": array de pontos fortes do match,
+              "suggested_topics": array de tópicos sugeridos para iniciar a conversa
             }`
           }
         ],
@@ -102,28 +124,28 @@ serve(async (req) => {
     if (!openAIResponse.ok) {
       const error = await openAIResponse.text()
       console.error("Erro na resposta da OpenAI:", error)
-      throw new Error(`OpenAI API error: ${error}`)
+      throw new Error('Erro ao processar matches')
     }
 
     const aiData = await openAIResponse.json()
-    console.log("Resposta da OpenAI:", aiData)
-
     if (!aiData.choices?.[0]?.message?.content) {
-      throw new Error('Formato inválido na resposta da OpenAI')
+      throw new Error('Formato inválido na resposta da IA')
     }
 
     let matches
     try {
       matches = JSON.parse(aiData.choices[0].message.content)
       if (!Array.isArray(matches)) {
-        throw new Error('A resposta não é um array')
+        throw new Error('Resposta inválida da IA')
       }
     } catch (error) {
-      console.error("Erro ao fazer parse da resposta:", error)
-      throw new Error('Erro ao processar resposta da OpenAI')
+      console.error("Erro ao processar resposta:", error)
+      throw new Error('Erro ao processar recomendações')
     }
 
-    // Inserir ou atualizar matches no banco
+    console.log("Matches gerados com sucesso:", matches.length)
+
+    // Inserir matches no banco
     for (const match of matches) {
       const { error: upsertError } = await supabaseClient
         .from('network_matches')
@@ -140,21 +162,23 @@ serve(async (req) => {
         })
 
       if (upsertError) {
-        console.error("Erro ao inserir match:", upsertError)
-        throw upsertError
+        console.error("Erro ao salvar match:", upsertError)
       }
     }
 
     return new Response(
-      JSON.stringify({ success: true, matches }), 
+      JSON.stringify({ success: true, matches_count: matches.length }), 
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   } catch (error) {
-    console.error('Erro:', error)
+    console.error('Erro na geração de matches:', error)
     return new Response(
-      JSON.stringify({ error: error.message }), 
+      JSON.stringify({ 
+        error: error instanceof Error ? error.message : 'Erro desconhecido',
+        details: error instanceof Error ? error.stack : undefined
+      }), 
       { 
-        status: 500, 
+        status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
       }
     )
