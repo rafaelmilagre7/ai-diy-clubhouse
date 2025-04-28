@@ -13,7 +13,7 @@ const AdminEvents = () => {
   const { isProcessing, authError, isAuthenticated } = useHandleGoogleCalendarAuth();
   
   useEffect(() => {
-    if (searchParams.has('code') || searchParams.has('state') || searchParams.has('error')) {
+    if (searchParams.has('code') || searchParams.has('state') || searchParams.has('error') || searchParams.has('authError')) {
       // Limpa os parâmetros da URL após processar
       const emptyParams = new URLSearchParams();
       setSearchParams(emptyParams, { replace: true });

@@ -1,16 +1,6 @@
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
-
-// Configurações OAuth2
-const CLIENT_ID = Deno.env.get('GOOGLE_CLIENT_ID');
-const CLIENT_SECRET = Deno.env.get('GOOGLE_CLIENT_SECRET');
-const REDIRECT_URI = Deno.env.get('GOOGLE_REDIRECT_URI') || 'https://viverdeia-club.functions.supabase.co/google-calendar-callback';
-
-// Informações do projeto (importante para resolver o erro "Project not specified")
-const PROJECT_ID = Deno.env.get('SUPABASE_PROJECT_ID') || 'zotzvtepvpnkcoobdubt';
-const SUPABASE_URL = Deno.env.get('SUPABASE_URL') || 'https://zotzvtepvpnkcoobdubt.supabase.co';
-
-const SCOPES = ['https://www.googleapis.com/auth/calendar.readonly'];
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 // Cabeçalhos CORS para permitir chamadas do frontend
 const corsHeaders = {
@@ -18,22 +8,125 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-serve(async (req) => {
-  // Lidar com requisições OPTIONS (preflight CORS)
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+// Função robusta para extrair PROJECT_ID de várias fontes possíveis
+function getProjectId(): string {
+  console.log('Obtendo PROJECT_ID de variáveis de ambiente');
+  
+  // Primeiro, tentar extrair do SUPABASE_PROJECT_ID explícito (prioridade máxima)
+  const projectIdFromEnv = Deno.env.get('SUPABASE_PROJECT_ID');
+  if (projectIdFromEnv) {
+    console.log(`SUPABASE_PROJECT_ID encontrado: ${projectIdFromEnv}`);
+    return projectIdFromEnv;
   }
+  
+  // Tentar extrair de PROJECT_ID (compatibilidade)
+  const projectId = Deno.env.get('PROJECT_ID');
+  if (projectId) {
+    console.log(`PROJECT_ID encontrado: ${projectId}`);
+    return projectId;
+  }
+  
+  // Tentar extrair de SUPABASE_URL (formato: https://[project-id].supabase.co)
+  const supabaseUrl = Deno.env.get('SUPABASE_URL');
+  if (supabaseUrl) {
+    console.log(`SUPABASE_URL encontrado: ${supabaseUrl}`);
+    const match = supabaseUrl.match(/https:\/\/([^.]+)\.supabase\.co/);
+    if (match && match[1]) {
+      console.log(`PROJECT_ID extraído de SUPABASE_URL: ${match[1]}`);
+      return match[1];
+    }
+  }
+  
+  // Valor padrão do projeto
+  const defaultProjectId = 'zotzvtepvpnkcoobdubt';
+  console.log(`ATENÇÃO: Usando PROJECT_ID padrão: ${defaultProjectId}`);
+  return defaultProjectId;
+}
 
+// Verificar se todas as variáveis de ambiente necessárias estão configuradas
+function verificarVariaveisAmbiente(): { valido: boolean; mensagens: string[] } {
+  const mensagens: string[] = [];
+  const variaveis = [
+    { nome: 'GOOGLE_CLIENT_ID', valor: Deno.env.get('GOOGLE_CLIENT_ID') },
+    { nome: 'GOOGLE_CLIENT_SECRET', valor: Deno.env.get('GOOGLE_CLIENT_SECRET') },
+    { nome: 'GOOGLE_REDIRECT_URI', valor: Deno.env.get('GOOGLE_REDIRECT_URI') },
+    { nome: 'SUPABASE_URL', valor: Deno.env.get('SUPABASE_URL') },
+    { nome: 'SUPABASE_SERVICE_ROLE_KEY', valor: Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') },
+    { nome: 'APP_URL', valor: Deno.env.get('APP_URL') },
+  ];
+
+  variaveis.forEach(v => {
+    if (!v.valor) {
+      mensagens.push(`Variável de ambiente '${v.nome}' não definida.`);
+    }
+  });
+
+  return {
+    valido: mensagens.length === 0,
+    mensagens
+  };
+}
+
+// Configuração de URLs e IDs do projeto
+const PROJECT_ID = getProjectId();
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL') || `https://${PROJECT_ID}.supabase.co`;
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
+const APP_URL = Deno.env.get('APP_URL') || 'https://viverdeia-club.vercel.app';
+
+// Configurações OAuth2 do Google
+const CLIENT_ID = Deno.env.get('GOOGLE_CLIENT_ID');
+const CLIENT_SECRET = Deno.env.get('GOOGLE_CLIENT_SECRET');
+const REDIRECT_URI = Deno.env.get('GOOGLE_REDIRECT_URI') || 'https://viverdeia-club.functions.supabase.co/google-calendar-callback';
+const SCOPES = ['https://www.googleapis.com/auth/calendar.readonly'];
+
+// Inicializar cliente Supabase sem persistência de sessão
+const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+  auth: {
+    persistSession: false,
+  },
+});
+
+console.log('Google Calendar Auth function inicializada com sucesso', {
+  projectId: PROJECT_ID,
+  supabaseUrl: SUPABASE_URL,
+  redirectUri: REDIRECT_URI,
+  appUrl: APP_URL,
+  hasClientId: !!CLIENT_ID,
+  hasClientSecret: !!CLIENT_SECRET,
+});
+
+// Verificação de ambiente na inicialização
+const ambienteCheck = verificarVariaveisAmbiente();
+if (!ambienteCheck.valido) {
+  console.error('ERRO DE CONFIGURAÇÃO: Variáveis de ambiente ausentes:', ambienteCheck.mensagens);
+}
+
+serve(async (req) => {
+  console.log('===== Google Calendar Auth: Requisição recebida =====');
+  console.log('Método:', req.method);
+  console.log('URL:', req.url);
+  
   try {
+    // Verificar se é uma requisição OPTIONS (CORS preflight)
+    if (req.method === 'OPTIONS') {
+      console.log('Requisição OPTIONS detectada, retornando cabeçalhos CORS');
+      return new Response(null, { headers: corsHeaders });
+    }
+
     const url = new URL(req.url);
     const body = await req.json().catch(() => ({}));
 
-    console.log('Google Calendar Auth Request:', { 
+    console.log('Dados da requisição:', { 
       url: url.toString(), 
-      body: JSON.stringify(body),
+      body: Object.keys(body).length > 0 ? '[dados presentes]' : '[corpo vazio]',
       projectId: PROJECT_ID,
       redirectUri: REDIRECT_URI
     });
+
+    // Verificar novamente as variáveis de ambiente
+    if (!ambienteCheck.valido) {
+      throw new Error(`Configuração incompleta: ${ambienteCheck.mensagens.join(', ')}`);
+    }
 
     // Gerar URL de autorização do Google
     if (Object.keys(body).length === 0) {
@@ -77,7 +170,7 @@ serve(async (req) => {
       }
 
       console.log('Trocando código por token:', { 
-        code: code.substring(0, 10) + '...',
+        code: typeof code === 'string' ? (code.substring(0, 10) + '...') : 'formato inválido',
         redirect_uri: REDIRECT_URI 
       });
 
@@ -222,19 +315,26 @@ serve(async (req) => {
 
     // Endpoint não encontrado
     return new Response(
-      JSON.stringify({ error: 'Requisição inválida' }),
+      JSON.stringify({ 
+        error: 'Requisição inválida', 
+        message: 'Endpoint não encontrado ou método não suportado'
+      }),
       { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
   } catch (error) {
-    console.error('Erro na função Google Calendar:', error);
+    console.error('Erro na função Google Calendar Auth:', error);
     return new Response(
       JSON.stringify({ 
         error: error.message,
-        project_id: PROJECT_ID,
-        redirect_uri: REDIRECT_URI,
-        has_client_id: !!CLIENT_ID,
-        has_client_secret: !!CLIENT_SECRET
+        details: {
+          project_id: PROJECT_ID,
+          redirect_uri: REDIRECT_URI,
+          has_client_id: !!CLIENT_ID,
+          has_client_secret: !!CLIENT_SECRET,
+          config_status: ambienteCheck,
+          supabase_url: SUPABASE_URL
+        }
       }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
