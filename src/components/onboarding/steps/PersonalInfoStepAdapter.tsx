@@ -52,10 +52,10 @@ export const PersonalInfoStepAdapter: React.FC<OnboardingStepProps> = ({
     try {
       // Chamar onSubmit com o ID da etapa e os dados do formulário
       await onSubmit("personal", localFormData);
-      return true;
+      // Não retornar boolean, para compatibilidade com Promise<void>
     } catch (error) {
       console.error("Erro ao enviar formulário:", error);
-      return false;
+      // Não retornar boolean, para compatibilidade com Promise<void>
     }
   };
 
