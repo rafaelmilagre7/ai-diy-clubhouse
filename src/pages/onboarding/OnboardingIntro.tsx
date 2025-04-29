@@ -18,7 +18,7 @@ const OnboardingIntro = () => {
     if (isCompleted) {
       navigate('/onboarding/review');
     } else {
-      // Corrigido para a rota correta
+      // Aqui está a correção - navegação para a rota correta
       navigate('/onboarding');
     }
   };

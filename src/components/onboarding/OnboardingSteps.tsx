@@ -13,6 +13,7 @@ import { ProfessionalDataStep } from "./steps/ProfessionalDataStep";
 import { useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
+import { Button } from "../ui/button";
 
 export const OnboardingSteps = () => {
   const {
@@ -30,6 +31,7 @@ export const OnboardingSteps = () => {
   const location = useLocation();
   const [componentLoading, setComponentLoading] = useState(true);
   
+  // Mapeamento correto de caminhos para IDs de etapa
   const pathToStepComponent = {
     "/onboarding": "personal",
     "/onboarding/professional-data": "professional_data", 
@@ -38,7 +40,8 @@ export const OnboardingSteps = () => {
     "/onboarding/club-goals": "business_goals",
     "/onboarding/customization": "experience_personalization",
     "/onboarding/complementary": "complementary_info",
-    "/onboarding/review": "review"
+    "/onboarding/review": "review",
+    "/onboarding/trail-generation": "trail_generation"
   };
 
   const currentPathStepId = pathToStepComponent[location.pathname as keyof typeof pathToStepComponent] || currentStep.id;
@@ -54,6 +57,7 @@ export const OnboardingSteps = () => {
     return () => clearTimeout(timer);
   }, [location.pathname, currentPathStepId, currentStep.id]);
 
+  // Mapeamento de componentes para cada etapa do onboarding
   const stepComponents = {
     personal: PersonalInfoStep,
     professional_data: ProfessionalDataStep,
@@ -75,18 +79,31 @@ export const OnboardingSteps = () => {
   const CurrentStepComponent = stepComponents[currentPathStepId as keyof typeof stepComponents] || 
                               stepComponents[currentStep.id as keyof typeof stepComponents];
   
-  // Se não encontrou o componente, mostrar mensagem
+  // Se não encontrou o componente, mostrar mensagem e opção de retorno
   if (!CurrentStepComponent) {
     console.warn(`Componente não encontrado para etapa: ${currentPathStepId || currentStep.id}`);
     return (
       <div className="text-center p-6 bg-amber-50 border border-amber-200 rounded-lg">
-        <p className="text-amber-700">Etapa não encontrada. Por favor, volte para a página inicial do onboarding.</p>
-        <button 
-          onClick={() => navigateToStep(0)} 
-          className="mt-4 px-4 py-2 bg-amber-600 text-white rounded-md hover:bg-amber-700"
-        >
-          Voltar ao Início
-        </button>
+        <h2 className="text-xl font-semibold text-amber-700 mb-4">Etapa não encontrada</h2>
+        <p className="text-amber-700 mb-4">
+          Não foi possível encontrar esta etapa do onboarding. Isso pode ter ocorrido devido a uma URL incorreta 
+          ou uma mudança na estrutura do processo.
+        </p>
+        <div className="flex justify-center space-x-4">
+          <Button 
+            onClick={() => navigateToStep(0)} 
+            className="px-4 py-2 bg-amber-600 text-white rounded-md hover:bg-amber-700"
+          >
+            Voltar ao Início
+          </Button>
+          <Button 
+            onClick={() => window.location.reload()} 
+            variant="outline"
+            className="px-4 py-2 border border-amber-400 text-amber-700 rounded-md hover:bg-amber-100"
+          >
+            Recarregar Página
+          </Button>
+        </div>
       </div>
     );
   }
