@@ -103,7 +103,7 @@ const PersonalInfo = () => {
         backUrl="/"
       >
         <div className="flex justify-center items-center py-20">
-          <LoadingSpinner size={10} />
+          <LoadingSpinner size="lg" />
           <p className="ml-4 text-gray-400">Carregando seus dados...</p>
         </div>
       </OnboardingLayout>

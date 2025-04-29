@@ -66,7 +66,7 @@ export const PersonalInfoFormController = () => {
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-24">
-        <LoadingSpinner size={8} />
+        <LoadingSpinner size="lg" />
       </div>
     );
   }
