@@ -1,6 +1,6 @@
 
 import { useOnboardingSteps } from "@/hooks/onboarding/useOnboardingSteps";
-import { PersonalInfoStep } from "./steps/PersonalInfoStep";
+import { PersonalInfoStepAdapter } from "./steps/PersonalInfoStepAdapter";
 import { BusinessGoalsStep } from "./steps/BusinessGoalsStep";
 import { BusinessContextStep } from "./steps/BusinessContextStep";
 import { AIExperienceStep } from "./steps/AIExperienceStep";
@@ -59,7 +59,7 @@ export const OnboardingSteps = () => {
 
   // Mapeamento de componentes para cada etapa do onboarding
   const stepComponents = {
-    personal: PersonalInfoStep,
+    personal: PersonalInfoStepAdapter,
     professional_data: ProfessionalDataStep,
     business_context: BusinessContextStep,
     ai_exp: AIExperienceStep,
@@ -158,7 +158,7 @@ export const OnboardingSteps = () => {
       isSubmitting: isSubmitting,
       isLastStep: currentStepIndex === steps.length - 1,
       onComplete: completeOnboarding,
-      initialData: getInitialDataForCurrentStep(),
+      initialData: progress,
     };
 
     if (supportsPersonalInfo(stepId)) {
@@ -205,3 +205,4 @@ export const OnboardingSteps = () => {
     </div>
   );
 };
+
