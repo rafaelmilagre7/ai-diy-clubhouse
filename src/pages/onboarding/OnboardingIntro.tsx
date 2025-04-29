@@ -3,7 +3,6 @@ import React from 'react';
 import { Button } from "@/components/ui/button";
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, Edit, Map } from 'lucide-react';
-import { theme } from '@/lib/theme';
 import MemberLayout from '@/components/layout/MemberLayout';
 import { useProgress } from '@/hooks/onboarding/useProgress';
 import { Alert } from '@/components/ui/alert';
@@ -15,16 +14,24 @@ const OnboardingIntro = () => {
   const isCompleted = progress?.is_completed || false;
 
   const handleStartOnboarding = () => {
-    if (isCompleted) {
-      navigate('/onboarding/review');
-    } else {
-      // Aqui está a correção - navegação para a rota correta
-      navigate('/onboarding');
+    try {
+      if (isCompleted) {
+        navigate('/onboarding/review');
+      } else {
+        // Corrigido para navegação direta para a primeira etapa (rota base do onboarding)
+        navigate('/onboarding');
+      }
+    } catch (error) {
+      console.error("Erro ao iniciar onboarding:", error);
     }
   };
 
   const handleGoToTrail = () => {
-    navigate('/implementation-trail');
+    try {
+      navigate('/implementation-trail');
+    } catch (error) {
+      console.error("Erro ao navegar para trilha:", error);
+    }
   };
 
   return (

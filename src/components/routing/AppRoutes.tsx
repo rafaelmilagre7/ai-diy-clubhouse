@@ -44,20 +44,23 @@ import CourseDetails from '@/pages/admin/learning/[id]';
 import ModuleDetails from '@/pages/admin/learning/module/[id]';
 import OnboardingIntro from '@/pages/onboarding/OnboardingIntro';
 import Onboarding from '@/pages/onboarding/Onboarding';
+import Index from '@/pages/Index';
+import Auth from '@/pages/Auth';
 
 const AppRoutes = () => {
   console.log("Renderizando AppRoutes");
   
   return (
     <Routes>
-      {/* Auth Routes */}
+      {/* Index e Auth Routes */}
+      <Route path="/" element={<Index />} />
+      <Route path="/auth" element={<Auth />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/set-new-password" element={<SetNewPassword />} />
       
       {/* Member Routes with Layout */}
-      <Route path="/" element={<ProtectedRoutes><MemberLayout><Dashboard /></MemberLayout></ProtectedRoutes>} />
       <Route path="/dashboard" element={<ProtectedRoutes><MemberLayout><Dashboard /></MemberLayout></ProtectedRoutes>} />
       <Route path="/implementation-trail" element={<ProtectedRoutes><MemberLayout><ImplementationTrailPage /></MemberLayout></ProtectedRoutes>} />
       <Route path="/solutions" element={<ProtectedRoutes><MemberLayout><Solutions /></MemberLayout></ProtectedRoutes>} />
@@ -80,8 +83,16 @@ const AppRoutes = () => {
       <Route path="/suggestions/new" element={<ProtectedRoutes><MemberLayout><NewSuggestion /></MemberLayout></ProtectedRoutes>} />
       
       {/* Onboarding Routes */}
-      <Route path="/onboarding" element={<ProtectedRoutes><OnboardingIntro /></ProtectedRoutes>} />
-      <Route path="/onboarding/*" element={<ProtectedRoutes><Onboarding /></ProtectedRoutes>} />
+      <Route path="/onboarding-intro" element={<ProtectedRoutes><OnboardingIntro /></ProtectedRoutes>} />
+      <Route path="/onboarding" element={<ProtectedRoutes><Onboarding /></ProtectedRoutes>} />
+      <Route path="/onboarding/professional-data" element={<ProtectedRoutes><Onboarding /></ProtectedRoutes>} />
+      <Route path="/onboarding/business-context" element={<ProtectedRoutes><Onboarding /></ProtectedRoutes>} />
+      <Route path="/onboarding/ai-experience" element={<ProtectedRoutes><Onboarding /></ProtectedRoutes>} />
+      <Route path="/onboarding/club-goals" element={<ProtectedRoutes><Onboarding /></ProtectedRoutes>} />
+      <Route path="/onboarding/customization" element={<ProtectedRoutes><Onboarding /></ProtectedRoutes>} />
+      <Route path="/onboarding/complementary" element={<ProtectedRoutes><Onboarding /></ProtectedRoutes>} />
+      <Route path="/onboarding/review" element={<ProtectedRoutes><Onboarding /></ProtectedRoutes>} />
+      <Route path="/onboarding/trail-generation" element={<ProtectedRoutes><Onboarding /></ProtectedRoutes>} />
       
       {/* Admin Routes */}
       <Route path="/admin" element={

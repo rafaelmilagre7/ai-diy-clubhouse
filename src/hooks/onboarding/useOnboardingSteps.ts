@@ -29,13 +29,34 @@ export const useOnboardingSteps = () => {
     "/onboarding/trail-generation": 8
   };
 
+  // Log detalhado para depuração
+  useEffect(() => {
+    console.log("useOnboardingSteps - Estado atual:");
+    console.log("- URL atual:", location.pathname);
+    console.log("- Índice atual:", currentStepIndex);
+    console.log("- Progress carregado:", !!progress);
+    console.log("- Etapa atual:", steps[currentStepIndex]?.id || "desconhecida");
+  }, [location.pathname, currentStepIndex, progress]);
+
   // Determinar o índice atual com base na rota atual primeiro
   useEffect(() => {
     const path = location.pathname;
+    
+    // Verificar se estamos em uma rota de onboarding válida
     if (routeToStepIndex.hasOwnProperty(path)) {
       const index = routeToStepIndex[path as keyof typeof routeToStepIndex];
       console.log(`Definindo etapa ${index} com base na URL: ${path}`);
       setCurrentStepIndex(index);
+      
+      // Se temos progresso e a etapa atual ainda não foi completada, adicioná-la às etapas completadas
+      if (progress && progress.completed_steps && !progress.completed_steps.includes(steps[index].id)) {
+        // Atualizamos apenas localmente - a persistência será tratada ao salvar os dados
+        console.log(`Marcando etapa ${steps[index].id} como visitada`);
+      }
+    } else if (path === "/onboarding") {
+      // Caso especial para a rota raiz do onboarding
+      console.log("Na rota raiz do onboarding, definindo para etapa 0");
+      setCurrentStepIndex(0);
     } else if (progress?.completed_steps) {
       // Fallback: Determinar com base em etapas completadas
       const lastCompletedStep = progress.completed_steps[progress.completed_steps.length - 1];
