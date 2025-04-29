@@ -10,7 +10,7 @@ interface UseAuthMethodsProps {
 
 export const useAuthMethods = ({ setIsLoading }: UseAuthMethodsProps) => {
   // Função para fazer login com credenciais
-  const signIn = async (email?: string, password?: string) => {
+  const signIn = async (email?: string, password?: string): Promise<{ error: Error | null }> => {
     try {
       setIsLoading(true);
       
@@ -24,7 +24,7 @@ export const useAuthMethods = ({ setIsLoading }: UseAuthMethodsProps) => {
         });
         
         if (error) throw error;
-        return;
+        return { error: null };
       }
       
       // Login com email/senha
@@ -40,6 +40,8 @@ export const useAuthMethods = ({ setIsLoading }: UseAuthMethodsProps) => {
         description: 'Bem-vindo ao VIVER DE IA Club!',
       });
       
+      return { error: null };
+      
     } catch (error: any) {
       console.error('Erro no login:', error);
       toast({
@@ -47,7 +49,7 @@ export const useAuthMethods = ({ setIsLoading }: UseAuthMethodsProps) => {
         description: error.message || 'Falha na autenticação. Verifique suas credenciais.',
         variant: 'destructive',
       });
-      throw error;
+      return { error };
     } finally {
       setIsLoading(false);
     }

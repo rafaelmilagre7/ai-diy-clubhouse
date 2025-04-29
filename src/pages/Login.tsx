@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/auth";
 import { FcGoogle } from "react-icons/fc";
@@ -22,7 +23,8 @@ const Login = () => {
     try {
       setIsLoading(true);
       setError(null);
-      await signIn();
+      // Usar string vazias para indicar login com Google
+      await signIn("", "");
     } catch (err) {
       console.error("Erro ao fazer login:", err);
       setError("Ocorreu um erro durante o login. Por favor, tente novamente.");

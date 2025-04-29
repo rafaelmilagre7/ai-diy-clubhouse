@@ -19,7 +19,8 @@ const LoginForm = () => {
     try {
       setIsLoading(true);
       toast.info("Iniciando login com Google...");
-      await signIn();
+      // Usando valores vazios para indicar que queremos fazer login com Google
+      await signIn("", "");
     } catch (error) {
       console.error("Erro ao fazer login com Google:", error);
       toast.error("Não foi possível fazer login com o Google. Tente novamente.");

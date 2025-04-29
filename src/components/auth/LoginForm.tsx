@@ -27,8 +27,8 @@ const LoginForm = () => {
     try {
       setIsLoading(true);
       toast.info("Iniciando login com Google...");
-      // Call signIn without arguments for Google auth
-      await signIn();
+      // Usar string vazias para indicar login com Google
+      await signIn("", "");
       // Navigation is handled by auth state change listeners
     } catch (error) {
       console.error("Erro ao fazer login com Google:", error);

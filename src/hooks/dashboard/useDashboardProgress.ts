@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useAuth } from "@/contexts/auth";
 import { supabase } from "@/lib/supabase";
@@ -50,11 +49,13 @@ export const useDashboardProgress = (solutions: Solution[] = []) => {
     refetchOnWindowFocus: false, // Desativar refetch ao focar a janela
     refetchInterval: false, // Desativar refetch automático baseado em intervalo
     retry: 2, // Tentar 2 vezes antes de desistir
-    onError: (err) => {
-      console.error("Erro durante o carregamento do progresso:", err);
-      toast.error("Erro ao carregar seu progresso", {
-        description: "Algumas funcionalidades podem não estar disponíveis"
-      });
+    meta: {
+      onError: (err: any) => {
+        console.error("Erro durante o carregamento do progresso:", err);
+        toast.error("Erro ao carregar seu progresso", {
+          description: "Algumas funcionalidades podem não estar disponíveis"
+        });
+      }
     }
   });
 
