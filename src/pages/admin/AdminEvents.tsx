@@ -40,7 +40,7 @@ const AdminEvents = () => {
       )}
 
       {/* Garantindo que o valor passado seja explicitamente um booleano */}
-      <AdminEventsHeader isCalendarAuthenticated={isAuthenticated === true} />
+      <AdminEventsHeader isCalendarAuthenticated={Boolean(isAuthenticated)} />
       <EventsTable />
     </div>
   );

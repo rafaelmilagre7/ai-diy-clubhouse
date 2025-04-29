@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
@@ -52,7 +51,7 @@ interface GoogleCalendarTokens {
 
 export const useGoogleCalendarAuth = () => {
   const [isLoading, setIsLoading] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [userInfo, setUserInfo] = useState<{ email: string; name: string; picture: string } | null>(null);
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [lastError, setLastError] = useState<string | null>(null);
@@ -149,7 +148,7 @@ export const useGoogleCalendarAuth = () => {
     userInfo,
     lastError,
     isAuthInitiating,
-    accessToken, // Exportando explicitamente o accessToken
+    accessToken,
     initiateLogin,
     handleLogout
   };

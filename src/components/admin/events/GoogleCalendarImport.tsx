@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Calendar } from "lucide-react";
 import { useGoogleCalendarAuth } from "@/hooks/admin/useGoogleCalendarAuth";
@@ -8,7 +7,7 @@ import { type EventFormData } from "./form/EventFormSchema";
 
 export interface GoogleCalendarImportProps {
   onEventsSelected: (events: EventFormData[]) => void;
-  isAuthenticated?: boolean;
+  isAuthenticated: boolean;
 }
 
 export const GoogleCalendarImport = ({ 
