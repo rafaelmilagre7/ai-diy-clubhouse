@@ -304,354 +304,6 @@ export type Database = {
         }
         Relationships: []
       }
-      learning_certificates: {
-        Row: {
-          certificate_url: string | null
-          course_id: string
-          created_at: string
-          id: string
-          issued_at: string
-          user_id: string
-        }
-        Insert: {
-          certificate_url?: string | null
-          course_id: string
-          created_at?: string
-          id?: string
-          issued_at?: string
-          user_id: string
-        }
-        Update: {
-          certificate_url?: string | null
-          course_id?: string
-          created_at?: string
-          id?: string
-          issued_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "learning_certificates_course_id_fkey"
-            columns: ["course_id"]
-            isOneToOne: false
-            referencedRelation: "learning_courses"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      learning_courses: {
-        Row: {
-          cover_image_url: string | null
-          created_at: string
-          created_by: string | null
-          description: string | null
-          id: string
-          order_index: number | null
-          published: boolean | null
-          slug: string
-          title: string
-          updated_at: string
-        }
-        Insert: {
-          cover_image_url?: string | null
-          created_at?: string
-          created_by?: string | null
-          description?: string | null
-          id?: string
-          order_index?: number | null
-          published?: boolean | null
-          slug: string
-          title: string
-          updated_at?: string
-        }
-        Update: {
-          cover_image_url?: string | null
-          created_at?: string
-          created_by?: string | null
-          description?: string | null
-          id?: string
-          order_index?: number | null
-          published?: boolean | null
-          slug?: string
-          title?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      learning_lesson_tools: {
-        Row: {
-          created_at: string
-          id: string
-          lesson_id: string
-          order_index: number
-          tool_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          lesson_id: string
-          order_index?: number
-          tool_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          lesson_id?: string
-          order_index?: number
-          tool_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "learning_lesson_tools_lesson_id_fkey"
-            columns: ["lesson_id"]
-            isOneToOne: false
-            referencedRelation: "learning_lessons"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "learning_lesson_tools_tool_id_fkey"
-            columns: ["tool_id"]
-            isOneToOne: false
-            referencedRelation: "tools"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      learning_lesson_videos: {
-        Row: {
-          created_at: string
-          description: string | null
-          duration_seconds: number | null
-          id: string
-          lesson_id: string
-          order_index: number
-          thumbnail_url: string | null
-          title: string
-          url: string
-        }
-        Insert: {
-          created_at?: string
-          description?: string | null
-          duration_seconds?: number | null
-          id?: string
-          lesson_id: string
-          order_index?: number
-          thumbnail_url?: string | null
-          title: string
-          url: string
-        }
-        Update: {
-          created_at?: string
-          description?: string | null
-          duration_seconds?: number | null
-          id?: string
-          lesson_id?: string
-          order_index?: number
-          thumbnail_url?: string | null
-          title?: string
-          url?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "learning_lesson_videos_lesson_id_fkey"
-            columns: ["lesson_id"]
-            isOneToOne: false
-            referencedRelation: "learning_lessons"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      learning_lessons: {
-        Row: {
-          ai_assistant_enabled: boolean | null
-          ai_assistant_prompt: string | null
-          content: Json | null
-          cover_image_url: string | null
-          created_at: string
-          description: string | null
-          estimated_time_minutes: number | null
-          id: string
-          module_id: string
-          order_index: number
-          published: boolean | null
-          title: string
-          updated_at: string
-        }
-        Insert: {
-          ai_assistant_enabled?: boolean | null
-          ai_assistant_prompt?: string | null
-          content?: Json | null
-          cover_image_url?: string | null
-          created_at?: string
-          description?: string | null
-          estimated_time_minutes?: number | null
-          id?: string
-          module_id: string
-          order_index?: number
-          published?: boolean | null
-          title: string
-          updated_at?: string
-        }
-        Update: {
-          ai_assistant_enabled?: boolean | null
-          ai_assistant_prompt?: string | null
-          content?: Json | null
-          cover_image_url?: string | null
-          created_at?: string
-          description?: string | null
-          estimated_time_minutes?: number | null
-          id?: string
-          module_id?: string
-          order_index?: number
-          published?: boolean | null
-          title?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "learning_lessons_module_id_fkey"
-            columns: ["module_id"]
-            isOneToOne: false
-            referencedRelation: "learning_modules"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      learning_modules: {
-        Row: {
-          course_id: string
-          cover_image_url: string | null
-          created_at: string
-          description: string | null
-          id: string
-          order_index: number
-          published: boolean | null
-          title: string
-          updated_at: string
-        }
-        Insert: {
-          course_id: string
-          cover_image_url?: string | null
-          created_at?: string
-          description?: string | null
-          id?: string
-          order_index?: number
-          published?: boolean | null
-          title: string
-          updated_at?: string
-        }
-        Update: {
-          course_id?: string
-          cover_image_url?: string | null
-          created_at?: string
-          description?: string | null
-          id?: string
-          order_index?: number
-          published?: boolean | null
-          title?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "learning_modules_course_id_fkey"
-            columns: ["course_id"]
-            isOneToOne: false
-            referencedRelation: "learning_courses"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      learning_progress: {
-        Row: {
-          completed_at: string | null
-          created_at: string
-          id: string
-          last_position_seconds: number | null
-          lesson_id: string
-          notes: string | null
-          progress_percentage: number | null
-          started_at: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          completed_at?: string | null
-          created_at?: string
-          id?: string
-          last_position_seconds?: number | null
-          lesson_id: string
-          notes?: string | null
-          progress_percentage?: number | null
-          started_at?: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          completed_at?: string | null
-          created_at?: string
-          id?: string
-          last_position_seconds?: number | null
-          lesson_id?: string
-          notes?: string | null
-          progress_percentage?: number | null
-          started_at?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "learning_progress_lesson_id_fkey"
-            columns: ["lesson_id"]
-            isOneToOne: false
-            referencedRelation: "learning_lessons"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      learning_resources: {
-        Row: {
-          created_at: string
-          description: string | null
-          file_size_bytes: number | null
-          file_type: string | null
-          file_url: string
-          id: string
-          lesson_id: string
-          name: string
-          order_index: number
-        }
-        Insert: {
-          created_at?: string
-          description?: string | null
-          file_size_bytes?: number | null
-          file_type?: string | null
-          file_url: string
-          id?: string
-          lesson_id: string
-          name: string
-          order_index?: number
-        }
-        Update: {
-          created_at?: string
-          description?: string | null
-          file_size_bytes?: number | null
-          file_type?: string | null
-          file_url?: string
-          id?: string
-          lesson_id?: string
-          name?: string
-          order_index?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "learning_resources_lesson_id_fkey"
-            columns: ["lesson_id"]
-            isOneToOne: false
-            referencedRelation: "learning_lessons"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       modules: {
         Row: {
           certificate_template: Json | null
@@ -701,108 +353,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      network_connections: {
-        Row: {
-          created_at: string
-          id: string
-          recipient_id: string
-          requester_id: string
-          status: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          recipient_id: string
-          requester_id: string
-          status?: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          recipient_id?: string
-          requester_id?: string
-          status?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      network_matches: {
-        Row: {
-          compatibility_score: number
-          created_at: string
-          id: string
-          is_viewed: boolean
-          match_reason: string | null
-          match_strengths: Json | null
-          matched_user_id: string
-          status: string
-          suggested_topics: Json | null
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          compatibility_score: number
-          created_at?: string
-          id?: string
-          is_viewed?: boolean
-          match_reason?: string | null
-          match_strengths?: Json | null
-          matched_user_id: string
-          status?: string
-          suggested_topics?: Json | null
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          compatibility_score?: number
-          created_at?: string
-          id?: string
-          is_viewed?: boolean
-          match_reason?: string | null
-          match_strengths?: Json | null
-          matched_user_id?: string
-          status?: string
-          suggested_topics?: Json | null
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      networking_preferences: {
-        Row: {
-          created_at: string
-          exclude_sectors: string[] | null
-          is_active: boolean | null
-          looking_for: Json | null
-          min_compatibility: number | null
-          preferred_connections_per_week: number | null
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          exclude_sectors?: string[] | null
-          is_active?: boolean | null
-          looking_for?: Json | null
-          min_compatibility?: number | null
-          preferred_connections_per_week?: number | null
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          exclude_sectors?: string[] | null
-          is_active?: boolean | null
-          looking_for?: Json | null
-          min_compatibility?: number | null
-          preferred_connections_per_week?: number | null
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
       }
       onboarding: {
         Row: {
@@ -1035,13 +585,6 @@ export type Database = {
             foreignKeyName: "onboarding_ai_experience_progress_id_fkey"
             columns: ["progress_id"]
             isOneToOne: false
-            referencedRelation: "onboarding_profile_view"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "onboarding_ai_experience_progress_id_fkey"
-            columns: ["progress_id"]
-            isOneToOne: false
             referencedRelation: "onboarding_progress"
             referencedColumns: ["id"]
           },
@@ -1088,13 +631,6 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "onboarding_business_context_progress_id_fkey"
-            columns: ["progress_id"]
-            isOneToOne: false
-            referencedRelation: "onboarding_profile_view"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "onboarding_business_context_progress_id_fkey"
             columns: ["progress_id"]
@@ -1154,13 +690,6 @@ export type Database = {
           week_availability?: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: "onboarding_business_goals_progress_id_fkey"
-            columns: ["progress_id"]
-            isOneToOne: false
-            referencedRelation: "onboarding_profile_view"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "onboarding_business_goals_progress_id_fkey"
             columns: ["progress_id"]
@@ -1278,13 +807,6 @@ export type Database = {
             foreignKeyName: "onboarding_experience_personalization_progress_id_fkey"
             columns: ["progress_id"]
             isOneToOne: false
-            referencedRelation: "onboarding_profile_view"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "onboarding_experience_personalization_progress_id_fkey"
-            columns: ["progress_id"]
-            isOneToOne: false
             referencedRelation: "onboarding_progress"
             referencedColumns: ["id"]
           },
@@ -1316,13 +838,6 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "onboarding_history_onboarding_id_fkey"
-            columns: ["onboarding_id"]
-            isOneToOne: false
-            referencedRelation: "onboarding_profile_view"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "onboarding_history_onboarding_id_fkey"
             columns: ["onboarding_id"]
@@ -1389,13 +904,6 @@ export type Database = {
             foreignKeyName: "onboarding_personal_info_progress_id_fkey"
             columns: ["progress_id"]
             isOneToOne: false
-            referencedRelation: "onboarding_profile_view"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "onboarding_personal_info_progress_id_fkey"
-            columns: ["progress_id"]
-            isOneToOne: false
             referencedRelation: "onboarding_progress"
             referencedColumns: ["id"]
           },
@@ -1442,13 +950,6 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "onboarding_professional_info_progress_id_fkey"
-            columns: ["progress_id"]
-            isOneToOne: false
-            referencedRelation: "onboarding_profile_view"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "onboarding_professional_info_progress_id_fkey"
             columns: ["progress_id"]
@@ -2515,31 +2016,6 @@ export type Database = {
       }
     }
     Views: {
-      network_match_view: {
-        Row: {
-          compatibility_score: number | null
-          created_at: string | null
-          id: string | null
-          interests: string | null
-          is_viewed: boolean | null
-          match_reason: string | null
-          match_strengths: Json | null
-          matched_user_avatar: string | null
-          matched_user_company: string | null
-          matched_user_id: string | null
-          matched_user_name: string | null
-          matched_user_position: string | null
-          skills_to_share: string | null
-          status: string | null
-          suggested_topics: Json | null
-          updated_at: string | null
-          user_avatar: string | null
-          user_company: string | null
-          user_id: string | null
-          user_name: string | null
-        }
-        Relationships: []
-      }
       onboarding_analytics: {
         Row: {
           ai_experience: Json | null
@@ -2555,57 +2031,6 @@ export type Database = {
           resources_needs: Json | null
           started_at: string | null
           team_info: Json | null
-          user_id: string | null
-        }
-        Relationships: []
-      }
-      onboarding_profile_view: {
-        Row: {
-          ai_experience: Json | null
-          ai_knowledge_level: string | null
-          annual_revenue: string | null
-          budget_range: string | null
-          business_context: Json | null
-          business_data: Json | null
-          business_goals: Json | null
-          company_data: Json | null
-          company_name: string | null
-          company_sector: string | null
-          company_size: string | null
-          company_website: string | null
-          complementary_info: Json | null
-          completed_steps: string[] | null
-          created_at: string | null
-          current_position: string | null
-          current_step: string | null
-          debug_logs: Json | null
-          decision_makers: string[] | null
-          experience_personalization: Json | null
-          goals: string[] | null
-          id: string | null
-          implementation_preferences: Json | null
-          implementation_speed: string | null
-          industry_focus: Json | null
-          is_completed: boolean | null
-          last_error: string | null
-          last_sync_at: string | null
-          personal_info: Json | null
-          priority_areas: string[] | null
-          professional_data: Json | null
-          professional_info: Json | null
-          profile_avatar: string | null
-          profile_company: string | null
-          profile_name: string | null
-          resources_needs: Json | null
-          support_level: string | null
-          sync_status: string | null
-          target_market: string | null
-          team_info: Json | null
-          team_size: string | null
-          tech_stack: string[] | null
-          technical_expertise: string | null
-          training_needs: string[] | null
-          updated_at: string | null
           user_id: string | null
         }
         Relationships: []

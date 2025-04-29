@@ -1,20 +1,16 @@
-import { Achievement, ensureValidCategory, achievementCache } from '@/types/achievementTypes';
+
+import { Achievement } from '@/types/achievementTypes';
 import { supabase } from '@/lib/supabase';
 
 export const fetchProgressData = async (userId: string) => {
   const { data, error } = await supabase
     .from('progress')
     .select(`
-      id,
-      user_id,
       solution_id,
       is_completed,
       current_module,
-      last_activity,
-      completed_at,
-      completed_modules,
       solutions (
-        id, category, title
+        id, category
       )
     `)
     .eq('user_id', userId);
@@ -24,86 +20,25 @@ export const fetchProgressData = async (userId: string) => {
 };
 
 export const fetchBadgesData = async (userId: string) => {
-  try {
-    const { data, error } = await supabase
-      .from('user_badges')
-      .select(`
-        id,
-        badge_id,
-        earned_at,
-        badges (
-          id, name, description, category, icon
-        )
-      `)
-      .eq('user_id', userId);
-      
-    if (error) {
-      console.warn("Erro ao carregar badges (pode ser que a tabela não existe):", error);
-      return [];
-    }
+  const { data, error } = await supabase
+    .from('user_badges')
+    .select(`
+      badge_id,
+      earned_at,
+      badges (
+        id, name, description, category
+      )
+    `)
+    .eq('user_id', userId);
     
-    return data;
-  } catch (err) {
-    console.error("Erro ao buscar badges:", err);
-    return []; // Retornar array vazio para evitar quebrar o fluxo
-  }
-};
-
-export const fetchChecklistData = async (userId: string) => {
-  try {
-    const { data, error } = await supabase
-      .from('user_checklists')
-      .select(`
-        id,
-        user_id,
-        solution_id,
-        checked_items,
-        is_completed,
-        completed_at
-      `)
-      .eq('user_id', userId);
-      
-    if (error) {
-      console.warn("Erro ao carregar checklists:", error);
-      return [];
-    }
-    
-    return data;
-  } catch (err) {
-    console.error("Erro ao buscar checklists:", err);
+  // Se ocorrer um erro, retornar um array vazio em vez de lançar o erro
+  // Isso evitará que a falha na tabela badges quebre o carregamento do dashboard
+  if (error) {
+    console.warn("Erro ao carregar badges (pode ser que a tabela não existe):", error);
     return [];
   }
-};
-
-export const fetchSocialData = async (userId: string) => {
-  try {
-    const { data: comments, error: commentsError } = await supabase
-      .from("solution_comments")
-      .select("*")
-      .eq("user_id", userId);
-      
-    if (commentsError) throw commentsError;
-    
-    const { data: likes, error: likesError } = await supabase
-      .from("solution_comment_likes")
-      .select("comment_id")
-      .eq("user_id", userId);
-      
-    if (likesError) throw likesError;
-    
-    return {
-      comments: comments || [],
-      totalComments: (comments || []).length,
-      totalLikes: (likes || []).length
-    };
-  } catch (error) {
-    console.error("Erro ao buscar dados sociais:", error);
-    return {
-      comments: [],
-      totalComments: 0,
-      totalLikes: 0
-    };
-  }
+  
+  return data;
 };
 
 export const createFallbackAchievements = (): Achievement[] => {
@@ -137,8 +72,10 @@ export const formatDate = (dateString?: string): string => {
   
   try {
     const date = new Date(dateString);
+    // Se for hoje, retornar "hoje"
     if (isToday(date)) return 'hoje';
     
+    // Caso contrário, formatar como DD/MM/YYYY
     return date.toLocaleDateString('pt-BR', {
       day: '2-digit',
       month: '2-digit',
@@ -149,36 +86,10 @@ export const formatDate = (dateString?: string): string => {
   }
 };
 
+// Função auxiliar para verificar se uma data é hoje
 const isToday = (date: Date): boolean => {
   const today = new Date();
   return date.getDate() === today.getDate() &&
     date.getMonth() === today.getMonth() &&
     date.getFullYear() === today.getFullYear();
-};
-
-export const mapToValidCategory = (category: string): "achievement" | "revenue" | "operational" | "strategy" => {
-  return ensureValidCategory(category);
-};
-
-export const processAchievements = (
-  achievements: Achievement[], 
-  previousAchievements: Achievement[]
-): Achievement[] => {
-  if (!previousAchievements || previousAchievements.length === 0) {
-    return achievements;
-  }
-
-  return achievements.map(achievement => {
-    const previousAchievement = previousAchievements.find(a => a.id === achievement.id);
-    
-    if (previousAchievement && previousAchievement.isUnlocked && !achievement.isUnlocked) {
-      return {
-        ...achievement,
-        isUnlocked: true,
-        earnedAt: previousAchievement.earnedAt
-      };
-    }
-    
-    return achievement;
-  });
 };

@@ -3,35 +3,21 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export const SolutionsGridLoader = () => {
   return (
-    <div className="space-y-12 animate-fade-in">
-      {/* Texto explicativo */}
-      <div className="text-center text-gray-500 mb-4">
-        <p>Carregando suas soluções personalizadas...</p>
-      </div>
-      
-      {/* Primeira seção */}
-      <div>
-        <Skeleton className="h-8 w-64 mb-2" />
-        <Skeleton className="h-5 w-96 mb-6" />
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {Array(3).fill(0).map((_, i) => (
-            <Skeleton key={i} className="h-64 rounded-lg" />
-          ))}
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {[1, 2, 3, 4, 5, 6].map((item) => (
+        <div key={item} className="border rounded-lg shadow-sm overflow-hidden">
+          <Skeleton className="h-[160px] w-full" />
+          <div className="p-4 space-y-3">
+            <Skeleton className="h-5 w-3/4" />
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-full" />
+            <div className="flex justify-between pt-2">
+              <Skeleton className="h-3 w-[80px]" />
+              <Skeleton className="h-3 w-[60px]" />
+            </div>
+          </div>
         </div>
-      </div>
-      
-      {/* Segunda seção */}
-      <div>
-        <Skeleton className="h-8 w-64 mb-2" />
-        <Skeleton className="h-5 w-96 mb-6" />
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {Array(2).fill(0).map((_, i) => (
-            <Skeleton key={i} className="h-64 rounded-lg" />
-          ))}
-        </div>
-      </div>
+      ))}
     </div>
   );
 };

@@ -5,10 +5,9 @@ import { AchievementCard } from "./AchievementCard";
 
 interface AchievementGridProps {
   achievements: Achievement[];
-  animateIds?: string[];
 }
 
-export const AchievementGrid = ({ achievements, animateIds = [] }: AchievementGridProps) => {
+export const AchievementGrid = ({ achievements }: AchievementGridProps) => {
   if (!achievements || achievements.length === 0) {
     return (
       <div className="text-center py-12">
@@ -30,8 +29,7 @@ export const AchievementGrid = ({ achievements, animateIds = [] }: AchievementGr
       {achievements.map((achievement) => (
         <AchievementCard 
           key={achievement.id} 
-          achievement={achievement}
-          shouldAnimate={animateIds.includes(achievement.id)}
+          achievement={achievement} 
         />
       ))}
     </div>

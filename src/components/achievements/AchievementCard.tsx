@@ -1,4 +1,3 @@
-
 import { cn } from "@/lib/utils";
 import { Achievement } from "@/types/achievementTypes";
 import { Card, CardContent } from "@/components/ui/card";
@@ -16,51 +15,20 @@ import React, { useEffect, useRef } from "react";
 
 interface AchievementCardProps {
   achievement: Achievement;
-  shouldAnimate?: boolean;
 }
 
-export const AchievementCard = ({ achievement, shouldAnimate = false }: AchievementCardProps) => {
+export const AchievementCard = ({ achievement }: AchievementCardProps) => {
   const isMobile = useIsMobile();
   const cardRef = useRef<HTMLDivElement>(null);
-  
-  // Adicionar estilo global para animação
-  useEffect(() => {
-    const style = document.createElement('style');
-    style.innerHTML = `
-      @keyframes highlight-flash {
-        0%, 100% { box-shadow: 0 0 0 rgba(0,0,0,0); }
-        50% { box-shadow: 0 0 15px 5px rgba(35, 197, 200, 0.6); }
-      }
-      
-      .highlight-flash {
-        animation: highlight-flash 1.2s ease-in-out;
-      }
-
-      @keyframes pulse-light {
-        0% { transform: scale(1); }
-        50% { transform: scale(1.03); box-shadow: 0 0 15px rgba(35, 197, 200, 0.4); }
-        100% { transform: scale(1); }
-      }
-
-      .animate-pulse-light {
-        animation: pulse-light 1.5s infinite;
-      }
-    `;
-    document.head.appendChild(style);
-    
-    return () => {
-      document.head.removeChild(style);
-    };
-  }, []);
 
   useEffect(() => {
-    if (shouldAnimate && cardRef.current) {
+    if (achievement.isUnlocked && cardRef.current) {
       cardRef.current.classList.add("highlight-flash");
       setTimeout(() => {
         cardRef.current?.classList.remove("highlight-flash");
       }, 1200);
     }
-  }, [achievement.isUnlocked, shouldAnimate]);
+  }, [achievement.isUnlocked]);
 
   const cardContent = (
     <Card ref={cardRef} className={cn(
@@ -72,8 +40,7 @@ export const AchievementCard = ({ achievement, shouldAnimate = false }: Achievem
       achievement.isUnlocked && achievement.category === "revenue" && "shadow-revenue/10",
       achievement.isUnlocked && achievement.category === "operational" && "shadow-operational/10",
       achievement.isUnlocked && achievement.category === "strategy" && "shadow-strategy/10",
-      achievement.isUnlocked && achievement.category === "achievement" && "shadow-viverblue/10",
-      shouldAnimate && "animate-pulse-light"
+      achievement.isUnlocked && achievement.category === "achievement" && "shadow-viverblue/10"
     )}>
       <div className={cn(
         "absolute inset-0 opacity-10 pointer-events-none",

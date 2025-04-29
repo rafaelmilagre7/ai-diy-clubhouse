@@ -1,23 +1,16 @@
 
-import React, { useEffect } from 'react';
+import React, { useRef } from 'react';
 import { OnboardingSteps } from '@/components/onboarding/OnboardingSteps';
 import { OnboardingHeader } from '@/components/onboarding/OnboardingHeader';
 import { EtapasProgresso } from '@/components/onboarding/EtapasProgresso';
 import { useOnboardingSteps } from '@/hooks/onboarding/useOnboardingSteps';
 import MemberLayout from '@/components/layout/MemberLayout';
 import { toast } from 'sonner';
-import { useLocation } from 'react-router-dom';
-import { Loader2 } from 'lucide-react';
 
 const Onboarding: React.FC = () => {
-  const { currentStepIndex, steps, navigateToStep, saveStepData, progress, isLoading } = useOnboardingSteps();
-  const location = useLocation();
+  const { currentStepIndex, steps, navigateToStep, saveStepData, progress } = useOnboardingSteps();
+  const formStateRef = useRef<any>(null); // Pode ser aprimorado para tipo específico no futuro
 
-  useEffect(() => {
-    console.log("Onboarding renderizado - URL atual:", location.pathname);
-    console.log("Etapa atual:", currentStepIndex);
-  }, [location.pathname, currentStepIndex]);
-  
   // Esta função será passada para EtapasProgresso: salva dados e navega ao destino
   const handleStepClick = async (stepIndexDestino: number) => {
     // Não processa clique na etapa já atual
@@ -65,7 +58,6 @@ const Onboarding: React.FC = () => {
       await saveStepData(stepId, data, false);
 
     } catch (e) {
-      console.error("Erro ao salvar dados antes de trocar de etapa:", e);
       toast.error("Erro ao salvar dados antes de trocar de etapa");
       // Em caso de erro, não navega
       return;
@@ -75,21 +67,10 @@ const Onboarding: React.FC = () => {
     navigateToStep(stepIndexDestino);
   };
 
-  if (isLoading) {
-    return (
-      <MemberLayout>
-        <div className="container max-w-screen-lg mx-auto py-8 px-4 text-center">
-          <Loader2 className="h-10 w-10 text-gray-400 animate-spin mx-auto mb-4" />
-          <p className="text-gray-500">Carregando dados do onboarding...</p>
-        </div>
-      </MemberLayout>
-    );
-  }
-
   return (
     <MemberLayout>
-      <div className="container max-w-screen-lg mx-auto py-8 px-4">
-        <OnboardingHeader isOnboardingCompleted={progress?.is_completed || false} />
+      <div className="container max-w-screen-lg mx-auto py-8">
+        <OnboardingHeader isOnboardingCompleted={false} />
         <div className="mt-6">
           <EtapasProgresso
             currentStep={currentStepIndex + 1}

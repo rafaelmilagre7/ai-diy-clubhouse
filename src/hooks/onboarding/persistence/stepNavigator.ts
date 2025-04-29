@@ -26,55 +26,30 @@ export function navigateAfterStep(
     "complementary_info": "/onboarding/review"
   };
   
-  // Tratamento especial para a rota raiz do onboarding
-  if (stepId === "initial" || stepId === "") {
-    console.log("Navegando da rota inicial para a primeira etapa (dados pessoais)");
-    navigate("/onboarding");
-    return;
-  }
-  
   // Verificar se temos uma rota direta para o próximo passo
   if (nextRouteMap[stepId]) {
     const nextRoute = nextRouteMap[stepId];
     console.log(`Navegando para ${nextRoute} (via mapeamento direto)`);
     
-    try {
-      // Uso de navigate em vez de window.location.href para evitar recarregamento completo da página
-      navigate(nextRoute);
-      return;
-    } catch (error) {
-      console.error(`Erro ao navegar para ${nextRoute}:`, error);
-      // Continuar com o método alternativo abaixo em caso de erro
-    }
+    // Uso de navigate em vez de window.location.href para evitar recarregamento completo da página
+    navigate(nextRoute);
+    return;
   }
   
   // Caso alternativo: usar o índice atual para determinar o próximo passo
   if (typeof currentStepIndex === 'number' && currentStepIndex >= 0) {
-    try {
-      if (currentStepIndex < steps.length - 1) {
-        const nextStep = steps[currentStepIndex + 1];
-        console.log(`Navegando para ${nextStep.path} (próximo passo na sequência)`);
-        
-        navigate(nextStep.path);
-      } else {
-        console.log('Navegando para /onboarding/review (última etapa)');
-        
-        navigate('/onboarding/review');
-      }
-      return;
-    } catch (error) {
-      console.error("Erro ao navegar para a próxima etapa:", error);
-      // Se falhar, tentar uma navegação mais simples
+    if (currentStepIndex < steps.length - 1) {
+      const nextStep = steps[currentStepIndex + 1];
+      console.log(`Navegando para ${nextStep.path} (próximo passo na sequência)`);
+      
+      navigate(nextStep.path);
+    } else {
+      console.log('Navegando para /onboarding/review (última etapa)');
+      
+      navigate('/onboarding/review');
     }
+    return;
   }
   
-  // Adicionar um fallback em caso de erro na determinação de rota
-  try {
-    console.warn("Não foi possível determinar a próxima etapa, assumindo primeira etapa");
-    navigate('/onboarding');
-  } catch (error) {
-    console.error("Erro no fallback de navegação:", error);
-    // Último recurso: recarregar a página para o onboarding
-    window.location.href = '/onboarding';
-  }
+  console.warn("Não foi possível determinar a próxima etapa, permanecendo na página atual");
 }

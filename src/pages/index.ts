@@ -7,13 +7,8 @@ export { default as ResetPassword } from './Auth';
 
 // Admin
 export { default as AdminDashboard } from './admin/AdminDashboard';
-export { default as AdminAnalytics } from './admin/AdminAnalytics';
-export { default as AdminEvents } from './admin/AdminEvents';
 export { default as SolutionEditor } from './admin/SolutionEditor';
 export { default as SolutionsList } from './admin/SolutionsList';
-export { default as AdminLearning } from './admin/learning';
-export { default as CourseDetails } from './admin/learning/[id]';
-export { default as ModuleDetails } from './admin/learning/module/[id]';
 
 // Member
 export { default as Dashboard } from './member/Dashboard';

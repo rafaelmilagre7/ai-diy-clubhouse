@@ -1,28 +1,37 @@
 
 import React from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import { ChartBarIcon } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 
 interface PlaceholderTabContentProps {
   title: string;
-  description: string;
+  description?: string;
+  badges?: string[];
 }
 
-export const PlaceholderTabContent = ({ title, description }: PlaceholderTabContentProps) => {
+export const PlaceholderTabContent = ({ title, description = "Conteúdo em desenvolvimento", badges = [] }: PlaceholderTabContentProps) => {
   return (
-    <div className="grid gap-4">
-      <Card>
-        <CardHeader>
-          <CardTitle>{title}</CardTitle>
-          <CardDescription>{description}</CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-col items-center justify-center h-[400px] text-muted-foreground">
-          <ChartBarIcon className="h-16 w-16 mb-4 opacity-30" />
-          <p className="text-center max-w-md">
-            Esta seção está em desenvolvimento. Em breve, você poderá visualizar análises detalhadas aqui.
+    <Card>
+      <CardHeader>
+        <CardTitle>{title}</CardTitle>
+        <CardDescription>
+          {description}
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="py-8 text-center">
+          <p className="text-muted-foreground">
+            {description}
           </p>
-        </CardContent>
-      </Card>
-    </div>
+          {badges.length > 0 && (
+            <div className="flex flex-wrap justify-center gap-2 mt-4">
+              {badges.map((badge, i) => (
+                <Badge key={i} variant="outline">{badge}</Badge>
+              ))}
+            </div>
+          )}
+        </div>
+      </CardContent>
+    </Card>
   );
 };

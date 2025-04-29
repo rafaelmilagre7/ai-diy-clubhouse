@@ -30,7 +30,6 @@ import SolutionImplementation from '@/pages/member/SolutionImplementation';
 import ImplementationCompleted from '@/pages/member/ImplementationCompleted';
 import Benefits from '@/pages/member/Benefits';
 import Achievements from '@/pages/member/Achievements';
-import Events from '@/pages/member/Events';
 import Suggestions from '@/pages/member/Suggestions';
 import SuggestionDetails from '@/pages/member/SuggestionDetails';
 import NewSuggestion from '@/pages/member/NewSuggestion';
@@ -39,28 +38,33 @@ import MemberLayout from '@/components/layout/MemberLayout';
 import AdminLayout from '@/components/layout/admin/AdminLayout';
 import ImplementationTrailPage from '@/pages/member/ImplementationTrailPage';
 import AdminEvents from '@/pages/admin/AdminEvents';
-import AdminLearningPage from '@/pages/admin/learning/index';
-import CourseDetails from '@/pages/admin/learning/[id]';
-import ModuleDetails from '@/pages/admin/learning/module/[id]';
+import Events from '@/pages/member/Events';
+
+// Onboarding
 import OnboardingIntro from '@/pages/onboarding/OnboardingIntro';
-import Onboarding from '@/pages/onboarding/Onboarding';
-import Index from '@/pages/Index';
-import Auth from '@/pages/Auth';
+import PersonalInfo from '@/pages/onboarding/steps/PersonalInfo';
+import ProfessionalData from '@/pages/onboarding/steps/ProfessionalData';
+import BusinessContext from '@/pages/onboarding/steps/BusinessContext';
+import AIExperience from '@/pages/onboarding/steps/AIExperience';
+import BusinessGoalsClub from '@/pages/onboarding/steps/BusinessGoalsClub';
+import ExperiencePersonalization from '@/pages/onboarding/steps/ExperiencePersonalization';
+import ComplementaryInfo from '@/pages/onboarding/steps/ComplementaryInfo';
+import Review from '@/pages/onboarding/steps/Review';
+import TrailGeneration from '@/pages/onboarding/steps/TrailGeneration';
 
 const AppRoutes = () => {
   console.log("Renderizando AppRoutes");
   
   return (
     <Routes>
-      {/* Index e Auth Routes */}
-      <Route path="/" element={<Index />} />
-      <Route path="/auth" element={<Auth />} />
+      {/* Auth Routes */}
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/set-new-password" element={<SetNewPassword />} />
       
       {/* Member Routes with Layout */}
+      <Route path="/" element={<ProtectedRoutes><MemberLayout><Dashboard /></MemberLayout></ProtectedRoutes>} />
       <Route path="/dashboard" element={<ProtectedRoutes><MemberLayout><Dashboard /></MemberLayout></ProtectedRoutes>} />
       <Route path="/implementation-trail" element={<ProtectedRoutes><MemberLayout><ImplementationTrailPage /></MemberLayout></ProtectedRoutes>} />
       <Route path="/solutions" element={<ProtectedRoutes><MemberLayout><Solutions /></MemberLayout></ProtectedRoutes>} />
@@ -83,43 +87,22 @@ const AppRoutes = () => {
       <Route path="/suggestions/new" element={<ProtectedRoutes><MemberLayout><NewSuggestion /></MemberLayout></ProtectedRoutes>} />
       
       {/* Onboarding Routes */}
-      <Route path="/onboarding-intro" element={<ProtectedRoutes><OnboardingIntro /></ProtectedRoutes>} />
-      <Route path="/onboarding" element={<ProtectedRoutes><Onboarding /></ProtectedRoutes>} />
-      <Route path="/onboarding/professional-data" element={<ProtectedRoutes><Onboarding /></ProtectedRoutes>} />
-      <Route path="/onboarding/business-context" element={<ProtectedRoutes><Onboarding /></ProtectedRoutes>} />
-      <Route path="/onboarding/ai-experience" element={<ProtectedRoutes><Onboarding /></ProtectedRoutes>} />
-      <Route path="/onboarding/club-goals" element={<ProtectedRoutes><Onboarding /></ProtectedRoutes>} />
-      <Route path="/onboarding/customization" element={<ProtectedRoutes><Onboarding /></ProtectedRoutes>} />
-      <Route path="/onboarding/complementary" element={<ProtectedRoutes><Onboarding /></ProtectedRoutes>} />
-      <Route path="/onboarding/review" element={<ProtectedRoutes><Onboarding /></ProtectedRoutes>} />
-      <Route path="/onboarding/trail-generation" element={<ProtectedRoutes><Onboarding /></ProtectedRoutes>} />
+      <Route path="/onboarding" element={<ProtectedRoutes><OnboardingIntro /></ProtectedRoutes>} />
+      <Route path="/onboarding/personal-info" element={<ProtectedRoutes><PersonalInfo /></ProtectedRoutes>} />
+      <Route path="/onboarding/professional-data" element={<ProtectedRoutes><ProfessionalData /></ProtectedRoutes>} />
+      <Route path="/onboarding/business-context" element={<ProtectedRoutes><BusinessContext /></ProtectedRoutes>} />
+      <Route path="/onboarding/ai-experience" element={<ProtectedRoutes><AIExperience /></ProtectedRoutes>} />
+      <Route path="/onboarding/club-goals" element={<ProtectedRoutes><BusinessGoalsClub /></ProtectedRoutes>} />
+      <Route path="/onboarding/customization" element={<ProtectedRoutes><ExperiencePersonalization /></ProtectedRoutes>} />
+      <Route path="/onboarding/complementary" element={<ProtectedRoutes><ComplementaryInfo /></ProtectedRoutes>} />
+      <Route path="/onboarding/review" element={<ProtectedRoutes><Review /></ProtectedRoutes>} />
+      <Route path="/onboarding/trail-generation" element={<ProtectedRoutes><TrailGeneration /></ProtectedRoutes>} />
       
       {/* Admin Routes */}
       <Route path="/admin" element={
         <AdminProtectedRoutes>
           <AdminLayout>
             <AdminDashboard />
-          </AdminLayout>
-        </AdminProtectedRoutes>
-      } />
-      <Route path="/admin/learning" element={
-        <AdminProtectedRoutes>
-          <AdminLayout>
-            <AdminLearningPage />
-          </AdminLayout>
-        </AdminProtectedRoutes>
-      } />
-      <Route path="/admin/learning/:id" element={
-        <AdminProtectedRoutes>
-          <AdminLayout>
-            <CourseDetails />
-          </AdminLayout>
-        </AdminProtectedRoutes>
-      } />
-      <Route path="/admin/learning/module/:id" element={
-        <AdminProtectedRoutes>
-          <AdminLayout>
-            <ModuleDetails />
           </AdminLayout>
         </AdminProtectedRoutes>
       } />

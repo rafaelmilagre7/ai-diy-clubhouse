@@ -1,131 +1,80 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AchievementGrid } from "@/components/achievements/AchievementGrid";
 import { cn } from "@/lib/utils";
 import { Achievement } from "@/types/achievementTypes";
-import { AchievementGrid } from "./AchievementGrid";
 
 interface AchievementsTabsProps {
   achievements: Achievement[];
+  orientation?: "horizontal" | "vertical";
   onCategoryChange?: (category: string) => void;
-  orientation?: "vertical" | "horizontal";
-  animateIds?: string[];
 }
 
 export const AchievementsTabs = ({ 
   achievements, 
-  onCategoryChange,
   orientation = "horizontal",
-  animateIds = []
+  onCategoryChange 
 }: AchievementsTabsProps) => {
-  const [activeValue, setActiveValue] = useState("all");
-  
-  // Estatísticas baseadas nas conquistas
-  const stats = {
-    total: achievements.length,
-    unlocked: achievements.filter(a => a.isUnlocked).length,
-    general: achievements.filter(a => a.category === "achievement").length,
-    revenue: achievements.filter(a => a.category === "revenue").length,
-    operational: achievements.filter(a => a.category === "operational").length,
-    strategy: achievements.filter(a => a.category === "strategy").length
+  const [activeTab, setActiveTab] = useState("all");
+
+  const filterAchievements = (tab: string) => {
+    if (tab === "all") return achievements;
+    return achievements.filter(a => a.category === tab);
   };
 
-  // Filtrar conquistas com base na categoria selecionada
-  const filteredAchievements = activeValue === "all" 
-    ? achievements 
-    : achievements.filter(achievement => {
-        if (activeValue === "unlocked") return achievement.isUnlocked;
-        if (activeValue === "locked") return !achievement.isUnlocked;
-        return achievement.category === activeValue;
-      });
-  
-  const handleTabChange = (value: string) => {
-    setActiveValue(value);
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
     if (onCategoryChange) {
-      onCategoryChange(value);
+      onCategoryChange(tab);
     }
   };
 
   return (
     <Tabs 
-      defaultValue="all" 
-      value={activeValue} 
-      onValueChange={handleTabChange}
-      className="w-full"
+      defaultValue={activeTab} 
+      onValueChange={handleTabChange} 
+      className="space-y-4"
       orientation={orientation === "vertical" ? "vertical" : "horizontal"}
     >
       <TabsList className={cn(
-        "bg-muted/50 p-1 mb-6",
-        orientation === "vertical" 
-          ? "flex-col h-auto space-y-1 mr-4" 
-          : "flex flex-wrap gap-1"
+        "bg-white p-1 shadow-sm",
+        orientation === "vertical" ? "flex flex-col h-auto space-y-1" : "flex space-x-1"
       )}>
-        <TabsTrigger value="all" className={orientation === "vertical" ? "w-full justify-start" : ""}>
-          Todas ({stats.total})
+        <TabsTrigger 
+          value="all" 
+          className="data-[state=active]:bg-slate-100 data-[state=active]:text-slate-900"
+        >
+          Todas
         </TabsTrigger>
-        
-        <TabsTrigger value="unlocked" className={orientation === "vertical" ? "w-full justify-start" : ""}>
-          Desbloqueadas ({stats.unlocked})
+        <TabsTrigger 
+          value="achievement" 
+          className="text-viverblue data-[state=active]:bg-viverblue/10 data-[state=active]:text-viverblue"
+        >
+          Conquistas
         </TabsTrigger>
-        
-        <TabsTrigger value="locked" className={orientation === "vertical" ? "w-full justify-start" : ""}>
-          Bloqueadas ({stats.total - stats.unlocked})
+        <TabsTrigger 
+          value="revenue" 
+          className="text-revenue data-[state=active]:bg-revenue/10 data-[state=active]:text-revenue"
+        >
+          Receita
         </TabsTrigger>
-        
-        {stats.general > 0 && (
-          <TabsTrigger 
-            value="achievement" 
-            className={cn(
-              orientation === "vertical" ? "w-full justify-start" : "",
-              "text-viverblue"
-            )}
-          >
-            Gerais ({stats.general})
-          </TabsTrigger>
-        )}
-        
-        {stats.revenue > 0 && (
-          <TabsTrigger 
-            value="revenue" 
-            className={cn(
-              orientation === "vertical" ? "w-full justify-start" : "",
-              "text-revenue"
-            )}
-          >
-            Vendas ({stats.revenue})
-          </TabsTrigger>
-        )}
-        
-        {stats.operational > 0 && (
-          <TabsTrigger 
-            value="operational" 
-            className={cn(
-              orientation === "vertical" ? "w-full justify-start" : "",
-              "text-operational"
-            )}
-          >
-            Operações ({stats.operational})
-          </TabsTrigger>
-        )}
-        
-        {stats.strategy > 0 && (
-          <TabsTrigger 
-            value="strategy" 
-            className={cn(
-              orientation === "vertical" ? "w-full justify-start" : "",
-              "text-strategy"
-            )}
-          >
-            Estratégia ({stats.strategy})
-          </TabsTrigger>
-        )}
+        <TabsTrigger 
+          value="operational" 
+          className="text-operational data-[state=active]:bg-operational/10 data-[state=active]:text-operational"
+        >
+          Operacional
+        </TabsTrigger>
+        <TabsTrigger 
+          value="strategy" 
+          className="text-strategy data-[state=active]:bg-strategy/10 data-[state=active]:text-strategy"
+        >
+          Estratégia
+        </TabsTrigger>
       </TabsList>
       
-      <TabsContent value={activeValue} className="mt-0">
-        <AchievementGrid 
-          achievements={filteredAchievements} 
-          animateIds={animateIds}
-        />
+      <TabsContent value={activeTab} className="pt-4">
+        <AchievementGrid achievements={filterAchievements(activeTab)} />
       </TabsContent>
     </Tabs>
   );

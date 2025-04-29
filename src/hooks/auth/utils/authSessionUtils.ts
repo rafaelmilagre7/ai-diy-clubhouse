@@ -1,123 +1,79 @@
 
-import { supabase } from '@/lib/supabase';
+import { supabase, UserProfile } from "@/lib/supabase";
+import { createUserProfileIfNeeded, fetchUserProfile } from "@/contexts/auth/utils/profileUtils";
+import { determineRoleFromEmail, validateUserRole } from "@/contexts/auth/utils/profileUtils/roleValidation";
 
 /**
- * Processa ou cria o perfil do usuário após login bem-sucedido
- * @param userId ID do usuário autenticado
- * @param email Email do usuário
- * @param name Nome do usuário (opcional)
- * @returns O perfil do usuário processado ou criado
+ * Processa o perfil do usuário durante a inicialização da sessão
+ * Busca o perfil existente ou cria um novo se necessário
  */
 export const processUserProfile = async (
   userId: string,
-  email: string | undefined,
-  name?: string
-) => {
+  email: string | undefined | null,
+  name: string | undefined | null
+): Promise<UserProfile | null> => {
   try {
-    console.log(`Processando perfil para usuário ${userId}`);
-    
-    // Buscar perfil existente
-    const { data: existingProfile, error: fetchError } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .maybeSingle(); // Usando maybeSingle em vez de single para evitar erros
-    
-    if (fetchError) {
-      console.error('Erro ao buscar perfil:', fetchError);
-      throw fetchError;
+    if (!userId) {
+      console.error("ID de usuário não fornecido para processamento de perfil");
+      return null;
     }
     
-    // Se o perfil existir, retornar
-    if (existingProfile) {
-      console.log('Perfil existente encontrado:', existingProfile);
-      return existingProfile;
+    // Tentar buscar perfil existente
+    let profile = await fetchUserProfile(userId);
+    
+    // Se não encontrou perfil, criar um novo
+    if (!profile) {
+      console.log("Nenhum perfil encontrado, criando novo perfil para", email);
+      profile = await createUserProfileIfNeeded(userId, email || "", name || "Usuário");
+      
+      if (!profile) {
+        console.error("Falha ao criar perfil para", email);
+        return null;
+      }
     }
     
-    console.log('Perfil não encontrado, criando novo perfil');
-    
-    // Determinar papel (role) do usuário
-    const isAdmin = email?.endsWith('@viverdeia.ai') || email === 'admin@teste.com';
-    const role = isAdmin ? 'admin' : 'member';
-    
-    // Criar perfil se não existir
-    const { data: newProfile, error: insertError } = await supabase
-      .from('profiles')
-      .insert([
-        {
-          id: userId,
-          email: email || '',
-          name: name || 'Usuário',
-          role: role
-        }
-      ])
-      .select()
-      .single();
-    
-    if (insertError) {
-      console.error('Erro ao criar perfil:', insertError);
-      throw insertError;
+    // Verificar e atualizar o papel do usuário se necessário
+    if (profile.role) {
+      const validatedRole = await validateUserRole(profile.id, profile.role, email);
+      if (validatedRole !== profile.role) {
+        profile.role = validatedRole;
+      }
     }
     
-    console.log('Novo perfil criado:', newProfile);
-    
-    // Inicializar o progresso de onboarding para o novo usuário
-    await initializeOnboardingProgress(userId);
-    
-    return newProfile;
-    
+    return profile;
   } catch (error) {
-    console.error('Erro ao processar perfil:', error);
-    throw error;
+    console.error("Erro ao processar perfil do usuário:", error);
+    return null;
   }
 };
 
 /**
- * Inicializa o registro de progresso de onboarding para um novo usuário
+ * Inicializa um novo perfil com valores padrão
  */
-const initializeOnboardingProgress = async (userId: string) => {
+export const initializeNewProfile = async (userId: string, email: string, name: string): Promise<UserProfile | null> => {
   try {
-    // Verificar se já existe um registro de progresso
-    const { data: existingProgress } = await supabase
-      .from('onboarding_progress')
-      .select('id')
-      .eq('user_id', userId)
-      .maybeSingle();
-      
-    if (existingProgress) {
-      console.log('Progresso de onboarding já existe:', existingProgress.id);
-      return existingProgress;
-    }
+    const role = determineRoleFromEmail(email);
     
-    // Criar registro de progresso inicial
-    const { data: newProgress, error } = await supabase
-      .from('onboarding_progress')
-      .insert([{
-        user_id: userId,
-        current_step: 'personal',
-        completed_steps: [],
-        is_completed: false,
-        personal_info: {},
-        professional_info: {},
-        business_context: {},
-        business_goals: {},
-        ai_experience: {},
-        experience_personalization: {},
-        complementary_info: {}
-      }])
+    const { data, error } = await supabase
+      .from("profiles")
+      .insert({
+        id: userId,
+        email,
+        name,
+        role,
+        created_at: new Date().toISOString(),
+      })
       .select()
       .single();
-      
+    
     if (error) {
-      console.error('Erro ao inicializar progresso de onboarding:', error);
-      throw error;
+      console.error("Erro ao inicializar novo perfil:", error);
+      return null;
     }
     
-    console.log('Progresso de onboarding inicializado:', newProgress.id);
-    return newProgress;
+    return data as UserProfile;
   } catch (error) {
-    console.error('Falha ao inicializar progresso de onboarding:', error);
-    // Não propagar erro para não bloquear fluxo de autenticação
+    console.error("Erro inesperado ao inicializar perfil:", error);
     return null;
   }
 };

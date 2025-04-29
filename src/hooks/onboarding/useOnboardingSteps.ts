@@ -1,13 +1,12 @@
 
 import { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useProgress } from "./useProgress";
 import { useStepPersistenceCore } from "./useStepPersistenceCore";
 import { steps } from "./useStepDefinitions";
 
 export const useOnboardingSteps = () => {
   const navigate = useNavigate();
-  const location = useLocation();
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const { progress, isLoading, refreshProgress } = useProgress();
   const { saveStepData, completeOnboarding } = useStepPersistenceCore({
@@ -16,71 +15,27 @@ export const useOnboardingSteps = () => {
     navigate,
   });
 
-  // Mapeamento de rotas para índices de etapas
-  const routeToStepIndex = {
-    "/onboarding": 0,
-    "/onboarding/professional-data": 1,
-    "/onboarding/business-context": 2,
-    "/onboarding/ai-experience": 3,
-    "/onboarding/club-goals": 4,
-    "/onboarding/customization": 5,
-    "/onboarding/complementary": 6,
-    "/onboarding/review": 7,
-    "/onboarding/trail-generation": 8
-  };
-
-  // Log detalhado para depuração
+  // Determinar o índice atual baseado nas etapas completadas
   useEffect(() => {
-    console.log("useOnboardingSteps - Estado atual:");
-    console.log("- URL atual:", location.pathname);
-    console.log("- Índice atual:", currentStepIndex);
-    console.log("- Progress carregado:", !!progress);
-    console.log("- Etapa atual:", steps[currentStepIndex]?.id || "desconhecida");
-  }, [location.pathname, currentStepIndex, progress]);
-
-  // Determinar o índice atual com base na rota atual primeiro
-  useEffect(() => {
-    const path = location.pathname;
-    
-    // Verificar se estamos em uma rota de onboarding válida
-    if (routeToStepIndex.hasOwnProperty(path)) {
-      const index = routeToStepIndex[path as keyof typeof routeToStepIndex];
-      console.log(`Definindo etapa ${index} com base na URL: ${path}`);
-      setCurrentStepIndex(index);
-      
-      // Se temos progresso e a etapa atual ainda não foi completada, adicioná-la às etapas completadas
-      if (progress && progress.completed_steps && !progress.completed_steps.includes(steps[index].id)) {
-        // Atualizamos apenas localmente - a persistência será tratada ao salvar os dados
-        console.log(`Marcando etapa ${steps[index].id} como visitada`);
-      }
-    } else if (path === "/onboarding") {
-      // Caso especial para a rota raiz do onboarding
-      console.log("Na rota raiz do onboarding, definindo para etapa 0");
-      setCurrentStepIndex(0);
-    } else if (progress?.completed_steps) {
-      // Fallback: Determinar com base em etapas completadas
+    if (progress?.completed_steps) {
       const lastCompletedStep = progress.completed_steps[progress.completed_steps.length - 1];
       const nextStepIndex = steps.findIndex(step => step.id === lastCompletedStep) + 1;
-      if (nextStepIndex < steps.length && nextStepIndex >= 0) {
+      if (nextStepIndex < steps.length) {
         setCurrentStepIndex(nextStepIndex);
-        console.log(`Definindo etapa ${nextStepIndex} com base no progresso salvo (última concluída: ${lastCompletedStep})`);
       }
     }
-  }, [location.pathname, progress?.completed_steps]);
+  }, [progress?.completed_steps]);
 
   const navigateToStep = (index: number) => {
     if (index >= 0 && index < steps.length) {
-      console.log(`Navegando para etapa ${index}: ${steps[index].path}`);
       setCurrentStepIndex(index);
       navigate(steps[index].path);
-    } else {
-      console.warn(`Tentativa de navegação para índice inválido: ${index}`);
     }
   };
 
   return {
     currentStepIndex,
-    currentStep: steps[currentStepIndex] || steps[0],
+    currentStep: steps[currentStepIndex],
     steps,
     isSubmitting: false,
     saveStepData,
@@ -88,6 +43,6 @@ export const useOnboardingSteps = () => {
     isLoading,
     refreshProgress,
     navigateToStep,
-    completeOnboarding
+    completeOnboarding // Adicionando a função aqui
   };
 };
