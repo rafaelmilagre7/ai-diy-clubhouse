@@ -7,7 +7,7 @@ import { GoogleCalendarImport } from "./GoogleCalendarImport";
 import { type EventFormData } from "./form/EventFormSchema";
 
 interface AdminEventsHeaderProps {
-  // Corrigindo a tipagem para aceitar boolean
+  // Garantindo que o tipo seja explicitamente boolean
   isCalendarAuthenticated: boolean;
 }
 
