@@ -17,6 +17,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [initComplete, setInitComplete] = useState(false);
+  const [authError, setAuthError] = useState<Error | null>(null);
 
   // Extrair métodos de autenticação
   const { signIn, signOut, signInAsMember, signInAsAdmin } = useAuthMethods({ setIsLoading });
@@ -30,7 +31,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // First set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, newSession) => {
-        console.log("Auth state changed:", event);
+        console.log("Auth state changed:", event, "User ID:", newSession?.user?.id);
         
         if (!isMounted) return;
         
@@ -39,7 +40,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         // Resetar o perfil quando o usuário faz logout
         if (event === 'SIGNED_OUT') {
+          console.log("AuthProvider: User signed out, resetting profile");
           setProfile(null);
+          localStorage.removeItem('lastAuthRoute');
         }
       }
     );
@@ -48,13 +51,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const initAuth = async () => {
       try {
         console.log("AuthProvider: Getting current session");
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error("AuthProvider: Error getting session:", error);
+          setAuthError(error);
+        }
         
         if (!isMounted) return;
         
-        console.log("AuthProvider: Session retrieved", !!session);
+        console.log("AuthProvider: Session retrieved", !!session, "User ID:", session?.user?.id);
         setSession(session);
         setUser(session?.user || null);
+        
+        // Salvar a última rota autenticada para diagnóstico
+        if (session?.user) {
+          localStorage.setItem('lastAuthRoute', window.location.pathname);
+          console.log("AuthProvider: Saved last auth route:", window.location.pathname);
+        }
         
         // Se não temos sessão, não precisamos esperar pelo perfil
         if (!session) {
@@ -66,6 +80,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setInitComplete(true);
       } catch (error) {
         console.error("Error getting initial session:", error);
+        setAuthError(error instanceof Error ? error : new Error(String(error)));
         if (isMounted) {
           setIsLoading(false);
           setInitComplete(true);
@@ -81,7 +96,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setIsLoading(false);
         setInitComplete(true);
       }
-    }, 3000); // 3 segundos
+    }, 5000); // 5 segundos para maior tolerância
     
     initAuth();
     
@@ -119,6 +134,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setProfile(data as UserProfile);
         } else {
           console.log("AuthProvider: No profile found, user may need to complete registration");
+          // Tentar criar perfil básico se não existir
+          try {
+            const newProfile = {
+              id: user.id,
+              email: user.email,
+              name: user.user_metadata?.name || user.user_metadata?.full_name || 'Usuário',
+              role: 'member'
+            };
+            
+            const { error: insertError } = await supabase
+              .from('profiles')
+              .insert(newProfile);
+              
+            if (!insertError) {
+              console.log("AuthProvider: Created basic profile for user");
+              setProfile(newProfile as UserProfile);
+            } else {
+              console.error("Error creating profile:", insertError);
+            }
+          } catch (createError) {
+            console.error("Error trying to create profile:", createError);
+          }
         }
       } catch (error) {
         console.error("Error in profile fetch:", error);
@@ -149,6 +186,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     profile,
     isAdmin,
     isLoading,
+    authError,
     signIn,
     signOut,
     signInAsMember,
