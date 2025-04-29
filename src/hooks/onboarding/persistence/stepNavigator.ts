@@ -26,6 +26,13 @@ export function navigateAfterStep(
     "complementary_info": "/onboarding/review"
   };
   
+  // Tratamento especial para a rota raiz do onboarding
+  if (stepId === "initial" || stepId === "") {
+    console.log("Navegando da rota inicial para a primeira etapa (dados pessoais)");
+    navigate("/onboarding");
+    return;
+  }
+  
   // Verificar se temos uma rota direta para o próximo passo
   if (nextRouteMap[stepId]) {
     const nextRoute = nextRouteMap[stepId];

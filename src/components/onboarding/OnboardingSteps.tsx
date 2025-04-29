@@ -44,10 +44,10 @@ export const OnboardingSteps = () => {
     "/onboarding/trail-generation": "trail_generation"
   };
 
-  const currentPathStepId = pathToStepComponent[location.pathname as keyof typeof pathToStepComponent] || currentStep.id;
+  const currentPathStepId = pathToStepComponent[location.pathname as keyof typeof pathToStepComponent] || currentStep?.id || "personal";
   
   useEffect(() => {
-    console.log(`Rota atual: ${location.pathname}, stepId mapeado: ${currentPathStepId}, currentStep.id: ${currentStep.id}`);
+    console.log(`Rota atual: ${location.pathname}, stepId mapeado: ${currentPathStepId}, currentStep.id: ${currentStep?.id || "não definido"}`);
     
     // Após o carregamento inicial, desativar o estado de loading
     const timer = setTimeout(() => {
@@ -55,7 +55,7 @@ export const OnboardingSteps = () => {
     }, 500);
     
     return () => clearTimeout(timer);
-  }, [location.pathname, currentPathStepId, currentStep.id]);
+  }, [location.pathname, currentPathStepId, currentStep]);
 
   // Mapeamento de componentes para cada etapa do onboarding
   const stepComponents = {
@@ -76,12 +76,21 @@ export const OnboardingSteps = () => {
     ),
   };
 
-  const CurrentStepComponent = stepComponents[currentPathStepId as keyof typeof stepComponents] || 
-                              stepComponents[currentStep.id as keyof typeof stepComponents];
+  const getCurrentStepId = () => {
+    // Se estamos na rota raiz de onboarding, usar sempre "personal"
+    if (location.pathname === "/onboarding") {
+      return "personal";
+    }
+    
+    // Caso contrário, usar o ID do mapeamento ou fallback para currentStep
+    return currentPathStepId || currentStep?.id || "personal";
+  };
+
+  const CurrentStepComponent = stepComponents[getCurrentStepId() as keyof typeof stepComponents];
   
   // Se não encontrou o componente, mostrar mensagem e opção de retorno
   if (!CurrentStepComponent) {
-    console.warn(`Componente não encontrado para etapa: ${currentPathStepId || currentStep.id}`);
+    console.warn(`Componente não encontrado para etapa: ${getCurrentStepId()}`);
     return (
       <div className="text-center p-6 bg-amber-50 border border-amber-200 rounded-lg">
         <h2 className="text-xl font-semibold text-amber-700 mb-4">Etapa não encontrada</h2>
@@ -112,14 +121,22 @@ export const OnboardingSteps = () => {
 
   const getInitialDataForCurrentStep = () => {
     if (!progress) return undefined;
-    if (currentPathStepId === "professional_data" || currentStep.id === "professional_data") {
+    
+    const stepId = getCurrentStepId();
+    
+    if (stepId === "professional_data") {
       return progress.professional_info;
     }
-    if (currentPathStepId === "business_context" || currentStep.id === "business_context") {
+    if (stepId === "business_context") {
       return progress.business_context;
     }
-    const sectionKey = currentStep.section as keyof OnboardingData;
-    return progress[sectionKey as keyof typeof progress];
+    
+    // Buscar dados específicos com base na seção atual
+    if (stepId && stepId in progress) {
+      return progress[stepId as keyof typeof progress];
+    }
+    
+    return undefined;
   };
 
   const supportsPersonalInfo = (stepId: string) => {
@@ -135,6 +152,7 @@ export const OnboardingSteps = () => {
   };
 
   const getPropsForCurrentStep = () => {
+    const stepId = getCurrentStepId();
     const baseProps = {
       onSubmit: saveStepData,
       isSubmitting: isSubmitting,
@@ -143,7 +161,7 @@ export const OnboardingSteps = () => {
       initialData: getInitialDataForCurrentStep(),
     };
 
-    if (supportsPersonalInfo(currentPathStepId || currentStep.id)) {
+    if (supportsPersonalInfo(stepId)) {
       return {
         ...baseProps,
         personalInfo: progress?.personal_info,
@@ -167,7 +185,7 @@ export const OnboardingSteps = () => {
       <div className="flex justify-between items-center">
         <div className="space-y-1">
           <h2 className="text-2xl font-semibold text-white">
-            {currentStep.title}
+            {currentStep?.title || "Onboarding"}
           </h2>
           <p className="text-gray-400">
             Passo {currentStepIndex + 1} de {steps.length}
