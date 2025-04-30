@@ -2,6 +2,7 @@
 import { LearningLesson, LearningLessonVideo } from "@/lib/supabase";
 import { Card } from "@/components/ui/card";
 import { LessonVideoPlayer } from "./LessonVideoPlayer";
+import { ContentRenderer } from "../content/ContentRenderer";
 
 interface LessonContentProps {
   lesson: LearningLesson;
@@ -10,21 +11,19 @@ interface LessonContentProps {
 }
 
 export const LessonContent = ({ lesson, videos, onProgressUpdate }: LessonContentProps) => {
-  // Função para renderizar o conteúdo da lição baseado no tipo
-  const renderContent = () => {
-    // Conteúdo em texto da lição
-    const textContent = lesson.content ? (
-      <div className="prose prose-slate max-w-none">
-        {/* Renderizar conteúdo estruturado (JSON) - Implementação completa necessária */}
-        <div dangerouslySetInnerHTML={{ __html: typeof lesson.content === 'string' 
-          ? lesson.content 
-          : JSON.stringify(lesson.content) }} />
-      </div>
-    ) : (
-      <p className="text-muted-foreground">Esta lição não possui conteúdo textual.</p>
-    );
-    
-    return (
+  // Função para lidar com interações do usuário com o conteúdo
+  const handleContentInteraction = () => {
+    // Atualiza o progresso quando o usuário interage com o conteúdo
+    // Definimos um valor intermediário para o progresso (50% se não houver vídeos)
+    if (!videos.length) {
+      onProgressUpdate(50);
+    }
+  };
+  
+  return (
+    <Card className="p-6">
+      <h2 className="text-2xl font-bold mb-6">{lesson.title}</h2>
+      
       <div className="space-y-8">
         {/* Reprodutor de vídeo (se houver vídeos) */}
         {videos.length > 0 && (
@@ -37,18 +36,14 @@ export const LessonContent = ({ lesson, videos, onProgressUpdate }: LessonConten
           />
         )}
         
-        {/* Conteúdo textual */}
+        {/* Conteúdo estruturado da aula */}
         <div>
-          {textContent}
+          <ContentRenderer 
+            content={lesson.content} 
+            onInteraction={handleContentInteraction} 
+          />
         </div>
       </div>
-    );
-  };
-
-  return (
-    <Card className="p-6">
-      <h2 className="text-2xl font-bold mb-6">{lesson.title}</h2>
-      {renderContent()}
     </Card>
   );
 };
