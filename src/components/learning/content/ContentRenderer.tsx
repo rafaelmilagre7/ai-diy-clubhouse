@@ -80,27 +80,28 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({ block, onInteraction }) =
     }
   };
 
+  // Usamos type assertion (as) para resolver problemas de tipagem
   switch (type) {
     case "header":
-      return <HeaderBlock data={data} />;
+      return <HeaderBlock data={data as import("@/components/admin/solution/editor/BlockTypes").HeaderBlockData} />;
     case "paragraph":
-      return <ParagraphBlock data={data} />;
+      return <ParagraphBlock data={data as import("@/components/admin/solution/editor/BlockTypes").ParagraphBlockData} />;
     case "image":
-      return <ImageBlock data={data} />;
+      return <ImageBlock data={data as import("@/components/admin/solution/editor/BlockTypes").ImageBlockData} />;
     case "list":
-      return <ListBlock data={data} />;
+      return <ListBlock data={data as import("@/components/admin/solution/editor/BlockTypes").ListBlockData} />;
     case "quote":
-      return <QuoteBlock data={data} />;
+      return <QuoteBlock data={data as import("@/components/admin/solution/editor/BlockTypes").QuoteBlockData} />;
     case "video":
-      return <VideoBlock data={data} onVideoInteraction={handleInteraction} />;
+      return <VideoBlock data={data as import("@/components/admin/solution/editor/BlockTypes").VideoBlockData} onVideoInteraction={handleInteraction} />;
     case "youtube":
-      return <YoutubeBlock data={data} onVideoInteraction={handleInteraction} />;
+      return <YoutubeBlock data={data as import("@/components/admin/solution/editor/BlockTypes").YoutubeBlockData} onVideoInteraction={handleInteraction} />;
     case "code":
-      return <CodeBlock data={data} />;
+      return <CodeBlock data={data as import("@/components/admin/solution/editor/BlockTypes").CodeBlockData} />;
     case "checklist":
-      return <ChecklistBlock data={data} />;
+      return <ChecklistBlock data={data as import("@/components/admin/solution/editor/BlockTypes").ChecklistBlockData} />;
     case "warning":
-      return <WarningBlock data={data} />;
+      return <WarningBlock data={data as import("@/components/admin/solution/editor/BlockTypes").WarningBlockData} />;
     default:
       return (
         <div className="p-4 bg-muted/20 border rounded-md my-4">

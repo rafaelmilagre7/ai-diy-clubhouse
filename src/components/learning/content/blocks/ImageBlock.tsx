@@ -1,7 +1,6 @@
 
 import React from "react";
 import { ImageBlockData } from "@/components/admin/solution/editor/BlockTypes";
-import Image from "next/image";
 
 interface ImageBlockProps {
   data: ImageBlockData;
