@@ -10,6 +10,7 @@ import {
   User,
   ChevronLeft,
   Users,
+  FileBox
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "react-router-dom";
@@ -44,7 +45,7 @@ export const FormacaoSidebarNav = ({ sidebarOpen }: FormacaoSidebarNavProps) => 
     {
       title: "Materiais",
       href: "/formacao/materiais",
-      icon: Book,
+      icon: FileBox,
     },
     {
       title: "Alunos",
@@ -64,6 +65,23 @@ export const FormacaoSidebarNav = ({ sidebarOpen }: FormacaoSidebarNavProps) => 
   ];
 
   const isActive = (href: string) => {
+    // Para lidar com rotas dinâmicas como /formacao/cursos/[id]
+    if (href === "/formacao/cursos" && location.pathname.startsWith("/formacao/cursos/")) {
+      return true;
+    }
+    
+    if (href === "/formacao/aulas" && location.pathname.startsWith("/formacao/aulas/")) {
+      return true;
+    }
+    
+    if (href === "/formacao/materiais" && location.pathname.startsWith("/formacao/materiais/")) {
+      return true;
+    }
+    
+    if (href === "/formacao/alunos" && location.pathname.startsWith("/formacao/alunos/")) {
+      return true;
+    }
+    
     return location.pathname === href || location.pathname.startsWith(href + '/');
   };
 

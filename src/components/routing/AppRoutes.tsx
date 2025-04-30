@@ -1,3 +1,4 @@
+
 import { Routes, Route } from 'react-router-dom';
 import { AdminProtectedRoutes } from '@/auth/AdminProtectedRoutes';
 import { FormacaoProtectedRoutes } from '@/auth/FormacaoProtectedRoutes';
@@ -41,6 +42,11 @@ import ImplementationTrailPage from '@/pages/member/ImplementationTrailPage';
 import AdminEvents from '@/pages/admin/AdminEvents';
 import Events from '@/pages/member/Events';
 
+// Formação
+import FormacaoDashboard from '@/pages/formacao/FormacaoDashboard';
+import FormacaoCursos from '@/pages/formacao/FormacaoCursos';
+import FormacaoCursoDetalhes from '@/pages/formacao/FormacaoCursoDetalhes';
+
 // Onboarding
 import OnboardingIntro from '@/pages/onboarding/OnboardingIntro';
 import PersonalInfo from '@/pages/onboarding/steps/PersonalInfo';
@@ -52,9 +58,6 @@ import ExperiencePersonalization from '@/pages/onboarding/steps/ExperiencePerson
 import ComplementaryInfo from '@/pages/onboarding/steps/ComplementaryInfo';
 import Review from '@/pages/onboarding/steps/Review';
 import TrailGeneration from '@/pages/onboarding/steps/TrailGeneration';
-
-// Formação
-import FormacaoDashboard from '@/pages/formacao/FormacaoDashboard';
 
 const AppRoutes = () => {
   console.log("Renderizando AppRoutes");
@@ -204,7 +207,8 @@ const AppRoutes = () => {
       
       {/* Formação Routes with Layout */}
       <Route path="/formacao" element={<FormacaoProtectedRoutes><FormacaoLayout><FormacaoDashboard /></FormacaoLayout></FormacaoProtectedRoutes>} />
-      <Route path="/formacao/cursos" element={<FormacaoProtectedRoutes><FormacaoLayout><div>Página de Cursos</div></FormacaoLayout></FormacaoProtectedRoutes>} />
+      <Route path="/formacao/cursos" element={<FormacaoProtectedRoutes><FormacaoLayout><FormacaoCursos /></FormacaoLayout></FormacaoProtectedRoutes>} />
+      <Route path="/formacao/cursos/:id" element={<FormacaoProtectedRoutes><FormacaoLayout><FormacaoCursoDetalhes /></FormacaoLayout></FormacaoProtectedRoutes>} />
       <Route path="/formacao/aulas" element={<FormacaoProtectedRoutes><FormacaoLayout><div>Página de Aulas</div></FormacaoLayout></FormacaoProtectedRoutes>} />
       <Route path="/formacao/materiais" element={<FormacaoProtectedRoutes><FormacaoLayout><div>Página de Materiais</div></FormacaoLayout></FormacaoProtectedRoutes>} />
       <Route path="/formacao/alunos" element={<FormacaoProtectedRoutes><FormacaoLayout><div>Página de Alunos</div></FormacaoLayout></FormacaoProtectedRoutes>} />
