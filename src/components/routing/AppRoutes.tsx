@@ -1,6 +1,6 @@
-
 import { Routes, Route } from 'react-router-dom';
 import { AdminProtectedRoutes } from '@/auth/AdminProtectedRoutes';
+import { FormacaoProtectedRoutes } from '@/auth/FormacaoProtectedRoutes';
 import { ProtectedRoutes } from '@/auth/ProtectedRoutes';
 import Login from '@/pages/auth/Login';
 import Register from '@/pages/auth/Register';
@@ -36,6 +36,7 @@ import NewSuggestion from '@/pages/member/NewSuggestion';
 import { Navigate } from 'react-router-dom';
 import MemberLayout from '@/components/layout/MemberLayout';
 import AdminLayout from '@/components/layout/admin/AdminLayout';
+import FormacaoLayout from '@/components/layout/formacao/FormacaoLayout';
 import ImplementationTrailPage from '@/pages/member/ImplementationTrailPage';
 import AdminEvents from '@/pages/admin/AdminEvents';
 import Events from '@/pages/member/Events';
@@ -51,6 +52,9 @@ import ExperiencePersonalization from '@/pages/onboarding/steps/ExperiencePerson
 import ComplementaryInfo from '@/pages/onboarding/steps/ComplementaryInfo';
 import Review from '@/pages/onboarding/steps/Review';
 import TrailGeneration from '@/pages/onboarding/steps/TrailGeneration';
+
+// Formação
+import FormacaoDashboard from '@/pages/formacao/FormacaoDashboard';
 
 const AppRoutes = () => {
   console.log("Renderizando AppRoutes");
@@ -197,6 +201,14 @@ const AppRoutes = () => {
           </AdminLayout>
         </AdminProtectedRoutes>
       } />
+      
+      {/* Formação Routes with Layout */}
+      <Route path="/formacao" element={<FormacaoProtectedRoutes><FormacaoLayout><FormacaoDashboard /></FormacaoLayout></FormacaoProtectedRoutes>} />
+      <Route path="/formacao/cursos" element={<FormacaoProtectedRoutes><FormacaoLayout><div>Página de Cursos</div></FormacaoLayout></FormacaoProtectedRoutes>} />
+      <Route path="/formacao/aulas" element={<FormacaoProtectedRoutes><FormacaoLayout><div>Página de Aulas</div></FormacaoLayout></FormacaoProtectedRoutes>} />
+      <Route path="/formacao/materiais" element={<FormacaoProtectedRoutes><FormacaoLayout><div>Página de Materiais</div></FormacaoLayout></FormacaoProtectedRoutes>} />
+      <Route path="/formacao/alunos" element={<FormacaoProtectedRoutes><FormacaoLayout><div>Página de Alunos</div></FormacaoLayout></FormacaoProtectedRoutes>} />
+      <Route path="/formacao/configuracoes" element={<FormacaoProtectedRoutes><FormacaoLayout><div>Configurações do LMS</div></FormacaoLayout></FormacaoProtectedRoutes>} />
       
       {/* Fallback route */}
       <Route path="*" element={<NotFound />} />

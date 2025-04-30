@@ -1,3 +1,4 @@
+
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
@@ -9,6 +10,7 @@ import {
   BookOpen,
   Gauge,
   Calendar,
+  GraduationCap
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "react-router-dom";
@@ -66,6 +68,29 @@ export const AdminSidebarNav = ({ sidebarOpen }: AdminSidebarNavProps) => {
     },
   ];
 
+  const formacaoItems = [
+    {
+      title: "LMS Dashboard",
+      href: "/formacao",
+      icon: GraduationCap,
+    },
+    {
+      title: "Cursos",
+      href: "/formacao/cursos",
+      icon: BookOpen,
+    },
+    {
+      title: "Aulas",
+      href: "/formacao/aulas",
+      icon: BookOpen,
+    },
+    {
+      title: "Alunos",
+      href: "/formacao/alunos",
+      icon: Users,
+    },
+  ];
+
   const isActive = (href: string) => {
     return location.pathname === href || location.pathname.startsWith(href + '/');
   };
@@ -74,6 +99,32 @@ export const AdminSidebarNav = ({ sidebarOpen }: AdminSidebarNavProps) => {
     <div className="space-y-4 py-4">
       <div className="px-3 space-y-1">
         {menuItems.map((item) => (
+          <Button
+            key={item.href}
+            variant={isActive(item.href) ? "default" : "ghost"}
+            className={cn(
+              "w-full justify-start gap-2",
+              !sidebarOpen && "justify-center",
+              isActive(item.href) && "bg-viverblue hover:bg-viverblue/90"
+            )}
+            asChild
+          >
+            <Link to={item.href}>
+              <item.icon className="h-4 w-4" />
+              {sidebarOpen && <span>{item.title}</span>}
+            </Link>
+          </Button>
+        ))}
+
+        <Separator className="my-4" />
+        
+        {sidebarOpen && (
+          <div className="mb-2 px-2 text-xs font-semibold text-gray-500">
+            ÁREA DE FORMAÇÃO
+          </div>
+        )}
+        
+        {formacaoItems.map((item) => (
           <Button
             key={item.href}
             variant={isActive(item.href) ? "default" : "ghost"}

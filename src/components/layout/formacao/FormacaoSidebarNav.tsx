@@ -2,84 +2,64 @@
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/auth";
 import { 
-  LayoutDashboard, 
-  Lightbulb, 
-  Settings, 
-  Trophy,
-  Gift,
-  MessageSquare,
-  ShieldCheck,
-  User,
-  Award,
+  LayoutDashboard,
+  Book,
   BookOpen,
-  Map,
-  Calendar,
-  GraduationCap
+  GraduationCap,
+  Settings,
+  User,
+  ChevronLeft,
+  Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "react-router-dom";
 
-interface SidebarNavProps {
+interface FormacaoSidebarNavProps {
   sidebarOpen: boolean;
 }
 
-export const MemberSidebarNav = ({ sidebarOpen }: SidebarNavProps) => {
+export const FormacaoSidebarNav = ({ sidebarOpen }: FormacaoSidebarNavProps) => {
   const location = useLocation();
-  const { isAdmin, isFormacao } = useAuth();
+  const { isAdmin } = useAuth();
 
   // Log para verificar se o componente está sendo renderizado
-  console.log("MemberSidebarNav renderizando, sidebarOpen:", sidebarOpen);
+  console.log("FormacaoSidebarNav renderizando, sidebarOpen:", sidebarOpen);
 
   const menuItems = [
     {
       title: "Dashboard",
-      href: "/dashboard",
+      href: "/formacao",
       icon: LayoutDashboard,
     },
     {
-      title: "Onboarding",
-      href: "/onboarding",
+      title: "Cursos",
+      href: "/formacao/cursos",
+      icon: GraduationCap,
+    },
+    {
+      title: "Aulas",
+      href: "/formacao/aulas",
       icon: BookOpen,
     },
     {
-      title: "Trilha de Implementação",
-      href: "/implementation-trail",
-      icon: Map,
+      title: "Materiais",
+      href: "/formacao/materiais",
+      icon: Book,
     },
     {
-      title: "Soluções",
-      href: "/solutions",
-      icon: Lightbulb,
+      title: "Alunos",
+      href: "/formacao/alunos",
+      icon: Users,
     },
     {
-      title: "Ferramentas",
-      href: "/tools",
+      title: "Configurações",
+      href: "/formacao/configuracoes",
       icon: Settings,
-    },
-    {
-      title: "Benefícios",
-      href: "/benefits",
-      icon: Gift,
-    },
-    {
-      title: "Sugestões",
-      href: "/suggestions",
-      icon: MessageSquare,
-    },
-    {
-      title: "Conquistas",
-      href: "/achievements",
-      icon: Award,
     },
     {
       title: "Perfil",
       href: "/profile",
       icon: User,
-    },
-    {
-      title: "Eventos",
-      href: "/events",
-      icon: Calendar,
     }
   ];
 
@@ -118,27 +98,25 @@ export const MemberSidebarNav = ({ sidebarOpen }: SidebarNavProps) => {
             asChild
           >
             <Link to="/admin">
-              <ShieldCheck className="h-4 w-4" />
-              {sidebarOpen && <span>Painel Admin</span>}
+              <ChevronLeft className="h-4 w-4" />
+              {sidebarOpen && <span>Voltar para Admin</span>}
             </Link>
           </Button>
         )}
         
-        {isFormacao && (
-          <Button
-            variant="outline"
-            className={cn(
-              "w-full justify-start gap-2 border-viverblue text-viverblue hover:bg-viverblue/10 mt-4",
-              !sidebarOpen && "justify-center"
-            )}
-            asChild
-          >
-            <Link to="/formacao">
-              <GraduationCap className="h-4 w-4" />
-              {sidebarOpen && <span>Área de Formação</span>}
-            </Link>
-          </Button>
-        )}
+        <Button
+          variant="outline"
+          className={cn(
+            "w-full justify-start gap-2 mt-2",
+            !sidebarOpen && "justify-center"
+          )}
+          asChild
+        >
+          <Link to="/dashboard">
+            <ChevronLeft className="h-4 w-4" />
+            {sidebarOpen && <span>Voltar ao Dashboard</span>}
+          </Link>
+        </Button>
       </div>
     </div>
   );

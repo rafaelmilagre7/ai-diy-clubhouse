@@ -4,6 +4,7 @@ import { useEffect, useState, useRef, ReactNode } from "react";
 import { useAuth } from "@/contexts/auth";
 import LoadingScreen from "@/components/common/LoadingScreen";
 import MemberLayout from "./MemberLayout";
+import FormacaoLayout from "./formacao/FormacaoLayout";
 import { toast } from "sonner";
 
 /**
@@ -15,6 +16,7 @@ const LayoutProvider = ({ children }: { children: ReactNode }) => {
     user,
     profile,
     isAdmin,
+    isFormacao,
     isLoading,
   } = useAuth();
   const navigate = useNavigate();
@@ -22,7 +24,7 @@ const LayoutProvider = ({ children }: { children: ReactNode }) => {
   const timeoutRef = useRef<number | null>(null);
   
   // Debug logs
-  console.log("LayoutProvider state:", { user, profile, isAdmin, isLoading, loadingTimeout });
+  console.log("LayoutProvider state:", { user, profile, isAdmin, isFormacao, isLoading, loadingTimeout });
 
   // Configurar timeout de carregamento
   useEffect(() => {
@@ -58,17 +60,28 @@ const LayoutProvider = ({ children }: { children: ReactNode }) => {
   // Verificar papel do usuário
   useEffect(() => {
     if (!isLoading && user && profile) {
-      if (isAdmin && window.location.pathname.indexOf('/admin') !== 0) {
+      if (isAdmin && window.location.pathname.indexOf('/admin') !== 0 && window.location.pathname.indexOf('/formacao') !== 0) {
         console.log("LayoutProvider: Admin user detected, redirecting to admin area");
         navigate('/admin', { replace: true });
+      } else if (isFormacao && !isAdmin && window.location.pathname.indexOf('/formacao') !== 0) {
+        console.log("LayoutProvider: Formacao user detected, redirecting to formacao area");
+        navigate('/formacao', { replace: true });
       }
     }
-  }, [user, profile, isAdmin, isLoading, navigate]);
+  }, [user, profile, isAdmin, isFormacao, isLoading, navigate]);
+
+  // Verificar se estamos em páginas de formação
+  const isFormacaoRoute = window.location.pathname.indexOf('/formacao') === 0;
 
   // Fast path for members - If we have user and profile, render immediately
-  if (user && profile && !isAdmin) {
-    console.log("LayoutProvider: Renderizando MemberLayout diretamente");
-    return <MemberLayout>{children}</MemberLayout>;
+  if (user && profile) {
+    if (isFormacaoRoute && (isFormacao || isAdmin)) {
+      console.log("LayoutProvider: Renderizando FormacaoLayout");
+      return <FormacaoLayout>{children}</FormacaoLayout>;
+    } else if (!isFormacao || isAdmin) {
+      console.log("LayoutProvider: Renderizando MemberLayout");
+      return <MemberLayout>{children}</MemberLayout>;
+    }
   }
 
   // Show loading screen while checking the session (but only if timeout not exceeded)
@@ -82,8 +95,13 @@ const LayoutProvider = ({ children }: { children: ReactNode }) => {
   }
 
   // Se for admin, redirecionar para área admin
-  if (isAdmin) {
+  if (isAdmin && !isFormacaoRoute) {
     return <Navigate to="/admin" replace />;
+  }
+
+  // Se for formacao (sem ser admin), redirecionar para área formacao
+  if (isFormacao && !isAdmin && !isFormacaoRoute) {
+    return <Navigate to="/formacao" replace />;
   }
 
   // Default case: Render the member layout

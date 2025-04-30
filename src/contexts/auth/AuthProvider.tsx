@@ -167,8 +167,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     fetchProfile();
   }, [user, initComplete]);
 
-  // Calculate isAdmin based on profile role
+  // Calculate isAdmin and isFormacao based on profile role
   const isAdmin = profile?.role === 'admin';
+  const isFormacao = profile?.role === 'formacao';
   
   // Debug log for profile
   useEffect(() => {
@@ -176,7 +177,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       profileId: profile?.id || 'não definido',
       email: profile?.email || 'não definido',
       role: profile?.role || 'não definido',
-      isAdmin: profile?.role === 'admin'
+      isAdmin: profile?.role === 'admin',
+      isFormacao: profile?.role === 'formacao'
     });
   }, [profile]);
 
@@ -185,6 +187,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     user,
     profile,
     isAdmin,
+    isFormacao,
     isLoading,
     authError,
     signIn,
