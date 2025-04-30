@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { LearningResource } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
@@ -11,7 +12,6 @@ import {
 } from "@/components/ui/table";
 import { 
   FileText, 
-  FilePdf, 
   FileImage, 
   FileArchive,
   FileCode, 
