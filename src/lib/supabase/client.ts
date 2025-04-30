@@ -55,6 +55,3 @@ export async function decrementVoteCount(suggestionId: string, voteType: 'upvote
     column: column 
   });
 }
-
-// Tipos comuns usados em todo o projeto
-// Que também são exportados do arquivo types.ts

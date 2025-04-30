@@ -21,7 +21,7 @@ export interface Solution {
   category: string;
   image_url?: string;
   thumbnail_url?: string;
-  author_id: string;
+  author_id?: string;
   created_at: string;
   updated_at: string;
   published: boolean;
