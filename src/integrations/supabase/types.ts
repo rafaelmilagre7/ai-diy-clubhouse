@@ -339,6 +339,47 @@ export type Database = {
           },
         ]
       }
+      learning_comments: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          is_hidden: boolean
+          lesson_id: string
+          parent_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          is_hidden?: boolean
+          lesson_id: string
+          parent_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          is_hidden?: boolean
+          lesson_id?: string
+          parent_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "learning_comments_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "learning_comments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       learning_courses: {
         Row: {
           cover_image_url: string | null
@@ -2665,6 +2706,10 @@ export type Database = {
         Args: { suggestion_id: string }
         Returns: undefined
       }
+      determinerolefromemail: {
+        Args: { email: string }
+        Returns: string
+      }
       increment: {
         Args: { row_id: string; table_name: string; column_name: string }
         Returns: undefined
@@ -2692,6 +2737,10 @@ export type Database = {
       merge_json_data: {
         Args: { target: Json; source: Json }
         Returns: Json
+      }
+      validateuserrole: {
+        Args: { profileid: string; currentrole: string; email: string }
+        Returns: string
       }
     }
     Enums: {

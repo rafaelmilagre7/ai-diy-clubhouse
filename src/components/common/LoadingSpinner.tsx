@@ -10,8 +10,14 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
   size = "md", 
   className = "" 
 }) => {
-  // Convertemos o tamanho para valores numéricos
-  const sizeValue = size === "sm" ? 4 : size === "md" ? 6 : 8;
+  // Convertemos o tamanho para valores específicos em pixels
+  const sizeMap = {
+    sm: 4,
+    md: 6,
+    lg: 8
+  };
+  
+  const sizeValue = sizeMap[size];
   
   return (
     <div className={`flex justify-center items-center ${className}`}>
