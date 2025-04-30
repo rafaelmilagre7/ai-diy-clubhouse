@@ -1,0 +1,313 @@
+
+import { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/auth";
+import { supabase } from "@/lib/supabase";
+import { LearningLesson, LearningResource, LearningLessonVideo } from "@/lib/supabase";
+import { toast } from "sonner";
+import { AulaHeader } from "@/components/formacao/aulas/AulaHeader";
+import { AulaFormDialog } from "@/components/formacao/aulas/AulaFormDialog";
+import { RecursosList } from "@/components/formacao/materiais/RecursosList";
+import { RecursoFormDialog } from "@/components/formacao/materiais/RecursoFormDialog";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Loader2, Plus, File, Video } from "lucide-react";
+
+const FormacaoAulaDetalhes = () => {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const { profile } = useAuth();
+  
+  const [aula, setAula] = useState<LearningLesson | null>(null);
+  const [recursos, setRecursos] = useState<LearningResource[]>([]);
+  const [videos, setVideos] = useState<LearningLessonVideo[]>([]);
+  
+  const [loading, setLoading] = useState(true);
+  const [loadingRecursos, setLoadingRecursos] = useState(true);
+  const [loadingVideos, setLoadingVideos] = useState(true);
+  
+  const [isAulaDialogOpen, setIsAulaDialogOpen] = useState(false);
+  const [isRecursoDialogOpen, setIsRecursoDialogOpen] = useState(false);
+  const [editingRecurso, setEditingRecurso] = useState<LearningResource | null>(null);
+  const [activeTab, setActiveTab] = useState("conteudo");
+
+  // Buscar detalhes da aula
+  const fetchAula = async () => {
+    if (!id) return;
+    
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('learning_lessons')
+        .select('*, learning_modules(id, title, course_id)')
+        .eq('id', id)
+        .single();
+      
+      if (error) throw error;
+      
+      setAula(data);
+    } catch (error) {
+      console.error("Erro ao buscar aula:", error);
+      toast.error("Não foi possível carregar a aula");
+      navigate('/formacao/aulas');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Buscar recursos da aula
+  const fetchRecursos = async () => {
+    if (!id) return;
+    
+    setLoadingRecursos(true);
+    try {
+      const { data, error } = await supabase
+        .from('learning_resources')
+        .select('*')
+        .eq('lesson_id', id)
+        .order('order_index');
+      
+      if (error) throw error;
+      
+      setRecursos(data || []);
+    } catch (error) {
+      console.error("Erro ao buscar recursos:", error);
+    } finally {
+      setLoadingRecursos(false);
+    }
+  };
+
+  // Buscar vídeos da aula
+  const fetchVideos = async () => {
+    if (!id) return;
+    
+    setLoadingVideos(true);
+    try {
+      const { data, error } = await supabase
+        .from('learning_lesson_videos')
+        .select('*')
+        .eq('lesson_id', id)
+        .order('order_index');
+      
+      if (error) throw error;
+      
+      setVideos(data || []);
+    } catch (error) {
+      console.error("Erro ao buscar vídeos:", error);
+    } finally {
+      setLoadingVideos(false);
+    }
+  };
+
+  // Carregar dados iniciais
+  useEffect(() => {
+    fetchAula();
+    fetchRecursos();
+    fetchVideos();
+  }, [id]);
+
+  // Abrir modal para editar aula
+  const handleEditarAula = () => {
+    setIsAulaDialogOpen(true);
+  };
+
+  // Ações após salvar aula
+  const handleSalvarAula = () => {
+    setIsAulaDialogOpen(false);
+    fetchAula();
+  };
+
+  // Abrir modal para adicionar recurso
+  const handleNovoRecurso = () => {
+    setEditingRecurso(null);
+    setIsRecursoDialogOpen(true);
+  };
+
+  // Abrir modal para editar recurso existente
+  const handleEditarRecurso = (recurso: LearningResource) => {
+    setEditingRecurso(recurso);
+    setIsRecursoDialogOpen(true);
+  };
+
+  // Excluir recurso
+  const handleExcluirRecurso = async (recursoId: string) => {
+    try {
+      const { error } = await supabase
+        .from('learning_resources')
+        .delete()
+        .eq('id', recursoId);
+      
+      if (error) throw error;
+      
+      toast.success("Material excluído com sucesso!");
+      fetchRecursos();
+    } catch (error) {
+      console.error("Erro ao excluir recurso:", error);
+      toast.error("Não foi possível excluir o material. Tente novamente.");
+    }
+  };
+
+  // Ações após salvar recurso
+  const handleSalvarRecurso = () => {
+    setIsRecursoDialogOpen(false);
+    fetchRecursos();
+  };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (!aula) {
+    return (
+      <div className="text-center py-12">
+        <h2 className="text-xl font-semibold">Aula não encontrada</h2>
+        <p className="text-muted-foreground mt-2 mb-4">A aula que você está procurando não existe ou foi removida.</p>
+        <Button onClick={() => navigate('/formacao/aulas')}>Voltar para Aulas</Button>
+      </div>
+    );
+  }
+
+  const isAdmin = profile?.role === 'admin';
+  const moduloId = aula.learning_modules?.id || '';
+
+  return (
+    <div className="space-y-6">
+      <AulaHeader 
+        aula={aula} 
+        onEditar={handleEditarAula} 
+        isAdmin={isAdmin} 
+        moduloId={moduloId}
+      />
+      
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList>
+          <TabsTrigger value="conteudo">Conteúdo</TabsTrigger>
+          <TabsTrigger value="materiais">Materiais</TabsTrigger>
+          <TabsTrigger value="videos">Vídeos</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="conteudo" className="mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Conteúdo da Aula</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {aula.content ? (
+                <div className="prose dark:prose-invert max-w-none">
+                  {JSON.stringify(aula.content) !== '{}' ? (
+                    <pre>{JSON.stringify(aula.content, null, 2)}</pre>
+                  ) : (
+                    <p>Esta aula ainda não possui conteúdo detalhado.</p>
+                  )}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  <p>Nenhum conteúdo disponível para esta aula.</p>
+                  {isAdmin && (
+                    <Button className="mt-4" variant="outline">
+                      Adicionar Conteúdo
+                    </Button>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="materiais" className="mt-6">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-xl font-bold flex items-center gap-2">
+              <File className="h-5 w-5" /> 
+              Materiais Disponíveis
+            </h3>
+            {isAdmin && (
+              <Button onClick={handleNovoRecurso}>
+                <Plus className="h-4 w-4 mr-2" />
+                Adicionar Material
+              </Button>
+            )}
+          </div>
+          
+          <RecursosList
+            recursos={recursos}
+            loading={loadingRecursos}
+            onEdit={handleEditarRecurso}
+            onDelete={handleExcluirRecurso}
+            isAdmin={isAdmin}
+          />
+        </TabsContent>
+        
+        <TabsContent value="videos" className="mt-6">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-xl font-bold flex items-center gap-2">
+              <Video className="h-5 w-5" /> 
+              Vídeos da Aula
+            </h3>
+            {isAdmin && (
+              <Button>
+                <Plus className="h-4 w-4 mr-2" />
+                Adicionar Vídeo
+              </Button>
+            )}
+          </div>
+          
+          {loadingVideos ? (
+            <div className="flex justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+          ) : videos.length > 0 ? (
+            <div className="grid gap-6">
+              {videos.map((video) => (
+                <Card key={video.id}>
+                  <CardContent className="p-6">
+                    <div className="aspect-video w-full mb-4">
+                      <iframe 
+                        src={video.url} 
+                        className="w-full h-full"
+                        title={video.title}
+                        allowFullScreen
+                      />
+                    </div>
+                    <h4 className="text-lg font-medium">{video.title}</h4>
+                    {video.description && <p className="text-muted-foreground mt-1">{video.description}</p>}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12 border rounded-lg bg-background">
+              <Video className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+              <h3 className="text-lg font-medium">Nenhum vídeo disponível</h3>
+              <p className="text-sm text-muted-foreground mt-2 mb-4">
+                Esta aula ainda não possui vídeos cadastrados.
+              </p>
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
+      
+      <AulaFormDialog 
+        open={isAulaDialogOpen}
+        onOpenChange={setIsAulaDialogOpen}
+        aula={aula}
+        moduleId={aula.module_id}
+        onSuccess={handleSalvarAula}
+      />
+      
+      <RecursoFormDialog
+        open={isRecursoDialogOpen}
+        onOpenChange={setIsRecursoDialogOpen}
+        recurso={editingRecurso}
+        lessonId={id || ''}
+        onSuccess={handleSalvarRecurso}
+      />
+    </div>
+  );
+};
+
+export default FormacaoAulaDetalhes;
