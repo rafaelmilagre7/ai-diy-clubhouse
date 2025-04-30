@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
 import { supabase } from "@/lib/supabase";
-import { LearningLesson, LearningResource, LearningLessonVideo } from "@/lib/supabase";
+import { LearningLesson, LearningResource, LearningLessonVideo, LearningModule } from "@/lib/supabase";
 import { toast } from "sonner";
 import { AulaHeader } from "@/components/formacao/aulas/AulaHeader";
 import { AulaFormDialog } from "@/components/formacao/aulas/AulaFormDialog";
@@ -20,6 +20,7 @@ const FormacaoAulaDetalhes = () => {
   const { profile } = useAuth();
   
   const [aula, setAula] = useState<LearningLesson | null>(null);
+  const [modulo, setModulo] = useState<LearningModule | null>(null);
   const [recursos, setRecursos] = useState<LearningResource[]>([]);
   const [videos, setVideos] = useState<LearningLessonVideo[]>([]);
   
@@ -40,13 +41,26 @@ const FormacaoAulaDetalhes = () => {
     try {
       const { data, error } = await supabase
         .from('learning_lessons')
-        .select('*, learning_modules(id, title, course_id)')
+        .select('*')
         .eq('id', id)
         .single();
       
       if (error) throw error;
       
       setAula(data);
+      
+      // Buscar dados do módulo separadamente
+      if (data.module_id) {
+        const { data: moduleData, error: moduleError } = await supabase
+          .from('learning_modules')
+          .select('*, course_id')
+          .eq('id', data.module_id)
+          .single();
+        
+        if (!moduleError && moduleData) {
+          setModulo(moduleData);
+        }
+      }
     } catch (error) {
       console.error("Erro ao buscar aula:", error);
       toast.error("Não foi possível carregar a aula");
@@ -173,7 +187,7 @@ const FormacaoAulaDetalhes = () => {
   }
 
   const isAdmin = profile?.role === 'admin';
-  const moduloId = aula.learning_modules?.id || '';
+  const moduloId = modulo?.id || aula.module_id || '';
 
   return (
     <div className="space-y-6">

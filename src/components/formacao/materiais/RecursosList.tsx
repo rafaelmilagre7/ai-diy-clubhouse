@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { LearningResource } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
@@ -58,7 +57,7 @@ export const RecursosList = ({
   const getFileIcon = (fileType: string | null) => {
     if (!fileType) return <File className="h-5 w-5" />;
     
-    if (fileType.includes("pdf")) return <FilePdf className="h-5 w-5" />;
+    if (fileType.includes("pdf")) return <FileText className="h-5 w-5 text-red-500" />;
     if (fileType.includes("image")) return <FileImage className="h-5 w-5" />;
     if (fileType.includes("zip") || fileType.includes("rar")) return <FileArchive className="h-5 w-5" />;
     if (fileType.includes("text") || fileType.includes("doc")) return <FileText className="h-5 w-5" />;
