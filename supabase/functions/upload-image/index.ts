@@ -21,7 +21,8 @@ serve(async (req) => {
   }
 
   try {
-    const apiKey = Deno.env.get('IMGBB_API_KEY');
+    // Utilizar a chave de API do ImgBB configurada
+    const apiKey = '04b796a219698057ded57d20ec1705cf';
     
     if (!apiKey) {
       return new Response(JSON.stringify({ error: 'ImgBB API key not configured' }), { 

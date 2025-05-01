@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { uploadFileToStorage } from "@/components/ui/file/uploadUtils";
 import { ImagePlus, Trash2, Loader2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 interface ImageUploadProps {
   value: string | undefined;
@@ -14,6 +15,7 @@ interface ImageUploadProps {
 export const ImageUpload = ({ value, onChange, bucketName, folderPath }: ImageUploadProps) => {
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
+  const { toast } = useToast();
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -23,6 +25,8 @@ export const ImageUpload = ({ value, onChange, bucketName, folderPath }: ImageUp
     setProgress(0);
 
     try {
+      console.log(`Iniciando upload para bucket: ${bucketName}, pasta: ${folderPath}`);
+      
       const result = await uploadFileToStorage(
         file,
         bucketName,
@@ -32,10 +36,21 @@ export const ImageUpload = ({ value, onChange, bucketName, folderPath }: ImageUp
         }
       );
 
+      console.log("Upload bem-sucedido:", result);
       onChange(result.publicUrl);
+      
+      toast({
+        title: "Upload concluído",
+        description: "A imagem foi enviada com sucesso.",
+        variant: "success",
+      });
     } catch (error) {
       console.error("Erro ao fazer upload:", error);
-      alert("Falha ao fazer upload da imagem. Tente novamente.");
+      toast({
+        title: "Falha no upload",
+        description: "Não foi possível enviar a imagem. Tente novamente.",
+        variant: "destructive",
+      });
     } finally {
       setUploading(false);
     }
@@ -53,6 +68,11 @@ export const ImageUpload = ({ value, onChange, bucketName, folderPath }: ImageUp
             src={value}
             alt="Imagem de capa"
             className="h-full w-full object-cover"
+            onError={(e) => {
+              const target = e.target as HTMLImageElement;
+              target.src = "https://placehold.co/600x400?text=Imagem+não+encontrada";
+              console.error("Erro ao carregar imagem:", value);
+            }}
           />
           <Button
             type="button"

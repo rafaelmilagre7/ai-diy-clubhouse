@@ -2,9 +2,9 @@
 import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Loader2, Upload, AlertCircle } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
+import { uploadFileToStorage } from '@/components/ui/file/uploadUtils';
 import { useToast } from '@/hooks/use-toast';
-import { v4 as uuidv4 } from 'uuid';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface FileUploadProps {
   bucketName: string;
@@ -29,6 +29,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
 }) => {
   const [isUploading, setIsUploading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [progress, setProgress] = useState(0);
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   
@@ -58,42 +59,28 @@ export const FileUpload: React.FC<FileUploadProps> = ({
     
     setErrorMessage(null);
     setIsUploading(true);
+    setProgress(0);
     
     try {
-      // Gerar um nome único para o arquivo
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${uuidv4()}.${fileExt}`;
-      const filePath = folder ? `${folder}/${fileName}` : fileName;
+      console.log(`Iniciando upload para bucket: ${bucketName}, pasta: ${folder}`);
       
-      console.log('Iniciando upload para:', bucketName, filePath);
+      const result = await uploadFileToStorage(
+        file,
+        bucketName,
+        folder,
+        (progress) => {
+          setProgress(progress);
+        }
+      );
       
-      // Fazer upload para o Supabase Storage
-      const { data, error } = await supabase.storage
-        .from(bucketName)
-        .upload(filePath, file, {
-          cacheControl: '3600',
-          upsert: true,
-        });
+      console.log('Upload bem-sucedido:', result);
       
-      if (error) {
-        console.error('Erro no upload para o Supabase:', error);
-        throw error;
-      }
-      
-      console.log('Upload realizado com sucesso:', data);
-      
-      // Obter a URL pública do arquivo
-      const { data: urlData } = supabase.storage
-        .from(bucketName)
-        .getPublicUrl(filePath);
-      
-      console.log('URL pública obtida:', urlData.publicUrl);
-      
-      onUploadComplete(urlData.publicUrl, file.name, file.size);
+      onUploadComplete(result.publicUrl, file.name, file.size);
       
       toast({
         title: 'Upload realizado com sucesso',
         description: 'O arquivo foi enviado com sucesso.',
+        variant: 'success',
       });
     } catch (error: any) {
       console.error('Erro ao fazer upload:', error);
@@ -130,7 +117,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
             {isUploading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Enviando...
+                Enviando... {progress}%
               </>
             ) : (
               <>
@@ -162,10 +149,10 @@ export const FileUpload: React.FC<FileUploadProps> = ({
       </div>
       
       {errorMessage && (
-        <div className="flex items-center text-red-500 text-sm mt-1">
-          <AlertCircle className="h-4 w-4 mr-1" />
-          {errorMessage}
-        </div>
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{errorMessage}</AlertDescription>
+        </Alert>
       )}
     </div>
   );

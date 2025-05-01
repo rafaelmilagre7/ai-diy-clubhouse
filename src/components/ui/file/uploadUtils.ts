@@ -1,3 +1,4 @@
+
 import { v4 as uuidv4 } from 'uuid';
 import { supabase } from '@/lib/supabase';
 
@@ -9,12 +10,27 @@ export const uploadFileToSupabase = async (
   onProgressUpdate?: (progress: number) => void
 ) => {
   try {
+    // Verificar se o bucket existe antes do upload
+    const { data: buckets } = await supabase.storage.listBuckets();
+    const bucketExists = buckets?.some(bucket => bucket.name === bucketName);
+    
+    if (!bucketExists) {
+      console.warn(`Bucket ${bucketName} não encontrado. Tentando criar...`);
+      await supabase.storage.createBucket(bucketName, {
+        public: true
+      });
+    }
+    
     // Gerar um nome único para o arquivo
     const fileExt = file.name.split('.').pop();
     const fileName = `${uuidv4()}.${fileExt}`;
     const filePath = folderPath ? `${folderPath}/${fileName}` : fileName;
     
     console.log(`Iniciando upload para bucket "${bucketName}", caminho "${filePath}"`);
+    
+    if (onProgressUpdate) {
+      onProgressUpdate(10);
+    }
     
     // Fazer upload para o Supabase Storage
     const { data, error } = await supabase.storage
@@ -31,15 +47,18 @@ export const uploadFileToSupabase = async (
     
     console.log('Upload realizado com sucesso:', data?.path);
     
-    // Simular progresso para compatibilidade com a interface
     if (onProgressUpdate) {
-      onProgressUpdate(100);
+      onProgressUpdate(80);
     }
     
     // Obter a URL pública do arquivo
     const { data: urlData } = supabase.storage
       .from(bucketName)
       .getPublicUrl(filePath);
+    
+    if (onProgressUpdate) {
+      onProgressUpdate(100);
+    }
     
     return {
       publicUrl: urlData.publicUrl,
@@ -55,7 +74,7 @@ export const uploadFileToSupabase = async (
 // Função para fazer upload de imagem para ImgBB
 export const uploadImageToImgBB = async (
   file: File,
-  apiKey: string,
+  apiKey: string = '04b796a219698057ded57d20ec1705cf',
   onProgressUpdate?: (progress: number) => void
 ) => {
   try {
@@ -119,12 +138,22 @@ export const uploadFileToStorage = async (
   onProgressUpdate?: (progress: number) => void
 ) => {
   try {
-    if (isImageFile(file)) {
-      // Usar diretamente o Supabase para imagens também
+    console.log(`Tentando upload para ${bucketName}/${folderPath}`, file);
+    
+    // Primeiro tentar o upload para o Supabase
+    try {
       return await uploadFileToSupabase(file, bucketName, folderPath, onProgressUpdate);
+    } catch (supabaseError) {
+      console.error("Erro no upload para Supabase, tentando ImgBB como fallback:", supabaseError);
+      
+      // Se o arquivo for uma imagem e houver falha no Supabase, tentar ImgBB como fallback
+      if (isImageFile(file)) {
+        return await uploadImageToImgBB(file, undefined, onProgressUpdate);
+      } else {
+        // Se não for imagem, não podemos usar ImgBB, então relançamos o erro
+        throw supabaseError;
+      }
     }
-
-    return await uploadFileToSupabase(file, bucketName, folderPath, onProgressUpdate);
   } catch (error) {
     console.error("Erro ao fazer upload do arquivo:", error);
     throw error;
