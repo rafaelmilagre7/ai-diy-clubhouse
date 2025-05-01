@@ -135,6 +135,7 @@ const CourseDetails = () => {
                 modules={modules || []} 
                 courseId={id!} 
                 userProgress={userProgress || []}
+                course={course}
               />
             </div>
             

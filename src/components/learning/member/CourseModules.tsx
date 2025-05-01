@@ -95,7 +95,7 @@ export const CourseModules = ({ modules, courseId, userProgress, course }: Cours
     return lessonsWithProgress ? Math.round(totalProgress / lessons.length) : 0;
   };
 
-  // Function to calculate course progress
+  // Função para calcular progresso do curso
   const calculateCourseProgress = (progressList: any[]): number => {
     if (!progressList || progressList.length === 0) return 0;
     
@@ -178,7 +178,7 @@ export const CourseModules = ({ modules, courseId, userProgress, course }: Cours
       <TabsContent value="certificate">
         <CourseCertificate 
           course={course}
-          progressPercentage={calculateCourseProgress(progress)}
+          progressPercentage={calculateCourseProgress(userProgress)}
         />
       </TabsContent>
     </Tabs>
