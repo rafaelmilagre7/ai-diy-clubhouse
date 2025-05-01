@@ -235,17 +235,20 @@ export const AulaWizard = ({
       // Clone os valores para não modificar o objeto original
       const { videos, ...lessonData } = {...values};
       
-      // Adicionar o ID do módulo
-      lessonData.module_id = moduleId;
+      // Criar um novo objeto com todas as propriedades e o module_id
+      const completeLessonData = {
+        ...lessonData,
+        module_id: moduleId
+      };
       
-      console.log("Dados da aula a serem salvos:", lessonData);
+      console.log("Dados da aula a serem salvos:", completeLessonData);
       
       if (lessonId) {
         // Atualizar aula existente
         console.log("Atualizando aula existente:", lessonId);
         const { error } = await supabase
           .from('learning_lessons')
-          .update(lessonData)
+          .update(completeLessonData)
           .eq('id', lessonId);
           
         if (error) {
@@ -259,7 +262,7 @@ export const AulaWizard = ({
         console.log("Criando nova aula");
         const { data, error } = await supabase
           .from('learning_lessons')
-          .insert(lessonData)
+          .insert(completeLessonData)
           .select()
           .single();
           
