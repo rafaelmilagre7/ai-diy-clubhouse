@@ -7,10 +7,13 @@ import { Slider } from "@/components/ui/slider";
 
 interface LessonVideoPlayerProps {
   video: LearningLessonVideo;
-  onProgress: (progress: number) => void;
+  onProgress?: (progress: number) => void;
 }
 
-export const LessonVideoPlayer = ({ video, onProgress }: LessonVideoPlayerProps) => {
+export const LessonVideoPlayer: React.FC<LessonVideoPlayerProps> = ({ 
+  video, 
+  onProgress 
+}) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -37,7 +40,7 @@ export const LessonVideoPlayer = ({ video, onProgress }: LessonVideoPlayerProps)
   // Atualizar tempo atual e progresso
   useEffect(() => {
     const videoElement = videoRef.current;
-    if (!videoElement) return;
+    if (!videoElement || !onProgress) return;
     
     const handleTimeUpdate = () => {
       setCurrentTime(videoElement.currentTime);

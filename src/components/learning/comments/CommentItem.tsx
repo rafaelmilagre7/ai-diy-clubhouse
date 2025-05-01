@@ -3,12 +3,12 @@ import React, { useState } from "react";
 import { Comment } from "@/types/learningTypes";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { formatDistanceToNow } from "date-fns";
-import { ptBR } from "date-fns/locale";
-import { MessageSquare, ThumbsUp, Shield, Trash } from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { MessageSquare, ThumbsUp, Trash2, CornerDownRight } from "lucide-react";
 import { useAuth } from "@/contexts/auth";
 import { CommentForm } from "./CommentForm";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { formatDistanceToNow } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 interface CommentItemProps {
   comment: Comment;
@@ -17,7 +17,6 @@ interface CommentItemProps {
   onDelete: (commentId: string) => Promise<void>;
   onLike: (commentId: string) => Promise<void>;
   isReply?: boolean;
-  className?: string;
 }
 
 export const CommentItem: React.FC<CommentItemProps> = ({
@@ -26,31 +25,14 @@ export const CommentItem: React.FC<CommentItemProps> = ({
   onReply,
   onDelete,
   onLike,
-  isReply = false,
-  className = ""
+  isReply = false
 }) => {
   const [isReplying, setIsReplying] = useState(false);
-  const [showDeleteAlert, setShowDeleteAlert] = useState(false);
-  const { user, profile } = useAuth();
+  const { user } = useAuth();
   
-  const canDelete = 
-    user?.id === comment.user_id || 
-    profile?.role === 'admin' || 
-    profile?.role === 'formacao';
-  
-  const isAdmin = comment.profiles?.role === 'admin';
-  const isFormacao = comment.profiles?.role === 'formacao';
-  
-  const formatDate = (dateString: string) => {
-    try {
-      return formatDistanceToNow(new Date(dateString), {
-        addSuffix: true,
-        locale: ptBR
-      });
-    } catch {
-      return "data desconhecida";
-    }
-  };
+  // Verifica se o usuário é dono do comentário ou é admin/formacao
+  const canDelete = user?.id === comment.user_id || 
+    (user && ['admin', 'formacao'].includes(user?.role || ''));
   
   const getInitials = (name: string | null | undefined) => {
     if (!name) return "U";
@@ -62,144 +44,110 @@ export const CommentItem: React.FC<CommentItemProps> = ({
       .toUpperCase();
   };
   
-  const handleReply = async (content: string) => {
+  const handleReplyClick = () => {
+    setIsReplying(!isReplying);
+  };
+  
+  const handleCancelReply = () => {
+    setIsReplying(false);
+  };
+  
+  const handleReplySubmit = async (content: string) => {
     await onReply(content, comment.id);
     setIsReplying(false);
   };
   
+  const formatDate = (dateString: string) => {
+    try {
+      return formatDistanceToNow(new Date(dateString), { 
+        addSuffix: true,
+        locale: ptBR 
+      });
+    } catch (error) {
+      return "data desconhecida";
+    }
+  };
+  
+  const profileName = comment.profiles?.name || "Usuário";
+  
   return (
-    <div className={`border rounded-lg p-4 bg-card ${className}`}>
+    <Card className={`p-4 ${isReply ? 'border-l-4 border-l-primary/20' : ''}`}>
       <div className="flex gap-3">
         <Avatar className="h-8 w-8">
-          <AvatarImage 
-            src={comment.profiles?.avatar_url || ""} 
-            alt={comment.profiles?.name || "Usuário"} 
-          />
+          <AvatarImage src={comment.profiles?.avatar_url || ""} alt={profileName} />
           <AvatarFallback className="bg-primary/10 text-primary">
-            {getInitials(comment.profiles?.name)}
+            {getInitials(profileName)}
           </AvatarFallback>
         </Avatar>
         
-        <div className="flex-1">
-          <div className="flex items-center gap-2">
-            <span className="font-medium">
-              {comment.profiles?.name || "Usuário"}
-            </span>
-            
-            {isAdmin && (
-              <span className="px-2 py-0.5 rounded-full text-xs bg-primary/20 text-primary flex items-center">
-                <Shield className="h-3 w-3 mr-1" />
-                Admin
-              </span>
+        <div className="flex-1 space-y-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="font-medium">{profileName}</span>
+            <span className="text-xs text-muted-foreground">{formatDate(comment.created_at)}</span>
+            {comment.profiles?.role === 'admin' && (
+              <span className="text-xs px-1.5 py-0.5 bg-primary/10 text-primary rounded">Admin</span>
             )}
-            
-            {isFormacao && !isAdmin && (
-              <span className="px-2 py-0.5 rounded-full text-xs bg-blue-500/20 text-blue-600 flex items-center">
-                <Shield className="h-3 w-3 mr-1" />
-                Formador
-              </span>
+            {comment.profiles?.role === 'formacao' && (
+              <span className="text-xs px-1.5 py-0.5 bg-amber-500/10 text-amber-600 rounded">Instrutor</span>
             )}
-            
-            <span className="text-xs text-muted-foreground">
-              {formatDate(comment.created_at)}
-            </span>
           </div>
           
-          <div className="mt-2 whitespace-pre-line">
+          <div className="text-sm">
             {comment.content}
           </div>
           
-          <div className="flex items-center gap-3 mt-3">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="h-8 px-2 flex items-center gap-1 text-sm"
-              onClick={() => onLike(comment.id)}
-            >
-              <ThumbsUp className="h-4 w-4" />
-              {comment.likes_count || 0}
-            </Button>
-            
+          <div className="flex gap-2 pt-1">
             {!isReply && (
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className="h-8 px-2 flex items-center gap-1 text-sm"
-                onClick={() => setIsReplying(true)}
+                className="h-7 px-2 text-xs"
+                onClick={handleReplyClick}
               >
-                <MessageSquare className="h-4 w-4" />
+                <MessageSquare className="h-3.5 w-3.5 mr-1" />
                 Responder
               </Button>
             )}
+            
+            <Button 
+              variant={comment.user_has_liked ? "secondary" : "ghost"}
+              size="sm" 
+              className="h-7 px-2 text-xs"
+              onClick={() => onLike(comment.id)}
+            >
+              <ThumbsUp className="h-3.5 w-3.5 mr-1" />
+              {comment.likes_count || 0}
+            </Button>
             
             {canDelete && (
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className="h-8 px-2 flex items-center gap-1 text-sm text-destructive hover:text-destructive"
-                onClick={() => setShowDeleteAlert(true)}
+                className="h-7 px-2 text-xs text-destructive"
+                onClick={() => onDelete(comment.id)}
               >
-                <Trash className="h-4 w-4" />
+                <Trash2 className="h-3.5 w-3.5 mr-1" />
                 Excluir
               </Button>
             )}
           </div>
           
           {isReplying && (
-            <div className="mt-4 pl-4 border-l-2 border-muted">
+            <div className="mt-3 pl-2">
               <CommentForm
                 lessonId={lessonId}
                 parentId={comment.id}
-                onSubmit={handleReply}
-                onCancel={() => setIsReplying(false)}
+                onSubmit={handleReplySubmit}
+                onCancel={handleCancelReply}
                 placeholder="Escreva sua resposta..."
-                autoFocus
+                autoFocus={true}
                 replyingTo={comment}
+                isSubmitting={false}
               />
             </div>
           )}
-          
-          {/* Respostas a este comentário */}
-          {comment.replies && comment.replies.length > 0 && (
-            <div className="mt-4 space-y-4 pl-6 border-l border-muted">
-              {comment.replies.map(reply => (
-                <CommentItem 
-                  key={reply.id}
-                  comment={reply}
-                  lessonId={lessonId}
-                  onReply={onReply}
-                  onDelete={onDelete}
-                  onLike={onLike}
-                  isReply={true}
-                />
-              ))}
-            </div>
-          )}
-          
-          <AlertDialog open={showDeleteAlert} onOpenChange={setShowDeleteAlert}>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Excluir comentário</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Tem certeza que deseja excluir este comentário? Esta ação não pode ser desfeita.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                <AlertDialogAction 
-                  onClick={() => {
-                    onDelete(comment.id);
-                    setShowDeleteAlert(false);
-                  }} 
-                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                >
-                  Excluir
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
         </div>
       </div>
-    </div>
+    </Card>
   );
 };

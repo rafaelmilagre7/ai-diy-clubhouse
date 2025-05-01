@@ -40,10 +40,14 @@ export const LessonContent: React.FC<LessonContentProps> = ({
       {hasVideos && (
         <section>
           <h2 className="text-xl font-semibold mb-4">Vídeo-aula</h2>
-          <LessonVideoPlayer 
-            videos={videos} 
-            onVideoProgress={onProgressUpdate}
-          />
+          {videos.map((video, index) => (
+            <div key={video.id || index} className="mb-4">
+              <LessonVideoPlayer 
+                video={video} 
+                onProgress={onProgressUpdate}
+              />
+            </div>
+          ))}
         </section>
       )}
       
