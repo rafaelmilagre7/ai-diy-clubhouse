@@ -139,12 +139,12 @@ const FormacaoAulas = () => {
 
   // Manipular alteração do filtro de curso
   const handleCursoChange = (value: string) => {
-    setCursoFiltro(value);
+    setCursoFiltro(value === "all" ? "" : value);
   };
 
   // Manipular alteração do filtro de módulo
   const handleModuloChange = (value: string) => {
-    setModuloFiltro(value);
+    setModuloFiltro(value === "all" ? "" : value);
   };
 
   // Manipular busca
@@ -215,12 +215,12 @@ const FormacaoAulas = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="text-sm font-medium mb-1 block">Curso</label>
-              <Select value={cursoFiltro} onValueChange={handleCursoChange}>
+              <Select value={cursoFiltro || "all"} onValueChange={handleCursoChange}>
                 <SelectTrigger>
                   <SelectValue placeholder="Todos os cursos" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todos os cursos</SelectItem>
+                  <SelectItem value="all">Todos os cursos</SelectItem>
                   {cursosDisponiveis.map((curso) => (
                     <SelectItem key={curso.id} value={curso.id}>
                       {curso.title}
@@ -232,12 +232,12 @@ const FormacaoAulas = () => {
             
             <div>
               <label className="text-sm font-medium mb-1 block">Módulo</label>
-              <Select value={moduloFiltro} onValueChange={handleModuloChange}>
+              <Select value={moduloFiltro || "all"} onValueChange={handleModuloChange}>
                 <SelectTrigger>
                   <SelectValue placeholder="Todos os módulos" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todos os módulos</SelectItem>
+                  <SelectItem value="all">Todos os módulos</SelectItem>
                   {modulosDisponiveis
                     .filter(modulo => !cursoFiltro || modulo.course_id === cursoFiltro)
                     .map((modulo) => (
