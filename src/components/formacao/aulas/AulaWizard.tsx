@@ -28,7 +28,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { ImageUpload } from "@/components/formacao/common/ImageUpload";
-import { FileUpload } from "@/components/formacao/common/FileUpload";
+import { VideoUpload } from "@/components/formacao/comum/VideoUpload";
 import { Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -44,9 +44,8 @@ const aulaFormSchema = z.object({
   title: z.string().min(3, { message: "O título precisa ter pelo menos 3 caracteres" }),
   description: z.string().optional(),
   cover_image_url: z.string().optional(),
-  estimated_time_minutes: z.coerce.number().min(0).default(0),
   ai_assistant_enabled: z.boolean().default(true),
-  ai_assistant_prompt: z.string().optional(),
+  ai_assistant_id: z.string().optional(),
   published: z.boolean().default(false),
   videos: z
     .array(
@@ -55,6 +54,10 @@ const aulaFormSchema = z.object({
         url: z.string().url("URL inválida"),
         description: z.string().optional(),
         thumbnail_url: z.string().optional(),
+        video_type: z.string().default("youtube"),
+        video_file_path: z.string().optional(),
+        video_file_name: z.string().optional(),
+        file_size_bytes: z.number().optional(),
       })
     )
     .default([]),
@@ -86,20 +89,31 @@ export const AulaWizard = ({
   const form = useForm<AulaFormValues>({
     resolver: zodResolver(aulaFormSchema),
     defaultValues: {
-      title: aula?.title || "",
-      description: aula?.description || "",
-      cover_image_url: aula?.cover_image_url || "",
-      estimated_time_minutes: aula?.estimated_time_minutes || 0,
-      ai_assistant_enabled: aula?.ai_assistant_enabled ?? true,
-      ai_assistant_prompt: aula?.ai_assistant_prompt || "",
-      published: aula?.published || false,
+      title: "",
+      description: "",
+      cover_image_url: "",
+      ai_assistant_enabled: true,
+      ai_assistant_id: "",
+      published: false,
       videos: [],
     },
   });
   
-  // Buscar vídeos existentes se for edição
+  // Buscar vídeos existentes e inicializar o formulário quando estiver editando
   useEffect(() => {
     if (isEditing && aula) {
+      // Inicializar campos básicos
+      form.reset({
+        title: aula.title || "",
+        description: aula.description || "",
+        cover_image_url: aula.cover_image_url || "",
+        ai_assistant_enabled: aula.ai_assistant_enabled ?? true,
+        ai_assistant_id: aula.ai_assistant_prompt || "", // Vamos usar o campo prompt para o ID temporariamente
+        published: aula.published || false,
+        videos: [],
+      });
+      
+      // Buscar vídeos associados
       const fetchVideos = async () => {
         try {
           const { data, error } = await supabase
@@ -116,11 +130,16 @@ export const AulaWizard = ({
               title: v.title,
               url: v.url,
               description: v.description || '',
-              thumbnail_url: v.thumbnail_url || ''
+              thumbnail_url: v.thumbnail_url || '',
+              video_type: v.video_type || 'youtube',
+              video_file_path: v.video_file_path || '',
+              video_file_name: v.video_file_name || '',
+              file_size_bytes: v.file_size_bytes || undefined
             })));
           }
         } catch (error) {
           console.error("Erro ao buscar vídeos:", error);
+          toast.error("Erro ao buscar vídeos da aula");
         }
       };
       
@@ -140,9 +159,8 @@ export const AulaWizard = ({
             title: values.title,
             description: values.description,
             cover_image_url: values.cover_image_url,
-            estimated_time_minutes: values.estimated_time_minutes,
             ai_assistant_enabled: values.ai_assistant_enabled,
-            ai_assistant_prompt: values.ai_assistant_prompt,
+            ai_assistant_prompt: values.ai_assistant_id, // Guardar o ID no campo prompt por enquanto
             published: values.published,
             updated_at: new Date().toISOString(),
           })
@@ -166,6 +184,10 @@ export const AulaWizard = ({
             description: video.description || null,
             thumbnail_url: video.thumbnail_url || null,
             order_index: index,
+            video_type: video.video_type || 'youtube',
+            video_file_path: video.video_file_path || null,
+            video_file_name: video.video_file_name || null,
+            file_size_bytes: video.file_size_bytes || null
           }));
           
           const { error: videoError } = await supabase
@@ -198,9 +220,8 @@ export const AulaWizard = ({
             title: values.title,
             description: values.description,
             cover_image_url: values.cover_image_url,
-            estimated_time_minutes: values.estimated_time_minutes,
             ai_assistant_enabled: values.ai_assistant_enabled,
-            ai_assistant_prompt: values.ai_assistant_prompt,
+            ai_assistant_prompt: values.ai_assistant_id, // Guardar o ID no campo prompt por enquanto
             published: values.published,
             module_id: moduleId,
             order_index: nextOrder,
@@ -220,6 +241,10 @@ export const AulaWizard = ({
             description: video.description || null,
             thumbnail_url: video.thumbnail_url || null,
             order_index: index,
+            video_type: video.video_type || 'youtube',
+            video_file_path: video.video_file_path || null,
+            video_file_name: video.video_file_name || null,
+            file_size_bytes: video.file_size_bytes || null
           }));
           
           const { error: videoError } = await supabase
@@ -272,7 +297,16 @@ export const AulaWizard = ({
     const currentVideos = form.getValues().videos || [];
     form.setValue("videos", [
       ...currentVideos,
-      { title: "", url: "", description: "", thumbnail_url: "" },
+      { 
+        title: "", 
+        url: "", 
+        description: "", 
+        thumbnail_url: "",
+        video_type: "youtube",
+        video_file_path: "",
+        video_file_name: "",
+        file_size_bytes: undefined
+      },
     ]);
   };
   
@@ -282,32 +316,32 @@ export const AulaWizard = ({
     form.setValue("videos", currentVideos);
   };
   
-  const handleYoutubeUrlChange = (index: number, value: string) => {
-    // Extrair ID do YouTube da URL
-    let videoId = "";
-    try {
-      if (value.includes("youtube.com/watch")) {
-        const url = new URL(value);
-        videoId = url.searchParams.get("v") || "";
-      } else if (value.includes("youtu.be/")) {
-        videoId = value.split("youtu.be/")[1]?.split("?")[0] || "";
+  const handleVideoChange = (index: number, url: string, videoType: string, fileName?: string, filePath?: string, fileSize?: number) => {
+    const videos = form.getValues().videos;
+    videos[index].url = url;
+    videos[index].video_type = videoType;
+    
+    if (videoType === "youtube") {
+      // Extrair ID do YouTube para thumbnail
+      let videoId = "";
+      try {
+        if (url.includes("youtube.com/embed/")) {
+          videoId = url.split("youtube.com/embed/")[1]?.split("?")[0] || "";
+          if (videoId) {
+            videos[index].thumbnail_url = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+          }
+        }
+      } catch (e) {
+        console.error("Erro ao processar URL do YouTube:", e);
       }
-      
-      if (videoId) {
-        // Se conseguimos extrair um ID, atualizar a thumbnail
-        const thumbnailUrl = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
-        
-        // Gerar URL de embed
-        const embedUrl = `https://www.youtube.com/embed/${videoId}`;
-        
-        const videos = form.getValues().videos;
-        videos[index].url = embedUrl;
-        videos[index].thumbnail_url = thumbnailUrl;
-        form.setValue("videos", videos);
-      }
-    } catch (e) {
-      console.error("Erro ao processar URL do YouTube:", e);
+    } else if (videoType === "file") {
+      videos[index].video_file_name = fileName || "";
+      videos[index].video_file_path = filePath || "";
+      videos[index].file_size_bytes = fileSize;
+      videos[index].thumbnail_url = "";  // Clear YouTube thumbnail if any
     }
+    
+    form.setValue("videos", videos);
   };
 
   return (
@@ -402,28 +436,6 @@ export const AulaWizard = ({
                     </FormItem>
                   )}
                 />
-                
-                <FormField
-                  control={form.control}
-                  name="estimated_time_minutes"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Tempo Estimado (minutos)</FormLabel>
-                      <FormControl>
-                        <Input 
-                          type="number" 
-                          min="0"
-                          placeholder="0" 
-                          {...field} 
-                        />
-                      </FormControl>
-                      <FormDescription>
-                        Tempo estimado para conclusão desta aula.
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
               </div>
             )}
             
@@ -470,7 +482,7 @@ export const AulaWizard = ({
                 </div>
                 
                 <div className="space-y-6">
-                  {form.watch("videos").map((_, index) => (
+                  {form.watch("videos").map((video, index) => (
                     <div key={index} className="border rounded-md p-4 space-y-4 relative">
                       <Button 
                         type="button" 
@@ -497,29 +509,21 @@ export const AulaWizard = ({
                         )}
                       />
                       
-                      <FormField
-                        control={form.control}
-                        name={`videos.${index}.url`}
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>URL do Vídeo</FormLabel>
-                            <FormControl>
-                              <Input 
-                                placeholder="Cole o link do vídeo do YouTube" 
-                                {...field}
-                                onChange={(e) => {
-                                  field.onChange(e);
-                                  handleYoutubeUrlChange(index, e.target.value);
-                                }}
-                              />
-                            </FormControl>
-                            <FormDescription>
-                              URL do YouTube: https://www.youtube.com/watch?v=VIDEO_ID
-                            </FormDescription>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                      <FormItem>
+                        <FormLabel>Vídeo</FormLabel>
+                        <FormControl>
+                          <VideoUpload
+                            value={form.watch(`videos.${index}.url`)}
+                            videoType={form.watch(`videos.${index}.video_type`)}
+                            onChange={(url, type, fileName, filePath, fileSize) => 
+                              handleVideoChange(index, url, type, fileName, filePath, fileSize)
+                            }
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          Faça upload de um arquivo de vídeo ou insira uma URL do YouTube
+                        </FormDescription>
+                      </FormItem>
                       
                       <FormField
                         control={form.control}
@@ -539,17 +543,6 @@ export const AulaWizard = ({
                           </FormItem>
                         )}
                       />
-                      
-                      {/* Prévia do vídeo */}
-                      {form.watch(`videos.${index}.thumbnail_url`) && (
-                        <div className="mt-4 border rounded-md overflow-hidden">
-                          <img 
-                            src={form.watch(`videos.${index}.thumbnail_url`)} 
-                            alt="Prévia do vídeo"
-                            className="w-full h-auto"
-                          />
-                        </div>
-                      )}
                     </div>
                   ))}
                   
@@ -592,20 +585,19 @@ export const AulaWizard = ({
                 {form.watch("ai_assistant_enabled") && (
                   <FormField
                     control={form.control}
-                    name="ai_assistant_prompt"
+                    name="ai_assistant_id"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Prompt para Assistente IA (Opcional)</FormLabel>
+                        <FormLabel>ID do Assistente OpenAI</FormLabel>
                         <FormControl>
-                          <Textarea
-                            placeholder="Instruções específicas para o assistente de IA desta aula"
-                            rows={5}
+                          <Input
+                            placeholder="asst_abc123..."
                             {...field}
                             value={field.value || ''}
                           />
                         </FormControl>
                         <FormDescription>
-                          Instruções personalizadas para o comportamento do assistente de IA.
+                          Insira o ID do assistente criado na plataforma OpenAI
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
@@ -652,13 +644,6 @@ export const AulaWizard = ({
                       <span className="text-muted-foreground">Descrição:</span>
                       <span className="font-medium max-w-[60%] text-right truncate">
                         {form.watch("description") || "Sem descrição"}
-                      </span>
-                    </div>
-                    
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Tempo estimado:</span>
-                      <span className="font-medium">
-                        {form.watch("estimated_time_minutes")} minutos
                       </span>
                     </div>
                     

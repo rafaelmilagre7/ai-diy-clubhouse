@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
@@ -189,6 +190,33 @@ const FormacaoAulaDetalhes = () => {
   const isAdmin = profile?.role === 'admin';
   const moduloId = modulo?.id || aula.module_id || '';
 
+  // Renderizar vídeo de acordo com o tipo
+  const renderVideo = (video: LearningLessonVideo) => {
+    const videoType = video.video_type || 'youtube';
+    
+    if (videoType === 'youtube') {
+      return (
+        <iframe 
+          src={video.url} 
+          className="w-full h-full"
+          title={video.title}
+          allowFullScreen
+        />
+      );
+    } else if (videoType === 'file') {
+      return (
+        <video 
+          src={video.url} 
+          controls
+          className="w-full h-full"
+          title={video.title}
+        />
+      );
+    }
+    
+    return <div>Formato de vídeo não suportado</div>;
+  };
+
   return (
     <div className="space-y-6">
       <AulaHeader 
@@ -280,12 +308,7 @@ const FormacaoAulaDetalhes = () => {
                 <Card key={video.id}>
                   <CardContent className="p-6">
                     <div className="aspect-video w-full mb-4">
-                      <iframe 
-                        src={video.url} 
-                        className="w-full h-full"
-                        title={video.title}
-                        allowFullScreen
-                      />
+                      {renderVideo(video)}
                     </div>
                     <h4 className="text-lg font-medium">{video.title}</h4>
                     {video.description && <p className="text-muted-foreground mt-1">{video.description}</p>}

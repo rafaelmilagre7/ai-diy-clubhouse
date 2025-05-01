@@ -495,34 +495,46 @@ export type Database = {
           created_at: string
           description: string | null
           duration_seconds: number | null
+          file_size_bytes: number | null
           id: string
           lesson_id: string
           order_index: number
           thumbnail_url: string | null
           title: string
           url: string
+          video_file_name: string | null
+          video_file_path: string | null
+          video_type: string | null
         }
         Insert: {
           created_at?: string
           description?: string | null
           duration_seconds?: number | null
+          file_size_bytes?: number | null
           id?: string
           lesson_id: string
           order_index?: number
           thumbnail_url?: string | null
           title: string
           url: string
+          video_file_name?: string | null
+          video_file_path?: string | null
+          video_type?: string | null
         }
         Update: {
           created_at?: string
           description?: string | null
           duration_seconds?: number | null
+          file_size_bytes?: number | null
           id?: string
           lesson_id?: string
           order_index?: number
           thumbnail_url?: string | null
           title?: string
           url?: string
+          video_file_name?: string | null
+          video_file_path?: string | null
+          video_type?: string | null
         }
         Relationships: [
           {
