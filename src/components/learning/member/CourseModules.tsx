@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
@@ -7,6 +8,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { LessonItem } from "./LessonItem";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { CourseCertificate } from "./CourseCertificate";
+import { Video, Clock, CheckCircle } from "lucide-react";
 
 interface CourseModulesProps {
   modules: LearningModule[];
@@ -26,7 +28,7 @@ export const CourseModules = ({ modules, courseId, userProgress, course }: Cours
       
       const { data, error } = await supabase
         .from("learning_lessons")
-        .select("*")
+        .select("*, learning_lesson_videos(count)")
         .in("module_id", moduleIds)
         .eq("published", true)
         .order("order_index", { ascending: true });
@@ -47,6 +49,50 @@ export const CourseModules = ({ modules, courseId, userProgress, course }: Cours
       });
       
       return lessonsByModule;
+    },
+    enabled: modules.length > 0
+  });
+  
+  // Buscar informações de vídeos para cada aula
+  const { data: lessonVideos } = useQuery({
+    queryKey: ["learning-lesson-videos", modules.map(m => m.id).join(',')],
+    queryFn: async () => {
+      const moduleIds = modules.map(m => m.id);
+      
+      // Obter todas as lições dos módulos
+      const { data: lessonsData } = await supabase
+        .from("learning_lessons")
+        .select("id, module_id")
+        .in("module_id", moduleIds)
+        .eq("published", true);
+        
+      if (!lessonsData?.length) return {};
+      
+      const lessonIds = lessonsData.map(l => l.id);
+      
+      // Buscar vídeos das lições
+      const { data: videos, error } = await supabase
+        .from("learning_lesson_videos")
+        .select("*")
+        .in("lesson_id", lessonIds)
+        .order("order_index", { ascending: true });
+        
+      if (error) {
+        console.error("Erro ao carregar vídeos das aulas:", error);
+        return {};
+      }
+      
+      // Agrupar vídeos por lição
+      const videosByLesson: Record<string, any[]> = {};
+      
+      videos.forEach(video => {
+        if (!videosByLesson[video.lesson_id]) {
+          videosByLesson[video.lesson_id] = [];
+        }
+        videosByLesson[video.lesson_id].push(video);
+      });
+      
+      return videosByLesson;
     },
     enabled: modules.length > 0
   });
@@ -104,6 +150,47 @@ export const CourseModules = ({ modules, courseId, userProgress, course }: Cours
     
     return totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
   };
+  
+  // Calcular a duração total de um módulo em minutos
+  const calculateModuleDuration = (moduleId: string): number => {
+    if (!lessonVideos || !moduleLessons || !moduleLessons[moduleId]) return 0;
+    
+    const lessons = moduleLessons[moduleId];
+    let totalDuration = 0;
+    
+    lessons.forEach(lesson => {
+      const videos = lessonVideos[lesson.id] || [];
+      videos.forEach(video => {
+        if (video.duration_seconds) {
+          totalDuration += Math.ceil(video.duration_seconds / 60);
+        } else if (lesson.estimated_time_minutes) {
+          totalDuration += lesson.estimated_time_minutes;
+        }
+      });
+      
+      // Se não há vídeos mas há tempo estimado na aula
+      if (videos.length === 0 && lesson.estimated_time_minutes) {
+        totalDuration += lesson.estimated_time_minutes;
+      }
+    });
+    
+    return totalDuration;
+  };
+  
+  // Contar o número total de vídeos em um módulo
+  const countModuleVideos = (moduleId: string): number => {
+    if (!lessonVideos || !moduleLessons || !moduleLessons[moduleId]) return 0;
+    
+    const lessons = moduleLessons[moduleId];
+    let totalVideos = 0;
+    
+    lessons.forEach(lesson => {
+      const videos = lessonVideos[lesson.id] || [];
+      totalVideos += videos.length;
+    });
+    
+    return totalVideos;
+  };
 
   return (
     <Tabs defaultValue="modules" className="w-full">
@@ -126,47 +213,83 @@ export const CourseModules = ({ modules, courseId, userProgress, course }: Cours
                 onValueChange={setExpandedModules}
                 className="w-full"
               >
-                {modules.map((module) => (
-                  <AccordionItem key={module.id} value={module.id} className="border-b">
-                    <AccordionTrigger className="px-6 py-4 hover:bg-muted/50">
-                      <div className="flex flex-col items-start text-left">
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium">{module.title}</span>
-                          {isModuleCompleted(module.id) && (
-                            <span className="bg-green-100 text-green-800 text-xs px-2 py-0.5 rounded">
-                              Concluído
+                {modules.map((module) => {
+                  const isCompleted = isModuleCompleted(module.id);
+                  const progress = calculateModuleProgress(module.id);
+                  const duration = calculateModuleDuration(module.id);
+                  const videoCount = countModuleVideos(module.id);
+                  
+                  return (
+                    <AccordionItem key={module.id} value={module.id} className="border-b">
+                      <AccordionTrigger className="px-6 py-4 hover:bg-muted/50">
+                        <div className="flex flex-col items-start text-left w-full">
+                          <div className="flex items-center gap-2 w-full justify-between">
+                            <span className="font-medium">{module.title}</span>
+                            {isCompleted && (
+                              <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0" />
+                            )}
+                          </div>
+                          
+                          <div className="flex flex-wrap gap-3 mt-1 text-sm text-muted-foreground">
+                            <span>
+                              {moduleLessons && moduleLessons[module.id] 
+                                ? `${moduleLessons[module.id].length} aulas`
+                                : "0 aulas"}
                             </span>
+                            
+                            {videoCount > 0 && (
+                              <span className="flex items-center gap-1">
+                                <Video className="h-3 w-3" />
+                                {videoCount} {videoCount === 1 ? 'vídeo' : 'vídeos'}
+                              </span>
+                            )}
+                            
+                            {duration > 0 && (
+                              <span className="flex items-center gap-1">
+                                <Clock className="h-3 w-3" />
+                                {duration} min
+                              </span>
+                            )}
+                            
+                            {progress > 0 && (
+                              <span>{progress}% concluído</span>
+                            )}
+                          </div>
+                          
+                          {progress > 0 && (
+                            <div className="w-full mt-2 bg-muted rounded-full h-1.5 overflow-hidden">
+                              <div 
+                                className="bg-primary h-full" 
+                                style={{ width: `${progress}%` }}
+                              />
+                            </div>
                           )}
                         </div>
-                        <span className="text-sm text-muted-foreground mt-1">
-                          {moduleLessons && moduleLessons[module.id] 
-                            ? `${moduleLessons[module.id].length} aulas • ${calculateModuleProgress(module.id)}% concluído`
-                            : "Carregando..."}
-                        </span>
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent className="px-0 py-0">
-                      <div className="border-t">
-                        {moduleLessons && moduleLessons[module.id] ? (
-                          moduleLessons[module.id].map((lesson) => (
-                            <LessonItem
-                              key={lesson.id}
-                              lesson={lesson}
-                              courseId={courseId}
-                              isCompleted={userProgress?.some(
-                                p => p.lesson_id === lesson.id && p.progress_percentage === 100
-                              )}
-                            />
-                          ))
-                        ) : (
-                          <div className="px-6 py-4 text-sm text-muted-foreground">
-                            Este módulo ainda não possui aulas.
-                          </div>
-                        )}
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
-                ))}
+                      </AccordionTrigger>
+                      <AccordionContent className="px-0 py-0">
+                        <div className="border-t">
+                          {moduleLessons && moduleLessons[module.id] ? (
+                            moduleLessons[module.id].map((lesson) => (
+                              <LessonItem
+                                key={lesson.id}
+                                lesson={lesson}
+                                courseId={courseId}
+                                isCompleted={userProgress?.some(
+                                  p => p.lesson_id === lesson.id && p.progress_percentage === 100
+                                )}
+                                videos={lessonVideos?.[lesson.id] || []}
+                              />
+                            ))
+                          ) : (
+                            <div className="px-6 py-4 text-sm text-muted-foreground">
+                              Este módulo ainda não possui aulas.
+                            </div>
+                          )}
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+                  );
+                })}
               </Accordion>
             )}
           </CardContent>

@@ -1,15 +1,34 @@
 
 import { Link } from "react-router-dom";
 import { LearningLesson } from "@/lib/supabase";
-import { CheckCircle, Circle } from "lucide-react";
+import { CheckCircle, Circle, Clock, Video } from "lucide-react";
 
 interface LessonItemProps {
   lesson: LearningLesson;
   courseId: string;
   isCompleted: boolean;
+  videos?: any[];
 }
 
-export const LessonItem = ({ lesson, courseId, isCompleted }: LessonItemProps) => {
+export const LessonItem = ({ lesson, courseId, isCompleted, videos = [] }: LessonItemProps) => {
+  // Calcular a duração total dos vídeos em minutos
+  const calculateDuration = (): number => {
+    if (videos.length === 0 && lesson.estimated_time_minutes) {
+      return lesson.estimated_time_minutes;
+    }
+    
+    let totalSeconds = 0;
+    videos.forEach(video => {
+      if (video.duration_seconds) {
+        totalSeconds += video.duration_seconds;
+      }
+    });
+    
+    return totalSeconds > 0 ? Math.ceil(totalSeconds / 60) : (lesson.estimated_time_minutes || 0);
+  };
+  
+  const duration = calculateDuration();
+
   return (
     <Link 
       to={`/learning/course/${courseId}/lesson/${lesson.id}`}
@@ -29,8 +48,18 @@ export const LessonItem = ({ lesson, courseId, isCompleted }: LessonItemProps) =
         </h4>
         
         <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1">
-          {lesson.estimated_time_minutes && (
-            <span>{lesson.estimated_time_minutes} min</span>
+          {videos.length > 0 && (
+            <span className="flex items-center gap-1">
+              <Video className="h-3 w-3" />
+              {videos.length} {videos.length === 1 ? 'vídeo' : 'vídeos'}
+            </span>
+          )}
+          
+          {duration > 0 && (
+            <span className="flex items-center gap-1">
+              <Clock className="h-3 w-3" />
+              {duration} min
+            </span>
           )}
         </div>
       </div>

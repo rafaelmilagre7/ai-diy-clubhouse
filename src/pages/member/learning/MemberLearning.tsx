@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@/contexts/auth";
 import { supabase } from "@/lib/supabase";
 import { LearningCourse } from "@/lib/supabase";
 import { MemberLearningHeader } from "@/components/learning/member/MemberLearningHeader";
@@ -9,11 +10,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CoursesSkeleton } from "@/components/learning/member/CoursesSkeleton";
 import { EmptyCoursesState } from "@/components/learning/member/states/EmptyCoursesState";
 import { ErrorState } from "@/components/learning/member/states/ErrorState";
+import { Input } from "@/components/ui/input";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
 
 const MemberLearning = () => {
   console.log("Renderizando MemberLearning componente");
   const [activeTab, setActiveTab] = useState<"all" | "in-progress" | "completed">("all");
+  const [searchTerm, setSearchTerm] = useState("");
+  const { isAdmin, isFormacao } = useAuth();
   
   useEffect(() => {
     console.log("MemberLearning montado");
@@ -57,7 +62,7 @@ const MemberLearning = () => {
       console.log("Iniciando busca de progresso para o usuário:", user.user.id);
       const { data: progressData, error } = await supabase
         .from("learning_progress")
-        .select("*")
+        .select("*, lesson:learning_lessons(id, title, module_id, module:learning_modules(id, title, course_id))")
         .eq("user_id", user.user.id);
       
       if (error) {
@@ -71,63 +76,136 @@ const MemberLearning = () => {
     enabled: !!courses
   });
   
-  // Filtrar cursos com base na aba selecionada
+  // Buscar detalhes de aulas não publicadas (apenas para admins/formacao)
+  const { data: unpublishedLessons } = useQuery({
+    queryKey: ["unpublished-lessons"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("learning_lessons")
+        .select("*, module:learning_modules(title, course:learning_courses(title))")
+        .eq("published", false)
+        .order("updated_at", { ascending: false });
+        
+      if (error) {
+        console.error("Erro ao carregar aulas não publicadas:", error);
+        return [];
+      }
+      
+      return data || [];
+    },
+    enabled: !!(isAdmin || isFormacao)
+  });
+  
+  // Filtrar cursos com base na aba selecionada e termo de busca
   const filteredCourses = () => {
     if (!courses) return [];
-    if (activeTab === "all") return courses;
+    
+    // Filtrar por termo de busca primeiro
+    let filtered = searchTerm
+      ? courses.filter(course => 
+          course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (course.description && course.description.toLowerCase().includes(searchTerm.toLowerCase()))
+        )
+      : courses;
+    
+    // Depois filtrar por aba
+    if (activeTab === "all") return filtered;
     
     if (!userProgress) return [];
     
-    // Obter IDs de lições por curso
-    const courseLessons: Record<string, string[]> = {};
+    // Agrupar progresso por curso
+    const courseProgress: Record<string, any[]> = {};
+    userProgress.forEach(progress => {
+      if (progress.lesson?.module?.course_id) {
+        const courseId = progress.lesson.module.course_id;
+        if (!courseProgress[courseId]) {
+          courseProgress[courseId] = [];
+        }
+        courseProgress[courseId].push(progress);
+      }
+    });
     
-    // Filtrar com base no progresso
     if (activeTab === "in-progress") {
-      return courses.filter(course => {
-        const hasProgress = userProgress.some(p => courseLessons[course.id]?.includes(p.lesson_id));
-        const isCompleted = false; // Aqui iremos implementar a lógica de conclusão
+      return filtered.filter(course => {
+        const hasProgress = courseProgress[course.id]?.some(p => p.progress_percentage > 0);
+        const isCompleted = courseProgress[course.id]?.every(p => p.progress_percentage === 100);
         return hasProgress && !isCompleted;
       });
     }
     
     if (activeTab === "completed") {
-      return courses.filter(course => {
-        // Implementar lógica para verificar conclusão
-        return false;
+      return filtered.filter(course => {
+        const progressItems = courseProgress[course.id];
+        return progressItems && progressItems.length > 0 && 
+               progressItems.every(p => p.progress_percentage === 100);
       });
     }
     
-    return courses;
+    return filtered;
   };
+
+  const displayedCourses = filteredCourses();
 
   return (
     <div className="container py-6">
       <MemberLearningHeader />
       
-      <Tabs 
-        defaultValue="all" 
-        value={activeTab}
-        onValueChange={(value) => setActiveTab(value as "all" | "in-progress" | "completed")}
-        className="mt-8"
-      >
-        <TabsList className="mb-6">
-          <TabsTrigger value="all">Todos os Cursos</TabsTrigger>
-          <TabsTrigger value="in-progress">Em Andamento</TabsTrigger>
-          <TabsTrigger value="completed">Concluídos</TabsTrigger>
-        </TabsList>
+      {(isAdmin || isFormacao) && unpublishedLessons && unpublishedLessons.length > 0 && (
+        <Alert className="mt-4 border-yellow-200 bg-yellow-50">
+          <AlertDescription>
+            <div className="font-semibold">Atenção administrador:</div> 
+            <p>Existem {unpublishedLessons.length} aulas não publicadas que não estão visíveis para os membros.</p>
+            <p className="text-sm text-muted-foreground mt-1">Acesse o painel de Formação para revisar e publicar.</p>
+          </AlertDescription>
+        </Alert>
+      )}
+      
+      <div className="mt-8 space-y-4">
+        <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
+          <Tabs 
+            defaultValue="all" 
+            value={activeTab}
+            onValueChange={(value) => setActiveTab(value as "all" | "in-progress" | "completed")}
+          >
+            <TabsList>
+              <TabsTrigger value="all">Todos os Cursos</TabsTrigger>
+              <TabsTrigger value="in-progress">Em Andamento</TabsTrigger>
+              <TabsTrigger value="completed">Concluídos</TabsTrigger>
+            </TabsList>
+          </Tabs>
+          
+          <div className="w-full sm:w-auto sm:min-w-[280px]">
+            <Input
+              placeholder="Buscar cursos..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="max-w-sm"
+            />
+          </div>
+        </div>
         
-        <TabsContent value={activeTab} className="mt-0">
+        <TabsContent value={activeTab} className="mt-6">
           {isLoading ? (
             <CoursesSkeleton />
           ) : error ? (
             <ErrorState message="Não foi possível carregar os cursos" />
-          ) : filteredCourses().length === 0 ? (
-            <EmptyCoursesState activeTab={activeTab} />
+          ) : displayedCourses.length === 0 ? (
+            searchTerm ? (
+              <EmptyCoursesState 
+                activeTab={activeTab} 
+                message="Nenhum curso encontrado para sua busca" 
+              />
+            ) : (
+              <EmptyCoursesState activeTab={activeTab} />
+            )
           ) : (
-            <MemberCoursesList courses={filteredCourses()} userProgress={userProgress || []} />
+            <MemberCoursesList 
+              courses={displayedCourses} 
+              userProgress={userProgress || []} 
+            />
           )}
         </TabsContent>
-      </Tabs>
+      </div>
     </div>
   );
 };
