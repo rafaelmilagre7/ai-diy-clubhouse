@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Loader2, Upload, AlertCircle } from 'lucide-react';
@@ -80,7 +79,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
       toast({
         title: 'Upload realizado com sucesso',
         description: 'O arquivo foi enviado com sucesso.',
-        variant: 'success',
+        variant: 'default', // Alterado de 'success' para 'default'
       });
     } catch (error: any) {
       console.error('Erro ao fazer upload:', error);

@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { uploadFileToStorage } from "@/components/ui/file/uploadUtils";
@@ -42,7 +41,7 @@ export const ImageUpload = ({ value, onChange, bucketName, folderPath }: ImageUp
       toast({
         title: "Upload concluído",
         description: "A imagem foi enviada com sucesso.",
-        variant: "success",
+        variant: "default",
       });
     } catch (error) {
       console.error("Erro ao fazer upload:", error);
