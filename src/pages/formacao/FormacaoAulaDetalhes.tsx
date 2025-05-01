@@ -14,6 +14,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, Plus, File, Video } from "lucide-react";
 
+// Adicionar interface temporária para lidar com os novos campos até que os tipos sejam atualizados
+interface VideoWithType extends LearningLessonVideo {
+  video_type?: string;
+  video_file_path?: string | null;
+  video_file_name?: string | null;
+  file_size_bytes?: number | null;
+}
+
 const FormacaoAulaDetalhes = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -22,7 +30,7 @@ const FormacaoAulaDetalhes = () => {
   const [aula, setAula] = useState<LearningLesson | null>(null);
   const [modulo, setModulo] = useState<LearningModule | null>(null);
   const [recursos, setRecursos] = useState<LearningResource[]>([]);
-  const [videos, setVideos] = useState<LearningLessonVideo[]>([]);
+  const [videos, setVideos] = useState<VideoWithType[]>([]);
   
   const [loading, setLoading] = useState(true);
   const [loadingRecursos, setLoadingRecursos] = useState(true);
@@ -191,7 +199,7 @@ const FormacaoAulaDetalhes = () => {
   const moduloId = modulo?.id || aula.module_id || '';
 
   // Renderizar vídeo de acordo com o tipo
-  const renderVideo = (video: LearningLessonVideo) => {
+  const renderVideo = (video: VideoWithType) => {
     const videoType = video.video_type || 'youtube';
     
     if (videoType === 'youtube') {
