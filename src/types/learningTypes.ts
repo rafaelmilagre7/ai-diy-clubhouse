@@ -17,3 +17,29 @@ export interface Comment {
   };
   replies?: Comment[];
 }
+
+export interface CertificateTemplate {
+  id: string;
+  name: string;
+  description: string | null;
+  html_template: string;
+  created_at: string;
+  updated_at: string;
+  created_by: string | null;
+  is_default: boolean;
+  course_id: string | null;
+  metadata: Record<string, any>;
+}
+
+export interface Certificate {
+  id: string;
+  user_id: string;
+  course_id: string;
+  certificate_url: string | null;
+  created_at: string;
+  issued_at: string;
+  validation_code: string;
+  template_id: string | null;
+  metadata: Record<string, any>;
+  has_validation_page: boolean;
+}
