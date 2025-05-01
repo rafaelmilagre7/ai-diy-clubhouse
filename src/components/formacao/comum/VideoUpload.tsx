@@ -23,6 +23,17 @@ export const VideoUpload = ({
   const [fileName, setFileName] = useState<string | null>(null);
   const [urlInput, setUrlInput] = useState<string>(videoType === "youtube" ? value : "");
 
+  useEffect(() => {
+    // Se for um vídeo de arquivo e tiver um valor, tenta extrair o nome do arquivo
+    if (value && videoType === "file") {
+      const pathParts = value.split("/");
+      const extractedFileName = pathParts[pathParts.length - 1];
+      if (extractedFileName) {
+        setFileName(decodeURIComponent(extractedFileName));
+      }
+    }
+  }, [value, videoType]);
+
   // Upload de arquivo
   const uploadVideo = async (file: File) => {
     try {
@@ -41,6 +52,8 @@ export const VideoUpload = ({
       const uniqueFileName = `${uuidv4()}.${fileExt}`;
       const filePath = `videos/${uniqueFileName}`;
       
+      console.log("Iniciando upload de vídeo para:", filePath);
+      
       // Upload para o bucket de vídeos
       const { data, error } = await supabase.storage
         .from("learning_videos")
@@ -49,7 +62,12 @@ export const VideoUpload = ({
           upsert: true,
         });
       
-      if (error) throw error;
+      if (error) {
+        console.error("Erro no upload para o storage:", error);
+        throw error;
+      }
+      
+      console.log("Upload bem-sucedido:", data);
       
       // Obter URL pública
       const { data: urlData } = supabase.storage
@@ -58,6 +76,15 @@ export const VideoUpload = ({
       
       const publicUrl = urlData.publicUrl;
       setFileName(file.name);
+      
+      console.log("URL pública obtida:", publicUrl);
+      console.log("Dados completos:", {
+        url: publicUrl,
+        type: "file",
+        fileName: file.name,
+        filePath: data.path,
+        fileSize: file.size
+      });
       
       // Chamar onChange com todos os dados relevantes
       onChange(publicUrl, "file", file.name, data.path, file.size);
@@ -118,6 +145,8 @@ export const VideoUpload = ({
       // Obter URL da thumbnail
       const thumbnailUrl = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
       
+      console.log("URL de incorporação do YouTube gerada:", embedUrl);
+      
       // Atualizar com URL de incorporação
       onChange(embedUrl, "youtube");
       
@@ -130,6 +159,14 @@ export const VideoUpload = ({
 
   // Alternar entre upload de arquivo e URL do YouTube
   const [uploadType, setUploadType] = useState<"file" | "youtube">(videoType === "youtube" ? "youtube" : "file");
+
+  // Efeito para atualizar o tipo de upload quando videoType mudar
+  useEffect(() => {
+    setUploadType(videoType === "youtube" ? "youtube" : "file");
+    if (videoType === "youtube") {
+      setUrlInput(value);
+    }
+  }, [videoType, value]);
 
   return (
     <div className="space-y-6">
@@ -258,3 +295,5 @@ export const VideoUpload = ({
     </div>
   );
 };
+
+import { useEffect } from "react";

@@ -55,6 +55,7 @@ const FormacaoAulaDetalhes = () => {
       
       if (error) throw error;
       
+      console.log("Dados da aula carregados:", data);
       setAula(data);
       
       // Buscar dados do módulo separadamente
@@ -66,6 +67,7 @@ const FormacaoAulaDetalhes = () => {
           .single();
         
         if (!moduleError && moduleData) {
+          console.log("Dados do módulo carregados:", moduleData);
           setModulo(moduleData);
         }
       }
@@ -92,6 +94,7 @@ const FormacaoAulaDetalhes = () => {
       
       if (error) throw error;
       
+      console.log("Recursos carregados:", data);
       setRecursos(data || []);
     } catch (error) {
       console.error("Erro ao buscar recursos:", error);
@@ -114,6 +117,7 @@ const FormacaoAulaDetalhes = () => {
       
       if (error) throw error;
       
+      console.log("Vídeos carregados:", data);
       setVideos(data || []);
     } catch (error) {
       console.error("Erro ao buscar vídeos:", error);

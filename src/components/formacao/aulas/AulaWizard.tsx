@@ -55,9 +55,9 @@ const aulaFormSchema = z.object({
         description: z.string().optional(),
         thumbnail_url: z.string().optional(),
         video_type: z.string().default("youtube"),
-        video_file_path: z.string().optional(),
-        video_file_name: z.string().optional(),
-        file_size_bytes: z.number().optional(),
+        video_file_path: z.string().optional().nullable(),
+        video_file_name: z.string().optional().nullable(),
+        file_size_bytes: z.number().optional().nullable(),
       })
     )
     .default([]),
@@ -76,6 +76,7 @@ export const AulaWizard = ({
   const [currentStep, setCurrentStep] = useState(0);
   const [videos, setVideos] = useState<any[]>([]);
   const isEditing = !!aula;
+  const [formInitialized, setFormInitialized] = useState(false);
 
   // Definir os passos do wizard
   const steps = [
@@ -102,13 +103,15 @@ export const AulaWizard = ({
   // Buscar vídeos existentes e inicializar o formulário quando estiver editando
   useEffect(() => {
     if (isEditing && aula) {
+      console.log("Inicializando formulário com dados da aula:", aula);
+      
       // Inicializar campos básicos
       form.reset({
         title: aula.title || "",
         description: aula.description || "",
         cover_image_url: aula.cover_image_url || "",
         ai_assistant_enabled: aula.ai_assistant_enabled ?? true,
-        ai_assistant_id: aula.ai_assistant_prompt || "", // Vamos usar o campo prompt para o ID temporariamente
+        ai_assistant_id: aula.ai_assistant_prompt || "", 
         published: aula.published || false,
         videos: [],
       });
@@ -122,21 +125,29 @@ export const AulaWizard = ({
             .eq("lesson_id", aula.id)
             .order("order_index");
             
-          if (error) throw error;
+          if (error) {
+            console.error("Erro ao buscar vídeos:", error);
+            toast.error("Erro ao buscar vídeos da aula");
+            return;
+          }
+          
+          console.log("Vídeos encontrados para a aula:", data);
           
           if (data && data.length > 0) {
             setVideos(data);
             form.setValue("videos", data.map(v => ({
-              title: v.title,
-              url: v.url,
+              title: v.title || "",
+              url: v.url || "",
               description: v.description || '',
               thumbnail_url: v.thumbnail_url || '',
               video_type: v.video_type || 'youtube',
-              video_file_path: v.video_file_path || '',
-              video_file_name: v.video_file_name || '',
-              file_size_bytes: v.file_size_bytes || undefined
+              video_file_path: v.video_file_path || null,
+              video_file_name: v.video_file_name || null,
+              file_size_bytes: v.file_size_bytes || null
             })));
           }
+          
+          setFormInitialized(true);
         } catch (error) {
           console.error("Erro ao buscar vídeos:", error);
           toast.error("Erro ao buscar vídeos da aula");
@@ -144,14 +155,19 @@ export const AulaWizard = ({
       };
       
       fetchVideos();
+    } else {
+      setFormInitialized(true);
     }
   }, [aula, isEditing, form]);
 
   const onSubmit = async (values: AulaFormValues) => {
+    console.log("Enviando formulário com valores:", values);
     setIsSubmitting(true);
     
     try {
-      if (isEditing) {
+      if (isEditing && aula) {
+        console.log("Atualizando aula existente:", aula.id);
+        
         // Atualizar aula existente
         const { error } = await supabase
           .from('learning_lessons')
@@ -160,25 +176,35 @@ export const AulaWizard = ({
             description: values.description,
             cover_image_url: values.cover_image_url,
             ai_assistant_enabled: values.ai_assistant_enabled,
-            ai_assistant_prompt: values.ai_assistant_id, // Guardar o ID no campo prompt por enquanto
+            ai_assistant_prompt: values.ai_assistant_id,
             published: values.published,
             updated_at: new Date().toISOString(),
           })
-          .eq('id', aula!.id);
+          .eq('id', aula.id);
           
-        if (error) throw error;
+        if (error) {
+          console.error("Erro ao atualizar aula:", error);
+          throw error;
+        }
         
         // Atualizar vídeos da aula
-        if (values.videos.length > 0) {
+        if (values.videos && values.videos.length > 0) {
+          console.log("Atualizando vídeos da aula:", values.videos);
+          
           // Primeiro, vamos excluir os vídeos existentes para evitar duplicados
-          await supabase
+          const { error: deleteError } = await supabase
             .from('learning_lesson_videos')
             .delete()
-            .eq('lesson_id', aula!.id);
+            .eq('lesson_id', aula.id);
+            
+          if (deleteError) {
+            console.error("Erro ao excluir vídeos existentes:", deleteError);
+            throw deleteError;
+          }
             
           // Agora inserimos os novos vídeos
           const videosToInsert = values.videos.map((video, index) => ({
-            lesson_id: aula!.id,
+            lesson_id: aula.id,
             title: video.title,
             url: video.url,
             description: video.description || null,
@@ -190,15 +216,25 @@ export const AulaWizard = ({
             file_size_bytes: video.file_size_bytes || null
           }));
           
-          const { error: videoError } = await supabase
+          console.log("Inserindo vídeos:", videosToInsert);
+          
+          const { error: videoError, data: insertedVideos } = await supabase
             .from('learning_lesson_videos')
-            .insert(videosToInsert);
+            .insert(videosToInsert)
+            .select();
             
-          if (videoError) throw videoError;
+          if (videoError) {
+            console.error("Erro ao inserir vídeos:", videoError);
+            throw videoError;
+          }
+          
+          console.log("Vídeos inseridos com sucesso:", insertedVideos);
         }
         
         toast.success("Aula atualizada com sucesso!");
       } else {
+        console.log("Criando nova aula para o módulo:", moduleId);
+        
         // Verificar ordem máxima atual
         const { data: maxOrderData, error: maxOrderError } = await supabase
           .from('learning_lessons')
@@ -207,7 +243,10 @@ export const AulaWizard = ({
           .order('order_index', { ascending: false })
           .limit(1);
           
-        if (maxOrderError) throw maxOrderError;
+        if (maxOrderError) {
+          console.error("Erro ao obter ordem máxima:", maxOrderError);
+          throw maxOrderError;
+        }
         
         const nextOrder = maxOrderData && maxOrderData.length > 0 
           ? (maxOrderData[0].order_index + 1) 
@@ -221,7 +260,7 @@ export const AulaWizard = ({
             description: values.description,
             cover_image_url: values.cover_image_url,
             ai_assistant_enabled: values.ai_assistant_enabled,
-            ai_assistant_prompt: values.ai_assistant_id, // Guardar o ID no campo prompt por enquanto
+            ai_assistant_prompt: values.ai_assistant_id,
             published: values.published,
             module_id: moduleId,
             order_index: nextOrder,
@@ -230,10 +269,17 @@ export const AulaWizard = ({
           .select()
           .single();
           
-        if (error) throw error;
+        if (error) {
+          console.error("Erro ao criar aula:", error);
+          throw error;
+        }
+        
+        console.log("Nova aula criada:", newLesson);
         
         // Inserir vídeos para a nova aula
-        if (values.videos.length > 0 && newLesson) {
+        if (values.videos && values.videos.length > 0 && newLesson) {
+          console.log("Inserindo vídeos para a nova aula:", values.videos);
+          
           const videosToInsert = values.videos.map((video, index) => ({
             lesson_id: newLesson.id,
             title: video.title,
@@ -247,11 +293,17 @@ export const AulaWizard = ({
             file_size_bytes: video.file_size_bytes || null
           }));
           
-          const { error: videoError } = await supabase
+          const { error: videoError, data: insertedVideos } = await supabase
             .from('learning_lesson_videos')
-            .insert(videosToInsert);
+            .insert(videosToInsert)
+            .select();
             
-          if (videoError) throw videoError;
+          if (videoError) {
+            console.error("Erro ao inserir vídeos para nova aula:", videoError);
+            throw videoError;
+          }
+          
+          console.log("Vídeos inseridos com sucesso para nova aula:", insertedVideos);
         }
         
         toast.success("Aula criada com sucesso!");
@@ -317,9 +369,28 @@ export const AulaWizard = ({
   };
   
   const handleVideoChange = (index: number, url: string, videoType: string, fileName?: string, filePath?: string, fileSize?: number) => {
-    const videos = form.getValues().videos;
-    videos[index].url = url;
-    videos[index].video_type = videoType;
+    console.log("handleVideoChange chamado com:", { index, url, videoType, fileName, filePath, fileSize });
+    
+    const currentVideos = [...form.getValues().videos];
+    
+    // Certifique-se de que o vídeo no índice especificado existe
+    if (!currentVideos[index]) {
+      console.warn(`Vídeo no índice ${index} não encontrado, adicionando novo`);
+      currentVideos[index] = { 
+        title: "", 
+        url: "", 
+        description: "", 
+        thumbnail_url: "",
+        video_type: "youtube",
+        video_file_path: "",
+        video_file_name: "",
+        file_size_bytes: undefined
+      };
+    }
+    
+    // Atualizar dados do vídeo
+    currentVideos[index].url = url;
+    currentVideos[index].video_type = videoType;
     
     if (videoType === "youtube") {
       // Extrair ID do YouTube para thumbnail
@@ -328,21 +399,36 @@ export const AulaWizard = ({
         if (url.includes("youtube.com/embed/")) {
           videoId = url.split("youtube.com/embed/")[1]?.split("?")[0] || "";
           if (videoId) {
-            videos[index].thumbnail_url = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+            currentVideos[index].thumbnail_url = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
           }
         }
       } catch (e) {
         console.error("Erro ao processar URL do YouTube:", e);
       }
     } else if (videoType === "file") {
-      videos[index].video_file_name = fileName || "";
-      videos[index].video_file_path = filePath || "";
-      videos[index].file_size_bytes = fileSize;
-      videos[index].thumbnail_url = "";  // Clear YouTube thumbnail if any
+      currentVideos[index].video_file_name = fileName || "";
+      currentVideos[index].video_file_path = filePath || "";
+      currentVideos[index].file_size_bytes = fileSize || null;
+      currentVideos[index].thumbnail_url = "";  // Limpar thumbnail do YouTube se houver
     }
     
-    form.setValue("videos", videos);
+    console.log("Atualizando vídeos do formulário:", currentVideos);
+    form.setValue("videos", currentVideos);
   };
+
+  // Se o formulário ainda não foi inicializado, exibir indicador de carregamento
+  if (isEditing && !formInitialized) {
+    return (
+      <Sheet open={open} onOpenChange={handleOpenChange}>
+        <SheetContent side="right" className="w-full sm:max-w-xl md:max-w-2xl">
+          <div className="flex justify-center items-center h-full">
+            <Loader2 className="h-8 w-8 animate-spin" />
+            <span className="ml-2">Carregando dados da aula...</span>
+          </div>
+        </SheetContent>
+      </Sheet>
+    );
+  }
 
   return (
     <Sheet open={open} onOpenChange={handleOpenChange}>
@@ -513,8 +599,8 @@ export const AulaWizard = ({
                         <FormLabel>Vídeo</FormLabel>
                         <FormControl>
                           <VideoUpload
-                            value={form.watch(`videos.${index}.url`)}
-                            videoType={form.watch(`videos.${index}.video_type`)}
+                            value={form.watch(`videos.${index}.url`) || ''}
+                            videoType={form.watch(`videos.${index}.video_type`) || 'youtube'}
                             onChange={(url, type, fileName, filePath, fileSize) => 
                               handleVideoChange(index, url, type, fileName, filePath, fileSize)
                             }
