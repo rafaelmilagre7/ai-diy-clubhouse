@@ -30,6 +30,7 @@ export const MemberSidebarNav = ({ sidebarOpen }: SidebarNavProps) => {
 
   // Log para verificar se o componente está sendo renderizado
   console.log("MemberSidebarNav renderizando, sidebarOpen:", sidebarOpen);
+  console.log("Caminho atual:", location.pathname);
 
   const menuItems = [
     {
@@ -90,6 +91,7 @@ export const MemberSidebarNav = ({ sidebarOpen }: SidebarNavProps) => {
   ];
 
   const isActive = (href: string) => {
+    console.log(`Verificando se ${href} está ativo para ${location.pathname}`);
     return location.pathname === href || location.pathname.startsWith(href + '/');
   };
 

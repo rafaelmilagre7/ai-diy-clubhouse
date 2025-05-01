@@ -1,5 +1,5 @@
 
-import { Navigate, useNavigate } from "react-router-dom";
+import { Navigate, useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useState, useRef, ReactNode } from "react";
 import { useAuth } from "@/contexts/auth";
 import LoadingScreen from "@/components/common/LoadingScreen";
@@ -20,11 +20,20 @@ const LayoutProvider = ({ children }: { children: ReactNode }) => {
     isLoading,
   } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [loadingTimeout, setLoadingTimeout] = useState(false);
   const timeoutRef = useRef<number | null>(null);
   
   // Debug logs
-  console.log("LayoutProvider state:", { user, profile, isAdmin, isFormacao, isLoading, loadingTimeout });
+  console.log("LayoutProvider state:", { 
+    user: !!user, 
+    profile: !!profile, 
+    isAdmin, 
+    isFormacao, 
+    isLoading, 
+    loadingTimeout,
+    currentPath: location.pathname
+  });
 
   // Configurar timeout de carregamento
   useEffect(() => {
@@ -57,28 +66,41 @@ const LayoutProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [user, isLoading, navigate]);
 
-  // Verificar papel do usuário
+  // Verificar papel do usuário e rota atual
   useEffect(() => {
     if (!isLoading && user && profile) {
-      if (isAdmin && window.location.pathname.indexOf('/admin') !== 0 && window.location.pathname.indexOf('/formacao') !== 0) {
+      console.log("Verificando regras de acesso para rota:", location.pathname);
+      
+      // Verificar se é uma rota de learning
+      const isLearningRoute = location.pathname.startsWith('/learning');
+      console.log("É rota de learning?", isLearningRoute);
+      
+      if (isAdmin && window.location.pathname.indexOf('/admin') !== 0 && 
+          window.location.pathname.indexOf('/formacao') !== 0 &&
+          !isLearningRoute) {
         console.log("LayoutProvider: Admin user detected, redirecting to admin area");
         navigate('/admin', { replace: true });
-      } else if (isFormacao && !isAdmin && window.location.pathname.indexOf('/formacao') !== 0) {
+      } else if (isFormacao && !isAdmin && 
+                window.location.pathname.indexOf('/formacao') !== 0 &&
+                !isLearningRoute) {
         console.log("LayoutProvider: Formacao user detected, redirecting to formacao area");
         navigate('/formacao', { replace: true });
       }
     }
-  }, [user, profile, isAdmin, isFormacao, isLoading, navigate]);
+  }, [user, profile, isAdmin, isFormacao, isLoading, navigate, location.pathname]);
 
   // Verificar se estamos em páginas de formação
   const isFormacaoRoute = window.location.pathname.indexOf('/formacao') === 0;
+  const isLearningRoute = window.location.pathname.indexOf('/learning') === 0;
+
+  console.log("Tipo de rota:", {isFormacaoRoute, isLearningRoute});
 
   // Fast path for members - If we have user and profile, render immediately
   if (user && profile) {
     if (isFormacaoRoute && (isFormacao || isAdmin)) {
       console.log("LayoutProvider: Renderizando FormacaoLayout");
       return <FormacaoLayout>{children}</FormacaoLayout>;
-    } else if (!isFormacao || isAdmin) {
+    } else if (isLearningRoute || !isFormacao || isAdmin) {
       console.log("LayoutProvider: Renderizando MemberLayout");
       return <MemberLayout>{children}</MemberLayout>;
     }
@@ -95,12 +117,12 @@ const LayoutProvider = ({ children }: { children: ReactNode }) => {
   }
 
   // Se for admin, redirecionar para área admin
-  if (isAdmin && !isFormacaoRoute) {
+  if (isAdmin && !isFormacaoRoute && !isLearningRoute) {
     return <Navigate to="/admin" replace />;
   }
 
   // Se for formacao (sem ser admin), redirecionar para área formacao
-  if (isFormacao && !isAdmin && !isFormacaoRoute) {
+  if (isFormacao && !isAdmin && !isFormacaoRoute && !isLearningRoute) {
     return <Navigate to="/formacao" replace />;
   }
 

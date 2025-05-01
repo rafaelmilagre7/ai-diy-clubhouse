@@ -41,26 +41,9 @@ import FormacaoLayout from '@/components/layout/formacao/FormacaoLayout';
 import ImplementationTrailPage from '@/pages/member/ImplementationTrailPage';
 import AdminEvents from '@/pages/admin/AdminEvents';
 import Events from '@/pages/member/Events';
-
-// Formação
-import FormacaoDashboard from '@/pages/formacao/FormacaoDashboard';
-import FormacaoCursos from '@/pages/formacao/FormacaoCursos';
-import FormacaoCursoDetalhes from '@/pages/formacao/FormacaoCursoDetalhes';
-import FormacaoModuloDetalhes from '@/pages/formacao/FormacaoModuloDetalhes';
-import FormacaoAulas from '@/pages/formacao/FormacaoAulas';
-import FormacaoAulaDetalhes from '@/pages/formacao/FormacaoAulaDetalhes';
-
-// Onboarding
-import OnboardingIntro from '@/pages/onboarding/OnboardingIntro';
-import PersonalInfo from '@/pages/onboarding/steps/PersonalInfo';
-import ProfessionalData from '@/pages/onboarding/steps/ProfessionalData';
-import BusinessContext from '@/pages/onboarding/steps/BusinessContext';
-import AIExperience from '@/pages/onboarding/steps/AIExperience';
-import BusinessGoalsClub from '@/pages/onboarding/steps/BusinessGoalsClub';
-import ExperiencePersonalization from '@/pages/onboarding/steps/ExperiencePersonalization';
-import ComplementaryInfo from '@/pages/onboarding/steps/ComplementaryInfo';
-import Review from '@/pages/onboarding/steps/Review';
-import TrailGeneration from '@/pages/onboarding/steps/TrailGeneration';
+import MemberLearning from '@/pages/member/learning/MemberLearning';
+import CourseDetails from '@/pages/member/learning/CourseDetails';
+import LessonView from '@/pages/member/learning/LessonView';
 
 const AppRoutes = () => {
   console.log("Renderizando AppRoutes");
@@ -90,6 +73,11 @@ const AppRoutes = () => {
       <Route path="/benefits" element={<ProtectedRoutes><MemberLayout><Benefits /></MemberLayout></ProtectedRoutes>} />
       <Route path="/achievements" element={<ProtectedRoutes><MemberLayout><Achievements /></MemberLayout></ProtectedRoutes>} />
       <Route path="/events" element={<ProtectedRoutes><MemberLayout><Events /></MemberLayout></ProtectedRoutes>} />
+
+      {/* Learning Routes */}
+      <Route path="/learning" element={<ProtectedRoutes><MemberLayout><MemberLearning /></MemberLayout></ProtectedRoutes>} />
+      <Route path="/learning/course/:id" element={<ProtectedRoutes><MemberLayout><CourseDetails /></MemberLayout></ProtectedRoutes>} />
+      <Route path="/learning/course/:courseId/lesson/:lessonId" element={<ProtectedRoutes><MemberLayout><LessonView /></MemberLayout></ProtectedRoutes>} />
       
       {/* Sugestões Routes */}
       <Route path="/suggestions" element={<ProtectedRoutes><MemberLayout><Suggestions /></MemberLayout></ProtectedRoutes>} />
@@ -224,5 +212,22 @@ const AppRoutes = () => {
     </Routes>
   );
 };
+
+import OnboardingIntro from '@/pages/onboarding/OnboardingIntro';
+import PersonalInfo from '@/pages/onboarding/steps/PersonalInfo';
+import ProfessionalData from '@/pages/onboarding/steps/ProfessionalData';
+import BusinessContext from '@/pages/onboarding/steps/BusinessContext';
+import AIExperience from '@/pages/onboarding/steps/AIExperience';
+import BusinessGoalsClub from '@/pages/onboarding/steps/BusinessGoalsClub';
+import ExperiencePersonalization from '@/pages/onboarding/steps/ExperiencePersonalization';
+import ComplementaryInfo from '@/pages/onboarding/steps/ComplementaryInfo';
+import Review from '@/pages/onboarding/steps/Review';
+import TrailGeneration from '@/pages/onboarding/steps/TrailGeneration';
+import FormacaoDashboard from '@/pages/formacao/FormacaoDashboard';
+import FormacaoCursos from '@/pages/formacao/FormacaoCursos';
+import FormacaoCursoDetalhes from '@/pages/formacao/FormacaoCursoDetalhes';
+import FormacaoModuloDetalhes from '@/pages/formacao/FormacaoModuloDetalhes';
+import FormacaoAulas from '@/pages/formacao/FormacaoAulas';
+import FormacaoAulaDetalhes from '@/pages/formacao/FormacaoAulaDetalhes';
 
 export default AppRoutes;

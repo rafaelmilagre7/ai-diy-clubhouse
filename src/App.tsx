@@ -6,7 +6,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { LoggingProvider } from './hooks/useLogging';
 import { AuthProvider } from './contexts/auth';
-import { AppRoutes } from './routes';
+import AppRoutes from './components/routing/AppRoutes';
 
 // Criar uma instância do QueryClient fora do componente para evitar recriação a cada render
 const queryClient = new QueryClient({
