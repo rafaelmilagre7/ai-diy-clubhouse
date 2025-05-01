@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
@@ -6,7 +5,7 @@ import { supabase } from "@/lib/supabase";
 import { LearningLesson, LearningResource, LearningLessonVideo, LearningModule } from "@/lib/supabase";
 import { toast } from "sonner";
 import { AulaHeader } from "@/components/formacao/aulas/AulaHeader";
-import { AulaFormDialog } from "@/components/formacao/aulas/AulaFormDialog";
+import { AulaWizard } from "@/components/formacao/aulas/AulaWizard";
 import { RecursosList } from "@/components/formacao/materiais/RecursosList";
 import { RecursoFormDialog } from "@/components/formacao/materiais/RecursoFormDialog";
 import { Button } from "@/components/ui/button";
@@ -28,7 +27,7 @@ const FormacaoAulaDetalhes = () => {
   const [loadingRecursos, setLoadingRecursos] = useState(true);
   const [loadingVideos, setLoadingVideos] = useState(true);
   
-  const [isAulaDialogOpen, setIsAulaDialogOpen] = useState(false);
+  const [isAulaWizardOpen, setIsAulaWizardOpen] = useState(false);
   const [isRecursoDialogOpen, setIsRecursoDialogOpen] = useState(false);
   const [editingRecurso, setEditingRecurso] = useState<LearningResource | null>(null);
   const [activeTab, setActiveTab] = useState("conteudo");
@@ -123,13 +122,14 @@ const FormacaoAulaDetalhes = () => {
 
   // Abrir modal para editar aula
   const handleEditarAula = () => {
-    setIsAulaDialogOpen(true);
+    setIsAulaWizardOpen(true);
   };
 
   // Ações após salvar aula
   const handleSalvarAula = () => {
-    setIsAulaDialogOpen(false);
+    setIsAulaWizardOpen(false);
     fetchAula();
+    fetchVideos(); // Também recarregar os vídeos após salvar
   };
 
   // Abrir modal para adicionar recurso
@@ -263,9 +263,9 @@ const FormacaoAulaDetalhes = () => {
               Vídeos da Aula
             </h3>
             {isAdmin && (
-              <Button>
+              <Button onClick={handleEditarAula}>
                 <Plus className="h-4 w-4 mr-2" />
-                Adicionar Vídeo
+                Gerenciar Vídeos
               </Button>
             )}
           </div>
@@ -300,14 +300,20 @@ const FormacaoAulaDetalhes = () => {
               <p className="text-sm text-muted-foreground mt-2 mb-4">
                 Esta aula ainda não possui vídeos cadastrados.
               </p>
+              {isAdmin && (
+                <Button onClick={handleEditarAula} variant="outline">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Adicionar Vídeos
+                </Button>
+              )}
             </div>
           )}
         </TabsContent>
       </Tabs>
       
-      <AulaFormDialog 
-        open={isAulaDialogOpen}
-        onOpenChange={setIsAulaDialogOpen}
+      <AulaWizard 
+        open={isAulaWizardOpen}
+        onOpenChange={setIsAulaWizardOpen}
         aula={aula}
         moduleId={aula.module_id}
         onSuccess={handleSalvarAula}
