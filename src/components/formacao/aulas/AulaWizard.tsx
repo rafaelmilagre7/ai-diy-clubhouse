@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { 
   Dialog, 
@@ -231,10 +230,15 @@ export const AulaWizard = ({
       
       // Primeiro, inserir ou atualizar a aula
       let lessonId = aula?.id;
-      let lessonData = {
-        ...values,
-        module_id: moduleId
-      };
+      
+      // Separar os dados de vídeo do objeto de aula
+      // Clone os valores para não modificar o objeto original
+      const { videos, ...lessonData } = {...values};
+      
+      // Adicionar o ID do módulo
+      lessonData.module_id = moduleId;
+      
+      console.log("Dados da aula a serem salvos:", lessonData);
       
       if (lessonId) {
         // Atualizar aula existente
@@ -269,8 +273,8 @@ export const AulaWizard = ({
       }
       
       // Em seguida, gerenciar vídeos
-      if (lessonId && values.videos.length > 0) {
-        console.log(`Gerenciando ${values.videos.length} vídeos para a aula ${lessonId}`);
+      if (lessonId && videos.length > 0) {
+        console.log(`Gerenciando ${videos.length} vídeos para a aula ${lessonId}`);
         
         // Primeiro, buscar vídeos existentes para esta aula
         const { data: existingVideos } = await supabase
@@ -282,7 +286,7 @@ export const AulaWizard = ({
         console.log("IDs de vídeos existentes:", existingVideoIds);
         
         // Para cada vídeo no formulário, inserir ou atualizar
-        for (const video of values.videos) {
+        for (const video of videos) {
           console.log("Processando vídeo:", video);
           
           const videoData = {
@@ -360,7 +364,7 @@ export const AulaWizard = ({
       log("aula_saved", {
         lesson_id: lessonId,
         is_update: !!aula,
-        has_videos: values.videos.length > 0
+        has_videos: videos.length > 0
       });
       
       handleOpenChange(false);
