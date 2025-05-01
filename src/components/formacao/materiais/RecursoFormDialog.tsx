@@ -201,7 +201,7 @@ export const RecursoFormDialog = ({
                         form.setValue("file_type", fileType);
                         form.setValue("file_size_bytes", fileSize);
                       }}
-                      bucketName="learning_resources"
+                      bucketName="learning_materials"
                       folderPath="materiais"
                       acceptedFileTypes="*/*"
                     />
