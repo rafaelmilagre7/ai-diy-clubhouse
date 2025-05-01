@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,7 +22,9 @@ export const VideoUpload = ({
   const [uploading, setUploading] = useState(false);
   const [fileName, setFileName] = useState<string | null>(null);
   const [urlInput, setUrlInput] = useState<string>(videoType === "youtube" ? value : "");
-
+  const [uploadProgress, setUploadProgress] = useState(0);
+  
+  // Extrair o nome do arquivo do URL para exibição
   useEffect(() => {
     // Se for um vídeo de arquivo e tiver um valor, tenta extrair o nome do arquivo
     if (value && videoType === "file") {
@@ -38,6 +40,7 @@ export const VideoUpload = ({
   const uploadVideo = async (file: File) => {
     try {
       setUploading(true);
+      setUploadProgress(10);
       
       // Verificar tamanho do arquivo (limite de 100MB para vídeos)
       const MAX_SIZE = 100 * 1024 * 1024; // 100MB em bytes
@@ -67,6 +70,7 @@ export const VideoUpload = ({
         throw error;
       }
       
+      setUploadProgress(70);
       console.log("Upload bem-sucedido:", data);
       
       // Obter URL pública
@@ -77,6 +81,7 @@ export const VideoUpload = ({
       const publicUrl = urlData.publicUrl;
       setFileName(file.name);
       
+      setUploadProgress(90);
       console.log("URL pública obtida:", publicUrl);
       console.log("Dados completos:", {
         url: publicUrl,
@@ -89,10 +94,11 @@ export const VideoUpload = ({
       // Chamar onChange com todos os dados relevantes
       onChange(publicUrl, "file", file.name, data.path, file.size);
       
+      setUploadProgress(100);
       toast.success("Vídeo carregado com sucesso");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erro ao fazer upload do vídeo:", error);
-      toast.error("Erro ao fazer upload do vídeo. Tente novamente.");
+      toast.error(`Erro ao fazer upload do vídeo: ${error.message || 'Tente novamente'}`);
     } finally {
       setUploading(false);
     }
@@ -146,9 +152,10 @@ export const VideoUpload = ({
       const thumbnailUrl = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
       
       console.log("URL de incorporação do YouTube gerada:", embedUrl);
+      console.log("URL da thumbnail:", thumbnailUrl);
       
       // Atualizar com URL de incorporação
-      onChange(embedUrl, "youtube");
+      onChange(embedUrl, "youtube", undefined, undefined, undefined);
       
       toast.success("URL do YouTube processada com sucesso");
     } catch (error) {
@@ -239,7 +246,7 @@ export const VideoUpload = ({
                     <>
                       <Loader2 className="w-8 h-8 mb-3 text-gray-500 animate-spin" />
                       <p className="text-sm text-gray-500 dark:text-gray-400">
-                        Fazendo upload...
+                        Fazendo upload... {uploadProgress}%
                       </p>
                     </>
                   ) : (
@@ -295,5 +302,3 @@ export const VideoUpload = ({
     </div>
   );
 };
-
-import { useEffect } from "react";
