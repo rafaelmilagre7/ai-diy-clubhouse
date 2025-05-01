@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { 
   Dialog, 
   DialogContent, 
@@ -79,17 +79,62 @@ export const AulaWizard = ({
   const form = useForm<AulaFormValues>({
     resolver: zodResolver(aulaFormSchema),
     defaultValues: {
-      title: aula?.title || "",
-      description: aula?.description || "",
-      content: aula?.content || {},
-      cover_image_url: aula?.cover_image_url || "",
-      published: aula?.published || false,
-      estimated_time_minutes: aula?.estimated_time_minutes || 0,
-      ai_assistant_enabled: aula?.ai_assistant_enabled ?? true,
-      ai_assistant_prompt: aula?.ai_assistant_prompt || "",
-      videos: [] // Será preenchido quando buscarmos os vídeos
+      title: "",
+      description: "",
+      content: {},
+      cover_image_url: "",
+      published: false,
+      estimated_time_minutes: 0,
+      ai_assistant_enabled: true,
+      ai_assistant_prompt: "",
+      videos: []
     }
   });
+  
+  // Função para lidar com mudanças no estado do modal
+  const handleOpenChange = (newOpen: boolean) => {
+    // Se estiver fechando o modal, resetamos o formulário
+    if (!newOpen) {
+      form.reset();
+    }
+    onOpenChange(newOpen);
+  };
+  
+  // Efeito para resetar e inicializar o formulário quando aula ou estado do modal mudar
+  useEffect(() => {
+    if (open && aula) {
+      // Inicializa o formulário com os valores da aula
+      form.reset({
+        title: aula.title || "",
+        description: aula.description || "",
+        content: aula.content || {},
+        cover_image_url: aula.cover_image_url || "",
+        published: aula.published || false,
+        estimated_time_minutes: aula.estimated_time_minutes || 0,
+        ai_assistant_enabled: aula.ai_assistant_enabled ?? true,
+        ai_assistant_prompt: aula.ai_assistant_prompt || "",
+        videos: [] // Será preenchido quando buscarmos os vídeos
+      });
+      
+      // Se a aula tem ID, buscamos os vídeos
+      if (aula.id) {
+        fetchVideos(aula.id);
+      }
+    } else if (open) {
+      // Se está abrindo para criar uma nova aula, resetamos o formulário
+      form.reset({
+        title: "",
+        description: "",
+        content: {},
+        cover_image_url: "",
+        published: false,
+        estimated_time_minutes: 0,
+        ai_assistant_enabled: true,
+        ai_assistant_prompt: "",
+        videos: []
+      });
+    }
+  }, [aula, open]);
   
   // Buscar vídeos da aula se estiver editando
   const fetchVideos = async (lessonId: string) => {
@@ -109,13 +154,6 @@ export const AulaWizard = ({
       console.error("Erro ao buscar vídeos:", error);
     }
   };
-  
-  // Efeito para buscar vídeos quando o componente montar
-  React.useEffect(() => {
-    if (aula?.id) {
-      fetchVideos(aula.id);
-    }
-  }, [aula?.id]);
 
   // Manipular adição de vídeo
   const handleAddVideo = () => {
@@ -271,7 +309,7 @@ export const AulaWizard = ({
         onSuccess();
       }
       
-      onOpenChange(false);
+      handleOpenChange(false);
     } catch (error: any) {
       console.error("Erro ao salvar aula:", error);
       toast.error(`Erro ao salvar: ${error.message || "Tente novamente"}`);
@@ -281,7 +319,7 @@ export const AulaWizard = ({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-4xl h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>{aula ? "Editar Aula" : "Nova Aula"}</DialogTitle>
@@ -536,7 +574,7 @@ export const AulaWizard = ({
             </Tabs>
             
             <DialogFooter className="sticky bottom-0 pt-2 bg-white dark:bg-gray-950">
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              <Button type="button" variant="outline" onClick={() => handleOpenChange(false)}>
                 Cancelar
               </Button>
               <Button type="submit" disabled={saving}>
