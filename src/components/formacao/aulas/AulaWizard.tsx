@@ -31,6 +31,7 @@ import { supabase } from "@/lib/supabase";
 import { ImageUpload } from "@/components/formacao/comum/ImageUpload";
 import { VideoUpload } from "@/components/formacao/comum/VideoUpload";
 import { Loader2, Plus, Trash } from "lucide-react";
+import { useLogging } from "@/hooks/useLogging";
 
 const aulaFormSchema = z.object({
   title: z.string().min(3, "O título precisa ter pelo menos 3 caracteres"),
@@ -74,6 +75,7 @@ export const AulaWizard = ({
 }: AulaWizardProps) => {
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState("detalhes");
+  const { log, logError } = useLogging();
   
   // Configurar formulário
   const form = useForm<AulaFormValues>({
@@ -148,10 +150,12 @@ export const AulaWizard = ({
       if (error) throw error;
       
       if (data && data.length > 0) {
+        console.log("Vídeos carregados:", data);
         form.setValue('videos', data);
       }
     } catch (error) {
       console.error("Erro ao buscar vídeos:", error);
+      logError("fetch_videos_error", error);
     }
   };
 
@@ -205,11 +209,16 @@ export const AulaWizard = ({
     const updatedVideos = [...currentVideos];
     updatedVideos[index] = videoData;
     
+    console.log("Video alterado:", videoData);
     form.setValue('videos', updatedVideos);
   };
 
   // Salvar aula
   const onSubmit = async (values: AulaFormValues) => {
+    console.log("Iniciando salvamento da aula com os valores:", values);
+    console.log("Estado do formulário:", form.formState);
+    console.log("Vídeos para salvar:", values.videos);
+    
     if (!moduleId) {
       toast.error("Módulo não especificado");
       return;
@@ -218,6 +227,8 @@ export const AulaWizard = ({
     setSaving(true);
     
     try {
+      console.log("Salvando aula para o módulo:", moduleId);
+      
       // Primeiro, inserir ou atualizar a aula
       let lessonId = aula?.id;
       let lessonData = {
@@ -227,27 +238,40 @@ export const AulaWizard = ({
       
       if (lessonId) {
         // Atualizar aula existente
+        console.log("Atualizando aula existente:", lessonId);
         const { error } = await supabase
           .from('learning_lessons')
           .update(lessonData)
           .eq('id', lessonId);
           
-        if (error) throw error;
+        if (error) {
+          console.error("Erro ao atualizar aula:", error);
+          throw error;
+        }
+        
+        console.log("Aula atualizada com sucesso");
       } else {
         // Criar nova aula
+        console.log("Criando nova aula");
         const { data, error } = await supabase
           .from('learning_lessons')
           .insert(lessonData)
           .select()
           .single();
           
-        if (error) throw error;
+        if (error) {
+          console.error("Erro ao criar aula:", error);
+          throw error;
+        }
         
+        console.log("Nova aula criada:", data);
         lessonId = data.id;
       }
       
       // Em seguida, gerenciar vídeos
       if (lessonId && values.videos.length > 0) {
+        console.log(`Gerenciando ${values.videos.length} vídeos para a aula ${lessonId}`);
+        
         // Primeiro, buscar vídeos existentes para esta aula
         const { data: existingVideos } = await supabase
           .from('learning_lesson_videos')
@@ -255,9 +279,12 @@ export const AulaWizard = ({
           .eq('lesson_id', lessonId);
         
         const existingVideoIds = existingVideos?.map(v => v.id) || [];
+        console.log("IDs de vídeos existentes:", existingVideoIds);
         
         // Para cada vídeo no formulário, inserir ou atualizar
         for (const video of values.videos) {
+          console.log("Processando vídeo:", video);
+          
           const videoData = {
             lesson_id: lessonId,
             title: video.title,
@@ -273,47 +300,82 @@ export const AulaWizard = ({
           
           if (video.id && existingVideoIds.includes(video.id)) {
             // Atualizar vídeo existente
+            console.log("Atualizando vídeo existente:", video.id);
             const { error } = await supabase
               .from('learning_lesson_videos')
               .update(videoData)
               .eq('id', video.id);
               
-            if (error) throw error;
+            if (error) {
+              console.error("Erro ao atualizar vídeo:", error);
+              throw error;
+            }
+            
+            console.log("Vídeo atualizado com sucesso");
             
             // Remover da lista de existingVideoIds para não excluir depois
             existingVideoIds.splice(existingVideoIds.indexOf(video.id), 1);
           } else {
             // Inserir novo vídeo
-            const { error } = await supabase
+            console.log("Inserindo novo vídeo");
+            const { data, error } = await supabase
               .from('learning_lesson_videos')
               .insert(videoData);
               
-            if (error) throw error;
+            if (error) {
+              console.error("Erro ao inserir vídeo:", error);
+              throw error;
+            }
+            
+            console.log("Novo vídeo inserido com sucesso:", data);
           }
         }
         
         // Excluir vídeos que não estão mais no formulário
         if (existingVideoIds.length > 0) {
+          console.log("Excluindo vídeos que não estão mais no formulário:", existingVideoIds);
           const { error } = await supabase
             .from('learning_lesson_videos')
             .delete()
             .in('id', existingVideoIds);
             
-          if (error) throw error;
+          if (error) {
+            console.error("Erro ao excluir vídeos antigos:", error);
+            throw error;
+          }
+          
+          console.log("Vídeos antigos excluídos com sucesso");
         }
       }
       
+      console.log("Operação concluída com sucesso!");
       toast.success(aula ? "Aula atualizada com sucesso!" : "Aula criada com sucesso!");
       
       if (onSuccess) {
+        console.log("Chamando callback onSuccess");
         onSuccess();
       }
+      
+      // Registrar operação bem-sucedida
+      log("aula_saved", {
+        lesson_id: lessonId,
+        is_update: !!aula,
+        has_videos: values.videos.length > 0
+      });
       
       handleOpenChange(false);
     } catch (error: any) {
       console.error("Erro ao salvar aula:", error);
+      logError("aula_save_error", {
+        error: error.message || String(error),
+        form_values: values,
+        lesson_id: aula?.id,
+        module_id: moduleId
+      });
+      
       toast.error(`Erro ao salvar: ${error.message || "Tente novamente"}`);
     } finally {
+      console.log("Finalizando operação de salvamento");
       setSaving(false);
     }
   };
@@ -574,12 +636,27 @@ export const AulaWizard = ({
             </Tabs>
             
             <DialogFooter className="sticky bottom-0 pt-2 bg-white dark:bg-gray-950">
-              <Button type="button" variant="outline" onClick={() => handleOpenChange(false)}>
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => handleOpenChange(false)}
+                disabled={saving}
+              >
                 Cancelar
               </Button>
-              <Button type="submit" disabled={saving}>
-                {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {aula ? "Atualizar" : "Criar"} Aula
+              <Button 
+                type="submit" 
+                disabled={saving || form.formState.isSubmitting}
+                className="min-w-[120px]"
+              >
+                {saving ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    {aula ? "Atualizando..." : "Criando..."}
+                  </>
+                ) : (
+                  aula ? "Atualizar Aula" : "Criar Aula"
+                )}
               </Button>
             </DialogFooter>
           </form>
@@ -588,6 +665,3 @@ export const AulaWizard = ({
     </Dialog>
   );
 };
-
-// Importação do React
-import React from "react";

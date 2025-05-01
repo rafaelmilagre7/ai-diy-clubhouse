@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, Plus, File, Video } from "lucide-react";
+import { useLogging } from "@/hooks/useLogging";
 
 // Adicionar interface temporária para lidar com os novos campos até que os tipos sejam atualizados
 interface VideoWithType extends LearningLessonVideo {
@@ -26,6 +27,7 @@ const FormacaoAulaDetalhes = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { profile } = useAuth();
+  const { logError } = useLogging();
   
   const [aula, setAula] = useState<LearningLesson | null>(null);
   const [modulo, setModulo] = useState<LearningModule | null>(null);
@@ -73,6 +75,7 @@ const FormacaoAulaDetalhes = () => {
       }
     } catch (error) {
       console.error("Erro ao buscar aula:", error);
+      logError("fetch_aula_error", error);
       toast.error("Não foi possível carregar a aula");
       navigate('/formacao/aulas');
     } finally {
@@ -98,6 +101,7 @@ const FormacaoAulaDetalhes = () => {
       setRecursos(data || []);
     } catch (error) {
       console.error("Erro ao buscar recursos:", error);
+      logError("fetch_recursos_error", error);
     } finally {
       setLoadingRecursos(false);
     }
@@ -121,6 +125,7 @@ const FormacaoAulaDetalhes = () => {
       setVideos(data || []);
     } catch (error) {
       console.error("Erro ao buscar vídeos:", error);
+      logError("fetch_videos_error", error);
     } finally {
       setLoadingVideos(false);
     }
@@ -140,9 +145,21 @@ const FormacaoAulaDetalhes = () => {
 
   // Ações após salvar aula
   const handleSalvarAula = () => {
+    console.log("Aula salva com sucesso, recarregando dados...");
     setIsAulaWizardOpen(false);
+    // Recarregar todos os dados relevantes
     fetchAula();
-    fetchVideos(); // Também recarregar os vídeos após salvar
+    fetchVideos();
+    
+    // Alternar para a aba de vídeos se estiver na aba de vídeos
+    if (activeTab === "videos") {
+      // Um pequeno delay para garantir que a UI seja atualizada após a busca de dados
+      setTimeout(() => {
+        setActiveTab("videos");
+      }, 300);
+    }
+    
+    toast.success("Dados da aula atualizados");
   };
 
   // Abrir modal para adicionar recurso
@@ -171,6 +188,7 @@ const FormacaoAulaDetalhes = () => {
       fetchRecursos();
     } catch (error) {
       console.error("Erro ao excluir recurso:", error);
+      logError("delete_recurso_error", error);
       toast.error("Não foi possível excluir o material. Tente novamente.");
     }
   };
@@ -263,7 +281,7 @@ const FormacaoAulaDetalhes = () => {
                 <div className="text-center py-8 text-muted-foreground">
                   <p>Nenhum conteúdo disponível para esta aula.</p>
                   {isAdmin && (
-                    <Button className="mt-4" variant="outline">
+                    <Button className="mt-4" variant="outline" onClick={handleEditarAula}>
                       Adicionar Conteúdo
                     </Button>
                   )}
@@ -346,6 +364,7 @@ const FormacaoAulaDetalhes = () => {
         </TabsContent>
       </Tabs>
       
+      {/* Componente de edição de aula */}
       <AulaWizard 
         open={isAulaWizardOpen}
         onOpenChange={setIsAulaWizardOpen}
@@ -354,6 +373,7 @@ const FormacaoAulaDetalhes = () => {
         onSuccess={handleSalvarAula}
       />
       
+      {/* Componente de edição de recurso */}
       <RecursoFormDialog
         open={isRecursoDialogOpen}
         onOpenChange={setIsRecursoDialogOpen}
