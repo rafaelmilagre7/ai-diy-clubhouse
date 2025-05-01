@@ -7,7 +7,7 @@ import { LearningModule, LearningLesson } from "@/lib/supabase";
 import { toast } from "sonner";
 import { FormacaoAulasHeader } from "@/components/formacao/aulas/FormacaoAulasHeader";
 import { AulasList } from "@/components/formacao/aulas/AulasList";
-import { AulaFormDialog } from "@/components/formacao/aulas/AulaFormDialog";
+import { AulaWizard } from "@/components/formacao/aulas/AulaWizard";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 
@@ -20,7 +20,7 @@ const FormacaoModuloDetalhes = () => {
   const [aulas, setAulas] = useState<LearningLesson[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingAulas, setLoadingAulas] = useState(true);
-  const [isAulaDialogOpen, setIsAulaDialogOpen] = useState(false);
+  const [isAulaWizardOpen, setIsAulaWizardOpen] = useState(false);
   const [editingAula, setEditingAula] = useState<LearningLesson | null>(null);
 
   // Buscar detalhes do módulo
@@ -79,13 +79,13 @@ const FormacaoModuloDetalhes = () => {
   // Abrir modal para criar nova aula
   const handleNovaAula = () => {
     setEditingAula(null);
-    setIsAulaDialogOpen(true);
+    setIsAulaWizardOpen(true);
   };
 
   // Abrir modal para editar aula existente
   const handleEditarAula = (aula: LearningLesson) => {
     setEditingAula(aula);
-    setIsAulaDialogOpen(true);
+    setIsAulaWizardOpen(true);
   };
 
   // Excluir aula
@@ -125,7 +125,7 @@ const FormacaoModuloDetalhes = () => {
 
   // Ações após salvar uma aula
   const handleSalvarAula = () => {
-    setIsAulaDialogOpen(false);
+    setIsAulaWizardOpen(false);
     fetchAulas();
   };
 
@@ -148,7 +148,6 @@ const FormacaoModuloDetalhes = () => {
   }
 
   const isAdmin = profile?.role === 'admin';
-  const cursoId = modulo.course_id;
 
   return (
     <div className="space-y-6">
@@ -156,7 +155,7 @@ const FormacaoModuloDetalhes = () => {
         onNovaAula={handleNovaAula} 
         titulo={modulo.title}
         breadcrumb={true}
-        moduloId={cursoId}
+        moduloId={modulo.course_id}
       />
       
       <AulasList 
@@ -167,9 +166,9 @@ const FormacaoModuloDetalhes = () => {
         isAdmin={isAdmin}
       />
       
-      <AulaFormDialog 
-        open={isAulaDialogOpen}
-        onOpenChange={setIsAulaDialogOpen}
+      <AulaWizard 
+        open={isAulaWizardOpen}
+        onOpenChange={setIsAulaWizardOpen}
         aula={editingAula}
         moduleId={id || ''}
         onSuccess={handleSalvarAula}
