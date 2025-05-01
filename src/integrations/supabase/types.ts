@@ -339,6 +339,35 @@ export type Database = {
           },
         ]
       }
+      learning_comment_likes: {
+        Row: {
+          comment_id: string
+          created_at: string | null
+          id: string
+          user_id: string
+        }
+        Insert: {
+          comment_id: string
+          created_at?: string | null
+          id?: string
+          user_id: string
+        }
+        Update: {
+          comment_id?: string
+          created_at?: string | null
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "learning_comment_likes_comment_id_fkey"
+            columns: ["comment_id"]
+            isOneToOne: false
+            referencedRelation: "learning_comments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       learning_comments: {
         Row: {
           content: string
@@ -346,6 +375,7 @@ export type Database = {
           id: string
           is_hidden: boolean
           lesson_id: string
+          likes_count: number
           parent_id: string | null
           updated_at: string
           user_id: string
@@ -356,6 +386,7 @@ export type Database = {
           id?: string
           is_hidden?: boolean
           lesson_id: string
+          likes_count?: number
           parent_id?: string | null
           updated_at?: string
           user_id: string
@@ -366,6 +397,7 @@ export type Database = {
           id?: string
           is_hidden?: boolean
           lesson_id?: string
+          likes_count?: number
           parent_id?: string | null
           updated_at?: string
           user_id?: string

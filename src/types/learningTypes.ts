@@ -9,6 +9,7 @@ export interface Comment {
   updated_at: string;
   is_hidden: boolean;
   likes_count?: number;
+  user_has_liked?: boolean;
   profiles?: {
     name: string;
     avatar_url?: string;

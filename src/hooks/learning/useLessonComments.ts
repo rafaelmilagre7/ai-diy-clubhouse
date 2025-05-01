@@ -69,7 +69,10 @@ export const useLessonComments = (lessonId: string) => {
         const organizedComments = rootComments.map((comment: Comment) => {
           const commentReplies = replies.filter(
             (reply: Comment) => reply.parent_id === comment.id
-          );
+          ).map((reply: Comment) => ({
+            ...reply,
+            user_has_liked: !!userLikes[reply.id]
+          }));
           
           return {
             ...comment,

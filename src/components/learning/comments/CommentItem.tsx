@@ -4,7 +4,7 @@ import { Comment } from "@/types/learningTypes";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { MessageSquare, ThumbsUp, Trash2, CornerDownRight } from "lucide-react";
+import { MessageSquare, ThumbsUp, Trash2 } from "lucide-react";
 import { useAuth } from "@/contexts/auth";
 import { CommentForm } from "./CommentForm";
 import { formatDistanceToNow } from "date-fns";
