@@ -40,6 +40,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { createStoragePublicPolicy } from "@/lib/supabase/rpc";
 import { Loader2, PlusCircle, Trash } from "lucide-react";
+import { getTableColumns } from "@/lib/supabase/rpc";
 
 // Schema para validação do formulário
 const formSchema = z.object({
@@ -103,6 +104,8 @@ const FormacaoAulaNova = () => {
     checked: false,
     exists: false
   });
+  const [tableColumns, setTableColumns] = useState<Array<{column_name: string; data_type: string}> | null>(null);
+  const [tableChecked, setTableChecked] = useState(false);
 
   // Configurar o formulário
   const form = useForm<FormValues>({
@@ -172,7 +175,7 @@ const FormacaoAulaNova = () => {
     fetchModulos();
   }, [cursoSelecionado]);
 
-  // Verificar se o bucket de vídeos existe
+  // Verificar se o bucket de vídeos existe e a estrutura da tabela
   useEffect(() => {
     const ensureBucketExists = async () => {
       try {
@@ -214,7 +217,23 @@ const FormacaoAulaNova = () => {
       }
     };
     
+    const checkTableStructure = async () => {
+      try {
+        setTableChecked(false);
+        console.log("Verificando estrutura da tabela learning_lessons...");
+
+        const columns = await getTableColumns('learning_lessons');
+        setTableColumns(columns);
+        console.log("Colunas encontradas:", columns);
+        setTableChecked(true);
+      } catch (error) {
+        console.error("Erro ao verificar estrutura da tabela:", error);
+        setTableChecked(true);
+      }
+    };
+
     ensureBucketExists();
+    checkTableStructure();
   }, []);
 
   // Manipular a seleção de curso
@@ -292,31 +311,14 @@ const FormacaoAulaNova = () => {
     toast.success("Vídeo removido");
   };
 
-  // Verificar a estrutura da tabela learning_lessons
-  const checkTableStructure = async () => {
-    try {
-      // Esta consulta verifica se a tabela tem as colunas esperadas
-      const { data: columnInfo, error } = await supabase
-        .rpc('get_table_columns', { table_name: 'learning_lessons' });
-
-      if (error) {
-        console.error("Erro ao verificar estrutura da tabela:", error);
-        return null;
-      }
-
-      return columnInfo;
-    } catch (error) {
-      console.error("Erro ao executar verificação da tabela:", error);
-      return null;
-    }
-  };
-
   // Criar uma nova aula
   const onSubmit = async (values: FormValues) => {
     setIsLoading(true);
     
     try {
-      if (!values.videos || values.videos.length === 0) {
+      const validVideos = values.videos?.filter(video => video.url) || [];
+      
+      if (validVideos.length === 0) {
         toast.warning("Por favor, adicione pelo menos um vídeo à aula");
         setIsLoading(false);
         return;
@@ -331,47 +333,45 @@ const FormacaoAulaNova = () => {
       
       // Calcular tempo estimado com base nos vídeos (estimativa simples)
       // Cada vídeo adicionado considera-se 10 minutos em média
-      const estimated_time_minutes = values.videos.length * 10;
+      const estimated_time_minutes = validVideos.length * 10;
+      
+      // Verificar estrutura da tabela para determinar se devemos incluir ou não o campo published
+      const hasPublishedField = tableColumns?.some(col => col.column_name === 'published');
+      console.log("Tabela tem campo published:", hasPublishedField);
       
       // Criar a aula
-      console.log("Criando nova aula com dados:", {
+      const lessonData = {
         title: values.title,
-        description: values.description,
+        description: values.description || "",
         module_id: values.module_id,
-        order_index: values.order_index,
-        cover_image_url: values.cover_image_url,
-        estimated_time_minutes
-      });
+        order_index: values.order_index || 0,
+        cover_image_url: values.cover_image_url || null,
+        estimated_time_minutes: estimated_time_minutes
+      };
+      
+      // Adicionar campo published apenas se ele existir na tabela
+      const lessonDataWithPublished = hasPublishedField 
+        ? { ...lessonData, published: false }
+        : lessonData;
+      
+      console.log("Criando nova aula com dados:", lessonDataWithPublished);
 
-      const { data: lessonData, error: lessonError } = await supabase
+      const { data, error } = await supabase
         .from("learning_lessons")
-        .insert({
-          title: values.title,
-          description: values.description || "",
-          module_id: values.module_id,
-          order_index: values.order_index || 0,
-          cover_image_url: values.cover_image_url || null,
-          published: false, // Remover se a coluna não existir
-          estimated_time_minutes: estimated_time_minutes
-        })
+        .insert(lessonDataWithPublished)
         .select();
 
-      if (lessonError) {
-        console.error("Erro ao criar aula:", lessonError);
+      if (error) {
+        console.error("Erro ao criar aula:", error);
         
-        // Se o erro for sobre a coluna is_published não existir
-        if (lessonError.message.includes("is_published") || lessonError.message.includes("published")) {
-          // Tentar novamente sem o campo published
+        // Se o erro for sobre coluna desconhecida, tentar novamente sem o campo que causou o problema
+        if (error.message.includes("column") && error.message.includes("does not exist")) {
+          console.log("Tentando novamente sem campos problemáticos...");
+          
+          // Tentar criar sem o campo published
           const { data: retryData, error: retryError } = await supabase
             .from("learning_lessons")
-            .insert({
-              title: values.title,
-              description: values.description || "",
-              module_id: values.module_id,
-              order_index: values.order_index || 0,
-              cover_image_url: values.cover_image_url || null,
-              estimated_time_minutes: estimated_time_minutes
-            })
+            .insert(lessonData)
             .select();
             
           if (retryError) {
@@ -386,25 +386,28 @@ const FormacaoAulaNova = () => {
           
           // Usar o ID da aula criada na segunda tentativa
           const lessonId = retryData[0].id;
-          await insertVideos(lessonId, values.videos);
+          // Filtrar vídeos para ter apenas aqueles com URL válida
+          const validVideosToInsert = validVideos.filter(video => video.url);
+          await insertVideos(lessonId, validVideosToInsert as VideoItem[]);
           
           toast.success("Aula criada com sucesso!");
           navigate(`/formacao/aulas/${lessonId}`);
           return;
         } else {
-          throw lessonError;
+          throw error;
         }
       }
       
-      if (!lessonData || lessonData.length === 0) {
+      if (!data || data.length === 0) {
         throw new Error("Falha ao criar aula: nenhum dado retornado");
       }
       
-      console.log("Aula criada com sucesso:", lessonData);
-      const lessonId = lessonData[0].id;
+      console.log("Aula criada com sucesso:", data);
+      const lessonId = data[0].id;
       
       // Adicionar os vídeos à aula
-      await insertVideos(lessonId, values.videos);
+      const validVideosToInsert = validVideos.filter(video => video.url);
+      await insertVideos(lessonId, validVideosToInsert as VideoItem[]);
       
       toast.success("Aula criada com sucesso!");
       navigate(`/formacao/aulas/${lessonId}`);
@@ -478,6 +481,24 @@ const FormacaoAulaNova = () => {
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <CardContent className="space-y-6">
+              {/* Status de verificação da tabela */}
+              {!tableChecked ? (
+                <div className="p-4 border rounded-md bg-yellow-50 text-yellow-800">
+                  <p className="text-sm">Verificando estrutura da tabela...</p>
+                </div>
+              ) : tableColumns === null ? (
+                <div className="p-4 border rounded-md bg-red-50 text-red-800">
+                  <p className="text-sm font-semibold">Não foi possível verificar a estrutura da tabela</p>
+                  <p className="text-sm mt-1">Algumas funcionalidades podem não funcionar corretamente.</p>
+                </div>
+              ) : (
+                <div className="p-4 border rounded-md bg-green-50 text-green-800">
+                  <p className="text-sm">Estrutura da tabela verificada ({tableColumns.length} colunas encontradas)</p>
+                  <p className="text-sm mt-1">Campo 'published': {tableColumns.some(c => c.column_name === 'published') ? 'Presente' : 'Ausente'}</p>
+                </div>
+              )}
+              
+              {/* Status de verificação do bucket */}
               {!bucketStatus.checked ? (
                 <div className="p-4 border rounded-md bg-yellow-50 text-yellow-800">
                   <p className="text-sm">Verificando configuração de armazenamento...</p>
