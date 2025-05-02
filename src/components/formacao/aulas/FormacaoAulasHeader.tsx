@@ -6,12 +6,14 @@ interface FormacaoAulasHeaderProps {
   titulo?: string;
   breadcrumb?: boolean;
   onNovaAula?: () => void;
+  moduloId?: string;
 }
 
 export const FormacaoAulasHeader = ({ 
   titulo = "Gerenciamento de Aulas",
   breadcrumb = false,
-  onNovaAula
+  onNovaAula,
+  moduloId
 }: FormacaoAulasHeaderProps) => {
   return (
     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">

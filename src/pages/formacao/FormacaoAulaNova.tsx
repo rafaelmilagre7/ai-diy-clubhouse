@@ -36,7 +36,7 @@ import * as z from "zod";
 import { Editor } from "@/components/editor/Editor";
 import { FormacaoAulasHeader } from "@/components/formacao/aulas/FormacaoAulasHeader";
 import { VideoUpload } from "@/components/formacao/comum/VideoUpload";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { createStoragePublicPolicy } from "@/lib/supabase/rpc";
 import { Loader2, PlusCircle, Trash } from "lucide-react";
