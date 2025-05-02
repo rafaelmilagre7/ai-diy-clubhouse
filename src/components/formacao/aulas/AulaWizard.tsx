@@ -275,25 +275,49 @@ export const AulaWizard = ({
       console.log("Status de publicação a ser salvo:", completeLessonData.published);
       
       if (lessonId) {
-        // Atualizar aula existente
+        // Atualizar aula existente - FIX: Separar operação de update e verificação
         console.log("Atualizando aula existente:", lessonId);
         
-        const { data, error } = await supabase
+        // 1. Primeiro fazer a atualização sem retorno de dados
+        const { error: updateError } = await supabase
           .from('learning_lessons')
           .update(completeLessonData)
-          .eq('id', lessonId)
-          .select('*');
+          .eq('id', lessonId);
           
-        if (error) {
-          console.error("Erro ao atualizar aula:", error);
-          throw error;
+        if (updateError) {
+          console.error("Erro ao atualizar aula:", updateError);
+          throw updateError;
         }
         
-        console.log("Resposta da atualização da aula:", data);
-        if (data && data.length > 0) {
-          console.log("Status de publicação após atualização:", data[0].published);
-          if (data[0].published !== values.published) {
-            console.warn("AVISO: Status de publicação não corresponde ao esperado!");
+        // 2. Depois buscar os dados atualizados para verificar
+        const { data: updatedData, error: fetchError } = await supabase
+          .from('learning_lessons')
+          .select('*')
+          .eq('id', lessonId)
+          .single();
+          
+        if (fetchError) {
+          console.error("Erro ao buscar aula atualizada:", fetchError);
+          throw fetchError;
+        }
+        
+        console.log("Aula atualizada com sucesso:", updatedData);
+        console.log("Status de publicação após atualização:", updatedData.published);
+        
+        if (updatedData.published !== values.published) {
+          console.warn("AVISO: Status de publicação após atualização não corresponde ao esperado!");
+          console.log("Tentando atualização específica do status de publicação...");
+          
+          // Tenta atualizar especificamente o status de publicação para garantir
+          const { error: pubUpdateError } = await supabase
+            .from('learning_lessons')
+            .update({ published: values.published })
+            .eq('id', lessonId);
+            
+          if (pubUpdateError) {
+            console.error("Erro na atualização específica do status:", pubUpdateError);
+          } else {
+            console.log("Status de publicação atualizado com sucesso!");
           }
         }
       } else {

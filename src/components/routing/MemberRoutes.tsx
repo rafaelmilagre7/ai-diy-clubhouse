@@ -28,7 +28,7 @@ const MemberRoutes = () => {
       <Route path="/profile" element={<Profile />} />
       <Route path="/solutions/:id" element={<SolutionDetails />} />
       
-      {/* Rotas de aprendizado melhoradas */}
+      {/* Rotas de aprendizado */}
       <Route path="/learning" element={<MemberLearning />} />
       <Route path="/learning/course/:id" element={<CourseDetails />} />
       <Route path="/learning/course/:courseId/lesson/:lessonId" element={<LessonView />} />
