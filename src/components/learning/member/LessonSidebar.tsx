@@ -2,7 +2,7 @@
 import { Link } from "react-router-dom";
 import { LearningLesson, LearningModule } from "@/lib/supabase";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckCircle, Circle } from "lucide-react";
+import { CheckCircle, Circle, BookOpen } from "lucide-react";
 
 interface LessonSidebarProps {
   currentLesson: LearningLesson;
@@ -19,8 +19,14 @@ export const LessonSidebar = ({
 }: LessonSidebarProps) => {
   return (
     <Card className="sticky top-24">
-      <CardHeader className="pb-3">
+      <CardHeader className="pb-3 flex flex-row items-center justify-between">
         <CardTitle className="text-lg">{module?.title || "Aulas do módulo"}</CardTitle>
+        <Link to={`/learning/course/${courseId}`} className="text-sm text-muted-foreground hover:text-foreground">
+          <span className="flex items-center">
+            <BookOpen className="h-4 w-4 mr-1" />
+            Voltar ao curso
+          </span>
+        </Link>
       </CardHeader>
       <CardContent className="p-0">
         <div className="divide-y">

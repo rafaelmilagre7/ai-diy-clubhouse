@@ -8,7 +8,7 @@ import { Link } from "react-router-dom";
 interface CursoHeaderProps {
   curso: LearningCourse;
   onNovoModulo: () => void;
-  onEditarCurso?: () => void; // Novo prop para ação de editar
+  onEditarCurso?: () => void;
   isAdmin: boolean;
 }
 
@@ -40,7 +40,7 @@ export const CursoHeader = ({ curso, onNovoModulo, onEditarCurso, isAdmin }: Cur
         </div>
         
         {isAdmin && (
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             {onEditarCurso && (
               <Button variant="outline" onClick={onEditarCurso}>
                 <Edit className="h-4 w-4 mr-2" />

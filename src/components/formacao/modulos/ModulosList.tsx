@@ -80,7 +80,7 @@ export const ModulosList = ({ modulos, loading, onEdit, onDelete, isAdmin }: Mod
               </p>
             </CardContent>
             
-            <CardFooter className="gap-2 justify-between">
+            <CardFooter className="gap-2 justify-between flex-wrap">
               <Button variant="outline" size="sm" asChild>
                 <Link to={`/formacao/modulos/${modulo.id}`}>
                   <BookOpen className="h-4 w-4 mr-1" />
@@ -89,7 +89,7 @@ export const ModulosList = ({ modulos, loading, onEdit, onDelete, isAdmin }: Mod
               </Button>
               
               {isAdmin && (
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-wrap">
                   <Button variant="outline" size="sm" onClick={() => onEdit(modulo)}>
                     <Pencil className="h-4 w-4 mr-1" />
                     Editar

@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import Dashboard from "@/pages/member/Dashboard";
@@ -29,15 +30,16 @@ const MemberRoutes = () => {
     <Routes>
       {/* Rotas principais */}
       <Route path="/" element={<Dashboard />} />
+      <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/profile" element={<Profile />} />
       <Route path="/solutions/:id" element={<SolutionDetails />} />
       <Route path="*" element={<NotFound />} />
       
       {/* Rotas de aprendizado */}
-      <Route path="/cursos" element={<MemberLearning />} />
-      <Route path="/cursos/:slug" element={<CourseDetails />} />
-      <Route path="/aulas/:id" element={<LessonView />} />
-      <Route path="/certificados" element={<MemberCertificates />} />
+      <Route path="/learning" element={<MemberLearning />} />
+      <Route path="/learning/course/:id" element={<CourseDetails />} />
+      <Route path="/learning/course/:courseId/lesson/:lessonId" element={<LessonView />} />
+      <Route path="/certificates" element={<MemberCertificates />} />
       
       {/* Rota pública de validação de certificados */}
       <Route path="/certificado/validar/:code?" element={<ValidateCertificate />} />

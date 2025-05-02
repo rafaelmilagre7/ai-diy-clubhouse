@@ -1,41 +1,84 @@
 
 import { Button } from "@/components/ui/button";
-import { PlusCircle, ChevronLeft } from "lucide-react";
+import { ChevronLeft, PlusCircle } from "lucide-react";
 import { Link } from "react-router-dom";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
 
 interface FormacaoAulasHeaderProps {
   onNovaAula?: () => void;
-  moduloId?: string;
   titulo?: string;
   breadcrumb?: boolean;
+  moduloId?: string;
+  cursoId?: string;
 }
 
-export const FormacaoAulasHeader = ({ 
-  onNovaAula, 
-  moduloId, 
-  titulo = "Aulas",
-  breadcrumb = false
+export const FormacaoAulasHeader = ({
+  onNovaAula,
+  titulo = "Gerenciamento de Aulas",
+  breadcrumb = false,
+  moduloId,
+  cursoId
 }: FormacaoAulasHeaderProps) => {
   return (
-    <div className="flex flex-col space-y-4">
-      {breadcrumb && moduloId && (
-        <div className="flex items-center">
-          <Button variant="ghost" size="sm" asChild>
-            <Link to={`/formacao/modulos/${moduloId}`}>
-              <ChevronLeft className="h-4 w-4 mr-1" />
-              Voltar para o Módulo
-            </Link>
-          </Button>
+    <div className="flex flex-col gap-4">
+      {breadcrumb ? (
+        <Breadcrumb>
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link to="/formacao/cursos">Cursos</Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            {cursoId ? (
+              <>
+                <BreadcrumbItem>
+                  <BreadcrumbLink asChild>
+                    <Link to={`/formacao/cursos/${cursoId}`}>Detalhes do Curso</Link>
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator />
+              </>
+            ) : moduloId ? (
+              <>
+                <BreadcrumbItem>
+                  <BreadcrumbLink asChild>
+                    <Link to={`/formacao/cursos/${moduloId}`}>Detalhes do Curso</Link>
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator />
+              </>
+            ) : null}
+            <BreadcrumbItem>
+              <BreadcrumbPage>{titulo}</BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
+      ) : (
+        <div className="flex justify-between items-center">
+          <h1 className="text-3xl font-bold tracking-tight">{titulo}</h1>
         </div>
       )}
-      
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">{titulo}</h2>
-          <p className="text-muted-foreground">
-            Gerencie as aulas disponíveis na plataforma
-          </p>
-        </div>
+
+      <div className="flex justify-between items-center">
+        {breadcrumb ? (
+          <h1 className="text-3xl font-bold tracking-tight">{titulo}</h1>
+        ) : (
+          <Button variant="ghost" size="sm" asChild>
+            <Link to="/formacao">
+              <ChevronLeft className="h-4 w-4 mr-1" />
+              Voltar
+            </Link>
+          </Button>
+        )}
+
         {onNovaAula && (
           <Button onClick={onNovaAula}>
             <PlusCircle className="h-4 w-4 mr-2" />
