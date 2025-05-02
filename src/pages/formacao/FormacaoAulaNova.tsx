@@ -52,7 +52,6 @@ const formSchema = z.object({
   }),
   order_index: z.number().optional(),
   cover_image_url: z.string().optional(),
-  is_published: z.boolean().default(false),
   videos: z.array(
     z.object({
       url: z.string().min(1, "A URL do vídeo é obrigatória"),
@@ -100,6 +99,10 @@ const FormacaoAulaNova = () => {
   const [uploading, setUploading] = useState(false);
   const [videoTitle, setVideoTitle] = useState("");
   const [videoDescription, setVideoDescription] = useState("");
+  const [bucketStatus, setBucketStatus] = useState<{ checked: boolean; exists: boolean; error?: string }>({
+    checked: false,
+    exists: false
+  });
 
   // Configurar o formulário
   const form = useForm<FormValues>({
@@ -108,7 +111,6 @@ const FormacaoAulaNova = () => {
       title: "",
       description: "",
       order_index: 0,
-      is_published: false,
       cover_image_url: "",
       videos: [],
     },
@@ -117,18 +119,23 @@ const FormacaoAulaNova = () => {
   // Buscar cursos e módulos
   useEffect(() => {
     const fetchCursos = async () => {
-      const { data, error } = await supabase
-        .from("learning_courses")
-        .select("id, title")
-        .order("title");
+      try {
+        const { data, error } = await supabase
+          .from("learning_courses")
+          .select("id, title")
+          .order("title");
 
-      if (error) {
-        toast.error("Erro ao carregar cursos");
-        console.error("Erro ao carregar cursos:", error);
-        return;
+        if (error) {
+          toast.error("Erro ao carregar cursos");
+          console.error("Erro ao carregar cursos:", error);
+          return;
+        }
+
+        setCursos(data || []);
+      } catch (error) {
+        console.error("Exceção ao carregar cursos:", error);
+        toast.error("Falha ao carregar os cursos");
       }
-
-      setCursos(data || []);
     };
 
     fetchCursos();
@@ -142,19 +149,24 @@ const FormacaoAulaNova = () => {
         return;
       }
 
-      const { data, error } = await supabase
-        .from("learning_modules")
-        .select("id, title, course_id")
-        .eq("course_id", cursoSelecionado)
-        .order("title");
+      try {
+        const { data, error } = await supabase
+          .from("learning_modules")
+          .select("id, title, course_id")
+          .eq("course_id", cursoSelecionado)
+          .order("title");
 
-      if (error) {
-        toast.error("Erro ao carregar módulos");
-        console.error("Erro ao carregar módulos:", error);
-        return;
+        if (error) {
+          toast.error("Erro ao carregar módulos");
+          console.error("Erro ao carregar módulos:", error);
+          return;
+        }
+
+        setModulos(data || []);
+      } catch (error) {
+        console.error("Exceção ao carregar módulos:", error);
+        toast.error("Falha ao carregar os módulos");
       }
-
-      setModulos(data || []);
     };
 
     fetchModulos();
@@ -164,10 +176,41 @@ const FormacaoAulaNova = () => {
   useEffect(() => {
     const ensureBucketExists = async () => {
       try {
-        await createStoragePublicPolicy('learning_videos');
-        console.log("Bucket learning_videos verificado/criado com sucesso!");
+        setBucketStatus({ checked: false, exists: false });
+        console.log("Verificando se o bucket learning_videos existe...");
+
+        // Verificar se o bucket existe
+        const { data: buckets, error: listError } = await supabase.storage.listBuckets();
+        
+        if (listError) {
+          console.error("Erro ao listar buckets:", listError);
+          setBucketStatus({ checked: true, exists: false, error: listError.message });
+          return;
+        }
+        
+        const videoBucketExists = buckets?.some(bucket => bucket.name === 'learning_videos');
+        
+        if (videoBucketExists) {
+          console.log("Bucket learning_videos já existe!");
+          setBucketStatus({ checked: true, exists: true });
+          return;
+        }
+        
+        // Criar o bucket com políticas públicas se não existir
+        console.log("Criando bucket learning_videos...");
+        const { success, error } = await createStoragePublicPolicy('learning_videos');
+        
+        if (!success) {
+          console.error("Erro ao criar bucket learning_videos:", error);
+          setBucketStatus({ checked: true, exists: false, error: String(error) });
+          return;
+        }
+        
+        console.log("Bucket learning_videos criado com sucesso!");
+        setBucketStatus({ checked: true, exists: true });
       } catch (error) {
         console.error("Erro ao verificar/criar bucket de vídeos:", error);
+        setBucketStatus({ checked: true, exists: false, error: String(error) });
       }
     };
     
@@ -249,6 +292,25 @@ const FormacaoAulaNova = () => {
     toast.success("Vídeo removido");
   };
 
+  // Verificar a estrutura da tabela learning_lessons
+  const checkTableStructure = async () => {
+    try {
+      // Esta consulta verifica se a tabela tem as colunas esperadas
+      const { data: columnInfo, error } = await supabase
+        .rpc('get_table_columns', { table_name: 'learning_lessons' });
+
+      if (error) {
+        console.error("Erro ao verificar estrutura da tabela:", error);
+        return null;
+      }
+
+      return columnInfo;
+    } catch (error) {
+      console.error("Erro ao executar verificação da tabela:", error);
+      return null;
+    }
+  };
+
   // Criar uma nova aula
   const onSubmit = async (values: FormValues) => {
     setIsLoading(true);
@@ -259,12 +321,28 @@ const FormacaoAulaNova = () => {
         setIsLoading(false);
         return;
       }
+
+      if (!bucketStatus.exists) {
+        toast.error("O bucket de vídeos não está configurado adequadamente");
+        console.error("Status do bucket:", bucketStatus);
+        setIsLoading(false);
+        return;
+      }
       
       // Calcular tempo estimado com base nos vídeos (estimativa simples)
       // Cada vídeo adicionado considera-se 10 minutos em média
       const estimated_time_minutes = values.videos.length * 10;
       
       // Criar a aula
+      console.log("Criando nova aula com dados:", {
+        title: values.title,
+        description: values.description,
+        module_id: values.module_id,
+        order_index: values.order_index,
+        cover_image_url: values.cover_image_url,
+        estimated_time_minutes
+      });
+
       const { data: lessonData, error: lessonError } = await supabase
         .from("learning_lessons")
         .insert({
@@ -273,43 +351,113 @@ const FormacaoAulaNova = () => {
           module_id: values.module_id,
           order_index: values.order_index || 0,
           cover_image_url: values.cover_image_url || null,
-          is_published: values.is_published,
+          published: false, // Remover se a coluna não existir
           estimated_time_minutes: estimated_time_minutes
         })
         .select();
 
-      if (lessonError) throw lessonError;
+      if (lessonError) {
+        console.error("Erro ao criar aula:", lessonError);
+        
+        // Se o erro for sobre a coluna is_published não existir
+        if (lessonError.message.includes("is_published") || lessonError.message.includes("published")) {
+          // Tentar novamente sem o campo published
+          const { data: retryData, error: retryError } = await supabase
+            .from("learning_lessons")
+            .insert({
+              title: values.title,
+              description: values.description || "",
+              module_id: values.module_id,
+              order_index: values.order_index || 0,
+              cover_image_url: values.cover_image_url || null,
+              estimated_time_minutes: estimated_time_minutes
+            })
+            .select();
+            
+          if (retryError) {
+            throw retryError;
+          }
+          
+          if (!retryData || retryData.length === 0) {
+            throw new Error("Falha ao criar aula: nenhum dado retornado");
+          }
+          
+          console.log("Aula criada com sucesso (segunda tentativa):", retryData);
+          
+          // Usar o ID da aula criada na segunda tentativa
+          const lessonId = retryData[0].id;
+          await insertVideos(lessonId, values.videos);
+          
+          toast.success("Aula criada com sucesso!");
+          navigate(`/formacao/aulas/${lessonId}`);
+          return;
+        } else {
+          throw lessonError;
+        }
+      }
       
+      if (!lessonData || lessonData.length === 0) {
+        throw new Error("Falha ao criar aula: nenhum dado retornado");
+      }
+      
+      console.log("Aula criada com sucesso:", lessonData);
       const lessonId = lessonData[0].id;
       
       // Adicionar os vídeos à aula
-      const videoPromises = values.videos.map(async (video) => {
-        return supabase
-          .from("learning_lesson_videos")
-          .insert({
-            lesson_id: lessonId,
-            title: video.title,
-            description: video.description || null,
-            url: video.url,
-            video_type: video.videoType,
-            video_file_name: video.fileName || null,
-            video_file_path: video.filePath || null,
-            file_size_bytes: video.fileSize || null,
-            order_index: video.order_index,
-            // Adicionar uma estimativa de duração baseada no tamanho do arquivo (se disponível)
-            duration_seconds: video.fileSize ? Math.floor(video.fileSize / 100000) : 300, // estimativa aproximada
-          });
-      });
-      
-      await Promise.all(videoPromises);
+      await insertVideos(lessonId, values.videos);
       
       toast.success("Aula criada com sucesso!");
       navigate(`/formacao/aulas/${lessonId}`);
     } catch (error: any) {
-      toast.error("Erro ao criar aula");
-      console.error("Erro ao criar aula:", error);
+      toast.error("Erro ao criar aula: " + (error.message || "Erro desconhecido"));
+      console.error("Erro detalhado ao criar aula:", error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // Função para inserir vídeos
+  const insertVideos = async (lessonId: string, videos: VideoItem[]) => {
+    try {
+      console.log(`Inserindo ${videos.length} vídeos para a aula ${lessonId}`);
+      
+      if (!videos || videos.length === 0) return;
+      
+      const videoPromises = videos.map(async (video) => {
+        const videoData = {
+          lesson_id: lessonId,
+          title: video.title,
+          description: video.description || null,
+          url: video.url,
+          video_type: video.videoType,
+          video_file_name: video.fileName || null,
+          video_file_path: video.filePath || null,
+          file_size_bytes: video.fileSize || null,
+          order_index: video.order_index,
+          // Adicionar uma estimativa de duração baseada no tamanho do arquivo (se disponível)
+          duration_seconds: video.fileSize ? Math.floor(video.fileSize / 100000) : 300, // estimativa aproximada
+        };
+        
+        console.log("Inserindo vídeo:", videoData);
+        
+        return supabase
+          .from("learning_lesson_videos")
+          .insert(videoData);
+      });
+      
+      const results = await Promise.all(videoPromises);
+      
+      // Verificar erros
+      const errors = results.filter(result => result.error).map(result => result.error);
+      if (errors.length > 0) {
+        console.error("Erros ao inserir vídeos:", errors);
+        throw new Error(`${errors.length} vídeos não puderam ser adicionados`);
+      }
+      
+      console.log(`${videos.length} vídeos adicionados com sucesso`);
+    } catch (error) {
+      console.error("Erro ao adicionar vídeos:", error);
+      throw error;
     }
   };
 
@@ -330,6 +478,22 @@ const FormacaoAulaNova = () => {
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <CardContent className="space-y-6">
+              {!bucketStatus.checked ? (
+                <div className="p-4 border rounded-md bg-yellow-50 text-yellow-800">
+                  <p className="text-sm">Verificando configuração de armazenamento...</p>
+                </div>
+              ) : !bucketStatus.exists ? (
+                <div className="p-4 border rounded-md bg-red-50 text-red-800">
+                  <p className="text-sm font-semibold">Erro na configuração do armazenamento</p>
+                  <p className="text-sm mt-1">{bucketStatus.error || "Não foi possível configurar o bucket de vídeos."}</p>
+                  <p className="text-sm mt-2">O upload de arquivos pode não funcionar corretamente.</p>
+                </div>
+              ) : (
+                <div className="p-4 border rounded-md bg-green-50 text-green-800">
+                  <p className="text-sm">Armazenamento configurado corretamente</p>
+                </div>
+              )}
+
               <FormField
                 control={form.control}
                 name="title"
