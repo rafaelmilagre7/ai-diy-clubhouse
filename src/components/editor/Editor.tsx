@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { FileUpload } from '@/components/ui/file-upload';
+import { ImageUpload } from '@/components/formacao/comum/ImageUpload';
 
 interface EditorProps {
   value: any;
@@ -10,15 +10,11 @@ interface EditorProps {
 export const Editor: React.FC<EditorProps> = ({ value, onChange }) => {
   return (
     <div className="w-full">
-      <FileUpload
+      <ImageUpload
+        value={typeof value === 'string' ? value : ''}
+        onChange={onChange}
         bucketName="learning_images"
-        folder="covers"
-        onUploadComplete={(url) => onChange(url)}
-        accept="image/*"
-        maxSize={5}
-        buttonText="Fazer upload de imagem de capa"
-        fieldLabel="Imagem da capa da aula"
-        initialFileUrl={typeof value === 'string' ? value : undefined}
+        folderPath="covers"
       />
     </div>
   );

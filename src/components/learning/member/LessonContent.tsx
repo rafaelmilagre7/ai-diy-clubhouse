@@ -43,18 +43,18 @@ export const LessonContent: React.FC<LessonContentProps> = ({
   
   // Determinar se devemos usar abas ou não
   const useTabs = (hasVideos && hasResources);
-  
-  // Renderizar a imagem da capa, se existir
+
+  // Renderizar a imagem da capa de modo mais proeminente
   const renderCoverImage = () => {
     if (!lesson.cover_image_url) return null;
     
     return (
       <div className="mb-6">
-        <div className="aspect-video relative rounded-xl overflow-hidden">
+        <div className="relative rounded-xl overflow-hidden">
           <img 
             src={lesson.cover_image_url} 
             alt={`Capa da aula ${lesson.title}`}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover aspect-video"
             onError={(e) => {
               (e.target as HTMLImageElement).style.display = 'none';
             }}
@@ -66,8 +66,19 @@ export const LessonContent: React.FC<LessonContentProps> = ({
 
   if (useTabs) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-6" onClick={handleInteraction}>
         {renderCoverImage()}
+        
+        {/* Descrição da aula */}
+        {lesson.description && (
+          <Card className="overflow-hidden">
+            <CardContent className="p-6">
+              <div className="prose dark:prose-invert max-w-none">
+                <p>{lesson.description}</p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
         
         <Tabs defaultValue="video" className="w-full">
           <TabsList className="mb-4">
@@ -112,7 +123,7 @@ export const LessonContent: React.FC<LessonContentProps> = ({
   
   // Versão sem abas quando há somente um tipo de conteúdo
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" onClick={handleInteraction}>
       {renderCoverImage()}
       
       {/* Descrição da aula */}
