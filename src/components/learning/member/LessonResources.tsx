@@ -2,7 +2,7 @@
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Download, File, FileText, FilePdf, FileImage, MoreHorizontal } from "lucide-react";
+import { Download, File, FileText, FileImage, MoreHorizontal } from "lucide-react";
 import { formatFileSize } from "@/lib/utils";
 
 interface Resource {
@@ -23,7 +23,7 @@ export const LessonResources: React.FC<LessonResourcesProps> = ({ resources }) =
   const getFileIcon = (fileType: string | undefined) => {
     if (!fileType) return File;
     
-    if (fileType.includes('pdf')) return FilePdf;
+    if (fileType.includes('pdf')) return FileText; // Usado FileText no lugar de FilePdf
     if (fileType.includes('image')) return FileImage;
     if (fileType.includes('text')) return FileText;
     
@@ -48,12 +48,15 @@ export const LessonResources: React.FC<LessonResourcesProps> = ({ resources }) =
     <div className="grid gap-4">
       {resources.map((resource) => {
         const FileIcon = getFileIcon(resource.file_type);
+        const isPdf = resource.file_type?.includes('pdf');
         
         return (
           <Card key={resource.id} className="overflow-hidden">
             <div className="flex items-center p-4 gap-4">
               <div className="bg-muted/50 p-3 rounded-lg">
-                <FileIcon className="h-6 w-6 text-primary" />
+                <FileIcon 
+                  className={`h-6 w-6 ${isPdf ? 'text-red-500' : 'text-primary'}`} 
+                />
               </div>
               
               <div className="flex-1 min-w-0">

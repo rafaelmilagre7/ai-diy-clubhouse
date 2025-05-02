@@ -10,7 +10,6 @@ import CourseDetails from "@/pages/member/learning/CourseDetails";
 import LessonView from "@/pages/member/learning/LessonView";
 import MemberCertificates from "@/pages/member/learning/MemberCertificates";
 import ValidateCertificate from "@/pages/certificate/ValidateCertificate";
-import FormacaoCertificateTemplates from "@/pages/formacao/FormacaoCertificateTemplates";
 
 const MemberRoutes = () => {
   const isAdminRoute = window.location.pathname.startsWith('/admin');

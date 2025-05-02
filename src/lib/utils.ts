@@ -1,3 +1,4 @@
+
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 
@@ -77,4 +78,34 @@ export function formatFileSize(bytes: number): string {
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+/**
+ * Formata a duração em segundos para um formato legível (hh:mm:ss ou mm:ss)
+ */
+export function formatDuration(seconds: number): string {
+  if (!seconds || isNaN(seconds)) return '00:00';
+  
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const secs = Math.floor(seconds % 60);
+  
+  if (hours > 0) {
+    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  }
+  
+  return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+}
+
+/**
+ * Calcula o progresso de um curso baseado em aulas concluídas
+ */
+export function calculateCourseProgress(
+  completedLessonIds: string[], 
+  totalLessonIds: string[]
+): number {
+  if (!totalLessonIds.length) return 0;
+  
+  const completed = completedLessonIds.filter(id => totalLessonIds.includes(id)).length;
+  return Math.round((completed / totalLessonIds.length) * 100);
 }

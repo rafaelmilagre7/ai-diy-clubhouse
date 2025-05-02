@@ -2,7 +2,9 @@
 import { Link } from "react-router-dom";
 import { LearningLesson, LearningModule } from "@/lib/supabase";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckCircle, Circle, BookOpen } from "lucide-react";
+import { CheckCircle, Circle, BookOpen, ChevronLeft } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 interface LessonSidebarProps {
   currentLesson: LearningLesson;
@@ -19,17 +21,45 @@ export const LessonSidebar = ({
   courseId,
   completedLessons = []
 }: LessonSidebarProps) => {
+  // Cálculo simples de progresso
+  const totalLessons = lessons.length;
+  const completedCount = completedLessons.length;
+  const progressPercentage = totalLessons > 0 ? Math.round((completedCount / totalLessons) * 100) : 0;
+
   return (
     <Card className="sticky top-24">
-      <CardHeader className="pb-3 flex flex-row items-center justify-between">
-        <CardTitle className="text-lg truncate">{module?.title || "Aulas do módulo"}</CardTitle>
-        <Link 
-          to={`/learning/course/${courseId}`} 
-          className="text-sm text-muted-foreground hover:text-foreground flex items-center"
-        >
-          <BookOpen className="h-4 w-4 mr-1" />
-          <span className="hidden sm:inline">Voltar ao curso</span>
-        </Link>
+      <CardHeader className="pb-3">
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-lg truncate">{module?.title || "Aulas do módulo"}</CardTitle>
+          <Button 
+            variant="ghost"
+            size="sm"
+            asChild
+            className="p-0 h-auto"
+          >
+            <Link to={`/learning/course/${courseId}`}>
+              <ChevronLeft className="h-4 w-4 mr-1" />
+              <span className="text-sm">Voltar</span>
+            </Link>
+          </Button>
+        </div>
+
+        {/* Barra de progresso */}
+        <div className="mt-2">
+          <div className="flex justify-between text-xs text-muted-foreground mb-1">
+            <span>Progresso</span>
+            <span>{progressPercentage}%</span>
+          </div>
+          <div className="h-2 bg-muted rounded-full overflow-hidden">
+            <div 
+              className={cn(
+                "h-full rounded-full",
+                progressPercentage < 100 ? "bg-blue-500" : "bg-green-500"
+              )} 
+              style={{ width: `${progressPercentage}%` }}
+            ></div>
+          </div>
+        </div>
       </CardHeader>
       <CardContent className="p-0">
         <div className="divide-y">
@@ -47,9 +77,9 @@ export const LessonSidebar = ({
               >
                 <div className="flex-shrink-0 mr-3">
                   {isCompleted ? (
-                    <CheckCircle className="h-4 w-4 text-primary" />
+                    <CheckCircle className="h-4 w-4 text-green-500" />
                   ) : isCurrent ? (
-                    <Circle className="h-4 w-4 fill-primary text-primary" />
+                    <Circle className="h-4 w-4 fill-blue-500 text-blue-500" />
                   ) : (
                     <Circle className="h-4 w-4 text-muted-foreground" />
                   )}
