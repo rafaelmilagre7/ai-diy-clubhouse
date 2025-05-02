@@ -10,6 +10,17 @@ export const supabase = createClient(supabaseConfig.url, supabaseConfig.anonKey,
     autoRefreshToken: true,
     detectSessionInUrl: true,
     flowType: 'pkce',
+  },
+  global: {
+    // Aumentar timeouts para lidar melhor com uploads grandes
+    headers: {
+      'X-Client-Info': 'supabase-js/2.x'
+    }
+  },
+  realtime: {
+    params: {
+      eventsPerSecond: 10
+    }
   }
 });
 
@@ -54,4 +65,42 @@ export async function decrementVoteCount(suggestionId: string, voteType: 'upvote
     table: 'suggestions', 
     column: column 
   });
+}
+
+// Função auxiliar para verificar e criar buckets de armazenamento
+export async function ensureStorageBucketExists(bucketName: string): Promise<boolean> {
+  try {
+    // Verificar se o bucket existe
+    const { data: buckets, error: listError } = await supabase.storage.listBuckets();
+    
+    if (listError) {
+      console.error(`[Storage] Erro ao listar buckets: ${listError.message}`);
+      return false;
+    }
+    
+    const bucketExists = buckets?.some(bucket => bucket.name === bucketName);
+    
+    // Se o bucket já existir, retornar true
+    if (bucketExists) {
+      console.log(`[Storage] Bucket ${bucketName} já existe`);
+      return true;
+    }
+    
+    // Se não existir, tentar criar
+    console.log(`[Storage] Criando bucket ${bucketName}...`);
+    const { error: createError } = await supabase.storage.createBucket(bucketName, {
+      public: true
+    });
+    
+    if (createError) {
+      console.error(`[Storage] Erro ao criar bucket ${bucketName}: ${createError.message}`);
+      return false;
+    }
+    
+    console.log(`[Storage] Bucket ${bucketName} criado com sucesso`);
+    return true;
+  } catch (error) {
+    console.error('[Storage] Erro ao verificar/criar bucket:', error);
+    return false;
+  }
 }

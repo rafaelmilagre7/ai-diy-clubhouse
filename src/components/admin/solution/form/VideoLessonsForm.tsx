@@ -119,13 +119,26 @@ const VideoLessonsForm: React.FC<VideoLessonsFormProps> = ({
     if (!solutionId) return;
     
     try {
+      // Verificar se a URL é válida
+      if (!url || typeof url !== 'string') {
+        console.error("URL de vídeo inválida:", url);
+        toast({
+          title: "Erro ao adicionar vídeo",
+          description: "A URL do vídeo é inválida.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
       const newVideo = {
         solution_id: solutionId,
-        name: fileName,
+        name: fileName || "Vídeo sem título",
         url,
         type: "video",
         format: "Vídeo MP4"
       };
+      
+      console.log("Adicionando novo vídeo:", newVideo);
       
       const { data, error } = await supabase
         .from("solution_resources")
@@ -133,7 +146,10 @@ const VideoLessonsForm: React.FC<VideoLessonsFormProps> = ({
         .select()
         .single();
         
-      if (error) throw error;
+      if (error) {
+        console.error("Erro ao adicionar vídeo na base de dados:", error);
+        throw error;
+      }
       
       if (data) {
         const videoLesson: VideoLesson = {

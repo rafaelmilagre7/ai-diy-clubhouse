@@ -23,6 +23,7 @@ export const VideoUpload = ({
   const [fileName, setFileName] = useState<string | null>(null);
   const [urlInput, setUrlInput] = useState<string>(videoType === "youtube" ? value : "");
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [error, setError] = useState<string | null>(null);
   
   // Extrair o nome do arquivo do URL para exibição
   useEffect(() => {
@@ -36,21 +37,76 @@ export const VideoUpload = ({
     }
   }, [value, videoType]);
 
+  // Verificar se o bucket existe e criar se necessário
+  const ensureBucketExists = async () => {
+    try {
+      console.log("Verificando se o bucket learning_videos existe...");
+      
+      // Verificar se o bucket existe
+      const { data: buckets, error: listError } = await supabase.storage.listBuckets();
+      
+      if (listError) {
+        console.error("Erro ao listar buckets:", listError);
+        throw listError;
+      }
+      
+      const bucketExists = buckets?.some(bucket => bucket.name === 'learning_videos');
+      
+      if (!bucketExists) {
+        console.log("Bucket learning_videos não existe, tentando criar...");
+        
+        // Tentar criar o bucket
+        const { data, error } = await supabase.storage.createBucket('learning_videos', {
+          public: true,
+          fileSizeLimit: 104857600, // 100MB em bytes
+        });
+        
+        if (error) {
+          console.error("Erro ao criar bucket learning_videos:", error);
+          return false;
+        }
+        
+        console.log("Bucket learning_videos criado com sucesso!");
+      } else {
+        console.log("Bucket learning_videos já existe.");
+      }
+      
+      return true;
+    } catch (error) {
+      console.error("Erro ao verificar/criar bucket:", error);
+      return false;
+    }
+  };
+
   // Upload de arquivo
   const uploadVideo = async (file: File) => {
     try {
+      setError(null);
       setUploading(true);
-      setUploadProgress(10);
+      setUploadProgress(5);
       
       // Verificar tamanho do arquivo (limite de 100MB para vídeos)
       const MAX_SIZE = 100 * 1024 * 1024; // 100MB em bytes
       if (file.size > MAX_SIZE) {
         toast.error(`O arquivo excede o tamanho máximo de 100MB`);
+        setError(`O arquivo excede o tamanho máximo de 100MB`);
         setUploading(false);
         return;
       }
       
-      // Gerar nome único
+      // Verificar se o bucket existe
+      const bucketReady = await ensureBucketExists();
+      
+      if (!bucketReady) {
+        toast.error("Não foi possível preparar o armazenamento para vídeos");
+        setError("Erro ao preparar armazenamento");
+        setUploading(false);
+        return;
+      }
+      
+      setUploadProgress(20);
+      
+      // Gerar nome único para evitar colisões
       const fileExt = file.name.split(".").pop();
       const uniqueFileName = `${uuidv4()}.${fileExt}`;
       const filePath = `videos/${uniqueFileName}`;
@@ -67,6 +123,8 @@ export const VideoUpload = ({
       
       if (error) {
         console.error("Erro no upload para o storage:", error);
+        toast.error(`Erro no upload: ${error.message}`);
+        setError(`Erro no upload: ${error.message}`);
         throw error;
       }
       
@@ -98,6 +156,7 @@ export const VideoUpload = ({
       toast.success("Vídeo carregado com sucesso");
     } catch (error: any) {
       console.error("Erro ao fazer upload do vídeo:", error);
+      setError(`Erro no upload: ${error.message || 'Tente novamente'}`);
       toast.error(`Erro ao fazer upload do vídeo: ${error.message || 'Tente novamente'}`);
     } finally {
       setUploading(false);
@@ -118,6 +177,7 @@ export const VideoUpload = ({
   const handleRemoveFile = () => {
     onChange("", "youtube");
     setFileName(null);
+    setError(null);
   };
   
   // Lidar com entrada de URL do YouTube
@@ -126,6 +186,8 @@ export const VideoUpload = ({
       toast.error("Por favor, insira uma URL do YouTube");
       return;
     }
+    
+    setError(null);
     
     // Extrair ID do vídeo do YouTube
     try {
@@ -142,6 +204,7 @@ export const VideoUpload = ({
       
       if (!videoId) {
         toast.error("URL do YouTube inválida");
+        setError("URL do YouTube inválida");
         return;
       }
       
@@ -158,9 +221,10 @@ export const VideoUpload = ({
       onChange(embedUrl, "youtube", undefined, undefined, undefined);
       
       toast.success("URL do YouTube processada com sucesso");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erro ao processar URL do YouTube:", error);
       toast.error("URL inválida. Verifique e tente novamente.");
+      setError(`Erro ao processar URL: ${error.message}`);
     }
   };
 
@@ -203,11 +267,16 @@ export const VideoUpload = ({
               placeholder="Cole a URL do vídeo do YouTube aqui"
               value={urlInput}
               onChange={(e) => setUrlInput(e.target.value)}
+              className={error && error.includes("URL") ? "border-red-500" : ""}
             />
             <Button type="button" onClick={handleYoutubeUrl}>
               Adicionar
             </Button>
           </div>
+          
+          {error && error.includes("URL") && (
+            <p className="text-sm text-red-500">{error}</p>
+          )}
           
           {value && videoType === "youtube" && (
             <div className="mt-4 border rounded-md overflow-hidden">
@@ -238,7 +307,7 @@ export const VideoUpload = ({
                 className={cn(
                   "flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer",
                   "bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600",
-                  "border-gray-300 dark:border-gray-600"
+                  error ? "border-red-500" : "border-gray-300 dark:border-gray-600"
                 )}
               >
                 <div className="flex flex-col items-center justify-center pt-5 pb-6">
@@ -296,6 +365,10 @@ export const VideoUpload = ({
                 <span className="sr-only">Remover vídeo</span>
               </Button>
             </div>
+          )}
+          
+          {error && !error.includes("URL") && (
+            <p className="text-sm text-red-500 mt-2">{error}</p>
           )}
         </div>
       )}
