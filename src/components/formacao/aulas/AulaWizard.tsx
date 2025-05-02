@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { 
   Dialog, 
@@ -104,6 +105,7 @@ export const AulaWizard = ({
   // Efeito para resetar e inicializar o formulário quando aula ou estado do modal mudar
   useEffect(() => {
     if (open && aula) {
+      console.log("Inicializando formulário com aula existente:", aula);
       // Inicializa o formulário com os valores da aula
       form.reset({
         title: aula.title || "",
@@ -122,6 +124,7 @@ export const AulaWizard = ({
         fetchVideos(aula.id);
       }
     } else if (open) {
+      console.log("Inicializando formulário para nova aula");
       // Se está abrindo para criar uma nova aula, resetamos o formulário
       form.reset({
         title: "",
@@ -217,6 +220,7 @@ export const AulaWizard = ({
     console.log("Iniciando salvamento da aula com os valores:", values);
     console.log("Estado do formulário:", form.formState);
     console.log("Vídeos para salvar:", values.videos);
+    console.log("Campo published:", values.published);
     
     if (!moduleId) {
       toast.error("Módulo não especificado");
@@ -246,16 +250,20 @@ export const AulaWizard = ({
       if (lessonId) {
         // Atualizar aula existente
         console.log("Atualizando aula existente:", lessonId);
-        const { error } = await supabase
+        console.log("Status de publicação a ser salvo:", completeLessonData.published);
+        
+        const { data, error } = await supabase
           .from('learning_lessons')
           .update(completeLessonData)
-          .eq('id', lessonId);
+          .eq('id', lessonId)
+          .select();
           
         if (error) {
           console.error("Erro ao atualizar aula:", error);
           throw error;
         }
         
+        console.log("Resposta da atualização da aula:", data);
         console.log("Aula atualizada com sucesso");
       } else {
         // Criar nova aula
@@ -355,6 +363,36 @@ export const AulaWizard = ({
         }
       }
       
+      // Verificar se a aula foi realmente atualizada com o status de publicação correto
+      if (lessonId) {
+        const { data: updatedLesson, error: checkError } = await supabase
+          .from('learning_lessons')
+          .select('published')
+          .eq('id', lessonId)
+          .single();
+          
+        if (checkError) {
+          console.error("Erro ao verificar estado da aula após atualização:", checkError);
+        } else {
+          console.log("Status de publicação após atualização:", updatedLesson.published);
+          if (updatedLesson.published !== values.published) {
+            console.warn("AVISO: O status de publicação não foi atualizado corretamente!");
+            
+            // Tentar uma atualização direta apenas do campo published
+            const { error: publishUpdateError } = await supabase
+              .from('learning_lessons')
+              .update({ published: values.published })
+              .eq('id', lessonId);
+              
+            if (publishUpdateError) {
+              console.error("Erro na segunda tentativa de atualização do status:", publishUpdateError);
+            } else {
+              console.log("Segunda tentativa de atualização do status de publicação bem-sucedida");
+            }
+          }
+        }
+      }
+      
       console.log("Operação concluída com sucesso!");
       toast.success(aula ? "Aula atualizada com sucesso!" : "Aula criada com sucesso!");
       
@@ -367,7 +405,8 @@ export const AulaWizard = ({
       log("aula_saved", {
         lesson_id: lessonId,
         is_update: !!aula,
-        has_videos: videos.length > 0
+        has_videos: videos.length > 0,
+        published: values.published
       });
       
       handleOpenChange(false);
@@ -490,7 +529,10 @@ export const AulaWizard = ({
                         <FormControl>
                           <Switch
                             checked={field.value}
-                            onCheckedChange={field.onChange}
+                            onCheckedChange={(checked) => {
+                              console.log("Switch toggled to:", checked);
+                              field.onChange(checked);
+                            }}
                           />
                         </FormControl>
                         <FormMessage />

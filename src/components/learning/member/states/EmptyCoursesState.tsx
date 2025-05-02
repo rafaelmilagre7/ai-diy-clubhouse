@@ -1,5 +1,8 @@
 
 import { Book } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/auth";
+import { Link } from "react-router-dom";
 
 interface EmptyCoursesStateProps {
   activeTab: string;
@@ -7,6 +10,9 @@ interface EmptyCoursesStateProps {
 }
 
 export const EmptyCoursesState = ({ activeTab, message }: EmptyCoursesStateProps) => {
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin" || user?.role === "formacao";
+
   const getMessage = () => {
     if (message) return message;
     
@@ -27,7 +33,9 @@ export const EmptyCoursesState = ({ activeTab, message }: EmptyCoursesStateProps
       case "completed":
         return "Continue aprendendo e conclua cursos para vê-los aqui.";
       default:
-        return "Novos cursos serão disponibilizados em breve.";
+        return isAdmin 
+          ? "Acesse o painel de administração para criar e publicar novos cursos e aulas." 
+          : "Novos cursos serão disponibilizados em breve.";
     }
   };
 
@@ -38,6 +46,14 @@ export const EmptyCoursesState = ({ activeTab, message }: EmptyCoursesStateProps
       </div>
       <h3 className="text-lg font-medium">{getMessage()}</h3>
       <p className="text-muted-foreground mt-2">{getDescription()}</p>
+      
+      {isAdmin && activeTab === "all" && (
+        <Button asChild className="mt-6">
+          <Link to="/formacao/cursos">
+            Gerenciar Cursos e Aulas
+          </Link>
+        </Button>
+      )}
     </div>
   );
 };
