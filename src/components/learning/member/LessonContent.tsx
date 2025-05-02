@@ -1,11 +1,10 @@
 
 import React, { useEffect } from "react";
 import { LearningLesson } from "@/lib/supabase/types";
-import { ContentRenderer } from "../content/ContentRenderer";
 import { LessonVideoPlayer } from "./LessonVideoPlayer";
 import { LessonComments } from "../comments/LessonComments";
 import { LessonResources } from "./LessonResources";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -42,23 +41,37 @@ export const LessonContent: React.FC<LessonContentProps> = ({
   // Verificar se há recursos para exibir
   const hasResources = resources && resources.length > 0;
   
-  // Verificar se há conteúdo textual para exibir
-  const hasContent = lesson.content && 
-    (typeof lesson.content === 'string' ? 
-      lesson.content.trim() !== '' : 
-      (lesson.content.blocks?.length > 0 || Object.keys(lesson.content).length > 0)
-    );
-
   // Determinar se devemos usar abas ou não
-  const useTabs = (hasVideos && (hasContent || hasResources));
+  const useTabs = (hasVideos && hasResources);
   
+  // Renderizar a imagem da capa, se existir
+  const renderCoverImage = () => {
+    if (!lesson.cover_image_url) return null;
+    
+    return (
+      <div className="mb-6">
+        <div className="aspect-video relative rounded-xl overflow-hidden">
+          <img 
+            src={lesson.cover_image_url} 
+            alt={`Capa da aula ${lesson.title}`}
+            className="w-full h-full object-cover"
+            onError={(e) => {
+              (e.target as HTMLImageElement).style.display = 'none';
+            }}
+          />
+        </div>
+      </div>
+    );
+  };
+
   if (useTabs) {
     return (
       <div className="space-y-6">
+        {renderCoverImage()}
+        
         <Tabs defaultValue="video" className="w-full">
           <TabsList className="mb-4">
             {hasVideos && <TabsTrigger value="video">Vídeos</TabsTrigger>}
-            {hasContent && <TabsTrigger value="content">Conteúdo</TabsTrigger>}
             {hasResources && <TabsTrigger value="resources">Materiais</TabsTrigger>}
           </TabsList>
           
@@ -81,19 +94,6 @@ export const LessonContent: React.FC<LessonContentProps> = ({
             </TabsContent>
           )}
           
-          {hasContent && (
-            <TabsContent value="content">
-              <Card className="p-6">
-                <ScrollArea className="max-h-[70vh]">
-                  <ContentRenderer 
-                    content={lesson.content}
-                    onInteraction={handleInteraction}
-                  />
-                </ScrollArea>
-              </Card>
-            </TabsContent>
-          )}
-          
           {hasResources && (
             <TabsContent value="resources">
               <LessonResources resources={resources} />
@@ -113,12 +113,25 @@ export const LessonContent: React.FC<LessonContentProps> = ({
   // Versão sem abas quando há somente um tipo de conteúdo
   return (
     <div className="space-y-6">
+      {renderCoverImage()}
+      
+      {/* Descrição da aula */}
+      {lesson.description && (
+        <Card className="overflow-hidden">
+          <CardContent className="p-6">
+            <div className="prose dark:prose-invert max-w-none">
+              <p>{lesson.description}</p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+      
       {/* Reprodutor de vídeo se houver vídeos */}
       {hasVideos && (
         <section>
-          <h2 className="text-xl font-semibold mb-4">Vídeo-aula</h2>
+          <h2 className="text-xl font-semibold mb-4">Vídeos da Aula</h2>
           {videos.map((video, index) => (
-            <div key={video.id || index} className="mb-4">
+            <div key={video.id || index} className="mb-6">
               <div className="aspect-video mb-2">
                 <LessonVideoPlayer 
                   video={video} 
@@ -131,19 +144,6 @@ export const LessonContent: React.FC<LessonContentProps> = ({
               )}
             </div>
           ))}
-        </section>
-      )}
-      
-      {/* Conteúdo textual da aula */}
-      {hasContent && (
-        <section className="mt-6">
-          <h2 className="text-xl font-semibold mb-4">Conteúdo da aula</h2>
-          <Card className="p-6">
-            <ContentRenderer 
-              content={lesson.content}
-              onInteraction={handleInteraction}
-            />
-          </Card>
         </section>
       )}
       

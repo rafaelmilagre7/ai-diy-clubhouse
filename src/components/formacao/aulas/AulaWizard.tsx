@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { useNavigate } from "react-router-dom";
 
 import { 
   Form, 
@@ -44,12 +43,11 @@ const formSchema = z.object({
   moduleId: z.string().uuid({
     message: "Por favor, selecione um módulo válido.",
   }),
-  content: z.any().optional(),
+  coverImageUrl: z.string().optional(),
   estimatedTimeMinutes: z.number().optional().default(0),
   aiAssistantEnabled: z.boolean().default(false),
   aiAssistantPrompt: z.string().optional(),
   published: z.boolean().default(false),
-  coverImageUrl: z.string().url("Por favor, insira uma URL válida").optional(),
   orderIndex: z.number().optional().default(0),
   videos: z.array(
     z.object({
@@ -95,18 +93,16 @@ const AulaWizard: React.FC<AulaWizardProps> = ({ open, onOpenChange, aula, modul
   const [isSaving, setIsSaving] = useState(false);
   const [modules, setModules] = useState<LearningModule[]>([]);
   const { toast: hookToast } = useToast();
-  const navigate = useNavigate();
 
   const defaultValues: Partial<FormSchema> = {
     title: aula?.title || "",
     description: aula?.description || "",
     moduleId: aula?.module_id || moduleId || "",
-    content: aula?.content || {},
+    coverImageUrl: aula?.cover_image_url || "",
     estimatedTimeMinutes: aula?.estimated_time_minutes || 0,
     aiAssistantEnabled: aula?.ai_assistant_enabled || false,
     aiAssistantPrompt: aula?.ai_assistant_prompt || "",
     published: aula?.published || false,
-    coverImageUrl: aula?.cover_image_url || "",
     orderIndex: aula?.order_index || 0,
     videos: (aula as ExtendedLearningLesson)?.videos || []
   };
@@ -240,12 +236,11 @@ const AulaWizard: React.FC<AulaWizardProps> = ({ open, onOpenChange, aula, modul
         title: values.title,
         description: values.description || null,
         module_id: values.moduleId,
-        content: values.content || null,
+        cover_image_url: values.coverImageUrl || null,
         estimated_time_minutes: values.estimatedTimeMinutes || 0,
         ai_assistant_enabled: values.aiAssistantEnabled,
         ai_assistant_prompt: values.aiAssistantPrompt || null,
         published: values.published,
-        cover_image_url: values.coverImageUrl || null,
         order_index: values.orderIndex || 0
       };
       
@@ -253,7 +248,7 @@ const AulaWizard: React.FC<AulaWizardProps> = ({ open, onOpenChange, aula, modul
       console.log("Status de publicação a ser salvo:", completeLessonData.published);
       
       if (lessonId) {
-        // Atualizar aula existente - FIX: Separar operação de update e verificação
+        // Atualizar aula existente
         console.log("Atualizando aula existente:", lessonId);
         
         // 1. Primeiro fazer a atualização sem retorno de dados
@@ -372,10 +367,6 @@ const AulaWizard: React.FC<AulaWizardProps> = ({ open, onOpenChange, aula, modul
     onOpenChange(false);
   };
 
-  const handleEditorChange = (value: any) => {
-    form.setValue("content", value);
-  };
-
   const handleVideoChange = (index: number, field: string, value: any) => {
     const newVideos = [...form.getValues().videos];
     newVideos[index] = { ...newVideos[index], [field]: value };
@@ -408,22 +399,23 @@ const AulaWizard: React.FC<AulaWizardProps> = ({ open, onOpenChange, aula, modul
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[75%] lg:max-w-[60%] xl:max-w-[50%]">
-        <DialogHeader>
+      <DialogContent className="w-full max-w-3xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
+        <DialogHeader className="sticky top-0 z-10 bg-background pb-4">
           <DialogTitle>{aula ? "Editar Aula" : "Criar Nova Aula"}</DialogTitle>
           <DialogDescription>
             Preencha os campos abaixo para {aula ? "editar a aula." : "criar uma nova aula."}
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            {/* Campos básicos */}
+            <div className="grid grid-cols-1 gap-4">
               <FormField
                 control={form.control}
                 name="title"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Título</FormLabel>
+                    <FormLabel>1. Título da Aula</FormLabel>
                     <FormControl>
                       <Input placeholder="Título da aula" {...field} />
                     </FormControl>
@@ -431,6 +423,44 @@ const AulaWizard: React.FC<AulaWizardProps> = ({ open, onOpenChange, aula, modul
                   </FormItem>
                 )}
               />
+              
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>2. Descrição da Aula</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Descrição da aula"
+                        className="min-h-[80px]"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="coverImageUrl"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>3. Imagem da Capa</FormLabel>
+                    <FormControl>
+                      <Editor
+                        value={field.value}
+                        onChange={field.onChange}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="moduleId"
@@ -453,90 +483,43 @@ const AulaWizard: React.FC<AulaWizardProps> = ({ open, onOpenChange, aula, modul
                   </FormItem>
                 )}
               />
-            </div>
-
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Descrição</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Descrição da aula"
-                      className="resize-none"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="content"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Conteúdo</FormLabel>
-                  <FormControl>
-                    <Editor
-                      value={field.value}
-                      onChange={handleEditorChange}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <FormField
-                control={form.control}
-                name="estimatedTimeMinutes"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Tempo Estimado (minutos)</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        placeholder="Tempo estimado em minutos"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
+              
               <FormField
                 control={form.control}
                 name="orderIndex"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Ordem da Aula</FormLabel>
+                    <FormLabel>4. Ordem da Aula</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
                         placeholder="Ordem da aula no módulo"
                         {...field}
+                        onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
                       />
                     </FormControl>
                     <FormMessage />
+                    <FormDescription>
+                      Posição desta aula dentro do módulo
+                    </FormDescription>
                   </FormItem>
                 )}
               />
-
+            </div>
+            
+            <div className="grid grid-cols-1 gap-4">
               <FormField
                 control={form.control}
-                name="coverImageUrl"
+                name="estimatedTimeMinutes"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>URL da Imagem de Capa</FormLabel>
+                    <FormLabel>Duração Estimada (minutos)</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="URL da imagem de capa"
+                        type="number"
+                        placeholder="Tempo estimado em minutos"
                         {...field}
+                        onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
                       />
                     </FormControl>
                     <FormMessage />
@@ -545,16 +528,16 @@ const AulaWizard: React.FC<AulaWizardProps> = ({ open, onOpenChange, aula, modul
               />
             </div>
 
-            <div className="flex items-center space-x-2">
+            <div className="rounded-lg border p-4 space-y-4">
               <FormField
                 control={form.control}
                 name="aiAssistantEnabled"
                 render={({ field }) => (
-                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                  <FormItem className="flex flex-row items-center justify-between">
                     <div className="space-y-0.5">
-                      <FormLabel className="text-base">Habilitar Assistente de IA</FormLabel>
+                      <FormLabel className="text-base">5. Assistente de IA</FormLabel>
                       <FormDescription>
-                        Permite que o assistente de IA ajude os alunos nesta aula.
+                        Ative para permitir assistência de IA nesta aula
                       </FormDescription>
                     </div>
                     <FormControl>
@@ -566,55 +549,30 @@ const AulaWizard: React.FC<AulaWizardProps> = ({ open, onOpenChange, aula, modul
                   </FormItem>
                 )}
               />
+
+              {form.getValues().aiAssistantEnabled && (
+                <FormField
+                  control={form.control}
+                  name="aiAssistantPrompt"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>ID do Assistente de IA</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="ID do assistente (ex: asst_abc123)"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
             </div>
 
-            {form.getValues().aiAssistantEnabled && (
-              <FormField
-                control={form.control}
-                name="aiAssistantPrompt"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Prompt do Assistente de IA</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="Prompt para o assistente de IA"
-                        className="resize-none"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            )}
-
-            <FormField
-              control={form.control}
-              name="published"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                  <div className="space-y-0.5">
-                    <FormLabel className="text-base">Publicar Aula</FormLabel>
-                    <FormDescription>
-                      Define se a aula está visível para os alunos.
-                    </FormDescription>
-                  </div>
-                  <FormControl>
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-
-            <div>
-              <FormLabel>Vídeos da Aula</FormLabel>
-              <FormDescription>
-                Adicione e gerencie os vídeos desta aula.
-              </FormDescription>
-
+            <div className="rounded-lg border p-4">
+              <FormLabel className="text-base block mb-4">6. Vídeos da Aula</FormLabel>
+              
               <DragDropContext onDragEnd={onDragEnd}>
                 <Droppable droppableId="videos">
                   {(provided) => (
@@ -627,29 +585,50 @@ const AulaWizard: React.FC<AulaWizardProps> = ({ open, onOpenChange, aula, modul
                               {...provided.draggableProps}
                               className="border rounded-md p-4"
                             >
-                              <div className="flex items-center justify-between">
+                              <div className="flex items-center justify-between mb-2">
                                 <div className="flex items-center">
                                   <div {...provided.dragHandleProps} className="cursor-grab mr-2">
                                     <GripVertical className="h-4 w-4 text-gray-500" />
                                   </div>
-                                  <span>Vídeo {index + 1}</span>
+                                  <span className="font-medium">Vídeo {index + 1}</span>
                                 </div>
-                                <Button type="button" variant="ghost" size="sm" onClick={() => handleRemoveVideo(index)}>
+                                <Button 
+                                  type="button" 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  onClick={() => handleRemoveVideo(index)}
+                                >
                                   Remover
                                 </Button>
                               </div>
 
-                              <VideoUpload
-                                value={video.url || ""}
-                                videoType={video.type || "youtube"}
-                                onChange={(url, type, fileName, filePath, fileSize) => {
-                                  handleVideoChange(index, "url", url);
-                                  handleVideoChange(index, "type", type);
-                                  handleVideoChange(index, "fileName", fileName);
-                                  handleVideoChange(index, "filePath", filePath);
-                                  handleVideoChange(index, "fileSize", fileSize);
-                                }}
-                              />
+                              <div className="space-y-3">
+                                <Input
+                                  placeholder="Título do vídeo"
+                                  value={video.title || ''}
+                                  onChange={(e) => handleVideoChange(index, "title", e.target.value)}
+                                  className="mb-2"
+                                />
+                                
+                                <Textarea
+                                  placeholder="Descrição do vídeo"
+                                  value={video.description || ''}
+                                  onChange={(e) => handleVideoChange(index, "description", e.target.value)}
+                                  className="mb-2 resize-none h-20"
+                                />
+                                
+                                <VideoUpload
+                                  value={video.url || ""}
+                                  videoType={video.type || "youtube"}
+                                  onChange={(url, type, fileName, filePath, fileSize) => {
+                                    handleVideoChange(index, "url", url);
+                                    handleVideoChange(index, "type", type);
+                                    handleVideoChange(index, "fileName", fileName);
+                                    handleVideoChange(index, "filePath", filePath);
+                                    handleVideoChange(index, "fileSize", fileSize);
+                                  }}
+                                />
+                              </div>
                             </div>
                           )}
                         </Draggable>
@@ -660,18 +639,39 @@ const AulaWizard: React.FC<AulaWizardProps> = ({ open, onOpenChange, aula, modul
                 </Droppable>
               </DragDropContext>
 
-              <Button type="button" variant="outline" className="mt-4" onClick={handleAddVideo}>
+              <Button type="button" variant="outline" className="mt-4 w-full" onClick={handleAddVideo}>
                 <Plus className="w-4 h-4 mr-2" />
                 Adicionar Vídeo
               </Button>
             </div>
 
-            <DialogFooter>
+            <FormField
+              control={form.control}
+              name="published"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                  <div className="space-y-0.5">
+                    <FormLabel className="text-base">Publicar Aula</FormLabel>
+                    <FormDescription>
+                      Quando publicada, a aula ficará visível para os alunos.
+                    </FormDescription>
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+
+            <DialogFooter className="pt-4 border-t">
               <Button type="button" variant="ghost" onClick={handleCancel}>
                 Cancelar
               </Button>
               <Button type="submit" disabled={isSaving}>
-                {isSaving ? "Salvando..." : "Salvar"}
+                {isSaving ? "Salvando..." : "Salvar Aula"}
               </Button>
             </DialogFooter>
           </form>

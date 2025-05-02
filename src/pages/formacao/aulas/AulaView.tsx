@@ -170,21 +170,17 @@ const AulaView: React.FC = () => {
   const isLoading = isLoadingAula || isLoadingRecursos || isLoadingVideos;
   
   if (isLoading) {
-    return <div className="container py-8">Carregando aula...</div>;
+    return (
+      <div className="container py-8">Carregando aula...</div>
+    );
   }
   
   if (!aula) {
     return (
       <div className="container py-8">
         <h2 className="text-xl font-semibold">Aula não encontrada</h2>
-        <Button 
-          variant="ghost" 
-          className="mt-4"
-          onClick={() => navigate(`/formacao/cursos/${cursoId}`)}
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Voltar para o curso
-        </Button>
+        <p className="text-muted-foreground mt-2 mb-4">O módulo que você está procurando não existe ou foi removido.</p>
+        <Button onClick={() => navigate(`/formacao/cursos/${cursoId}`)}>Voltar para o curso</Button>
       </div>
     );
   }
@@ -222,15 +218,10 @@ const AulaView: React.FC = () => {
             <LessonContent
               lesson={aula}
               videos={videos || []}
+              resources={recursos || []}
               onProgressUpdate={handleProgressUpdate}
             />
           </div>
-          
-          {recursos && recursos.length > 0 && (
-            <div className="mt-8">
-              <LessonResources resources={recursos} />
-            </div>
-          )}
         </div>
         
         <div>
