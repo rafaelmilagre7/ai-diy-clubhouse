@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { CursoHeader } from "@/components/formacao/cursos/CursoHeader";
 import { ModulosList } from "@/components/formacao/modulos/ModulosList";
 import { ModuloFormDialog } from "@/components/formacao/modulos/ModuloFormDialog";
+import { CursoFormDialog } from "@/components/formacao/cursos/CursoFormDialog";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 
@@ -21,6 +22,7 @@ const FormacaoCursoDetalhes = () => {
   const [loading, setLoading] = useState(true);
   const [loadingModulos, setLoadingModulos] = useState(true);
   const [isModuloDialogOpen, setIsModuloDialogOpen] = useState(false);
+  const [isCursoDialogOpen, setIsCursoDialogOpen] = useState(false);
   const [editingModulo, setEditingModulo] = useState<LearningModule | null>(null);
 
   // Buscar detalhes do curso
@@ -80,6 +82,11 @@ const FormacaoCursoDetalhes = () => {
     setEditingModulo(null);
     setIsModuloDialogOpen(true);
   };
+  
+  // Abrir modal para editar curso
+  const handleEditarCurso = () => {
+    setIsCursoDialogOpen(true);
+  };
 
   // Abrir modal para editar módulo existente
   const handleEditarModulo = (modulo: LearningModule) => {
@@ -110,6 +117,12 @@ const FormacaoCursoDetalhes = () => {
     setIsModuloDialogOpen(false);
     fetchModulos();
   };
+  
+  // Ações após salvar o curso
+  const handleSalvarCurso = () => {
+    setIsCursoDialogOpen(false);
+    fetchCurso();
+  };
 
   if (loading) {
     return (
@@ -135,7 +148,8 @@ const FormacaoCursoDetalhes = () => {
     <div className="space-y-6">
       <CursoHeader 
         curso={curso} 
-        onNovoModulo={handleNovoModulo} 
+        onNovoModulo={handleNovoModulo}
+        onEditarCurso={handleEditarCurso}
         isAdmin={isAdmin} 
       />
       
@@ -154,6 +168,16 @@ const FormacaoCursoDetalhes = () => {
         cursoId={id || ''}
         onSuccess={handleSalvarModulo}
       />
+      
+      {curso && (
+        <CursoFormDialog 
+          open={isCursoDialogOpen}
+          onOpenChange={setIsCursoDialogOpen}
+          curso={curso}
+          onSuccess={handleSalvarCurso}
+          userId={profile?.id || ''}
+        />
+      )}
     </div>
   );
 };

@@ -2,16 +2,17 @@
 import { LearningCourse } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ChevronLeft, PlusCircle } from "lucide-react";
+import { ChevronLeft, Edit, PlusCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 
 interface CursoHeaderProps {
   curso: LearningCourse;
   onNovoModulo: () => void;
+  onEditarCurso?: () => void; // Novo prop para ação de editar
   isAdmin: boolean;
 }
 
-export const CursoHeader = ({ curso, onNovoModulo, isAdmin }: CursoHeaderProps) => {
+export const CursoHeader = ({ curso, onNovoModulo, onEditarCurso, isAdmin }: CursoHeaderProps) => {
   return (
     <div>
       <div className="flex items-center gap-2 mb-4">
@@ -40,6 +41,12 @@ export const CursoHeader = ({ curso, onNovoModulo, isAdmin }: CursoHeaderProps) 
         
         {isAdmin && (
           <div className="flex gap-2">
+            {onEditarCurso && (
+              <Button variant="outline" onClick={onEditarCurso}>
+                <Edit className="h-4 w-4 mr-2" />
+                Editar Curso
+              </Button>
+            )}
             <Button onClick={onNovoModulo}>
               <PlusCircle className="h-4 w-4 mr-2" />
               Novo Módulo

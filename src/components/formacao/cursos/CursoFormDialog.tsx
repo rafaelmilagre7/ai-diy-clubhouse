@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -57,7 +57,7 @@ export const CursoFormDialog = ({
 }: CursoFormDialogProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const isEditing = !!curso;
-
+  
   const form = useForm<CursoFormValues>({
     resolver: zodResolver(cursoFormSchema),
     defaultValues: {
@@ -67,6 +67,18 @@ export const CursoFormDialog = ({
       published: curso?.published || false,
     },
   });
+  
+  // Atualizar formulário quando o curso mudar
+  useEffect(() => {
+    if (curso) {
+      form.reset({
+        title: curso.title || "",
+        description: curso.description || "",
+        cover_image_url: curso.cover_image_url || "",
+        published: curso.published || false,
+      });
+    }
+  }, [curso, form]);
 
   const onSubmit = async (values: CursoFormValues) => {
     setIsSubmitting(true);
@@ -125,7 +137,7 @@ export const CursoFormDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-[650px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{isEditing ? "Editar Curso" : "Criar Novo Curso"}</DialogTitle>
           <DialogDescription>

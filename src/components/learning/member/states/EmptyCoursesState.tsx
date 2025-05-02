@@ -47,12 +47,16 @@ export const EmptyCoursesState = ({ activeTab, message }: EmptyCoursesStateProps
       <h3 className="text-lg font-medium">{getMessage()}</h3>
       <p className="text-muted-foreground mt-2">{getDescription()}</p>
       
-      {isAdmin && activeTab === "all" && (
-        <Button asChild className="mt-6">
-          <Link to="/formacao/cursos">
-            Gerenciar Cursos e Aulas
-          </Link>
-        </Button>
+      {isAdmin && (
+        <div className="mt-6 space-y-2">
+          {activeTab === "all" && (
+            <Button asChild>
+              <Link to="/formacao/cursos">
+                Gerenciar Cursos e Aulas
+              </Link>
+            </Button>
+          )}
+        </div>
       )}
     </div>
   );
