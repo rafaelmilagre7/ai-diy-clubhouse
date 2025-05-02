@@ -23,9 +23,11 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const FormacaoAulas = () => {
   const { profile } = useAuth();
+  const navigate = useNavigate();
   const [aulas, setAulas] = useState<LearningLesson[]>([]);
   const [loading, setLoading] = useState(true);
   const [cursoFiltro, setCursoFiltro] = useState<string>("");
@@ -33,6 +35,11 @@ const FormacaoAulas = () => {
   const [cursosDisponiveis, setCursosDisponiveis] = useState<{id: string, title: string}[]>([]);
   const [modulosDisponiveis, setModulosDisponiveis] = useState<{id: string, title: string, course_id: string}[]>([]);
   const [busca, setBusca] = useState("");
+  
+  // Nova função para lidar com a criação de aulas
+  const handleNovaAula = () => {
+    navigate("/formacao/aulas/nova");
+  };
   
   // Buscar cursos para filtro
   const fetchCursos = async () => {
@@ -202,7 +209,7 @@ const FormacaoAulas = () => {
 
   return (
     <div className="space-y-6">
-      <FormacaoAulasHeader />
+      <FormacaoAulasHeader onNovaAula={handleNovaAula} />
       
       <Card>
         <CardHeader>
