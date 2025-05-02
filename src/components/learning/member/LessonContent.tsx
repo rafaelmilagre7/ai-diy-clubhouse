@@ -6,7 +6,6 @@ import { LessonComments } from "../comments/LessonComments";
 import { LessonResources } from "./LessonResources";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface LessonContentProps {
@@ -106,6 +105,13 @@ export const LessonContent: React.FC<LessonContentProps> = ({
           </Card>
         )}
         
+        {/* Duração total dos vídeos */}
+        {hasVideos && formatTotalDuration() && (
+          <div className="flex items-center text-sm text-muted-foreground">
+            <span>Duração total: {formatTotalDuration()}</span>
+          </div>
+        )}
+        
         <Tabs defaultValue="video" className="w-full">
           <TabsList className="mb-4">
             {hasVideos && <TabsTrigger value="video">Vídeos</TabsTrigger>}
@@ -161,6 +167,13 @@ export const LessonContent: React.FC<LessonContentProps> = ({
             </div>
           </CardContent>
         </Card>
+      )}
+      
+      {/* Duração total dos vídeos */}
+      {hasVideos && formatTotalDuration() && (
+        <div className="flex items-center text-sm text-muted-foreground">
+          <span>Duração total: {formatTotalDuration()}</span>
+        </div>
       )}
       
       {/* Reprodutor de vídeo se houver vídeos */}

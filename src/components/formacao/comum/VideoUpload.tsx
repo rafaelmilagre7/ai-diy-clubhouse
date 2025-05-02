@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { Upload, Loader2, Video, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { v4 as uuidv4 } from "uuid";
+import { createStoragePublicPolicy } from "@/lib/supabase/rpc";
 
 interface VideoUploadProps {
   value: string;
@@ -43,53 +44,15 @@ export const VideoUpload = ({
     try {
       console.log("Verificando se o bucket learning_videos existe...");
       
-      // Verificar se o bucket existe
-      const { data: buckets, error: listError } = await supabase.storage.listBuckets();
+      // Verifica e cria o bucket + políticas usando a função RPC
+      const { success, error } = await createStoragePublicPolicy('learning_videos');
       
-      if (listError) {
-        console.error("Erro ao listar buckets:", listError);
-        throw listError;
+      if (!success) {
+        console.error("Erro ao configurar bucket:", error);
+        return false;
       }
       
-      const bucketExists = buckets?.some(bucket => bucket.name === 'learning_videos');
-      
-      if (!bucketExists) {
-        console.log("Bucket learning_videos não existe, tentando criar...");
-        
-        // Tentar criar o bucket
-        const { data, error } = await supabase.storage.createBucket('learning_videos', {
-          public: true,
-          fileSizeLimit: 104857600, // 100MB em bytes
-        });
-        
-        if (error) {
-          console.error("Erro ao criar bucket learning_videos:", error);
-          return false;
-        }
-        
-        console.log("Bucket learning_videos criado com sucesso!");
-        
-        // Criar política de acesso público
-        try {
-          // Tentar atualizar as políticas de RLS para acesso público
-          const { error: policyError } = await supabase.rpc('create_storage_public_policy', {
-            bucket_name: 'learning_videos'
-          });
-          
-          if (policyError) {
-            console.error("Erro ao definir política pública:", policyError);
-            // Não falhar por causa disso, apenas logar o erro
-          } else {
-            console.log("Política pública aplicada com sucesso ao bucket");
-          }
-        } catch (policyErr) {
-          console.error("Erro ao aplicar política:", policyErr);
-          // Continuamos mesmo com erro na política
-        }
-      } else {
-        console.log("Bucket learning_videos já existe.");
-      }
-      
+      console.log("Bucket learning_videos configurado com sucesso!");
       return true;
     } catch (error) {
       console.error("Erro ao verificar/criar bucket:", error);

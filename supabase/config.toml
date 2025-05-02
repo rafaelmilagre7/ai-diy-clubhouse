@@ -1,13 +1,18 @@
 
+# Este é o arquivo de configuração do Supabase
 project_id = "zotzvtepvpnkcoobdubt"
 
 [api]
 enabled = true
 port = 54321
-schemas = ["public", "storage", "graphql_public"]
+schemas = ["public", "storage"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
 
 [db]
 port = 54322
+shadow_port = 54320
+major_version = 15
 
 [studio]
 enabled = true
@@ -18,26 +23,12 @@ api_url = "http://localhost"
 enabled = true
 port = 54324
 
-[auth]
-enabled = true
-port = 54325
-
 [storage]
 enabled = true
 
+[auth]
+enabled = true
+site_url = "http://localhost:3000"
+
 [realtime]
 enabled = true
-
-[analytics]
-enabled = true
-port = 54327
-
-[vector]
-enabled = true
-port = 54328
-
-[functions.google-calendar-auth]
-verify_jwt = false
-
-[functions.google-calendar-callback]
-verify_jwt = false

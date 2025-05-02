@@ -2738,6 +2738,10 @@ export type Database = {
         Args: { progress_id: string }
         Returns: Json
       }
+      create_storage_public_policy: {
+        Args: { bucket_name: string }
+        Returns: boolean
+      }
       decrement: {
         Args: { row_id: string; table_name: string; column_name: string }
         Returns: undefined
