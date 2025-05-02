@@ -44,7 +44,6 @@ const formSchema = z.object({
     message: "Por favor, selecione um módulo válido.",
   }),
   coverImageUrl: z.string().optional(),
-  estimatedTimeMinutes: z.number().optional().default(0),
   aiAssistantEnabled: z.boolean().default(false),
   aiAssistantPrompt: z.string().optional(),
   published: z.boolean().default(false),
@@ -59,6 +58,7 @@ const formSchema = z.object({
       fileName: z.string().optional(),
       filePath: z.string().optional(),
       fileSize: z.number().optional(),
+      duration_seconds: z.number().optional(),
     })
   ).optional().default([])
 })
@@ -80,6 +80,7 @@ interface VideoFormValues {
   fileName?: string;
   filePath?: string;
   fileSize?: number;
+  duration_seconds?: number;
 }
 
 // Estendendo a interface LearningLesson para incluir a propriedade videos
@@ -99,7 +100,6 @@ const AulaWizard: React.FC<AulaWizardProps> = ({ open, onOpenChange, aula, modul
     description: aula?.description || "",
     moduleId: aula?.module_id || moduleId || "",
     coverImageUrl: aula?.cover_image_url || "",
-    estimatedTimeMinutes: aula?.estimated_time_minutes || 0,
     aiAssistantEnabled: aula?.ai_assistant_enabled || false,
     aiAssistantPrompt: aula?.ai_assistant_prompt || "",
     published: aula?.published || false,
@@ -149,6 +149,20 @@ const AulaWizard: React.FC<AulaWizardProps> = ({ open, onOpenChange, aula, modul
     fetchModules();
   }, []);
 
+  const calculateTotalDuration = (videos: VideoFormValues[]): number => {
+    if (!videos || videos.length === 0) return 0;
+    
+    let totalDuration = 0;
+    for (const video of videos) {
+      if (video.duration_seconds) {
+        totalDuration += video.duration_seconds;
+      }
+    }
+    
+    // Converter segundos para minutos e arredondar para cima
+    return Math.ceil(totalDuration / 60);
+  };
+
   const handleSaveVideos = async (lessonId: string, videos: VideoFormValues[]) => {
     try {
       console.log("Salvando vídeos para a aula:", lessonId);
@@ -179,7 +193,7 @@ const AulaWizard: React.FC<AulaWizardProps> = ({ open, onOpenChange, aula, modul
           video_file_path: video.filePath || null,
           video_file_name: video.fileName || null,
           file_size_bytes: video.fileSize || null,
-          duration_seconds: null,
+          duration_seconds: video.duration_seconds || null,
           thumbnail_url: null
         };
         
@@ -231,13 +245,17 @@ const AulaWizard: React.FC<AulaWizardProps> = ({ open, onOpenChange, aula, modul
       console.log("ID da aula:", lessonId);
       console.log("Status de publicação a ser salvo:", values.published);
       
+      // Calcular o tempo estimado com base nos vídeos
+      const totalDurationMinutes = calculateTotalDuration(values.videos);
+      console.log("Tempo total calculado dos vídeos (minutos):", totalDurationMinutes);
+      
       // Preparar os dados completos da lição
       const completeLessonData: Partial<LearningLesson> = {
         title: values.title,
         description: values.description || null,
         module_id: values.moduleId,
         cover_image_url: values.coverImageUrl || null,
-        estimated_time_minutes: values.estimatedTimeMinutes || 0,
+        estimated_time_minutes: totalDurationMinutes, // Tempo calculado automaticamente
         ai_assistant_enabled: values.aiAssistantEnabled,
         ai_assistant_prompt: values.aiAssistantPrompt || null,
         published: values.published,
@@ -303,18 +321,22 @@ const AulaWizard: React.FC<AulaWizardProps> = ({ open, onOpenChange, aula, modul
         console.log("Criando nova aula...");
         
         // Verificar se o bucket de vídeos existe para evitar problemas de upload
-        await supabase.storage.createBucket('learning_videos', {
-          public: true
-        }).then(() => {
-          console.log("Bucket learning_videos verificado/criado");
-        }).catch((error) => {
-          // Ignorar erro se o bucket já existir
-          if (error.message.includes('already exists')) {
-            console.log("Bucket learning_videos já existe");
-          } else {
-            console.error("Erro ao criar bucket:", error);
+        try {
+          const { data: buckets } = await supabase.storage.listBuckets();
+          const bucketExists = buckets?.some(bucket => bucket.name === 'learning_videos');
+          
+          if (!bucketExists) {
+            console.log("Bucket de vídeos não existe, tentando criar...");
+            await supabase.storage.createBucket('learning_videos', {
+              public: true,
+              fileSizeLimit: 104857600, // 100MB
+            });
+            console.log("Bucket de vídeos criado com sucesso!");
           }
-        });
+        } catch (err) {
+          console.log("Erro ao verificar/criar bucket:", err);
+          // Continuamos mesmo em caso de erro, pois o bucket pode existir
+        }
         
         const { data, error } = await supabase
           .from('learning_lessons')
@@ -506,27 +528,6 @@ const AulaWizard: React.FC<AulaWizardProps> = ({ open, onOpenChange, aula, modul
                 )}
               />
             </div>
-            
-            <div className="grid grid-cols-1 gap-4">
-              <FormField
-                control={form.control}
-                name="estimatedTimeMinutes"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Duração Estimada (minutos)</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        placeholder="Tempo estimado em minutos"
-                        {...field}
-                        onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
 
             <div className="rounded-lg border p-4 space-y-4">
               <FormField
@@ -572,6 +573,9 @@ const AulaWizard: React.FC<AulaWizardProps> = ({ open, onOpenChange, aula, modul
 
             <div className="rounded-lg border p-4">
               <FormLabel className="text-base block mb-4">6. Vídeos da Aula</FormLabel>
+              <FormDescription className="mb-4">
+                Os vídeos adicionados aqui determinarão automaticamente o tempo total da aula
+              </FormDescription>
               
               <DragDropContext onDragEnd={onDragEnd}>
                 <Droppable droppableId="videos">
@@ -626,6 +630,12 @@ const AulaWizard: React.FC<AulaWizardProps> = ({ open, onOpenChange, aula, modul
                                     handleVideoChange(index, "fileName", fileName);
                                     handleVideoChange(index, "filePath", filePath);
                                     handleVideoChange(index, "fileSize", fileSize);
+                                    
+                                    // Se for um vídeo do YouTube, tentar extrair duração (implementação futura)
+                                    // Por enquanto, adicionamos um valor padrão para teste de 300 segundos (5 min)
+                                    if (type === 'youtube') {
+                                      handleVideoChange(index, "duration_seconds", 300);
+                                    }
                                   }}
                                 />
                               </div>

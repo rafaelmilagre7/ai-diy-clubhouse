@@ -44,6 +44,32 @@ export const LessonContent: React.FC<LessonContentProps> = ({
   // Determinar se devemos usar abas ou não
   const useTabs = (hasVideos && hasResources);
 
+  // Calcular duração total dos vídeos em formato legível
+  const formatTotalDuration = () => {
+    if (!videos || videos.length === 0) return null;
+    
+    let totalSeconds = 0;
+    let hasValidDurations = false;
+    
+    videos.forEach(video => {
+      if (video.duration_seconds) {
+        totalSeconds += video.duration_seconds;
+        hasValidDurations = true;
+      }
+    });
+    
+    if (!hasValidDurations) return null;
+    
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    
+    if (hours > 0) {
+      return `${hours}h ${minutes}min`;
+    } else {
+      return `${minutes} minutos`;
+    }
+  };
+
   // Renderizar a imagem da capa de modo mais proeminente
   const renderCoverImage = () => {
     if (!lesson.cover_image_url) return null;

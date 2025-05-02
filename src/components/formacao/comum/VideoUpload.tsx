@@ -24,6 +24,7 @@ export const VideoUpload = ({
   const [urlInput, setUrlInput] = useState<string>(videoType === "youtube" ? value : "");
   const [uploadProgress, setUploadProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Extrair o nome do arquivo do URL para exibição
   useEffect(() => {
@@ -67,6 +68,24 @@ export const VideoUpload = ({
         }
         
         console.log("Bucket learning_videos criado com sucesso!");
+        
+        // Criar política de acesso público
+        try {
+          // Tentar atualizar as políticas de RLS para acesso público
+          const { error: policyError } = await supabase.rpc('create_storage_public_policy', {
+            bucket_name: 'learning_videos'
+          });
+          
+          if (policyError) {
+            console.error("Erro ao definir política pública:", policyError);
+            // Não falhar por causa disso, apenas logar o erro
+          } else {
+            console.log("Política pública aplicada com sucesso ao bucket");
+          }
+        } catch (policyErr) {
+          console.error("Erro ao aplicar política:", policyErr);
+          // Continuamos mesmo com erro na política
+        }
       } else {
         console.log("Bucket learning_videos já existe.");
       }
@@ -78,12 +97,22 @@ export const VideoUpload = ({
     }
   };
 
+  // Handle file selection
+  const handleFileSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    await uploadVideo(file);
+  };
+
   // Upload de arquivo
   const uploadVideo = async (file: File) => {
     try {
       setError(null);
       setUploading(true);
       setUploadProgress(5);
+      
+      console.log("Iniciando upload de arquivo:", file.name);
       
       // Verificar tamanho do arquivo (limite de 100MB para vídeos)
       const MAX_SIZE = 100 * 1024 * 1024; // 100MB em bytes
@@ -141,13 +170,6 @@ export const VideoUpload = ({
       
       setUploadProgress(90);
       console.log("URL pública obtida:", publicUrl);
-      console.log("Dados completos:", {
-        url: publicUrl,
-        type: "file",
-        fileName: file.name,
-        filePath: data.path,
-        fileSize: file.size
-      });
       
       // Chamar onChange com todos os dados relevantes
       onChange(publicUrl, "file", file.name, data.path, file.size);
@@ -156,219 +178,180 @@ export const VideoUpload = ({
       toast.success("Vídeo carregado com sucesso");
     } catch (error: any) {
       console.error("Erro ao fazer upload do vídeo:", error);
-      setError(`Erro no upload: ${error.message || 'Tente novamente'}`);
-      toast.error(`Erro ao fazer upload do vídeo: ${error.message || 'Tente novamente'}`);
+      setError(`Erro no upload: ${error.message || "Ocorreu um erro desconhecido"}`);
+      toast.error(`Falha no upload: ${error.message || "Erro desconhecido"}`);
     } finally {
       setUploading(false);
+      // Limpar o input de arquivo para permitir selecionar o mesmo arquivo novamente
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
     }
   };
 
-  // Manipular arquivos selecionados no input
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files || e.target.files.length === 0) {
-      return;
-    }
-    
-    const file = e.target.files[0];
-    uploadVideo(file);
-  };
-
-  // Manipular remoção do arquivo
-  const handleRemoveFile = () => {
-    onChange("", "youtube");
-    setFileName(null);
-    setError(null);
-  };
-  
-  // Lidar com entrada de URL do YouTube
-  const handleYoutubeUrl = () => {
+  // Handle YouTube URL submission
+  const handleUrlSubmit = () => {
     if (!urlInput) {
-      toast.error("Por favor, insira uma URL do YouTube");
+      setError("Por favor, insira uma URL válida");
       return;
     }
-    
-    setError(null);
-    
-    // Extrair ID do vídeo do YouTube
+
+    // Validação simples para URL do YouTube
+    const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.?be)\/.+$/;
+    if (!youtubeRegex.test(urlInput)) {
+      setError("Por favor, insira uma URL válida do YouTube");
+      toast.error("Por favor, insira uma URL válida do YouTube");
+      return;
+    }
+
     try {
-      let videoId = "";
-      
-      if (urlInput.includes("youtube.com/watch")) {
-        const url = new URL(urlInput);
-        videoId = url.searchParams.get("v") || "";
-      } else if (urlInput.includes("youtu.be/")) {
-        videoId = urlInput.split("youtu.be/")[1]?.split("?")[0] || "";
-      } else if (urlInput.includes("youtube.com/embed/")) {
-        videoId = urlInput.split("youtube.com/embed/")[1]?.split("?")[0] || "";
-      }
-      
-      if (!videoId) {
-        toast.error("URL do YouTube inválida");
-        setError("URL do YouTube inválida");
-        return;
-      }
-      
-      // Criar URL de incorporação
-      const embedUrl = `https://www.youtube.com/embed/${videoId}`;
-      
-      // Obter URL da thumbnail
-      const thumbnailUrl = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
-      
-      console.log("URL de incorporação do YouTube gerada:", embedUrl);
-      console.log("URL da thumbnail:", thumbnailUrl);
-      
-      // Atualizar com URL de incorporação
-      onChange(embedUrl, "youtube", undefined, undefined, undefined);
-      
-      toast.success("URL do YouTube processada com sucesso");
+      onChange(urlInput, "youtube");
+      toast.success("URL do YouTube adicionada com sucesso");
     } catch (error: any) {
-      console.error("Erro ao processar URL do YouTube:", error);
-      toast.error("URL inválida. Verifique e tente novamente.");
-      setError(`Erro ao processar URL: ${error.message}`);
+      console.error("Erro ao adicionar URL do YouTube:", error);
+      setError(`Erro: ${error.message || "Ocorreu um erro desconhecido"}`);
     }
   };
 
-  // Alternar entre upload de arquivo e URL do YouTube
-  const [uploadType, setUploadType] = useState<"file" | "youtube">(videoType === "youtube" ? "youtube" : "file");
+  const handleTriggerFileInput = () => {
+    fileInputRef.current?.click();
+  };
 
-  // Efeito para atualizar o tipo de upload quando videoType mudar
-  useEffect(() => {
-    setUploadType(videoType === "youtube" ? "youtube" : "file");
-    if (videoType === "youtube") {
-      setUrlInput(value);
-    }
-  }, [videoType, value]);
+  // Remover vídeo
+  const handleRemove = () => {
+    onChange("", videoType === "youtube" ? "youtube" : "file");
+    setFileName(null);
+    setUrlInput("");
+  };
 
   return (
-    <div className="space-y-6">
-      <div className="flex space-x-4">
-        <Button
-          type="button"
-          variant={uploadType === "youtube" ? "default" : "outline"}
-          onClick={() => setUploadType("youtube")}
-          className="flex-1"
-        >
-          Link do YouTube
-        </Button>
-        <Button
-          type="button"
-          variant={uploadType === "file" ? "default" : "outline"}
-          onClick={() => setUploadType("file")}
-          className="flex-1"
-        >
-          Upload de Arquivo
-        </Button>
+    <div className="w-full space-y-4">
+      {/* Seleção de tipo de vídeo */}
+      <div className="flex justify-between items-center mb-2">
+        <div className="flex space-x-4">
+          <div className="flex items-center">
+            <input 
+              type="radio" 
+              name="video-type" 
+              id="youtube" 
+              checked={videoType === "youtube"}
+              className="mr-2"
+              onChange={() => onChange(value, "youtube")}
+            />
+            <label htmlFor="youtube">YouTube</label>
+          </div>
+          
+          <div className="flex items-center">
+            <input 
+              type="radio" 
+              name="video-type" 
+              id="file" 
+              checked={videoType === "file"}
+              className="mr-2"
+              onChange={() => onChange(value, "file")}
+            />
+            <label htmlFor="file">Upload de Arquivo</label>
+          </div>
+        </div>
+        
+        {value && (
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={handleRemove}
+          >
+            <X className="h-4 w-4 mr-1" /> Remover
+          </Button>
+        )}
       </div>
-
-      {uploadType === "youtube" ? (
-        <div className="space-y-4">
+      
+      {error && (
+        <div className="text-destructive text-sm bg-destructive/10 p-2 rounded-md">
+          {error}
+        </div>
+      )}
+      
+      {/* YouTube URL input */}
+      {videoType === "youtube" && (
+        <div className="space-y-2">
           <div className="flex space-x-2">
             <Input
-              placeholder="Cole a URL do vídeo do YouTube aqui"
+              placeholder="Cole a URL do vídeo do YouTube"
               value={urlInput}
               onChange={(e) => setUrlInput(e.target.value)}
-              className={error && error.includes("URL") ? "border-red-500" : ""}
+              className="flex-1"
             />
-            <Button type="button" onClick={handleYoutubeUrl}>
+            <Button 
+              type="button"
+              onClick={handleUrlSubmit}
+              disabled={!urlInput}
+            >
               Adicionar
             </Button>
           </div>
           
-          {error && error.includes("URL") && (
-            <p className="text-sm text-red-500">{error}</p>
-          )}
-          
           {value && videoType === "youtube" && (
-            <div className="mt-4 border rounded-md overflow-hidden">
-              <iframe
-                src={value}
-                title="Vídeo do YouTube"
-                className="w-full aspect-video"
-                allowFullScreen
-              />
-              <div className="p-2 flex justify-end">
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={handleRemoveFile}
-                >
-                  <X className="h-4 w-4 mr-1" />
-                  Remover
-                </Button>
+            <div className="rounded-md border p-2 flex items-center justify-between">
+              <div className="flex items-center">
+                <Video className="h-4 w-4 mr-2 text-primary" />
+                <span className="text-sm truncate">{value}</span>
               </div>
             </div>
           )}
         </div>
-      ) : (
-        <div>
+      )}
+      
+      {/* File upload */}
+      {videoType === "file" && (
+        <div className="space-y-2">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="video/*"
+            onChange={handleFileSelected}
+            className="hidden"
+          />
+          
           {!value || videoType !== "file" ? (
-            <div className="flex items-center justify-center w-full">
-              <label
-                className={cn(
-                  "flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer",
-                  "bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600",
-                  error ? "border-red-500" : "border-gray-300 dark:border-gray-600"
-                )}
-              >
-                <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                  {uploading ? (
-                    <>
-                      <Loader2 className="w-8 h-8 mb-3 text-gray-500 animate-spin" />
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
-                        Fazendo upload... {uploadProgress}%
-                      </p>
-                    </>
-                  ) : (
-                    <>
-                      <Video className="w-8 h-8 mb-3 text-gray-500" />
-                      <p className="mb-2 text-sm text-gray-500 dark:text-gray-400">
-                        <span className="font-semibold">Clique para upload</span> ou arraste o arquivo
-                      </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        MP4, WEBM ou MOV (máx. 100MB)
-                      </p>
-                    </>
-                  )}
+            <div 
+              className={cn(
+                "border-2 border-dashed rounded-md p-6 text-center cursor-pointer hover:border-primary transition-colors",
+                uploading && "pointer-events-none opacity-60"
+              )}
+              onClick={handleTriggerFileInput}
+            >
+              {uploading ? (
+                <div className="flex flex-col items-center">
+                  <Loader2 className="h-6 w-6 animate-spin mb-2" />
+                  <p className="text-sm font-medium">Enviando arquivo... {uploadProgress}%</p>
                 </div>
-                <Input
-                  id="dropzone-file"
-                  type="file"
-                  className="hidden"
-                  onChange={handleFileChange}
-                  disabled={uploading}
-                  accept="video/mp4,video/webm,video/quicktime"
-                />
-              </label>
+              ) : (
+                <>
+                  <Upload className="h-6 w-6 mx-auto mb-2 text-muted-foreground" />
+                  <p className="text-sm font-medium">Clique para fazer upload de vídeo</p>
+                  <p className="text-xs text-muted-foreground mt-1">MP4, MOV, WEBM, AVI (máx: 100MB)</p>
+                </>
+              )}
             </div>
           ) : (
-            <div className="flex items-center p-4 space-x-4 border rounded-lg bg-gray-50 dark:bg-gray-700">
-              <Video className="h-10 w-10 flex-shrink-0 text-blue-600" />
-              <div className="flex-1 min-w-0">
-                <p className="font-medium text-gray-900 truncate dark:text-white">
-                  {fileName || "Vídeo carregado"}
-                </p>
-                <video 
-                  src={value} 
-                  controls 
-                  className="mt-2 w-full rounded"
-                  style={{ maxHeight: "200px" }}
-                />
+            <div className="rounded-md border p-2 flex items-center justify-between">
+              <div className="flex items-center">
+                <Video className="h-4 w-4 mr-2 text-primary" />
+                <span className="text-sm truncate">{fileName || value}</span>
               </div>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={handleRemoveFile}
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleTriggerFileInput}
                 disabled={uploading}
-                className="flex-shrink-0"
               >
-                <X className="h-4 w-4" />
-                <span className="sr-only">Remover vídeo</span>
+                {uploading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  "Alterar"
+                )}
               </Button>
             </div>
-          )}
-          
-          {error && !error.includes("URL") && (
-            <p className="text-sm text-red-500 mt-2">{error}</p>
           )}
         </div>
       )}
