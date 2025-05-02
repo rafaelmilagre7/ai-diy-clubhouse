@@ -67,7 +67,7 @@ export const FormacaoAulasHeader = ({
         </div>
       )}
 
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center flex-wrap gap-4">
         {breadcrumb ? (
           <h1 className="text-3xl font-bold tracking-tight">{titulo}</h1>
         ) : (
@@ -80,7 +80,7 @@ export const FormacaoAulasHeader = ({
         )}
 
         {onNovaAula && (
-          <Button onClick={onNovaAula}>
+          <Button onClick={onNovaAula} className="whitespace-nowrap">
             <PlusCircle className="h-4 w-4 mr-2" />
             Nova Aula
           </Button>

@@ -16,13 +16,8 @@ const MemberRoutes = () => {
   const isAdminRoute = window.location.pathname.startsWith('/admin');
   const isFormacaoRoute = window.location.pathname.startsWith('/formacao');
 
-  // Redirecionar para /admin se for rota de admin e usuário não for admin
-  if (isAdminRoute) {
-    return <Navigate to="/login" replace />;
-  }
-
-  // Redirecionar para /formacao se for rota de formacao e usuário não for formacao
-  if (isFormacaoRoute) {
+  // Redirecionar para /login se for rota de admin ou formação e usuário não tiver permissão
+  if (isAdminRoute || isFormacaoRoute) {
     return <Navigate to="/login" replace />;
   }
 
@@ -33,9 +28,8 @@ const MemberRoutes = () => {
       <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/profile" element={<Profile />} />
       <Route path="/solutions/:id" element={<SolutionDetails />} />
-      <Route path="*" element={<NotFound />} />
       
-      {/* Rotas de aprendizado */}
+      {/* Rotas de aprendizado melhoradas */}
       <Route path="/learning" element={<MemberLearning />} />
       <Route path="/learning/course/:id" element={<CourseDetails />} />
       <Route path="/learning/course/:courseId/lesson/:lessonId" element={<LessonView />} />
@@ -44,14 +38,11 @@ const MemberRoutes = () => {
       {/* Rota pública de validação de certificados */}
       <Route path="/certificado/validar/:code?" element={<ValidateCertificate />} />
       
-      {/* Rotas de formação */}
-      <Route path="/formacao">
-        <Route index element={<Navigate to="/login" replace />} />
-        <Route path="certificados" element={<FormacaoCertificateTemplates />} />
-      </Route>
+      {/* Rota curinga para formacao (redireciona para login) */}
+      <Route path="/formacao/*" element={<Navigate to="/login" replace />} />
       
-      {/* Rota curinga para formacao (redireciona para not found) */}
-      <Route path="/formacao/*" element={<NotFound />} />
+      {/* Rota para lidar com páginas não encontradas */}
+      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 };

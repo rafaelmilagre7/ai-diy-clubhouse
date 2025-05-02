@@ -26,7 +26,7 @@ export const CursoHeader = ({ curso, onNovoModulo, onEditarCurso, isAdmin }: Cur
       
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <h1 className="text-3xl font-bold tracking-tight">{curso.title}</h1>
             <Badge variant={curso.published ? "default" : "outline"}>
               {curso.published ? "Publicado" : "Rascunho"}
@@ -42,12 +42,12 @@ export const CursoHeader = ({ curso, onNovoModulo, onEditarCurso, isAdmin }: Cur
         {isAdmin && (
           <div className="flex flex-wrap gap-2">
             {onEditarCurso && (
-              <Button variant="outline" onClick={onEditarCurso}>
+              <Button variant="outline" onClick={onEditarCurso} className="whitespace-nowrap">
                 <Edit className="h-4 w-4 mr-2" />
                 Editar Curso
               </Button>
             )}
-            <Button onClick={onNovoModulo}>
+            <Button onClick={onNovoModulo} className="whitespace-nowrap">
               <PlusCircle className="h-4 w-4 mr-2" />
               Novo Módulo
             </Button>

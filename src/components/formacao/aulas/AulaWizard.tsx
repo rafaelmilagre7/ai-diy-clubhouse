@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { 
   Dialog, 
@@ -32,6 +31,7 @@ import { ImageUpload } from "@/components/formacao/comum/ImageUpload";
 import { VideoUpload } from "@/components/formacao/comum/VideoUpload";
 import { Loader2, Plus, Trash } from "lucide-react";
 import { useLogging } from "@/hooks/useLogging";
+import { Edit } from "lucide-react";
 
 const aulaFormSchema = z.object({
   title: z.string().min(3, "O título precisa ter pelo menos 3 caracteres"),
@@ -138,7 +138,7 @@ export const AulaWizard = ({
         videos: []
       });
     }
-  }, [aula, open]);
+  }, [aula, open, form.reset]);
   
   // Buscar vídeos da aula se estiver editando
   const fetchVideos = async (lessonId: string) => {
@@ -215,7 +215,6 @@ export const AulaWizard = ({
     form.setValue('videos', updatedVideos);
   };
 
-  // Salvar aula
   const onSubmit = async (values: AulaFormValues) => {
     console.log("Iniciando salvamento da aula com os valores:", values);
     console.log("Estado do formulário:", form.formState);
@@ -242,7 +241,8 @@ export const AulaWizard = ({
       // Criar um novo objeto com todas as propriedades e o module_id
       const completeLessonData = {
         ...lessonData,
-        module_id: moduleId
+        module_id: moduleId,
+        published: values.published // Garantir que o estado de publicação seja explicitamente definido
       };
       
       console.log("Dados da aula a serem salvos:", completeLessonData);

@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
@@ -12,7 +11,7 @@ import { RecursoFormDialog } from "@/components/formacao/materiais/RecursoFormDi
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, Plus, File, Video } from "lucide-react";
+import { Loader2, Plus, File, Video, Edit } from "lucide-react";
 import { useLogging } from "@/hooks/useLogging";
 
 // Adicionar interface temporária para lidar com os novos campos até que os tipos sejam atualizados
@@ -64,7 +63,7 @@ const FormacaoAulaDetalhes = () => {
       if (data.module_id) {
         const { data: moduleData, error: moduleError } = await supabase
           .from('learning_modules')
-          .select('*, course_id')
+          .select('*, learning_courses(id, title)')
           .eq('id', data.module_id)
           .single();
         
@@ -140,7 +139,10 @@ const FormacaoAulaDetalhes = () => {
 
   // Abrir modal para editar aula
   const handleEditarAula = () => {
-    setIsAulaWizardOpen(true);
+    console.log("Abrindo modal para editar aula:", aula);
+    if (aula) {
+      setIsAulaWizardOpen(true);
+    }
   };
 
   // Ações após salvar aula
@@ -247,6 +249,58 @@ const FormacaoAulaDetalhes = () => {
     return <div>Formato de vídeo não suportado</div>;
   };
 
+  // Renderizar a aba de vídeos
+  const renderVideosTab = () => {
+    if (loadingVideos) {
+      return (
+        <div className="flex justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </div>
+      );
+    }
+
+    if (videos.length > 0) {
+      return (
+        <div className="grid gap-6">
+          {videos.map((video) => (
+            <Card key={video.id} className="overflow-hidden">
+              <CardContent className="p-6">
+                <div className="aspect-video w-full mb-4">
+                  {renderVideo(video)}
+                </div>
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+                  <h4 className="text-lg font-medium">{video.title}</h4>
+                  {isAdmin && (
+                    <Button variant="outline" size="sm" onClick={handleEditarAula}>
+                      <Edit className="h-4 w-4 mr-2" /> Editar
+                    </Button>
+                  )}
+                </div>
+                {video.description && <p className="text-muted-foreground mt-1">{video.description}</p>}
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      );
+    }
+
+    return (
+      <div className="text-center py-12 border rounded-lg bg-background">
+        <Video className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+        <h3 className="text-lg font-medium">Nenhum vídeo disponível</h3>
+        <p className="text-sm text-muted-foreground mt-2 mb-4">
+          Esta aula ainda não possui vídeos cadastrados.
+        </p>
+        {isAdmin && (
+          <Button onClick={handleEditarAula} variant="outline">
+            <Plus className="h-4 w-4 mr-2" />
+            Adicionar Vídeos
+          </Button>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className="space-y-6">
       <AulaHeader 
@@ -328,39 +382,7 @@ const FormacaoAulaDetalhes = () => {
             )}
           </div>
           
-          {loadingVideos ? (
-            <div className="flex justify-center py-12">
-              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-            </div>
-          ) : videos.length > 0 ? (
-            <div className="grid gap-6">
-              {videos.map((video) => (
-                <Card key={video.id}>
-                  <CardContent className="p-6">
-                    <div className="aspect-video w-full mb-4">
-                      {renderVideo(video)}
-                    </div>
-                    <h4 className="text-lg font-medium">{video.title}</h4>
-                    {video.description && <p className="text-muted-foreground mt-1">{video.description}</p>}
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-12 border rounded-lg bg-background">
-              <Video className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <h3 className="text-lg font-medium">Nenhum vídeo disponível</h3>
-              <p className="text-sm text-muted-foreground mt-2 mb-4">
-                Esta aula ainda não possui vídeos cadastrados.
-              </p>
-              {isAdmin && (
-                <Button onClick={handleEditarAula} variant="outline">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Adicionar Vídeos
-                </Button>
-              )}
-            </div>
-          )}
+          {renderVideosTab()}
         </TabsContent>
       </Tabs>
       

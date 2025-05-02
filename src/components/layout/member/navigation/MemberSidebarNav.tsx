@@ -1,84 +1,92 @@
 
-import { useLocation } from "react-router-dom";
-import { Link } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { 
-  BarChart2, 
-  Lightbulb, 
-  Wrench, 
-  User, 
-  Gift, 
-  Award,
-  MessageSquarePlus,
-  Calendar
-} from "lucide-react";
+import { Home, BookOpen, Tool, Bell, Settings, Lightbulb, GraduationCap } from "lucide-react";
+import { useAuth } from "@/contexts/auth";
 
-const navItems = [
-  {
-    title: "Dashboard",
-    icon: BarChart2,
-    href: "/dashboard",
-  },
-  {
-    title: "Soluções",
-    icon: Lightbulb,
-    href: "/solutions",
-  },
-  {
-    title: "Ferramentas",
-    icon: Wrench,
-    href: "/tools",
-  },
-  {
-    title: "Benefícios",
-    icon: Gift,
-    href: "/benefits",
-  },
-  {
-    title: "Conquistas",
-    icon: Award,
-    href: "/achievements",
-  },
-  {
-    title: "Eventos",
-    icon: Calendar,
-    href: "/events",
-  },
-  {
-    title: "Sugestões",
-    icon: MessageSquarePlus,
-    href: "/suggestions",
-  },
-];
+export const MemberSidebarNav = ({ sidebarOpen, className }: {
+  sidebarOpen: boolean,
+  className?: string
+}) => {
+  const { profile } = useAuth();
 
-interface MemberSidebarNavProps {
-  sidebarOpen: boolean;
-}
+  const navItems = [
+    { 
+      name: "Dashboard", 
+      path: "/", 
+      end: true, 
+      icon: Home 
+    },
+    { 
+      name: "Soluções", 
+      path: "/solutions", 
+      icon: Lightbulb 
+    },
+    { 
+      name: "Cursos", 
+      path: "/learning", 
+      icon: GraduationCap 
+    },
+    { 
+      name: "Ferramentas", 
+      path: "/tools", 
+      icon: Tool 
+    },
+    { 
+      name: "Notificações", 
+      path: "/notifications", 
+      icon: Bell 
+    },
+    { 
+      name: "Perfil", 
+      path: "/profile", 
+      icon: Settings 
+    },
+  ];
 
-export const MemberSidebarNav = ({ sidebarOpen }: MemberSidebarNavProps) => {
-  const location = useLocation();
-  const currentPath = location.pathname;
+  const isAdmin = profile?.role === 'admin';
 
   return (
-    <nav className="flex-1 px-4 py-5">
-      <ul className="space-y-2">
+    <nav className={cn("px-2 lg:px-4", className)}>
+      <ul className="space-y-1">
         {navItems.map((item) => (
-          <li key={item.href}>
-            <Link
-              to={item.href}
-              className={cn(
-                "flex items-center rounded-lg px-4 py-3 text-sm font-medium transition-all hover:bg-accent",
-                currentPath === item.href || currentPath.startsWith(`${item.href}/`)
-                  ? "bg-accent/50 text-accent-foreground"
-                  : "text-muted-foreground hover:text-foreground",
-                !sidebarOpen && "justify-center px-2"
-              )}
+          <li key={item.path}>
+            <NavLink
+              to={item.path}
+              end={item.end}
+              className={({ isActive }) =>
+                cn(
+                  "flex items-center gap-x-3 px-3 py-2 rounded-md text-sm transition-colors",
+                  isActive
+                    ? "bg-accent text-accent-foreground font-medium"
+                    : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+                )
+              }
             >
-              <item.icon className={cn("h-5 w-5", !sidebarOpen && "h-6 w-6")} />
-              {sidebarOpen && <span className="ml-3">{item.title}</span>}
-            </Link>
+              <item.icon className="h-4 w-4" />
+              {sidebarOpen && <span>{item.name}</span>}
+            </NavLink>
           </li>
         ))}
+        
+        {isAdmin && (
+          <li>
+            <NavLink
+              to="/formacao"
+              className={({ isActive }) =>
+                cn(
+                  "mt-4 flex items-center gap-x-3 px-3 py-2 rounded-md text-sm transition-colors",
+                  isActive
+                    ? "bg-primary text-primary-foreground font-medium"
+                    : "text-muted-foreground hover:bg-primary/10 hover:text-primary",
+                )
+              }
+            >
+              <BookOpen className="h-4 w-4" />
+              {sidebarOpen && <span>Área de Formação</span>}
+            </NavLink>
+          </li>
+        )}
       </ul>
     </nav>
   );

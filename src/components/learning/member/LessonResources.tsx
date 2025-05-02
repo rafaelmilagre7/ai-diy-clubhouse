@@ -1,75 +1,83 @@
 
-import { LearningResource } from "@/lib/supabase";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { FileText, FileImage, FileArchive, File, Download } from "lucide-react";
+import React from "react";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Download, File, FileText, FilePdf, FileImage, MoreHorizontal } from "lucide-react";
+import { formatFileSize } from "@/lib/utils";
 
-interface LessonResourcesProps {
-  resources: LearningResource[];
+interface Resource {
+  id: string;
+  name: string;
+  description?: string;
+  file_url: string;
+  file_type?: string;
+  file_size_bytes?: number;
 }
 
-export const LessonResources = ({ resources }: LessonResourcesProps) => {
-  // Função para determinar o ícone com base no tipo de arquivo
-  const getFileIcon = (fileType: string | null) => {
-    if (!fileType) return <File className="h-5 w-5" />;
+interface LessonResourcesProps {
+  resources: Resource[];
+}
+
+export const LessonResources: React.FC<LessonResourcesProps> = ({ resources }) => {
+  // Função para determinar o ícone baseado no tipo de arquivo
+  const getFileIcon = (fileType: string | undefined) => {
+    if (!fileType) return File;
     
-    if (fileType.includes("pdf")) return <FileText className="h-5 w-5 text-red-500" />;
-    if (fileType.includes("image")) return <FileImage className="h-5 w-5" />;
-    if (fileType.includes("zip") || fileType.includes("rar")) return <FileArchive className="h-5 w-5" />;
+    if (fileType.includes('pdf')) return FilePdf;
+    if (fileType.includes('image')) return FileImage;
+    if (fileType.includes('text')) return FileText;
     
-    return <File className="h-5 w-5" />;
+    return File;
   };
   
-  // Função para formatar o tamanho do arquivo
-  const formatFileSize = (bytes: number | null) => {
-    if (bytes === null) return "Desconhecido";
-    
-    if (bytes < 1024) return `${bytes} B`;
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-    if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-    return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)} GB`;
-  };
+  if (!resources.length) {
+    return (
+      <Card className="py-12 flex justify-center items-center">
+        <CardContent className="text-center">
+          <File className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+          <h3 className="text-lg font-medium">Nenhum material disponível</h3>
+          <p className="text-sm text-muted-foreground mt-1">
+            Esta aula não possui materiais complementares.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
-    <Card>
-      <CardHeader className="pb-3">
-        <CardTitle className="text-lg">Materiais da aula</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="divide-y">
-          {resources.map((resource) => (
-            <div key={resource.id} className="py-3 flex items-center justify-between">
-              <div className="flex items-center">
-                {getFileIcon(resource.file_type)}
-                <div className="ml-3">
-                  <h4 className="text-sm font-medium">{resource.name}</h4>
-                  {resource.description && (
-                    <p className="text-xs text-muted-foreground">{resource.description}</p>
-                  )}
-                  {resource.file_size_bytes && (
-                    <p className="text-xs text-muted-foreground">
-                      {formatFileSize(resource.file_size_bytes)}
-                    </p>
-                  )}
-                </div>
+    <div className="grid gap-4">
+      {resources.map((resource) => {
+        const FileIcon = getFileIcon(resource.file_type);
+        
+        return (
+          <Card key={resource.id} className="overflow-hidden">
+            <div className="flex items-center p-4 gap-4">
+              <div className="bg-muted/50 p-3 rounded-lg">
+                <FileIcon className="h-6 w-6 text-primary" />
               </div>
               
-              <Button size="sm" variant="ghost" asChild>
-                <a href={resource.file_url} target="_blank" rel="noopener noreferrer">
+              <div className="flex-1 min-w-0">
+                <h3 className="font-medium truncate">{resource.name}</h3>
+                {resource.description && (
+                  <p className="text-sm text-muted-foreground mt-1">{resource.description}</p>
+                )}
+                {resource.file_size_bytes && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {formatFileSize(resource.file_size_bytes)}
+                  </p>
+                )}
+              </div>
+              
+              <Button asChild variant="outline" size="sm">
+                <a href={resource.file_url} target="_blank" rel="noopener noreferrer" download>
                   <Download className="h-4 w-4 mr-1" />
-                  Baixar
+                  <span className="hidden sm:inline">Download</span>
                 </a>
               </Button>
             </div>
-          ))}
-          
-          {resources.length === 0 && (
-            <p className="text-sm text-muted-foreground py-3">
-              Nenhum material disponível para esta aula.
-            </p>
-          )}
-        </div>
-      </CardContent>
-    </Card>
+          </Card>
+        );
+      })}
+    </div>
   );
 };
