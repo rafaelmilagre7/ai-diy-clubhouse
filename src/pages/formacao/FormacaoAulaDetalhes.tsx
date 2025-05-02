@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
@@ -5,7 +6,7 @@ import { supabase } from "@/lib/supabase";
 import { LearningLesson, LearningResource, LearningLessonVideo, LearningModule } from "@/lib/supabase";
 import { toast } from "sonner";
 import { AulaHeader } from "@/components/formacao/aulas/AulaHeader";
-import { AulaWizard } from "@/components/formacao/aulas/AulaWizard";
+import AulaWizard from "@/components/formacao/aulas/AulaWizard";
 import { RecursosList } from "@/components/formacao/materiais/RecursosList";
 import { RecursoFormDialog } from "@/components/formacao/materiais/RecursoFormDialog";
 import { Button } from "@/components/ui/button";

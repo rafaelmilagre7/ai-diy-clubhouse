@@ -7,7 +7,7 @@ import { LearningModule, LearningLesson } from "@/lib/supabase";
 import { toast } from "sonner";
 import { FormacaoAulasHeader } from "@/components/formacao/aulas/FormacaoAulasHeader";
 import { AulasList } from "@/components/formacao/aulas/AulasList";
-import { AulaWizard } from "@/components/formacao/aulas/AulaWizard";
+import AulaWizard from "@/components/formacao/aulas/AulaWizard";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 

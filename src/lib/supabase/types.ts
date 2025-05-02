@@ -1,4 +1,3 @@
-
 export type UserRole = 'admin' | 'member' | 'formacao';
 
 export interface UserProfile {
@@ -114,6 +113,16 @@ export interface LearningLesson {
   estimated_time_minutes: number | null;
   ai_assistant_enabled: boolean;
   ai_assistant_prompt: string | null;
+  videos?: Array<{
+    id?: string;
+    title?: string;
+    description?: string | null;
+    url?: string;
+    type?: string;
+    fileName?: string;
+    filePath?: string;
+    fileSize?: number;
+  }>;
 }
 
 export interface LearningProgress {

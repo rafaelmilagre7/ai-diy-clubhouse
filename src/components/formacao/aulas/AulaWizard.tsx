@@ -82,6 +82,11 @@ interface VideoFormValues {
   fileSize?: number;
 }
 
+// Estendendo a interface LearningLesson para incluir a propriedade videos
+interface ExtendedLearningLesson extends LearningLesson {
+  videos?: VideoFormValues[];
+}
+
 type FormSchema = z.infer<typeof formSchema>
 
 const AulaWizard: React.FC<AulaWizardProps> = ({ open, onOpenChange, aula, moduleId, onSuccess }) => {
@@ -101,7 +106,7 @@ const AulaWizard: React.FC<AulaWizardProps> = ({ open, onOpenChange, aula, modul
     published: aula?.published || false,
     coverImageUrl: aula?.cover_image_url || "",
     orderIndex: aula?.order_index || 0,
-    videos: aula?.videos || []
+    videos: (aula as ExtendedLearningLesson)?.videos || []
   };
 
   const form = useForm<FormSchema>({
@@ -284,7 +289,7 @@ const AulaWizard: React.FC<AulaWizardProps> = ({ open, onOpenChange, aula, modul
       
       onSuccess?.();
       form.reset(defaultValues);
-      setOpen(false);
+      onOpenChange(false);
       
     } catch (error: any) {
       console.error("Erro ao salvar aula:", error);
@@ -300,7 +305,7 @@ const AulaWizard: React.FC<AulaWizardProps> = ({ open, onOpenChange, aula, modul
 
   const handleCancel = () => {
     form.reset(defaultValues);
-    setOpen(false);
+    onOpenChange(false);
   };
 
   const handleEditorChange = (value: any) => {
@@ -337,7 +342,6 @@ const AulaWizard: React.FC<AulaWizardProps> = ({ open, onOpenChange, aula, modul
     form.setValue("videos", items);
   };
 
-// Adicionar uma nova função para lidar com o salvamento de vídeos
   const handleSaveVideos = async (lessonId: string, videos: VideoFormValues[]) => {
     try {
       console.log("Salvando vídeos para a aula:", lessonId);
@@ -685,23 +689,170 @@ const AulaWizard: React.FC<AulaWizardProps> = ({ open, onOpenChange, aula, modul
   );
 };
 
-export default AulaWizard;
+const onSubmit = async (values: FormSchema) => {
+  try {
+    setIsSaving(true);
+    
+    const lessonId = aula?.id;
+    
+    console.log("Dados do formulário:", values);
+    console.log("ID da aula:", lessonId);
+    console.log("Status de publicação a ser salvo:", values.published);
+    
+    // Preparar os dados completos da lição
+    const completeLessonData: Partial<LearningLesson> = {
+      title: values.title,
+      description: values.description || null,
+      module_id: values.moduleId,
+      content: values.content || null,
+      estimated_time_minutes: values.estimatedTimeMinutes || 0,
+      ai_assistant_enabled: values.aiAssistantEnabled,
+      ai_assistant_prompt: values.aiAssistantPrompt || null,
+      published: values.published,
+      cover_image_url: values.coverImageUrl || null,
+      order_index: values.orderIndex || 0
+    };
+    
+    console.log("Dados completos a serem salvos:", completeLessonData);
+    console.log("Status de publicação a ser salvo:", completeLessonData.published);
+    
+    if (lessonId) {
+      // Atualizar aula existente - FIX: Separar operação de update e verificação
+      console.log("Atualizando aula existente:", lessonId);
+      
+      // 1. Primeiro fazer a atualização sem retorno de dados
+      const { error: updateError } = await supabase
+        .from('learning_lessons')
+        .update(completeLessonData)
+        .eq('id', lessonId);
+        
+      if (updateError) {
+        console.error("Erro ao atualizar aula:", updateError);
+        throw updateError;
+      }
+      
+      // 2. Depois buscar os dados atualizados para verificar
+      const { data: updatedData, error: fetchError } = await supabase
+        .from('learning_lessons')
+        .select('*')
+        .eq('id', lessonId)
+        .single();
+        
+      if (fetchError) {
+        console.error("Erro ao buscar aula atualizada:", fetchError);
+        throw fetchError;
+      }
+      
+      console.log("Aula atualizada com sucesso:", updatedData);
+      console.log("Status de publicação após atualização:", updatedData.published);
+      
+      if (updatedData.published !== values.published) {
+        console.warn("AVISO: Status de publicação após atualização não corresponde ao esperado!");
+        console.log("Tentando atualização específica do status de publicação...");
+        
+        // Tenta atualizar especificamente o status de publicação para garantir
+        const { error: pubUpdateError } = await supabase
+          .from('learning_lessons')
+          .update({ published: values.published })
+          .eq('id', lessonId);
+          
+        if (pubUpdateError) {
+          console.error("Erro na atualização específica do status:", pubUpdateError);
+        } else {
+          console.log("Status de publicação atualizado com sucesso!");
+        }
+      }
+      
+      // Atualizar os vídeos da aula
+      await handleSaveVideos(lessonId, values.videos);
+      
+      toast({
+        title: "Aula atualizada",
+        description: "A aula foi atualizada com sucesso.",
+      });
+    } else {
+      // Criar nova aula
+      console.log("Criando nova aula...");
+      
+      // Verificar se o bucket de vídeos existe para evitar problemas de upload
+      await supabase.storage.createBucket('learning_videos', {
+        public: true
+      }).then(() => {
+        console.log("Bucket learning_videos verificado/criado");
+      }).catch((error) => {
+        // Ignorar erro se o bucket já existir
+        if (error.message.includes('already exists')) {
+          console.log("Bucket learning_videos já existe");
+        } else {
+          console.error("Erro ao criar bucket:", error);
+        }
+      });
+      
+      const { data, error } = await supabase
+        .from('learning_lessons')
+        .insert([completeLessonData])
+        .select('*')
+        .single();
+        
+      if (error) {
+        console.error("Erro ao criar aula:", error);
+        throw error;
+      }
+      
+      console.log("Aula criada com sucesso:", data);
+      
+      // Verificar se os dados foram realmente persistidos
+      const { data: verifyData, error: verifyError } = await supabase
+        .from('learning_lessons')
+        .select('*')
+        .eq('id', data.id)
+        .single();
+        
+      if (verifyError) {
+        console.error("Erro ao verificar aula criada:", verifyError);
+      } else {
+        console.log("Verificação da aula criada:", verifyData);
+        console.log("Status de publicação verificado:", verifyData.published);
+      }
+      
+      // Salvar os vídeos da aula
+      const newLessonId = data.id;
+      await handleSaveVideos(newLessonId, values.videos);
+      
+      toast({
+        title: "Aula criada",
+        description: "A aula foi criada com sucesso.",
+      });
+    }
+    
+    onSuccess?.();
+    form.reset(defaultValues);
+    onOpenChange(false);
+    
+  } catch (error: any) {
+    console.error("Erro ao salvar aula:", error);
+    toast({
+      title: "Erro ao salvar aula",
+      description: error.message || "Ocorreu um erro ao tentar salvar a aula.",
+      variant: "destructive",
+    });
+  } finally {
+    setIsSaving(false);
+  }
+};
 
 interface FormDescriptionProps {
   children?: React.ReactNode;
 }
 
-const FormDescription = React.forwardRef<HTMLParagraphElement, FormDescriptionProps>(
-  ({ className, children, ...props }, ref) => {
-    return (
-      <p
-        className="text-sm text-muted-foreground"
-        {...props}
-        ref={ref}
-      >
-        {children}
-      </p>
-    )
-  }
-)
-FormDescription.displayName = "FormDescription"
+const FormDescription: React.FC<FormDescriptionProps> = ({ children }) => {
+  return (
+    <p className="text-sm text-muted-foreground">
+      {children}
+    </p>
+  );
+};
+
+FormDescription.displayName = "FormDescription";
+
+export default AulaWizard;
