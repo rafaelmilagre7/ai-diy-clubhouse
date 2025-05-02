@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
@@ -446,16 +445,14 @@ const FormacaoAulaNova = () => {
       }
 
       // Verificar se o bucket está disponível, mas não bloquear completamente
-      // Se não conseguirmos fazer upload agora, pelo menos a aula estará criada
       if (!bucketStatus.exists) {
         console.warn("O bucket de armazenamento pode não estar disponível. Tentando continuar mesmo assim...");
       }
       
       // Calcular tempo estimado com base nos vídeos (estimativa simples)
-      // Cada vídeo adicionado considera-se 10 minutos em média
       const estimated_time_minutes = validVideos.length * 10;
       
-      // Determinar se devemos tentar inserir o campo published (baseado na verificação da tabela)
+      // Determinar se devemos tentar inserir o campo published
       const hasPublishedField = tableColumns?.some(col => col.column_name === 'published');
       console.log("Tabela tem campo published:", hasPublishedField);
       
@@ -507,8 +504,8 @@ const FormacaoAulaNova = () => {
           // Usar o ID da aula criada na segunda tentativa
           const lessonId = retryData[0].id;
           
-          // Inserir apenas os vídeos com URL válida
-          await insertVideos(lessonId, validVideos);
+          // Inserir apenas os vídeos com URL válida - usando type assertion para garantir tipo correto
+          await insertVideos(lessonId, validVideos as VideoItem[]);
           
           toast.success("Aula criada com sucesso!");
           navigate(`/formacao/aulas/${lessonId}`);
@@ -525,8 +522,8 @@ const FormacaoAulaNova = () => {
       console.log("Aula criada com sucesso:", data);
       const lessonId = data[0].id;
       
-      // Adicionar os vídeos à aula (apenas os com URL válida)
-      await insertVideos(lessonId, validVideos);
+      // Adicionar os vídeos à aula (apenas os com URL válida) - usando type assertion para garantir tipo correto
+      await insertVideos(lessonId, validVideos as VideoItem[]);
       
       toast.success("Aula criada com sucesso!");
       navigate(`/formacao/aulas/${lessonId}`);
@@ -545,7 +542,8 @@ const FormacaoAulaNova = () => {
       
       if (!videos || videos.length === 0) return;
       
-      // Filtrar para garantir que só vamos inserir vídeos com URL
+      // Esta etapa de filtragem é agora redundante, pois já garantimos que os vídeos têm URL válida antes de chegar aqui
+      // Mantendo por segurança adicional
       const validVideos = videos.filter(video => video.url && video.url.trim() !== '');
       
       if (validVideos.length === 0) {
