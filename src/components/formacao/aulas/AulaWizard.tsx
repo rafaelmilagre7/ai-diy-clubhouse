@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { 
   Dialog, 
@@ -32,6 +33,7 @@ import { VideoUpload } from "@/components/formacao/comum/VideoUpload";
 import { Loader2, Plus, Trash } from "lucide-react";
 import { useLogging } from "@/hooks/useLogging";
 import { Edit } from "lucide-react";
+import { formatDuration } from "@/lib/utils";
 
 const aulaFormSchema = z.object({
   title: z.string().min(3, "O título precisa ter pelo menos 3 caracteres"),
@@ -39,9 +41,8 @@ const aulaFormSchema = z.object({
   content: z.any().optional(),
   cover_image_url: z.string().optional().nullable(),
   published: z.boolean().default(false),
-  estimated_time_minutes: z.coerce.number().min(0).default(0),
   ai_assistant_enabled: z.boolean().default(true),
-  ai_assistant_prompt: z.string().optional(),
+  ai_assistant_id: z.string().optional(),
   videos: z.array(z.object({
     id: z.string().optional(),
     title: z.string().min(1, "Título do vídeo é obrigatório"),
@@ -52,6 +53,7 @@ const aulaFormSchema = z.object({
     video_file_path: z.string().optional(),
     video_file_name: z.string().optional(),
     file_size_bytes: z.number().optional(),
+    duration_seconds: z.number().optional(),
     order_index: z.number().default(0),
   })).default([])
 });
@@ -86,9 +88,8 @@ export const AulaWizard = ({
       content: {},
       cover_image_url: "",
       published: false,
-      estimated_time_minutes: 0,
       ai_assistant_enabled: true,
-      ai_assistant_prompt: "",
+      ai_assistant_id: "",
       videos: []
     }
   });
@@ -113,9 +114,8 @@ export const AulaWizard = ({
         content: aula.content || {},
         cover_image_url: aula.cover_image_url || "",
         published: aula.published || false,
-        estimated_time_minutes: aula.estimated_time_minutes || 0,
         ai_assistant_enabled: aula.ai_assistant_enabled ?? true,
-        ai_assistant_prompt: aula.ai_assistant_prompt || "",
+        ai_assistant_id: aula.ai_assistant_prompt || "",
         videos: [] // Será preenchido quando buscarmos os vídeos
       });
       
@@ -132,9 +132,8 @@ export const AulaWizard = ({
         content: {},
         cover_image_url: "",
         published: false,
-        estimated_time_minutes: 0,
         ai_assistant_enabled: true,
-        ai_assistant_prompt: "",
+        ai_assistant_id: "",
         videos: []
       });
     }
@@ -206,6 +205,9 @@ export const AulaWizard = ({
         videoId = url.split("youtube.com/embed/")[1]?.split("?")[0] || "";
         videoData.thumbnail_url = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
       }
+      
+      // Estimar duração do vídeo para YouTube (momentaneamente definido como 5 minutos até que seja obtido)
+      videoData.duration_seconds = videoData.duration_seconds || 300;
     }
     
     const updatedVideos = [...currentVideos];
@@ -213,6 +215,24 @@ export const AulaWizard = ({
     
     console.log("Video alterado:", videoData);
     form.setValue('videos', updatedVideos);
+  };
+
+  // Calcular tempo estimado baseado na duração dos vídeos
+  const calculateEstimatedTime = (): number => {
+    const videos = form.getValues().videos || [];
+    let totalSeconds = 0;
+    
+    videos.forEach(video => {
+      if (video.duration_seconds) {
+        totalSeconds += video.duration_seconds;
+      } else {
+        // Se não tiver duração, estimar 5 minutos (300 segundos) por vídeo
+        totalSeconds += 300;
+      }
+    });
+    
+    // Converter para minutos
+    return Math.ceil(totalSeconds / 60);
   };
 
   const onSubmit = async (values: AulaFormValues) => {
@@ -231,7 +251,11 @@ export const AulaWizard = ({
     try {
       console.log("Salvando aula para o módulo:", moduleId);
       
-      // Primeiro, inserir ou atualizar a aula
+      // Calcular tempo estimado automaticamente com base nos vídeos
+      const estimated_time_minutes = calculateEstimatedTime();
+      console.log("Tempo estimado calculado:", estimated_time_minutes, "minutos");
+      
+      // Preparar dados da aula
       let lessonId = aula?.id;
       
       // Separar os dados de vídeo do objeto de aula
@@ -242,21 +266,23 @@ export const AulaWizard = ({
       const completeLessonData = {
         ...lessonData,
         module_id: moduleId,
-        published: values.published // Garantir que o estado de publicação seja explicitamente definido
+        published: values.published, // Garantir que o estado de publicação seja explicitamente definido
+        ai_assistant_prompt: values.ai_assistant_id, // Usar o campo ai_assistant_id como ai_assistant_prompt no banco
+        estimated_time_minutes: estimated_time_minutes // Definir tempo estimado calculado
       };
       
       console.log("Dados da aula a serem salvos:", completeLessonData);
+      console.log("Status de publicação a ser salvo:", completeLessonData.published);
       
       if (lessonId) {
         // Atualizar aula existente
         console.log("Atualizando aula existente:", lessonId);
-        console.log("Status de publicação a ser salvo:", completeLessonData.published);
         
         const { data, error } = await supabase
           .from('learning_lessons')
           .update(completeLessonData)
           .eq('id', lessonId)
-          .select();
+          .select('*');
           
         if (error) {
           console.error("Erro ao atualizar aula:", error);
@@ -264,7 +290,12 @@ export const AulaWizard = ({
         }
         
         console.log("Resposta da atualização da aula:", data);
-        console.log("Aula atualizada com sucesso");
+        if (data && data.length > 0) {
+          console.log("Status de publicação após atualização:", data[0].published);
+          if (data[0].published !== values.published) {
+            console.warn("AVISO: Status de publicação não corresponde ao esperado!");
+          }
+        }
       } else {
         // Criar nova aula
         console.log("Criando nova aula");
@@ -294,6 +325,7 @@ export const AulaWizard = ({
           .eq('lesson_id', lessonId);
         
         const existingVideoIds = existingVideos?.map(v => v.id) || [];
+        const remainingVideoIds = [...existingVideoIds];
         console.log("IDs de vídeos existentes:", existingVideoIds);
         
         // Para cada vídeo no formulário, inserir ou atualizar
@@ -310,7 +342,8 @@ export const AulaWizard = ({
             video_type: video.video_type || 'youtube',
             video_file_path: video.video_file_path || null,
             video_file_name: video.video_file_name || null,
-            file_size_bytes: video.file_size_bytes || null
+            file_size_bytes: video.file_size_bytes || null,
+            duration_seconds: video.duration_seconds || null
           };
           
           if (video.id && existingVideoIds.includes(video.id)) {
@@ -328,12 +361,15 @@ export const AulaWizard = ({
             
             console.log("Vídeo atualizado com sucesso");
             
-            // Remover da lista de existingVideoIds para não excluir depois
-            existingVideoIds.splice(existingVideoIds.indexOf(video.id), 1);
+            // Remover da lista de remainingVideoIds para não excluir depois
+            const idIndex = remainingVideoIds.indexOf(video.id);
+            if (idIndex !== -1) {
+              remainingVideoIds.splice(idIndex, 1);
+            }
           } else {
             // Inserir novo vídeo
             console.log("Inserindo novo vídeo");
-            const { data, error } = await supabase
+            const { error } = await supabase
               .from('learning_lesson_videos')
               .insert(videoData);
               
@@ -342,17 +378,17 @@ export const AulaWizard = ({
               throw error;
             }
             
-            console.log("Novo vídeo inserido com sucesso:", data);
+            console.log("Novo vídeo inserido com sucesso");
           }
         }
         
         // Excluir vídeos que não estão mais no formulário
-        if (existingVideoIds.length > 0) {
-          console.log("Excluindo vídeos que não estão mais no formulário:", existingVideoIds);
+        if (remainingVideoIds.length > 0) {
+          console.log("Excluindo vídeos que não estão mais no formulário:", remainingVideoIds);
           const { error } = await supabase
             .from('learning_lesson_videos')
             .delete()
-            .in('id', existingVideoIds);
+            .in('id', remainingVideoIds);
             
           if (error) {
             console.error("Erro ao excluir vídeos antigos:", error);
@@ -360,36 +396,6 @@ export const AulaWizard = ({
           }
           
           console.log("Vídeos antigos excluídos com sucesso");
-        }
-      }
-      
-      // Verificar se a aula foi realmente atualizada com o status de publicação correto
-      if (lessonId) {
-        const { data: updatedLesson, error: checkError } = await supabase
-          .from('learning_lessons')
-          .select('published')
-          .eq('id', lessonId)
-          .single();
-          
-        if (checkError) {
-          console.error("Erro ao verificar estado da aula após atualização:", checkError);
-        } else {
-          console.log("Status de publicação após atualização:", updatedLesson.published);
-          if (updatedLesson.published !== values.published) {
-            console.warn("AVISO: O status de publicação não foi atualizado corretamente!");
-            
-            // Tentar uma atualização direta apenas do campo published
-            const { error: publishUpdateError } = await supabase
-              .from('learning_lessons')
-              .update({ published: values.published })
-              .eq('id', lessonId);
-              
-            if (publishUpdateError) {
-              console.error("Erro na segunda tentativa de atualização do status:", publishUpdateError);
-            } else {
-              console.log("Segunda tentativa de atualização do status de publicação bem-sucedida");
-            }
-          }
         }
       }
       
@@ -497,24 +503,7 @@ export const AulaWizard = ({
                   )}
                 />
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <FormField
-                    control={form.control}
-                    name="estimated_time_minutes"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Tempo Estimado (minutos)</FormLabel>
-                        <FormControl>
-                          <Input type="number" min="0" {...field} />
-                        </FormControl>
-                        <FormDescription>
-                          Duração estimada desta aula em minutos
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
+                <div className="grid grid-cols-1 gap-6">                  
                   <FormField
                     control={form.control}
                     name="published"
@@ -566,20 +555,20 @@ export const AulaWizard = ({
                 {form.watch("ai_assistant_enabled") && (
                   <FormField
                     control={form.control}
-                    name="ai_assistant_prompt"
+                    name="ai_assistant_id"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Prompt para o Assistente</FormLabel>
+                        <FormLabel>ID do Assistente OpenAI</FormLabel>
                         <FormControl>
-                          <Textarea 
-                            placeholder="Instruções para o assistente de IA" 
+                          <Input 
+                            placeholder="Ex: asst_LaPrWWHgQFw5wgJKAgTRI1mJ" 
                             {...field}
                             value={field.value || ""}
-                            className="min-h-[100px]"
                           />
                         </FormControl>
                         <FormDescription>
-                          Instruções específicas para o assistente sobre esta aula
+                          Insira o ID do assistente da API OpenAI que será usado para responder perguntas sobre esta aula.
+                          Os IDs começam com "asst_" e podem ser encontrados no dashboard da OpenAI.
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
@@ -609,7 +598,7 @@ export const AulaWizard = ({
                   </div>
                 ) : (
                   <div className="space-y-8">
-                    {form.watch("videos").map((_, index) => (
+                    {form.watch("videos").map((video, index) => (
                       <div key={index} className="border rounded-lg p-4 space-y-4">
                         <div className="flex justify-between items-center">
                           <h3 className="font-medium">Vídeo {index + 1}</h3>
@@ -677,8 +666,23 @@ export const AulaWizard = ({
                             </FormItem>
                           )}
                         />
+                        
+                        {video.duration_seconds && (
+                          <div className="text-sm text-muted-foreground">
+                            <span>Duração estimada: {formatDuration(video.duration_seconds)}</span>
+                          </div>
+                        )}
                       </div>
                     ))}
+                    
+                    {form.watch("videos").length > 0 && (
+                      <div className="border-t pt-4 flex justify-between items-center">
+                        <div>
+                          <span className="text-sm font-medium">Tempo total estimado:</span>
+                          <span className="ml-2 text-sm">{formatDuration(calculateEstimatedTime() * 60)}</span>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </TabsContent>
