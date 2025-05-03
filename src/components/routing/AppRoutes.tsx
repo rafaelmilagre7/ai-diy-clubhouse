@@ -45,9 +45,6 @@ import MemberLearning from '@/pages/member/learning/MemberLearning';
 import CourseDetails from '@/pages/member/learning/CourseDetails';
 import LessonView from '@/pages/member/learning/LessonView';
 
-// Importar a nova página de criação de aulas
-import FormacaoAulaNova from '@/pages/formacao/FormacaoAulaNova';
-
 const AppRoutes = () => {
   console.log("Renderizando AppRoutes");
   
@@ -205,7 +202,8 @@ const AppRoutes = () => {
       <Route path="/formacao/cursos/:id" element={<FormacaoProtectedRoutes><FormacaoLayout><FormacaoCursoDetalhes /></FormacaoLayout></FormacaoProtectedRoutes>} />
       <Route path="/formacao/modulos/:id" element={<FormacaoProtectedRoutes><FormacaoLayout><FormacaoModuloDetalhes /></FormacaoLayout></FormacaoProtectedRoutes>} />
       <Route path="/formacao/aulas" element={<FormacaoProtectedRoutes><FormacaoLayout><FormacaoAulas /></FormacaoLayout></FormacaoProtectedRoutes>} />
-      <Route path="/formacao/aulas/nova" element={<FormacaoProtectedRoutes><FormacaoLayout><FormacaoAulaNova /></FormacaoLayout></FormacaoProtectedRoutes>} />
+      {/* Removido a rota para FormacaoAulaNova: */}
+      {/* <Route path="/formacao/aulas/nova" element={<FormacaoProtectedRoutes><FormacaoLayout><FormacaoAulaNova /></FormacaoLayout></FormacaoProtectedRoutes>} /> */}
       <Route path="/formacao/aulas/:id" element={<FormacaoProtectedRoutes><FormacaoLayout><FormacaoAulaDetalhes /></FormacaoLayout></FormacaoProtectedRoutes>} />
       <Route path="/formacao/materiais" element={<FormacaoProtectedRoutes><FormacaoLayout><div>Página de Materiais</div></FormacaoLayout></FormacaoProtectedRoutes>} />
       <Route path="/formacao/alunos" element={<FormacaoProtectedRoutes><FormacaoLayout><div>Página de Alunos</div></FormacaoLayout></FormacaoProtectedRoutes>} />

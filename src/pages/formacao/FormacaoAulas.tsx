@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/auth";
 import { supabase } from "@/lib/supabase";
@@ -24,6 +23,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import AulaWizard from "@/components/formacao/aulas/AulaWizard";
 
 const FormacaoAulas = () => {
   const { profile } = useAuth();
@@ -35,10 +35,13 @@ const FormacaoAulas = () => {
   const [cursosDisponiveis, setCursosDisponiveis] = useState<{id: string, title: string}[]>([]);
   const [modulosDisponiveis, setModulosDisponiveis] = useState<{id: string, title: string, course_id: string}[]>([]);
   const [busca, setBusca] = useState("");
+  const [isWizardOpen, setIsWizardOpen] = useState(false);
+  const [selectedModuleId, setSelectedModuleId] = useState<string | null>(null);
   
-  // Nova função para lidar com a criação de aulas
+  // Nova função para abrir o wizard ao invés de navegar para nova página
   const handleNovaAula = () => {
-    navigate("/formacao/aulas/nova");
+    setSelectedModuleId(moduloFiltro || null);
+    setIsWizardOpen(true);
   };
   
   // Buscar cursos para filtro
@@ -207,6 +210,12 @@ const FormacaoAulas = () => {
     window.location.href = `/formacao/aulas/${aula.id}`;
   };
 
+  // Função para lidar com o sucesso da criação/edição de aula
+  const handleWizardSuccess = () => {
+    fetchAulas();
+    toast.success("Operação realizada com sucesso");
+  };
+
   return (
     <div className="space-y-6">
       <FormacaoAulasHeader onNovaAula={handleNovaAula} />
@@ -287,6 +296,15 @@ const FormacaoAulas = () => {
         onEdit={handleEditarAula}
         onDelete={handleExcluirAula}
         isAdmin={profile?.role === 'admin'}
+      />
+
+      {/* Modal do Wizard para criar nova aula */}
+      <AulaWizard
+        open={isWizardOpen}
+        onOpenChange={setIsWizardOpen}
+        aula={null}
+        moduleId={selectedModuleId}
+        onSuccess={handleWizardSuccess}
       />
     </div>
   );

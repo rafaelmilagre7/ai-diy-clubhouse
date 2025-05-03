@@ -1,38 +1,54 @@
 
 import { Button } from "@/components/ui/button";
-import { PlusCircle } from "lucide-react";
+import { Plus } from "lucide-react";
+import { Link } from "react-router-dom";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
 
 interface FormacaoAulasHeaderProps {
   titulo?: string;
-  breadcrumb?: boolean;
   onNovaAula?: () => void;
-  moduloId?: string;
+  breadcrumb?: boolean;
 }
 
-export const FormacaoAulasHeader = ({ 
-  titulo = "Gerenciamento de Aulas",
-  breadcrumb = false,
+export const FormacaoAulasHeader: React.FC<FormacaoAulasHeaderProps> = ({
+  titulo = "Aulas",
   onNovaAula,
-  moduloId
-}: FormacaoAulasHeaderProps) => {
+  breadcrumb = false,
+}) => {
   return (
-    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-      <div>
-        {breadcrumb ? (
-          <div className="flex items-center text-sm text-muted-foreground mb-1">
-            <a href="/formacao/aulas" className="hover:underline">
-              Aulas
-            </a>
-            <span className="mx-2">/</span>
-            <span>{titulo}</span>
-          </div>
-        ) : null}
-        <h1 className="text-2xl md:text-3xl font-bold tracking-tight">{titulo}</h1>
+    <div className="flex justify-between items-center">
+      <div className="space-y-2">
+        {breadcrumb && (
+          <Breadcrumb className="mb-4">
+            <BreadcrumbList>
+              <BreadcrumbItem>
+                <BreadcrumbLink href="/formacao">Formação</BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbLink href="/formacao/aulas">Aulas</BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbLink>{titulo}</BreadcrumbLink>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
+        )}
+        <h1 className="text-2xl font-bold">{titulo}</h1>
+        <p className="text-muted-foreground">
+          Gerencie as aulas disponíveis na plataforma
+        </p>
       </div>
-      
       {onNovaAula && (
-        <Button onClick={onNovaAula} className="bg-[#0ABAB5] hover:bg-[#0ABAB5]/90">
-          <PlusCircle className="h-4 w-4 mr-2" />
+        <Button onClick={onNovaAula}>
+          <Plus className="mr-2 h-4 w-4" />
           Nova Aula
         </Button>
       )}
