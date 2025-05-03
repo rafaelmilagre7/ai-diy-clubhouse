@@ -1,7 +1,32 @@
 
-// Configuração do Supabase para a aplicação
-export const supabaseConfig = {
-  url: 'https://zotzvtepvpnkcoobdubt.supabase.co',
-  anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpvdHp2dGVwdnBua2Nvb2JkdWJ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQzNzgzODAsImV4cCI6MjA1OTk1NDM4MH0.dxjPkqTPnK8gjjxJbooPX5_kpu3INciLeDpuU8dszHQ',
-  projectId: 'zotzvtepvpnkcoobdubt',
+// Configurações relacionadas ao Supabase
+
+// Buckets de armazenamento
+export const STORAGE_BUCKETS = {
+  VIDEOS: 'learning_videos',
+  SOLUTION_FILES: 'solution_files',
+  PROFILE_AVATARS: 'avatars',
+};
+
+// Limites de tamanho de arquivos (em bytes)
+export const FILE_SIZE_LIMITS = {
+  VIDEO: 314572800, // 300 MB
+  DOCUMENT: 10485760, // 10 MB
+  IMAGE: 5242880, // 5 MB
+};
+
+// Tipos de mídia aceitos
+export const ACCEPTED_VIDEO_TYPES = [
+  'video/mp4',
+  'video/webm',
+  'video/quicktime', // .mov
+  'video/x-msvideo', // .avi
+];
+
+// Mapeamento de tipos de arquivo para categorias
+export const FILE_TYPE_MAPPING = {
+  IMAGE: ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
+  DOCUMENT: ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
+  SPREADSHEET: ['application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'],
+  PRESENTATION: ['application/vnd.ms-powerpoint', 'application/vnd.openxmlformats-officedocument.presentationml.presentation'],
 };
