@@ -1,4 +1,3 @@
-
 import { supabase } from './client';
 import { STORAGE_BUCKETS } from './config';
 import { createStoragePublicPolicy } from './rpc';
@@ -13,7 +12,7 @@ export async function setupLearningStorageBuckets(retryAttempts = 2) {
       STORAGE_BUCKETS.VIDEOS,
       STORAGE_BUCKETS.SOLUTION_FILES,
       STORAGE_BUCKETS.PROFILE_AVATARS,
-      STORAGE_BUCKETS.LEARNING_RESOURCES // Adicionado novo bucket
+      STORAGE_BUCKETS.LEARNING_RESOURCES
     ];
     
     console.log("Tentando configurar buckets de armazenamento:", bucketsToCreate);

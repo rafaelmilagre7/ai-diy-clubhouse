@@ -17,10 +17,15 @@ export const uploadFileToSupabase = async (
     
     if (!bucketExists) {
       console.warn(`Bucket ${bucketName} não encontrado. Tentando criar...`);
-      await supabase.storage.createBucket(bucketName, {
+      const result = await supabase.storage.createBucket(bucketName, {
         public: true,
         fileSizeLimit: bucketName.includes('video') ? 314572800 : 104857600 // 300MB para vídeos, 100MB para outros
       });
+      
+      if (result.error) {
+        console.error("Falha ao criar bucket:", result.error);
+        throw new Error(`Não foi possível criar o bucket ${bucketName}: ${result.error.message}`);
+      }
     }
     
     // Gerar um nome único para o arquivo
@@ -150,18 +155,30 @@ export const uploadFileToStorage = async (
   try {
     console.log(`Tentando upload para ${bucketName}/${folderPath}`, file);
     
-    // Primeiro tentar o upload para o Supabase
+    // Determinar bucket de fallback apropriado
+    let fallbackBucket = 'solution_files';
+    
+    if (bucketName === 'learning_resources' && !isImageFile(file)) {
+      fallbackBucket = 'solution_files';
+    } else if (bucketName.includes('video') && file.type.startsWith('video/')) {
+      fallbackBucket = 'learning_videos';
+    }
+    
+    // Primeiro tentar o upload para o Supabase no bucket solicitado
     try {
       return await uploadFileToSupabase(file, bucketName, folderPath, onProgressUpdate, abortSignal);
     } catch (supabaseError) {
-      console.error("Erro no upload para Supabase, tentando ImgBB como fallback:", supabaseError);
+      console.error(`Erro no upload para ${bucketName}, tentando fallback para ${fallbackBucket}:`, supabaseError);
       
       // Se o arquivo for uma imagem e houver falha no Supabase, tentar ImgBB como fallback
       if (isImageFile(file)) {
+        console.log("Tentando fallback para ImgBB (imagem)");
         return await uploadImageToImgBB(file, undefined, onProgressUpdate, abortSignal);
       } else {
-        // Se não for imagem, não podemos usar ImgBB, então relançamos o erro
-        throw supabaseError;
+        // Se não for imagem, tentamos outro bucket no Supabase como fallback
+        console.log(`Tentando fallback para bucket ${fallbackBucket}`);
+        const fallbackFolder = folderPath ? `${bucketName}/${folderPath}` : bucketName;
+        return await uploadFileToSupabase(file, fallbackBucket, fallbackFolder, onProgressUpdate, abortSignal);
       }
     }
   } catch (error) {

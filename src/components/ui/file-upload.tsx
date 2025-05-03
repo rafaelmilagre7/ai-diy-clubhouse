@@ -1,11 +1,10 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Loader2, Upload, AlertCircle, X, Info } from 'lucide-react';
+import { Loader2, Upload, AlertCircle, X, Info, Check } from 'lucide-react';
 import { uploadFileToStorage } from '@/components/ui/file/uploadUtils';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { ensureBucketExists } from '@/lib/supabase/storage';
 import { STORAGE_BUCKETS } from '@/lib/supabase/config';
 
 interface FileUploadProps {
@@ -40,36 +39,36 @@ export const FileUpload: React.FC<FileUploadProps> = ({
   
   // Verificar o status do bucket quando o componente montar
   useEffect(() => {
-    checkBucket();
+    checkBucketStatus();
   }, [bucketName]);
   
-  const checkBucket = async () => {
+  const checkBucketStatus = async () => {
     try {
       setBucketStatus("checking");
       
-      // Verificar se o bucket especificado existe
-      const exists = await ensureBucketExists(bucketName);
-      
-      if (exists) {
-        console.log(`Bucket ${bucketName} está pronto para uso`);
-        setBucketStatus("ready");
-      } else {
-        // Se não puder criar o bucket especificado, tentar usar um fallback conhecido
-        console.log(`Bucket ${bucketName} indisponível, usando fallback`);
-        
-        // Verificar se o bucket SOLUTION_FILES existe ou pode ser criado
-        const fallbackBucket = STORAGE_BUCKETS.FALLBACK;
-        const fallbackBucketExists = await ensureBucketExists(fallbackBucket);
-        
-        if (fallbackBucketExists) {
-          setBucketStatus("fallback");
-        } else {
-          setBucketStatus("error");
+      // Verificar se o bucket especificado existe - apenas uma verificação leve
+      const { data: buckets, error } = await fetch(`https://zotzvtepvpnkcoobdubt.supabase.co/storage/v1/bucket/${bucketName}/object`, {
+        method: 'HEAD',
+      }).then(res => {
+        if (res.ok || res.status === 400) {
+          // 400 geralmente significa que o bucket existe, mas precisamos de um path
+          return { data: [{ name: bucketName }], error: null };
         }
+        return { data: null, error: { message: `Bucket ${bucketName} não encontrado` } };
+      }).catch(() => {
+        return { data: null, error: { message: `Erro ao verificar bucket ${bucketName}` } };
+      });
+      
+      if (error) {
+        console.log(`Bucket ${bucketName} não encontrado ou inacessível. Usando fallback.`);
+        setBucketStatus("fallback");
+      } else {
+        console.log(`Bucket ${bucketName} encontrado e pronto para uso.`);
+        setBucketStatus("ready");
       }
     } catch (error) {
       console.error("Erro ao verificar bucket:", error);
-      setBucketStatus("error");
+      setBucketStatus("fallback");
     }
   };
   
@@ -97,6 +96,10 @@ export const FileUpload: React.FC<FileUploadProps> = ({
     if (bucketStatus === "ready") {
       return bucketName;
     } else if (bucketStatus === "fallback") {
+      // Usar um bucket fallback apropriado baseado no tipo de arquivo
+      if (bucketName === STORAGE_BUCKETS.LEARNING_RESOURCES) {
+        return STORAGE_BUCKETS.SOLUTION_FILES;  
+      }
       return STORAGE_BUCKETS.FALLBACK;
     }
     // Em caso de erro tentar usar o bucket original de qualquer forma
@@ -107,14 +110,6 @@ export const FileUpload: React.FC<FileUploadProps> = ({
     const file = e.target.files?.[0];
     
     if (!file) return;
-    
-    if (bucketStatus === "checking") {
-      toast({
-        title: 'Aguarde',
-        description: 'Verificando configuração de armazenamento...',
-      });
-      await checkBucket(); // Garantir que a verificação de bucket está completa
-    }
     
     // Validações
     const fileSizeMB = file.size / (1024 * 1024);
@@ -152,7 +147,8 @@ export const FileUpload: React.FC<FileUploadProps> = ({
         actualFolder,
         (progress) => {
           setProgress(progress);
-        }
+        },
+        abortControllerRef.current
       );
       
       console.log('Upload bem-sucedido:', result);
@@ -162,7 +158,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
       toast({
         title: 'Upload realizado com sucesso',
         description: 'O arquivo foi enviado com sucesso.',
-        variant: 'default', // Alterado de 'success' para 'default'
+        variant: 'default',
       });
     } catch (error: any) {
       console.error('Erro ao fazer upload:', error);
@@ -197,9 +193,6 @@ export const FileUpload: React.FC<FileUploadProps> = ({
         {fieldLabel && (
           <label className="text-sm text-muted-foreground mb-2">
             {fieldLabel}
-            {bucketStatus === "fallback" && (
-              <span className="ml-2 text-amber-600 text-xs">(Usando armazenamento alternativo)</span>
-            )}
           </label>
         )}
         <div className="flex items-center gap-2">
@@ -262,6 +255,15 @@ export const FileUpload: React.FC<FileUploadProps> = ({
         </div>
       </div>
       
+      {bucketStatus === "ready" && !errorMessage && !isUploading && fileName && (
+        <Alert variant="default" className="bg-green-50 border-green-100 py-2">
+          <Check className="h-4 w-4 text-green-600" />
+          <AlertDescription className="text-green-700 text-xs">
+            Armazenamento pronto para uploads. Último arquivo: {fileName}
+          </AlertDescription>
+        </Alert>
+      )}
+      
       {bucketStatus === "fallback" && !errorMessage && !isUploading && (
         <Alert variant="warning" className="bg-amber-50 border-amber-100 py-2">
           <Info className="h-4 w-4 text-amber-600" />
@@ -280,7 +282,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
         </Alert>
       )}
       
-      {fileName && !isUploading && !errorMessage && (
+      {fileName && !isUploading && !errorMessage && bucketStatus !== "ready" && (
         <div className="text-sm text-muted-foreground">
           Arquivo selecionado: {fileName}
         </div>
