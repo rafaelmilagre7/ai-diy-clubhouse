@@ -51,7 +51,7 @@ export const Editor: React.FC<EditorProps> = ({
       <ImageUpload
         value={typeof value === 'string' ? value : ''}
         onChange={onChange}
-        bucketName="learning_images"
+        bucketName="learning_covers" // Corrigido: usando bucket que existe no sistema
         folderPath="covers"
       />
     </div>

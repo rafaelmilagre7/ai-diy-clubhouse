@@ -1,25 +1,22 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { uploadFileToStorage } from "@/components/ui/file/uploadUtils";
+import { uploadFileWithFallback } from "@/lib/supabase/storage";
 import { ImagePlus, Trash2, Loader2 } from "lucide-react";
-import { toast } from "sonner";
+import { useToast } from "@/hooks/use-toast";
+import { STORAGE_BUCKETS } from "@/lib/supabase/config";
 
 interface ImageUploadProps {
-  value: string;
+  value: string | undefined;
   onChange: (url: string) => void;
-  bucketName?: string;
-  folderPath?: string;
+  bucketName: string;
+  folderPath: string;
 }
 
-export const ImageUpload = ({ 
-  value, 
-  onChange, 
-  bucketName = "learning_images", 
-  folderPath = "covers" 
-}: ImageUploadProps) => {
+export const ImageUpload = ({ value, onChange, bucketName, folderPath }: ImageUploadProps) => {
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
+  const { toast } = useToast();
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -31,25 +28,30 @@ export const ImageUpload = ({
     try {
       console.log(`Iniciando upload para bucket: ${bucketName}, pasta: ${folderPath}`);
       
-      const result = await uploadFileToStorage(
+      const result = await uploadFileWithFallback(
         file,
         bucketName,
         folderPath,
         (progress) => {
           setProgress(Math.round(progress));
-        }
+        },
+        STORAGE_BUCKETS.FALLBACK // Usando o bucket de fallback definido nas constantes
       );
 
       console.log("Upload bem-sucedido:", result);
       onChange(result.publicUrl);
       
-      toast.success("Upload concluído", {
-        description: "A imagem foi enviada com sucesso."
+      toast({
+        title: "Upload concluído",
+        description: "A imagem foi enviada com sucesso.",
+        variant: "default",
       });
     } catch (error) {
       console.error("Erro ao fazer upload:", error);
-      toast.error("Falha no upload", {
-        description: "Não foi possível enviar a imagem. Tente novamente."
+      toast({
+        title: "Falha no upload",
+        description: "Não foi possível enviar a imagem. Tente novamente.",
+        variant: "destructive",
       });
     } finally {
       setUploading(false);

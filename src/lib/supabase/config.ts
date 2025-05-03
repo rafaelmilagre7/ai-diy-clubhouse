@@ -7,6 +7,7 @@
 export const STORAGE_BUCKETS = {
   LEARNING_VIDEOS: 'learning_videos',
   LEARNING_RESOURCES: 'learning_resources',
+  LEARNING_COVERS: 'learning_covers', // Adicionando explicitamente o bucket de capas
   FALLBACK: 'solution_files', // Bucket alternativo caso os outros falhem
 };
 
