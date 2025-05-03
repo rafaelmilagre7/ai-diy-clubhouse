@@ -15,7 +15,7 @@ export const useFileUpload = ({
   bucketName, 
   folder = '',
   onUploadComplete, 
-  maxSize = 5 
+  maxSize = 300 // Atualizando para 300MB por padrão
 }: UseFileUploadProps) => {
   const [uploading, setUploading] = useState(false);
   const [uploadedFileUrl, setUploadedFileUrl] = useState<string | null>(null);
@@ -23,6 +23,18 @@ export const useFileUpload = ({
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
   const isUploadingRef = useRef(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  const cancelUpload = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+      toast({
+        title: 'Upload cancelado',
+        description: 'O upload do arquivo foi cancelado.',
+      });
+    }
+  };
 
   const handleFileUpload = async (file: File) => {
     if (isUploadingRef.current) {
@@ -41,6 +53,7 @@ export const useFileUpload = ({
     }
 
     try {
+      abortControllerRef.current = new AbortController();
       isUploadingRef.current = true;
       setError(null);
       setUploading(true);
@@ -59,6 +72,7 @@ export const useFileUpload = ({
         .upload(filePath, file, {
           cacheControl: '3600',
           upsert: true,
+          duplex: "half" // Melhor suporte para uploads grandes
         });
 
       if (error) {
@@ -86,14 +100,26 @@ export const useFileUpload = ({
 
     } catch (error: any) {
       console.error('Erro no upload:', error);
-      setError(error.message || 'Erro ao fazer upload do arquivo');
+      
+      // Verificar se o erro é de timeout ou conexão
+      const errorMessage = error.message || 'Erro ao fazer upload do arquivo';
+      let displayMessage = errorMessage;
+      
+      if (errorMessage.includes('timeout') || errorMessage.includes('network')) {
+        displayMessage = 'Tempo limite excedido ou problema de conexão. Tente novamente com um arquivo menor ou verifique sua conexão.';
+      } else if (errorMessage.includes('size')) {
+        displayMessage = `O arquivo excede o tamanho máximo de ${maxSize}MB.`;
+      }
+      
+      setError(displayMessage);
       toast({
         title: 'Erro no upload',
-        description: error.message || 'Ocorreu um erro ao fazer upload do arquivo.',
+        description: displayMessage,
         variant: 'destructive',
       });
     } finally {
       setUploading(false);
+      abortControllerRef.current = null;
       setTimeout(() => {
         isUploadingRef.current = false;
       }, 300);
@@ -107,5 +133,6 @@ export const useFileUpload = ({
     error,
     handleFileUpload,
     setUploadedFileUrl,
+    cancelUpload,
   };
 };

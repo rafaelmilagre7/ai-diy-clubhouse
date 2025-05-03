@@ -28,8 +28,10 @@ export async function createStoragePublicPolicy(bucketName: string): Promise<{ s
     console.log(`[Storage] Criando bucket ${bucketName}...`);
     const { error: createError } = await supabase.storage.createBucket(bucketName, {
       public: true,
-      fileSizeLimit: 104857600, // 100MB limit
-      allowedMimeTypes: ['video/mp4', 'video/webm', 'video/quicktime', 'video/x-msvideo']
+      fileSizeLimit: 314572800, // 300MB limit (atualizado de 100MB)
+      allowedMimeTypes: bucketName.includes('video') ? 
+        ['video/mp4', 'video/webm', 'video/quicktime', 'video/x-msvideo', 'video/x-ms-wmv'] :
+        undefined
     });
     
     if (createError) {

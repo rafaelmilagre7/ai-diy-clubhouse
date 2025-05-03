@@ -7,7 +7,8 @@ export const uploadFileToSupabase = async (
   file: File,
   bucketName: string,
   folderPath: string = '',
-  onProgressUpdate?: (progress: number) => void
+  onProgressUpdate?: (progress: number) => void,
+  abortSignal?: AbortSignal
 ) => {
   try {
     // Verificar se o bucket existe antes do upload
@@ -17,7 +18,8 @@ export const uploadFileToSupabase = async (
     if (!bucketExists) {
       console.warn(`Bucket ${bucketName} não encontrado. Tentando criar...`);
       await supabase.storage.createBucket(bucketName, {
-        public: true
+        public: true,
+        fileSizeLimit: bucketName.includes('video') ? 314572800 : 104857600 // 300MB para vídeos, 100MB para outros
       });
     }
     
@@ -38,6 +40,7 @@ export const uploadFileToSupabase = async (
       .upload(filePath, file, {
         cacheControl: '3600',
         upsert: true,
+        duplex: "half", // Melhor suporte para uploads grandes
       });
     
     if (error) {
@@ -75,7 +78,8 @@ export const uploadFileToSupabase = async (
 export const uploadImageToImgBB = async (
   file: File,
   apiKey: string = '04b796a219698057ded57d20ec1705cf',
-  onProgressUpdate?: (progress: number) => void
+  onProgressUpdate?: (progress: number) => void,
+  abortSignal?: AbortSignal
 ) => {
   try {
     const formData = new FormData();
@@ -92,6 +96,11 @@ export const uploadImageToImgBB = async (
           onProgressUpdate(progress);
         }
       };
+    }
+    
+    // Configurar cancelamento
+    if (abortSignal) {
+      abortSignal.onabort = () => xhr.abort();
     }
     
     // Criar Promise para manipular a resposta
@@ -135,20 +144,21 @@ export const uploadFileToStorage = async (
   file: File,
   bucketName: string,
   folderPath: string = '',
-  onProgressUpdate?: (progress: number) => void
+  onProgressUpdate?: (progress: number) => void,
+  abortSignal?: AbortSignal
 ) => {
   try {
     console.log(`Tentando upload para ${bucketName}/${folderPath}`, file);
     
     // Primeiro tentar o upload para o Supabase
     try {
-      return await uploadFileToSupabase(file, bucketName, folderPath, onProgressUpdate);
+      return await uploadFileToSupabase(file, bucketName, folderPath, onProgressUpdate, abortSignal);
     } catch (supabaseError) {
       console.error("Erro no upload para Supabase, tentando ImgBB como fallback:", supabaseError);
       
       // Se o arquivo for uma imagem e houver falha no Supabase, tentar ImgBB como fallback
       if (isImageFile(file)) {
-        return await uploadImageToImgBB(file, undefined, onProgressUpdate);
+        return await uploadImageToImgBB(file, undefined, onProgressUpdate, abortSignal);
       } else {
         // Se não for imagem, não podemos usar ImgBB, então relançamos o erro
         throw supabaseError;

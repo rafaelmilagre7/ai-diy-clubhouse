@@ -1,6 +1,7 @@
+
 import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { Loader2, Upload, AlertCircle } from 'lucide-react';
+import { Loader2, Upload, AlertCircle, X } from 'lucide-react';
 import { uploadFileToStorage } from '@/components/ui/file/uploadUtils';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -21,7 +22,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
   folder = '', // Definir um valor padrão para folder
   onUploadComplete,
   accept = '*',
-  maxSize = 5, // Padrão 5MB
+  maxSize = 300, // Padrão aumentado para 300MB
   buttonText = 'Upload do Arquivo',
   fieldLabel = 'Selecione um arquivo',
   initialFileUrl,
@@ -29,13 +30,27 @@ export const FileUpload: React.FC<FileUploadProps> = ({
   const [isUploading, setIsUploading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [progress, setProgress] = useState(0);
+  const [fileName, setFileName] = useState<string | null>(null);
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
   
   const handleButtonClick = () => {
     // Acionar o clique no input de arquivo
     if (fileInputRef.current) {
       fileInputRef.current.click();
+    }
+  };
+
+  const handleCancelUpload = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+      setIsUploading(false);
+      toast({
+        title: 'Upload cancelado',
+        description: 'O upload foi interrompido.',
+      });
     }
   };
   
@@ -59,8 +74,10 @@ export const FileUpload: React.FC<FileUploadProps> = ({
     setErrorMessage(null);
     setIsUploading(true);
     setProgress(0);
+    setFileName(file.name);
     
     try {
+      abortControllerRef.current = new AbortController();
       console.log(`Iniciando upload para bucket: ${bucketName}, pasta: ${folder}`);
       
       const result = await uploadFileToStorage(
@@ -83,15 +100,22 @@ export const FileUpload: React.FC<FileUploadProps> = ({
       });
     } catch (error: any) {
       console.error('Erro ao fazer upload:', error);
-      setErrorMessage(error.message || 'Erro ao fazer upload do arquivo.');
+      
+      let displayMessage = error.message || 'Erro ao fazer upload do arquivo.';
+      if (error.message?.includes('timeout') || error.message?.includes('network')) {
+        displayMessage = 'Tempo limite excedido ou problema de conexão. Tente novamente com um arquivo menor ou verifique sua conexão.';
+      }
+      
+      setErrorMessage(displayMessage);
       
       toast({
         title: 'Erro ao fazer upload',
-        description: error.message || 'Ocorreu um erro ao enviar o arquivo.',
+        description: displayMessage,
         variant: 'destructive',
       });
     } finally {
       setIsUploading(false);
+      abortControllerRef.current = null;
       // Limpar o input
       e.target.value = '';
     }
@@ -134,7 +158,20 @@ export const FileUpload: React.FC<FileUploadProps> = ({
             disabled={isUploading}
           />
           
-          {initialFileUrl && (
+          {isUploading && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={handleCancelUpload}
+              className="text-destructive hover:text-destructive/90"
+            >
+              <X className="h-4 w-4 mr-1" />
+              Cancelar
+            </Button>
+          )}
+          
+          {initialFileUrl && !isUploading && (
             <a
               href={initialFileUrl}
               target="_blank"
@@ -146,6 +183,12 @@ export const FileUpload: React.FC<FileUploadProps> = ({
           )}
         </div>
       </div>
+      
+      {fileName && !isUploading && !errorMessage && (
+        <div className="text-sm text-muted-foreground">
+          Arquivo selecionado: {fileName}
+        </div>
+      )}
       
       {errorMessage && (
         <Alert variant="destructive">

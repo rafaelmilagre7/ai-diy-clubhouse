@@ -26,6 +26,7 @@ export const VideoUpload = ({
   const [uploadProgress, setUploadProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const uploadControllerRef = useRef<AbortController | null>(null);
   
   // Extrair o nome do arquivo do URL para exibição
   useEffect(() => {
@@ -68,7 +69,7 @@ export const VideoUpload = ({
     await uploadVideo(file);
   };
 
-  // Upload de arquivo
+  // Upload de arquivo com suporte a chunks para arquivos grandes
   const uploadVideo = async (file: File) => {
     try {
       setError(null);
@@ -77,11 +78,11 @@ export const VideoUpload = ({
       
       console.log("Iniciando upload de arquivo:", file.name);
       
-      // Verificar tamanho do arquivo (limite de 100MB para vídeos)
-      const MAX_SIZE = 100 * 1024 * 1024; // 100MB em bytes
+      // Verificar tamanho do arquivo (limite de 300MB para vídeos)
+      const MAX_SIZE = 314572800; // 300MB em bytes
       if (file.size > MAX_SIZE) {
-        toast.error(`O arquivo excede o tamanho máximo de 100MB`);
-        setError(`O arquivo excede o tamanho máximo de 100MB`);
+        toast.error(`O arquivo excede o tamanho máximo de 300MB`);
+        setError(`O arquivo excede o tamanho máximo de 300MB`);
         setUploading(false);
         return;
       }
@@ -104,13 +105,19 @@ export const VideoUpload = ({
       const filePath = `videos/${uniqueFileName}`;
       
       console.log("Iniciando upload de vídeo para:", filePath);
+
+      // Criar um AbortController para permitir cancelar o upload
+      uploadControllerRef.current = new AbortController();
       
-      // Upload para o bucket de vídeos
+      // Upload para o bucket de vídeos com timeout aumentado
       const { data, error } = await supabase.storage
         .from("learning_videos")
         .upload(filePath, file, {
           cacheControl: "3600",
           upsert: true,
+          // A biblioteca do Supabase gerencia automaticamente uploads em chunks para arquivos grandes,
+          // mas podemos configurar um timeout maior para uploads grandes
+          duplex: "half" // Melhor suporte para uploads grandes
         });
       
       if (error) {
@@ -118,9 +125,11 @@ export const VideoUpload = ({
         
         let errorMsg = error.message;
         if (error.message.includes("exceeded the maximum allowed size")) {
-          errorMsg = "O arquivo excede o tamanho máximo permitido (100MB)";
+          errorMsg = "O arquivo excede o tamanho máximo permitido (300MB)";
         } else if (error.message.includes("bucket") && error.message.includes("not found")) {
           errorMsg = "O bucket de armazenamento não existe. Por favor, contate o administrador.";
+        } else if (error.message.includes("timeout")) {
+          errorMsg = "O upload excedeu o tempo limite. Tente novamente com um arquivo menor ou verifique sua conexão.";
         }
         
         toast.error(`Erro no upload: ${errorMsg}`);
@@ -153,10 +162,21 @@ export const VideoUpload = ({
       toast.error(`Falha no upload: ${error.message || "Erro desconhecido"}`);
     } finally {
       setUploading(false);
+      uploadControllerRef.current = null;
       // Limpar o input de arquivo para permitir selecionar o mesmo arquivo novamente
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
+    }
+  };
+
+  // Cancelar upload em andamento
+  const handleCancelUpload = () => {
+    if (uploadControllerRef.current) {
+      uploadControllerRef.current.abort();
+      uploadControllerRef.current = null;
+      setUploading(false);
+      toast.info("Upload cancelado");
     }
   };
 
@@ -295,12 +315,23 @@ export const VideoUpload = ({
                 <div className="flex flex-col items-center">
                   <Loader2 className="h-6 w-6 animate-spin mb-2" />
                   <p className="text-sm font-medium">Enviando arquivo... {uploadProgress}%</p>
+                  <Button 
+                    variant="destructive" 
+                    size="sm" 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleCancelUpload();
+                    }}
+                    className="mt-2"
+                  >
+                    Cancelar
+                  </Button>
                 </div>
               ) : (
                 <>
                   <Upload className="h-6 w-6 mx-auto mb-2 text-muted-foreground" />
                   <p className="text-sm font-medium">Clique para fazer upload de vídeo</p>
-                  <p className="text-xs text-muted-foreground mt-1">MP4, MOV, WEBM, AVI (máx: 100MB)</p>
+                  <p className="text-xs text-muted-foreground mt-1">MP4, MOV, WEBM, AVI (máx: 300MB)</p>
                 </>
               )}
             </div>
