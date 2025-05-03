@@ -1,94 +1,114 @@
 
 import { supabase } from './client';
-import { createStoragePublicPolicy } from './rpc';
+import { STORAGE_BUCKETS } from './config';
 
 /**
- * Verifica e configura os buckets de armazenamento necessários para o LMS
- * @returns Promise com status de sucesso e mensagem
+ * Configura os buckets de armazenamento necessários para o módulo de aprendizado
  */
-export async function setupLearningStorageBuckets(): Promise<{ 
-  success: boolean; 
-  message: string;
-  readyBuckets: string[];
-}> {
+export async function setupLearningStorageBuckets() {
   try {
-    console.log("Configurando buckets de armazenamento para LMS...");
-    const buckets = ['learning_videos', 'solution_files'];
-    const readyBuckets: string[] = [];
+    const results = await Promise.all([
+      ensureBucketExists(STORAGE_BUCKETS.VIDEOS),
+      ensureBucketExists(STORAGE_BUCKETS.SOLUTION_FILES),
+      ensureBucketExists(STORAGE_BUCKETS.PROFILE_AVATARS)
+    ]);
     
-    // Verificar cada bucket necessário
-    for (const bucketName of buckets) {
-      console.log(`Verificando bucket ${bucketName}...`);
-      const { success, error } = await createStoragePublicPolicy(bucketName);
-      
-      if (success) {
-        console.log(`✓ Bucket ${bucketName} está pronto`);
-        readyBuckets.push(bucketName);
-      } else {
-        console.error(`✗ Erro no bucket ${bucketName}: ${error}`);
-      }
-    }
-    
-    if (readyBuckets.length === buckets.length) {
-      return { 
-        success: true, 
-        message: 'Todos os buckets de armazenamento configurados com sucesso', 
-        readyBuckets 
-      };
-    } else {
-      return { 
-        success: false, 
-        message: `Alguns buckets não puderam ser configurados. Configurados: ${readyBuckets.join(', ')}`, 
-        readyBuckets 
-      };
-    }
+    return {
+      success: results.every(result => result),
+      message: 'Buckets de armazenamento configurados com sucesso'
+    };
   } catch (error) {
-    console.error("Erro ao configurar buckets de armazenamento:", error);
-    return { 
-      success: false, 
-      message: `Erro ao configurar buckets: ${error instanceof Error ? error.message : String(error)}`, 
-      readyBuckets: [] 
+    console.error('Erro ao configurar buckets de armazenamento:', error);
+    return {
+      success: false,
+      error,
+      message: 'Falha ao configurar buckets de armazenamento'
     };
   }
 }
 
 /**
- * Formata URL de vídeo do YouTube para obter o ID
- * @param url URL do vídeo do YouTube
- * @returns ID do vídeo ou null
+ * Garante que um bucket existe, criando-o se necessário
  */
-export function getYoutubeVideoId(url: string): string | null {
-  if (!url) return null;
-  
+async function ensureBucketExists(bucketName: string): Promise<boolean> {
   try {
-    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
-    const match = url.match(regExp);
-    return (match && match[2].length === 11) ? match[2] : null;
+    const { data: buckets } = await supabase.storage.listBuckets();
+    const exists = buckets?.some(bucket => bucket.name === bucketName);
+    
+    if (!exists) {
+      const { error } = await supabase.storage.createBucket(bucketName, {
+        public: true,
+        fileSizeLimit: 314572800 // 300MB
+      });
+      
+      if (error) {
+        console.error(`Erro ao criar bucket ${bucketName}:`, error);
+        return false;
+      }
+    }
+    
+    return true;
   } catch (error) {
-    console.error("Erro ao extrair ID do YouTube:", error);
-    return null;
+    console.error(`Erro ao verificar/criar bucket ${bucketName}:`, error);
+    return false;
   }
 }
 
 /**
- * Gera URL de thumbnail para vídeo do YouTube
- * @param youtubeId ID do vídeo do YouTube
- * @returns URL da thumbnail
+ * Extrai o ID de um vídeo do YouTube a partir da URL
  */
-export function getYoutubeThumbnailUrl(youtubeId: string): string {
-  return `https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg`;
+export function getYoutubeVideoId(url?: string): string | null {
+  if (!url) return null;
+  
+  // Padrões comuns de URLs do YouTube
+  const patterns = [
+    // youtu.be/ID
+    /youtu\.be\/([^?&#]+)/,
+    // youtube.com/watch?v=ID
+    /youtube\.com\/watch\?v=([^?&#]+)/,
+    // youtube.com/embed/ID
+    /youtube\.com\/embed\/([^?&#]+)/,
+    // youtube.com/v/ID
+    /youtube\.com\/v\/([^?&#]+)/
+  ];
+  
+  for (const pattern of patterns) {
+    const match = url.match(pattern);
+    if (match && match[1]) {
+      return match[1];
+    }
+  }
+  
+  return null;
 }
 
 /**
- * Converte segundos para formato legível (MM:SS)
- * @param seconds Duração em segundos
- * @returns String formatada
+ * Obtém a URL da miniatura de um vídeo do YouTube
  */
-export function formatVideoDuration(seconds: number): string {
-  if (!seconds || isNaN(seconds)) return '00:00';
+export function getYoutubeThumbnailUrl(videoId: string, quality: 'default' | 'medium' | 'high' | 'standard' | 'maxres' = 'medium'): string {
+  return `https://img.youtube.com/vi/${videoId}/${quality}default.jpg`;
+}
+
+/**
+ * Formata a duração do vídeo em formato legível (mm:ss ou hh:mm:ss)
+ */
+export function formatVideoDuration(seconds: number | null): string {
+  if (!seconds || seconds <= 0) return '00:00';
   
-  const minutes = Math.floor(seconds / 60);
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
   const remainingSeconds = Math.floor(seconds % 60);
   
-  return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+  if (hours > 0) {
+    return `${padZero(hours)}:${padZero(minutes)}:${padZero(remainingSeconds)}`;
+  }
+  
+  return `${padZero(minutes)}:${padZero(remainingSeconds)}`;
+}
+
+/**
+ * Função auxiliar para adicionar zero à esquerda para valores menores que 10
+ */
+function padZero(num: number): string {
+  return num < 10 ? `0${num}` : `${num}`;
 }
