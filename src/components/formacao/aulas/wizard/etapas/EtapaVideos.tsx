@@ -19,10 +19,10 @@ import {
   CardTitle,
   CardFooter,
 } from "@/components/ui/card";
-import { Trash2, Video as VideoIcon, AlertCircle, Info } from "lucide-react";
+import { Trash2, Video as VideoIcon } from "lucide-react";
 import { VideoUploadCard } from "@/components/formacao/comum/VideoUploadCard";
 import { YoutubeEmbed } from "@/components/common/YoutubeEmbed";
-import { getYoutubeVideoId, setupLearningStorageBuckets } from "@/lib/supabase/storage";
+import { getYoutubeVideoId } from "@/lib/supabase/storage";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
 
@@ -39,47 +39,6 @@ const EtapaVideos: React.FC<EtapaVideosProps> = ({
   onPrevious,
   isSaving
 }) => {
-  // Estado para controlar o status dos buckets
-  const [bucketStatus, setBucketStatus] = useState<"checking" | "ready" | "error" | "partial">("checking");
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  
-  // Verificar status dos buckets quando o componente montar
-  useEffect(() => {
-    checkBucketStatus();
-  }, []);
-  
-  const checkBucketStatus = async () => {
-    try {
-      setBucketStatus("checking");
-      const response = await setupLearningStorageBuckets();
-      
-      if (response.success) {
-        setBucketStatus("ready");
-      } else if (response.readyBuckets && response.readyBuckets.length > 0) {
-        // Verificar se pelo menos alguns buckets estão prontos
-        setBucketStatus("partial");
-        setErrorMessage(response.message || "Alguns buckets não estão disponíveis");
-      } else {
-        setBucketStatus("error");
-        setErrorMessage(response.message || "Não foi possível configurar os buckets de armazenamento");
-      }
-    } catch (error) {
-      setBucketStatus("error");
-      setErrorMessage(`Erro ao verificar armazenamento: ${error instanceof Error ? error.message : String(error)}`);
-    }
-  };
-  
-  const handleRetryBucketSetup = async () => {
-    toast.info("Verificando configuração de armazenamento...");
-    await checkBucketStatus();
-    
-    if (bucketStatus === "ready") {
-      toast.success("Armazenamento configurado com sucesso!");
-    } else {
-      toast.error("Configuração de armazenamento incompleta.");
-    }
-  };
-  
   // Obter os vídeos já adicionados do formulário
   const videos = form.watch('videos') || [];
   
@@ -179,56 +138,6 @@ const EtapaVideos: React.FC<EtapaVideosProps> = ({
                 </div>
               </div>
               
-              {/* Alertas de status do bucket */}
-              {bucketStatus === "checking" && (
-                <Alert className="mb-4">
-                  <div className="flex items-center">
-                    <div className="animate-spin mr-2 h-4 w-4 border-2 border-primary border-r-transparent rounded-full"></div>
-                    <AlertDescription>Verificando configuração do armazenamento...</AlertDescription>
-                  </div>
-                </Alert>
-              )}
-              
-              {bucketStatus === "error" && (
-                <Alert variant="destructive" className="mb-4">
-                  <AlertCircle className="h-4 w-4 mr-2" />
-                  <div className="flex-1">
-                    <AlertDescription>{errorMessage || "Erro na configuração do armazenamento"}</AlertDescription>
-                    <div className="mt-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={handleRetryBucketSetup}
-                        className="flex items-center"
-                      >
-                        Tentar novamente
-                      </Button>
-                    </div>
-                  </div>
-                </Alert>
-              )}
-              
-              {bucketStatus === "partial" && (
-                <Alert variant="warning" className="mb-4">
-                  <Info className="h-4 w-4 mr-2" />
-                  <div className="flex-1">
-                    <AlertDescription>
-                      {errorMessage || "Configuração parcial do armazenamento. A adição de vídeos por upload pode ser limitada."}
-                    </AlertDescription>
-                    <div className="mt-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={handleRetryBucketSetup}
-                        className="flex items-center"
-                      >
-                        Tentar reconfigurar
-                      </Button>
-                    </div>
-                  </div>
-                </Alert>
-              )}
-                
               <FormControl>
                 <div className="space-y-6">
                   {/* Componente de upload de vídeo - desativado se atingiu o limite */}
@@ -239,7 +148,6 @@ const EtapaVideos: React.FC<EtapaVideosProps> = ({
                     />
                   ) : (
                     <Alert className="bg-amber-50 border-amber-100">
-                      <Info className="h-4 w-4 text-amber-600" />
                       <AlertDescription className="text-amber-700">
                         Você atingiu o limite máximo de {MAX_VIDEOS} vídeos por aula. 
                         Para adicionar um novo vídeo, remova algum dos existentes.
