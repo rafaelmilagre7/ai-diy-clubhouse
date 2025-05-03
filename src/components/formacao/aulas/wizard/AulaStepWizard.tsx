@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -268,7 +269,6 @@ const AulaStepWizard: React.FC<AulaStepWizardProps> = ({
     try {
       setIsSaving(true);
       
-      const lessonId = aula?.id;
       console.log("Dados do formulário:", values);
       
       // Calcular o tempo estimado com base nos vídeos
