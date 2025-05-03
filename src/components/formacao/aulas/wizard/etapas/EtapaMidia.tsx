@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import {
   Form,
   FormControl,
@@ -12,7 +12,11 @@ import {
 import { UseFormReturn } from "react-hook-form";
 import { AulaFormValues } from "../AulaStepWizard";
 import { Button } from "@/components/ui/button";
-import { Editor } from "@/components/editor/Editor";
+import { ImageUpload } from "@/components/formacao/comum/ImageUpload";
+import { STORAGE_BUCKETS } from "@/lib/supabase/config";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Info } from "lucide-react";
+import { setupLearningStorageBuckets } from "@/lib/supabase/storage";
 
 interface EtapaMidiaProps {
   form: UseFormReturn<AulaFormValues>;
@@ -24,8 +28,40 @@ interface EtapaMidiaProps {
 const EtapaMidia: React.FC<EtapaMidiaProps> = ({
   form,
   onNext,
-  onPrevious
+  onPrevious,
+  isSaving
 }) => {
+  const [bucketStatus, setBucketStatus] = useState<{ 
+    checked: boolean;
+    isReady: boolean;
+    message?: string;
+  }>({ checked: false, isReady: false });
+
+  React.useEffect(() => {
+    // Verificar o status dos buckets quando o componente é montado
+    const checkBuckets = async () => {
+      try {
+        const result = await setupLearningStorageBuckets();
+        console.log("Status dos buckets:", result);
+        
+        setBucketStatus({
+          checked: true,
+          isReady: result.success || result.partial,
+          message: result.message
+        });
+      } catch (error) {
+        console.error("Erro ao verificar buckets:", error);
+        setBucketStatus({
+          checked: true,
+          isReady: false,
+          message: "Falha ao verificar os buckets de armazenamento."
+        });
+      }
+    };
+    
+    checkBuckets();
+  }, []);
+
   const handleContinue = async () => {
     // Validar apenas os campos desta etapa
     const result = await form.trigger(['coverImageUrl']);
@@ -37,6 +73,15 @@ const EtapaMidia: React.FC<EtapaMidiaProps> = ({
   return (
     <Form {...form}>
       <div className="space-y-6 py-4">
+        {!bucketStatus.isReady && bucketStatus.checked && (
+          <Alert variant="warning">
+            <Info className="h-4 w-4" />
+            <AlertDescription>
+              {bucketStatus.message || "Não foi possível verificar o status dos buckets de armazenamento. O upload de imagens pode falhar."}
+            </AlertDescription>
+          </Alert>
+        )}
+        
         <div className="space-y-4">
           <FormField
             control={form.control}
@@ -48,32 +93,19 @@ const EtapaMidia: React.FC<EtapaMidiaProps> = ({
                   Escolha uma imagem atrativa que represente o conteúdo da aula
                 </FormDescription>
                 <FormControl>
-                  <Editor
+                  <ImageUpload
                     value={field.value || ""}
                     onChange={field.onChange}
+                    bucketName={STORAGE_BUCKETS.LEARNING_COVERS}
+                    folderPath="covers"
+                    maxSizeMB={5}
+                    disabled={isSaving}
                   />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-          
-          {/* Visualização da imagem de capa */}
-          {form.watch('coverImageUrl') && (
-            <div className="mt-4">
-              <h3 className="text-sm font-medium mb-2">Pré-visualização:</h3>
-              <div className="border rounded-md p-2 bg-muted/20">
-                <img 
-                  src={form.watch('coverImageUrl')} 
-                  alt="Imagem de capa" 
-                  className="max-h-[200px] object-contain"
-                  onError={(e) => {
-                    e.currentTarget.src = "https://placehold.co/600x400?text=Imagem+Inválida";
-                  }}
-                />
-              </div>
-            </div>
-          )}
           
           <div className="mt-6 text-sm text-muted-foreground">
             <h4 className="font-medium mb-1">Dicas para uma boa imagem de capa:</h4>
@@ -82,6 +114,7 @@ const EtapaMidia: React.FC<EtapaMidiaProps> = ({
               <li>Escolha imagens relacionadas ao tema da aula</li>
               <li>Evite imagens com muito texto</li>
               <li>Dimensões recomendadas: 1280x720 pixels (16:9)</li>
+              <li>Tamanho máximo: 5MB</li>
             </ul>
           </div>
         </div>
@@ -91,12 +124,14 @@ const EtapaMidia: React.FC<EtapaMidiaProps> = ({
             type="button" 
             variant="outline" 
             onClick={onPrevious}
+            disabled={isSaving}
           >
             Voltar
           </Button>
           <Button 
             type="button" 
             onClick={handleContinue}
+            disabled={isSaving}
           >
             Continuar
           </Button>

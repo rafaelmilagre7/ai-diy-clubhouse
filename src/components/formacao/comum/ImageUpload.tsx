@@ -2,26 +2,62 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { uploadFileWithFallback } from "@/lib/supabase/storage";
-import { ImagePlus, Trash2, Loader2 } from "lucide-react";
+import { ImagePlus, Trash2, Loader2, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { STORAGE_BUCKETS } from "@/lib/supabase/config";
+import { STORAGE_BUCKETS, FILE_SIZE_LIMITS } from "@/lib/supabase/config";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface ImageUploadProps {
   value: string | undefined;
   onChange: (url: string) => void;
   bucketName: string;
   folderPath: string;
+  maxSizeMB?: number; // Tamanho máximo em MB (opcional)
+  disabled?: boolean;
 }
 
-export const ImageUpload = ({ value, onChange, bucketName, folderPath }: ImageUploadProps) => {
+export const ImageUpload = ({ 
+  value, 
+  onChange, 
+  bucketName, 
+  folderPath,
+  maxSizeMB = 5, // 5MB padrão para imagens
+  disabled = false
+}: ImageUploadProps) => {
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    
+    // Validar tipo de arquivo
+    const fileType = file.type.split('/')[0];
+    if (fileType !== 'image') {
+      setError("Por favor, selecione apenas arquivos de imagem");
+      toast({
+        title: "Tipo de arquivo inválido",
+        description: "Por favor, selecione apenas arquivos de imagem.",
+        variant: "destructive",
+      });
+      return;
+    }
 
+    // Validar tamanho do arquivo (usando o limite especificado nos props)
+    const maxSize = maxSizeMB * 1024 * 1024; // Converter para bytes
+    if (file.size > maxSize) {
+      setError(`A imagem é muito grande (${(file.size / (1024 * 1024)).toFixed(2)}MB). O tamanho máximo é ${maxSizeMB}MB.`);
+      toast({
+        title: "Arquivo muito grande",
+        description: `A imagem excede o tamanho máximo de ${maxSizeMB}MB. Por favor, selecione uma imagem menor.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setError(null);
     setUploading(true);
     setProgress(0);
 
@@ -46,11 +82,12 @@ export const ImageUpload = ({ value, onChange, bucketName, folderPath }: ImageUp
         description: "A imagem foi enviada com sucesso.",
         variant: "default",
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erro ao fazer upload:", error);
+      setError(error.message || "Não foi possível enviar a imagem. Tente novamente.");
       toast({
         title: "Falha no upload",
-        description: "Não foi possível enviar a imagem. Tente novamente.",
+        description: error.message || "Não foi possível enviar a imagem. Tente novamente.",
         variant: "destructive",
       });
     } finally {
@@ -60,10 +97,18 @@ export const ImageUpload = ({ value, onChange, bucketName, folderPath }: ImageUp
 
   const handleRemoveImage = () => {
     onChange("");
+    setError(null);
   };
 
   return (
     <div className="space-y-4">
+      {error && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+      
       {value ? (
         <div className="relative aspect-video w-full overflow-hidden rounded-md border">
           <img
@@ -74,6 +119,7 @@ export const ImageUpload = ({ value, onChange, bucketName, folderPath }: ImageUp
               const target = e.target as HTMLImageElement;
               target.src = "https://placehold.co/600x400?text=Imagem+não+encontrada";
               console.error("Erro ao carregar imagem:", value);
+              setError("Não foi possível carregar a imagem. O arquivo pode não existir mais.");
             }}
           />
           <Button
@@ -82,6 +128,7 @@ export const ImageUpload = ({ value, onChange, bucketName, folderPath }: ImageUp
             variant="destructive"
             className="absolute right-2 top-2"
             onClick={handleRemoveImage}
+            disabled={disabled}
           >
             <Trash2 className="h-4 w-4" />
           </Button>
@@ -101,6 +148,9 @@ export const ImageUpload = ({ value, onChange, bucketName, folderPath }: ImageUp
               <span className="text-sm text-muted-foreground">
                 Clique para adicionar uma imagem de capa
               </span>
+              <span className="text-xs text-muted-foreground">
+                Tamanho máximo: {maxSizeMB}MB
+              </span>
             </div>
           )}
         </div>
@@ -109,15 +159,15 @@ export const ImageUpload = ({ value, onChange, bucketName, folderPath }: ImageUp
         type="file"
         accept="image/*"
         onChange={handleImageUpload}
-        disabled={uploading}
+        disabled={uploading || disabled}
         className="hidden"
         id="image-upload"
       />
-      {!value && (
+      {!value && !uploading && (
         <Button
           type="button"
           variant="outline"
-          disabled={uploading}
+          disabled={uploading || disabled}
           onClick={() => document.getElementById("image-upload")?.click()}
           className="w-full"
         >

@@ -1,11 +1,15 @@
+
 // Vamos criar ou atualizar este arquivo
 
 import { supabase } from '@/lib/supabase';
+import { STORAGE_BUCKETS, FILE_SIZE_LIMITS } from './config';
 
 // Listagem dos buckets necessários para o sistema de aprendizado
 const LEARNING_BUCKETS = [
   'learning_videos',     // Vídeos de aulas
   'learning_resources',  // Outros recursos (PDFs, documentos, imagens)
+  'learning_covers',     // Imagens de capa
+  'learning_images',     // Imagens gerais
   'solution_files',      // Arquivos de solução (usado como fallback)
 ];
 
@@ -59,18 +63,31 @@ export const setupLearningStorageBuckets = async () => {
     
     for (const bucketName of missingBuckets) {
       try {
+        // Definir limite de tamanho de acordo com o tipo do bucket
+        let fileSizeLimit = FILE_SIZE_LIMITS.DEFAULT;
+        if (bucketName.includes('video')) {
+          fileSizeLimit = FILE_SIZE_LIMITS.VIDEOS;
+        } else if (bucketName.includes('image') || bucketName.includes('cover')) {
+          fileSizeLimit = FILE_SIZE_LIMITS.IMAGES;
+        } else if (bucketName.includes('resource') || bucketName.includes('file')) {
+          fileSizeLimit = FILE_SIZE_LIMITS.DOCUMENTS;
+        }
+        
         const { data, error } = await supabase.storage.createBucket(bucketName, {
           public: true, // Tornando público para facilitar acesso aos recursos
-          fileSizeLimit: bucketName.includes('video') ? 314572800 : 104857600 // 300MB para vídeos, 100MB para outros
+          fileSizeLimit: fileSizeLimit
         });
         
         if (error) {
           console.error(`Erro ao criar bucket ${bucketName}:`, error);
           creationErrors.push(bucketName);
         } else {
-          console.log(`Bucket ${bucketName} criado com sucesso`);
+          console.log(`Bucket ${bucketName} criado com sucesso com limite de ${fileSizeLimit} bytes`);
           readyBuckets.push(bucketName);
           createdCount++;
+          
+          // Configurar política pública para o bucket
+          await setupStoragePublicPolicy(bucketName);
         }
       } catch (err) {
         console.error(`Erro ao criar bucket ${bucketName}:`, err);
@@ -140,10 +157,20 @@ export const ensureBucketExists = async (bucketName: string): Promise<boolean> =
       return true;
     }
     
+    // Determinar limite de tamanho com base no nome do bucket
+    let fileSizeLimit = FILE_SIZE_LIMITS.DEFAULT;
+    if (bucketName.includes('video')) {
+      fileSizeLimit = FILE_SIZE_LIMITS.VIDEOS;
+    } else if (bucketName.includes('image') || bucketName.includes('cover')) {
+      fileSizeLimit = FILE_SIZE_LIMITS.IMAGES;
+    } else if (bucketName.includes('resource') || bucketName.includes('file')) {
+      fileSizeLimit = FILE_SIZE_LIMITS.DOCUMENTS;
+    }
+    
     // Tentar criar o bucket
     const { data, error } = await supabase.storage.createBucket(bucketName, {
       public: true,
-      fileSizeLimit: bucketName.includes('video') ? 314572800 : 104857600
+      fileSizeLimit: fileSizeLimit
     });
     
     if (error) {
@@ -151,7 +178,11 @@ export const ensureBucketExists = async (bucketName: string): Promise<boolean> =
       return false;
     }
     
-    console.log(`Bucket ${bucketName} criado com sucesso`);
+    console.log(`Bucket ${bucketName} criado com sucesso com limite de ${fileSizeLimit} bytes`);
+    
+    // Configurar políticas de acesso público
+    await setupStoragePublicPolicy(bucketName);
+    
     return true;
   } catch (error) {
     console.error(`Erro ao verificar/criar bucket ${bucketName}:`, error);
@@ -216,6 +247,23 @@ export const uploadFileWithFallback = async (
   onProgress?: (progress: number) => void,
   fallbackBucket?: string
 ): Promise<{ path: string; publicUrl: string }> => {
+  // Validar tamanho do arquivo antes do upload
+  let maxFileSize = FILE_SIZE_LIMITS.DEFAULT;
+  
+  // Determinar limite baseado no tipo de bucket
+  if (bucketName.includes('video')) {
+    maxFileSize = FILE_SIZE_LIMITS.VIDEOS;
+  } else if (bucketName.includes('image') || bucketName.includes('cover')) {
+    maxFileSize = FILE_SIZE_LIMITS.IMAGES;
+  } else if (bucketName.includes('resource') || bucketName.includes('file')) {
+    maxFileSize = FILE_SIZE_LIMITS.DOCUMENTS;
+  }
+  
+  if (file.size > maxFileSize) {
+    const sizeMB = maxFileSize / (1024 * 1024);
+    throw new Error(`O arquivo é muito grande (${(file.size / (1024 * 1024)).toFixed(2)}MB). O tamanho máximo permitido é ${sizeMB}MB.`);
+  }
+  
   // Gerar um nome único para o arquivo
   const fileExt = file.name.split('.').pop();
   const fileName = `${crypto.randomUUID()}.${fileExt}`;
@@ -294,8 +342,24 @@ export const uploadFileWithFallback = async (
     };
     
   } catch (error: any) {
-    console.error(`Erro no upload: ${error.message}`);
-    throw error;
+    // Melhorar a mensagem de erro para o usuário
+    let errorMessage = `Erro no upload: ${error.message}`;
+    
+    // Verificar se o erro está relacionado ao tamanho do arquivo
+    if (error.message && error.message.includes('size')) {
+      errorMessage = `O arquivo excede o tamanho máximo permitido (${(maxFileSize / (1024 * 1024)).toFixed(2)}MB).`;
+    }
+    // Verificar se o erro está relacionado a permissões
+    else if (error.message && (error.message.includes('permission') || error.message.includes('403'))) {
+      errorMessage = 'Você não tem permissão para fazer upload neste bucket. Verifique se está autenticado.';
+    }
+    // Verificar se é um erro de conectividade
+    else if (error.message && (error.message.includes('network') || error.message.includes('connection'))) {
+      errorMessage = 'Erro de conexão. Verifique sua internet e tente novamente.';
+    }
+    
+    console.error(`Erro detalhado no upload: ${error.message}`);
+    throw new Error(errorMessage);
   }
 };
 
