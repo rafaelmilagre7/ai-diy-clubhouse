@@ -14,12 +14,14 @@ interface FormacaoAulasHeaderProps {
   titulo?: string;
   onNovaAula?: () => void;
   breadcrumb?: boolean;
+  moduloId?: string; // Adicionado para permitir passagem do ID do módulo
 }
 
 export const FormacaoAulasHeader: React.FC<FormacaoAulasHeaderProps> = ({
   titulo = "Aulas",
   onNovaAula,
   breadcrumb = false,
+  moduloId, // Agora o componente pode receber essa prop
 }) => {
   return (
     <div className="flex justify-between items-center">
