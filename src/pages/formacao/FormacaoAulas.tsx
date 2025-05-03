@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/auth";
 import { supabase } from "@/lib/supabase";
@@ -23,7 +24,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import AulaWizard from "@/components/formacao/aulas/AulaWizard";
+import AulaStepWizard from "@/components/formacao/aulas/wizard/AulaStepWizard";
 
 const FormacaoAulas = () => {
   const { profile } = useAuth();
@@ -207,6 +208,8 @@ const FormacaoAulas = () => {
 
   // Redirecionar para detalhes da aula
   const handleEditarAula = (aula: LearningLesson) => {
+    // Abrir o wizard em modo de edição
+    setSelectedModuleId(aula.module_id);
     window.location.href = `/formacao/aulas/${aula.id}`;
   };
 
@@ -218,7 +221,7 @@ const FormacaoAulas = () => {
 
   return (
     <div className="space-y-6">
-      <FormacaoAulasHeader onNovaAula={handleNovaAula} />
+      <FormacaoAulasHeader onNovaAula={handleNovaAula} moduloId={moduloFiltro} />
       
       <Card>
         <CardHeader>
@@ -298,8 +301,8 @@ const FormacaoAulas = () => {
         isAdmin={profile?.role === 'admin'}
       />
 
-      {/* Modal do Wizard para criar nova aula */}
-      <AulaWizard
+      {/* Wizard de etapas para criar/editar aula */}
+      <AulaStepWizard
         open={isWizardOpen}
         onOpenChange={setIsWizardOpen}
         aula={null}
