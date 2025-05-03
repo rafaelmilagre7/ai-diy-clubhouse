@@ -1,3 +1,4 @@
+
 // Vamos criar ou atualizar este arquivo
 
 import { supabase } from '@/lib/supabase';
@@ -117,6 +118,49 @@ export const setupLearningStorageBuckets = async () => {
 };
 
 /**
+ * Verifica se um bucket existe e tenta criá-lo se necessário
+ * @param bucketName Nome do bucket a verificar/criar
+ * @returns true se o bucket está disponível, false caso contrário
+ */
+export const ensureBucketExists = async (bucketName: string): Promise<boolean> => {
+  try {
+    // Verificar os buckets existentes
+    const { data: existingBuckets, error: listError } = await supabase.storage.listBuckets();
+    
+    if (listError) {
+      console.error("Erro ao listar buckets:", listError);
+      return false;
+    }
+    
+    // Lista de buckets já existentes
+    const existingBucketNames = existingBuckets?.map(bucket => bucket.name) || [];
+    
+    // Se o bucket já existe, retornar sucesso
+    if (existingBucketNames.includes(bucketName)) {
+      console.log(`Bucket ${bucketName} já existe`);
+      return true;
+    }
+    
+    // Tentar criar o bucket
+    const { data, error } = await supabase.storage.createBucket(bucketName, {
+      public: true,
+      fileSizeLimit: bucketName.includes('video') ? 314572800 : 104857600
+    });
+    
+    if (error) {
+      console.error(`Erro ao criar bucket ${bucketName}:`, error);
+      return false;
+    }
+    
+    console.log(`Bucket ${bucketName} criado com sucesso`);
+    return true;
+  } catch (error) {
+    console.error(`Erro ao verificar/criar bucket ${bucketName}:`, error);
+    return false;
+  }
+};
+
+/**
  * Extrai o ID de um vídeo do YouTube a partir da URL
  */
 export const getYoutubeVideoId = (url: string): string | null => {
@@ -142,6 +186,19 @@ export const getYoutubeVideoId = (url: string): string | null => {
     console.error("Erro ao extrair ID do YouTube:", error);
     return null;
   }
+};
+
+/**
+ * Gera URL da thumbnail de um vídeo do YouTube
+ * @param url URL do vídeo do YouTube
+ * @returns URL da thumbnail ou null
+ */
+export const getYoutubeThumbnailUrl = (url: string): string | null => {
+  const videoId = getYoutubeVideoId(url);
+  if (!videoId) return null;
+  
+  // URL da thumbnail de alta qualidade do YouTube
+  return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
 };
 
 /**

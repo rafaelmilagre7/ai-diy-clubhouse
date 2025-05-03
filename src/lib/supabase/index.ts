@@ -11,5 +11,6 @@ export {
   getYoutubeVideoId, 
   getYoutubeThumbnailUrl, 
   formatVideoDuration,
-  setupLearningStorageBuckets 
+  setupLearningStorageBuckets,
+  ensureBucketExists
 } from './storage';
