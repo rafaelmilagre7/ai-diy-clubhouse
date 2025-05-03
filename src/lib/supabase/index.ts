@@ -1,4 +1,5 @@
 
+
 // Re-exportação centralizada para garantir compatibilidade com importações existentes
 export * from './client';
 export * from './types';
@@ -12,5 +13,9 @@ export {
   getYoutubeThumbnailUrl, 
   formatVideoDuration,
   setupLearningStorageBuckets,
-  ensureBucketExists
+  ensureBucketExists,
+  // Não exportar createStoragePublicPolicy daqui para evitar o conflito,
+  // já que está sendo exportado por rpc.ts
+  setupStoragePublicPolicy
 } from './storage';
+

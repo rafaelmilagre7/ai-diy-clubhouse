@@ -13,7 +13,8 @@ import { FileUpload } from "@/components/formacao/common/FileUpload";
 import { Input } from "@/components/ui/input";
 import { Plus, File, Link as LinkIcon, Trash, AlertCircle, RefreshCw, Check } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { setupLearningStorageBuckets, createStoragePublicPolicy } from "@/lib/supabase";
+import { setupLearningStorageBuckets } from "@/lib/supabase";
+import { createStoragePublicPolicy } from "@/lib/supabase/rpc";
 import { STORAGE_BUCKETS } from "@/lib/supabase/config";
 import { toast } from "sonner";
 

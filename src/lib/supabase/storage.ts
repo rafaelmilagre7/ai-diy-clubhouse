@@ -304,7 +304,7 @@ export const uploadFileWithFallback = async (
  * @param bucketName Nome do bucket para configurar
  * @returns Objeto com status da operação
  */
-export const createStoragePublicPolicy = async (bucketName: string): Promise<{ success: boolean, error: string | null }> => {
+export const setupStoragePublicPolicy = async (bucketName: string): Promise<{ success: boolean, error: string | null }> => {
   try {
     const { data, error } = await supabase.rpc('create_storage_public_policy', { bucket_name: bucketName });
     
