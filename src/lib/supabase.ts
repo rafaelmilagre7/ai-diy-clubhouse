@@ -3,12 +3,17 @@ import { createClient } from '@supabase/supabase-js';
 import type { Database } from './supabase/types';
 import { createStoragePublicPolicy } from './supabase/rpc';
 
+// Reexportar todos os tipos necessários
+export * from './supabase/types';
+export * from './supabase/client';
+export * from './supabase/storage';
+export * from './supabase/rpc';
+export * from './supabase/config';
+
 export const supabase = createClient<Database>(
   import.meta.env.VITE_SUPABASE_URL,
   import.meta.env.VITE_SUPABASE_ANON_KEY
 );
-
-// Tipos para o sistema LMS são importados de types.ts, não precisamos redefini-los aqui
 
 // Funções para trabalhar com vídeos
 export async function uploadLearningVideo(file: File, lessonId: string) {
