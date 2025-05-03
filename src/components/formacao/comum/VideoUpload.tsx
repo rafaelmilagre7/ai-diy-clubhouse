@@ -1,453 +1,291 @@
 
-import { useState, useEffect, useRef } from "react";
-import { supabase } from "@/lib/supabase";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
+import { uploadFileWithFallback } from "@/lib/supabase/storage";
+import { getYoutubeVideoId, getYoutubeThumbnailUrl } from "@/lib/supabase/storage";
+import { 
+  Film, Link, Loader2, Video, Youtube, AlertCircle, Check, X
+} from "lucide-react";
 import { toast } from "sonner";
-import { Upload, Loader2, Video, X } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { v4 as uuidv4 } from "uuid";
+import { Card, CardContent } from "@/components/ui/card";
+import { STORAGE_BUCKETS } from "@/lib/supabase/config";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface VideoUploadProps {
   value: string;
-  onChange: (url: string, videoType: string, fileName?: string, filePath?: string, fileSize?: number, duration_seconds?: number) => void;
+  onChange: (
+    url: string, 
+    videoType: string, 
+    fileName?: string, 
+    filePath?: string, 
+    fileSize?: number,
+    duration?: number,
+    thumbnailUrl?: string
+  ) => void;
   videoType?: string;
-  disabled?: boolean;
 }
 
-export const VideoUpload = ({ 
-  value, 
+export const VideoUpload: React.FC<VideoUploadProps> = ({
+  value,
   onChange,
-  videoType = "youtube",
-  disabled = false
-}: VideoUploadProps) => {
+  videoType = "youtube"
+}) => {
+  const [activeTab, setActiveTab] = useState(videoType || "youtube");
+  const [youtubeUrl, setYoutubeUrl] = useState(videoType === "youtube" ? value : "");
   const [uploading, setUploading] = useState(false);
-  const [fileName, setFileName] = useState<string | null>(null);
-  const [urlInput, setUrlInput] = useState<string>(videoType === "youtube" ? value : "");
   const [uploadProgress, setUploadProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
-  const [bucketStatus, setBucketStatus] = useState<"checking" | "ready" | "error">("checking");
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const uploadControllerRef = useRef<AbortController | null>(null);
-  
-  // Verificar se o bucket existe ao carregar o componente
-  useEffect(() => {
-    checkBucketStatus();
-  }, []);
 
-  // Extrair o nome do arquivo do URL para exibição
-  useEffect(() => {
-    // Se for um vídeo de arquivo e tiver um valor, tenta extrair o nome do arquivo
-    if (value && videoType === "file") {
-      const pathParts = value.split("/");
-      const extractedFileName = pathParts[pathParts.length - 1];
-      if (extractedFileName) {
-        setFileName(decodeURIComponent(extractedFileName));
-      }
+  // Processar URL do YouTube
+  const processYoutubeUrl = () => {
+    if (!youtubeUrl) {
+      setError("Por favor, insira uma URL válida do YouTube");
+      return;
     }
-  }, [value, videoType]);
 
-  // Verificar status do bucket sem tentar criar
-  const checkBucketStatus = async () => {
     try {
-      setBucketStatus("checking");
-      
-      console.log("Verificando se o bucket learning_videos existe...");
-      
-      // Apenas verificar se o bucket existe sem tentar criar
-      const { data: buckets, error } = await supabase.storage.listBuckets();
-      
-      if (error) {
-        console.error("Erro ao listar buckets:", error);
-        setBucketStatus("error");
-        return false;
-      }
-      
-      const bucketExists = buckets?.some(bucket => bucket.name === 'learning_videos');
-      
-      if (bucketExists) {
-        console.log("Bucket learning_videos existe.");
-        setBucketStatus("ready");
-        return true;
-      } else {
-        console.log("Bucket learning_videos não existe.");
-        // Tentar criar o bucket diretamente sem usar RPC
-        try {
-          const { error: createError } = await supabase.storage.createBucket('learning_videos', {
-            public: true,
-            fileSizeLimit: 314572800 // 300MB
-          });
-          
-          if (createError) {
-            console.error("Erro ao criar bucket:", createError);
-            setBucketStatus("error");
-            return false;
-          }
-          
-          console.log("Bucket learning_videos criado com sucesso!");
-          setBucketStatus("ready");
-          return true;
-        } catch (createErr) {
-          console.error("Erro ao criar bucket:", createErr);
-          setBucketStatus("error");
-          return false;
-        }
-      }
-    } catch (err) {
-      console.error("Erro ao verificar status do bucket:", err);
-      setBucketStatus("error");
-      return false;
-    }
-  };
-
-  // Upload de arquivo com suporte a chunks para arquivos grandes
-  const uploadVideo = async (file: File) => {
-    try {
-      setError(null);
-      setUploading(true);
-      setUploadProgress(5);
-      
-      console.log("Iniciando upload de arquivo:", file.name);
-      
-      // Verificar tamanho do arquivo (limite de 300MB para vídeos)
-      const MAX_SIZE = 314572800; // 300MB em bytes
-      if (file.size > MAX_SIZE) {
-        toast.error(`O arquivo excede o tamanho máximo de 300MB`);
-        setError(`O arquivo excede o tamanho máximo de 300MB`);
-        setUploading(false);
+      // Extrair ID do vídeo
+      const videoId = getYoutubeVideoId(youtubeUrl);
+      if (!videoId) {
+        setError("URL do YouTube inválida. Utilize uma URL no formato correto.");
         return;
       }
-      
-      // Verificar status do bucket antes do upload
-      if (bucketStatus === "checking") {
-        const isReady = await checkBucketStatus();
-        if (!isReady) {
-          toast.error("Não foi possível preparar o armazenamento para vídeos. Tentando upload direto.");
-          // Continuamos com o upload mesmo assim - será tratado abaixo
-        }
-      }
-      
-      setUploadProgress(20);
-      
-      // Gerar nome único para evitar colisões
-      const fileExt = file.name.split(".").pop();
-      const uniqueFileName = `${uuidv4()}.${fileExt}`;
-      const filePath = `videos/${uniqueFileName}`;
-      
-      console.log("Iniciando upload de vídeo para:", filePath);
 
-      // Criar um AbortController para permitir cancelar o upload
-      uploadControllerRef.current = new AbortController();
+      // Formatar URL corretamente
+      const standardUrl = `https://www.youtube.com/watch?v=${videoId}`;
       
-      // Upload para o bucket de vídeos
-      const { data, error } = await supabase.storage
-        .from("learning_videos")
-        .upload(filePath, file, {
-          cacheControl: "3600",
-          upsert: true,
-          duplex: "half" // Melhor suporte para uploads grandes
-        });
+      // Gerar URL de thumbnail
+      const thumbnailUrl = getYoutubeThumbnailUrl(standardUrl);
       
-      if (error) {
-        console.error("Erro no upload para o storage:", error);
-        
-        let errorMsg = error.message;
-        if (error.message.includes("bucket") && error.message.includes("not found")) {
-          errorMsg = "O bucket de armazenamento não existe. Tentando método alternativo...";
-          
-          // Tentar método alternativo - fazer upload para outro bucket
-          try {
-            const { data: altData, error: altError } = await supabase.storage
-              .from("solution_files") // Usar bucket que provavelmente existe
-              .upload(`learning_videos/${uniqueFileName}`, file, {
-                cacheControl: "3600",
-                upsert: true,
-                duplex: "half"
-              });
-              
-            if (altError) {
-              throw altError;
-            }
-            
-            // Se chegou aqui, o upload alternativo funcionou
-            console.log("Upload alternativo bem-sucedido:", altData);
-            
-            // Obter URL pública do método alternativo
-            const { data: altUrlData } = supabase.storage
-              .from("solution_files")
-              .getPublicUrl(`learning_videos/${uniqueFileName}`);
-              
-            const publicUrl = altUrlData.publicUrl;
-            setFileName(file.name);
-            
-            setUploadProgress(100);
-            console.log("URL pública obtida (método alternativo):", publicUrl);
-            
-            // Chamar onChange com todos os dados relevantes
-            onChange(publicUrl, "file", file.name, `solution_files/learning_videos/${uniqueFileName}`, file.size);
-            
-            toast.success("Vídeo carregado com sucesso (método alternativo)");
-            setUploading(false);
-            return; // Terminar a função aqui pois o upload alternativo funcionou
-          } catch (altErr: any) {
-            console.error("Erro no upload alternativo:", altErr);
-            errorMsg = `Falha em todos os métodos de upload: ${altErr.message || "Erro desconhecido"}`;
-          }
-        }
-        
-        toast.error(`Erro no upload: ${errorMsg}`);
-        setError(`Erro no upload: ${errorMsg}`);
-        throw error;
-      }
-      
-      setUploadProgress(70);
-      console.log("Upload bem-sucedido:", data);
-      
-      // Obter URL pública
-      const { data: urlData } = supabase.storage
-        .from("learning_videos")
-        .getPublicUrl(data.path);
-      
-      const publicUrl = urlData.publicUrl;
-      setFileName(file.name);
-      
-      setUploadProgress(90);
-      console.log("URL pública obtida:", publicUrl);
-      
-      // Chamar onChange com todos os dados relevantes
-      onChange(publicUrl, "file", file.name, data.path, file.size);
-      
-      setUploadProgress(100);
-      toast.success("Vídeo carregado com sucesso");
-    } catch (error: any) {
-      console.error("Erro ao fazer upload do vídeo:", error);
-      setError(`Erro no upload: ${error.message || "Ocorreu um erro desconhecido"}`);
-      toast.error(`Falha no upload: ${error.message || "Erro desconhecido"}`);
-    } finally {
-      setUploading(false);
-      uploadControllerRef.current = null;
-      // Limpar o input de arquivo para permitir selecionar o mesmo arquivo novamente
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
-      }
+      // Passa para o componente pai
+      onChange(standardUrl, "youtube", undefined, undefined, undefined, 0, thumbnailUrl);
+      setError(null);
+      toast.success("URL do YouTube adicionada com sucesso");
+    } catch (error) {
+      setError("Erro ao processar URL do YouTube. Verifique se o formato está correto.");
+      console.error("Erro ao processar URL do YouTube:", error);
     }
   };
 
-  // Handle file selection
-  const handleFileSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Upload direto de vídeo
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    
-    await uploadVideo(file);
-  };
 
-  // Cancelar upload em andamento
-  const handleCancelUpload = () => {
-    if (uploadControllerRef.current) {
-      uploadControllerRef.current.abort();
-      uploadControllerRef.current = null;
-      setUploading(false);
-      toast.info("Upload cancelado");
-    }
-  };
-
-  // Handle YouTube URL submission
-  const handleUrlSubmit = () => {
-    if (!urlInput) {
-      setError("Por favor, insira uma URL válida");
+    // Validar tipo de arquivo
+    const validTypes = ['video/mp4', 'video/quicktime', 'video/x-msvideo', 'video/x-matroska'];
+    if (!validTypes.includes(file.type)) {
+      setError(`Tipo de arquivo não suportado: ${file.type}. Use formatos como MP4, MOV, AVI ou MKV.`);
       return;
     }
 
-    // Validação simples para URL do YouTube
-    const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.?be)\/.+$/;
-    if (!youtubeRegex.test(urlInput)) {
-      setError("Por favor, insira uma URL válida do YouTube");
-      toast.error("Por favor, insira uma URL válida do YouTube");
+    // Validar tamanho (limite de 200MB)
+    const maxSize = 200 * 1024 * 1024; // 200MB em bytes
+    if (file.size > maxSize) {
+      setError(`O arquivo é muito grande (${(file.size / (1024 * 1024)).toFixed(2)}MB). O tamanho máximo é 200MB.`);
       return;
     }
+
+    setUploading(true);
+    setUploadProgress(0);
+    setError(null);
 
     try {
-      onChange(urlInput, "youtube");
-      toast.success("URL do YouTube adicionada com sucesso");
+      // Usar a função de upload com fallback
+      const result = await uploadFileWithFallback(
+        file,
+        STORAGE_BUCKETS.LEARNING_VIDEOS,
+        "videos",
+        (progress) => setUploadProgress(progress),
+        STORAGE_BUCKETS.FALLBACK
+      );
+
+      onChange(
+        result.publicUrl, 
+        "direct", 
+        file.name, 
+        result.path, 
+        file.size
+      );
+      
+      toast.success("Vídeo enviado com sucesso");
     } catch (error: any) {
-      console.error("Erro ao adicionar URL do YouTube:", error);
-      setError(`Erro: ${error.message || "Ocorreu um erro desconhecido"}`);
+      console.error("Erro ao fazer upload:", error);
+      setError(`Erro no upload: ${error.message || "Tente novamente ou use uma URL do YouTube"}`);
+      toast.error("Falha no upload do vídeo");
+    } finally {
+      setUploading(false);
     }
   };
 
-  const handleTriggerFileInput = () => {
-    fileInputRef.current?.click();
-  };
+  // Verificar se o vídeo atual está vazio
+  const hasValue = !!value;
 
-  // Remover vídeo
-  const handleRemove = () => {
-    onChange("", videoType === "youtube" ? "youtube" : "file");
-    setFileName(null);
-    setUrlInput("");
+  // Renderizar preview do vídeo
+  const renderVideoPreview = () => {
+    if (!hasValue) return null;
+
+    if (videoType === "youtube") {
+      const videoId = getYoutubeVideoId(value);
+      if (!videoId) return null;
+
+      return (
+        <div className="relative pb-[56.25%] h-0">
+          <iframe 
+            className="absolute top-0 left-0 w-full h-full"
+            src={`https://www.youtube.com/embed/${videoId}`}
+            title="YouTube video"
+            allowFullScreen
+          ></iframe>
+        </div>
+      );
+    } else {
+      return (
+        <div className="relative rounded-md overflow-hidden bg-black">
+          <video 
+            controls 
+            className="w-full h-auto max-h-[300px]" 
+            src={value}
+          >
+            Seu navegador não suporta a reprodução deste vídeo.
+          </video>
+        </div>
+      );
+    }
   };
 
   return (
-    <div className="w-full space-y-4">
-      {/* Seleção de tipo de vídeo */}
-      <div className="flex justify-between items-center mb-2">
-        <div className="flex space-x-4">
-          <div className="flex items-center">
-            <input 
-              type="radio" 
-              name="video-type" 
-              id="youtube" 
-              checked={videoType === "youtube"}
-              className="mr-2"
-              onChange={() => onChange(value, "youtube")}
-              disabled={disabled}
-            />
-            <label htmlFor="youtube">YouTube</label>
-          </div>
-          
-          <div className="flex items-center">
-            <input 
-              type="radio" 
-              name="video-type" 
-              id="file" 
-              checked={videoType === "file"}
-              className="mr-2"
-              onChange={() => onChange(value, "file")}
-              disabled={disabled}
-            />
-            <label htmlFor="file">Upload de Arquivo</label>
-          </div>
-        </div>
-        
-        {value && (
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={handleRemove}
-            disabled={disabled}
-          >
-            <X className="h-4 w-4 mr-1" /> Remover
-          </Button>
-        )}
-      </div>
-      
-      {error && (
-        <div className="text-destructive text-sm bg-destructive/10 p-2 rounded-md">
-          {error}
-        </div>
-      )}
-
-      {bucketStatus === "error" && (
-        <div className="text-amber-600 text-sm bg-amber-50 p-2 rounded-md border border-amber-200">
-          <p className="font-medium">Atenção</p>
-          <p>O sistema de armazenamento pode não estar totalmente configurado. Em caso de falha, tentaremos um método alternativo de upload.</p>
-        </div>
-      )}
-      
-      {/* YouTube URL input */}
-      {videoType === "youtube" && (
-        <div className="space-y-2">
-          <div className="flex space-x-2">
-            <Input
-              placeholder="Cole a URL do vídeo do YouTube"
-              value={urlInput}
-              onChange={(e) => setUrlInput(e.target.value)}
-              className="flex-1"
-              disabled={disabled}
-            />
+    <div className="space-y-4">
+      {hasValue ? (
+        <div className="space-y-4">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center">
+              {videoType === "youtube" ? (
+                <Youtube className="h-5 w-5 text-red-600 mr-2" />
+              ) : (
+                <Video className="h-5 w-5 text-blue-600 mr-2" />
+              )}
+              <span className="text-sm font-medium">
+                {videoType === "youtube" ? "Vídeo do YouTube" : "Vídeo Enviado"}
+              </span>
+            </div>
             <Button 
-              type="button"
-              onClick={handleUrlSubmit}
-              disabled={!urlInput || disabled || uploading}
+              variant="ghost" 
+              size="sm" 
+              onClick={() => onChange("", "youtube")}
             >
-              Adicionar
+              <X className="h-4 w-4 mr-1" /> Remover
             </Button>
           </div>
           
-          {value && videoType === "youtube" && (
-            <div className="rounded-md border p-2 flex items-center justify-between">
-              <div className="flex items-center">
-                <Video className="h-4 w-4 mr-2 text-primary" />
-                <span className="text-sm truncate">{value}</span>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-      
-      {/* File upload */}
-      {videoType === "file" && (
-        <div className="space-y-2">
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="video/*"
-            onChange={handleFileSelected}
-            className="hidden"
-            disabled={disabled}
-          />
+          {renderVideoPreview()}
           
-          {!value || videoType !== "file" ? (
-            <div 
-              className={cn(
-                "border-2 border-dashed rounded-md p-6 text-center cursor-pointer hover:border-primary transition-colors",
-                uploading && "pointer-events-none opacity-60",
-                disabled && "opacity-50 pointer-events-none bg-gray-50"
-              )}
-              onClick={disabled ? undefined : handleTriggerFileInput}
-            >
-              {uploading ? (
-                <div className="flex flex-col items-center">
-                  <Loader2 className="h-6 w-6 animate-spin mb-2" />
-                  <p className="text-sm font-medium">Enviando arquivo... {uploadProgress}%</p>
-                  <Button 
-                    variant="destructive" 
-                    size="sm" 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleCancelUpload();
-                    }}
-                    className="mt-2"
-                    disabled={disabled}
-                  >
-                    Cancelar
-                  </Button>
-                </div>
-              ) : (
-                <>
-                  <Upload className="h-6 w-6 mx-auto mb-2 text-muted-foreground" />
-                  <p className="text-sm font-medium">
-                    {disabled 
-                      ? "Upload de vídeos desativado" 
-                      : "Clique para fazer upload de vídeo"
-                    }
-                  </p>
-                  {!disabled && (
-                    <p className="text-xs text-muted-foreground mt-1">MP4, MOV, WEBM, AVI (máx: 300MB)</p>
-                  )}
-                </>
-              )}
+          <Alert variant="info" className="bg-blue-50">
+            <div className="flex items-start">
+              <Check className="h-4 w-4 mt-1 text-blue-600" />
+              <AlertDescription className="ml-2">
+                Vídeo adicionado com sucesso
+              </AlertDescription>
             </div>
-          ) : (
-            <div className="rounded-md border p-2 flex items-center justify-between">
-              <div className="flex items-center">
-                <Video className="h-4 w-4 mr-2 text-primary" />
-                <span className="text-sm truncate">{fileName || value}</span>
-              </div>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={handleTriggerFileInput}
-                disabled={disabled || uploading}
-              >
-                {uploading ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  "Alterar"
-                )}
-              </Button>
-            </div>
-          )}
+          </Alert>
         </div>
+      ) : (
+        <Card>
+          <CardContent className="p-4">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="youtube">
+                  <Youtube className="h-4 w-4 mr-2" /> YouTube
+                </TabsTrigger>
+                <TabsTrigger value="direct">
+                  <Film className="h-4 w-4 mr-2" /> Upload de Arquivo
+                </TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="youtube" className="pt-4">
+                <div className="space-y-4">
+                  <div className="flex gap-2">
+                    <div className="relative flex-grow">
+                      <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                        <Link className="h-4 w-4 text-gray-400" />
+                      </div>
+                      <Input 
+                        type="url" 
+                        placeholder="https://www.youtube.com/watch?v=..." 
+                        value={youtubeUrl}
+                        onChange={(e) => {
+                          setYoutubeUrl(e.target.value);
+                          setError(null);
+                        }}
+                        className="pl-10"
+                      />
+                    </div>
+                    <Button 
+                      type="button" 
+                      onClick={processYoutubeUrl}
+                    >
+                      Adicionar
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Cole uma URL de vídeo do YouTube. Formatos suportados: youtube.com/watch, youtu.be
+                  </p>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="direct" className="pt-4">
+                <div className="space-y-4">
+                  {uploading ? (
+                    <div className="p-6 border border-dashed rounded-md text-center">
+                      <Loader2 className="h-8 w-8 mx-auto animate-spin text-primary" />
+                      <p className="mt-2 font-medium">Enviando vídeo... {uploadProgress}%</p>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Não saia ou feche esta página durante o upload.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="p-6 border border-dashed rounded-md text-center cursor-pointer"
+                         onClick={() => document.getElementById('video-file-input')?.click()}>
+                      <Film className="h-8 w-8 mx-auto text-primary" />
+                      <p className="mt-2 font-medium">
+                        Clique para fazer upload de um vídeo
+                      </p>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Formatos suportados: MP4, MOV, AVI, MKV
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        Tamanho máximo: 200MB
+                      </p>
+                      <input
+                        id="video-file-input"
+                        type="file"
+                        className="hidden"
+                        onChange={handleFileUpload}
+                        accept="video/mp4,video/quicktime,video/x-msvideo,video/x-matroska"
+                      />
+                      <Button
+                        type="button"
+                        className="mt-4"
+                        onClick={() => document.getElementById('video-file-input')?.click()}
+                      >
+                        Selecionar Arquivo
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </TabsContent>
+            </Tabs>
+            
+            {error && (
+              <Alert variant="destructive" className="mt-4">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+          </CardContent>
+        </Card>
       )}
     </div>
   );

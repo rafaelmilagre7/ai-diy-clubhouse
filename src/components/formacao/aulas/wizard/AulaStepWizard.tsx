@@ -20,18 +20,25 @@ import EtapaPublicacao from "./etapas/EtapaPublicacao";
 import WizardProgress from "./WizardProgress";
 import { setupLearningStorageBuckets } from "@/lib/supabase/storage";
 
+// Enum para nível de dificuldade
+export enum DifficultyLevel {
+  BEGINNER = "beginner",
+  INTERMEDIATE = "intermediate",
+  ADVANCED = "advanced"
+}
+
 // Schema completo para validação
 const aulaFormSchema = z.object({
   // Etapa 1: Informações Básicas
   title: z.string().min(2, { message: "O título deve ter pelo menos 2 caracteres." }),
   description: z.string().optional(),
   moduleId: z.string().uuid({ message: "Por favor, selecione um módulo válido." }),
-  orderIndex: z.number().optional().default(0),
+  difficultyLevel: z.nativeEnum(DifficultyLevel).default(DifficultyLevel.BEGINNER),
   
   // Etapa 2: Imagem e Mídia
   coverImageUrl: z.string().optional(),
   
-  // Etapa 3: Vídeos
+  // Etapa 3: Vídeos (limitado a 3)
   videos: z.array(
     z.object({
       id: z.string().optional(),
@@ -45,7 +52,7 @@ const aulaFormSchema = z.object({
       duration_seconds: z.number().optional(),
       thumbnail_url: z.string().optional(),
     })
-  ).optional().default([]),
+  ).max(3, { message: "É permitido no máximo 3 vídeos por aula" }).optional().default([]),
   
   // Etapa 4: Materiais
   resources: z.array(
@@ -56,6 +63,7 @@ const aulaFormSchema = z.object({
       url: z.string().optional(),
       type: z.string().optional(),
       fileName: z.string().optional(),
+      fileSize: z.number().optional(),
     })
   ).optional().default([]),
   
@@ -99,7 +107,7 @@ const AulaStepWizard: React.FC<AulaStepWizardProps> = ({
     title: aula?.title || "",
     description: aula?.description || "",
     moduleId: aula?.module_id || moduleId || "",
-    orderIndex: aula?.order_index || 0,
+    difficultyLevel: (aula?.difficulty_level as DifficultyLevel) || DifficultyLevel.BEGINNER,
     coverImageUrl: aula?.cover_image_url || "",
     published: aula?.published || false,
     aiAssistantEnabled: aula?.ai_assistant_enabled || false,
@@ -158,6 +166,81 @@ const AulaStepWizard: React.FC<AulaStepWizardProps> = ({
     fetchModules();
   }, []);
 
+  // Buscar os vídeos existentes, se for edição de aula
+  useEffect(() => {
+    const fetchVideos = async () => {
+      if (!aula?.id) return;
+      
+      try {
+        const { data, error } = await supabase
+          .from("learning_lesson_videos")
+          .select("*")
+          .eq("lesson_id", aula.id)
+          .order("order_index");
+          
+        if (error) {
+          console.error("Erro ao buscar vídeos da aula:", error);
+          return;
+        }
+        
+        if (data && data.length > 0) {
+          const videosFormatted = data.map(video => ({
+            id: video.id,
+            title: video.title,
+            description: video.description || "",
+            url: video.url,
+            type: video.video_type || "youtube",
+            fileName: video.video_file_name,
+            filePath: video.video_file_path,
+            fileSize: video.file_size_bytes,
+            duration_seconds: video.duration_seconds,
+            thumbnail_url: video.thumbnail_url
+          }));
+          
+          form.setValue("videos", videosFormatted);
+        }
+      } catch (error) {
+        console.error("Erro ao buscar vídeos:", error);
+      }
+    };
+    
+    const fetchResources = async () => {
+      if (!aula?.id) return;
+      
+      try {
+        const { data, error } = await supabase
+          .from("learning_resources")
+          .select("*")
+          .eq("lesson_id", aula.id)
+          .order("order_index");
+          
+        if (error) {
+          console.error("Erro ao buscar recursos da aula:", error);
+          return;
+        }
+        
+        if (data && data.length > 0) {
+          const resourcesFormatted = data.map(resource => ({
+            id: resource.id,
+            title: resource.name,
+            description: resource.description || "",
+            url: resource.file_url,
+            type: resource.file_type || "document",
+            fileName: resource.file_url.split('/').pop(),
+            fileSize: resource.file_size_bytes
+          }));
+          
+          form.setValue("resources", resourcesFormatted);
+        }
+      } catch (error) {
+        console.error("Erro ao buscar recursos:", error);
+      }
+    };
+    
+    fetchVideos();
+    fetchResources();
+  }, [aula?.id, form]);
+
   // Resetar formulário quando a aula mudar
   useEffect(() => {
     form.reset(defaultValues);
@@ -186,11 +269,23 @@ const AulaStepWizard: React.FC<AulaStepWizardProps> = ({
       
       if (!videos || videos.length === 0) {
         console.log("Nenhum vídeo para salvar.");
-        return;
+        return true;
       }
       
       let videosSalvosComSucesso = 0;
       let errosEncontrados = 0;
+      
+      // Primeiro removemos todos os vídeos existentes desta aula
+      if (aula?.id) {
+        const { error: deleteError } = await supabase
+          .from('learning_lesson_videos')
+          .delete()
+          .eq('lesson_id', lessonId);
+          
+        if (deleteError) {
+          console.error("Erro ao remover vídeos existentes:", deleteError);
+        }
+      }
       
       // Para cada vídeo no formulário
       for (let i = 0; i < videos.length; i++) {
@@ -219,36 +314,19 @@ const AulaStepWizard: React.FC<AulaStepWizardProps> = ({
           
           console.log(`Salvando vídeo ${i + 1}:`, videoData);
           
-          if (video.id) {
-            // Atualizar vídeo existente
-            const { error } = await supabase
-              .from('learning_lesson_videos')
-              .update(videoData)
-              .eq('id', video.id);
-              
-            if (error) {
-              console.error(`Erro ao atualizar vídeo ${i + 1}:`, error);
-              errosEncontrados++;
-              continue; // Continuar com o próximo vídeo mesmo se houver erro
-            }
+          // Sempre inserir novos registros após a limpeza
+          const { error } = await supabase
+            .from('learning_lesson_videos')
+            .insert([videoData]);
             
-            console.log(`Vídeo ${i + 1} atualizado com sucesso.`);
-            videosSalvosComSucesso++;
-          } else {
-            // Criar novo vídeo
-            const { error } = await supabase
-              .from('learning_lesson_videos')
-              .insert([videoData]);
-              
-            if (error) {
-              console.error(`Erro ao criar vídeo ${i + 1}:`, error);
-              errosEncontrados++;
-              continue;
-            }
-            
-            console.log(`Vídeo ${i + 1} criado com sucesso.`);
-            videosSalvosComSucesso++;
+          if (error) {
+            console.error(`Erro ao criar vídeo ${i + 1}:`, error);
+            errosEncontrados++;
+            continue;
           }
+          
+          console.log(`Vídeo ${i + 1} criado com sucesso.`);
+          videosSalvosComSucesso++;
         } catch (err) {
           console.error(`Erro ao processar vídeo ${i + 1}:`, err);
           errosEncontrados++;
@@ -268,7 +346,7 @@ const AulaStepWizard: React.FC<AulaStepWizardProps> = ({
         console.log(`Todos os ${videosSalvosComSucesso} vídeos foram salvos com sucesso.`);
       }
       
-      return videosSalvosComSucesso > 0; // Retorna true se pelo menos um vídeo foi salvo
+      return videosSalvosComSucesso > 0 || videos.length === 0; // Retorna true se pelo menos um vídeo foi salvo ou se não havia vídeos
     } catch (error) {
       console.error("Erro ao salvar vídeos:", error);
       toast.error("Ocorreu um erro ao salvar os vídeos.");
@@ -285,6 +363,18 @@ const AulaStepWizard: React.FC<AulaStepWizardProps> = ({
       
       console.log("Salvando materiais para a aula:", lessonId);
       console.log("Materiais a salvar:", resources);
+      
+      // Primeiro removemos todos os recursos existentes desta aula
+      if (aula?.id) {
+        const { error: deleteError } = await supabase
+          .from('learning_resources')
+          .delete()
+          .eq('lesson_id', lessonId);
+          
+        if (deleteError) {
+          console.error("Erro ao remover recursos existentes:", deleteError);
+        }
+      }
       
       let successCount = 0;
       let errorCount = 0;
@@ -305,24 +395,13 @@ const AulaStepWizard: React.FC<AulaStepWizardProps> = ({
         };
         
         try {
-          if (resource.id) {
-            // Atualizar recurso existente
-            const { error } = await supabase
-              .from('learning_resources')
-              .update(resourceData)
-              .eq('id', resource.id);
-              
-            if (error) throw error;
-            successCount++;
-          } else {
-            // Criar novo recurso
-            const { error } = await supabase
-              .from('learning_resources')
-              .insert([resourceData]);
-              
-            if (error) throw error;
-            successCount++;
-          }
+          // Sempre inserir novos registros
+          const { error } = await supabase
+            .from('learning_resources')
+            .insert([resourceData]);
+            
+          if (error) throw error;
+          successCount++;
         } catch (err) {
           console.error(`Erro ao salvar material ${i + 1}:`, err);
           errorCount++;
@@ -333,7 +412,7 @@ const AulaStepWizard: React.FC<AulaStepWizardProps> = ({
         toast.warning(`Nem todos os materiais foram salvos. ${successCount} salvos, ${errorCount} com erro.`);
       }
       
-      return successCount > 0;
+      return successCount > 0 || resources.length === 0;
     } catch (error) {
       console.error("Erro ao salvar materiais:", error);
       toast.error("Ocorreu um erro ao salvar os materiais.");
@@ -365,7 +444,7 @@ const AulaStepWizard: React.FC<AulaStepWizardProps> = ({
         ai_assistant_enabled: values.aiAssistantEnabled,
         ai_assistant_prompt: values.aiAssistantPrompt || null,
         published: values.published,
-        order_index: values.orderIndex || 0
+        difficulty_level: values.difficultyLevel
       };
       
       console.log("Dados completos a serem salvos:", lessonData);
@@ -405,12 +484,12 @@ const AulaStepWizard: React.FC<AulaStepWizardProps> = ({
         // Salvar recursos (materiais)
         const materiaisSalvos = await saveResources(lessonId, values.resources || []);
         
-        if (videosSalvos) {
+        if (videosSalvos && materiaisSalvos) {
           toast.success(aula ? "Aula atualizada com sucesso!" : "Aula criada com sucesso!");
         } else {
           toast.warning(aula 
-            ? "Aula atualizada, mas houve problema com os vídeos" 
-            : "Aula criada, mas houve problema com os vídeos");
+            ? "Aula atualizada, mas houve problema com os vídeos ou materiais" 
+            : "Aula criada, mas houve problema com os vídeos ou materiais");
         }
       }
       

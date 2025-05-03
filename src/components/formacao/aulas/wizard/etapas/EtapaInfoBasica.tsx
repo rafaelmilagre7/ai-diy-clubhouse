@@ -14,7 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { LearningModule } from "@/lib/supabase";
 import { UseFormReturn } from "react-hook-form";
-import { AulaFormValues } from "../AulaStepWizard";
+import { AulaFormValues, DifficultyLevel } from "../AulaStepWizard";
 
 interface EtapaInfoBasicaProps {
   form: UseFormReturn<AulaFormValues>;
@@ -31,7 +31,7 @@ const EtapaInfoBasica: React.FC<EtapaInfoBasicaProps> = ({
 }) => {
   const handleContinue = async () => {
     // Validar apenas os campos desta etapa
-    const result = await form.trigger(['title', 'moduleId', 'description', 'orderIndex']);
+    const result = await form.trigger(['title', 'moduleId', 'description', 'difficultyLevel']);
     if (result) {
       onNext();
     }
@@ -110,20 +110,27 @@ const EtapaInfoBasica: React.FC<EtapaInfoBasicaProps> = ({
             
             <FormField
               control={form.control}
-              name="orderIndex"
+              name="difficultyLevel"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Ordem da Aula</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      placeholder="Ordem de exibição"
-                      {...field}
-                      onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
-                    />
-                  </FormControl>
+                  <FormLabel>Nível de Dificuldade</FormLabel>
+                  <Select 
+                    onValueChange={field.onChange} 
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione o nível de dificuldade" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value={DifficultyLevel.BEGINNER}>Iniciante</SelectItem>
+                      <SelectItem value={DifficultyLevel.INTERMEDIATE}>Intermediário</SelectItem>
+                      <SelectItem value={DifficultyLevel.ADVANCED}>Avançado</SelectItem>
+                    </SelectContent>
+                  </Select>
                   <FormDescription>
-                    Posição desta aula dentro do módulo
+                    Nível de dificuldade do conteúdo
                   </FormDescription>
                   <FormMessage />
                 </FormItem>

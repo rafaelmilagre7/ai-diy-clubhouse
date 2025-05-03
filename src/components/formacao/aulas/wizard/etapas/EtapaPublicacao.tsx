@@ -6,14 +6,16 @@ import {
   FormField,
   FormItem,
   FormLabel,
+  FormMessage,
   FormDescription
 } from "@/components/ui/form";
-import { UseFormReturn } from "react-hook-form";
-import { AulaFormValues } from "../AulaStepWizard";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
+import { UseFormReturn } from "react-hook-form";
+import { AulaFormValues } from "../AulaStepWizard";
 import { Input } from "@/components/ui/input";
-import { CheckCircle2, CircleAlert, BookOpen, Video, FileText } from "lucide-react";
+import { AlertCircle, CheckCircle } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface EtapaPublicacaoProps {
   form: UseFormReturn<AulaFormValues>;
@@ -29,106 +31,54 @@ const EtapaPublicacao: React.FC<EtapaPublicacaoProps> = ({
   onSubmit,
   isSaving
 }) => {
-  const aulaTitle = form.watch('title');
-  const videos = form.watch('videos') || [];
-  const resources = form.watch('resources') || [];
+  const aiAssistantEnabled = form.watch("aiAssistantEnabled");
+  const title = form.watch("title");
+  const moduleId = form.watch("moduleId");
+  const coverImageUrl = form.watch("coverImageUrl");
   
-  // Verifica se a aula tem validação mínima para ser publicada
-  const hasMinimumContent = aulaTitle && videos.length > 0;
+  const dadosObrigatoriosPreenchidos = !!title && !!moduleId;
   
+  const handlePublish = () => {
+    if (dadosObrigatoriosPreenchidos) {
+      onSubmit();
+    } else {
+      form.trigger();
+    }
+  };
+
   return (
     <Form {...form}>
       <div className="space-y-6 py-4">
-        <div className="border rounded-lg p-4 bg-muted/20">
-          <h3 className="text-lg font-medium mb-4">Resumo da Aula</h3>
-          
-          <div className="space-y-4">
-            <div>
-              <h4 className="font-medium">Título da Aula</h4>
-              <p className="text-muted-foreground">{aulaTitle || '(Não definido)'}</p>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="flex items-center">
-                <BookOpen className="h-5 w-5 mr-2 text-blue-500" />
-                <div>
-                  <p className="font-medium">Módulo</p>
-                  <p className="text-muted-foreground text-sm">
-                    {form.watch('moduleId') ? 'Selecionado' : 'Não selecionado'}
-                  </p>
-                </div>
-              </div>
-              
-              <div className="flex items-center">
-                <Video className="h-5 w-5 mr-2 text-blue-500" />
-                <div>
-                  <p className="font-medium">Vídeos</p>
-                  <p className="text-muted-foreground text-sm">
-                    {videos.length} {videos.length === 1 ? 'vídeo' : 'vídeos'}
-                  </p>
-                </div>
-              </div>
-              
-              <div className="flex items-center">
-                <FileText className="h-5 w-5 mr-2 text-blue-500" />
-                <div>
-                  <p className="font-medium">Materiais</p>
-                  <p className="text-muted-foreground text-sm">
-                    {resources.length} {resources.length === 1 ? 'material' : 'materiais'}
-                  </p>
-                </div>
-              </div>
-            </div>
-            
-            {/* Status de validação */}
-            <div className="mt-4 border-t pt-4">
-              {hasMinimumContent ? (
-                <div className="flex items-center text-green-600">
-                  <CheckCircle2 className="h-5 w-5 mr-2" />
-                  <span>A aula possui o conteúdo mínimo necessário para publicação</span>
-                </div>
-              ) : (
-                <div className="flex items-center text-amber-600">
-                  <CircleAlert className="h-5 w-5 mr-2" />
-                  <span>A aula precisa ter pelo menos um título e um vídeo para ser publicada</span>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-        
+        <Alert variant={dadosObrigatoriosPreenchidos ? "default" : "destructive"}>
+          {dadosObrigatoriosPreenchidos ? (
+            <CheckCircle className="h-4 w-4" />
+          ) : (
+            <AlertCircle className="h-4 w-4" />
+          )}
+          <AlertTitle>
+            {dadosObrigatoriosPreenchidos 
+              ? "Pronto para publicar!" 
+              : "Dados obrigatórios faltando"
+            }
+          </AlertTitle>
+          <AlertDescription>
+            {dadosObrigatoriosPreenchidos
+              ? "Todos os dados obrigatórios foram preenchidos."
+              : "Você precisa preencher todos os campos obrigatórios nas etapas anteriores."
+            }
+          </AlertDescription>
+        </Alert>
+
         <div className="space-y-4">
-          <FormField
-            control={form.control}
-            name="published"
-            render={({ field }) => (
-              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                <div className="space-y-0.5">
-                  <FormLabel className="text-base">Publicar Aula</FormLabel>
-                  <FormDescription>
-                    Quando publicada, a aula ficará visível para os alunos.
-                  </FormDescription>
-                </div>
-                <FormControl>
-                  <Switch
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                    disabled={!hasMinimumContent}
-                  />
-                </FormControl>
-              </FormItem>
-            )}
-          />
-          
           <FormField
             control={form.control}
             name="aiAssistantEnabled"
             render={({ field }) => (
-              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+              <FormItem className="flex flex-row items-center justify-between">
                 <div className="space-y-0.5">
                   <FormLabel className="text-base">Assistente de IA</FormLabel>
                   <FormDescription>
-                    Ative para permitir assistência de IA nesta aula
+                    Habilitar assistente de IA para esta aula?
                   </FormDescription>
                 </div>
                 <FormControl>
@@ -140,27 +90,71 @@ const EtapaPublicacao: React.FC<EtapaPublicacaoProps> = ({
               </FormItem>
             )}
           />
-          
-          {form.watch('aiAssistantEnabled') && (
+
+          {aiAssistantEnabled && (
             <FormField
               control={form.control}
               name="aiAssistantPrompt"
               render={({ field }) => (
-                <FormItem className="rounded-lg border p-4">
-                  <FormLabel>ID do Assistente de IA</FormLabel>
+                <FormItem>
+                  <FormLabel>ID do Assistente OpenAI</FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="ID do assistente (ex: asst_abc123)"
+                      placeholder="Ex: asst_abc123"
                       {...field}
                     />
                   </FormControl>
                   <FormDescription>
-                    Insira o ID do assistente criado na plataforma OpenAI
+                    Insira o ID do assistente criado no OpenAI Studio (formato: asst_xyz)
                   </FormDescription>
+                  <FormMessage />
                 </FormItem>
               )}
             />
           )}
+
+          <FormField
+            control={form.control}
+            name="published"
+            render={({ field }) => (
+              <FormItem className="flex flex-row items-center justify-between border p-4 rounded-md">
+                <div className="space-y-0.5">
+                  <FormLabel className="text-base">Publicar aula?</FormLabel>
+                  <FormDescription>
+                    Quando publicada, a aula ficará visível para os alunos
+                  </FormDescription>
+                </div>
+                <FormControl>
+                  <Switch
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+        </div>
+        
+        <div className="space-y-4 mt-6">
+          <h3 className="font-medium">Informações da Aula</h3>
+          <div className="space-y-2">
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Título:</span>
+              <span className="font-medium">{title || "Não definido"}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Imagem de Capa:</span>
+              <span className="font-medium">{coverImageUrl ? "Definida" : "Não definida"}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Assistente de IA:</span>
+              <span className="font-medium">{aiAssistantEnabled ? "Ativado" : "Desativado"}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Status:</span>
+              <span className="font-medium">{form.getValues().published ? "Publicado" : "Rascunho"}</span>
+            </div>
+          </div>
         </div>
         
         <div className="flex justify-between pt-4 border-t">
@@ -173,8 +167,9 @@ const EtapaPublicacao: React.FC<EtapaPublicacaoProps> = ({
           </Button>
           <Button 
             type="button" 
-            onClick={onSubmit}
-            disabled={isSaving || !hasMinimumContent}
+            onClick={handlePublish}
+            disabled={isSaving}
+            className="px-6"
           >
             {isSaving ? "Salvando..." : "Salvar Aula"}
           </Button>
