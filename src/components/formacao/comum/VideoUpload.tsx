@@ -7,7 +7,6 @@ import { toast } from "sonner";
 import { Upload, Loader2, Video, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { v4 as uuidv4 } from "uuid";
-import { createStoragePublicPolicy } from "@/lib/supabase/rpc";
 
 interface VideoUploadProps {
   value: string;
@@ -25,9 +24,15 @@ export const VideoUpload = ({
   const [urlInput, setUrlInput] = useState<string>(videoType === "youtube" ? value : "");
   const [uploadProgress, setUploadProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [bucketStatus, setBucketStatus] = useState<"checking" | "ready" | "error">("checking");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const uploadControllerRef = useRef<AbortController | null>(null);
   
+  // Verificar se o bucket existe ao carregar o componente
+  useEffect(() => {
+    checkBucketStatus();
+  }, []);
+
   // Extrair o nome do arquivo do URL para exibição
   useEffect(() => {
     // Se for um vídeo de arquivo e tiver um valor, tenta extrair o nome do arquivo
@@ -40,33 +45,57 @@ export const VideoUpload = ({
     }
   }, [value, videoType]);
 
-  // Verificar se o bucket existe e criar se necessário
-  const ensureBucketExists = async () => {
+  // Verificar status do bucket sem tentar criar
+  const checkBucketStatus = async () => {
     try {
+      setBucketStatus("checking");
+      
       console.log("Verificando se o bucket learning_videos existe...");
       
-      // Verifica e cria o bucket + políticas usando a função RPC
-      const { success, error } = await createStoragePublicPolicy('learning_videos');
+      // Apenas verificar se o bucket existe sem tentar criar
+      const { data: buckets, error } = await supabase.storage.listBuckets();
       
-      if (!success) {
-        console.error("Erro ao configurar bucket:", error);
+      if (error) {
+        console.error("Erro ao listar buckets:", error);
+        setBucketStatus("error");
         return false;
       }
       
-      console.log("Bucket learning_videos configurado com sucesso!");
-      return true;
-    } catch (error) {
-      console.error("Erro ao verificar/criar bucket:", error);
+      const bucketExists = buckets?.some(bucket => bucket.name === 'learning_videos');
+      
+      if (bucketExists) {
+        console.log("Bucket learning_videos existe.");
+        setBucketStatus("ready");
+        return true;
+      } else {
+        console.log("Bucket learning_videos não existe.");
+        // Tentar criar o bucket diretamente sem usar RPC
+        try {
+          const { error: createError } = await supabase.storage.createBucket('learning_videos', {
+            public: true,
+            fileSizeLimit: 314572800 // 300MB
+          });
+          
+          if (createError) {
+            console.error("Erro ao criar bucket:", createError);
+            setBucketStatus("error");
+            return false;
+          }
+          
+          console.log("Bucket learning_videos criado com sucesso!");
+          setBucketStatus("ready");
+          return true;
+        } catch (createErr) {
+          console.error("Erro ao criar bucket:", createErr);
+          setBucketStatus("error");
+          return false;
+        }
+      }
+    } catch (err) {
+      console.error("Erro ao verificar status do bucket:", err);
+      setBucketStatus("error");
       return false;
     }
-  };
-
-  // Handle file selection
-  const handleFileSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    
-    await uploadVideo(file);
   };
 
   // Upload de arquivo com suporte a chunks para arquivos grandes
@@ -87,14 +116,13 @@ export const VideoUpload = ({
         return;
       }
       
-      // Verificar se o bucket existe
-      const bucketReady = await ensureBucketExists();
-      
-      if (!bucketReady) {
-        toast.error("Não foi possível preparar o armazenamento para vídeos");
-        setError("Erro ao preparar armazenamento");
-        setUploading(false);
-        return;
+      // Verificar status do bucket antes do upload
+      if (bucketStatus === "checking") {
+        const isReady = await checkBucketStatus();
+        if (!isReady) {
+          toast.error("Não foi possível preparar o armazenamento para vídeos. Tentando upload direto.");
+          // Continuamos com o upload mesmo assim - será tratado abaixo
+        }
       }
       
       setUploadProgress(20);
@@ -109,14 +137,12 @@ export const VideoUpload = ({
       // Criar um AbortController para permitir cancelar o upload
       uploadControllerRef.current = new AbortController();
       
-      // Upload para o bucket de vídeos com timeout aumentado
+      // Upload para o bucket de vídeos
       const { data, error } = await supabase.storage
         .from("learning_videos")
         .upload(filePath, file, {
           cacheControl: "3600",
           upsert: true,
-          // A biblioteca do Supabase gerencia automaticamente uploads em chunks para arquivos grandes,
-          // mas podemos configurar um timeout maior para uploads grandes
           duplex: "half" // Melhor suporte para uploads grandes
         });
       
@@ -124,12 +150,47 @@ export const VideoUpload = ({
         console.error("Erro no upload para o storage:", error);
         
         let errorMsg = error.message;
-        if (error.message.includes("exceeded the maximum allowed size")) {
-          errorMsg = "O arquivo excede o tamanho máximo permitido (300MB)";
-        } else if (error.message.includes("bucket") && error.message.includes("not found")) {
-          errorMsg = "O bucket de armazenamento não existe. Por favor, contate o administrador.";
-        } else if (error.message.includes("timeout")) {
-          errorMsg = "O upload excedeu o tempo limite. Tente novamente com um arquivo menor ou verifique sua conexão.";
+        if (error.message.includes("bucket") && error.message.includes("not found")) {
+          errorMsg = "O bucket de armazenamento não existe. Tentando método alternativo...";
+          
+          // Tentar método alternativo - fazer upload para outro bucket
+          try {
+            const { data: altData, error: altError } = await supabase.storage
+              .from("solution_files") // Usar bucket que provavelmente existe
+              .upload(`learning_videos/${uniqueFileName}`, file, {
+                cacheControl: "3600",
+                upsert: true,
+                duplex: "half"
+              });
+              
+            if (altError) {
+              throw altError;
+            }
+            
+            // Se chegou aqui, o upload alternativo funcionou
+            console.log("Upload alternativo bem-sucedido:", altData);
+            
+            // Obter URL pública do método alternativo
+            const { data: altUrlData } = supabase.storage
+              .from("solution_files")
+              .getPublicUrl(`learning_videos/${uniqueFileName}`);
+              
+            const publicUrl = altUrlData.publicUrl;
+            setFileName(file.name);
+            
+            setUploadProgress(100);
+            console.log("URL pública obtida (método alternativo):", publicUrl);
+            
+            // Chamar onChange com todos os dados relevantes
+            onChange(publicUrl, "file", file.name, `solution_files/learning_videos/${uniqueFileName}`, file.size);
+            
+            toast.success("Vídeo carregado com sucesso (método alternativo)");
+            setUploading(false);
+            return; // Terminar a função aqui pois o upload alternativo funcionou
+          } catch (altErr: any) {
+            console.error("Erro no upload alternativo:", altErr);
+            errorMsg = `Falha em todos os métodos de upload: ${altErr.message || "Erro desconhecido"}`;
+          }
         }
         
         toast.error(`Erro no upload: ${errorMsg}`);
@@ -168,6 +229,14 @@ export const VideoUpload = ({
         fileInputRef.current.value = "";
       }
     }
+  };
+
+  // Handle file selection
+  const handleFileSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    await uploadVideo(file);
   };
 
   // Cancelar upload em andamento
@@ -259,6 +328,13 @@ export const VideoUpload = ({
       {error && (
         <div className="text-destructive text-sm bg-destructive/10 p-2 rounded-md">
           {error}
+        </div>
+      )}
+
+      {bucketStatus === "error" && (
+        <div className="text-amber-600 text-sm bg-amber-50 p-2 rounded-md border border-amber-200">
+          <p className="font-medium">Atenção</p>
+          <p>O sistema de armazenamento pode não estar totalmente configurado. Em caso de falha, tentaremos um método alternativo de upload.</p>
         </div>
       )}
       

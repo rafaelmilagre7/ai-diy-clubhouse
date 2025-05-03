@@ -155,6 +155,114 @@ const AulaStepWizard: React.FC<AulaStepWizardProps> = ({
     return Math.ceil(totalDuration / 60);
   };
 
+  // Função para salvar vídeos com melhor tratamento de erros
+  const saveVideos = async (lessonId: string, videos: any[]) => {
+    try {
+      console.log("Salvando vídeos para a aula:", lessonId);
+      console.log("Vídeos a salvar:", videos);
+      
+      if (!videos || videos.length === 0) {
+        console.log("Nenhum vídeo para salvar.");
+        return;
+      }
+      
+      let videosSalvosComSucesso = 0;
+      let errosEncontrados = 0;
+      
+      // Para cada vídeo no formulário
+      for (let i = 0; i < videos.length; i++) {
+        const video = videos[i];
+        
+        // Se o vídeo não tiver URL, pular
+        if (!video.url) {
+          console.log(`Vídeo ${i + 1} sem URL encontrado, pulando...`);
+          continue;
+        }
+        
+        try {
+          const videoData = {
+            lesson_id: lessonId,
+            title: video.title || "Vídeo sem título",
+            description: video.description || null,
+            url: video.url,
+            order_index: i,
+            video_type: video.type || "youtube",
+            video_file_path: video.filePath || null,
+            video_file_name: video.fileName || null,
+            file_size_bytes: video.fileSize || null,
+            duration_seconds: video.duration_seconds || null,
+            thumbnail_url: null
+          };
+          
+          console.log(`Salvando vídeo ${i + 1}:`, videoData);
+          
+          if (video.id) {
+            // Atualizar vídeo existente
+            const { error } = await supabase
+              .from('learning_lesson_videos')
+              .update(videoData)
+              .eq('id', video.id);
+              
+            if (error) {
+              console.error(`Erro ao atualizar vídeo ${i + 1}:`, error);
+              errosEncontrados++;
+              continue; // Continuar com o próximo vídeo mesmo se houver erro
+            }
+            
+            console.log(`Vídeo ${i + 1} atualizado com sucesso.`);
+            videosSalvosComSucesso++;
+          } else {
+            // Criar novo vídeo
+            const { error } = await supabase
+              .from('learning_lesson_videos')
+              .insert([videoData]);
+              
+            if (error) {
+              console.error(`Erro ao criar vídeo ${i + 1}:`, error);
+              errosEncontrados++;
+              continue;
+            }
+            
+            console.log(`Vídeo ${i + 1} criado com sucesso.`);
+            videosSalvosComSucesso++;
+          }
+        } catch (err) {
+          console.error(`Erro ao processar vídeo ${i + 1}:`, err);
+          errosEncontrados++;
+        }
+      }
+      
+      // Mostrar mensagem de resumo
+      if (errosEncontrados > 0) {
+        if (videosSalvosComSucesso > 0) {
+          console.warn(`Alguns vídeos não puderam ser salvos. Salvos: ${videosSalvosComSucesso}, Erros: ${errosEncontrados}`);
+          toast.warning(`Nem todos os vídeos puderam ser salvos. ${videosSalvosComSucesso} salvos, ${errosEncontrados} com erro.`);
+        } else {
+          console.error("Nenhum vídeo pôde ser salvo.");
+          toast.error("Não foi possível salvar os vídeos. Verifique os logs para mais detalhes.");
+        }
+      } else if (videosSalvosComSucesso > 0) {
+        console.log(`Todos os ${videosSalvosComSucesso} vídeos foram salvos com sucesso.`);
+      }
+      
+      return videosSalvosComSucesso > 0; // Retorna true se pelo menos um vídeo foi salvo
+    } catch (error) {
+      console.error("Erro ao salvar vídeos:", error);
+      toast.error("Ocorreu um erro ao salvar os vídeos.");
+      return false;
+    }
+  };
+
+  // Função para salvar recursos (implementação futura)
+  const saveResources = async (lessonId: string, resources: any[]) => {
+    try {
+      // Implementar salvamento de recursos
+      // Essa funcionalidade será ampliada na implementação de materiais
+    } catch (error) {
+      console.error("Erro ao salvar recursos:", error);
+    }
+  };
+
   // Submeter o formulário
   const onSubmit = async (values: AulaFormValues) => {
     try {
@@ -164,7 +272,7 @@ const AulaStepWizard: React.FC<AulaStepWizardProps> = ({
       console.log("Dados do formulário:", values);
       
       // Calcular o tempo estimado com base nos vídeos
-      const totalDurationMinutes = calculateTotalDuration(values.videos || []);
+      const totalDurationMinutes = calculateTotalDuration(values.videos);
       console.log("Tempo total calculado dos vídeos (minutos):", totalDurationMinutes);
       
       // Preparar os dados da aula
@@ -180,6 +288,11 @@ const AulaStepWizard: React.FC<AulaStepWizardProps> = ({
         order_index: values.orderIndex || 0
       };
       
+      console.log("Dados completos a serem salvos:", lessonData);
+      
+      let lessonId = aula?.id;
+      let salvamentoAulaSucesso = false;
+      
       if (lessonId) {
         // Atualizar aula existente
         const { error } = await supabase
@@ -189,11 +302,8 @@ const AulaStepWizard: React.FC<AulaStepWizardProps> = ({
           
         if (error) throw error;
         
-        // Salvar vídeos e materiais
-        await saveVideos(lessonId, values.videos || []);
-        await saveResources(lessonId, values.resources || []);
-        
-        toast.success("Aula atualizada com sucesso!");
+        console.log("Aula atualizada com sucesso!");
+        salvamentoAulaSucesso = true;
       } else {
         // Criar nova aula
         const { data, error } = await supabase
@@ -204,13 +314,25 @@ const AulaStepWizard: React.FC<AulaStepWizardProps> = ({
           
         if (error) throw error;
         
-        const newLessonId = data.id;
-        
+        lessonId = data.id;
+        console.log("Aula criada com sucesso:", data);
+        salvamentoAulaSucesso = true;
+      }
+      
+      if (salvamentoAulaSucesso && lessonId) {
         // Salvar vídeos e materiais
-        await saveVideos(newLessonId, values.videos || []);
-        await saveResources(newLessonId, values.resources || []);
+        const videosSalvos = await saveVideos(lessonId, values.videos || []);
         
-        toast.success("Aula criada com sucesso!");
+        // Salvar recursos (implementação futura)
+        // await saveResources(lessonId, values.resources || []);
+        
+        if (videosSalvos) {
+          toast.success(aula ? "Aula atualizada com sucesso!" : "Aula criada com sucesso!");
+        } else {
+          toast.warning(aula 
+            ? "Aula atualizada, mas houve problema com os vídeos" 
+            : "Aula criada, mas houve problema com os vídeos");
+        }
       }
       
       if (onSuccess) onSuccess();
@@ -222,58 +344,6 @@ const AulaStepWizard: React.FC<AulaStepWizardProps> = ({
       toast.error(`Erro ao salvar aula: ${error.message || "Ocorreu um erro ao tentar salvar."}`);
     } finally {
       setIsSaving(false);
-    }
-  };
-
-  // Funções auxiliares para salvar vídeos e materiais
-  const saveVideos = async (lessonId: string, videos: any[]) => {
-    try {
-      if (!videos || videos.length === 0) return;
-      
-      for (let i = 0; i < videos.length; i++) {
-        const video = videos[i];
-        
-        if (!video.url) continue;
-        
-        const videoData = {
-          lesson_id: lessonId,
-          title: video.title || "Vídeo sem título",
-          description: video.description || null,
-          url: video.url,
-          order_index: i,
-          video_type: video.type || "youtube",
-          video_file_path: video.filePath || null,
-          video_file_name: video.fileName || null,
-          file_size_bytes: video.fileSize || null,
-          duration_seconds: video.duration_seconds || null,
-          thumbnail_url: null
-        };
-        
-        if (video.id) {
-          // Atualizar vídeo existente
-          await supabase
-            .from("learning_lesson_videos")
-            .update(videoData)
-            .eq("id", video.id);
-        } else {
-          // Criar novo vídeo
-          await supabase
-            .from("learning_lesson_videos")
-            .insert([videoData]);
-        }
-      }
-    } catch (error) {
-      console.error("Erro ao salvar vídeos:", error);
-      throw error;
-    }
-  };
-
-  const saveResources = async (lessonId: string, resources: any[]) => {
-    try {
-      // Implementar salvamento de recursos
-      // Essa funcionalidade será ampliada na implementação de materiais
-    } catch (error) {
-      console.error("Erro ao salvar recursos:", error);
     }
   };
 
