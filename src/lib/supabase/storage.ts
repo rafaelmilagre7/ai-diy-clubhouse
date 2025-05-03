@@ -1,4 +1,3 @@
-
 // Vamos criar ou atualizar este arquivo
 
 import { supabase } from '@/lib/supabase';
@@ -199,6 +198,135 @@ export const getYoutubeThumbnailUrl = (url: string): string | null => {
   
   // URL da thumbnail de alta qualidade do YouTube
   return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+};
+
+/**
+ * Upload de arquivo para o Supabase Storage com tratamento de erros e fallback
+ * @param file Arquivo para upload
+ * @param bucketName Nome do bucket principal
+ * @param folderPath Pasta dentro do bucket (opcional)
+ * @param onProgress Callback de progresso (opcional)
+ * @param fallbackBucket Nome do bucket alternativo (opcional)
+ * @returns Objeto com dados do upload bem-sucedido
+ */
+export const uploadFileWithFallback = async (
+  file: File,
+  bucketName: string,
+  folderPath: string = '',
+  onProgress?: (progress: number) => void,
+  fallbackBucket?: string
+): Promise<{ path: string; publicUrl: string }> => {
+  // Gerar um nome único para o arquivo
+  const fileExt = file.name.split('.').pop();
+  const fileName = `${crypto.randomUUID()}.${fileExt}`;
+  const filePath = folderPath ? `${folderPath}/${fileName}` : fileName;
+  
+  console.log(`Iniciando upload para bucket: ${bucketName}, pasta: ${folderPath}, arquivo: ${fileName}`);
+  
+  try {
+    if (onProgress) onProgress(10);
+    
+    // Verificar se o bucket existe
+    const bucketExists = await ensureBucketExists(bucketName);
+    
+    if (!bucketExists) {
+      console.warn(`Bucket ${bucketName} não disponível. Tentando bucket alternativo.`);
+      
+      // Se um bucket alternativo foi fornecido e o principal falhou
+      if (fallbackBucket) {
+        const fallbackExists = await ensureBucketExists(fallbackBucket);
+        
+        if (fallbackExists) {
+          console.log(`Usando bucket de fallback: ${fallbackBucket}`);
+          const fallbackPath = `${bucketName}/${folderPath}/${fileName}`.replace(/\/+/g, '/');
+          
+          // Upload para o bucket alternativo
+          const { data, error } = await supabase.storage
+            .from(fallbackBucket)
+            .upload(fallbackPath, file, {
+              cacheControl: '3600',
+              upsert: true
+            });
+          
+          if (error) throw error;
+          
+          if (onProgress) onProgress(100);
+          
+          // Obter a URL pública
+          const { data: urlData } = supabase.storage
+            .from(fallbackBucket)
+            .getPublicUrl(fallbackPath);
+          
+          return {
+            path: fallbackPath,
+            publicUrl: urlData.publicUrl
+          };
+        } else {
+          throw new Error(`Nem o bucket principal nem o alternativo estão disponíveis`);
+        }
+      } else {
+        throw new Error(`Bucket ${bucketName} não está disponível e nenhum fallback foi fornecido`);
+      }
+    }
+    
+    // Se o bucket principal existe, fazer o upload para ele
+    if (onProgress) onProgress(30);
+    
+    const { data, error } = await supabase.storage
+      .from(bucketName)
+      .upload(filePath, file, {
+        cacheControl: '3600',
+        upsert: true
+      });
+    
+    if (error) throw error;
+    
+    if (onProgress) onProgress(100);
+    
+    // Obter a URL pública
+    const { data: urlData } = supabase.storage
+      .from(bucketName)
+      .getPublicUrl(filePath);
+    
+    return {
+      path: data.path,
+      publicUrl: urlData.publicUrl
+    };
+    
+  } catch (error: any) {
+    console.error(`Erro no upload: ${error.message}`);
+    throw error;
+  }
+};
+
+/**
+ * Configura políticas de acesso público ao Storage
+ * @param bucketName Nome do bucket para configurar
+ * @returns Objeto com status da operação
+ */
+export const createStoragePublicPolicy = async (bucketName: string): Promise<{ success: boolean, error: string | null }> => {
+  try {
+    const { data, error } = await supabase.rpc('create_storage_public_policy', { bucket_name: bucketName });
+    
+    if (error) {
+      console.error('Erro ao configurar políticas:', error);
+      return { 
+        success: false, 
+        error: error.message 
+      };
+    }
+    
+    return { 
+      success: true, 
+      error: null 
+    };
+  } catch (err: any) {
+    console.error('Exceção ao configurar políticas:', err);
+    return {
+      success: false,
+      error: err.message || 'Erro desconhecido'
+    };
+  }
 };
 
 /**

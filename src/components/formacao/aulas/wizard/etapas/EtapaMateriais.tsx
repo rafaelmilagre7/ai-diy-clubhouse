@@ -9,11 +9,11 @@ import {
 import { UseFormReturn } from "react-hook-form";
 import { AulaFormValues } from "../AulaStepWizard";
 import { Button } from "@/components/ui/button";
-import { FileUpload } from "@/components/ui/file-upload";
+import { FileUpload } from "@/components/formacao/common/FileUpload";
 import { Input } from "@/components/ui/input";
-import { Plus, File, Link as LinkIcon, Trash, AlertCircle, RefreshCw } from "lucide-react";
+import { Plus, File, Link as LinkIcon, Trash, AlertCircle, RefreshCw, Check } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { ensureBucketExists } from "@/lib/supabase/storage";
+import { setupLearningStorageBuckets, createStoragePublicPolicy } from "@/lib/supabase";
 import { STORAGE_BUCKETS } from "@/lib/supabase/config";
 import { toast } from "sonner";
 
@@ -42,33 +42,30 @@ const EtapaMateriais: React.FC<EtapaMateriaisProps> = ({
   const checkBucketStatus = async () => {
     try {
       setBucketStatus("checking");
-      console.log("Verificando bucket de materiais de aprendizado...");
+      console.log("Verificando buckets de armazenamento para materiais...");
       
-      // Tentar verificar e garantir que o bucket existe
-      const bucketReady = await ensureBucketExists(STORAGE_BUCKETS.LEARNING_RESOURCES);
+      // Configurar todos os buckets necessários
+      const result = await setupLearningStorageBuckets();
+      console.log("Resultado da configuração de buckets:", result);
       
-      if (bucketReady) {
-        console.log("Bucket de materiais está pronto para uso");
+      if (result.success) {
+        console.log("Todos os buckets estão prontos para uso");
         setBucketStatus("ready");
         setErrorMessage(null);
+      } else if (result.partial) {
+        console.log("Alguns buckets estão disponíveis:", result.readyBuckets);
+        setBucketStatus("partial");
+        setErrorMessage("Usando configuração parcial de armazenamento. Alguns recursos podem não funcionar corretamente.");
       } else {
-        console.log("Bucket de materiais não está disponível, tentando fallback");
+        console.error("Falha ao configurar buckets:", result.message);
+        setBucketStatus("error");
+        setErrorMessage(result.message);
         
-        // Tentar verificar o bucket de fallback
-        const fallbackReady = await ensureBucketExists(STORAGE_BUCKETS.FALLBACK);
-        
-        if (fallbackReady) {
-          console.log("Bucket fallback disponível");
-          setBucketStatus("partial");
-          setErrorMessage("Usando armazenamento alternativo para materiais.");
-        } else {
-          console.error("Nenhum bucket está disponível");
-          setBucketStatus("error");
-          setErrorMessage("Não foi possível configurar o armazenamento para materiais.");
-        }
+        // Tentar configurar política de acesso para o bucket de fallback
+        await createStoragePublicPolicy(STORAGE_BUCKETS.FALLBACK);
       }
     } catch (error) {
-      console.error("Erro ao verificar bucket de materiais:", error);
+      console.error("Erro ao verificar buckets:", error);
       setBucketStatus("error");
       setErrorMessage(`Erro ao verificar armazenamento: ${error instanceof Error ? error.message : String(error)}`);
     }
@@ -77,16 +74,23 @@ const EtapaMateriais: React.FC<EtapaMateriaisProps> = ({
   const handleRetryBucketSetup = async () => {
     setIsRetrying(true);
     toast.info("Verificando configuração de armazenamento...");
-    await checkBucketStatus();
     
-    if (bucketStatus === "ready") {
-      toast.success("Armazenamento configurado com sucesso!");
-    } else if (bucketStatus === "partial") {
-      toast.success("Configuração parcial pronta. Usando armazenamento alternativo.");
-    } else {
-      toast.error("Não foi possível configurar o armazenamento. Serão usados buckets alternativos.");
+    try {
+      await checkBucketStatus();
+      
+      if (bucketStatus === "ready") {
+        toast.success("Armazenamento configurado com sucesso!");
+      } else if (bucketStatus === "partial") {
+        toast.success("Configuração parcial pronta. Usando armazenamento alternativo.");
+      } else {
+        toast.error("Não foi possível configurar o armazenamento. Serão usados buckets alternativos.");
+      }
+    } catch (error) {
+      console.error("Erro ao reconfigurar buckets:", error);
+      toast.error("Erro ao verificar configuração de armazenamento");
+    } finally {
+      setIsRetrying(false);
     }
-    setIsRetrying(false);
   };
 
   const handleContinue = async () => {
@@ -111,6 +115,15 @@ const EtapaMateriais: React.FC<EtapaMateriaisProps> = ({
     form.setValue('resources', newResources);
   };
   
+  // Determinar qual bucket usar com base no status
+  const getBucketToUse = () => {
+    if (bucketStatus === "ready") {
+      return STORAGE_BUCKETS.LEARNING_RESOURCES;
+    } else {
+      return STORAGE_BUCKETS.FALLBACK;
+    }
+  };
+  
   return (
     <Form {...form}>
       <div className="space-y-6 py-4">
@@ -121,13 +134,21 @@ const EtapaMateriais: React.FC<EtapaMateriaisProps> = ({
           </FormDescription>
           <FormMessage />
           
-          {/* Alertas de status do bucket */}
           {bucketStatus === "checking" && (
             <Alert className="mb-4">
               <div className="flex items-center">
                 <div className="animate-spin mr-2 h-4 w-4 border-2 border-primary border-r-transparent rounded-full"></div>
                 <AlertDescription>Verificando configuração do armazenamento...</AlertDescription>
               </div>
+            </Alert>
+          )}
+          
+          {bucketStatus === "ready" && (
+            <Alert variant="success" className="mb-4 bg-green-50 border-green-200">
+              <Check className="h-4 w-4 mr-2 text-green-600" />
+              <AlertDescription className="text-green-700">
+                Sistema de armazenamento configurado corretamente.
+              </AlertDescription>
             </Alert>
           )}
           
@@ -159,10 +180,10 @@ const EtapaMateriais: React.FC<EtapaMateriaisProps> = ({
           )}
           
           {bucketStatus === "partial" && (
-            <Alert variant="warning" className="mb-4">
-              <AlertCircle className="h-4 w-4 mr-2" />
+            <Alert variant="warning" className="mb-4 bg-amber-50 border-amber-200">
+              <AlertCircle className="h-4 w-4 mr-2 text-amber-600" />
               <div className="flex-1">
-                <AlertDescription>
+                <AlertDescription className="text-amber-700">
                   {errorMessage || "Configuração parcial do armazenamento. Usando bucket alternativo."}
                 </AlertDescription>
                 <div className="mt-2">
@@ -234,20 +255,19 @@ const EtapaMateriais: React.FC<EtapaMateriaisProps> = ({
                       <div>
                         <FormLabel className="text-sm">Upload do Arquivo</FormLabel>
                         <FileUpload
-                          bucketName={bucketStatus === "ready" ? STORAGE_BUCKETS.LEARNING_RESOURCES : STORAGE_BUCKETS.FALLBACK}
-                          folder="materials"
-                          accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.zip,.rar,.txt"
-                          onUploadComplete={(url, fileName) => {
+                          bucketName={getBucketToUse()}
+                          folderPath="materials"
+                          acceptedFileTypes=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.zip,.rar,.txt"
+                          value={resource.url || ''}
+                          onChange={(url, fileType, fileSize) => {
                             handleResourceChange(index, 'url', url);
-                            handleResourceChange(index, 'fileName', fileName);
+                            handleResourceChange(index, 'fileName', fileType);
+                            handleResourceChange(index, 'fileSize', fileSize);
                           }}
-                          buttonText="Escolher Arquivo"
-                          fieldLabel={resource.fileName || "Selecione um arquivo"}
-                          initialFileUrl={resource.url}
                         />
-                        {bucketStatus !== "ready" && (
+                        {bucketStatus !== "ready" && resource.url && (
                           <p className="text-amber-600 text-xs mt-1">
-                            Usando bucket alternativo devido a problemas de configuração.
+                            Este arquivo foi armazenado em um bucket alternativo.
                           </p>
                         )}
                       </div>
