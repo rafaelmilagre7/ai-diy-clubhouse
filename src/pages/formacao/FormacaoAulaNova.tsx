@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
@@ -39,7 +40,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { createStoragePublicPolicy } from "@/lib/supabase/rpc";
 import { Loader2, PlusCircle, Trash } from "lucide-react";
-import { getTableColumns } from "@/lib/supabase/rpc";
 import { ensureStorageBucketExists } from "@/lib/supabase/client";
 
 // Schema para validação do formulário
