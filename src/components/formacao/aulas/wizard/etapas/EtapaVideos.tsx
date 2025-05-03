@@ -1,25 +1,33 @@
 
-import React from "react";
-import {
-  Form,
-  FormLabel,
-  FormDescription,
-  FormMessage
-} from "@/components/ui/form";
+import React, { useState } from "react";
 import { UseFormReturn } from "react-hook-form";
 import { AulaFormValues } from "../AulaStepWizard";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+  FormDescription
+} from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
+import { 
+  Card, 
+  CardContent, 
+  CardHeader, 
+  CardTitle, 
+  CardDescription 
+} from "@/components/ui/card";
+import { Trash2, Plus, Video as VideoIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { VideoUpload } from "@/components/formacao/comum/VideoUpload";
-import { Plus, GripVertical, Trash } from "lucide-react";
-import { DragDropContext, Droppable, Draggable, DropResult } from "react-beautiful-dnd";
+import { YoutubeEmbed } from "@/components/common/YoutubeEmbed";
 
 interface EtapaVideosProps {
   form: UseFormReturn<AulaFormValues>;
   onNext: () => void;
   onPrevious: () => void;
-  isSaving: boolean;
 }
 
 const EtapaVideos: React.FC<EtapaVideosProps> = ({
@@ -27,162 +35,276 @@ const EtapaVideos: React.FC<EtapaVideosProps> = ({
   onNext,
   onPrevious
 }) => {
-  const handleContinue = async () => {
-    // Validar apenas os campos desta etapa
-    onNext();
+  // Obter os vídeos já adicionados do formulário
+  const videos = form.watch('videos') || [];
+  
+  // Estado para controlar o vídeo sendo editado
+  const [editingVideoIndex, setEditingVideoIndex] = useState<number | null>(null);
+  const [isAdding, setIsAdding] = useState(false);
+  
+  // Estados para o novo vídeo
+  const [newVideoTitle, setNewVideoTitle] = useState("");
+  const [newVideoUrl, setNewVideoUrl] = useState("");
+  const [newVideoType, setNewVideoType] = useState<"youtube" | "file">("youtube");
+  const [newVideoFileName, setNewVideoFileName] = useState<string | undefined>();
+  const [newVideoFilePath, setNewVideoFilePath] = useState<string | undefined>();
+  const [newVideoFileSize, setNewVideoFileSize] = useState<number | undefined>();
+  
+  // Função para adicionar um novo vídeo
+  const handleAddVideo = () => {
+    if (!newVideoUrl || !newVideoTitle.trim()) return;
+    
+    const newVideos = [...videos];
+    newVideos.push({
+      title: newVideoTitle,
+      url: newVideoUrl,
+      video_type: newVideoType,
+      video_file_name: newVideoFileName,
+      video_file_path: newVideoFilePath,
+      file_size_bytes: newVideoFileSize,
+      order_index: videos.length
+    });
+    
+    form.setValue('videos', newVideos);
+    resetNewVideoForm();
+    setIsAdding(false);
   };
   
-  const videos = form.watch('videos') || [];
-
-  // Funções para manipular vídeos
-  const handleAddVideo = () => {
-    form.setValue('videos', [...videos, { url: '', type: 'youtube' }]);
-  };
-
+  // Função para remover um vídeo
   const handleRemoveVideo = (index: number) => {
     const newVideos = [...videos];
     newVideos.splice(index, 1);
+    
+    // Reordenar índices após remover um vídeo
+    newVideos.forEach((video, idx) => {
+      video.order_index = idx;
+    });
+    
     form.setValue('videos', newVideos);
   };
-
-  const handleVideoChange = (index: number, field: string, value: any) => {
+  
+  // Função para editar um vídeo existente
+  const handleUpdateVideo = (index: number) => {
+    if (!newVideoUrl || !newVideoTitle.trim()) return;
+    
     const newVideos = [...videos];
-    newVideos[index] = { ...newVideos[index], [field]: value };
+    newVideos[index] = {
+      ...newVideos[index],
+      title: newVideoTitle,
+      url: newVideoUrl,
+      video_type: newVideoType,
+      video_file_name: newVideoFileName,
+      video_file_path: newVideoFilePath,
+      file_size_bytes: newVideoFileSize
+    };
+    
     form.setValue('videos', newVideos);
+    resetNewVideoForm();
+    setEditingVideoIndex(null);
+  };
+  
+  // Função para iniciar a edição de um vídeo
+  const startEditingVideo = (index: number) => {
+    const video = videos[index];
+    setNewVideoTitle(video.title);
+    setNewVideoUrl(video.url);
+    setNewVideoType(video.video_type as "youtube" | "file" || "youtube");
+    setNewVideoFileName(video.video_file_name);
+    setNewVideoFilePath(video.video_file_path);
+    setNewVideoFileSize(video.file_size_bytes);
+    setEditingVideoIndex(index);
+    setIsAdding(false);
+  };
+  
+  // Resetar o formulário de novo vídeo
+  const resetNewVideoForm = () => {
+    setNewVideoTitle("");
+    setNewVideoUrl("");
+    setNewVideoType("youtube");
+    setNewVideoFileName(undefined);
+    setNewVideoFilePath(undefined);
+    setNewVideoFileSize(undefined);
+  };
+  
+  // Função chamada quando o componente VideoUpload muda
+  const handleVideoUrlChange = (
+    url: string, 
+    type: string, 
+    fileName?: string, 
+    filePath?: string, 
+    fileSize?: number
+  ) => {
+    setNewVideoUrl(url);
+    setNewVideoType(type as "youtube" | "file");
+    setNewVideoFileName(fileName);
+    setNewVideoFilePath(filePath);
+    setNewVideoFileSize(fileSize);
+  };
+  
+  // Cancelar adição ou edição
+  const handleCancel = () => {
+    resetNewVideoForm();
+    setEditingVideoIndex(null);
+    setIsAdding(false);
+  };
+  
+  // Extrair ID do YouTube de uma URL
+  const extractYoutubeId = (url: string): string | null => {
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+    const match = url.match(regExp);
+    return (match && match[2].length === 11) ? match[2] : null;
   };
 
-  const onDragEnd = (result: DropResult) => {
-    if (!result.destination) return;
-    
-    const items = Array.from(videos);
-    const [reorderedItem] = items.splice(result.source.index, 1);
-    items.splice(result.destination.index, 0, reorderedItem);
-    
-    form.setValue('videos', items);
+  // Continuar para a próxima etapa
+  const handleContinue = async () => {
+    const result = await form.trigger(['videos']);
+    if (result) {
+      onNext();
+    }
   };
 
   return (
     <Form {...form}>
       <div className="space-y-6 py-4">
-        <div>
-          <FormLabel className="text-lg font-medium">Vídeos da Aula</FormLabel>
-          <FormDescription className="mb-4">
-            Os vídeos adicionados aqui determinarão automaticamente o tempo total estimado da aula
-          </FormDescription>
-          <FormMessage />
-          
-          <DragDropContext onDragEnd={onDragEnd}>
-            <Droppable droppableId="videos">
-              {(provided) => (
-                <div
-                  {...provided.droppableProps}
-                  ref={provided.innerRef}
-                  className="space-y-4"
-                >
-                  {videos.length === 0 ? (
-                    <div className="text-center p-6 border border-dashed rounded-md">
-                      <p className="text-muted-foreground">
-                        Nenhum vídeo adicionado. Clique em "Adicionar Vídeo" para começar.
-                      </p>
-                    </div>
-                  ) : (
-                    <>
-                      {videos.map((video, index) => (
-                        <Draggable
-                          key={index}
-                          draggableId={`video-${index}`}
-                          index={index}
-                        >
-                          {(provided) => (
-                            <div
-                              ref={provided.innerRef}
-                              {...provided.draggableProps}
-                              className="border rounded-md p-4"
-                            >
-                              <div className="flex items-center justify-between mb-4">
-                                <div className="flex items-center">
-                                  <div 
-                                    {...provided.dragHandleProps} 
-                                    className="cursor-grab mr-3"
-                                  >
-                                    <GripVertical className="h-5 w-5 text-muted-foreground" />
-                                  </div>
-                                  <h3 className="font-medium">Vídeo {index + 1}</h3>
+        <FormField
+          control={form.control}
+          name="videos"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Vídeos da Aula</FormLabel>
+              <FormDescription className="mb-2">
+                Adicione vídeos do YouTube ou faça upload de arquivos de vídeo para esta aula
+              </FormDescription>
+              <FormControl>
+                <div className="space-y-4">
+                  {/* Lista de vídeos já adicionados */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {videos.map((video, index) => (
+                      <Card key={index} className="overflow-hidden">
+                        <CardContent className="p-0">
+                          {/* Preview do vídeo baseado no tipo */}
+                          {video.video_type === "youtube" && video.url && (
+                            <div className="aspect-video">
+                              {extractYoutubeId(video.url) ? (
+                                <YoutubeEmbed youtubeId={extractYoutubeId(video.url) || ""} />
+                              ) : (
+                                <div className="flex items-center justify-center h-full bg-muted">
+                                  <VideoIcon className="h-12 w-12 text-muted-foreground" />
                                 </div>
-                                <Button
-                                  type="button"
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handleRemoveVideo(index)}
-                                >
-                                  <Trash className="h-4 w-4 mr-1" />
-                                  Remover
-                                </Button>
-                              </div>
-                              
-                              <div className="space-y-4">
-                                <div>
-                                  <FormLabel className="text-sm">Título do Vídeo</FormLabel>
-                                  <Input
-                                    placeholder="Título do vídeo"
-                                    value={video.title || ''}
-                                    onChange={(e) => handleVideoChange(index, 'title', e.target.value)}
-                                    className="mt-1"
-                                  />
-                                </div>
-                                
-                                <div>
-                                  <FormLabel className="text-sm">Descrição do Vídeo</FormLabel>
-                                  <Textarea
-                                    placeholder="Descrição do vídeo"
-                                    value={video.description || ''}
-                                    onChange={(e) => handleVideoChange(index, 'description', e.target.value)}
-                                    className="mt-1 resize-none h-20"
-                                  />
-                                </div>
-                                
-                                <div>
-                                  <FormLabel className="text-sm">URL ou Upload do Vídeo</FormLabel>
-                                  <VideoUpload
-                                    value={video.url || ""}
-                                    videoType={video.type || "youtube"}
-                                    onChange={(url, type, fileName, filePath, fileSize) => {
-                                      handleVideoChange(index, "url", url);
-                                      handleVideoChange(index, "type", type);
-                                      handleVideoChange(index, "fileName", fileName);
-                                      handleVideoChange(index, "filePath", filePath);
-                                      handleVideoChange(index, "fileSize", fileSize);
-                                      
-                                      // Definir duração padrão para cálculo de tempo (será refinado depois)
-                                      if (type === 'youtube') {
-                                        handleVideoChange(index, "duration_seconds", 300);
-                                      }
-                                    }}
-                                  />
-                                </div>
-                              </div>
+                              )}
                             </div>
                           )}
-                        </Draggable>
-                      ))}
-                    </>
+                          
+                          {video.video_type === "file" && video.url && (
+                            <div className="aspect-video bg-black">
+                              <video 
+                                src={video.url} 
+                                controls 
+                                className="w-full h-full" 
+                                poster={video.thumbnail_url} 
+                              />
+                            </div>
+                          )}
+                          
+                          {/* Informações do vídeo */}
+                          <div className="p-4">
+                            <h4 className="font-medium">{video.title}</h4>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {video.video_type === "youtube" ? "YouTube" : "Arquivo de vídeo"}
+                              {video.file_size_bytes && ` • ${Math.round(video.file_size_bytes / (1024 * 1024))} MB`}
+                            </p>
+                            
+                            <div className="flex justify-between mt-4">
+                              <Button 
+                                type="button" 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => startEditingVideo(index)}
+                              >
+                                Editar
+                              </Button>
+                              <Button 
+                                type="button" 
+                                variant="destructive" 
+                                size="sm"
+                                onClick={() => handleRemoveVideo(index)}
+                              >
+                                <Trash2 className="h-4 w-4 mr-1" /> Remover
+                              </Button>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                  
+                  {/* Formulário para adicionar/editar vídeo */}
+                  {(isAdding || editingVideoIndex !== null) ? (
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>{editingVideoIndex !== null ? "Editar Vídeo" : "Adicionar Novo Vídeo"}</CardTitle>
+                        <CardDescription>
+                          {editingVideoIndex !== null 
+                            ? "Edite as informações do vídeo selecionado" 
+                            : "Adicione um vídeo do YouTube ou faça upload de um arquivo de vídeo"}
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div>
+                          <label className="text-sm font-medium">Título do Vídeo</label>
+                          <Input
+                            placeholder="Digite o título do vídeo"
+                            value={newVideoTitle}
+                            onChange={(e) => setNewVideoTitle(e.target.value)}
+                            className="mt-1"
+                          />
+                        </div>
+                        
+                        <div>
+                          <label className="text-sm font-medium">URL do Vídeo</label>
+                          <VideoUpload 
+                            value={newVideoUrl}
+                            onChange={handleVideoUrlChange}
+                            videoType={newVideoType}
+                          />
+                        </div>
+                        
+                        <div className="flex justify-end space-x-2 mt-4">
+                          <Button 
+                            type="button" 
+                            variant="outline"
+                            onClick={handleCancel}
+                          >
+                            Cancelar
+                          </Button>
+                          <Button 
+                            type="button"
+                            onClick={() => editingVideoIndex !== null ? handleUpdateVideo(editingVideoIndex) : handleAddVideo()}
+                            disabled={!newVideoUrl || !newVideoTitle.trim()}
+                          >
+                            {editingVideoIndex !== null ? "Atualizar" : "Adicionar"}
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ) : (
+                    <Button
+                      type="button"
+                      onClick={() => {
+                        setIsAdding(true);
+                        resetNewVideoForm();
+                      }}
+                      className="w-full"
+                    >
+                      <Plus className="h-4 w-4 mr-1" /> Adicionar Vídeo
+                    </Button>
                   )}
-                  {provided.placeholder}
                 </div>
-              )}
-            </Droppable>
-          </DragDropContext>
-          
-          <Button
-            type="button"
-            variant="outline"
-            className="w-full mt-4"
-            onClick={handleAddVideo}
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Adicionar Vídeo
-          </Button>
-        </div>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
         
         <div className="flex justify-between pt-4">
           <Button 
