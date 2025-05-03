@@ -115,8 +115,16 @@ export const VideoUpload = ({
       
       if (error) {
         console.error("Erro no upload para o storage:", error);
-        toast.error(`Erro no upload: ${error.message}`);
-        setError(`Erro no upload: ${error.message}`);
+        
+        let errorMsg = error.message;
+        if (error.message.includes("exceeded the maximum allowed size")) {
+          errorMsg = "O arquivo excede o tamanho máximo permitido (100MB)";
+        } else if (error.message.includes("bucket") && error.message.includes("not found")) {
+          errorMsg = "O bucket de armazenamento não existe. Por favor, contate o administrador.";
+        }
+        
+        toast.error(`Erro no upload: ${errorMsg}`);
+        setError(`Erro no upload: ${errorMsg}`);
         throw error;
       }
       

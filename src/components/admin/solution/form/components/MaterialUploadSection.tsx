@@ -1,45 +1,107 @@
 
 import React from "react";
-import { FileUpload } from "@/components/ui/file-upload";
-import { detectFileType, getFileFormatName } from "../utils/resourceUtils";
+import ResourceUploadCard from "./ResourceUploadCard";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/lib/supabase";
 import { ResourceMetadata } from "../types/ResourceTypes";
+import { detectFileType, getFileFormatName } from "../utils/resourceUtils";
 
 interface MaterialUploadSectionProps {
   solutionId: string | null;
   onUploadComplete: (url: string, fileName: string, fileSize: number) => Promise<void>;
+  bucketReady?: boolean; // Nova propriedade para verificar se o bucket está pronto
 }
 
-const MaterialUploadSection: React.FC<MaterialUploadSectionProps> = ({ 
-  solutionId, 
-  onUploadComplete 
+const MaterialUploadSection: React.FC<MaterialUploadSectionProps> = ({
+  solutionId,
+  onUploadComplete,
+  bucketReady = true // Padrão como true para compatibilidade com código existente
 }) => {
-  const handleFileUploadComplete = async (url: string, fileName: string, fileSize: number) => {
-    await onUploadComplete(url, fileName, fileSize);
-  };
-  
-  return (
-    <div className="bg-white border p-6 rounded-lg">
-      <h3 className="text-lg font-medium mb-4">Upload de Material</h3>
-      <p className="text-sm text-muted-foreground mb-4">
-        Adicione materiais de suporte para esta solução (PDFs, planilhas, slides, etc).
-      </p>
+  const { toast } = useToast();
+
+  // Manipulador para URL do YouTube
+  const handleYoutubeUrlSubmit = async (url: string) => {
+    if (!solutionId) {
+      toast({
+        title: "Erro",
+        description: "É necessário salvar a solução antes de adicionar materiais.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      // Extrair ID do vídeo do YouTube
+      let videoId = "";
+      if (url.includes("youtube.com/watch")) {
+        videoId = new URL(url).searchParams.get("v") || "";
+      } else if (url.includes("youtu.be/")) {
+        videoId = url.split("youtu.be/")[1]?.split("?")[0] || "";
+      } else if (url.includes("youtube.com/embed/")) {
+        videoId = url.split("youtube.com/embed/")[1]?.split("?")[0] || "";
+      }
+
+      if (!videoId) {
+        toast({
+          title: "Erro",
+          description: "URL do YouTube inválida.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Criar uma URL de incorporação padrão
+      const embedUrl = `https://www.youtube.com/embed/${videoId}`;
       
-      {solutionId ? (
-        <FileUpload
-          bucketName="solution_files"
-          folder="documents"
-          onUploadComplete={handleFileUploadComplete}
-          accept="*"
-          maxSize={25} // 25MB
-          buttonText="Upload de Material"
-          fieldLabel="Selecione um arquivo (até 25MB)"
-        />
-      ) : (
-        <div className="text-sm text-amber-600 p-3 bg-amber-50 rounded-md">
-          Salve as informações básicas da solução antes de adicionar materiais.
-        </div>
-      )}
-    </div>
+      const metadata: ResourceMetadata = {
+        title: `Vídeo do YouTube (${videoId})`,
+        description: `Vídeo incorporado do YouTube`,
+        url: embedUrl,
+        type: "video",
+        format: "YouTube",
+        tags: [],
+        order: 0,
+        downloads: 0,
+        size: 0,
+        version: "1.0"
+      };
+
+      // Criar o recurso no banco de dados
+      const { data, error } = await supabase
+        .from("solution_resources")
+        .insert({
+          solution_id: solutionId,
+          name: `Vídeo do YouTube (${videoId})`,
+          url: embedUrl,
+          type: "video",
+          format: "YouTube",
+          metadata: JSON.stringify(metadata)
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      if (data) {
+        // Se bem-sucedido, chame onUploadComplete para atualizar a UI
+        await onUploadComplete(embedUrl, `Vídeo do YouTube (${videoId})`, 0);
+      }
+    } catch (error: any) {
+      console.error("Erro ao adicionar vídeo do YouTube:", error);
+      toast({
+        title: "Erro ao adicionar vídeo",
+        description: error.message || "Ocorreu um erro ao tentar adicionar o vídeo do YouTube.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  return (
+    <ResourceUploadCard 
+      handleUploadComplete={onUploadComplete}
+      handleYoutubeUrlSubmit={handleYoutubeUrlSubmit}
+      bucketReady={bucketReady}
+    />
   );
 };
 

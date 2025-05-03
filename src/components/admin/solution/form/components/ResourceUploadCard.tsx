@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/card";
 import { FileUpload } from "@/components/ui/file-upload";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertTriangle, Upload, LinkIcon } from "lucide-react";
+import { AlertTriangle, Upload, LinkIcon, Info } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -18,11 +18,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 interface ResourceUploadCardProps {
   handleUploadComplete: (url: string, fileName: string, fileSize: number) => Promise<void>;
   handleYoutubeUrlSubmit?: (url: string) => Promise<void>;
+  bucketReady?: boolean; // Nova propriedade para verificar se o bucket está pronto
 }
 
 const ResourceUploadCard: React.FC<ResourceUploadCardProps> = ({ 
   handleUploadComplete,
-  handleYoutubeUrlSubmit 
+  handleYoutubeUrlSubmit,
+  bucketReady = true
 }) => {
   const [uploadError, setUploadError] = React.useState<string | null>(null);
   const [youtubeUrl, setYoutubeUrl] = useState("");
@@ -65,6 +67,16 @@ const ResourceUploadCard: React.FC<ResourceUploadCardProps> = ({
           <Alert variant="destructive" className="mb-4">
             <AlertTriangle className="h-4 w-4" />
             <AlertDescription>{uploadError}</AlertDescription>
+          </Alert>
+        )}
+        
+        {!bucketReady && (
+          <Alert variant="warning" className="mb-4">
+            <Info className="h-4 w-4" />
+            <AlertDescription>
+              O sistema de armazenamento pode não estar totalmente configurado. 
+              O upload de arquivos pode não funcionar corretamente.
+            </AlertDescription>
           </Alert>
         )}
         
