@@ -1,3 +1,4 @@
+
 export * from './types/database.types';
 
 export type UserRole = 'admin' | 'member' | 'formacao';
