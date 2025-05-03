@@ -7,20 +7,29 @@ import { STORAGE_BUCKETS } from './config';
  */
 export async function setupLearningStorageBuckets() {
   try {
-    const results = await Promise.all([
-      ensureBucketExists(STORAGE_BUCKETS.VIDEOS),
-      ensureBucketExists(STORAGE_BUCKETS.SOLUTION_FILES),
-      ensureBucketExists(STORAGE_BUCKETS.PROFILE_AVATARS)
-    ]);
+    const bucketsToCreate = [
+      STORAGE_BUCKETS.VIDEOS,
+      STORAGE_BUCKETS.SOLUTION_FILES,
+      STORAGE_BUCKETS.PROFILE_AVATARS
+    ];
+    
+    const results = await Promise.all(
+      bucketsToCreate.map(bucketName => ensureBucketExists(bucketName))
+    );
+    
+    // Identificar quais buckets foram configurados com sucesso
+    const readyBuckets = bucketsToCreate.filter((_, index) => results[index]);
     
     return {
       success: results.every(result => result),
+      readyBuckets, // Adicionando essa propriedade para melhor feedback
       message: 'Buckets de armazenamento configurados com sucesso'
     };
   } catch (error) {
     console.error('Erro ao configurar buckets de armazenamento:', error);
     return {
       success: false,
+      readyBuckets: [], // Adicionando array vazio em caso de erro
       error,
       message: 'Falha ao configurar buckets de armazenamento'
     };

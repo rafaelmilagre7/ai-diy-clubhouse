@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -37,24 +37,25 @@ export const VideoUploadCard: React.FC<VideoUploadCardProps> = ({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  // Verificar status dos buckets ao carregar o componente
-  useState(() => {
+  // Usar useEffect em vez de useState para executar a verificação de buckets
+  useEffect(() => {
     checkStorage();
-  });
+  }, []); // Array de dependências vazio para executar apenas uma vez
   
   const checkStorage = async () => {
     try {
       setBucketStatus("checking");
-      const { success, readyBuckets, message } = await setupLearningStorageBuckets();
+      const response = await setupLearningStorageBuckets();
       
-      if (success) {
+      if (response.success) {
         setBucketStatus("ready");
-      } else if (readyBuckets.length > 0) {
+      } else if (response.readyBuckets && response.readyBuckets.length > 0) {
+        // Verificar se pelo menos alguns buckets estão prontos
         setBucketStatus("partial");
-        setErrorMessage(`Configuração parcial: ${message}`);
+        setErrorMessage(`Configuração parcial: ${response.message}`);
       } else {
         setBucketStatus("error");
-        setErrorMessage(`Erro na configuração: ${message}`);
+        setErrorMessage(`Erro na configuração: ${response.message}`);
       }
     } catch (error) {
       setBucketStatus("error");
