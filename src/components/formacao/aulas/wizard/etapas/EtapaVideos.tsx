@@ -58,11 +58,11 @@ const EtapaVideos: React.FC<EtapaVideosProps> = ({
     newVideos.push({
       title: newVideoTitle,
       url: newVideoUrl,
-      video_type: newVideoType,
-      video_file_name: newVideoFileName,
-      video_file_path: newVideoFilePath,
-      file_size_bytes: newVideoFileSize,
-      order_index: videos.length
+      type: newVideoType,
+      fileName: newVideoFileName,
+      filePath: newVideoFilePath,
+      fileSize: newVideoFileSize,
+      duration_seconds: 0
     });
     
     form.setValue('videos', newVideos);
@@ -74,11 +74,6 @@ const EtapaVideos: React.FC<EtapaVideosProps> = ({
   const handleRemoveVideo = (index: number) => {
     const newVideos = [...videos];
     newVideos.splice(index, 1);
-    
-    // Reordenar índices após remover um vídeo
-    newVideos.forEach((video, idx) => {
-      video.order_index = idx;
-    });
     
     form.setValue('videos', newVideos);
   };
@@ -92,10 +87,10 @@ const EtapaVideos: React.FC<EtapaVideosProps> = ({
       ...newVideos[index],
       title: newVideoTitle,
       url: newVideoUrl,
-      video_type: newVideoType,
-      video_file_name: newVideoFileName,
-      video_file_path: newVideoFilePath,
-      file_size_bytes: newVideoFileSize
+      type: newVideoType,
+      fileName: newVideoFileName,
+      filePath: newVideoFilePath,
+      fileSize: newVideoFileSize
     };
     
     form.setValue('videos', newVideos);
@@ -106,12 +101,12 @@ const EtapaVideos: React.FC<EtapaVideosProps> = ({
   // Função para iniciar a edição de um vídeo
   const startEditingVideo = (index: number) => {
     const video = videos[index];
-    setNewVideoTitle(video.title);
-    setNewVideoUrl(video.url);
-    setNewVideoType(video.video_type as "youtube" | "file" || "youtube");
-    setNewVideoFileName(video.video_file_name);
-    setNewVideoFilePath(video.video_file_path);
-    setNewVideoFileSize(video.file_size_bytes);
+    setNewVideoTitle(video.title || '');
+    setNewVideoUrl(video.url || '');
+    setNewVideoType(video.type as "youtube" | "file" || "youtube");
+    setNewVideoFileName(video.fileName);
+    setNewVideoFilePath(video.filePath);
+    setNewVideoFileSize(video.fileSize);
     setEditingVideoIndex(index);
     setIsAdding(false);
   };
@@ -183,7 +178,7 @@ const EtapaVideos: React.FC<EtapaVideosProps> = ({
                       <Card key={index} className="overflow-hidden">
                         <CardContent className="p-0">
                           {/* Preview do vídeo baseado no tipo */}
-                          {video.video_type === "youtube" && video.url && (
+                          {video.type === "youtube" && video.url && (
                             <div className="aspect-video">
                               {extractYoutubeId(video.url) ? (
                                 <YoutubeEmbed youtubeId={extractYoutubeId(video.url) || ""} />
@@ -195,13 +190,12 @@ const EtapaVideos: React.FC<EtapaVideosProps> = ({
                             </div>
                           )}
                           
-                          {video.video_type === "file" && video.url && (
+                          {video.type === "file" && video.url && (
                             <div className="aspect-video bg-black">
                               <video 
                                 src={video.url} 
                                 controls 
                                 className="w-full h-full" 
-                                poster={video.thumbnail_url} 
                               />
                             </div>
                           )}
@@ -210,8 +204,8 @@ const EtapaVideos: React.FC<EtapaVideosProps> = ({
                           <div className="p-4">
                             <h4 className="font-medium">{video.title}</h4>
                             <p className="text-xs text-muted-foreground mt-1">
-                              {video.video_type === "youtube" ? "YouTube" : "Arquivo de vídeo"}
-                              {video.file_size_bytes && ` • ${Math.round(video.file_size_bytes / (1024 * 1024))} MB`}
+                              {video.type === "youtube" ? "YouTube" : "Arquivo de vídeo"}
+                              {video.fileSize && ` • ${Math.round(video.fileSize / (1024 * 1024))} MB`}
                             </p>
                             
                             <div className="flex justify-between mt-4">
