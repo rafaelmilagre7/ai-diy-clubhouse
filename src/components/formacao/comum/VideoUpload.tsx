@@ -10,14 +10,16 @@ import { v4 as uuidv4 } from "uuid";
 
 interface VideoUploadProps {
   value: string;
-  onChange: (url: string, videoType: string, fileName?: string, filePath?: string, fileSize?: number) => void;
+  onChange: (url: string, videoType: string, fileName?: string, filePath?: string, fileSize?: number, duration_seconds?: number) => void;
   videoType?: string;
+  disabled?: boolean;
 }
 
 export const VideoUpload = ({ 
   value, 
   onChange,
-  videoType = "youtube"
+  videoType = "youtube",
+  disabled = false
 }: VideoUploadProps) => {
   const [uploading, setUploading] = useState(false);
   const [fileName, setFileName] = useState<string | null>(null);
@@ -297,6 +299,7 @@ export const VideoUpload = ({
               checked={videoType === "youtube"}
               className="mr-2"
               onChange={() => onChange(value, "youtube")}
+              disabled={disabled}
             />
             <label htmlFor="youtube">YouTube</label>
           </div>
@@ -309,6 +312,7 @@ export const VideoUpload = ({
               checked={videoType === "file"}
               className="mr-2"
               onChange={() => onChange(value, "file")}
+              disabled={disabled}
             />
             <label htmlFor="file">Upload de Arquivo</label>
           </div>
@@ -319,6 +323,7 @@ export const VideoUpload = ({
             variant="ghost" 
             size="sm" 
             onClick={handleRemove}
+            disabled={disabled}
           >
             <X className="h-4 w-4 mr-1" /> Remover
           </Button>
@@ -347,11 +352,12 @@ export const VideoUpload = ({
               value={urlInput}
               onChange={(e) => setUrlInput(e.target.value)}
               className="flex-1"
+              disabled={disabled}
             />
             <Button 
               type="button"
               onClick={handleUrlSubmit}
-              disabled={!urlInput}
+              disabled={!urlInput || disabled || uploading}
             >
               Adicionar
             </Button>
@@ -377,15 +383,17 @@ export const VideoUpload = ({
             accept="video/*"
             onChange={handleFileSelected}
             className="hidden"
+            disabled={disabled}
           />
           
           {!value || videoType !== "file" ? (
             <div 
               className={cn(
                 "border-2 border-dashed rounded-md p-6 text-center cursor-pointer hover:border-primary transition-colors",
-                uploading && "pointer-events-none opacity-60"
+                uploading && "pointer-events-none opacity-60",
+                disabled && "opacity-50 pointer-events-none bg-gray-50"
               )}
-              onClick={handleTriggerFileInput}
+              onClick={disabled ? undefined : handleTriggerFileInput}
             >
               {uploading ? (
                 <div className="flex flex-col items-center">
@@ -399,6 +407,7 @@ export const VideoUpload = ({
                       handleCancelUpload();
                     }}
                     className="mt-2"
+                    disabled={disabled}
                   >
                     Cancelar
                   </Button>
@@ -406,8 +415,15 @@ export const VideoUpload = ({
               ) : (
                 <>
                   <Upload className="h-6 w-6 mx-auto mb-2 text-muted-foreground" />
-                  <p className="text-sm font-medium">Clique para fazer upload de vídeo</p>
-                  <p className="text-xs text-muted-foreground mt-1">MP4, MOV, WEBM, AVI (máx: 300MB)</p>
+                  <p className="text-sm font-medium">
+                    {disabled 
+                      ? "Upload de vídeos desativado" 
+                      : "Clique para fazer upload de vídeo"
+                    }
+                  </p>
+                  {!disabled && (
+                    <p className="text-xs text-muted-foreground mt-1">MP4, MOV, WEBM, AVI (máx: 300MB)</p>
+                  )}
                 </>
               )}
             </div>
@@ -421,7 +437,7 @@ export const VideoUpload = ({
                 variant="outline" 
                 size="sm" 
                 onClick={handleTriggerFileInput}
-                disabled={uploading}
+                disabled={disabled || uploading}
               >
                 {uploading ? (
                   <Loader2 className="h-4 w-4 animate-spin" />

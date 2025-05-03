@@ -5,8 +5,9 @@ import { createStoragePublicPolicy } from './rpc';
 
 /**
  * Configura os buckets de armazenamento necessários para o módulo de aprendizado
+ * com sistema de retry e feedback detalhado
  */
-export async function setupLearningStorageBuckets() {
+export async function setupLearningStorageBuckets(retryAttempts = 2) {
   try {
     const bucketsToCreate = [
       STORAGE_BUCKETS.VIDEOS,
@@ -40,24 +41,53 @@ export async function setupLearningStorageBuckets() {
     // Array para armazenar resultados das operações de criação/verificação
     const results = [];
     const readyBuckets = [];
+    const failedBuckets = [];
+    const errors = [];
     
     // Tentar criar ou confirmar cada bucket
     for (const bucketName of bucketsToCreate) {
       try {
         const exists = existingBucketsMap.has(bucketName);
+        let bucketReady = false;
+        let attemptCount = 0;
         
-        if (!exists) {
-          console.log(`Bucket ${bucketName} não existe, tentando criar...`);
-          const { error } = await supabase.storage.createBucket(bucketName, {
-            public: true,
-            fileSizeLimit: 314572800 // 300MB
-          });
+        if (exists) {
+          console.log(`Bucket ${bucketName} já existe!`);
+          bucketReady = true;
+          results.push(true);
+          readyBuckets.push(bucketName);
+          continue; // Pular para o próximo bucket se este já existe
+        }
+        
+        // Loop de tentativas para criar o bucket
+        while (!bucketReady && attemptCount <= retryAttempts) {
+          attemptCount++;
           
-          if (error) {
-            console.error(`Erro ao criar bucket ${bucketName}:`, error);
-            results.push(false);
-          } else {
-            console.log(`Bucket ${bucketName} criado com sucesso!`);
+          try {
+            console.log(`Tentativa ${attemptCount}/${retryAttempts+1} de criar bucket ${bucketName}`);
+            
+            const { error } = await supabase.storage.createBucket(bucketName, {
+              public: true,
+              fileSizeLimit: 314572800 // 300MB
+            });
+            
+            if (error) {
+              console.warn(`Tentativa ${attemptCount} falhou para bucket ${bucketName}:`, error);
+              errors.push(error);
+              
+              if (attemptCount <= retryAttempts) {
+                // Aguardar um pouco antes de tentar novamente
+                await new Promise(resolve => setTimeout(resolve, 500 * attemptCount));
+                continue;
+              } else {
+                // Todas as tentativas falharam
+                throw error;
+              }
+            }
+            
+            // Bucket criado com sucesso
+            console.log(`Bucket ${bucketName} criado com sucesso na tentativa ${attemptCount}!`);
+            bucketReady = true;
             
             // Tentar aplicar políticas de acesso público
             try {
@@ -71,40 +101,56 @@ export async function setupLearningStorageBuckets() {
               results.push(true);
               readyBuckets.push(bucketName);
             }
+            
+            break; // Sair do loop de tentativas
+          } catch (attemptError) {
+            if (attemptCount > retryAttempts) {
+              console.error(`Todas as ${retryAttempts+1} tentativas falharam para bucket ${bucketName}:`, attemptError);
+              failedBuckets.push(bucketName);
+              results.push(false);
+            }
           }
-        } else {
-          console.log(`Bucket ${bucketName} já existe!`);
-          results.push(true);
-          readyBuckets.push(bucketName);
         }
       } catch (bucketError) {
         console.error(`Erro ao processar bucket ${bucketName}:`, bucketError);
+        failedBuckets.push(bucketName);
         results.push(false);
+        errors.push(bucketError);
       }
     }
     
     const allSuccess = results.length === bucketsToCreate.length && results.every(result => result);
     
+    // Mais detalhes no resultado para ajudar no diagnóstico
+    const resultDetails = {
+      success: allSuccess,
+      readyBuckets,
+      failedBuckets,
+      bucketsTotal: bucketsToCreate.length,
+      bucketsReady: readyBuckets.length,
+      bucketsFailed: failedBuckets.length,
+      errors: errors.length > 0 ? errors : undefined,
+    };
+    
     if (allSuccess) {
-      console.log("Todos os buckets foram configurados com sucesso!");
+      console.log("Todos os buckets foram configurados com sucesso!", resultDetails);
       return {
-        success: true,
-        readyBuckets,
+        ...resultDetails,
         message: 'Todos os buckets de armazenamento foram configurados com sucesso'
       };
     } else if (readyBuckets.length > 0) {
-      console.log(`${readyBuckets.length} de ${bucketsToCreate.length} buckets foram configurados`);
+      console.log(`${readyBuckets.length} de ${bucketsToCreate.length} buckets foram configurados`, resultDetails);
       return {
+        ...resultDetails,
         success: false,
-        readyBuckets,
         message: `Configuração parcial: ${readyBuckets.length} de ${bucketsToCreate.length} buckets estão prontos`
       };
     } else {
-      console.error("Nenhum bucket foi configurado com sucesso");
+      console.error("Nenhum bucket foi configurado com sucesso", resultDetails);
       return {
+        ...resultDetails,
         success: false,
-        readyBuckets: [],
-        message: 'Falha ao configurar qualquer bucket de armazenamento'
+        message: 'Falha ao configurar qualquer bucket de armazenamento. Verifique suas permissões ou tente novamente mais tarde.'
       };
     }
   } catch (error) {
@@ -113,32 +159,86 @@ export async function setupLearningStorageBuckets() {
       success: false,
       readyBuckets: [],
       error,
-      message: 'Falha ao configurar buckets de armazenamento'
+      message: `Falha ao configurar buckets de armazenamento: ${error instanceof Error ? error.message : String(error)}`
     };
   }
 }
 
 /**
  * Garante que um bucket existe, criando-o se necessário
+ * com sistema de retry e configuração automática de políticas
  */
-async function ensureBucketExists(bucketName: string): Promise<boolean> {
+export async function ensureBucketExists(bucketName: string, retryAttempts = 1): Promise<boolean> {
   try {
-    const { data: buckets } = await supabase.storage.listBuckets();
-    const exists = buckets?.some(bucket => bucket.name === bucketName);
+    console.log(`Verificando se o bucket ${bucketName} existe...`);
     
-    if (!exists) {
-      const { error } = await supabase.storage.createBucket(bucketName, {
-        public: true,
-        fileSizeLimit: 314572800 // 300MB
-      });
+    // Primeiro, verificar se o bucket já existe
+    const { data: buckets, error: listError } = await supabase.storage.listBuckets();
+    
+    if (listError) {
+      console.error(`Erro ao listar buckets para verificar ${bucketName}:`, listError);
+      return false;
+    }
+    
+    // Se o bucket existe, retornar sucesso
+    const exists = buckets?.some(bucket => bucket.name === bucketName);
+    if (exists) {
+      console.log(`Bucket ${bucketName} já existe.`);
+      return true;
+    }
+    
+    // Se não existe, tentar criar
+    console.log(`Bucket ${bucketName} não encontrado, tentando criar...`);
+    
+    let attemptCount = 0;
+    let success = false;
+    
+    // Loop de tentativas para criar o bucket
+    while (!success && attemptCount <= retryAttempts) {
+      attemptCount++;
+      console.log(`Tentativa ${attemptCount}/${retryAttempts+1} de criar bucket ${bucketName}`);
       
-      if (error) {
-        console.error(`Erro ao criar bucket ${bucketName}:`, error);
-        return false;
+      try {
+        const { error } = await supabase.storage.createBucket(bucketName, {
+          public: true,
+          fileSizeLimit: 314572800 // 300MB
+        });
+        
+        if (error) {
+          console.warn(`Tentativa ${attemptCount} falhou para bucket ${bucketName}:`, error);
+          
+          if (attemptCount <= retryAttempts) {
+            // Aguardar um pouco antes de tentar novamente
+            await new Promise(resolve => setTimeout(resolve, 500 * attemptCount));
+            continue;
+          } else {
+            // Todas as tentativas falharam
+            throw error;
+          }
+        }
+        
+        // Bucket criado com sucesso, tentar aplicar política
+        console.log(`Bucket ${bucketName} criado com sucesso na tentativa ${attemptCount}!`);
+        
+        try {
+          await createStoragePublicPolicy(bucketName);
+          console.log(`Políticas públicas aplicadas ao bucket ${bucketName}`);
+        } catch (policyError) {
+          console.error(`Erro ao aplicar políticas ao bucket ${bucketName}:`, policyError);
+          // Mesmo com erro na política, consideramos o bucket criado
+        }
+        
+        success = true;
+        break;
+      } catch (error) {
+        if (attemptCount > retryAttempts) {
+          console.error(`Todas as ${retryAttempts+1} tentativas falharam para bucket ${bucketName}:`, error);
+          throw error;
+        }
       }
     }
     
-    return true;
+    return success;
   } catch (error) {
     console.error(`Erro ao verificar/criar bucket ${bucketName}:`, error);
     return false;

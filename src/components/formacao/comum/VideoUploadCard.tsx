@@ -40,7 +40,7 @@ export const VideoUploadCard: React.FC<VideoUploadCardProps> = ({
   const [isRetrying, setIsRetrying] = useState(false);
   const { user, profile } = useAuth();
   
-  // Usar useEffect em vez de useState para executar a verificação de buckets
+  // Usar useEffect para executar a verificação de buckets
   useEffect(() => {
     checkStorage();
   }, []); // Array de dependências vazio para executar apenas uma vez
@@ -62,11 +62,11 @@ export const VideoUploadCard: React.FC<VideoUploadCardProps> = ({
         // Verificar se pelo menos alguns buckets estão prontos
         console.log("Apenas alguns buckets estão disponíveis:", response.readyBuckets);
         setBucketStatus("partial");
-        setErrorMessage(`Configuração parcial: ${response.message}`);
+        setErrorMessage(`Configuração parcial: ${response.message || "Alguns buckets não estão disponíveis"}`);
       } else {
         console.error("Erro na configuração dos buckets:", response);
         setBucketStatus("error");
-        setErrorMessage(`Erro na configuração: ${response.message}`);
+        setErrorMessage(`Erro na configuração: ${response.message || "Não foi possível configurar os buckets de armazenamento"}`);
       }
     } catch (error) {
       console.error("Erro ao verificar armazenamento:", error);
