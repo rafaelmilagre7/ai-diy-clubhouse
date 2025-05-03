@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Loader2, Upload, AlertCircle, X, Info, Check } from 'lucide-react';
@@ -141,6 +140,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
         description: bucketStatus === "fallback" ? "Usando configuração alternativa de armazenamento" : "Enviando arquivo...",
       });
       
+      // Corrigido: Passar o AbortSignal em vez do AbortController completo
       const result = await uploadFileToStorage(
         file,
         uploadBucket,
@@ -148,7 +148,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
         (progress) => {
           setProgress(progress);
         },
-        abortControllerRef.current
+        abortControllerRef.current.signal // Corrigido: Agora passamos o AbortSignal
       );
       
       console.log('Upload bem-sucedido:', result);

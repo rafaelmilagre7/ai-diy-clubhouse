@@ -72,7 +72,9 @@ export const useFileUpload = ({
         .upload(filePath, file, {
           cacheControl: '3600',
           upsert: true,
-          duplex: "half" // Melhor suporte para uploads grandes
+          duplex: "half", // Melhor suporte para uploads grandes
+          // Se necessário, podemos adicionar o signal do AbortController aqui
+          // signal: abortControllerRef.current.signal
         });
 
       if (error) {

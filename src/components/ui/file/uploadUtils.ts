@@ -84,7 +84,7 @@ export const uploadImageToImgBB = async (
   file: File,
   apiKey: string = '04b796a219698057ded57d20ec1705cf',
   onProgressUpdate?: (progress: number) => void,
-  abortSignal?: AbortSignal
+  abortSignal?: AbortSignal // Corrigido: Agora recebe AbortSignal
 ) => {
   try {
     const formData = new FormData();
@@ -150,7 +150,7 @@ export const uploadFileToStorage = async (
   bucketName: string,
   folderPath: string = '',
   onProgressUpdate?: (progress: number) => void,
-  abortSignal?: AbortSignal
+  abortSignal?: AbortSignal  // Corrigido: Agora recebe AbortSignal
 ) => {
   try {
     console.log(`Tentando upload para ${bucketName}/${folderPath}`, file);
