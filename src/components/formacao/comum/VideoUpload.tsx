@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -25,12 +24,14 @@ interface VideoUploadProps {
     thumbnailUrl?: string
   ) => void;
   videoType?: string;
+  disabled?: boolean; // Adicionada a propriedade disabled que estava faltando
 }
 
 export const VideoUpload: React.FC<VideoUploadProps> = ({
   value,
   onChange,
-  videoType = "youtube"
+  videoType = "youtube",
+  disabled = false // Adicionado valor padrão
 }) => {
   const [activeTab, setActiveTab] = useState(videoType || "youtube");
   const [youtubeUrl, setYoutubeUrl] = useState(videoType === "youtube" ? value : "");
@@ -175,6 +176,7 @@ export const VideoUpload: React.FC<VideoUploadProps> = ({
               variant="ghost" 
               size="sm" 
               onClick={() => onChange("", "youtube")}
+              disabled={disabled}
             >
               <X className="h-4 w-4 mr-1" /> Remover
             </Button>
@@ -182,7 +184,7 @@ export const VideoUpload: React.FC<VideoUploadProps> = ({
           
           {renderVideoPreview()}
           
-          <Alert variant="info" className="bg-blue-50">
+          <Alert variant="success" className="bg-blue-50">
             <div className="flex items-start">
               <Check className="h-4 w-4 mt-1 text-blue-600" />
               <AlertDescription className="ml-2">
@@ -196,10 +198,10 @@ export const VideoUpload: React.FC<VideoUploadProps> = ({
           <CardContent className="p-4">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="youtube">
+                <TabsTrigger value="youtube" disabled={disabled}>
                   <Youtube className="h-4 w-4 mr-2" /> YouTube
                 </TabsTrigger>
-                <TabsTrigger value="direct">
+                <TabsTrigger value="direct" disabled={disabled}>
                   <Film className="h-4 w-4 mr-2" /> Upload de Arquivo
                 </TabsTrigger>
               </TabsList>

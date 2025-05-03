@@ -116,6 +116,7 @@ export interface LearningLesson {
   estimated_time_minutes: number | null;
   ai_assistant_enabled: boolean;
   ai_assistant_prompt: string | null;
+  difficulty_level: string | null;  // Adicionada esta propriedade que estava faltando
   videos?: Array<{
     id?: string;
     title?: string;
