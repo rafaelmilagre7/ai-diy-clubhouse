@@ -1,6 +1,7 @@
 
 import { supabase } from './client';
 import { STORAGE_BUCKETS } from './config';
+import { createStoragePublicPolicy } from './rpc';
 
 /**
  * Configura os buckets de armazenamento necessários para o módulo de aprendizado
@@ -13,23 +14,104 @@ export async function setupLearningStorageBuckets() {
       STORAGE_BUCKETS.PROFILE_AVATARS
     ];
     
-    const results = await Promise.all(
-      bucketsToCreate.map(bucketName => ensureBucketExists(bucketName))
-    );
+    console.log("Tentando configurar buckets de armazenamento:", bucketsToCreate);
     
-    // Identificar quais buckets foram configurados com sucesso
-    const readyBuckets = bucketsToCreate.filter((_, index) => results[index]);
+    // Primeiro verificamos se os buckets existem
+    const { data: existingBuckets, error: listError } = await supabase.storage.listBuckets();
     
-    return {
-      success: results.every(result => result),
-      readyBuckets, // Adicionando essa propriedade para melhor feedback
-      message: 'Buckets de armazenamento configurados com sucesso'
-    };
+    if (listError) {
+      console.error("Erro ao listar buckets:", listError);
+      return {
+        success: false,
+        readyBuckets: [],
+        error: listError,
+        message: `Erro ao verificar buckets existentes: ${listError.message}`
+      };
+    }
+    
+    console.log("Buckets existentes:", existingBuckets?.map(b => b.name));
+    
+    // Mapeamento de buckets existentes para rápida verificação
+    const existingBucketsMap = new Map();
+    existingBuckets?.forEach(bucket => {
+      existingBucketsMap.set(bucket.name, bucket);
+    });
+    
+    // Array para armazenar resultados das operações de criação/verificação
+    const results = [];
+    const readyBuckets = [];
+    
+    // Tentar criar ou confirmar cada bucket
+    for (const bucketName of bucketsToCreate) {
+      try {
+        const exists = existingBucketsMap.has(bucketName);
+        
+        if (!exists) {
+          console.log(`Bucket ${bucketName} não existe, tentando criar...`);
+          const { error } = await supabase.storage.createBucket(bucketName, {
+            public: true,
+            fileSizeLimit: 314572800 // 300MB
+          });
+          
+          if (error) {
+            console.error(`Erro ao criar bucket ${bucketName}:`, error);
+            results.push(false);
+          } else {
+            console.log(`Bucket ${bucketName} criado com sucesso!`);
+            
+            // Tentar aplicar políticas de acesso público
+            try {
+              await createStoragePublicPolicy(bucketName);
+              console.log(`Políticas públicas aplicadas ao bucket ${bucketName}`);
+              results.push(true);
+              readyBuckets.push(bucketName);
+            } catch (policyError) {
+              console.error(`Erro ao aplicar políticas ao bucket ${bucketName}:`, policyError);
+              // Mesmo com erro na política, consideramos o bucket criado
+              results.push(true);
+              readyBuckets.push(bucketName);
+            }
+          }
+        } else {
+          console.log(`Bucket ${bucketName} já existe!`);
+          results.push(true);
+          readyBuckets.push(bucketName);
+        }
+      } catch (bucketError) {
+        console.error(`Erro ao processar bucket ${bucketName}:`, bucketError);
+        results.push(false);
+      }
+    }
+    
+    const allSuccess = results.length === bucketsToCreate.length && results.every(result => result);
+    
+    if (allSuccess) {
+      console.log("Todos os buckets foram configurados com sucesso!");
+      return {
+        success: true,
+        readyBuckets,
+        message: 'Todos os buckets de armazenamento foram configurados com sucesso'
+      };
+    } else if (readyBuckets.length > 0) {
+      console.log(`${readyBuckets.length} de ${bucketsToCreate.length} buckets foram configurados`);
+      return {
+        success: false,
+        readyBuckets,
+        message: `Configuração parcial: ${readyBuckets.length} de ${bucketsToCreate.length} buckets estão prontos`
+      };
+    } else {
+      console.error("Nenhum bucket foi configurado com sucesso");
+      return {
+        success: false,
+        readyBuckets: [],
+        message: 'Falha ao configurar qualquer bucket de armazenamento'
+      };
+    }
   } catch (error) {
     console.error('Erro ao configurar buckets de armazenamento:', error);
     return {
       success: false,
-      readyBuckets: [], // Adicionando array vazio em caso de erro
+      readyBuckets: [],
       error,
       message: 'Falha ao configurar buckets de armazenamento'
     };

@@ -6,10 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertTriangle, Upload, LinkIcon, Info } from "lucide-react";
+import { AlertTriangle, Upload, LinkIcon, Info, RefreshCw } from "lucide-react";
 import { VideoUpload } from "./VideoUpload";
 import { setupLearningStorageBuckets } from "@/lib/supabase/storage";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/auth";
 
 interface VideoUploadCardProps {
   onVideoAdded: (videoData: {
@@ -36,6 +37,8 @@ export const VideoUploadCard: React.FC<VideoUploadCardProps> = ({
   const [bucketStatus, setBucketStatus] = useState<"checking" | "ready" | "error" | "partial">("checking");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isRetrying, setIsRetrying] = useState(false);
+  const { user, profile } = useAuth();
   
   // Usar useEffect em vez de useState para executar a verificação de buckets
   useEffect(() => {
@@ -45,21 +48,44 @@ export const VideoUploadCard: React.FC<VideoUploadCardProps> = ({
   const checkStorage = async () => {
     try {
       setBucketStatus("checking");
+      setErrorMessage(null);
+      
+      console.log("Verificando estado dos buckets de armazenamento...");
       const response = await setupLearningStorageBuckets();
       
+      console.log("Resposta da verificação de buckets:", response);
+      
       if (response.success) {
+        console.log("Todos os buckets estão prontos para uso");
         setBucketStatus("ready");
       } else if (response.readyBuckets && response.readyBuckets.length > 0) {
         // Verificar se pelo menos alguns buckets estão prontos
+        console.log("Apenas alguns buckets estão disponíveis:", response.readyBuckets);
         setBucketStatus("partial");
         setErrorMessage(`Configuração parcial: ${response.message}`);
       } else {
+        console.error("Erro na configuração dos buckets:", response);
         setBucketStatus("error");
         setErrorMessage(`Erro na configuração: ${response.message}`);
       }
     } catch (error) {
+      console.error("Erro ao verificar armazenamento:", error);
       setBucketStatus("error");
       setErrorMessage(`Erro ao verificar armazenamento: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  };
+
+  const retryBucketSetup = async () => {
+    setIsRetrying(true);
+    toast.info("Tentando reconfigurar o armazenamento...");
+    
+    try {
+      await checkStorage();
+      toast.success("Verificação de armazenamento concluída");
+    } catch (error) {
+      toast.error("Falha ao verificar armazenamento");
+    } finally {
+      setIsRetrying(false);
     }
   };
   
@@ -90,6 +116,9 @@ export const VideoUploadCard: React.FC<VideoUploadCardProps> = ({
     setTitle("");
     setDescription("");
     setYoutubeUrl("");
+    
+    // Mostrar feedback de sucesso
+    toast.success("Vídeo adicionado com sucesso!");
   };
   
   const handleAddYouTubeVideo = async () => {
@@ -125,7 +154,6 @@ export const VideoUploadCard: React.FC<VideoUploadCardProps> = ({
         0
       );
       
-      toast.success("Vídeo do YouTube adicionado com sucesso");
     } catch (error) {
       console.error("Erro ao adicionar vídeo do YouTube:", error);
       toast.error("Erro ao adicionar vídeo do YouTube");
@@ -133,6 +161,52 @@ export const VideoUploadCard: React.FC<VideoUploadCardProps> = ({
       setIsSubmitting(false);
     }
   };
+  
+  // Verificar se o usuário está autenticado
+  const isAuthenticated = !!user;
+  const isAdmin = profile?.role === 'admin' || profile?.role === 'formacao';
+  
+  // Renderizar mensagem de erro de autenticação se necessário
+  if (!isAuthenticated) {
+    return (
+      <Card className="border-2 border-dashed border-red-300">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-red-500 flex items-center text-xl">
+            <AlertTriangle className="h-5 w-5 mr-2" />
+            Erro de Autenticação
+          </CardTitle>
+          <CardDescription className="text-base">
+            Você precisa estar autenticado para adicionar vídeos
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Alert variant="destructive">
+            <AlertTriangle className="h-4 w-4 mr-2" />
+            <AlertDescription>
+              Sua sessão expirou ou você não tem permissão para esta operação. Tente fazer login novamente.
+            </AlertDescription>
+          </Alert>
+        </CardContent>
+      </Card>
+    );
+  }
+  
+  // Verificar se o usuário tem permissões adequadas
+  if (!isAdmin) {
+    return (
+      <Card className="border-2 border-dashed border-yellow-300">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-yellow-500 flex items-center text-xl">
+            <AlertTriangle className="h-5 w-5 mr-2" />
+            Permissão Insuficiente
+          </CardTitle>
+          <CardDescription className="text-base">
+            Você não tem permissões para adicionar vídeos ao sistema
+          </CardDescription>
+        </CardHeader>
+      </Card>
+    );
+  }
   
   return (
     <Card className="border-2 border-dashed border-[#0ABAB5]/30 hover:border-[#0ABAB5]/50 transition-all">
@@ -147,19 +221,56 @@ export const VideoUploadCard: React.FC<VideoUploadCardProps> = ({
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Alertas de status do storage */}
+        {bucketStatus === "checking" && (
+          <Alert>
+            <div className="flex items-center">
+              <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+              <AlertDescription>Verificando configuração do armazenamento...</AlertDescription>
+            </div>
+          </Alert>
+        )}
+        
         {bucketStatus === "error" && (
           <Alert variant="destructive">
             <AlertTriangle className="h-4 w-4 mr-2" />
-            <AlertDescription>{errorMessage || "Erro na configuração do armazenamento"}</AlertDescription>
+            <div className="flex-1">
+              <AlertDescription>{errorMessage || "Erro na configuração do armazenamento"}</AlertDescription>
+              <div className="mt-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={retryBucketSetup}
+                  disabled={isRetrying}
+                  className="flex items-center"
+                >
+                  {isRetrying && <RefreshCw className="h-3 w-3 mr-2 animate-spin" />}
+                  Tentar novamente
+                </Button>
+              </div>
+            </div>
           </Alert>
         )}
         
         {bucketStatus === "partial" && (
           <Alert variant="warning">
             <Info className="h-4 w-4 mr-2" />
-            <AlertDescription>
-              {errorMessage || "Configuração parcial do armazenamento. Alguns recursos podem não funcionar corretamente."}
-            </AlertDescription>
+            <div className="flex-1">
+              <AlertDescription>
+                {errorMessage || "Configuração parcial do armazenamento. Alguns recursos podem não funcionar corretamente."}
+              </AlertDescription>
+              <div className="mt-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={retryBucketSetup}
+                  disabled={isRetrying}
+                  className="flex items-center"
+                >
+                  {isRetrying && <RefreshCw className="h-3 w-3 mr-2 animate-spin" />}
+                  Tentar reconfigurar
+                </Button>
+              </div>
+            </div>
           </Alert>
         )}
         
@@ -210,6 +321,7 @@ export const VideoUploadCard: React.FC<VideoUploadCardProps> = ({
               <Button 
                 onClick={handleAddYouTubeVideo}
                 disabled={!youtubeUrl.trim() || isSubmitting}
+                className="whitespace-nowrap"
               >
                 {isSubmitting ? "Adicionando..." : "Adicionar"}
               </Button>
@@ -224,7 +336,14 @@ export const VideoUploadCard: React.FC<VideoUploadCardProps> = ({
               value=""
               onChange={handleVideoUploaded}
               videoType="file"
+              disabled={bucketStatus === "error"}
             />
+            {bucketStatus !== "ready" && bucketStatus !== "checking" && (
+              <p className="text-sm text-amber-600">
+                Nota: O upload de arquivos de vídeo pode estar limitado devido a problemas de configuração do armazenamento.
+                O upload de vídeos do YouTube continua disponível.
+              </p>
+            )}
           </TabsContent>
         </Tabs>
       </CardContent>
