@@ -1,6 +1,6 @@
 
 import { createClient } from '@supabase/supabase-js';
-import type { Database } from './supabase/types';
+import type { Database } from './supabase/types/database.types';
 import { createStoragePublicPolicy } from './supabase/rpc';
 
 // Reexportar todos os tipos necessários
@@ -10,6 +10,7 @@ export * from './supabase/storage';
 export * from './supabase/rpc';
 export * from './supabase/config';
 
+// Criação do cliente Supabase
 export const supabase = createClient<Database>(
   import.meta.env.VITE_SUPABASE_URL,
   import.meta.env.VITE_SUPABASE_ANON_KEY

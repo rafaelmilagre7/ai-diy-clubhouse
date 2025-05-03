@@ -1,3 +1,6 @@
+
+export * from './types/database.types';
+
 export type UserRole = 'admin' | 'member' | 'formacao';
 
 export interface UserProfile {
@@ -160,6 +163,10 @@ export interface LearningLessonVideo {
   duration_seconds: number | null;
   created_at: string;
   order_index: number;
+  video_type?: string; // Adicionado
+  file_size_bytes?: number | null; // Adicionado
+  video_file_path?: string | null; // Adicionado
+  video_file_name?: string | null; // Adicionado
 }
 
 export interface LearningComment {
