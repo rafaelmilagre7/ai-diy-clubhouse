@@ -1,4 +1,3 @@
-
 export * from './types/database.types';
 
 export type UserRole = 'admin' | 'member' | 'formacao';
@@ -163,10 +162,10 @@ export interface LearningLessonVideo {
   duration_seconds: number | null;
   created_at: string;
   order_index: number;
-  video_type?: string; // Adicionado
-  file_size_bytes?: number | null; // Adicionado
-  video_file_path?: string | null; // Adicionado
-  video_file_name?: string | null; // Adicionado
+  video_type?: string;
+  file_size_bytes?: number | null;
+  video_file_path?: string | null;
+  video_file_name?: string | null;
 }
 
 export interface LearningComment {

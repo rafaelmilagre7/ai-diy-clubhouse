@@ -5,3 +5,11 @@ export * from './types';
 export * from './rpc';
 export * from './storage';
 export * from './config';
+
+// Exportações explícitas das funções de storage para evitar problemas de importação circular
+export { 
+  getYoutubeVideoId, 
+  getYoutubeThumbnailUrl, 
+  formatVideoDuration,
+  setupLearningStorageBuckets 
+} from './storage';
