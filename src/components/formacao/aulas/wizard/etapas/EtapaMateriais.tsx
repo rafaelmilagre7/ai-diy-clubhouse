@@ -11,7 +11,7 @@ import { AulaFormValues } from "../AulaStepWizard";
 import { Button } from "@/components/ui/button";
 import { FileUpload } from "@/components/ui/file-upload";
 import { Input } from "@/components/ui/input";
-import { Plus, File, Link as LinkIcon, Trash, AlertCircle } from "lucide-react";
+import { Plus, File, Link as LinkIcon, Trash, AlertCircle, RefreshCw } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ensureBucketExists } from "@/lib/supabase/storage";
 import { STORAGE_BUCKETS } from "@/lib/supabase/config";
@@ -27,10 +27,12 @@ interface EtapaMateriaisProps {
 const EtapaMateriais: React.FC<EtapaMateriaisProps> = ({
   form,
   onNext,
-  onPrevious
+  onPrevious,
+  isSaving
 }) => {
   const [bucketStatus, setBucketStatus] = useState<"checking" | "ready" | "error" | "partial">("checking");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isRetrying, setIsRetrying] = useState(false);
 
   // Verificar status do bucket quando o componente montar
   useEffect(() => {
@@ -50,9 +52,20 @@ const EtapaMateriais: React.FC<EtapaMateriaisProps> = ({
         setBucketStatus("ready");
         setErrorMessage(null);
       } else {
-        console.error("Bucket de materiais não está disponível");
-        setBucketStatus("error");
-        setErrorMessage("Não foi possível configurar o armazenamento para materiais.");
+        console.log("Bucket de materiais não está disponível, tentando fallback");
+        
+        // Tentar verificar o bucket de fallback
+        const fallbackReady = await ensureBucketExists(STORAGE_BUCKETS.FALLBACK);
+        
+        if (fallbackReady) {
+          console.log("Bucket fallback disponível");
+          setBucketStatus("partial");
+          setErrorMessage("Usando armazenamento alternativo para materiais.");
+        } else {
+          console.error("Nenhum bucket está disponível");
+          setBucketStatus("error");
+          setErrorMessage("Não foi possível configurar o armazenamento para materiais.");
+        }
       }
     } catch (error) {
       console.error("Erro ao verificar bucket de materiais:", error);
@@ -62,14 +75,18 @@ const EtapaMateriais: React.FC<EtapaMateriaisProps> = ({
   };
 
   const handleRetryBucketSetup = async () => {
+    setIsRetrying(true);
     toast.info("Verificando configuração de armazenamento...");
     await checkBucketStatus();
     
     if (bucketStatus === "ready") {
       toast.success("Armazenamento configurado com sucesso!");
+    } else if (bucketStatus === "partial") {
+      toast.success("Configuração parcial pronta. Usando armazenamento alternativo.");
     } else {
       toast.error("Não foi possível configurar o armazenamento. Serão usados buckets alternativos.");
     }
+    setIsRetrying(false);
   };
 
   const handleContinue = async () => {
@@ -124,9 +141,17 @@ const EtapaMateriais: React.FC<EtapaMateriaisProps> = ({
                     variant="outline"
                     size="sm"
                     onClick={handleRetryBucketSetup}
+                    disabled={isRetrying}
                     className="flex items-center"
                   >
-                    Tentar novamente
+                    {isRetrying ? (
+                      <>
+                        <RefreshCw className="h-3 w-3 mr-2 animate-spin" />
+                        Tentando...
+                      </>
+                    ) : (
+                      "Tentar novamente"
+                    )}
                   </Button>
                 </div>
               </div>
@@ -138,16 +163,24 @@ const EtapaMateriais: React.FC<EtapaMateriaisProps> = ({
               <AlertCircle className="h-4 w-4 mr-2" />
               <div className="flex-1">
                 <AlertDescription>
-                  {errorMessage || "Configuração parcial do armazenamento. Alguns recursos podem não funcionar corretamente."}
+                  {errorMessage || "Configuração parcial do armazenamento. Usando bucket alternativo."}
                 </AlertDescription>
                 <div className="mt-2">
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={handleRetryBucketSetup}
+                    disabled={isRetrying}
                     className="flex items-center"
                   >
-                    Tentar reconfigurar
+                    {isRetrying ? (
+                      <>
+                        <RefreshCw className="h-3 w-3 mr-2 animate-spin" />
+                        Tentando...
+                      </>
+                    ) : (
+                      "Tentar reconfigurar"
+                    )}
                   </Button>
                 </div>
               </div>
@@ -201,7 +234,7 @@ const EtapaMateriais: React.FC<EtapaMateriaisProps> = ({
                       <div>
                         <FormLabel className="text-sm">Upload do Arquivo</FormLabel>
                         <FileUpload
-                          bucketName={bucketStatus === "ready" ? STORAGE_BUCKETS.LEARNING_RESOURCES : STORAGE_BUCKETS.SOLUTION_FILES}
+                          bucketName={bucketStatus === "ready" ? STORAGE_BUCKETS.LEARNING_RESOURCES : STORAGE_BUCKETS.FALLBACK}
                           folder="materials"
                           accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.zip,.rar,.txt"
                           onUploadComplete={(url, fileName) => {
@@ -268,6 +301,7 @@ const EtapaMateriais: React.FC<EtapaMateriaisProps> = ({
           <Button 
             type="button" 
             onClick={handleContinue}
+            disabled={isSaving}
           >
             Continuar
           </Button>

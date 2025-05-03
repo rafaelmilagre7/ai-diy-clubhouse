@@ -58,7 +58,8 @@ export const FileUpload: React.FC<FileUploadProps> = ({
         console.log(`Bucket ${bucketName} indisponível, usando fallback`);
         
         // Verificar se o bucket SOLUTION_FILES existe ou pode ser criado
-        const fallbackBucketExists = await ensureBucketExists(STORAGE_BUCKETS.SOLUTION_FILES);
+        const fallbackBucket = STORAGE_BUCKETS.FALLBACK;
+        const fallbackBucketExists = await ensureBucketExists(fallbackBucket);
         
         if (fallbackBucketExists) {
           setBucketStatus("fallback");
@@ -96,7 +97,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
     if (bucketStatus === "ready") {
       return bucketName;
     } else if (bucketStatus === "fallback") {
-      return STORAGE_BUCKETS.SOLUTION_FILES;
+      return STORAGE_BUCKETS.FALLBACK;
     }
     // Em caso de erro tentar usar o bucket original de qualquer forma
     return bucketName;

@@ -6,7 +6,8 @@ export const STORAGE_BUCKETS = {
   VIDEOS: 'learning_videos',
   SOLUTION_FILES: 'solution_files',
   PROFILE_AVATARS: 'avatars',
-  LEARNING_RESOURCES: 'learning_resources', // Novo bucket para materiais de aprendizado
+  LEARNING_RESOURCES: 'learning_resources', // Bucket para materiais de aprendizado
+  FALLBACK: 'solution_files', // Bucket de fallback (deve existir na maioria das configurações)
 };
 
 // Limites de tamanho de arquivos (em bytes)
