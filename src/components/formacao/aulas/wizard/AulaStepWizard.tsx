@@ -18,6 +18,7 @@ import EtapaPublicacao from "./etapas/EtapaPublicacao";
 
 // Componente indicador de progresso
 import WizardProgress from "./WizardProgress";
+import { setupLearningStorageBuckets } from "@/lib/supabase/storage";
 
 // Schema completo para validação
 const aulaFormSchema = z.object({
@@ -42,6 +43,7 @@ const aulaFormSchema = z.object({
       filePath: z.string().optional(),
       fileSize: z.number().optional(),
       duration_seconds: z.number().optional(),
+      thumbnail_url: z.string().optional(),
     })
   ).optional().default([]),
   
@@ -82,6 +84,7 @@ const AulaStepWizard: React.FC<AulaStepWizardProps> = ({
 }) => {
   const [modules, setModules] = useState<LearningModule[]>([]);
   const [isSaving, setIsSaving] = useState(false);
+  const [storageReady, setStorageReady] = useState(false);
   const { 
     currentStep, 
     stepTitles, 
@@ -110,6 +113,25 @@ const AulaStepWizard: React.FC<AulaStepWizardProps> = ({
     defaultValues,
     mode: "onChange",
   });
+
+  // Verificar configuração de storage ao inicializar
+  useEffect(() => {
+    const checkStorageConfig = async () => {
+      try {
+        const result = await setupLearningStorageBuckets();
+        setStorageReady(result.success);
+        
+        if (!result.success) {
+          console.warn("Configuração de armazenamento incompleta:", result.message);
+          toast.warning("Configuração de armazenamento incompleta. Alguns recursos podem não funcionar corretamente.");
+        }
+      } catch (error) {
+        console.error("Erro ao verificar configuração de armazenamento:", error);
+      }
+    };
+    
+    checkStorageConfig();
+  }, []);
 
   // Buscar módulos disponíveis ao carregar o componente
   useEffect(() => {
@@ -192,7 +214,7 @@ const AulaStepWizard: React.FC<AulaStepWizardProps> = ({
             video_file_name: video.fileName || null,
             file_size_bytes: video.fileSize || null,
             duration_seconds: video.duration_seconds || null,
-            thumbnail_url: null
+            thumbnail_url: video.thumbnail_url || null
           };
           
           console.log(`Salvando vídeo ${i + 1}:`, videoData);
@@ -254,13 +276,68 @@ const AulaStepWizard: React.FC<AulaStepWizardProps> = ({
     }
   };
 
-  // Função para salvar recursos (implementação futura)
+  // Função para salvar recursos de materiais
   const saveResources = async (lessonId: string, resources: any[]) => {
     try {
-      // Implementar salvamento de recursos
-      // Essa funcionalidade será ampliada na implementação de materiais
+      if (!resources || resources.length === 0) {
+        return true;
+      }
+      
+      console.log("Salvando materiais para a aula:", lessonId);
+      console.log("Materiais a salvar:", resources);
+      
+      let successCount = 0;
+      let errorCount = 0;
+      
+      for (let i = 0; i < resources.length; i++) {
+        const resource = resources[i];
+        
+        if (!resource.url) continue;
+        
+        const resourceData = {
+          lesson_id: lessonId,
+          name: resource.title || "Material sem nome",
+          description: resource.description || null,
+          file_url: resource.url,
+          file_type: resource.type || "document",
+          order_index: i,
+          file_size_bytes: resource.fileSize || null
+        };
+        
+        try {
+          if (resource.id) {
+            // Atualizar recurso existente
+            const { error } = await supabase
+              .from('learning_resources')
+              .update(resourceData)
+              .eq('id', resource.id);
+              
+            if (error) throw error;
+            successCount++;
+          } else {
+            // Criar novo recurso
+            const { error } = await supabase
+              .from('learning_resources')
+              .insert([resourceData]);
+              
+            if (error) throw error;
+            successCount++;
+          }
+        } catch (err) {
+          console.error(`Erro ao salvar material ${i + 1}:`, err);
+          errorCount++;
+        }
+      }
+      
+      if (errorCount > 0) {
+        toast.warning(`Nem todos os materiais foram salvos. ${successCount} salvos, ${errorCount} com erro.`);
+      }
+      
+      return successCount > 0;
     } catch (error) {
-      console.error("Erro ao salvar recursos:", error);
+      console.error("Erro ao salvar materiais:", error);
+      toast.error("Ocorreu um erro ao salvar os materiais.");
+      return false;
     }
   };
 
@@ -268,6 +345,9 @@ const AulaStepWizard: React.FC<AulaStepWizardProps> = ({
   const onSubmit = async (values: AulaFormValues) => {
     try {
       setIsSaving(true);
+      
+      // Usar let para poder reatribuir o valor caso uma nova aula seja criada
+      let lessonId = aula?.id;
       
       console.log("Dados do formulário:", values);
       
@@ -290,7 +370,6 @@ const AulaStepWizard: React.FC<AulaStepWizardProps> = ({
       
       console.log("Dados completos a serem salvos:", lessonData);
       
-      let lessonId = aula?.id;
       let salvamentoAulaSucesso = false;
       
       if (lessonId) {
@@ -323,8 +402,8 @@ const AulaStepWizard: React.FC<AulaStepWizardProps> = ({
         // Salvar vídeos e materiais
         const videosSalvos = await saveVideos(lessonId, values.videos || []);
         
-        // Salvar recursos (implementação futura)
-        // await saveResources(lessonId, values.resources || []);
+        // Salvar recursos (materiais)
+        const materiaisSalvos = await saveResources(lessonId, values.resources || []);
         
         if (videosSalvos) {
           toast.success(aula ? "Aula atualizada com sucesso!" : "Aula criada com sucesso!");
