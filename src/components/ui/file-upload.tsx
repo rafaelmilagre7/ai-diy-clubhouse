@@ -1,10 +1,12 @@
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Loader2, Upload, AlertCircle, X } from 'lucide-react';
+import { Loader2, Upload, AlertCircle, X, Info } from 'lucide-react';
 import { uploadFileToStorage } from '@/components/ui/file/uploadUtils';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { ensureBucketExists } from '@/lib/supabase/storage';
+import { STORAGE_BUCKETS } from '@/lib/supabase/config';
 
 interface FileUploadProps {
   bucketName: string;
@@ -31,9 +33,44 @@ export const FileUpload: React.FC<FileUploadProps> = ({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [progress, setProgress] = useState(0);
   const [fileName, setFileName] = useState<string | null>(null);
+  const [bucketStatus, setBucketStatus] = useState<"checking" | "ready" | "error" | "fallback">("checking");
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
+  
+  // Verificar o status do bucket quando o componente montar
+  useEffect(() => {
+    checkBucket();
+  }, [bucketName]);
+  
+  const checkBucket = async () => {
+    try {
+      setBucketStatus("checking");
+      
+      // Verificar se o bucket especificado existe
+      const exists = await ensureBucketExists(bucketName);
+      
+      if (exists) {
+        console.log(`Bucket ${bucketName} está pronto para uso`);
+        setBucketStatus("ready");
+      } else {
+        // Se não puder criar o bucket especificado, tentar usar um fallback conhecido
+        console.log(`Bucket ${bucketName} indisponível, usando fallback`);
+        
+        // Verificar se o bucket SOLUTION_FILES existe ou pode ser criado
+        const fallbackBucketExists = await ensureBucketExists(STORAGE_BUCKETS.SOLUTION_FILES);
+        
+        if (fallbackBucketExists) {
+          setBucketStatus("fallback");
+        } else {
+          setBucketStatus("error");
+        }
+      }
+    } catch (error) {
+      console.error("Erro ao verificar bucket:", error);
+      setBucketStatus("error");
+    }
+  };
   
   const handleButtonClick = () => {
     // Acionar o clique no input de arquivo
@@ -54,10 +91,29 @@ export const FileUpload: React.FC<FileUploadProps> = ({
     }
   };
   
+  // Determinar qual bucket usar para o upload
+  const getUploadBucket = () => {
+    if (bucketStatus === "ready") {
+      return bucketName;
+    } else if (bucketStatus === "fallback") {
+      return STORAGE_BUCKETS.SOLUTION_FILES;
+    }
+    // Em caso de erro tentar usar o bucket original de qualquer forma
+    return bucketName;
+  };
+  
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     
     if (!file) return;
+    
+    if (bucketStatus === "checking") {
+      toast({
+        title: 'Aguarde',
+        description: 'Verificando configuração de armazenamento...',
+      });
+      await checkBucket(); // Garantir que a verificação de bucket está completa
+    }
     
     // Validações
     const fileSizeMB = file.size / (1024 * 1024);
@@ -78,12 +134,21 @@ export const FileUpload: React.FC<FileUploadProps> = ({
     
     try {
       abortControllerRef.current = new AbortController();
-      console.log(`Iniciando upload para bucket: ${bucketName}, pasta: ${folder}`);
+      
+      // Determinar qual bucket usar
+      const uploadBucket = getUploadBucket();
+      const actualFolder = bucketStatus === "fallback" ? `${bucketName}/${folder}`.trim() : folder;
+      
+      console.log(`Iniciando upload para bucket: ${uploadBucket}, pasta: ${actualFolder}`);
+      toast({
+        title: 'Iniciando upload',
+        description: bucketStatus === "fallback" ? "Usando configuração alternativa de armazenamento" : "Enviando arquivo...",
+      });
       
       const result = await uploadFileToStorage(
         file,
-        bucketName,
-        folder,
+        uploadBucket,
+        actualFolder,
         (progress) => {
           setProgress(progress);
         }
@@ -102,7 +167,11 @@ export const FileUpload: React.FC<FileUploadProps> = ({
       console.error('Erro ao fazer upload:', error);
       
       let displayMessage = error.message || 'Erro ao fazer upload do arquivo.';
-      if (error.message?.includes('timeout') || error.message?.includes('network')) {
+      
+      // Mensagens de erro específicas para problemas comuns
+      if (error.message?.includes('bucket') && error.message?.includes('not found')) {
+        displayMessage = 'Não foi possível encontrar o local de armazenamento. Tente novamente mais tarde ou entre em contato com o suporte.';
+      } else if (error.message?.includes('timeout') || error.message?.includes('network')) {
         displayMessage = 'Tempo limite excedido ou problema de conexão. Tente novamente com um arquivo menor ou verifique sua conexão.';
       }
       
@@ -127,6 +196,9 @@ export const FileUpload: React.FC<FileUploadProps> = ({
         {fieldLabel && (
           <label className="text-sm text-muted-foreground mb-2">
             {fieldLabel}
+            {bucketStatus === "fallback" && (
+              <span className="ml-2 text-amber-600 text-xs">(Usando armazenamento alternativo)</span>
+            )}
           </label>
         )}
         <div className="flex items-center gap-2">
@@ -134,13 +206,18 @@ export const FileUpload: React.FC<FileUploadProps> = ({
             type="button"
             variant="outline"
             className={`relative ${isUploading ? 'opacity-70' : ''}`}
-            disabled={isUploading}
+            disabled={isUploading || bucketStatus === "error"}
             onClick={handleButtonClick}
           >
             {isUploading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Enviando... {progress}%
+              </>
+            ) : bucketStatus === "checking" ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Verificando...
               </>
             ) : (
               <>
@@ -155,7 +232,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
             accept={accept}
             onChange={handleFileChange}
             className="hidden"
-            disabled={isUploading}
+            disabled={isUploading || bucketStatus === "error"}
           />
           
           {isUploading && (
@@ -183,6 +260,24 @@ export const FileUpload: React.FC<FileUploadProps> = ({
           )}
         </div>
       </div>
+      
+      {bucketStatus === "fallback" && !errorMessage && !isUploading && (
+        <Alert variant="warning" className="bg-amber-50 border-amber-100 py-2">
+          <Info className="h-4 w-4 text-amber-600" />
+          <AlertDescription className="text-amber-700 text-xs">
+            Usando configuração alternativa de armazenamento. O upload deve funcionar normalmente.
+          </AlertDescription>
+        </Alert>
+      )}
+      
+      {bucketStatus === "error" && !errorMessage && (
+        <Alert variant="destructive" className="py-2">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            Não foi possível configurar o armazenamento. Tente novamente mais tarde.
+          </AlertDescription>
+        </Alert>
+      )}
       
       {fileName && !isUploading && !errorMessage && (
         <div className="text-sm text-muted-foreground">

@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   Form,
   FormLabel,
@@ -11,7 +11,11 @@ import { AulaFormValues } from "../AulaStepWizard";
 import { Button } from "@/components/ui/button";
 import { FileUpload } from "@/components/ui/file-upload";
 import { Input } from "@/components/ui/input";
-import { Plus, File, Link as LinkIcon, Trash } from "lucide-react";
+import { Plus, File, Link as LinkIcon, Trash, AlertCircle } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { ensureBucketExists } from "@/lib/supabase/storage";
+import { STORAGE_BUCKETS } from "@/lib/supabase/config";
+import { toast } from "sonner";
 
 interface EtapaMateriaisProps {
   form: UseFormReturn<AulaFormValues>;
@@ -25,6 +29,49 @@ const EtapaMateriais: React.FC<EtapaMateriaisProps> = ({
   onNext,
   onPrevious
 }) => {
+  const [bucketStatus, setBucketStatus] = useState<"checking" | "ready" | "error" | "partial">("checking");
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // Verificar status do bucket quando o componente montar
+  useEffect(() => {
+    checkBucketStatus();
+  }, []);
+
+  const checkBucketStatus = async () => {
+    try {
+      setBucketStatus("checking");
+      console.log("Verificando bucket de materiais de aprendizado...");
+      
+      // Tentar verificar e garantir que o bucket existe
+      const bucketReady = await ensureBucketExists(STORAGE_BUCKETS.LEARNING_RESOURCES);
+      
+      if (bucketReady) {
+        console.log("Bucket de materiais está pronto para uso");
+        setBucketStatus("ready");
+        setErrorMessage(null);
+      } else {
+        console.error("Bucket de materiais não está disponível");
+        setBucketStatus("error");
+        setErrorMessage("Não foi possível configurar o armazenamento para materiais.");
+      }
+    } catch (error) {
+      console.error("Erro ao verificar bucket de materiais:", error);
+      setBucketStatus("error");
+      setErrorMessage(`Erro ao verificar armazenamento: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  };
+
+  const handleRetryBucketSetup = async () => {
+    toast.info("Verificando configuração de armazenamento...");
+    await checkBucketStatus();
+    
+    if (bucketStatus === "ready") {
+      toast.success("Armazenamento configurado com sucesso!");
+    } else {
+      toast.error("Não foi possível configurar o armazenamento. Serão usados buckets alternativos.");
+    }
+  };
+
   const handleContinue = async () => {
     onNext();
   };
@@ -56,6 +103,56 @@ const EtapaMateriais: React.FC<EtapaMateriaisProps> = ({
             Adicione arquivos ou links que serão disponibilizados para os alunos
           </FormDescription>
           <FormMessage />
+          
+          {/* Alertas de status do bucket */}
+          {bucketStatus === "checking" && (
+            <Alert className="mb-4">
+              <div className="flex items-center">
+                <div className="animate-spin mr-2 h-4 w-4 border-2 border-primary border-r-transparent rounded-full"></div>
+                <AlertDescription>Verificando configuração do armazenamento...</AlertDescription>
+              </div>
+            </Alert>
+          )}
+          
+          {bucketStatus === "error" && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertCircle className="h-4 w-4 mr-2" />
+              <div className="flex-1">
+                <AlertDescription>{errorMessage || "Erro na configuração do armazenamento"}</AlertDescription>
+                <div className="mt-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleRetryBucketSetup}
+                    className="flex items-center"
+                  >
+                    Tentar novamente
+                  </Button>
+                </div>
+              </div>
+            </Alert>
+          )}
+          
+          {bucketStatus === "partial" && (
+            <Alert variant="warning" className="mb-4">
+              <AlertCircle className="h-4 w-4 mr-2" />
+              <div className="flex-1">
+                <AlertDescription>
+                  {errorMessage || "Configuração parcial do armazenamento. Alguns recursos podem não funcionar corretamente."}
+                </AlertDescription>
+                <div className="mt-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleRetryBucketSetup}
+                    className="flex items-center"
+                  >
+                    Tentar reconfigurar
+                  </Button>
+                </div>
+              </div>
+            </Alert>
+          )}
           
           <div className="space-y-4 mt-4">
             {resources.length === 0 ? (
@@ -104,7 +201,7 @@ const EtapaMateriais: React.FC<EtapaMateriaisProps> = ({
                       <div>
                         <FormLabel className="text-sm">Upload do Arquivo</FormLabel>
                         <FileUpload
-                          bucketName="learning_resources"
+                          bucketName={bucketStatus === "ready" ? STORAGE_BUCKETS.LEARNING_RESOURCES : STORAGE_BUCKETS.SOLUTION_FILES}
                           folder="materials"
                           accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.zip,.rar,.txt"
                           onUploadComplete={(url, fileName) => {
@@ -115,6 +212,11 @@ const EtapaMateriais: React.FC<EtapaMateriaisProps> = ({
                           fieldLabel={resource.fileName || "Selecione um arquivo"}
                           initialFileUrl={resource.url}
                         />
+                        {bucketStatus !== "ready" && (
+                          <p className="text-amber-600 text-xs mt-1">
+                            Usando bucket alternativo devido a problemas de configuração.
+                          </p>
+                        )}
                       </div>
                     ) : (
                       <div>

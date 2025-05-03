@@ -6,6 +6,7 @@ export const STORAGE_BUCKETS = {
   VIDEOS: 'learning_videos',
   SOLUTION_FILES: 'solution_files',
   PROFILE_AVATARS: 'avatars',
+  LEARNING_RESOURCES: 'learning_resources', // Novo bucket para materiais de aprendizado
 };
 
 // Limites de tamanho de arquivos (em bytes)

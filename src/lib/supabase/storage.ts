@@ -12,7 +12,8 @@ export async function setupLearningStorageBuckets(retryAttempts = 2) {
     const bucketsToCreate = [
       STORAGE_BUCKETS.VIDEOS,
       STORAGE_BUCKETS.SOLUTION_FILES,
-      STORAGE_BUCKETS.PROFILE_AVATARS
+      STORAGE_BUCKETS.PROFILE_AVATARS,
+      STORAGE_BUCKETS.LEARNING_RESOURCES // Adicionado novo bucket
     ];
     
     console.log("Tentando configurar buckets de armazenamento:", bucketsToCreate);

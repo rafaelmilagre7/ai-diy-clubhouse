@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { UseFormReturn } from "react-hook-form";
 import { AulaFormValues } from "../AulaStepWizard";
 import {
@@ -17,11 +17,14 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
+  CardFooter,
 } from "@/components/ui/card";
-import { Trash2, Video as VideoIcon } from "lucide-react";
+import { Trash2, Video as VideoIcon, AlertCircle, Info } from "lucide-react";
 import { VideoUploadCard } from "@/components/formacao/comum/VideoUploadCard";
 import { YoutubeEmbed } from "@/components/common/YoutubeEmbed";
-import { getYoutubeVideoId } from "@/lib/supabase/storage";
+import { getYoutubeVideoId, setupLearningStorageBuckets } from "@/lib/supabase/storage";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { toast } from "sonner";
 
 interface EtapaVideosProps {
   form: UseFormReturn<AulaFormValues>;
@@ -36,8 +39,61 @@ const EtapaVideos: React.FC<EtapaVideosProps> = ({
   onPrevious,
   isSaving
 }) => {
+  // Estado para controlar o status dos buckets
+  const [bucketStatus, setBucketStatus] = useState<"checking" | "ready" | "error" | "partial">("checking");
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  
+  // Verificar status dos buckets quando o componente montar
+  useEffect(() => {
+    checkBucketStatus();
+  }, []);
+  
+  const checkBucketStatus = async () => {
+    try {
+      setBucketStatus("checking");
+      const response = await setupLearningStorageBuckets();
+      
+      if (response.success) {
+        setBucketStatus("ready");
+      } else if (response.readyBuckets && response.readyBuckets.length > 0) {
+        // Verificar se pelo menos alguns buckets estão prontos
+        setBucketStatus("partial");
+        setErrorMessage(response.message || "Alguns buckets não estão disponíveis");
+      } else {
+        setBucketStatus("error");
+        setErrorMessage(response.message || "Não foi possível configurar os buckets de armazenamento");
+      }
+    } catch (error) {
+      setBucketStatus("error");
+      setErrorMessage(`Erro ao verificar armazenamento: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  };
+  
+  const handleRetryBucketSetup = async () => {
+    toast.info("Verificando configuração de armazenamento...");
+    await checkBucketStatus();
+    
+    if (bucketStatus === "ready") {
+      toast.success("Armazenamento configurado com sucesso!");
+    } else {
+      toast.error("Configuração de armazenamento incompleta.");
+    }
+  };
+  
   // Obter os vídeos já adicionados do formulário
   const videos = form.watch('videos') || [];
+  
+  // Estado para controle do contador de vídeos
+  const [videoCount, setVideoCount] = useState(videos.length);
+  const MAX_VIDEOS = 3;
+  
+  // Função para verificar se atingiu o limite de vídeos
+  const hasReachedVideoLimit = videoCount >= MAX_VIDEOS;
+  
+  // Atualizar contador quando a lista de vídeos mudar
+  useEffect(() => {
+    setVideoCount(videos.length);
+  }, [videos.length]);
   
   // Função para adicionar um novo vídeo
   const handleAddVideo = (videoData: {
@@ -50,6 +106,12 @@ const EtapaVideos: React.FC<EtapaVideosProps> = ({
     duration_seconds?: number;
     thumbnail_url?: string;
   }) => {
+    // Verificar limite de vídeos
+    if (videos.length >= MAX_VIDEOS) {
+      toast.error(`Limite de ${MAX_VIDEOS} vídeos atingido. Remova algum vídeo antes de adicionar outro.`);
+      return;
+    }
+    
     // Gerar thumbnail para YouTube, se aplicável
     let thumbnailUrl = videoData.thumbnail_url;
     if (videoData.type === "youtube" && !thumbnailUrl) {
@@ -74,6 +136,9 @@ const EtapaVideos: React.FC<EtapaVideosProps> = ({
     // Adicionar novo vídeo ao array de vídeos
     const newVideos = [...videos, newVideo];
     form.setValue('videos', newVideos);
+    setVideoCount(newVideos.length);
+    
+    toast.success(`Vídeo adicionado (${newVideos.length}/${MAX_VIDEOS})`);
   };
   
   // Função para remover um vídeo
@@ -81,6 +146,9 @@ const EtapaVideos: React.FC<EtapaVideosProps> = ({
     const newVideos = [...videos];
     newVideos.splice(index, 1);
     form.setValue('videos', newVideos);
+    setVideoCount(newVideos.length);
+    
+    toast.info(`Vídeo removido (${newVideos.length}/${MAX_VIDEOS})`);
   };
 
   // Continuar para a próxima etapa
@@ -99,16 +167,85 @@ const EtapaVideos: React.FC<EtapaVideosProps> = ({
           name="videos"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Vídeos da Aula</FormLabel>
-              <FormDescription className="mb-2">
-                Adicione vídeos do YouTube ou faça upload de arquivos de vídeo para esta aula
-              </FormDescription>
+              <div className="flex justify-between items-center">
+                <div>
+                  <FormLabel className="text-lg font-medium">Vídeos da Aula</FormLabel>
+                  <FormDescription className="mb-2">
+                    Adicione até 3 vídeos do YouTube ou faça upload de arquivos de vídeo para esta aula
+                  </FormDescription>
+                </div>
+                <div className="bg-muted px-3 py-1 rounded-full text-sm font-medium">
+                  {videoCount}/{MAX_VIDEOS} vídeos
+                </div>
+              </div>
+              
+              {/* Alertas de status do bucket */}
+              {bucketStatus === "checking" && (
+                <Alert className="mb-4">
+                  <div className="flex items-center">
+                    <div className="animate-spin mr-2 h-4 w-4 border-2 border-primary border-r-transparent rounded-full"></div>
+                    <AlertDescription>Verificando configuração do armazenamento...</AlertDescription>
+                  </div>
+                </Alert>
+              )}
+              
+              {bucketStatus === "error" && (
+                <Alert variant="destructive" className="mb-4">
+                  <AlertCircle className="h-4 w-4 mr-2" />
+                  <div className="flex-1">
+                    <AlertDescription>{errorMessage || "Erro na configuração do armazenamento"}</AlertDescription>
+                    <div className="mt-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleRetryBucketSetup}
+                        className="flex items-center"
+                      >
+                        Tentar novamente
+                      </Button>
+                    </div>
+                  </div>
+                </Alert>
+              )}
+              
+              {bucketStatus === "partial" && (
+                <Alert variant="warning" className="mb-4">
+                  <Info className="h-4 w-4 mr-2" />
+                  <div className="flex-1">
+                    <AlertDescription>
+                      {errorMessage || "Configuração parcial do armazenamento. A adição de vídeos por upload pode ser limitada."}
+                    </AlertDescription>
+                    <div className="mt-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleRetryBucketSetup}
+                        className="flex items-center"
+                      >
+                        Tentar reconfigurar
+                      </Button>
+                    </div>
+                  </div>
+                </Alert>
+              )}
+                
               <FormControl>
                 <div className="space-y-6">
-                  {/* Componente de upload de vídeo */}
-                  <VideoUploadCard 
-                    onVideoAdded={handleAddVideo}
-                  />
+                  {/* Componente de upload de vídeo - desativado se atingiu o limite */}
+                  {!hasReachedVideoLimit ? (
+                    <VideoUploadCard 
+                      onVideoAdded={handleAddVideo}
+                      defaultTitle=""
+                    />
+                  ) : (
+                    <Alert className="bg-amber-50 border-amber-100">
+                      <Info className="h-4 w-4 text-amber-600" />
+                      <AlertDescription className="text-amber-700">
+                        Você atingiu o limite máximo de {MAX_VIDEOS} vídeos por aula. 
+                        Para adicionar um novo vídeo, remova algum dos existentes.
+                      </AlertDescription>
+                    </Alert>
+                  )}
                   
                   {/* Lista de vídeos já adicionados */}
                   {videos.length > 0 && (
@@ -118,7 +255,9 @@ const EtapaVideos: React.FC<EtapaVideosProps> = ({
                         {videos.map((video, index) => (
                           <Card key={index} className="overflow-hidden">
                             <CardHeader className="p-3 bg-gray-50 border-b flex items-center justify-between">
-                              <CardTitle className="text-sm font-medium">{video.title}</CardTitle>
+                              <CardTitle className="text-sm font-medium truncate">
+                                {video.title || `Vídeo ${index + 1}`}
+                              </CardTitle>
                               <Button 
                                 variant="ghost" 
                                 size="sm"
@@ -151,16 +290,15 @@ const EtapaVideos: React.FC<EtapaVideosProps> = ({
                                   />
                                 </div>
                               )}
-                              
-                              {/* Informações do vídeo */}
-                              <div className="p-3">
-                                <p className="text-xs text-muted-foreground">
-                                  {video.type === "youtube" ? "YouTube" : "Arquivo de vídeo"}
-                                  {video.fileSize && ` • ${Math.round(video.fileSize / (1024 * 1024))} MB`}
-                                  {video.duration_seconds > 0 && ` • ${Math.floor(video.duration_seconds / 60)}:${(video.duration_seconds % 60).toString().padStart(2, '0')}`}
-                                </p>
-                              </div>
                             </CardContent>
+                            <CardFooter className="p-3 bg-gray-50 border-t">
+                              <p className="text-xs text-muted-foreground flex items-center">
+                                <VideoIcon className="h-3 w-3 mr-1" />
+                                {video.type === "youtube" ? "YouTube" : "Arquivo de vídeo"}
+                                {video.fileSize && ` • ${Math.round(video.fileSize / (1024 * 1024))} MB`}
+                                {video.duration_seconds > 0 && ` • ${Math.floor(video.duration_seconds / 60)}:${(video.duration_seconds % 60).toString().padStart(2, '0')}`}
+                              </p>
+                            </CardFooter>
                           </Card>
                         ))}
                       </div>
