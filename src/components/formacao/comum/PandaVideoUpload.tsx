@@ -107,8 +107,12 @@ export const PandaVideoUpload = ({
       // Verificar tamanho antes do envio
       console.log(`Iniciando upload do vídeo: ${videoFile.name}, tamanho: ${bytesToSize(videoFile.size)}, tipo: ${videoFile.type}`);
 
+      // URL correta da Edge Function do Supabase com o domínio completo
+      const functionUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/upload-panda-video`;
+      console.log("Chamando Edge Function:", functionUrl);
+      
       // Iniciar upload para a Edge Function
-      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/upload-panda-video`, {
+      const response = await fetch(functionUrl, {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${session.access_token}`
