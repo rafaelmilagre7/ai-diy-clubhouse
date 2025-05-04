@@ -1,11 +1,11 @@
+
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { corsHeaders } from "../_shared/cors.ts";
 
-const PANDA_AUTH_URL = "https://auth.api.pandavideo.com.br/oauth2/token";
-const PANDA_API_URL = "https://api.pandavideo.com.br/videos";
+const PANDA_UPLOAD_URL = "https://uploader-us01.pandavideo.com.br/files";
 
-// Implementar sistema de retry para falhas de autenticação
-async function fetchWithRetry(url: string, options: RequestInit, maxRetries = 3) {
+// Implementar sistema de retry para falhas de upload
+async function uploadWithRetry(url: string, options: RequestInit, maxRetries = 3) {
   let lastError;
   
   for (let attempt = 0; attempt < maxRetries; attempt++) {
@@ -25,6 +25,11 @@ async function fetchWithRetry(url: string, options: RequestInit, maxRetries = 3)
   }
   
   throw new Error(`Falha após ${maxRetries} tentativas: ${lastError?.message || 'Erro desconhecido'}`);
+}
+
+// Função auxiliar para codificar em Base64
+function encodeBase64(str: string): string {
+  return btoa(str);
 }
 
 serve(async (req) => {
@@ -73,26 +78,18 @@ serve(async (req) => {
       );
     }
 
-    // Obter as variáveis de ambiente necessárias
-    const clientId = Deno.env.get("PANDA_CLIENT_ID");
-    const clientSecret = Deno.env.get("PANDA_CLIENT_SECRET");
+    // Obter API key do Panda Video
+    const apiKey = Deno.env.get("PANDA_API_KEY");
     
-    console.log("Verificando credenciais Panda Video: Client ID disponível:", !!clientId);
-    console.log("Verificando credenciais Panda Video: Client Secret disponível:", !!clientSecret);
+    console.log("Verificando credencial Panda Video API Key disponível:", !!apiKey);
     
-    if (!clientId || !clientSecret) {
-      console.error("Credenciais do Panda Video não configuradas");
-      console.error("Client ID disponível:", !!clientId);
-      console.error("Client Secret disponível:", !!clientSecret);
+    if (!apiKey) {
+      console.error("API Key do Panda Video não configurada");
       
       return new Response(
         JSON.stringify({ 
           success: false,
-          error: "Configuração incompleta do servidor: credenciais não definidas",
-          details: {
-            clientIdPresent: !!clientId,
-            clientSecretPresent: !!clientSecret
-          }
+          error: "Configuração incompleta do servidor: API Key não definida"
         }),
         { 
           status: 500, 
@@ -130,6 +127,7 @@ serve(async (req) => {
     const videoFile = formData.get("video") as File;
     const videoTitle = formData.get("title") as string || "Vídeo sem título";
     const isPrivate = formData.get("private") === "true";
+    const folderId = formData.get("folder_id") as string || "";
 
     if (!videoFile) {
       console.log("Nenhum arquivo de vídeo encontrado no FormData");
@@ -151,168 +149,42 @@ serve(async (req) => {
     console.log(`Processando upload do vídeo: ${videoTitle} (${videoFile.size} bytes)`);
     console.log(`Tipo do arquivo: ${videoFile.type}`);
 
-    // 1. Autenticar com o Panda Video para obter token
-    console.log("Iniciando autenticação com Panda Video API");
-    console.log("Usando credenciais: ID=" + clientId.substring(0, 3) + "..." + (clientId.length > 6 ? clientId.substring(clientId.length - 3) : ""));
-      
-    let tokenResponse;
-    try {
-      const authBody = new URLSearchParams({
-        grant_type: "client_credentials",
-        client_id: clientId,
-        client_secret: clientSecret
-      });
-      
-      console.log("Enviando solicitação de autenticação para:", PANDA_AUTH_URL);
-      
-      tokenResponse = await fetchWithRetry(PANDA_AUTH_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded"
-        },
-        body: authBody
-      });
-      
-      console.log("Resposta de autenticação recebida: Status", tokenResponse.status);
-    } catch (authError) {
-      console.error("Erro na requisição para autenticação:", authError);
-      return new Response(
-        JSON.stringify({ 
-          success: false,
-          error: "Falha na conexão com o serviço de autenticação",
-          details: authError.message 
-        }),
-        { 
-          status: 500, 
-          headers: { 
-            ...corsHeaders, 
-            "Content-Type": "application/json" 
-          } 
-        }
-      );
-    }
+    // Gerar um UUID para o vídeo
+    const videoId = crypto.randomUUID();
+    console.log("ID de vídeo gerado:", videoId);
 
-    if (!tokenResponse.ok) {
-      let tokenErrorText;
-      try {
-        tokenErrorText = await tokenResponse.text();
-        console.error("Resposta de erro do serviço de autenticação:", tokenErrorText);
-      } catch (e) {
-        tokenErrorText = "Erro desconhecido na autenticação";
-        console.error("Não foi possível ler resposta de erro da autenticação:", e);
-      }
-      
-      // Analisar se é um problema de credenciais
-      const isCredentialProblem = tokenErrorText.includes('invalid_client') || 
-                                 tokenErrorText.includes('unauthorized') ||
-                                 tokenResponse.status === 401;
-      
-      return new Response(
-        JSON.stringify({ 
-          success: false,
-          error: isCredentialProblem 
-            ? "Credenciais de API inválidas. Verifique as chaves Panda Video."
-            : "Falha na autenticação com o serviço de vídeo",
-          details: tokenErrorText,
-          status: tokenResponse.status
-        }),
-        { 
-          status: isCredentialProblem ? 401 : 500, 
-          headers: { 
-            ...corsHeaders, 
-            "Content-Type": "application/json" 
-          } 
-        }
-      );
-    }
-
-    let tokenData;
-    try {
-      tokenData = await tokenResponse.json();
-      console.log("Token de acesso obtido com sucesso");
-    } catch (parseError) {
-      console.error("Erro ao parsear resposta de token:", parseError);
-      return new Response(
-        JSON.stringify({ 
-          success: false,
-          error: "Erro ao processar resposta de autenticação",
-          details: parseError.message 
-        }),
-        { 
-          status: 500, 
-          headers: { 
-            ...corsHeaders, 
-            "Content-Type": "application/json" 
-          } 
-        }
-      );
+    // Preparar metadados para o protocolo Tus
+    const metadataEntries = [
+      `authorization ${encodeBase64(apiKey)}`,
+      `filename ${encodeBase64(videoFile.name)}`,
+      `video_id ${encodeBase64(videoId)}`
+    ];
+    
+    // Adicionar folder_id apenas se estiver definido
+    if (folderId) {
+      metadataEntries.push(`folder_id ${encodeBase64(folderId)}`);
     }
     
-    const accessToken = tokenData.access_token;
-
-    if (!accessToken) {
-      console.error("Token de acesso não recebido:", tokenData);
-      return new Response(
-        JSON.stringify({ 
-          success: false,
-          error: "Falha ao obter autorização do serviço de vídeo",
-          tokenResponse: tokenData
-        }),
-        { 
-          status: 500, 
-          headers: { 
-            ...corsHeaders, 
-            "Content-Type": "application/json" 
-          } 
-        }
-      );
-    }
-
-    // 2. Converter o arquivo para base64
-    console.log("Convertendo vídeo para base64...");
-    let arrayBuffer, base64;
-    try {
-      arrayBuffer = await videoFile.arrayBuffer();
-      const bytes = new Uint8Array(arrayBuffer);
-      base64 = btoa(String.fromCharCode(...bytes));
-      console.log(`Conversão base64 concluída. Tamanho após codificação: ${base64.length} caracteres`);
-    } catch (convertError) {
-      console.error("Erro ao converter vídeo para base64:", convertError);
-      return new Response(
-        JSON.stringify({ 
-          success: false,
-          error: "Erro ao processar o arquivo de vídeo",
-          details: convertError.message 
-        }),
-        { 
-          status: 500, 
-          headers: { 
-            ...corsHeaders, 
-            "Content-Type": "application/json" 
-          } 
-        }
-      );
-    }
+    const uploadMetadata = metadataEntries.join(',');
     
-    const mimeType = videoFile.type || "video/mp4";
-    const base64Data = `data:${mimeType};base64,${base64}`;
-
-    // 3. Enviar o vídeo para o Panda Video
-    console.log("Enviando vídeo para a API do Panda Video...");
+    // Preparar o buffer de dados do arquivo
+    const fileBuffer = await videoFile.arrayBuffer();
+    
+    console.log("Iniciando upload com protocolo Tus para Panda Video API");
+    console.log("URL de upload:", PANDA_UPLOAD_URL);
+    console.log("Tamanho do arquivo:", videoFile.size, "bytes");
+    
     let uploadResponse;
     try {
-      uploadResponse = await fetchWithRetry(PANDA_API_URL, {
+      uploadResponse = await uploadWithRetry(PANDA_UPLOAD_URL, {
         method: "POST",
         headers: {
-          "Authorization": `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
-          "Accept": "application/json"
+          "Tus-Resumable": "1.0.0",
+          "Upload-Length": videoFile.size.toString(),
+          "Content-Type": "application/offset+octet-stream",
+          "Upload-Metadata": uploadMetadata
         },
-        body: JSON.stringify({
-          title: videoTitle,
-          path: base64Data,
-          private: isPrivate
-        })
+        body: new Uint8Array(fileBuffer)
       });
       
       console.log(`Resposta do Panda Video API recebida com status: ${uploadResponse.status}`);
@@ -363,88 +235,27 @@ serve(async (req) => {
         }
       );
     }
-
-    let videoData;
-    try {
-      videoData = await uploadResponse.json();
-      console.log("Upload de vídeo bem-sucedido:", videoData);
-    } catch (parseError) {
-      console.error("Erro ao parsear resposta de upload:", parseError, "Status:", uploadResponse.status);
-      
-      // Tentar ler como texto para diagnóstico
-      try {
-        const responseText = await uploadResponse.text();
-        console.error("Resposta não-JSON recebida:", responseText);
-        
-        return new Response(
-          JSON.stringify({ 
-            success: false,
-            error: "Resposta inválida do servidor de vídeo",
-            details: "A resposta não é um JSON válido", 
-            responseText: responseText.substring(0, 200) // Enviar parte da resposta para diagnóstico
-          }),
-          { 
-            status: 500, 
-            headers: { 
-              ...corsHeaders, 
-              "Content-Type": "application/json" 
-            } 
-          }
-        );
-      } catch (textError) {
-        console.error("Não foi possível ler a resposta como texto:", textError);
-        
-        return new Response(
-          JSON.stringify({ 
-            success: false,
-            error: "Erro ao processar resposta do upload",
-            details: parseError.message 
-          }),
-          { 
-            status: 500, 
-            headers: { 
-              ...corsHeaders, 
-              "Content-Type": "application/json" 
-            } 
-          }
-        );
-      }
-    }
     
-    if (!videoData || !videoData.id) {
-      console.error("Dados do vídeo incompletos ou ausentes na resposta:", videoData);
-      return new Response(
-        JSON.stringify({ 
-          success: false,
-          error: "Dados do vídeo incompletos na resposta do servidor",
-          received: videoData
-        }),
-        { 
-          status: 500, 
-          headers: { 
-            ...corsHeaders, 
-            "Content-Type": "application/json" 
-          } 
-        }
-      );
-    }
-
-    // 4. Retornar os dados do vídeo
-    console.log("Retornando dados do vídeo para o cliente");
+    // Obter URL de localização do vídeo da resposta
+    const locationUrl = uploadResponse.headers.get("Location");
+    const uploadId = locationUrl ? locationUrl.split('/').pop() : '';
     
-    // Adicionar mais logs para diagnóstico
-    console.log("Função Edge Function upload-panda-video completada com sucesso");
+    console.log("Upload de vídeo bem-sucedido. ID de upload:", uploadId);
+    console.log("Location URL:", locationUrl);
     
+    // Como o Tus não retorna imediatamente os metadados do vídeo,
+    // retornamos um sucesso com o ID do vídeo e outros dados que temos
     return new Response(
       JSON.stringify({
         success: true,
         video: {
-          id: videoData.id,
-          title: videoData.title,
-          duration: videoData.duration || 0,
-          url: `https://player.pandavideo.com.br/embed/${videoData.id}`,
-          thumbnail_url: videoData.thumbnail_url || null,
-          video_type: "panda"
+          id: videoId,
+          title: videoTitle,
+          duration: 0, // Será necessário obter isso por meio de outra API call
+          url: `https://player.pandavideo.com.br/embed/${videoId}`,
+          thumbnail_url: null, // Será disponibilizado após o processamento
+          video_type: "panda",
+          upload_id: uploadId
         }
       }),
       { 

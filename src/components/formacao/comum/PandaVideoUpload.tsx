@@ -167,7 +167,7 @@ export const PandaVideoUpload = ({
               errorData.error?.includes('auth') || 
               errorData.error?.includes('token') ||
               response.status === 401) {
-            errorMessage = "Falha na autenticação com o serviço Panda Video. Verifique as credenciais.";
+            errorMessage = "Falha na autenticação. Verifique se está logado.";
           } else if (response.status === 500) {
             errorMessage = "Erro interno do servidor. Tente novamente em alguns instantes.";
           } else {
