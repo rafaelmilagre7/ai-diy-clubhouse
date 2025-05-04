@@ -1,4 +1,3 @@
-
 export * from './types/database.types';
 
 export type UserRole = 'admin' | 'member' | 'formacao';
@@ -100,6 +99,10 @@ export interface LearningModule {
   created_at: string;
   updated_at: string;
   order_index: number;
+  learning_courses?: {
+    id: string;
+    title: string;
+  } | null;
 }
 
 export interface LearningLesson {

@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { LearningLesson } from "@/lib/supabase";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,9 +15,10 @@ interface AulasListProps {
   onEdit: (aula: LearningLesson) => void;
   onDelete: (id: string) => void;
   isAdmin: boolean;
+  onRefresh?: () => void;  // Nova prop adicionada
 }
 
-export const AulasList = ({ aulas, loading, onEdit, onDelete, isAdmin }: AulasListProps) => {
+export const AulasList = ({ aulas, loading, onEdit, onDelete, isAdmin, onRefresh }: AulasListProps) => {
   const [aulaParaExcluir, setAulaParaExcluir] = useState<LearningLesson | null>(null);
 
   // Abrir diálogo de confirmação para excluir
@@ -31,6 +31,10 @@ export const AulasList = ({ aulas, loading, onEdit, onDelete, isAdmin }: AulasLi
     if (aulaParaExcluir) {
       onDelete(aulaParaExcluir.id);
       setAulaParaExcluir(null);
+      // Chamar onRefresh se estiver definido
+      if (onRefresh) {
+        onRefresh();
+      }
     }
   };
 

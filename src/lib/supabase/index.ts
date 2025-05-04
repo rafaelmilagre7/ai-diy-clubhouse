@@ -1,5 +1,4 @@
 
-
 // Re-exportação centralizada para garantir compatibilidade com importações existentes
 export * from './client';
 export * from './types';
@@ -14,8 +13,8 @@ export {
   formatVideoDuration,
   setupLearningStorageBuckets,
   ensureBucketExists,
-  // Não exportar createStoragePublicPolicy daqui para evitar o conflito,
-  // já que está sendo exportado por rpc.ts
-  setupStoragePublicPolicy
+  // Removida a exportação de setupStoragePublicPolicy que não existe
 } from './storage';
 
+// Não re-exportamos createStoragePublicPolicy aqui para evitar conflito
+// Use diretamente de ./rpc ou ./storage conforme necessário

@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
-import { AulaStepWizard } from "./wizard/AulaStepWizard";
+import AulaStepWizard from "./wizard/AulaStepWizard";
 
 interface NovaAulaButtonProps {
   moduleId: string;

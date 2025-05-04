@@ -85,8 +85,8 @@ export const setupLearningStorageBuckets = async () => {
           readyBuckets.push(bucketName);
           createdCount++;
           
-          // Configurar política pública para o bucket
-          await setupStoragePublicPolicy(bucketName);
+          // Configurar política pública para o bucket - Corrigida a referência aqui
+          await createStoragePublicPolicy(bucketName);
         }
       } catch (err) {
         console.error(`Erro ao criar bucket ${bucketName}:`, err);
@@ -179,8 +179,8 @@ export const ensureBucketExists = async (bucketName: string): Promise<boolean> =
     
     console.log(`Bucket ${bucketName} criado com sucesso com limite de ${fileSizeLimit} bytes`);
     
-    // Configurar políticas de acesso público
-    await setupStoragePublicPolicy(bucketName);
+    // Configurar políticas de acesso público - Corrigida a referência aqui
+    await createStoragePublicPolicy(bucketName);
     
     return true;
   } catch (error) {
@@ -442,4 +442,3 @@ export const formatVideoDuration = (seconds: number): string => {
   
   return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
 };
-
