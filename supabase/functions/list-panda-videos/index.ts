@@ -19,8 +19,8 @@ async function fetchPandaVideos(limit = 20, page = 1) {
       throw new Error('PANDA_API_KEY não definida');
     }
     
-    // Construir URL da API
-    const url = `https://api-v2.pandavideo.com.br/videos?limit=${limit}&page=${page}&orderby=created_at&order=desc`;
+    // Construir URL da API - CORRIGIDO: removido o parâmetro "order" que estava causando o erro
+    const url = `https://api-v2.pandavideo.com.br/videos?limit=${limit}&page=${page}&orderby=created_at`;
     
     // Fazer requisição para API do Panda Video
     const response = await fetch(url, {
