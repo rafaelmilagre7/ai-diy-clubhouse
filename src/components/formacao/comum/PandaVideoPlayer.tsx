@@ -7,18 +7,23 @@ interface PandaVideoPlayerProps {
   videoId: string;
   title?: string;
   onProgress?: (progress: number) => void;
+  onEnded?: () => void;
 }
 
 export const PandaVideoPlayer: React.FC<PandaVideoPlayerProps> = ({
   videoId,
   title,
-  onProgress
+  onProgress,
+  onEnded
 }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   // Estruturar a URL do player do Panda Video
   const embedUrl = `https://player.pandavideo.com.br/embed/${videoId}`;
+  
+  // Gerar um ID único para este iframe
+  const frameId = `panda-player-${videoId}`;
 
   useEffect(() => {
     // Simulação de carregamento para evitar flash de conteúdo
@@ -31,7 +36,7 @@ export const PandaVideoPlayer: React.FC<PandaVideoPlayerProps> = ({
 
   // Lidar com mensagens do iframe do Panda Video para rastreamento de progresso
   useEffect(() => {
-    if (!onProgress) return;
+    if (!onProgress && !onEnded) return;
 
     const handleMessage = (event: MessageEvent) => {
       // Verificar se a mensagem é do player do Panda Video
@@ -40,7 +45,7 @@ export const PandaVideoPlayer: React.FC<PandaVideoPlayerProps> = ({
           const data = JSON.parse(event.data);
           
           // Verificar se é um evento de progresso
-          if (data.event === "timeupdate" && data.video === videoId) {
+          if (data.event === "timeupdate" && data.video === videoId && onProgress) {
             const currentPercentage = (data.currentTime / data.duration) * 100;
             
             // Atualizar progresso em marcos específicos
@@ -52,12 +57,18 @@ export const PandaVideoPlayer: React.FC<PandaVideoPlayerProps> = ({
               onProgress(75);
             } else if (currentPercentage >= 99) {
               onProgress(100);
+              
+              // Se o vídeo estiver em mais de 99%, considerar como finalizado
+              if (onEnded) {
+                onEnded();
+              }
             }
           }
           
           // Verificar se o vídeo foi concluído
           if (data.event === "ended" && data.video === videoId) {
-            onProgress(100);
+            if (onProgress) onProgress(100);
+            if (onEnded) onEnded();
           }
         } catch (e) {
           // Ignorar erro de parsing JSON
@@ -67,7 +78,7 @@ export const PandaVideoPlayer: React.FC<PandaVideoPlayerProps> = ({
 
     window.addEventListener("message", handleMessage);
     return () => window.removeEventListener("message", handleMessage);
-  }, [videoId, onProgress]);
+  }, [videoId, onProgress, onEnded]);
 
   if (loading) {
     return (
@@ -98,6 +109,7 @@ export const PandaVideoPlayer: React.FC<PandaVideoPlayerProps> = ({
       <CardContent className="p-0">
         <div className="aspect-video w-full">
           <iframe
+            id={frameId}
             src={embedUrl}
             title={title || "Vídeo"}
             width="100%"

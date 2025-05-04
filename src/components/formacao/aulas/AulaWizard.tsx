@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -190,16 +189,28 @@ const AulaWizard: React.FC<AulaWizardProps> = ({ open, onOpenChange, aula, modul
           url: video.url,
           order_index: i,
           video_type: video.type || "youtube",
-          video_file_path: video.filePath || null,
+          video_file_path: video.filePath || video.video_id || null, // Usar video_id como fallback
           video_file_name: video.fileName || null,
           file_size_bytes: video.fileSize || null,
           duration_seconds: video.duration_seconds || null,
-          thumbnail_url: null
+          thumbnail_url: video.thumbnail_url || null
         };
         
         console.log(`Salvando vídeo ${i + 1}:`, videoData);
         
-        if (video.id) {
+        if (video.id && video.id.startsWith('temp-video-')) {
+          // É um vídeo novo temporário, criar
+          const { error } = await supabase
+            .from('learning_lesson_videos')
+            .insert([videoData]);
+            
+          if (error) {
+            console.error(`Erro ao criar vídeo ${i + 1}:`, error);
+            throw error;
+          }
+          
+          console.log(`Vídeo ${i + 1} criado com sucesso.`);
+        } else if (video.id) {
           // Atualizar vídeo existente
           const { error } = await supabase
             .from('learning_lesson_videos')
@@ -213,7 +224,7 @@ const AulaWizard: React.FC<AulaWizardProps> = ({ open, onOpenChange, aula, modul
           
           console.log(`Vídeo ${i + 1} atualizado com sucesso.`);
         } else {
-          // Criar novo vídeo
+          // Criar novo vídeo sem id temporário
           const { error } = await supabase
             .from('learning_lesson_videos')
             .insert([videoData]);
@@ -224,6 +235,25 @@ const AulaWizard: React.FC<AulaWizardProps> = ({ open, onOpenChange, aula, modul
           }
           
           console.log(`Vídeo ${i + 1} criado com sucesso.`);
+        }
+      }
+      
+      // Remover vídeos que não estão mais presentes
+      if (aula?.id) {
+        const videoIds = videos
+          .filter(v => v.id && !v.id.startsWith('temp-video-'))
+          .map(v => v.id);
+          
+        if (videoIds.length > 0) {
+          const { error } = await supabase
+            .from('learning_lesson_videos')
+            .delete()
+            .eq('lesson_id', lessonId)
+            .not('id', 'in', `(${videoIds.join(',')})`);
+            
+          if (error) {
+            console.error("Erro ao remover vídeos não utilizados:", error);
+          }
         }
       }
       

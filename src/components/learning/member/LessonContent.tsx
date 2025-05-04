@@ -12,7 +12,7 @@ interface LessonContentProps {
   lesson: LearningLesson;
   videos: any[];
   resources?: any[];
-  onProgressUpdate?: (progress: number) => void;
+  onProgressUpdate?: (videoId: string, progress: number) => void;
 }
 
 export const LessonContent: React.FC<LessonContentProps> = ({ 
@@ -23,14 +23,14 @@ export const LessonContent: React.FC<LessonContentProps> = ({
 }) => {
   useEffect(() => {
     // Marcar progresso inicial quando o componente é montado
-    if (onProgressUpdate) {
-      onProgressUpdate(10);
+    if (onProgressUpdate && videos.length > 0) {
+      onProgressUpdate(videos[0].id, 10);
     }
-  }, []);
+  }, [videos, onProgressUpdate]);
   
-  const handleInteraction = () => {
+  const handleVideoProgress = (videoId: string, progress: number) => {
     if (onProgressUpdate) {
-      onProgressUpdate(50); // Quando o usuário interage com o conteúdo, marcamos 50% de progresso
+      onProgressUpdate(videoId, progress);
     }
   };
   
@@ -91,7 +91,7 @@ export const LessonContent: React.FC<LessonContentProps> = ({
 
   if (useTabs) {
     return (
-      <div className="space-y-6" onClick={handleInteraction}>
+      <div className="space-y-6">
         {renderCoverImage()}
         
         {/* Descrição da aula */}
@@ -120,20 +120,10 @@ export const LessonContent: React.FC<LessonContentProps> = ({
           
           {hasVideos && (
             <TabsContent value="video" className="space-y-4">
-              {videos.map((video, index) => (
-                <div key={video.id || index} className="mb-4">
-                  <h3 className="text-lg font-medium mb-2">{video.title}</h3>
-                  <div className="aspect-video">
-                    <LessonVideoPlayer 
-                      video={video} 
-                      onProgress={onProgressUpdate}
-                    />
-                  </div>
-                  {video.description && (
-                    <p className="text-muted-foreground mt-2">{video.description}</p>
-                  )}
-                </div>
-              ))}
+              <LessonVideoPlayer 
+                videos={videos}
+                onProgress={handleVideoProgress}
+              />
             </TabsContent>
           )}
           
@@ -155,7 +145,7 @@ export const LessonContent: React.FC<LessonContentProps> = ({
   
   // Versão sem abas quando há somente um tipo de conteúdo
   return (
-    <div className="space-y-6" onClick={handleInteraction}>
+    <div className="space-y-6">
       {renderCoverImage()}
       
       {/* Descrição da aula */}
@@ -176,24 +166,13 @@ export const LessonContent: React.FC<LessonContentProps> = ({
         </div>
       )}
       
-      {/* Reprodutor de vídeo se houver vídeos */}
+      {/* Reprodutor de vídeo com playlist se houver vídeos */}
       {hasVideos && (
         <section>
-          <h2 className="text-xl font-semibold mb-4">Vídeos da Aula</h2>
-          {videos.map((video, index) => (
-            <div key={video.id || index} className="mb-6">
-              <div className="aspect-video mb-2">
-                <LessonVideoPlayer 
-                  video={video} 
-                  onProgress={onProgressUpdate}
-                />
-              </div>
-              <h3 className="text-lg font-medium">{video.title}</h3>
-              {video.description && (
-                <p className="text-muted-foreground mt-1">{video.description}</p>
-              )}
-            </div>
-          ))}
+          <LessonVideoPlayer 
+            videos={videos}
+            onProgress={handleVideoProgress}
+          />
         </section>
       )}
       

@@ -1,20 +1,20 @@
-
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
 import { LessonContent } from "@/components/learning/member/LessonContent";
-import { LessonHeader } from "@/components/learning/member/LessonHeader";
 import { LessonNavigation } from "@/components/learning/member/LessonNavigation";
+import { LessonHeader } from "@/components/learning/member/LessonHeader";
 import { LessonSidebar } from "@/components/learning/member/LessonSidebar";
 import { LessonResources } from "@/components/learning/member/LessonResources";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft } from "lucide-react";
+import { toast } from "sonner";
 
 const AulaView: React.FC = () => {
   const { cursoId, aulaId } = useParams<{ cursoId: string; aulaId: string }>();
   const navigate = useNavigate();
-  const [progress, setProgress] = useState(0);
+  const [videoProgresses, setVideoProgresses] = useState<Record<string, number>>({});
   
   // Buscar detalhes da aula
   const { data: aula, isLoading: isLoadingAula } = useQuery({
@@ -110,8 +110,9 @@ const AulaView: React.FC = () => {
         
       if (error) return null;
       
-      if (data) {
-        setProgress(data.progress_percentage);
+      // Inicializar o estado com os progressos existentes
+      if (data && data.video_progress) {
+        setVideoProgresses(data.video_progress);
       }
       
       return data;
@@ -119,53 +120,84 @@ const AulaView: React.FC = () => {
     enabled: !!aulaId
   });
   
-  // Função para atualizar o progresso
-  const handleProgressUpdate = async (newProgress: number) => {
-    if (newProgress <= progress) return;
-    
+  // Função para atualizar o progresso de um vídeo específico
+  const handleVideoProgress = async (videoId: string, progress: number) => {
+    // Atualizar o estado local
+    setVideoProgresses(prev => {
+      // Se o progresso anterior for maior, manter o maior progresso
+      const currentProgress = prev[videoId] || 0;
+      if (progress <= currentProgress) return prev;
+      
+      const newProgresses = { ...prev, [videoId]: progress };
+      
+      // Calcular o progresso geral da aula
+      const videoIds = Object.keys(newProgresses);
+      let totalProgress = 0;
+      
+      videoIds.forEach(id => {
+        totalProgress += newProgresses[id] || 0;
+      });
+      
+      // Média do progresso de todos os vídeos
+      const averageProgress = Math.round(
+        totalProgress / (videos?.length || 1)
+      );
+      
+      // Atualizar no banco de dados
+      updateLessonProgress(averageProgress, newProgresses);
+      
+      return newProgresses;
+    });
+  };
+  
+  // Função para atualizar o progresso no banco de dados
+  const updateLessonProgress = async (progress: number, videoProgress: Record<string, number>) => {
     const { data: userData } = await supabase.auth.getUser();
     if (!userData.user) return;
     
-    setProgress(newProgress);
-    
     const now = new Date().toISOString();
-    if (userProgress) {
-      // Atualizar progresso existente
-      await supabase
-        .from("learning_progress")
-        .update({
-          progress_percentage: newProgress,
-          updated_at: now,
-          completed_at: newProgress >= 100 ? now : userProgress.completed_at
-        })
-        .eq("id", userProgress.id);
-    } else {
-      // Criar novo registro de progresso
-      await supabase
-        .from("learning_progress")
-        .insert({
-          user_id: userData.user.id,
-          lesson_id: aulaId,
-          progress_percentage: newProgress,
-          started_at: now,
-          completed_at: newProgress >= 100 ? now : null
-        });
+    try {
+      if (userProgress) {
+        // Atualizar progresso existente
+        await supabase
+          .from("learning_progress")
+          .update({
+            progress_percentage: progress,
+            video_progress: videoProgress,
+            updated_at: now,
+            completed_at: progress >= 100 ? now : userProgress.completed_at
+          })
+          .eq("id", userProgress.id);
+      } else {
+        // Criar novo registro de progresso
+        await supabase
+          .from("learning_progress")
+          .insert({
+            user_id: userData.user.id,
+            lesson_id: aulaId,
+            progress_percentage: progress,
+            video_progress: videoProgress,
+            started_at: now,
+            completed_at: progress >= 100 ? now : null
+          });
+      }
+      
+      refetchProgress();
+    } catch (error) {
+      console.error("Erro ao atualizar progresso:", error);
     }
-    
-    refetchProgress();
   };
   
-  // Marcar aula como concluída
+  // Marcar aula como concluída manualmente
   const handleComplete = () => {
-    handleProgressUpdate(100);
+    const fullProgress: Record<string, number> = {};
+    videos?.forEach(video => {
+      fullProgress[video.id] = 100;
+    });
+    
+    setVideoProgresses(fullProgress);
+    updateLessonProgress(100, fullProgress);
   };
-  
-  // Iniciar progresso quando a página carrega
-  useEffect(() => {
-    if (aulaId && !userProgress) {
-      handleProgressUpdate(1); // 1% para marcar que começou
-    }
-  }, [aulaId, userProgress]);
   
   const isLoading = isLoadingAula || isLoadingRecursos || isLoadingVideos;
   
@@ -201,7 +233,7 @@ const AulaView: React.FC = () => {
           <LessonHeader
             title={aula.title}
             moduleTitle={moduloData?.modulo?.title || ""}
-            progress={progress}
+            progress={userProgress?.progress_percentage || 0}
           />
           
           <div className="mt-6">
@@ -210,7 +242,7 @@ const AulaView: React.FC = () => {
               currentLesson={aula}
               allLessons={moduloData?.aulas || []}
               onComplete={handleComplete}
-              isCompleted={progress >= 100}
+              isCompleted={(userProgress?.progress_percentage || 0) >= 100}
             />
           </div>
           
@@ -219,7 +251,7 @@ const AulaView: React.FC = () => {
               lesson={aula}
               videos={videos || []}
               resources={recursos || []}
-              onProgressUpdate={handleProgressUpdate}
+              onProgressUpdate={handleVideoProgress}
             />
           </div>
         </div>

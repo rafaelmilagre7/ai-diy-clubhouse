@@ -37,7 +37,7 @@ const EtapaVideos: React.FC<EtapaVideosProps> = ({
   const [validationError, setValidationError] = useState<string | null>(null);
   
   const videos = form.watch('videos') || [];
-  const maxVideos = 3;
+  const maxVideos = 5; // Aumentado para 5 vídeos
   
   const handleContinue = async () => {
     setValidationError(null);
@@ -99,7 +99,7 @@ const EtapaVideos: React.FC<EtapaVideosProps> = ({
       <div className="space-y-6 py-4">
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <FormLabel className="text-base">Vídeos da Aula (máx. 3)</FormLabel>
+            <FormLabel className="text-base">Vídeos da Aula (máx. {maxVideos})</FormLabel>
             <Button
               type="button"
               size="sm"
@@ -111,7 +111,7 @@ const EtapaVideos: React.FC<EtapaVideosProps> = ({
           </div>
           
           <FormDescription>
-            Adicione até 3 vídeos para esta aula. Você pode usar vídeos do YouTube ou fazer upload direto pelo Panda Video.
+            Adicione até {maxVideos} vídeos para esta aula. Você pode usar vídeos do YouTube ou fazer upload direto pelo Panda Video.
           </FormDescription>
           
           {validationError && (
@@ -139,7 +139,7 @@ const EtapaVideos: React.FC<EtapaVideosProps> = ({
                   >
                     {videos.map((video, index) => (
                       <Draggable 
-                        key={index} 
+                        key={`video-${index}`} 
                         draggableId={`video-${index}`} 
                         index={index}
                       >
@@ -220,7 +220,7 @@ const EtapaVideos: React.FC<EtapaVideosProps> = ({
                                       handleVideoChange(index, "url", url);
                                       handleVideoChange(index, "type", "panda");
                                       handleVideoChange(index, "fileName", fileName);
-                                      handleVideoChange(index, "filePath", filePath);
+                                      handleVideoChange(index, "filePath", filePath || videoId); // Usar videoId como fallback para filePath
                                       handleVideoChange(index, "fileSize", fileSize);
                                       handleVideoChange(index, "video_id", videoId);
                                       
