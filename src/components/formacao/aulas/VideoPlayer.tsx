@@ -104,8 +104,8 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   const renderVideo = () => {
     // Vídeo do Panda
     if (video.video_type === 'panda' && video.url) {
-      // Extrair o ID do vídeo do Panda da URL
-      const pandaVideoId = video.video_id || video.url.split('/').pop();
+      // Extrair o ID do vídeo do Panda da URL ou usar o campo video_file_path como fallback
+      const pandaVideoId = video.video_file_path || video.url.split('/').pop();
       
       if (pandaVideoId) {
         return (

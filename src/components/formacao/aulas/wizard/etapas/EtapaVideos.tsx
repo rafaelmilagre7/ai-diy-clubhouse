@@ -51,6 +51,10 @@ const EtapaVideos: React.FC<EtapaVideosProps> = ({
   const handleVideoChange = (index: number, field: string, value: any) => {
     const newVideos = [...form.getValues().videos];
     newVideos[index] = { ...newVideos[index], [field]: value };
+    // Garantir que o vídeo tenha um ID único para satisfazer as validações de tipo
+    if (field === 'title' && !newVideos[index].id) {
+      newVideos[index].id = `temp-video-${index}-${Date.now()}`;
+    }
     form.setValue("videos", newVideos, { shouldValidate: true });
     setValidationError(null);
   };
@@ -62,7 +66,9 @@ const EtapaVideos: React.FC<EtapaVideosProps> = ({
     }
     
     const currentVideos = form.getValues().videos || [];
+    // Adicionar um ID temporário para satisfazer as validações de tipo
     form.setValue("videos", [...currentVideos, { 
+      id: `temp-video-${currentVideos.length}-${Date.now()}`,
       title: "", 
       description: "", 
       url: "", 

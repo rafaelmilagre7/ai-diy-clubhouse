@@ -3,7 +3,7 @@ import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Download, File, FileText, FileImage, MoreHorizontal } from "lucide-react";
-import { formatFileSize } from "@/lib/utils";
+import { bytesToSize } from "@/lib/utils";
 
 interface Resource {
   id: string;
@@ -66,7 +66,7 @@ export const LessonResources: React.FC<LessonResourcesProps> = ({ resources }) =
                 )}
                 {resource.file_size_bytes && (
                   <p className="text-xs text-muted-foreground mt-1">
-                    {formatFileSize(resource.file_size_bytes)}
+                    {bytesToSize(resource.file_size_bytes)}
                   </p>
                 )}
               </div>

@@ -17,3 +17,34 @@ export function bytesToSize(bytes: number): string {
   const i = Math.floor(Math.log(bytes) / Math.log(1024));
   return parseFloat((bytes / Math.pow(1024, i)).toFixed(2)) + ' ' + sizes[i];
 }
+
+// Adicionando alias para manter compatibilidade com os componentes existentes
+export const formatFileSize = bytesToSize;
+
+/**
+ * Converte texto para formato slug (URL amigável)
+ * @param text - Texto a ser convertido
+ * @param addTimestamp - Adicionar timestamp ao slug para garantir unicidade
+ * @returns Slug formatado
+ */
+export function slugify(text: string, addTimestamp = true): string {
+  const slug = text
+    .toString()
+    .normalize('NFD')           // normaliza os caracteres decompostos
+    .replace(/[\u0300-\u036f]/g, '') // remove acentos
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, '-')       // substitui espaços por -
+    .replace(/[^\w\-]+/g, '')   // remove caracteres não-palavra
+    .replace(/\-\-+/g, '-')     // substitui múltiplos hifens por um único
+    .replace(/^-+/, '')         // remove hifens do início
+    .replace(/-+$/, '');        // remove hifens do final
+  
+  // Adiciona um timestamp ao slug para garantir unicidade
+  if (addTimestamp) {
+    const timestamp = new Date().getTime();
+    return `${slug}-${timestamp}`;
+  }
+  
+  return slug;
+}

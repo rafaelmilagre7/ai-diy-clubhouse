@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { LearningLessonVideo } from "@/lib/supabase";
 import { Play, Pause, Volume2, VolumeX } from "lucide-react";
@@ -24,7 +23,8 @@ export const LessonVideoPlayer: React.FC<LessonVideoPlayerProps> = ({
   
   // Se for um vídeo do Panda, usar componente específico
   if (video.video_type === 'panda') {
-    const pandaVideoId = video.video_id || video.url.split('/').pop();
+    // Extrair ID do vídeo do Panda da URL ou usar o campo video_file_path como fallback
+    const pandaVideoId = video.video_file_path || video.url.split('/').pop();
     
     if (pandaVideoId) {
       return (
@@ -94,8 +94,8 @@ export const LessonVideoPlayer: React.FC<LessonVideoPlayerProps> = ({
     };
   }, [duration, onProgress]);
   
-  // Controle de reprodução
-  const togglePlay = () => {
+  // Funções de controle de reprodução
+  function togglePlay() {
     const videoElement = videoRef.current;
     if (!videoElement) return;
     
@@ -106,18 +106,18 @@ export const LessonVideoPlayer: React.FC<LessonVideoPlayerProps> = ({
     }
     
     setIsPlaying(!isPlaying);
-  };
+  }
   
   // Controle de volume
-  const toggleMute = () => {
+  function toggleMute() {
     const videoElement = videoRef.current;
     if (!videoElement) return;
     
     videoElement.muted = !isMuted;
     setIsMuted(!isMuted);
-  };
+  }
   
-  const handleVolumeChange = (value: number[]) => {
+  function handleVolumeChange(value: number[]) {
     const newVolume = value[0];
     
     const videoElement = videoRef.current;
@@ -133,10 +133,10 @@ export const LessonVideoPlayer: React.FC<LessonVideoPlayerProps> = ({
       setIsMuted(false);
       videoElement.muted = false;
     }
-  };
+  }
   
   // Controle da timeline
-  const handleTimelineChange = (value: number[]) => {
+  function handleTimelineChange(value: number[]) {
     const newTime = value[0];
     
     const videoElement = videoRef.current;
@@ -144,14 +144,14 @@ export const LessonVideoPlayer: React.FC<LessonVideoPlayerProps> = ({
     
     videoElement.currentTime = newTime * duration / 100;
     setCurrentTime(videoElement.currentTime);
-  };
+  }
   
   // Formatação do tempo
-  const formatTime = (seconds: number) => {
+  function formatTime(seconds: number) {
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
     return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
-  };
+  }
 
   return (
     <div className="w-full overflow-hidden rounded-lg bg-black">
