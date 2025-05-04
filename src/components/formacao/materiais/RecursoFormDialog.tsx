@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -201,8 +200,8 @@ export const RecursoFormDialog = ({
                         form.setValue("file_type", fileType);
                         form.setValue("file_size_bytes", fileSize);
                       }}
-                      bucketName="learning_materials"
-                      folderPath="materiais"
+                      bucketName="solution_files"
+                      folderPath="learning_materials"
                       acceptedFileTypes="*/*"
                     />
                   </FormControl>

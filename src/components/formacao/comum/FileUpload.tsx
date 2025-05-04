@@ -4,7 +4,6 @@ import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { uploadFileWithFallback, ensureBucketExists, createStoragePublicPolicy } from "@/lib/supabase/storage";
 import { Upload, Loader2, File, X, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { STORAGE_BUCKETS } from "@/lib/supabase/config";
@@ -30,39 +29,54 @@ export const FileUpload = ({
   const [uploadProgress, setUploadProgress] = useState(0);
   const [bucketReady, setBucketReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // Lista de buckets para tentar em ordem de preferência
+  const fallbackBuckets = ["solution_files", "learning_materials", "documents"];
 
   // Verificar status do bucket ao montar o componente
   useEffect(() => {
-    const initBucket = async () => {
+    const checkBucket = async () => {
       try {
         setError(null);
-        console.log(`Inicializando bucket ${bucketName}...`);
+        console.log(`Verificando bucket ${bucketName}...`);
         
-        // Primeiro, tentar usar a função que aplica a política apropriada
-        const result = await createStoragePublicPolicy(bucketName);
+        // Verificar se o bucket existe
+        const { data: buckets, error: bucketsError } = await supabase
+          .storage
+          .listBuckets();
+          
+        if (bucketsError) {
+          console.error("Erro ao listar buckets:", bucketsError);
+          throw bucketsError;
+        }
         
-        if (result.success) {
-          console.log(`Bucket ${bucketName} configurado com sucesso!`);
+        // Se o bucket solicitado existe, usamos ele
+        if (buckets?.some(b => b.name === bucketName)) {
+          console.log(`Bucket ${bucketName} encontrado!`);
           setBucketReady(true);
-        } else {
-          console.warn(`Não foi possível configurar políticas para ${bucketName}, tentando fallback...`, result.error);
-          
-          // Se falhar, tentar apenas verificar/criar o bucket
-          const isReady = await ensureBucketExists(bucketName);
-          setBucketReady(isReady);
-          
-          if (!isReady) {
-            setError(`Não foi possível preparar o bucket de armazenamento ${bucketName}.`);
-            console.error(`Bucket ${bucketName} não pôde ser inicializado.`);
+          return;
+        }
+        
+        // Se não, procuramos um bucket alternativo
+        console.log(`Bucket ${bucketName} não encontrado, procurando alternativas...`);
+        for (const fallbackBucket of fallbackBuckets) {
+          if (buckets?.some(b => b.name === fallbackBucket)) {
+            console.log(`Usando bucket alternativo: ${fallbackBucket}`);
+            setBucketReady(true);
+            return;
           }
         }
+        
+        setError("Nenhum bucket de armazenamento disponível. Entre em contato com o administrador do sistema.");
+        setBucketReady(false);
       } catch (error) {
-        console.error("Erro ao inicializar bucket:", error);
-        setError("Erro ao inicializar o armazenamento. Upload de arquivos pode não funcionar.");
+        console.error("Erro ao verificar buckets:", error);
+        setError("Erro ao verificar armazenamento. Upload de arquivos pode não funcionar.");
+        setBucketReady(false);
       }
     };
     
-    initBucket();
+    checkBucket();
   }, [bucketName]);
 
   // Extract filename from URL for display
@@ -90,25 +104,78 @@ export const FileUpload = ({
       setUploadProgress(0);
       setError(null);
       
-      if (!bucketReady) {
-        // Tentar inicializar o bucket novamente antes do upload
-        const result = await createStoragePublicPolicy(bucketName);
-        if (!result.success) {
-          throw new Error(`O bucket ${bucketName} não está disponível para upload.`);
+      // Lista de buckets para tentar
+      const bucketsToTry = [bucketName, ...fallbackBuckets];
+      let uploadSuccess = false;
+      let uploadedUrl = "";
+      
+      // Gerar um nome único para o arquivo
+      const fileExt = file.name.split('.').pop();
+      const uniqueFileName = `${Date.now()}_${Math.floor(Math.random() * 1000)}.${fileExt}`;
+      const actualFolderPath = folderPath ? `${folderPath}` : "";
+      
+      // Tentar fazer upload em cada bucket até ter sucesso
+      for (const currentBucket of bucketsToTry) {
+        try {
+          console.log(`Tentando fazer upload para o bucket: ${currentBucket}`);
+          setUploadProgress(10);
+          
+          // Verificar se o bucket existe
+          const { data: bucketExists, error: bucketCheckError } = await supabase
+            .storage
+            .getBucket(currentBucket);
+            
+          if (bucketCheckError) {
+            console.log(`Bucket ${currentBucket} não existe ou não está acessível, pulando...`);
+            continue;
+          }
+          
+          setUploadProgress(30);
+          
+          // Fazer upload
+          const filePath = actualFolderPath ? `${actualFolderPath}/${uniqueFileName}` : uniqueFileName;
+          const { data, error } = await supabase.storage
+            .from(currentBucket)
+            .upload(filePath, file, {
+              cacheControl: '3600',
+              upsert: true,
+              contentType: file.type
+            });
+            
+          if (error) {
+            console.error(`Erro ao fazer upload para ${currentBucket}:`, error);
+            continue;
+          }
+          
+          setUploadProgress(70);
+          
+          // Obter URL pública
+          const { data: publicUrlData } = supabase.storage
+            .from(currentBucket)
+            .getPublicUrl(filePath);
+            
+          if (!publicUrlData?.publicUrl) {
+            console.error(`URL pública não disponível para ${currentBucket}`);
+            continue;
+          }
+          
+          uploadedUrl = publicUrlData.publicUrl;
+          uploadSuccess = true;
+          setUploadProgress(100);
+          
+          console.log(`Upload realizado com sucesso para ${currentBucket}:`, uploadedUrl);
+          break;
+        } catch (bucketError) {
+          console.error(`Erro ao usar bucket ${currentBucket}:`, bucketError);
         }
       }
       
-      // Upload com mecanismo de fallback
-      const result = await uploadFileWithFallback(
-        file,
-        bucketName,
-        folderPath,
-        (progress) => setUploadProgress(progress),
-        STORAGE_BUCKETS.FALLBACK // Usar bucket de fallback
-      );
+      if (!uploadSuccess) {
+        throw new Error("Não foi possível fazer upload do arquivo em nenhum bucket disponível.");
+      }
       
       setFileName(file.name);
-      onChange(result.publicUrl, file.type, file.size);
+      onChange(uploadedUrl, file.type, file.size);
       
       toast.success("Upload realizado com sucesso!");
       
@@ -178,7 +245,7 @@ export const FileUpload = ({
               type="file"
               className="hidden"
               onChange={handleFileChange}
-              disabled={uploading || !bucketReady}
+              disabled={uploading || (!bucketReady && !fallbackBuckets.length)}
               accept={acceptedFileTypes}
             />
           </label>

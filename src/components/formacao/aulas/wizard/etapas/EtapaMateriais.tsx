@@ -17,8 +17,6 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { File, Trash, Plus } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { supabase } from "@/lib/supabase";
-import { createStoragePublicPolicy } from "@/lib/supabase/storage";
 import { useToast } from "@/hooks/use-toast";
 
 interface EtapaMateriaisProps {
@@ -34,30 +32,6 @@ const EtapaMateriais: React.FC<EtapaMateriaisProps> = ({
   onPrevious
 }) => {
   const { toast } = useToast();
-
-  // Inicializar o bucket learning_resources na montagem do componente
-  useEffect(() => {
-    const setupStorage = async () => {
-      const bucketName = 'learning_resources';
-      try {
-        const result = await createStoragePublicPolicy(bucketName);
-        if (!result.success) {
-          console.error(`Não foi possível configurar o bucket ${bucketName}:`, result.error);
-          toast({
-            title: "Atenção",
-            description: "Houve um problema ao preparar o armazenamento. Uploads podem não funcionar corretamente.",
-            variant: "destructive",
-          });
-        } else {
-          console.log(`Bucket ${bucketName} configurado com sucesso!`);
-        }
-      } catch (error) {
-        console.error("Erro ao configurar bucket:", error);
-      }
-    };
-    
-    setupStorage();
-  }, [toast]);
 
   const handleContinue = async () => {
     const result = await form.trigger(['resources']);
@@ -156,8 +130,8 @@ const EtapaMateriais: React.FC<EtapaMateriaisProps> = ({
                           handleMaterialChange(index, "type", fileType || "document");
                           handleMaterialChange(index, "fileSize", fileSize);
                         }}
-                        bucketName="learning_resources"
-                        folderPath="materials"
+                        bucketName="solution_files"
+                        folderPath="learning_materials"
                         acceptedFileTypes="application/pdf, application/msword, application/vnd.openxmlformats-officedocument.wordprocessingml.document, application/vnd.ms-excel, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/zip, image/jpeg, image/png"
                       />
                     </div>
