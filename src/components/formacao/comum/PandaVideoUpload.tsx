@@ -18,7 +18,7 @@ import { bytesToSize } from "@/lib/utils";
 interface PandaVideoUploadProps {
   value: string;
   videoData?: {
-    id: string;
+    id?: string; // Alterado aqui - agora id é opcional
     title?: string;
     description?: string;
     duration_seconds?: number;
