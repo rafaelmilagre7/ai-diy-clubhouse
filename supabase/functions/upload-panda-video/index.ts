@@ -154,7 +154,7 @@ serve(async (req) => {
 
     // 1. Autenticar com o Panda Video para obter token
     console.log("Iniciando autenticação com Panda Video API");
-    console.log("Usando credenciais: ID=" + clientId.substring(0, 3) + "..." + clientId.substring(clientId.length - 3));
+    console.log("Usando credenciais: ID=" + clientId.substring(0, 3) + "..." + (clientId.length > 6 ? clientId.substring(clientId.length - 3) : ""));
       
     let tokenResponse;
     try {
@@ -165,7 +165,6 @@ serve(async (req) => {
       });
       
       console.log("Enviando solicitação de autenticação para:", PANDA_AUTH_URL);
-      console.log("Payload de autenticação:", authBody.toString());
       
       tokenResponse = await fetchWithRetry(PANDA_AUTH_URL, {
         method: "POST",
@@ -204,15 +203,22 @@ serve(async (req) => {
         console.error("Não foi possível ler resposta de erro da autenticação:", e);
       }
       
+      // Analisar se é um problema de credenciais
+      const isCredentialProblem = tokenErrorText.includes('invalid_client') || 
+                                 tokenErrorText.includes('unauthorized') ||
+                                 tokenResponse.status === 401;
+      
       return new Response(
         JSON.stringify({ 
           success: false,
-          error: "Falha na autenticação com o serviço de vídeo",
+          error: isCredentialProblem 
+            ? "Credenciais de API inválidas. Verifique as chaves Panda Video."
+            : "Falha na autenticação com o serviço de vídeo",
           details: tokenErrorText,
           status: tokenResponse.status
         }),
         { 
-          status: 500, 
+          status: isCredentialProblem ? 401 : 500, 
           headers: { 
             ...corsHeaders, 
             "Content-Type": "application/json" 
@@ -289,7 +295,7 @@ serve(async (req) => {
       );
     }
     
-    const mimeType = videoFile.type;
+    const mimeType = videoFile.type || "video/mp4";
     const base64Data = `data:${mimeType};base64,${base64}`;
 
     // 3. Enviar o vídeo para o Panda Video
@@ -300,7 +306,8 @@ serve(async (req) => {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${accessToken}`,
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
+          "Accept": "application/json"
         },
         body: JSON.stringify({
           title: videoTitle,

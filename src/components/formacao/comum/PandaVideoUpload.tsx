@@ -7,7 +7,8 @@ import {
   Loader2, 
   Upload, 
   Video, 
-  X 
+  X,
+  RefreshCw
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -42,12 +43,15 @@ export const PandaVideoUpload = ({
   onChange
 }: PandaVideoUploadProps) => {
   const [uploading, setUploading] = useState(false);
+  const [retrying, setRetrying] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const { toast } = useToast();
 
   const maxSizeMB = 500; // 500MB máximo
+  const maxRetries = 3;   // Número máximo de tentativas
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -79,6 +83,7 @@ export const PandaVideoUpload = ({
 
     setError(null);
     setVideoFile(file);
+    setRetryCount(0);
   };
 
   const handleUpload = async () => {
@@ -90,12 +95,18 @@ export const PandaVideoUpload = ({
     setUploading(true);
     setProgress(5);
     setError(null);
+    setRetrying(false);
 
     try {
-      // Obter a JWT token para autenticação
+      // Verificar a sessão antes de prosseguir
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
         throw new Error("Usuário não autenticado. Faça login para continuar.");
+      }
+
+      // Verificar se o token de acesso está presente
+      if (!session.access_token) {
+        throw new Error("Token de autenticação não encontrado. Tente fazer login novamente.");
       }
 
       // Criar FormData para envio do vídeo
@@ -107,8 +118,8 @@ export const PandaVideoUpload = ({
       // Verificar tamanho antes do envio
       console.log(`Iniciando upload do vídeo: ${videoFile.name}, tamanho: ${bytesToSize(videoFile.size)}, tipo: ${videoFile.type}`);
 
-      // URL correta da Edge Function do Supabase com o ID completo do projeto
-      const functionUrl = `https://zotzvtepvpnkcoobdubt.functions.supabase.co/upload-panda-video`;
+      // URL da Edge Function do Supabase com o ID completo do projeto
+      const functionUrl = 'https://zotzvtepvpnkcoobdubt.functions.supabase.co/upload-panda-video';
       console.log("Chamando Edge Function:", functionUrl);
       
       // Adicionar tempo limite estendido para vídeos maiores
@@ -119,7 +130,8 @@ export const PandaVideoUpload = ({
       const response = await fetch(functionUrl, {
         method: "POST",
         headers: {
-          "Authorization": `Bearer ${session.access_token}`
+          "Authorization": `Bearer ${session.access_token}`,
+          "x-client-info": `@supabase/auth-helpers-nextjs@0.7.4`
         },
         body: formData,
         signal: controller.signal
@@ -142,47 +154,68 @@ export const PandaVideoUpload = ({
       if (!response.ok) {
         clearInterval(progressInterval);
         
-        // Clone a resposta antes de tentar lê-la para evitar o erro "body stream already read"
+        // Clone a resposta antes de tentar lê-la
         const clonedResponse = response.clone();
+        let errorMessage = "";
         
         // Tentar obter detalhes do erro como JSON primeiro
         try {
           const errorData = await response.json();
           console.error("Erro detalhado (JSON):", errorData);
           
-          // Verificar se há problema específico com as credenciais
           if (errorData.error?.includes('autenticação') || 
               errorData.error?.includes('auth') || 
-              errorData.error?.includes('token')) {
-            throw new Error("Falha na autenticação com o serviço Panda Video. Verifique as credenciais.");
+              errorData.error?.includes('token') ||
+              response.status === 401) {
+            errorMessage = "Falha na autenticação com o serviço Panda Video. Verifique as credenciais.";
+          } else if (response.status === 500) {
+            errorMessage = "Erro interno do servidor. Tente novamente em alguns instantes.";
+          } else {
+            errorMessage = errorData.error || errorData.message || "Falha ao fazer upload do vídeo";
           }
-          
-          const errorMsg = errorData.error || errorData.message || "Falha ao fazer upload do vídeo";
-          throw new Error(errorMsg);
         } catch (jsonError) {
-          // Se falhar ao ler como JSON, tente ler como texto usando a resposta clonada
+          // Se falhar ao ler como JSON, tente ler como texto
           try {
             const errorText = await clonedResponse.text();
             console.error("Resposta não-JSON do servidor:", errorText);
             
-            // Melhor análise do erro 500
             if (response.status === 500) {
-              if (errorText.includes("auth") || errorText.includes("token") || errorText.includes("credential")) {
-                throw new Error("Erro de autenticação com a API do Panda Video. Verifique as credenciais no servidor.");
-              } else {
-                throw new Error("Erro interno do servidor. Por favor, tente novamente com um vídeo menor.");
-              }
+              errorMessage = "Erro interno do servidor. Tente novamente em alguns instantes.";
+            } else if (response.status === 401) {
+              errorMessage = "Erro de autenticação. Tente fazer login novamente.";
+            } else {
+              errorMessage = `Erro no servidor (Código ${response.status})`;
             }
-            
-            const errorMsg = `Erro no servidor (Código ${response.status}): ${
-              errorText.length > 100 ? errorText.substring(0, 100) + "..." : errorText
-            }`;
-            throw new Error(errorMsg);
           } catch (textError) {
-            // Se ambos falharem, retorne um erro genérico com o status HTTP
-            throw new Error(`Erro na comunicação com o servidor (Código ${response.status}). Tente novamente mais tarde.`);
+            errorMessage = `Erro na comunicação com o servidor (Código ${response.status})`;
           }
         }
+        
+        // Verificar se devemos tentar novamente
+        if (retryCount < maxRetries && (response.status === 500 || response.status === 503 || response.status === 429)) {
+          clearInterval(progressInterval);
+          setProgress(0);
+          setRetrying(true);
+          setRetryCount(prevCount => prevCount + 1);
+          
+          toast({
+            title: "Tentando novamente",
+            description: `Tentativa ${retryCount + 1} de ${maxRetries}. Por favor, aguarde...`,
+            variant: "default",
+          });
+          
+          // Esperar antes de tentar novamente (backoff exponencial)
+          const retryDelay = Math.pow(2, retryCount) * 2000;
+          await new Promise(resolve => setTimeout(resolve, retryDelay));
+          
+          // Chamar a função de upload novamente
+          setRetrying(false);
+          setUploading(false);
+          setTimeout(() => handleUpload(), 500);
+          return;
+        }
+        
+        throw new Error(errorMessage);
       }
 
       // Esta é a forma segura de ler o corpo da resposta uma única vez
@@ -250,12 +283,6 @@ export const PandaVideoUpload = ({
       // Mensagem mais específica baseada no erro
       let errorMessage = error.message || "Não foi possível enviar o vídeo. Tente novamente.";
       
-      if (error.message?.includes("credenciais") || error.message?.includes("autenticação")) {
-        errorMessage = "Falha na autenticação com o serviço de vídeo. Por favor, contate o suporte técnico.";
-      } else if (error.message?.includes("tempo limite") || error.message?.includes("timeout")) {
-        errorMessage = "O upload demorou muito tempo e foi cancelado. Tente com um vídeo menor ou verifique sua conexão.";
-      }
-      
       setError(errorMessage);
       toast({
         title: "Falha no upload",
@@ -318,29 +345,37 @@ export const PandaVideoUpload = ({
               type="button" 
               variant="ghost" 
               size="sm" 
-              disabled={uploading}
+              disabled={uploading || retrying}
               onClick={() => setVideoFile(null)}
             >
               <X className="h-4 w-4" />
             </Button>
           </div>
 
-          {uploading && (
+          {(uploading || retrying) && (
             <div className="mt-2 space-y-2">
-              <Progress value={progress} />
+              <Progress value={retrying ? 0 : progress} />
               <p className="text-xs text-center text-muted-foreground">
-                {progress < 100 ? `Enviando... ${progress}%` : "Processando vídeo..."}
+                {retrying ? (
+                  <span className="flex items-center justify-center">
+                    <RefreshCw className="h-3 w-3 mr-1 animate-spin" />
+                    Preparando tentativa {retryCount} de {maxRetries}...
+                  </span>
+                ) : progress < 100 ? (
+                  `Enviando... ${progress}%`
+                ) : (
+                  "Processando vídeo..."
+                )}
               </p>
             </div>
           )}
 
-          {!uploading && (
+          {!uploading && !retrying && (
             <Button
               type="button"
               variant="default"
               className="mt-2 w-full"
               onClick={handleUpload}
-              disabled={uploading}
             >
               <Upload className="mr-2 h-4 w-4" />
               Enviar vídeo
@@ -361,7 +396,7 @@ export const PandaVideoUpload = ({
                 type="file"
                 accept="video/*"
                 onChange={handleFileChange}
-                disabled={uploading}
+                disabled={uploading || retrying}
                 className="hidden"
               />
             </label>
@@ -373,7 +408,7 @@ export const PandaVideoUpload = ({
         </div>
       )}
       
-      {uploading && (
+      {(uploading || retrying) && (
         <div className="flex justify-center">
           <Loader2 className="h-5 w-5 animate-spin text-primary" />
         </div>
