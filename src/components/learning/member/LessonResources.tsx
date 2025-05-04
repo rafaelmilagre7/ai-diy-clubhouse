@@ -2,7 +2,7 @@
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Download, File, FileText, FileImage, MoreHorizontal } from "lucide-react";
+import { Download, File, FileText, FileImage, MoreHorizontal, FileArchive } from "lucide-react";
 import { bytesToSize } from "@/lib/utils";
 
 interface Resource {
@@ -21,13 +21,35 @@ interface LessonResourcesProps {
 export const LessonResources: React.FC<LessonResourcesProps> = ({ resources }) => {
   // Função para determinar o ícone baseado no tipo de arquivo
   const getFileIcon = (fileType: string | undefined) => {
-    if (!fileType) return File;
+    if (!fileType) return <File className="h-5 w-5" />;
     
-    if (fileType.includes('pdf')) return FileText; // Usado FileText no lugar de FilePdf
-    if (fileType.includes('image')) return FileImage;
-    if (fileType.includes('text')) return FileText;
+    if (fileType.includes('pdf')) return <FileText className="h-5 w-5 text-red-500" />; 
+    if (fileType.includes('image')) return <FileImage className="h-5 w-5 text-blue-500" />;
+    if (fileType.includes('text') || fileType.includes('doc')) return <FileText className="h-5 w-5 text-blue-600" />;
+    if (fileType.includes('spreadsheet') || fileType.includes('excel') || fileType.includes('xls')) 
+      return <FileText className="h-5 w-5 text-green-600" />;
+    if (fileType.includes('zip') || fileType.includes('rar')) 
+      return <FileArchive className="h-5 w-5 text-yellow-600" />;
     
-    return File;
+    return <File className="h-5 w-5" />;
+  };
+
+  // Função para fazer download do arquivo
+  const handleDownload = (resource: Resource) => {
+    try {
+      // Criar um link temporário para download
+      const link = document.createElement('a');
+      link.href = resource.file_url;
+      link.setAttribute('download', resource.name);
+      link.setAttribute('target', '_blank');
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error('Erro ao fazer download:', error);
+      // Abrir em nova aba como fallback
+      window.open(resource.file_url, '_blank');
+    }
   };
   
   if (!resources.length) {
@@ -51,12 +73,10 @@ export const LessonResources: React.FC<LessonResourcesProps> = ({ resources }) =
         const isPdf = resource.file_type?.includes('pdf');
         
         return (
-          <Card key={resource.id} className="overflow-hidden">
+          <Card key={resource.id} className="overflow-hidden hover:shadow-md transition-shadow">
             <div className="flex items-center p-4 gap-4">
               <div className="bg-muted/50 p-3 rounded-lg">
-                <FileIcon 
-                  className={`h-6 w-6 ${isPdf ? 'text-red-500' : 'text-primary'}`} 
-                />
+                {FileIcon}
               </div>
               
               <div className="flex-1 min-w-0">
@@ -71,7 +91,12 @@ export const LessonResources: React.FC<LessonResourcesProps> = ({ resources }) =
                 )}
               </div>
               
-              <Button asChild variant="outline" size="sm">
+              <Button 
+                asChild 
+                variant="outline" 
+                size="sm"
+                onClick={() => handleDownload(resource)}
+              >
                 <a href={resource.file_url} target="_blank" rel="noopener noreferrer" download>
                   <Download className="h-4 w-4 mr-1" />
                   <span className="hidden sm:inline">Download</span>

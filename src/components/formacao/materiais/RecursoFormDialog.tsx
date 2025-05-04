@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -25,7 +26,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { FileUpload } from "@/components/formacao/common/FileUpload";
+import { FileUpload } from "@/components/formacao/comum/FileUpload";
 import { Loader2 } from "lucide-react";
 
 interface RecursoFormDialogProps {
@@ -71,6 +72,8 @@ export const RecursoFormDialog = ({
     setIsSubmitting(true);
     
     try {
+      console.log("Iniciando salvamento do recurso:", values);
+      
       if (isEditing) {
         // Atualizando recurso existente
         const { error } = await supabase
@@ -84,7 +87,12 @@ export const RecursoFormDialog = ({
           })
           .eq('id', recurso.id);
           
-        if (error) throw error;
+        if (error) {
+          console.error("Erro ao atualizar recurso:", error);
+          throw error;
+        }
+        
+        console.log("Recurso atualizado com sucesso");
         toast.success("Material atualizado com sucesso!");
       } else {
         // Primeiro, verificamos a ordem máxima atual
@@ -95,14 +103,19 @@ export const RecursoFormDialog = ({
           .order('order_index', { ascending: false })
           .limit(1);
           
-        if (maxOrderError) throw maxOrderError;
+        if (maxOrderError) {
+          console.error("Erro ao buscar ordem máxima:", maxOrderError);
+          throw maxOrderError;
+        }
         
         const nextOrder = maxOrderData && maxOrderData.length > 0 
           ? (maxOrderData[0].order_index + 1) 
           : 0;
+          
+        console.log("Próxima ordem:", nextOrder);
         
         // Criando novo recurso
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from('learning_resources')
           .insert({
             name: values.name,
@@ -112,17 +125,24 @@ export const RecursoFormDialog = ({
             file_size_bytes: values.file_size_bytes,
             lesson_id: lessonId,
             order_index: nextOrder,
-          });
+          })
+          .select();
           
-        if (error) throw error;
+        if (error) {
+          console.error("Erro ao inserir recurso:", error);
+          throw error;
+        }
+        
+        console.log("Recurso criado com sucesso:", data);
         toast.success("Material adicionado com sucesso!");
       }
       
       onSuccess();
       form.reset();
-    } catch (error) {
+      onOpenChange(false);
+    } catch (error: any) {
       console.error("Erro ao salvar material:", error);
-      toast.error("Ocorreu um erro ao salvar o material. Tente novamente.");
+      toast.error(`Erro ao salvar o material: ${error.message || "Tente novamente."}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -196,13 +216,15 @@ export const RecursoFormDialog = ({
                     <FileUpload
                       value={field.value}
                       onChange={(url, fileType, fileSize) => {
+                        console.log("Arquivo enviado:", { url, fileType, fileSize });
                         field.onChange(url);
-                        form.setValue("file_type", fileType);
-                        form.setValue("file_size_bytes", fileSize);
+                        form.setValue("file_type", fileType || "");
+                        form.setValue("file_size_bytes", fileSize || 0);
                       }}
                       bucketName="solution_files"
                       folderPath="learning_materials"
                       acceptedFileTypes="*/*"
+                      disabled={isSubmitting}
                     />
                   </FormControl>
                   <FormDescription>
@@ -214,7 +236,7 @@ export const RecursoFormDialog = ({
             />
 
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => handleOpenChange(false)}>
+              <Button type="button" variant="outline" onClick={() => handleOpenChange(false)} disabled={isSubmitting}>
                 Cancelar
               </Button>
               <Button type="submit" disabled={isSubmitting}>

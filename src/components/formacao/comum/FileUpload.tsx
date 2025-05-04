@@ -15,6 +15,7 @@ interface FileUploadProps {
   bucketName: string;
   folderPath?: string;
   acceptedFileTypes?: string;
+  disabled?: boolean;
 }
 
 export const FileUpload = ({ 
@@ -22,7 +23,8 @@ export const FileUpload = ({
   onChange, 
   bucketName, 
   folderPath = "",
-  acceptedFileTypes = "*/*"
+  acceptedFileTypes = "*/*",
+  disabled = false
 }: FileUploadProps) => {
   const [uploading, setUploading] = useState(false);
   const [fileName, setFileName] = useState<string | null>(null);
@@ -65,6 +67,37 @@ export const FileUpload = ({
             setBucketReady(true);
             return;
           }
+        }
+        
+        // Tentar criar um bucket se nenhum estiver disponível
+        try {
+          console.log("Nenhum bucket encontrado, tentando criar...");
+          const { data, error } = await supabase
+            .storage
+            .createBucket(bucketName, {
+              public: true,
+              fileSizeLimit: 104857600 // 100MB
+            });
+            
+          if (error) {
+            console.error("Erro ao criar bucket:", error);
+            throw error;
+          }
+          
+          console.log("Bucket criado com sucesso:", data);
+          
+          // Criar políticas de acesso público
+          try {
+            await supabase.rpc('create_storage_public_policy', { bucket_name: bucketName });
+            console.log("Políticas de acesso público criadas para o bucket");
+          } catch (policyError) {
+            console.error("Erro ao criar políticas de acesso:", policyError);
+          }
+          
+          setBucketReady(true);
+          return;
+        } catch (createError) {
+          console.error("Erro ao criar bucket:", createError);
         }
         
         setError("Nenhum bucket de armazenamento disponível. Entre em contato com o administrador do sistema.");
@@ -215,7 +248,8 @@ export const FileUpload = ({
         <div className="flex items-center justify-center w-full">
           <label
             className={cn(
-              "flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer",
+              "flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg",
+              disabled ? "cursor-not-allowed opacity-60" : "cursor-pointer",
               "bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600",
               "border-gray-300 dark:border-gray-600"
             )}
@@ -245,7 +279,7 @@ export const FileUpload = ({
               type="file"
               className="hidden"
               onChange={handleFileChange}
-              disabled={uploading || (!bucketReady && !fallbackBuckets.length)}
+              disabled={uploading || disabled || (!bucketReady && !fallbackBuckets.length)}
               accept={acceptedFileTypes}
             />
           </label>
@@ -261,16 +295,18 @@ export const FileUpload = ({
               Arquivo carregado com sucesso
             </p>
           </div>
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={handleRemoveFile}
-            disabled={uploading}
-            className="flex-shrink-0"
-          >
-            <X className="h-4 w-4" />
-            <span className="sr-only">Remover arquivo</span>
-          </Button>
+          {!disabled && (
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={handleRemoveFile}
+              disabled={uploading || disabled}
+              className="flex-shrink-0"
+            >
+              <X className="h-4 w-4" />
+              <span className="sr-only">Remover arquivo</span>
+            </Button>
+          )}
         </div>
       )}
     </div>

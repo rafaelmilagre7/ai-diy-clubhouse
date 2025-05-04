@@ -15,23 +15,28 @@ import { AulaFormValues } from "../AulaStepWizard";
 import { FileUpload } from "@/components/formacao/comum/FileUpload";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { File, Trash, Plus } from "lucide-react";
+import { File, Trash, Plus, Loader2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/lib/supabase";
 
 interface EtapaMateriaisProps {
   form: UseFormReturn<AulaFormValues>;
   onNext: () => void;
   onPrevious: () => void;
   isSaving: boolean;
+  aulaId?: string; // ID da aula sendo editada, se for uma edição
 }
 
 const EtapaMateriais: React.FC<EtapaMateriaisProps> = ({
   form,
   onNext,
-  onPrevious
+  onPrevious,
+  isSaving,
+  aulaId
 }) => {
   const { toast } = useToast();
+  const [savingMaterial, setSavingMaterial] = React.useState<number | null>(null);
 
   const handleContinue = async () => {
     const result = await form.trigger(['resources']);
@@ -59,6 +64,76 @@ const EtapaMateriais: React.FC<EtapaMateriaisProps> = ({
     const newResources = [...form.getValues().resources];
     newResources[index] = { ...newResources[index], [field]: value };
     form.setValue("resources", newResources);
+  };
+
+  // Função para salvar o material no banco de dados quando o upload for concluído
+  const saveResourceToDatabase = async (index: number) => {
+    try {
+      setSavingMaterial(index);
+      const resources = form.getValues().resources || [];
+      const resource = resources[index];
+      
+      if (!resource?.url || !resource?.title) {
+        toast({
+          title: "Erro ao salvar material",
+          description: "URL e título são obrigatórios.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Se estamos editando uma aula, salvar diretamente no banco
+      if (aulaId) {
+        console.log("Salvando material para a aula:", aulaId);
+        
+        const { data, error } = await supabase
+          .from("learning_resources")
+          .insert({
+            lesson_id: aulaId,
+            name: resource.title,
+            description: resource.description || "",
+            file_url: resource.url,
+            file_type: resource.type,
+            file_size_bytes: resource.fileSize,
+            order_index: index
+          })
+          .select("*")
+          .single();
+          
+        if (error) {
+          console.error("Erro ao salvar material no banco:", error);
+          throw error;
+        }
+
+        console.log("Material salvo com sucesso:", data);
+        
+        toast({
+          title: "Material adicionado",
+          description: "O material foi salvo com sucesso.",
+        });
+      }
+      
+    } catch (error: any) {
+      console.error("Erro ao salvar material:", error);
+      toast({
+        title: "Erro ao salvar material",
+        description: error.message || "Ocorreu um erro ao tentar salvar o material.",
+        variant: "destructive",
+      });
+    } finally {
+      setSavingMaterial(null);
+    }
+  };
+
+  const handleFileUpload = async (index: number, url: string, fileType: string | undefined, fileSize: number | undefined) => {
+    handleMaterialChange(index, "url", url);
+    handleMaterialChange(index, "type", fileType || "document");
+    handleMaterialChange(index, "fileSize", fileSize);
+    
+    // Se temos um aulaId, salvar material diretamente no banco
+    if (aulaId) {
+      await saveResourceToDatabase(index);
+    }
   };
 
   const resources = form.watch('resources') || [];
@@ -103,6 +178,7 @@ const EtapaMateriais: React.FC<EtapaMateriaisProps> = ({
                         variant="ghost"
                         size="sm"
                         onClick={() => handleRemoveMaterial(index)}
+                        disabled={savingMaterial === index}
                       >
                         <Trash className="h-4 w-4 mr-1" />
                         Remover
@@ -114,6 +190,7 @@ const EtapaMateriais: React.FC<EtapaMateriaisProps> = ({
                         placeholder="Título do material"
                         value={resource.title || ''}
                         onChange={(e) => handleMaterialChange(index, "title", e.target.value)}
+                        disabled={savingMaterial === index}
                       />
                       
                       <Textarea
@@ -121,19 +198,24 @@ const EtapaMateriais: React.FC<EtapaMateriaisProps> = ({
                         value={resource.description || ''}
                         onChange={(e) => handleMaterialChange(index, "description", e.target.value)}
                         className="resize-none h-20"
+                        disabled={savingMaterial === index}
                       />
                       
                       <FileUpload
                         value={resource.url || ''}
-                        onChange={(url, fileType, fileSize) => {
-                          handleMaterialChange(index, "url", url);
-                          handleMaterialChange(index, "type", fileType || "document");
-                          handleMaterialChange(index, "fileSize", fileSize);
-                        }}
+                        onChange={(url, fileType, fileSize) => handleFileUpload(index, url, fileType, fileSize)}
                         bucketName="solution_files"
                         folderPath="learning_materials"
                         acceptedFileTypes="application/pdf, application/msword, application/vnd.openxmlformats-officedocument.wordprocessingml.document, application/vnd.ms-excel, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/zip, image/jpeg, image/png"
+                        disabled={savingMaterial === index}
                       />
+                      
+                      {savingMaterial === index && (
+                        <div className="flex items-center justify-center p-2 bg-muted rounded">
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          <span className="text-sm">Salvando material...</span>
+                        </div>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
@@ -153,8 +235,16 @@ const EtapaMateriais: React.FC<EtapaMateriaisProps> = ({
           <Button 
             type="button" 
             onClick={handleContinue}
+            disabled={isSaving}
           >
-            Continuar
+            {isSaving ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Salvando...
+              </>
+            ) : (
+              'Continuar'
+            )}
           </Button>
         </div>
       </div>

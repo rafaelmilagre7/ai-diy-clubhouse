@@ -1,28 +1,26 @@
 
-/**
- * Configurações do Supabase
- */
+// Configurações gerais do Supabase para o projeto
 
-// Buckets de armazenamento usados pelo sistema
+// Configurações para os buckets de armazenamento
 export const STORAGE_BUCKETS = {
-  LEARNING_VIDEOS: 'learning_videos',
-  LEARNING_RESOURCES: 'learning_resources',
-  LEARNING_COVERS: 'learning_covers', // Bucket para imagens de capa
-  LEARNING_IMAGES: 'learning_images', // Adicionando bucket específico para imagens gerais
-  FALLBACK: 'solution_files', // Bucket alternativo caso os outros falhem
+  AVATARS: 'avatars',
+  SOLUTION_FILES: 'solution_files',
+  LEARNING_MATERIALS: 'learning_materials',
+  COURSE_IMAGES: 'course_images',
+  FALLBACK: 'solution_files' // Bucket de fallback para uploads
 };
 
-// Limites de tamanho de arquivo por tipo (em bytes)
-export const FILE_SIZE_LIMITS = {
-  IMAGES: 5 * 1024 * 1024,       // 5MB para imagens
-  DOCUMENTS: 25 * 1024 * 1024,   // 25MB para documentos
-  VIDEOS: 300 * 1024 * 1024,     // 300MB para vídeos
-  DEFAULT: 100 * 1024 * 1024,    // 100MB padrão
+// Tamanhos máximos de upload para diferentes tipos de arquivo
+export const MAX_UPLOAD_SIZES = {
+  IMAGE: 5, // 5MB
+  DOCUMENT: 10, // 10MB
+  VIDEO: 100, // 100MB
+  DEFAULT: 20 // 20MB
 };
 
-// Configurações de validação
-export const UPLOAD_VALIDATORS = {
-  IMAGE_EXTENSIONS: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'],
-  VIDEO_EXTENSIONS: ['mp4', 'mov', 'avi', 'mkv', 'webm'],
-  DOCUMENT_EXTENSIONS: ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt'],
+// Extensões de arquivo permitidas por categoria
+export const ALLOWED_FILE_EXTENSIONS = {
+  IMAGES: ['.jpg', '.jpeg', '.png', '.gif', '.webp'],
+  DOCUMENTS: ['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx', '.txt'],
+  VIDEOS: ['.mp4', '.webm', '.mov', '.avi']
 };
