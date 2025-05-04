@@ -81,6 +81,51 @@ const ModuloDetalhes = () => {
     fetchAulas();
   }, [id]);
 
+  // Função para atualizar a lista após operações bem-sucedidas
+  const handleSuccess = () => {
+    fetchAulas();
+  };
+
+  // Função para editar aula
+  const handleEditarAula = (aula: LearningLesson) => {
+    navigate(`/formacao/aulas/${aula.id}`);
+  };
+
+  // Função para excluir aula
+  const handleExcluirAula = async (aulaId: string) => {
+    try {
+      // Primeiro excluir materiais relacionados
+      const { error: materiaisError } = await supabase
+        .from('learning_resources')
+        .delete()
+        .eq('lesson_id', aulaId);
+      
+      if (materiaisError) throw materiaisError;
+      
+      // Depois excluir vídeos relacionados
+      const { error: videosError } = await supabase
+        .from('learning_lesson_videos')
+        .delete()
+        .eq('lesson_id', aulaId);
+      
+      if (videosError) throw videosError;
+      
+      // Finalmente excluir a aula
+      const { error } = await supabase
+        .from('learning_lessons')
+        .delete()
+        .eq('id', aulaId);
+      
+      if (error) throw error;
+      
+      toast.success("Aula excluída com sucesso!");
+      fetchAulas();
+    } catch (error) {
+      console.error("Erro ao excluir aula:", error);
+      toast.error("Não foi possível excluir a aula. Verifique se não há dependências.");
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center py-12">
@@ -124,17 +169,20 @@ const ModuloDetalhes = () => {
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-semibold">Aulas</h2>
         {isAdmin && (
-          <NovaAulaButton moduleId={id || ''} />
+          <NovaAulaButton 
+            moduleId={id || ''} 
+            buttonText="Nova Aula"
+            onSuccess={handleSuccess}
+          />
         )}
       </div>
       
       <AulasList 
         aulas={aulas} 
         loading={loadingAulas} 
-        onEdit={() => {}}
-        onDelete={() => {}}
+        onEdit={handleEditarAula}
+        onDelete={handleExcluirAula}
         isAdmin={isAdmin}
-        onRefresh={fetchAulas}
       />
     </div>
   );

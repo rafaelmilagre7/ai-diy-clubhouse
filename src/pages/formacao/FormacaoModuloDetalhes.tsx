@@ -7,9 +7,9 @@ import { LearningModule, LearningLesson } from "@/lib/supabase";
 import { toast } from "sonner";
 import { FormacaoAulasHeader } from "@/components/formacao/aulas/FormacaoAulasHeader";
 import { AulasList } from "@/components/formacao/aulas/AulasList";
-import AulaWizard from "@/components/formacao/aulas/AulaWizard";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
+import { NovaAulaButton } from "@/components/formacao/aulas/NovaAulaButton";
 
 const FormacaoModuloDetalhes = () => {
   const { id } = useParams<{ id: string }>();
@@ -20,8 +20,6 @@ const FormacaoModuloDetalhes = () => {
   const [aulas, setAulas] = useState<LearningLesson[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingAulas, setLoadingAulas] = useState(true);
-  const [isAulaWizardOpen, setIsAulaWizardOpen] = useState(false);
-  const [editingAula, setEditingAula] = useState<LearningLesson | null>(null);
 
   // Buscar detalhes do módulo
   const fetchModulo = async () => {
@@ -76,18 +74,6 @@ const FormacaoModuloDetalhes = () => {
     fetchAulas();
   }, [id]);
 
-  // Abrir modal para criar nova aula
-  const handleNovaAula = () => {
-    setEditingAula(null);
-    setIsAulaWizardOpen(true);
-  };
-
-  // Abrir modal para editar aula existente
-  const handleEditarAula = (aula: LearningLesson) => {
-    setEditingAula(aula);
-    setIsAulaWizardOpen(true);
-  };
-
   // Excluir aula
   const handleExcluirAula = async (aulaId: string) => {
     try {
@@ -123,9 +109,13 @@ const FormacaoModuloDetalhes = () => {
     }
   };
 
-  // Ações após salvar uma aula
-  const handleSalvarAula = () => {
-    setIsAulaWizardOpen(false);
+  // Função para editar aula
+  const handleEditarAula = (aula: LearningLesson) => {
+    navigate(`/formacao/aulas/${aula.id}`);
+  };
+
+  // Função para atualizar a lista após operações bem-sucedidas
+  const handleSuccess = () => {
     fetchAulas();
   };
 
@@ -152,11 +142,18 @@ const FormacaoModuloDetalhes = () => {
   return (
     <div className="space-y-6">
       <FormacaoAulasHeader 
-        onNovaAula={handleNovaAula} 
         titulo={modulo.title}
         breadcrumb={true}
         moduloId={modulo.course_id}
-      />
+      >
+        {isAdmin && (
+          <NovaAulaButton 
+            moduleId={id || ''} 
+            buttonText="Nova Aula"
+            onSuccess={handleSuccess}
+          />
+        )}
+      </FormacaoAulasHeader>
       
       <AulasList 
         aulas={aulas} 
@@ -164,14 +161,6 @@ const FormacaoModuloDetalhes = () => {
         onEdit={handleEditarAula}
         onDelete={handleExcluirAula}
         isAdmin={isAdmin}
-      />
-      
-      <AulaWizard 
-        open={isAulaWizardOpen}
-        onOpenChange={setIsAulaWizardOpen}
-        aula={editingAula}
-        moduleId={id || ''}
-        onSuccess={handleSalvarAula}
       />
     </div>
   );
