@@ -15,7 +15,10 @@ serve(async (req) => {
     // Verificar se a requisição é POST
     if (req.method !== "POST") {
       return new Response(
-        JSON.stringify({ error: "Método não permitido" }),
+        JSON.stringify({ 
+          success: false,
+          error: "Método não permitido" 
+        }),
         { 
           status: 405, 
           headers: { 
@@ -30,7 +33,10 @@ serve(async (req) => {
     const authHeader = req.headers.get("Authorization");
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return new Response(
-        JSON.stringify({ error: "Usuário não autenticado" }),
+        JSON.stringify({ 
+          success: false,
+          error: "Usuário não autenticado" 
+        }),
         { 
           status: 401, 
           headers: { 
@@ -48,7 +54,10 @@ serve(async (req) => {
     if (!clientId || !clientSecret) {
       console.error("Credenciais do Panda Video não configuradas");
       return new Response(
-        JSON.stringify({ error: "Configuração incompleta do servidor" }),
+        JSON.stringify({ 
+          success: false,
+          error: "Configuração incompleta do servidor" 
+        }),
         { 
           status: 500, 
           headers: { 
@@ -60,14 +69,37 @@ serve(async (req) => {
     }
 
     // Extrair os dados do formulário
-    const formData = await req.formData();
+    let formData;
+    try {
+      formData = await req.formData();
+    } catch (formError) {
+      console.error("Erro ao processar formulário:", formError);
+      return new Response(
+        JSON.stringify({ 
+          success: false,
+          error: "Erro ao processar os dados do formulário",
+          details: formError.message 
+        }),
+        { 
+          status: 400, 
+          headers: { 
+            ...corsHeaders, 
+            "Content-Type": "application/json" 
+          } 
+        }
+      );
+    }
+    
     const videoFile = formData.get("video") as File;
     const videoTitle = formData.get("title") as string || "Vídeo sem título";
     const isPrivate = formData.get("private") === "true";
 
     if (!videoFile) {
       return new Response(
-        JSON.stringify({ error: "Nenhum arquivo de vídeo enviado" }),
+        JSON.stringify({ 
+          success: false,
+          error: "Nenhum arquivo de vídeo enviado" 
+        }),
         { 
           status: 400, 
           headers: { 
@@ -81,78 +113,26 @@ serve(async (req) => {
     console.log(`Processando upload do vídeo: ${videoTitle} (${videoFile.size} bytes)`);
 
     // 1. Autenticar com o Panda Video para obter token
-    const tokenResponse = await fetch(PANDA_AUTH_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded"
-      },
-      body: new URLSearchParams({
-        grant_type: "client_credentials",
-        client_id: clientId,
-        client_secret: clientSecret
-      })
-    });
-
-    if (!tokenResponse.ok) {
-      const tokenError = await tokenResponse.text();
-      console.error("Erro na autenticação com Panda Video:", tokenError);
-      return new Response(
-        JSON.stringify({ error: "Falha na autenticação com o serviço de vídeo" }),
-        { 
-          status: 500, 
-          headers: { 
-            ...corsHeaders, 
-            "Content-Type": "application/json" 
-          } 
-        }
-      );
-    }
-
-    const tokenData = await tokenResponse.json();
-    const accessToken = tokenData.access_token;
-
-    if (!accessToken) {
-      console.error("Token de acesso não recebido:", tokenData);
-      return new Response(
-        JSON.stringify({ error: "Falha ao obter autorização do serviço de vídeo" }),
-        { 
-          status: 500, 
-          headers: { 
-            ...corsHeaders, 
-            "Content-Type": "application/json" 
-          } 
-        }
-      );
-    }
-
-    // 2. Converter o arquivo para base64
-    const arrayBuffer = await videoFile.arrayBuffer();
-    const bytes = new Uint8Array(arrayBuffer);
-    const base64 = btoa(String.fromCharCode(...bytes));
-    const mimeType = videoFile.type;
-    const base64Data = `data:${mimeType};base64,${base64}`;
-
-    // 3. Enviar o vídeo para o Panda Video
-    const uploadResponse = await fetch(PANDA_API_URL, {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${accessToken}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        title: videoTitle,
-        path: base64Data,
-        private: isPrivate
-      })
-    });
-
-    if (!uploadResponse.ok) {
-      const uploadError = await uploadResponse.text();
-      console.error("Erro no upload para Panda Video:", uploadError);
+    let tokenResponse;
+    try {
+      tokenResponse = await fetch(PANDA_AUTH_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded"
+        },
+        body: new URLSearchParams({
+          grant_type: "client_credentials",
+          client_id: clientId,
+          client_secret: clientSecret
+        })
+      });
+    } catch (authError) {
+      console.error("Erro na requisição para autenticação:", authError);
       return new Response(
         JSON.stringify({ 
-          error: "Falha ao fazer upload do vídeo",
-          details: uploadError
+          success: false,
+          error: "Falha na conexão com o serviço de autenticação",
+          details: authError.message 
         }),
         { 
           status: 500, 
@@ -164,7 +144,177 @@ serve(async (req) => {
       );
     }
 
-    const videoData = await uploadResponse.json();
+    if (!tokenResponse.ok) {
+      let tokenErrorText;
+      try {
+        tokenErrorText = await tokenResponse.text();
+      } catch (e) {
+        tokenErrorText = "Erro desconhecido na autenticação";
+      }
+      
+      console.error("Erro na autenticação com Panda Video:", tokenErrorText);
+      return new Response(
+        JSON.stringify({ 
+          success: false,
+          error: "Falha na autenticação com o serviço de vídeo",
+          details: tokenErrorText 
+        }),
+        { 
+          status: 500, 
+          headers: { 
+            ...corsHeaders, 
+            "Content-Type": "application/json" 
+          } 
+        }
+      );
+    }
+
+    let tokenData;
+    try {
+      tokenData = await tokenResponse.json();
+    } catch (parseError) {
+      console.error("Erro ao parsear resposta de token:", parseError);
+      return new Response(
+        JSON.stringify({ 
+          success: false,
+          error: "Erro ao processar resposta de autenticação",
+          details: parseError.message 
+        }),
+        { 
+          status: 500, 
+          headers: { 
+            ...corsHeaders, 
+            "Content-Type": "application/json" 
+          } 
+        }
+      );
+    }
+    
+    const accessToken = tokenData.access_token;
+
+    if (!accessToken) {
+      console.error("Token de acesso não recebido:", tokenData);
+      return new Response(
+        JSON.stringify({ 
+          success: false,
+          error: "Falha ao obter autorização do serviço de vídeo" 
+        }),
+        { 
+          status: 500, 
+          headers: { 
+            ...corsHeaders, 
+            "Content-Type": "application/json" 
+          } 
+        }
+      );
+    }
+
+    // 2. Converter o arquivo para base64
+    let arrayBuffer, base64;
+    try {
+      arrayBuffer = await videoFile.arrayBuffer();
+      const bytes = new Uint8Array(arrayBuffer);
+      base64 = btoa(String.fromCharCode(...bytes));
+    } catch (convertError) {
+      console.error("Erro ao converter vídeo para base64:", convertError);
+      return new Response(
+        JSON.stringify({ 
+          success: false,
+          error: "Erro ao processar o arquivo de vídeo",
+          details: convertError.message 
+        }),
+        { 
+          status: 500, 
+          headers: { 
+            ...corsHeaders, 
+            "Content-Type": "application/json" 
+          } 
+        }
+      );
+    }
+    
+    const mimeType = videoFile.type;
+    const base64Data = `data:${mimeType};base64,${base64}`;
+
+    // 3. Enviar o vídeo para o Panda Video
+    let uploadResponse;
+    try {
+      uploadResponse = await fetch(PANDA_API_URL, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${accessToken}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          title: videoTitle,
+          path: base64Data,
+          private: isPrivate
+        })
+      });
+    } catch (uploadError) {
+      console.error("Erro na requisição de upload:", uploadError);
+      return new Response(
+        JSON.stringify({ 
+          success: false,
+          error: "Falha na conexão com o serviço de vídeo",
+          details: uploadError.message 
+        }),
+        { 
+          status: 500, 
+          headers: { 
+            ...corsHeaders, 
+            "Content-Type": "application/json" 
+          } 
+        }
+      );
+    }
+
+    if (!uploadResponse.ok) {
+      let uploadErrorText;
+      try {
+        uploadErrorText = await uploadResponse.text();
+      } catch (e) {
+        uploadErrorText = "Erro desconhecido no upload";
+      }
+      
+      console.error("Erro no upload para Panda Video:", uploadErrorText);
+      return new Response(
+        JSON.stringify({ 
+          success: false,
+          error: "Falha ao fazer upload do vídeo",
+          details: uploadErrorText 
+        }),
+        { 
+          status: 500, 
+          headers: { 
+            ...corsHeaders, 
+            "Content-Type": "application/json" 
+          } 
+        }
+      );
+    }
+
+    let videoData;
+    try {
+      videoData = await uploadResponse.json();
+    } catch (parseError) {
+      console.error("Erro ao parsear resposta de upload:", parseError);
+      return new Response(
+        JSON.stringify({ 
+          success: false,
+          error: "Erro ao processar resposta do upload",
+          details: parseError.message 
+        }),
+        { 
+          status: 500, 
+          headers: { 
+            ...corsHeaders, 
+            "Content-Type": "application/json" 
+          } 
+        }
+      );
+    }
+    
     console.log("Upload de vídeo bem-sucedido:", videoData);
 
     // 4. Retornar os dados do vídeo
@@ -192,6 +342,7 @@ serve(async (req) => {
     console.error("Erro no processamento do upload:", error);
     return new Response(
       JSON.stringify({ 
+        success: false,
         error: "Erro no processamento do upload", 
         message: error.message 
       }),

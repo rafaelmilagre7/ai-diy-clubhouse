@@ -104,6 +104,9 @@ export const PandaVideoUpload = ({
       formData.append("title", videoFile.name.replace(/\.[^/.]+$/, ""));
       formData.append("private", "true");
 
+      // Verificar tamanho antes do envio
+      console.log(`Iniciando upload do vídeo: ${videoFile.name}, tamanho: ${bytesToSize(videoFile.size)}`);
+
       // Iniciar upload para a Edge Function
       const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/upload-panda-video`, {
         method: "POST",
@@ -126,12 +129,41 @@ export const PandaVideoUpload = ({
 
       if (!response.ok) {
         clearInterval(progressInterval);
-        const errorData = await response.json();
-        throw new Error(errorData.error || errorData.message || "Falha ao fazer upload do vídeo");
+        
+        // Tente obter detalhes do erro, mesmo se não for um JSON válido
+        let errorMsg = "Falha ao fazer upload do vídeo";
+        try {
+          const errorData = await response.json();
+          errorMsg = errorData.error || errorData.message || errorMsg;
+          console.error("Erro detalhado:", errorData);
+        } catch (parseError) {
+          // Capture o texto bruto da resposta se não for JSON
+          const errorText = await response.text();
+          console.error("Resposta não-JSON do servidor:", errorText);
+          errorMsg = `Erro no servidor (Código ${response.status}): ${errorText.substring(0, 100)}...`;
+        }
+        
+        throw new Error(errorMsg);
       }
 
-      // Processar resposta
-      const result = await response.json();
+      // Tente fazer parse da resposta com tratamento de erro adequado
+      let result;
+      try {
+        const responseText = await response.text();
+        console.log("Resposta bruta:", responseText);
+        
+        // Verifique se a resposta não está vazia antes de fazer o parse
+        if (!responseText || responseText.trim() === '') {
+          throw new Error("Resposta vazia do servidor");
+        }
+        
+        result = JSON.parse(responseText);
+      } catch (parseError) {
+        clearInterval(progressInterval);
+        console.error("Erro ao analisar resposta JSON:", parseError);
+        throw new Error(`Erro ao processar resposta do servidor: ${parseError.message}`);
+      }
+
       clearInterval(progressInterval);
       setProgress(100);
 
@@ -140,6 +172,8 @@ export const PandaVideoUpload = ({
       }
 
       const videoInfo = result.video;
+      
+      console.log("Upload concluído com sucesso:", videoInfo);
       
       // Atualizar componente com informações do vídeo
       onChange(
