@@ -4,6 +4,7 @@ import { LearningLessonVideo } from "@/lib/supabase";
 import { Play, Pause, Volume2, VolumeX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
+import { PandaVideoPlayer } from "@/components/formacao/comum/PandaVideoPlayer";
 
 interface LessonVideoPlayerProps {
   video: LearningLessonVideo;
@@ -20,6 +21,23 @@ export const LessonVideoPlayer: React.FC<LessonVideoPlayerProps> = ({
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(1);
   const [isMuted, setIsMuted] = useState(false);
+  
+  // Se for um vídeo do Panda, usar componente específico
+  if (video.video_type === 'panda') {
+    const pandaVideoId = video.video_id || video.url.split('/').pop();
+    
+    if (pandaVideoId) {
+      return (
+        <PandaVideoPlayer
+          videoId={pandaVideoId}
+          title={video.title}
+          onProgress={onProgress}
+        />
+      );
+    }
+  }
+  
+  // Para outros tipos de vídeo, continuar com o player padrão
   
   // Configurar evento de metadados para obter duração
   useEffect(() => {

@@ -9,3 +9,6 @@ supabase_version = "1.0.0"
 
 [functions.setup-storage-buckets]
 verify_jwt = true
+
+[functions.upload-panda-video]
+verify_jwt = true

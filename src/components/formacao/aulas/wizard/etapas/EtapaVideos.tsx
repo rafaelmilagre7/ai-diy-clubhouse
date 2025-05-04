@@ -13,11 +13,13 @@ import { Button } from "@/components/ui/button";
 import { UseFormReturn } from "react-hook-form";
 import { AulaFormValues } from "../AulaStepWizard";
 import { VideoUpload } from "@/components/formacao/comum/VideoUpload";
+import { PandaVideoUpload } from "@/components/formacao/comum/PandaVideoUpload";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { AlertCircle, GripVertical, Plus } from "lucide-react";
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface EtapaVideosProps {
   form: UseFormReturn<AulaFormValues>;
@@ -103,7 +105,7 @@ const EtapaVideos: React.FC<EtapaVideosProps> = ({
           </div>
           
           <FormDescription>
-            Adicione até 3 vídeos para esta aula. Você pode fazer upload direto ou inserir links do YouTube.
+            Adicione até 3 vídeos para esta aula. Você pode usar vídeos do YouTube ou fazer upload direto pelo Panda Video.
           </FormDescription>
           
           {validationError && (
@@ -176,25 +178,57 @@ const EtapaVideos: React.FC<EtapaVideosProps> = ({
                                 className="mb-2 resize-none h-20"
                               />
                               
-                              <VideoUpload
-                                value={video.url || ""}
-                                videoType={video.type || "youtube"}
-                                onChange={(url, type, fileName, filePath, fileSize, duration_seconds, thumbnail_url) => {
-                                  handleVideoChange(index, "url", url);
-                                  handleVideoChange(index, "type", type);
-                                  handleVideoChange(index, "fileName", fileName);
-                                  handleVideoChange(index, "filePath", filePath);
-                                  handleVideoChange(index, "fileSize", fileSize);
-                                  
-                                  if (duration_seconds) {
-                                    handleVideoChange(index, "duration_seconds", duration_seconds);
-                                  }
-                                  
-                                  if (thumbnail_url) {
-                                    handleVideoChange(index, "thumbnail_url", thumbnail_url);
-                                  }
-                                }}
-                              />
+                              <Tabs defaultValue={video.type || "youtube"} onValueChange={(value) => handleVideoChange(index, "type", value)}>
+                                <TabsList className="w-full mb-4">
+                                  <TabsTrigger value="youtube" className="flex-1">YouTube</TabsTrigger>
+                                  <TabsTrigger value="panda" className="flex-1">Upload Direto (Panda)</TabsTrigger>
+                                </TabsList>
+                                
+                                <TabsContent value="youtube">
+                                  <VideoUpload
+                                    value={video.url || ""}
+                                    videoType="youtube"
+                                    onChange={(url, type, fileName, filePath, fileSize, duration_seconds, thumbnail_url) => {
+                                      handleVideoChange(index, "url", url);
+                                      handleVideoChange(index, "type", "youtube");
+                                      handleVideoChange(index, "fileName", fileName);
+                                      handleVideoChange(index, "filePath", filePath);
+                                      handleVideoChange(index, "fileSize", fileSize);
+                                      
+                                      if (duration_seconds) {
+                                        handleVideoChange(index, "duration_seconds", duration_seconds);
+                                      }
+                                      
+                                      if (thumbnail_url) {
+                                        handleVideoChange(index, "thumbnail_url", thumbnail_url);
+                                      }
+                                    }}
+                                  />
+                                </TabsContent>
+                                
+                                <TabsContent value="panda">
+                                  <PandaVideoUpload
+                                    value={video.url || ""}
+                                    videoData={video}
+                                    onChange={(url, type, fileName, filePath, fileSize, duration_seconds, thumbnail_url, videoId) => {
+                                      handleVideoChange(index, "url", url);
+                                      handleVideoChange(index, "type", "panda");
+                                      handleVideoChange(index, "fileName", fileName);
+                                      handleVideoChange(index, "filePath", filePath);
+                                      handleVideoChange(index, "fileSize", fileSize);
+                                      handleVideoChange(index, "video_id", videoId);
+                                      
+                                      if (duration_seconds) {
+                                        handleVideoChange(index, "duration_seconds", duration_seconds);
+                                      }
+                                      
+                                      if (thumbnail_url) {
+                                        handleVideoChange(index, "thumbnail_url", thumbnail_url);
+                                      }
+                                    }}
+                                  />
+                                </TabsContent>
+                              </Tabs>
                             </div>
                           </div>
                         )}

@@ -5,6 +5,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { LearningLessonVideo } from "@/lib/supabase";
 import { YoutubeEmbed } from "@/components/common/YoutubeEmbed";
 import { getYoutubeVideoId } from "@/lib/supabase/storage";
+import { PandaVideoPlayer } from "@/components/formacao/comum/PandaVideoPlayer";
 
 interface VideoPlayerProps {
   video: LearningLessonVideo | null;
@@ -36,7 +37,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   
   // Configurar intervalo para reportar tempo atual do vídeo
   useEffect(() => {
-    if (!videoRef.current || !onTimeUpdate) return;
+    if (!videoRef.current || !onTimeUpdate || video?.video_type !== 'file') return;
     
     const interval = setInterval(() => {
       if (videoRef.current) {
@@ -49,7 +50,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   
   // Definir tempo inicial do vídeo, se fornecido
   useEffect(() => {
-    if (videoRef.current && startTime > 0) {
+    if (videoRef.current && startTime > 0 && video?.video_type === 'file') {
       videoRef.current.currentTime = startTime;
     }
   }, [video, startTime]);
@@ -101,7 +102,30 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   
   // Renderizar vídeo baseado no tipo
   const renderVideo = () => {
-    if (video.video_type === 'youtube' && video.url) {
+    // Vídeo do Panda
+    if (video.video_type === 'panda' && video.url) {
+      // Extrair o ID do vídeo do Panda da URL
+      const pandaVideoId = video.video_id || video.url.split('/').pop();
+      
+      if (pandaVideoId) {
+        return (
+          <PandaVideoPlayer 
+            videoId={pandaVideoId} 
+            title={video.title}
+            onProgress={(progress) => {
+              if (onTimeUpdate) {
+                // Simular onTimeUpdate para manter compatibilidade
+                const duration = video.duration_seconds || 0;
+                const currentTime = (progress / 100) * duration;
+                onTimeUpdate(currentTime, duration);
+              }
+            }}
+          />
+        );
+      }
+    }
+    // Vídeo do YouTube
+    else if (video.video_type === 'youtube' && video.url) {
       const youtubeId = getYoutubeVideoId(video.url);
       
       if (youtubeId) {
@@ -113,7 +137,9 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
           </div>
         );
       }
-    } else if (video.url) {
+    } 
+    // Vídeo direto (Supabase Storage)
+    else if (video.url) {
       return (
         <video
           ref={videoRef}
