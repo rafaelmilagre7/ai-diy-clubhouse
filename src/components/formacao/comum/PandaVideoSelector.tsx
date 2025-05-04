@@ -135,12 +135,32 @@ export const PandaVideoSelector: React.FC<PandaVideoSelectorProps> = ({
     });
   };
 
+  const handleRetry = () => {
+    fetchVideos();
+    toast({
+      title: "Tentando novamente",
+      description: "Buscando vídeos do Panda Video...",
+    });
+  };
+
   return (
     <div className="space-y-4">
       {error && (
         <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{error}</AlertDescription>
+          <div className="flex justify-between items-start">
+            <div className="flex items-center gap-2">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{error}</AlertDescription>
+            </div>
+            <Button 
+              size="sm" 
+              onClick={handleRetry} 
+              variant="outline"
+              className="ml-2"
+            >
+              <RefreshCw className="h-4 w-4 mr-1" /> Tentar novamente
+            </Button>
+          </div>
         </Alert>
       )}
 
@@ -185,6 +205,17 @@ export const PandaVideoSelector: React.FC<PandaVideoSelectorProps> = ({
             <div className="text-center py-8 text-muted-foreground">
               {searchQuery ? (
                 <p>Nenhum vídeo encontrado para "{searchQuery}"</p>
+              ) : error ? (
+                <div className="flex flex-col items-center gap-2">
+                  <p>Não foi possível carregar os vídeos.</p>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={handleRetry}
+                  >
+                    <RefreshCw className="h-4 w-4 mr-1" /> Tentar novamente
+                  </Button>
+                </div>
               ) : (
                 <p>Nenhum vídeo disponível. Faça upload de novos vídeos.</p>
               )}
