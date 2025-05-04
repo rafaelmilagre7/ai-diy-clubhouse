@@ -658,6 +658,7 @@ export type Database = {
           started_at: string
           updated_at: string
           user_id: string
+          video_progress: Json | null
         }
         Insert: {
           completed_at?: string | null
@@ -670,6 +671,7 @@ export type Database = {
           started_at?: string
           updated_at?: string
           user_id: string
+          video_progress?: Json | null
         }
         Update: {
           completed_at?: string | null
@@ -682,6 +684,7 @@ export type Database = {
           started_at?: string
           updated_at?: string
           user_id?: string
+          video_progress?: Json | null
         }
         Relationships: [
           {

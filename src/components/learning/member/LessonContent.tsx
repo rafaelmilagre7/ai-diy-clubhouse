@@ -122,7 +122,7 @@ export const LessonContent: React.FC<LessonContentProps> = ({
             <TabsContent value="video" className="space-y-4">
               <LessonVideoPlayer 
                 videos={videos}
-                onProgress={handleVideoProgress}
+                onProgress={(videoId, progress) => handleVideoProgress(videoId, progress)}
               />
             </TabsContent>
           )}
@@ -171,7 +171,7 @@ export const LessonContent: React.FC<LessonContentProps> = ({
         <section>
           <LessonVideoPlayer 
             videos={videos}
-            onProgress={handleVideoProgress}
+            onProgress={(videoId, progress) => handleVideoProgress(videoId, progress)}
           />
         </section>
       )}

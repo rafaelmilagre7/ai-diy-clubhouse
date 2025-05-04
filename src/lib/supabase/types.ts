@@ -126,6 +126,9 @@ export interface LearningLesson {
     fileName?: string;
     filePath?: string;
     fileSize?: number;
+    video_id?: string;
+    thumbnail_url?: string;
+    duration_seconds?: number;
   }>;
 }
 
@@ -140,6 +143,7 @@ export interface LearningProgress {
   created_at: string;
   updated_at: string;
   last_position_seconds: number | null;
+  video_progress?: Record<string, number>;
 }
 
 export interface LearningResource {
@@ -168,6 +172,7 @@ export interface LearningLessonVideo {
   file_size_bytes?: number | null;
   video_file_path?: string | null;
   video_file_name?: string | null;
+  video_id?: string | null;
 }
 
 export interface LearningComment {

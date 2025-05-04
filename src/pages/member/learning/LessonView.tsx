@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation } from "@tanstack/react-query";
@@ -188,7 +187,8 @@ const LessonView = () => {
   });
   
   // Atualizar progresso quando o usuário interage com a lição
-  const handleProgressUpdate = (newProgress: number) => {
+  const handleProgressUpdate = (videoId: string, newProgress: number) => {
+    // Se o progresso for maior que o atual, atualizamos
     if (newProgress > progress) {
       setProgress(newProgress);
       updateProgressMutation.mutate(newProgress);
@@ -204,7 +204,7 @@ const LessonView = () => {
   // Marcar o início do estudo quando a página carrega
   useEffect(() => {
     if (lessonId && !userProgress) {
-      handleProgressUpdate(1);
+      updateProgressMutation.mutate(1);
     }
   }, [lessonId, userProgress]);
 

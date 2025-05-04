@@ -58,6 +58,8 @@ const formSchema = z.object({
       filePath: z.string().optional(),
       fileSize: z.number().optional(),
       duration_seconds: z.number().optional(),
+      video_id: z.string().optional(),
+      thumbnail_url: z.string().optional(),
     })
   ).optional().default([])
 })
@@ -80,6 +82,8 @@ interface VideoFormValues {
   filePath?: string;
   fileSize?: number;
   duration_seconds?: number;
+  video_id?: string;
+  thumbnail_url?: string;
 }
 
 // Estendendo a interface LearningLesson para incluir a propriedade videos
@@ -193,7 +197,8 @@ const AulaWizard: React.FC<AulaWizardProps> = ({ open, onOpenChange, aula, modul
           video_file_name: video.fileName || null,
           file_size_bytes: video.fileSize || null,
           duration_seconds: video.duration_seconds || null,
-          thumbnail_url: video.thumbnail_url || null
+          thumbnail_url: video.thumbnail_url || null,
+          video_id: video.video_id || null
         };
         
         console.log(`Salvando vídeo ${i + 1}:`, videoData);
@@ -654,18 +659,20 @@ const AulaWizard: React.FC<AulaWizardProps> = ({ open, onOpenChange, aula, modul
                                 <VideoUpload
                                   value={video.url || ""}
                                   videoType={video.type || "youtube"}
-                                  onChange={(url, type, fileName, filePath, fileSize) => {
+                                  onChange={(url, type, fileName, filePath, fileSize, duration_seconds, thumbnail_url) => {
                                     handleVideoChange(index, "url", url);
                                     handleVideoChange(index, "type", type);
                                     handleVideoChange(index, "fileName", fileName);
                                     handleVideoChange(index, "filePath", filePath);
                                     handleVideoChange(index, "fileSize", fileSize);
+                                    handleVideoChange(index, "duration_seconds", duration_seconds);
+                                    handleVideoChange(index, "thumbnail_url", thumbnail_url);
                                     
                                     // Se for um vídeo do YouTube, tentar extrair duração (implementação futura)
                                     // Por enquanto, adicionamos um valor padrão para teste de 300 segundos (5 min)
-                                    if (type === 'youtube') {
-                                      handleVideoChange(index, "duration_seconds", 300);
-                                    }
+                                    // if (type === 'youtube') {
+                                    //   handleVideoChange(index, "duration_seconds", 300);
+                                    // }
                                   }}
                                 />
                               </div>
