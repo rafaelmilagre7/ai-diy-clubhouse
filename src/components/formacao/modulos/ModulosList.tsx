@@ -1,116 +1,110 @@
 
-import { LearningModule } from "@/lib/supabase";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Pencil, Trash2, FileText, Loader2, BookOpen } from "lucide-react";
-import { useState } from "react";
-import { ModuloDeleteDialog } from "./ModuloDeleteDialog";
 import { Link } from "react-router-dom";
+import { LearningModule } from "@/lib/supabase";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Edit, Trash2, Loader2, LucideIcon, BookOpen, Plus } from "lucide-react";
+import { NovaAulaButton } from "@/components/formacao/aulas/NovaAulaButton";
 
 interface ModulosListProps {
   modulos: LearningModule[];
   loading: boolean;
   onEdit: (modulo: LearningModule) => void;
-  onDelete: (id: string) => void;
+  onDelete: (moduloId: string) => void;
   isAdmin: boolean;
 }
 
-export const ModulosList = ({ modulos, loading, onEdit, onDelete, isAdmin }: ModulosListProps) => {
-  const [moduloParaExcluir, setModuloParaExcluir] = useState<LearningModule | null>(null);
-
-  // Abrir diálogo de confirmação para excluir
-  const handleOpenDelete = (modulo: LearningModule) => {
-    setModuloParaExcluir(modulo);
-  };
-
-  // Confirmar exclusão
-  const handleConfirmDelete = () => {
-    if (moduloParaExcluir) {
-      onDelete(moduloParaExcluir.id);
-      setModuloParaExcluir(null);
-    }
-  };
-
+export const ModulosList: React.FC<ModulosListProps> = ({ 
+  modulos, 
+  loading,
+  onEdit,
+  onDelete,
+  isAdmin
+}) => {
   if (loading) {
     return (
-      <div className="flex justify-center items-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <Card key={i} className="overflow-hidden">
+            <CardHeader className="pb-3">
+              <Skeleton className="h-4 w-3/4 mb-2" />
+              <Skeleton className="h-3 w-1/2" />
+            </CardHeader>
+            <CardContent>
+              <Skeleton className="h-16 w-full" />
+            </CardContent>
+            <CardFooter className="flex justify-between border-t p-3 bg-gray-50">
+              <Skeleton className="h-8 w-24" />
+              <Skeleton className="h-8 w-24" />
+            </CardFooter>
+          </Card>
+        ))}
       </div>
     );
   }
 
   if (modulos.length === 0) {
     return (
-      <div className="text-center py-12 border rounded-lg bg-background">
-        <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-        <h3 className="text-lg font-medium">Nenhum módulo disponível</h3>
-        <p className="text-sm text-muted-foreground mt-2 mb-4">
-          Este curso ainda não possui módulos cadastrados.
-        </p>
+      <div className="text-center py-12 border rounded-lg bg-gray-50">
+        <h3 className="text-lg font-semibold mb-2">Nenhum módulo encontrado</h3>
+        <p className="text-muted-foreground mb-4">Ainda não existem módulos cadastrados para este curso.</p>
       </div>
     );
   }
 
   return (
-    <>
-      <div className="space-y-4">
-        {modulos.map((modulo, index) => (
-          <Card key={modulo.id}>
-            <CardHeader className="pb-2">
-              <div className="flex justify-between items-start">
-                <div>
-                  <div className="text-sm text-muted-foreground mb-1">Módulo {index + 1}</div>
-                  <CardTitle>{modulo.title}</CardTitle>
-                </div>
-                {modulo.published ? (
-                  <div className="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">
-                    Publicado
-                  </div>
-                ) : (
-                  <div className="px-2 py-1 text-xs bg-gray-100 text-gray-800 rounded-full">
-                    Rascunho
-                  </div>
-                )}
-              </div>
-            </CardHeader>
-            
-            <CardContent>
-              <p className="text-muted-foreground">
-                {modulo.description || "Sem descrição disponível"}
-              </p>
-            </CardContent>
-            
-            <CardFooter className="gap-2 justify-between flex-wrap">
-              <Button variant="outline" size="sm" asChild>
-                <Link to={`/formacao/modulos/${modulo.id}`}>
-                  <BookOpen className="h-4 w-4 mr-1" />
-                  Ver Aulas
-                </Link>
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {modulos.map((modulo) => (
+        <Card key={modulo.id} className="overflow-hidden">
+          <CardHeader className="pb-3">
+            <CardTitle>{modulo.title}</CardTitle>
+            <CardDescription>
+              {modulo.description || "Este módulo não possui descrição."}
+            </CardDescription>
+          </CardHeader>
+          
+          <CardFooter className="flex justify-between border-t p-3 bg-gray-50">
+            <Link to={`/formacao/modulos/${modulo.id}`}>
+              <Button variant="secondary" size="sm">
+                <BookOpen className="h-4 w-4 mr-2" />
+                Ver aulas
               </Button>
-              
+            </Link>
+
+            <div className="flex space-x-2">
               {isAdmin && (
-                <div className="flex gap-2 flex-wrap">
-                  <Button variant="outline" size="sm" onClick={() => onEdit(modulo)}>
-                    <Pencil className="h-4 w-4 mr-1" />
-                    Editar
+                <>
+                  <NovaAulaButton 
+                    moduleId={modulo.id} 
+                    buttonText="+ Aula"
+                    variant="outline"
+                    size="sm"
+                  />
+                  
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={() => onEdit(modulo)}
+                  >
+                    <Edit className="h-3.5 w-3.5" />
+                    <span className="sr-only">Editar</span>
                   </Button>
-                  <Button variant="outline" size="sm" onClick={() => handleOpenDelete(modulo)}>
-                    <Trash2 className="h-4 w-4 mr-1" />
-                    Excluir
+                  
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={() => onDelete(modulo.id)}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                    <span className="sr-only">Excluir</span>
                   </Button>
-                </div>
+                </>
               )}
-            </CardFooter>
-          </Card>
-        ))}
-      </div>
-      
-      <ModuloDeleteDialog 
-        open={!!moduloParaExcluir} 
-        onOpenChange={() => setModuloParaExcluir(null)}
-        onConfirm={handleConfirmDelete}
-        modulo={moduloParaExcluir}
-      />
-    </>
+            </div>
+          </CardFooter>
+        </Card>
+      ))}
+    </div>
   );
 };

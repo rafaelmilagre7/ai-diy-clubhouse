@@ -1,12 +1,14 @@
 
 import { useState, useEffect } from "react";
+import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { uploadFileWithFallback, ensureBucketExists } from "@/lib/supabase/storage";
-import { Upload, Loader2, File, X } from "lucide-react";
+import { uploadFileWithFallback, ensureBucketExists, createStoragePublicPolicy } from "@/lib/supabase/storage";
+import { Upload, Loader2, File, X, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { STORAGE_BUCKETS } from "@/lib/supabase/config";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface FileUploadProps {
   value: string;
@@ -27,23 +29,40 @@ export const FileUpload = ({
   const [fileName, setFileName] = useState<string | null>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [bucketReady, setBucketReady] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Verificar status do bucket ao montar o componente
   useEffect(() => {
-    const checkBucket = async () => {
+    const initBucket = async () => {
       try {
-        const isReady = await ensureBucketExists(bucketName);
-        setBucketReady(isReady);
+        setError(null);
+        console.log(`Inicializando bucket ${bucketName}...`);
         
-        if (!isReady) {
-          console.warn(`Bucket ${bucketName} não está pronto. Algumas funcionalidades podem não estar disponíveis.`);
+        // Primeiro, tentar usar a função que aplica a política apropriada
+        const result = await createStoragePublicPolicy(bucketName);
+        
+        if (result.success) {
+          console.log(`Bucket ${bucketName} configurado com sucesso!`);
+          setBucketReady(true);
+        } else {
+          console.warn(`Não foi possível configurar políticas para ${bucketName}, tentando fallback...`, result.error);
+          
+          // Se falhar, tentar apenas verificar/criar o bucket
+          const isReady = await ensureBucketExists(bucketName);
+          setBucketReady(isReady);
+          
+          if (!isReady) {
+            setError(`Não foi possível preparar o bucket de armazenamento ${bucketName}.`);
+            console.error(`Bucket ${bucketName} não pôde ser inicializado.`);
+          }
         }
       } catch (error) {
-        console.error("Erro ao verificar bucket:", error);
+        console.error("Erro ao inicializar bucket:", error);
+        setError("Erro ao inicializar o armazenamento. Upload de arquivos pode não funcionar.");
       }
     };
     
-    checkBucket();
+    initBucket();
   }, [bucketName]);
 
   // Extract filename from URL for display
@@ -69,6 +88,15 @@ export const FileUpload = ({
     try {
       setUploading(true);
       setUploadProgress(0);
+      setError(null);
+      
+      if (!bucketReady) {
+        // Tentar inicializar o bucket novamente antes do upload
+        const result = await createStoragePublicPolicy(bucketName);
+        if (!result.success) {
+          throw new Error(`O bucket ${bucketName} não está disponível para upload.`);
+        }
+      }
       
       // Upload com mecanismo de fallback
       const result = await uploadFileWithFallback(
@@ -84,8 +112,9 @@ export const FileUpload = ({
       
       toast.success("Upload realizado com sucesso!");
       
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erro no upload de arquivo:", error);
+      setError(error.message || "Erro ao fazer upload do arquivo.");
       toast.error("Erro ao fazer upload do arquivo. Tente novamente.");
     } finally {
       setUploading(false);
@@ -108,6 +137,13 @@ export const FileUpload = ({
 
   return (
     <div className="space-y-4">
+      {error && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+      
       {!value || !fileName ? (
         <div className="flex items-center justify-center w-full">
           <label
@@ -142,7 +178,7 @@ export const FileUpload = ({
               type="file"
               className="hidden"
               onChange={handleFileChange}
-              disabled={uploading}
+              disabled={uploading || !bucketReady}
               accept={acceptedFileTypes}
             />
           </label>

@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import {
   Form,
   FormControl,
@@ -17,6 +17,9 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { File, Trash, Plus } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { supabase } from "@/lib/supabase";
+import { createStoragePublicPolicy } from "@/lib/supabase/storage";
+import { useToast } from "@/hooks/use-toast";
 
 interface EtapaMateriaisProps {
   form: UseFormReturn<AulaFormValues>;
@@ -30,6 +33,32 @@ const EtapaMateriais: React.FC<EtapaMateriaisProps> = ({
   onNext,
   onPrevious
 }) => {
+  const { toast } = useToast();
+
+  // Inicializar o bucket learning_resources na montagem do componente
+  useEffect(() => {
+    const setupStorage = async () => {
+      const bucketName = 'learning_resources';
+      try {
+        const result = await createStoragePublicPolicy(bucketName);
+        if (!result.success) {
+          console.error(`Não foi possível configurar o bucket ${bucketName}:`, result.error);
+          toast({
+            title: "Atenção",
+            description: "Houve um problema ao preparar o armazenamento. Uploads podem não funcionar corretamente.",
+            variant: "destructive",
+          });
+        } else {
+          console.log(`Bucket ${bucketName} configurado com sucesso!`);
+        }
+      } catch (error) {
+        console.error("Erro ao configurar bucket:", error);
+      }
+    };
+    
+    setupStorage();
+  }, [toast]);
+
   const handleContinue = async () => {
     const result = await form.trigger(['resources']);
     if (result) {

@@ -1,4 +1,3 @@
-
 // Vamos criar ou atualizar este arquivo
 
 import { supabase } from '@/lib/supabase';
@@ -368,8 +367,46 @@ export const uploadFileWithFallback = async (
  * @param bucketName Nome do bucket para configurar
  * @returns Objeto com status da operação
  */
-export const setupStoragePublicPolicy = async (bucketName: string): Promise<{ success: boolean, error: string | null }> => {
+export const createStoragePublicPolicy = async (bucketName: string): Promise<{ success: boolean, error: string | null }> => {
   try {
+    console.log(`Tentando configurar políticas para bucket: ${bucketName}`);
+    
+    // Verificar se o bucket existe
+    const { data: buckets } = await supabase.storage.listBuckets();
+    const bucketExists = buckets?.some(bucket => bucket.name === bucketName);
+    
+    if (!bucketExists) {
+      console.log(`Bucket ${bucketName} não encontrado. Tentando criar...`);
+      // Determinar limite baseado no tipo de bucket
+      let fileSizeLimit = FILE_SIZE_LIMITS.DEFAULT;
+      
+      if (bucketName.includes('video')) {
+        fileSizeLimit = FILE_SIZE_LIMITS.VIDEOS;
+      } else if (bucketName.includes('image') || bucketName.includes('cover')) {
+        fileSizeLimit = FILE_SIZE_LIMITS.IMAGES;
+      } else if (bucketName.includes('resource') || bucketName.includes('file')) {
+        fileSizeLimit = FILE_SIZE_LIMITS.DOCUMENTS;
+      } else if (bucketName === 'learning_resources') {
+        fileSizeLimit = FILE_SIZE_LIMITS.DOCUMENTS; // Garantir que este bucket tenha limite apropriado
+      }
+      
+      const { error: createError } = await supabase.storage.createBucket(bucketName, {
+        public: true,
+        fileSizeLimit: fileSizeLimit
+      });
+      
+      if (createError) {
+        console.error(`Erro ao criar bucket ${bucketName}:`, createError);
+        return { 
+          success: false, 
+          error: `Erro ao criar bucket: ${createError.message}` 
+        };
+      }
+      
+      console.log(`Bucket ${bucketName} criado com sucesso!`);
+    }
+    
+    // Chamar a RPC para configurar políticas de acesso
     const { data, error } = await supabase.rpc('create_storage_public_policy', { bucket_name: bucketName });
     
     if (error) {
@@ -380,6 +417,7 @@ export const setupStoragePublicPolicy = async (bucketName: string): Promise<{ su
       };
     }
     
+    console.log(`Políticas configuradas com sucesso para o bucket ${bucketName}`);
     return { 
       success: true, 
       error: null 
@@ -404,3 +442,4 @@ export const formatVideoDuration = (seconds: number): string => {
   
   return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
 };
+

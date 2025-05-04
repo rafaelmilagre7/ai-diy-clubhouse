@@ -1,70 +1,75 @@
 
 import { LearningCourse } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { ChevronLeft, Edit, PlusCircle, BookOpen } from "lucide-react";
-import { Link } from "react-router-dom";
-import { cn } from "@/lib/utils";
+import { Edit, Calendar, Clock, FileText, BarChart } from "lucide-react";
+import { NovaAulaButton } from "@/components/formacao/aulas/NovaAulaButton";
 
 interface CursoHeaderProps {
   curso: LearningCourse;
   onNovoModulo: () => void;
-  onEditarCurso?: () => void;
+  onEditarCurso: () => void;
   isAdmin: boolean;
 }
 
-export const CursoHeader = ({ curso, onNovoModulo, onEditarCurso, isAdmin }: CursoHeaderProps) => {
+export const CursoHeader: React.FC<CursoHeaderProps> = ({
+  curso,
+  onNovoModulo,
+  onEditarCurso,
+  isAdmin
+}) => {
+  const coverImage = curso.cover_image_url || '/placeholder-course.jpg';
+  
   return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-2">
-        <Button variant="ghost" size="sm" asChild>
-          <Link to="/formacao/cursos">
-            <ChevronLeft className="h-4 w-4 mr-1" />
-            Voltar
-          </Link>
-        </Button>
+    <div className="space-y-6">
+      <div className="relative h-48 md:h-64 rounded-lg overflow-hidden">
+        <div 
+          className="absolute inset-0 bg-cover bg-center" 
+          style={{ backgroundImage: `url(${coverImage})` }}
+        >
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-black/20" />
+        </div>
+        
+        <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
+          <h1 className="text-2xl md:text-3xl font-bold">{curso.title}</h1>
+          <p className="mt-2 line-clamp-2 text-white/80">{curso.description}</p>
+        </div>
+
+        {isAdmin && (
+          <div className="absolute top-4 right-4">
+            <Button 
+              variant="secondary" 
+              size="sm" 
+              onClick={onEditarCurso}
+            >
+              <Edit className="mr-2 h-4 w-4" />
+              Editar Curso
+            </Button>
+          </div>
+        )}
       </div>
-      
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <div className="flex flex-wrap items-center gap-2">
-            <h1 className="text-3xl font-bold tracking-tight">{curso.title}</h1>
-            <Badge 
-              variant={curso.published ? "default" : "outline"}
-              className={cn(
-                curso.published ? "bg-green-500 hover:bg-green-600" : "text-amber-500 border-amber-500"
-              )}
-            >
-              {curso.published ? "Publicado" : "Rascunho"}
-            </Badge>
-          </div>
-          {curso.description && (
-            <p className="text-muted-foreground mt-2 max-w-3xl">
-              {curso.description}
-            </p>
-          )}
-          
-          <div className="mt-2">
-            <Link 
-              to={`/learning/course/${curso.id}`} 
-              className="inline-flex items-center text-sm text-blue-600 hover:text-blue-800"
-            >
-              <BookOpen className="h-4 w-4 mr-1" />
-              Visualizar como aluno
-            </Link>
-          </div>
+
+      <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
+        <span className="flex items-center">
+          <Calendar className="mr-1 h-4 w-4" />
+          {new Date(curso.created_at).toLocaleDateString('pt-BR')}
+        </span>
+      </div>
+
+      <div className="flex flex-wrap justify-between items-center">
+        <div className="space-y-2">
+          <h2 className="text-xl font-semibold">Módulos do Curso</h2>
+          <p className="text-muted-foreground">
+            Explore os módulos deste curso e acesse as aulas disponíveis.
+          </p>
         </div>
         
         {isAdmin && (
-          <div className="flex flex-wrap gap-2">
-            {onEditarCurso && (
-              <Button variant="outline" onClick={onEditarCurso} className="whitespace-nowrap">
-                <Edit className="h-4 w-4 mr-2" />
-                Editar Curso
-              </Button>
-            )}
-            <Button onClick={onNovoModulo} className="whitespace-nowrap bg-viverblue hover:bg-viverblue/90">
-              <PlusCircle className="h-4 w-4 mr-2" />
+          <div className="flex gap-2">
+            <Button 
+              onClick={onNovoModulo}
+              variant="outline"
+            >
+              <FileText className="mr-2 h-4 w-4" />
               Novo Módulo
             </Button>
           </div>
