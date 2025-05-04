@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -107,8 +106,8 @@ export const PandaVideoUpload = ({
       // Verificar tamanho antes do envio
       console.log(`Iniciando upload do vídeo: ${videoFile.name}, tamanho: ${bytesToSize(videoFile.size)}, tipo: ${videoFile.type}`);
 
-      // URL correta da Edge Function do Supabase com o domínio completo
-      const functionUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/upload-panda-video`;
+      // URL correta da Edge Function do Supabase com o ID completo do projeto
+      const functionUrl = `https://zotzvtepvpnkcoobdubt.functions.supabase.co/upload-panda-video`;
       console.log("Chamando Edge Function:", functionUrl);
       
       // Iniciar upload para a Edge Function

@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { corsHeaders } from "../_shared/cors.ts";
 
@@ -54,6 +53,9 @@ serve(async (req) => {
     // Obter as variáveis de ambiente necessárias
     const clientId = Deno.env.get("PANDA_CLIENT_ID") || "default";
     const clientSecret = Deno.env.get("PANDA_CLIENT_SECRET");
+    
+    console.log("Verificando credenciais Panda Video: Client ID disponível:", !!clientId);
+    console.log("Verificando credenciais Panda Video: Client Secret disponível:", !!clientSecret);
     
     if (!clientSecret) {
       console.error("Credenciais do Panda Video não configuradas");
@@ -383,6 +385,10 @@ serve(async (req) => {
 
     // 4. Retornar os dados do vídeo
     console.log("Retornando dados do vídeo para o cliente");
+    
+    // Adicionar mais logs para diagnóstico
+    console.log("Função Edge Function upload-panda-video completada com sucesso");
+    
     return new Response(
       JSON.stringify({
         success: true,
