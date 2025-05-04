@@ -1,14 +1,20 @@
 
-# This file is used for configuring the Supabase project
-
-# Do not edit project_id! It will be replaced when you link.
 project_id = "zotzvtepvpnkcoobdubt"
 
-# What version of Supabase is this project using?
-supabase_version = "1.0.0"
+[api]
+enabled = true
 
-[functions.setup-storage-buckets]
-verify_jwt = true
+[db]
+enabled = true
 
-[functions.upload-panda-video]
+[realtime]
+enabled = true
+
+[storage]
+enabled = true
+
+[edge_functions]
+enabled = true
+
+[edge_functions.list-panda-videos]
 verify_jwt = true

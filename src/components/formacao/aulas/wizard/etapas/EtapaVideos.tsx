@@ -12,14 +12,14 @@ import {
 import { Button } from "@/components/ui/button";
 import { UseFormReturn } from "react-hook-form";
 import { AulaFormValues } from "../AulaStepWizard";
-import { VideoUpload } from "@/components/formacao/comum/VideoUpload";
-import { PandaVideoUpload } from "@/components/formacao/comum/PandaVideoUpload";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { AlertCircle, GripVertical, Plus } from "lucide-react";
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { PandaVideoUpload } from "@/components/formacao/comum/PandaVideoUpload";
+import { PandaVideoSelector } from "@/components/formacao/comum/PandaVideoSelector";
 
 interface EtapaVideosProps {
   form: UseFormReturn<AulaFormValues>;
@@ -72,7 +72,7 @@ const EtapaVideos: React.FC<EtapaVideosProps> = ({
       title: "", 
       description: "", 
       url: "", 
-      type: "youtube"
+      type: "panda"
     }], { shouldValidate: true });
   };
 
@@ -94,6 +94,18 @@ const EtapaVideos: React.FC<EtapaVideosProps> = ({
     form.setValue("videos", items, { shouldValidate: true });
   };
 
+  // Função para selecionar vídeo existente
+  const handleSelectExistingVideo = (index: number, videoData: any) => {
+    handleVideoChange(index, "title", videoData.title || "Vídeo sem título");
+    handleVideoChange(index, "description", videoData.description || "");
+    handleVideoChange(index, "url", videoData.url);
+    handleVideoChange(index, "type", "panda");
+    handleVideoChange(index, "filePath", videoData.id);
+    handleVideoChange(index, "duration_seconds", videoData.duration_seconds || 0);
+    handleVideoChange(index, "thumbnail_url", videoData.thumbnail_url || "");
+    handleVideoChange(index, "video_id", videoData.id);
+  };
+
   return (
     <Form {...form}>
       <div className="space-y-6 py-4">
@@ -111,7 +123,7 @@ const EtapaVideos: React.FC<EtapaVideosProps> = ({
           </div>
           
           <FormDescription>
-            Adicione até {maxVideos} vídeos para esta aula. Você pode usar vídeos do YouTube ou fazer upload direto pelo Panda Video.
+            Adicione até {maxVideos} vídeos para esta aula. Você pode selecionar vídeos existentes ou fazer upload de novos vídeos.
           </FormDescription>
           
           {validationError && (
@@ -184,35 +196,20 @@ const EtapaVideos: React.FC<EtapaVideosProps> = ({
                                 className="mb-2 resize-none h-20"
                               />
                               
-                              <Tabs defaultValue={video.type || "youtube"} onValueChange={(value) => handleVideoChange(index, "type", value)}>
+                              <Tabs defaultValue="selector" className="w-full">
                                 <TabsList className="w-full mb-4">
-                                  <TabsTrigger value="youtube" className="flex-1">YouTube</TabsTrigger>
-                                  <TabsTrigger value="panda" className="flex-1">Upload Direto (Panda)</TabsTrigger>
+                                  <TabsTrigger value="selector" className="flex-1">Selecionar Vídeo Existente</TabsTrigger>
+                                  <TabsTrigger value="upload" className="flex-1">Fazer Upload de Novo Vídeo</TabsTrigger>
                                 </TabsList>
                                 
-                                <TabsContent value="youtube">
-                                  <VideoUpload
-                                    value={video.url || ""}
-                                    videoType="youtube"
-                                    onChange={(url, type, fileName, filePath, fileSize, duration_seconds, thumbnail_url) => {
-                                      handleVideoChange(index, "url", url);
-                                      handleVideoChange(index, "type", "youtube");
-                                      handleVideoChange(index, "fileName", fileName);
-                                      handleVideoChange(index, "filePath", filePath);
-                                      handleVideoChange(index, "fileSize", fileSize);
-                                      
-                                      if (duration_seconds) {
-                                        handleVideoChange(index, "duration_seconds", duration_seconds);
-                                      }
-                                      
-                                      if (thumbnail_url) {
-                                        handleVideoChange(index, "thumbnail_url", thumbnail_url);
-                                      }
-                                    }}
+                                <TabsContent value="selector">
+                                  <PandaVideoSelector 
+                                    onSelect={(videoData) => handleSelectExistingVideo(index, videoData)}
+                                    currentVideoId={video.video_id || video.filePath}
                                   />
                                 </TabsContent>
                                 
-                                <TabsContent value="panda">
+                                <TabsContent value="upload">
                                   <PandaVideoUpload
                                     value={video.url || ""}
                                     videoData={video}

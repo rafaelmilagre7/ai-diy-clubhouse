@@ -24,7 +24,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import AulaStepWizard from "@/components/formacao/aulas/wizard/AulaStepWizard";
+import { NovaAulaButton } from "@/components/formacao/aulas/NovaAulaButton";
 
 const FormacaoAulas = () => {
   const { profile } = useAuth();
@@ -36,14 +36,6 @@ const FormacaoAulas = () => {
   const [cursosDisponiveis, setCursosDisponiveis] = useState<{id: string, title: string}[]>([]);
   const [modulosDisponiveis, setModulosDisponiveis] = useState<{id: string, title: string, course_id: string}[]>([]);
   const [busca, setBusca] = useState("");
-  const [isWizardOpen, setIsWizardOpen] = useState(false);
-  const [selectedModuleId, setSelectedModuleId] = useState<string | null>(null);
-  
-  // Nova função para abrir o wizard ao invés de navegar para nova página
-  const handleNovaAula = () => {
-    setSelectedModuleId(moduloFiltro || null);
-    setIsWizardOpen(true);
-  };
   
   // Buscar cursos para filtro
   const fetchCursos = async () => {
@@ -171,6 +163,12 @@ const FormacaoAulas = () => {
     fetchAulas();
   };
 
+  // Função para lidar com o sucesso da criação/edição de aula
+  const handleAulaSuccess = () => {
+    fetchAulas();
+    toast.success("Operação realizada com sucesso");
+  };
+
   // Excluir aula
   const handleExcluirAula = async (aulaId: string) => {
     try {
@@ -208,20 +206,19 @@ const FormacaoAulas = () => {
 
   // Redirecionar para detalhes da aula
   const handleEditarAula = (aula: LearningLesson) => {
-    // Abrir o wizard em modo de edição
-    setSelectedModuleId(aula.module_id);
     window.location.href = `/formacao/aulas/${aula.id}`;
-  };
-
-  // Função para lidar com o sucesso da criação/edição de aula
-  const handleWizardSuccess = () => {
-    fetchAulas();
-    toast.success("Operação realizada com sucesso");
   };
 
   return (
     <div className="space-y-6">
-      <FormacaoAulasHeader onNovaAula={handleNovaAula} moduloId={moduloFiltro} />
+      <FormacaoAulasHeader>
+        {/* Usar o componente NovaAulaButton corretamente */}
+        <NovaAulaButton 
+          moduleId={moduloFiltro || ""} 
+          buttonText="Nova Aula" 
+          onSuccess={handleAulaSuccess}
+        />
+      </FormacaoAulasHeader>
       
       <Card>
         <CardHeader>
@@ -299,15 +296,6 @@ const FormacaoAulas = () => {
         onEdit={handleEditarAula}
         onDelete={handleExcluirAula}
         isAdmin={profile?.role === 'admin'}
-      />
-
-      {/* Wizard de etapas para criar/editar aula */}
-      <AulaStepWizard
-        open={isWizardOpen}
-        onOpenChange={setIsWizardOpen}
-        aula={null}
-        moduleId={selectedModuleId}
-        onSuccess={handleWizardSuccess}
       />
     </div>
   );

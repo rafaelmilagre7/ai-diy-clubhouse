@@ -10,6 +10,7 @@ interface NovaAulaButtonProps {
   variant?: "default" | "outline" | "secondary" | "ghost";
   size?: "default" | "sm" | "lg" | "icon";
   className?: string;
+  onSuccess?: () => void;
 }
 
 export const NovaAulaButton: React.FC<NovaAulaButtonProps> = ({
@@ -17,7 +18,8 @@ export const NovaAulaButton: React.FC<NovaAulaButtonProps> = ({
   buttonText = "Nova Aula",
   variant = "default",
   size = "default",
-  className = ""
+  className = "",
+  onSuccess
 }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -27,6 +29,7 @@ export const NovaAulaButton: React.FC<NovaAulaButtonProps> = ({
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
+    if (onSuccess) onSuccess();
   };
 
   return (
@@ -47,6 +50,7 @@ export const NovaAulaButton: React.FC<NovaAulaButtonProps> = ({
           onOpenChange={setIsModalOpen}
           moduleId={moduleId}
           onClose={handleCloseModal}
+          onSuccess={onSuccess}
         />
       )}
     </>
