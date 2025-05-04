@@ -8,119 +8,129 @@ interface PandaVideoPlayerProps {
   title?: string;
   onProgress?: (progress: number) => void;
   onEnded?: () => void;
+  className?: string;
 }
 
 export const PandaVideoPlayer: React.FC<PandaVideoPlayerProps> = ({
   videoId,
   title,
   onProgress,
-  onEnded
+  onEnded,
+  className
 }) => {
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  // Estruturar a URL do player do Panda Video
+  const [iframeLoaded, setIframeLoaded] = useState(false);
   const embedUrl = `https://player.pandavideo.com.br/embed/${videoId}`;
   
-  // Gerar um ID único para este iframe
-  const frameId = `panda-player-${videoId}`;
-
   useEffect(() => {
-    // Simulação de carregamento para evitar flash de conteúdo
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 1000);
-
-    return () => clearTimeout(timer);
-  }, [videoId]);
-
-  // Lidar com mensagens do iframe do Panda Video para rastreamento de progresso
-  useEffect(() => {
-    if (!onProgress && !onEnded) return;
-
-    const handleMessage = (event: MessageEvent) => {
-      // Verificar se a mensagem é do player do Panda Video
-      if (event.origin === "https://player.pandavideo.com.br") {
+    let progressInterval: number;
+    
+    const setupMessageListener = () => {
+      // Handler para eventos de mensagem do player do Panda Video
+      const handleMessage = (event: MessageEvent) => {
         try {
+          if (!event.data || typeof event.data !== 'string') return;
+          
+          // Verificar se a mensagem vem do Panda Video
+          if (!event.data.startsWith('{') || !event.data.includes('pandavideo')) return;
+          
           const data = JSON.parse(event.data);
           
-          // Verificar se é um evento de progresso
-          if (data.event === "timeupdate" && data.video === videoId && onProgress) {
-            const currentPercentage = (data.currentTime / data.duration) * 100;
+          // Verificar se a mensagem é do player do Panda Video
+          if (!data.event || !data.event.startsWith('pandavideo')) return;
+          
+          console.log("Mensagem recebida do player Panda:", data);
+          
+          // Eventos de progresso
+          if (data.event === 'pandavideo.playing') {
+            setLoading(false);
             
-            // Atualizar progresso em marcos específicos
-            if (currentPercentage >= 25 && currentPercentage < 50) {
-              onProgress(25);
-            } else if (currentPercentage >= 50 && currentPercentage < 75) {
-              onProgress(50);
-            } else if (currentPercentage >= 75 && currentPercentage < 100) {
-              onProgress(75);
-            } else if (currentPercentage >= 99) {
-              onProgress(100);
-              
-              // Se o vídeo estiver em mais de 99%, considerar como finalizado
-              if (onEnded) {
-                onEnded();
-              }
+            // Configurar intervalo para monitorar o progresso
+            if (onProgress && !progressInterval) {
+              progressInterval = window.setInterval(() => {
+                if (data.progress && typeof data.progress === 'number') {
+                  onProgress(data.progress);
+                }
+              }, 5000);
             }
           }
           
-          // Verificar se o vídeo foi concluído
-          if (data.event === "ended" && data.video === videoId) {
-            if (onProgress) onProgress(100);
-            if (onEnded) onEnded();
+          // Reporte de progresso
+          if (data.event === 'pandavideo.progress' && onProgress) {
+            if (data.progress && typeof data.progress === 'number') {
+              onProgress(data.progress);
+            }
           }
-        } catch (e) {
-          // Ignorar erro de parsing JSON
+          
+          // Evento de vídeo finalizado
+          if (data.event === 'pandavideo.ended' && onEnded) {
+            if (progressInterval) {
+              clearInterval(progressInterval);
+            }
+            
+            // Reportar progresso de 100% antes de finalizar
+            if (onProgress) {
+              onProgress(100);
+            }
+            
+            onEnded();
+          }
+        } catch (error) {
+          console.error("Erro ao processar mensagem do player Panda:", error);
         }
-      }
+      };
+      
+      window.addEventListener('message', handleMessage);
+      
+      return () => {
+        window.removeEventListener('message', handleMessage);
+        if (progressInterval) {
+          clearInterval(progressInterval);
+        }
+      };
     };
-
-    window.addEventListener("message", handleMessage);
-    return () => window.removeEventListener("message", handleMessage);
+    
+    const cleanup = setupMessageListener();
+    
+    return () => {
+      cleanup();
+    };
   }, [videoId, onProgress, onEnded]);
-
-  if (loading) {
-    return (
-      <Card>
-        <CardContent className="p-0">
-          <div className="aspect-video">
-            <Skeleton className="h-full w-full" />
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (error) {
-    return (
-      <Card>
-        <CardContent className="p-0">
-          <div className="aspect-video bg-rose-50 flex items-center justify-center">
-            <p className="text-rose-500">{error}</p>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
+  
+  // Simular um carregamento mais rápido para melhor UX
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (!iframeLoaded) {
+        setLoading(false);
+      }
+    }, 3000);
+    
+    return () => clearTimeout(timer);
+  }, [iframeLoaded]);
+  
   return (
-    <Card>
-      <CardContent className="p-0">
-        <div className="aspect-video w-full">
-          <iframe
-            id={frameId}
+    <Card className={className}>
+      <CardContent className="p-0 relative">
+        {loading && (
+          <div className="absolute inset-0 z-10">
+            <Skeleton className="w-full h-full" />
+          </div>
+        )}
+        <div className="aspect-video">
+          <iframe 
             src={embedUrl}
-            title={title || "Vídeo"}
-            width="100%"
-            height="100%"
-            frameBorder="0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            className="w-full h-full"
+            title={title || `Vídeo ${videoId}`}
             allowFullScreen
-            className="h-full w-full"
-          ></iframe>
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            onLoad={() => {
+              setIframeLoaded(true);
+              setLoading(false);
+            }}
+          />
         </div>
       </CardContent>
     </Card>
   );
 };
+

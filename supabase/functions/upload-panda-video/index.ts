@@ -52,10 +52,10 @@ serve(async (req) => {
     }
 
     // Obter as variáveis de ambiente necessárias
-    const clientId = Deno.env.get("PANDA_CLIENT_ID");
+    const clientId = Deno.env.get("PANDA_CLIENT_ID") || "default";
     const clientSecret = Deno.env.get("PANDA_CLIENT_SECRET");
     
-    if (!clientId || !clientSecret) {
+    if (!clientSecret) {
       console.error("Credenciais do Panda Video não configuradas");
       return new Response(
         JSON.stringify({ 
@@ -120,7 +120,9 @@ serve(async (req) => {
     console.log(`Tipo do arquivo: ${videoFile.type}`);
 
     // 1. Autenticar com o Panda Video para obter token
-    console.log("Iniciando autenticação com Panda Video API");
+    console.log("Iniciando autenticação com Panda Video API usando clientSecret:", 
+      clientSecret.substring(0, 8) + "..." + clientSecret.substring(clientSecret.length - 5));
+      
     let tokenResponse;
     try {
       tokenResponse = await fetch(PANDA_AUTH_URL, {
