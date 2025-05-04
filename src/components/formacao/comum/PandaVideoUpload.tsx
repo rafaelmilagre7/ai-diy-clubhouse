@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -110,14 +111,21 @@ export const PandaVideoUpload = ({
       const functionUrl = `https://zotzvtepvpnkcoobdubt.functions.supabase.co/upload-panda-video`;
       console.log("Chamando Edge Function:", functionUrl);
       
-      // Iniciar upload para a Edge Function
+      // Adicionar tempo limite estendido para vídeos maiores
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 600000); // 10 minutos de timeout
+      
+      // Iniciar upload para a Edge Function com timeout estendido
       const response = await fetch(functionUrl, {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${session.access_token}`
         },
-        body: formData
+        body: formData,
+        signal: controller.signal
       });
+      
+      clearTimeout(timeoutId);
 
       // Progresso artificial durante o upload
       const progressInterval = setInterval(() => {
@@ -142,6 +150,13 @@ export const PandaVideoUpload = ({
           const errorData = await response.json();
           console.error("Erro detalhado (JSON):", errorData);
           
+          // Verificar se há problema específico com as credenciais
+          if (errorData.error?.includes('autenticação') || 
+              errorData.error?.includes('auth') || 
+              errorData.error?.includes('token')) {
+            throw new Error("Falha na autenticação com o serviço Panda Video. Verifique as credenciais.");
+          }
+          
           const errorMsg = errorData.error || errorData.message || "Falha ao fazer upload do vídeo";
           throw new Error(errorMsg);
         } catch (jsonError) {
@@ -150,13 +165,22 @@ export const PandaVideoUpload = ({
             const errorText = await clonedResponse.text();
             console.error("Resposta não-JSON do servidor:", errorText);
             
+            // Melhor análise do erro 500
+            if (response.status === 500) {
+              if (errorText.includes("auth") || errorText.includes("token") || errorText.includes("credential")) {
+                throw new Error("Erro de autenticação com a API do Panda Video. Verifique as credenciais no servidor.");
+              } else {
+                throw new Error("Erro interno do servidor. Por favor, tente novamente com um vídeo menor.");
+              }
+            }
+            
             const errorMsg = `Erro no servidor (Código ${response.status}): ${
               errorText.length > 100 ? errorText.substring(0, 100) + "..." : errorText
             }`;
             throw new Error(errorMsg);
           } catch (textError) {
             // Se ambos falharem, retorne um erro genérico com o status HTTP
-            throw new Error(`Erro na comunicação com o servidor (Código ${response.status})`);
+            throw new Error(`Erro na comunicação com o servidor (Código ${response.status}). Tente novamente mais tarde.`);
           }
         }
       }
@@ -205,7 +229,7 @@ export const PandaVideoUpload = ({
         videoInfo.url,            // URL do player embedado
         "panda",                  // Tipo de vídeo
         videoFile.name,           // Nome do arquivo
-        null,                     // Caminho do arquivo (não usado para Panda)
+        videoInfo.id,             // ID do vídeo no Panda (armazenado no campo filePath para reutilização)
         videoFile.size,           // Tamanho do arquivo
         videoInfo.duration || 0,  // Duração em segundos
         videoInfo.thumbnail_url,  // URL da thumbnail
@@ -222,10 +246,20 @@ export const PandaVideoUpload = ({
       setVideoFile(null);
     } catch (error: any) {
       console.error("Erro ao fazer upload para Panda Video:", error);
-      setError(error.message || "Não foi possível enviar o vídeo. Tente novamente.");
+      
+      // Mensagem mais específica baseada no erro
+      let errorMessage = error.message || "Não foi possível enviar o vídeo. Tente novamente.";
+      
+      if (error.message?.includes("credenciais") || error.message?.includes("autenticação")) {
+        errorMessage = "Falha na autenticação com o serviço de vídeo. Por favor, contate o suporte técnico.";
+      } else if (error.message?.includes("tempo limite") || error.message?.includes("timeout")) {
+        errorMessage = "O upload demorou muito tempo e foi cancelado. Tente com um vídeo menor ou verifique sua conexão.";
+      }
+      
+      setError(errorMessage);
       toast({
         title: "Falha no upload",
-        description: error.message || "Não foi possível enviar o vídeo. Tente novamente.",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {

@@ -1,8 +1,32 @@
+
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { corsHeaders } from "../_shared/cors.ts";
 
 const PANDA_AUTH_URL = "https://auth.api.pandavideo.com.br/oauth2/token";
 const PANDA_API_URL = "https://api.pandavideo.com.br/videos";
+
+// Implementar sistema de retry para falhas de autenticação
+async function fetchWithRetry(url: string, options: RequestInit, maxRetries = 3) {
+  let lastError;
+  
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      if (attempt > 0) {
+        console.log(`Tentativa ${attempt + 1} de ${maxRetries} para: ${url}`);
+        // Espera exponencial entre tentativas (1s, 2s, 4s...)
+        await new Promise(r => setTimeout(r, Math.pow(2, attempt) * 1000));
+      }
+      
+      const response = await fetch(url, options);
+      return response;
+    } catch (error) {
+      console.error(`Erro na tentativa ${attempt + 1}:`, error);
+      lastError = error;
+    }
+  }
+  
+  throw new Error(`Falha após ${maxRetries} tentativas: ${lastError?.message || 'Erro desconhecido'}`);
+}
 
 serve(async (req) => {
   console.log("Requisição de upload de vídeo recebida");
@@ -51,18 +75,25 @@ serve(async (req) => {
     }
 
     // Obter as variáveis de ambiente necessárias
-    const clientId = Deno.env.get("PANDA_CLIENT_ID") || "default";
+    const clientId = Deno.env.get("PANDA_CLIENT_ID");
     const clientSecret = Deno.env.get("PANDA_CLIENT_SECRET");
     
     console.log("Verificando credenciais Panda Video: Client ID disponível:", !!clientId);
     console.log("Verificando credenciais Panda Video: Client Secret disponível:", !!clientSecret);
     
-    if (!clientSecret) {
+    if (!clientId || !clientSecret) {
       console.error("Credenciais do Panda Video não configuradas");
+      console.error("Client ID disponível:", !!clientId);
+      console.error("Client Secret disponível:", !!clientSecret);
+      
       return new Response(
         JSON.stringify({ 
           success: false,
-          error: "Configuração incompleta do servidor" 
+          error: "Configuração incompleta do servidor: credenciais não definidas",
+          details: {
+            clientIdPresent: !!clientId,
+            clientSecretPresent: !!clientSecret
+          }
         }),
         { 
           status: 500, 
@@ -122,22 +153,29 @@ serve(async (req) => {
     console.log(`Tipo do arquivo: ${videoFile.type}`);
 
     // 1. Autenticar com o Panda Video para obter token
-    console.log("Iniciando autenticação com Panda Video API usando clientSecret:", 
-      clientSecret.substring(0, 8) + "..." + clientSecret.substring(clientSecret.length - 5));
+    console.log("Iniciando autenticação com Panda Video API");
+    console.log("Usando credenciais: ID=" + clientId.substring(0, 3) + "..." + clientId.substring(clientId.length - 3));
       
     let tokenResponse;
     try {
-      tokenResponse = await fetch(PANDA_AUTH_URL, {
+      const authBody = new URLSearchParams({
+        grant_type: "client_credentials",
+        client_id: clientId,
+        client_secret: clientSecret
+      });
+      
+      console.log("Enviando solicitação de autenticação para:", PANDA_AUTH_URL);
+      console.log("Payload de autenticação:", authBody.toString());
+      
+      tokenResponse = await fetchWithRetry(PANDA_AUTH_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/x-www-form-urlencoded"
         },
-        body: new URLSearchParams({
-          grant_type: "client_credentials",
-          client_id: clientId,
-          client_secret: clientSecret
-        })
+        body: authBody
       });
+      
+      console.log("Resposta de autenticação recebida: Status", tokenResponse.status);
     } catch (authError) {
       console.error("Erro na requisição para autenticação:", authError);
       return new Response(
@@ -170,7 +208,8 @@ serve(async (req) => {
         JSON.stringify({ 
           success: false,
           error: "Falha na autenticação com o serviço de vídeo",
-          details: tokenErrorText 
+          details: tokenErrorText,
+          status: tokenResponse.status
         }),
         { 
           status: 500, 
@@ -211,7 +250,8 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ 
           success: false,
-          error: "Falha ao obter autorização do serviço de vídeo" 
+          error: "Falha ao obter autorização do serviço de vídeo",
+          tokenResponse: tokenData
         }),
         { 
           status: 500, 
@@ -256,7 +296,7 @@ serve(async (req) => {
     console.log("Enviando vídeo para a API do Panda Video...");
     let uploadResponse;
     try {
-      uploadResponse = await fetch(PANDA_API_URL, {
+      uploadResponse = await fetchWithRetry(PANDA_API_URL, {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${accessToken}`,
