@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/auth";
 import { supabase } from "@/lib/supabase";
@@ -211,7 +210,7 @@ const FormacaoAulas = () => {
 
   return (
     <div className="space-y-6">
-      <FormacaoAulasHeader>
+      <FormacaoAulasHeader titulo="Aulas">
         {/* Usar o componente NovaAulaButton corretamente */}
         <NovaAulaButton 
           moduleId={moduloFiltro || ""} 

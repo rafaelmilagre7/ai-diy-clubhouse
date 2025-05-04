@@ -14,14 +14,16 @@ interface FormacaoAulasHeaderProps {
   titulo?: string;
   onNovaAula?: () => void;
   breadcrumb?: boolean;
-  moduloId?: string; // Adicionado para permitir passagem do ID do módulo
+  moduloId?: string;
+  children?: React.ReactNode; // Adicionado a propriedade children
 }
 
 export const FormacaoAulasHeader: React.FC<FormacaoAulasHeaderProps> = ({
   titulo = "Aulas",
   onNovaAula,
   breadcrumb = false,
-  moduloId, // Agora o componente pode receber essa prop
+  moduloId,
+  children, // Adicionado ao destructuring
 }) => {
   return (
     <div className="flex justify-between items-center">
@@ -48,11 +50,15 @@ export const FormacaoAulasHeader: React.FC<FormacaoAulasHeaderProps> = ({
           Gerencie as aulas disponíveis na plataforma
         </p>
       </div>
-      {onNovaAula && (
-        <Button onClick={onNovaAula}>
-          <Plus className="mr-2 h-4 w-4" />
-          Nova Aula
-        </Button>
+      {children ? (
+        children
+      ) : (
+        onNovaAula && (
+          <Button onClick={onNovaAula}>
+            <Plus className="mr-2 h-4 w-4" />
+            Nova Aula
+          </Button>
+        )
       )}
     </div>
   );

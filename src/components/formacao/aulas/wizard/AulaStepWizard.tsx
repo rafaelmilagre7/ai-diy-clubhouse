@@ -50,6 +50,7 @@ const aulaFormSchema = z.object({
       fileSize: z.number().optional(),
       duration_seconds: z.number().optional(),
       thumbnail_url: z.string().optional(),
+      video_id: z.string().optional(),
     })
   ).max(3, { message: "É permitido no máximo 3 vídeos por aula" }).optional().default([]),
   
@@ -195,7 +196,8 @@ const AulaStepWizard: React.FC<AulaStepWizardProps> = ({
             filePath: video.video_file_path,
             fileSize: video.file_size_bytes,
             duration_seconds: video.duration_seconds,
-            thumbnail_url: video.thumbnail_url
+            thumbnail_url: video.thumbnail_url,
+            video_id: video.video_id
           }));
           
           form.setValue("videos", videosFormatted);
@@ -310,7 +312,8 @@ const AulaStepWizard: React.FC<AulaStepWizardProps> = ({
             video_file_name: video.fileName || null,
             file_size_bytes: video.fileSize || null,
             duration_seconds: video.duration_seconds || null,
-            thumbnail_url: video.thumbnail_url || null
+            thumbnail_url: video.thumbnail_url || null,
+            video_id: video.video_id
           };
           
           console.log(`Salvando vídeo ${i + 1}:`, videoData);
