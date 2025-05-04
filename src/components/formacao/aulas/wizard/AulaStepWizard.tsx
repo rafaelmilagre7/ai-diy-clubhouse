@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -81,6 +80,7 @@ interface AulaStepWizardProps {
   aula?: LearningLesson | null;
   moduleId?: string | null;
   onSuccess?: () => void;
+  onClose?: () => void;  // Nova prop adicionada
 }
 
 const AulaStepWizard: React.FC<AulaStepWizardProps> = ({
@@ -89,6 +89,7 @@ const AulaStepWizard: React.FC<AulaStepWizardProps> = ({
   aula,
   moduleId,
   onSuccess,
+  onClose,  // Adicionado o parâmetro onClose
 }) => {
   const [modules, setModules] = useState<LearningModule[]>([]);
   const [isSaving, setIsSaving] = useState(false);
@@ -496,6 +497,7 @@ const AulaStepWizard: React.FC<AulaStepWizardProps> = ({
       if (onSuccess) onSuccess();
       form.reset(defaultValues);
       onOpenChange(false);
+      if (onClose) onClose();  // Chamar onClose se fornecido
       
     } catch (error: any) {
       console.error("Erro ao salvar aula:", error);
@@ -534,6 +536,7 @@ const AulaStepWizard: React.FC<AulaStepWizardProps> = ({
   const handleCancel = () => {
     form.reset(defaultValues);
     onOpenChange(false);
+    if (onClose) onClose();  // Chamar onClose se fornecido
   };
 
   return (
