@@ -18,7 +18,7 @@ import { bytesToSize } from "@/lib/utils";
 interface PandaVideoUploadProps {
   value: string;
   videoData?: {
-    id?: string; // Alterado aqui - agora id é opcional
+    id?: string;
     title?: string;
     description?: string;
     duration_seconds?: number;
@@ -105,7 +105,7 @@ export const PandaVideoUpload = ({
       formData.append("private", "true");
 
       // Verificar tamanho antes do envio
-      console.log(`Iniciando upload do vídeo: ${videoFile.name}, tamanho: ${bytesToSize(videoFile.size)}`);
+      console.log(`Iniciando upload do vídeo: ${videoFile.name}, tamanho: ${bytesToSize(videoFile.size)}, tipo: ${videoFile.type}`);
 
       // Iniciar upload para a Edge Function
       const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/upload-panda-video`, {
@@ -127,40 +127,62 @@ export const PandaVideoUpload = ({
         });
       }, 1000);
 
+      // Verificar resposta HTTP (status code)
       if (!response.ok) {
         clearInterval(progressInterval);
         
-        // Tente obter detalhes do erro, mesmo se não for um JSON válido
-        let errorMsg = "Falha ao fazer upload do vídeo";
+        // Clone a resposta antes de tentar lê-la para evitar o erro "body stream already read"
+        const clonedResponse = response.clone();
+        
+        // Tentar obter detalhes do erro como JSON primeiro
         try {
           const errorData = await response.json();
-          errorMsg = errorData.error || errorData.message || errorMsg;
-          console.error("Erro detalhado:", errorData);
-        } catch (parseError) {
-          // Capture o texto bruto da resposta se não for JSON
-          const errorText = await response.text();
-          console.error("Resposta não-JSON do servidor:", errorText);
-          errorMsg = `Erro no servidor (Código ${response.status}): ${errorText.substring(0, 100)}...`;
+          console.error("Erro detalhado (JSON):", errorData);
+          
+          const errorMsg = errorData.error || errorData.message || "Falha ao fazer upload do vídeo";
+          throw new Error(errorMsg);
+        } catch (jsonError) {
+          // Se falhar ao ler como JSON, tente ler como texto usando a resposta clonada
+          try {
+            const errorText = await clonedResponse.text();
+            console.error("Resposta não-JSON do servidor:", errorText);
+            
+            const errorMsg = `Erro no servidor (Código ${response.status}): ${
+              errorText.length > 100 ? errorText.substring(0, 100) + "..." : errorText
+            }`;
+            throw new Error(errorMsg);
+          } catch (textError) {
+            // Se ambos falharem, retorne um erro genérico com o status HTTP
+            throw new Error(`Erro na comunicação com o servidor (Código ${response.status})`);
+          }
         }
-        
-        throw new Error(errorMsg);
       }
 
-      // Tente fazer parse da resposta com tratamento de erro adequado
+      // Esta é a forma segura de ler o corpo da resposta uma única vez
+      let responseText;
+      try {
+        responseText = await response.text();
+        console.log("Resposta bruta do servidor:", responseText);
+      } catch (textError) {
+        clearInterval(progressInterval);
+        console.error("Erro ao ler resposta do servidor:", textError);
+        throw new Error("Não foi possível ler a resposta do servidor");
+      }
+      
+      // Verificar se o texto da resposta não está vazio antes de fazer o parse
+      if (!responseText || responseText.trim() === '') {
+        clearInterval(progressInterval);
+        throw new Error("Resposta vazia do servidor");
+      }
+      
+      // Tentar fazer parse da resposta como JSON
       let result;
       try {
-        const responseText = await response.text();
-        console.log("Resposta bruta:", responseText);
-        
-        // Verifique se a resposta não está vazia antes de fazer o parse
-        if (!responseText || responseText.trim() === '') {
-          throw new Error("Resposta vazia do servidor");
-        }
-        
         result = JSON.parse(responseText);
       } catch (parseError) {
         clearInterval(progressInterval);
         console.error("Erro ao analisar resposta JSON:", parseError);
+        console.error("Resposta que falhou no parse:", responseText);
         throw new Error(`Erro ao processar resposta do servidor: ${parseError.message}`);
       }
 

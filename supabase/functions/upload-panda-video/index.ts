@@ -6,6 +6,8 @@ const PANDA_AUTH_URL = "https://auth.api.pandavideo.com.br/oauth2/token";
 const PANDA_API_URL = "https://api.pandavideo.com.br/videos";
 
 serve(async (req) => {
+  console.log("Requisição de upload de vídeo recebida");
+  
   // Lidar com requisições OPTIONS (CORS preflight)
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -14,6 +16,7 @@ serve(async (req) => {
   try {
     // Verificar se a requisição é POST
     if (req.method !== "POST") {
+      console.log("Método não permitido:", req.method);
       return new Response(
         JSON.stringify({ 
           success: false,
@@ -32,6 +35,7 @@ serve(async (req) => {
     // Verificar autenticação do usuário (JWT)
     const authHeader = req.headers.get("Authorization");
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      console.log("Erro de autenticação: Token JWT ausente ou inválido");
       return new Response(
         JSON.stringify({ 
           success: false,
@@ -72,6 +76,7 @@ serve(async (req) => {
     let formData;
     try {
       formData = await req.formData();
+      console.log("FormData extraído com sucesso");
     } catch (formError) {
       console.error("Erro ao processar formulário:", formError);
       return new Response(
@@ -95,6 +100,7 @@ serve(async (req) => {
     const isPrivate = formData.get("private") === "true";
 
     if (!videoFile) {
+      console.log("Nenhum arquivo de vídeo encontrado no FormData");
       return new Response(
         JSON.stringify({ 
           success: false,
@@ -111,8 +117,10 @@ serve(async (req) => {
     }
 
     console.log(`Processando upload do vídeo: ${videoTitle} (${videoFile.size} bytes)`);
+    console.log(`Tipo do arquivo: ${videoFile.type}`);
 
     // 1. Autenticar com o Panda Video para obter token
+    console.log("Iniciando autenticação com Panda Video API");
     let tokenResponse;
     try {
       tokenResponse = await fetch(PANDA_AUTH_URL, {
@@ -148,11 +156,12 @@ serve(async (req) => {
       let tokenErrorText;
       try {
         tokenErrorText = await tokenResponse.text();
+        console.error("Resposta de erro do serviço de autenticação:", tokenErrorText);
       } catch (e) {
         tokenErrorText = "Erro desconhecido na autenticação";
+        console.error("Não foi possível ler resposta de erro da autenticação:", e);
       }
       
-      console.error("Erro na autenticação com Panda Video:", tokenErrorText);
       return new Response(
         JSON.stringify({ 
           success: false,
@@ -172,6 +181,7 @@ serve(async (req) => {
     let tokenData;
     try {
       tokenData = await tokenResponse.json();
+      console.log("Token de acesso obtido com sucesso");
     } catch (parseError) {
       console.error("Erro ao parsear resposta de token:", parseError);
       return new Response(
@@ -210,11 +220,13 @@ serve(async (req) => {
     }
 
     // 2. Converter o arquivo para base64
+    console.log("Convertendo vídeo para base64...");
     let arrayBuffer, base64;
     try {
       arrayBuffer = await videoFile.arrayBuffer();
       const bytes = new Uint8Array(arrayBuffer);
       base64 = btoa(String.fromCharCode(...bytes));
+      console.log(`Conversão base64 concluída. Tamanho após codificação: ${base64.length} caracteres`);
     } catch (convertError) {
       console.error("Erro ao converter vídeo para base64:", convertError);
       return new Response(
@@ -237,6 +249,7 @@ serve(async (req) => {
     const base64Data = `data:${mimeType};base64,${base64}`;
 
     // 3. Enviar o vídeo para o Panda Video
+    console.log("Enviando vídeo para a API do Panda Video...");
     let uploadResponse;
     try {
       uploadResponse = await fetch(PANDA_API_URL, {
@@ -251,6 +264,8 @@ serve(async (req) => {
           private: isPrivate
         })
       });
+      
+      console.log(`Resposta do Panda Video API recebida com status: ${uploadResponse.status}`);
     } catch (uploadError) {
       console.error("Erro na requisição de upload:", uploadError);
       return new Response(
@@ -270,22 +285,27 @@ serve(async (req) => {
     }
 
     if (!uploadResponse.ok) {
+      // Clonar a resposta para poder lê-la mais de uma vez se necessário
+      const clonedResponse = uploadResponse.clone();
+      
       let uploadErrorText;
       try {
-        uploadErrorText = await uploadResponse.text();
+        uploadErrorText = await clonedResponse.text();
+        console.error("Erro no upload para Panda Video:", uploadErrorText);
       } catch (e) {
         uploadErrorText = "Erro desconhecido no upload";
+        console.error("Não foi possível ler resposta de erro:", e);
       }
       
-      console.error("Erro no upload para Panda Video:", uploadErrorText);
       return new Response(
         JSON.stringify({ 
           success: false,
           error: "Falha ao fazer upload do vídeo",
-          details: uploadErrorText 
+          details: uploadErrorText,
+          statusCode: uploadResponse.status
         }),
         { 
-          status: 500, 
+          status: uploadResponse.status, 
           headers: { 
             ...corsHeaders, 
             "Content-Type": "application/json" 
@@ -297,13 +317,57 @@ serve(async (req) => {
     let videoData;
     try {
       videoData = await uploadResponse.json();
+      console.log("Upload de vídeo bem-sucedido:", videoData);
     } catch (parseError) {
-      console.error("Erro ao parsear resposta de upload:", parseError);
+      console.error("Erro ao parsear resposta de upload:", parseError, "Status:", uploadResponse.status);
+      
+      // Tentar ler como texto para diagnóstico
+      try {
+        const responseText = await uploadResponse.text();
+        console.error("Resposta não-JSON recebida:", responseText);
+        
+        return new Response(
+          JSON.stringify({ 
+            success: false,
+            error: "Resposta inválida do servidor de vídeo",
+            details: "A resposta não é um JSON válido", 
+            responseText: responseText.substring(0, 200) // Enviar parte da resposta para diagnóstico
+          }),
+          { 
+            status: 500, 
+            headers: { 
+              ...corsHeaders, 
+              "Content-Type": "application/json" 
+            } 
+          }
+        );
+      } catch (textError) {
+        console.error("Não foi possível ler a resposta como texto:", textError);
+        
+        return new Response(
+          JSON.stringify({ 
+            success: false,
+            error: "Erro ao processar resposta do upload",
+            details: parseError.message 
+          }),
+          { 
+            status: 500, 
+            headers: { 
+              ...corsHeaders, 
+              "Content-Type": "application/json" 
+            } 
+          }
+        );
+      }
+    }
+    
+    if (!videoData || !videoData.id) {
+      console.error("Dados do vídeo incompletos ou ausentes na resposta:", videoData);
       return new Response(
         JSON.stringify({ 
           success: false,
-          error: "Erro ao processar resposta do upload",
-          details: parseError.message 
+          error: "Dados do vídeo incompletos na resposta do servidor",
+          received: videoData
         }),
         { 
           status: 500, 
@@ -314,10 +378,9 @@ serve(async (req) => {
         }
       );
     }
-    
-    console.log("Upload de vídeo bem-sucedido:", videoData);
 
     // 4. Retornar os dados do vídeo
+    console.log("Retornando dados do vídeo para o cliente");
     return new Response(
       JSON.stringify({
         success: true,
@@ -339,7 +402,7 @@ serve(async (req) => {
       }
     );
   } catch (error) {
-    console.error("Erro no processamento do upload:", error);
+    console.error("Erro não tratado no processamento do upload:", error);
     return new Response(
       JSON.stringify({ 
         success: false,

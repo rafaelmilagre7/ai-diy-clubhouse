@@ -24,7 +24,19 @@ export const LessonVideoPlayer: React.FC<LessonVideoPlayerProps> = ({
   // Se for um vídeo do Panda, usar componente específico
   if (video.video_type === 'panda') {
     // Extrair ID do vídeo do Panda da URL ou usar o campo video_file_path como fallback
-    const pandaVideoId = video.video_file_path || video.url.split('/').pop();
+    let pandaVideoId = "";
+    
+    if (video.video_file_path) {
+      pandaVideoId = video.video_file_path;
+    } else if (video.url) {
+      // Tentar extrair o ID do vídeo da URL do Panda Video
+      const matches = video.url.match(/\/embed\/([a-zA-Z0-9]+)/);
+      if (matches && matches[1]) {
+        pandaVideoId = matches[1];
+      } else {
+        pandaVideoId = video.url.split('/').pop() || '';
+      }
+    }
     
     if (pandaVideoId) {
       return (
