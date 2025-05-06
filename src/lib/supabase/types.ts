@@ -16,7 +16,7 @@ export interface Solution {
   description: string;
   slug: string;
   thumbnail_url: string | null;
-  category: 'productivity' | 'marketing' | 'leadership' | 'finance' | 'communication' | 'operations' | 'sales' | 'customer_service' | 'human_resources';
+  category: 'productivity' | 'marketing' | 'leadership' | 'finance' | 'communication' | 'operations' | 'sales' | 'customer_service' | 'human_resources' | 'revenue' | 'operational' | 'strategy';
   difficulty: 'easy' | 'medium' | 'advanced' | 'expert';
   published: boolean;
   created_at: string;
@@ -29,6 +29,8 @@ export interface Solution {
   completion_requirements: any;
   related_solutions: string[];
   videos?: any[];
+  overview?: string;
+  checklist?: any[];
 }
 
 export interface Module {
@@ -138,6 +140,15 @@ export interface LearningComment {
   content: string;
   likes_count: number;
   is_hidden: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface UserChecklist {
+  id: string;
+  user_id: string;
+  solution_id: string;
+  checked_items: Record<string, boolean>;
   created_at: string;
   updated_at: string;
 }

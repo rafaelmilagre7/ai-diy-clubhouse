@@ -3,6 +3,7 @@ import { Solution } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { PlayCircle, CheckCircle, Award } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { SolutionCategory } from "@/lib/types/categoryTypes";
 
 interface SolutionSidebarProps {
   solution: Solution;
@@ -34,6 +35,16 @@ export const SolutionSidebar = ({
     }
   };
   
+  // Helper para traduzir categorias
+  const getCategoryTranslation = (category: SolutionCategory): string => {
+    switch (category) {
+      case "revenue": return "Receita";
+      case "operational": return "Operacional";
+      case "strategy": return "Estratégia";
+      default: return category;
+    }
+  };
+
   return (
     <div className="bg-white p-6 rounded-lg shadow-sm space-y-6 hidden sm:block">
       <div>
@@ -96,9 +107,7 @@ export const SolutionSidebar = ({
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Categoria:</span>
               <span className="font-medium">
-                {solution.category === "revenue" && "Receita"}
-                {solution.category === "operational" && "Operacional"}
-                {solution.category === "strategy" && "Estratégia"}
+                {getCategoryTranslation(solution.category as SolutionCategory)}
               </span>
             </div>
           )}

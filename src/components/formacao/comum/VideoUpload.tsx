@@ -1,9 +1,10 @@
+
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
-import { uploadFileWithFallback } from "@/lib/supabase/storage";
-import { getYoutubeVideoId, getYoutubeThumbnailUrl } from "@/lib/supabase/storage";
+import { uploadFileWithFallback } from "@/lib/supabase";
+import { getYoutubeVideoId, getYoutubeThumbnailUrl } from "@/lib/supabase";
 import { 
   Film, Link, Loader2, Video, Youtube, AlertCircle, Check, X
 } from "lucide-react";
