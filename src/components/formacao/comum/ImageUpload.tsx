@@ -1,10 +1,9 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { uploadFileWithFallback } from "@/lib/supabase/storage";
 import { ImagePlus, Trash2, Loader2, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { STORAGE_BUCKETS, FILE_SIZE_LIMITS } from "@/lib/supabase/config";
+import { STORAGE_BUCKETS, MAX_UPLOAD_SIZES } from "@/lib/supabase/config";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface ImageUploadProps {

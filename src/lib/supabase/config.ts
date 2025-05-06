@@ -7,6 +7,7 @@ export const STORAGE_BUCKETS = {
   SOLUTION_FILES: 'solution_files',
   LEARNING_MATERIALS: 'learning_materials',
   COURSE_IMAGES: 'course_images',
+  LEARNING_VIDEOS: 'learning_videos', // Adiciona constante faltante
   FALLBACK: 'solution_files' // Bucket de fallback para uploads
 };
 

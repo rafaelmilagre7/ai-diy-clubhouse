@@ -186,18 +186,27 @@ export const formatVideoDuration = (seconds: number): string => {
 
 // Função para configurar buckets para o módulo de aprendizagem
 export const setupLearningStorageBuckets = async () => {
-  const requiredBuckets = ['learning_materials', 'solution_files', 'course_images'];
-  const results = [];
+  const requiredBuckets = ['learning_materials', 'solution_files', 'course_images', 'learning_videos'];
+  let allSuccessful = true;
+  let errorMessages = [];
   
   for (const bucket of requiredBuckets) {
     try {
       const success = await ensureBucketExists(bucket);
-      results.push({ bucket, success });
+      if (!success) {
+        allSuccessful = false;
+        errorMessages.push(`Falha ao configurar bucket ${bucket}`);
+      }
     } catch (error) {
       console.error(`Erro ao configurar bucket ${bucket}:`, error);
-      results.push({ bucket, success: false, error });
+      allSuccessful = false;
+      errorMessages.push(`Erro ao configurar bucket ${bucket}: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
   
-  return results;
+  return {
+    success: allSuccessful,
+    message: allSuccessful ? 'Todos os buckets configurados com sucesso' : 
+      `Alguns buckets não puderam ser configurados: ${errorMessages.join(', ')}`
+  };
 };

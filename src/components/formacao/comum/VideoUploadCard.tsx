@@ -54,7 +54,7 @@ export const VideoUploadCard: React.FC<VideoUploadCardProps> = ({
       console.log("Resposta da verificação de buckets:", response);
       
       // Sempre assumir que os buckets estão prontos a menos que haja um erro claro
-      setBucketStatus("ready");
+      setBucketStatus(response.success ? "ready" : "partial");
       
       // Apenas registrar no console qualquer informação adicional
       if (!response.success) {
