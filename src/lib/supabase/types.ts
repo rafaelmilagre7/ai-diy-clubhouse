@@ -1,14 +1,15 @@
-
 export interface UserProfile {
   id: string;
   name: string | null;
   email: string;
   avatar_url: string | null;
-  role: string;
+  role: UserRole;
   created_at: string;
   industry?: string | null;
   company_name?: string | null;
 }
+
+export type UserRole = 'admin' | 'member' | 'formacao';
 
 export interface Solution {
   id: string;
@@ -31,6 +32,7 @@ export interface Solution {
   videos?: any[];
   overview?: string;
   checklist?: any[];
+  author_id?: string;
 }
 
 export interface Module {
@@ -151,4 +153,18 @@ export interface UserChecklist {
   checked_items: Record<string, boolean>;
   created_at: string;
   updated_at: string;
+}
+
+export interface Progress {
+  id: string;
+  user_id: string;
+  solution_id: string;
+  current_module: number;
+  is_completed: boolean;
+  completed_modules: number[];
+  completion_data?: any;
+  last_activity: string;
+  completed_at?: string | null;
+  created_at: string;
+  implementation_status?: string;
 }

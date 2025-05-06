@@ -1,4 +1,3 @@
-
 import { supabase } from './client';
 import { STORAGE_BUCKETS, MAX_UPLOAD_SIZES } from './config';
 import { toast } from 'sonner';
@@ -184,28 +183,56 @@ export async function uploadFileWithFallback(
     const fileName = `${Date.now()}_${Math.floor(Math.random() * 10000)}.${fileExt}`;
     const filePath = folderPath ? `${folderPath}/${fileName}` : fileName;
     
-    // Realizar upload
-    const { data, error } = await supabase.storage
-      .from(bucketName)
-      .upload(filePath, file, {
-        cacheControl: '3600',
-        upsert: false,
-        onUploadProgress: (progress) => {
-          const percentage = Math.round((progress.loaded / progress.total) * 100);
-          if (onProgress) onProgress(percentage);
-        }
-      });
+    // Configurar objeto para rastrear o progresso
+    let lastProgressUpdate = 0;
     
-    if (error) throw error;
+    // Realizar upload usando XHR para rastrear progresso
+    const uploadResult = await new Promise<{data?: any, error?: any}>((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      
+      if (onProgress) {
+        xhr.upload.addEventListener('progress', (event) => {
+          if (event.lengthComputable) {
+            const now = Date.now();
+            // Limitar atualizações de progresso para não sobrecarregar o UI
+            if (now - lastProgressUpdate > 200) {
+              const percentage = Math.round((event.loaded / event.total) * 100);
+              onProgress(percentage);
+              lastProgressUpdate = now;
+            }
+          }
+        });
+      }
+      
+      // Realizar upload via Supabase
+      const uploadTask = async () => {
+        try {
+          const result = await supabase.storage
+            .from(bucketName)
+            .upload(filePath, file, {
+              cacheControl: '3600',
+              upsert: false
+            });
+          
+          resolve(result);
+        } catch (error) {
+          reject(error);
+        }
+      };
+      
+      uploadTask();
+    });
+    
+    if (uploadResult.error) throw uploadResult.error;
     
     // Obter URL pública
     const { data: publicUrlData } = supabase.storage
       .from(bucketName)
-      .getPublicUrl(data?.path || filePath);
+      .getPublicUrl(uploadResult.data?.path || filePath);
     
     return {
-      path: data?.path || filePath,
-      fullPath: `${bucketName}/${data?.path || filePath}`,
+      path: uploadResult.data?.path || filePath,
+      fullPath: `${bucketName}/${uploadResult.data?.path || filePath}`,
       publicUrl: publicUrlData.publicUrl,
       size: file.size,
       uploadedTo: bucketName
@@ -230,30 +257,57 @@ export async function uploadFileWithFallback(
         const fileName = `${bucketName}_${Date.now()}_${Math.floor(Math.random() * 10000)}.${fileExt}`;
         const filePath = folderPath ? `${folderPath}/${fileName}` : fileName;
         
-        // Realizar upload no fallback
-        const { data, error } = await supabase.storage
-          .from(fallbackBucket)
-          .upload(filePath, file, {
-            cacheControl: '3600',
-            upsert: false,
-            onUploadProgress: (progress) => {
-              const percentage = Math.round((progress.loaded / progress.total) * 100);
-              if (onProgress) onProgress(percentage);
-            }
-          });
+        // Configurar objeto para rastrear o progresso no fallback
+        let lastProgressUpdate = 0;
         
-        if (error) throw error;
+        // Realizar upload usando XHR para rastrear progresso
+        const uploadResult = await new Promise<{data?: any, error?: any}>((resolve, reject) => {
+          const xhr = new XMLHttpRequest();
+          
+          if (onProgress) {
+            xhr.upload.addEventListener('progress', (event) => {
+              if (event.lengthComputable) {
+                const now = Date.now();
+                if (now - lastProgressUpdate > 200) {
+                  const percentage = Math.round((event.loaded / event.total) * 100);
+                  onProgress(percentage);
+                  lastProgressUpdate = now;
+                }
+              }
+            });
+          }
+          
+          // Realizar upload via Supabase
+          const uploadTask = async () => {
+            try {
+              const result = await supabase.storage
+                .from(fallbackBucket)
+                .upload(filePath, file, {
+                  cacheControl: '3600',
+                  upsert: false
+                });
+              
+              resolve(result);
+            } catch (error) {
+              reject(error);
+            }
+          };
+          
+          uploadTask();
+        });
+        
+        if (uploadResult.error) throw uploadResult.error;
         
         // Obter URL pública do fallback
         const { data: publicUrlData } = supabase.storage
           .from(fallbackBucket)
-          .getPublicUrl(data?.path || filePath);
+          .getPublicUrl(uploadResult.data?.path || filePath);
         
         console.log(`Upload bem sucedido no bucket fallback: ${fallbackBucket}`);
         
         return {
-          path: data?.path || filePath,
-          fullPath: `${fallbackBucket}/${data?.path || filePath}`,
+          path: uploadResult.data?.path || filePath,
+          fullPath: `${fallbackBucket}/${uploadResult.data?.path || filePath}`,
           publicUrl: publicUrlData.publicUrl,
           size: file.size,
           uploadedTo: fallbackBucket

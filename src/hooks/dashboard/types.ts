@@ -1,12 +1,13 @@
 
 import { Solution as SupabaseSolution } from "@/lib/supabase";
+import { SolutionCategory } from "@/lib/types/categoryTypes";
 
 // Definir tipo Solution que estende a SupabaseSolution mas torna author_id opcional
-export interface Solution extends Omit<SupabaseSolution, 'author_id'> {
+export interface Solution extends Omit<SupabaseSolution, 'author_id' | 'category'> {
   id: string;
   title: string;
   description: string;
-  category: string;
+  category: SolutionCategory;
   difficulty: string;
   published: boolean;
   created_at: string;

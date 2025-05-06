@@ -114,17 +114,37 @@ export const FileUpload = ({
       const fileExt = file.name.split('.').pop();
       const filePath = `${folderPath}/${Date.now()}-${file.name}`;
       
-      // Upload do arquivo
-      const { data, error } = await supabase.storage
-        .from(bucketName)
-        .upload(filePath, file, {
-          cacheControl: '3600',
-          upsert: true,
-          onUploadProgress: (progress) => {
-            const percentage = Math.round((progress.loaded / progress.total) * 100);
+      // Iniciar XMLHttpRequest para rastrear progresso manualmente
+      const xhr = new XMLHttpRequest();
+      const uploadPromise = new Promise<{data?: any, error?: any}>((resolve, reject) => {
+        xhr.upload.addEventListener('progress', (event) => {
+          if (event.lengthComputable) {
+            const percentage = Math.round((event.loaded / event.total) * 100);
             setUploadProgress(percentage);
           }
         });
+        
+        // Realizar upload via Supabase
+        const uploadTask = async () => {
+          try {
+            const result = await supabase.storage
+              .from(bucketName)
+              .upload(filePath, file, {
+                cacheControl: '3600',
+                upsert: true
+              });
+            
+            resolve(result);
+          } catch (error) {
+            reject(error);
+          }
+        };
+        
+        uploadTask();
+      });
+      
+      // Aguardar resultado do upload
+      const { data, error } = await uploadPromise;
       
       if (error) {
         throw error;

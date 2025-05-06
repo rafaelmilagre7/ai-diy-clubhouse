@@ -1,12 +1,13 @@
 
 import { Solution as SupabaseSolution } from "@/lib/supabase";
+import { SolutionCategory } from "@/lib/types/categoryTypes";
 
 // Definição unificada de Solution que estende a SupabaseSolution
-export interface Solution extends Omit<SupabaseSolution, 'author_id'> {
+export interface Solution extends Omit<SupabaseSolution, 'author_id' | 'category'> {
   id: string;
   title: string;
   description: string;
-  category: string;
+  category: SolutionCategory;
   difficulty: string;
   published: boolean;
   created_at: string;
