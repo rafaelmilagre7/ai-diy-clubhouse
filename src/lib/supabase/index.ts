@@ -9,15 +9,20 @@ export {
   // Evitamos re-exportar createStoragePublicPolicy daqui para evitar o conflito
 } from './rpc';
 
+// Exportar utilitários de vídeo
+export {
+  getYoutubeVideoId,
+  getYoutubeThumbnailUrl,
+  formatVideoDuration,
+  estimateVideoDuration
+} from './videoUtils';
+
 // Exportações explícitas das funções de storage para evitar problemas de importação circular
 export { 
-  getYoutubeVideoId, 
-  getYoutubeThumbnailUrl, 
-  formatVideoDuration,
   setupLearningStorageBuckets,
-  ensureBucketExists,
+  ensureStorageBucketExists,
   createStoragePublicPolicy,  // Exportamos explicitamente daqui
-  // Removida a exportação de setupStoragePublicPolicy que não existe
+  uploadFileWithFallback
 } from './storage';
 
 // Não re-exportamos createStoragePublicPolicy de './rpc' para evitar conflito

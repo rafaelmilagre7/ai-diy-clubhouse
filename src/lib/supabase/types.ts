@@ -1,92 +1,61 @@
-export * from './types/database.types';
-
-export type UserRole = 'admin' | 'member' | 'formacao';
 
 export interface UserProfile {
   id: string;
-  email: string;
   name: string | null;
+  email: string;
   avatar_url: string | null;
-  company_name: string | null;
-  industry: string | null;
-  role: UserRole;
+  role: string;
   created_at: string;
+  industry?: string | null;
+  company_name?: string | null;
 }
 
-// Interface expandida para incluir todas as propriedades utilizadas no código
 export interface Solution {
   id: string;
   title: string;
   description: string;
-  difficulty: string;
-  category: string;
-  image_url?: string;
-  thumbnail_url?: string;
-  author_id?: string;
+  slug: string;
+  thumbnail_url: string | null;
+  category: 'productivity' | 'marketing' | 'leadership' | 'finance' | 'communication' | 'operations' | 'sales' | 'customer_service' | 'human_resources';
+  difficulty: 'easy' | 'medium' | 'advanced' | 'expert';
+  published: boolean;
   created_at: string;
   updated_at: string;
-  published: boolean;
-  slug: string;
-  status?: string;
-  completion_percentage?: number;
-  overview?: string;
-  estimated_time?: number;
-  success_rate?: number;
-  tags?: string[];
+  tags: string[];
+  estimated_time: number | null;
+  success_rate: number;
+  checklist_items: any[];
+  implementation_steps: any[];
+  completion_requirements: any;
+  related_solutions: string[];
   videos?: any[];
-  checklist?: any[];
-  module_order?: number;
-  related_solutions?: string[];
 }
 
 export interface Module {
   id: string;
-  solution_id: string;
   title: string;
-  description?: string;
-  order: number;
-  module_order?: number; // Algumas partes do código usam essa propriedade ao invés de order
-  type: string;
-  content?: any;
+  type: string; 
+  content: any;
+  metrics: any;
+  solution_id: string;
   created_at: string;
   updated_at: string;
-  completed?: boolean;
+  module_order: number;
+  estimated_time_minutes?: number;
+  certificate_template?: any;
 }
 
-// Adicionando interfaces faltantes
-export interface Progress {
-  id: string;
-  user_id: string;
-  solution_id: string;
-  current_module: number;
-  is_completed: boolean;
-  completed_modules: number[];
-  completed_at?: string;
-  last_activity: string;
-  created_at: string;
-}
-
-export interface UserChecklist {
-  id: string;
-  user_id: string;
-  solution_id: string;
-  checked_items: Record<string, boolean>;
-  created_at: string;
-  updated_at: string;
-}
-
-// Interfaces para o LMS
 export interface LearningCourse {
   id: string;
   title: string;
   description: string | null;
-  cover_image_url: string | null;
   slug: string;
+  cover_image_url: string | null;
   published: boolean;
   created_at: string;
   updated_at: string;
-  order_index: number;
   created_by: string | null;
+  order_index: number;
 }
 
 export interface LearningModule {
@@ -94,59 +63,45 @@ export interface LearningModule {
   title: string;
   description: string | null;
   cover_image_url: string | null;
-  course_id: string;
   published: boolean;
+  order_index: number;
+  course_id: string;
   created_at: string;
   updated_at: string;
-  order_index: number;
-  learning_courses?: {
-    id: string;
-    title: string;
-  } | null;
 }
 
 export interface LearningLesson {
   id: string;
   title: string;
   description: string | null;
-  content: any | null;
-  cover_image_url: string | null;
   module_id: string;
-  published: boolean;
-  created_at: string;
-  updated_at: string;
-  order_index: number;
-  estimated_time_minutes: number | null;
+  cover_image_url: string | null;
   ai_assistant_enabled: boolean;
   ai_assistant_prompt: string | null;
-  difficulty_level: string | null;  // Adicionada esta propriedade que estava faltando
-  videos?: Array<{
-    id?: string;
-    title?: string;
-    description?: string | null;
-    url?: string;
-    type?: string;
-    fileName?: string;
-    filePath?: string;
-    fileSize?: number;
-    video_id?: string;
-    thumbnail_url?: string;
-    duration_seconds?: number;
-  }>;
-}
-
-export interface LearningProgress {
-  id: string;
-  user_id: string;
-  lesson_id: string;
-  progress_percentage: number;
-  started_at: string;
-  completed_at: string | null;
-  notes: string | null;
+  published: boolean;
+  order_index: number;
+  estimated_time_minutes: number | null;
   created_at: string;
   updated_at: string;
-  last_position_seconds: number | null;
-  video_progress?: Record<string, number>;
+  content: any | null;
+  difficulty_level?: string;
+}
+
+export interface LearningLessonVideo {
+  id: string;
+  lesson_id: string;
+  title: string;
+  description: string | null;
+  url: string;
+  order_index: number;
+  video_type: string | null;
+  video_file_path: string | null;
+  video_file_name: string | null;
+  file_size_bytes: number | null;
+  duration_seconds: number | null;
+  thumbnail_url: string | null;
+  video_id: string | null;
+  created_at: string;
 }
 
 export interface LearningResource {
@@ -157,43 +112,32 @@ export interface LearningResource {
   file_url: string;
   file_type: string | null;
   file_size_bytes: number | null;
-  created_at: string;
   order_index: number;
+  created_at: string;
 }
 
-export interface LearningLessonVideo {
+export interface LearningProgress {
   id: string;
+  user_id: string;
   lesson_id: string;
-  title: string;
-  description: string | null;
-  url: string;
-  thumbnail_url: string | null;
-  duration_seconds: number | null;
+  started_at: string;
+  completed_at: string | null;
+  progress_percentage: number;
+  last_position_seconds: number | null;
+  notes: string | null;
+  video_progress: Record<string, number>;
   created_at: string;
-  order_index: number;
-  video_type?: string;
-  file_size_bytes?: number | null;
-  video_file_path?: string | null;
-  video_file_name?: string | null;
-  video_id?: string | null;
+  updated_at: string;
 }
 
 export interface LearningComment {
   id: string;
-  user_id: string;
   lesson_id: string;
-  content: string;
+  user_id: string;
   parent_id: string | null;
+  content: string;
+  likes_count: number;
+  is_hidden: boolean;
   created_at: string;
   updated_at: string;
-  is_hidden: boolean;
-}
-
-export interface LearningCertificate {
-  id: string;
-  user_id: string;
-  course_id: string;
-  certificate_url: string | null;
-  created_at: string;
-  issued_at: string;
 }

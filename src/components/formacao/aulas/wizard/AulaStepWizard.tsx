@@ -129,15 +129,19 @@ const AulaStepWizard: React.FC<AulaStepWizardProps> = ({
   useEffect(() => {
     const checkStorageConfig = async () => {
       try {
+        console.log("Verificando configuração de armazenamento...");
         const result = await setupLearningStorageBuckets();
         setStorageReady(result.success);
         
         if (!result.success) {
           console.warn("Configuração de armazenamento incompleta:", result.message);
           toast.warning("Configuração de armazenamento incompleta. Alguns recursos podem não funcionar corretamente.");
+        } else {
+          console.log("Configuração de armazenamento concluída com sucesso");
         }
       } catch (error) {
         console.error("Erro ao verificar configuração de armazenamento:", error);
+        toast.error("Erro ao verificar configuração de armazenamento");
       }
     };
     
@@ -248,7 +252,7 @@ const AulaStepWizard: React.FC<AulaStepWizardProps> = ({
   // Resetar formulário quando a aula mudar
   useEffect(() => {
     form.reset(defaultValues);
-  }, [aula, moduleId, form]);
+  }, [aula, moduleId, form, defaultValues]);
 
   // Função para calcular tempo estimado com base nos vídeos
   const calculateTotalDuration = (videos: any[]): number => {
@@ -291,6 +295,8 @@ const AulaStepWizard: React.FC<AulaStepWizardProps> = ({
           
         if (deleteError) {
           console.error("Erro ao remover vídeos existentes:", deleteError);
+        } else {
+          console.log("Vídeos existentes removidos com sucesso");
         }
       }
       
@@ -323,9 +329,10 @@ const AulaStepWizard: React.FC<AulaStepWizardProps> = ({
           console.log(`Salvando vídeo ${i + 1}:`, videoData);
           
           // Sempre inserir novos registros após a limpeza
-          const { error } = await supabase
+          const { data, error } = await supabase
             .from('learning_lesson_videos')
-            .insert([videoData]);
+            .insert([videoData])
+            .select();
             
           if (error) {
             console.error(`Erro ao criar vídeo ${i + 1}:`, error);
@@ -333,7 +340,7 @@ const AulaStepWizard: React.FC<AulaStepWizardProps> = ({
             continue;
           }
           
-          console.log(`Vídeo ${i + 1} criado com sucesso.`);
+          console.log(`Vídeo ${i + 1} criado com sucesso:`, data);
           videosSalvosComSucesso++;
         } catch (err) {
           console.error(`Erro ao processar vídeo ${i + 1}:`, err);
@@ -381,6 +388,8 @@ const AulaStepWizard: React.FC<AulaStepWizardProps> = ({
           
         if (deleteError) {
           console.error("Erro ao remover recursos existentes:", deleteError);
+        } else {
+          console.log("Recursos existentes removidos com sucesso");
         }
       }
       
@@ -403,12 +412,19 @@ const AulaStepWizard: React.FC<AulaStepWizardProps> = ({
         };
         
         try {
+          console.log(`Salvando material ${i + 1}:`, resourceData);
           // Sempre inserir novos registros
-          const { error } = await supabase
+          const { data, error } = await supabase
             .from('learning_resources')
-            .insert([resourceData]);
+            .insert([resourceData])
+            .select();
             
-          if (error) throw error;
+          if (error) {
+            console.error(`Erro ao salvar material ${i + 1}:`, error);
+            throw error;
+          }
+          
+          console.log(`Material ${i + 1} criado com sucesso:`, data);
           successCount++;
         } catch (err) {
           console.error(`Erro ao salvar material ${i + 1}:`, err);
@@ -418,6 +434,8 @@ const AulaStepWizard: React.FC<AulaStepWizardProps> = ({
       
       if (errorCount > 0) {
         toast.warning(`Nem todos os materiais foram salvos. ${successCount} salvos, ${errorCount} com erro.`);
+      } else if (successCount > 0) {
+        console.log(`Todos os ${successCount} materiais foram salvos com sucesso.`);
       }
       
       return successCount > 0 || resources.length === 0;
@@ -441,6 +459,20 @@ const AulaStepWizard: React.FC<AulaStepWizardProps> = ({
       const totalDurationMinutes = calculateTotalDuration(values.videos);
       console.log("Tempo total calculado dos vídeos (minutos):", totalDurationMinutes);
       
+      // Verificar se o módulo é válido
+      if (!values.moduleId) {
+        toast.error("Por favor, selecione um módulo para a aula.");
+        setIsSaving(false);
+        return;
+      }
+      
+      // Verificar se o título é válido
+      if (!values.title || values.title.trim().length < 2) {
+        toast.error("Por favor, forneça um título válido para a aula.");
+        setIsSaving(false);
+        return;
+      }
+      
       // Preparar os dados da aula
       const lessonData = {
         title: values.title,
@@ -454,7 +486,8 @@ const AulaStepWizard: React.FC<AulaStepWizardProps> = ({
         difficulty_level: values.difficultyLevel
       };
       
-      console.log("Dados completos a serem salvos:", lessonData);
+      console.log("Dados completos da aula a serem salvos:", lessonData);
+      console.log("Status de publicação:", values.published);
       
       let salvamentoAulaSucesso = false;
       
@@ -532,9 +565,11 @@ const AulaStepWizard: React.FC<AulaStepWizardProps> = ({
         console.log("Salvando vídeos e materiais relacionados...");
         
         const videosSalvos = await saveVideos(lessonId, values.videos || []);
+        console.log("Resultado do salvamento de vídeos:", videosSalvos);
         
         // Salvar recursos (materiais)
         const materiaisSalvos = await saveResources(lessonId, values.resources || []);
+        console.log("Resultado do salvamento de materiais:", materiaisSalvos);
         
         if (videosSalvos && materiaisSalvos) {
           toast.success(aula ? "Aula atualizada com sucesso!" : "Aula criada com sucesso!");
