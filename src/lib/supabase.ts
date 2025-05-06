@@ -1,6 +1,15 @@
 
-// Re-exportação centralizada de todos os módulos do Supabase
-export * from './supabase/index';
+// Re-exportar tudo do cliente
+export * from './supabase/client';
 
-// Aviso de depreciação para este arquivo
-console.warn('O arquivo src/lib/supabase.ts está depreciado. Importe diretamente de @/lib/supabase/index.ts');
+// Re-exportar configurações
+export * from './supabase/config';
+
+// Re-exportar funções de armazenamento
+export * from './supabase/storage';
+
+// Re-exportar funções RPC
+export * from './supabase/rpc';
+
+// Re-exportar tipos (se existirem)
+// export * from './supabase/types';

@@ -2,26 +2,49 @@
 import { supabase } from "./client";
 
 /**
- * Cria políticas de acesso público para um bucket de armazenamento
+ * Cria políticas de acesso público para um bucket
+ * @param bucketName Nome do bucket
+ * @returns Objeto com status da operação
  */
-export const createStoragePublicPolicy = async (bucketName: string) => {
+export async function createStoragePublicPolicy(bucketName: string): Promise<{ success: boolean, error?: string }> {
   try {
-    console.log(`Criando políticas públicas para o bucket: ${bucketName}`);
-    
     const { data, error } = await supabase.rpc('create_storage_public_policy', {
       bucket_name: bucketName
     });
     
     if (error) {
       console.error(`Erro ao criar políticas para ${bucketName}:`, error);
-      throw error;
+      return { success: false, error: error.message };
     }
     
-    console.log(`Políticas públicas criadas com sucesso para ${bucketName}:`, data);
-    
-    return { success: true, error: null };
+    return { success: true };
   } catch (error: any) {
-    console.error(`Falha ao criar políticas para ${bucketName}:`, error);
+    console.error(`Erro ao criar políticas para ${bucketName}:`, error);
     return { success: false, error: error.message };
   }
-};
+}
+
+/**
+ * Valida o papel do usuário com base no email
+ */
+export async function validateUserRole(profileId: string, currentRole: string, email: string): Promise<{ 
+  success: boolean;
+  role?: string;
+  error?: string;
+}> {
+  try {
+    const { data, error } = await supabase.rpc('validateuserrole', {
+      profileid: profileId,
+      currentrole: currentRole,
+      email: email
+    });
+    
+    if (error) {
+      return { success: false, error: error.message };
+    }
+    
+    return { success: true, role: data };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}

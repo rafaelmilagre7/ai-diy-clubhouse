@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -90,7 +91,7 @@ const AulaStepWizard: React.FC<AulaStepWizardProps> = ({
   aula,
   moduleId,
   onSuccess,
-  onClose,  // Adicionado o parâmetro onClose
+  onClose,
 }) => {
   const [modules, setModules] = useState<LearningModule[]>([]);
   const [isSaving, setIsSaving] = useState(false);
@@ -257,6 +258,9 @@ const AulaStepWizard: React.FC<AulaStepWizardProps> = ({
     for (const video of videos) {
       if (video.duration_seconds) {
         totalDuration += video.duration_seconds;
+      } else {
+        // Estimar duração padrão para vídeos sem duração especificada
+        totalDuration += 300; // 5 minutos
       }
     }
     
@@ -428,11 +432,10 @@ const AulaStepWizard: React.FC<AulaStepWizardProps> = ({
   const onSubmit = async (values: AulaFormValues) => {
     try {
       setIsSaving(true);
+      console.log("Iniciando salvamento da aula com valores:", values);
       
       // Usar let para poder reatribuir o valor caso uma nova aula seja criada
       let lessonId = aula?.id;
-      
-      console.log("Dados do formulário:", values);
       
       // Calcular o tempo estimado com base nos vídeos
       const totalDurationMinutes = calculateTotalDuration(values.videos);
@@ -457,32 +460,77 @@ const AulaStepWizard: React.FC<AulaStepWizardProps> = ({
       
       if (lessonId) {
         // Atualizar aula existente
-        const { error } = await supabase
+        console.log("Atualizando aula existente com ID:", lessonId);
+        
+        const { data, error } = await supabase
           .from("learning_lessons")
           .update(lessonData)
-          .eq("id", lessonId);
+          .eq("id", lessonId)
+          .select();
           
-        if (error) throw error;
+        if (error) {
+          console.error("Erro ao atualizar aula:", error);
+          throw new Error(`Erro ao atualizar aula: ${error.message}`);
+        }
         
-        console.log("Aula atualizada com sucesso!");
+        console.log("Resposta da atualização da aula:", data);
         salvamentoAulaSucesso = true;
+        
+        // Verificar se os dados foram realmente persistidos
+        const { data: verifyData, error: verifyError } = await supabase
+          .from("learning_lessons")
+          .select("*")
+          .eq("id", lessonId)
+          .single();
+          
+        if (verifyError) {
+          console.error("Erro ao verificar aula atualizada:", verifyError);
+        } else {
+          console.log("Verificação da aula atualizada:", verifyData);
+          console.log("Status de publicação após atualização:", verifyData.published);
+        }
       } else {
         // Criar nova aula
+        console.log("Criando nova aula...");
+        
         const { data, error } = await supabase
           .from("learning_lessons")
           .insert([lessonData])
+          .select();
+          
+        if (error) {
+          console.error("Erro ao criar aula:", error);
+          throw new Error(`Erro ao criar aula: ${error.message}`);
+        }
+        
+        if (!data || data.length === 0) {
+          throw new Error("Falha ao criar aula: nenhum dado retornado do servidor");
+        }
+        
+        lessonId = data[0].id;
+        console.log("Nova aula criada com sucesso. ID:", lessonId);
+        
+        // Verificar se os dados foram realmente persistidos
+        const { data: verifyData, error: verifyError } = await supabase
+          .from("learning_lessons")
           .select("*")
+          .eq("id", lessonId)
           .single();
           
-        if (error) throw error;
+        if (verifyError) {
+          console.error("Erro ao verificar aula criada:", verifyError);
+        } else {
+          console.log("Verificação da aula criada:", verifyData);
+          console.log("Status de publicação verificado:", verifyData.published);
+        }
         
-        lessonId = data.id;
-        console.log("Aula criada com sucesso:", data);
         salvamentoAulaSucesso = true;
       }
       
       if (salvamentoAulaSucesso && lessonId) {
         // Salvar vídeos e materiais
+        console.log("Salvando vídeos e materiais relacionados...");
+        
         const videosSalvos = await saveVideos(lessonId, values.videos || []);
         
         // Salvar recursos (materiais)
@@ -495,12 +543,35 @@ const AulaStepWizard: React.FC<AulaStepWizardProps> = ({
             ? "Aula atualizada, mas houve problema com os vídeos ou materiais" 
             : "Aula criada, mas houve problema com os vídeos ou materiais");
         }
+        
+        // Verificar novamente a aula salva para confirmar
+        const { data: finalCheck, error: finalCheckError } = await supabase
+          .from("learning_lessons")
+          .select("*")
+          .eq("id", lessonId)
+          .single();
+          
+        if (finalCheckError) {
+          console.error("Erro na verificação final da aula:", finalCheckError);
+        } else {
+          console.log("Verificação final da aula salva:", finalCheck);
+        }
+      } else {
+        throw new Error("Não foi possível salvar a aula. Verifique os logs para mais detalhes.");
       }
       
-      if (onSuccess) onSuccess();
+      if (onSuccess) {
+        console.log("Chamando callback de sucesso...");
+        onSuccess();
+      }
+      
       form.reset(defaultValues);
       onOpenChange(false);
-      if (onClose) onClose();  // Chamar onClose se fornecido
+      
+      if (onClose) {
+        console.log("Chamando callback de fechamento...");
+        onClose();
+      }
       
     } catch (error: any) {
       console.error("Erro ao salvar aula:", error);
@@ -539,7 +610,7 @@ const AulaStepWizard: React.FC<AulaStepWizardProps> = ({
   const handleCancel = () => {
     form.reset(defaultValues);
     onOpenChange(false);
-    if (onClose) onClose();  // Chamar onClose se fornecido
+    if (onClose) onClose();
   };
 
   return (
