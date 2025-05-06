@@ -1,10 +1,9 @@
-
 import { useState, useEffect, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LearningLessonVideo } from "@/lib/supabase";
 import { YoutubeEmbed } from "@/components/common/YoutubeEmbed";
-import { getYoutubeVideoId } from "@/lib/supabase/storage";
+import { getYoutubeVideoId } from "@/lib/supabase";
 import { PandaVideoPlayer } from "@/components/formacao/comum/PandaVideoPlayer";
 
 interface VideoPlayerProps {

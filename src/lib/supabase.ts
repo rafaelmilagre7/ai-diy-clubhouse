@@ -11,5 +11,13 @@ export * from './supabase/storage';
 // Re-exportar funções RPC
 export * from './supabase/rpc';
 
-// Re-exportar tipos (se existirem)
-// export * from './supabase/types';
+// Re-exportar tipos
+export * from './supabase/types';
+
+// Exportar utilitários de vídeo
+export {
+  getYoutubeVideoId,
+  getYoutubeThumbnailUrl,
+  formatVideoDuration,
+  estimateVideoDuration
+} from './supabase/videoUtils';

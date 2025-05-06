@@ -1,13 +1,12 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { uploadFileWithFallback, ensureBucketExists } from "@/lib/supabase/storage";
+import { uploadFileWithFallback } from "@/lib/supabase";
 import { Upload, Loader2, File, X, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { STORAGE_BUCKETS, MAX_UPLOAD_SIZES } from "@/lib/supabase/config";
+import { MAX_UPLOAD_SIZES } from "@/lib/supabase/config";
 
 interface FileUploadProps {
   value: string;
@@ -37,10 +36,13 @@ export const FileUpload = ({
     const checkBucket = async () => {
       try {
         console.log(`Verificando bucket: ${bucketName}`);
-        const isReady = await ensureBucketExists(bucketName);
-        setBucketReady(isReady);
+        // Verificar se o bucket existe usando o Supabase API diretamente
+        const { data: buckets } = await supabase.storage.listBuckets();
+        const bucketExists = buckets?.some(bucket => bucket.name === bucketName);
         
-        if (!isReady) {
+        setBucketReady(bucketExists);
+        
+        if (!bucketExists) {
           console.warn(`Bucket ${bucketName} não está pronto. Tentando criar...`);
           // Tentativa de criar o bucket via RPC
           const { data, error } = await supabase.rpc('create_storage_public_policy', {
@@ -83,35 +85,64 @@ export const FileUpload = ({
     }
   }, [value]);
 
+  
   const uploadFile = async (file: File) => {
     try {
       setUploading(true);
       setUploadProgress(0);
       setError(null);
       
-      // Primeiro, verificamos se o bucket existe e está acessível
-      const bucketExists = await ensureBucketExists(bucketName);
+      // Verificar se o bucket existe antes de fazer upload
+      const { data: buckets } = await supabase.storage.listBuckets();
+      const bucketExists = buckets?.some(bucket => bucket.name === bucketName);
+      
       if (!bucketExists) {
-        console.warn(`Bucket ${bucketName} não encontrado, usando fallback: ${STORAGE_BUCKETS.FALLBACK}`);
-        toast.warning("Usando armazenamento alternativo. O upload pode demorar um pouco mais.");
+        console.warn(`Bucket ${bucketName} não encontrado, tentando criar...`);
+        const { data, error } = await supabase.rpc('create_storage_public_policy', {
+          bucket_name: bucketName
+        });
+        
+        if (error) {
+          throw new Error(`Não foi possível criar o bucket: ${error.message}`);
+        }
       }
       
       // Upload com mecanismo de fallback aprimorado
       console.log(`Iniciando upload para bucket: ${bucketName}, pasta: ${folderPath}`);
-      const result = await uploadFileWithFallback(
-        file,
-        bucketName,
-        folderPath,
-        (progress) => {
-          setUploadProgress(progress);
-          console.log(`Upload progresso: ${progress}%`);
-        },
-        STORAGE_BUCKETS.FALLBACK // Usar bucket de fallback
-      );
       
-      console.log("Upload concluído com sucesso:", result);
+      // Gerar um nome único para o arquivo
+      const fileExt = file.name.split('.').pop();
+      const filePath = `${folderPath}/${Date.now()}-${file.name}`;
+      
+      // Upload do arquivo
+      const { data, error } = await supabase.storage
+        .from(bucketName)
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: true,
+          onUploadProgress: (progress) => {
+            const percentage = Math.round((progress.loaded / progress.total) * 100);
+            setUploadProgress(percentage);
+          }
+        });
+      
+      if (error) {
+        throw error;
+      }
+      
+      // Obter a URL pública do arquivo
+      const { data: publicUrlData } = supabase.storage
+        .from(bucketName)
+        .getPublicUrl(filePath);
+        
+      const publicUrl = publicUrlData?.publicUrl;
+      
+      if (!publicUrl) {
+        throw new Error('Falha ao obter URL pública para o arquivo.');
+      }
+      
       setFileName(file.name);
-      onChange(result.publicUrl, file.type, file.size);
+      onChange(publicUrl, file.type, file.size);
       
       toast.success("Upload realizado com sucesso!");
       

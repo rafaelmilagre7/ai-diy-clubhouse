@@ -4,10 +4,13 @@ export * from './client';
 export * from './types';
 export * from './config';
 
-// Exportações explícitas de rpc.ts
+// Exportações explícitas de funções de storage
 export { 
-  // Evitamos re-exportar createStoragePublicPolicy daqui para evitar o conflito
-} from './rpc';
+  setupLearningStorageBuckets,
+  ensureStorageBucketExists,
+  createStoragePublicPolicy, 
+  uploadFileWithFallback
+} from './storage';
 
 // Exportar utilitários de vídeo
 export {
@@ -17,12 +20,4 @@ export {
   estimateVideoDuration
 } from './videoUtils';
 
-// Exportações explícitas das funções de storage para evitar problemas de importação circular
-export { 
-  setupLearningStorageBuckets,
-  ensureStorageBucketExists,
-  createStoragePublicPolicy,  // Exportamos explicitamente daqui
-  uploadFileWithFallback
-} from './storage';
-
-// Não re-exportamos createStoragePublicPolicy de './rpc' para evitar conflito
+// Remover as exportações duplicadas de rpc para evitar conflitos
