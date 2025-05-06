@@ -14,8 +14,10 @@ export {
   setupLearningStorageBuckets
 } from './supabase/storage';
 
-// Exportar funções RPC
-export * from './supabase/rpc';
+// Exportar funções RPC explicitamente (para evitar ambiguidades)
+export { 
+  createStoragePublicPolicy
+} from './supabase/rpc';
 
 // Exportar utilitários de vídeo
 export {

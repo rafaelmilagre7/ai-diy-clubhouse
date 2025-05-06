@@ -18,5 +18,8 @@ export interface Solution extends Omit<SupabaseSolution, 'author_id' | 'category
   estimated_time?: number;
   success_rate?: number;
   related_solutions?: string[];
+  checklist_items: any[]; // adicionando propriedades faltantes
+  implementation_steps: any[];
+  completion_requirements: any;
   author_id?: string; // Tornando author_id opcional para compatibilidade
 }

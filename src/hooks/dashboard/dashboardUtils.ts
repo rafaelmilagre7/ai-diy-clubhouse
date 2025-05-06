@@ -18,7 +18,10 @@ export const fallbackSolutionsData: Solution[] = [
     published: true,
     author_id: "",
     created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
+    updated_at: new Date().toISOString(),
+    checklist_items: [],
+    implementation_steps: [],
+    completion_requirements: {}
   },
   {
     id: "2",
@@ -35,7 +38,10 @@ export const fallbackSolutionsData: Solution[] = [
     published: true,
     author_id: "",
     created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
+    updated_at: new Date().toISOString(),
+    checklist_items: [],
+    implementation_steps: [],
+    completion_requirements: {}
   },
   {
     id: "3",
@@ -52,7 +58,10 @@ export const fallbackSolutionsData: Solution[] = [
     published: true,
     author_id: "",
     created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
+    updated_at: new Date().toISOString(),
+    checklist_items: [],
+    implementation_steps: [],
+    completion_requirements: {}
   }
 ];
 
