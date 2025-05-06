@@ -27,7 +27,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { FileUpload } from "@/components/formacao/comum/FileUpload";
-import { Loader2 } from "lucide-react";
+import { Loader2, AlertCircle } from "lucide-react";
+import { STORAGE_BUCKETS } from "@/lib/supabase/config";
 
 interface RecursoFormDialogProps {
   open: boolean;
@@ -55,6 +56,7 @@ export const RecursoFormDialog = ({
   onSuccess
 }: RecursoFormDialogProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const isEditing = !!recurso;
   
   const form = useForm<RecursoFormValues>({
@@ -70,6 +72,7 @@ export const RecursoFormDialog = ({
 
   const onSubmit = async (values: RecursoFormValues) => {
     setIsSubmitting(true);
+    setError(null);
     
     try {
       console.log("Iniciando salvamento do recurso:", values);
@@ -142,6 +145,7 @@ export const RecursoFormDialog = ({
       onOpenChange(false);
     } catch (error: any) {
       console.error("Erro ao salvar material:", error);
+      setError(error.message || "Não foi possível salvar o material. Tente novamente.");
       toast.error(`Erro ao salvar o material: ${error.message || "Tente novamente."}`);
     } finally {
       setIsSubmitting(false);
@@ -151,6 +155,7 @@ export const RecursoFormDialog = ({
   const handleOpenChange = (open: boolean) => {
     if (!open) {
       form.reset();
+      setError(null);
     }
     onOpenChange(open);
   };
@@ -166,6 +171,13 @@ export const RecursoFormDialog = ({
               : "Adicione um novo material para esta aula."}
           </DialogDescription>
         </DialogHeader>
+        
+        {error && (
+          <div className="bg-destructive/10 text-destructive p-3 rounded-md flex items-center space-x-2 text-sm">
+            <AlertCircle className="h-4 w-4 flex-shrink-0" />
+            <span>{error}</span>
+          </div>
+        )}
         
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -221,8 +233,8 @@ export const RecursoFormDialog = ({
                         form.setValue("file_type", fileType || "");
                         form.setValue("file_size_bytes", fileSize || 0);
                       }}
-                      bucketName="solution_files"
-                      folderPath="learning_materials"
+                      bucketName={STORAGE_BUCKETS.LEARNING_MATERIALS}
+                      folderPath="materials"
                       acceptedFileTypes="*/*"
                       disabled={isSubmitting}
                     />

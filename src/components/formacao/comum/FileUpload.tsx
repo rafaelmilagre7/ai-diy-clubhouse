@@ -4,10 +4,10 @@ import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { uploadFileWithFallback, ensureBucketExists } from "@/lib/supabase/storage";
 import { Upload, Loader2, File, X, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { STORAGE_BUCKETS } from "@/lib/supabase/config";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { STORAGE_BUCKETS, MAX_UPLOAD_SIZES } from "@/lib/supabase/config";
 
 interface FileUploadProps {
   value: string;
@@ -31,81 +31,33 @@ export const FileUpload = ({
   const [uploadProgress, setUploadProgress] = useState(0);
   const [bucketReady, setBucketReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
-  // Lista de buckets para tentar em ordem de preferência
-  const fallbackBuckets = ["solution_files", "learning_materials", "documents"];
 
   // Verificar status do bucket ao montar o componente
   useEffect(() => {
     const checkBucket = async () => {
       try {
-        setError(null);
-        console.log(`Verificando bucket ${bucketName}...`);
+        console.log(`Verificando bucket: ${bucketName}`);
+        const isReady = await ensureBucketExists(bucketName);
+        setBucketReady(isReady);
         
-        // Verificar se o bucket existe
-        const { data: buckets, error: bucketsError } = await supabase
-          .storage
-          .listBuckets();
+        if (!isReady) {
+          console.warn(`Bucket ${bucketName} não está pronto. Tentando criar...`);
+          // Tentativa de criar o bucket via RPC
+          const { data, error } = await supabase.rpc('create_storage_public_policy', {
+            bucket_name: bucketName
+          });
           
-        if (bucketsError) {
-          console.error("Erro ao listar buckets:", bucketsError);
-          throw bucketsError;
-        }
-        
-        // Se o bucket solicitado existe, usamos ele
-        if (buckets?.some(b => b.name === bucketName)) {
-          console.log(`Bucket ${bucketName} encontrado!`);
-          setBucketReady(true);
-          return;
-        }
-        
-        // Se não, procuramos um bucket alternativo
-        console.log(`Bucket ${bucketName} não encontrado, procurando alternativas...`);
-        for (const fallbackBucket of fallbackBuckets) {
-          if (buckets?.some(b => b.name === fallbackBucket)) {
-            console.log(`Usando bucket alternativo: ${fallbackBucket}`);
-            setBucketReady(true);
-            return;
-          }
-        }
-        
-        // Tentar criar um bucket se nenhum estiver disponível
-        try {
-          console.log("Nenhum bucket encontrado, tentando criar...");
-          const { data, error } = await supabase
-            .storage
-            .createBucket(bucketName, {
-              public: true,
-              fileSizeLimit: 104857600 // 100MB
-            });
-            
           if (error) {
-            console.error("Erro ao criar bucket:", error);
-            throw error;
+            console.error("Erro ao criar bucket via RPC:", error);
+            setError(`Não foi possível inicializar o bucket de armazenamento: ${error.message}`);
+          } else {
+            console.log("Bucket criado com sucesso via RPC:", data);
+            setBucketReady(true);
           }
-          
-          console.log("Bucket criado com sucesso:", data);
-          
-          // Criar políticas de acesso público
-          try {
-            await supabase.rpc('create_storage_public_policy', { bucket_name: bucketName });
-            console.log("Políticas de acesso público criadas para o bucket");
-          } catch (policyError) {
-            console.error("Erro ao criar políticas de acesso:", policyError);
-          }
-          
-          setBucketReady(true);
-          return;
-        } catch (createError) {
-          console.error("Erro ao criar bucket:", createError);
         }
-        
-        setError("Nenhum bucket de armazenamento disponível. Entre em contato com o administrador do sistema.");
-        setBucketReady(false);
       } catch (error) {
-        console.error("Erro ao verificar buckets:", error);
-        setError("Erro ao verificar armazenamento. Upload de arquivos pode não funcionar.");
-        setBucketReady(false);
+        console.error("Erro ao verificar bucket:", error);
+        setError("Erro ao verificar o bucket de armazenamento. Por favor, tente novamente.");
       }
     };
     
@@ -137,85 +89,36 @@ export const FileUpload = ({
       setUploadProgress(0);
       setError(null);
       
-      // Lista de buckets para tentar
-      const bucketsToTry = [bucketName, ...fallbackBuckets];
-      let uploadSuccess = false;
-      let uploadedUrl = "";
-      
-      // Gerar um nome único para o arquivo
-      const fileExt = file.name.split('.').pop();
-      const uniqueFileName = `${Date.now()}_${Math.floor(Math.random() * 1000)}.${fileExt}`;
-      const actualFolderPath = folderPath ? `${folderPath}` : "";
-      
-      // Tentar fazer upload em cada bucket até ter sucesso
-      for (const currentBucket of bucketsToTry) {
-        try {
-          console.log(`Tentando fazer upload para o bucket: ${currentBucket}`);
-          setUploadProgress(10);
-          
-          // Verificar se o bucket existe
-          const { data: bucketExists, error: bucketCheckError } = await supabase
-            .storage
-            .getBucket(currentBucket);
-            
-          if (bucketCheckError) {
-            console.log(`Bucket ${currentBucket} não existe ou não está acessível, pulando...`);
-            continue;
-          }
-          
-          setUploadProgress(30);
-          
-          // Fazer upload
-          const filePath = actualFolderPath ? `${actualFolderPath}/${uniqueFileName}` : uniqueFileName;
-          const { data, error } = await supabase.storage
-            .from(currentBucket)
-            .upload(filePath, file, {
-              cacheControl: '3600',
-              upsert: true,
-              contentType: file.type
-            });
-            
-          if (error) {
-            console.error(`Erro ao fazer upload para ${currentBucket}:`, error);
-            continue;
-          }
-          
-          setUploadProgress(70);
-          
-          // Obter URL pública
-          const { data: publicUrlData } = supabase.storage
-            .from(currentBucket)
-            .getPublicUrl(filePath);
-            
-          if (!publicUrlData?.publicUrl) {
-            console.error(`URL pública não disponível para ${currentBucket}`);
-            continue;
-          }
-          
-          uploadedUrl = publicUrlData.publicUrl;
-          uploadSuccess = true;
-          setUploadProgress(100);
-          
-          console.log(`Upload realizado com sucesso para ${currentBucket}:`, uploadedUrl);
-          break;
-        } catch (bucketError) {
-          console.error(`Erro ao usar bucket ${currentBucket}:`, bucketError);
-        }
+      // Primeiro, verificamos se o bucket existe e está acessível
+      const bucketExists = await ensureBucketExists(bucketName);
+      if (!bucketExists) {
+        console.warn(`Bucket ${bucketName} não encontrado, usando fallback: ${STORAGE_BUCKETS.FALLBACK}`);
+        toast.warning("Usando armazenamento alternativo. O upload pode demorar um pouco mais.");
       }
       
-      if (!uploadSuccess) {
-        throw new Error("Não foi possível fazer upload do arquivo em nenhum bucket disponível.");
-      }
+      // Upload com mecanismo de fallback aprimorado
+      console.log(`Iniciando upload para bucket: ${bucketName}, pasta: ${folderPath}`);
+      const result = await uploadFileWithFallback(
+        file,
+        bucketName,
+        folderPath,
+        (progress) => {
+          setUploadProgress(progress);
+          console.log(`Upload progresso: ${progress}%`);
+        },
+        STORAGE_BUCKETS.FALLBACK // Usar bucket de fallback
+      );
       
+      console.log("Upload concluído com sucesso:", result);
       setFileName(file.name);
-      onChange(uploadedUrl, file.type, file.size);
+      onChange(result.publicUrl, file.type, file.size);
       
       toast.success("Upload realizado com sucesso!");
       
     } catch (error: any) {
       console.error("Erro no upload de arquivo:", error);
-      setError(error.message || "Erro ao fazer upload do arquivo.");
-      toast.error("Erro ao fazer upload do arquivo. Tente novamente.");
+      setError(error.message || "Erro ao fazer upload do arquivo");
+      toast.error(error.message || "Erro ao fazer upload do arquivo. Tente novamente.");
     } finally {
       setUploading(false);
     }
@@ -238,20 +141,20 @@ export const FileUpload = ({
   return (
     <div className="space-y-4">
       {error && (
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
+        <div className="bg-destructive/10 text-destructive p-3 rounded-md flex items-center space-x-2 text-sm">
+          <AlertCircle className="h-4 w-4 flex-shrink-0" />
+          <span>{error}</span>
+        </div>
       )}
-      
+
       {!value || !fileName ? (
         <div className="flex items-center justify-center w-full">
           <label
             className={cn(
-              "flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg",
-              disabled ? "cursor-not-allowed opacity-60" : "cursor-pointer",
+              "flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer",
               "bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600",
-              "border-gray-300 dark:border-gray-600"
+              "border-gray-300 dark:border-gray-600",
+              disabled && "opacity-50 cursor-not-allowed"
             )}
           >
             <div className="flex flex-col items-center justify-center pt-5 pb-6">
@@ -269,7 +172,7 @@ export const FileUpload = ({
                     <span className="font-semibold">Clique para upload</span> ou arraste o arquivo
                   </p>
                   <p className="text-xs text-gray-500 dark:text-gray-400">
-                    Tamanho máximo recomendado: 10MB
+                    Tamanho máximo recomendado: {MAX_UPLOAD_SIZES.DOCUMENT}MB
                   </p>
                 </>
               )}
@@ -279,7 +182,7 @@ export const FileUpload = ({
               type="file"
               className="hidden"
               onChange={handleFileChange}
-              disabled={uploading || disabled || (!bucketReady && !fallbackBuckets.length)}
+              disabled={uploading || disabled || !bucketReady}
               accept={acceptedFileTypes}
             />
           </label>
@@ -295,18 +198,16 @@ export const FileUpload = ({
               Arquivo carregado com sucesso
             </p>
           </div>
-          {!disabled && (
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={handleRemoveFile}
-              disabled={uploading || disabled}
-              className="flex-shrink-0"
-            >
-              <X className="h-4 w-4" />
-              <span className="sr-only">Remover arquivo</span>
-            </Button>
-          )}
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={handleRemoveFile}
+            disabled={uploading || disabled}
+            className="flex-shrink-0"
+          >
+            <X className="h-4 w-4" />
+            <span className="sr-only">Remover arquivo</span>
+          </Button>
         </div>
       )}
     </div>

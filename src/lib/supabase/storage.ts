@@ -1,4 +1,3 @@
-
 import { supabase } from "./client";
 
 /**
@@ -114,7 +113,47 @@ export const uploadFileWithFallback = async (
       if (error) {
         lastError = error;
         console.error(`Erro no upload para ${currentBucket}:`, error);
-        continue;
+        
+        // Se o erro for relacionado a política RLS, tentar criar políticas
+        if (error.message.includes('security') || error.message.includes('policy')) {
+          try {
+            console.log("Tentando configurar políticas de acesso para:", currentBucket);
+            await supabase.rpc('create_storage_public_policy', {
+              bucket_name: currentBucket
+            });
+            
+            // Tentar novamente após configurar políticas
+            const retryResult = await supabase.storage
+              .from(currentBucket)
+              .upload(filePath, file, {
+                cacheControl: '3600',
+                upsert: true,
+                contentType: file.type
+              });
+              
+            if (!retryResult.error) {
+              // Se o segundo upload funcionar, continuar com o fluxo normal
+              if (onProgressUpdate) onProgressUpdate(70);
+              
+              const { data: urlData } = supabase.storage
+                .from(currentBucket)
+                .getPublicUrl(filePath);
+              
+              if (onProgressUpdate) onProgressUpdate(100);
+              
+              return {
+                success: true,
+                bucket: currentBucket,
+                path: filePath,
+                publicUrl: urlData.publicUrl
+              };
+            }
+          } catch (policyError) {
+            console.error(`Erro ao configurar políticas para ${currentBucket}:`, policyError);
+          }
+        }
+        
+        continue; // Tentar o próximo bucket
       }
       
       if (onProgressUpdate) onProgressUpdate(70);
