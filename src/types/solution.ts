@@ -15,7 +15,7 @@ export interface Solution extends Omit<SupabaseSolution, 'author_id' | 'category
   thumbnail_url: string | null; // Modificado: agora é obrigatório mas aceita null
   slug: string;
   tags: string[]; // Alterado: removido o opcional (?)
-  estimated_time?: number;
+  estimated_time: number; // Tornando obrigatório para corresponder ao tipo base
   success_rate?: number;
   related_solutions?: string[];
   checklist_items: any[]; // adicionando propriedades faltantes
