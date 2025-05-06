@@ -14,7 +14,7 @@ export const fallbackSolutionsData: Solution[] = [
     estimated_time: 45,  // Já estava definido como número
     success_rate: 95,    // Já estava definido como número
     tags: ["whatsapp", "automation", "ai"],
-    related_solutions: [],
+    related_solutions: [], // Garantindo que é uma array vazia em vez de opcional
     published: true,
     author_id: "",
     created_at: new Date().toISOString(),
@@ -34,7 +34,7 @@ export const fallbackSolutionsData: Solution[] = [
     estimated_time: 60,  // Já estava definido como número
     success_rate: 80,    // Já estava definido como número
     tags: ["chatbot", "lead generation", "sales"],
-    related_solutions: [],
+    related_solutions: [], // Garantindo que é uma array vazia em vez de opcional
     published: true,
     author_id: "",
     created_at: new Date().toISOString(),
@@ -54,7 +54,7 @@ export const fallbackSolutionsData: Solution[] = [
     estimated_time: 90,  // Já estava definido como número
     success_rate: 70,    // Já estava definido como número
     tags: ["sentiment analysis", "customer satisfaction", "retention"],
-    related_solutions: [],
+    related_solutions: [], // Garantindo que é uma array vazia em vez de opcional
     published: true,
     author_id: "",
     created_at: new Date().toISOString(),

@@ -17,7 +17,7 @@ export interface Solution extends Omit<SupabaseSolution, 'author_id' | 'category
   tags: string[]; // Alterado: removido o opcional (?)
   estimated_time: number; // Tornando obrigatório para corresponder ao tipo base
   success_rate: number; // Tornando obrigatório para corresponder ao tipo base
-  related_solutions?: string[];
+  related_solutions: string[]; // Tornando obrigatório para corresponder ao tipo base
   checklist_items: any[];
   implementation_steps: any[];
   completion_requirements: any;
