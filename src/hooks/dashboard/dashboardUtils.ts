@@ -7,7 +7,7 @@ export const fallbackSolutionsData: Solution[] = [
     id: "1",
     title: "Assistente de IA no WhatsApp",
     description: "Implemente um assistente de IA para atendimento automatizado via WhatsApp",
-    thumbnail_url: "/images/whatsapp-ai.jpg",
+    thumbnail_url: "/images/whatsapp-ai.jpg", // Certifique-se que não é null
     category: "operational",
     difficulty: "easy",
     slug: "whatsapp-ai-assistant",
@@ -27,7 +27,7 @@ export const fallbackSolutionsData: Solution[] = [
     id: "2",
     title: "Chatbot para Geração de Leads",
     description: "Crie um chatbot para qualificar e capturar leads no seu site",
-    thumbnail_url: "/images/chatbot-leads.jpg",
+    thumbnail_url: "/images/chatbot-leads.jpg", // Certifique-se que não é null
     category: "revenue",
     difficulty: "medium",
     slug: "chatbot-lead-generation",
@@ -47,7 +47,7 @@ export const fallbackSolutionsData: Solution[] = [
     id: "3",
     title: "Análise de Sentimento de Clientes",
     description: "Analise o sentimento dos seus clientes para melhorar a satisfação e retenção",
-    thumbnail_url: "/images/sentiment-analysis.jpg",
+    thumbnail_url: "/images/sentiment-analysis.jpg", // Certifique-se que não é null
     category: "operational",
     difficulty: "advanced",
     slug: "customer-sentiment-analysis",

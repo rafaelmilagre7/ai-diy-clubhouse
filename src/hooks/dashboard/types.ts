@@ -12,7 +12,7 @@ export interface Solution extends Omit<SupabaseSolution, 'author_id' | 'category
   published: boolean;
   created_at: string;
   updated_at: string;
-  thumbnail_url?: string;
+  thumbnail_url: string | null; // Modificado: agora é obrigatório mas aceita null
   slug: string;
   tags?: string[];
   estimated_time?: number;
