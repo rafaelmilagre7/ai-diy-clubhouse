@@ -12,7 +12,7 @@ export const fallbackSolutionsData: Solution[] = [
     difficulty: "easy",
     slug: "whatsapp-ai-assistant",
     estimated_time: 45,  // Já estava definido como número
-    success_rate: 95,
+    success_rate: 95,    // Já estava definido como número
     tags: ["whatsapp", "automation", "ai"],
     related_solutions: [],
     published: true,
@@ -32,7 +32,7 @@ export const fallbackSolutionsData: Solution[] = [
     difficulty: "medium",
     slug: "chatbot-lead-generation",
     estimated_time: 60,  // Já estava definido como número
-    success_rate: 80,
+    success_rate: 80,    // Já estava definido como número
     tags: ["chatbot", "lead generation", "sales"],
     related_solutions: [],
     published: true,
@@ -52,7 +52,7 @@ export const fallbackSolutionsData: Solution[] = [
     difficulty: "advanced",
     slug: "customer-sentiment-analysis",
     estimated_time: 90,  // Já estava definido como número
-    success_rate: 70,
+    success_rate: 70,    // Já estava definido como número
     tags: ["sentiment analysis", "customer satisfaction", "retention"],
     related_solutions: [],
     published: true,
