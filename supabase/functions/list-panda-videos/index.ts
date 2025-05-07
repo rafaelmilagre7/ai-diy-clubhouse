@@ -1,106 +1,165 @@
 
-import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
+import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
+import { corsHeaders } from "../_shared/cors.ts";
 
-// Cabeçalhos CORS para permitir chamadas do frontend
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+const PANDA_API_URL = "https://api-v2.pandavideo.com.br";
 
-// Função para buscar vídeos do Panda Video API
-async function fetchPandaVideos(limit = 20, page = 1) {
-  try {
-    console.log(`Buscando vídeos do Panda Video (page: ${page}, limit: ${limit})`);
-    
-    // Obter API key do ambiente
-    const pandaApiKey = Deno.env.get('PANDA_API_KEY');
-    
-    if (!pandaApiKey) {
-      throw new Error('PANDA_API_KEY não definida');
-    }
-    
-    // Construir URL da API - CORRIGIDO: removido completamente os parâmetros que estavam causando o erro
-    const url = `https://api-v2.pandavideo.com.br/videos?limit=${limit}&page=${page}`;
-    
-    // Fazer requisição para API do Panda Video
-    const response = await fetch(url, {
-      headers: {
-        'Authorization': pandaApiKey,
-        'Content-Type': 'application/json',
-      },
-    });
-    
-    if (!response.ok) {
-      const text = await response.text();
-      console.error(`Erro na resposta da API do Panda: ${response.status} ${text}`);
-      throw new Error(`Erro ao buscar vídeos: ${response.status} ${response.statusText}`);
-    }
-    
-    // Processar resposta
-    const data = await response.json();
-    console.log(`Obtidos ${data.videos?.length || 0} vídeos do Panda Video`);
-    
-    // Transformar dados para o formato esperado
-    const videos = data.videos?.map((video: any) => ({
-      id: video.id,
-      title: video.title || 'Sem título',
-      description: video.description || '',
-      url: `https://player.pandavideo.com.br/embed/${video.id}`,
-      thumbnail_url: video.thumbnail?.url || null,
-      duration_seconds: video.duration || 0,
-      created_at: video.created_at,
-    })) || [];
-    
-    return {
-      videos,
-      total: data.pagination?.total || 0,
-      page: data.pagination?.page || 1,
-      pages: data.pagination?.pages || 1,
-    };
-  } catch (error) {
-    console.error('Erro ao buscar vídeos do Panda Video:', error);
-    throw error;
-  }
-}
-
-// Servidor HTTP
 serve(async (req) => {
+  console.log("Requisição para listar vídeos do Panda recebida");
+
   // Lidar com requisições OPTIONS (CORS preflight)
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders, status: 204 });
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
   }
-  
+
   try {
-    // Verificar método
-    if (req.method !== 'POST') {
-      return new Response(JSON.stringify({
-        error: 'Método não permitido. Use POST.'
-      }), { 
-        status: 405,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      });
+    // Verificar autenticação do usuário (JWT)
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      console.log("Erro de autenticação: Token JWT ausente ou inválido");
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: "Usuário não autenticado"
+        }),
+        {
+          status: 401,
+          headers: {
+            ...corsHeaders,
+            "Content-Type": "application/json"
+          }
+        }
+      );
+    }
+
+    // Obter API key do Panda Video
+    const apiKey = Deno.env.get("PANDA_API_KEY");
+
+    console.log("Verificando credencial Panda Video API Key disponível:", !!apiKey);
+
+    if (!apiKey) {
+      console.error("API Key do Panda Video não configurada");
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: "Configuração incompleta do servidor: API Key não definida"
+        }),
+        {
+          status: 500,
+          headers: {
+            ...corsHeaders,
+            "Content-Type": "application/json"
+          }
+        }
+      );
+    }
+
+    // Parâmetros opcionais
+    const url = new URL(req.url);
+    const page = url.searchParams.get("page") || "1";
+    const limit = url.searchParams.get("limit") || "100";
+    const search = url.searchParams.get("search") || "";
+    const folder = url.searchParams.get("folder") || "";
+
+    // Construir URL de consulta
+    let apiUrl = `${PANDA_API_URL}/videos?page=${page}&quantity=${limit}`;
+    
+    if (search) {
+      apiUrl += `&search=${encodeURIComponent(search)}`;
     }
     
-    // Processar parâmetros da requisição
-    const { limit = 20, page = 1 } = await req.json();
-    
-    // Buscar vídeos
-    const result = await fetchPandaVideos(limit, page);
-    
-    // Retornar resposta
-    return new Response(JSON.stringify(result), {
-      status: 200,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    if (folder) {
+      apiUrl += `&folder=${encodeURIComponent(folder)}`;
+    }
+
+    console.log("URL da API do Panda:", apiUrl);
+
+    // Fazer requisição para a API do Panda Video
+    const response = await fetch(apiUrl, {
+      method: "GET",
+      headers: {
+        "Authorization": `ApiVideoPanda ${apiKey}`,
+        "Accept": "application/json"
+      }
     });
+
+    console.log("Status da resposta da API do Panda:", response.status);
+
+    if (!response.ok) {
+      let errorText = "";
+      try {
+        const errorData = await response.json();
+        errorText = errorData.message || "Erro desconhecido";
+      } catch (e) {
+        errorText = await response.text();
+      }
+
+      console.error("Erro da API do Panda:", errorText);
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: `Erro ao obter vídeos: ${errorText}`
+        }),
+        {
+          status: response.status,
+          headers: {
+            ...corsHeaders,
+            "Content-Type": "application/json"
+          }
+        }
+      );
+    }
+
+    // Processar dados da resposta
+    const data = await response.json();
+    
+    // Mapear dados para um formato mais amigável
+    const videos = data.videos.map((video: any) => ({
+      id: video.id,
+      title: video.title || "Sem título",
+      description: video.description || "",
+      duration_seconds: video.duration_seconds || 0,
+      thumbnail_url: video.thumbnail_url || null,
+      created_at: video.created_at,
+      folder_id: video.folder_id,
+      status: video.status,
+      hls_playlist_url: video.hls_playlist_url
+    }));
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        videos,
+        pagination: {
+          page: parseInt(page),
+          limit: parseInt(limit),
+          total: data.count || videos.length,
+          totalPages: Math.ceil((data.count || videos.length) / parseInt(limit))
+        }
+      }),
+      {
+        status: 200,
+        headers: {
+          ...corsHeaders,
+          "Content-Type": "application/json"
+        }
+      }
+    );
   } catch (error) {
-    // Tratar erros
-    console.error('Erro na edge function:', error);
-    
-    return new Response(JSON.stringify({
-      error: error.message || 'Erro interno do servidor'
-    }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-    });
+    console.error("Erro não tratado ao listar vídeos:", error);
+    return new Response(
+      JSON.stringify({
+        success: false,
+        error: "Erro ao processar a requisição",
+        message: error.message
+      }),
+      {
+        status: 500,
+        headers: {
+          ...corsHeaders,
+          "Content-Type": "application/json"
+        }
+      }
+    );
   }
 });

@@ -182,12 +182,14 @@ serve(async (req) => {
           "Tus-Resumable": "1.0.0",
           "Upload-Length": videoFile.size.toString(),
           "Content-Type": "application/offset+octet-stream",
-          "Upload-Metadata": uploadMetadata
+          "Upload-Metadata": uploadMetadata,
+          "Origin": "https://viverdeia.ai", // Adicionar origem para evitar problemas de CORS
         },
         body: new Uint8Array(fileBuffer)
       });
       
       console.log(`Resposta do Panda Video API recebida com status: ${uploadResponse.status}`);
+      console.log(`Headers da resposta:`, Object.fromEntries(uploadResponse.headers.entries()));
     } catch (uploadError) {
       console.error("Erro na requisição de upload:", uploadError);
       return new Response(
