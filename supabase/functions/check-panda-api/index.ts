@@ -5,7 +5,7 @@ import { corsHeaders } from "../_shared/cors.ts";
 const PANDA_API_URL = "https://api-v2.pandavideo.com.br";
 
 serve(async (req) => {
-  console.log("Requisição para verificar API Panda recebida");
+  console.log("Requisição para verificar status da API Panda recebida");
   
   // Lidar com requisições OPTIONS (CORS preflight)
   if (req.method === "OPTIONS") {
@@ -53,113 +53,40 @@ serve(async (req) => {
       );
     }
 
-    console.log("API Key Panda encontrada, verificando formato");
-    // Verificar se a chave tem o formato correto (começando com 'panda-')
-    if (!apiKey.startsWith('panda-')) {
-      console.error("Formato da API Key do Panda Video incorreto");
-      return new Response(
-        JSON.stringify({
-          success: false,
-          error: "Formato da API Key incorreto",
-          message: "A API Key deve começar com 'panda-'"
-        }),
-        {
-          status: 500,
-          headers: {
-            ...corsHeaders,
-            "Content-Type": "application/json"
-          }
-        }
-      );
-    }
-
-    // URL para verificar a API (apenas buscar 1 vídeo para testar)
-    const checkEndpoint = `${PANDA_API_URL}/videos?page=1&quantity=1`;
-    console.log("URL da requisição de teste:", checkEndpoint);
-
-    // Implementar retry para a requisição da API do Panda Video
-    let retriesLeft = 2;
-    let response = null;
-    let lastError = null;
+    console.log("Testando comunicação com API Panda Video...");
     
-    while (retriesLeft > 0 && !response) {
+    // Testar conexão com a API do Panda Video
+    // Faremos uma requisição simples para verificar se está funcionando
+    const response = await fetch(`${PANDA_API_URL}/videos?limit=1`, {
+      method: "GET",
+      headers: {
+        "Authorization": apiKey, // Usar a API key diretamente no header
+        "Content-Type": "application/json"
+      }
+    });
+
+    console.log(`Status da resposta: ${response.status}`);
+    
+    if (!response.ok) {
+      let errorMessage = "Falha na comunicação com a API do Panda Video";
+      
       try {
-        console.log(`Tentativa ${3-retriesLeft} de requisição à API Panda Video`);
-        
-        // CORREÇÃO: Formato correto do cabeçalho de autorização conforme documentação
-        // Usar apenas o valor da API key no cabeçalho Authorization, sem o prefixo "ApiVideoPanda"
-        console.log(`Usando cabeçalho de autorização: ${apiKey.substring(0, 10)}...`);
-        
-        // Fazer requisição para a API do Panda Video com o cabeçalho correto
-        response = await fetch(checkEndpoint, {
-          method: "GET",
-          headers: {
-            "Authorization": apiKey,
-            "Accept": "application/json",
-            "Content-Type": "application/json"
-          }
-        });
-        
-        console.log(`Status da resposta API: ${response.status}`);
-        
-        // Se a resposta for bem-sucedida, sair do loop
-        if (response.ok) {
-          console.log("Requisição bem-sucedida");
-          break;
-        }
-        
-        // Para erros, capturar e tratar
-        const errorText = await response.text();
-        console.error(`Erro API Panda (${response.status}): ${errorText}`);
-        throw new Error(`Erro API Panda (${response.status}): ${errorText}`);
-      } catch (error) {
-        console.error("Erro na requisição:", error);
-        lastError = error;
-        retriesLeft--;
-        
-        if (retriesLeft > 0) {
-          // Backoff exponencial: 1s, 2s...
-          const backoffTime = Math.pow(2, 2 - retriesLeft) * 1000;
-          console.error(`Erro ao acessar API do Panda. Tentando novamente em ${backoffTime}ms:`, error);
-          await new Promise(resolve => setTimeout(resolve, backoffTime));
-          response = null;
-        }
-      }
-    }
-    
-    // Se todas as tentativas falharam
-    if (!response || !response.ok) {
-      console.error("Todas as tentativas falharam:", lastError);
-      
-      // Tentar extrair uma mensagem de erro mais útil
-      let errorDetails = "Falha na comunicação com a API do Panda Video";
-      let statusCode = 500;
-      
-      if (response) {
-        statusCode = response.status;
-        try {
-          const errorBody = await response.text();
-          try {
-            const errorJson = JSON.parse(errorBody);
-            errorDetails = errorJson.message || errorBody;
-          } catch {
-            errorDetails = errorBody.substring(0, 200);
-          }
-        } catch {
-          errorDetails = `Erro HTTP ${response.status}`;
-        }
-      } else if (lastError) {
-        errorDetails = lastError.message;
+        const errorData = await response.json();
+        console.error("Detalhes do erro:", errorData);
+        errorMessage = errorData.error || errorData.message || errorMessage;
+      } catch (e) {
+        // Erro ao processar a resposta, ignorar
       }
       
       return new Response(
         JSON.stringify({
           success: false,
-          error: `Erro na API do Panda Video: ${errorDetails}`,
-          statusCode,
+          error: errorMessage,
+          status: response.status,
+          details: "Verifique se a API Key está configurada corretamente"
         }),
         {
-          status: 200, // Retornamos 200 para o frontend conseguir processar a resposta
+          status: 200, // Retornamos 200 mesmo em caso de erro para o frontend poder exibir a mensagem
           headers: {
             ...corsHeaders,
             "Content-Type": "application/json"
@@ -168,38 +95,11 @@ serve(async (req) => {
       );
     }
 
-    // Analisar a resposta para garantir que é um JSON válido
-    let responseData;
-    try {
-      responseData = await response.json();
-      console.log("Resposta obtida com sucesso:", JSON.stringify(responseData).substring(0, 100) + "...");
-    } catch (parseError) {
-      console.error("Erro ao analisar resposta JSON:", parseError);
-      return new Response(
-        JSON.stringify({
-          success: false,
-          error: "Resposta inválida da API do Panda Video",
-          details: parseError instanceof Error ? parseError.message : "Erro desconhecido"
-        }),
-        {
-          status: 500,
-          headers: {
-            ...corsHeaders,
-            "Content-Type": "application/json"
-          }
-        }
-      );
-    }
-
-    // Se chegou aqui, a API está funcionando
+    // Se chegou até aqui, a API está funcionando
     return new Response(
       JSON.stringify({
         success: true,
-        message: "API do Panda Video está configurada e funcionando corretamente",
-        data: {
-          videosCount: Array.isArray(responseData.videos) ? responseData.videos.length : 0,
-          apiVersion: "v2"
-        }
+        message: "Integração com Panda Video está funcionando corretamente"
       }),
       {
         status: 200,
@@ -211,10 +111,11 @@ serve(async (req) => {
     );
   } catch (error) {
     console.error("Erro não tratado:", error);
+    
     return new Response(
       JSON.stringify({
         success: false,
-        error: "Erro ao processar a requisição",
+        error: "Erro ao verificar status da API",
         message: error instanceof Error ? error.message : String(error)
       }),
       {
