@@ -1,287 +1,300 @@
 
 import { useState, useEffect } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Search, Loader2, Video, Check, RefreshCw, AlertCircle } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
-import { formatVideoDuration } from "@/lib/supabase/videoUtils";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Pagination } from "@/components/ui/pagination";
+import { 
+  Search, 
+  Loader2, 
+  Film, 
+  ChevronLeft, 
+  ChevronRight, 
+  Check,
+  AlertCircle,
+  RefreshCw 
+} from "lucide-react";
+import {
+  Card,
+  CardContent
+} from "@/components/ui/card";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Skeleton } from "@/components/ui/skeleton";
+import { setupLearningStorageBuckets } from "@/lib/supabase";
 
-interface VideoItem {
-  id: string;
-  title: string;
-  description?: string;
-  thumbnail_url: string | null;
-  duration_seconds: number;
-  url: string;
-  status: string;
-  created_at: string;
+interface PandaVideoSelectorProps {
+  onSelectVideo: (videoData: any) => void;
 }
 
-interface PagingInfo {
+interface PaginationState {
   page: number;
   limit: number;
   total: number;
   totalPages: number;
 }
 
-interface PandaVideoSelectorProps {
-  onSelectVideo: (videoData: any) => void;
-}
-
 export const PandaVideoSelector = ({ onSelectVideo }: PandaVideoSelectorProps) => {
-  const [videos, setVideos] = useState<VideoItem[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [videos, setVideos] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [searchText, setSearchText] = useState("");
-  const [pagination, setPagination] = useState<PagingInfo>({
+  const [searchQuery, setSearchQuery] = useState("");
+  const [pagination, setPagination] = useState<PaginationState>({
     page: 1,
     limit: 12,
     total: 0,
-    totalPages: 0
+    totalPages: 1
   });
-  const [selectedVideoId, setSelectedVideoId] = useState<string | null>(null);
+  const [retrying, setRetrying] = useState(false);
 
-  // Buscar vídeos da biblioteca
-  const fetchVideos = async (page = 1, search = "") => {
+  // Verificar e criar bucket de armazenamento, se necessário
+  useEffect(() => {
+    const checkAndCreateBuckets = async () => {
+      try {
+        // Verificar se o bucket de vídeos existe e criá-lo se necessário
+        await setupLearningStorageBuckets();
+      } catch (error) {
+        console.error("Erro ao configurar buckets:", error);
+      }
+    };
+
+    checkAndCreateBuckets();
+  }, []);
+
+  // Função para buscar vídeos
+  const fetchVideos = async (page = 1, query = "") => {
     setLoading(true);
     setError(null);
     
     try {
-      // Correção: Usar 'body' em vez de 'query' para passar os parâmetros
       const { data, error } = await supabase.functions.invoke("list-panda-videos", {
-        method: "POST", // Alterar para POST já que estamos enviando dados no body
         body: {
           page: page,
           limit: pagination.limit,
-          search: search || ""
-        }
+          search: query
+        },
+        method: 'POST'
       });
-      
+
       if (error) {
-        console.error("Erro ao buscar vídeos:", error);
-        setError("Não foi possível carregar os vídeos. " + error.message);
-        toast.error("Erro ao listar vídeos", {
-          description: error.message
-        });
-        return;
+        console.error("Erro na invocação da função:", error);
+        throw new Error(error.message);
       }
       
       if (!data.success) {
-        console.error("Erro na API:", data);
-        setError(data.error || "Falha ao buscar vídeos");
-        toast.error("Erro ao listar vídeos", {
-          description: data.error || "Falha ao carregar biblioteca de vídeos"
-        });
-        return;
+        console.error("Erro retornado pela API:", data);
+        throw new Error(data.message || data.error || "Erro ao buscar vídeos");
       }
       
       setVideos(data.videos || []);
+      setPagination({
+        page: data.pagination?.page || 1,
+        limit: data.pagination?.limit || 12,
+        total: data.pagination?.total || 0,
+        totalPages: data.pagination?.totalPages || 1
+      });
       
-      if (data.pagination) {
-        setPagination({
-          page: data.pagination.page,
-          limit: data.pagination.limit,
-          total: data.pagination.total,
-          totalPages: data.pagination.totalPages
-        });
-      }
     } catch (err: any) {
-      console.error("Erro ao buscar vídeos:", err);
-      setError("Falha na comunicação com o servidor: " + err.message);
-      toast.error("Erro ao listar vídeos", {
-        description: err.message
+      console.error("Falha ao buscar vídeos:", err);
+      
+      // Fornecer mensagem de erro amigável
+      let errorMessage = "Não foi possível carregar os vídeos";
+      
+      if (err.message?.includes("network") || err.message?.includes("timeout")) {
+        errorMessage = "Problema de conexão ao carregar vídeos. Verifique sua internet e tente novamente.";
+      } else if (err.message?.includes("auth") || err.message?.includes("401")) {
+        errorMessage = "Problema de autenticação ao conectar com o serviço de vídeo.";
+      }
+      
+      setError(errorMessage);
+      toast.error("Erro ao carregar biblioteca de vídeos", {
+        description: errorMessage
       });
     } finally {
       setLoading(false);
+      setRetrying(false);
     }
   };
-  
-  // Carregar vídeos ao montar componente
+
+  // Carregar vídeos inicialmente
   useEffect(() => {
-    fetchVideos(1, searchText);
+    fetchVideos(pagination.page, searchQuery);
   }, []);
-  
-  // Manipular busca
+
+  // Função para lidar com a pesquisa
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    fetchVideos(1, searchText);
+    fetchVideos(1, searchQuery);
   };
-  
-  // Manipular paginação
-  const handlePageChange = (page: number) => {
-    if (page < 1 || page > pagination.totalPages || page === pagination.page) return;
-    fetchVideos(page, searchText);
+
+  // Função para navegar entre as páginas
+  const handlePageChange = (newPage: number) => {
+    if (newPage < 1 || newPage > pagination.totalPages) return;
+    fetchVideos(newPage, searchQuery);
   };
-  
-  // Selecionar vídeo
-  const handleSelectVideo = (video: VideoItem) => {
-    setSelectedVideoId(video.id);
-    
+
+  // Função para selecionar um vídeo
+  const handleSelectVideo = (video: any) => {
     const videoData = {
-      video_id: video.id,
-      title: video.title,
       url: video.url,
+      type: "panda",
+      title: video.title,
+      video_id: video.id,
       thumbnail_url: video.thumbnail_url,
-      duration_seconds: video.duration_seconds,
-      description: video.description || "",
-      type: "panda"
+      duration_seconds: video.duration_seconds
     };
     
     onSelectVideo(videoData);
-    
-    toast.success("Vídeo selecionado", {
-      description: `"${video.title}" foi selecionado com sucesso!`
-    });
+    toast.success("Vídeo selecionado com sucesso!");
   };
-  
-  // Tentar novamente após erro
+
+  // Função para tentar novamente após um erro
   const handleRetry = () => {
-    fetchVideos(pagination.page, searchText);
+    setRetrying(true);
+    fetchVideos(pagination.page, searchQuery);
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
+      {/* Barra de pesquisa */}
       <form onSubmit={handleSearch} className="flex gap-2">
-        <Input
-          placeholder="Buscar vídeos por título..."
-          value={searchText}
-          onChange={(e) => setSearchText(e.target.value)}
-          className="flex-1"
-          disabled={loading}
-        />
-        <Button 
-          type="submit"
-          variant="outline"
-          disabled={loading}
-        >
-          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
-          <span className="ml-1 hidden sm:inline">Buscar</span>
+        <div className="relative flex-1">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Procurar vídeos..."
+            className="pl-9"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            disabled={loading || retrying}
+          />
+        </div>
+        <Button type="submit" disabled={loading || retrying}>
+          Buscar
         </Button>
       </form>
-      
+
+      {/* Mensagem de erro */}
+      {error && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Erro ao carregar vídeos</AlertTitle>
+          <AlertDescription className="flex flex-col gap-2">
+            <p>{error}</p>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="w-fit" 
+              onClick={handleRetry}
+              disabled={retrying}
+            >
+              {retrying ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <RefreshCw className="mr-2 h-4 w-4" />
+              )}
+              Tentar novamente
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {/* Lista de vídeos */}
       {loading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-          {[...Array(6)].map((_, index) => (
-            <div key={index} className="space-y-2">
-              <Skeleton className="aspect-video w-full rounded-md" />
-              <Skeleton className="h-4 w-3/4" />
-              <Skeleton className="h-3 w-1/2" />
-            </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {Array(6).fill(0).map((_, i) => (
+            <Card key={i} className="overflow-hidden">
+              <Skeleton className="aspect-video w-full" />
+              <CardContent className="p-4">
+                <Skeleton className="h-5 w-3/4 mb-1" />
+                <Skeleton className="h-4 w-1/2" />
+              </CardContent>
+            </Card>
           ))}
         </div>
-      ) : error ? (
-        <div className="p-6 border border-destructive/20 bg-destructive/10 rounded-md">
-          <div className="flex items-center gap-2 text-destructive">
-            <AlertCircle className="h-5 w-5" />
-            <h3 className="font-semibold">Erro ao carregar vídeos</h3>
-          </div>
-          <p className="mt-2 text-sm text-muted-foreground">{error}</p>
-          <Button 
-            onClick={handleRetry}
-            variant="outline"
-            className="mt-4"
-            size="sm"
-          >
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Tentar novamente
-          </Button>
-        </div>
-      ) : videos.length === 0 ? (
-        <div className="p-8 border-2 border-dashed rounded-md text-center">
-          <Video className="mx-auto h-8 w-8 text-muted-foreground mb-3" />
-          <p className="font-medium">Nenhum vídeo encontrado</p>
-          <p className="text-muted-foreground mt-1">
-            {searchText 
-              ? "Tente usar termos de busca diferentes" 
-              : "Faça upload de vídeos para sua conta Panda Video"
-            }
-          </p>
-        </div>
-      ) : (
-        <>
-          <ScrollArea className="max-h-[500px]">
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {videos.map((video) => (
-                <Card 
-                  key={video.id} 
-                  className={`overflow-hidden cursor-pointer transition-all ${
-                    selectedVideoId === video.id 
-                      ? 'border-primary ring-1 ring-primary' 
-                      : 'hover:border-primary/50'
-                  }`}
-                  onClick={() => handleSelectVideo(video)}
-                >
-                  <div className="relative aspect-video">
-                    {video.thumbnail_url ? (
-                      <img 
-                        src={video.thumbnail_url} 
-                        alt={video.title}
-                        className="object-cover w-full h-full"
-                      />
-                    ) : (
-                      <div className="flex items-center justify-center h-full bg-muted">
-                        <Video className="h-10 w-10 text-muted-foreground" />
-                      </div>
-                    )}
-                    
-                    {video.duration_seconds > 0 && (
-                      <div className="absolute bottom-2 right-2 bg-black/70 px-1 py-0.5 rounded text-xs text-white">
-                        {formatVideoDuration(video.duration_seconds)}
-                      </div>
-                    )}
-                    
-                    {selectedVideoId === video.id && (
-                      <div className="absolute top-2 right-2">
-                        <div className="bg-primary text-primary-foreground rounded-full p-1">
-                          <Check className="h-4 w-4" />
-                        </div>
-                      </div>
-                    )}
-                  </div>
+      ) : videos.length > 0 ? (
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {videos.map((video) => (
+              <Card key={video.id} className="overflow-hidden group cursor-pointer hover:border-primary transition-colors">
+                <div className="relative aspect-video w-full overflow-hidden bg-muted">
+                  {video.thumbnail_url ? (
+                    <img
+                      src={video.thumbnail_url}
+                      alt={video.title}
+                      className="object-cover w-full h-full group-hover:scale-105 transition-transform"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = 'https://placehold.co/640x360?text=Video';
+                      }}
+                    />
+                  ) : (
+                    <div className="flex items-center justify-center h-full w-full bg-muted">
+                      <Film className="h-12 w-12 text-muted-foreground opacity-50" />
+                    </div>
+                  )}
                   
-                  <CardContent className="p-3">
-                    <h3 className="font-medium text-sm line-clamp-1">{video.title}</h3>
-                    <p className="text-xs text-muted-foreground mt-1">
+                  {video.duration_seconds > 0 && (
+                    <div className="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
+                      {Math.floor(video.duration_seconds / 60)}:{(video.duration_seconds % 60).toString().padStart(2, '0')}
+                    </div>
+                  )}
+                </div>
+                <CardContent className="p-4">
+                  <h3 className="font-medium truncate">{video.title}</h3>
+                  <div className="flex items-center justify-between mt-2">
+                    <span className="text-xs text-muted-foreground">
                       {new Date(video.created_at).toLocaleDateString('pt-BR')}
-                    </p>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </ScrollArea>
-          
+                    </span>
+                    <Button 
+                      size="sm"
+                      onClick={() => handleSelectVideo(video)}
+                      className="opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <Check className="h-4 w-4 mr-1" />
+                      Selecionar
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          {/* Paginação */}
           {pagination.totalPages > 1 && (
-            <Pagination className="flex justify-center mt-4">
+            <div className="flex justify-center items-center gap-2">
               <Button
                 variant="outline"
-                size="sm"
+                size="icon"
+                disabled={pagination.page === 1}
                 onClick={() => handlePageChange(pagination.page - 1)}
-                disabled={pagination.page <= 1 || loading}
               >
-                Anterior
+                <ChevronLeft className="h-4 w-4" />
               </Button>
-              
-              <span className="mx-4 flex items-center text-sm">
+              <span className="text-sm">
                 Página {pagination.page} de {pagination.totalPages}
               </span>
-              
               <Button
                 variant="outline"
-                size="sm"
+                size="icon"
+                disabled={pagination.page === pagination.totalPages}
                 onClick={() => handlePageChange(pagination.page + 1)}
-                disabled={pagination.page >= pagination.totalPages || loading}
               >
-                Próxima
+                <ChevronRight className="h-4 w-4" />
               </Button>
-            </Pagination>
+            </div>
           )}
-        </>
+        </div>
+      ) : (
+        <div className="text-center py-12">
+          <Film className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+          <h3 className="text-lg font-medium">Nenhum vídeo encontrado</h3>
+          <p className="text-muted-foreground mt-1">
+            {searchQuery ? `Não encontramos vídeos para "${searchQuery}"` : "Sua biblioteca de vídeos está vazia"}
+          </p>
+        </div>
       )}
+      
+      <div className="text-xs text-muted-foreground italic mt-4 text-center">
+        Vídeos recém-enviados podem demorar alguns minutos para aparecer na biblioteca.
+      </div>
     </div>
   );
 };

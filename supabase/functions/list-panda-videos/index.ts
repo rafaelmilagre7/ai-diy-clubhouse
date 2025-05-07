@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { corsHeaders } from "../_shared/cors.ts";
 
@@ -24,7 +25,8 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({
           success: false,
-          error: "Usuário não autenticado"
+          error: "Usuário não autenticado",
+          message: "Você precisa estar logado para acessar esta função."
         }),
         {
           status: 401,
@@ -43,8 +45,8 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({
           success: false,
-          error: "Configuração incompleta do servidor: API Key não definida",
-          message: "Por favor, configure a variável de ambiente PANDA_API_KEY no Supabase"
+          error: "Configuração incompleta do servidor",
+          message: "A API Key do Panda Video não foi configurada no servidor."
         }),
         {
           status: 500,
@@ -64,8 +66,8 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({
           success: false,
-          error: "Formato da API Key incorreto",
-          message: "A API Key deve começar com 'panda-'"
+          error: "Configuração incorreta",
+          message: "O formato da API Key do Panda Video está incorreto."
         }),
         {
           status: 500,
@@ -78,13 +80,33 @@ serve(async (req) => {
     }
 
     // Obter parâmetros do corpo da requisição
-    const requestData = await req.json().catch(() => ({}));
-    console.log("Dados recebidos no corpo:", requestData);
+    let requestBody;
+    try {
+      requestBody = await req.json();
+    } catch (parseError) {
+      console.error("Erro ao analisar corpo da requisição:", parseError);
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: "Erro na requisição",
+          message: "Falha ao interpretar os parâmetros da requisição."
+        }),
+        {
+          status: 400,
+          headers: {
+            ...corsHeaders,
+            "Content-Type": "application/json"
+          }
+        }
+      );
+    }
     
-    const page = requestData.page || "1";
-    const limit = requestData.limit || "20"; 
-    const search = requestData.search || "";
-    const folder = requestData.folder_id || "";
+    console.log("Dados recebidos no corpo:", requestBody);
+    
+    const page = requestBody?.page || "1";
+    const limit = requestBody?.limit || "20"; 
+    const search = requestBody?.search || "";
+    const folder = requestBody?.folder_id || "";
 
     console.log("Parâmetros de busca:", { page, limit, search, folder });
 
@@ -110,8 +132,7 @@ serve(async (req) => {
       try {
         console.log(`Tentativa ${4-retriesLeft} de requisição à API Panda Video`);
         
-        // CORREÇÃO: Formato correto do cabeçalho de autorização conforme documentação
-        // Usar apenas o valor da API key no cabeçalho Authorization, sem o prefixo "ApiVideoPanda"
+        // Usar apenas o valor da API key no cabeçalho Authorization
         console.log(`Usando cabeçalho de autorização: ${apiKey.substring(0, 10)}...`);
         
         // Fazer requisição para a API do Panda Video com o cabeçalho correto
@@ -125,12 +146,36 @@ serve(async (req) => {
         });
         
         console.log(`Status da resposta API: ${response.status}`);
-        console.log("Headers da resposta:", Object.fromEntries(response.headers.entries()));
         
         // Se a resposta for bem-sucedida, sair do loop
         if (response.ok) {
           console.log("Requisição bem-sucedida");
           break;
+        }
+        
+        // Tratar diferentes códigos de erro HTTP de forma amigável
+        let errorMessage;
+        switch(response.status) {
+          case 401:
+            errorMessage = "Credenciais de API inválidas. Verifique sua API Key do Panda Video.";
+            break;
+          case 403:
+            errorMessage = "Sem permissão para acessar os vídeos. Verifique as permissões da sua conta Panda Video.";
+            break;
+          case 404:
+            errorMessage = "Recurso não encontrado na API do Panda Video.";
+            break;
+          case 429:
+            errorMessage = "Limite de requisições excedido. Aguarde um momento e tente novamente.";
+            break;
+          case 500:
+          case 502:
+          case 503:
+          case 504:
+            errorMessage = "O serviço Panda Video está com problemas temporários. Tente novamente mais tarde.";
+            break;
+          default:
+            errorMessage = `Erro na API do Panda Video (código ${response.status})`;
         }
         
         // Se receber um erro de rate limit, tentar novamente
@@ -147,10 +192,26 @@ serve(async (req) => {
           continue;
         }
         
-        // Para outros erros, capturar e tratar
+        // Para outros erros, capturar e retornar uma resposta amigável
         const errorText = await response.text();
         console.error(`Erro API Panda (${response.status}): ${errorText}`);
-        throw new Error(`Erro API Panda (${response.status}): ${errorText}`);
+        
+        return new Response(
+          JSON.stringify({
+            success: false,
+            error: "Erro ao comunicar com Panda Video",
+            message: errorMessage,
+            statusCode: response.status,
+            details: errorText.substring(0, 200) // Limitar detalhes técnicos para segurança
+          }),
+          {
+            status: 200, // Retornar 200 para o cliente, mas com flag de erro
+            headers: {
+              ...corsHeaders,
+              "Content-Type": "application/json"
+            }
+          }
+        );
       } catch (error) {
         console.error("Erro na requisição:", error);
         lastError = error;
@@ -172,11 +233,12 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({
           success: false,
-          error: `Erro ao obter vídeos: ${lastError?.message || "Falha na comunicação com a API do Panda Video"}`,
-          retriesAttempted: 3 - retriesLeft
+          error: "Falha na comunicação",
+          message: "Não foi possível estabelecer conexão com o serviço de vídeo. Por favor, tente novamente mais tarde.",
+          details: lastError?.message || "Erro desconhecido ao conectar com a API"
         }),
         {
-          status: 500,
+          status: 200, // Enviar 200 mas com flag de erro para evitar erros genéricos no frontend
           headers: {
             ...corsHeaders,
             "Content-Type": "application/json"
@@ -198,11 +260,11 @@ serve(async (req) => {
         return new Response(
           JSON.stringify({
             success: false,
-            error: "Erro ao processar resposta do servidor Panda Video",
-            rawResponseSample: responseText.substring(0, 200)
+            error: "Erro ao processar resposta",
+            message: "A resposta do serviço de vídeo não está em um formato válido."
           }),
           {
-            status: 500,
+            status: 200, // Enviar 200 para evitar erros genéricos no frontend
             headers: {
               ...corsHeaders,
               "Content-Type": "application/json"
@@ -215,10 +277,11 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({
           success: false,
-          error: "Erro ao ler resposta da API do Panda Video"
+          error: "Erro ao ler resposta",
+          message: "Não foi possível ler a resposta do serviço de vídeo."
         }),
         {
-          status: 500,
+          status: 200, // Enviar 200 para evitar erros genéricos no frontend
           headers: {
             ...corsHeaders,
             "Content-Type": "application/json"
@@ -233,11 +296,11 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({
           success: false,
-          error: "Formato de resposta inválido da API do Panda Video",
-          rawResponse: responseData
+          error: "Formato de resposta inválido",
+          message: "O serviço de vídeo retornou dados em um formato inesperado."
         }),
         {
-          status: 500,
+          status: 200, // Enviar 200 para evitar erros genéricos no frontend
           headers: {
             ...corsHeaders,
             "Content-Type": "application/json"
@@ -259,7 +322,7 @@ serve(async (req) => {
       url: `https://player.pandavideo.com.br/embed/${video.id}`
     }));
 
-    console.log(`${videos.length} vídeos processados`);
+    console.log(`${videos.length} vídeos processados com sucesso`);
 
     return new Response(
       JSON.stringify({
@@ -287,11 +350,12 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: false,
-        error: "Erro ao processar a requisição",
-        message: error instanceof Error ? error.message : String(error)
+        error: "Erro inesperado",
+        message: "Ocorreu um erro inesperado ao processar sua solicitação. Por favor, tente novamente.",
+        details: error instanceof Error ? error.message : String(error)
       }),
       {
-        status: 500,
+        status: 200, // Enviar 200 para evitar erros genéricos no frontend
         headers: {
           ...corsHeaders,
           "Content-Type": "application/json"
