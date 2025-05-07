@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { corsHeaders } from "../_shared/cors.ts";
 
@@ -78,12 +77,14 @@ serve(async (req) => {
       );
     }
 
-    // Parâmetros da URL
-    const url = new URL(req.url);
-    const page = url.searchParams.get("page") || "1";
-    const limit = url.searchParams.get("limit") || "20"; // Aumentando o padrão para 20
-    const search = url.searchParams.get("search") || "";
-    const folder = url.searchParams.get("folder") || "";
+    // Obter parâmetros do corpo da requisição
+    const requestData = await req.json().catch(() => ({}));
+    console.log("Dados recebidos no corpo:", requestData);
+    
+    const page = requestData.page || "1";
+    const limit = requestData.limit || "20"; 
+    const search = requestData.search || "";
+    const folder = requestData.folder_id || "";
 
     console.log("Parâmetros de busca:", { page, limit, search, folder });
 

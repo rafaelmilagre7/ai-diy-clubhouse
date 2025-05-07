@@ -52,11 +52,12 @@ export const PandaVideoSelector = ({ onSelectVideo }: PandaVideoSelectorProps) =
     setError(null);
     
     try {
+      // Correção: Usar 'body' em vez de 'query' para passar os parâmetros
       const { data, error } = await supabase.functions.invoke("list-panda-videos", {
-        method: "GET",
-        query: {
-          page: page.toString(),
-          limit: pagination.limit.toString(),
+        method: "POST", // Alterar para POST já que estamos enviando dados no body
+        body: {
+          page: page,
+          limit: pagination.limit,
           search: search || ""
         }
       });
