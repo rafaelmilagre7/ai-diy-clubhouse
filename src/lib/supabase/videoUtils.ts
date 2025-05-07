@@ -52,3 +52,21 @@ export function formatVideoDuration(seconds: number): string {
   
   return `${formattedMinutes}:${formattedSeconds}`;
 }
+
+/**
+ * Estima a duração de um vídeo baseado em seu tamanho
+ * Isso é uma estimativa aproximada baseada em uma taxa de bits média
+ * @param fileSize Tamanho do arquivo em bytes
+ * @returns Duração estimada em segundos
+ */
+export function estimateVideoDuration(fileSize: number): number {
+  if (!fileSize) return 0;
+  
+  // Assumir taxa de bits média de 2 Mbps para vídeos (250 KB/s)
+  const bitRate = 250 * 1024; // bytes por segundo
+  
+  // Calcular duração estimada
+  const durationSeconds = Math.floor(fileSize / bitRate);
+  
+  return durationSeconds;
+}
