@@ -70,3 +70,37 @@ export function estimateVideoDuration(fileSize: number): number {
   
   return durationSeconds;
 }
+
+/**
+ * Extrai o ID do Panda Video a partir de uma URL embedada
+ * @param url URL do Panda Video
+ * @returns ID do vídeo ou string vazia
+ */
+export function getPandaVideoId(url: string): string {
+  if (!url) return '';
+  
+  try {
+    // Padrão para URLs como https://player.pandavideo.com.br/embed/12345
+    if (url.includes('player.pandavideo.com.br/embed/')) {
+      const parts = url.split('player.pandavideo.com.br/embed/');
+      if (parts.length > 1) {
+        // Remover parâmetros de URL se existirem
+        return parts[1].split('?')[0].split('#')[0];
+      }
+    }
+    
+    return '';
+  } catch (error) {
+    console.error("Erro ao extrair ID do Panda Video:", error);
+    return '';
+  }
+}
+
+// Exportar todas as funções de forma limpa
+export default {
+  getYoutubeVideoId,
+  getYoutubeThumbnailUrl,
+  formatVideoDuration,
+  estimateVideoDuration,
+  getPandaVideoId
+};

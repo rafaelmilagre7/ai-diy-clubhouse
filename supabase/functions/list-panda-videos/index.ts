@@ -92,6 +92,7 @@ serve(async (req) => {
         });
         
         console.log("Status da resposta da API do Panda:", response.status);
+        console.log("Headers da resposta:", Object.fromEntries(response.headers.entries()));
         
         // Se a resposta for bem-sucedida, sair do loop
         if (response.ok) break;
@@ -112,6 +113,7 @@ serve(async (req) => {
         
         // Para outros erros, capturar e tratar
         const errorText = await response.text();
+        console.error(`Erro API Panda (${response.status}): ${errorText}`);
         throw new Error(`Erro API Panda (${response.status}): ${errorText}`);
       } catch (error) {
         lastError = error;
@@ -147,15 +149,38 @@ serve(async (req) => {
     }
 
     // Processar dados da resposta
+    let responseText;
+    try {
+      responseText = await response.text();
+      console.log("Resposta bruta da API do Panda:", responseText);
+    } catch (parseError) {
+      console.error("Erro ao ler resposta como texto:", parseError);
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: "Erro ao ler resposta da API do Panda Video"
+        }),
+        {
+          status: 500,
+          headers: {
+            ...corsHeaders,
+            "Content-Type": "application/json"
+          }
+        }
+      );
+    }
+    
+    // Tentar fazer parse da resposta como JSON
     let data;
     try {
-      data = await response.json();
+      data = JSON.parse(responseText);
     } catch (parseError) {
       console.error("Erro ao analisar resposta JSON:", parseError);
       return new Response(
         JSON.stringify({
           success: false,
-          error: "Erro ao processar resposta do servidor Panda Video"
+          error: "Erro ao processar resposta do servidor Panda Video",
+          rawResponse: responseText
         }),
         {
           status: 500,
