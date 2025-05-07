@@ -16,9 +16,6 @@ export const MemberContent = ({
   setSidebarOpen, 
   children 
 }: MemberContentProps) => {
-  // Debug log para verificar quando o componente é renderizado
-  console.log("MemberContent renderizando, sidebarOpen:", sidebarOpen);
-
   return (
     <main 
       className={cn(

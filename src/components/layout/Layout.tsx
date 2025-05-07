@@ -1,14 +1,80 @@
 
-import LayoutProvider from "./LayoutProvider";
-import { ReactNode } from "react";
+import { useState, useEffect } from "react";
+import { useAuth } from "@/contexts/auth";
+import { MemberSidebar } from "./member/MemberSidebar";
+import { MemberContent } from "./member/MemberContent";
 
 /**
- * Layout is the main entry point for the member area layout
- * It delegates authentication checks and layout rendering to LayoutProvider
+ * Layout renderiza a estrutura de layout para usuários membros
+ * Isso inclui a barra lateral e a área de conteúdo
  */
-const Layout = ({ children }: { children: ReactNode }) => {
-  console.log("Layout principal renderizando");
-  return <LayoutProvider>{children}</LayoutProvider>;
+const Layout = ({ children }: { children: React.ReactNode }) => {
+  const { user, profile, signOut } = useAuth();
+  
+  // Estado para controlar a visibilidade da barra lateral
+  const [sidebarOpen, setSidebarOpen] = useState(() => {
+    // Recuperar estado do localStorage, padrão é aberto em desktop
+    const savedState = localStorage.getItem("sidebarOpen");
+    return savedState !== null ? savedState === "true" : window.innerWidth >= 768;
+  });
+
+  // Efeito para persistir o estado da barra lateral
+  useEffect(() => {
+    localStorage.setItem("sidebarOpen", String(sidebarOpen));
+  }, [sidebarOpen]);
+
+  // Função para obter iniciais do nome do usuário
+  const getInitials = (name: string | null) => {
+    if (!name) return "U";
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .substring(0, 2);
+  };
+
+  // Detectar tamanho de tela e ajustar barra lateral em dispositivos móveis
+  useEffect(() => {
+    const handleResize = () => {
+      const isMobile = window.innerWidth < 768;
+      
+      if (isMobile && sidebarOpen) {
+        setSidebarOpen(false);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    // Executar verificação inicial
+    handleResize();
+    
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [sidebarOpen]);
+
+  return (
+    <div className="flex min-h-screen bg-background overflow-hidden">
+      {/* Barra lateral */}
+      <MemberSidebar 
+        sidebarOpen={sidebarOpen} 
+        setSidebarOpen={setSidebarOpen}
+        profileName={profile?.name || null}
+        profileEmail={profile?.email || null}
+        profileAvatar={profile?.avatar_url}
+        getInitials={getInitials}
+        signOut={signOut}
+      />
+      
+      {/* Conteúdo principal */}
+      <MemberContent 
+        sidebarOpen={sidebarOpen} 
+        setSidebarOpen={setSidebarOpen}
+      >
+        {children}
+      </MemberContent>
+    </div>
+  );
 };
 
 export default Layout;

@@ -27,7 +27,7 @@ export const ProtectedRoute = ({
     };
   }, []);
   
-  // Handle loading timeout - Always runs regardless of conditions
+  // Handle loading timeout
   useEffect(() => {
     if (isLoading) {
       // Clear any existing timeout
@@ -39,8 +39,8 @@ export const ProtectedRoute = ({
         console.log("ProtectedRoute: Loading timeout exceeded");
         setLoadingTimeout(true);
         setIsLoading(false);
-        navigate('/auth', { replace: true });
-      }, 2000); // Longer timeout for better UX
+        navigate('/login', { replace: true });
+      }, 2000);
     }
     
     return () => {
@@ -50,12 +50,12 @@ export const ProtectedRoute = ({
     };
   }, [isLoading, navigate, setIsLoading]);
 
-  // Navigation logic - Always runs regardless of conditions
+  // Navigation logic
   useEffect(() => {
     if (!isLoading && !loadingTimeout) {
       if (!user) {
-        console.log("ProtectedRoute: No user, redirecting to auth");
-        navigate('/auth', { replace: true });
+        console.log("ProtectedRoute: No user, redirecting to login");
+        navigate('/login', { replace: true });
       } else if (requireAdmin && !isAdmin) {
         console.log("ProtectedRoute: User is not admin, redirecting to dashboard");
         navigate('/dashboard', { replace: true });
@@ -76,3 +76,5 @@ export const ProtectedRoute = ({
   // Return loading screen as fallback while navigation happens
   return <LoadingScreen message="Redirecionando..." />;
 };
+
+export default ProtectedRoute;

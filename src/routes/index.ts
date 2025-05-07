@@ -1,3 +1,3 @@
 
-// Re-exportação simples do AppRoutes
-export { default as AppRoutes } from '@/components/routing/AppRoutes';
+// Exportando o componente AppRoutes como padrão
+export { default } from '@/components/routing/AppRoutes';
