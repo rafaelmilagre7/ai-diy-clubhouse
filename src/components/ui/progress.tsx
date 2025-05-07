@@ -4,7 +4,7 @@ import * as ProgressPrimitive from "@radix-ui/react-progress";
 
 import { cn } from "@/lib/utils";
 
-const ProgressBar = React.forwardRef<
+const Progress = React.forwardRef<
   React.ElementRef<typeof ProgressPrimitive.Root>,
   React.ComponentPropsWithoutRef<typeof ProgressPrimitive.Root> & {
     isIndeterminate?: boolean;
@@ -30,6 +30,6 @@ const ProgressBar = React.forwardRef<
   );
 });
 
-ProgressBar.displayName = "ProgressBar";
+Progress.displayName = "Progress";
 
-export { ProgressBar };
+export { Progress };

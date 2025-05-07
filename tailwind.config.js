@@ -1,3 +1,4 @@
+
 /** @type {import('tailwindcss').Config} */
 const { fontFamily } = require("tailwindcss/defaultTheme")
 
@@ -52,6 +53,10 @@ module.exports = {
         card: {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
+        },
+        viverblue: {
+          DEFAULT: "#0ABAB5",
+          30: "#cde4f8", // adicionado para resolver o erro
         },
       },
       borderRadius: {

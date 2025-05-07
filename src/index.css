@@ -9,4 +9,10 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer utilities {
+  ::selection {
+    @apply bg-viverblue/30;
+  }
+}
+
 /* --- DEMAIS customizações, plugins, ou pequenas regras que necessitem ficar aqui podem ser adicionadas abaixo --- */
