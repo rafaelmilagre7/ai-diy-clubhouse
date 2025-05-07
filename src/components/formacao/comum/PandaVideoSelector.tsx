@@ -117,6 +117,7 @@ export const PandaVideoSelector = ({
 
   // Carregar vídeos ao montar o componente
   useEffect(() => {
+    console.log("PandaVideoSelector montado, buscando vídeos...");
     fetchVideos();
   }, []);
   
@@ -162,6 +163,8 @@ export const PandaVideoSelector = ({
       </Card>
     ));
   };
+  
+  console.log("PandaVideoSelector renderizando com", videos.length, "vídeos");
   
   return (
     <div className="space-y-4">

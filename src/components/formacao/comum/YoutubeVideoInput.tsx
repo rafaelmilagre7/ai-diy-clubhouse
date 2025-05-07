@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
-import { Youtube, Info, Link as LinkIcon } from "lucide-react";
+import { Info, Link as LinkIcon } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { getYoutubeVideoId } from "@/lib/supabase/videoUtils";
 
@@ -29,15 +29,19 @@ export function YoutubeVideoInput({ value, onChange, onVideoLoaded }: YoutubeVid
         setIsValidUrl(true);
         setError(null);
         
-        // Se houver callback para quando um vídeo é carregado
+        // Obter título do vídeo para callback, se fornecido
         if (onVideoLoaded) {
-          // Obter informações sobre o vídeo usando o API do YouTube (se disponível)
-          // Ou simplesmente passar o título derivado da URL
-          const simpleTitle = value.includes('title=') 
-            ? decodeURIComponent(value.split('title=')[1].split('&')[0]) 
-            : `Vídeo do YouTube (${videoId})`;
-          
-          onVideoLoaded(simpleTitle);
+          try {
+            // Tentar extrair título da URL ou usar ID como fallback
+            const simpleTitle = value.includes('title=') 
+              ? decodeURIComponent(value.split('title=')[1].split('&')[0]) 
+              : `Vídeo do YouTube (${videoId})`;
+            
+            onVideoLoaded(simpleTitle);
+          } catch (err) {
+            console.log("Erro ao extrair título:", err);
+            onVideoLoaded(`Vídeo do YouTube (${videoId})`);
+          }
         }
       } else {
         setIsValidUrl(false);

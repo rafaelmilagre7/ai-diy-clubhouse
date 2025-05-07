@@ -17,10 +17,11 @@ async function uploadWithRetry(url: string, options: RequestInit, maxRetries = 3
       }
       
       console.log(`Iniciando requisição para: ${url}`);
-      console.log(`Headers:`, Object.fromEntries(
+      const headersLog = Object.fromEntries(
         Object.entries(options.headers || {})
-          .filter(([key]) => key.toLowerCase() !== 'authorization')
-      ));
+          .filter(([key]) => !key.toLowerCase().includes('authorization'))
+      );
+      console.log(`Headers:`, headersLog);
       
       const response = await fetch(url, options);
       
@@ -72,8 +73,6 @@ serve(async (req) => {
   console.log("Requisição de upload de vídeo recebida");
   console.log("URL:", req.url);
   console.log("Método:", req.method);
-  console.log("Headers:", Object.fromEntries([...req.headers.entries()]
-    .filter(([key]) => !key.toLowerCase().includes("authorization"))));
   
   // Lidar com requisições OPTIONS (CORS preflight)
   if (req.method === "OPTIONS") {
@@ -103,6 +102,9 @@ serve(async (req) => {
     const authHeader = req.headers.get("Authorization");
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
       console.log("Erro de autenticação: Token JWT ausente ou inválido");
+      console.log("Headers recebidos:", Object.fromEntries([...req.headers.entries()]
+        .filter(([key]) => !key.toLowerCase().includes("authorization"))));
+      
       return new Response(
         JSON.stringify({ 
           success: false,
@@ -138,7 +140,7 @@ serve(async (req) => {
       );
     }
     
-    console.log("API Key do Panda Video encontrada:", apiKey.substring(0, 10) + "...");
+    console.log("API Key do Panda Video encontrada:", apiKey.substring(0, 5) + "...");
 
     // Extrair os dados do formulário
     let formData;
@@ -212,7 +214,8 @@ serve(async (req) => {
     const metadataEntries = [
       `authorization ${encodeBase64(apiKey)}`,
       `filename ${encodeBase64(videoFile.name)}`,
-      `video_id ${encodeBase64(videoId)}`
+      `video_id ${encodeBase64(videoId)}`,
+      `title ${encodeBase64(videoTitle || videoFile.name)}`
     ];
     
     // Adicionar folder_id apenas se estiver definido
@@ -220,10 +223,8 @@ serve(async (req) => {
       metadataEntries.push(`folder_id ${encodeBase64(folderId)}`);
     }
     
-    // Adicionar title se fornecido
-    if (videoTitle) {
-      metadataEntries.push(`title ${encodeBase64(videoTitle)}`);
-    }
+    // Definir se o vídeo é privado ou não
+    metadataEntries.push(`private ${encodeBase64(isPrivate ? "true" : "false")}`);
     
     const uploadMetadata = metadataEntries.join(',');
     
@@ -233,7 +234,7 @@ serve(async (req) => {
     console.log("Iniciando upload protocolo TUS para Panda Video");
     console.log("URL de upload:", PANDA_UPLOAD_URL);
     console.log("Tamanho do arquivo:", videoFile.size, "bytes");
-    console.log("Metadados TUS:", uploadMetadata);
+    console.log("Metadados TUS:", uploadMetadata.substring(0, 100) + "...");
     
     // ETAPA 1: Criar a requisição de criação do upload via protocolo TUS
     let locationUrl = "";
@@ -246,7 +247,8 @@ serve(async (req) => {
           "Upload-Length": videoFile.size.toString(),
           "Upload-Metadata": uploadMetadata,
           "Content-Type": "application/offset+octet-stream",
-          "Accept": "application/json, */*; q=0.8"
+          "Accept": "application/json, */*; q=0.8",
+          "X-Upload-Origin": "VidReview"
         }
       });
       
@@ -281,8 +283,6 @@ serve(async (req) => {
     // ETAPA 2: Realizar o upload do arquivo para o endpoint TUS
     try {  
       console.log("Iniciando ETAPA 2: Upload de bytes via PATCH");
-      console.log("Enviando para:", locationUrl);
-      console.log("Tamanho do buffer:", fileBuffer.byteLength, "bytes");
       
       const patchResponse = await uploadWithRetry(locationUrl, {
         method: "PATCH",
@@ -325,17 +325,15 @@ serve(async (req) => {
     // Upload concluído com sucesso
     console.log("Upload concluído com sucesso!");
     
-    // Como o Panda não retorna os metadados do vídeo imediatamente,
-    // retornamos os dados que temos disponíveis no momento
     return new Response(
       JSON.stringify({
         success: true,
         video: {
           id: videoId,
-          title: videoTitle,
-          duration: 0, // Será necessário obter isso após processamento
+          title: videoTitle || videoFile.name,
+          duration: 0, // Será processado pelo Panda Video
           url: `https://player.pandavideo.com.br/embed/${videoId}`,
-          thumbnail_url: null, // Será disponibilizado após o processamento
+          thumbnail_url: null, // Será gerado pelo Panda Video após processamento
           type: "panda",
         }
       }),

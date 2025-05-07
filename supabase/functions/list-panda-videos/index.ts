@@ -8,7 +8,7 @@ serve(async (req) => {
   console.log("Requisição para listar vídeos do Panda recebida");
   console.log("URL da requisição:", req.url);
   console.log("Método:", req.method);
-
+  
   // Lidar com requisições OPTIONS (CORS preflight)
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -54,12 +54,12 @@ serve(async (req) => {
       );
     }
 
-    console.log("API Key Panda encontrada:", apiKey.substring(0, 10) + "...");
+    console.log("API Key Panda encontrada:", apiKey.substring(0, 5) + "...");
 
     // Parâmetros da URL
     const url = new URL(req.url);
     const page = url.searchParams.get("page") || "1";
-    const limit = url.searchParams.get("limit") || "100";
+    const limit = url.searchParams.get("limit") || "20"; // Aumentando o padrão para 20
     const search = url.searchParams.get("search") || "";
     const folder = url.searchParams.get("folder") || "";
 
@@ -98,6 +98,7 @@ serve(async (req) => {
         });
         
         console.log(`Status da resposta API: ${response.status}`);
+        console.log("Headers da resposta:", Object.fromEntries(response.headers.entries()));
         
         // Se a resposta for bem-sucedida, sair do loop
         if (response.ok) {
@@ -249,8 +250,8 @@ serve(async (req) => {
         headers: {
           ...corsHeaders,
           "Content-Type": "application/json",
-          // Adicionar cache para evitar chamadas repetidas
-          "Cache-Control": "public, max-age=60" // 1 minuto de cache
+          // Cache curto para teste, mas útil para evitar muitas chamadas
+          "Cache-Control": "public, max-age=30" 
         }
       }
     );
