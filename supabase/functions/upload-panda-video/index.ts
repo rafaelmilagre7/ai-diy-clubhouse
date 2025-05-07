@@ -27,7 +27,7 @@ async function uploadWithRetry(url: string, options: RequestInit, maxRetries = 3
         // Obter detalhes do erro para logging
         let errorBody;
         try {
-          errorBody = await response.clone().text();
+          errorBody = await response.text();
           console.error(`Resposta com erro (${response.status}): ${errorBody}`);
         } catch (e) {
           console.error(`Não foi possível ler corpo da resposta com erro: ${e}`);
@@ -35,7 +35,7 @@ async function uploadWithRetry(url: string, options: RequestInit, maxRetries = 3
         
         // Se for um erro recuperável, continuar tentativas
         if (response.status >= 500 || response.status === 429) {
-          throw new Error(`Erro HTTP ${response.status}`);
+          throw new Error(`Erro HTTP ${response.status}: ${errorBody || 'Sem detalhes'}`);
         }
         
         // Para outros erros, retornar a resposta mesmo sendo erro
@@ -237,7 +237,7 @@ serve(async (req) => {
           "Upload-Length": videoFile.size.toString(),
           "Upload-Metadata": uploadMetadata,
           "Content-Type": "application/offset+octet-stream",
-          "Accept": "application/json, */*"
+          "Accept": "application/json, */*; q=0.8"
         }
       });
       
@@ -280,7 +280,8 @@ serve(async (req) => {
         headers: {
           "Tus-Resumable": "1.0.0",
           "Upload-Offset": "0",
-          "Content-Type": "application/offset+octet-stream"
+          "Content-Type": "application/offset+octet-stream",
+          "Accept": "application/json, */*; q=0.8"
         },
         body: new Uint8Array(fileBuffer)
       });

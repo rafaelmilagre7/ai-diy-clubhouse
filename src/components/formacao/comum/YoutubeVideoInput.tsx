@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
-import { Youtube, Info } from "lucide-react";
+import { Youtube, Info, Link as LinkIcon } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { getYoutubeVideoId } from "@/lib/supabase/videoUtils";
 
@@ -41,7 +41,7 @@ export function YoutubeVideoInput({ value, onChange, onVideoLoaded }: YoutubeVid
     <div className="space-y-3">
       <div className="relative">
         <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-          <Youtube className="h-4 w-4 text-muted-foreground" />
+          <LinkIcon className="h-4 w-4 text-muted-foreground" />
         </div>
         <Input
           placeholder="Cole a URL do YouTube (ex: https://youtube.com/watch?v=...)"
@@ -52,7 +52,7 @@ export function YoutubeVideoInput({ value, onChange, onVideoLoaded }: YoutubeVid
       </div>
       
       <p className="text-xs text-muted-foreground">
-        Formatos suportados: youtube.com/watch?v=ID, youtu.be/ID
+        Formatos suportados: youtube.com/watch?v=ID, youtu.be/ID, youtube.com/embed/ID
       </p>
       
       {error && (
