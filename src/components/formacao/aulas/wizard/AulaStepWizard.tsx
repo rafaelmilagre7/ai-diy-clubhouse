@@ -1,199 +1,170 @@
 
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useNavigate } from "react-router-dom";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Form } from "@/components/ui/form";
+import { aulaFormSchema } from "./schemas/aulaFormSchema";
 import EtapaInfoBasica from "./etapas/EtapaInfoBasica";
-import EtapaConteudo from "./etapas/EtapaConteudo";
+import EtapaMidia from "./etapas/EtapaMidia";
 import EtapaVideos from "./etapas/EtapaVideos";
-import EtapaAtividades from "./etapas/EtapaAtividades";
 import EtapaMateriais from "./etapas/EtapaMateriais";
-import EtapaRevisao from "./etapas/EtapaRevisao";
+import EtapaPublicacao from "./etapas/EtapaPublicacao";
+import { toast } from "sonner";
 import { useCreateAula } from "@/hooks/formacao/useCreateAula";
 
-export type DifficultyLevel = "iniciante" | "intermediario" | "avancado";
-
+// Interfaces para tipos de dados
 export interface AulaVideo {
   id?: string;
-  title?: string;
+  title: string;
   description?: string;
-  url?: string;
-  type?: string;
-  fileName?: string;
-  filePath?: string;
-  fileSize?: number;
-  duration_seconds?: number;
-  thumbnail_url?: string;
-  video_id?: string;
-  origin?: "youtube" | "panda_upload" | "panda_select";
+  url: string;
+  type: "youtube" | "panda";
+  video_id?: string; // ID do vídeo no Panda Video
+  thumbnail_url?: string; // URL da miniatura do vídeo
+  duration_seconds?: number; // Duração do vídeo em segundos
+}
+
+export interface AulaMaterial {
+  id?: string;
+  title: string;
+  description?: string;
+  url: string;
+  type: string; // "pdf", "doc", "image", etc.
+  file_size?: number;
 }
 
 export interface AulaFormValues {
   title: string;
-  description: string;
-  content?: string;
-  videos?: AulaVideo[];
-  activities?: any[];
-  resources?: any[];
-  order_index?: number;
-  formacao_id?: string;
-  modulo_id?: string;
-  difficultyLevel?: DifficultyLevel;
-  coverImageUrl?: string;
-  aiAssistantEnabled?: boolean;
-  aiAssistantPrompt?: string;
-  published?: boolean;
+  description?: string;
+  objective?: string;
+  difficulty: string;
+  estimated_time?: string;
+  thumbnail_url?: string;
+  videos: AulaVideo[];
+  materials?: AulaMaterial[];
+  is_published?: boolean;
+  is_featured?: boolean;
 }
 
 interface AulaStepWizardProps {
-  open?: boolean;
-  onOpenChange?: (open: boolean) => void;
-  moduleId: string;
-  onClose?: () => void;
-  onSuccess?: () => void;
+  onComplete?: (data: AulaFormValues) => void;
+  onCancel?: () => void;
+  defaultValues?: Partial<AulaFormValues>;
 }
 
+const defaultFormValues: AulaFormValues = {
+  title: "",
+  description: "",
+  objective: "",
+  difficulty: "medium",
+  estimated_time: "30",
+  thumbnail_url: "",
+  videos: [],
+  materials: [],
+  is_published: false,
+  is_featured: false
+};
+
 const AulaStepWizard: React.FC<AulaStepWizardProps> = ({ 
-  open, 
-  onOpenChange, 
-  moduleId, 
-  onClose,
-  onSuccess
+  onComplete,
+  onCancel,
+  defaultValues
 }) => {
-  const [activeTab, setActiveTab] = useState("informacoes");
-  const [isSaving, setIsSaving] = useState(false);
-  const navigate = useNavigate();
-  const { mutate: createAula, isLoading: isAulaCreating } = useCreateAula();
+  const [currentStep, setCurrentStep] = useState(0);
+  const { mutate, isLoading } = useCreateAula();
 
   const form = useForm<AulaFormValues>({
-    defaultValues: {
-      title: "",
-      description: "",
-      content: "",
-      videos: [],
-      activities: [],
-      resources: [],
-      order_index: 0,
-      formacao_id: "",
-      modulo_id: moduleId,
-      difficultyLevel: "iniciante",
-      coverImageUrl: "",
-      aiAssistantEnabled: false,
-      aiAssistantPrompt: "",
-      published: false,
-    },
+    resolver: zodResolver(aulaFormSchema),
+    defaultValues: { ...defaultFormValues, ...defaultValues },
+    mode: "onChange"
   });
 
-  const handleNext = (tab: string) => {
-    setActiveTab(tab);
-  };
-
-  const handlePrevious = (tab: string) => {
-    setActiveTab(tab);
-  };
-
-  const handleSubmit = async (data: AulaFormValues) => {
-    setIsSaving(true);
-    try {
-      // Remover campos que não existem no backend
-      const submissionData = {
-        ...data,
-        modulo_id: moduleId
-      };
-
-      createAula(submissionData, {
-        onSuccess: () => {
-          console.log("Aula criada com sucesso!");
-          setIsSaving(false);
-          if (onSuccess) onSuccess();
-          if (onClose) onClose();
-          navigate("/formacao/aulas");
-        },
-        onError: (error: any) => {
-          console.error("Erro ao criar aula:", error);
-          setIsSaving(false);
-        },
-      });
-    } catch (error) {
-      console.error("Erro ao criar aula:", error);
-      setIsSaving(false);
+  const handleNext = () => {
+    if (currentStep < 4) {
+      setCurrentStep(currentStep + 1);
     }
   };
 
-  const content = (
-    <Card className="w-full">
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="p-4">
-          <TabsTrigger value="informacoes">Informações</TabsTrigger>
-          <TabsTrigger value="conteudo">Conteúdo</TabsTrigger>
-          <TabsTrigger value="videos">Vídeos</TabsTrigger>
-          <TabsTrigger value="atividades">Atividades</TabsTrigger>
-          <TabsTrigger value="materiais">Materiais</TabsTrigger>
-          <TabsTrigger value="revisao">Revisão</TabsTrigger>
-        </TabsList>
-      </Tabs>
+  const handlePrevious = () => {
+    if (currentStep > 0) {
+      setCurrentStep(currentStep - 1);
+    } else if (onCancel) {
+      onCancel();
+    }
+  };
 
-      <Card className="p-4">
-        {activeTab === "informacoes" && (
-          <EtapaInfoBasica form={form} onNext={() => handleNext("conteudo")} />
-        )}
-        {activeTab === "conteudo" && (
-          <EtapaConteudo
-            form={form}
-            onNext={() => handleNext("videos")}
-            onPrevious={() => handlePrevious("informacoes")}
-          />
-        )}
-        {activeTab === "videos" && (
-          <EtapaVideos
-            form={form}
-            onNext={() => handleNext("atividades")}
-            onPrevious={() => handlePrevious("conteudo")}
-            isSaving={isSaving}
-          />
-        )}
-        {activeTab === "atividades" && (
-          <EtapaAtividades
-            form={form}
-            onNext={() => handleNext("materiais")}
-            onPrevious={() => handlePrevious("videos")}
-          />
-        )}
-        {activeTab === "materiais" && (
-          <EtapaMateriais
-            form={form}
-            onNext={() => handleNext("revisao")}
-            onPrevious={() => handlePrevious("atividades")}
-          />
-        )}
-        {activeTab === "revisao" && (
-          <EtapaRevisao
-            form={form}
-            onPrevious={() => handlePrevious("materiais")}
-            onSubmit={form.handleSubmit(handleSubmit)}
-            isSaving={isSaving || isAulaCreating}
-          />
-        )}
-      </Card>
-    </Card>
+  const handleComplete = async (values: AulaFormValues) => {
+    try {
+      toast.message("Processando...", {
+        description: "Criando nova aula com todos os recursos."
+      });
+      
+      // Simular chamada de API através do hook useCreateAula
+      await mutate(values, {
+        onSuccess: (data) => {
+          toast.success("Aula criada com sucesso!");
+          if (onComplete) onComplete(data);
+        },
+        onError: (error) => {
+          console.error("Erro ao criar aula:", error);
+          toast.error("Erro ao criar aula", {
+            description: "Por favor, tente novamente."
+          });
+        }
+      });
+    } catch (error) {
+      console.error("Erro no processo de criação:", error);
+      toast.error("Erro ao processar", {
+        description: "Ocorreu um erro interno. Tente novamente."
+      });
+    }
+  };
+
+  const steps = [
+    <EtapaInfoBasica 
+      key="info" 
+      form={form} 
+      onNext={handleNext} 
+      onPrevious={handlePrevious}
+      isSaving={isLoading}
+    />,
+    <EtapaMidia 
+      key="midia" 
+      form={form} 
+      onNext={handleNext} 
+      onPrevious={handlePrevious}
+      isSaving={isLoading}
+    />,
+    <EtapaVideos 
+      key="videos" 
+      form={form} 
+      onNext={handleNext} 
+      onPrevious={handlePrevious}
+      isSaving={isLoading}
+    />,
+    <EtapaMateriais 
+      key="materiais" 
+      form={form} 
+      onNext={handleNext} 
+      onPrevious={handlePrevious}
+      isSaving={isLoading}
+    />,
+    <EtapaPublicacao 
+      key="publicacao" 
+      form={form} 
+      onPrevious={handlePrevious} 
+      onSubmit={handleComplete}
+      isSaving={isLoading}
+    />
+  ];
+
+  return (
+    <Form {...form}>
+      <form className="space-y-6">
+        {steps[currentStep]}
+      </form>
+    </Form>
   );
-
-  // Se o componente for usado dentro de um modal
-  if (open !== undefined) {
-    return (
-      <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          {content}
-        </DialogContent>
-      </Dialog>
-    );
-  }
-
-  // Se o componente for usado em uma página
-  return content;
 };
 
 export default AulaStepWizard;
