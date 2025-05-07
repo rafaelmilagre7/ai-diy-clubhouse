@@ -6,11 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, FileText, Trash2, ExternalLink, GripVertical } from "lucide-react";
+import { Plus, FileText, Trash2, ExternalLink, GripVertical, Upload } from "lucide-react";
 import { FormLabel, FormDescription } from "@/components/ui/form";
 import { Badge } from "@/components/ui/badge";
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import { toast } from "sonner";
+import { FileUpload } from "@/components/ui/file-upload";
 
 interface EtapaMateriaisProps {
   form: UseFormReturn<AulaFormValues>;
@@ -34,7 +35,7 @@ const EtapaMateriais: React.FC<EtapaMateriaisProps> = ({
     onNext();
   };
 
-  const handleAddMaterial = () => {
+  const handleUploadComplete = (url: string, fileName: string, fileSize: number) => {
     if (materials.length >= maxMaterials) {
       toast.info(`Limite máximo de ${maxMaterials} materiais atingido.`);
       return;
@@ -43,11 +44,13 @@ const EtapaMateriais: React.FC<EtapaMateriaisProps> = ({
     const currentMaterials = form.getValues().materials || [];
     form.setValue("materials", [...currentMaterials, {
       id: `material-${Date.now()}`,
-      title: "",
-      description: "",
-      url: "",
-      type: "link"
+      title: fileName,
+      description: `Tamanho: ${(fileSize / (1024 * 1024)).toFixed(2)} MB`,
+      url: url,
+      type: "file"
     }]);
+
+    toast.success(`Material "${fileName}" adicionado com sucesso!`);
   };
 
   const handleRemoveMaterial = (index: number) => {
@@ -59,12 +62,6 @@ const EtapaMateriais: React.FC<EtapaMateriaisProps> = ({
     form.setValue("materials", newMaterials);
     
     toast.info(`"${materialTitle}" foi removido`);
-  };
-
-  const handleMaterialChange = (index: number, field: string, value: any) => {
-    const newMaterials = [...form.getValues().materials || []];
-    newMaterials[index] = { ...newMaterials[index], [field]: value };
-    form.setValue("materials", newMaterials);
   };
 
   const onDragEnd = (result: any) => {
@@ -85,26 +82,49 @@ const EtapaMateriais: React.FC<EtapaMateriaisProps> = ({
           <div>
             <FormLabel className="text-base font-semibold">Materiais Complementares</FormLabel>
             <FormDescription>
-              Adicione links, documentos e outros recursos para esta aula.
+              Adicione documentos e outros recursos para esta aula.
               {materials.length > 0 && <Badge variant="outline" className="ml-2">{materials.length}/{maxMaterials}</Badge>}
             </FormDescription>
           </div>
-          <Button
-            type="button"
-            onClick={handleAddMaterial}
-            disabled={materials.length >= maxMaterials}
-            className="gap-1"
-          >
-            <Plus className="w-4 h-4" /> Adicionar Material
-          </Button>
         </div>
+        
+        <Card className="border-2 border-dashed border-[#0ABAB5]/30 hover:border-[#0ABAB5]/50 transition-all">
+          <CardContent className="p-6">
+            <div className="space-y-4">
+              <div className="flex items-center">
+                <Upload className="h-5 w-5 mr-2 text-[#0ABAB5]" />
+                <h3 className="text-lg font-semibold text-[#0ABAB5]">Upload de Materiais</h3>
+              </div>
+              
+              <p className="text-sm text-muted-foreground">
+                Faça upload de PDFs, documentos, planilhas e outros materiais de apoio para a aula.
+              </p>
+              
+              <div className="bg-gray-50 p-6 rounded-md">
+                <FileUpload
+                  bucketName="learning_materials"
+                  folder="aulas"
+                  onUploadComplete={handleUploadComplete}
+                  accept="*"
+                  maxSize={25} // 25MB
+                  buttonText="Upload de Material"
+                  fieldLabel="Selecione um arquivo (até 25MB)"
+                />
+              </div>
+              
+              <p className="text-sm text-muted-foreground">
+                Formatos suportados: PDF, Word, Excel, PowerPoint, imagens e outros arquivos.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
         
         {materials.length === 0 ? (
           <div className="p-8 border-2 border-dashed rounded-md text-center">
             <FileText className="mx-auto h-8 w-8 text-muted-foreground mb-3" />
             <p className="font-medium">Nenhum material adicionado ainda</p>
             <p className="text-muted-foreground mt-1">
-              Clique em "Adicionar Material" para incluir recursos complementares.
+              Use a opção de upload para adicionar materiais complementares.
             </p>
           </div>
         ) : (
@@ -149,49 +169,26 @@ const EtapaMateriais: React.FC<EtapaMateriaisProps> = ({
                               </Button>
                             </div>
                             
-                            <div className="space-y-4">
-                              <div className="grid gap-2">
-                                <FormLabel htmlFor={`material-title-${index}`}>Título do material</FormLabel>
-                                <Input
-                                  id={`material-title-${index}`}
-                                  placeholder="Título do material"
-                                  value={material.title || ''}
-                                  onChange={(e) => handleMaterialChange(index, "title", e.target.value)}
-                                />
+                            <div className="flex justify-between items-center">
+                              <div>
+                                <p className="font-medium">{material.title}</p>
+                                {material.description && (
+                                  <p className="text-sm text-muted-foreground">{material.description}</p>
+                                )}
                               </div>
                               
-                              <div className="grid gap-2">
-                                <FormLabel htmlFor={`material-description-${index}`}>Descrição (opcional)</FormLabel>
-                                <Textarea
-                                  id={`material-description-${index}`}
-                                  placeholder="Descrição do material"
-                                  value={material.description || ''}
-                                  onChange={(e) => handleMaterialChange(index, "description", e.target.value)}
-                                  className="resize-none h-20"
-                                />
-                              </div>
-                              
-                              <div className="grid gap-2">
-                                <FormLabel htmlFor={`material-url-${index}`}>URL do material</FormLabel>
-                                <div className="flex items-center gap-2">
-                                  <Input
-                                    id={`material-url-${index}`}
-                                    placeholder="https://..."
-                                    value={material.url || ''}
-                                    onChange={(e) => handleMaterialChange(index, "url", e.target.value)}
-                                  />
-                                  {material.url && (
-                                    <Button 
-                                      type="button" 
-                                      size="icon" 
-                                      variant="ghost"
-                                      onClick={() => window.open(material.url, '_blank')}
-                                    >
-                                      <ExternalLink className="h-4 w-4" />
-                                    </Button>
-                                  )}
-                                </div>
-                              </div>
+                              {material.url && (
+                                <Button 
+                                  type="button" 
+                                  size="sm" 
+                                  variant="outline"
+                                  onClick={() => window.open(material.url, '_blank')}
+                                  className="flex items-center gap-1"
+                                >
+                                  <FileText className="h-4 w-4" />
+                                  Visualizar
+                                </Button>
+                              )}
                             </div>
                           </CardContent>
                         </Card>

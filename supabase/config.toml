@@ -1,29 +1,37 @@
 
-# Este arquivo de configuração é usado pelo CLI do Supabase.
-
 project_id = "zotzvtepvpnkcoobdubt"
 
 [api]
-# URL da API RESTful do Supabase em produção
-url = "https://zotzvtepvpnkcoobdubt.supabase.co"
+enabled = true
+port = 54321
+schemas = ["public", "storage", "graphql_public"]
 
 [db]
-# Configurações de conexão para o banco de dados PostgreSQL
-# https://supabase.com/docs/guides/database/connecting/connecting-to-postgres
+port = 54322
 
-[functions]
-[functions.check-panda-api]
+[studio]
+enabled = true
+port = 54323
+api_url = "http://localhost:54321"
+
+[inbucket]
+enabled = true
+port = 54324
+
+[auth]
+enabled = true
+site_url = "http://localhost:5173"
+
+[storage]
+enabled = true
+
+[realtime]
+enabled = true
+
+[[functions]]
+name = "list-panda-videos"
 verify_jwt = true
 
-[functions.list-panda-videos]
+[[functions]]
+name = "upload-panda-video"
 verify_jwt = true
-
-[functions.upload-to-panda]
-verify_jwt = true
-
-[functions.upload-panda-video]
-verify_jwt = true
-
-[functions.create-storage-bucket]
-verify_jwt = true
-

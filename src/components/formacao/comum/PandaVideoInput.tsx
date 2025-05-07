@@ -1,8 +1,6 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { PandaVideoSelector } from "./PandaVideoSelector";
 import { PandaVideoUploader } from "./PandaVideoUploader";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -15,15 +13,33 @@ interface PandaVideoInputProps {
     thumbnail_url?: string;
     duration_seconds?: number;
   };
+  uploadOnly?: boolean;
 }
 
-export const PandaVideoInput = ({ onChange, initialValue }: PandaVideoInputProps) => {
+export const PandaVideoInput = ({ 
+  onChange, 
+  initialValue, 
+  uploadOnly = false
+}: PandaVideoInputProps) => {
   const [activeTab, setActiveTab] = useState<string>("upload");
   
   const handleVideoSelected = (videoData: any) => {
     onChange(videoData);
   };
 
+  // Se uploadOnly for verdadeiro, mostrar apenas o componente de upload
+  if (uploadOnly) {
+    return (
+      <div className="space-y-4">
+        <PandaVideoUploader 
+          onChange={handleVideoSelected}
+          initialValue={initialValue}
+        />
+      </div>
+    );
+  }
+
+  // Caso contrário, mostrar o componente com abas
   return (
     <div className="space-y-4">
       <Tabs defaultValue="upload" value={activeTab} onValueChange={setActiveTab}>
@@ -40,9 +56,9 @@ export const PandaVideoInput = ({ onChange, initialValue }: PandaVideoInputProps
         </TabsContent>
         
         <TabsContent value="select" className="pt-4">
-          <PandaVideoSelector 
-            onSelectVideo={handleVideoSelected}
-          />
+          <div className="p-4 text-center text-muted-foreground">
+            <p>Selecione vídeos da biblioteca do Panda Video.</p>
+          </div>
         </TabsContent>
       </Tabs>
     </div>

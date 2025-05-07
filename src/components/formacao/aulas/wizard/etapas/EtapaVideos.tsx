@@ -36,6 +36,11 @@ const EtapaVideos: React.FC<EtapaVideosProps> = ({
 
   // Manipulador para continuar para a próxima etapa
   const handleContinue = async () => {
+    if (videos.length === 0) {
+      setValidationError("Adicione pelo menos um vídeo antes de continuar.");
+      return;
+    }
+    
     setValidationError(null);
     onNext();
   };
@@ -108,7 +113,7 @@ const EtapaVideos: React.FC<EtapaVideosProps> = ({
           <div>
             <FormLabel className="text-base font-semibold">Vídeos da Aula</FormLabel>
             <FormDescription>
-              Adicione vídeos a esta aula. Você pode incluir vídeos da biblioteca do Panda Video.
+              Faça upload dos vídeos da aula diretamente do seu computador.
               {videos.length > 0 && <Badge variant="outline" className="ml-2">{videos.length}/{maxVideos}</Badge>}
             </FormDescription>
           </div>
@@ -136,6 +141,7 @@ const EtapaVideos: React.FC<EtapaVideosProps> = ({
               <FormLabel className="text-base font-semibold">Adicionar Vídeo</FormLabel>
               <PandaVideoInput
                 onChange={handleSelectVideo}
+                uploadOnly={true}
               />
               <div className="flex justify-end gap-2 mt-4">
                 <Button 
@@ -230,7 +236,7 @@ const EtapaVideos: React.FC<EtapaVideosProps> = ({
                                 </div>
                                 
                                 <Badge variant="outline" className="mt-2">
-                                  {video.type === 'panda' ? 'Panda Video' : 'YouTube'}
+                                  Panda Video
                                 </Badge>
                               </div>
                             </div>

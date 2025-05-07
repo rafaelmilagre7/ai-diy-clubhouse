@@ -13,13 +13,6 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 interface EtapaInfoBasicaProps {
   form: UseFormReturn<AulaFormValues>;
@@ -35,7 +28,7 @@ const EtapaInfoBasica: React.FC<EtapaInfoBasicaProps> = ({
   const [validationError, setValidationError] = useState<string | null>(null);
 
   const handleContinue = async () => {
-    const isValid = await form.trigger(['title', 'description', 'difficulty', 'estimated_time', 'objective']);
+    const isValid = await form.trigger(['title', 'description']);
     
     if (isValid) {
       setValidationError(null);
@@ -93,80 +86,6 @@ const EtapaInfoBasica: React.FC<EtapaInfoBasicaProps> = ({
           </FormItem>
         )}
       />
-      
-      <FormField
-        control={form.control}
-        name="objective"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Objetivo de Aprendizagem</FormLabel>
-            <FormControl>
-              <Textarea
-                placeholder="O que o aluno deve aprender com esta aula?"
-                className="resize-none h-20"
-                {...field}
-              />
-            </FormControl>
-            <FormDescription>
-              Descreva o que os alunos irão aprender com esta aula.
-            </FormDescription>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <FormField
-          control={form.control}
-          name="difficulty"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Nível de Dificuldade</FormLabel>
-              <Select
-                onValueChange={field.onChange}
-                defaultValue={field.value}
-              >
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione o nível de dificuldade" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="basic">Básico</SelectItem>
-                  <SelectItem value="medium">Intermediário</SelectItem>
-                  <SelectItem value="advanced">Avançado</SelectItem>
-                </SelectContent>
-              </Select>
-              <FormDescription>
-                O nível de conhecimento necessário para acompanhar esta aula.
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="estimated_time"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Tempo Estimado (minutos)</FormLabel>
-              <FormControl>
-                <Input
-                  type="number"
-                  min={1}
-                  placeholder="30"
-                  {...field}
-                />
-              </FormControl>
-              <FormDescription>
-                Tempo estimado para completar esta aula (em minutos).
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      </div>
 
       {!standalone && (
         <div className="flex justify-end pt-4">

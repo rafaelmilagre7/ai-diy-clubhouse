@@ -1,39 +1,96 @@
 
-import React from 'react';
-import { BrowserRouter } from 'react-router-dom';
-import { Toaster } from './components/ui/toaster';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
-import { LoggingProvider } from './hooks/useLogging';
-import { AuthProvider } from './contexts/auth';
-import AppRoutes from './components/routing/AppRoutes';
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "./contexts/auth";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { Toaster } from "sonner";
+import MainLayout from "./components/layout/MainLayout";
+import FormacaoLayout from "./components/layout/formacao/FormacaoLayout";
 
-// Criar uma instância do QueryClient fora do componente para evitar recriação a cada render
+// Auth Pages
+import LoginPage from "./pages/auth/LoginPage";
+import SignupPage from "./pages/auth/SignupPage";
+import ForgotPasswordPage from "./pages/auth/ForgotPasswordPage";
+import ResetPasswordPage from "./pages/auth/ResetPasswordPage";
+
+// Formação Pages
+import FormacaoHomePage from "./pages/formacao/FormacaoHomePage";
+import FormacaoAulasPage from "./pages/formacao/FormacaoAulasPage";
+import FormacaoAulaNova from "./pages/formacao/FormacaoAulaNova";
+import FormacaoAulaNovaVideos from "./pages/formacao/FormacaoAulaNovaVideos";
+import FormacaoAulaNovaMateriais from "./pages/formacao/FormacaoAulaNovaMateriais";
+import FormacaoAulaNovaPublicacao from "./pages/formacao/FormacaoAulaNovaPublicacao";
+
+// Membro Pages
+import MemberCursosPage from "./pages/membro/MemberCursosPage";
+import MemberCursoDetailPage from "./pages/membro/MemberCursoDetailPage";
+import MemberAulaPage from "./pages/membro/MemberAulaPage";
+
+// Protected Routes
+import ProtectedRoute from "./components/auth/ProtectedRoute";
+import AdminRoute from "./components/auth/AdminRoute";
+import FormacaoRoute from "./components/auth/FormacaoRoute";
+
+// Create a client
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 1000 * 60 * 5, // 5 minutos
-      retry: 1,
+      refetchOnWindowFocus: false,
+      retry: 0,
     },
   },
 });
 
-const App = () => {
-  console.log("Renderizando App.tsx");
-  
+function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <LoggingProvider>
-          <AuthProvider>
-            <AppRoutes />
-            <Toaster />
-            <ReactQueryDevtools initialIsOpen={false} />
-          </AuthProvider>
-        </LoggingProvider>
-      </BrowserRouter>
+      <AuthProvider>
+        <Router>
+          <Routes>
+            {/* Auth Routes */}
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/cadastro" element={<SignupPage />} />
+            <Route path="/esqueci-senha" element={<ForgotPasswordPage />} />
+            <Route path="/redefinir-senha" element={<ResetPasswordPage />} />
+
+            {/* Formação Routes */}
+            <Route
+              path="/formacao"
+              element={
+                <FormacaoRoute>
+                  <FormacaoLayout />
+                </FormacaoRoute>
+              }
+            >
+              <Route index element={<FormacaoHomePage />} />
+              <Route path="aulas" element={<FormacaoAulasPage />} />
+              <Route path="aulas/nova" element={<FormacaoAulaNova />} />
+              <Route path="aulas/nova/videos" element={<FormacaoAulaNovaVideos />} />
+              <Route path="aulas/nova/materiais" element={<FormacaoAulaNovaMateriais />} />
+              <Route path="aulas/nova/publicacao" element={<FormacaoAulaNovaPublicacao />} />
+              {/* Adicionar outras rotas de formação conforme necessário */}
+            </Route>
+
+            {/* Membro Routes */}
+            <Route
+              path="/membro"
+              element={
+                <ProtectedRoute>
+                  <MainLayout />
+                </ProtectedRoute>
+              }
+            >
+              <Route path="cursos" element={<MemberCursosPage />} />
+              <Route path="curso/:cursoId" element={<MemberCursoDetailPage />} />
+              <Route path="aula/:aulaId" element={<MemberAulaPage />} />
+            </Route>
+
+            {/* Outras rotas conforme necessário */}
+          </Routes>
+        </Router>
+        <Toaster position="top-right" richColors />
+      </AuthProvider>
     </QueryClientProvider>
   );
-};
+}
 
 export default App;

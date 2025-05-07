@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { UseFormReturn } from "react-hook-form";
 import { AulaFormValues } from "@/components/formacao/aulas/types";
 import { Button } from "@/components/ui/button";
@@ -14,7 +14,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle, Loader2 } from "lucide-react";
+import { AlertCircle, CheckCircle, Loader2 } from "lucide-react";
 
 interface EtapaPublicacaoProps {
   form: UseFormReturn<AulaFormValues>;
@@ -33,6 +33,13 @@ const EtapaPublicacao: React.FC<EtapaPublicacaoProps> = ({
 }) => {
   const [error, setError] = useState<string | null>(null);
   const { title, videos } = form.watch();
+  
+  // Definir a aula como publicada por padrão
+  useEffect(() => {
+    if (!form.getValues('is_published')) {
+      form.setValue('is_published', true);
+    }
+  }, [form]);
 
   // Validação antes de salvar
   const hasValidationErrors = () => {
@@ -52,6 +59,9 @@ const EtapaPublicacao: React.FC<EtapaPublicacaoProps> = ({
     if (hasValidationErrors()) {
       return;
     }
+    
+    // Forçar a aula para ser publicada
+    form.setValue('is_published', true);
     
     // Continuar com salvamento - passar os valores do formulário para a função onComplete
     onComplete(form.getValues());
@@ -94,27 +104,13 @@ const EtapaPublicacao: React.FC<EtapaPublicacaoProps> = ({
       <div className="space-y-4">
         <h4 className="font-medium">Opções de Publicação</h4>
         
-        <FormField
-          control={form.control}
-          name="is_published"
-          render={({ field }) => (
-            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
-              <div className="space-y-0.5">
-                <FormLabel>Publicar aula</FormLabel>
-                <FormDescription>
-                  Quando ativado, a aula estará visível para os alunos.
-                </FormDescription>
-              </div>
-              <FormControl>
-                <Switch
-                  checked={field.value}
-                  onCheckedChange={field.onChange}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <Alert className="bg-green-50 border-green-200">
+          <CheckCircle className="h-4 w-4 text-green-500" />
+          <AlertTitle className="text-green-700">Aula será publicada automaticamente</AlertTitle>
+          <AlertDescription className="text-green-600">
+            Ao clicar em "Salvar Aula", ela será publicada e disponibilizada para os usuários.
+          </AlertDescription>
+        </Alert>
         
         <FormField
           control={form.control}
@@ -148,6 +144,7 @@ const EtapaPublicacao: React.FC<EtapaPublicacaoProps> = ({
             type="button" 
             onClick={handleComplete}
             disabled={isSaving}
+            className="bg-green-600 hover:bg-green-700"
           >
             {isSaving ? (
               <>
@@ -155,7 +152,7 @@ const EtapaPublicacao: React.FC<EtapaPublicacaoProps> = ({
                 Salvando...
               </>
             ) : (
-              "Salvar Aula"
+              "Salvar e Publicar Aula"
             )}
           </Button>
         </div>
