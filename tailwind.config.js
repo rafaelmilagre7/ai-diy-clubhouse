@@ -66,6 +66,7 @@ module.exports = {
       },
       fontFamily: {
         sans: ["var(--font-sans)", ...fontFamily.sans],
+        heading: ["Outfit", "system-ui", "sans-serif"], // Adicionando família de fonte heading
       },
       keyframes: {
         "accordion-down": {

@@ -1,4 +1,3 @@
-
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,7 +17,7 @@ import {
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useFileUpload } from "@/hooks/useFileUpload";
-import { ProgressBar } from "@/components/ui/progress";
+import { Progress } from "@/components/ui/progress";
 
 interface PandaVideoUploaderProps {
   onChange: (videoData: any) => void;
@@ -311,7 +310,7 @@ export const PandaVideoUploader = ({ onChange, initialValue }: PandaVideoUploade
                     Isso pode demorar alguns minutos
                   </span>
                 </div>
-                <ProgressBar
+                <Progress
                   isIndeterminate
                   value={100}
                   className="h-1"
