@@ -59,6 +59,8 @@ module.exports = {
           30: "#cde4f8", // adicionado para resolver o erro
         },
         revenue: "#00C48C", // Adicionando a cor revenue com o valor especificado
+        operational: "#8E24AA", // Adicionando a cor operational
+        strategy: "#00897B", // Adicionando a cor strategy para prevenir erros futuros
       },
       borderRadius: {
         lg: "var(--radius)",
