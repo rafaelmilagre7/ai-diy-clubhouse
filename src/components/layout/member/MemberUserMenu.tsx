@@ -1,16 +1,19 @@
 
-import { useNavigate } from "react-router-dom";
-import {
+import { Link, useNavigate } from "react-router-dom";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { User, LogOut } from "lucide-react";
+import { 
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { LogOut, Settings, User } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
+import { useState } from "react";
+import { toast } from "sonner";
 
 interface MemberUserMenuProps {
   sidebarOpen: boolean;
@@ -21,106 +24,89 @@ interface MemberUserMenuProps {
   signOut: () => Promise<void>;
 }
 
-export function MemberUserMenu({
-  sidebarOpen,
-  profileName,
-  profileEmail,
+export const MemberUserMenu = ({ 
+  sidebarOpen, 
+  profileName, 
+  profileEmail, 
   profileAvatar,
   getInitials,
-  signOut,
-}: MemberUserMenuProps) {
+  signOut
+}: MemberUserMenuProps) => {
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const navigate = useNavigate();
   
-  const handleSignOut = async () => {
+  const handleSignOut = async (e: Event) => {
+    e.preventDefault();
+    
     try {
+      setIsLoggingOut(true);
+      console.log("Iniciando processo de logout via MemberUserMenu");
+      
+      // Limpar token do localStorage para garantir logout
+      localStorage.removeItem('sb-zotzvtepvpnkcoobdubt-auth-token');
+      localStorage.removeItem('supabase.auth.token');
+      
+      // Usar o signOut do contexto de autenticação
       await signOut();
-      navigate("/login", { replace: true });
+      
+      // Redirecionamento forçado para a página de autenticação
+      toast.success("Logout realizado com sucesso");
+      console.log("Redirecionando para /login");
+      
+      // Forçar redirecionamento via location.href para garantir reset completo da aplicação
+      window.location.href = '/login';
     } catch (error) {
       console.error("Erro ao fazer logout:", error);
+      // Força redirecionamento para login em caso de falha
+      window.location.href = '/login';
+    } finally {
+      setIsLoggingOut(false);
     }
   };
-
-  if (!sidebarOpen) {
-    // Versão compacta quando a sidebar está fechada
-    return (
+  
+  return (
+    <div className="p-3">
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="h-9 w-9 rounded-full p-0">
-            <Avatar className="h-9 w-9">
-              <AvatarImage src={profileAvatar} alt={profileName || "Avatar do usuário"} />
+          <Button
+            variant="ghost"
+            className={cn(
+              "w-full justify-start gap-2 px-2",
+              !sidebarOpen && "justify-center"
+            )}
+          >
+            <Avatar className="h-8 w-8">
+              <AvatarImage src={profileAvatar} />
               <AvatarFallback>{getInitials(profileName)}</AvatarFallback>
             </Avatar>
+            {sidebarOpen && (
+              <div className="flex flex-col items-start text-sm">
+                <span className="font-medium">{profileName}</span>
+                <span className="text-muted-foreground text-xs truncate max-w-[150px]">
+                  {profileEmail}
+                </span>
+              </div>
+            )}
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <div className="flex items-center justify-start gap-2 p-2">
-            <div className="flex flex-col space-y-1 leading-none">
-              {profileName && <p className="font-medium">{profileName}</p>}
-              {profileEmail && (
-                <p className="text-xs text-muted-foreground">{profileEmail}</p>
-              )}
-            </div>
-          </div>
+        <DropdownMenuContent align="end" className="w-56">
+          <DropdownMenuLabel>Minha Conta</DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => navigate("/profile")}>
-            <User className="mr-2 h-4 w-4" />
-            Perfil
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => navigate("/profile/edit")}>
-            <Settings className="mr-2 h-4 w-4" />
-            Configurações
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={handleSignOut}>
+          <Link to="/profile">
+            <DropdownMenuItem>
+              <User className="mr-2 h-4 w-4" />
+              <span>Perfil</span>
+            </DropdownMenuItem>
+          </Link>
+          <DropdownMenuItem 
+            disabled={isLoggingOut} 
+            onSelect={handleSignOut}
+          >
             <LogOut className="mr-2 h-4 w-4" />
-            Sair
+            <span>{isLoggingOut ? "Saindo..." : "Sair"}</span>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
-    );
-  }
-
-  // Versão completa quando a sidebar está aberta
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          className="w-full justify-start px-2"
-        >
-          <div className="flex items-center gap-2">
-            <Avatar className="h-8 w-8">
-              <AvatarImage src={profileAvatar} alt={profileName || "Avatar do usuário"} />
-              <AvatarFallback>{getInitials(profileName)}</AvatarFallback>
-            </Avatar>
-            <div className="flex flex-col items-start text-left">
-              <p className="text-sm font-medium line-clamp-1">
-                {profileName || "Usuário"}
-              </p>
-              {profileEmail && (
-                <p className="text-xs text-muted-foreground line-clamp-1">
-                  {profileEmail}
-                </p>
-              )}
-            </div>
-          </div>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="w-[240px]">
-        <DropdownMenuItem onClick={() => navigate("/profile")}>
-          <User className="mr-2 h-4 w-4" />
-          Perfil
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => navigate("/profile/edit")}>
-          <Settings className="mr-2 h-4 w-4" />
-          Configurações
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={handleSignOut}>
-          <LogOut className="mr-2 h-4 w-4" />
-          Sair
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    </div>
   );
-}
+};

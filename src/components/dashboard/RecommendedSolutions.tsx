@@ -16,7 +16,7 @@ export const RecommendedSolutions: FC<RecommendedSolutionsProps> = ({
     <div className="mb-8">
       <h2 className="text-2xl font-bold mb-4">Soluções recomendadas</h2>
       <p className="text-muted-foreground mb-4">
-        Começe a implementar estas soluções para melhorar seu negócio
+        Soluções personalizadas para o seu negócio
       </p>
       <SolutionsGrid solutions={solutions} onSolutionClick={onSolutionClick} />
     </div>

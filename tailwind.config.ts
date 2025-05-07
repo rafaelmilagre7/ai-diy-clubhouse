@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -103,9 +104,9 @@ export default {
 				sm: 'calc(var(--radius) - 4px)'
 			},
 			fontFamily: {
-                // Alterando de Inter para Nunito como fonte principal
-                sans: ['Nunito', 'system-ui', 'sans-serif'],
-                heading: ['Nunito', 'system-ui', 'sans-serif'],
+                // Adicionar Inter como fonte principal e Outfit para títulos
+                sans: ['Inter', 'system-ui', 'sans-serif'],
+                heading: ['Outfit', 'system-ui', 'sans-serif'],
             },
 			keyframes: {
 				'accordion-down': {
@@ -188,9 +189,6 @@ export default {
                 'gradient-card': 'linear-gradient(135deg, #ffffff 0%, #f5f5f5 100%)',
                 'dot-pattern': 'radial-gradient(circle, #0ABAB5 1px, transparent 1px)',
             },
-            backgroundSize: {
-                'size-200': '200% 200%',
-            }
 		}
 	},
 	plugins: [require("tailwindcss-animate")],

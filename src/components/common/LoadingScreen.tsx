@@ -1,17 +1,14 @@
 
 import { Loader2 } from "lucide-react";
 
-interface LoadingScreenProps {
-  message?: string;
-}
-
-const LoadingScreen = ({ message = "Carregando..." }: LoadingScreenProps) => {
+const LoadingScreen = ({ message = "Carregando" }: { message?: string }) => {
   return (
-    <div className="flex min-h-screen w-full flex-col items-center justify-center bg-background">
-      <div className="flex flex-col items-center justify-center space-y-4 text-center">
-        <Loader2 className="h-12 w-12 animate-spin text-primary" />
-        <p className="text-lg font-medium text-muted-foreground">{message}</p>
-      </div>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-background">
+      <Loader2 className="h-12 w-12 text-viverblue animate-spin mb-4" />
+      <h2 className="text-xl font-semibold text-foreground mb-2">{message}</h2>
+      <p className="text-sm text-muted-foreground">
+        Estamos preparando sua experiência personalizada do VIVER DE IA Club...
+      </p>
     </div>
   );
 };

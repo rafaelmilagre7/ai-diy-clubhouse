@@ -1,168 +1,122 @@
 
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { UseFormReturn } from "react-hook-form";
-import { AulaFormValues } from "@/components/formacao/aulas/types";
+import { AulaFormValues } from "../AulaStepWizard";
 import { Button } from "@/components/ui/button";
 import {
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
-  FormMessage,
+  FormDescription,
 } from "@/components/ui/form";
 import { Switch } from "@/components/ui/switch";
-import { Separator } from "@/components/ui/separator";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle, CheckCircle, Loader2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent } from "@/components/ui/card";
 
 interface EtapaPublicacaoProps {
   form: UseFormReturn<AulaFormValues>;
-  onComplete: (values: AulaFormValues) => void;
+  onNext: () => void;
   onPrevious: () => void;
-  isSaving: boolean;
-  standalone?: boolean;
 }
 
 const EtapaPublicacao: React.FC<EtapaPublicacaoProps> = ({
   form,
-  onComplete,
+  onNext,
   onPrevious,
-  isSaving,
-  standalone = false,
 }) => {
-  const [error, setError] = useState<string | null>(null);
-  
-  // Definir a aula como publicada por padrão
-  useEffect(() => {
-    if (!form.getValues('is_published')) {
-      form.setValue('is_published', true);
-    }
-  }, [form]);
-
-  // Validação antes de salvar
-  const hasValidationErrors = () => {
-    // Verificar se tem título
-    if (!form.getValues('title') || form.getValues('title').trim() === '') {
-      setError("A aula precisa ter um título.");
-      return true;
-    }
-
-    // Verificar se tem pelo menos um vídeo
-    if (!form.getValues('videos') || form.getValues('videos').length === 0) {
-      setError("A aula precisa ter pelo menos um vídeo.");
-      return true;
-    }
-
-    // Reset de erro
-    setError(null);
-    return false;
+  const handleContinue = async () => {
+    // Não há campos obrigatórios nesta etapa
+    onNext();
   };
 
-  const handleComplete = async () => {
-    // Verificar validação
-    if (hasValidationErrors()) {
-      return;
-    }
-    
-    // Forçar a aula para ser publicada
-    form.setValue('is_published', true);
-    form.setValue('published', true);
-    
-    // Continuar com salvamento - passar os valores do formulário para a função onComplete
-    onComplete(form.getValues());
-  };
+  const aiAssistantEnabled = form.watch("aiAssistantEnabled");
+  const modulo = form.watch("modulo_id");
+  const coverImage = form.watch("coverImageUrl");
 
   return (
-    <div className="space-y-6 font-sans">
-      <h3 className="text-lg font-semibold">Revisão e Publicação</h3>
+    <div className="space-y-6 py-4">
+      <h3 className="text-base font-medium">Configurações de Publicação</h3>
       
-      {error && (
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Erro</AlertTitle>
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
-      
-      {/* Resumo da aula */}
-      <div className="space-y-6 py-4 border-b">
-        <h4 className="font-medium">Resumo da Aula</h4>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <p className="text-sm font-medium text-muted-foreground">Título da aula</p>
-            <p className="text-sm">{form.getValues('title') || "Não definido"}</p>
-          </div>
-          <div>
-            <p className="text-sm font-medium text-muted-foreground">Vídeos</p>
-            <p className="text-sm">{form.getValues('videos')?.length || 0} vídeo(s)</p>
-          </div>
-          <div>
-            <p className="text-sm font-medium text-muted-foreground">Materiais complementares</p>
-            <p className="text-sm">{form.getValues('materials')?.length || 0} material(is)</p>
-          </div>
-        </div>
-      </div>
-      
-      <Separator />
-
-      {/* Opções de publicação */}
-      <div className="space-y-4">
-        <h4 className="font-medium">Opções de Publicação</h4>
-        
-        <Alert className="bg-green-50 border-green-200">
-          <CheckCircle className="h-4 w-4 text-green-500" />
-          <AlertTitle className="text-green-700">Aula será publicada automaticamente</AlertTitle>
-          <AlertDescription className="text-green-600">
-            Ao clicar em "Salvar Aula", ela será publicada e disponibilizada para os usuários.
-          </AlertDescription>
-        </Alert>
-        
-        <FormField
-          control={form.control}
-          name="is_featured"
-          render={({ field }) => (
-            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
-              <div className="space-y-0.5">
-                <FormLabel>Destacar aula</FormLabel>
-                <FormDescription>
-                  Quando ativado, a aula aparecerá como destaque no módulo.
-                </FormDescription>
-              </div>
-              <FormControl>
-                <Switch
-                  checked={field.value}
-                  onCheckedChange={field.onChange}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      </div>
-
-      {!standalone && (
-        <div className="flex justify-between pt-4 border-t">
-          <Button type="button" variant="outline" onClick={onPrevious}>
-            Voltar
-          </Button>
-          <Button 
-            type="button" 
-            onClick={handleComplete}
-            disabled={isSaving}
-            className="bg-green-600 hover:bg-green-700"
-          >
-            {isSaving ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Salvando...
-              </>
-            ) : (
-              "Salvar e Publicar Aula"
+      <Card>
+        <CardContent className="p-4 space-y-4">
+          <FormField
+            control={form.control}
+            name="aiAssistantEnabled"
+            render={({ field }) => (
+              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                <div className="space-y-0.5">
+                  <FormLabel className="text-base">
+                    Assistente de IA
+                  </FormLabel>
+                  <FormDescription>
+                    Ative para incluir assistência de IA para os alunos nesta aula
+                  </FormDescription>
+                </div>
+                <FormControl>
+                  <Switch
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                </FormControl>
+              </FormItem>
             )}
-          </Button>
-        </div>
-      )}
+          />
+
+          {aiAssistantEnabled && (
+            <FormField
+              control={form.control}
+              name="aiAssistantPrompt"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Prompt do Assistente</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Instruções para o assistente de IA"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    Instruções especiais para o assistente de IA desta aula
+                  </FormDescription>
+                </FormItem>
+              )}
+            />
+          )}
+
+          <FormField
+            control={form.control}
+            name="published"
+            render={({ field }) => (
+              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                <div className="space-y-0.5">
+                  <FormLabel className="text-base">
+                    Publicar Aula
+                  </FormLabel>
+                  <FormDescription>
+                    Quando ativado, a aula ficará visível para os alunos
+                  </FormDescription>
+                </div>
+                <FormControl>
+                  <Switch
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+        </CardContent>
+      </Card>
+
+      <div className="flex justify-between pt-4 border-t">
+        <Button type="button" variant="outline" onClick={onPrevious}>
+          Voltar
+        </Button>
+        <Button type="button" onClick={handleContinue}>
+          Continuar
+        </Button>
+      </div>
     </div>
   );
 };

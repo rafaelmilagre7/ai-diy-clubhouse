@@ -1,64 +1,86 @@
 
-import { useState } from "react";
-import { PandaVideoPlayerEnhanced } from "./PandaVideoPlayerEnhanced";
-import { Loader2 } from "lucide-react";
-import { toast } from "sonner";
+import { useState, useEffect } from 'react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface PandaVideoPlayerProps {
   videoId: string;
   title?: string;
-  className?: string;
-  onProgress?: (progress: number) => void;
-  onEnded?: () => void;
-  startTime?: number;
   autoplay?: boolean;
+  onProgress?: (progress: number) => void;
 }
 
-export const PandaVideoPlayer = ({ 
-  videoId, 
-  title = "Vídeo",
-  className = "",
-  onProgress,
-  onEnded,
-  startTime = 0,
-  autoplay = false
-}: PandaVideoPlayerProps) => {
+export const PandaVideoPlayer: React.FC<PandaVideoPlayerProps> = ({
+  videoId,
+  title,
+  autoplay = false,
+  onProgress
+}) => {
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   
-  const handleError = (errorMessage: string) => {
-    setError(errorMessage);
-    toast.error("Erro ao carregar vídeo", {
-      description: errorMessage
-    });
-    console.error("Erro no player Panda Video:", errorMessage);
-  };
+  useEffect(() => {
+    // Simular carregamento para evitar flash de conteúdo
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 500);
+    
+    return () => clearTimeout(timer);
+  }, [videoId]);
   
+  // Configurar comunicação com o player do Panda Video
+  useEffect(() => {
+    if (!onProgress) return;
+    
+    // Função para receber mensagens do iframe
+    const handleMessage = (event: MessageEvent) => {
+      try {
+        // Verificar origem da mensagem (domínio pandavideo.com.br)
+        if (!event.origin.includes('pandavideo.com.br')) return;
+        
+        // Tentar processar a mensagem como JSON
+        const data = typeof event.data === 'string' 
+          ? JSON.parse(event.data) 
+          : event.data;
+        
+        // Se for uma atualização de progresso do vídeo
+        if (data.event === 'timeupdate' && data.value && data.value.percent !== undefined) {
+          onProgress(data.value.percent);
+        }
+      } catch (error) {
+        console.log('Erro ao processar mensagem do player:', error);
+      }
+    };
+    
+    // Adicionar listener para mensagens do iframe
+    window.addEventListener('message', handleMessage);
+    
+    // Remover listener ao desmontar componente
+    return () => {
+      window.removeEventListener('message', handleMessage);
+    };
+  }, [videoId, onProgress]);
+
   return (
-    <div className="relative">
+    <div className="relative w-full">
       {loading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/20 z-10 rounded-lg">
-          <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        <div className="absolute inset-0 z-10">
+          <Skeleton className="w-full h-full" />
         </div>
       )}
       
-      <PandaVideoPlayerEnhanced
-        videoId={videoId}
-        title={title}
-        className={className}
-        onProgress={onProgress}
-        onEnded={onEnded}
-        startTime={startTime}
-        autoplay={autoplay}
-        onReady={() => setLoading(false)}
-        onError={handleError}
-      />
-      
-      {error && !loading && (
-        <div className="mt-2 p-3 bg-destructive/10 border border-destructive/30 rounded text-sm text-destructive">
-          {error}
-        </div>
-      )}
+      <div className="aspect-video overflow-hidden rounded-md">
+        <iframe
+          src={`https://player.pandavideo.com.br/embed/?v=${videoId}${autoplay ? '&autoplay=1' : ''}`}
+          title={title || "Vídeo"}
+          className="w-full h-full"
+          allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+          style={{ 
+            border: 'none',
+            opacity: loading ? 0 : 1,
+            transition: 'opacity 0.3s ease'
+          }}
+        />
+      </div>
     </div>
   );
 };

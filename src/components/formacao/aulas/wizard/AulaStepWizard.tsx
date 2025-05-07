@@ -1,123 +1,199 @@
 
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Form } from "@/components/ui/form";
-import { aulaFormSchema } from "./schemas/aulaFormSchema";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useNavigate } from "react-router-dom";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import EtapaInfoBasica from "./etapas/EtapaInfoBasica";
+import EtapaConteudo from "./etapas/EtapaConteudo";
 import EtapaVideos from "./etapas/EtapaVideos";
+import EtapaAtividades from "./etapas/EtapaAtividades";
 import EtapaMateriais from "./etapas/EtapaMateriais";
-import EtapaPublicacao from "./etapas/EtapaPublicacao";
-import { toast } from "sonner";
+import EtapaRevisao from "./etapas/EtapaRevisao";
 import { useCreateAula } from "@/hooks/formacao/useCreateAula";
-import { AulaFormValues } from "@/components/formacao/aulas/types";
 
-interface AulaStepWizardProps {
-  onComplete?: (data: AulaFormValues) => void;
-  onCancel?: () => void;
-  defaultValues?: Partial<AulaFormValues>;
+export type DifficultyLevel = "iniciante" | "intermediario" | "avancado";
+
+export interface AulaVideo {
+  id?: string;
+  title?: string;
+  description?: string;
+  url?: string;
+  type?: string;
+  fileName?: string;
+  filePath?: string;
+  fileSize?: number;
+  duration_seconds?: number;
+  thumbnail_url?: string;
+  video_id?: string;
+  origin?: "youtube" | "panda_upload" | "panda_select";
 }
 
-const defaultFormValues: AulaFormValues = {
-  title: "",
-  description: "",
-  difficulty: "medium",
-  videos: [],
-  materials: [],
-  is_published: false,
-  is_featured: false
-};
+export interface AulaFormValues {
+  title: string;
+  description: string;
+  content?: string;
+  videos?: AulaVideo[];
+  activities?: any[];
+  resources?: any[];
+  order_index?: number;
+  formacao_id?: string;
+  modulo_id?: string;
+  difficultyLevel?: DifficultyLevel;
+  coverImageUrl?: string;
+  aiAssistantEnabled?: boolean;
+  aiAssistantPrompt?: string;
+  published?: boolean;
+}
+
+interface AulaStepWizardProps {
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  moduleId: string;
+  onClose?: () => void;
+  onSuccess?: () => void;
+}
 
 const AulaStepWizard: React.FC<AulaStepWizardProps> = ({ 
-  onComplete,
-  onCancel,
-  defaultValues
+  open, 
+  onOpenChange, 
+  moduleId, 
+  onClose,
+  onSuccess
 }) => {
-  const [currentStep, setCurrentStep] = useState(0);
-  const { mutate, isLoading } = useCreateAula();
+  const [activeTab, setActiveTab] = useState("informacoes");
+  const [isSaving, setIsSaving] = useState(false);
+  const navigate = useNavigate();
+  const { mutate: createAula, isLoading: isAulaCreating } = useCreateAula();
 
   const form = useForm<AulaFormValues>({
-    resolver: zodResolver(aulaFormSchema),
-    defaultValues: { ...defaultFormValues, ...defaultValues },
-    mode: "onChange"
+    defaultValues: {
+      title: "",
+      description: "",
+      content: "",
+      videos: [],
+      activities: [],
+      resources: [],
+      order_index: 0,
+      formacao_id: "",
+      modulo_id: moduleId,
+      difficultyLevel: "iniciante",
+      coverImageUrl: "",
+      aiAssistantEnabled: false,
+      aiAssistantPrompt: "",
+      published: false,
+    },
   });
 
-  const handleNext = () => {
-    if (currentStep < 3) {
-      setCurrentStep(currentStep + 1);
-    }
+  const handleNext = (tab: string) => {
+    setActiveTab(tab);
   };
 
-  const handlePrevious = () => {
-    if (currentStep > 0) {
-      setCurrentStep(currentStep - 1);
-    } else if (onCancel) {
-      onCancel();
-    }
+  const handlePrevious = (tab: string) => {
+    setActiveTab(tab);
   };
 
-  const handleComplete = async (values: AulaFormValues) => {
+  const handleSubmit = async (data: AulaFormValues) => {
+    setIsSaving(true);
     try {
-      toast.message("Processando...", {
-        description: "Criando nova aula com todos os recursos."
-      });
-      
-      // Simular chamada de API através do hook useCreateAula
-      await mutate(values, {
-        onSuccess: (data) => {
-          toast.success("Aula criada com sucesso!");
-          if (onComplete) onComplete(data);
+      // Remover campos que não existem no backend
+      const submissionData = {
+        ...data,
+        modulo_id: moduleId
+      };
+
+      createAula(submissionData, {
+        onSuccess: () => {
+          console.log("Aula criada com sucesso!");
+          setIsSaving(false);
+          if (onSuccess) onSuccess();
+          if (onClose) onClose();
+          navigate("/formacao/aulas");
         },
-        onError: (error) => {
+        onError: (error: any) => {
           console.error("Erro ao criar aula:", error);
-          toast.error("Erro ao criar aula", {
-            description: "Por favor, tente novamente."
-          });
-        }
+          setIsSaving(false);
+        },
       });
     } catch (error) {
-      console.error("Erro no processo de criação:", error);
-      toast.error("Erro ao processar", {
-        description: "Ocorreu um erro interno. Tente novamente."
-      });
+      console.error("Erro ao criar aula:", error);
+      setIsSaving(false);
     }
   };
 
-  const steps = [
-    <EtapaInfoBasica 
-      key="info" 
-      form={form} 
-      onNext={handleNext} 
-    />,
-    <EtapaVideos 
-      key="videos" 
-      form={form} 
-      onNext={handleNext} 
-      onPrevious={handlePrevious}
-      isSaving={isLoading}
-    />,
-    <EtapaMateriais 
-      key="materiais" 
-      form={form} 
-      onNext={handleNext} 
-      onPrevious={handlePrevious}
-    />,
-    <EtapaPublicacao 
-      key="publicacao" 
-      form={form} 
-      onPrevious={handlePrevious} 
-      onComplete={handleComplete}
-      isSaving={isLoading}
-    />
-  ];
+  const content = (
+    <Card className="w-full">
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="p-4">
+          <TabsTrigger value="informacoes">Informações</TabsTrigger>
+          <TabsTrigger value="conteudo">Conteúdo</TabsTrigger>
+          <TabsTrigger value="videos">Vídeos</TabsTrigger>
+          <TabsTrigger value="atividades">Atividades</TabsTrigger>
+          <TabsTrigger value="materiais">Materiais</TabsTrigger>
+          <TabsTrigger value="revisao">Revisão</TabsTrigger>
+        </TabsList>
+      </Tabs>
 
-  return (
-    <Form {...form}>
-      <form className="space-y-6">
-        {steps[currentStep]}
-      </form>
-    </Form>
+      <Card className="p-4">
+        {activeTab === "informacoes" && (
+          <EtapaInfoBasica form={form} onNext={() => handleNext("conteudo")} />
+        )}
+        {activeTab === "conteudo" && (
+          <EtapaConteudo
+            form={form}
+            onNext={() => handleNext("videos")}
+            onPrevious={() => handlePrevious("informacoes")}
+          />
+        )}
+        {activeTab === "videos" && (
+          <EtapaVideos
+            form={form}
+            onNext={() => handleNext("atividades")}
+            onPrevious={() => handlePrevious("conteudo")}
+            isSaving={isSaving}
+          />
+        )}
+        {activeTab === "atividades" && (
+          <EtapaAtividades
+            form={form}
+            onNext={() => handleNext("materiais")}
+            onPrevious={() => handlePrevious("videos")}
+          />
+        )}
+        {activeTab === "materiais" && (
+          <EtapaMateriais
+            form={form}
+            onNext={() => handleNext("revisao")}
+            onPrevious={() => handlePrevious("atividades")}
+          />
+        )}
+        {activeTab === "revisao" && (
+          <EtapaRevisao
+            form={form}
+            onPrevious={() => handlePrevious("materiais")}
+            onSubmit={form.handleSubmit(handleSubmit)}
+            isSaving={isSaving || isAulaCreating}
+          />
+        )}
+      </Card>
+    </Card>
   );
+
+  // Se o componente for usado dentro de um modal
+  if (open !== undefined) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          {content}
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
+  // Se o componente for usado em uma página
+  return content;
 };
 
 export default AulaStepWizard;

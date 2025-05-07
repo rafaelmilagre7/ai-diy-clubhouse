@@ -1,31 +1,39 @@
 
-import { BrowserRouter as Router } from "react-router-dom";
-import { AuthProvider } from "./contexts/auth";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Toaster } from "sonner";
-import AppRoutes from "./routes";
+import React from 'react';
+import { BrowserRouter } from 'react-router-dom';
+import { Toaster } from './components/ui/toaster';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+import { LoggingProvider } from './hooks/useLogging';
+import { AuthProvider } from './contexts/auth';
+import AppRoutes from './components/routing/AppRoutes';
 
-// Create a client
+// Criar uma instância do QueryClient fora do componente para evitar recriação a cada render
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      refetchOnWindowFocus: false,
-      retry: 0,
+      staleTime: 1000 * 60 * 5, // 5 minutos
+      retry: 1,
     },
   },
 });
 
-function App() {
+const App = () => {
+  console.log("Renderizando App.tsx");
+  
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <Router>
-          <AppRoutes />
-          <Toaster position="top-right" richColors />
-        </Router>
-      </AuthProvider>
+      <BrowserRouter>
+        <LoggingProvider>
+          <AuthProvider>
+            <AppRoutes />
+            <Toaster />
+            <ReactQueryDevtools initialIsOpen={false} />
+          </AuthProvider>
+        </LoggingProvider>
+      </BrowserRouter>
     </QueryClientProvider>
   );
-}
+};
 
 export default App;

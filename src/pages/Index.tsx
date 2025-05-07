@@ -8,7 +8,7 @@ const Index = () => {
   const redirectTimerRef = useRef<number | null>(null);
   const [isRedirecting, setIsRedirecting] = useState(false);
 
-  // Redirecionar automaticamente para a página de login após um breve delay
+  // Redirecionar automaticamente para a página de autenticação após um breve delay
   useEffect(() => {
     // Verificar se já há uma sessão no localStorage para redirecionamento mais rápido
     const hasSession = !!localStorage.getItem('supabase.auth.token');
@@ -19,7 +19,7 @@ const Index = () => {
     setIsRedirecting(true);
     
     redirectTimerRef.current = window.setTimeout(() => {
-      navigate('/login', { replace: true });
+      navigate('/auth', { replace: true });
     }, redirectDelay);
 
     return () => {
@@ -59,7 +59,7 @@ const Index = () => {
         <div className="text-center mt-4">
           <p>
             Se você não for redirecionado automaticamente, clique{" "}
-            <Link to="/login" className="text-viverblue hover:underline">
+            <Link to="/auth" className="text-viverblue hover:underline">
               aqui
             </Link>
             .

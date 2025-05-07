@@ -4,7 +4,7 @@ import { LearningLessonVideo } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Trash } from "lucide-react";
-import { extractYouTubeVideoId, formatVideoDuration } from "@/lib/supabase/videoUtils";
+import { getYoutubeVideoId, formatVideoDuration } from "@/lib/supabase/videoUtils";
 
 interface VideoDisplayProps {
   video: LearningLessonVideo;
@@ -25,7 +25,7 @@ const VideoDisplay: React.FC<VideoDisplayProps> = ({
 }) => {
   // Extrair ID do YouTube, se for um vídeo do YouTube
   const youtubeId = video.video_type === "youtube" || (!video.video_type && video.url?.includes("youtu"))
-    ? extractYouTubeVideoId(video.url)
+    ? getYoutubeVideoId(video.url)
     : null;
   
   const thumbnailUrl = video.thumbnail_url || (youtubeId 

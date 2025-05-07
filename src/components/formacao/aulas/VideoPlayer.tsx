@@ -1,11 +1,10 @@
-
 import { useState, useEffect, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LearningLessonVideo } from "@/lib/supabase";
 import { YoutubeEmbed } from "@/components/common/YoutubeEmbed";
 import { getYoutubeVideoId } from "@/lib/supabase";
-import { PandaVideoPlayerEnhanced } from "@/components/formacao/comum/PandaVideoPlayerEnhanced";
+import { PandaVideoPlayer } from "@/components/formacao/comum/PandaVideoPlayer";
 
 interface VideoPlayerProps {
   video: LearningLessonVideo | null;
@@ -105,28 +104,21 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
     // Vídeo do Panda
     if (video.video_type === 'panda' && video.url) {
       // Extrair o ID do vídeo do Panda da URL ou usar o campo video_file_path como fallback
-      const pandaVideoId = video.video_file_path || 
-                          (video.url.includes('/embed/') ? 
-                            video.url.split('/embed/')[1]?.split('?')[0] : 
-                            video.url.split('/').pop());
+      const pandaVideoId = video.video_file_path || video.url.split('/').pop();
       
       if (pandaVideoId) {
         return (
-          <PandaVideoPlayerEnhanced 
+          <PandaVideoPlayer 
             videoId={pandaVideoId} 
             title={video.title}
             onProgress={(progress) => {
-              if (onTimeUpdate && video.duration_seconds) {
+              if (onTimeUpdate) {
                 // Simular onTimeUpdate para manter compatibilidade
                 const duration = video.duration_seconds || 0;
                 const currentTime = (progress / 100) * duration;
                 onTimeUpdate(currentTime, duration);
               }
             }}
-            onEnded={() => {
-              console.log("Vídeo finalizado:", video.title);
-            }}
-            startTime={startTime}
           />
         );
       }

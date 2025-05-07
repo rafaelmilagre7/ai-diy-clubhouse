@@ -1,11 +1,10 @@
 
-import React, { useState } from "react";
+import React from "react";
 import { UseFormReturn } from "react-hook-form";
-import { AulaFormValues } from "@/components/formacao/aulas/types";
+import { AulaFormValues } from "../AulaStepWizard";
 import { Button } from "@/components/ui/button";
 import {
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -13,39 +12,26 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface EtapaInfoBasicaProps {
   form: UseFormReturn<AulaFormValues>;
   onNext: () => void;
-  standalone?: boolean;
 }
 
 const EtapaInfoBasica: React.FC<EtapaInfoBasicaProps> = ({
   form,
   onNext,
-  standalone = false,
 }) => {
-  const [validationError, setValidationError] = useState<string | null>(null);
-
   const handleContinue = async () => {
-    const isValid = await form.trigger(['title', 'description']);
-    
-    if (isValid) {
-      setValidationError(null);
+    const result = await form.trigger(["title", "description", "difficultyLevel"]);
+    if (result) {
       onNext();
-    } else {
-      setValidationError("Por favor, preencha todos os campos obrigatórios");
     }
   };
 
   return (
-    <div className="space-y-6">
-      {validationError && (
-        <div className="bg-destructive/20 text-destructive p-3 rounded-md text-sm">
-          {validationError}
-        </div>
-      )}
-
+    <div className="space-y-6 py-4">
       <FormField
         control={form.control}
         name="title"
@@ -53,14 +39,8 @@ const EtapaInfoBasica: React.FC<EtapaInfoBasicaProps> = ({
           <FormItem>
             <FormLabel>Título da Aula</FormLabel>
             <FormControl>
-              <Input
-                placeholder="Digite o título da aula"
-                {...field}
-              />
+              <Input placeholder="Digite o título da aula" {...field} />
             </FormControl>
-            <FormDescription>
-              Um título claro e descritivo sobre o conteúdo da aula.
-            </FormDescription>
             <FormMessage />
           </FormItem>
         )}
@@ -73,49 +53,45 @@ const EtapaInfoBasica: React.FC<EtapaInfoBasicaProps> = ({
           <FormItem>
             <FormLabel>Descrição</FormLabel>
             <FormControl>
-              <Textarea
-                placeholder="Descreva brevemente o conteúdo da aula"
-                className="resize-none h-20"
-                {...field}
+              <Textarea 
+                placeholder="Digite uma breve descrição da aula" 
+                className="resize-none h-20" 
+                {...field} 
               />
             </FormControl>
-            <FormDescription>
-              Uma descrição breve sobre o que será abordado na aula.
-            </FormDescription>
             <FormMessage />
           </FormItem>
         )}
       />
 
-      {/* Campo de dificuldade */}
       <FormField
         control={form.control}
-        name="difficulty"
+        name="difficultyLevel"
         render={({ field }) => (
           <FormItem>
             <FormLabel>Nível de Dificuldade</FormLabel>
-            <FormControl>
-              <select
-                className="w-full border border-input bg-background px-3 py-2 rounded-md"
-                {...field}
-              >
-                <option value="basic">Básico</option>
-                <option value="medium">Intermediário</option>
-                <option value="advanced">Avançado</option>
-              </select>
-            </FormControl>
+            <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <FormControl>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o nível de dificuldade" />
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent>
+                <SelectItem value="iniciante">Iniciante</SelectItem>
+                <SelectItem value="intermediario">Intermediário</SelectItem>
+                <SelectItem value="avancado">Avançado</SelectItem>
+              </SelectContent>
+            </Select>
             <FormMessage />
           </FormItem>
         )}
       />
 
-      {!standalone && (
-        <div className="flex justify-end pt-4">
-          <Button type="button" onClick={handleContinue}>
-            Continuar
-          </Button>
-        </div>
-      )}
+      <div className="flex justify-end pt-4 border-t">
+        <Button type="button" onClick={handleContinue}>
+          Continuar
+        </Button>
+      </div>
     </div>
   );
 };

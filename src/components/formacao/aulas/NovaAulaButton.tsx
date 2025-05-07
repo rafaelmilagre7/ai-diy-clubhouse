@@ -1,8 +1,8 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import AulaStepWizard from "./wizard/AulaStepWizard";
 
 interface NovaAulaButtonProps {
   moduleId: string;
@@ -21,22 +21,37 @@ export const NovaAulaButton: React.FC<NovaAulaButtonProps> = ({
   className = "",
   onSuccess
 }) => {
-  const navigate = useNavigate();
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const handleClick = () => {
-    navigate(`/formacao/aulas/nova?moduleId=${moduleId}`);
+  const handleOpenModal = () => {
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    if (onSuccess) onSuccess();
   };
 
   return (
-    <Button 
-      onClick={handleClick}
-      variant={variant}
-      size={size}
-      className={className}
-    >
-      <Plus className="h-4 w-4 mr-2" />
-      {buttonText}
-    </Button>
+    <>
+      <Button 
+        onClick={handleOpenModal}
+        variant={variant}
+        size={size}
+        className={className}
+      >
+        <Plus className="h-4 w-4 mr-2" />
+        {buttonText}
+      </Button>
+
+      <AulaStepWizard 
+        open={isModalOpen} 
+        onOpenChange={setIsModalOpen}
+        moduleId={moduleId}
+        onClose={handleCloseModal}
+        onSuccess={onSuccess}
+      />
+    </>
   );
 };
 
