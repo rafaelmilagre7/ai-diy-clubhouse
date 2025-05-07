@@ -19,6 +19,8 @@ interface PandaVideoPlayerEnhancedProps {
   className?: string;
   onProgress?: (progress: number) => void;
   onEnded?: () => void;
+  onReady?: () => void;
+  onError?: (message: string) => void;
   startTime?: number;
   autoplay?: boolean;
 }
@@ -29,6 +31,8 @@ export const PandaVideoPlayerEnhanced = ({
   className = "",
   onProgress,
   onEnded,
+  onReady,
+  onError,
   startTime = 0,
   autoplay = false
 }: PandaVideoPlayerEnhancedProps) => {
@@ -77,6 +81,9 @@ export const PandaVideoPlayerEnhanced = ({
                 setPlayerReady(true);
                 setLoading(false);
                 
+                // Notificar que o player está pronto
+                if (onReady) onReady();
+                
                 // Configurar tempo inicial se fornecido
                 if (startTime > 0) {
                   playerRef.current.setCurrentTime(startTime);
@@ -88,6 +95,15 @@ export const PandaVideoPlayerEnhanced = ({
                   setIsPlaying(true);
                 }
               },
+              onError: (err: any) => {
+                console.error("Erro no player:", err);
+                const errorMessage = err?.message || "Não foi possível carregar o vídeo";
+                setPlayerError(errorMessage);
+                setLoading(false);
+                
+                // Notificar sobre o erro
+                if (onError) onError(errorMessage);
+              }
             });
 
             // Registrar evento para monitorar o progresso
@@ -128,14 +144,22 @@ export const PandaVideoPlayerEnhanced = ({
             });
           } catch (err) {
             console.error("Erro ao inicializar player:", err);
-            setPlayerError("Não foi possível inicializar o player. Verifique o ID do vídeo.");
+            const errorMessage = err instanceof Error ? err.message : "Erro desconhecido ao inicializar o player";
+            setPlayerError(errorMessage);
             setLoading(false);
+            
+            // Notificar sobre o erro
+            if (onError) onError(errorMessage);
           }
         });
       } catch (error) {
         console.error("Erro ao configurar player:", error);
-        setPlayerError("Ocorreu um erro ao configurar o player.");
+        const errorMessage = error instanceof Error ? error.message : "Erro desconhecido ao configurar o player";
+        setPlayerError(errorMessage);
         setLoading(false);
+        
+        // Notificar sobre o erro
+        if (onError) onError(errorMessage);
       }
     };
 
@@ -153,7 +177,7 @@ export const PandaVideoPlayerEnhanced = ({
         playerRef.current = null;
       }
     };
-  }, [videoId, autoplay, onEnded, onProgress, startTime]);
+  }, [videoId, autoplay, onEnded, onProgress, startTime, onReady, onError]);
   
   // Funções para controlar o player
   const handlePlayPause = useCallback(() => {
