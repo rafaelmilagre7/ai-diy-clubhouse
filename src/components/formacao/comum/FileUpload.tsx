@@ -1,17 +1,21 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { uploadFileWithFallback } from "@/lib/supabase";
 import { Upload, Loader2, File, X, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { MAX_UPLOAD_SIZES } from "@/lib/supabase/config";
 
 interface FileUploadProps {
   value: string;
-  onChange: (value: string, fileType: string | undefined, fileSize: number | undefined) => void;
-  bucketName: string;
+  onChange: (
+    value: string, 
+    fileType?: string, 
+    fileName?: string, 
+    fileSize?: number
+  ) => void;
+  bucketName?: string;
   folderPath?: string;
   acceptedFileTypes?: string;
   disabled?: boolean;
@@ -20,7 +24,7 @@ interface FileUploadProps {
 export const FileUpload = ({ 
   value, 
   onChange, 
-  bucketName, 
+  bucketName = "learning_resources", 
   folderPath = "",
   acceptedFileTypes = "*/*",
   disabled = false
@@ -85,7 +89,6 @@ export const FileUpload = ({
     }
   }, [value]);
 
-  
   const uploadFile = async (file: File) => {
     try {
       setUploading(true);
@@ -111,40 +114,27 @@ export const FileUpload = ({
       console.log(`Iniciando upload para bucket: ${bucketName}, pasta: ${folderPath}`);
       
       // Gerar um nome único para o arquivo
-      const fileExt = file.name.split('.').pop();
       const filePath = `${folderPath}/${Date.now()}-${file.name}`;
       
-      // Iniciar XMLHttpRequest para rastrear progresso manualmente
+      // Upload do arquivo - corrigido para usar a API adequada sem onUploadProgress
+      const uploadOptions = {
+        cacheControl: '3600',
+        upsert: true
+      };
+      
+      // Use um evento personalizado para rastrear o progresso do upload
       const xhr = new XMLHttpRequest();
-      const uploadPromise = new Promise<{data?: any, error?: any}>((resolve, reject) => {
-        xhr.upload.addEventListener('progress', (event) => {
-          if (event.lengthComputable) {
-            const percentage = Math.round((event.loaded / event.total) * 100);
-            setUploadProgress(percentage);
-          }
-        });
-        
-        // Realizar upload via Supabase
-        const uploadTask = async () => {
-          try {
-            const result = await supabase.storage
-              .from(bucketName)
-              .upload(filePath, file, {
-                cacheControl: '3600',
-                upsert: true
-              });
-            
-            resolve(result);
-          } catch (error) {
-            reject(error);
-          }
-        };
-        
-        uploadTask();
+      xhr.upload.addEventListener('progress', (event) => {
+        if (event.lengthComputable) {
+          const percentage = Math.round((event.loaded / event.total) * 100);
+          setUploadProgress(percentage);
+        }
       });
       
-      // Aguardar resultado do upload
-      const { data, error } = await uploadPromise;
+      // Inicia o upload
+      const { data, error } = await supabase.storage
+        .from(bucketName)
+        .upload(filePath, file, uploadOptions);
       
       if (error) {
         throw error;
@@ -162,7 +152,7 @@ export const FileUpload = ({
       }
       
       setFileName(file.name);
-      onChange(publicUrl, file.type, file.size);
+      onChange(publicUrl, file.type, file.name, file.size);
       
       toast.success("Upload realizado com sucesso!");
       
@@ -185,7 +175,7 @@ export const FileUpload = ({
   };
 
   const handleRemoveFile = () => {
-    onChange("", undefined, undefined);
+    onChange("", undefined, undefined, undefined);
     setFileName(null);
   };
 
@@ -223,7 +213,7 @@ export const FileUpload = ({
                     <span className="font-semibold">Clique para upload</span> ou arraste o arquivo
                   </p>
                   <p className="text-xs text-gray-500 dark:text-gray-400">
-                    Tamanho máximo recomendado: {MAX_UPLOAD_SIZES.DOCUMENT}MB
+                    Tamanho máximo recomendado: 300MB
                   </p>
                 </>
               )}

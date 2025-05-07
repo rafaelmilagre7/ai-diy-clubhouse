@@ -16,7 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { AlertCircle, GripVertical, Plus } from "lucide-react";
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { FileUpload } from "@/components/formacao/comum/FileUpload";
 
 interface EtapaMateriaisProps {
   form: UseFormReturn<AulaFormValues>;
@@ -92,7 +92,7 @@ const EtapaMateriais: React.FC<EtapaMateriaisProps> = ({
   };
 
   // Função auxiliar para upload de arquivos
-  const handleFileUpload = (index: number, url: string, fileType: string | undefined, fileName: string | undefined, fileSize: number | undefined) => {
+  const handleFileUpload = (index: number, url: string, fileType?: string, fileName?: string, fileSize?: number) => {
     handleResourceChange(index, "url", url);
     if (fileType) handleResourceChange(index, "type", fileType);
     if (fileName) handleResourceChange(index, "fileName", fileName);
@@ -211,18 +211,14 @@ const EtapaMateriais: React.FC<EtapaMateriaisProps> = ({
                                   </div>
                                 </div>
                               ) : (
-                                <Button
-                                  type="button"
-                                  variant="outline"
-                                  onClick={() => {
-                                    // Aqui você pode implementar a lógica de upload
-                                    // Por enquanto, vamos apenas simular um upload bem-sucedido
-                                    const mockUrl = `https://example.com/files/material-${Date.now()}.pdf`;
-                                    handleFileUpload(index, mockUrl, "application/pdf", "documento.pdf", 1024 * 250);
+                                <FileUpload
+                                  value={resource.url || ""}
+                                  onChange={(url, fileType, fileName, fileSize) => {
+                                    handleFileUpload(index, url, fileType, fileName, fileSize);
                                   }}
-                                >
-                                  Upload do Arquivo
-                                </Button>
+                                  bucketName="learning_resources"
+                                  folderPath={`materiais/${Date.now()}`}
+                                />
                               )}
                             </div>
                           </div>

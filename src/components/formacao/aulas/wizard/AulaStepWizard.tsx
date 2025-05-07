@@ -171,8 +171,10 @@ const AulaStepWizard: React.FC<AulaStepWizardProps> = ({
       }
     };
 
-    fetchModules();
-  }, []);
+    if (open) {
+      fetchModules();
+    }
+  }, [open]);
 
   // Buscar os vídeos existentes, se for edição de aula
   useEffect(() => {
@@ -246,14 +248,27 @@ const AulaStepWizard: React.FC<AulaStepWizardProps> = ({
       }
     };
     
-    fetchVideos();
-    fetchResources();
-  }, [aula?.id, form]);
+    if (open && aula?.id) {
+      fetchVideos();
+      fetchResources();
+    }
+  }, [aula?.id, form, open]);
 
-  // Resetar formulário quando a aula mudar
+  // Resetar formulário quando a aula mudar ou quando o modal for aberto
   useEffect(() => {
     if (open) {
-      form.reset(defaultValues);
+      form.reset({
+        title: aula?.title || "",
+        description: aula?.description || "",
+        moduleId: aula?.module_id || moduleId || "",
+        difficultyLevel: (aula?.difficulty_level as DifficultyLevel) || DifficultyLevel.BEGINNER,
+        coverImageUrl: aula?.cover_image_url || "",
+        published: aula?.published || false,
+        aiAssistantEnabled: aula?.ai_assistant_enabled || false,
+        aiAssistantPrompt: aula?.ai_assistant_prompt || "",
+        videos: [],
+        resources: [],
+      });
     }
   }, [aula, moduleId, form, defaultValues, open]);
 
@@ -665,40 +680,38 @@ const AulaStepWizard: React.FC<AulaStepWizardProps> = ({
         </DialogHeader>
         
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)}>
-            <div className="space-y-6">
-              {renderStep()}
-              
-              {/* Navegação inferior - só aparece em algumas etapas */}
-              {currentStep < 4 && (
-                <div className="flex justify-between pt-4 border-t">
-                  <Button 
-                    type="button" 
-                    variant="ghost" 
-                    onClick={handleCancel}
-                  >
-                    Cancelar
-                  </Button>
-                  <div className="space-x-2">
-                    {currentStep > 0 && (
-                      <Button 
-                        type="button" 
-                        variant="outline" 
-                        onClick={prevStep}
-                      >
-                        Voltar
-                      </Button>
-                    )}
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            {renderStep()}
+            
+            {/* Navegação inferior - só aparece em algumas etapas */}
+            {currentStep < 4 && (
+              <div className="flex justify-between pt-4 border-t">
+                <Button 
+                  type="button" 
+                  variant="ghost" 
+                  onClick={handleCancel}
+                >
+                  Cancelar
+                </Button>
+                <div className="space-x-2">
+                  {currentStep > 0 && (
                     <Button 
                       type="button" 
-                      onClick={nextStep}
+                      variant="outline" 
+                      onClick={prevStep}
                     >
-                      {currentStep === totalSteps - 2 ? "Finalizar" : "Avançar"}
+                      Voltar
                     </Button>
-                  </div>
+                  )}
+                  <Button 
+                    type="button" 
+                    onClick={nextStep}
+                  >
+                    {currentStep === totalSteps - 2 ? "Finalizar" : "Avançar"}
+                  </Button>
                 </div>
-              )}
-            </div>
+              </div>
+            )}
           </form>
         </Form>
       </DialogContent>

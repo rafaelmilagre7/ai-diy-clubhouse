@@ -47,7 +47,13 @@ const EtapaInfoBasica: React.FC<EtapaInfoBasicaProps> = ({
             <FormItem>
               <FormLabel>Título da Aula</FormLabel>
               <FormControl>
-                <Input placeholder="Digite o título da aula" {...field} />
+                <Input 
+                  placeholder="Digite o título da aula" 
+                  {...field} 
+                  onChange={(e) => field.onChange(e.target.value)}
+                  disabled={false}
+                  readOnly={false}
+                />
               </FormControl>
               <FormDescription>
                 O título deve ser claro e objetivo
@@ -68,6 +74,9 @@ const EtapaInfoBasica: React.FC<EtapaInfoBasicaProps> = ({
                   placeholder="Descreva brevemente o conteúdo da aula"
                   className="min-h-[100px]"
                   {...field}
+                  onChange={(e) => field.onChange(e.target.value)}
+                  disabled={false}
+                  readOnly={false}
                 />
               </FormControl>
               <FormDescription>
