@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { UseFormReturn } from "react-hook-form";
-import { AulaFormValues } from "../AulaStepWizard";
+import { AulaFormValues, AulaVideo } from "../AulaStepWizard";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { AlertCircle, GripVertical, Plus, Video, Youtube } from "lucide-react";
@@ -52,7 +52,7 @@ const EtapaVideos: React.FC<EtapaVideosProps> = ({
   };
 
   const handleVideoChange = (index: number, field: string, value: any) => {
-    const newVideos = [...form.getValues().videos];
+    const newVideos = [...form.getValues().videos || []];
     newVideos[index] = { ...newVideos[index], [field]: value };
     // Garantir que o vídeo tenha um ID único para satisfazer as validações de tipo
     if (field === 'title' && !newVideos[index].id) {
@@ -91,7 +91,7 @@ const EtapaVideos: React.FC<EtapaVideosProps> = ({
   const onDragEnd = (result: any) => {
     if (!result.destination) return;
 
-    const items = Array.from(form.getValues().videos);
+    const items = Array.from(form.getValues().videos || []);
     const [reorderedItem] = items.splice(result.source.index, 1);
     items.splice(result.destination.index, 0, reorderedItem);
 
@@ -100,7 +100,7 @@ const EtapaVideos: React.FC<EtapaVideosProps> = ({
 
   const handleChangeVideoOrigin = (index: number, origin: VideoOriginType) => {
     // Limpar valores relacionados ao tipo anterior para evitar dados incorretos
-    const currentVideo = { ...form.getValues().videos[index] };
+    const currentVideo = { ...form.getValues().videos?.[index] };
     
     const updatedVideo = {
       ...currentVideo,
@@ -110,7 +110,7 @@ const EtapaVideos: React.FC<EtapaVideosProps> = ({
     };
     
     // Atualizar o vídeo no formulário
-    const newVideos = [...form.getValues().videos];
+    const newVideos = [...form.getValues().videos || []];
     newVideos[index] = updatedVideo;
     form.setValue("videos", newVideos, { shouldValidate: true });
   };
@@ -128,7 +128,7 @@ const EtapaVideos: React.FC<EtapaVideosProps> = ({
   };
   
   // Função para renderizar o componente específico com base na origem do vídeo
-  const renderVideoSourceComponent = (video: any, index: number) => {
+  const renderVideoSourceComponent = (video: AulaVideo, index: number) => {
     const origin = video.origin || "youtube";
     
     switch(origin) {
