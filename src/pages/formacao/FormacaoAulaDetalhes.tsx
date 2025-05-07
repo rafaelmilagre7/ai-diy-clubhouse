@@ -219,15 +219,38 @@ const FormacaoAulaDetalhes = () => {
   const isAdmin = profile?.role === 'admin';
   const moduloId = modulo?.id || aula.module_id || '';
 
-  // Renderizar vídeo de acordo com o tipo
+  // Função para renderizar vídeo de acordo com o tipo
   const renderVideo = (video: VideoWithType) => {
     const videoType = video.video_type || 'youtube';
     
-    if (videoType === 'youtube') {
+    if (videoType === 'panda') {
+      // Extrair o ID do vídeo do Panda
+      const pandaVideoId = video.video_file_path || 
+                          (video.url?.includes('/embed/') ? 
+                            video.url.split('/embed/')[1]?.split('?')[0] : 
+                            video.url?.split('/').pop());
+      
+      if (pandaVideoId) {
+        return (
+          <div className="aspect-video w-full">
+            <PandaVideoPlayerEnhanced 
+              videoId={pandaVideoId} 
+              title={video.title}
+              onProgress={(progress) => {
+                console.log(`Progresso do vídeo: ${progress}%`);
+              }}
+              onEnded={() => {
+                console.log(`Vídeo finalizado: ${video.title}`);
+              }}
+            />
+          </div>
+        );
+      }
+    } else if (videoType === 'youtube') {
       return (
         <iframe 
           src={video.url} 
-          className="w-full h-full"
+          className="w-full h-full aspect-video"
           title={video.title}
           allowFullScreen
         />
@@ -237,7 +260,7 @@ const FormacaoAulaDetalhes = () => {
         <video 
           src={video.url} 
           controls
-          className="w-full h-full"
+          className="w-full h-full aspect-video"
           title={video.title}
         />
       );

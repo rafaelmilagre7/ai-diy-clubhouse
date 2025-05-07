@@ -2,16 +2,21 @@
 import React, { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { AlertCircle, CheckCircle2, Loader2, RefreshCw } from "lucide-react";
+import { AlertCircle, CheckCircle2, Loader2, RefreshCw, Info } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 export const PandaVideoStatusCheck = () => {
   const [checking, setChecking] = useState(false);
   const [status, setStatus] = useState<"unchecked" | "error" | "ok">("unchecked");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [errorDetails, setErrorDetails] = useState<string | null>(null);
+  const [connectionInfo, setConnectionInfo] = useState<{
+    videosCount?: number;
+    apiVersion?: string;
+  } | null>(null);
 
   // Verificar status da API key
   const checkApiKeyStatus = async () => {
@@ -19,8 +24,11 @@ export const PandaVideoStatusCheck = () => {
     setStatus("unchecked");
     setErrorMessage(null);
     setErrorDetails(null);
+    setConnectionInfo(null);
     
     try {
+      toast.info("Verificando conexão com o Panda Video...");
+      
       // Chamar a edge function para testar a API key
       const { data, error } = await supabase.functions.invoke("check-panda-api", {
         method: "GET"
@@ -30,6 +38,9 @@ export const PandaVideoStatusCheck = () => {
         console.error("Erro ao chamar a função check-panda-api:", error);
         setStatus("error");
         setErrorMessage(`Erro na comunicação com o servidor: ${error.message}`);
+        toast.error("Falha ao verificar API do Panda Video", {
+          description: error.message
+        });
         return;
       }
 
@@ -38,16 +49,33 @@ export const PandaVideoStatusCheck = () => {
         setStatus("error");
         setErrorMessage(data.error || "Erro na comunicação com a API Panda Video");
         setErrorDetails(data.message || null);
+        
+        toast.error("Falha na conexão com Panda Video", {
+          description: data.error || "Verifique se a API key está configurada corretamente"
+        });
         return;
       }
       
       // Se chegou até aqui, a API key está ok
       setStatus("ok");
+      
+      // Armazenar informações da conexão
+      if (data.data) {
+        setConnectionInfo({
+          videosCount: data.data.videosCount,
+          apiVersion: data.data.apiVersion || 'v2'
+        });
+      }
+      
       toast.success("Conexão com Panda Video verificada com sucesso!");
     } catch (err: any) {
       console.error("Exceção ao verificar API key:", err);
       setStatus("error");
       setErrorMessage(err.message || "Erro desconhecido ao verificar API key");
+      
+      toast.error("Erro ao verificar API do Panda Video", {
+        description: err.message
+      });
     } finally {
       setChecking(false);
     }
@@ -93,7 +121,29 @@ export const PandaVideoStatusCheck = () => {
             <CheckCircle2 className="h-4 w-4 text-green-600" />
             <AlertTitle className="text-green-700">Integração funcionando</AlertTitle>
             <AlertDescription className="text-green-600">
-              A API do Panda Video está configurada corretamente e pronta para uso.
+              <div className="flex flex-col gap-1">
+                <p>A API do Panda Video está configurada corretamente e pronta para uso.</p>
+                
+                {connectionInfo && (
+                  <div className="mt-1 flex items-center gap-1 text-sm">
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Info className="h-3 w-3" />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Informações da sua conta Panda Video</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                    <span>
+                      {connectionInfo.videosCount !== undefined ? 
+                        `${connectionInfo.videosCount} vídeo(s) disponível(is)` :
+                        "Conta verificada"}
+                    </span>
+                  </div>
+                )}
+              </div>
             </AlertDescription>
           </Alert>
         )}
