@@ -189,6 +189,9 @@ export default {
                 'gradient-card': 'linear-gradient(135deg, #ffffff 0%, #f5f5f5 100%)',
                 'dot-pattern': 'radial-gradient(circle, #0ABAB5 1px, transparent 1px)',
             },
+            backgroundSize: {
+                'size-200': '200% 200%',
+            }
 		}
 	},
 	plugins: [require("tailwindcss-animate")],

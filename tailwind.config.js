@@ -90,6 +90,9 @@ module.exports = {
         "accordion-up": "accordion-up 0.2s ease-out",
         "indeterminate-progress": "indeterminate-progress 1.5s ease-in-out infinite"
       },
+      backgroundImage: {
+        'dot-pattern': 'radial-gradient(circle, #0ABAB5 1px, transparent 1px)', // Definindo o padrão de pontos
+      }
     },
   },
   plugins: [require("tailwindcss-animate")],
