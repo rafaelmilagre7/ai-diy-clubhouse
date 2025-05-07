@@ -1,7 +1,6 @@
 
 import React, { useState } from "react";
 import {
-  Form,
   FormControl,
   FormField,
   FormItem,
@@ -107,161 +106,159 @@ const EtapaVideos: React.FC<EtapaVideosProps> = ({
   };
 
   return (
-    <Form {...form}>
-      <div className="space-y-6 py-4">
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <FormLabel className="text-base">Vídeos da Aula (máx. {maxVideos})</FormLabel>
-            <Button
-              type="button"
-              size="sm"
-              onClick={handleAddVideo}
-              disabled={videos.length >= maxVideos}
-            >
-              <Plus className="w-4 h-4 mr-1" /> Adicionar Vídeo
-            </Button>
-          </div>
-          
-          <FormDescription>
-            Adicione até {maxVideos} vídeos para esta aula. Você pode selecionar vídeos existentes ou fazer upload de novos vídeos.
-          </FormDescription>
-          
-          {validationError && (
-            <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
-              <AlertTitle>Erro</AlertTitle>
-              <AlertDescription>{validationError}</AlertDescription>
-            </Alert>
-          )}
-          
-          {videos.length === 0 ? (
-            <div className="p-8 border-2 border-dashed rounded-md text-center">
-              <p className="text-muted-foreground">
-                Nenhum vídeo adicionado. Clique em "Adicionar Vídeo" para começar.
-              </p>
-            </div>
-          ) : (
-            <DragDropContext onDragEnd={onDragEnd}>
-              <Droppable droppableId="videos">
-                {(provided) => (
-                  <div 
-                    {...provided.droppableProps} 
-                    ref={provided.innerRef} 
-                    className="space-y-4"
-                  >
-                    {videos.map((video, index) => (
-                      <Draggable 
-                        key={`video-${index}`} 
-                        draggableId={`video-${index}`} 
-                        index={index}
-                      >
-                        {(provided) => (
-                          <div
-                            ref={provided.innerRef}
-                            {...provided.draggableProps}
-                            className="border rounded-md p-4"
-                          >
-                            <div className="flex items-center justify-between mb-3">
-                              <div className="flex items-center">
-                                <div 
-                                  {...provided.dragHandleProps} 
-                                  className="cursor-grab mr-2"
-                                >
-                                  <GripVertical className="h-4 w-4 text-gray-500" />
-                                </div>
-                                <span className="font-medium">Vídeo {index + 1}</span>
-                              </div>
-                              <Button 
-                                type="button" 
-                                variant="ghost" 
-                                size="sm" 
-                                onClick={() => handleRemoveVideo(index)}
-                              >
-                                Remover
-                              </Button>
-                            </div>
-                            
-                            <div className="space-y-4">
-                              <Input
-                                placeholder="Título do vídeo"
-                                value={video.title || ''}
-                                onChange={(e) => handleVideoChange(index, "title", e.target.value)}
-                                className="mb-2"
-                              />
-                              
-                              <Textarea
-                                placeholder="Descrição do vídeo"
-                                value={video.description || ''}
-                                onChange={(e) => handleVideoChange(index, "description", e.target.value)}
-                                className="mb-2 resize-none h-20"
-                              />
-                              
-                              <Tabs defaultValue="selector" className="w-full">
-                                <TabsList className="w-full mb-4">
-                                  <TabsTrigger value="selector" className="flex-1">Selecionar Vídeo Existente</TabsTrigger>
-                                  <TabsTrigger value="upload" className="flex-1">Fazer Upload de Novo Vídeo</TabsTrigger>
-                                </TabsList>
-                                
-                                <TabsContent value="selector">
-                                  <PandaVideoSelector 
-                                    onSelect={(videoData) => handleSelectExistingVideo(index, videoData)}
-                                    currentVideoId={video.video_id || video.filePath}
-                                  />
-                                </TabsContent>
-                                
-                                <TabsContent value="upload">
-                                  <PandaVideoUpload
-                                    value={video.url || ""}
-                                    videoData={video}
-                                    onChange={(url, type, fileName, filePath, fileSize, duration_seconds, thumbnail_url, videoId) => {
-                                      handleVideoChange(index, "url", url);
-                                      handleVideoChange(index, "type", "panda");
-                                      handleVideoChange(index, "fileName", fileName);
-                                      handleVideoChange(index, "filePath", filePath || videoId); // Usar videoId como fallback para filePath
-                                      handleVideoChange(index, "fileSize", fileSize);
-                                      handleVideoChange(index, "video_id", videoId);
-                                      
-                                      if (duration_seconds) {
-                                        handleVideoChange(index, "duration_seconds", duration_seconds);
-                                      }
-                                      
-                                      if (thumbnail_url) {
-                                        handleVideoChange(index, "thumbnail_url", thumbnail_url);
-                                      }
-                                    }}
-                                  />
-                                </TabsContent>
-                              </Tabs>
-                            </div>
-                          </div>
-                        )}
-                      </Draggable>
-                    ))}
-                    {provided.placeholder}
-                  </div>
-                )}
-              </Droppable>
-            </DragDropContext>
-          )}
+    <div className="space-y-6 py-4">
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <FormLabel className="text-base">Vídeos da Aula (máx. {maxVideos})</FormLabel>
+          <Button
+            type="button"
+            size="sm"
+            onClick={handleAddVideo}
+            disabled={videos.length >= maxVideos}
+          >
+            <Plus className="w-4 h-4 mr-1" /> Adicionar Vídeo
+          </Button>
         </div>
         
-        <div className="flex justify-between pt-4 border-t">
-          <Button 
-            type="button" 
-            variant="outline" 
-            onClick={onPrevious}
-          >
-            Voltar
-          </Button>
-          <Button 
-            type="button" 
-            onClick={handleContinue}
-          >
-            Continuar
-          </Button>
-        </div>
+        <FormDescription>
+          Adicione até {maxVideos} vídeos para esta aula. Você pode selecionar vídeos existentes ou fazer upload de novos vídeos.
+        </FormDescription>
+        
+        {validationError && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Erro</AlertTitle>
+            <AlertDescription>{validationError}</AlertDescription>
+          </Alert>
+        )}
+        
+        {videos.length === 0 ? (
+          <div className="p-8 border-2 border-dashed rounded-md text-center">
+            <p className="text-muted-foreground">
+              Nenhum vídeo adicionado. Clique em "Adicionar Vídeo" para começar.
+            </p>
+          </div>
+        ) : (
+          <DragDropContext onDragEnd={onDragEnd}>
+            <Droppable droppableId="videos">
+              {(provided) => (
+                <div 
+                  {...provided.droppableProps} 
+                  ref={provided.innerRef} 
+                  className="space-y-4"
+                >
+                  {videos.map((video, index) => (
+                    <Draggable 
+                      key={`video-${index}`} 
+                      draggableId={`video-${index}`} 
+                      index={index}
+                    >
+                      {(provided) => (
+                        <div
+                          ref={provided.innerRef}
+                          {...provided.draggableProps}
+                          className="border rounded-md p-4"
+                        >
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center">
+                              <div 
+                                {...provided.dragHandleProps} 
+                                className="cursor-grab mr-2"
+                              >
+                                <GripVertical className="h-4 w-4 text-gray-500" />
+                              </div>
+                              <span className="font-medium">Vídeo {index + 1}</span>
+                            </div>
+                            <Button 
+                              type="button" 
+                              variant="ghost" 
+                              size="sm" 
+                              onClick={() => handleRemoveVideo(index)}
+                            >
+                              Remover
+                            </Button>
+                          </div>
+                          
+                          <div className="space-y-4">
+                            <Input
+                              placeholder="Título do vídeo"
+                              value={video.title || ''}
+                              onChange={(e) => handleVideoChange(index, "title", e.target.value)}
+                              className="mb-2"
+                            />
+                            
+                            <Textarea
+                              placeholder="Descrição do vídeo"
+                              value={video.description || ''}
+                              onChange={(e) => handleVideoChange(index, "description", e.target.value)}
+                              className="mb-2 resize-none h-20"
+                            />
+                            
+                            <Tabs defaultValue="selector" className="w-full">
+                              <TabsList className="w-full mb-4">
+                                <TabsTrigger value="selector" className="flex-1">Selecionar Vídeo Existente</TabsTrigger>
+                                <TabsTrigger value="upload" className="flex-1">Fazer Upload de Novo Vídeo</TabsTrigger>
+                              </TabsList>
+                              
+                              <TabsContent value="selector">
+                                <PandaVideoSelector 
+                                  onSelect={(videoData) => handleSelectExistingVideo(index, videoData)}
+                                  currentVideoId={video.video_id || video.filePath}
+                                />
+                              </TabsContent>
+                              
+                              <TabsContent value="upload">
+                                <PandaVideoUpload
+                                  value={video.url || ""}
+                                  videoData={video}
+                                  onChange={(url, type, fileName, filePath, fileSize, duration_seconds, thumbnail_url, videoId) => {
+                                    handleVideoChange(index, "url", url);
+                                    handleVideoChange(index, "type", "panda");
+                                    handleVideoChange(index, "fileName", fileName);
+                                    handleVideoChange(index, "filePath", filePath || videoId); // Usar videoId como fallback para filePath
+                                    handleVideoChange(index, "fileSize", fileSize);
+                                    handleVideoChange(index, "video_id", videoId);
+                                    
+                                    if (duration_seconds) {
+                                      handleVideoChange(index, "duration_seconds", duration_seconds);
+                                    }
+                                    
+                                    if (thumbnail_url) {
+                                      handleVideoChange(index, "thumbnail_url", thumbnail_url);
+                                    }
+                                  }}
+                                />
+                              </TabsContent>
+                            </Tabs>
+                          </div>
+                        </div>
+                      )}
+                    </Draggable>
+                  ))}
+                  {provided.placeholder}
+                </div>
+              )}
+            </Droppable>
+          </DragDropContext>
+        )}
       </div>
-    </Form>
+      
+      <div className="flex justify-between pt-4 border-t">
+        <Button 
+          type="button" 
+          variant="outline" 
+          onClick={onPrevious}
+        >
+          Voltar
+        </Button>
+        <Button 
+          type="button" 
+          onClick={handleContinue}
+        >
+          Continuar
+        </Button>
+      </div>
+    </div>
   );
 };
 

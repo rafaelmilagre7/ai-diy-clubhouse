@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -251,8 +252,10 @@ const AulaStepWizard: React.FC<AulaStepWizardProps> = ({
 
   // Resetar formulário quando a aula mudar
   useEffect(() => {
-    form.reset(defaultValues);
-  }, [aula, moduleId, form, defaultValues]);
+    if (open) {
+      form.reset(defaultValues);
+    }
+  }, [aula, moduleId, form, defaultValues, open]);
 
   // Função para calcular tempo estimado com base nos vídeos
   const calculateTotalDuration = (videos: any[]): number => {
