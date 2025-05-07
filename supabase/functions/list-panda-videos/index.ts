@@ -6,6 +6,8 @@ const PANDA_API_URL = "https://api-v2.pandavideo.com.br";
 
 serve(async (req) => {
   console.log("Requisição para listar vídeos do Panda recebida");
+  console.log("URL da requisição:", req.url);
+  console.log("Método:", req.method);
 
   // Lidar com requisições OPTIONS (CORS preflight)
   if (req.method === "OPTIONS") {
@@ -34,9 +36,6 @@ serve(async (req) => {
 
     // Obter API key do Panda Video
     const apiKey = Deno.env.get("PANDA_API_KEY");
-
-    console.log("Verificando credencial Panda Video API Key:", apiKey ? `${apiKey.substring(0, 6)}...` : "não definida");
-
     if (!apiKey) {
       console.error("API Key do Panda Video não configurada");
       return new Response(
@@ -55,14 +54,16 @@ serve(async (req) => {
       );
     }
 
+    console.log("API Key Panda encontrada:", apiKey.substring(0, 10) + "...");
+
     // Parâmetros da URL
     const url = new URL(req.url);
-    console.log("URL da requisição:", url.toString());
-    
     const page = url.searchParams.get("page") || "1";
     const limit = url.searchParams.get("limit") || "100";
     const search = url.searchParams.get("search") || "";
     const folder = url.searchParams.get("folder") || "";
+
+    console.log("Parâmetros de busca:", { page, limit, search, folder });
 
     // Contruir URL da API
     let apiUrl = `${PANDA_API_URL}/videos?page=${page}&quantity=${limit}`;
@@ -91,12 +92,12 @@ serve(async (req) => {
           method: "GET",
           headers: {
             "Authorization": `ApiVideoPanda ${apiKey}`,
-            "Accept": "application/json"
+            "Accept": "application/json",
+            "Content-Type": "application/json"
           }
         });
         
         console.log(`Status da resposta API: ${response.status}`);
-        console.log(`Headers da resposta:`, Object.fromEntries(response.headers.entries()));
         
         // Se a resposta for bem-sucedida, sair do loop
         if (response.ok) {
@@ -123,6 +124,7 @@ serve(async (req) => {
         console.error(`Erro API Panda (${response.status}): ${errorText}`);
         throw new Error(`Erro API Panda (${response.status}): ${errorText}`);
       } catch (error) {
+        console.error("Erro na requisição:", error);
         lastError = error;
         retriesLeft--;
         
@@ -159,7 +161,7 @@ serve(async (req) => {
     let responseData;
     try {
       const responseText = await response.text();
-      console.log("Resposta da API do Panda (amostra):", responseText.substring(0, 100) + "...");
+      console.log("Resposta da API do Panda (amostra):", responseText.substring(0, 200) + "...");
       
       try {
         responseData = JSON.parse(responseText);

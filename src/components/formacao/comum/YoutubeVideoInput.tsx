@@ -19,6 +19,7 @@ export function YoutubeVideoInput({ value, onChange, onVideoLoaded }: YoutubeVid
   useEffect(() => {
     if (!value) {
       setIsValidUrl(false);
+      setError(null);
       return;
     }
     
@@ -27,15 +28,27 @@ export function YoutubeVideoInput({ value, onChange, onVideoLoaded }: YoutubeVid
       if (videoId) {
         setIsValidUrl(true);
         setError(null);
+        
+        // Se houver callback para quando um vídeo é carregado
+        if (onVideoLoaded) {
+          // Obter informações sobre o vídeo usando o API do YouTube (se disponível)
+          // Ou simplesmente passar o título derivado da URL
+          const simpleTitle = value.includes('title=') 
+            ? decodeURIComponent(value.split('title=')[1].split('&')[0]) 
+            : `Vídeo do YouTube (${videoId})`;
+          
+          onVideoLoaded(simpleTitle);
+        }
       } else {
         setIsValidUrl(false);
-        setError("URL do YouTube inválida");
+        setError("URL do YouTube inválida. Certifique-se de colar a URL completa.");
       }
     } catch (err) {
+      console.error("Erro ao processar URL do YouTube:", err);
       setIsValidUrl(false);
-      setError("Erro ao processar URL do YouTube");
+      setError("Erro ao processar URL do YouTube. Verifique e tente novamente.");
     }
-  }, [value]);
+  }, [value, onVideoLoaded]);
 
   return (
     <div className="space-y-3">

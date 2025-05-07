@@ -4,11 +4,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Search, Loader2, Video, Check, RefreshCw } from "lucide-react";
+import { Search, Loader2, Video, Check, RefreshCw, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { formatVideoDuration } from "@/lib/supabase/videoUtils";
 import { PandaVideoPlayer } from "./PandaVideoPlayer";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface PandaVideo {
   id: string;
@@ -51,6 +52,8 @@ export const PandaVideoSelector = ({
         throw new Error("Usuário não autenticado. Faça login para continuar.");
       }
 
+      console.log("Iniciando busca de vídeos Panda Video (página " + pageNum + ")...");
+      
       // Construir a URL da edge function com parâmetros de busca
       let functionUrl = 'list-panda-videos';
       const params = new URLSearchParams();
@@ -67,19 +70,19 @@ export const PandaVideoSelector = ({
         functionUrl += `?${paramString}`;
       }
 
-      console.log(`Buscando vídeos do Panda Video (página ${pageNum})...`);
-      const { data, error } = await supabase.functions.invoke(functionUrl, {
+      const { data, error: invokeError } = await supabase.functions.invoke(functionUrl, {
         method: 'GET'
       });
       
+      if (invokeError) {
+        console.error("Erro ao invocar função list-panda-videos:", invokeError);
+        throw new Error(invokeError.message || "Falha ao buscar vídeos");
+      }
+      
       console.log("Resposta da função list-panda-videos:", data);
       
-      if (error) {
-        throw error;
-      }
-
-      if (!data.success) {
-        throw new Error(data.error || "Falha ao buscar vídeos");
+      if (!data || !data.success) {
+        throw new Error(data?.error || "Falha ao buscar vídeos");
       }
 
       if (reset) {
@@ -94,6 +97,8 @@ export const PandaVideoSelector = ({
       
       if (data.videos && data.videos.length === 0 && pageNum === 1) {
         toast.info("Nenhum vídeo encontrado no Panda Video");
+      } else {
+        console.log(`${data.videos?.length || 0} vídeos encontrados`);
       }
     } catch (err: any) {
       console.error("Erro ao buscar vídeos:", err);
@@ -192,20 +197,23 @@ export const PandaVideoSelector = ({
       </div>
       
       {error && (
-        <div className="p-4 border border-red-300 bg-red-50 rounded-md text-red-700 text-sm">
-          <p className="font-medium">Erro ao carregar vídeos</p>
-          <p>{error}</p>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={handleRetryLoad}
-            className="mt-2" 
-            disabled={retrying}
-          >
-            <RefreshCw className={`h-4 w-4 mr-2 ${retrying ? 'animate-spin' : ''}`} />
-            Tentar novamente
-          </Button>
-        </div>
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4 mr-2" />
+          <AlertDescription className="flex flex-col">
+            <span className="font-medium">Erro ao carregar vídeos</span>
+            <span className="text-sm">{error}</span>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleRetryLoad}
+              className="mt-2 self-start" 
+              disabled={retrying}
+            >
+              <RefreshCw className={`h-4 w-4 mr-2 ${retrying ? 'animate-spin' : ''}`} />
+              Tentar novamente
+            </Button>
+          </AlertDescription>
+        </Alert>
       )}
       
       {loading && videos.length === 0 ? (

@@ -16,6 +16,12 @@ async function uploadWithRetry(url: string, options: RequestInit, maxRetries = 3
         await new Promise(r => setTimeout(r, Math.pow(2, attempt) * 1000));
       }
       
+      console.log(`Iniciando requisição para: ${url}`);
+      console.log(`Headers:`, Object.fromEntries(
+        Object.entries(options.headers || {})
+          .filter(([key]) => key.toLowerCase() !== 'authorization')
+      ));
+      
       const response = await fetch(url, options);
       
       // Debug de resposta
@@ -64,6 +70,10 @@ function encodeBase64(str: string): string {
 
 serve(async (req) => {
   console.log("Requisição de upload de vídeo recebida");
+  console.log("URL:", req.url);
+  console.log("Método:", req.method);
+  console.log("Headers:", Object.fromEntries([...req.headers.entries()]
+    .filter(([key]) => !key.toLowerCase().includes("authorization"))));
   
   // Lidar com requisições OPTIONS (CORS preflight)
   if (req.method === "OPTIONS") {
@@ -110,9 +120,6 @@ serve(async (req) => {
 
     // Obter API key do Panda Video
     const apiKey = Deno.env.get("PANDA_API_KEY");
-    
-    console.log("Verificando API Key Panda Video:", apiKey ? `${apiKey.substring(0, 6)}...` : "não definida");
-    
     if (!apiKey) {
       console.error("API Key do Panda Video não configurada");
       return new Response(
@@ -130,6 +137,8 @@ serve(async (req) => {
         }
       );
     }
+    
+    console.log("API Key do Panda Video encontrada:", apiKey.substring(0, 10) + "...");
 
     // Extrair os dados do formulário
     let formData;
@@ -281,7 +290,8 @@ serve(async (req) => {
           "Tus-Resumable": "1.0.0",
           "Upload-Offset": "0",
           "Content-Type": "application/offset+octet-stream",
-          "Accept": "application/json, */*; q=0.8"
+          "Accept": "application/json, */*; q=0.8",
+          "Content-Length": fileBuffer.byteLength.toString()
         },
         body: new Uint8Array(fileBuffer)
       });
