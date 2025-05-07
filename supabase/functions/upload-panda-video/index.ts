@@ -231,6 +231,7 @@ serve(async (req) => {
     console.log("ID de vídeo gerado:", videoId);
     
     const metadataEntries = [
+      // CORREÇÃO: Apenas o valor da API key, sem prefixo
       `authorization ${encodeBase64(apiKey)}`,
       `filename ${encodeBase64(videoFile.name)}`,
       `video_id ${encodeBase64(videoId)}`,

@@ -1,19 +1,13 @@
 
 import { useState } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Video, Upload } from "lucide-react";
-import { PandaVideoUploader } from "./PandaVideoUploader";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { PandaVideoSelector } from "./PandaVideoSelector";
+import { PandaVideoUploader } from "./PandaVideoUploader";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface PandaVideoInputProps {
-  onChange: (videoData: {
-    url: string;
-    type: string;
-    title: string;
-    video_id: string;
-    thumbnail_url?: string;
-    duration_seconds?: number;
-  }) => void;
+  onChange: (videoData: any) => void;
   initialValue?: {
     url?: string;
     title?: string;
@@ -24,64 +18,33 @@ interface PandaVideoInputProps {
 }
 
 export const PandaVideoInput = ({ onChange, initialValue }: PandaVideoInputProps) => {
-  const [activeTab, setActiveTab] = useState<string>(initialValue?.video_id ? "select" : "upload");
+  const [activeTab, setActiveTab] = useState<string>("upload");
   
-  const handleSelectExisting = (videoData: any) => {
-    onChange({
-      url: videoData.url,
-      type: "panda",
-      title: videoData.title,
-      video_id: videoData.id,
-      thumbnail_url: videoData.thumbnail_url,
-      duration_seconds: videoData.duration_seconds
-    });
-  };
-  
-  const handleUploadComplete = (
-    url: string,
-    type: string,
-    title: string,
-    videoId: string,
-    fileSize?: number,
-    durationSeconds?: number,
-    thumbnailUrl?: string
-  ) => {
-    onChange({
-      url,
-      type,
-      title,
-      video_id: videoId,
-      thumbnail_url: thumbnailUrl,
-      duration_seconds: durationSeconds
-    });
+  const handleVideoSelected = (videoData: any) => {
+    onChange(videoData);
   };
 
   return (
-    <Tabs value={activeTab} onValueChange={setActiveTab}>
-      <TabsList className="grid w-full grid-cols-2">
-        <TabsTrigger value="upload" className="flex items-center gap-1">
-          <Upload className="h-4 w-4" />
-          <span>Upload</span>
-        </TabsTrigger>
-        <TabsTrigger value="select" className="flex items-center gap-1">
-          <Video className="h-4 w-4" />
-          <span>Biblioteca</span>
-        </TabsTrigger>
-      </TabsList>
-      
-      <TabsContent value="upload" className="space-y-3 mt-3">
-        <PandaVideoUploader
-          onChange={handleUploadComplete}
-          initialValue={activeTab === "upload" ? initialValue : undefined}
-        />
-      </TabsContent>
-      
-      <TabsContent value="select" className="space-y-3 mt-3">
-        <PandaVideoSelector
-          onSelect={handleSelectExisting}
-          currentVideoId={initialValue?.video_id}
-        />
-      </TabsContent>
-    </Tabs>
+    <div className="space-y-4">
+      <Tabs defaultValue="upload" value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="w-full">
+          <TabsTrigger value="upload" className="flex-1">Fazer upload</TabsTrigger>
+          <TabsTrigger value="select" className="flex-1">Biblioteca</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="upload" className="pt-4">
+          <PandaVideoUploader 
+            onChange={handleVideoSelected}
+            initialValue={initialValue}
+          />
+        </TabsContent>
+        
+        <TabsContent value="select" className="pt-4">
+          <PandaVideoSelector 
+            onSelectVideo={handleVideoSelected}
+          />
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 };

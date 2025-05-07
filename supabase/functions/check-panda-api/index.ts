@@ -85,13 +85,16 @@ serve(async (req) => {
     while (retriesLeft > 0 && !response) {
       try {
         console.log(`Tentativa ${3-retriesLeft} de requisição à API Panda Video`);
-        console.log(`Usando cabeçalho de autorização: ApiVideoPanda ${apiKey.substring(0, 10)}...`);
         
-        // Fazer requisição para a API do Panda Video
+        // CORREÇÃO: Formato correto do cabeçalho de autorização conforme documentação
+        // Usar apenas o valor da API key no cabeçalho Authorization, sem o prefixo "ApiVideoPanda"
+        console.log(`Usando cabeçalho de autorização: ${apiKey.substring(0, 10)}...`);
+        
+        // Fazer requisição para a API do Panda Video com o cabeçalho correto
         response = await fetch(checkEndpoint, {
           method: "GET",
           headers: {
-            "Authorization": `ApiVideoPanda ${apiKey}`,
+            "Authorization": apiKey,
             "Accept": "application/json",
             "Content-Type": "application/json"
           }
@@ -194,7 +197,8 @@ serve(async (req) => {
         success: true,
         message: "API do Panda Video está configurada e funcionando corretamente",
         data: {
-          videosCount: Array.isArray(responseData.videos) ? responseData.videos.length : 0
+          videosCount: Array.isArray(responseData.videos) ? responseData.videos.length : 0,
+          apiVersion: "v2"
         }
       }),
       {
