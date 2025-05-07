@@ -8,8 +8,8 @@ const LoginPage = () => {
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
           <img
-            src="/logo.svg"
-            alt="Logo"
+            src="https://milagredigital.com/wp-content/uploads/2025/04/viverdeiaclub.avif"
+            alt="Logo VIVER DE IA Club"
             className="mx-auto h-20 w-auto"
           />
           <h2 className="mt-4 text-2xl font-extrabold text-white">
