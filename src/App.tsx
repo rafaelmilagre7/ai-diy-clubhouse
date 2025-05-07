@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./contexts/auth";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "sonner";
-import MainLayout from "./components/layout/MainLayout";
+import Layout from "./components/layout/Layout";
 import FormacaoLayout from "./components/layout/formacao/FormacaoLayout";
 
 // Auth Pages
@@ -26,7 +26,7 @@ import MemberCursoDetailPage from "./pages/membro/MemberCursoDetailPage";
 import MemberAulaPage from "./pages/membro/MemberAulaPage";
 
 // Protected Routes
-import ProtectedRoute from "./components/auth/ProtectedRoute";
+import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import AdminRoute from "./components/auth/AdminRoute";
 import FormacaoRoute from "./components/auth/FormacaoRoute";
 
@@ -57,7 +57,9 @@ function App() {
               path="/formacao"
               element={
                 <FormacaoRoute>
-                  <FormacaoLayout />
+                  <FormacaoLayout>
+                    <FormacaoHomePage />
+                  </FormacaoLayout>
                 </FormacaoRoute>
               }
             >
@@ -75,7 +77,9 @@ function App() {
               path="/membro"
               element={
                 <ProtectedRoute>
-                  <MainLayout />
+                  <Layout>
+                    <MemberCursosPage />
+                  </Layout>
                 </ProtectedRoute>
               }
             >

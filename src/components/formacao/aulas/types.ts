@@ -1,34 +1,38 @@
 
-// Interfaces para tipos de dados compartilhados entre componentes de aula
-export interface AulaVideo {
-  id?: string;
-  title: string;
-  description?: string;
-  url: string;
-  type: "youtube" | "panda";
-  video_id?: string; // ID do vídeo no Panda Video
-  thumbnail_url?: string; // URL da miniatura do vídeo
-  duration_seconds?: number; // Duração do vídeo em segundos
-}
-
-export interface AulaMaterial {
-  id?: string;
-  title: string;
-  description?: string;
-  url: string;
-  type: string; // "pdf", "doc", "image", etc.
-  file_size?: number;
-}
-
 export interface AulaFormValues {
+  id?: string;
   title: string;
-  description?: string;
-  objective?: string;
-  difficulty: string;
-  estimated_time?: string;
+  description: string;
+  video_id?: string;
   thumbnail_url?: string;
-  videos: AulaVideo[];
-  materials?: AulaMaterial[];
-  is_published?: boolean;
-  is_featured?: boolean;
+  duration_seconds?: number;
+  materials?: {
+    id: string;
+    name: string;
+    url: string;
+    type: string;
+    size?: number;
+  }[];
+  published?: boolean;
+  created_at?: string;
+  updated_at?: string;
+  author_id?: string;
+  module_id?: string;
+  position?: number;
+}
+
+export interface Material {
+  id: string;
+  name: string;
+  url: string;
+  type: string;
+  size?: number;
+}
+
+export interface VideoData {
+  video_id: string;
+  url: string;
+  title?: string;
+  thumbnail_url?: string;
+  duration_seconds?: number;
 }

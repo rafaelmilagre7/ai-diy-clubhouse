@@ -1,219 +1,133 @@
 
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { supabase } from '@/lib/supabase';
-import { useAuth } from '@/contexts/auth';
-import AulaPlayer from '@/components/learning/member/AulaPlayer';
-import { Button } from '@/components/ui/button';
-import { ChevronLeft } from 'lucide-react';
-import { Skeleton } from '@/components/ui/skeleton';
-import { toast } from 'sonner';
+import React from 'react';
+import { useParams, Link } from 'react-router-dom';
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { ChevronLeft, ChevronRight, Download, CheckCircle } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
-const MemberAulaPage: React.FC = () => {
+const MemberAulaPage = () => {
   const { aulaId } = useParams<{ aulaId: string }>();
-  const navigate = useNavigate();
-  const { user } = useAuth();
   
-  const [loading, setLoading] = useState(true);
-  const [aula, setAula] = useState<any>(null);
-  const [nextAula, setNextAula] = useState<any>(null);
-  const [prevAula, setPrevAula] = useState<any>(null);
-  const [modulo, setModulo] = useState<any>(null);
-  
-  useEffect(() => {
-    const fetchAula = async () => {
-      try {
-        setLoading(true);
-        
-        if (!aulaId) {
-          toast.error('ID da aula não fornecido');
-          return;
-        }
-        
-        // Buscar a aula atual
-        const { data: aulaData, error: aulaError } = await supabase
-          .from('learning_lessons')
-          .select(`
-            id,
-            title,
-            description,
-            cover_image_url,
-            module_id
-          `)
-          .eq('id', aulaId)
-          .eq('published', true)
-          .single();
-        
-        if (aulaError || !aulaData) {
-          console.error('Erro ao carregar aula:', aulaError);
-          toast.error('Erro ao carregar a aula');
-          return;
-        }
-        
-        // Buscar o módulo
-        const { data: moduloData } = await supabase
-          .from('learning_modules')
-          .select(`
-            id,
-            title,
-            course_id
-          `)
-          .eq('id', aulaData.module_id)
-          .single();
-        
-        setModulo(moduloData);
-        
-        // Buscar vídeos da aula
-        const { data: videosData } = await supabase
-          .from('learning_lesson_videos')
-          .select('*')
-          .eq('lesson_id', aulaId)
-          .order('order_index', { ascending: true });
-        
-        // Buscar materiais da aula
-        const { data: materiaisData } = await supabase
-          .from('learning_resources')
-          .select('*')
-          .eq('lesson_id', aulaId)
-          .order('order_index', { ascending: true });
-        
-        // Buscar aulas anterior e próxima no mesmo módulo
-        const { data: aulasModulo } = await supabase
-          .from('learning_lessons')
-          .select('id, title, order_index')
-          .eq('module_id', aulaData.module_id)
-          .eq('published', true)
-          .order('order_index', { ascending: true });
-        
-        if (aulasModulo && aulasModulo.length > 0) {
-          const currentIndex = aulasModulo.findIndex(a => a.id === aulaId);
-          
-          if (currentIndex > 0) {
-            setPrevAula(aulasModulo[currentIndex - 1]);
-          }
-          
-          if (currentIndex < aulasModulo.length - 1) {
-            setNextAula(aulasModulo[currentIndex + 1]);
-          }
-        }
-        
-        // Atualizar progresso do usuário
-        if (user) {
-          const { error: progressError } = await supabase
-            .from('learning_progress')
-            .upsert({
-              user_id: user.id,
-              lesson_id: aulaId,
-              started_at: new Date().toISOString(),
-              progress_percentage: 10, // Inicial
-            }, { onConflict: 'user_id,lesson_id' });
-          
-          if (progressError) {
-            console.error('Erro ao registrar progresso:', progressError);
-          }
-        }
-        
-        // Construir objeto completo da aula
-        const aulaCompleta = {
-          ...aulaData,
-          videos: videosData || [],
-          materials: materiaisData || [],
-        };
-        
-        setAula(aulaCompleta);
-      } catch (error) {
-        console.error('Erro ao carregar dados da aula:', error);
-        toast.error('Ocorreu um erro ao carregar a aula');
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    fetchAula();
-  }, [aulaId, user]);
-  
-  const handleVoltar = () => {
-    if (modulo?.course_id) {
-      navigate(`/membro/curso/${modulo.course_id}`);
-    } else {
-      navigate('/membro/cursos');
-    }
+  // Dados simulados (em um projeto real, viriam da API)
+  const aula = {
+    id: aulaId,
+    titulo: 'Aplicações na Indústria',
+    descricao: 'Nesta aula, exploraremos as diversas aplicações de IA em ambientes industriais.',
+    videoId: '12345', // ID do vídeo no Panda Video
+    materiais: [
+      { id: '1', nome: 'Slides da apresentação', tipo: 'pdf' },
+      { id: '2', nome: 'Código de exemplo', tipo: 'zip' }
+    ],
+    concluida: false,
+    cursoId: '1'
   };
   
-  const handleNextAula = () => {
-    if (nextAula?.id) {
-      navigate(`/membro/aula/${nextAula.id}`);
-    }
+  const proximaAula = {
+    id: '4',
+    titulo: 'Implementação de Projetos'
   };
-  
-  const handlePrevAula = () => {
-    if (prevAula?.id) {
-      navigate(`/membro/aula/${prevAula.id}`);
-    }
-  };
-  
-  if (loading) {
-    return (
-      <div className="container max-w-5xl py-8 space-y-6">
-        <Button variant="ghost" className="mb-4">
-          <ChevronLeft className="mr-2 h-4 w-4" />
-          Voltar
-        </Button>
-        
-        <Skeleton className="h-8 w-1/2 mb-4" />
-        <Skeleton className="h-[400px] w-full" />
-        <div className="space-y-2">
-          <Skeleton className="h-4 w-full" />
-          <Skeleton className="h-4 w-3/4" />
-        </div>
-      </div>
-    );
-  }
-  
+
   if (!aula) {
-    return (
-      <div className="container max-w-5xl py-8">
-        <Button variant="ghost" onClick={handleVoltar} className="mb-4">
-          <ChevronLeft className="mr-2 h-4 w-4" />
-          Voltar
-        </Button>
-        
-        <div className="text-center py-12">
-          <h2 className="text-xl font-semibold mb-2">Aula não encontrada</h2>
-          <p className="text-muted-foreground">
-            A aula que você está tentando acessar não existe ou foi removida.
-          </p>
-          <Button onClick={handleVoltar} className="mt-4">
-            Voltar para cursos
-          </Button>
-        </div>
-      </div>
-    );
+    return <div className="container mx-auto py-8">Aula não encontrada</div>;
   }
-  
+
+  const marcarComoConcluida = () => {
+    // Aqui iria a lógica para marcar como concluída
+    console.log("Aula marcada como concluída");
+  };
+
   return (
-    <div className="container max-w-5xl py-8 space-y-6">
-      <div>
-        <Button variant="ghost" onClick={handleVoltar} className="mb-4">
-          <ChevronLeft className="mr-2 h-4 w-4" />
+    <div className="container mx-auto py-8">
+      <div className="mb-6">
+        <Link 
+          to={`/membro/curso/${aula.cursoId}`}
+          className="inline-flex items-center text-primary hover:underline"
+        >
+          <ChevronLeft className="h-4 w-4 mr-1" />
           Voltar para o curso
-        </Button>
-        
-        {modulo && (
-          <div className="mb-4">
-            <p className="text-sm text-muted-foreground">{modulo.title}</p>
-            <h1 className="text-2xl font-bold">{aula.title}</h1>
-          </div>
-        )}
+        </Link>
       </div>
       
-      <AulaPlayer
-        aula={aula}
-        onNext={nextAula ? handleNextAula : undefined}
-        onPrevious={prevAula ? handlePrevAula : undefined}
-        isFirst={!prevAula}
-        isLast={!nextAula}
-      />
+      <h1 className="text-3xl font-bold mb-2">{aula.titulo}</h1>
+      <p className="text-muted-foreground mb-6">{aula.descricao}</p>
+      
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="md:col-span-2 space-y-8">
+          {/* Player de vídeo */}
+          <div className="aspect-video bg-black rounded-lg flex items-center justify-center">
+            <div className="text-white">
+              [Player de Vídeo do Panda Video] <br />
+              ID do vídeo: {aula.videoId}
+            </div>
+          </div>
+          
+          {/* Botões de navegação */}
+          <div className="flex justify-between">
+            <div>
+              {!aula.concluida && (
+                <Button onClick={marcarComoConcluida}>
+                  <CheckCircle className="mr-2 h-4 w-4" />
+                  Marcar como concluída
+                </Button>
+              )}
+            </div>
+            <div>
+              {proximaAula && (
+                <Button asChild>
+                  <Link to={`/membro/aula/${proximaAula.id}`}>
+                    Próxima aula <ChevronRight className="ml-2 h-4 w-4" />
+                  </Link>
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
+        
+        <div className="space-y-6">
+          {/* Status da aula */}
+          <div className="flex justify-center">
+            {aula.concluida ? (
+              <Badge variant="success" className="px-3 py-1 text-sm">
+                <CheckCircle className="mr-1 h-4 w-4" /> Aula concluída
+              </Badge>
+            ) : (
+              <Badge variant="outline" className="px-3 py-1 text-sm">
+                Em progresso
+              </Badge>
+            )}
+          </div>
+          
+          {/* Materiais complementares */}
+          <Card>
+            <CardContent className="p-5">
+              <h3 className="font-semibold mb-3">Materiais complementares</h3>
+              
+              {aula.materiais.length > 0 ? (
+                <div className="space-y-2">
+                  {aula.materiais.map((material) => (
+                    <div key={material.id} className="flex items-center justify-between">
+                      <div className="flex items-center">
+                        <span>{material.nome}</span>
+                        <Badge variant="outline" className="ml-2">
+                          {material.tipo}
+                        </Badge>
+                      </div>
+                      <Button size="icon" variant="ghost">
+                        <Download className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  Nenhum material disponível para esta aula.
+                </p>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 };
