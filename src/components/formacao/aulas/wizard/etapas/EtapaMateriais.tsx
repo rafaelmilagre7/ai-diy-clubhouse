@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, FileText, Trash2, External, GripVertical } from "lucide-react";
+import { Plus, FileText, Trash2, ExternalLink, GripVertical } from "lucide-react";
 import { FormLabel, FormDescription } from "@/components/ui/form";
 import { Badge } from "@/components/ui/badge";
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
@@ -185,7 +185,7 @@ const EtapaMateriais: React.FC<EtapaMateriaisProps> = ({
                                       variant="ghost"
                                       onClick={() => window.open(material.url, '_blank')}
                                     >
-                                      <External className="h-4 w-4" />
+                                      <ExternalLink className="h-4 w-4" />
                                     </Button>
                                   )}
                                 </div>
