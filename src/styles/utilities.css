@@ -1,3 +1,4 @@
+
 /* Utilitários extras, gradientes, animações customizadas para responsividade, glass, hover, efeitos */
 
 .bg-size-200 {
@@ -8,6 +9,11 @@
 }
 
 @layer utilities {
+  /* Seleção de texto personalizada */
+  ::selection {
+    @apply bg-primary/30 text-white;
+  }
+  
   /* Responsividade para cartões glass e outros */
   @media (max-width: 600px) {
     .glass-card, .glassmorphism, .glass-effect {

@@ -30,6 +30,18 @@ export function formatVideoDuration(totalSeconds: number): string {
 }
 
 /**
+ * Estima a duração do vídeo com base no tamanho do arquivo
+ * 
+ * @param fileSizeBytes Tamanho do arquivo em bytes
+ * @returns Duração aproximada em segundos
+ */
+export function estimateVideoDuration(fileSizeBytes: number): number {
+  // Estimativa simples: 1MB ~ 10 segundos de vídeo em qualidade média
+  const fileSizeMB = fileSizeBytes / (1024 * 1024);
+  return Math.round(fileSizeMB * 10);
+}
+
+/**
  * Extrai o ID do vídeo de uma URL do YouTube
  * 
  * @param url URL do vídeo do YouTube
@@ -55,6 +67,23 @@ export function extractYouTubeVideoId(url: string): string | null {
   
   return null;
 }
+
+/**
+ * Obtém a URL da thumbnail do vídeo do YouTube
+ * 
+ * @param url URL do vídeo do YouTube
+ * @returns URL da thumbnail ou null se não for possível extrair
+ */
+export function getYoutubeThumbnailUrl(url: string): string | null {
+  const videoId = extractYouTubeVideoId(url);
+  if (!videoId) return null;
+  return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+}
+
+/**
+ * Aliases para manter compatibilidade com código existente
+ */
+export const getYoutubeVideoId = extractYouTubeVideoId;
 
 /**
  * Extrai o ID do vídeo de uma URL do Panda Video

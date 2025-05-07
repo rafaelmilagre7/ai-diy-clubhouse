@@ -1,9 +1,8 @@
-
 import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Info, Link as LinkIcon } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { getYoutubeVideoId } from "@/lib/supabase/videoUtils";
+import { extractYouTubeVideoId } from "@/lib/supabase/videoUtils";
 
 interface YoutubeVideoInputProps {
   value: string;
@@ -24,7 +23,7 @@ export function YoutubeVideoInput({ value, onChange, onVideoLoaded }: YoutubeVid
     }
     
     try {
-      const videoId = getYoutubeVideoId(value);
+      const videoId = extractYouTubeVideoId(value);
       if (videoId) {
         setIsValidUrl(true);
         setError(null);
@@ -83,7 +82,7 @@ export function YoutubeVideoInput({ value, onChange, onVideoLoaded }: YoutubeVid
         <div className="mt-4 rounded-md overflow-hidden border">
           <div className="relative pb-[56.25%] h-0">
             <iframe
-              src={`https://www.youtube.com/embed/${getYoutubeVideoId(value)}`}
+              src={`https://www.youtube.com/embed/${extractYouTubeVideoId(value)}`}
               title="Vídeo do YouTube"
               className="absolute top-0 left-0 w-full h-full"
               frameBorder="0"

@@ -57,6 +57,11 @@ module.exports = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        viverblue: {
+          DEFAULT: "#0ABAB5",
+          light: "#3DCCC7",
+          dark: "#07807C"
+        }
       },
       borderRadius: {
         lg: "var(--radius)",

@@ -14,6 +14,7 @@ export {
 
 // Exportar utilitários de vídeo
 export {
+  extractYouTubeVideoId,
   getYoutubeVideoId,
   getYoutubeThumbnailUrl,
   formatVideoDuration,
