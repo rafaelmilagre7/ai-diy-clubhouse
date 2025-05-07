@@ -1,100 +1,124 @@
 
-import { useState, useEffect } from 'react';
-import { Skeleton } from '@/components/ui/skeleton';
+import { useEffect, useRef } from "react";
 
 interface PandaVideoPlayerProps {
   videoId: string;
   title?: string;
   autoplay?: boolean;
-  onProgress?: (progress: number) => void;
   onEnded?: () => void;
+  onProgress?: (currentTime: number, duration: number) => void;
 }
 
-export const PandaVideoPlayer: React.FC<PandaVideoPlayerProps> = ({
+export const PandaVideoPlayer = ({
   videoId,
-  title,
+  title = "Vídeo",
   autoplay = false,
-  onProgress,
-  onEnded
-}) => {
-  const [loading, setLoading] = useState(true);
+  onEnded,
+  onProgress
+}: PandaVideoPlayerProps) => {
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const playerInitialized = useRef(false);
   
+  // Configurar o listener para mensagens do player
   useEffect(() => {
-    // Simular carregamento para evitar flash de conteúdo
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 500);
+    if (!onEnded && !onProgress) return;
     
-    return () => clearTimeout(timer);
-  }, [videoId]);
-  
-  // Configurar comunicação com o player do Panda Video
-  useEffect(() => {
-    if (!onProgress && !onEnded) return;
-    
-    // Função para receber mensagens do iframe
-    const handleMessage = (event: MessageEvent) => {
+    const handleMessageEvent = (event: MessageEvent) => {
+      if (event.origin !== "https://player.pandavideo.com.br") {
+        return;
+      }
+      
       try {
-        // Verificar origem da mensagem (domínio pandavideo.com.br)
-        if (!event.origin.includes('pandavideo.com.br')) return;
+        const data = event.data;
         
-        // Tentar processar a mensagem como JSON
-        const data = typeof event.data === 'string' 
-          ? JSON.parse(event.data) 
-          : event.data;
+        if (!data || typeof data !== 'string') return;
         
-        // Se for uma atualização de progresso do vídeo
-        if (data.event === 'timeupdate' && data.value && data.value.percent !== undefined) {
-          if (onProgress) {
-            onProgress(data.value.percent);
-          }
-          
-          // Se o vídeo terminou (progresso de 100%)
-          if (onEnded && data.value.percent >= 100) {
-            onEnded();
-          }
-        }
+        const parsedData = JSON.parse(data);
         
-        // Evento específico de finalização do vídeo
-        if (data.event === 'ended' && onEnded) {
+        // Verificar se o evento é para o player específico
+        if (parsedData.event === "onStateChange" && 
+            parsedData.state === "ENDED" && 
+            onEnded && 
+            parsedData.videoId === videoId) {
+          console.log("Vídeo terminado:", videoId);
           onEnded();
         }
+        
+        // Evento de progresso (enviado periodicamente)
+        if (parsedData.event === "onTimeUpdate" && 
+            onProgress && 
+            parsedData.videoId === videoId) {
+          const currentTime = parsedData.currentTime || 0;
+          const duration = parsedData.duration || 0;
+          onProgress(currentTime, duration);
+        }
       } catch (error) {
-        console.log('Erro ao processar mensagem do player:', error);
+        console.error("Erro ao processar mensagem do player Panda:", error);
       }
     };
     
-    // Adicionar listener para mensagens do iframe
-    window.addEventListener('message', handleMessage);
+    window.addEventListener('message', handleMessageEvent);
     
-    // Remover listener ao desmontar componente
+    // Cleanup
     return () => {
-      window.removeEventListener('message', handleMessage);
+      window.removeEventListener('message', handleMessageEvent);
     };
-  }, [videoId, onProgress, onEnded]);
+  }, [videoId, onEnded, onProgress]);
+  
+  // Inicializar o player quando montar
+  useEffect(() => {
+    if (playerInitialized.current) return;
+    
+    // Esta é uma função para garantir que o script do Panda Video esteja carregado
+    const initPandaPlayer = () => {
+      if (window.PandaPlayer) {
+        window.PandaPlayer.init();
+        playerInitialized.current = true;
+      } else {
+        // Se o script ainda não carregou, adicionar
+        const script = document.createElement("script");
+        script.src = "https://player.pandavideo.com.br/api.v2.js";
+        script.async = true;
+        script.onload = () => {
+          if (window.PandaPlayer) {
+            window.PandaPlayer.init();
+            playerInitialized.current = true;
+          }
+        };
+        document.body.appendChild(script);
+      }
+    };
+    
+    initPandaPlayer();
+    
+    // Cleanup
+    return () => {
+      playerInitialized.current = false;
+    };
+  }, []);
 
   return (
-    <div className="relative w-full">
-      {loading && (
-        <div className="absolute inset-0 z-10">
-          <Skeleton className="w-full h-full" />
-        </div>
-      )}
-      
-      <div className="aspect-video overflow-hidden rounded-md">
-        <iframe
-          src={`https://player.pandavideo.com.br/embed/?v=${videoId}${autoplay ? '&autoplay=1' : ''}`}
-          title={title || "Vídeo"}
-          className="w-full h-full"
-          allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
-          allowFullScreen
-          style={{ 
-            border: 'none',
-            opacity: loading ? 0 : 1,
-            transition: 'opacity 0.3s ease'
-          }}
-        />
-      </div>
+    <div className="relative w-full aspect-video">
+      <iframe
+        ref={iframeRef}
+        id={`panda-${videoId}`}
+        src={`https://player.pandavideo.com.br/embed/${videoId}?${autoplay ? 'autoplay=1' : ''}`}
+        style={{ border: "none" }}
+        allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture"
+        allowFullScreen
+        className="absolute top-0 left-0 w-full h-full"
+        title={title}
+      />
     </div>
   );
 };
+
+// Adicionar definição de tipo no Window global
+declare global {
+  interface Window {
+    PandaPlayer?: {
+      init: () => void;
+      // pode ter outros métodos também
+    };
+  }
+}

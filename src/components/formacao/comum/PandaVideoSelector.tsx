@@ -3,7 +3,8 @@ import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Loader2, Video, Check } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Search, Loader2, Video, Check, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { formatVideoDuration } from "@/lib/supabase/videoUtils";
@@ -29,15 +30,20 @@ export const PandaVideoSelector = ({
   currentVideoId
 }: PandaVideoSelectorProps) => {
   const [videos, setVideos] = useState<PandaVideo[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedVideoId, setSelectedVideoId] = useState<string | null>(currentVideoId || null);
   const [previewVideo, setPreviewVideo] = useState<PandaVideo | null>(null);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(false);
+  const [retrying, setRetrying] = useState(false);
   
-  const fetchVideos = async (search?: string) => {
-    setLoading(true);
-    setError(null);
+  const fetchVideos = async (search?: string, pageNum = 1, reset = true) => {
+    if (reset) {
+      setLoading(true);
+      setError(null);
+    }
     
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -53,12 +59,15 @@ export const PandaVideoSelector = ({
         params.append("search", search);
       }
       
+      params.append("page", pageNum.toString());
+      params.append("limit", "12"); // Limite de itens por página
+      
       const paramString = params.toString();
       if (paramString) {
         functionUrl += `?${paramString}`;
       }
 
-      console.log("Buscando vídeos do Panda Video...");
+      console.log(`Buscando vídeos do Panda Video (página ${pageNum})...`);
       const { data, error } = await supabase.functions.invoke(functionUrl, {
         method: 'GET'
       });
@@ -73,9 +82,17 @@ export const PandaVideoSelector = ({
         throw new Error(data.error || "Falha ao buscar vídeos");
       }
 
-      setVideos(data.videos || []);
+      if (reset) {
+        setVideos(data.videos || []);
+      } else {
+        setVideos(prev => [...prev, ...(data.videos || [])]);
+      }
       
-      if (data.videos && data.videos.length === 0) {
+      // Verificar se há mais páginas
+      setHasMore(data.pagination && data.pagination.page < data.pagination.totalPages);
+      setPage(data.pagination?.page || 1);
+      
+      if (data.videos && data.videos.length === 0 && pageNum === 1) {
         toast.info("Nenhum vídeo encontrado no Panda Video");
       }
     } catch (err: any) {
@@ -84,10 +101,13 @@ export const PandaVideoSelector = ({
       toast.error("Erro ao carregar vídeos", {
         description: err.message || "Não foi possível buscar os vídeos no momento."
       });
-      setVideos([]);
     } finally {
       setLoading(false);
     }
+  };
+
+  const loadMoreVideos = () => {
+    fetchVideos(searchQuery, page + 1, false);
   };
 
   // Carregar vídeos ao montar o componente
@@ -101,6 +121,7 @@ export const PandaVideoSelector = ({
       const current = videos.find(v => v.id === currentVideoId);
       if (current) {
         setPreviewVideo(current);
+        setSelectedVideoId(current.id);
       }
     }
   }, [currentVideoId, videos]);
@@ -114,6 +135,27 @@ export const PandaVideoSelector = ({
     setPreviewVideo(video);
     onSelect(video);
     toast.success("Vídeo selecionado com sucesso");
+  };
+
+  const handleRetryLoad = () => {
+    setRetrying(true);
+    fetchVideos()
+      .finally(() => setRetrying(false));
+  };
+  
+  // Renderizar placeholders durante carregamento
+  const renderLoadingSkeletons = () => {
+    return Array(6).fill(0).map((_, i) => (
+      <Card key={`skeleton-${i}`} className="overflow-hidden">
+        <div className="aspect-video bg-muted">
+          <Skeleton className="w-full h-full" />
+        </div>
+        <CardContent className="p-3">
+          <Skeleton className="h-5 w-full mb-2" />
+          <Skeleton className="h-4 w-3/4" />
+        </CardContent>
+      </Card>
+    ));
   };
   
   return (
@@ -131,20 +173,44 @@ export const PandaVideoSelector = ({
             onKeyDown={e => e.key === 'Enter' && handleSearch()}
           />
         </div>
-        <Button variant="outline" onClick={handleSearch} disabled={loading}>
+        <Button 
+          variant="outline" 
+          onClick={handleSearch} 
+          disabled={loading}
+        >
           {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Buscar"}
+        </Button>
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          onClick={handleRetryLoad} 
+          disabled={loading || retrying} 
+          title="Atualizar lista"
+        >
+          <RefreshCw className={`h-4 w-4 ${retrying ? 'animate-spin' : ''}`} />
         </Button>
       </div>
       
       {error && (
         <div className="p-4 border border-red-300 bg-red-50 rounded-md text-red-700 text-sm">
-          {error}
+          <p className="font-medium">Erro ao carregar vídeos</p>
+          <p>{error}</p>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleRetryLoad}
+            className="mt-2" 
+            disabled={retrying}
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${retrying ? 'animate-spin' : ''}`} />
+            Tentar novamente
+          </Button>
         </div>
       )}
       
-      {loading ? (
-        <div className="flex justify-center py-8">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      {loading && videos.length === 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
+          {renderLoadingSkeletons()}
         </div>
       ) : previewVideo ? (
         <div className="space-y-4">
@@ -163,7 +229,7 @@ export const PandaVideoSelector = ({
             </Button>
           </div>
           <div className="p-3 border rounded-md">
-            <h3 className="font-medium">{previewVideo.title}</h3>
+            <h3 className="font-medium">{previewVideo.title || "Vídeo sem título"}</h3>
             {previewVideo.description && (
               <p className="text-sm text-muted-foreground mt-1">{previewVideo.description}</p>
             )}
@@ -178,62 +244,90 @@ export const PandaVideoSelector = ({
               className="w-full mt-4"
               onClick={() => handleSelectVideo(previewVideo)}
             >
-              Usar este vídeo
+              {selectedVideoId === previewVideo.id ? (
+                <>
+                  <Check className="h-4 w-4 mr-2" />
+                  Vídeo selecionado
+                </>
+              ) : (
+                "Usar este vídeo"
+              )}
             </Button>
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
-          {videos.length > 0 ? (
-            videos.map(video => (
-              <Card 
-                key={video.id} 
-                className={`overflow-hidden cursor-pointer transition-all hover:shadow-md ${
-                  selectedVideoId === video.id ? 'ring-2 ring-primary' : ''
-                }`}
-                onClick={() => setPreviewVideo(video)}
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {videos.length > 0 ? (
+              videos.map(video => (
+                <Card 
+                  key={video.id} 
+                  className={`overflow-hidden cursor-pointer transition-all hover:shadow-md ${
+                    selectedVideoId === video.id ? 'ring-2 ring-primary' : ''
+                  }`}
+                  onClick={() => setPreviewVideo(video)}
+                >
+                  <div className="relative aspect-video bg-muted">
+                    {video.thumbnail_url ? (
+                      <img 
+                        src={video.thumbnail_url} 
+                        alt={video.title} 
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <Video className="h-8 w-8 text-muted-foreground" />
+                      </div>
+                    )}
+                    {video.duration_seconds > 0 && (
+                      <div className="absolute bottom-2 right-2 bg-black/70 text-white px-2 py-0.5 rounded text-xs">
+                        {formatVideoDuration(video.duration_seconds)}
+                      </div>
+                    )}
+                    {selectedVideoId === video.id && (
+                      <div className="absolute top-2 right-2 bg-primary text-primary-foreground rounded-full p-1">
+                        <Check className="h-4 w-4" />
+                      </div>
+                    )}
+                  </div>
+                  <CardContent className="p-3">
+                    <h3 className="font-medium truncate text-sm">{video.title || "Sem título"}</h3>
+                    {video.status && (
+                      <p className={`text-xs mt-1 ${
+                        video.status === 'ready' ? 'text-green-600' : 'text-amber-600'
+                      }`}>
+                        Status: {video.status === 'ready' ? 'Pronto' : 'Processando'}
+                      </p>
+                    )}
+                  </CardContent>
+                </Card>
+              ))
+            ) : (
+              <div className="col-span-full p-8 border-2 border-dashed rounded-md text-center">
+                <Video className="mx-auto h-10 w-10 text-muted-foreground mb-2" />
+                <p className="text-muted-foreground">
+                  {error ? 'Ocorreu um erro ao carregar os vídeos' : 'Nenhum vídeo encontrado. Tente fazer uma busca ou envie um novo vídeo.'}
+                </p>
+              </div>
+            )}
+          </div>
+          
+          {hasMore && (
+            <div className="flex justify-center pt-4">
+              <Button 
+                variant="outline" 
+                onClick={loadMoreVideos} 
+                disabled={loading}
               >
-                <div className="relative aspect-video bg-muted">
-                  {video.thumbnail_url ? (
-                    <img 
-                      src={video.thumbnail_url} 
-                      alt={video.title} 
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <Video className="h-8 w-8 text-muted-foreground" />
-                    </div>
-                  )}
-                  {video.duration_seconds > 0 && (
-                    <div className="absolute bottom-2 right-2 bg-black/70 text-white px-2 py-0.5 rounded text-xs">
-                      {formatVideoDuration(video.duration_seconds)}
-                    </div>
-                  )}
-                  {selectedVideoId === video.id && (
-                    <div className="absolute top-2 right-2 bg-primary text-primary-foreground rounded-full p-1">
-                      <Check className="h-4 w-4" />
-                    </div>
-                  )}
-                </div>
-                <CardContent className="p-3">
-                  <h3 className="font-medium truncate text-sm">{video.title || "Sem título"}</h3>
-                  {video.status && (
-                    <p className={`text-xs mt-1 ${
-                      video.status === 'ready' ? 'text-green-600' : 'text-amber-600'
-                    }`}>
-                      Status: {video.status === 'ready' ? 'Pronto' : 'Processando'}
-                    </p>
-                  )}
-                </CardContent>
-              </Card>
-            ))
-          ) : (
-            <div className="col-span-full p-8 border-2 border-dashed rounded-md text-center">
-              <Video className="mx-auto h-10 w-10 text-muted-foreground mb-2" />
-              <p className="text-muted-foreground">
-                {error ? 'Ocorreu um erro ao carregar os vídeos' : 'Nenhum vídeo encontrado. Faça upload ou busca por um vídeo.'}
-              </p>
+                {loading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Carregando...
+                  </>
+                ) : (
+                  "Carregar mais"
+                )}
+              </Button>
             </div>
           )}
         </div>

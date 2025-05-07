@@ -16,11 +16,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { AlertCircle, GripVertical, Plus, Video, Youtube } from "lucide-react";
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
-import { PandaVideoUpload } from "@/components/formacao/comum/PandaVideoUpload";
+import { PandaVideoUploader } from "@/components/formacao/comum/PandaVideoUploader";
 import { PandaVideoSelector } from "@/components/formacao/comum/PandaVideoSelector";
+import { YoutubeVideoInput } from "@/components/formacao/comum/YoutubeVideoInput";
 
 interface EtapaVideosProps {
   form: UseFormReturn<AulaFormValues>;
@@ -29,7 +29,7 @@ interface EtapaVideosProps {
   isSaving: boolean;
 }
 
-type VideoOriginType = "youtube" | "panda_upload" | "panda_select";
+type VideoSourceTab = "youtube" | "panda_upload" | "panda_select";
 
 const EtapaVideos: React.FC<EtapaVideosProps> = ({
   form,
@@ -42,6 +42,7 @@ const EtapaVideos: React.FC<EtapaVideosProps> = ({
   const videos = form.watch('videos') || [];
   const maxVideos = 5; // Limite de 5 vídeos
   
+  // Função para validar e avançar
   const handleContinue = async () => {
     setValidationError(null);
     // Validar esta etapa
@@ -51,17 +52,7 @@ const EtapaVideos: React.FC<EtapaVideosProps> = ({
     }
   };
 
-  const handleVideoChange = (index: number, field: string, value: any) => {
-    const newVideos = [...form.getValues().videos || []];
-    newVideos[index] = { ...newVideos[index], [field]: value };
-    // Garantir que o vídeo tenha um ID único para satisfazer as validações de tipo
-    if (field === 'title' && !newVideos[index].id) {
-      newVideos[index].id = `temp-video-${index}-${Date.now()}`;
-    }
-    form.setValue("videos", newVideos, { shouldValidate: true });
-    setValidationError(null);
-  };
-
+  // Funções para manipular vídeos
   const handleAddVideo = () => {
     if (videos.length >= maxVideos) {
       setValidationError(`Você pode adicionar no máximo ${maxVideos} vídeos.`);
@@ -69,14 +60,13 @@ const EtapaVideos: React.FC<EtapaVideosProps> = ({
     }
     
     const currentVideos = form.getValues().videos || [];
-    // Adicionar um ID temporário para satisfazer as validações de tipo
+    // Adicionar vídeo com ID temporário
     form.setValue("videos", [...currentVideos, { 
       id: `temp-video-${currentVideos.length}-${Date.now()}`,
       title: "", 
       description: "", 
       url: "", 
-      type: "youtube", // Tipo padrão agora é YouTube
-      origin: "youtube" as VideoOriginType // Nova propriedade que indica a origem
+      type: "youtube"
     }], { shouldValidate: true });
   };
 
@@ -88,6 +78,19 @@ const EtapaVideos: React.FC<EtapaVideosProps> = ({
     setValidationError(null);
   };
 
+  // Atualizar campo específico de um vídeo
+  const handleVideoChange = (index: number, field: string, value: any) => {
+    const newVideos = [...form.getValues().videos || []];
+    newVideos[index] = { ...newVideos[index], [field]: value };
+    // Garantir que o vídeo tenha um ID único
+    if (!newVideos[index].id) {
+      newVideos[index].id = `temp-video-${index}-${Date.now()}`;
+    }
+    form.setValue("videos", newVideos, { shouldValidate: true });
+    setValidationError(null);
+  };
+
+  // Reordenar vídeos com drag and drop
   const onDragEnd = (result: any) => {
     if (!result.destination) return;
 
@@ -98,118 +101,38 @@ const EtapaVideos: React.FC<EtapaVideosProps> = ({
     form.setValue("videos", items, { shouldValidate: true });
   };
 
-  const handleChangeVideoOrigin = (index: number, origin: VideoOriginType) => {
-    // Limpar valores relacionados ao tipo anterior para evitar dados incorretos
-    const currentVideo = { ...form.getValues().videos?.[index] };
-    
-    const updatedVideo = {
-      ...currentVideo,
-      origin,
-      url: "", // Limpa URL ao mudar de origem
-      type: origin === "youtube" ? "youtube" : "panda" // Ajusta o tipo com base na origem
-    };
-    
-    // Atualizar o vídeo no formulário
-    const newVideos = [...form.getValues().videos || []];
-    newVideos[index] = updatedVideo;
-    form.setValue("videos", newVideos, { shouldValidate: true });
+  // Função para manipular YouTube videos
+  const handleYoutubeVideoChange = (index: number, url: string) => {
+    handleVideoChange(index, "url", url);
+    handleVideoChange(index, "type", "youtube");
   };
-  
-  // Função para selecionar vídeo existente
-  const handleSelectExistingVideo = (index: number, videoData: any) => {
-    handleVideoChange(index, "title", videoData.title || "Vídeo sem título");
-    handleVideoChange(index, "description", videoData.description || "");
+
+  // Função para lidar com upload de vídeo do PandaVideo
+  const handlePandaVideoUpload = (index: number, url: string, type: string, title: string, videoId: string, fileSize?: number, durationSeconds?: number, thumbnailUrl?: string) => {
+    handleVideoChange(index, "url", url);
+    handleVideoChange(index, "type", "panda");
+    handleVideoChange(index, "video_id", videoId);
+    
+    // Atualizar título se disponível
+    if (title && !form.getValues().videos?.[index]?.title) {
+      handleVideoChange(index, "title", title);
+    }
+    
+    // Adicionar metadados extras
+    if (fileSize) handleVideoChange(index, "fileSize", fileSize);
+    if (durationSeconds) handleVideoChange(index, "duration_seconds", durationSeconds);
+    if (thumbnailUrl) handleVideoChange(index, "thumbnail_url", thumbnailUrl);
+  };
+
+  // Função para lidar com a seleção de vídeo existente do PandaVideo
+  const handlePandaVideoSelect = (index: number, videoData: any) => {
     handleVideoChange(index, "url", videoData.url);
     handleVideoChange(index, "type", "panda");
-    handleVideoChange(index, "filePath", videoData.id);
+    handleVideoChange(index, "video_id", videoData.id);
+    handleVideoChange(index, "title", videoData.title || "Vídeo sem título");
+    handleVideoChange(index, "description", videoData.description || "");
     handleVideoChange(index, "duration_seconds", videoData.duration_seconds || 0);
     handleVideoChange(index, "thumbnail_url", videoData.thumbnail_url || "");
-    handleVideoChange(index, "video_id", videoData.id);
-  };
-  
-  // Função para renderizar o componente específico com base na origem do vídeo
-  const renderVideoSourceComponent = (video: AulaVideo, index: number) => {
-    const origin = video.origin || "youtube";
-    
-    switch(origin) {
-      case "youtube":
-        return (
-          <div className="space-y-4">
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                <Youtube className="h-4 w-4 text-muted-foreground" />
-              </div>
-              <Input
-                placeholder="Cole a URL do YouTube (ex: https://youtube.com/watch?v=...)"
-                className="pl-10"
-                value={video.url || ''}
-                onChange={(e) => handleVideoChange(index, "url", e.target.value)}
-              />
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Formatos suportados: youtube.com/watch, youtu.be
-            </p>
-            
-            {video.url && video.url.includes("youtube") && (
-              <div className="mt-4 rounded-md overflow-hidden border">
-                <div className="relative pb-[56.25%] h-0">
-                  <iframe
-                    src={`https://www.youtube.com/embed/${getYoutubeVideoId(video.url)}`}
-                    title={video.title || "Vídeo do YouTube"}
-                    className="absolute top-0 left-0 w-full h-full"
-                    frameBorder="0"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                  ></iframe>
-                </div>
-              </div>
-            )}
-          </div>
-        );
-        
-      case "panda_upload":
-        return (
-          <PandaVideoUpload
-            value={video.url || ""}
-            videoData={video}
-            onChange={(url, type, fileName, filePath, fileSize, duration_seconds, thumbnail_url, videoId) => {
-              handleVideoChange(index, "url", url);
-              handleVideoChange(index, "type", "panda");
-              handleVideoChange(index, "fileName", fileName);
-              handleVideoChange(index, "filePath", filePath || videoId);
-              handleVideoChange(index, "fileSize", fileSize);
-              handleVideoChange(index, "video_id", videoId);
-              handleVideoChange(index, "duration_seconds", duration_seconds);
-              handleVideoChange(index, "thumbnail_url", thumbnail_url);
-            }}
-          />
-        );
-        
-      case "panda_select":
-        return (
-          <PandaVideoSelector 
-            onSelect={(videoData) => handleSelectExistingVideo(index, videoData)}
-            currentVideoId={video.video_id || video.filePath}
-          />
-        );
-        
-      default:
-        return <p>Selecione uma origem de vídeo acima</p>;
-    }
-  };
-  
-  // Função para extrair ID do YouTube de uma URL
-  const getYoutubeVideoId = (url: string): string => {
-    if (!url) return '';
-    
-    try {
-      const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
-      const match = url.match(regExp);
-      return (match && match[2].length === 11) ? match[2] : '';
-    } catch (error) {
-      console.error("Erro ao extrair ID do YouTube:", error);
-      return '';
-    }
   };
 
   return (
@@ -221,14 +144,14 @@ const EtapaVideos: React.FC<EtapaVideosProps> = ({
             type="button"
             size="sm"
             onClick={handleAddVideo}
-            disabled={videos.length >= maxVideos}
+            disabled={videos.length >= maxVideos || isSaving}
           >
             <Plus className="w-4 h-4 mr-1" /> Adicionar Vídeo
           </Button>
         </div>
         
         <FormDescription>
-          Adicione até {maxVideos} vídeos para esta aula através de YouTube, upload pelo Panda Video ou seleção de vídeos já existentes.
+          Adicione até {maxVideos} vídeos para esta aula através de YouTube, upload pelo Panda Video ou seleção de vídeos existentes.
         </FormDescription>
         
         {validationError && (
@@ -256,8 +179,8 @@ const EtapaVideos: React.FC<EtapaVideosProps> = ({
                 >
                   {videos.map((video, index) => (
                     <Draggable 
-                      key={`video-${index}`} 
-                      draggableId={`video-${index}`} 
+                      key={`video-${video.id || index}`} 
+                      draggableId={`video-${video.id || index}`} 
                       index={index}
                     >
                       {(provided) => (
@@ -302,38 +225,53 @@ const EtapaVideos: React.FC<EtapaVideosProps> = ({
                                 className="mb-2 resize-none h-20"
                               />
                               
-                              <div className="border rounded-md p-4 bg-muted/20">
-                                <RadioGroup 
-                                  value={video.origin || "youtube"} 
-                                  onValueChange={(value) => handleChangeVideoOrigin(index, value as VideoOriginType)}
-                                  className="flex flex-col space-y-1 md:flex-row md:space-y-0 md:space-x-4 mb-4"
-                                >
-                                  <div className="flex items-center space-x-2">
-                                    <RadioGroupItem value="youtube" id={`youtube-${index}`} />
-                                    <Label htmlFor={`youtube-${index}`} className="flex items-center">
-                                      <Youtube className="h-4 w-4 mr-1.5" />
-                                      YouTube
-                                    </Label>
-                                  </div>
-                                  <div className="flex items-center space-x-2">
-                                    <RadioGroupItem value="panda_upload" id={`panda-upload-${index}`} />
-                                    <Label htmlFor={`panda-upload-${index}`} className="flex items-center">
-                                      <Video className="h-4 w-4 mr-1.5" />
-                                      Enviar via Panda Video
-                                    </Label>
-                                  </div>
-                                  <div className="flex items-center space-x-2">
-                                    <RadioGroupItem value="panda_select" id={`panda-select-${index}`} />
-                                    <Label htmlFor={`panda-select-${index}`} className="flex items-center">
-                                      <Video className="h-4 w-4 mr-1.5" />
-                                      Selecionar do Panda
-                                    </Label>
-                                  </div>
-                                </RadioGroup>
+                              <Tabs defaultValue={video.type === "panda" ? (video.video_id ? "panda_select" : "panda_upload") : "youtube"}>
+                                <TabsList className="grid grid-cols-3 mb-4">
+                                  <TabsTrigger value="youtube" className="flex items-center gap-1">
+                                    <Youtube className="h-3 w-3" />
+                                    <span className="text-xs">YouTube</span>
+                                  </TabsTrigger>
+                                  <TabsTrigger value="panda_upload" className="flex items-center gap-1">
+                                    <Video className="h-3 w-3" />
+                                    <span className="text-xs">Upload</span>
+                                  </TabsTrigger>
+                                  <TabsTrigger value="panda_select" className="flex items-center gap-1">
+                                    <Video className="h-3 w-3" />
+                                    <span className="text-xs">Biblioteca</span>
+                                  </TabsTrigger>
+                                </TabsList>
                                 
-                                {/* Componente específico para cada tipo de origem de vídeo */}
-                                {renderVideoSourceComponent(video, index)}
-                              </div>
+                                <TabsContent value="youtube" className="space-y-2">
+                                  <YoutubeVideoInput 
+                                    value={video.url || ''} 
+                                    onChange={(url) => handleYoutubeVideoChange(index, url)}
+                                  />
+                                </TabsContent>
+                                
+                                <TabsContent value="panda_upload" className="space-y-2">
+                                  <PandaVideoUploader 
+                                    onChange={(url, type, title, videoId, fileSize, durationSeconds, thumbnailUrl) => 
+                                      handlePandaVideoUpload(index, url, type, title, videoId, fileSize, durationSeconds, thumbnailUrl)
+                                    }
+                                    initialValue={
+                                      video.type === "panda" && video.url ? {
+                                        url: video.url,
+                                        title: video.title,
+                                        video_id: video.video_id,
+                                        thumbnail_url: video.thumbnail_url,
+                                        duration_seconds: video.duration_seconds
+                                      } : undefined
+                                    }
+                                  />
+                                </TabsContent>
+                                
+                                <TabsContent value="panda_select" className="space-y-2">
+                                  <PandaVideoSelector 
+                                    onSelect={(videoData) => handlePandaVideoSelect(index, videoData)}
+                                    currentVideoId={video.video_id}
+                                  />
+                                </TabsContent>
+                              </Tabs>
                             </div>
                           </CardContent>
                         </Card>
@@ -353,12 +291,14 @@ const EtapaVideos: React.FC<EtapaVideosProps> = ({
           type="button" 
           variant="outline" 
           onClick={onPrevious}
+          disabled={isSaving}
         >
           Voltar
         </Button>
         <Button 
           type="button" 
           onClick={handleContinue}
+          disabled={isSaving}
         >
           Continuar
         </Button>

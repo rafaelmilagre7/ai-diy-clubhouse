@@ -18,6 +18,10 @@ async function uploadWithRetry(url: string, options: RequestInit, maxRetries = 3
       
       const response = await fetch(url, options);
       
+      // Debug de resposta
+      console.log(`Resposta do servidor (status ${response.status}):`, 
+        Object.fromEntries(response.headers.entries()));
+      
       // Verificar se a resposta está ok antes de retornar
       if (!response.ok) {
         // Obter detalhes do erro para logging
@@ -33,6 +37,9 @@ async function uploadWithRetry(url: string, options: RequestInit, maxRetries = 3
         if (response.status >= 500 || response.status === 429) {
           throw new Error(`Erro HTTP ${response.status}`);
         }
+        
+        // Para outros erros, retornar a resposta mesmo sendo erro
+        return response;
       }
       
       return response;
@@ -104,16 +111,15 @@ serve(async (req) => {
     // Obter API key do Panda Video
     const apiKey = Deno.env.get("PANDA_API_KEY");
     
-    console.log("Verificando credencial Panda Video API Key disponível:", !!apiKey);
-    console.log("API Key parcial (primeiros 5 chars):", apiKey ? apiKey.substring(0, 5) + "..." : "não definida");
+    console.log("Verificando API Key Panda Video:", apiKey ? `${apiKey.substring(0, 6)}...` : "não definida");
     
     if (!apiKey) {
       console.error("API Key do Panda Video não configurada");
-      
       return new Response(
         JSON.stringify({ 
           success: false,
-          error: "Configuração incompleta do servidor: API Key não definida"
+          error: "Configuração incompleta do servidor: API Key não definida",
+          message: "Por favor, configure a variável de ambiente PANDA_API_KEY no Supabase"
         }),
         { 
           status: 500, 
@@ -129,13 +135,10 @@ serve(async (req) => {
     let formData;
     try {
       formData = await req.formData();
-      console.log("FormData extraído com sucesso");
-      
-      // Listar campos recebidos para debug
-      const formEntries = Array.from(formData.entries());
-      console.log(`Campos no FormData: ${formEntries.map(([key]) => key).join(", ")}`);
+      console.log("FormData recebido com sucesso");
+      console.log("Campos no FormData:", Array.from(formData.keys()).join(", "));
     } catch (formError) {
-      console.error("Erro ao processar formulário:", formError);
+      console.error("Erro ao processar dados do formulário:", formError);
       return new Response(
         JSON.stringify({ 
           success: false,
@@ -158,7 +161,7 @@ serve(async (req) => {
     const folderId = formData.get("folder_id") as string || "";
 
     if (!videoFile) {
-      console.log("Nenhum arquivo de vídeo encontrado no FormData");
+      console.log("Nenhum arquivo de vídeo encontrado");
       return new Response(
         JSON.stringify({ 
           success: false,
@@ -174,15 +177,10 @@ serve(async (req) => {
       );
     }
 
-    console.log(`Processando upload do vídeo: ${videoTitle} (${videoFile.size} bytes)`);
-    console.log(`Tipo do arquivo: ${videoFile.type}`);
-
-    // Gerar um UUID para o vídeo
-    const videoId = crypto.randomUUID();
-    console.log("ID de vídeo gerado:", videoId);
+    console.log(`Processando upload: "${videoTitle}" (${videoFile.size} bytes, tipo: ${videoFile.type})`);
 
     // Verificar o tamanho do arquivo
-    if (videoFile.size > 500 * 1024 * 1024) { // 500MB em bytes
+    if (videoFile.size > 500 * 1024 * 1024) { // 500MB
       return new Response(
         JSON.stringify({ 
           success: false,
@@ -199,6 +197,9 @@ serve(async (req) => {
     }
 
     // Preparar metadados para o protocolo Tus
+    const videoId = crypto.randomUUID();
+    console.log("ID de vídeo gerado:", videoId);
+    
     const metadataEntries = [
       `authorization ${encodeBase64(apiKey)}`,
       `filename ${encodeBase64(videoFile.name)}`,
@@ -220,38 +221,60 @@ serve(async (req) => {
     // Preparar o buffer de dados do arquivo
     const fileBuffer = await videoFile.arrayBuffer();
     
-    console.log("Iniciando upload com protocolo Tus para Panda Video API");
+    console.log("Iniciando upload protocolo TUS para Panda Video");
     console.log("URL de upload:", PANDA_UPLOAD_URL);
     console.log("Tamanho do arquivo:", videoFile.size, "bytes");
     console.log("Metadados TUS:", uploadMetadata);
     
-    let uploadResponse;
+    // ETAPA 1: Criar a requisição de criação do upload via protocolo TUS
+    let locationUrl = "";
     try {
-      // Criar a requisição de criação do upload via protocolo TUS
-      uploadResponse = await uploadWithRetry(PANDA_UPLOAD_URL, {
+      console.log("Iniciando ETAPA 1: Criação do upload TUS");
+      const uploadResponse = await uploadWithRetry(PANDA_UPLOAD_URL, {
         method: "POST",
         headers: {
           "Tus-Resumable": "1.0.0",
           "Upload-Length": videoFile.size.toString(),
           "Upload-Metadata": uploadMetadata,
           "Content-Type": "application/offset+octet-stream",
-          "X-Upload-Content-Type": videoFile.type,
           "Accept": "application/json, */*"
         }
       });
       
-      console.log(`Resposta da criação do upload recebida com status: ${uploadResponse.status}`);
-      console.log(`Headers da resposta:`, Object.fromEntries(uploadResponse.headers.entries()));
+      console.log(`ETAPA 1 - Status: ${uploadResponse.status}`);
+      console.log("Headers retornados:", Object.fromEntries(uploadResponse.headers.entries()));
       
       // Obter a URL de Location para onde enviar os bytes
-      const locationUrl = uploadResponse.headers.get("Location");
+      locationUrl = uploadResponse.headers.get("Location") || "";
       if (!locationUrl) {
         throw new Error("API do Panda Video não retornou URL de upload (Location header)");
       }
       
       console.log("Upload criado. URL de upload:", locationUrl);
+    } catch (err) {
+      console.error("Erro na criação do upload TUS:", err);
+      return new Response(
+        JSON.stringify({ 
+          success: false,
+          error: "Falha ao iniciar upload para o Panda Video",
+          details: err instanceof Error ? err.message : String(err)
+        }),
+        { 
+          status: 500, 
+          headers: { 
+            ...corsHeaders, 
+            "Content-Type": "application/json" 
+          } 
+        }
+      );
+    }
       
-      // Realizar o upload do arquivo para o endpoint de patch
+    // ETAPA 2: Realizar o upload do arquivo para o endpoint TUS
+    try {  
+      console.log("Iniciando ETAPA 2: Upload de bytes via PATCH");
+      console.log("Enviando para:", locationUrl);
+      console.log("Tamanho do buffer:", fileBuffer.byteLength, "bytes");
+      
       const patchResponse = await uploadWithRetry(locationUrl, {
         method: "PATCH",
         headers: {
@@ -262,15 +285,21 @@ serve(async (req) => {
         body: new Uint8Array(fileBuffer)
       });
       
-      console.log(`Upload PATCH completado com status: ${patchResponse.status}`);
-      console.log(`Headers da resposta PATCH:`, Object.fromEntries(patchResponse.headers.entries()));
-    } catch (uploadError) {
-      console.error("Erro na requisição de upload:", uploadError);
+      console.log(`ETAPA 2 - Status: ${patchResponse.status}`);
+      console.log("Headers retornados:", Object.fromEntries(patchResponse.headers.entries()));
+      
+      if (!patchResponse.ok) {
+        const responseText = await patchResponse.text();
+        console.error("Resposta de erro do servidor:", responseText);
+        throw new Error(`Erro ao enviar arquivo: ${patchResponse.status} - ${responseText}`);
+      }
+    } catch (err) {
+      console.error("Erro no upload de arquivo:", err);
       return new Response(
         JSON.stringify({ 
           success: false,
-          error: "Falha na conexão com o serviço de vídeo",
-          details: uploadError instanceof Error ? uploadError.message : String(uploadError)
+          error: "Falha durante upload do arquivo",
+          details: err instanceof Error ? err.message : String(err)
         }),
         { 
           status: 500, 
@@ -282,19 +311,21 @@ serve(async (req) => {
       );
     }
 
-    // Como o Tus não retorna imediatamente os metadados do vídeo,
-    // retornamos um sucesso com o ID do vídeo e outros dados que temos
+    // Upload concluído com sucesso
+    console.log("Upload concluído com sucesso!");
+    
+    // Como o Panda não retorna os metadados do vídeo imediatamente,
+    // retornamos os dados que temos disponíveis no momento
     return new Response(
       JSON.stringify({
         success: true,
         video: {
           id: videoId,
           title: videoTitle,
-          duration: 0, // Será necessário obter isso por meio de outra API call
+          duration: 0, // Será necessário obter isso após processamento
           url: `https://player.pandavideo.com.br/embed/${videoId}`,
           thumbnail_url: null, // Será disponibilizado após o processamento
-          video_type: "panda",
-          upload_id: videoId // Usando o mesmo videoId para simplificar
+          type: "panda",
         }
       }),
       { 
@@ -318,8 +349,8 @@ serve(async (req) => {
         headers: { 
           ...corsHeaders, 
           "Content-Type": "application/json" 
-          } 
         }
-      );
-    }
-  });
+      }
+    );
+  }
+});

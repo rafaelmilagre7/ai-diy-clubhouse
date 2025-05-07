@@ -35,7 +35,7 @@ serve(async (req) => {
     // Obter API key do Panda Video
     const apiKey = Deno.env.get("PANDA_API_KEY");
 
-    console.log("Verificando credencial Panda Video API Key disponível:", !!apiKey);
+    console.log("Verificando credencial Panda Video API Key:", apiKey ? `${apiKey.substring(0, 6)}...` : "não definida");
 
     if (!apiKey) {
       console.error("API Key do Panda Video não configurada");
@@ -55,14 +55,16 @@ serve(async (req) => {
       );
     }
 
-    // Parâmetros opcionais
+    // Parâmetros da URL
     const url = new URL(req.url);
+    console.log("URL da requisição:", url.toString());
+    
     const page = url.searchParams.get("page") || "1";
     const limit = url.searchParams.get("limit") || "100";
     const search = url.searchParams.get("search") || "";
     const folder = url.searchParams.get("folder") || "";
 
-    // Construir URL de consulta
+    // Contruir URL da API
     let apiUrl = `${PANDA_API_URL}/videos?page=${page}&quantity=${limit}`;
     
     if (search) {
@@ -82,6 +84,8 @@ serve(async (req) => {
     
     while (retriesLeft > 0 && !response) {
       try {
+        console.log(`Tentativa ${4-retriesLeft} de requisição à API Panda Video`);
+        
         // Fazer requisição para a API do Panda Video
         response = await fetch(apiUrl, {
           method: "GET",
@@ -91,11 +95,14 @@ serve(async (req) => {
           }
         });
         
-        console.log("Status da resposta da API do Panda:", response.status);
-        console.log("Headers da resposta:", Object.fromEntries(response.headers.entries()));
+        console.log(`Status da resposta API: ${response.status}`);
+        console.log(`Headers da resposta:`, Object.fromEntries(response.headers.entries()));
         
         // Se a resposta for bem-sucedida, sair do loop
-        if (response.ok) break;
+        if (response.ok) {
+          console.log("Requisição bem-sucedida");
+          break;
+        }
         
         // Se receber um erro de rate limit, tentar novamente
         if (response.status === 429) {
@@ -149,12 +156,32 @@ serve(async (req) => {
     }
 
     // Processar dados da resposta
-    let responseText;
+    let responseData;
     try {
-      responseText = await response.text();
-      console.log("Resposta bruta da API do Panda:", responseText);
-    } catch (parseError) {
-      console.error("Erro ao ler resposta como texto:", parseError);
+      const responseText = await response.text();
+      console.log("Resposta da API do Panda (amostra):", responseText.substring(0, 100) + "...");
+      
+      try {
+        responseData = JSON.parse(responseText);
+      } catch (parseError) {
+        console.error("Erro ao analisar resposta JSON:", parseError);
+        return new Response(
+          JSON.stringify({
+            success: false,
+            error: "Erro ao processar resposta do servidor Panda Video",
+            rawResponseSample: responseText.substring(0, 200)
+          }),
+          {
+            status: 500,
+            headers: {
+              ...corsHeaders,
+              "Content-Type": "application/json"
+            }
+          }
+        );
+      }
+    } catch (readError) {
+      console.error("Erro ao ler resposta como texto:", readError);
       return new Response(
         JSON.stringify({
           success: false,
@@ -170,36 +197,14 @@ serve(async (req) => {
       );
     }
     
-    // Tentar fazer parse da resposta como JSON
-    let data;
-    try {
-      data = JSON.parse(responseText);
-    } catch (parseError) {
-      console.error("Erro ao analisar resposta JSON:", parseError);
-      return new Response(
-        JSON.stringify({
-          success: false,
-          error: "Erro ao processar resposta do servidor Panda Video",
-          rawResponse: responseText
-        }),
-        {
-          status: 500,
-          headers: {
-            ...corsHeaders,
-            "Content-Type": "application/json"
-          }
-        }
-      );
-    }
-    
     // Verificar se a resposta contém a propriedade 'videos'
-    if (!data || !data.videos) {
-      console.error("Formato de resposta inválido:", data);
+    if (!responseData || typeof responseData !== 'object' || !Array.isArray(responseData.videos)) {
+      console.error("Formato de resposta inválido:", responseData);
       return new Response(
         JSON.stringify({
           success: false,
           error: "Formato de resposta inválido da API do Panda Video",
-          rawResponse: data
+          rawResponse: responseData
         }),
         {
           status: 500,
@@ -212,7 +217,7 @@ serve(async (req) => {
     }
     
     // Mapear dados para um formato mais amigável
-    const videos = data.videos.map((video: any) => ({
+    const videos = responseData.videos.map((video: any) => ({
       id: video.id,
       title: video.title || "Sem título",
       description: video.description || "",
@@ -221,9 +226,10 @@ serve(async (req) => {
       created_at: video.created_at,
       folder_id: video.folder_id,
       status: video.status,
-      hls_playlist_url: video.hls_playlist_url,
       url: `https://player.pandavideo.com.br/embed/${video.id}`
     }));
+
+    console.log(`${videos.length} vídeos processados`);
 
     return new Response(
       JSON.stringify({
@@ -232,8 +238,8 @@ serve(async (req) => {
         pagination: {
           page: parseInt(page),
           limit: parseInt(limit),
-          total: data.count || videos.length,
-          totalPages: Math.ceil((data.count || videos.length) / parseInt(limit))
+          total: responseData.count || videos.length,
+          totalPages: Math.ceil((responseData.count || videos.length) / parseInt(limit))
         }
       }),
       {
@@ -252,7 +258,7 @@ serve(async (req) => {
       JSON.stringify({
         success: false,
         error: "Erro ao processar a requisição",
-        message: error.message
+        message: error instanceof Error ? error.message : String(error)
       }),
       {
         status: 500,
