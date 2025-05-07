@@ -13,6 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, Plus, File, Video, Edit, Upload } from "lucide-react";
 import { useLogging } from "@/hooks/useLogging";
+import { PandaVideoPlayerEnhanced } from "@/components/formacao/comum/PandaVideoPlayerEnhanced";
 
 // Adicionar interface temporária para lidar com os novos campos até que os tipos sejam atualizados
 interface VideoWithType extends Omit<LearningLessonVideo, 'video_type'> {
