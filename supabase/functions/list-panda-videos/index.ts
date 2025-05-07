@@ -19,6 +19,9 @@ serve(async (req) => {
     const authHeader = req.headers.get("Authorization");
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
       console.log("Erro de autenticação: Token JWT ausente ou inválido");
+      console.log("Headers recebidos:", Object.fromEntries([...req.headers.entries()]
+        .filter(([key]) => !key.toLowerCase().includes("authorization"))));
+      
       return new Response(
         JSON.stringify({
           success: false,
