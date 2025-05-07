@@ -5,17 +5,20 @@ import { Button } from "@/components/ui/button";
 import { AlertCircle, CheckCircle2, Loader2, RefreshCw } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { supabase } from "@/lib/supabase";
+import { toast } from "sonner";
 
 export const PandaVideoStatusCheck = () => {
   const [checking, setChecking] = useState(false);
   const [status, setStatus] = useState<"unchecked" | "error" | "ok">("unchecked");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [errorDetails, setErrorDetails] = useState<string | null>(null);
 
   // Verificar status da API key
   const checkApiKeyStatus = async () => {
     setChecking(true);
     setStatus("unchecked");
     setErrorMessage(null);
+    setErrorDetails(null);
     
     try {
       // Chamar a edge function para testar a API key
@@ -34,11 +37,13 @@ export const PandaVideoStatusCheck = () => {
         console.error("Erro na resposta da API:", data);
         setStatus("error");
         setErrorMessage(data.error || "Erro na comunicação com a API Panda Video");
+        setErrorDetails(data.message || null);
         return;
       }
       
       // Se chegou até aqui, a API key está ok
       setStatus("ok");
+      toast.success("Conexão com Panda Video verificada com sucesso!");
     } catch (err: any) {
       console.error("Exceção ao verificar API key:", err);
       setStatus("error");
@@ -99,8 +104,12 @@ export const PandaVideoStatusCheck = () => {
             <AlertTitle>Erro na integração</AlertTitle>
             <AlertDescription className="space-y-2">
               <p>{errorMessage || "Não foi possível conectar com a API do Panda Video."}</p>
+              {errorDetails && (
+                <p className="text-sm">{errorDetails}</p>
+              )}
               <p className="text-sm">
-                Verifique se a chave da API está configurada corretamente nas configurações da aplicação.
+                Verifique se a chave da API do Panda Video está configurada corretamente nas configurações da aplicação.
+                A chave deve começar com <code>panda-</code>.
               </p>
             </AlertDescription>
           </Alert>

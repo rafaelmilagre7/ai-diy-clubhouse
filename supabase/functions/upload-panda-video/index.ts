@@ -140,7 +140,26 @@ serve(async (req) => {
       );
     }
     
-    console.log("API Key do Panda Video encontrada:", apiKey.substring(0, 5) + "...");
+    console.log("API Key do Panda Video encontrada:", apiKey.substring(0, 10) + "...");
+    
+    // Verificar se a chave tem o formato correto
+    if (!apiKey.startsWith('panda-')) {
+      console.error("Formato da API Key do Panda Video incorreto");
+      return new Response(
+        JSON.stringify({ 
+          success: false,
+          error: "Formato da API Key incorreto",
+          message: "A API Key deve começar com 'panda-'"
+        }),
+        { 
+          status: 500, 
+          headers: { 
+            ...corsHeaders, 
+            "Content-Type": "application/json" 
+          } 
+        }
+      );
+    }
 
     // Extrair os dados do formulário
     let formData;

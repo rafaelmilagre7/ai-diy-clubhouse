@@ -53,7 +53,25 @@ serve(async (req) => {
       );
     }
 
-    console.log("API Key Panda encontrada:", apiKey.substring(0, 5) + "...");
+    console.log("API Key Panda encontrada, verificando formato");
+    // Verificar se a chave tem o formato correto (começando com 'panda-')
+    if (!apiKey.startsWith('panda-')) {
+      console.error("Formato da API Key do Panda Video incorreto");
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: "Formato da API Key incorreto",
+          message: "A API Key deve começar com 'panda-'"
+        }),
+        {
+          status: 500,
+          headers: {
+            ...corsHeaders,
+            "Content-Type": "application/json"
+          }
+        }
+      );
+    }
 
     // URL para verificar a API (apenas buscar 1 vídeo para testar)
     const checkEndpoint = `${PANDA_API_URL}/videos?page=1&quantity=1`;
@@ -67,6 +85,7 @@ serve(async (req) => {
     while (retriesLeft > 0 && !response) {
       try {
         console.log(`Tentativa ${3-retriesLeft} de requisição à API Panda Video`);
+        console.log(`Usando cabeçalho de autorização: ApiVideoPanda ${apiKey.substring(0, 10)}...`);
         
         // Fazer requisição para a API do Panda Video
         response = await fetch(checkEndpoint, {
@@ -146,11 +165,37 @@ serve(async (req) => {
       );
     }
 
+    // Analisar a resposta para garantir que é um JSON válido
+    let responseData;
+    try {
+      responseData = await response.json();
+      console.log("Resposta obtida com sucesso:", JSON.stringify(responseData).substring(0, 100) + "...");
+    } catch (parseError) {
+      console.error("Erro ao analisar resposta JSON:", parseError);
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: "Resposta inválida da API do Panda Video",
+          details: parseError instanceof Error ? parseError.message : "Erro desconhecido"
+        }),
+        {
+          status: 500,
+          headers: {
+            ...corsHeaders,
+            "Content-Type": "application/json"
+          }
+        }
+      );
+    }
+
     // Se chegou aqui, a API está funcionando
     return new Response(
       JSON.stringify({
         success: true,
-        message: "API do Panda Video está configurada e funcionando corretamente"
+        message: "API do Panda Video está configurada e funcionando corretamente",
+        data: {
+          videosCount: Array.isArray(responseData.videos) ? responseData.videos.length : 0
+        }
       }),
       {
         status: 200,

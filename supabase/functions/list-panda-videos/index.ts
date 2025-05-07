@@ -57,7 +57,26 @@ serve(async (req) => {
       );
     }
 
-    console.log("API Key Panda encontrada:", apiKey.substring(0, 5) + "...");
+    console.log("API Key Panda encontrada:", apiKey.substring(0, 10) + "...");
+    
+    // Verificar se a chave tem o formato correto (começando com 'panda-')
+    if (!apiKey.startsWith('panda-')) {
+      console.error("Formato da API Key do Panda Video incorreto");
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: "Formato da API Key incorreto",
+          message: "A API Key deve começar com 'panda-'"
+        }),
+        {
+          status: 500,
+          headers: {
+            ...corsHeaders,
+            "Content-Type": "application/json"
+          }
+        }
+      );
+    }
 
     // Parâmetros da URL
     const url = new URL(req.url);
@@ -89,6 +108,7 @@ serve(async (req) => {
     while (retriesLeft > 0 && !response) {
       try {
         console.log(`Tentativa ${4-retriesLeft} de requisição à API Panda Video`);
+        console.log(`Usando cabeçalho de autorização: ApiVideoPanda ${apiKey.substring(0, 10)}...`);
         
         // Fazer requisição para a API do Panda Video
         response = await fetch(apiUrl, {
