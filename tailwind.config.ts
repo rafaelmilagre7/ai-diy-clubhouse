@@ -106,6 +106,7 @@ export default {
 			fontFamily: {
                 // Alterando de Inter para Nunito como fonte principal
                 sans: ['Nunito', 'system-ui', 'sans-serif'],
+                nunito: ['Nunito', 'system-ui', 'sans-serif'], // Adicionando Nunito como fonte específica
                 heading: ['Nunito', 'system-ui', 'sans-serif'],
             },
 			keyframes: {

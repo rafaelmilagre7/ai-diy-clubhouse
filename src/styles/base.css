@@ -61,6 +61,12 @@
     font-feature-settings: "ss01", "ss02", "cv01", "cv02";
     min-height: 100vh;
   }
+  
+  /* Adicionando a classe font-heading ao estilo base */
+  .font-heading {
+    @apply font-nunito tracking-tight; /* Usando a família fonte definida no tailwind.config */
+  }
+  
   h1, h2, h3, h4, h5, h6 {
     @apply font-heading tracking-tight;
   }

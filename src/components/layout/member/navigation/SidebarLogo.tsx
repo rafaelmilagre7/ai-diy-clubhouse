@@ -2,7 +2,12 @@
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
-export function SidebarLogo({ sidebarOpen }: { sidebarOpen: boolean }) {
+interface SidebarLogoProps {
+  sidebarOpen: boolean;
+  setSidebarOpen?: (open: boolean) => void;  // Tornando opcional para compatibilidade
+}
+
+export function SidebarLogo({ sidebarOpen, setSidebarOpen }: SidebarLogoProps) {
   return (
     <Link
       to="/dashboard"
