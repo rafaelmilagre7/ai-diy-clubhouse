@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { AulaVideo } from '@/components/formacao/aulas/wizard/AulaStepWizard';
+import { AulaVideo } from '@/components/formacao/aulas/types';
 import { toast } from 'sonner';
 
 export const useAulaVideos = (initialVideos: AulaVideo[] = []) => {

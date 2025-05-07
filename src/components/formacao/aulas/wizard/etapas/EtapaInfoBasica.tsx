@@ -1,7 +1,7 @@
 
 import React, { useState } from "react";
 import { UseFormReturn } from "react-hook-form";
-import { AulaFormValues } from "../AulaStepWizard";
+import { AulaFormValues } from "@/components/formacao/aulas/types";
 import { Button } from "@/components/ui/button";
 import {
   FormControl,

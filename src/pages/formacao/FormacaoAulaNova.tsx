@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 import { aulaFormSchema } from "@/components/formacao/aulas/wizard/schemas/aulaFormSchema";
-import { AulaFormValues } from "@/components/formacao/aulas/wizard/AulaStepWizard";
+import { AulaFormValues } from "@/components/formacao/aulas/types";
 import EtapaInfoBasica from "@/components/formacao/aulas/wizard/etapas/EtapaInfoBasica";
 import { useAulaWizardStore } from "@/hooks/formacao/useAulaWizardStore";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
@@ -30,17 +30,21 @@ const FormacaoAulaNova = () => {
   useEffect(() => {
     const subscription = form.watch((value) => {
       // Apenas atualizar campos que foram modificados
-      Object.keys(value).forEach((key) => {
-        if (value[key as keyof AulaFormValues] !== undefined) {
-          updateFormField(
-            key as keyof AulaFormValues,
-            value[key as keyof AulaFormValues] as any
-          );
-        }
-      });
+      if (value) {
+        Object.keys(value).forEach((key) => {
+          const fieldKey = key as keyof AulaFormValues;
+          if (value[fieldKey] !== undefined) {
+            updateFormField(fieldKey, value[fieldKey] as any);
+          }
+        });
+      }
     });
     
-    return () => subscription.unsubscribe();
+    return () => {
+      if (subscription && typeof subscription.unsubscribe === 'function') {
+        subscription.unsubscribe();
+      }
+    };
   }, [form.watch, updateFormField]);
   
   // Manipulador para avançar para a próxima etapa

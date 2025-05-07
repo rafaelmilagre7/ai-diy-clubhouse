@@ -2,7 +2,8 @@
 import React from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
-import AulaStepWizard, { AulaFormValues } from "./AulaStepWizard";
+import AulaStepWizard from "./AulaStepWizard";
+import { AulaFormValues } from "@/components/formacao/aulas/types";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 
 interface AulaDialogProps {

@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { AulaFormValues } from "@/components/formacao/aulas/wizard/AulaStepWizard";
+import { AulaFormValues } from "@/components/formacao/aulas/types";
 
 interface CreateAulaOptions {
   onSuccess?: (data: any) => void;

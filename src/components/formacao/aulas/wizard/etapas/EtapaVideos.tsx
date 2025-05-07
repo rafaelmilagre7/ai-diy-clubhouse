@@ -1,7 +1,7 @@
 
 import React, { useState } from "react";
 import { UseFormReturn } from "react-hook-form";
-import { AulaFormValues, AulaVideo } from "../AulaStepWizard";
+import { AulaFormValues, AulaVideo } from "@/components/formacao/aulas/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { FormLabel, FormDescription } from "@/components/ui/form";
