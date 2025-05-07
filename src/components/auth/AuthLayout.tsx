@@ -1,8 +1,8 @@
 
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { LoginForm } from './login/LoginForm';
-import { RegisterForm } from './RegisterForm';
+import LoginForm from './login/LoginForm';
+import RegisterForm from './RegisterForm';
 
 interface AuthLayoutProps {
   initialTab?: string;

@@ -65,17 +65,23 @@ module.exports = {
         revenue: {
           DEFAULT: "#3949AB",
           light: "#7986CB",
-          dark: "#1A237E"
+          dark: "#1A237E",
+          lighter: "#C5CAE9",
+          darker: "#0D1642"
         },
         operational: {
           DEFAULT: "#8E24AA",
           light: "#BA68C8",
-          dark: "#4A148C"
+          dark: "#4A148C",
+          lighter: "#E1BEE7",
+          darker: "#2A0B50"
         },
         strategy: {
           DEFAULT: "#00897B",
           light: "#4DB6AC",
-          dark: "#004D40"
+          dark: "#004D40",
+          lighter: "#B2DFDB",
+          darker: "#002B23"
         }
       },
       borderRadius: {
@@ -97,6 +103,19 @@ module.exports = {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
       },
+      backgroundImage: {
+        'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
+        'gradient-conic': 'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
+        'gradient-viver': 'linear-gradient(135deg, #0ABAB5 0%, #6de2de 100%)',
+        'gradient-revenue': 'linear-gradient(135deg, #1A237E 0%, #3949AB 100%)',
+        'gradient-operational': 'linear-gradient(135deg, #4A148C 0%, #8E24AA 100%)',
+        'gradient-strategy': 'linear-gradient(135deg, #004D40 0%, #00897B 100%)',
+        'gradient-card': 'linear-gradient(135deg, #ffffff 0%, #f5f5f5 100%)',
+        'dot-pattern': 'radial-gradient(circle, #0ABAB5 1px, transparent 1px)',
+      },
+      backgroundSize: {
+        'size-200': '200% 200%',
+      }
     },
   },
   plugins: [require("tailwindcss-animate")],
