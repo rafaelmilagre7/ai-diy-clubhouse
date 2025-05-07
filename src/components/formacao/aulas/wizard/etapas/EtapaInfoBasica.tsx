@@ -87,6 +87,28 @@ const EtapaInfoBasica: React.FC<EtapaInfoBasicaProps> = ({
         )}
       />
 
+      {/* Campo de dificuldade */}
+      <FormField
+        control={form.control}
+        name="difficulty"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Nível de Dificuldade</FormLabel>
+            <FormControl>
+              <select
+                className="w-full border border-input bg-background px-3 py-2 rounded-md"
+                {...field}
+              >
+                <option value="basic">Básico</option>
+                <option value="medium">Intermediário</option>
+                <option value="advanced">Avançado</option>
+              </select>
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
       {!standalone && (
         <div className="flex justify-end pt-4">
           <Button type="button" onClick={handleContinue}>

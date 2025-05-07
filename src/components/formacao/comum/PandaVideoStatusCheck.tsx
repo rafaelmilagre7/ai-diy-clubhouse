@@ -1,68 +1,64 @@
 
-import { useState, useEffect } from "react";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle, AlertTriangle, CheckCircle, Loader2 } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import React, { useState, useEffect } from 'react';
+import { AlertCircle, CheckCircle, Loader2 } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { supabase } from '@/lib/supabase';
 
-export const PandaVideoStatusCheck = () => {
+export const PandaVideoStatusCheck: React.FC = () => {
   const [status, setStatus] = useState<'checking' | 'ok' | 'error'>('checking');
-  const [message, setMessage] = useState<string | null>(null);
-
+  const [message, setMessage] = useState('Verificando conexão com Panda Video...');
+  
   useEffect(() => {
-    const checkPandaAPIStatus = async () => {
+    const checkPandaConnection = async () => {
       try {
-        setStatus('checking');
-        const { data, error } = await supabase.functions.invoke("check-panda-api", {
-          body: { action: "status" }
-        });
-
+        // Tentando chamar uma função Edge que verifica a conexão com o Panda Video
+        const { data, error } = await supabase.functions.invoke('check-panda-connection');
+        
         if (error) {
-          console.error("Erro ao verificar API Panda:", error);
-          setStatus('error');
-          setMessage(error.message || "Não foi possível verificar a integração com o Panda Video");
-          return;
+          throw new Error(error.message);
         }
-
+        
         if (data && data.success) {
           setStatus('ok');
-          setMessage(null);
+          setMessage('Conexão com Panda Video estabelecida com sucesso.');
         } else {
-          setStatus('error');
-          setMessage(data?.error || "Erro na integração com o Panda Video");
+          throw new Error(data?.message || 'Falha na verificação do Panda Video');
         }
-      } catch (err) {
-        console.error("Exceção ao verificar API:", err);
+      } catch (err: any) {
+        console.error('Erro ao verificar conexão com Panda Video:', err);
         setStatus('error');
-        setMessage("Erro ao comunicar com serviço de vídeo");
+        setMessage(`Não foi possível verificar a integração com Panda Video. ${err.message}`);
       }
     };
-
-    checkPandaAPIStatus();
+    
+    // Verificar a conexão apenas uma vez ao montar o componente
+    checkPandaConnection();
   }, []);
-
+  
   if (status === 'checking') {
     return (
-      <Alert className="mb-4 bg-muted/50">
-        <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-        <AlertDescription>
-          Verificando integração com o serviço de vídeo...
+      <Alert className="mb-6 bg-blue-50 border-blue-100">
+        <Loader2 className="h-4 w-4 text-blue-500 animate-spin" />
+        <AlertTitle className="text-blue-700">Verificando integração</AlertTitle>
+        <AlertDescription className="text-blue-600">
+          {message}
         </AlertDescription>
       </Alert>
     );
   }
-
+  
   if (status === 'error') {
     return (
-      <Alert variant="destructive" className="mb-4">
-        <AlertTriangle className="h-4 w-4" />
-        <AlertTitle>Atenção na integração de vídeo</AlertTitle>
+      <Alert variant="destructive" className="mb-6">
+        <AlertCircle className="h-4 w-4" />
+        <AlertTitle>Erro de integração</AlertTitle>
         <AlertDescription>
-          {message || "Houve um problema na integração com o serviço de vídeo. O upload ou seleção de vídeos pode não funcionar corretamente."}
+          {message} O upload de vídeos pode não funcionar corretamente.
         </AlertDescription>
       </Alert>
     );
   }
-
-  // Se estiver tudo ok, não exibimos nada para não distrair o usuário
+  
+  // Não exibir nada quando estiver ok para não ocupar espaço desnecessário
   return null;
 };

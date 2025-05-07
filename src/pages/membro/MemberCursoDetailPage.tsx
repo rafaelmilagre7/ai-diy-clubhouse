@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Button } from "@/components/ui/card";
+import { Button } from "@/components/ui/button"; // Corrigido: importação do Button
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle, Clock, PlayCircle, Lock } from "lucide-react";
 

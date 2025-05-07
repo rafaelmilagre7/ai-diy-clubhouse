@@ -21,10 +21,7 @@ interface AulaStepWizardProps {
 const defaultFormValues: AulaFormValues = {
   title: "",
   description: "",
-  objective: "",
   difficulty: "medium",
-  estimated_time: "30",
-  thumbnail_url: "",
   videos: [],
   materials: [],
   is_published: false,

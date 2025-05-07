@@ -32,7 +32,6 @@ const EtapaPublicacao: React.FC<EtapaPublicacaoProps> = ({
   standalone = false,
 }) => {
   const [error, setError] = useState<string | null>(null);
-  const { title, videos } = form.watch();
   
   // Definir a aula como publicada por padrão
   useEffect(() => {
@@ -44,8 +43,14 @@ const EtapaPublicacao: React.FC<EtapaPublicacaoProps> = ({
   // Validação antes de salvar
   const hasValidationErrors = () => {
     // Verificar se tem título
-    if (!title || title.trim() === '') {
+    if (!form.getValues('title') || form.getValues('title').trim() === '') {
       setError("A aula precisa ter um título.");
+      return true;
+    }
+
+    // Verificar se tem pelo menos um vídeo
+    if (!form.getValues('videos') || form.getValues('videos').length === 0) {
+      setError("A aula precisa ter pelo menos um vídeo.");
       return true;
     }
 
@@ -62,13 +67,14 @@ const EtapaPublicacao: React.FC<EtapaPublicacaoProps> = ({
     
     // Forçar a aula para ser publicada
     form.setValue('is_published', true);
+    form.setValue('published', true);
     
     // Continuar com salvamento - passar os valores do formulário para a função onComplete
     onComplete(form.getValues());
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 font-sans">
       <h3 className="text-lg font-semibold">Revisão e Publicação</h3>
       
       {error && (
@@ -85,15 +91,15 @@ const EtapaPublicacao: React.FC<EtapaPublicacaoProps> = ({
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <p className="text-sm font-medium text-muted-foreground">Título da aula</p>
-            <p className="text-sm">{title || "Não definido"}</p>
+            <p className="text-sm">{form.getValues('title') || "Não definido"}</p>
           </div>
           <div>
             <p className="text-sm font-medium text-muted-foreground">Vídeos</p>
-            <p className="text-sm">{videos?.length || 0} vídeo(s)</p>
+            <p className="text-sm">{form.getValues('videos')?.length || 0} vídeo(s)</p>
           </div>
           <div>
             <p className="text-sm font-medium text-muted-foreground">Materiais complementares</p>
-            <p className="text-sm">{form.watch('materials')?.length || 0} material(is)</p>
+            <p className="text-sm">{form.getValues('materials')?.length || 0} material(is)</p>
           </div>
         </div>
       </div>

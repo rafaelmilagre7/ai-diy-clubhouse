@@ -43,11 +43,14 @@ const AulaDialog: React.FC<AulaDialogProps> = ({
               onComplete={handleComplete} 
               onCancel={handleCancel}
               defaultValues={{ 
+                title: "",
+                description: "",
                 difficulty: "medium", 
                 videos: [],
                 materials: [],
                 is_published: false,
-                is_featured: false
+                is_featured: false,
+                module_id: moduleId
               }}
             />
           </div>
@@ -63,11 +66,14 @@ const AulaDialog: React.FC<AulaDialogProps> = ({
           onComplete={handleComplete} 
           onCancel={handleCancel}
           defaultValues={{ 
+            title: "",
+            description: "",
             difficulty: "medium", 
             videos: [],
             materials: [],
             is_published: false,
-            is_featured: false
+            is_featured: false,
+            module_id: moduleId
           }}
         />
       </DialogContent>

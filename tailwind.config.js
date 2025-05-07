@@ -1,7 +1,5 @@
 
 /** @type {import('tailwindcss').Config} */
-const { fontFamily } = require("tailwindcss/defaultTheme")
-
 module.exports = {
   darkMode: ["class"],
   content: [
@@ -9,7 +7,7 @@ module.exports = {
     './components/**/*.{ts,tsx}',
     './app/**/*.{ts,tsx}',
     './src/**/*.{ts,tsx}',
-	],
+  ],
   prefix: "",
   theme: {
     container: {
@@ -20,6 +18,11 @@ module.exports = {
       },
     },
     extend: {
+      fontFamily: {
+        sans: ['Inter', 'sans-serif'],
+        heading: ['Poppins', 'sans-serif'],
+        display: ['Montserrat', 'sans-serif'],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -54,22 +57,11 @@ module.exports = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        viverblue: {
-          DEFAULT: "#0ABAB5",
-          30: "#cde4f8", // adicionado para resolver o erro
-        },
-        revenue: "#00C48C", // Adicionando a cor revenue com o valor especificado
-        operational: "#8E24AA", // Adicionando a cor operational
-        strategy: "#00897B", // Adicionando a cor strategy para prevenir erros futuros
       },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
-      },
-      fontFamily: {
-        sans: ["var(--font-sans)", ...fontFamily.sans],
-        heading: ["Outfit", "system-ui", "sans-serif"], // Adicionando família de fonte heading
       },
       keyframes: {
         "accordion-down": {
@@ -80,19 +72,11 @@ module.exports = {
           from: { height: "var(--radix-accordion-content-height)" },
           to: { height: "0" },
         },
-        "indeterminate-progress": {
-          "0%": { transform: "translateX(-100%)" },
-          "100%": { transform: "translateX(100%)" }
-        }
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
-        "indeterminate-progress": "indeterminate-progress 1.5s ease-in-out infinite"
       },
-      backgroundImage: {
-        'dot-pattern': 'radial-gradient(circle, #0ABAB5 1px, transparent 1px)', // Definindo o padrão de pontos
-      }
     },
   },
   plugins: [require("tailwindcss-animate")],

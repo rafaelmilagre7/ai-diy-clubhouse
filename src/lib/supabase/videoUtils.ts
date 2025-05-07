@@ -1,106 +1,77 @@
 
 /**
- * Extrai o ID do YouTube a partir de uma URL
- * @param url URL do YouTube
- * @returns ID do vídeo ou string vazia
+ * Formata a duração em segundos para o formato MM:SS ou HH:MM:SS
+ * 
+ * @param totalSeconds Duração em segundos
+ * @returns String formatada como MM:SS ou HH:MM:SS
  */
-export function getYoutubeVideoId(url: string): string {
-  if (!url) return '';
-  
-  try {
-    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
-    const match = url.match(regExp);
-    return (match && match[2].length === 11) ? match[2] : '';
-  } catch (error) {
-    console.error("Erro ao extrair ID do YouTube:", error);
-    return '';
+export function formatVideoDuration(totalSeconds: number): string {
+  // Se não for fornecido, ou for inválido, retorna 00:00
+  if (!totalSeconds || isNaN(totalSeconds) || totalSeconds <= 0) {
+    return '00:00';
   }
-}
-
-/**
- * Gera a URL da thumbnail de um vídeo do YouTube
- * @param url URL do YouTube
- * @returns URL da thumbnail
- */
-export function getYoutubeThumbnailUrl(url: string): string {
-  const videoId = getYoutubeVideoId(url);
-  if (!videoId) return '';
   
-  return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
-}
-
-/**
- * Formata a duração de um vídeo em segundos para formato HH:MM:SS ou MM:SS
- * @param seconds Duração em segundos
- * @returns String formatada com a duração
- */
-export function formatVideoDuration(seconds: number): string {
-  if (!seconds || isNaN(seconds)) return '00:00';
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = Math.floor(totalSeconds % 60);
   
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-  const remainingSeconds = Math.floor(seconds % 60);
-  
-  // Formatar com zeros à esquerda
+  // Adiciona zeros à esquerda quando necessário
   const formattedMinutes = String(minutes).padStart(2, '0');
-  const formattedSeconds = String(remainingSeconds).padStart(2, '0');
+  const formattedSeconds = String(seconds).padStart(2, '0');
   
+  // Retorna HH:MM:SS apenas se houver horas
   if (hours > 0) {
     const formattedHours = String(hours).padStart(2, '0');
     return `${formattedHours}:${formattedMinutes}:${formattedSeconds}`;
   }
   
+  // Caso contrário, retorna MM:SS
   return `${formattedMinutes}:${formattedSeconds}`;
 }
 
 /**
- * Estima a duração de um vídeo baseado em seu tamanho
- * Isso é uma estimativa aproximada baseada em uma taxa de bits média
- * @param fileSize Tamanho do arquivo em bytes
- * @returns Duração estimada em segundos
+ * Extrai o ID do vídeo de uma URL do YouTube
+ * 
+ * @param url URL do vídeo do YouTube
+ * @returns ID do vídeo ou null se não for encontrado
  */
-export function estimateVideoDuration(fileSize: number): number {
-  if (!fileSize) return 0;
+export function extractYouTubeVideoId(url: string): string | null {
+  if (!url) return null;
   
-  // Assumir taxa de bits média de 2 Mbps para vídeos (250 KB/s)
-  const bitRate = 250 * 1024; // bytes por segundo
+  // Padrões de URL do YouTube
+  const patterns = [
+    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/v\/|youtube\.com\/user\/.+\/|youtube\.com\/user\/.+\#\w\/\w\/\w\/\w\/|youtube\.com\/shorts\/)([^#\&\?\n]*)/,
+    /youtube\.com\/embed\/([^#\&\?\n]*)/,
+    /youtube\.com\/v\/([^#\&\?\n]*)/,
+    /youtu\.be\/([^#\&\?\n]*)/
+  ];
   
-  // Calcular duração estimada
-  const durationSeconds = Math.floor(fileSize / bitRate);
+  for (const pattern of patterns) {
+    const match = url.match(pattern);
+    if (match && match[1]) {
+      return match[1];
+    }
+  }
   
-  return durationSeconds;
+  return null;
 }
 
 /**
- * Extrai o ID do Panda Video a partir de uma URL embedada
- * @param url URL do Panda Video
- * @returns ID do vídeo ou string vazia
+ * Extrai o ID do vídeo de uma URL do Panda Video
+ * 
+ * @param url URL do vídeo do Panda Video
+ * @returns ID do vídeo ou null se não for encontrado
  */
-export function getPandaVideoId(url: string): string {
-  if (!url) return '';
+export function extractPandaVideoId(url: string): string | null {
+  if (!url) return null;
   
-  try {
-    // Padrão para URLs como https://player.pandavideo.com.br/embed/12345
-    if (url.includes('player.pandavideo.com.br/embed/')) {
-      const parts = url.split('player.pandavideo.com.br/embed/');
-      if (parts.length > 1) {
-        // Remover parâmetros de URL se existirem
-        return parts[1].split('?')[0].split('#')[0];
-      }
-    }
-    
-    return '';
-  } catch (error) {
-    console.error("Erro ao extrair ID do Panda Video:", error);
-    return '';
+  // Padrão para URL do Panda Video
+  const pattern = /player\.pandavideo\.com\.br\/embed\/([^#\&\?\n]*)/;
+  const match = url.match(pattern);
+  
+  if (match && match[1]) {
+    return match[1];
   }
+  
+  return null;
 }
-
-// Exportar todas as funções de forma limpa
-export default {
-  getYoutubeVideoId,
-  getYoutubeThumbnailUrl,
-  formatVideoDuration,
-  estimateVideoDuration,
-  getPandaVideoId
-};

@@ -1,7 +1,7 @@
 
 import React, { useState } from "react";
 import { UseFormReturn } from "react-hook-form";
-import { AulaFormValues, AulaMaterial } from "@/components/formacao/aulas/types";
+import { AulaFormValues, Material } from "@/components/formacao/aulas/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -44,10 +44,10 @@ const EtapaMateriais: React.FC<EtapaMateriaisProps> = ({
     const currentMaterials = form.getValues().materials || [];
     form.setValue("materials", [...currentMaterials, {
       id: `material-${Date.now()}`,
-      title: fileName,
-      description: `Tamanho: ${(fileSize / (1024 * 1024)).toFixed(2)} MB`,
+      name: fileName,
       url: url,
-      type: "file"
+      type: "file",
+      size: fileSize
     }]);
 
     toast.success(`Material "${fileName}" adicionado com sucesso!`);
@@ -55,13 +55,13 @@ const EtapaMateriais: React.FC<EtapaMateriaisProps> = ({
 
   const handleRemoveMaterial = (index: number) => {
     const currentMaterials = form.getValues().materials || [];
-    const materialTitle = currentMaterials[index]?.title || `Material ${index + 1}`;
+    const materialName = currentMaterials[index]?.name || `Material ${index + 1}`;
     
     const newMaterials = [...currentMaterials];
     newMaterials.splice(index, 1);
     form.setValue("materials", newMaterials);
     
-    toast.info(`"${materialTitle}" foi removido`);
+    toast.info(`"${materialName}" foi removido`);
   };
 
   const onDragEnd = (result: any) => {
@@ -76,7 +76,7 @@ const EtapaMateriais: React.FC<EtapaMateriaisProps> = ({
   };
 
   return (
-    <div className="space-y-6 py-4">
+    <div className="space-y-6 py-4 font-sans">
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <div>
@@ -171,9 +171,11 @@ const EtapaMateriais: React.FC<EtapaMateriaisProps> = ({
                             
                             <div className="flex justify-between items-center">
                               <div>
-                                <p className="font-medium">{material.title}</p>
-                                {material.description && (
-                                  <p className="text-sm text-muted-foreground">{material.description}</p>
+                                <p className="font-medium">{material.name}</p>
+                                {material.size && (
+                                  <p className="text-sm text-muted-foreground">
+                                    Tamanho: {(material.size / (1024 * 1024)).toFixed(2)} MB
+                                  </p>
                                 )}
                               </div>
                               
