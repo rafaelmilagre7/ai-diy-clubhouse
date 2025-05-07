@@ -6,17 +6,17 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
-import { ArrowRight } from "lucide-react";
-import { toast } from "sonner";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 import { aulaFormSchema } from "@/components/formacao/aulas/wizard/schemas/aulaFormSchema";
 import { AulaFormValues } from "@/components/formacao/aulas/wizard/AulaStepWizard";
-import EtapaInfoBasica from "@/components/formacao/aulas/wizard/etapas/EtapaInfoBasica";
+import EtapaVideos from "@/components/formacao/aulas/wizard/etapas/EtapaVideos";
 import { useAulaWizardStore } from "@/hooks/formacao/useAulaWizardStore";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
+import { PandaVideoStatusCheck } from "@/components/formacao/comum/PandaVideoStatusCheck";
 
-const FormacaoAulaNova = () => {
+const FormacaoAulaNovaVideos = () => {
   const navigate = useNavigate();
-  const { formData, updateFormField, setModuleId, moduleId } = useAulaWizardStore();
+  const { formData, updateFormField } = useAulaWizardStore();
   const isMobile = useMediaQuery("(max-width: 768px)");
   
   // Inicializar formulário com dados do store
@@ -43,27 +43,14 @@ const FormacaoAulaNova = () => {
     return () => subscription.unsubscribe();
   }, [form.watch, updateFormField]);
   
-  // Manipulador para avançar para a próxima etapa
-  const handleNext = async () => {
-    const valid = await form.trigger(['title', 'description', 'difficulty', 'estimated_time', 'objective']);
-    
-    if (!valid) {
-      toast.error("Por favor, preencha todos os campos obrigatórios");
-      return;
-    }
-    
-    navigate("/formacao/aulas/nova/videos");
+  // Manipuladores de navegação
+  const handlePrevious = () => {
+    navigate("/formacao/aulas/nova");
   };
   
-  // Se um módulo foi especificado via query param, salvar no store
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const moduleIdParam = params.get('moduleId');
-    
-    if (moduleIdParam && moduleIdParam !== moduleId) {
-      setModuleId(moduleIdParam);
-    }
-  }, [setModuleId, moduleId]);
+  const handleNext = () => {
+    navigate("/formacao/aulas/nova/materiais");
+  };
   
   return (
     <div className="py-6 px-4 md:px-6 max-w-5xl mx-auto">
@@ -71,7 +58,7 @@ const FormacaoAulaNova = () => {
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Nova Aula</h1>
           <p className="text-muted-foreground">
-            Crie uma nova aula para o seu curso.
+            Adicione vídeos à sua aula.
           </p>
         </div>
       </div>
@@ -79,14 +66,14 @@ const FormacaoAulaNova = () => {
       {/* Etapas do wizard */}
       <div className="mb-6">
         <ol className="flex items-center w-full text-sm font-medium text-center text-gray-500 dark:text-gray-400 sm:text-base">
-          <li className="flex md:w-full items-center text-primary font-medium dark:text-primary after:content-[''] after:w-full after:h-1 after:border-b after:border-gray-200 after:border-1 after:hidden sm:after:inline-block after:mx-6 xl:after:mx-10 dark:after:border-gray-700">
-            <span className="flex items-center justify-center w-8 h-8 bg-primary text-white rounded-full shrink-0">
-              1
+          <li className="flex md:w-full items-center after:content-[''] after:w-full after:h-1 after:border-b after:border-primary after:border-1 after:hidden sm:after:inline-block after:mx-6 xl:after:mx-10 dark:after:border-primary">
+            <span className="flex items-center justify-center w-8 h-8 bg-primary-500/20 border border-primary-500 text-primary-700 rounded-full shrink-0">
+              ✓
             </span>
             <span className={`hidden sm:inline-flex sm:ml-2 ${isMobile ? "text-xs" : ""}`}>Informações Básicas</span>
           </li>
-          <li className="flex md:w-full items-center after:content-[''] after:w-full after:h-1 after:border-b after:border-gray-200 after:border-1 after:hidden sm:after:inline-block after:mx-6 xl:after:mx-10 dark:after:border-gray-700">
-            <span className="flex items-center justify-center w-8 h-8 bg-gray-200 rounded-full shrink-0 dark:bg-gray-700">
+          <li className="flex md:w-full items-center text-primary font-medium after:content-[''] after:w-full after:h-1 after:border-b after:border-gray-200 after:border-1 after:hidden sm:after:inline-block after:mx-6 xl:after:mx-10 dark:after:border-gray-700">
+            <span className="flex items-center justify-center w-8 h-8 bg-primary text-white rounded-full shrink-0">
               2
             </span>
             <span className={`hidden sm:inline-flex sm:ml-2 ${isMobile ? "text-xs" : ""}`}>Vídeos</span>
@@ -106,23 +93,32 @@ const FormacaoAulaNova = () => {
         </ol>
       </div>
 
+      {/* Verificador de status da API Panda */}
+      <PandaVideoStatusCheck />
+
       <Card>
         <CardHeader>
-          <CardTitle>Informações Básicas</CardTitle>
+          <CardTitle>Vídeos da Aula</CardTitle>
           <CardDescription>
-            Preencha as informações básicas da aula.
+            Adicione vídeos para enriquecer o conteúdo da aula.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
             <form className="space-y-6">
-              <EtapaInfoBasica 
+              <EtapaVideos 
                 form={form}
                 onNext={handleNext}
+                onPrevious={handlePrevious}
                 standalone={true}
               />
               
-              <div className="flex justify-end pt-4">
+              <div className="flex justify-between pt-4 border-t">
+                <Button type="button" variant="outline" onClick={handlePrevious} className="gap-1">
+                  <ArrowLeft className="h-4 w-4" />
+                  Voltar
+                </Button>
+                
                 <Button type="button" onClick={handleNext} className="gap-1">
                   Próximo
                   <ArrowRight className="h-4 w-4" />
@@ -136,4 +132,4 @@ const FormacaoAulaNova = () => {
   );
 };
 
-export default FormacaoAulaNova;
+export default FormacaoAulaNovaVideos;

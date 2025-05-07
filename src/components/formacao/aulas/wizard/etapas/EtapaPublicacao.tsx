@@ -1,132 +1,165 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { UseFormReturn } from "react-hook-form";
 import { AulaFormValues } from "../AulaStepWizard";
 import { Button } from "@/components/ui/button";
 import {
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
-  FormDescription,
+  FormMessage,
 } from "@/components/ui/form";
 import { Switch } from "@/components/ui/switch";
-import { Card, CardContent } from "@/components/ui/card";
-import { CheckCircle2, AlertCircle } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertCircle, Loader2 } from "lucide-react";
 
 interface EtapaPublicacaoProps {
   form: UseFormReturn<AulaFormValues>;
+  onComplete: () => void;
   onPrevious: () => void;
-  onComplete: (values: AulaFormValues) => void;
   isSaving: boolean;
+  standalone?: boolean;
 }
 
 const EtapaPublicacao: React.FC<EtapaPublicacaoProps> = ({
   form,
-  onPrevious,
   onComplete,
+  onPrevious,
   isSaving,
+  standalone = false,
 }) => {
-  const { title, videos } = form.getValues();
-  
-  const hasRequiredFields = Boolean(
-    title && videos && videos.length > 0
-  );
+  const [error, setError] = useState<string | null>(null);
+  const { title, videos } = form.watch();
 
-  const handleSave = () => {
-    form.handleSubmit((values) => {
-      onComplete(values);
-    })();
+  // Validação antes de salvar
+  const hasValidationErrors = () => {
+    // Verificar se tem título
+    if (!title || title.trim() === '') {
+      setError("A aula precisa ter um título.");
+      return true;
+    }
+
+    // Reset de erro
+    setError(null);
+    return false;
+  };
+
+  const handleComplete = async () => {
+    // Verificar validação
+    if (hasValidationErrors()) {
+      return;
+    }
+    
+    // Continuar com salvamento
+    onComplete();
   };
 
   return (
-    <div className="space-y-6 py-4">
-      <div className="space-y-4">
-        <h2 className="text-lg font-semibold">Revisão e Publicação</h2>
-        <p className="text-gray-500">
-          Revise as informações da aula antes de salvar ou publicar.
-        </p>
-      </div>
-
-      <Card>
-        <CardContent className="p-4 space-y-4">
-          <div className="flex items-start space-x-3">
-            {hasRequiredFields ? (
-              <CheckCircle2 className="h-5 w-5 text-green-500 mt-0.5" />
-            ) : (
-              <AlertCircle className="h-5 w-5 text-amber-500 mt-0.5" />
-            )}
-            <div>
-              <h3 className="font-medium">Validação da Aula</h3>
-              <p className="text-sm text-muted-foreground">
-                {hasRequiredFields
-                  ? "Todos os campos obrigatórios estão preenchidos."
-                  : "Alguns campos obrigatórios não estão preenchidos."}
-              </p>
-              
-              <ul className="mt-2 text-sm list-disc pl-5 space-y-1">
-                <li className={title ? "text-green-600" : "text-red-500"}>
-                  Título da aula {title ? "preenchido" : "não preenchido"}
-                </li>
-                <li className={videos && videos.length > 0 ? "text-green-600" : "text-red-500"}>
-                  Vídeos {videos && videos.length > 0 ? `adicionados (${videos.length})` : "não adicionados"}
-                </li>
-              </ul>
-            </div>
+    <div className="space-y-6">
+      <h3 className="text-lg font-semibold">Revisão e Publicação</h3>
+      
+      {error && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Erro</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+      
+      {/* Resumo da aula */}
+      <div className="space-y-6 py-4 border-b">
+        <h4 className="font-medium">Resumo da Aula</h4>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <p className="text-sm font-medium text-muted-foreground">Título da aula</p>
+            <p className="text-sm">{title || "Não definido"}</p>
           </div>
-        </CardContent>
-      </Card>
-
-      <FormField
-        control={form.control}
-        name="is_published"
-        render={({ field }) => (
-          <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-            <div className="space-y-0.5">
-              <FormLabel className="text-base">Publicar Aula</FormLabel>
-              <FormDescription>
-                Quando publicada, a aula ficará visível para os alunos.
-              </FormDescription>
-            </div>
-            <FormControl>
-              <Switch
-                checked={field.value}
-                onCheckedChange={field.onChange}
-              />
-            </FormControl>
-          </FormItem>
-        )}
-      />
-
-      <FormField
-        control={form.control}
-        name="is_featured"
-        render={({ field }) => (
-          <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-            <div className="space-y-0.5">
-              <FormLabel className="text-base">Destacar Aula</FormLabel>
-              <FormDescription>
-                Aulas destacadas aparecem em posição privilegiada na plataforma.
-              </FormDescription>
-            </div>
-            <FormControl>
-              <Switch
-                checked={field.value}
-                onCheckedChange={field.onChange}
-              />
-            </FormControl>
-          </FormItem>
-        )}
-      />
-
-      <div className="flex justify-between pt-4 border-t">
-        <Button type="button" variant="outline" onClick={onPrevious} disabled={isSaving}>
-          Voltar
-        </Button>
-        <Button type="button" onClick={handleSave} disabled={isSaving || !hasRequiredFields}>
-          {isSaving ? "Salvando..." : "Salvar Aula"}
-        </Button>
+          <div>
+            <p className="text-sm font-medium text-muted-foreground">Vídeos</p>
+            <p className="text-sm">{videos?.length || 0} vídeo(s)</p>
+          </div>
+          <div>
+            <p className="text-sm font-medium text-muted-foreground">Materiais complementares</p>
+            <p className="text-sm">{form.watch('materials')?.length || 0} material(is)</p>
+          </div>
+        </div>
       </div>
+      
+      <Separator />
+
+      {/* Opções de publicação */}
+      <div className="space-y-4">
+        <h4 className="font-medium">Opções de Publicação</h4>
+        
+        <FormField
+          control={form.control}
+          name="is_published"
+          render={({ field }) => (
+            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+              <div className="space-y-0.5">
+                <FormLabel>Publicar aula</FormLabel>
+                <FormDescription>
+                  Quando ativado, a aula estará visível para os alunos.
+                </FormDescription>
+              </div>
+              <FormControl>
+                <Switch
+                  checked={field.value}
+                  onCheckedChange={field.onChange}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        <FormField
+          control={form.control}
+          name="is_featured"
+          render={({ field }) => (
+            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+              <div className="space-y-0.5">
+                <FormLabel>Destacar aula</FormLabel>
+                <FormDescription>
+                  Quando ativado, a aula aparecerá como destaque no módulo.
+                </FormDescription>
+              </div>
+              <FormControl>
+                <Switch
+                  checked={field.value}
+                  onCheckedChange={field.onChange}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </div>
+
+      {!standalone && (
+        <div className="flex justify-between pt-4 border-t">
+          <Button type="button" variant="outline" onClick={onPrevious}>
+            Voltar
+          </Button>
+          <Button 
+            type="button" 
+            onClick={handleComplete}
+            disabled={isSaving}
+          >
+            {isSaving ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Salvando...
+              </>
+            ) : (
+              "Salvar Aula"
+            )}
+          </Button>
+        </div>
+      )}
     </div>
   );
 };

@@ -1,0 +1,111 @@
+
+import React, { useState, useEffect } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { AlertCircle, CheckCircle2, Loader2, RefreshCw } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { supabase } from "@/lib/supabase";
+
+export const PandaVideoStatusCheck = () => {
+  const [checking, setChecking] = useState(false);
+  const [status, setStatus] = useState<"unchecked" | "error" | "ok">("unchecked");
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // Verificar status da API key
+  const checkApiKeyStatus = async () => {
+    setChecking(true);
+    setStatus("unchecked");
+    setErrorMessage(null);
+    
+    try {
+      // Chamar a edge function para testar a API key
+      const { data, error } = await supabase.functions.invoke("check-panda-api", {
+        method: "GET"
+      });
+      
+      if (error) {
+        console.error("Erro ao chamar a função check-panda-api:", error);
+        setStatus("error");
+        setErrorMessage(`Erro na comunicação com o servidor: ${error.message}`);
+        return;
+      }
+
+      if (!data.success) {
+        console.error("Erro na resposta da API:", data);
+        setStatus("error");
+        setErrorMessage(data.error || "Erro na comunicação com a API Panda Video");
+        return;
+      }
+      
+      // Se chegou até aqui, a API key está ok
+      setStatus("ok");
+    } catch (err: any) {
+      console.error("Exceção ao verificar API key:", err);
+      setStatus("error");
+      setErrorMessage(err.message || "Erro desconhecido ao verificar API key");
+    } finally {
+      setChecking(false);
+    }
+  };
+
+  // Verificar status ao montar o componente
+  useEffect(() => {
+    checkApiKeyStatus();
+  }, []);
+
+  return (
+    <Card className="mb-4">
+      <CardContent className="p-4">
+        <div className="flex items-center justify-between">
+          <div className="space-y-1">
+            <h3 className="text-base font-medium">Status da Integração com Panda Video</h3>
+            <p className="text-sm text-muted-foreground">
+              {status === "ok" 
+                ? "API configurada e funcionando corretamente" 
+                : status === "error"
+                  ? "Erro na configuração da API"
+                  : "Verificando conexão..."}
+            </p>
+          </div>
+          
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={checkApiKeyStatus}
+            disabled={checking}
+          >
+            {checking ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <RefreshCw className="h-4 w-4" />
+            )}
+            <span className="ml-1">Verificar</span>
+          </Button>
+        </div>
+        
+        {status === "ok" && (
+          <Alert className="mt-3 bg-green-50 border-green-200">
+            <CheckCircle2 className="h-4 w-4 text-green-600" />
+            <AlertTitle className="text-green-700">Integração funcionando</AlertTitle>
+            <AlertDescription className="text-green-600">
+              A API do Panda Video está configurada corretamente e pronta para uso.
+            </AlertDescription>
+          </Alert>
+        )}
+        
+        {status === "error" && (
+          <Alert variant="destructive" className="mt-3">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Erro na integração</AlertTitle>
+            <AlertDescription className="space-y-2">
+              <p>{errorMessage || "Não foi possível conectar com a API do Panda Video."}</p>
+              <p className="text-sm">
+                Verifique se a chave da API está configurada corretamente nas configurações da aplicação.
+              </p>
+            </AlertDescription>
+          </Alert>
+        )}
+      </CardContent>
+    </Card>
+  );
+};
