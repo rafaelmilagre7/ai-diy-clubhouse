@@ -42,7 +42,8 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({
           success: false,
-          error: "Configuração incompleta do servidor: API Key não definida"
+          error: "Configuração incompleta do servidor: API Key não definida",
+          message: "Por favor, configure a variável de ambiente PANDA_API_KEY no Supabase"
         }),
         {
           status: 500,
@@ -74,34 +75,69 @@ serve(async (req) => {
 
     console.log("URL da API do Panda:", apiUrl);
 
-    // Fazer requisição para a API do Panda Video
-    const response = await fetch(apiUrl, {
-      method: "GET",
-      headers: {
-        "Authorization": `ApiVideoPanda ${apiKey}`,
-        "Accept": "application/json"
-      }
-    });
-
-    console.log("Status da resposta da API do Panda:", response.status);
-
-    if (!response.ok) {
-      let errorText = "";
+    // Implementar retry para a requisição da API do Panda Video
+    let retriesLeft = 3;
+    let response = null;
+    let lastError = null;
+    
+    while (retriesLeft > 0 && !response) {
       try {
-        const errorData = await response.json();
-        errorText = errorData.message || "Erro desconhecido";
-      } catch (e) {
-        errorText = await response.text();
+        // Fazer requisição para a API do Panda Video
+        response = await fetch(apiUrl, {
+          method: "GET",
+          headers: {
+            "Authorization": `ApiVideoPanda ${apiKey}`,
+            "Accept": "application/json"
+          }
+        });
+        
+        console.log("Status da resposta da API do Panda:", response.status);
+        
+        // Se a resposta for bem-sucedida, sair do loop
+        if (response.ok) break;
+        
+        // Se receber um erro de rate limit, tentar novamente
+        if (response.status === 429) {
+          retriesLeft--;
+          const retryAfter = response.headers.get("Retry-After") || "2";
+          const waitTime = parseInt(retryAfter, 10) * 1000;
+          
+          console.log(`Rate limit atingido. Tentando novamente em ${waitTime}ms. Tentativas restantes: ${retriesLeft}`);
+          
+          // Esperar antes de tentar novamente
+          await new Promise(resolve => setTimeout(resolve, waitTime));
+          response = null;
+          continue;
+        }
+        
+        // Para outros erros, capturar e tratar
+        const errorText = await response.text();
+        throw new Error(`Erro API Panda (${response.status}): ${errorText}`);
+      } catch (error) {
+        lastError = error;
+        retriesLeft--;
+        
+        if (retriesLeft > 0) {
+          // Backoff exponencial: 1s, 2s, 4s...
+          const backoffTime = Math.pow(2, 3 - retriesLeft) * 1000;
+          console.error(`Erro ao acessar API do Panda. Tentando novamente em ${backoffTime}ms:`, error);
+          await new Promise(resolve => setTimeout(resolve, backoffTime));
+          response = null;
+        }
       }
-
-      console.error("Erro da API do Panda:", errorText);
+    }
+    
+    // Se todas as tentativas falharam
+    if (!response || !response.ok) {
+      console.error("Todas as tentativas falharam:", lastError);
       return new Response(
         JSON.stringify({
           success: false,
-          error: `Erro ao obter vídeos: ${errorText}`
+          error: `Erro ao obter vídeos: ${lastError?.message || "Falha na comunicação com a API do Panda Video"}`,
+          retriesAttempted: 3 - retriesLeft
         }),
         {
-          status: response.status,
+          status: 500,
           headers: {
             ...corsHeaders,
             "Content-Type": "application/json"
@@ -111,7 +147,44 @@ serve(async (req) => {
     }
 
     // Processar dados da resposta
-    const data = await response.json();
+    let data;
+    try {
+      data = await response.json();
+    } catch (parseError) {
+      console.error("Erro ao analisar resposta JSON:", parseError);
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: "Erro ao processar resposta do servidor Panda Video"
+        }),
+        {
+          status: 500,
+          headers: {
+            ...corsHeaders,
+            "Content-Type": "application/json"
+          }
+        }
+      );
+    }
+    
+    // Verificar se a resposta contém a propriedade 'videos'
+    if (!data || !data.videos) {
+      console.error("Formato de resposta inválido:", data);
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: "Formato de resposta inválido da API do Panda Video",
+          rawResponse: data
+        }),
+        {
+          status: 500,
+          headers: {
+            ...corsHeaders,
+            "Content-Type": "application/json"
+          }
+        }
+      );
+    }
     
     // Mapear dados para um formato mais amigável
     const videos = data.videos.map((video: any) => ({
@@ -123,7 +196,8 @@ serve(async (req) => {
       created_at: video.created_at,
       folder_id: video.folder_id,
       status: video.status,
-      hls_playlist_url: video.hls_playlist_url
+      hls_playlist_url: video.hls_playlist_url,
+      url: `https://player.pandavideo.com.br/embed/${video.id}`
     }));
 
     return new Response(
@@ -141,7 +215,9 @@ serve(async (req) => {
         status: 200,
         headers: {
           ...corsHeaders,
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
+          // Adicionar cache para evitar chamadas repetidas
+          "Cache-Control": "public, max-age=60" // 1 minuto de cache
         }
       }
     );

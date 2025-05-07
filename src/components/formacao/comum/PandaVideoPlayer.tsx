@@ -7,13 +7,15 @@ interface PandaVideoPlayerProps {
   title?: string;
   autoplay?: boolean;
   onProgress?: (progress: number) => void;
+  onEnded?: () => void;
 }
 
 export const PandaVideoPlayer: React.FC<PandaVideoPlayerProps> = ({
   videoId,
   title,
   autoplay = false,
-  onProgress
+  onProgress,
+  onEnded
 }) => {
   const [loading, setLoading] = useState(true);
   
@@ -28,7 +30,7 @@ export const PandaVideoPlayer: React.FC<PandaVideoPlayerProps> = ({
   
   // Configurar comunicação com o player do Panda Video
   useEffect(() => {
-    if (!onProgress) return;
+    if (!onProgress && !onEnded) return;
     
     // Função para receber mensagens do iframe
     const handleMessage = (event: MessageEvent) => {
@@ -43,7 +45,19 @@ export const PandaVideoPlayer: React.FC<PandaVideoPlayerProps> = ({
         
         // Se for uma atualização de progresso do vídeo
         if (data.event === 'timeupdate' && data.value && data.value.percent !== undefined) {
-          onProgress(data.value.percent);
+          if (onProgress) {
+            onProgress(data.value.percent);
+          }
+          
+          // Se o vídeo terminou (progresso de 100%)
+          if (onEnded && data.value.percent >= 100) {
+            onEnded();
+          }
+        }
+        
+        // Evento específico de finalização do vídeo
+        if (data.event === 'ended' && onEnded) {
+          onEnded();
         }
       } catch (error) {
         console.log('Erro ao processar mensagem do player:', error);
@@ -57,7 +71,7 @@ export const PandaVideoPlayer: React.FC<PandaVideoPlayerProps> = ({
     return () => {
       window.removeEventListener('message', handleMessage);
     };
-  }, [videoId, onProgress]);
+  }, [videoId, onProgress, onEnded]);
 
   return (
     <div className="relative w-full">
