@@ -61,6 +61,21 @@ module.exports = {
           DEFAULT: "#0ABAB5",
           light: "#3DCCC7",
           dark: "#07807C"
+        },
+        revenue: {
+          DEFAULT: "#3949AB",
+          light: "#7986CB",
+          dark: "#1A237E"
+        },
+        operational: {
+          DEFAULT: "#8E24AA",
+          light: "#BA68C8",
+          dark: "#4A148C"
+        },
+        strategy: {
+          DEFAULT: "#00897B",
+          light: "#4DB6AC",
+          dark: "#004D40"
         }
       },
       borderRadius: {

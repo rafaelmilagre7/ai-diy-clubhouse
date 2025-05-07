@@ -18,7 +18,7 @@ const SignupPage = () => {
         </div>
 
         <div className="bg-gray-800 border border-gray-700 rounded-lg shadow-xl p-6">
-          <AuthLayout defaultTab="signup" />
+          <AuthLayout initialTab="signup" />
         </div>
       </div>
     </div>
