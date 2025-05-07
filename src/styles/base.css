@@ -63,13 +63,14 @@
     min-height: 100vh;
   }
   
-  /* Adicionando a classe font-heading ao estilo base */
+  /* Corrigindo a classe font-heading para evitar dependência circular */
   .font-heading {
-    @apply font-heading tracking-tight; /* Usando a família fonte definida no tailwind.config */
+    font-family: 'Nunito', system-ui, sans-serif;
+    letter-spacing: -0.025em; /* Equivalente ao tracking-tight */
   }
   
   h1, h2, h3, h4, h5, h6 {
-    @apply font-heading tracking-tight;
+    @apply font-heading;
   }
   h1 { @apply text-3xl md:text-4xl; }
   h2 { @apply text-2xl md:text-3xl; }
@@ -87,4 +88,3 @@
 @media (max-width: 600px) {
   .container { @apply px-2; }
 }
-
