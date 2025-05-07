@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, Save } from "lucide-react";
 import { toast } from "sonner";
 import { aulaFormSchema } from "@/components/formacao/aulas/wizard/schemas/aulaFormSchema";
-import { AulaFormValues } from "@/components/formacao/aulas/wizard/AulaStepWizard";
+import { AulaFormValues } from "@/components/formacao/aulas/types";
 import EtapaPublicacao from "@/components/formacao/aulas/wizard/etapas/EtapaPublicacao";
 import { useAulaWizardStore } from "@/hooks/formacao/useAulaWizardStore";
 import { useCreateAula } from "@/hooks/formacao/useCreateAula";
@@ -50,10 +50,8 @@ const FormacaoAulaNovaRevisar = () => {
     navigate("/formacao/aulas/nova/materiais");
   };
   
-  const handleSubmit = async () => {
+  const handleSubmit = async (formValues: AulaFormValues) => {
     try {
-      const formValues = form.getValues();
-      
       // Verificar se temos pelo menos os campos obrigatórios
       if (!formValues.title || !formValues.difficulty) {
         toast.error("Campos obrigatórios não preenchidos");
@@ -164,7 +162,7 @@ const FormacaoAulaNovaRevisar = () => {
                 
                 <Button 
                   type="button" 
-                  onClick={handleSubmit} 
+                  onClick={() => handleSubmit(form.getValues())} 
                   className="gap-1"
                   disabled={isLoading}
                 >

@@ -1,7 +1,7 @@
 
 import React, { useState } from "react";
 import { UseFormReturn } from "react-hook-form";
-import { AulaFormValues } from "../AulaStepWizard";
+import { AulaFormValues } from "@/components/formacao/aulas/types";
 import { Button } from "@/components/ui/button";
 import {
   FormControl,
@@ -18,7 +18,7 @@ import { AlertCircle, Loader2 } from "lucide-react";
 
 interface EtapaPublicacaoProps {
   form: UseFormReturn<AulaFormValues>;
-  onComplete: () => void;
+  onComplete: (values: AulaFormValues) => void;
   onPrevious: () => void;
   isSaving: boolean;
   standalone?: boolean;
@@ -53,8 +53,8 @@ const EtapaPublicacao: React.FC<EtapaPublicacaoProps> = ({
       return;
     }
     
-    // Continuar com salvamento
-    onComplete();
+    // Continuar com salvamento - passar os valores do formulário para a função onComplete
+    onComplete(form.getValues());
   };
 
   return (

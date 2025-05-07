@@ -1,7 +1,7 @@
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { AulaFormValues } from '../components/formacao/aulas/wizard/AulaStepWizard';
+import { AulaFormValues } from '../../components/formacao/aulas/types';
 
 interface AulaWizardState {
   formData: Partial<AulaFormValues>;
