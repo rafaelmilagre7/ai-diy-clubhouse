@@ -54,3 +54,5 @@ export const NovaAulaButton: React.FC<NovaAulaButtonProps> = ({
     </>
   );
 };
+
+export default NovaAulaButton;

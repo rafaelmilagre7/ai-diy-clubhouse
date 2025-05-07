@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -83,7 +82,7 @@ interface AulaStepWizardProps {
   aula?: LearningLesson | null;
   moduleId?: string | null;
   onSuccess?: () => void;
-  onClose?: () => void;  // Nova prop adicionada
+  onClose?: () => void;
 }
 
 const AulaStepWizard: React.FC<AulaStepWizardProps> = ({
@@ -663,39 +662,41 @@ const AulaStepWizard: React.FC<AulaStepWizardProps> = ({
         </DialogHeader>
         
         <Form {...form}>
-          <div className="space-y-6">
-            {renderStep()}
-            
-            {/* Navegação inferior - só aparece em algumas etapas */}
-            {currentStep < 4 && (
-              <div className="flex justify-between pt-4 border-t">
-                <Button 
-                  type="button" 
-                  variant="ghost" 
-                  onClick={handleCancel}
-                >
-                  Cancelar
-                </Button>
-                <div className="space-x-2">
-                  {currentStep > 0 && (
-                    <Button 
-                      type="button" 
-                      variant="outline" 
-                      onClick={prevStep}
-                    >
-                      Voltar
-                    </Button>
-                  )}
+          <form onSubmit={form.handleSubmit(onSubmit)}>
+            <div className="space-y-6">
+              {renderStep()}
+              
+              {/* Navegação inferior - só aparece em algumas etapas */}
+              {currentStep < 4 && (
+                <div className="flex justify-between pt-4 border-t">
                   <Button 
                     type="button" 
-                    onClick={nextStep}
+                    variant="ghost" 
+                    onClick={handleCancel}
                   >
-                    {currentStep === totalSteps - 2 ? "Finalizar" : "Avançar"}
+                    Cancelar
                   </Button>
+                  <div className="space-x-2">
+                    {currentStep > 0 && (
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        onClick={prevStep}
+                      >
+                        Voltar
+                      </Button>
+                    )}
+                    <Button 
+                      type="button" 
+                      onClick={nextStep}
+                    >
+                      {currentStep === totalSteps - 2 ? "Finalizar" : "Avançar"}
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
+          </form>
         </Form>
       </DialogContent>
     </Dialog>
