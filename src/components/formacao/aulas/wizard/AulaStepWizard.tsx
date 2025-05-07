@@ -4,9 +4,15 @@ import { useForm } from "react-hook-form";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import EtapaVideos from "./etapas/EtapaVideos";
 import { useNavigate } from "react-router-dom";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import EtapaInfoBasica from "./etapas/EtapaInfoBasica";
+import EtapaConteudo from "./etapas/EtapaConteudo";
+import EtapaVideos from "./etapas/EtapaVideos";
+import EtapaAtividades from "./etapas/EtapaAtividades";
+import EtapaMateriais from "./etapas/EtapaMateriais";
+import EtapaRevisao from "./etapas/EtapaRevisao";
+import { useCreateAula } from "@/hooks/formacao/useCreateAula";
 
 export type DifficultyLevel = "iniciante" | "intermediario" | "avancado";
 
@@ -36,6 +42,10 @@ export interface AulaFormValues {
   formacao_id?: string;
   modulo_id?: string;
   difficultyLevel?: DifficultyLevel;
+  coverImageUrl?: string;
+  aiAssistantEnabled?: boolean;
+  aiAssistantPrompt?: string;
+  published?: boolean;
 }
 
 interface AulaStepWizardProps {
@@ -56,6 +66,7 @@ const AulaStepWizard: React.FC<AulaStepWizardProps> = ({
   const [activeTab, setActiveTab] = useState("informacoes");
   const [isSaving, setIsSaving] = useState(false);
   const navigate = useNavigate();
+  const { mutate: createAula, isLoading: isAulaCreating } = useCreateAula();
 
   const form = useForm<AulaFormValues>({
     defaultValues: {
@@ -69,18 +80,12 @@ const AulaStepWizard: React.FC<AulaStepWizardProps> = ({
       formacao_id: "",
       modulo_id: moduleId,
       difficultyLevel: "iniciante",
+      coverImageUrl: "",
+      aiAssistantEnabled: false,
+      aiAssistantPrompt: "",
+      published: false,
     },
   });
-
-  // Simulação do hook de criação de aula
-  const createAula = (data: AulaFormValues, options: any) => {
-    console.log("Criando aula com dados:", data);
-    setTimeout(() => {
-      options.onSuccess();
-    }, 1000);
-  };
-
-  const isAulaCreating = false;
 
   const handleNext = (tab: string) => {
     setActiveTab(tab);

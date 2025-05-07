@@ -1,11 +1,12 @@
 
 import React from "react";
 import { UseFormReturn } from "react-hook-form";
-import { AulaFormValues, AulaVideo } from "../AulaStepWizard";
+import { AulaFormValues } from "../AulaStepWizard";
 import { Button } from "@/components/ui/button";
-import { Card, CardHeader, CardContent } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
-import { YoutubeEmbed } from "@/components/common/YoutubeEmbed";
 
 interface EtapaRevisaoProps {
   form: UseFormReturn<AulaFormValues>;
@@ -21,89 +22,78 @@ const EtapaRevisao: React.FC<EtapaRevisaoProps> = ({
   isSaving,
 }) => {
   const formValues = form.getValues();
-  
-  // Função para extrair ID do vídeo do YouTube
-  const getYoutubeVideoId = (url: string): string | null => {
-    if (!url) return null;
-    try {
-      const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
-      const match = url.match(regExp);
-      return (match && match[2].length === 11) ? match[2] : null;
-    } catch (error) {
-      console.error("Erro ao extrair ID do YouTube:", error);
-      return null;
-    }
-  };
-
-  // Renderizar preview do vídeo
-  const renderVideoPreview = (video: AulaVideo) => {
-    if (video.origin === "youtube") {
-      const videoId = getYoutubeVideoId(video.url || "");
-      if (!videoId) return null;
-      
-      return <YoutubeEmbed youtubeId={videoId} title={video.title} className="mb-4" />;
-    } else {
-      return (
-        <div className="aspect-video mb-4 bg-gray-100 rounded-md flex items-center justify-center">
-          <p className="text-muted-foreground">Prévia do vídeo do Panda Video</p>
-        </div>
-      );
-    }
-  };
 
   return (
     <div className="space-y-6 py-4">
-      <h3 className="text-lg font-medium">Revisão da Aula</h3>
-      
-      <Card className="mb-4">
-        <CardHeader>
-          <h4 className="text-base font-medium">Informações Básicas</h4>
-        </CardHeader>
-        <CardContent>
-          <dl className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <dt className="text-sm font-medium text-muted-foreground">Título</dt>
-              <dd className="mt-1">{formValues.title}</dd>
-            </div>
-            <div>
-              <dt className="text-sm font-medium text-muted-foreground">Nível de Dificuldade</dt>
-              <dd className="mt-1">{formValues.difficultyLevel || "Não definido"}</dd>
-            </div>
-            <div className="md:col-span-2">
-              <dt className="text-sm font-medium text-muted-foreground">Descrição</dt>
-              <dd className="mt-1">{formValues.description}</dd>
-            </div>
-          </dl>
-        </CardContent>
-      </Card>
+      <h3 className="text-base font-medium">Revisão da Aula</h3>
 
-      <Card className="mb-4">
-        <CardHeader>
-          <h4 className="text-base font-medium">Conteúdo</h4>
-        </CardHeader>
-        <CardContent>
-          <div className="prose max-w-none prose-sm">
-            <p>{formValues.content}</p>
+      <Card>
+        <CardContent className="p-4 space-y-6">
+          <div>
+            <h4 className="font-medium mb-1">Título</h4>
+            <p>{formValues.title}</p>
+          </div>
+
+          <div>
+            <h4 className="font-medium mb-1">Descrição</h4>
+            <p className="text-sm text-muted-foreground">{formValues.description}</p>
+          </div>
+
+          <div>
+            <h4 className="font-medium mb-1">Conteúdo</h4>
+            <div className="text-sm text-muted-foreground max-h-40 overflow-y-auto border p-2 rounded-md">
+              {formValues.content || <em>Nenhum conteúdo adicionado</em>}
+            </div>
+          </div>
+
+          <div>
+            <h4 className="font-medium mb-1">Vídeos ({formValues.videos?.length || 0})</h4>
+            <div className="grid gap-2">
+              {formValues.videos && formValues.videos.length > 0 ? (
+                formValues.videos.map((video, index) => (
+                  <div key={index} className="p-2 border rounded-md">
+                    <p className="font-medium">{video.title || `Vídeo ${index + 1}`}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {video.origin === "youtube" ? "YouTube" : 
+                       video.origin === "panda_upload" ? "Upload via Panda Video" : 
+                       "Vídeo selecionado do Panda"}
+                    </p>
+                  </div>
+                ))
+              ) : (
+                <p className="text-sm text-muted-foreground">Nenhum vídeo adicionado</p>
+              )}
+            </div>
+          </div>
+
+          <div>
+            <h4 className="font-medium">Atividades</h4>
+            <p className="text-sm text-muted-foreground">
+              {formValues.activities?.length 
+                ? `${formValues.activities.length} atividades adicionadas` 
+                : "Nenhuma atividade adicionada"}
+            </p>
+          </div>
+
+          <div>
+            <h4 className="font-medium">Materiais</h4>
+            <p className="text-sm text-muted-foreground">
+              {formValues.resources?.length 
+                ? `${formValues.resources.length} materiais adicionados` 
+                : "Nenhum material adicionado"}
+            </p>
           </div>
         </CardContent>
       </Card>
 
-      {formValues.videos && formValues.videos.length > 0 && (
-        <Card className="mb-4">
-          <CardHeader>
-            <h4 className="text-base font-medium">Vídeos ({formValues.videos.length})</h4>
-          </CardHeader>
-          <CardContent>
-            {formValues.videos.map((video, index) => (
-              <div key={index} className="mb-4 pb-4 border-b last:border-b-0 last:pb-0 last:mb-0">
-                <h5 className="font-medium">{video.title || `Vídeo ${index + 1}`}</h5>
-                <p className="text-sm text-muted-foreground mb-2">{video.description}</p>
-                {renderVideoPreview(video)}
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      )}
+      <div className="flex items-center space-x-2">
+        <Switch
+          id="published"
+          checked={formValues.published}
+          onCheckedChange={(checked) => form.setValue("published", checked)}
+        />
+        <Label htmlFor="published">Publicar aula após criação</Label>
+      </div>
 
       <div className="flex justify-between pt-4 border-t">
         <Button type="button" variant="outline" onClick={onPrevious}>
@@ -111,16 +101,17 @@ const EtapaRevisao: React.FC<EtapaRevisaoProps> = ({
         </Button>
         <Button 
           type="button" 
-          onClick={onSubmit} 
+          onClick={onSubmit}
           disabled={isSaving}
+          className="min-w-[120px]"
         >
           {isSaving ? (
             <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" /> 
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               Salvando...
             </>
           ) : (
-            "Publicar Aula"
+            "Criar Aula"
           )}
         </Button>
       </div>

@@ -1,10 +1,10 @@
 
-import React, { useState } from "react";
+import React from "react";
 import { UseFormReturn } from "react-hook-form";
 import { AulaFormValues } from "../AulaStepWizard";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Plus, Upload, File, X } from "lucide-react";
+import { Plus } from "lucide-react";
 
 interface EtapaMateriaisProps {
   form: UseFormReturn<AulaFormValues>;
@@ -17,16 +17,22 @@ const EtapaMateriais: React.FC<EtapaMateriaisProps> = ({
   onNext,
   onPrevious,
 }) => {
-  const [uploading, setUploading] = useState(false);
-
   const handleContinue = async () => {
     // Sem validação obrigatória para materiais
     onNext();
   };
 
-  const handleAddMaterial = () => {
-    // Adicionar lógica para upload de materiais
-    console.log("Adicionar material");
+  const handleAddResource = () => {
+    const resources = form.getValues().resources || [];
+    form.setValue("resources", [
+      ...resources,
+      {
+        id: `resource-${resources.length + 1}`,
+        title: "",
+        type: "",
+        url: "",
+      },
+    ]);
   };
 
   return (
@@ -36,8 +42,7 @@ const EtapaMateriais: React.FC<EtapaMateriaisProps> = ({
         <Button
           type="button"
           size="sm"
-          onClick={handleAddMaterial}
-          disabled={uploading}
+          onClick={handleAddResource}
         >
           <Plus className="w-4 h-4 mr-1" /> Adicionar Material
         </Button>
@@ -45,23 +50,12 @@ const EtapaMateriais: React.FC<EtapaMateriaisProps> = ({
 
       <Card className="p-6 min-h-[200px] flex items-center justify-center border-dashed">
         <div className="text-center">
-          <Upload className="mx-auto h-12 w-12 text-muted-foreground" />
-          <p className="mt-2 text-muted-foreground">
-            Arraste arquivos aqui ou clique para fazer upload
+          <p className="text-muted-foreground">
+            Funcionalidade de materiais complementares em desenvolvimento.
           </p>
-          <p className="text-sm text-muted-foreground mt-1">
-            PDF, DOCX, PPTX, XLSX (max. 10MB)
+          <p className="text-sm text-muted-foreground">
+            Em breve você poderá adicionar links, PDFs e outros recursos.
           </p>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="mt-4"
-            onClick={handleAddMaterial}
-            disabled={uploading}
-          >
-            Selecionar Arquivos
-          </Button>
         </div>
       </Card>
 
