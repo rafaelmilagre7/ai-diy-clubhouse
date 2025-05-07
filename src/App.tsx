@@ -6,7 +6,8 @@ import { Toaster } from "sonner";
 import Layout from "./components/layout/Layout";
 import FormacaoLayout from "./components/layout/formacao/FormacaoLayout";
 
-// Auth Pages
+// Pages
+import Index from "./pages/Index"; // Página inicial
 import LoginPage from "./pages/auth/LoginPage";
 import SignupPage from "./pages/auth/SignupPage";
 import ForgotPasswordPage from "./pages/auth/ForgotPasswordPage";
@@ -46,8 +47,12 @@ function App() {
       <AuthProvider>
         <Router>
           <Routes>
+            {/* Página inicial */}
+            <Route path="/" element={<Index />} />
+            
             {/* Auth Routes */}
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/auth" element={<LoginPage />} /> {/* Redirecionamento de /auth para /login */}
             <Route path="/cadastro" element={<SignupPage />} />
             <Route path="/esqueci-senha" element={<ForgotPasswordPage />} />
             <Route path="/redefinir-senha" element={<ResetPasswordPage />} />
@@ -62,36 +67,78 @@ function App() {
                   </FormacaoLayout>
                 </FormacaoRoute>
               }
-            >
-              <Route index element={<FormacaoHomePage />} />
-              <Route path="aulas" element={<FormacaoAulasPage />} />
-              <Route path="aulas/nova" element={<FormacaoAulaNova />} />
-              <Route path="aulas/nova/videos" element={<FormacaoAulaNovaVideos />} />
-              <Route path="aulas/nova/materiais" element={<FormacaoAulaNovaMateriais />} />
-              <Route path="aulas/nova/publicacao" element={<FormacaoAulaNovaPublicacao />} />
-              {/* Adicionar outras rotas de formação conforme necessário */}
-            </Route>
+            />
+            <Route
+              path="/formacao/aulas"
+              element={
+                <FormacaoRoute>
+                  <FormacaoLayout>
+                    <FormacaoAulasPage />
+                  </FormacaoLayout>
+                </FormacaoRoute>
+              }
+            />
+            <Route
+              path="/formacao/aulas/nova"
+              element={
+                <FormacaoRoute>
+                  <FormacaoLayout>
+                    <FormacaoAulaNova />
+                  </FormacaoLayout>
+                </FormacaoRoute>
+              }
+            />
+            <Route
+              path="/formacao/aulas/nova/videos"
+              element={
+                <FormacaoRoute>
+                  <FormacaoLayout>
+                    <FormacaoAulaNovaVideos />
+                  </FormacaoLayout>
+                </FormacaoRoute>
+              }
+            />
+            <Route
+              path="/formacao/aulas/nova/materiais"
+              element={
+                <FormacaoRoute>
+                  <FormacaoLayout>
+                    <FormacaoAulaNovaMateriais />
+                  </FormacaoLayout>
+                </FormacaoRoute>
+              }
+            />
+            <Route
+              path="/formacao/aulas/nova/publicacao"
+              element={
+                <FormacaoRoute>
+                  <FormacaoLayout>
+                    <FormacaoAulaNovaPublicacao />
+                  </FormacaoLayout>
+                </FormacaoRoute>
+              }
+            />
 
             {/* Membro Routes */}
             <Route
-              path="/membro"
+              path="/membro/*"
               element={
                 <ProtectedRoute>
                   <Layout>
-                    <MemberCursosPage />
+                    <Routes>
+                      <Route path="cursos" element={<MemberCursosPage />} />
+                      <Route path="curso/:cursoId" element={<MemberCursoDetailPage />} />
+                      <Route path="aula/:aulaId" element={<MemberAulaPage />} />
+                    </Routes>
                   </Layout>
                 </ProtectedRoute>
               }
-            >
-              <Route path="cursos" element={<MemberCursosPage />} />
-              <Route path="curso/:cursoId" element={<MemberCursoDetailPage />} />
-              <Route path="aula/:aulaId" element={<MemberAulaPage />} />
-            </Route>
+            />
 
             {/* Outras rotas conforme necessário */}
           </Routes>
+          <Toaster position="top-right" richColors />
         </Router>
-        <Toaster position="top-right" richColors />
       </AuthProvider>
     </QueryClientProvider>
   );
