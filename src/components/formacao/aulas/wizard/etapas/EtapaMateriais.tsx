@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import {
   FormControl,
@@ -16,7 +17,6 @@ import { AlertCircle, GripVertical, Plus } from "lucide-react";
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileUpload } from "@/components/formacao/comum/FileUpload";
 
 interface EtapaMateriaisProps {
   form: UseFormReturn<AulaFormValues>;
@@ -89,6 +89,14 @@ const EtapaMateriais: React.FC<EtapaMateriaisProps> = ({
     items.splice(result.destination.index, 0, reorderedItem);
 
     form.setValue("resources", items, { shouldValidate: true });
+  };
+
+  // Função auxiliar para upload de arquivos
+  const handleFileUpload = (index: number, url: string, fileType: string | undefined, fileName: string | undefined, fileSize: number | undefined) => {
+    handleResourceChange(index, "url", url);
+    if (fileType) handleResourceChange(index, "type", fileType);
+    if (fileName) handleResourceChange(index, "fileName", fileName);
+    if (fileSize) handleResourceChange(index, "fileSize", fileSize);
   };
 
   return (
@@ -180,15 +188,43 @@ const EtapaMateriais: React.FC<EtapaMateriaisProps> = ({
                               className="mb-2 resize-none h-20"
                             />
                             
-                            <FileUpload
-                              value={resource.url || ""}
-                              onChange={(url, type, fileName, fileSize) => {
-                                handleResourceChange(index, "url", url);
-                                handleResourceChange(index, "type", type);
-                                handleResourceChange(index, "fileName", fileName);
-                                handleResourceChange(index, "fileSize", fileSize);
-                              }}
-                            />
+                            <div className="flex items-center gap-2">
+                              {resource.url ? (
+                                <div className="flex-1 p-3 border rounded-md bg-gray-50">
+                                  <div className="flex items-center justify-between">
+                                    <div>
+                                      <p className="font-medium text-sm">
+                                        {resource.fileName || "Documento sem nome"}
+                                      </p>
+                                      <p className="text-xs text-muted-foreground">
+                                        {resource.fileSize ? `${Math.round(resource.fileSize / 1024)} KB` : ""}
+                                      </p>
+                                    </div>
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => handleResourceChange(index, "url", "")}
+                                    >
+                                      Remover
+                                    </Button>
+                                  </div>
+                                </div>
+                              ) : (
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  onClick={() => {
+                                    // Aqui você pode implementar a lógica de upload
+                                    // Por enquanto, vamos apenas simular um upload bem-sucedido
+                                    const mockUrl = `https://example.com/files/material-${Date.now()}.pdf`;
+                                    handleFileUpload(index, mockUrl, "application/pdf", "documento.pdf", 1024 * 250);
+                                  }}
+                                >
+                                  Upload do Arquivo
+                                </Button>
+                              )}
+                            </div>
                           </div>
                         </div>
                       )}
