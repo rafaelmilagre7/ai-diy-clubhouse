@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
-import AulaStepWizard from "./wizard/AulaStepWizard";
+import AulaDialog from "./wizard/AulaDialog";
 
 interface NovaAulaButtonProps {
   moduleId: string;
@@ -44,12 +44,12 @@ export const NovaAulaButton: React.FC<NovaAulaButtonProps> = ({
         {buttonText}
       </Button>
 
-      <AulaStepWizard 
-        open={isModalOpen} 
+      <AulaDialog
+        open={isModalOpen}
         onOpenChange={setIsModalOpen}
         moduleId={moduleId}
-        onClose={handleCloseModal}
-        onSuccess={onSuccess}
+        onClose={() => setIsModalOpen(false)}
+        onSuccess={handleCloseModal}
       />
     </>
   );

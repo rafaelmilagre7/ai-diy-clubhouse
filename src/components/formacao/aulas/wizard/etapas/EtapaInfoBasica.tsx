@@ -24,7 +24,7 @@ const EtapaInfoBasica: React.FC<EtapaInfoBasicaProps> = ({
   onNext,
 }) => {
   const handleContinue = async () => {
-    const result = await form.trigger(["title", "description", "difficultyLevel"]);
+    const result = await form.trigger(["title", "description", "difficulty"]);
     if (result) {
       onNext();
     }
@@ -66,7 +66,7 @@ const EtapaInfoBasica: React.FC<EtapaInfoBasicaProps> = ({
 
       <FormField
         control={form.control}
-        name="difficultyLevel"
+        name="difficulty"
         render={({ field }) => (
           <FormItem>
             <FormLabel>Nível de Dificuldade</FormLabel>

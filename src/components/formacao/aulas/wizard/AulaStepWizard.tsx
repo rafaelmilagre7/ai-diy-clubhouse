@@ -5,7 +5,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Form } from "@/components/ui/form";
 import { aulaFormSchema } from "./schemas/aulaFormSchema";
 import EtapaInfoBasica from "./etapas/EtapaInfoBasica";
-import EtapaMidia from "./etapas/EtapaMidia";
 import EtapaVideos from "./etapas/EtapaVideos";
 import EtapaMateriais from "./etapas/EtapaMateriais";
 import EtapaPublicacao from "./etapas/EtapaPublicacao";
@@ -80,7 +79,7 @@ const AulaStepWizard: React.FC<AulaStepWizardProps> = ({
   });
 
   const handleNext = () => {
-    if (currentStep < 4) {
+    if (currentStep < 3) {
       setCurrentStep(currentStep + 1);
     }
   };
@@ -125,15 +124,6 @@ const AulaStepWizard: React.FC<AulaStepWizardProps> = ({
       key="info" 
       form={form} 
       onNext={handleNext} 
-      onPrevious={handlePrevious}
-      isSaving={isLoading}
-    />,
-    <EtapaMidia 
-      key="midia" 
-      form={form} 
-      onNext={handleNext} 
-      onPrevious={handlePrevious}
-      isSaving={isLoading}
     />,
     <EtapaVideos 
       key="videos" 
@@ -147,13 +137,12 @@ const AulaStepWizard: React.FC<AulaStepWizardProps> = ({
       form={form} 
       onNext={handleNext} 
       onPrevious={handlePrevious}
-      isSaving={isLoading}
     />,
     <EtapaPublicacao 
       key="publicacao" 
       form={form} 
       onPrevious={handlePrevious} 
-      onSubmit={handleComplete}
+      onComplete={handleComplete}
       isSaving={isLoading}
     />
   ];
