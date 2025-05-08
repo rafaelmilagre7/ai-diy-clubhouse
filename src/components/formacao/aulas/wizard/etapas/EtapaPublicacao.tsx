@@ -5,7 +5,6 @@ import { AulaFormValues } from "../AulaStepWizard";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input"; 
 import { Button } from "@/components/ui/button";
 import { Save, HelpCircle, Loader2, CheckCircle, AlertCircle } from "lucide-react";
@@ -55,7 +54,6 @@ const EtapaPublicacao: React.FC<EtapaPublicacaoProps> = ({
       console.log("Valores antes de salvar:", {
         aiAssistantEnabled: form.getValues("aiAssistantEnabled"),
         published: form.getValues("published"),
-        aiAssistantPrompt: form.getValues("aiAssistantPrompt"),
         aiAssistantId: form.getValues("aiAssistantId"),
       });
       
@@ -184,27 +182,6 @@ const EtapaPublicacao: React.FC<EtapaPublicacaoProps> = ({
                   <p className="text-xs text-muted-foreground">
                     ID do assistente criado no painel da OpenAI. Deixe em branco para usar o assistente padrão.
                   </p>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="aiAssistantPrompt" className="text-sm font-medium">
-                    Instruções complementares para o assistente IA
-                  </Label>
-                  <Textarea 
-                    id="aiAssistantPrompt"
-                    placeholder="Insira instruções específicas para personalizar o assistente de IA para esta aula. Ex: 'Você é um especialista em marketing digital que responde dúvidas sobre esta aula.'"
-                    rows={5}
-                    className="resize-none"
-                    value={form.watch("aiAssistantPrompt") || ""}
-                    onChange={(e) => form.setValue("aiAssistantPrompt", e.target.value)}
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Essas instruções serão usadas para complementar o contexto do assistente IA.
-                    Se deixado em branco, apenas o ID do assistente será usado.
-                  </p>
-                  {errors.aiAssistantPrompt && (
-                    <p className="text-sm text-destructive">{errors.aiAssistantPrompt.message}</p>
-                  )}
                 </div>
                 
                 <Alert className="bg-amber-50 border-amber-200 text-amber-800">

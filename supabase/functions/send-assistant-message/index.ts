@@ -51,13 +51,10 @@ serve(async (req) => {
     // Se não foi fornecido um ID de assistente específico, usar um fallback
     const effectiveAssistantId = assistantId || "asst_default"; // Deve ser substituído por um ID válido em produção
     
-    // Preparar instruções adicionais baseadas no contexto
+    // Preparar contexto adicional apenas se necessário
     let additionalInstructions = "";
     if (context?.lessonId) {
       additionalInstructions += `Esta conversa está relacionada à aula com ID ${context.lessonId}. `;
-    }
-    if (context?.assistantPrompt) {
-      additionalInstructions += context.assistantPrompt;
     }
     
     // Executar o assistente no thread

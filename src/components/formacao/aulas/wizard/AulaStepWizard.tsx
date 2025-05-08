@@ -48,7 +48,7 @@ const aulaFormSchema = z.object({
       type: z.string().optional(),
       fileName: z.string().optional(),
       filePath: z.string().optional(),
-      fileSize: z.number().optional(),
+      fileSize: z.string().optional(),
       duration_seconds: z.number().optional(),
       thumbnail_url: z.string().optional(),
       video_id: z.string().optional(),
@@ -64,14 +64,13 @@ const aulaFormSchema = z.object({
       url: z.string().optional(),
       type: z.string().optional(),
       fileName: z.string().optional(),
-      fileSize: z.number().optional(),
+      fileSize: z.string().optional(),
     })
   ).optional().default([]),
   
   // Etapa 5: Publicação
   published: z.boolean().default(false),
   aiAssistantEnabled: z.boolean().default(false),
-  aiAssistantPrompt: z.string().optional(),
   aiAssistantId: z.string().optional()
     .refine(val => val === undefined || val === "" || val?.startsWith("asst_"), {
       message: "ID do assistente deve começar com 'asst_'",
@@ -119,7 +118,6 @@ const AulaStepWizard: React.FC<AulaStepWizardProps> = ({
     coverImageUrl: aula?.cover_image_url || "",
     published: aula?.published || false,
     aiAssistantEnabled: aula?.ai_assistant_enabled || false,
-    aiAssistantPrompt: aula?.ai_assistant_prompt || "",
     aiAssistantId: aula?.ai_assistant_id || "",
     videos: [],
     resources: [],
@@ -509,7 +507,6 @@ const AulaStepWizard: React.FC<AulaStepWizardProps> = ({
         cover_image_url: values.coverImageUrl || null,
         estimated_time_minutes: totalDurationMinutes,
         ai_assistant_enabled: values.aiAssistantEnabled,
-        ai_assistant_prompt: values.aiAssistantPrompt || null,
         ai_assistant_id: values.aiAssistantId || null,
         published: values.published,
         difficulty_level: values.difficultyLevel
