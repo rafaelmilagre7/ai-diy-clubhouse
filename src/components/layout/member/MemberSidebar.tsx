@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
 import { MemberUserMenu } from "./MemberUserMenu";
 import { SidebarLogo } from "./navigation/SidebarLogo";
-import { MemberSidebarNav } from "./MemberSidebarNav";
+import { MemberNavigation } from "./navigation/MemberSidebarNav";
 
 interface MemberSidebarProps {
   sidebarOpen: boolean;
@@ -46,7 +46,7 @@ export const MemberSidebar = ({
         <Separator />
 
         {/* Navegação */}
-        <MemberSidebarNav sidebarOpen={sidebarOpen} />
+        <MemberNavigation sidebarOpen={sidebarOpen} />
 
         {/* Menu do usuário no rodapé da barra lateral */}
         <div className="mt-auto">

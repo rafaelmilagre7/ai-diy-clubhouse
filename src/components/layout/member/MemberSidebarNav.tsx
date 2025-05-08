@@ -11,7 +11,7 @@ import {
   Lightbulb, 
   LucideIcon,
   MessageSquare,
-  Certificate
+  ScrollText // Substituindo Certificate por ScrollText, que é mais adequado para representar certificados
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -44,7 +44,7 @@ export function MemberSidebarNav() {
     {
       title: "Certificados",
       href: "/learning/certificates",
-      icon: Certificate
+      icon: ScrollText // Alterado para ScrollText
     },
     {
       title: "Eventos",

@@ -7,12 +7,33 @@ import {
   AccordionTrigger 
 } from "@/components/ui/accordion";
 import { Card } from "@/components/ui/card";
-import { LearningModule, LearningLesson, LearningCourse, LearningProgress } from "@/lib/supabase/types";
+import { LearningModule, LearningLesson, LearningCourse } from "@/lib/supabase/types";
 import { CheckCircle, Lock, Clock, Play } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useLessonsByModule } from "@/hooks/learning";
+
+// Definindo um tipo personalizado para progress que é compatível com ambos os contextos
+type ProgressItem = {
+  lesson_id: string;
+  progress_percentage: number;
+  completed_at?: string;
+  updated_at?: string;
+  [key: string]: any; // Para permitir campos adicionais
+};
+
+export interface LearningProgress {
+  id: string;
+  user_id: string;
+  lesson_id: string;
+  progress_percentage: number;
+  started_at?: string;
+  completed_at?: string;
+  updated_at?: string;
+  created_at?: string;
+  [key: string]: any; // Para permitir campos adicionais
+}
 
 interface CourseModulesProps {
   modules: LearningModule[];
@@ -21,7 +42,7 @@ interface CourseModulesProps {
   course?: LearningCourse;
   expandedModules?: string[];
   lessons?: LearningLesson[]; // Adicionada esta prop para compatibilidade
-  progress?: { lesson_id: any; progress_percentage: any; }[]; // Adicionada esta prop para compatibilidade
+  progress?: ProgressItem[]; // Modificado para usar o tipo compatível
 }
 
 export const CourseModules: React.FC<CourseModulesProps> = ({ 
@@ -41,9 +62,10 @@ export const CourseModules: React.FC<CourseModulesProps> = ({
 
   // Verificar se uma aula está completa
   const isLessonCompleted = (lessonId: string): boolean => {
-    return !!effectiveProgress?.find(p => 
-      p.lesson_id === lessonId && 
-      (p.progress_percentage >= 100 || !!p.completed_at)
+    const lessonProgress = effectiveProgress?.find(p => p.lesson_id === lessonId);
+    return !!lessonProgress && (
+      lessonProgress.progress_percentage >= 100 || 
+      !!lessonProgress.completed_at
     );
   };
 
@@ -63,9 +85,11 @@ export const CourseModules: React.FC<CourseModulesProps> = ({
   const getLastAccessedLesson = (): string | null => {
     if (!effectiveProgress || effectiveProgress.length === 0) return null;
     
-    // Ordenar por updated_at (mais recente primeiro)
+    // Ordenar por updated_at (mais recente primeiro) com verificação segura
     const sortedProgress = [...effectiveProgress].sort((a, b) => {
-      return new Date(b.updated_at || "").getTime() - new Date(a.updated_at || "").getTime();
+      const dateA = a.updated_at ? new Date(a.updated_at).getTime() : 0;
+      const dateB = b.updated_at ? new Date(b.updated_at).getTime() : 0;
+      return dateB - dateA;
     });
     
     return sortedProgress[0].lesson_id;
@@ -157,7 +181,7 @@ export const CourseModules: React.FC<CourseModulesProps> = ({
                 <ModuleLessons 
                   moduleId={module.id} 
                   courseId={courseId}
-                  userProgress={effectiveProgress}
+                  userProgress={effectiveProgress as LearningProgress[]} // Usando type assertion para garantir compatibilidade
                   isLessonCompleted={isLessonCompleted}
                   isLessonInProgress={isLessonInProgress}
                   getLessonProgress={getLessonProgress}

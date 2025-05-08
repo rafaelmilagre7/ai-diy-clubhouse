@@ -1,8 +1,13 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { CertificatesList } from "@/components/learning/certificates/CertificatesList";
 
 const MyCertificates = () => {  
+  // Atualizar o título da página
+  useEffect(() => {
+    document.title = "Meus Certificados | Plataforma de Aprendizagem";
+  }, []);
+
   return (
     <div className="container mx-auto py-8">
       <div className="flex flex-col gap-6">
