@@ -13,6 +13,8 @@ export type LearningComment = Database['public']['Tables']['learning_comments'][
 export type Progress = Database['public']['Tables']['progress']['Row'];
 export type Solution = Database['public']['Tables']['solutions']['Row'];
 export type Module = Database['public']['Tables']['modules']['Row'];
+export type ImplementationCheckpoint = Database['public']['Tables']['implementation_checkpoints']['Row'];
+export type Event = Database['public']['Tables']['events']['Row'];
 
 // Outros tipos existentes
 export * from './database.types';

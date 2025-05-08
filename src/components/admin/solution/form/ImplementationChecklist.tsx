@@ -18,6 +18,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
+import { ImplementationCheckpoint } from "@/lib/supabase/types";
 
 interface Checkpoint {
   id?: string;
@@ -65,7 +66,15 @@ const ImplementationChecklist: React.FC<ImplementationChecklistProps> = ({
       if (error) throw error;
       
       if (data && data.length > 0) {
-        setCheckpoints(data);
+        // Convertendo para o tipo Checkpoint
+        const checkpointData = data.map((item: ImplementationCheckpoint) => ({
+          id: item.id,
+          solution_id: item.solution_id || '',
+          description: item.description,
+          checkpoint_order: item.checkpoint_order
+        }));
+        
+        setCheckpoints(checkpointData);
       } else {
         setCheckpoints([{ 
           solution_id: solutionId || "", 

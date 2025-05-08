@@ -1,4 +1,3 @@
-
 export type Json =
   | string
   | number
@@ -298,6 +297,30 @@ export interface Database {
         }
         Relationships: []
       }
+      implementation_checkpoints: {
+        Row: {
+          checkpoint_order: number
+          created_at: string
+          id: string
+          description: string
+          solution_id: string | null
+        }
+        Insert: {
+          checkpoint_order: number
+          created_at?: string
+          id?: string
+          description: string
+          solution_id?: string | null
+        }
+        Update: {
+          checkpoint_order?: number
+          created_at?: string
+          id?: string
+          description?: string
+          solution_id?: string | null
+        }
+        Relationships: []
+      }
       modules: {
         Row: {
           certificate_template: Json | null
@@ -472,6 +495,45 @@ export interface Database {
           thumbnail_url?: string | null
           title?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      events: {
+        Row: {
+          physical_location: string | null
+          start_time: string
+          id: string
+          location_link: string | null
+          cover_image_url: string | null
+          title: string
+          end_time: string
+          created_by: string
+          created_at: string
+          description: string | null
+        }
+        Insert: {
+          physical_location?: string | null
+          start_time: string
+          id?: string
+          location_link?: string | null
+          cover_image_url?: string | null
+          title: string
+          end_time: string
+          created_by: string
+          created_at?: string
+          description?: string | null
+        }
+        Update: {
+          physical_location?: string | null
+          start_time?: string
+          id?: string
+          location_link?: string | null
+          cover_image_url?: string | null
+          title?: string
+          end_time?: string
+          created_by?: string
+          created_at?: string
+          description?: string | null
         }
         Relationships: []
       }
