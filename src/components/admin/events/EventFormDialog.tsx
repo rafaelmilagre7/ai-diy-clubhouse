@@ -1,11 +1,12 @@
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { EventForm } from "./EventForm";
-import type { Event } from "@/types/events";
+import { Event as SupabaseEvent } from "@/lib/supabase/types";
+import { Event as AppEvent } from "@/types/events";
 import type { EventFormData } from "./form/EventFormSchema";
 
 interface EventFormDialogProps {
-  event?: Event;
+  event?: AppEvent; // Usando o tipo AppEvent do aplicativo
   initialData?: EventFormData | null;
   onClose: () => void;
 }

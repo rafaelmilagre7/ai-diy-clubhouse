@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
-import type { Event } from "@/lib/supabase/types";
+import { Event as AppEvent } from "@/types/events";
 import { useQueryClient } from "@tanstack/react-query";
 import { eventSchema, type EventFormData } from "./form/EventFormSchema";
 import { EventBasicInfo } from "./form/EventBasicInfo";
@@ -15,7 +15,7 @@ import { EventCoverImage } from "./form/EventCoverImage";
 import { useEffect } from "react";
 
 interface EventFormProps {
-  event?: Event;
+  event?: AppEvent;
   initialData?: EventFormData | null;
   onSuccess: () => void;
 }
@@ -74,7 +74,8 @@ export const EventForm = ({ event, initialData, onSuccess }: EventFormProps) => 
           created_by: (await supabase.auth.getUser()).data.user?.id as string,
           title: data.title,
           start_time: data.start_time,
-          end_time: data.end_time
+          end_time: data.end_time,
+          description: data.description || null // Garantindo que description pode ser null
         };
 
         const { error } = await supabase

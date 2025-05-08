@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabase";
 import { SolutionResource } from "@/lib/supabase/types";
 import { Resource, ResourceMetadata } from "../types/ResourceTypes";
 import { detectFileType, getFileFormatName } from "../utils/resourceUtils";
+import { parseResourceMetadata } from "../utils/resourceMetadataUtils";
 
 export const useMaterialsOperations = (
   solutionId: string | null,
@@ -33,17 +34,17 @@ export const useMaterialsOperations = (
         version: "1.0"
       };
       
+      // Converter ResourceMetadata para string JSON para armazenamento
       const newResource = {
         solution_id: solutionId,
         name: fileName,
         url: url,
         type: fileType,
         format: format,
-        metadata: metadata,
+        metadata: JSON.stringify(metadata), // Convertendo para string JSON
         size: fileSize
       };
       
-      // Usamos "solution_resources" como string direta, mas precisamos ter certeza de que ela está definida nas tipagens
       const { data, error } = await supabase
         .from("solution_resources")
         .insert(newResource)
@@ -54,19 +55,8 @@ export const useMaterialsOperations = (
       
       if (data) {
         // Converter o resultado do Supabase para o formato esperado pelo componente
-        const resource: Resource = {
-          id: data.id,
-          name: data.name,
-          url: data.url,
-          type: fileType,
-          format: data.format || format,
-          solution_id: data.solution_id,
-          metadata: metadata, // Usar o metadata já formatado que criamos
-          created_at: data.created_at,
-          updated_at: data.updated_at,
-          module_id: data.module_id,
-          size: data.size
-        };
+        // Usando parseResourceMetadata para garantir que o metadata seja do tipo correto
+        const resource = parseResourceMetadata(data);
         
         setMaterials(prev => [...prev, resource]);
       }

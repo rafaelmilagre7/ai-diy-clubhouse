@@ -63,6 +63,15 @@ export async function createStoragePublicPolicy(bucketName: string): Promise<{su
       return { success: false, error: `Erro ao atualizar políticas: ${updateError.message}` };
     }
     
+    // Chamar RPC para definir as políticas públicas de acesso
+    try {
+      await supabase.rpc('create_storage_public_policy', { bucket_name: bucketName });
+    } catch (rpcError: any) {
+      console.warn('Aviso ao definir políticas via RPC:', rpcError);
+      // Não retornamos erro aqui para não interromper o fluxo, já que algumas 
+      // operações podem funcionar mesmo sem esta chamada
+    }
+    
     return { success: true, error: null };
   } catch (error: any) {
     console.error('Exceção ao configurar bucket de armazenamento:', error);

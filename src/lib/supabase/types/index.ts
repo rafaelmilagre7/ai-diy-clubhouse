@@ -17,5 +17,29 @@ export type ImplementationCheckpoint = Database['public']['Tables']['implementat
 export type Event = Database['public']['Tables']['events']['Row'];
 export type SolutionResource = Database['public']['Tables']['solution_resources']['Row'];
 
+// Adicionando tipo Tool temporário para resolver o erro
+export interface Tool {
+  id: string;
+  name: string;
+  description: string;
+  official_url: string;
+  category: string;
+  logo_url: string | null;
+  video_url: string | null;
+  video_type: string | null;
+  tags: string[];
+  status: boolean;
+  created_at: string;
+  updated_at: string;
+  has_member_benefit: boolean;
+  benefit_title: string | null;
+  benefit_description: string | null;
+  benefit_link: string | null;
+  benefit_badge_url: string | null;
+  benefit_type: string | null;
+  benefit_clicks: number;
+  video_tutorials: any[];
+}
+
 // Outros tipos existentes
 export * from './database.types';

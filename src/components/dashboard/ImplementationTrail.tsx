@@ -10,10 +10,12 @@ import { TrailEmptyState } from "./TrailEmptyState";
 import { TrailCardList } from "./TrailCardList";
 import { TrailCardHeader } from "./TrailCardHeader";
 
-interface TrailSolution extends Omit<Solution, 'category'> {
+// Atualizando a interface TrailSolution para aceitar strings nos campos 'category' e 'difficulty'
+interface TrailSolution extends Omit<Solution, 'category' | 'difficulty'> {
   priority: number;
   justification: string;
-  category: string; // Usando string para compatibilidade com os dados do banco
+  category: string; // Mantendo como string para compatibilidade
+  difficulty: string; // Mantendo como string para compatibilidade
 }
 
 export const ImplementationTrail = () => {
@@ -55,12 +57,12 @@ export const ImplementationTrail = () => {
         trail.priority1.forEach(rec => {
           const solution = data?.find(s => s.id === rec.solutionId);
           if (solution) {
-            // Converter explicitamente para o tipo TrailSolution
             mappedSolutions.push({
               ...solution,
               priority: 1,
               justification: rec.justification,
-              category: solution.category as string // Tratar como string para compatibilidade
+              category: solution.category as string,
+              difficulty: solution.difficulty as string
             });
           }
         });
@@ -72,7 +74,8 @@ export const ImplementationTrail = () => {
               ...solution,
               priority: 2,
               justification: rec.justification,
-              category: solution.category as string
+              category: solution.category as string,
+              difficulty: solution.difficulty as string
             });
           }
         });
@@ -84,7 +87,8 @@ export const ImplementationTrail = () => {
               ...solution,
               priority: 3,
               justification: rec.justification,
-              category: solution.category as string
+              category: solution.category as string,
+              difficulty: solution.difficulty as string
             });
           }
         });
@@ -122,7 +126,7 @@ export const ImplementationTrail = () => {
       <TrailCardHeader onUpdate={handleRegenerateTrail} />
       <CardContent>
         <TrailCardList
-          solutions={solutions as any} // Cast para evitar erros de tipo
+          solutions={solutions} // Removido o cast para evitar erros
           onSolutionClick={handleSolutionClick}
           onSeeAll={() => navigate('/solutions')}
         />
