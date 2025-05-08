@@ -24,5 +24,8 @@ export {
   getYoutubeVideoId,
   getYoutubeThumbnailUrl,
   formatVideoDuration,
-  estimateVideoDuration
+  estimateVideoDuration,
+  youtubeUrlToEmbed,
+  getVideoTypeFromUrl,
+  getPandaVideoId
 } from './supabase/videoUtils';

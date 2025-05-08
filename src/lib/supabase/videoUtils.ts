@@ -107,3 +107,37 @@ export function getPandaVideoId(url: string): string | null {
   
   return null;
 }
+
+/**
+ * Obtém a URL da thumbnail de um vídeo do YouTube
+ * @param videoId ID do vídeo do YouTube
+ * @param quality Qualidade da thumbnail (default, mq, hq, sd, maxres)
+ * @returns URL da thumbnail
+ */
+export function getYoutubeThumbnailUrl(videoId: string, quality: 'default' | 'mq' | 'hq' | 'sd' | 'maxres' = 'hq'): string {
+  if (!videoId) return '';
+  
+  return `https://img.youtube.com/vi/${videoId}/${quality}default.jpg`;
+}
+
+/**
+ * Estima a duração de um vídeo com base no tamanho do arquivo
+ * @param fileSize Tamanho do arquivo em bytes
+ * @param quality Qualidade estimada do vídeo (low, medium, high)
+ * @returns Duração estimada em segundos
+ */
+export function estimateVideoDuration(fileSize: number, quality: 'low' | 'medium' | 'high' = 'medium'): number {
+  if (!fileSize) return 0;
+  
+  // Taxas de bits estimadas (bytes por segundo) para diferentes qualidades
+  const bitrates = {
+    low: 150000 / 8,     // 150 kbps
+    medium: 700000 / 8,  // 700 kbps
+    high: 2000000 / 8    // 2 Mbps
+  };
+  
+  // Estimar duração baseada no tamanho e bitrate
+  const durationSeconds = fileSize / bitrates[quality];
+  
+  return Math.round(durationSeconds);
+}

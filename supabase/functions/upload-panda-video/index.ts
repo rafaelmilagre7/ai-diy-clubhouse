@@ -1,353 +1,134 @@
 
-import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
+import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
+// Configuração de CORS para permitir requisições da aplicação web
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS"
-};
-
-// Implementar sistema de retry para falhas de upload
-async function uploadWithRetry(url: string, options: RequestInit, maxRetries = 3) {
-  let lastError;
-  
-  for (let attempt = 0; attempt < maxRetries; attempt++) {
-    try {
-      if (attempt > 0) {
-        console.log(`Tentativa ${attempt + 1} de ${maxRetries} para: ${url}`);
-        // Espera exponencial entre tentativas (1s, 2s, 4s...)
-        await new Promise(r => setTimeout(r, Math.pow(2, attempt) * 1000));
-      }
-      
-      const response = await fetch(url, options);
-      return response;
-    } catch (error) {
-      console.error(`Erro na tentativa ${attempt + 1}:`, error);
-      lastError = error;
-    }
-  }
-  
-  throw new Error(`Falha após ${maxRetries} tentativas: ${lastError?.message || 'Erro desconhecido'}`);
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
 }
 
-// Função auxiliar para codificar em Base64
-function encodeBase64(str: string): string {
-  return btoa(str);
-}
-
-serve(async (req) => {
-  console.log("Requisição de upload de vídeo recebida");
-  
-  // Lidar com requisições OPTIONS (CORS preflight)
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+// Função para lidar com as requisições
+serve(async (req: Request) => {
+  // Lidar com preflight CORS
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders })
   }
 
   try {
-    // Verificar se a requisição é POST
-    if (req.method !== "POST") {
-      console.log("Método não permitido:", req.method);
-      return new Response(
-        JSON.stringify({ 
-          success: false,
-          error: "Método não permitido" 
-        }),
-        { 
-          status: 405, 
-          headers: { 
-            ...corsHeaders, 
-            "Content-Type": "application/json" 
-          } 
-        }
-      );
+    // Apenas aceitar requisições POST
+    if (req.method !== 'POST') {
+      return new Response(JSON.stringify({ error: 'Método não permitido' }), {
+        status: 405,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
     }
 
-    // Verificar autenticação do usuário (JWT)
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      console.log("Erro de autenticação: Token JWT ausente ou inválido");
-      return new Response(
-        JSON.stringify({ 
-          success: false,
-          error: "Usuário não autenticado" 
-        }),
-        { 
-          status: 401, 
-          headers: { 
-            ...corsHeaders, 
-            "Content-Type": "application/json" 
-          } 
-        }
-      );
-    }
-
-    // Obter API key do Panda Video
-    const apiKey = Deno.env.get("PANDA_API_KEY");
-    
-    console.log("Verificando credencial Panda Video API Key disponível:", !!apiKey);
-    
-    if (!apiKey) {
-      console.error("API Key do Panda Video não configurada");
-      
-      // Ambiente de desenvolvimento ou teste, simular upload bem-sucedido
-      if (Deno.env.get("ENVIRONMENT") === "development" || !Deno.env.get("ENVIRONMENT")) {
-        console.log("Ambiente de desenvolvimento detectado, simulando upload bem-sucedido");
-        
-        // Gerar ID aleatório para o vídeo
-        const videoId = crypto.randomUUID();
-        
-        return new Response(
-          JSON.stringify({
-            success: true,
-            video: {
-              id: videoId,
-              title: "Vídeo de teste",
-              duration: Math.floor(Math.random() * 300),
-              url: `https://player.pandavideo.com.br/embed/?v=${videoId}`,
-              thumbnail_url: `https://picsum.photos/seed/${videoId}/640/360`,
-              video_type: "panda",
-              upload_id: videoId
-            }
-          }),
-          { 
-            status: 200, 
-            headers: { 
-              ...corsHeaders, 
-              "Content-Type": "application/json" 
-            } 
-          }
-        );
-      }
-      
-      return new Response(
-        JSON.stringify({ 
-          success: false,
-          error: "Configuração incompleta do servidor: API Key não definida"
-        }),
-        { 
-          status: 500, 
-          headers: { 
-            ...corsHeaders, 
-            "Content-Type": "application/json" 
-          } 
-        }
-      );
-    }
-
-    // Extrair os dados do formulário
-    let formData;
-    try {
-      formData = await req.formData();
-      console.log("FormData extraído com sucesso");
-    } catch (formError) {
-      console.error("Erro ao processar formulário:", formError);
-      return new Response(
-        JSON.stringify({ 
-          success: false,
-          error: "Erro ao processar os dados do formulário",
-          details: formError.message 
-        }),
-        { 
-          status: 400, 
-          headers: { 
-            ...corsHeaders, 
-            "Content-Type": "application/json" 
-          } 
-        }
-      );
-    }
-    
-    const videoFile = formData.get("video") as File;
-    const videoTitle = formData.get("title") as string || "Vídeo sem título";
-    const isPrivate = formData.get("private") === "true";
-    const folderId = formData.get("folder_id") as string || "";
-
-    if (!videoFile) {
-      console.log("Nenhum arquivo de vídeo encontrado no FormData");
-      return new Response(
-        JSON.stringify({ 
-          success: false,
-          error: "Nenhum arquivo de vídeo enviado" 
-        }),
-        { 
-          status: 400, 
-          headers: { 
-            ...corsHeaders, 
-            "Content-Type": "application/json" 
-          } 
-        }
-      );
-    }
-
-    console.log(`Processando upload do vídeo: ${videoTitle} (${videoFile.size} bytes)`);
-    console.log(`Tipo do arquivo: ${videoFile.type}`);
-
-    // Gerar um UUID para o vídeo
-    const videoId = crypto.randomUUID();
-    console.log("ID de vídeo gerado:", videoId);
-
-    // Ambiente de desenvolvimento ou teste, simular upload bem-sucedido
-    if (Deno.env.get("ENVIRONMENT") === "development" || !Deno.env.get("ENVIRONMENT")) {
-      console.log("Ambiente de desenvolvimento detectado, simulando upload bem-sucedido");
-      
-      return new Response(
-        JSON.stringify({
-          success: true,
-          video: {
-            id: videoId,
-            title: videoTitle,
-            duration: Math.floor(Math.random() * 300),
-            url: `https://player.pandavideo.com.br/embed/?v=${videoId}`,
-            thumbnail_url: `https://picsum.photos/seed/${videoId}/640/360`,
-            video_type: "panda",
-            upload_id: videoId
-          }
-        }),
-        { 
-          status: 200, 
-          headers: { 
-            ...corsHeaders, 
-            "Content-Type": "application/json" 
-          } 
-        }
-      );
-    }
-    
-    // Implementação real usando a API Panda Video
-    
-    // Preparar metadados para o protocolo Tus
-    const metadataEntries = [
-      `authorization ${encodeBase64(apiKey)}`,
-      `filename ${encodeBase64(videoFile.name)}`,
-      `video_id ${encodeBase64(videoId)}`
-    ];
-    
-    // Adicionar folder_id apenas se estiver definido
-    if (folderId) {
-      metadataEntries.push(`folder_id ${encodeBase64(folderId)}`);
-    }
-    
-    const uploadMetadata = metadataEntries.join(',');
-    
-    // URL da API Panda para upload
-    const PANDA_UPLOAD_URL = "https://uploader-us01.pandavideo.com.br/files";
-    
-    // Preparar o buffer de dados do arquivo
-    const fileBuffer = await videoFile.arrayBuffer();
-    
-    console.log("Iniciando upload com protocolo Tus para Panda Video API");
-    console.log("URL de upload:", PANDA_UPLOAD_URL);
-    console.log("Tamanho do arquivo:", videoFile.size, "bytes");
-    
-    let uploadResponse;
-    try {
-      uploadResponse = await uploadWithRetry(PANDA_UPLOAD_URL, {
-        method: "POST",
-        headers: {
-          "Tus-Resumable": "1.0.0",
-          "Upload-Length": videoFile.size.toString(),
-          "Content-Type": "application/offset+octet-stream",
-          "Upload-Metadata": uploadMetadata,
-          "Origin": "https://viverdeia.ai", // Adicionar origem para evitar problemas de CORS
+    // Configurar cliente Supabase para acessar secrets
+    const supabaseClient = createClient(
+      // Supabase API URL - usar a mesma URL do projeto
+      Deno.env.get('SUPABASE_URL') ?? '',
+      // Chave de serviço para permitir acesso a secrets
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false,
         },
-        body: new Uint8Array(fileBuffer)
-      });
-      
-      console.log(`Resposta do Panda Video API recebida com status: ${uploadResponse.status}`);
-      console.log(`Headers da resposta:`, Object.fromEntries(uploadResponse.headers.entries()));
-    } catch (uploadError) {
-      console.error("Erro na requisição de upload:", uploadError);
-      return new Response(
-        JSON.stringify({ 
-          success: false,
-          error: "Falha na conexão com o serviço de vídeo",
-          details: uploadError.message 
-        }),
-        { 
-          status: 500, 
-          headers: { 
-            ...corsHeaders, 
-            "Content-Type": "application/json" 
-          } 
-        }
-      );
-    }
-
-    if (!uploadResponse.ok) {
-      // Clonar a resposta para poder lê-la mais de uma vez se necessário
-      const clonedResponse = uploadResponse.clone();
-      
-      let uploadErrorText;
-      try {
-        uploadErrorText = await clonedResponse.text();
-        console.error("Erro no upload para Panda Video:", uploadErrorText);
-      } catch (e) {
-        uploadErrorText = "Erro desconhecido no upload";
-        console.error("Não foi possível ler resposta de erro:", e);
       }
-      
-      return new Response(
-        JSON.stringify({ 
-          success: false,
-          error: "Falha ao fazer upload do vídeo",
-          details: uploadErrorText,
-          statusCode: uploadResponse.status
-        }),
-        { 
-          status: uploadResponse.status, 
-          headers: { 
-            ...corsHeaders, 
-            "Content-Type": "application/json" 
-          } 
-        }
-      );
+    )
+    
+    // Obter chaves de API do Panda Video dos secrets do Supabase
+    const pandaApiKey = Deno.env.get('PANDA_API_KEY')
+    
+    // Verificar se a chave de API está disponível
+    if (!pandaApiKey) {
+      console.error('Erro: PANDA_API_KEY não configurada nos secrets do Supabase')
+      return new Response(JSON.stringify({
+        error: 'Configuração de API incorreta',
+        details: 'Secret PANDA_API_KEY não configurada'
+      }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
     }
     
-    // Obter URL de localização do vídeo da resposta
-    const locationUrl = uploadResponse.headers.get("Location");
-    const uploadId = locationUrl ? locationUrl.split('/').pop() : '';
+    // Extrair dados da requisição
+    const { videoName, fileName, fileType, fileSize } = await req.json()
     
-    console.log("Upload de vídeo bem-sucedido. ID de upload:", uploadId);
-    console.log("Location URL:", locationUrl);
+    console.log('Iniciando processo de upload para o Panda Video:', { videoName, fileName, fileType, fileSize })
     
-    // Como o Tus não retorna imediatamente os metadados do vídeo,
-    // retornamos um sucesso com o ID do vídeo e outros dados que temos
-    return new Response(
-      JSON.stringify({
-        success: true,
-        video: {
-          id: videoId,
-          title: videoTitle,
-          duration: 0, // Será necessário obter isso por meio de outra API call
-          url: `https://player.pandavideo.com.br/embed/?v=${videoId}`,
-          thumbnail_url: null, // Será disponibilizado após o processamento
-          video_type: "panda",
-          upload_id: uploadId
-        }
-      }),
-      { 
-        status: 200, 
-        headers: { 
-          ...corsHeaders, 
-          "Content-Type": "application/json" 
-        } 
+    // Verificar se os parâmetros necessários foram fornecidos
+    if (!fileName || !fileType) {
+      return new Response(JSON.stringify({
+        error: 'Parâmetros inválidos',
+        details: 'fileName e fileType são obrigatórios'
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+    
+    // Preparar URL para requisição de upload
+    const uploadUrl = 'https://api-v2.pandavideo.com.br/videos/getuploadurl'
+    
+    try {
+      // Obter URL de upload do Panda Video
+      const uploadResponse = await fetch(uploadUrl, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': `ApiKey ${pandaApiKey}`
+        },
+      })
+      
+      if (!uploadResponse.ok) {
+        const errorData = await uploadResponse.json()
+        console.error('Erro ao obter URL de upload do Panda Video:', errorData)
+        return new Response(JSON.stringify({
+          error: 'Erro na API do Panda Video',
+          details: errorData
+        }), {
+          status: uploadResponse.status,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
       }
-    );
+      
+      const uploadData = await uploadResponse.json()
+      console.log('URL de upload obtida com sucesso:', uploadData)
+      
+      // Adicionar informações de título/nome do arquivo para o frontend
+      const responseData = {
+        ...uploadData,
+        videoName: videoName || fileName,
+        fileName,
+        fileType,
+        fileSize
+      }
+      
+      // Retornar os dados para o cliente
+      return new Response(JSON.stringify(responseData), {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+      
+    } catch (error) {
+      console.error('Erro ao processar requisição para o Panda Video:', error)
+      return new Response(JSON.stringify({
+        error: 'Erro ao processar requisição',
+        details: error.message
+      }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+    
   } catch (error) {
-    console.error("Erro não tratado no processamento do upload:", error);
-    return new Response(
-      JSON.stringify({ 
-        success: false,
-        error: "Erro no processamento do upload", 
-        message: error.message 
-      }),
-      { 
-        status: 500, 
-        headers: { 
-          ...corsHeaders, 
-          "Content-Type": "application/json" 
-        } 
-      }
-    );
+    console.error('Erro na edge function:', error)
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    })
   }
-});
+})

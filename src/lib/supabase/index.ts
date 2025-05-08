@@ -17,7 +17,10 @@ export {
   getYoutubeVideoId,
   getYoutubeThumbnailUrl,
   formatVideoDuration,
-  estimateVideoDuration
+  estimateVideoDuration,
+  youtubeUrlToEmbed,
+  getVideoTypeFromUrl,
+  getPandaVideoId
 } from './videoUtils';
 
 // Remover as exportações duplicadas de rpc para evitar conflitos
