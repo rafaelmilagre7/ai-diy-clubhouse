@@ -33,6 +33,7 @@ import { VideoUpload } from "@/components/formacao/comum/VideoUpload";
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import { Plus, GripVertical } from "lucide-react";
 import { toast } from "sonner";
+import { VideoFormValues } from "@/lib/supabase/types";
 
 const formSchema = z.object({
   title: z.string().min(2, {
@@ -72,31 +73,54 @@ interface AulaWizardProps {
   onSuccess?: () => void;
 }
 
-interface VideoFormValues {
-  id?: string;
-  title?: string;
-  description?: string;
-  url?: string;
-  type?: string;
-  fileName?: string;
-  filePath?: string;
-  fileSize?: number;
-  duration_seconds?: number;
-  video_id?: string;
-  thumbnail_url?: string;
-}
-
-// Estendendo a interface LearningLesson para incluir a propriedade videos
-interface ExtendedLearningLesson extends LearningLesson {
-  videos?: VideoFormValues[];
-}
-
 type FormSchema = z.infer<typeof formSchema>
 
 const AulaWizard: React.FC<AulaWizardProps> = ({ open, onOpenChange, aula, moduleId, onSuccess }) => {
   const [isSaving, setIsSaving] = useState(false);
   const [modules, setModules] = useState<LearningModule[]>([]);
   const { toast: hookToast } = useToast();
+
+  // Carregamos os vídeos da aula para o estado local
+  const [aulaVideos, setAulaVideos] = useState<VideoFormValues[]>([]);
+  
+  useEffect(() => {
+    // Se tiver aula e ID, buscar vídeos
+    if (aula?.id) {
+      const fetchVideos = async () => {
+        try {
+          const { data, error } = await supabase
+            .from("learning_lesson_videos")
+            .select("*")
+            .eq("lesson_id", aula.id)
+            .order("order_index", { ascending: true });
+            
+          if (error) throw error;
+          
+          if (data) {
+            const formattedVideos: VideoFormValues[] = data.map(video => ({
+              id: video.id,
+              title: video.title,
+              description: video.description || "",
+              url: video.url,
+              type: video.video_type || "youtube",
+              fileName: video.video_file_name || undefined,
+              filePath: video.video_file_path || undefined,
+              fileSize: video.file_size_bytes || undefined,
+              duration_seconds: video.duration_seconds || undefined,
+              thumbnail_url: video.thumbnail_url || undefined,
+              video_id: video.video_id || undefined
+            }));
+            
+            setAulaVideos(formattedVideos);
+          }
+        } catch (error) {
+          console.error("Erro ao buscar vídeos da aula:", error);
+        }
+      };
+      
+      fetchVideos();
+    }
+  }, [aula?.id]);
 
   const defaultValues: Partial<FormSchema> = {
     title: aula?.title || "",
@@ -107,18 +131,24 @@ const AulaWizard: React.FC<AulaWizardProps> = ({ open, onOpenChange, aula, modul
     aiAssistantPrompt: aula?.ai_assistant_prompt || "",
     published: aula?.published || false,
     orderIndex: aula?.order_index || 0,
-    videos: (aula as ExtendedLearningLesson)?.videos || []
+    videos: aulaVideos || []
   };
 
   const form = useForm<FormSchema>({
     resolver: zodResolver(formSchema),
     defaultValues,
     mode: "onChange"
-  })
+  });
 
+  // Redefinir o formulário quando a aula ou os vídeos mudarem
   useEffect(() => {
-    form.reset(defaultValues);
-  }, [aula, moduleId, form]);
+    if (aula || aulaVideos.length > 0) {
+      form.reset({
+        ...defaultValues,
+        videos: aulaVideos
+      });
+    }
+  }, [aula, moduleId, aulaVideos, form]);
 
   useEffect(() => {
     const fetchModules = async () => {
@@ -176,6 +206,18 @@ const AulaWizard: React.FC<AulaWizardProps> = ({ open, onOpenChange, aula, modul
         return;
       }
       
+      // Primeiro, remover todos os vídeos existentes
+      if (aula?.id) {
+        const { error: deleteError } = await supabase
+          .from('learning_lesson_videos')
+          .delete()
+          .eq('lesson_id', lessonId);
+        
+        if (deleteError) {
+          console.error("Erro ao remover vídeos existentes:", deleteError);
+        }
+      }
+      
       // Para cada vídeo no formulário
       for (let i = 0; i < videos.length; i++) {
         const video = videos[i];
@@ -203,62 +245,15 @@ const AulaWizard: React.FC<AulaWizardProps> = ({ open, onOpenChange, aula, modul
         
         console.log(`Salvando vídeo ${i + 1}:`, videoData);
         
-        if (video.id && video.id.startsWith('temp-video-')) {
-          // É um vídeo novo temporário, criar
-          const { error } = await supabase
-            .from('learning_lesson_videos')
-            .insert([videoData]);
-            
-          if (error) {
-            console.error(`Erro ao criar vídeo ${i + 1}:`, error);
-            throw error;
-          }
+        // Inserir novo vídeo
+        const { error } = await supabase
+          .from('learning_lesson_videos')
+          .insert([videoData]);
           
-          console.log(`Vídeo ${i + 1} criado com sucesso.`);
-        } else if (video.id) {
-          // Atualizar vídeo existente
-          const { error } = await supabase
-            .from('learning_lesson_videos')
-            .update(videoData)
-            .eq('id', video.id);
-            
-          if (error) {
-            console.error(`Erro ao atualizar vídeo ${i + 1}:`, error);
-            throw error;
-          }
-          
-          console.log(`Vídeo ${i + 1} atualizado com sucesso.`);
+        if (error) {
+          console.error(`Erro ao criar vídeo ${i + 1}:`, error);
         } else {
-          // Criar novo vídeo sem id temporário
-          const { error } = await supabase
-            .from('learning_lesson_videos')
-            .insert([videoData]);
-            
-          if (error) {
-            console.error(`Erro ao criar vídeo ${i + 1}:`, error);
-            throw error;
-          }
-          
           console.log(`Vídeo ${i + 1} criado com sucesso.`);
-        }
-      }
-      
-      // Remover vídeos que não estão mais presentes
-      if (aula?.id) {
-        const videoIds = videos
-          .filter(v => v.id && !v.id.startsWith('temp-video-'))
-          .map(v => v.id);
-          
-        if (videoIds.length > 0) {
-          const { error } = await supabase
-            .from('learning_lesson_videos')
-            .delete()
-            .eq('lesson_id', lessonId)
-            .not('id', 'in', `(${videoIds.join(',')})`);
-            
-          if (error) {
-            console.error("Erro ao remover vídeos não utilizados:", error);
-          }
         }
       }
       

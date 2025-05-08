@@ -52,8 +52,14 @@ export const PublishLessonButton = ({
         
         if (error) throw error;
         
-        if (data && data.module && data.module.course_id) {
-          setCourseId(data.module.course_id);
+        if (data && data.module) {
+          // Verificamos se module é um array ou objeto e acessamos course_id corretamente
+          const moduleData = data.module;
+          if (Array.isArray(moduleData) && moduleData.length > 0) {
+            setCourseId(moduleData[0].course_id);
+          } else if (typeof moduleData === 'object' && moduleData !== null) {
+            setCourseId(moduleData.course_id);
+          }
         }
       } catch (err) {
         console.error("Erro ao buscar ID do curso:", err);

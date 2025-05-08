@@ -100,10 +100,7 @@ export interface LearningModule {
   created_at: string;
   updated_at: string;
   order_index: number;
-  learning_courses?: {
-    id: string;
-    title: string;
-  } | null;
+  learning_courses?: LearningCourse | null;
 }
 
 export interface LearningLesson {
@@ -140,7 +137,7 @@ export interface LearningProgress {
   created_at: string;
   updated_at: string;
   last_position_seconds: number | null;
-  video_progress?: Record<string, number>;
+  video_progress: Record<string, number>;
 }
 
 export interface LearningResource {
@@ -190,4 +187,20 @@ export interface LearningCertificate {
   certificate_url: string | null;
   created_at: string;
   issued_at: string;
+}
+
+// Interface específica para formulários que lidam com vídeos
+export interface VideoFormValues {
+  id?: string;
+  title?: string;
+  description?: string;
+  url?: string;
+  type?: string;
+  fileName?: string;
+  filePath?: string;
+  fileSize?: number;
+  duration_seconds?: number;
+  video_id?: string;
+  thumbnail_url?: string;
+  order_index?: number;
 }

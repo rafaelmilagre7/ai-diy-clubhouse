@@ -65,13 +65,15 @@ const AulaView: React.FC = () => {
       if (error) return [];
       return data || [];
     },
-    enabled: !!aulaId,
-    onSuccess: (data) => {
-      if (data && data.length > 0 && !selectedVideo) {
-        setSelectedVideo(data[0]);
-      }
-    }
+    enabled: !!aulaId
   });
+  
+  // Efeito para selecionar o primeiro vídeo quando os vídeos forem carregados
+  useEffect(() => {
+    if (videos && videos.length > 0 && !selectedVideo) {
+      setSelectedVideo(videos[0]);
+    }
+  }, [videos, selectedVideo]);
   
   // Buscar informações do módulo
   const { data: moduloData } = useQuery({
