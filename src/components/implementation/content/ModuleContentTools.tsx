@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from "react";
+
+import React from "react";
 import { Module, supabase } from "@/lib/supabase";
 import { ToolsLoading } from "./tools/ToolsLoading";
-import { ToolsEmptyState } from "./tools/ToolsEmptyState";
 import { ToolItem } from "./tools/ToolItem";
 import { useQuery } from "@tanstack/react-query";
 import { SolutionTool } from "@/lib/supabase/types";
@@ -10,6 +10,15 @@ import { useLogging } from "@/hooks/useLogging";
 
 interface ModuleContentToolsProps {
   module: Module;
+}
+
+interface SolutionToolWithDetails {
+  id: string;
+  solution_id: string;
+  tool_name: string;
+  tool_url?: string;
+  is_required: boolean;
+  details?: any;
 }
 
 export const ModuleContentTools = ({ module }: ModuleContentToolsProps) => {
@@ -23,9 +32,9 @@ export const ModuleContentTools = ({ module }: ModuleContentToolsProps) => {
       log("Buscando ferramentas da solução", { solution_id: module.solution_id });
       
       try {
-        // Buscar as ferramentas associadas à solução usando string para evitar erro de tipo
+        // Buscar as ferramentas associadas à solução
         const { data: solutionTools, error: toolsError } = await supabase
-          .from("solution_tools" as any)
+          .from("solution_tools")
           .select("*")
           .eq("solution_id", module.solution_id);
         
@@ -35,12 +44,12 @@ export const ModuleContentTools = ({ module }: ModuleContentToolsProps) => {
         }
         
         // Para cada ferramenta da solução, buscar informações detalhadas
-        const toolsWithDetails = await Promise.all(
-          (solutionTools || []).map(async (solutionTool) => {
+        const toolsWithDetails: SolutionToolWithDetails[] = await Promise.all(
+          (solutionTools || []).map(async (solutionTool: any) => {
             try {
               // Buscar informações detalhadas da ferramenta pelo nome
               const { data: toolDetails, error: detailsError } = await supabase
-                .from("tools" as any)
+                .from("tools")
                 .select("*")
                 .ilike("name", solutionTool.tool_name)
                 .maybeSingle();
@@ -68,10 +77,10 @@ export const ModuleContentTools = ({ module }: ModuleContentToolsProps) => {
         
         log("Ferramentas da solução recuperadas", { 
           count: toolsWithDetails?.length || 0, 
-          tools: toolsWithDetails?.map(t => t.tool_name) 
+          tools: toolsWithDetails?.map((t: SolutionToolWithDetails) => t.tool_name) 
         });
         
-        return toolsWithDetails as SolutionTool[];
+        return toolsWithDetails;
       } catch (error) {
         logError("Erro ao buscar ferramentas", error);
         throw error;
@@ -109,14 +118,14 @@ export const ModuleContentTools = ({ module }: ModuleContentToolsProps) => {
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-        {tools.map((tool) => (
+        {tools.map((tool: SolutionToolWithDetails) => (
           <ToolItem 
             key={tool.id} 
             toolName={tool.tool_name}
             toolUrl={tool.tool_url || ""}
             isRequired={tool.is_required} 
-            hasBenefit={tool.details?.has_member_benefit}
-            benefitType={tool.details?.benefit_type as any}
+            hasBenefit={tool.details?.has_member_benefit || false}
+            benefitType={tool.details?.benefit_type || null}
           />
         ))}
       </div>

@@ -7,6 +7,7 @@
 export const STORAGE_BUCKETS = {
   LEARNING_VIDEOS: "learning_videos",
   LEARNING_RESOURCES: "learning_resources",
+  LEARNING_MATERIALS: "learning_materials", // Adicionando o bucket que está faltando
   SOLUTION_RESOURCES: "solution_files",
   COVER_IMAGES: "cover_images",
   FALLBACK: "public" // Bucket de fallback para caso outros não estejam disponíveis

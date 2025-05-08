@@ -165,7 +165,7 @@ export const ModuleContentVideos: React.FC<ModuleContentVideosProps> = ({ module
       }
     }
     
-    if (videoType === 'panda' || video.url?.includes('pandavideo')) {
+    if (videoType === 'pandavideo' || video.url?.includes('pandavideo')) {
       const pandaVideoId = getPandaVideoId(video.url || '');
       if (pandaVideoId) {
         return (

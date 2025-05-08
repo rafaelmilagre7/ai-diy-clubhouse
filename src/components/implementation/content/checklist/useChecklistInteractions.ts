@@ -29,45 +29,50 @@ export const useChecklistInteractions = (solution: Solution | null) => {
         setSaving(true);
         
         // Check if a record already exists
-        const { data, error } = await supabase
-          .from("user_checklists")
-          .select("*")
-          .eq("user_id", user.id)
-          .eq("solution_id", solution.id)
-          .single();
+        try {
+          const { data, error } = await supabase
+            .from("user_checklists")
+            .select("*")
+            .eq("user_id", user.id)
+            .eq("solution_id", solution.id)
+            .single();
+            
+          if (error && error.code !== "PGRST116") { // PGRST116 = Not found, which is expected if no record yet
+            throw error;
+          }
           
-        if (error && error.code !== "PGRST116") { // PGRST116 = Not found, which is expected if no record yet
+          if (data) {
+            // Update existing record
+            await supabase
+              .from("user_checklists")
+              .update({
+                checked_items: newUserChecklist,
+                updated_at: new Date().toISOString()
+              })
+              .eq("id", data.id);
+          } else {
+            // Create new record
+            await supabase
+              .from("user_checklists")
+              .insert({
+                user_id: user.id,
+                solution_id: solution.id,
+                checked_items: newUserChecklist,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+              });
+          }
+          
+          // Log user interaction
+          log("User toggled checklist item", { 
+            solution_id: solution.id,
+            item_id: itemId,
+            checked
+          });
+        } catch (error) {
+          logError("Error accessing user_checklists:", error);
           throw error;
         }
-        
-        if (data) {
-          // Update existing record
-          await supabase
-            .from("user_checklists")
-            .update({
-              checked_items: newUserChecklist,
-              updated_at: new Date().toISOString()
-            })
-            .eq("id", data.id);
-        } else {
-          // Create new record
-          await supabase
-            .from("user_checklists")
-            .insert({
-              user_id: user.id,
-              solution_id: solution.id,
-              checked_items: newUserChecklist,
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString()
-            });
-        }
-        
-        // Log user interaction
-        log("User toggled checklist item", { 
-          solution_id: solution.id,
-          item_id: itemId,
-          checked
-        });
       }
     } catch (error) {
       logError("Error saving checklist progress:", error);

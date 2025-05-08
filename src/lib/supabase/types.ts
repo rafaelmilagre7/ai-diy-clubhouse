@@ -1,4 +1,3 @@
-
 export interface UserProfile {
   id: string;
   name: string | null;
@@ -237,5 +236,3 @@ export interface SolutionResource {
   updated_at: string;
   metadata: any | null;
 }
-
-// Adicionar outras interfaces conforme necessário

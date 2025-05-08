@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -8,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertTriangle, Upload, LinkIcon, Info, RefreshCw } from "lucide-react";
 import { VideoUpload } from "./VideoUpload";
-import { setupLearningStorageBuckets } from "@/lib/supabase/storage";
+import { createStoragePublicPolicy } from "@/lib/supabase/storage";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/auth";
 
@@ -49,7 +48,7 @@ export const VideoUploadCard: React.FC<VideoUploadCardProps> = ({
       setBucketStatus("checking");
       
       console.log("Verificando estado dos buckets de armazenamento...");
-      const response = await setupLearningStorageBuckets();
+      const response = await createStoragePublicPolicy("learning_videos");
       
       console.log("Resposta da verificação de buckets:", response);
       

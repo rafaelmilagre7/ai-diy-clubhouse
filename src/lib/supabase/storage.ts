@@ -1,4 +1,3 @@
-
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 
@@ -6,6 +5,7 @@ import { toast } from "sonner";
 export const STORAGE_BUCKETS = {
   LEARNING_VIDEOS: "learning_videos",
   LEARNING_RESOURCES: "learning_resources",
+  LEARNING_MATERIALS: "learning_materials", // Adicionado
   SOLUTION_RESOURCES: "solution_resources",
   SOLUTION_FILES: "solution_files",
   COVER_IMAGES: "cover_images",
@@ -20,6 +20,38 @@ export interface FileUploadResult {
   publicUrl: string;
   size: number;
   mimetype: string;
+}
+
+/**
+ * Função para criar políticas de acesso público para um bucket
+ */
+export async function createStoragePublicPolicy(bucketName: string): Promise<{success: boolean, message?: string}> {
+  try {
+    // Verificar se o bucket já existe
+    const { data: buckets } = await supabase.storage.listBuckets();
+    const bucketExists = buckets?.some(bucket => bucket.name === bucketName);
+    
+    if (!bucketExists) {
+      // Se não existir, usar a RPC para criar o bucket e suas políticas
+      const { error } = await supabase.rpc('create_storage_public_policy', {
+        bucket_name: bucketName
+      });
+      
+      if (error) {
+        console.error(`Erro ao criar bucket ${bucketName}:`, error);
+        return { success: false, message: error.message };
+      }
+      
+      console.log(`Bucket ${bucketName} criado com sucesso.`);
+    } else {
+      console.log(`Bucket ${bucketName} já existe.`);
+    }
+    
+    return { success: true };
+  } catch (error) {
+    console.error(`Erro ao configurar bucket ${bucketName}:`, error);
+    return { success: false, message: error instanceof Error ? error.message : String(error) };
+  }
 }
 
 /**
@@ -114,14 +146,6 @@ export async function uploadFileWithFallback(
 }
 
 /**
- * Função auxiliar para obter URL pública de um arquivo
- */
-export function getPublicStorageUrl(bucket: string, path: string): string {
-  const { data } = supabase.storage.from(bucket).getPublicUrl(path);
-  return data.publicUrl;
-}
-
-/**
  * Função para configurar buckets de armazenamento para o módulo de aprendizagem
  */
 export async function setupLearningStorageBuckets(): Promise<{
@@ -133,6 +157,7 @@ export async function setupLearningStorageBuckets(): Promise<{
     const bucketsToSetup = [
       STORAGE_BUCKETS.LEARNING_VIDEOS,
       STORAGE_BUCKETS.LEARNING_RESOURCES,
+      STORAGE_BUCKETS.LEARNING_MATERIALS,
       STORAGE_BUCKETS.COVER_IMAGES,
       STORAGE_BUCKETS.FALLBACK
     ];
@@ -143,16 +168,14 @@ export async function setupLearningStorageBuckets(): Promise<{
     // Verificar/criar cada bucket
     for (const bucketName of bucketsToSetup) {
       try {
-        // Usar a RPC para criar/atualizar o bucket
-        const { error } = await supabase.rpc('create_storage_public_policy', {
-          bucket_name: bucketName
-        });
+        // Criar/verificar o bucket
+        const result = await createStoragePublicPolicy(bucketName);
         
-        if (!error) {
+        if (result.success) {
           successCount++;
         } else {
-          console.warn(`Erro ao configurar bucket ${bucketName}:`, error);
-          errors.push(`${bucketName}: ${error.message}`);
+          console.warn(`Erro ao configurar bucket ${bucketName}:`, result.message);
+          errors.push(`${bucketName}: ${result.message}`);
         }
       } catch (bucketError) {
         console.error(`Erro ao configurar bucket ${bucketName}:`, bucketError);
@@ -181,35 +204,11 @@ export async function setupLearningStorageBuckets(): Promise<{
 }
 
 /**
- * Função para criar políticas de acesso público para um bucket
+ * Função auxiliar para obter URL pública de um arquivo
  */
-export async function createStoragePublicPolicy(bucketName: string): Promise<boolean> {
-  try {
-    // Verificar se o bucket já existe
-    const { data: buckets } = await supabase.storage.listBuckets();
-    const bucketExists = buckets?.some(bucket => bucket.name === bucketName);
-    
-    if (!bucketExists) {
-      // Se não existir, usar a RPC para criar o bucket e suas políticas
-      const { error } = await supabase.rpc('create_storage_public_policy', {
-        bucket_name: bucketName
-      });
-      
-      if (error) {
-        console.error(`Erro ao criar bucket ${bucketName}:`, error);
-        return false;
-      }
-      
-      console.log(`Bucket ${bucketName} criado com sucesso.`);
-    } else {
-      console.log(`Bucket ${bucketName} já existe.`);
-    }
-    
-    return true;
-  } catch (error) {
-    console.error(`Erro ao configurar bucket ${bucketName}:`, error);
-    return false;
-  }
+export function getPublicStorageUrl(bucket: string, path: string): string {
+  const { data } = supabase.storage.from(bucket).getPublicUrl(path);
+  return data.publicUrl;
 }
 
 /**

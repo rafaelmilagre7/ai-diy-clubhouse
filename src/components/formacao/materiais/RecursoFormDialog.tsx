@@ -232,7 +232,7 @@ export const RecursoFormDialog = ({
                         form.setValue("file_type", fileType || "");
                         form.setValue("file_size_bytes", Number(fileSize) || 0);
                       }}
-                      bucketName={STORAGE_BUCKETS.LEARNING_MATERIALS}
+                      bucketName={STORAGE_BUCKETS.LEARNING_RESOURCES}
                       folderPath="materials"
                       acceptedFileTypes="*/*"
                       disabled={isSubmitting}

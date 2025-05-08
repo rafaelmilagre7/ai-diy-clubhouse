@@ -282,139 +282,76 @@ const AulaWizard: React.FC<AulaWizardProps> = ({ open, onOpenChange, aula, modul
       
       // Calcular o tempo estimado com base nos vídeos
       const totalDurationMinutes = calculateTotalDuration(values.videos);
-      console.log("Tempo total calculado dos vídeos (minutos):", totalDurationMinutes);
+      console.log("Tempo total calculado dos vídeos:", totalDurationMinutes);
       
-      // Preparar os dados completos da lição
-      const completeLessonData: Partial<LearningLesson> = {
+      // Definir dados básicos da aula
+      const lessonData = {
         title: values.title,
         description: values.description || null,
         module_id: values.moduleId,
         cover_image_url: values.coverImageUrl || null,
-        estimated_time_minutes: totalDurationMinutes, // Tempo calculado automaticamente
         ai_assistant_enabled: values.aiAssistantEnabled,
         ai_assistant_prompt: values.aiAssistantPrompt || null,
         published: values.published,
-        order_index: values.orderIndex || 0
+        estimated_time_minutes: totalDurationMinutes || 0
       };
       
-      console.log("Dados completos a serem salvos:", completeLessonData);
-      console.log("Status de publicação a ser salvo:", completeLessonData.published);
+      let lessonResponse;
       
       if (lessonId) {
         // Atualizar aula existente
-        console.log("Atualizando aula existente:", lessonId);
-        
-        // 1. Primeiro fazer a atualização sem retorno de dados
-        const { error: updateError } = await supabase
+        lessonResponse = await supabase
           .from('learning_lessons')
-          .update(completeLessonData)
-          .eq('id', lessonId);
-          
-        if (updateError) {
-          console.error("Erro ao atualizar aula:", updateError);
-          throw updateError;
-        }
-        
-        // 2. Depois buscar os dados atualizados para verificar
-        const { data: updatedData, error: fetchError } = await supabase
-          .from('learning_lessons')
-          .select('*')
+          .update(lessonData)
           .eq('id', lessonId)
+          .select()
           .single();
-          
-        if (fetchError) {
-          console.error("Erro ao buscar aula atualizada:", fetchError);
-          throw fetchError;
+        
+        if (lessonResponse.error) {
+          throw lessonResponse.error;
         }
         
-        console.log("Aula atualizada com sucesso:", updatedData);
-        console.log("Status de publicação após atualização:", updatedData.published);
+        console.log("Aula atualizada com sucesso:", lessonResponse.data);
         
-        if (updatedData.published !== values.published) {
-          console.warn("AVISO: Status de publicação após atualização não corresponde ao esperado!");
-          console.log("Tentando atualização específica do status de publicação...");
-          
-          // Tenta atualizar especificamente o status de publicação para garantir
-          const { error: pubUpdateError } = await supabase
-            .from('learning_lessons')
-            .update({ published: values.published })
-            .eq('id', lessonId);
-            
-          if (pubUpdateError) {
-            console.error("Erro na atualização específica do status:", pubUpdateError);
-          } else {
-            console.log("Status de publicação atualizado com sucesso!");
-          }
-        }
-        
-        // Atualizar os vídeos da aula
+        // Salvar vídeos
         await handleSaveVideos(lessonId, values.videos);
-        
-        toast.success("Aula atualizada com sucesso!");
       } else {
         // Criar nova aula
-        console.log("Criando nova aula...");
-        
-        // Verificar se o bucket de vídeos existe para evitar problemas de upload
-        try {
-          const { data: buckets } = await supabase.storage.listBuckets();
-          const bucketExists = buckets?.some(bucket => bucket.name === 'learning_videos');
-          
-          if (!bucketExists) {
-            console.log("Bucket de vídeos não existe, tentando criar...");
-            await supabase.storage.createBucket('learning_videos', {
-              public: true,
-              fileSizeLimit: 104857600, // 100MB
-            });
-            console.log("Bucket de vídeos criado com sucesso!");
-          }
-        } catch (err) {
-          console.log("Erro ao verificar/criar bucket:", err);
-          // Continuamos mesmo em caso de erro, pois o bucket pode existir
-        }
-        
-        // Corrigido o tipo para inserir um único valor, não um array
-        const { error } = await supabase
-          .from("learning_lessons")
-          .insert([completeLessonData])
-          .select('*')
-          .single();
-          
-        if (error) {
-          console.error("Erro ao criar aula:", error);
-          throw error;
-        }
-        
-        console.log("Aula criada com sucesso:", data);
-        
-        // Verificar se os dados foram realmente persistidos
-        const { data: verifyData, error: verifyError } = await supabase
+        lessonResponse = await supabase
           .from('learning_lessons')
-          .select('*')
-          .eq('id', data.id)
+          .insert({
+            ...lessonData,
+            order_index: 0, // Valor padrão para nova aula
+          })
+          .select()
           .single();
-          
-        if (verifyError) {
-          console.error("Erro ao verificar aula criada:", verifyError);
-        } else {
-          console.log("Verificação da aula criada:", verifyData);
-          console.log("Status de publicação verificado:", verifyData.published);
+        
+        if (lessonResponse.error) {
+          throw lessonResponse.error;
         }
         
-        // Salvar os vídeos da aula
-        const newLessonId = data.id;
-        await handleSaveVideos(newLessonId, values.videos);
+        console.log("Nova aula criada:", lessonResponse.data);
         
-        toast.success("Aula criada com sucesso!");
+        // Salvar vídeos
+        await handleSaveVideos(lessonResponse.data.id, values.videos);
       }
       
-      if (onSuccess) onSuccess();
-      form.reset(defaultValues);
-      onOpenChange(false);
+      // Mostrar mensagem de sucesso
+      toast({
+        title: lessonId ? "Aula atualizada" : "Aula criada",
+        description: lessonId ? "A aula foi atualizada com sucesso." : "A aula foi criada com sucesso.",
+      });
       
+      // Fechar o modal e chamar callback de sucesso
+      onOpenChange(false);
+      if (onSuccess) onSuccess();
     } catch (error: any) {
       console.error("Erro ao salvar aula:", error);
-      toast.error(`Erro ao salvar aula: ${error.message || "Ocorreu um erro ao tentar salvar."}`);
+      toast({
+        title: "Erro ao salvar",
+        description: error.message || "Ocorreu um erro ao salvar a aula.",
+        variant: "destructive",
+      });
     } finally {
       setIsSaving(false);
     }

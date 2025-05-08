@@ -5,6 +5,15 @@ import { useAuth } from "@/contexts/auth";
 import { useLogging } from "@/hooks/useLogging";
 import { ChecklistItem, extractChecklistFromSolution, initializeUserChecklist, handleChecklistError } from "./checklistUtils";
 
+interface UserChecklist {
+  id: string;
+  user_id: string;
+  solution_id: string;
+  checked_items: Record<string, boolean>;
+  created_at: string;
+  updated_at: string;
+}
+
 export const useChecklistData = (module: Module) => {
   const [solution, setSolution] = useState<Solution | null>(null);
   const [checklist, setChecklist] = useState<ChecklistItem[]>([]);
@@ -80,23 +89,29 @@ export const useChecklistData = (module: Module) => {
         
         // If user is logged in, fetch their specific checklist progress
         if (user) {
-          const { data: userData, error: userError } = await supabase
-            .from("user_checklists")
-            .select("*")
-            .eq("user_id", user.id)
-            .eq("solution_id", module.solution_id)
-            .maybeSingle();
-              
-          if (userError) {
-            logError("Error fetching user checklist:", userError);
-          } else if (userData) {
-            // Parse the JSON data if it's a string
-            const userItems = typeof userData.checked_items === 'string' 
-              ? JSON.parse(userData.checked_items) 
-              : userData.checked_items;
-              
-            setUserChecklist(userItems as Record<string, boolean>);
-          } else {
+          try {
+            const { data: userData, error: userError } = await supabase
+              .from("user_checklists")
+              .select("*")
+              .eq("user_id", user.id)
+              .eq("solution_id", module.solution_id)
+              .maybeSingle();
+                
+            if (userError) {
+              logError("Error fetching user checklist:", userError);
+            } else if (userData) {
+              const typedUserData = userData as UserChecklist;
+              // Parse the JSON data if it's a string
+              const userItems = typeof typedUserData.checked_items === 'string' 
+                ? JSON.parse(typedUserData.checked_items) 
+                : typedUserData.checked_items;
+                
+              setUserChecklist(userItems as Record<string, boolean>);
+            } else {
+              setUserChecklist(initialUserChecklist);
+            }
+          } catch (err) {
+            logError("Error processing user checklist:", err);
             setUserChecklist(initialUserChecklist);
           }
         } else {
