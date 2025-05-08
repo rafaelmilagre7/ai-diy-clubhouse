@@ -293,7 +293,7 @@ export const extractPandaVideoInfo = (iframeCode: string): {
   thumbnailUrl: string;
 } | null => {
   try {
-    // Extrair o ID do vídeo
+    // Extrair o ID do vídeo do código de incorporação (iframe)
     const idMatch = iframeCode.match(/id="panda-(.*?)"/i);
     const srcMatch = iframeCode.match(/src="(.*?)"/i);
     
@@ -304,13 +304,13 @@ export const extractPandaVideoInfo = (iframeCode: string): {
     const videoId = idMatch[1];
     const embedUrl = srcMatch[1];
     
-    // Construir URL da thumbnail com base no ID
-    const thumbnailUrl = getPandaThumbnailUrl(videoId);
+    // Construir URL da thumbnail com base no ID do vídeo (formato padrão do Panda Video)
+    const thumbnailUrl = `https://thumbnails-vz-d6ebf577-797.tv.pandavideo.com.br/thumbnails/${videoId}/default.jpg`;
     
     return {
-      videoId,
+      videoId: videoId,
       url: embedUrl,
-      thumbnailUrl
+      thumbnailUrl: thumbnailUrl
     };
   } catch (error) {
     console.error("Erro ao extrair informações do iframe:", error);

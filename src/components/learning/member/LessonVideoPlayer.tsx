@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { LearningLessonVideo } from "@/lib/supabase";
 import { Play, Pause, Volume2, VolumeX, ChevronLeft, ChevronRight } from "lucide-react";
@@ -81,7 +80,7 @@ export const LessonVideoPlayer: React.FC<LessonVideoPlayerProps> = ({
   }, [currentVideo]);
   
   // Se for um vídeo do Panda, usar componente específico
-  if (currentVideo.video_type === 'panda') {
+  if (currentVideo?.video_type === 'panda') {
     // Extrair ID do vídeo do Panda da URL ou usar o campo video_file_path como fallback
     let pandaVideoId = "";
     
@@ -104,7 +103,11 @@ export const LessonVideoPlayer: React.FC<LessonVideoPlayerProps> = ({
             <PandaVideoPlayer
               videoId={pandaVideoId}
               title={currentVideo.title}
-              onProgress={handleProgress}
+              onProgress={(progress: number) => {
+                if (onProgress && currentVideo) {
+                  handleProgress(progress);
+                }
+              }}
               onEnded={handleVideoEnd}
             />
             

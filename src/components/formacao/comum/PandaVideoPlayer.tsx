@@ -8,6 +8,8 @@ interface PandaVideoPlayerProps {
   className?: string;
   width?: string | number;
   height?: string | number;
+  onProgress?: (progress: number) => void;
+  onEnded?: () => void;
 }
 
 export const PandaVideoPlayer: React.FC<PandaVideoPlayerProps> = ({
@@ -16,7 +18,9 @@ export const PandaVideoPlayer: React.FC<PandaVideoPlayerProps> = ({
   title,
   className = '',
   width = '100%',
-  height = '100%'
+  height = '100%',
+  onProgress,
+  onEnded
 }) => {
   // Se houver uma URL definida, usá-la; caso contrário, construir com base no ID
   const videoUrl = url || `https://player-vz-d6ebf577-797.tv.pandavideo.com.br/embed/?v=${videoId}`;
@@ -36,7 +40,7 @@ export const PandaVideoPlayer: React.FC<PandaVideoPlayerProps> = ({
         }}
         width={width}
         height={height}
-        fetchPriority="high"
+        // Removido o fetchPriority que estava causando erro
       />
     </div>
   );

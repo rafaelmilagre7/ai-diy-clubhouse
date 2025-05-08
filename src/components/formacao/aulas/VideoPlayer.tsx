@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -103,7 +102,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   // Renderizar vídeo baseado no tipo
   const renderVideo = () => {
     // Vídeo do Panda
-    if (video.video_type === 'panda' && video.url) {
+    if (video?.video_type === 'panda' && video.url) {
       // Extrair o ID do vídeo do Panda da URL ou usar o campo video_file_path como fallback
       const pandaVideoId = video.video_file_path || video.url.split('/').pop();
       
@@ -112,7 +111,8 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
           <PandaVideoPlayer 
             videoId={pandaVideoId} 
             title={video.title}
-            onProgress={(progress) => {
+            // Adaptar a propriedade onProgress para intermediar a chamada onTimeUpdate
+            onProgress={(progress: number) => {
               if (onTimeUpdate) {
                 // Simular onTimeUpdate para manter compatibilidade
                 const duration = video.duration_seconds || 0;

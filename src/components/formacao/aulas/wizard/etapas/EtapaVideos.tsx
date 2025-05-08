@@ -17,12 +17,28 @@ import { Textarea } from "@/components/ui/textarea";
 import { AlertCircle, GripVertical, Plus } from "lucide-react";
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { PandaVideoEmbed } from "@/components/formacao/comum/PandaVideoEmbed";
 
 interface EtapaVideosProps {
   form: UseFormReturn<AulaFormValues>;
   onNext: () => void;
   onPrevious: () => void;
   isSaving: boolean;
+}
+
+// Estenda o tipo para incluir embedCode
+interface VideoFormValues {
+  id?: string;
+  title?: string;
+  description?: string;
+  url?: string;
+  type?: string;
+  video_id?: string;
+  filePath?: string;
+  fileSize?: number;
+  duration_seconds?: number;
+  thumbnail_url?: string;
+  embedCode?: string; // Adicionado embedCode ao tipo
 }
 
 const EtapaVideos: React.FC<EtapaVideosProps> = ({
@@ -44,64 +60,6 @@ const EtapaVideos: React.FC<EtapaVideosProps> = ({
     }
   };
 
-  // Função para extrair informações do iframe do Panda Video
-  const extractPandaVideoInfo = (iframeCode: string): {
-    videoId: string;
-    url: string;
-    thumbUrl?: string;
-  } | null => {
-    try {
-      // Extrair o ID do vídeo do código de incorporação (iframe)
-      const idMatch = iframeCode.match(/id="panda-(.*?)"/i);
-      const srcMatch = iframeCode.match(/src="(.*?)"/i);
-      
-      if (!idMatch || idMatch.length < 2 || !srcMatch || srcMatch.length < 2) {
-        return null;
-      }
-      
-      const videoId = idMatch[1];
-      const embedUrl = srcMatch[1];
-      
-      // Construir URL da thumbnail com base no ID do vídeo (formato padrão do Panda Video)
-      const thumbnailUrl = `https://thumbnails-vz-d6ebf577-797.tv.pandavideo.com.br/thumbnails/${videoId}/default.jpg`;
-      
-      return {
-        videoId: videoId,
-        url: embedUrl,
-        thumbUrl: thumbnailUrl
-      };
-    } catch (error) {
-      console.error("Erro ao extrair informações do iframe:", error);
-      return null;
-    }
-  };
-
-  const handleIframeChange = (index: number, iframeCode: string) => {
-    const videoInfo = extractPandaVideoInfo(iframeCode);
-    
-    if (!videoInfo) {
-      setValidationError("O código de incorporação (iframe) do Panda Video parece ser inválido. Verifique se você copiou o código completo.");
-      return;
-    }
-    
-    setValidationError(null);
-    
-    // Atualizar os dados do vídeo com as informações extraídas do iframe
-    const newVideos = [...form.getValues().videos];
-    newVideos[index] = { 
-      ...newVideos[index],
-      url: videoInfo.url,
-      type: "panda",
-      video_id: videoInfo.videoId,
-      filePath: videoInfo.videoId,
-      thumbnail_url: videoInfo.thumbUrl || "",
-      // Armazenar o iframe completo para referência
-      embedCode: iframeCode
-    };
-    
-    form.setValue("videos", newVideos, { shouldValidate: true });
-  };
-
   const handleVideoChange = (index: number, field: string, value: any) => {
     const newVideos = [...form.getValues().videos];
     newVideos[index] = { ...newVideos[index], [field]: value };
@@ -110,6 +68,22 @@ const EtapaVideos: React.FC<EtapaVideosProps> = ({
     if (field === 'title' && !newVideos[index].id) {
       newVideos[index].id = `temp-video-${index}-${Date.now()}`;
     }
+    
+    form.setValue("videos", newVideos, { shouldValidate: true });
+    setValidationError(null);
+  };
+
+  const handleEmbedChange = (index: number, embedCode: string, videoId: string, url: string, thumbnailUrl: string) => {
+    const newVideos = [...form.getValues().videos];
+    newVideos[index] = {
+      ...newVideos[index],
+      url: url,
+      type: "panda",
+      video_id: videoId,
+      filePath: videoId,
+      thumbnail_url: thumbnailUrl,
+      embedCode: embedCode // Armazenar o código embed
+    } as VideoFormValues; // Usar o tipo estendido
     
     form.setValue("videos", newVideos, { shouldValidate: true });
     setValidationError(null);
@@ -127,8 +101,9 @@ const EtapaVideos: React.FC<EtapaVideosProps> = ({
       title: "", 
       description: "", 
       url: "", 
-      type: "panda"
-    }], { shouldValidate: true });
+      type: "panda",
+      embedCode: "" // Inicializar embedCode vazio
+    } as VideoFormValues], { shouldValidate: true });
   };
 
   const handleRemoveVideo = (index: number) => {
@@ -192,7 +167,7 @@ const EtapaVideos: React.FC<EtapaVideosProps> = ({
                     ref={provided.innerRef} 
                     className="space-y-4"
                   >
-                    {videos.map((video, index) => (
+                    {videos.map((video: VideoFormValues, index) => (
                       <Draggable 
                         key={`video-${index}`} 
                         draggableId={`video-${index}`} 
@@ -239,18 +214,12 @@ const EtapaVideos: React.FC<EtapaVideosProps> = ({
                                 className="mb-2 resize-none h-20"
                               />
                               
-                              <div className="space-y-2">
-                                <FormLabel>Código de Incorporação do Panda Video (iframe)</FormLabel>
-                                <Textarea
-                                  placeholder="Cole aqui o código iframe do Panda Video"
-                                  value={video.embedCode || ''}
-                                  onChange={(e) => handleIframeChange(index, e.target.value)}
-                                  className="font-mono text-xs h-32 resize-none"
-                                />
-                                <FormDescription>
-                                  Cole o código iframe completo fornecido pelo Panda Video
-                                </FormDescription>
-                              </div>
+                              <PandaVideoEmbed
+                                value={video.embedCode || ''}
+                                onChange={(embedCode, videoId, url, thumbnailUrl) => 
+                                  handleEmbedChange(index, embedCode, videoId, url, thumbnailUrl)
+                                }
+                              />
                               
                               {video.thumbnail_url && (
                                 <div className="mt-2">
