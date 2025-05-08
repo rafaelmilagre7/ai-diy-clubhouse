@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { LearningLesson } from "@/lib/supabase";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,6 +9,7 @@ import { AulaDeleteDialog } from "./AulaDeleteDialog";
 import { Link } from "react-router-dom";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { PublishLessonButton } from "./PublishLessonButton";
 
 interface AulasListProps {
   aulas: LearningLesson[];
@@ -15,11 +17,12 @@ interface AulasListProps {
   onEdit: (aula: LearningLesson) => void;
   onDelete: (id: string) => void;
   isAdmin: boolean;
-  onRefresh?: () => void;  // Nova prop adicionada
+  onRefresh?: () => void;
 }
 
 export const AulasList = ({ aulas, loading, onEdit, onDelete, isAdmin, onRefresh }: AulasListProps) => {
   const [aulaParaExcluir, setAulaParaExcluir] = useState<LearningLesson | null>(null);
+  const [publishingStates, setPublishingStates] = useState<Record<string, boolean>>({});
 
   // Abrir diálogo de confirmação para excluir
   const handleOpenDelete = (aula: LearningLesson) => {
@@ -36,6 +39,26 @@ export const AulasList = ({ aulas, loading, onEdit, onDelete, isAdmin, onRefresh
         onRefresh();
       }
     }
+  };
+
+  // Atualizar estado de publicação local
+  const handlePublishChange = (aulaId: string, published: boolean) => {
+    setPublishingStates(prevState => ({
+      ...prevState,
+      [aulaId]: published
+    }));
+    
+    // Atualizar a lista se onRefresh estiver disponível
+    if (onRefresh) {
+      onRefresh();
+    }
+  };
+
+  // Determinar se uma aula está publicada (considerando o estado local se disponível)
+  const isPublished = (aula: LearningLesson) => {
+    return aula.id in publishingStates 
+      ? publishingStates[aula.id] 
+      : !!aula.published;
   };
 
   if (loading) {
@@ -80,8 +103,8 @@ export const AulasList = ({ aulas, loading, onEdit, onDelete, isAdmin, onRefresh
             <CardHeader>
               <div className="flex justify-between items-start">
                 <CardTitle className="line-clamp-2">{aula.title}</CardTitle>
-                <Badge variant={aula.published ? "default" : "outline"}>
-                  {aula.published ? "Publicada" : "Rascunho"}
+                <Badge variant={isPublished(aula) ? "default" : "outline"}>
+                  {isPublished(aula) ? "Publicada" : "Rascunho"}
                 </Badge>
               </div>
               {aula.description && (
@@ -102,24 +125,37 @@ export const AulasList = ({ aulas, loading, onEdit, onDelete, isAdmin, onRefresh
               </div>
             </CardContent>
 
-            <CardFooter className="gap-2 flex justify-between">
-              <Button variant="outline" size="sm" asChild>
-                <Link to={`/formacao/aulas/${aula.id}`}>
-                  <Eye className="h-4 w-4 mr-1" />
-                  Visualizar
-                </Link>
-              </Button>
+            <CardFooter className="flex flex-col gap-3">
+              <div className="flex justify-between w-full">
+                <Button variant="outline" size="sm" asChild>
+                  <Link to={`/formacao/aulas/${aula.id}`}>
+                    <Eye className="h-4 w-4 mr-1" />
+                    Visualizar
+                  </Link>
+                </Button>
+                
+                {isAdmin && (
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm" onClick={() => onEdit(aula)}>
+                      <Pencil className="h-4 w-4 mr-1" />
+                      Editar
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => handleOpenDelete(aula)}>
+                      <Trash2 className="h-4 w-4 mr-1" />
+                      Excluir
+                    </Button>
+                  </div>
+                )}
+              </div>
               
               {isAdmin && (
-                <div className="flex gap-2">
-                  <Button variant="outline" size="sm" onClick={() => onEdit(aula)}>
-                    <Pencil className="h-4 w-4 mr-1" />
-                    Editar
-                  </Button>
-                  <Button variant="outline" size="sm" onClick={() => handleOpenDelete(aula)}>
-                    <Trash2 className="h-4 w-4 mr-1" />
-                    Excluir
-                  </Button>
+                <div className="w-full">
+                  <PublishLessonButton 
+                    lessonId={aula.id}
+                    isPublished={isPublished(aula)}
+                    onPublishChange={(published) => handlePublishChange(aula.id, published)}
+                    showPreview={false}
+                  />
                 </div>
               )}
             </CardFooter>
