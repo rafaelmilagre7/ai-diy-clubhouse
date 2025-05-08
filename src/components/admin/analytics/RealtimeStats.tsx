@@ -31,7 +31,10 @@ export const RealtimeStats = () => {
         if (activeUsersError) throw activeUsersError;
         
         // Contar usuários únicos
-        const uniqueUsers = new Set(activeUsersData?.map(p => p.user_id));
+        const uniqueUsers = new Set();
+        activeUsersData?.forEach(item => {
+          if (item.user_id) uniqueUsers.add(item.user_id);
+        });
         
         // Buscar tempo médio de implementação
         const { data: completedData, error: completedError } = await supabase

@@ -10,6 +10,9 @@ export type LearningProgress = Database['public']['Tables']['learning_progress']
 export type LearningResource = Database['public']['Tables']['learning_resources']['Row'];
 export type LearningLessonTool = Database['public']['Tables']['learning_lesson_tools']['Row'];
 export type LearningComment = Database['public']['Tables']['learning_comments']['Row'];
+export type Progress = Database['public']['Tables']['progress']['Row'];
+export type Solution = Database['public']['Tables']['solutions']['Row'];
+export type Module = Database['public']['Tables']['modules']['Row'];
 
 // Outros tipos existentes
 export * from './database.types';

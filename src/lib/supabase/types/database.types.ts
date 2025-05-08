@@ -373,6 +373,48 @@ export interface Database {
         }
         Relationships: []
       }
+      progress: {
+        Row: {
+          last_activity: string
+          created_at: string
+          completed_modules: number[] | null
+          completion_data: Json | null
+          id: string
+          implementation_status: string | null
+          user_id: string
+          solution_id: string
+          current_module: number
+          is_completed: boolean
+          completed_at: string | null
+        }
+        Insert: {
+          last_activity?: string
+          created_at?: string
+          completed_modules?: number[] | null
+          completion_data?: Json | null
+          id?: string
+          implementation_status?: string | null
+          user_id: string
+          solution_id: string
+          current_module: number
+          is_completed: boolean
+          completed_at?: string | null
+        }
+        Update: {
+          last_activity?: string
+          created_at?: string
+          completed_modules?: number[] | null
+          completion_data?: Json | null
+          id?: string
+          implementation_status?: string | null
+          user_id?: string
+          solution_id?: string
+          current_module?: number
+          is_completed?: boolean
+          completed_at?: string | null
+        }
+        Relationships: []
+      }
       solutions: {
         Row: {
           category: string
