@@ -5,6 +5,7 @@ export * from './types';
 export * from './videoUtils';
 export * from './storage';
 
-// Garantir que o cliente Supabase seja exportado como padrão
-export { supabase } from './client';
+// Importar e depois re-exportar o cliente Supabase
+import { supabase } from './client';
+export { supabase };
 export default supabase;
