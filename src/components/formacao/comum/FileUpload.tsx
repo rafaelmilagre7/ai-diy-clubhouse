@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
@@ -48,18 +47,8 @@ export const FileUpload = ({
         
         if (!bucketExists) {
           console.warn(`Bucket ${bucketName} não está pronto. Tentando criar...`);
-          // Tentativa de criar o bucket via RPC
-          const { data, error } = await supabase.rpc('create_storage_public_policy', {
-            bucket_name: bucketName
-          });
-          
-          if (error) {
-            console.error("Erro ao criar bucket via RPC:", error);
-            setError(`Não foi possível inicializar o bucket de armazenamento: ${error.message}`);
-          } else {
-            console.log("Bucket criado com sucesso via RPC:", data);
-            setBucketReady(true);
-          }
+          // Usar a função auxiliar que criamos
+          await createStoragePublicPolicy(bucketName);
         }
       } catch (error) {
         console.error("Erro ao verificar bucket:", error);
@@ -101,13 +90,8 @@ export const FileUpload = ({
       
       if (!bucketExists) {
         console.warn(`Bucket ${bucketName} não encontrado, tentando criar...`);
-        const { data, error } = await supabase.rpc('create_storage_public_policy', {
-          bucket_name: bucketName
-        });
-        
-        if (error) {
-          throw new Error(`Não foi possível criar o bucket: ${error.message}`);
-        }
+        // Usar a função auxiliar que criamos
+        await createStoragePublicPolicy(bucketName);
       }
       
       // Upload com mecanismo de fallback aprimorado

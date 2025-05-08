@@ -373,8 +373,9 @@ const AulaWizard: React.FC<AulaWizardProps> = ({ open, onOpenChange, aula, modul
           // Continuamos mesmo em caso de erro, pois o bucket pode existir
         }
         
-        const { data, error } = await supabase
-          .from('learning_lessons')
+        // Corrigido o tipo para inserir um único valor, não um array
+        const { error } = await supabase
+          .from("learning_lessons")
           .insert([completeLessonData])
           .select('*')
           .single();

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -34,7 +33,7 @@ export const VideoUploadCard: React.FC<VideoUploadCardProps> = ({
   const [title, setTitle] = useState(defaultTitle);
   const [description, setDescription] = useState("");
   const [youtubeUrl, setYoutubeUrl] = useState("");
-  const [bucketStatus, setBucketStatus] = useState<"checking" | "ready" | "error" | "partial">("checking");
+  const [bucketStatus, setBucketStatus<"checking" | "ready" | "error" | "partial">("checking");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isRetrying, setIsRetrying] = useState(false);
   const { user, profile } = useAuth();

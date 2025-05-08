@@ -1,27 +1,76 @@
 
-// Configurações gerais do Supabase para o projeto
+/**
+ * Arquivo de configurações para integração com Supabase
+ */
 
-// Configurações para os buckets de armazenamento
+// Configurações para buckets de armazenamento
 export const STORAGE_BUCKETS = {
-  AVATARS: 'avatars',
-  SOLUTION_FILES: 'solution_files',
-  LEARNING_MATERIALS: 'learning_materials',
-  COURSE_IMAGES: 'course_images',
-  LEARNING_VIDEOS: 'learning_videos',
-  FALLBACK: 'solution_files' // Bucket de fallback para uploads
+  LEARNING_VIDEOS: "learning_videos",
+  LEARNING_RESOURCES: "learning_resources",
+  SOLUTION_RESOURCES: "solution_files",
+  COVER_IMAGES: "cover_images",
+  FALLBACK: "public" // Bucket de fallback para caso outros não estejam disponíveis
 };
 
-// Tamanhos máximos de upload para diferentes tipos de arquivo
+// Limites de tamanho para uploads
 export const MAX_UPLOAD_SIZES = {
-  IMAGE: 5, // 5MB
-  DOCUMENT: 10, // 10MB
-  VIDEO: 100, // 100MB
-  DEFAULT: 20 // 20MB
+  IMAGE: 5, // 5 MB
+  DOCUMENT: 20, // 20 MB
+  VIDEO: 200, // 200 MB
+  DEFAULT: 100 // 100 MB
 };
 
-// Extensões de arquivo permitidas por categoria
-export const ALLOWED_FILE_EXTENSIONS = {
-  IMAGES: ['.jpg', '.jpeg', '.png', '.gif', '.webp'],
-  DOCUMENTS: ['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx', '.txt'],
-  VIDEOS: ['.mp4', '.webm', '.mov', '.avi']
+// Tipos de mídia suportados
+export const SUPPORTED_MEDIA_TYPES = {
+  IMAGES: ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
+  VIDEOS: ['video/mp4', 'video/webm', 'video/quicktime'],
+  DOCUMENTS: [
+    'application/pdf',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'application/vnd.ms-excel',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'application/vnd.ms-powerpoint',
+    'application/vnd.openxmlformats-officedocument.presentationml.presentation'
+  ]
+};
+
+// Extensões de arquivo para categorização automática
+export const FILE_EXTENSIONS_MAP: Record<string, string> = {
+  // Imagens
+  'jpg': 'image',
+  'jpeg': 'image',
+  'png': 'image',
+  'gif': 'image',
+  'webp': 'image',
+  'svg': 'image',
+  
+  // Documentos
+  'pdf': 'pdf',
+  'doc': 'document',
+  'docx': 'document',
+  'txt': 'document',
+  'rtf': 'document',
+  
+  // Planilhas
+  'xls': 'spreadsheet',
+  'xlsx': 'spreadsheet',
+  'csv': 'spreadsheet',
+  
+  // Apresentações
+  'ppt': 'presentation',
+  'pptx': 'presentation',
+  
+  // Vídeos
+  'mp4': 'video',
+  'webm': 'video',
+  'mov': 'video',
+  'avi': 'video',
+  
+  // Outros
+  'zip': 'other',
+  'rar': 'other',
+  '7z': 'other',
+  'json': 'other',
+  'html': 'other'
 };

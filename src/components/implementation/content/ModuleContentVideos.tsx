@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Module, Solution, supabase } from "@/lib/supabase";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -80,8 +79,22 @@ export const ModuleContentVideos: React.FC<ModuleContentVideosProps> = ({ module
               if (videoType === "youtube") {
                 const urlParts = resource.url.split('embed/');
                 youtubeId = urlParts.length > 1 ? urlParts[1]?.split('?')[0] : null;
-              } else if (videoType === "panda") {
+              } else if (videoType === "pandavideo") {
                 pandaId = getPandaVideoId(resource.url);
+              }
+              
+              // Tentar acessar metadata como objeto ou string JSON
+              let metadata: any = {};
+              if (resource.metadata) {
+                try {
+                  if (typeof resource.metadata === 'string') {
+                    metadata = JSON.parse(resource.metadata as string);
+                  } else if (typeof resource.metadata === 'object') {
+                    metadata = resource.metadata;
+                  }
+                } catch (e) {
+                  console.error("Erro ao processar metadata:", e);
+                }
               }
               
               return {
@@ -92,8 +105,8 @@ export const ModuleContentVideos: React.FC<ModuleContentVideosProps> = ({ module
                 type: videoType,
                 youtube_id: youtubeId,
                 panda_id: pandaId,
-                thumbnail_url: resource.metadata?.thumbnail_url || null,
-                duration_seconds: resource.metadata?.duration_seconds || 0
+                thumbnail_url: metadata?.thumbnail_url || null,
+                duration_seconds: metadata?.duration_seconds || 0
               };
             });
             
