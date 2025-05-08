@@ -4,7 +4,7 @@ import { NPSScoreChart } from './NPSScoreChart';
 import { NPSPerLessonChart } from './NPSPerLessonChart';
 import { LmsStatCards } from './LmsStatCards';
 import { LessonFeedbackTable } from './LessonFeedbackTable';
-import { useLmsAnalyticsData } from '@/hooks/analytics/useLmsAnalyticsData';
+import { useLmsAnalyticsData } from '@/hooks/analytics/lms/useLmsAnalyticsData';
 
 interface LmsAnalyticsTabContentProps {
   timeRange: string;
