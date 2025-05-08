@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase";
+import { SolutionResource } from "@/lib/supabase/types";
 import { Resource, ResourceMetadata } from "../types/ResourceTypes";
 import { detectFileType, getFileFormatName } from "../utils/resourceUtils";
 
@@ -19,7 +20,7 @@ export const useMaterialsOperations = (
       const fileType = detectFileType(fileName);
       const format = getFileFormatName(fileName);
       
-      const metadata = {
+      const metadata: ResourceMetadata = {
         title: fileName,
         description: `Arquivo ${format}`,
         url: url,
@@ -42,6 +43,7 @@ export const useMaterialsOperations = (
         size: fileSize
       };
       
+      // Usamos "solution_resources" como string direta, mas precisamos ter certeza de que ela está definida nas tipagens
       const { data, error } = await supabase
         .from("solution_resources")
         .insert(newResource)
@@ -51,7 +53,22 @@ export const useMaterialsOperations = (
       if (error) throw error;
       
       if (data) {
-        setMaterials(prev => [...prev, data as Resource]);
+        // Converter o resultado do Supabase para o formato esperado pelo componente
+        const resource: Resource = {
+          id: data.id,
+          name: data.name,
+          url: data.url,
+          type: fileType,
+          format: data.format || format,
+          solution_id: data.solution_id,
+          metadata: metadata, // Usar o metadata já formatado que criamos
+          created_at: data.created_at,
+          updated_at: data.updated_at,
+          module_id: data.module_id,
+          size: data.size
+        };
+        
+        setMaterials(prev => [...prev, resource]);
       }
       
       toast({

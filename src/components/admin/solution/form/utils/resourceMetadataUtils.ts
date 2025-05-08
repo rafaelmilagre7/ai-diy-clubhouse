@@ -25,10 +25,10 @@ export function parseResourceMetadata(item: any): Resource {
       if (typeof item.metadata === 'string') {
         metadata = JSON.parse(item.metadata);
       } else if (typeof item.metadata === 'object') {
-        metadata = item.metadata as ResourceMetadata;
+        metadata = item.metadata;
       }
     } catch (e) {
-      console.error("Error parsing metadata:", e);
+      console.error("Erro ao analisar metadata:", e);
       // Fallback to default metadata on parse error
       metadata = defaultMetadata;
     }

@@ -170,4 +170,72 @@ export interface Progress {
   implementation_status?: string;
 }
 
+export interface Event {
+  id: string;
+  title: string;
+  description: string | null;
+  start_time: string;
+  end_time: string;
+  location_link: string | null;
+  physical_location: string | null;
+  cover_image_url: string | null;
+  created_by: string;
+  created_at: string;
+}
+
+export interface ImplementationCheckpoint {
+  id: string;
+  solution_id: string | null;
+  description: string;
+  checkpoint_order: number;
+  created_at: string;
+}
+
+export interface Tool {
+  id: string;
+  name: string;
+  description: string;
+  official_url: string;
+  category: string;
+  logo_url: string | null;
+  video_url: string | null;
+  video_type: string | null;
+  tags: string[];
+  status: boolean;
+  created_at: string;
+  updated_at: string;
+  has_member_benefit: boolean;
+  benefit_title: string | null;
+  benefit_description: string | null;
+  benefit_link: string | null;
+  benefit_badge_url: string | null;
+  benefit_type: string | null;
+  benefit_clicks: number;
+  video_tutorials: any[];
+}
+
+export interface SolutionTool {
+  id: string;
+  solution_id: string | null;
+  tool_name: string;
+  tool_url: string | null;
+  is_required: boolean;
+  created_at: string;
+  details?: Tool | null;
+}
+
+export interface SolutionResource {
+  id: string;
+  format: string | null;
+  url: string;
+  name: string;
+  type: string;
+  solution_id: string | null;
+  module_id: string | null;
+  size: number | null;
+  created_at: string;
+  updated_at: string;
+  metadata: any | null;
+}
+
 // Adicionar outras interfaces conforme necessário

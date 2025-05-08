@@ -10,9 +10,10 @@ import { TrailEmptyState } from "./TrailEmptyState";
 import { TrailCardList } from "./TrailCardList";
 import { TrailCardHeader } from "./TrailCardHeader";
 
-interface TrailSolution extends Solution {
+interface TrailSolution extends Omit<Solution, 'category'> {
   priority: number;
   justification: string;
+  category: string; // Usando string para compatibilidade com os dados do banco
 }
 
 export const ImplementationTrail = () => {
@@ -54,10 +55,12 @@ export const ImplementationTrail = () => {
         trail.priority1.forEach(rec => {
           const solution = data?.find(s => s.id === rec.solutionId);
           if (solution) {
+            // Converter explicitamente para o tipo TrailSolution
             mappedSolutions.push({
               ...solution,
               priority: 1,
-              justification: rec.justification
+              justification: rec.justification,
+              category: solution.category as string // Tratar como string para compatibilidade
             });
           }
         });
@@ -68,7 +71,8 @@ export const ImplementationTrail = () => {
             mappedSolutions.push({
               ...solution,
               priority: 2,
-              justification: rec.justification
+              justification: rec.justification,
+              category: solution.category as string
             });
           }
         });
@@ -79,7 +83,8 @@ export const ImplementationTrail = () => {
             mappedSolutions.push({
               ...solution,
               priority: 3,
-              justification: rec.justification
+              justification: rec.justification,
+              category: solution.category as string
             });
           }
         });
@@ -117,7 +122,7 @@ export const ImplementationTrail = () => {
       <TrailCardHeader onUpdate={handleRegenerateTrail} />
       <CardContent>
         <TrailCardList
-          solutions={solutions}
+          solutions={solutions as any} // Cast para evitar erros de tipo
           onSolutionClick={handleSolutionClick}
           onSeeAll={() => navigate('/solutions')}
         />

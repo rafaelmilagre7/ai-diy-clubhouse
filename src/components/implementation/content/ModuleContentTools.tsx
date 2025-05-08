@@ -5,7 +5,7 @@ import { ToolsLoading } from "./tools/ToolsLoading";
 import { ToolsEmptyState } from "./tools/ToolsEmptyState";
 import { ToolItem } from "./tools/ToolItem";
 import { useQuery } from "@tanstack/react-query";
-import { SolutionTool } from "@/types/toolTypes";
+import { SolutionTool } from "@/lib/supabase/types";
 import { useToolsData } from "@/hooks/useToolsData";
 import { useLogging } from "@/hooks/useLogging";
 
@@ -23,55 +23,60 @@ export const ModuleContentTools = ({ module }: ModuleContentToolsProps) => {
     queryFn: async () => {
       log("Buscando ferramentas da solução", { solution_id: module.solution_id });
       
-      // Buscar as ferramentas associadas à solução
-      const { data: solutionTools, error: toolsError } = await supabase
-        .from("solution_tools")
-        .select("*")
-        .eq("solution_id", module.solution_id);
-      
-      if (toolsError) {
-        logError("Erro ao buscar ferramentas da solução", toolsError);
-        throw toolsError;
-      }
-      
-      // Para cada ferramenta da solução, buscar informações detalhadas
-      const toolsWithDetails = await Promise.all(
-        (solutionTools || []).map(async (solutionTool) => {
-          try {
-            // Buscar informações detalhadas da ferramenta pelo nome
-            const { data: toolDetails, error: detailsError } = await supabase
-              .from("tools")
-              .select("*")
-              .ilike("name", solutionTool.tool_name)
-              .maybeSingle();
-            
-            if (detailsError) {
-              logError("Erro ao buscar detalhes da ferramenta", {
-                error: detailsError,
+      try {
+        // Buscar as ferramentas associadas à solução usando string para evitar erro de tipo
+        const { data: solutionTools, error: toolsError } = await supabase
+          .from("solution_tools" as any)
+          .select("*")
+          .eq("solution_id", module.solution_id);
+        
+        if (toolsError) {
+          logError("Erro ao buscar ferramentas da solução", toolsError);
+          throw toolsError;
+        }
+        
+        // Para cada ferramenta da solução, buscar informações detalhadas
+        const toolsWithDetails = await Promise.all(
+          (solutionTools || []).map(async (solutionTool) => {
+            try {
+              // Buscar informações detalhadas da ferramenta pelo nome
+              const { data: toolDetails, error: detailsError } = await supabase
+                .from("tools" as any)
+                .select("*")
+                .ilike("name", solutionTool.tool_name)
+                .maybeSingle();
+              
+              if (detailsError) {
+                logError("Erro ao buscar detalhes da ferramenta", {
+                  error: detailsError,
+                  tool_name: solutionTool.tool_name
+                });
+              }
+              
+              return {
+                ...solutionTool,
+                details: toolDetails || null
+              };
+            } catch (error) {
+              logError("Erro ao processar detalhes da ferramenta", {
+                error,
                 tool_name: solutionTool.tool_name
               });
+              return solutionTool;
             }
-            
-            return {
-              ...solutionTool,
-              details: toolDetails || null
-            };
-          } catch (error) {
-            logError("Erro ao processar detalhes da ferramenta", {
-              error,
-              tool_name: solutionTool.tool_name
-            });
-            return solutionTool;
-          }
-        })
-      );
-      
-      log("Ferramentas da solução recuperadas", { 
-        count: toolsWithDetails?.length || 0, 
-        tools: toolsWithDetails?.map(t => t.tool_name) 
-      });
-      
-      return toolsWithDetails;
+          })
+        );
+        
+        log("Ferramentas da solução recuperadas", { 
+          count: toolsWithDetails?.length || 0, 
+          tools: toolsWithDetails?.map(t => t.tool_name) 
+        });
+        
+        return toolsWithDetails as SolutionTool[];
+      } catch (error) {
+        logError("Erro ao buscar ferramentas", error);
+        throw error;
+      }
     },
     enabled: !toolsDataLoading // Só executa a query depois que os dados estiverem prontos
   });

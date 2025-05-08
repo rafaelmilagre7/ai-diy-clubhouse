@@ -1,136 +1,71 @@
 
 import { supabase } from './client';
 
-// Função para garantir que um bucket de armazenamento existe
-export async function ensureStorageBucketExists(bucketName: string): Promise<boolean> {
+/**
+ * Cria ou verifica a existência de um bucket de armazenamento público
+ * com políticas adequadas para acesso e upload de arquivos
+ * 
+ * @param bucketName Nome do bucket a ser criado ou verificado
+ * @returns Um objeto indicando sucesso ou falha com mensagem de erro
+ */
+export async function createStoragePublicPolicy(bucketName: string): Promise<{success: boolean, error: string | null}> {
   try {
-    // Verificar se o bucket existe
-    const { data: buckets, error: listError } = await supabase.storage.listBuckets();
+    // Primeiro verificamos se o bucket existe
+    const { data: bucket, error: bucketError } = await supabase
+      .storage
+      .getBucket(bucketName);
     
-    if (listError) {
-      console.error(`Erro ao listar buckets:`, listError);
-      return false;
+    // Se o bucket não existe, tentamos criá-lo
+    if (!bucket || bucketError) {
+      const { data, error } = await supabase
+        .storage
+        .createBucket(bucketName, {
+          public: true,
+          fileSizeLimit: 314572800, // 300MB em bytes
+          allowedMimeTypes: [
+            'image/png', 
+            'image/jpeg', 
+            'image/jpg', 
+            'image/gif', 
+            'image/svg+xml',
+            'application/pdf',
+            'application/msword',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'application/vnd.ms-excel',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'application/vnd.ms-powerpoint',
+            'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+            'text/plain',
+            'text/csv',
+            'video/mp4',
+            'video/mpeg',
+            'application/zip',
+            'application/x-zip-compressed'
+          ]
+        });
+
+      if (error) {
+        console.error('Erro ao criar bucket:', error);
+        return { success: false, error: `Erro ao criar bucket: ${error.message}` };
+      }
     }
     
-    const exists = buckets?.some(bucket => bucket.name === bucketName);
-    
-    if (!exists) {
-      console.log(`Bucket ${bucketName} não existe. Tentando criar...`);
-      
-      // Tentar criar o bucket
-      const { error: createError } = await supabase.storage.createBucket(bucketName, {
+    // Definir políticas de acesso ao bucket (mesmo que já exista, atualizar políticas)
+    const { data: updateData, error: updateError } = await supabase
+      .storage
+      .updateBucket(bucketName, {
         public: true,
-        fileSizeLimit: 314572800 // 300MB
+        fileSizeLimit: 314572800, // 300MB
       });
-      
-      if (createError) {
-        console.error(`Erro ao criar bucket ${bucketName}:`, createError);
-        
-        // Se o erro foi de permissão, tentar usar a função RPC
-        if (createError.message.includes('permission') || createError.message.includes('not authorized')) {
-          console.log(`Tentando criar bucket ${bucketName} via RPC...`);
-          
-          try {
-            const { data, error } = await supabase.rpc('create_storage_public_policy', {
-              bucket_name: bucketName
-            });
-            
-            if (error) {
-              console.error(`Erro ao criar bucket ${bucketName} via RPC:`, error);
-              return false;
-            }
-            
-            console.log(`Bucket ${bucketName} criado com sucesso via RPC`);
-            return true;
-          } catch (rpcError) {
-            console.error(`Erro ao chamar RPC para criar bucket ${bucketName}:`, rpcError);
-            return false;
-          }
-        }
-        
-        return false;
-      }
-      
-      // Configurar políticas de acesso
-      try {
-        await createStoragePublicPolicy(bucketName);
-      } catch (policyError) {
-        console.error(`Não foi possível definir políticas para ${bucketName}:`, policyError);
-        // Não falhar por causa de políticas - o bucket já foi criado
-      }
+    
+    if (updateError) {
+      console.error('Erro ao atualizar políticas do bucket:', updateError);
+      return { success: false, error: `Erro ao atualizar políticas: ${updateError.message}` };
     }
     
-    return true;
-  } catch (error) {
-    console.error("Erro ao verificar/criar bucket:", error);
-    return false;
-  }
-}
-
-// Função para criar políticas de acesso público para um bucket
-export async function createStoragePublicPolicy(bucketName: string): Promise<{ success: boolean, error?: string }> {
-  try {
-    const { data, error } = await supabase.rpc('create_storage_public_policy', {
-      bucket_name: bucketName
-    });
-    
-    if (error) {
-      console.error(`Erro ao criar políticas para ${bucketName}:`, error);
-      return { success: false, error: error.message };
-    }
-    
-    return { success: true };
+    return { success: true, error: null };
   } catch (error: any) {
-    console.error(`Erro ao criar políticas para ${bucketName}:`, error);
-    return { success: false, error: error.message };
-  }
-}
-
-// Função de fallback para upload de arquivos
-export async function uploadFileWithFallback(bucket: string, path: string, file: File): Promise<{ data: any, error: any }> {
-  try {
-    // Primeiro, tentar fazer upload diretamente
-    const { data, error } = await supabase.storage
-      .from(bucket)
-      .upload(path, file, { upsert: true });
-    
-    if (error) {
-      console.error('Erro no upload direto:', error);
-      
-      // Se falhar por permissão, tentar criar o bucket
-      await ensureStorageBucketExists(bucket);
-      
-      // Tentar upload novamente após criar bucket
-      const retryResult = await supabase.storage
-        .from(bucket)
-        .upload(path, file, { upsert: true });
-      
-      return retryResult;
-    }
-    
-    return { data, error };
-  } catch (error) {
-    console.error('Erro crítico ao fazer upload:', error);
-    return { data: null, error };
-  }
-}
-
-// Garantir que todos os buckets necessários existam
-export async function setupLearningStorageBuckets(): Promise<boolean> {
-  try {
-    const buckets = ['learning-videos', 'learning-resources', 'learning-images'];
-    
-    for (const bucket of buckets) {
-      const success = await ensureStorageBucketExists(bucket);
-      if (!success) {
-        console.error(`Falha ao criar bucket ${bucket}`);
-        return false;
-      }
-    }
-    
-    return true;
-  } catch (error) {
-    console.error('Erro ao configurar buckets:', error);
-    return false;
+    console.error('Exceção ao configurar bucket de armazenamento:', error);
+    return { success: false, error: `Exceção: ${error.message}` };
   }
 }

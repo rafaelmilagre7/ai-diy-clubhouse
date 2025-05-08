@@ -7,9 +7,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Star } from "lucide-react";
 
-interface TrailSolution extends Solution {
+interface TrailSolution extends Omit<Solution, 'category'> {
   priority: number;
   justification: string;
+  category: string; // Usando string para compatibilidade com os dados do banco
 }
 
 interface TrailSolutionsListProps {
