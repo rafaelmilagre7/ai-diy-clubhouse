@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation } from "@tanstack/react-query";
@@ -8,8 +9,9 @@ import { LessonHeader } from "@/components/learning/member/LessonHeader";
 import { LessonSidebar } from "@/components/learning/member/LessonSidebar";
 import { LessonResources } from "@/components/learning/member/LessonResources";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const LessonView = () => {
   const { courseId, lessonId } = useParams<{ courseId: string; lessonId: string }>();
@@ -77,6 +79,26 @@ const LessonView = () => {
     enabled: !!lessonId
   });
   
+  // Buscar informações do curso
+  const { data: courseInfo } = useQuery({
+    queryKey: ["learning-course", courseId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("learning_courses")
+        .select("*")
+        .eq("id", courseId)
+        .single();
+        
+      if (error) {
+        console.error("Erro ao carregar curso:", error);
+        return null;
+      }
+      
+      return data;
+    },
+    enabled: !!courseId
+  });
+  
   // Buscar informações do módulo para navegação
   const { data: moduleData } = useQuery({
     queryKey: ["learning-module-lessons", lesson?.module_id],
@@ -137,6 +159,29 @@ const LessonView = () => {
       return data;
     },
     enabled: !!lessonId
+  });
+  
+  // Buscar todos os progressos completos para o sidebar
+  const { data: completedLessons = [] } = useQuery({
+    queryKey: ["learning-completed-lessons", moduleData?.module?.id],
+    queryFn: async () => {
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user || !moduleData?.module?.id) return [];
+      
+      const { data, error } = await supabase
+        .from("learning_progress")
+        .select("lesson_id")
+        .eq("user_id", userData.user.id)
+        .gte("progress_percentage", 100);
+        
+      if (error) {
+        console.error("Erro ao carregar aulas concluídas:", error);
+        return [];
+      }
+      
+      return data.map(item => item.lesson_id);
+    },
+    enabled: !!moduleData?.module?.id
   });
   
   // Salvar progresso da lição
@@ -230,8 +275,21 @@ const LessonView = () => {
           <LessonHeader 
             title={lesson?.title || ""} 
             moduleTitle={moduleData?.module?.title || ""}
+            courseTitle={courseInfo?.title}
+            courseId={courseId}
             progress={progress}
           />
+          
+          {/* Alerta se o progresso for muito baixo (aula recém iniciada) */}
+          {progress > 0 && progress < 5 && videos && videos.length > 0 && (
+            <Alert className="mt-6 bg-blue-50 dark:bg-blue-950/20 text-blue-800 dark:text-blue-300 border-blue-200 dark:border-blue-900">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Dica para seu aprendizado</AlertTitle>
+              <AlertDescription>
+                Assista os vídeos até o final para registrar seu progresso. Você pode marcar a aula como concluída ao terminar.
+              </AlertDescription>
+            </Alert>
+          )}
           
           <div className="mt-6">
             <LessonNavigation 
@@ -264,6 +322,7 @@ const LessonView = () => {
             module={moduleData?.module}
             lessons={moduleData?.lessons || []}
             courseId={courseId!}
+            completedLessons={completedLessons}
           />
         </div>
       </div>

@@ -55,9 +55,9 @@ export const MemberSidebarNav = ({ sidebarOpen }: SidebarNavProps) => {
       icon: Lightbulb,
     },
     {
-      title: "Formação",
+      title: "Cursos",
       href: "/learning",
-      icon: Book,
+      icon: GraduationCap,
     },
     {
       title: "Ferramentas",

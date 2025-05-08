@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CourseCard } from "@/components/learning/member/CourseCard";
+import { ContinueLearning } from "@/components/learning/member/ContinueLearning";
 import { Search } from "lucide-react";
 import { LearningCourse, LearningProgress } from "@/lib/supabase/types";
 
@@ -124,7 +125,10 @@ const MemberLearning = () => {
 
   return (
     <div className="container py-6">
-      <h1 className="text-3xl font-bold mb-6">Formação</h1>
+      <h1 className="text-3xl font-bold mb-6">Cursos</h1>
+      
+      {/* Componente para continuar de onde parou */}
+      <ContinueLearning />
       
       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between mb-8">
         <div className="relative w-full sm:w-72">

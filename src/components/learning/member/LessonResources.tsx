@@ -1,135 +1,212 @@
 
-import React from "react";
-import { Card, CardContent } from "@/components/ui/card";
+import { useState } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Download, File, FileText, FileImage, FileArchive, Video, AlertCircle } from "lucide-react";
-import { bytesToSize } from "@/lib/utils";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { FileText, Download, FilePlus2, FileImage, FileVideo, Link as LinkIcon } from "lucide-react";
 import { toast } from "sonner";
+import { Separator } from "@/components/ui/separator";
 
-interface Resource {
+interface LessonResourceProps {
   id: string;
-  name: string;
-  description?: string;
-  file_url: string;
-  file_type?: string;
-  file_size_bytes?: number;
+  title: string;
+  description?: string | null;
+  file_url?: string | null;
+  file_type?: string | null;
+  external_url?: string | null;
+  resource_type?: string | null;
+  file_size_bytes?: number | null;
 }
 
-interface LessonResourcesProps {
-  resources: Resource[];
-  isLoading?: boolean;
-}
+export const LessonResources = ({ resources = [] }: { resources: LessonResourceProps[] }) => {
+  const [activeType, setActiveType] = useState<string>("all");
+  const [downloading, setDownloading] = useState<string | null>(null);
 
-export const LessonResources: React.FC<LessonResourcesProps> = ({ 
-  resources, 
-  isLoading = false 
-}) => {
-  // Função para determinar o ícone baseado no tipo de arquivo
-  const getFileIcon = (fileType: string | undefined) => {
-    if (!fileType) return <File className="h-5 w-5" />;
+  if (!resources || resources.length === 0) {
+    return null;
+  }
+
+  // Preparar tipos de recursos para filtragem
+  const resourceTypes = ["all", ...new Set(resources.map(r => r.resource_type || "outros"))];
+
+  // Filtrar recursos baseado no tipo ativo
+  const filteredResources = activeType === "all" 
+    ? resources 
+    : resources.filter(r => r.resource_type === activeType);
+
+  // Função para gerar ícone baseado no tipo de arquivo
+  const getResourceIcon = (resource: LessonResourceProps) => {
+    const fileType = resource.file_type?.toLowerCase();
     
-    if (fileType.includes('pdf')) return <FileText className="h-5 w-5 text-red-500" />; 
-    if (fileType.includes('image')) return <FileImage className="h-5 w-5 text-blue-500" />;
-    if (fileType.includes('text') || fileType.includes('doc')) return <FileText className="h-5 w-5 text-blue-600" />;
-    if (fileType.includes('spreadsheet') || fileType.includes('excel') || fileType.includes('xls')) 
-      return <FileText className="h-5 w-5 text-green-600" />;
-    if (fileType.includes('zip') || fileType.includes('rar')) 
-      return <FileArchive className="h-5 w-5 text-yellow-600" />;
-    if (fileType.includes('video')) 
-      return <Video className="h-5 w-5 text-purple-600" />;
+    if (resource.external_url) {
+      return <LinkIcon className="h-5 w-5 text-blue-500" />;
+    }
     
-    return <File className="h-5 w-5" />;
+    if (!fileType) {
+      return <FilePlus2 className="h-5 w-5 text-gray-500" />;
+    }
+    
+    if (fileType.includes("pdf") || fileType.includes("doc")) {
+      return <FileText className="h-5 w-5 text-orange-500" />;
+    }
+    
+    if (fileType.includes("image") || fileType.includes("png") || fileType.includes("jpg") || fileType.includes("jpeg")) {
+      return <FileImage className="h-5 w-5 text-purple-500" />;
+    }
+    
+    if (fileType.includes("video") || fileType.includes("mp4")) {
+      return <FileVideo className="h-5 w-5 text-red-500" />;
+    }
+    
+    return <FilePlus2 className="h-5 w-5 text-gray-500" />;
   };
 
-  // Função para fazer download do arquivo
-  const handleDownload = (resource: Resource) => {
+  // Função para formatar tamanho do arquivo
+  const formatFileSize = (bytes: number | null | undefined) => {
+    if (!bytes) return "";
+    
+    const kb = bytes / 1024;
+    if (kb < 1024) {
+      return `${kb.toFixed(1)} KB`;
+    }
+    
+    const mb = kb / 1024;
+    return `${mb.toFixed(1)} MB`;
+  };
+
+  // Função para baixar ou abrir recurso
+  const handleResourceClick = async (resource: LessonResourceProps) => {
     try {
-      if (!resource.file_url) {
-        toast.error("O link do arquivo é inválido");
+      // Se é um link externo, abrir em nova janela
+      if (resource.external_url) {
+        window.open(resource.external_url, "_blank");
         return;
       }
-
-      // Log para depuração
-      console.log("Iniciando download:", resource);
       
-      // Criar um link temporário para download
-      const link = document.createElement('a');
-      link.href = resource.file_url;
-      link.setAttribute('download', resource.name);
-      link.setAttribute('target', '_blank');
+      // Se não tem URL, não fazer nada
+      if (!resource.file_url) {
+        toast.error("Recurso indisponível");
+        return;
+      }
+      
+      setDownloading(resource.id);
+      
+      // Baixar arquivo
+      const response = await fetch(resource.file_url);
+      if (!response.ok) {
+        throw new Error("Falha ao baixar arquivo");
+      }
+      
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = resource.title;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       
-      toast.success("Download iniciado");
+      toast.success("Download iniciado!");
     } catch (error) {
-      console.error('Erro ao fazer download:', error);
-      toast.error("Não foi possível iniciar o download");
-      
-      // Abrir em nova aba como fallback
-      window.open(resource.file_url, '_blank');
+      console.error("Erro ao baixar recurso:", error);
+      toast.error("Erro ao baixar recurso. Tente novamente.");
+    } finally {
+      setDownloading(null);
     }
   };
 
-  if (isLoading) {
-    return (
-      <Card className="py-12">
-        <CardContent className="flex justify-center items-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
-        </CardContent>
-      </Card>
-    );
-  }
-  
-  if (!resources.length) {
-    return (
-      <Card className="py-12">
-        <CardContent className="text-center">
-          <File className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-          <h3 className="text-lg font-medium">Nenhum material disponível</h3>
-          <p className="text-sm text-muted-foreground mt-1">
-            Esta aula não possui materiais complementares.
-          </p>
-        </CardContent>
-      </Card>
-    );
-  }
-
   return (
-    <div className="grid gap-4">
-      {resources.map((resource) => {
-        return (
-          <Card key={resource.id} className="overflow-hidden hover:shadow-md transition-shadow">
-            <div className="flex items-center p-4 gap-4">
-              <div className="bg-muted/50 p-3 rounded-lg">
-                {getFileIcon(resource.file_type)}
+    <Card>
+      <CardHeader>
+        <CardTitle>Material complementar</CardTitle>
+        <CardDescription>
+          Recursos adicionais para aprofundar seus conhecimentos
+        </CardDescription>
+        
+        {resourceTypes.length > 2 && (
+          <Tabs 
+            value={activeType} 
+            onValueChange={setActiveType}
+            className="mt-2"
+          >
+            <TabsList className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+              {resourceTypes.map(type => (
+                <TabsTrigger 
+                  key={type} 
+                  value={type}
+                  className="capitalize"
+                >
+                  {type === "all" ? "Todos" : type}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
+        )}
+      </CardHeader>
+      
+      <CardContent>
+        <div className="space-y-2 divide-y">
+          {filteredResources.length === 0 ? (
+            <p className="py-8 text-center text-muted-foreground">
+              Nenhum recurso deste tipo disponível.
+            </p>
+          ) : (
+            filteredResources.map((resource, index) => (
+              <div key={resource.id} className={`pt-3 ${index > 0 ? 'pt-3' : ''}`}>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-start gap-3">
+                    {getResourceIcon(resource)}
+                    <div>
+                      <h4 className="font-medium">{resource.title}</h4>
+                      {resource.description && (
+                        <p className="text-sm text-muted-foreground mt-0.5">
+                          {resource.description}
+                        </p>
+                      )}
+                      <div className="flex items-center gap-2 mt-1">
+                        {resource.file_size_bytes && (
+                          <span className="text-xs text-muted-foreground">
+                            {formatFileSize(resource.file_size_bytes)}
+                          </span>
+                        )}
+                        {resource.resource_type && (
+                          <span className="text-xs bg-muted px-2 py-0.5 rounded-full">
+                            {resource.resource_type}
+                          </span>
+                        )}
+                        {resource.external_url && (
+                          <span className="text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded-full">
+                            Link externo
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => handleResourceClick(resource)}
+                    disabled={downloading === resource.id}
+                    className="ml-2 flex-shrink-0"
+                  >
+                    {downloading === resource.id ? (
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                    ) : resource.external_url ? (
+                      <LinkIcon className="h-4 w-4 mr-1" />
+                    ) : (
+                      <Download className="h-4 w-4 mr-1" />
+                    )}
+                    {resource.external_url ? "Abrir" : "Baixar"}
+                  </Button>
+                </div>
+                {index < filteredResources.length - 1 && <Separator className="mt-3" />}
               </div>
-              
-              <div className="flex-1 min-w-0">
-                <h3 className="font-medium truncate">{resource.name}</h3>
-                {resource.description && (
-                  <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{resource.description}</p>
-                )}
-                {resource.file_size_bytes && (
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {bytesToSize(resource.file_size_bytes)}
-                  </p>
-                )}
-              </div>
-              
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => handleDownload(resource)}
-                className="flex-shrink-0"
-              >
-                <Download className="h-4 w-4 mr-2" />
-                <span>Download</span>
-              </Button>
-            </div>
-          </Card>
-        );
-      })}
-    </div>
+            ))
+          )}
+        </div>
+      </CardContent>
+    </Card>
   );
 };
