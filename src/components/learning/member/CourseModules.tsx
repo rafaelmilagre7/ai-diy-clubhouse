@@ -18,8 +18,10 @@ interface CourseModulesProps {
   modules: LearningModule[];
   courseId: string;
   userProgress: LearningProgress[];
-  course: LearningCourse;
+  course?: LearningCourse;
   expandedModules?: string[];
+  lessons?: LearningLesson[]; // Adicionada esta prop para compatibilidade
+  progress?: { lesson_id: any; progress_percentage: any; }[]; // Adicionada esta prop para compatibilidade
 }
 
 export const CourseModules: React.FC<CourseModulesProps> = ({ 
@@ -27,14 +29,19 @@ export const CourseModules: React.FC<CourseModulesProps> = ({
   courseId, 
   userProgress,
   course,
-  expandedModules = []
+  expandedModules = [],
+  lessons, // Nova prop
+  progress // Nova prop
 }) => {
   // Estado para rastrear módulos expandidos (para lembrar o estado mesmo ao recarregar componente)
   const [openModules, setOpenModules] = useState<string[]>(expandedModules);
 
+  // Usar progress se fornecido, caso contrário usar userProgress
+  const effectiveProgress = progress || userProgress;
+
   // Verificar se uma aula está completa
   const isLessonCompleted = (lessonId: string): boolean => {
-    return !!userProgress?.find(p => 
+    return !!effectiveProgress?.find(p => 
       p.lesson_id === lessonId && 
       (p.progress_percentage >= 100 || !!p.completed_at)
     );
@@ -42,23 +49,23 @@ export const CourseModules: React.FC<CourseModulesProps> = ({
 
   // Verificar se uma aula está em progresso
   const isLessonInProgress = (lessonId: string): boolean => {
-    const progress = userProgress?.find(p => p.lesson_id === lessonId);
-    return !!progress && progress.progress_percentage > 0 && progress.progress_percentage < 100;
+    const lessonProgress = effectiveProgress?.find(p => p.lesson_id === lessonId);
+    return !!lessonProgress && lessonProgress.progress_percentage > 0 && lessonProgress.progress_percentage < 100;
   };
   
   // Obter porcentagem de progresso para uma aula
   const getLessonProgress = (lessonId: string): number => {
-    const progress = userProgress?.find(p => p.lesson_id === lessonId);
-    return progress ? progress.progress_percentage : 0;
+    const lessonProgress = effectiveProgress?.find(p => p.lesson_id === lessonId);
+    return lessonProgress ? lessonProgress.progress_percentage : 0;
   };
   
   // Calcular a última aula em que o usuário estava
   const getLastAccessedLesson = (): string | null => {
-    if (!userProgress || userProgress.length === 0) return null;
+    if (!effectiveProgress || effectiveProgress.length === 0) return null;
     
     // Ordenar por updated_at (mais recente primeiro)
-    const sortedProgress = [...userProgress].sort((a, b) => {
-      return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
+    const sortedProgress = [...effectiveProgress].sort((a, b) => {
+      return new Date(b.updated_at || "").getTime() - new Date(a.updated_at || "").getTime();
     });
     
     return sortedProgress[0].lesson_id;
@@ -150,10 +157,11 @@ export const CourseModules: React.FC<CourseModulesProps> = ({
                 <ModuleLessons 
                   moduleId={module.id} 
                   courseId={courseId}
-                  userProgress={userProgress}
+                  userProgress={effectiveProgress}
                   isLessonCompleted={isLessonCompleted}
                   isLessonInProgress={isLessonInProgress}
                   getLessonProgress={getLessonProgress}
+                  providedLessons={lessons} // Passar as aulas fornecidas
                 />
               </AccordionContent>
             </AccordionItem>
@@ -171,7 +179,8 @@ const ModuleLessons = ({
   userProgress, 
   isLessonCompleted, 
   isLessonInProgress,
-  getLessonProgress
+  getLessonProgress,
+  providedLessons
 }: { 
   moduleId: string;
   courseId: string;
@@ -179,8 +188,12 @@ const ModuleLessons = ({
   isLessonCompleted: (id: string) => boolean;
   isLessonInProgress: (id: string) => boolean;
   getLessonProgress: (id: string) => number;
+  providedLessons?: LearningLesson[];
 }) => {
-  const { data: lessons, isLoading } = useLessonsByModule(moduleId);
+  const { data: fetchedLessons, isLoading } = useLessonsByModule(moduleId);
+  
+  // Usar aulas fornecidas se disponíveis, caso contrário usar aulas buscadas
+  const lessons = providedLessons?.filter(l => l.module_id === moduleId) || fetchedLessons;
   
   const LessonItem = ({ lesson }: { lesson: LearningLesson }) => {
     const completed = isLessonCompleted(lesson.id);
@@ -244,7 +257,7 @@ const ModuleLessons = ({
     );
   };
   
-  if (isLoading) {
+  if (isLoading && !providedLessons) {
     return (
       <div className="p-4 text-center">
         <p className="text-muted-foreground">Carregando aulas...</p>

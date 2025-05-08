@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
-import { Helmet } from "react-helmet-async";
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
@@ -21,6 +20,11 @@ const CourseView = () => {
   const [activeTab, setActiveTab] = useState('modules');
   const [courseProgress, setCourseProgress] = useState(0);
   
+  // Atualizar o título da página via document.title
+  useEffect(() => {
+    document.title = "Curso | Plataforma de Aprendizagem";
+  }, []);
+  
   // Buscar detalhes do curso
   const { data: course, isLoading: isLoadingCourse } = useQuery({
     queryKey: ['learning-course', courseId],
@@ -32,6 +36,12 @@ const CourseView = () => {
         .single();
       
       if (error) throw error;
+      
+      // Atualizar o título com o nome do curso
+      if (data?.title) {
+        document.title = `${data.title} | Plataforma de Aprendizagem`;
+      }
+      
       return data as LearningCourse;
     }
   });
@@ -139,10 +149,6 @@ const CourseView = () => {
   
   return (
     <div className="container py-6">
-      <Helmet>
-        <title>{course?.title || "Curso"} | Plataforma de Aprendizagem</title>
-      </Helmet>
-      
       <Button
         variant="ghost"
         className="mb-4"
@@ -190,8 +196,9 @@ const CourseView = () => {
             <TabsContent value="modules">
               <CourseModules 
                 modules={modules} 
-                lessons={lessons}
                 courseId={courseId!}
+                userProgress={[]}
+                lessons={lessons}
                 progress={progress || []}
               />
             </TabsContent>
