@@ -114,7 +114,7 @@ export const useVideoProgress = ({
           // Verificar se já existe registro de progresso
           const { data: existingProgress, error: checkError } = await supabase
             .from("learning_progress")
-            .select("id, video_progress, progress_percentage")
+            .select("id, video_progress, progress_percentage, completed_at")
             .eq("lesson_id", lessonId)
             .eq("user_id", userData.user.id)
             .maybeSingle();
@@ -138,7 +138,7 @@ export const useVideoProgress = ({
           }
           
           // Definir data de conclusão se progresso chegou a 100%
-          const completedAt = lessonProgress >= 100 ? new Date().toISOString() : null;
+          const completedAt = lessonProgress >= 100 ? new Date().toISOString() : existingProgress?.completed_at || null;
           
           if (existingProgress) {
             // Atualizar registro existente
@@ -148,7 +148,7 @@ export const useVideoProgress = ({
                 video_progress: videoProgressObj,
                 progress_percentage: lessonProgress,
                 last_position_seconds: currentTime,
-                completed_at: completedAt || existingProgress.completed_at,
+                completed_at: completedAt,
                 updated_at: new Date().toISOString()
               })
               .eq("id", existingProgress.id);

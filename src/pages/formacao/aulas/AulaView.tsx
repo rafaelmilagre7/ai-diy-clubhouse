@@ -237,14 +237,14 @@ const AulaView: React.FC = () => {
   };
   
   // Marcar aula como concluída manualmente
-  const handleComplete = () => {
+  const handleComplete = async (): Promise<void> => {
     const fullProgress: Record<string, number> = {};
     videos?.forEach(video => {
       fullProgress[video.id] = 100;
     });
     
     setVideoProgresses(fullProgress);
-    updateProgressMutation.mutate({
+    await updateProgressMutation.mutateAsync({
       progress: 100,
       videoProgress: fullProgress
     });

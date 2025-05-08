@@ -196,8 +196,8 @@ const LessonView = () => {
   };
   
   // Marcar lição como concluída
-  const handleComplete = () => {
-    updateProgressMutation.mutate(100);
+  const handleComplete = async (): Promise<void> => {
+    await updateProgressMutation.mutateAsync(100);
     toast.success("Lição concluída com sucesso!");
   };
   
