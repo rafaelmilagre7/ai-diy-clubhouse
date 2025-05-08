@@ -42,4 +42,14 @@ export interface Certificate {
   template_id: string | null;
   metadata: Record<string, any>;
   has_validation_page: boolean;
+  learning_courses?: {
+    id: string;
+    title: string;
+    description: string | null;
+    cover_image_url: string | null;
+  };
+  profiles?: {
+    name: string | null;
+    email: string | null;
+  };
 }

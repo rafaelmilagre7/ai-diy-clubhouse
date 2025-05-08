@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Download, ExternalLink, Award } from "lucide-react";
 import { Certificate } from "@/types/learningTypes";
@@ -12,15 +12,15 @@ interface CertificateCardProps {
   onDownload: (certificateId: string) => void;
 }
 
-export const CertificateCard = ({
+export const CertificateCard = ({ 
   certificate,
   onDownload
 }: CertificateCardProps) => {
-  const course = (certificate as any).learning_courses;
+  const course = certificate.learning_courses;
   const formattedDate = format(new Date(certificate.issued_at), "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
   
   return (
-    <Card className="overflow-hidden">
+    <Card className="overflow-hidden transition-all hover:shadow-md">
       <div className="bg-gradient-to-r from-primary/20 to-primary/5 pb-2 pt-6">
         <div className="flex justify-center">
           <Award className="h-20 w-20 text-primary/80" />
@@ -28,9 +28,9 @@ export const CertificateCard = ({
       </div>
       
       <CardHeader className="pb-2">
-        <CardTitle className="text-lg font-semibold">
+        <h3 className="text-lg font-semibold">
           {course?.title || "Certificado de Conclusão"}
-        </CardTitle>
+        </h3>
       </CardHeader>
       
       <CardContent>
