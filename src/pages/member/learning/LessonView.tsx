@@ -1,9 +1,9 @@
 
 import { useEffect } from "react";
 import { useParams } from "react-router-dom";
-import { Alert, AlertCircle, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { AlertCircle, ArrowLeft } from "lucide-react";
 import { LessonContent } from "@/components/learning/member/LessonContent";
 import { LessonNavigation } from "@/components/learning/member/LessonNavigation";
 import { LessonHeader } from "@/components/learning/member/LessonHeader";
