@@ -27,7 +27,7 @@ export const CourseCard: React.FC<CourseCardProps> = ({
   const isCompleted = progress >= 100;
   
   return (
-    <Link to={`/learning/course/${id}`}>
+    <Link to={`/learning/course/${id}`} className="block h-full">
       <Card className="overflow-hidden h-full flex flex-col transition-all hover:shadow-md">
         <div className="relative">
           <div 
@@ -89,7 +89,7 @@ export const CourseCard: React.FC<CourseCardProps> = ({
             <Progress 
               value={progress} 
               className="h-2" 
-              color={isCompleted ? "bg-green-500" : undefined}
+              indicatorClassName={isCompleted ? "bg-green-500" : undefined}
             />
           </div>
         </CardFooter>

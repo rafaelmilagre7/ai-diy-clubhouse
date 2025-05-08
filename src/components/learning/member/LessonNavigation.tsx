@@ -14,12 +14,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { toast } from "sonner";
 
 interface LessonNavigationProps {
   courseId: string;
   currentLesson: LearningLesson;
   allLessons: LearningLesson[];
-  onComplete?: () => void;
+  onComplete?: () => Promise<void>;
   isCompleted?: boolean;
 }
 
@@ -48,6 +49,25 @@ export const LessonNavigation: React.FC<LessonNavigationProps> = ({
     try {
       await onComplete();
       setIsConfirmOpen(false);
+      toast.success("Aula marcada como concluída!");
+      
+      // Se houver próxima aula e o usuário acabou de concluir esta, perguntar se quer ir para a próxima
+      if (nextLesson) {
+        toast("Deseja continuar para a próxima aula?", {
+          action: {
+            label: "Continuar",
+            onClick: () => {
+              window.location.href = `/learning/course/${courseId}/lesson/${nextLesson.id}`;
+            },
+          },
+          duration: 5000,
+        });
+      } else {
+        toast.success("Você concluiu todas as aulas deste módulo!");
+      }
+    } catch (error) {
+      console.error("Erro ao marcar aula como concluída:", error);
+      toast.error("Erro ao marcar a aula como concluída. Tente novamente.");
     } finally {
       setIsCompleting(false);
     }

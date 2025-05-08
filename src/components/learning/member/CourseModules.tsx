@@ -12,6 +12,7 @@ import { CheckCircle, Lock, Clock, Play } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { useLessonsByModule } from "@/hooks/learning";
 
 interface CourseModulesProps {
   modules: LearningModule[];
@@ -30,16 +31,6 @@ export const CourseModules: React.FC<CourseModulesProps> = ({
 }) => {
   // Estado para rastrear módulos expandidos (para lembrar o estado mesmo ao recarregar componente)
   const [openModules, setOpenModules] = useState<string[]>(expandedModules);
-
-  // Função para buscar lições de um módulo
-  const useLessonsByModule = (moduleId: string) => {
-    // Simulação de hook - em uma implementação real, este seria um hook React Query
-    return {
-      data: [],
-      isLoading: false,
-      error: null
-    };
-  };
 
   // Verificar se uma aula está completa
   const isLessonCompleted = (lessonId: string): boolean => {

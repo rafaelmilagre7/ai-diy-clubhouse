@@ -1,198 +1,192 @@
 
-import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
-import { useAuth } from '@/contexts/auth';
-import { toast } from 'sonner';
+import { useState, useEffect, useRef } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/lib/supabase";
+import { toast } from "sonner";
 
-interface VideoProgressOptions {
+interface UseVideoProgressOptions {
   lessonId: string;
   videoId: string;
   duration?: number;
-  autoSave?: boolean;
+  onProgressUpdate?: (progress: number) => void;
 }
 
-export const useVideoProgress = ({ 
-  lessonId, 
-  videoId, 
+/**
+ * Hook para gerenciar o progresso de visualização de vídeo
+ */
+export const useVideoProgress = ({
+  lessonId,
+  videoId,
   duration = 0,
-  autoSave = true 
-}: VideoProgressOptions) => {
-  const { user } = useAuth();
-  const [progress, setProgress] = useState<number>(0);
-  const [position, setPosition] = useState<number>(0);
-  const [saving, setSaving] = useState<boolean>(false);
-  const [isCompleted, setIsCompleted] = useState<boolean>(false);
+  onProgressUpdate
+}: UseVideoProgressOptions) => {
+  const [progress, setProgress] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+  const [lastSavedTime, setLastSavedTime] = useState(0);
+  const queryClient = useQueryClient();
   
-  // Verificar se já temos progresso salvo para este vídeo
+  // Use ref para armazenar o último progresso salvo para evitar atualizações excessivas
+  const lastSavedProgressRef = useRef(0);
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Carregar progresso inicial
   useEffect(() => {
-    if (!user || !lessonId || !videoId) return;
-    
     const loadProgress = async () => {
       try {
+        const { data: userData } = await supabase.auth.getUser();
+        if (!userData.user) throw new Error("Usuário não autenticado");
+        
         const { data, error } = await supabase
-          .from('learning_progress')
-          .select('*')
-          .eq('user_id', user.id)
-          .eq('lesson_id', lessonId)
+          .from("learning_progress")
+          .select("video_progress, last_position_seconds")
+          .eq("lesson_id", lessonId)
+          .eq("user_id", userData.user.id)
           .single();
           
-        if (error) throw error;
-        
-        if (data && data.video_progress) {
-          // Extrair progresso do vídeo específico
-          const videoProgress = data.video_progress[videoId] || 0;
-          setProgress(videoProgress);
-          setIsCompleted(videoProgress >= 95);
-          console.log(`Progresso carregado para vídeo ${videoId}: ${videoProgress}%`);
+        if (error && error.code !== 'PGRST116') { // Não encontrado
+          console.error("Erro ao carregar progresso:", error);
         }
-      } catch (err) {
-        console.error('Erro ao carregar progresso do vídeo:', err);
+        
+        if (data) {
+          const videoProgress = data.video_progress || {};
+          const videoCurrentProgress = videoProgress[videoId] || 0;
+          const lastPosition = videoCurrentProgress > 0 ? data.last_position_seconds : 0;
+          
+          setProgress(videoCurrentProgress);
+          setLastSavedTime(lastPosition);
+          lastSavedProgressRef.current = videoCurrentProgress;
+          
+          if (onProgressUpdate) {
+            onProgressUpdate(videoCurrentProgress);
+          }
+        }
+      } catch (error) {
+        console.error("Erro ao carregar progresso do vídeo:", error);
+      } finally {
+        setIsLoading(false);
       }
     };
     
-    loadProgress();
-  }, [user, lessonId, videoId]);
-  
-  // Função para atualizar posição e progresso
-  const updateProgress = async (
-    newPosition: number, 
-    videoDuration: number,
-    forceUpdate = false
-  ): Promise<boolean> => {
-    if (!user || !lessonId || !videoId || !autoSave) {
-      // Apenas atualizar localmente
-      setPosition(newPosition);
-      if (videoDuration > 0) {
-        const newProgress = Math.round((newPosition / videoDuration) * 100);
-        setProgress(newProgress);
-        setIsCompleted(newProgress >= 95);
+    if (lessonId && videoId) {
+      loadProgress();
+    }
+    
+    // Limpar timeout ao desmontar
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
       }
-      return false;
+    };
+  }, [lessonId, videoId]);
+  
+  // Função para atualizar o progresso
+  const updateProgress = async (currentTime: number, videoDuration: number) => {
+    if (!videoDuration) return;
+    
+    // Calcular porcentagem de progresso
+    const currentProgress = Math.round((currentTime / videoDuration) * 100);
+    
+    // Atualizar progresso local
+    setProgress(currentProgress);
+    
+    // Chamar callback se fornecido
+    if (onProgressUpdate) {
+      onProgressUpdate(currentProgress);
     }
     
-    // Se já salvamos recentemente, não salvar novamente a menos que forceUpdate seja true
-    if (saving && !forceUpdate) return false;
-    
-    // Calcular progresso percentual
-    let newProgress = 0;
-    if (videoDuration > 0) {
-      newProgress = Math.round((newPosition / videoDuration) * 100);
-    }
-    
-    // Se o progresso for menor que o atual e não estamos forçando, ignorar
-    if (newProgress < progress && !forceUpdate) {
-      console.log(`Ignorando progresso menor: ${newProgress}% < ${progress}%`);
-      return false;
-    }
-    
-    // Se não houve alteração significativa (< 5%), não salvar a menos que forceUpdate seja true
-    if (Math.abs(newProgress - progress) < 5 && !forceUpdate) {
-      console.log(`Alteração não significativa: ${progress}% → ${newProgress}%`);
-      return false;
-    }
-    
-    try {
-      setSaving(true);
-      setPosition(newPosition);
-      setProgress(newProgress);
-      setIsCompleted(newProgress >= 95);
+    // Verificar se precisamos salvar no banco (diferença > 5% ou pontos chave)
+    const shouldSave = 
+      Math.abs(currentProgress - lastSavedProgressRef.current) >= 5 || 
+      [25, 50, 75, 95].includes(currentProgress) ||
+      currentProgress === 100;
       
-      // Obter progresso existente
-      const { data: existingProgress, error: getError } = await supabase
-        .from('learning_progress')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('lesson_id', lessonId)
-        .maybeSingle();
+    if (shouldSave) {
+      // Evitar múltiplas chamadas em curto período
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
       
-      if (getError) throw getError;
-      
-      // Preparar dados para atualização
-      const now = new Date().toISOString();
-      let updateData: any = {
-        updated_at: now
-      };
-      
-      // Atualizar campo de progresso de vídeo
-      if (existingProgress) {
-        const currentVideoProgress = existingProgress.video_progress || {};
-        updateData.video_progress = {
-          ...currentVideoProgress,
-          [videoId]: newProgress
-        };
-        
-        // Se o progresso for alto, marcar como concluído
-        if (newProgress >= 95 && !existingProgress.completed_at) {
-          updateData.completed_at = now;
+      saveTimeoutRef.current = setTimeout(async () => {
+        try {
+          const { data: userData } = await supabase.auth.getUser();
+          if (!userData.user) throw new Error("Usuário não autenticado");
           
-          // Também atualizar o progresso geral da aula para 100%
-          updateData.progress_percentage = 100;
-        } else if (!existingProgress.completed_at) {
-          // Calcular progresso global da aula (média de todos os vídeos)
-          const allProgresses = Object.values({
-            ...currentVideoProgress,
-            [videoId]: newProgress
-          }) as number[];
+          // Verificar se já existe registro de progresso
+          const { data: existingProgress, error: checkError } = await supabase
+            .from("learning_progress")
+            .select("id, video_progress, progress_percentage")
+            .eq("lesson_id", lessonId)
+            .eq("user_id", userData.user.id)
+            .maybeSingle();
+            
+          if (checkError && checkError.code !== 'PGRST116') {
+            console.error("Erro ao verificar progresso:", checkError);
+            return;
+          }
           
-          const averageProgress = allProgresses.length > 0
-            ? Math.round(allProgresses.reduce((a, b) => a + b, 0) / allProgresses.length)
-            : newProgress;
+          const videoProgressObj = existingProgress?.video_progress || {};
+          videoProgressObj[videoId] = currentProgress;
           
-          updateData.progress_percentage = Math.min(averageProgress, 95); // Máximo 95% até completar manualmente
+          // Calcular progresso geral da lição
+          // Se o vídeo atual atingiu 95%, considerar lição como 100% concluída
+          let lessonProgress = existingProgress?.progress_percentage || 0;
+          if (currentProgress >= 95) {
+            lessonProgress = 100;
+          } else if (lessonProgress < 75) {
+            // Se ainda não chegou a 75%, atualizar proporcional ao vídeo
+            lessonProgress = Math.max(lessonProgress, Math.round(currentProgress * 0.75));
+          }
+          
+          // Definir data de conclusão se progresso chegou a 100%
+          const completedAt = lessonProgress >= 100 ? new Date().toISOString() : null;
+          
+          if (existingProgress) {
+            // Atualizar registro existente
+            await supabase
+              .from("learning_progress")
+              .update({
+                video_progress: videoProgressObj,
+                progress_percentage: lessonProgress,
+                last_position_seconds: currentTime,
+                completed_at: completedAt || existingProgress.completed_at,
+                updated_at: new Date().toISOString()
+              })
+              .eq("id", existingProgress.id);
+          } else {
+            // Criar novo registro de progresso
+            await supabase
+              .from("learning_progress")
+              .insert({
+                user_id: userData.user.id,
+                lesson_id: lessonId,
+                video_progress: videoProgressObj,
+                progress_percentage: lessonProgress,
+                last_position_seconds: currentTime,
+                completed_at: completedAt,
+              });
+          }
+          
+          // Atualizar último progresso salvo
+          lastSavedProgressRef.current = currentProgress;
+          
+          // Invalidar queries relacionadas
+          queryClient.invalidateQueries({ queryKey: ["learning-progress"] });
+          
+          // Notificar conclusão
+          if (currentProgress >= 95 && lastSavedProgressRef.current < 95) {
+            toast.success("Vídeo concluído!");
+          }
+        } catch (error) {
+          console.error("Erro ao salvar progresso:", error);
         }
-        
-        // Atualizar entrada existente
-        const { error: updateError } = await supabase
-          .from('learning_progress')
-          .update(updateData)
-          .eq('id', existingProgress.id);
-          
-        if (updateError) throw updateError;
-      } else {
-        // Criar nova entrada
-        const { error: insertError } = await supabase
-          .from('learning_progress')
-          .insert({
-            user_id: user.id,
-            lesson_id: lessonId,
-            progress_percentage: newProgress,
-            started_at: now,
-            video_progress: { [videoId]: newProgress }
-          });
-          
-        if (insertError) throw insertError;
-      }
-      
-      // Se completou, mostrar toast
-      if (newProgress >= 95 && progress < 95) {
-        toast.success('Vídeo concluído!');
-      }
-      
-      return true;
-    } catch (err) {
-      console.error('Erro ao salvar progresso do vídeo:', err);
-      return false;
-    } finally {
-      setSaving(false);
+      }, 1000);
     }
-  };
-  
-  // Função para marcar como completo
-  const markAsCompleted = async (): Promise<boolean> => {
-    return await updateProgress(
-      duration, 
-      duration,
-      true
-    );
   };
   
   return {
     progress,
-    position,
-    isCompleted,
-    saving,
+    lastSavedTime,
     updateProgress,
-    markAsCompleted,
-    setPosition
+    isLoading
   };
 };

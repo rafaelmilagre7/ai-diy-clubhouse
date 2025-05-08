@@ -45,7 +45,7 @@ export const VideoPlaylist: React.FC<VideoPlaylistProps> = ({
                 <PlayCircle className="h-5 w-5 text-muted-foreground" />
               )}
             </div>
-            <div>
+            <div className="flex-grow">
               <p className={cn(
                 "font-medium text-sm", 
                 index === currentVideoIndex && "text-blue-500",

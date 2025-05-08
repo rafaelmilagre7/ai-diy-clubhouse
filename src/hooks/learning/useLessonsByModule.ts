@@ -1,0 +1,29 @@
+
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/lib/supabase";
+import { LearningLesson } from "@/lib/supabase/types";
+
+/**
+ * Hook para buscar lições de um módulo específico
+ */
+export const useLessonsByModule = (moduleId: string) => {
+  return useQuery({
+    queryKey: ["learning-module-lessons", moduleId],
+    queryFn: async (): Promise<LearningLesson[]> => {
+      const { data, error } = await supabase
+        .from("learning_lessons")
+        .select("*, videos:learning_lesson_videos(*)")
+        .eq("module_id", moduleId)
+        .eq("published", true)
+        .order("order_index", { ascending: true });
+        
+      if (error) {
+        console.error("Erro ao buscar lições do módulo:", error);
+        return [];
+      }
+      
+      return data || [];
+    },
+    enabled: !!moduleId
+  });
+};
