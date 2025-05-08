@@ -12,9 +12,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { LearningModule } from "@/lib/supabase";
+import { LearningModule } from "@/lib/supabase/types";
 import { UseFormReturn } from "react-hook-form";
-import { AulaFormValues, DifficultyLevel } from "../AulaStepWizard";
+import { AulaFormValues } from "../schemas/aulaFormSchema";
+import { DifficultyLevel } from "../types/aulaTypes";
 
 interface EtapaInfoBasicaProps {
   form: UseFormReturn<AulaFormValues>;

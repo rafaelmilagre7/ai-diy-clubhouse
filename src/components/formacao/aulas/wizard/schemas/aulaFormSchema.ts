@@ -1,6 +1,6 @@
 
 import { z } from "zod";
-import { DifficultyLevel } from "../AulaStepWizard";
+import { DifficultyLevel } from "../types/aulaTypes";
 
 // Schema completo para validação
 export const aulaFormSchema = z.object({

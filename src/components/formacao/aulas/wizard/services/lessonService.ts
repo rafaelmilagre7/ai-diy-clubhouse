@@ -1,124 +1,134 @@
 
 import { supabase } from "@/lib/supabase";
 import { AulaFormValues } from "../schemas/aulaFormSchema";
-import { saveVideos, calculateTotalDuration } from "./videoService";
-import { saveResources } from "./resourceService";
+import { saveVideosForLesson } from "./videoService";
+import { saveResourcesForLesson } from "./resourceService";
 
-export interface SaveLessonResult {
+interface SaveResult {
   success: boolean;
-  lessonId?: string;
   message?: string;
-  error?: any;
+  lessonId?: string;
 }
 
-export const saveLesson = async (
-  values: AulaFormValues,
+export async function saveLesson(
+  values: AulaFormValues, 
   lessonId?: string,
   setCurrentSaveStep?: (step: string) => void
-): Promise<SaveLessonResult> => {
+): Promise<SaveResult> {
   try {
-    if (setCurrentSaveStep) setCurrentSaveStep("Iniciando salvamento...");
-    console.log("Iniciando processo de salvamento da aula");
-    
+    setCurrentSaveStep?.("Preparando dados da aula...");
+
     // Calcular o tempo estimado com base nos vídeos
     const totalDurationMinutes = calculateTotalDuration(values.videos);
-    console.log("Tempo total calculado dos vídeos (minutos):", totalDurationMinutes);
     
-    // Preparar os dados da aula
-    const lessonData = {
+    // Preparar os dados completos da lição
+    const completeLessonData = {
       title: values.title,
       description: values.description || null,
       module_id: values.moduleId,
       cover_image_url: values.coverImageUrl || null,
-      estimated_time_minutes: totalDurationMinutes,
+      estimated_time_minutes: totalDurationMinutes, 
       ai_assistant_enabled: values.aiAssistantEnabled,
       ai_assistant_id: values.aiAssistantId || null,
+      difficulty_level: values.difficultyLevel,
       published: values.published,
-      difficulty_level: values.difficultyLevel
+      updated_at: new Date()
     };
     
-    console.log("Dados completos a serem salvos:", lessonData);
-    if (setCurrentSaveStep) setCurrentSaveStep("Salvando dados básicos da aula...");
-    
-    let newLessonId = lessonId;
+    let resultId: string;
     
     if (lessonId) {
       // Atualizar aula existente
-      console.log(`Atualizando aula existente (ID: ${lessonId})...`);
-      const { data, error } = await supabase
-        .from("learning_lessons")
-        .update(lessonData)
-        .eq("id", lessonId)
-        .select();
+      setCurrentSaveStep?.("Atualizando informações básicas da aula...");
+      
+      const { error: updateError } = await supabase
+        .from('learning_lessons')
+        .update(completeLessonData)
+        .eq('id', lessonId);
         
-      if (error) {
-        console.error("Erro ao atualizar aula:", error);
-        return {
-          success: false,
-          error: error,
-          message: `Erro ao atualizar aula: ${error.message}`
-        };
+      if (updateError) {
+        throw updateError;
       }
       
-      console.log("Aula atualizada com sucesso!", data);
+      resultId = lessonId;
     } else {
       // Criar nova aula
-      console.log("Criando nova aula...");
+      setCurrentSaveStep?.("Criando nova aula...");
+      
+      // Verificar se o bucket de vídeos existe
+      try {
+        const { data: buckets } = await supabase.storage.listBuckets();
+        const bucketExists = buckets?.some(bucket => bucket.name === 'learning_videos');
+        
+        if (!bucketExists) {
+          console.log("Bucket de vídeos não existe, tentando criar...");
+          await supabase.storage.createBucket('learning_videos', {
+            public: true,
+            fileSizeLimit: 104857600, // 100MB
+          });
+        }
+      } catch (err) {
+        console.log("Erro ao verificar/criar bucket:", err);
+      }
+      
       const { data, error } = await supabase
-        .from("learning_lessons")
-        .insert([lessonData])
-        .select("*")
+        .from('learning_lessons')
+        .insert([completeLessonData])
+        .select('*')
         .single();
         
       if (error) {
-        console.error("Erro ao criar aula:", error);
-        return {
-          success: false,
-          error: error,
-          message: `Erro ao criar aula: ${error.message}`
-        };
+        throw error;
       }
       
-      newLessonId = data.id;
-      console.log("Aula criada com sucesso:", data);
+      resultId = data.id;
     }
     
-    if (!newLessonId) {
-      return {
-        success: false,
-        message: "ID da aula não encontrado após salvamento"
-      };
-    }
+    // Salvar vídeos da aula
+    setCurrentSaveStep?.("Salvando vídeos da aula...");
+    const videosResult = await saveVideosForLesson(resultId, values.videos);
     
-    // Salvar vídeos
-    if (setCurrentSaveStep) setCurrentSaveStep("Processando vídeos...");
-    const videoResult = await saveVideos(newLessonId, values.videos || []);
+    // Salvar materiais da aula
+    setCurrentSaveStep?.("Salvando materiais de apoio...");
+    const resourcesResult = await saveResourcesForLesson(resultId, values.resources);
     
-    // Salvar recursos (materiais)
-    if (setCurrentSaveStep) setCurrentSaveStep("Processando materiais...");
-    const materiaisResult = await saveResources(newLessonId, values.resources || []);
+    // Determinar mensagem de retorno com base nos resultados
+    let message: string;
     
-    if (!videoResult.success || !materiaisResult.success) {
-      return {
-        success: true, // A aula foi salva, então consideramos sucesso parcial
-        lessonId: newLessonId,
-        message: `Aula salva, mas houve problemas: ${
-          !videoResult.success ? videoResult.message : ""
-        } ${!materiaisResult.success ? materiaisResult.message : ""}`
-      };
+    if (videosResult && resourcesResult) {
+      message = lessonId 
+        ? "Aula atualizada com sucesso!" 
+        : "Aula criada com sucesso!";
+    } else {
+      message = "Aula salva, mas houve problemas com vídeos ou materiais.";
     }
     
     return {
       success: true,
-      lessonId: newLessonId,
-      message: lessonId ? "Aula atualizada com sucesso!" : "Aula criada com sucesso!"
+      message,
+      lessonId: resultId
     };
+    
   } catch (error: any) {
     console.error("Erro ao salvar aula:", error);
     return {
       success: false,
-      error: error,
-      message: `Erro ao salvar aula: ${error.message || "Ocorreu um erro ao tentar salvar."}`
+      message: error.message || "Erro ao salvar aula."
     };
   }
-};
+}
+
+// Função auxiliar para calcular o tempo total dos vídeos em minutos
+function calculateTotalDuration(videos: any[]): number {
+  if (!videos || videos.length === 0) return 0;
+  
+  let totalDuration = 0;
+  for (const video of videos) {
+    if (video.duration_seconds) {
+      totalDuration += video.duration_seconds;
+    }
+  }
+  
+  // Converter segundos para minutos e arredondar para cima
+  return Math.ceil(totalDuration / 60);
+}

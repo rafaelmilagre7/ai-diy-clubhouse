@@ -7,27 +7,7 @@ import { toast } from "sonner";
 import { aulaFormSchema, AulaFormValues } from "../schemas/aulaFormSchema";
 import { fetchLessonVideos } from "../services/videoService";
 import { fetchLessonResources } from "../services/resourceService";
-
-export interface LearningLesson {
-  id?: string;
-  title: string;
-  description?: string;
-  module_id: string;
-  cover_image_url?: string;
-  published?: boolean;
-  difficulty_level?: string;
-  ai_assistant_enabled?: boolean;
-  ai_assistant_id?: string;
-  estimated_time_minutes?: number;
-  [key: string]: any; // Para outros campos opcionais
-}
-
-export interface LearningModule {
-  id: string;
-  title: string;
-  course_id?: string;
-  [key: string]: any; // Para outros campos opcionais
-}
+import { LearningLesson, LearningModule } from "@/lib/supabase/types";
 
 export const useAulaForm = (
   aula?: LearningLesson | null,

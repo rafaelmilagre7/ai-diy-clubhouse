@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { UseFormReturn } from "react-hook-form";
-import { AulaFormValues } from "../AulaStepWizard";
+import { AulaFormValues } from "../schemas/aulaFormSchema";
 import { FileUpload } from "@/components/formacao/comum/FileUpload";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";

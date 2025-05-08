@@ -10,7 +10,7 @@ import {
   FormDescription
 } from "@/components/ui/form";
 import { UseFormReturn } from "react-hook-form";
-import { AulaFormValues } from "../AulaStepWizard";
+import { AulaFormValues } from "../schemas/aulaFormSchema";
 import { Button } from "@/components/ui/button";
 import { ImageUploadImgBB } from "@/components/formacao/comum/ImageUploadImgBB";
 

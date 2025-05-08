@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -7,10 +6,12 @@ import useAulaSteps from "@/hooks/useAulaSteps";
 import { Loader2 } from "lucide-react";
 
 // Serviços e hooks
-import { useAulaForm, LearningLesson } from "./hooks/useAulaForm";
+import { useAulaForm } from "./hooks/useAulaForm";
 import { useAulaStorage } from "./hooks/useAulaStorage";
 import { saveLesson } from "./services/lessonService";
 import { AulaFormValues } from "./schemas/aulaFormSchema";
+import { DifficultyLevel } from "./types/aulaTypes";
+import { LearningLesson, LearningModule } from "@/lib/supabase/types";
 
 // Etapas do wizard
 import EtapaInfoBasica from "./etapas/EtapaInfoBasica";
@@ -21,13 +22,6 @@ import EtapaPublicacao from "./etapas/EtapaPublicacao";
 
 // Componente indicador de progresso
 import WizardProgress from "./WizardProgress";
-
-// Enum para nível de dificuldade
-export enum DifficultyLevel {
-  BEGINNER = "beginner",
-  INTERMEDIATE = "intermediate",
-  ADVANCED = "advanced"
-}
 
 interface AulaStepWizardProps {
   open: boolean;
@@ -116,7 +110,7 @@ const AulaStepWizard: React.FC<AulaStepWizardProps> = ({
     
     switch (currentStep) {
       case 0:
-        return <EtapaInfoBasica {...formProps} modules={modules} />;
+        return <EtapaInfoBasica {...formProps} modules={modules as LearningModule[]} />;
       case 1:
         return <EtapaMidia {...formProps} />;
       case 2:
@@ -126,7 +120,7 @@ const AulaStepWizard: React.FC<AulaStepWizardProps> = ({
       case 4:
         return <EtapaPublicacao {...formProps} onSubmit={() => form.handleSubmit(onSubmit)()} />;
       default:
-        return <EtapaInfoBasica {...formProps} modules={modules} />;
+        return <EtapaInfoBasica {...formProps} modules={modules as LearningModule[]} />;
     }
   };
 

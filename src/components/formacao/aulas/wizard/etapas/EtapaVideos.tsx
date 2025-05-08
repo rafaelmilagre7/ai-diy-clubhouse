@@ -3,7 +3,7 @@ import React from "react";
 import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { UseFormReturn } from "react-hook-form";
-import { AulaFormValues } from "../AulaStepWizard";
+import { AulaFormValues } from "../schemas/aulaFormSchema";
 import { VideosHeader } from "./components/VideosHeader";
 import { VideosList } from "./components/VideosList";
 import { useVideoManager } from "./hooks/useVideoManager";
