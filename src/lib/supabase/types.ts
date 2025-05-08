@@ -1,3 +1,4 @@
+
 export interface UserProfile {
   id: string;
   name: string | null;
@@ -168,3 +169,5 @@ export interface Progress {
   created_at: string;
   implementation_status?: string;
 }
+
+// Adicionar outras interfaces conforme necessário

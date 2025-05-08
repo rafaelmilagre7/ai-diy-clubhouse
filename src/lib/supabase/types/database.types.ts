@@ -1,313 +1,444 @@
 
-export type Database = {
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[]
+
+export interface Database {
   public: {
     Tables: {
-      learning_lesson_videos: {
-        Row: {
-          id: string;
-          lesson_id: string;
-          title: string;
-          description: string | null;
-          url: string;
-          thumbnail_url: string | null;
-          duration_seconds: number | null;
-          created_at: string;
-          order_index: number;
-          video_type: string | null;
-          file_size_bytes: number | null;
-          video_file_path: string | null;
-          video_file_name: string | null;
-          video_id: string | null;
-        };
-        Insert: {
-          id?: string;
-          lesson_id: string;
-          title: string;
-          description?: string | null;
-          url: string;
-          thumbnail_url?: string | null;
-          duration_seconds?: number | null;
-          created_at?: string;
-          order_index: number;
-          video_type?: string | null;
-          file_size_bytes?: number | null;
-          video_file_path?: string | null;
-          video_file_name?: string | null;
-          video_id?: string | null;
-        };
-        Update: {
-          id?: string;
-          lesson_id?: string;
-          title?: string;
-          description?: string | null;
-          url?: string;
-          thumbnail_url?: string | null;
-          duration_seconds?: number | null;
-          created_at?: string;
-          order_index?: number;
-          video_type?: string | null;
-          file_size_bytes?: number | null;
-          video_file_path?: string | null;
-          video_file_name?: string | null;
-          video_id?: string | null;
-        };
-      };
-      learning_lessons: {
-        Row: {
-          id: string;
-          title: string;
-          description: string | null;
-          content: any | null;
-          cover_image_url: string | null;
-          module_id: string;
-          published: boolean;
-          created_at: string;
-          updated_at: string;
-          order_index: number;
-          estimated_time_minutes: number | null;
-          ai_assistant_enabled: boolean;
-          ai_assistant_prompt: string | null;
-          difficulty_level: string | null;
-        };
-        Insert: {
-          id?: string;
-          title: string;
-          description?: string | null;
-          content?: any | null;
-          cover_image_url?: string | null;
-          module_id: string;
-          published?: boolean;
-          created_at?: string;
-          updated_at?: string;
-          order_index: number;
-          estimated_time_minutes?: number | null;
-          ai_assistant_enabled?: boolean;
-          ai_assistant_prompt?: string | null;
-          difficulty_level?: string | null;
-        };
-        Update: {
-          id?: string;
-          title?: string;
-          description?: string | null;
-          content?: any | null;
-          cover_image_url?: string | null;
-          module_id?: string;
-          published?: boolean;
-          created_at?: string;
-          updated_at?: string;
-          order_index?: number;
-          estimated_time_minutes?: number | null;
-          ai_assistant_enabled?: boolean;
-          ai_assistant_prompt?: string | null;
-          difficulty_level?: string | null;
-        };
-      };
-      learning_modules: {
-        Row: {
-          id: string;
-          title: string;
-          description: string | null;
-          cover_image_url: string | null;
-          course_id: string;
-          published: boolean;
-          created_at: string;
-          updated_at: string;
-          order_index: number;
-        };
-        Insert: {
-          id?: string;
-          title: string;
-          description?: string | null;
-          cover_image_url?: string | null;
-          course_id: string;
-          published?: boolean;
-          created_at?: string;
-          updated_at?: string;
-          order_index: number;
-        };
-        Update: {
-          id?: string;
-          title?: string;
-          description?: string | null;
-          cover_image_url?: string | null;
-          course_id?: string;
-          published?: boolean;
-          created_at?: string;
-          updated_at?: string;
-          order_index?: number;
-        };
-      };
       learning_courses: {
         Row: {
-          id: string;
-          title: string;
-          description: string | null;
-          cover_image_url: string | null;
-          slug: string;
-          published: boolean;
-          created_at: string;
-          updated_at: string;
-          order_index: number;
-          created_by: string | null;
-        };
+          cover_image_url: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          order_index: number
+          published: boolean
+          slug: string
+          title: string
+          updated_at: string
+        }
         Insert: {
-          id?: string;
-          title: string;
-          description?: string | null;
-          cover_image_url?: string | null;
-          slug: string;
-          published?: boolean;
-          created_at?: string;
-          updated_at?: string;
-          order_index?: number;
-          created_by?: string | null;
-        };
+          cover_image_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          order_index?: number
+          published?: boolean
+          slug: string
+          title: string
+          updated_at?: string
+        }
         Update: {
-          id?: string;
-          title?: string;
-          description?: string | null;
-          cover_image_url?: string | null;
-          slug?: string;
-          published?: boolean;
-          created_at?: string;
-          updated_at?: string;
-          order_index?: number;
-          created_by?: string | null;
-        };
-      };
-      learning_progress: {
-        Row: {
-          id: string;
-          user_id: string;
-          lesson_id: string;
-          progress_percentage: number;
-          started_at: string;
-          completed_at: string | null;
-          notes: string | null;
-          created_at: string;
-          updated_at: string;
-          last_position_seconds: number | null;
-          video_progress: Record<string, number> | null;
-        };
-        Insert: {
-          id?: string;
-          user_id: string;
-          lesson_id: string;
-          progress_percentage?: number;
-          started_at?: string;
-          completed_at?: string | null;
-          notes?: string | null;
-          created_at?: string;
-          updated_at?: string;
-          last_position_seconds?: number | null;
-          video_progress?: Record<string, number> | null;
-        };
-        Update: {
-          id?: string;
-          user_id?: string;
-          lesson_id?: string;
-          progress_percentage?: number;
-          started_at?: string;
-          completed_at?: string | null;
-          notes?: string | null;
-          created_at?: string;
-          updated_at?: string;
-          last_position_seconds?: number | null;
-          video_progress?: Record<string, number> | null;
-        };
-      };
-      learning_resources: {
-        Row: {
-          id: string;
-          lesson_id: string;
-          name: string;
-          description: string | null;
-          file_url: string;
-          file_type: string | null;
-          file_size_bytes: number | null;
-          created_at: string;
-          order_index: number;
-        };
-        Insert: {
-          id?: string;
-          lesson_id: string;
-          name: string;
-          description?: string | null;
-          file_url: string;
-          file_type?: string | null;
-          file_size_bytes?: number | null;
-          created_at?: string;
-          order_index: number;
-        };
-        Update: {
-          id?: string;
-          lesson_id?: string;
-          name?: string;
-          description?: string | null;
-          file_url?: string;
-          file_type?: string | null;
-          file_size_bytes?: number | null;
-          created_at?: string;
-          order_index?: number;
-        };
-      };
-      learning_lesson_tools: {
-        Row: {
-          id: string;
-          lesson_id: string;
-          tool_id: string;
-          created_at: string;
-          order_index: number;
-        };
-        Insert: {
-          id?: string;
-          lesson_id: string;
-          tool_id: string;
-          created_at?: string;
-          order_index: number;
-        };
-        Update: {
-          id?: string;
-          lesson_id?: string;
-          tool_id?: string;
-          created_at?: string;
-          order_index?: number;
-        };
-      };
+          cover_image_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          order_index?: number
+          published?: boolean
+          slug?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       learning_comments: {
         Row: {
-          id: string;
-          user_id: string;
-          lesson_id: string;
-          content: string;
-          parent_id: string | null;
-          created_at: string;
-          updated_at: string;
-          is_hidden: boolean;
-        };
+          content: string
+          created_at: string
+          id: string
+          is_hidden: boolean
+          lesson_id: string
+          likes_count: number
+          parent_id: string | null
+          updated_at: string
+          user_id: string
+        }
         Insert: {
-          id?: string;
-          user_id: string;
-          lesson_id: string;
-          content: string;
-          parent_id?: string | null;
-          created_at?: string;
-          updated_at?: string;
-          is_hidden?: boolean;
-        };
+          content: string
+          created_at?: string
+          id?: string
+          is_hidden?: boolean
+          lesson_id: string
+          likes_count?: number
+          parent_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
         Update: {
-          id?: string;
-          user_id?: string;
-          lesson_id?: string;
-          content?: string;
-          parent_id?: string | null;
-          created_at?: string;
-          updated_at?: string;
-          is_hidden?: boolean;
-        };
-      };
-      // Definição mínima necessária para compilação
-      // Outras tabelas seriam adicionadas conforme necessário
-    };
-  };
-};
+          content?: string
+          created_at?: string
+          id?: string
+          is_hidden?: boolean
+          lesson_id?: string
+          likes_count?: number
+          parent_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      learning_lessons: {
+        Row: {
+          ai_assistant_enabled: boolean
+          ai_assistant_prompt: string | null
+          content: Json | null
+          cover_image_url: string | null
+          created_at: string
+          description: string | null
+          estimated_time_minutes: number | null
+          id: string
+          module_id: string
+          order_index: number
+          published: boolean
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          ai_assistant_enabled?: boolean
+          ai_assistant_prompt?: string | null
+          content?: Json | null
+          cover_image_url?: string | null
+          created_at?: string
+          description?: string | null
+          estimated_time_minutes?: number | null
+          id?: string
+          module_id: string
+          order_index: number
+          published?: boolean
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          ai_assistant_enabled?: boolean
+          ai_assistant_prompt?: string | null
+          content?: Json | null
+          cover_image_url?: string | null
+          created_at?: string
+          description?: string | null
+          estimated_time_minutes?: number | null
+          id?: string
+          module_id?: string
+          order_index?: number
+          published?: boolean
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      learning_lesson_videos: {
+        Row: {
+          created_at: string
+          description: string | null
+          duration_seconds: number | null
+          file_size_bytes: number | null
+          id: string
+          lesson_id: string
+          order_index: number
+          thumbnail_url: string | null
+          title: string
+          url: string
+          video_file_name: string | null
+          video_file_path: string | null
+          video_id: string | null
+          video_type: string | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          duration_seconds?: number | null
+          file_size_bytes?: number | null
+          id?: string
+          lesson_id: string
+          order_index: number
+          thumbnail_url?: string | null
+          title: string
+          url: string
+          video_file_name?: string | null
+          video_file_path?: string | null
+          video_id?: string | null
+          video_type?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          duration_seconds?: number | null
+          file_size_bytes?: number | null
+          id?: string
+          lesson_id?: string
+          order_index?: number
+          thumbnail_url?: string | null
+          title?: string
+          url?: string
+          video_file_name?: string | null
+          video_file_path?: string | null
+          video_id?: string | null
+          video_type?: string | null
+        }
+        Relationships: []
+      }
+      learning_modules: {
+        Row: {
+          course_id: string
+          cover_image_url: string | null
+          created_at: string
+          description: string | null
+          id: string
+          order_index: number
+          published: boolean
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          course_id: string
+          cover_image_url?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          order_index: number
+          published?: boolean
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          course_id?: string
+          cover_image_url?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          order_index?: number
+          published?: boolean
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      learning_progress: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          id: string
+          last_position_seconds: number | null
+          lesson_id: string
+          notes: string | null
+          progress_percentage: number
+          started_at: string
+          updated_at: string
+          user_id: string
+          video_progress: Json
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          last_position_seconds?: number | null
+          lesson_id: string
+          notes?: string | null
+          progress_percentage?: number
+          started_at?: string
+          updated_at?: string
+          user_id: string
+          video_progress?: Json
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          last_position_seconds?: number | null
+          lesson_id?: string
+          notes?: string | null
+          progress_percentage?: number
+          started_at?: string
+          updated_at?: string
+          user_id?: string
+          video_progress?: Json
+        }
+        Relationships: []
+      }
+      learning_resources: {
+        Row: {
+          created_at: string
+          description: string | null
+          file_size_bytes: number | null
+          file_type: string | null
+          file_url: string
+          id: string
+          lesson_id: string
+          name: string
+          order_index: number
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          file_size_bytes?: number | null
+          file_type?: string | null
+          file_url: string
+          id?: string
+          lesson_id: string
+          name: string
+          order_index: number
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          file_size_bytes?: number | null
+          file_type?: string | null
+          file_url?: string
+          id?: string
+          lesson_id?: string
+          name?: string
+          order_index?: number
+        }
+        Relationships: []
+      }
+      modules: {
+        Row: {
+          certificate_template: Json | null
+          content: Json
+          created_at: string
+          estimated_time_minutes: number | null
+          id: string
+          metrics: Json | null
+          module_order: number
+          solution_id: string
+          title: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          certificate_template?: Json | null
+          content: Json
+          created_at?: string
+          estimated_time_minutes?: number | null
+          id?: string
+          metrics?: Json | null
+          module_order: number
+          solution_id: string
+          title: string
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          certificate_template?: Json | null
+          content?: Json
+          created_at?: string
+          estimated_time_minutes?: number | null
+          id?: string
+          metrics?: Json | null
+          module_order?: number
+          solution_id?: string
+          title?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          company_name: string | null
+          created_at: string
+          email: string
+          id: string
+          industry: string | null
+          name: string | null
+          role: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          company_name?: string | null
+          created_at?: string
+          email: string
+          id: string
+          industry?: string | null
+          name?: string | null
+          role?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          company_name?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          industry?: string | null
+          name?: string | null
+          role?: string
+        }
+        Relationships: []
+      }
+      solutions: {
+        Row: {
+          category: string
+          checklist_items: Json[]
+          completion_requirements: Json
+          created_at: string
+          description: string
+          difficulty: string
+          estimated_time: number | null
+          id: string
+          implementation_steps: Json[]
+          published: boolean
+          related_solutions: string[]
+          slug: string
+          success_rate: number
+          tags: string[]
+          thumbnail_url: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          checklist_items?: Json[]
+          completion_requirements?: Json
+          created_at?: string
+          description: string
+          difficulty: string
+          estimated_time?: number | null
+          id?: string
+          implementation_steps?: Json[]
+          published?: boolean
+          related_solutions?: string[]
+          slug: string
+          success_rate?: number
+          tags?: string[]
+          thumbnail_url?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          checklist_items?: Json[]
+          completion_requirements?: Json
+          created_at?: string
+          description?: string
+          difficulty?: string
+          estimated_time?: number | null
+          id?: string
+          implementation_steps?: Json[]
+          published?: boolean
+          related_solutions?: string[]
+          slug?: string
+          success_rate?: number
+          tags?: string[]
+          thumbnail_url?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+    }
+    Views: {
+      // Definições de visualizações...
+    }
+    Functions: {
+      // Definições de funções...
+    }
+  }
+}

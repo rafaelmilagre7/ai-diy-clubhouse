@@ -1,157 +1,87 @@
 
 /**
- * Extrai o ID de um vídeo do YouTube a partir da URL
- * @param url URL do vídeo no YouTube (diversos formatos suportados)
- * @returns ID do vídeo ou null se não for possível extrair
+ * Extrai o ID de um vídeo do YouTube a partir de uma URL
  */
 export function getYoutubeVideoId(url: string): string | null {
   if (!url) return null;
   
-  // Tentar com padrão youtu.be/ID
-  const shortUrlPattern = /youtu\.be\/([^?&#]+)/;
-  const shortMatch = url.match(shortUrlPattern);
-  if (shortMatch && shortMatch[1]) {
-    return shortMatch[1];
-  }
+  // Regex para extrair ID do YouTube de vários formatos de URL
+  const regex = /(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+  const match = url.match(regex);
   
-  // Tentar com padrão youtube.com/watch?v=ID
-  const watchPattern = /youtube\.com\/watch\?v=([^&#]+)/;
-  const watchMatch = url.match(watchPattern);
-  if (watchMatch && watchMatch[1]) {
-    return watchMatch[1];
-  }
-  
-  // Tentar com padrão youtube.com/embed/ID
-  const embedPattern = /youtube\.com\/embed\/([^?&#]+)/;
-  const embedMatch = url.match(embedPattern);
-  if (embedMatch && embedMatch[1]) {
-    return embedMatch[1];
-  }
-  
-  return null;
+  return match ? match[1] : null;
 }
 
 /**
- * Converte uma URL do YouTube para o formato de incorporação (embed)
- * @param url URL do YouTube em qualquer formato suportado
- * @returns URL no formato de incorporação ou a URL original se não for possível converter
+ * Obtém a URL da thumbnail de um vídeo do YouTube
  */
-export function youtubeUrlToEmbed(url: string): string {
-  const videoId = getYoutubeVideoId(url);
-  if (!videoId) return url;
-  
-  return `https://www.youtube.com/embed/${videoId}`;
+export function getYoutubeThumbnailUrl(videoId: string): string {
+  return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
 }
 
 /**
- * Formata a duração de um vídeo em segundos para o formato MM:SS ou HH:MM:SS
- * @param seconds Duração do vídeo em segundos
- * @returns String formatada com a duração
+ * Converte segundos em formato legível (HH:MM:SS)
  */
 export function formatVideoDuration(seconds: number): string {
-  if (!seconds || isNaN(seconds)) return "00:00";
+  if (!seconds || isNaN(seconds)) return '00:00';
   
   const hours = Math.floor(seconds / 3600);
   const minutes = Math.floor((seconds % 3600) / 60);
   const remainingSeconds = Math.floor(seconds % 60);
   
-  const pad = (num: number) => num.toString().padStart(2, '0');
-  
   if (hours > 0) {
-    return `${pad(hours)}:${pad(minutes)}:${pad(remainingSeconds)}`;
+    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
   }
   
-  return `${pad(minutes)}:${pad(remainingSeconds)}`;
+  return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+}
+
+/**
+ * Estima a duração de um arquivo de vídeo com base no tamanho do arquivo
+ * Este é apenas um cálculo aproximado
+ */
+export function estimateVideoDuration(fileSizeBytes: number): number {
+  // Aproximação: 1MB ≈ 8 segundos de vídeo em qualidade média
+  const megabytes = fileSizeBytes / (1024 * 1024);
+  return Math.round(megabytes * 8);
+}
+
+/**
+ * Converte uma URL do YouTube para o formato de incorporação
+ */
+export function youtubeUrlToEmbed(url: string): string {
+  const videoId = getYoutubeVideoId(url);
+  if (!videoId) return '';
+  
+  return `https://www.youtube.com/embed/${videoId}`;
 }
 
 /**
  * Determina o tipo de vídeo com base na URL
- * @param url URL do vídeo
- * @returns Tipo de vídeo ('youtube', 'panda' ou 'other')
  */
-export function getVideoTypeFromUrl(url: string): 'youtube' | 'panda' | 'other' {
+export function getVideoTypeFromUrl(url: string): 'youtube' | 'vimeo' | 'pandavideo' | 'other' {
   if (!url) return 'other';
   
   if (url.includes('youtube.com') || url.includes('youtu.be')) {
     return 'youtube';
-  }
-  
-  if (url.includes('pandavideo.com.br') || url.includes('pandavideo.com')) {
-    return 'panda';
+  } else if (url.includes('vimeo.com')) {
+    return 'vimeo';
+  } else if (url.includes('pandavideo.com') || url.includes('player-vz')) {
+    return 'pandavideo';
   }
   
   return 'other';
 }
 
 /**
- * Extrai o ID de um vídeo do Panda Video a partir da URL
- * @param url URL do vídeo no Panda Video ou iframe
- * @returns ID do vídeo ou null se não for possível extrair
+ * Extrai o ID de um vídeo do Panda Video a partir de uma URL
  */
 export function getPandaVideoId(url: string): string | null {
   if (!url) return null;
   
-  // Padrões para extração do ID do Panda Video
+  // Exemplo: https://player-vz-d6ebf577-797.tv.pandavideo.com.br/embed/?v=1191d81c-13eb-46b6-bba5-f302e364d0e2
+  const regex = /[?&]v=([a-zA-Z0-9-]+)/;
+  const match = url.match(regex);
   
-  // Padrão para URLs diretas do player
-  const playerPattern = /player-[\w-]+\.tv\.pandavideo\.com\.br\/embed\/\?v=([\w-]+)/;
-  const playerMatch = url.match(playerPattern);
-  if (playerMatch && playerMatch[1]) {
-    return playerMatch[1];
-  }
-  
-  // Padrão para URLs de embed padrão
-  const embedPattern = /pandavideo\.com\.br\/embed\/\?v=([\w-]+)/;
-  const embedMatch = url.match(embedPattern);
-  if (embedMatch && embedMatch[1]) {
-    return embedMatch[1];
-  }
-  
-  // Padrão para iframe
-  const iframePattern = /id="panda-([\w-]+)"|src="https:\/\/player-[\w-]+\.tv\.pandavideo\.com\.br\/embed\/\?v=([\w-]+)"/;
-  const iframeMatch = url.match(iframePattern);
-  if (iframeMatch) {
-    return iframeMatch[1] || iframeMatch[2];
-  }
-  
-  // Se a própria URL já for um ID
-  if (/^[\w-]{36}$/.test(url)) {
-    return url;
-  }
-  
-  return null;
-}
-
-/**
- * Obtém a URL da thumbnail de um vídeo do YouTube
- * @param videoId ID do vídeo do YouTube
- * @param quality Qualidade da thumbnail (default, mq, hq, sd, maxres)
- * @returns URL da thumbnail
- */
-export function getYoutubeThumbnailUrl(videoId: string, quality: 'default' | 'mq' | 'hq' | 'sd' | 'maxres' = 'hq'): string {
-  if (!videoId) return '';
-  
-  return `https://img.youtube.com/vi/${videoId}/${quality}default.jpg`;
-}
-
-/**
- * Estima a duração de um vídeo com base no tamanho do arquivo
- * @param fileSize Tamanho do arquivo em bytes
- * @param quality Qualidade estimada do vídeo (low, medium, high)
- * @returns Duração estimada em segundos
- */
-export function estimateVideoDuration(fileSize: number, quality: 'low' | 'medium' | 'high' = 'medium'): number {
-  if (!fileSize) return 0;
-  
-  // Taxas de bits estimadas (bytes por segundo) para diferentes qualidades
-  const bitrates = {
-    low: 150000 / 8,     // 150 kbps
-    medium: 700000 / 8,  // 700 kbps
-    high: 2000000 / 8    // 2 Mbps
-  };
-  
-  // Estimar duração baseada no tamanho e bitrate
-  const durationSeconds = fileSize / bitrates[quality];
-  
-  return Math.round(durationSeconds);
+  return match ? match[1] : null;
 }
