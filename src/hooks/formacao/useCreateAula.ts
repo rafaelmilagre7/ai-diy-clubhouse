@@ -30,13 +30,13 @@ export const useCreateAula = () => {
       const aulaToSave = {
         title: aulaData.title,
         description: aulaData.description || '',
-        course_id: aulaData.courseId, // ID do curso relacionado
-        module_id: aulaData.moduleId, // ID do módulo relacionado
+        course_id: aulaData.formacao_id, // Usar formacao_id em vez de courseId
+        module_id: aulaData.modulo_id, // Usar modulo_id como está definido em AulaFormValues
         content: aulaData.content || {},
         cover_image_url: aulaData.coverImageUrl || null,
-        estimated_time_minutes: aulaData.estimatedTimeMinutes || 0,
+        estimated_time_minutes: aulaData.order_index || 0, // Usar um valor padrão para estimated_time
         published: aulaData.published || false,
-        order_index: aulaData.orderIndex || 0,
+        order_index: aulaData.order_index || 0, // Usar order_index como está definido
         ai_assistant_enabled: aulaData.aiAssistantEnabled !== false, // default true
         ai_assistant_prompt: aulaData.aiAssistantPrompt || ''
       };
@@ -86,7 +86,7 @@ export const useCreateAula = () => {
           toast({
             title: "Aviso",
             description: "Aula criada, mas houve um problema ao salvar alguns vídeos.",
-            variant: "warning",
+            variant: "destructive",
           });
         } else {
           console.log("Vídeos salvos com sucesso");
@@ -119,7 +119,7 @@ export const useCreateAula = () => {
           toast({
             title: "Aviso",
             description: "Aula criada, mas houve um problema ao salvar alguns recursos.",
-            variant: "warning",
+            variant: "destructive",
           });
         } else {
           console.log("Recursos salvos com sucesso");
