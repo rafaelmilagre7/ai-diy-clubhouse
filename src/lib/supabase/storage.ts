@@ -1,10 +1,14 @@
+
 import { supabase } from "./client";
+import { createStoragePublicPolicy } from "./rpc";
 
 /**
  * Verifica se um bucket existe e cria se não existir
  */
 export const ensureBucketExists = async (bucketName: string): Promise<boolean> => {
   try {
+    console.log(`Verificando se o bucket ${bucketName} existe...`);
+    
     // Verificar se o bucket existe
     const { data: buckets, error } = await supabase.storage.listBuckets();
     
@@ -15,6 +19,7 @@ export const ensureBucketExists = async (bucketName: string): Promise<boolean> =
     
     // Se o bucket já existe, retorna true
     if (buckets?.some(b => b.name === bucketName)) {
+      console.log(`Bucket ${bucketName} já existe.`);
       return true;
     }
     
@@ -24,18 +29,39 @@ export const ensureBucketExists = async (bucketName: string): Promise<boolean> =
       bucketName,
       {
         public: true,
-        fileSizeLimit: 104857600, // 100MB
+        fileSizeLimit: bucketName.includes('video') ? 314572800 : 104857600, // 300MB para vídeos, 100MB para outros
       }
     );
     
     if (createError) {
       console.error(`Erro ao criar bucket ${bucketName}:`, createError);
+      
+      // Se falhou por permissão ou RLS, tentar via RPC
+      if (createError.message.includes('permission') || createError.message.includes('policy')) {
+        try {
+          console.log(`Tentando criar bucket ${bucketName} via RPC...`);
+          const { success, error: rpcError } = await createStoragePublicPolicy(bucketName);
+          
+          if (rpcError) {
+            console.error(`Erro ao criar bucket ${bucketName} via RPC:`, rpcError);
+            return false;
+          }
+          
+          return success;
+        } catch (rpcException) {
+          console.error(`Exceção ao criar bucket ${bucketName} via RPC:`, rpcException);
+          return false;
+        }
+      }
+      
       return false;
     }
     
     // Criar políticas de acesso público para o bucket
     try {
+      console.log(`Configurando políticas para ${bucketName}...`);
       await createStoragePublicPolicy(bucketName);
+      console.log(`Políticas configuradas para ${bucketName}`);
     } catch (policyError) {
       console.error(`Erro ao definir políticas para ${bucketName}:`, policyError);
       // Não falha o processo se não conseguir definir políticas
@@ -225,95 +251,69 @@ export const formatVideoDuration = (seconds: number): string => {
 
 // Função para configurar buckets para o módulo de aprendizagem
 export const setupLearningStorageBuckets = async () => {
-  const requiredBuckets = ['learning_materials', 'solution_files', 'course_images', 'learning_videos'];
-  let allSuccessful = true;
-  let errorMessages = [];
+  const requiredBuckets = ['learning_materials', 'course_images', 'learning_videos', 'solution_files'];
   
-  for (const bucket of requiredBuckets) {
+  try {
+    console.log("Configurando buckets de aprendizagem via RPC...");
+    
+    // Tentar usar a função RPC dedicada primeiro (mais confiável)
     try {
-      const success = await ensureBucketExists(bucket);
-      if (!success) {
+      const { data, error } = await supabase.rpc('setup_learning_storage_buckets');
+      if (!error) {
+        console.log("Configuração de buckets via RPC bem-sucedida:", data);
+        return data || { 
+          success: true, 
+          message: 'Buckets configurados com sucesso via RPC'
+        };
+      } else {
+        console.error("Erro na RPC setup_learning_storage_buckets:", error);
+        // Continuar com o método tradicional como fallback
+      }
+    } catch (rpcError) {
+      console.error("Exceção na RPC setup_learning_storage_buckets:", rpcError);
+      // Continuar com o método tradicional como fallback
+    }
+    
+    console.log("Usando método tradicional para configurar buckets...");
+    let allSuccessful = true;
+    let errorMessages: string[] = [];
+    let successMessages: string[] = [];
+    
+    for (const bucket of requiredBuckets) {
+      try {
+        console.log(`Configurando bucket ${bucket}...`);
+        const success = await ensureBucketExists(bucket);
+        
+        if (success) {
+          successMessages.push(`Bucket ${bucket} configurado com sucesso`);
+          console.log(`✓ Bucket ${bucket} configurado com sucesso`);
+        } else {
+          allSuccessful = false;
+          errorMessages.push(`Falha ao configurar bucket ${bucket}`);
+          console.error(`✗ Falha ao configurar bucket ${bucket}`);
+        }
+      } catch (error) {
+        console.error(`✗ Erro ao configurar bucket ${bucket}:`, error);
         allSuccessful = false;
-        errorMessages.push(`Falha ao configurar bucket ${bucket}`);
-      }
-    } catch (error) {
-      console.error(`Erro ao configurar bucket ${bucket}:`, error);
-      allSuccessful = false;
-      errorMessages.push(`Erro ao configurar bucket ${bucket}: ${error instanceof Error ? error.message : String(error)}`);
-    }
-  }
-  
-  return {
-    success: allSuccessful,
-    message: allSuccessful ? 'Todos os buckets configurados com sucesso' : 
-      `Alguns buckets não puderam ser configurados: ${errorMessages.join(', ')}`
-  };
-};
-
-// Função para extrair o ID do vídeo do Panda Video de uma URL
-export const getPandaVideoId = (url: string): string | null => {
-  try {
-    // Formato comum do player do Panda Video
-    if (url.includes('pandavideo.com.br/embed')) {
-      // Formato: https://player-vz-XXXXX.tv.pandavideo.com.br/embed/?v=VIDEO_ID
-      const match = url.match(/[?&]v=([^&]+)/);
-      if (match && match[1]) {
-        return match[1];
+        errorMessages.push(`Erro ao configurar bucket ${bucket}: ${error instanceof Error ? error.message : String(error)}`);
       }
     }
-    
-    // Formato comum do iframe do Panda Video (id="panda-VIDEO_ID")
-    const iframeMatch = url.match(/id="panda-(.*?)"/i);
-    if (iframeMatch && iframeMatch[1]) {
-      return iframeMatch[1];
-    }
-    
-    // Formato alternativo
-    if (url.includes('/embed/?') && url.includes('pandavideo')) {
-      const urlObj = new URL(url);
-      return urlObj.searchParams.get('v');
-    }
-    
-    return null;
-  } catch (error) {
-    console.error('Erro ao extrair ID do vídeo Panda:', error);
-    return null;
-  }
-};
-
-// Função para obter a URL da thumbnail do Panda Video
-export const getPandaThumbnailUrl = (videoId: string): string => {
-  return `https://thumbnails-vz-d6ebf577-797.tv.pandavideo.com.br/thumbnails/${videoId}/default.jpg`;
-};
-
-// Função para extrair informações do iframe do Panda Video
-export const extractPandaVideoInfo = (iframeCode: string): {
-  videoId: string;
-  url: string;
-  thumbnailUrl: string;
-} | null => {
-  try {
-    // Extrair o ID do vídeo do código de incorporação (iframe)
-    const idMatch = iframeCode.match(/id="panda-(.*?)"/i);
-    const srcMatch = iframeCode.match(/src="(.*?)"/i);
-    
-    if (!idMatch || idMatch.length < 2 || !srcMatch || srcMatch.length < 2) {
-      return null;
-    }
-    
-    const videoId = idMatch[1];
-    const embedUrl = srcMatch[1];
-    
-    // Construir URL da thumbnail com base no ID do vídeo (formato padrão do Panda Video)
-    const thumbnailUrl = `https://thumbnails-vz-d6ebf577-797.tv.pandavideo.com.br/thumbnails/${videoId}/default.jpg`;
     
     return {
-      videoId: videoId,
-      url: embedUrl,
-      thumbnailUrl: thumbnailUrl
+      success: allSuccessful,
+      message: allSuccessful ? 
+        'Todos os buckets configurados com sucesso' : 
+        `Alguns buckets não puderam ser configurados: ${errorMessages.join(', ')}`,
+      details: {
+        success: successMessages,
+        errors: errorMessages
+      }
     };
   } catch (error) {
-    console.error("Erro ao extrair informações do iframe:", error);
-    return null;
+    console.error("Erro ao configurar buckets:", error);
+    return {
+      success: false,
+      message: `Erro ao configurar buckets: ${error instanceof Error ? error.message : String(error)}`
+    };
   }
 };

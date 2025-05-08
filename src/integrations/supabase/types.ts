@@ -2795,6 +2795,10 @@ export type Database = {
         Args: { target: Json; source: Json }
         Returns: Json
       }
+      setup_learning_storage_buckets: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       validateuserrole: {
         Args: { profileid: string; currentrole: string; email: string }
         Returns: string

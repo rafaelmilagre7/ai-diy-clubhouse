@@ -1,219 +1,198 @@
 
 import React from "react";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-  FormDescription
-} from "@/components/ui/form";
-import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
 import { UseFormReturn } from "react-hook-form";
 import { AulaFormValues } from "../AulaStepWizard";
-import { Input } from "@/components/ui/input";
-import { AlertCircle, CheckCircle } from "lucide-react";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { Save, HelpCircle, Loader2, CheckCircle } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface EtapaPublicacaoProps {
   form: UseFormReturn<AulaFormValues>;
   onNext: () => void;
   onPrevious: () => void;
-  onSubmit: () => void;
   isSaving: boolean;
+  onSubmit: () => Promise<void>;
 }
 
-const EtapaPublicacao: React.FC<EtapaPublicacaoProps> = ({
-  form,
-  onPrevious,
-  onSubmit,
-  isSaving
+const EtapaPublicacao: React.FC<EtapaPublicacaoProps> = ({ 
+  form, 
+  onPrevious, 
+  isSaving,
+  onSubmit
 }) => {
-  const aiAssistantEnabled = form.watch("aiAssistantEnabled");
-  const title = form.watch("title");
-  const moduleId = form.watch("moduleId");
-  const coverImageUrl = form.watch("coverImageUrl");
-  const difficultyLevel = form.watch("difficultyLevel");
+  const { register, watch, formState: { errors } } = form;
+  const aiAssistantEnabled = watch("aiAssistantEnabled");
+  const published = watch("published");
   
-  const dadosObrigatoriosPreenchidos = !!title && !!moduleId;
+  const [saving, setSaving] = React.useState(false);
+  const [saveStatus, setSaveStatus] = React.useState<"idle" | "saving" | "success" | "error">("idle");
+  const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
   
-  const handlePublish = () => {
-    if (dadosObrigatoriosPreenchidos) {
-      onSubmit();
-    } else {
-      form.trigger();
+  const handleSubmit = async () => {
+    try {
+      setSaving(true);
+      setSaveStatus("saving");
+      setErrorMessage(null);
+      
+      await onSubmit();
+      
+      setSaveStatus("success");
+    } catch (error: any) {
+      console.error("Erro ao salvar aula:", error);
+      setSaveStatus("error");
+      setErrorMessage(error.message || "Ocorreu um erro desconhecido ao salvar a aula.");
+    } finally {
+      setSaving(false);
     }
   };
-
-  const getDifficultyLabel = (difficulty: string) => {
-    switch(difficulty) {
-      case 'beginner':
-        return 'Iniciante';
-      case 'intermediate':
-        return 'Intermediário';
-      case 'advanced':
-        return 'Avançado';
-      default:
-        return 'Iniciante';
-    }
-  };
-
-  const getDifficultyColor = (difficulty: string) => {
-    switch(difficulty) {
-      case 'beginner':
-        return 'bg-green-100 text-green-800 border-green-200';
-      case 'intermediate':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'advanced':
-        return 'bg-red-100 text-red-800 border-red-200';
-      default:
-        return 'bg-green-100 text-green-800 border-green-200';
-    }
-  };
-
+  
   return (
-    <Form {...form}>
-      <div className="space-y-6 py-4">
-        <Alert variant={dadosObrigatoriosPreenchidos ? "default" : "destructive"}>
-          {dadosObrigatoriosPreenchidos ? (
-            <CheckCircle className="h-4 w-4" />
-          ) : (
-            <AlertCircle className="h-4 w-4" />
-          )}
-          <AlertTitle>
-            {dadosObrigatoriosPreenchidos 
-              ? "Pronto para publicar!" 
-              : "Dados obrigatórios faltando"
-            }
-          </AlertTitle>
-          <AlertDescription>
-            {dadosObrigatoriosPreenchidos
-              ? "Todos os dados obrigatórios foram preenchidos."
-              : "Você precisa preencher todos os campos obrigatórios nas etapas anteriores."
-            }
-          </AlertDescription>
-        </Alert>
-
-        <div className="space-y-4">
-          <FormField
-            control={form.control}
-            name="aiAssistantEnabled"
-            render={({ field }) => (
-              <FormItem className="flex flex-row items-center justify-between">
-                <div className="space-y-0.5">
-                  <FormLabel className="text-base">Assistente de IA</FormLabel>
-                  <FormDescription>
-                    Habilitar assistente de IA para esta aula?
-                  </FormDescription>
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-xl">Configurações de Publicação</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <div className="flex items-center">
+                  <Label htmlFor="published" className="text-base font-medium">Publicar aula</Label>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <HelpCircle className="h-4 w-4 text-muted-foreground ml-2" />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p className="max-w-xs">
+                          Quando publicada, a aula ficará visível para os alunos.
+                          Você ainda poderá fazer alterações depois.
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 </div>
-                <FormControl>
-                  <Switch
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
-                </FormControl>
-              </FormItem>
-            )}
-          />
-
-          {aiAssistantEnabled && (
-            <FormField
-              control={form.control}
-              name="aiAssistantPrompt"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>ID do Assistente OpenAI</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Ex: asst_abc123"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormDescription>
-                    Insira o ID do assistente criado no OpenAI Studio (formato: asst_xyz)
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          )}
-
-          <FormField
-            control={form.control}
-            name="published"
-            render={({ field }) => (
-              <FormItem className="flex flex-row items-center justify-between border p-4 rounded-md">
-                <div className="space-y-0.5">
-                  <FormLabel className="text-base">Publicar aula?</FormLabel>
-                  <FormDescription>
-                    Quando publicada, a aula ficará visível para os alunos
-                  </FormDescription>
-                </div>
-                <FormControl>
-                  <Switch
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
-                </FormControl>
-              </FormItem>
-            )}
-          />
-        </div>
-        
-        <div className="space-y-4 mt-6">
-          <h3 className="font-medium">Informações da Aula</h3>
-          <div className="space-y-2">
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Título:</span>
-              <span className="font-medium">{title || "Não definido"}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Imagem de Capa:</span>
-              <span className="font-medium">{coverImageUrl ? "Definida" : "Não definida"}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Nível de Dificuldade:</span>
-              <span className="font-medium">
-                {difficultyLevel && (
-                  <Badge className={getDifficultyColor(difficultyLevel)}>
-                    {getDifficultyLabel(difficultyLevel)}
-                  </Badge>
-                )}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Assistente de IA:</span>
-              <span className="font-medium">{aiAssistantEnabled ? "Ativado" : "Desativado"}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Status:</span>
-              <span className="font-medium">{form.getValues().published ? "Publicado" : "Rascunho"}</span>
+                <p className="text-sm text-muted-foreground">
+                  {published ? "A aula será visível para os alunos" : "A aula ficará em modo rascunho"}
+                </p>
+              </div>
+              <Switch 
+                id="published" 
+                checked={published}
+                {...register("published")}
+              />
             </div>
           </div>
+
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <div className="flex items-center">
+                  <Label htmlFor="aiAssistantEnabled" className="text-base font-medium">Habilitar assistente IA</Label>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <HelpCircle className="h-4 w-4 text-muted-foreground ml-2" />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p className="max-w-xs">
+                          Quando habilitado, um assistente baseado em IA estará disponível 
+                          para os alunos responderem dúvidas sobre esta aula.
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  {aiAssistantEnabled ? 
+                    "Os alunos poderão fazer perguntas sobre a aula" : 
+                    "O assistente IA não estará disponível para esta aula"}
+                </p>
+              </div>
+              <Switch 
+                id="aiAssistantEnabled" 
+                checked={aiAssistantEnabled}
+                {...register("aiAssistantEnabled")}
+              />
+            </div>
+            
+            {aiAssistantEnabled && (
+              <div className="space-y-2 pt-2">
+                <Label htmlFor="aiAssistantPrompt" className="text-sm font-medium">
+                  Instruções para o assistente IA
+                </Label>
+                <Textarea 
+                  id="aiAssistantPrompt"
+                  placeholder="Insira instruções específicas para personalizar o assistente de IA para esta aula. Ex: 'Você é um especialista em marketing digital que responde dúvidas sobre esta aula.'"
+                  rows={5}
+                  className="resize-none"
+                  {...register("aiAssistantPrompt")}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Essas instruções serão usadas para personalizar o comportamento do assistente IA. 
+                  Se deixado em branco, um prompt padrão será usado.
+                </p>
+                {errors.aiAssistantPrompt && (
+                  <p className="text-sm text-destructive">{errors.aiAssistantPrompt.message}</p>
+                )}
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {saveStatus === "error" && (
+        <div className="bg-destructive/10 p-4 rounded-md text-destructive">
+          <p className="font-medium">Erro ao salvar aula</p>
+          <p className="text-sm">{errorMessage || "Ocorreu um erro ao tentar salvar a aula. Por favor, tente novamente."}</p>
         </div>
-        
-        <div className="flex justify-between pt-4 border-t">
-          <Button 
-            type="button" 
-            variant="outline" 
-            onClick={onPrevious}
-          >
-            Voltar
-          </Button>
-          <Button 
-            type="button" 
-            onClick={handlePublish}
-            disabled={isSaving}
-            className="px-6"
-          >
-            {isSaving ? "Salvando..." : "Salvar Aula"}
-          </Button>
+      )}
+
+      {saveStatus === "success" && (
+        <div className="bg-green-100 p-4 rounded-md text-green-800 flex items-start space-x-2">
+          <CheckCircle className="h-5 w-5 mt-0.5 flex-shrink-0" />
+          <p>Aula salva com sucesso! O diálogo será fechado em breve.</p>
         </div>
+      )}
+      
+      <div className="flex justify-between pt-4 border-t">
+        <Button 
+          type="button" 
+          variant="outline" 
+          onClick={onPrevious}
+          disabled={isSaving || saving}
+        >
+          Voltar
+        </Button>
+        <Button 
+          type="button"
+          onClick={handleSubmit}
+          disabled={isSaving || saving || saveStatus === "success"}
+          className="min-w-[120px]"
+        >
+          {(isSaving || saving) ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Salvando...
+            </>
+          ) : saveStatus === "success" ? (
+            <>
+              <CheckCircle className="mr-2 h-4 w-4" />
+              Salvo!
+            </>
+          ) : (
+            <>
+              <Save className="mr-2 h-4 w-4" />
+              Salvar Aula
+            </>
+          )}
+        </Button>
       </div>
-    </Form>
+    </div>
   );
 };
 
