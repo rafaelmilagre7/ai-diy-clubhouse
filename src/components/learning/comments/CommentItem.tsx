@@ -1,14 +1,14 @@
 
 import React, { useState } from "react";
-import { Comment } from "@/types/learningTypes";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { MessageSquare, ThumbsUp, Trash2 } from "lucide-react";
 import { useAuth } from "@/contexts/auth";
-import { CommentForm } from "./CommentForm";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { Comment } from "@/types/learningTypes";
+import { CommentForm } from "./CommentForm";
 
 interface CommentItemProps {
   comment: Comment;
@@ -142,7 +142,6 @@ export const CommentItem: React.FC<CommentItemProps> = ({
                 placeholder="Escreva sua resposta..."
                 autoFocus={true}
                 replyingTo={comment}
-                isSubmitting={false}
               />
             </div>
           )}
@@ -151,3 +150,5 @@ export const CommentItem: React.FC<CommentItemProps> = ({
     </Card>
   );
 };
+
+export default CommentItem;

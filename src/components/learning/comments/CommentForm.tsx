@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -30,6 +30,14 @@ export const CommentForm: React.FC<CommentFormProps> = ({
 }) => {
   const [content, setContent] = useState("");
   const { user, profile } = useAuth();
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Auto-focus no textarea quando o componente é montado (se autoFocus=true)
+  useEffect(() => {
+    if (autoFocus && textareaRef.current) {
+      textareaRef.current.focus();
+    }
+  }, [autoFocus]);
   
   if (!user) {
     return (
@@ -91,11 +99,11 @@ export const CommentForm: React.FC<CommentFormProps> = ({
         
         <div className="flex-1 space-y-2">
           <Textarea
+            ref={textareaRef}
             value={content}
             onChange={(e) => setContent(e.target.value)}
             placeholder={placeholder}
             className="resize-none min-h-[100px]"
-            autoFocus={autoFocus}
           />
           
           <div className="flex justify-end gap-2">
@@ -129,3 +137,5 @@ export const CommentForm: React.FC<CommentFormProps> = ({
     </form>
   );
 };
+
+export default CommentForm;
