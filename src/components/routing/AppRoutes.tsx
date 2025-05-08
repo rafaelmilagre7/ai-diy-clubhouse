@@ -1,4 +1,3 @@
-
 import { Routes, Route } from 'react-router-dom';
 import { AdminProtectedRoutes } from '@/auth/AdminProtectedRoutes';
 import { FormacaoProtectedRoutes } from '@/auth/FormacaoProtectedRoutes';
@@ -205,6 +204,8 @@ const AppRoutes = () => {
       {/* Removido a rota para FormacaoAulaNova: */}
       {/* <Route path="/formacao/aulas/nova" element={<FormacaoProtectedRoutes><FormacaoLayout><FormacaoAulaNova /></FormacaoLayout></FormacaoProtectedRoutes>} /> */}
       <Route path="/formacao/aulas/:id" element={<FormacaoProtectedRoutes><FormacaoLayout><FormacaoAulaDetalhes /></FormacaoLayout></FormacaoProtectedRoutes>} />
+      {/* Adicionar nova rota para edição de aulas */}
+      <Route path="/formacao/aulas/:id/editar" element={<FormacaoProtectedRoutes><FormacaoLayout><FormacaoAulaEditar /></FormacaoLayout></FormacaoProtectedRoutes>} />
       <Route path="/formacao/materiais" element={<FormacaoProtectedRoutes><FormacaoLayout><div>Página de Materiais</div></FormacaoLayout></FormacaoProtectedRoutes>} />
       <Route path="/formacao/alunos" element={<FormacaoProtectedRoutes><FormacaoLayout><div>Página de Alunos</div></FormacaoLayout></FormacaoProtectedRoutes>} />
       <Route path="/formacao/configuracoes" element={<FormacaoProtectedRoutes><FormacaoLayout><div>Configurações do LMS</div></FormacaoLayout></FormacaoProtectedRoutes>} />
@@ -231,5 +232,6 @@ import FormacaoCursoDetalhes from '@/pages/formacao/FormacaoCursoDetalhes';
 import FormacaoModuloDetalhes from '@/pages/formacao/FormacaoModuloDetalhes';
 import FormacaoAulas from '@/pages/formacao/FormacaoAulas';
 import FormacaoAulaDetalhes from '@/pages/formacao/FormacaoAulaDetalhes';
+import FormacaoAulaEditar from '@/pages/formacao/FormacaoAulaEditar';
 
 export default AppRoutes;
