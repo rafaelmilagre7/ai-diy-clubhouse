@@ -1,3 +1,4 @@
+
 import { Fragment } from "react";
 import { Route } from "react-router-dom";
 import { lazy } from "react";
@@ -22,6 +23,7 @@ const Events = lazy(() => import("@/pages/member/Events"));
 const MemberLearning = lazy(() => import("@/pages/member/learning/MemberLearning"));
 const CourseDetails = lazy(() => import("@/pages/member/learning/CourseDetails"));
 const LessonView = lazy(() => import("@/pages/member/learning/LessonView"));
+const MyCertificates = lazy(() => import("@/pages/member/learning/MyCertificates"));
 
 export const MemberRoutes = () => {
   return (
@@ -188,6 +190,18 @@ export const MemberRoutes = () => {
           </ProtectedRoute>
         }
       />
+      {/* Nova rota para certificados */}
+      <Route
+        path="/learning/certificates"
+        element={
+          <ProtectedRoute>
+            <MemberLayout>
+              <MyCertificates />
+            </MemberLayout>
+          </ProtectedRoute>
+        }
+      />
     </Fragment>
   );
 };
+
