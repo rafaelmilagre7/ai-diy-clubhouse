@@ -23,6 +23,7 @@ export interface Certificate {
   validation_code: string;
   template_id?: string;
   certificate_url?: string;
+  has_validation_page?: boolean;
   profiles?: {
     name: string;
     email: string;
@@ -42,4 +43,6 @@ export interface CertificateTemplate {
   created_at: string;
   updated_at: string;
   is_default: boolean;
+  course_id?: string | null;
+  metadata?: Record<string, any>;
 }
