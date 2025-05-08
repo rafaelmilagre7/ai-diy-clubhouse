@@ -53,12 +53,29 @@ export const PublishLessonButton = ({
         if (error) throw error;
         
         if (data && data.module) {
-          // Verificamos se module é um array ou objeto e acessamos course_id corretamente
+          // Extrair o course_id do objeto module, tratando os diferentes formatos possíveis
           const moduleData = data.module;
+          
+          // Verificação detalhada da estrutura de dados retornada
+          console.log("Estrutura do módulo retornada:", moduleData);
+          
+          let extractedCourseId = null;
+          
+          // Cenário 1: O módulo é um array de objetos
           if (Array.isArray(moduleData) && moduleData.length > 0) {
-            setCourseId(moduleData[0].course_id);
-          } else if (typeof moduleData === 'object' && moduleData !== null) {
-            setCourseId(moduleData.course_id);
+            extractedCourseId = moduleData[0].course_id;
+            console.log("Course ID extraído do array:", extractedCourseId);
+          } 
+          // Cenário 2: O módulo é um objeto direto
+          else if (typeof moduleData === 'object' && moduleData !== null) {
+            extractedCourseId = moduleData.course_id;
+            console.log("Course ID extraído do objeto:", extractedCourseId);
+          }
+          
+          if (extractedCourseId) {
+            setCourseId(extractedCourseId);
+          } else {
+            console.error("Não foi possível extrair o course_id da resposta:", moduleData);
           }
         }
       } catch (err) {
