@@ -1,17 +1,60 @@
 
 import React, { useState } from "react";
-import { useForm, FormProvider } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useNavigate } from "react-router-dom";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import EtapaInfoBasica from "./etapas/EtapaInfoBasica";
-import EtapaConteudo from "./etapas/EtapaConteudo";
-import EtapaVideos from "./etapas/EtapaVideos";
-import EtapaAtividades from "./etapas/EtapaAtividades";
-import EtapaMateriais from "./etapas/EtapaMateriais";
-import EtapaRevisao from "./etapas/EtapaRevisao";
 import { useCreateAula } from "@/hooks/formacao/useCreateAula";
+
+// Importações das etapas
+// Por enquanto vamos criar placeholders para essas etapas
+const EtapaInfoBasica = ({ form, onNext }: any) => (
+  <div>
+    <h3>Etapa de Informações Básicas</h3>
+    <button onClick={onNext}>Próximo</button>
+  </div>
+);
+
+const EtapaConteudo = ({ form, onNext, onPrevious }: any) => (
+  <div>
+    <h3>Etapa de Conteúdo</h3>
+    <button onClick={onPrevious}>Voltar</button>
+    <button onClick={onNext}>Próximo</button>
+  </div>
+);
+
+const EtapaVideos = ({ form, onNext, onPrevious, isSaving }: any) => (
+  <div>
+    <h3>Etapa de Vídeos</h3>
+    <button onClick={onPrevious}>Voltar</button>
+    <button onClick={onNext}>Próximo</button>
+  </div>
+);
+
+const EtapaAtividades = ({ form, onNext, onPrevious }: any) => (
+  <div>
+    <h3>Etapa de Atividades</h3>
+    <button onClick={onPrevious}>Voltar</button>
+    <button onClick={onNext}>Próximo</button>
+  </div>
+);
+
+const EtapaMateriais = ({ form, onNext, onPrevious }: any) => (
+  <div>
+    <h3>Etapa de Materiais</h3>
+    <button onClick={onPrevious}>Voltar</button>
+    <button onClick={onNext}>Próximo</button>
+  </div>
+);
+
+const EtapaRevisao = ({ form, onPrevious, onSubmit, isSaving }: any) => (
+  <div>
+    <h3>Etapa de Revisão</h3>
+    <button onClick={onPrevious}>Voltar</button>
+    <button onClick={onSubmit} disabled={isSaving}>Salvar</button>
+  </div>
+);
 
 export type DifficultyLevel = "iniciante" | "intermediario" | "avancado";
 
@@ -67,7 +110,7 @@ const AulaStepWizard: React.FC<AulaStepWizardProps> = ({
   const navigate = useNavigate();
   const { mutate: createAula, isLoading: isAulaCreating } = useCreateAula();
 
-  const form = useForm<AulaFormValues>({
+  const methods = useForm<AulaFormValues>({
     defaultValues: {
       title: "",
       description: "",
@@ -94,7 +137,7 @@ const AulaStepWizard: React.FC<AulaStepWizardProps> = ({
     setActiveTab(tab);
   };
 
-  const handleSubmit = async (data: AulaFormValues) => {
+  const handleSubmit = methods.handleSubmit(async (data: AulaFormValues) => {
     setIsSaving(true);
     try {
       // Remover campos que não existem no backend
@@ -120,7 +163,7 @@ const AulaStepWizard: React.FC<AulaStepWizardProps> = ({
       console.error("Erro ao criar aula:", error);
       setIsSaving(false);
     }
-  };
+  });
 
   const content = (
     <Card className="w-full">
@@ -136,48 +179,46 @@ const AulaStepWizard: React.FC<AulaStepWizardProps> = ({
       </Tabs>
 
       <Card className="p-4">
-        <FormProvider {...form}>
-          {activeTab === "informacoes" && (
-            <EtapaInfoBasica form={form} onNext={() => handleNext("conteudo")} />
-          )}
-          {activeTab === "conteudo" && (
-            <EtapaConteudo
-              form={form}
-              onNext={() => handleNext("videos")}
-              onPrevious={() => handlePrevious("informacoes")}
-            />
-          )}
-          {activeTab === "videos" && (
-            <EtapaVideos
-              form={form}
-              onNext={() => handleNext("atividades")}
-              onPrevious={() => handlePrevious("conteudo")}
-              isSaving={isSaving}
-            />
-          )}
-          {activeTab === "atividades" && (
-            <EtapaAtividades
-              form={form}
-              onNext={() => handleNext("materiais")}
-              onPrevious={() => handlePrevious("videos")}
-            />
-          )}
-          {activeTab === "materiais" && (
-            <EtapaMateriais
-              form={form}
-              onNext={() => handleNext("revisao")}
-              onPrevious={() => handlePrevious("atividades")}
-            />
-          )}
-          {activeTab === "revisao" && (
-            <EtapaRevisao
-              form={form}
-              onPrevious={() => handlePrevious("materiais")}
-              onSubmit={form.handleSubmit(handleSubmit)}
-              isSaving={isSaving || isAulaCreating}
-            />
-          )}
-        </FormProvider>
+        {activeTab === "informacoes" && (
+          <EtapaInfoBasica form={methods} onNext={() => handleNext("conteudo")} />
+        )}
+        {activeTab === "conteudo" && (
+          <EtapaConteudo
+            form={methods}
+            onNext={() => handleNext("videos")}
+            onPrevious={() => handlePrevious("informacoes")}
+          />
+        )}
+        {activeTab === "videos" && (
+          <EtapaVideos
+            form={methods}
+            onNext={() => handleNext("atividades")}
+            onPrevious={() => handlePrevious("conteudo")}
+            isSaving={isSaving}
+          />
+        )}
+        {activeTab === "atividades" && (
+          <EtapaAtividades
+            form={methods}
+            onNext={() => handleNext("materiais")}
+            onPrevious={() => handlePrevious("videos")}
+          />
+        )}
+        {activeTab === "materiais" && (
+          <EtapaMateriais
+            form={methods}
+            onNext={() => handleNext("revisao")}
+            onPrevious={() => handlePrevious("atividades")}
+          />
+        )}
+        {activeTab === "revisao" && (
+          <EtapaRevisao
+            form={methods}
+            onPrevious={() => handlePrevious("materiais")}
+            onSubmit={handleSubmit}
+            isSaving={isSaving || isAulaCreating}
+          />
+        )}
       </Card>
     </Card>
   );

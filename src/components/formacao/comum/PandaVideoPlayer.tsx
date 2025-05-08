@@ -8,7 +8,12 @@ interface PandaVideoPlayerProps {
   onEnded?: () => void;
 }
 
-export const PandaVideoPlayer: React.FC<PandaVideoPlayerProps> = ({ videoId, title, onProgress, onEnded }) => {
+export const PandaVideoPlayer: React.FC<PandaVideoPlayerProps> = ({ 
+  videoId, 
+  title, 
+  onProgress, 
+  onEnded 
+}) => {
   // Construir URL do iframe para o Panda Video
   const embedUrl = `https://player.pandavideo.com.br/embed/?v=${videoId}`;
   
@@ -28,7 +33,7 @@ export const PandaVideoPlayer: React.FC<PandaVideoPlayerProps> = ({ videoId, tit
         const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
         
         // Processar eventos do player
-        if (data.event === 'timeupdate' && onProgress) {
+        if (data.event === 'timeupdate' && onProgress && data.duration) {
           // Calcular porcentagem de progresso
           const progress = Math.round((data.currentTime / data.duration) * 100);
           
@@ -70,3 +75,5 @@ export const PandaVideoPlayer: React.FC<PandaVideoPlayerProps> = ({ videoId, tit
     </div>
   );
 };
+
+export default PandaVideoPlayer;

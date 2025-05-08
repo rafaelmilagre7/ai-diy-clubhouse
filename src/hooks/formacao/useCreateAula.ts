@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { AulaFormValues } from "@/components/formacao/aulas/wizard/AulaStepWizard";
 
@@ -12,7 +12,6 @@ interface CreateAulaOptions {
 export const useCreateAula = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
-  const { toast } = useToast();
 
   const mutate = async (aulaData: AulaFormValues, options?: CreateAulaOptions) => {
     setIsLoading(true);
@@ -65,7 +64,7 @@ export const useCreateAula = () => {
           lesson_id: aulaCreated.id,
           title: video.title || `Vídeo ${index + 1}`,
           description: video.description || '',
-          url: video.url,
+          url: video.url || '',
           video_type: video.type || 'youtube',
           order_index: index,
           thumbnail_url: video.thumbnail_url || null,
@@ -83,11 +82,7 @@ export const useCreateAula = () => {
         if (videosError) {
           console.error("Erro ao salvar vídeos:", videosError);
           // Não interromper o fluxo, apenas logar o erro
-          toast({
-            title: "Aviso",
-            description: "Aula criada, mas houve um problema ao salvar alguns vídeos.",
-            variant: "destructive",
-          });
+          toast.error("Aula criada, mas houve um problema ao salvar alguns vídeos.");
         } else {
           console.log("Vídeos salvos com sucesso");
         }
@@ -102,7 +97,7 @@ export const useCreateAula = () => {
           lesson_id: aulaCreated.id,
           name: resource.name || `Recurso ${index + 1}`,
           description: resource.description || '',
-          file_url: resource.url,
+          file_url: resource.url || '',
           file_type: resource.type || 'document',
           order_index: index,
           file_size_bytes: resource.fileSize || null
@@ -116,11 +111,7 @@ export const useCreateAula = () => {
         if (resourcesError) {
           console.error("Erro ao salvar recursos:", resourcesError);
           // Não interromper o fluxo, apenas logar o erro
-          toast({
-            title: "Aviso",
-            description: "Aula criada, mas houve um problema ao salvar alguns recursos.",
-            variant: "destructive",
-          });
+          toast.error("Aula criada, mas houve um problema ao salvar alguns recursos.");
         } else {
           console.log("Recursos salvos com sucesso");
         }
@@ -135,10 +126,7 @@ export const useCreateAula = () => {
         });
       }
       
-      toast({
-        title: "Aula criada",
-        description: "A aula foi criada com sucesso!",
-      });
+      toast.success("A aula foi criada com sucesso!");
       
       setIsLoading(false);
       return aulaCreated;
@@ -146,11 +134,7 @@ export const useCreateAula = () => {
       console.error("Erro ao criar aula:", err);
       setError(err);
       
-      toast({
-        title: "Erro ao criar aula",
-        description: err.message || "Ocorreu um erro ao tentar criar a aula.",
-        variant: "destructive",
-      });
+      toast.error(err.message || "Ocorreu um erro ao tentar criar a aula.");
       
       // Chamar callback de erro
       if (options?.onError) {

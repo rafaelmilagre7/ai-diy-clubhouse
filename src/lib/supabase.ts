@@ -1,31 +1,16 @@
 
-// Re-exportar o cliente
-export * from './supabase/client';
+import { createClient } from '@supabase/supabase-js';
 
-// Re-exportar configurações
-export * from './supabase/config';
+// Variáveis de ambiente - em produção essas devem ser injetadas de maneira segura
+const supabaseUrl = 'https://zotzvtepvpnkcoobdubt.supabase.co';
+const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpvdHp2dGVwdnBua2Nvb2JkdWJ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQzNzgzODAsImV4cCI6MjA1OTk1NDM4MH0.dxjPkqTPnK8gjjxJbooPX5_kpu3INciLeDpuU8dszHQ';
 
-// Re-exportar tipos
-export * from './supabase/types';
+// Criar cliente do Supabase com opções de autenticação apropriadas
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+  },
+});
 
-// Exportar funções específicas de armazenamento (evitando ambiguidade)
-export { 
-  uploadFileWithFallback,
-  setupLearningStorageBuckets
-} from './supabase/storage';
-
-// Exportar funções RPC explicitamente (para evitar ambiguidades)
-export { 
-  createStoragePublicPolicy
-} from './supabase/rpc';
-
-// Exportar utilitários de vídeo
-export {
-  getYoutubeVideoId,
-  getYoutubeThumbnailUrl,
-  formatVideoDuration,
-  estimateVideoDuration,
-  youtubeUrlToEmbed,
-  getVideoTypeFromUrl,
-  getPandaVideoId
-} from './supabase/videoUtils';
+export default supabase;
