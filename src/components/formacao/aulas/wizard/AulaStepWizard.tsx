@@ -48,7 +48,7 @@ const aulaFormSchema = z.object({
       type: z.string().optional(),
       fileName: z.string().optional(),
       filePath: z.string().optional(),
-      fileSize: z.string().optional(),
+      fileSize: z.number().optional(),
       duration_seconds: z.number().optional(),
       thumbnail_url: z.string().optional(),
       video_id: z.string().optional(),

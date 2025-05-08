@@ -12,7 +12,15 @@ export function useVideoManager(form: UseFormReturn<AulaFormValues>) {
 
   const handleVideoChange = (index: number, field: string, value: any) => {
     const newVideos = [...form.getValues().videos];
-    newVideos[index] = { ...newVideos[index], [field]: value };
+    // Garantir conversão para number no caso do fileSize
+    if (field === 'fileSize' && value !== undefined && value !== null) {
+      newVideos[index] = { 
+        ...newVideos[index], 
+        [field]: typeof value === 'string' ? Number(value) : value
+      };
+    } else {
+      newVideos[index] = { ...newVideos[index], [field]: value };
+    }
     
     // Garantir que o vídeo tenha um ID único
     if (field === 'title' && !newVideos[index].id) {
