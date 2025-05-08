@@ -225,14 +225,14 @@ export const RecursoFormDialog = ({
                   <FormLabel>Arquivo</FormLabel>
                   <FormControl>
                     <FileUpload
-                      value={field.value}
-                      onChange={(url, fileType, fileName, fileSize) => {
+                      initialValue={field.value}
+                      onUploadComplete={(url, fileType, fileName, fileSize) => {
                         console.log("Arquivo enviado:", { url, fileType, fileSize });
                         field.onChange(url);
                         form.setValue("file_type", fileType || "");
                         form.setValue("file_size_bytes", Number(fileSize) || 0);
                       }}
-                      bucketName={STORAGE_BUCKETS.LEARNING_RESOURCES}
+                      bucketName={STORAGE_BUCKETS.LEARNING_MATERIALS}
                       folderPath="materials"
                       acceptedFileTypes="*/*"
                       disabled={isSubmitting}

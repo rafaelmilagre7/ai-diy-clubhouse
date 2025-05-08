@@ -4,21 +4,16 @@ import { Module, supabase } from "@/lib/supabase";
 import { ToolsLoading } from "./tools/ToolsLoading";
 import { ToolItem } from "./tools/ToolItem";
 import { useQuery } from "@tanstack/react-query";
-import { SolutionTool } from "@/lib/supabase/types";
 import { useToolsData } from "@/hooks/useToolsData";
 import { useLogging } from "@/hooks/useLogging";
+import { SolutionTool, Tool } from "@/lib/supabase/types/extra-tables";
 
 interface ModuleContentToolsProps {
   module: Module;
 }
 
-interface SolutionToolWithDetails {
-  id: string;
-  solution_id: string;
-  tool_name: string;
-  tool_url?: string;
-  is_required: boolean;
-  details?: any;
+interface SolutionToolWithDetails extends SolutionTool {
+  details?: Tool | null;
 }
 
 export const ModuleContentTools = ({ module }: ModuleContentToolsProps) => {
@@ -32,7 +27,7 @@ export const ModuleContentTools = ({ module }: ModuleContentToolsProps) => {
       log("Buscando ferramentas da solução", { solution_id: module.solution_id });
       
       try {
-        // Buscar as ferramentas associadas à solução
+        // Buscar as ferramentas associadas à solução com tipagem segura
         const { data: solutionTools, error: toolsError } = await supabase
           .from("solution_tools")
           .select("*")
@@ -43,9 +38,11 @@ export const ModuleContentTools = ({ module }: ModuleContentToolsProps) => {
           throw toolsError;
         }
         
+        const typedSolutionTools = solutionTools as SolutionTool[];
+        
         // Para cada ferramenta da solução, buscar informações detalhadas
         const toolsWithDetails: SolutionToolWithDetails[] = await Promise.all(
-          (solutionTools || []).map(async (solutionTool: any) => {
+          typedSolutionTools.map(async (solutionTool: SolutionTool) => {
             try {
               // Buscar informações detalhadas da ferramenta pelo nome
               const { data: toolDetails, error: detailsError } = await supabase
@@ -63,14 +60,17 @@ export const ModuleContentTools = ({ module }: ModuleContentToolsProps) => {
               
               return {
                 ...solutionTool,
-                details: toolDetails || null
+                details: toolDetails as Tool | null
               };
             } catch (error) {
               logError("Erro ao processar detalhes da ferramenta", {
                 error,
                 tool_name: solutionTool.tool_name
               });
-              return solutionTool;
+              return {
+                ...solutionTool,
+                details: null
+              };
             }
           })
         );
@@ -125,7 +125,7 @@ export const ModuleContentTools = ({ module }: ModuleContentToolsProps) => {
             toolUrl={tool.tool_url || ""}
             isRequired={tool.is_required} 
             hasBenefit={tool.details?.has_member_benefit || false}
-            benefitType={tool.details?.benefit_type || null}
+            benefitType={tool.details?.benefit_type || undefined}
           />
         ))}
       </div>

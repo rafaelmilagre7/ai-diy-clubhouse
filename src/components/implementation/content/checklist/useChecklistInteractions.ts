@@ -30,12 +30,16 @@ export const useChecklistInteractions = (solution: Solution | null) => {
         
         // Check if a record already exists
         try {
-          const { data, error } = await supabase
+          // Usar uma abordagem alternativa para tipagem segura
+          const checklistQuery = await supabase
             .from("user_checklists")
-            .select("*")
+            .select()
             .eq("user_id", user.id)
             .eq("solution_id", solution.id)
-            .single();
+            .maybeSingle();
+            
+          const error = checklistQuery.error;
+          const data = checklistQuery.data;
             
           if (error && error.code !== "PGRST116") { // PGRST116 = Not found, which is expected if no record yet
             throw error;

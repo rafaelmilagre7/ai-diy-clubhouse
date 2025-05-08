@@ -321,7 +321,7 @@ const AulaWizard: React.FC<AulaWizardProps> = ({ open, onOpenChange, aula, modul
           .from('learning_lessons')
           .insert({
             ...lessonData,
-            order_index: 0, // Valor padrão para nova aula
+            order_index: values.orderIndex || 0, // Usar o valor do formulário
           })
           .select()
           .single();
@@ -337,9 +337,8 @@ const AulaWizard: React.FC<AulaWizardProps> = ({ open, onOpenChange, aula, modul
       }
       
       // Mostrar mensagem de sucesso
-      toast({
-        title: lessonId ? "Aula atualizada" : "Aula criada",
-        description: lessonId ? "A aula foi atualizada com sucesso." : "A aula foi criada com sucesso.",
+      toast.success({
+        description: lessonId ? "A aula foi atualizada com sucesso." : "A aula foi criada com sucesso."
       });
       
       // Fechar o modal e chamar callback de sucesso
@@ -347,10 +346,8 @@ const AulaWizard: React.FC<AulaWizardProps> = ({ open, onOpenChange, aula, modul
       if (onSuccess) onSuccess();
     } catch (error: any) {
       console.error("Erro ao salvar aula:", error);
-      toast({
-        title: "Erro ao salvar",
-        description: error.message || "Ocorreu um erro ao salvar a aula.",
-        variant: "destructive",
+      toast.error({
+        description: error.message || "Ocorreu um erro ao salvar a aula."
       });
     } finally {
       setIsSaving(false);

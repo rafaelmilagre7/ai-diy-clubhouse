@@ -4,15 +4,7 @@ import { Module, Solution, supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/auth";
 import { useLogging } from "@/hooks/useLogging";
 import { ChecklistItem, extractChecklistFromSolution, initializeUserChecklist, handleChecklistError } from "./checklistUtils";
-
-interface UserChecklist {
-  id: string;
-  user_id: string;
-  solution_id: string;
-  checked_items: Record<string, boolean>;
-  created_at: string;
-  updated_at: string;
-}
+import { UserChecklist } from "@/lib/supabase/types/extra-tables";
 
 export const useChecklistData = (module: Module) => {
   const [solution, setSolution] = useState<Solution | null>(null);
@@ -90,9 +82,10 @@ export const useChecklistData = (module: Module) => {
         // If user is logged in, fetch their specific checklist progress
         if (user) {
           try {
+            // Usar any aqui como solução temporária devido ao problema de tipagem
             const { data: userData, error: userError } = await supabase
               .from("user_checklists")
-              .select("*")
+              .select()
               .eq("user_id", user.id)
               .eq("solution_id", module.solution_id)
               .maybeSingle();
