@@ -4,20 +4,20 @@ export * from './client';
 export * from './types';
 export * from './config';
 
-// Exportações explícitas de rpc.ts
-export { 
-  // Evitamos re-exportar createStoragePublicPolicy daqui para evitar o conflito
-} from './rpc';
-
-// Exportações explícitas das funções de storage para evitar problemas de importação circular
+// Exportação explícita das funções de storage
 export { 
   getYoutubeVideoId, 
   getYoutubeThumbnailUrl, 
   formatVideoDuration,
   setupLearningStorageBuckets,
   ensureBucketExists,
-  createStoragePublicPolicy,  // Exportamos explicitamente daqui
-  // Removida a exportação de setupStoragePublicPolicy que não existe
+  createStoragePublicPolicy,
+  extractPandaVideoInfo,
+  // Adicione outras funções que precisam ser exportadas
 } from './storage';
 
-// Não re-exportamos createStoragePublicPolicy de './rpc' para evitar conflito
+// Exportação explícita das funções de RPC
+// Nota: não re-exportamos createStoragePublicPolicy daqui para evitar conflito
+export {
+  // Adicionar outras funções de RPC conforme necessário
+} from './rpc';

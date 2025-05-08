@@ -17,6 +17,9 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   videoType = 'youtube',
   thumbnailUrl 
 }) => {
+  // Log para debugging
+  console.log("VideoPlayer recebeu:", { videoUrl, videoType, thumbnailUrl });
+  
   // Extrair ID do vídeo Panda da URL, se aplicável
   const extractPandaVideoId = (url: string): string | null => {
     // Verificar se a URL é válida
@@ -79,11 +82,20 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     }
   };
 
-  // Log para debugging
-  console.log("VideoPlayer recebeu:", { videoUrl, videoType, thumbnailUrl });
-
+  // Determina o tipo de vídeo automaticamente se não especificado
+  const determineVideoType = (url: string): string => {
+    if (!url) return 'unknown';
+    if (url.includes('pandavideo')) return 'panda';
+    if (url.includes('youtube') || url.includes('youtu.be')) return 'youtube';
+    if (url.match(/\.(mp4|webm|ogg)(\?|$)/i)) return 'video';
+    return 'unknown';
+  };
+  
+  // Se o tipo não for explicitamente especificado, determinar automaticamente
+  const effectiveVideoType = videoType === 'auto' ? determineVideoType(videoUrl) : videoType;
+  
   // Renderizar com base no tipo de vídeo
-  if (videoType === 'panda' || (videoUrl && videoUrl.includes('pandavideo'))) {
+  if (effectiveVideoType === 'panda' || (videoUrl && videoUrl.includes('pandavideo'))) {
     const videoId = extractPandaVideoId(videoUrl) || '';
     if (!videoId) {
       console.warn("ID de vídeo Panda não pôde ser extraído:", videoUrl);
@@ -97,7 +109,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   } 
   
   // Vídeo do YouTube
-  else if (videoType === 'youtube' || (videoUrl && (videoUrl.includes('youtube') || videoUrl.includes('youtu.be')))) {
+  else if (effectiveVideoType === 'youtube' || (videoUrl && (videoUrl.includes('youtube') || videoUrl.includes('youtu.be')))) {
     const youtubeId = extractYoutubeVideoId(videoUrl);
     if (youtubeId) {
       return (
