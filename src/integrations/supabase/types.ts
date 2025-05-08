@@ -552,6 +552,7 @@ export type Database = {
       learning_lessons: {
         Row: {
           ai_assistant_enabled: boolean | null
+          ai_assistant_id: string | null
           ai_assistant_prompt: string | null
           content: Json | null
           cover_image_url: string | null
@@ -568,6 +569,7 @@ export type Database = {
         }
         Insert: {
           ai_assistant_enabled?: boolean | null
+          ai_assistant_id?: string | null
           ai_assistant_prompt?: string | null
           content?: Json | null
           cover_image_url?: string | null
@@ -584,6 +586,7 @@ export type Database = {
         }
         Update: {
           ai_assistant_enabled?: boolean | null
+          ai_assistant_id?: string | null
           ai_assistant_prompt?: string | null
           content?: Json | null
           cover_image_url?: string | null

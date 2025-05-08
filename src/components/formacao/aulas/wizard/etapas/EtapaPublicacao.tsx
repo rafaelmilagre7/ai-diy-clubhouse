@@ -6,9 +6,11 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input"; 
 import { Button } from "@/components/ui/button";
-import { Save, HelpCircle, Loader2, CheckCircle } from "lucide-react";
+import { Save, HelpCircle, Loader2, CheckCircle, AlertCircle } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface EtapaPublicacaoProps {
   form: UseFormReturn<AulaFormValues>;
@@ -27,6 +29,7 @@ const EtapaPublicacao: React.FC<EtapaPublicacaoProps> = ({
   const { watch, setValue, formState: { errors } } = form;
   const aiAssistantEnabled = watch("aiAssistantEnabled");
   const published = watch("published");
+  const assistantId = watch("aiAssistantId");
   
   const [saving, setSaving] = React.useState(false);
   const [saveStatus, setSaveStatus] = React.useState<"idle" | "saving" | "success" | "error">("idle");
@@ -53,6 +56,7 @@ const EtapaPublicacao: React.FC<EtapaPublicacaoProps> = ({
         aiAssistantEnabled: form.getValues("aiAssistantEnabled"),
         published: form.getValues("published"),
         aiAssistantPrompt: form.getValues("aiAssistantPrompt"),
+        aiAssistantId: form.getValues("aiAssistantId"),
       });
       
       await onSubmit();
@@ -66,6 +70,13 @@ const EtapaPublicacao: React.FC<EtapaPublicacaoProps> = ({
       setSaving(false);
     }
   };
+
+  // Validação simples do formato do ID do assistente
+  const isValidAssistantId = (id: string) => {
+    return id.startsWith('asst_') || id === '';
+  };
+  
+  const assistantIdError = assistantId && !isValidAssistantId(assistantId);
   
   return (
     <div className="space-y-6">
@@ -138,25 +149,70 @@ const EtapaPublicacao: React.FC<EtapaPublicacaoProps> = ({
             </div>
             
             {aiAssistantEnabled && (
-              <div className="space-y-2 pt-2">
-                <Label htmlFor="aiAssistantPrompt" className="text-sm font-medium">
-                  Instruções para o assistente IA
-                </Label>
-                <Textarea 
-                  id="aiAssistantPrompt"
-                  placeholder="Insira instruções específicas para personalizar o assistente de IA para esta aula. Ex: 'Você é um especialista em marketing digital que responde dúvidas sobre esta aula.'"
-                  rows={5}
-                  className="resize-none"
-                  value={form.watch("aiAssistantPrompt") || ""}
-                  onChange={(e) => form.setValue("aiAssistantPrompt", e.target.value)}
-                />
-                <p className="text-xs text-muted-foreground">
-                  Essas instruções serão usadas para personalizar o comportamento do assistente IA. 
-                  Se deixado em branco, um prompt padrão será usado.
-                </p>
-                {errors.aiAssistantPrompt && (
-                  <p className="text-sm text-destructive">{errors.aiAssistantPrompt.message}</p>
-                )}
+              <div className="space-y-4 pt-2">
+                <div className="space-y-2">
+                  <div className="flex items-center">
+                    <Label htmlFor="aiAssistantId" className="text-sm font-medium">
+                      ID do Assistente OpenAI
+                    </Label>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <HelpCircle className="h-4 w-4 text-muted-foreground ml-2" />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p className="max-w-xs">
+                            Digite o ID do assistente da OpenAI no formato "asst_..." 
+                            Encontre seus assistentes no painel da OpenAI.
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
+                  <Input 
+                    id="aiAssistantId"
+                    placeholder="asst_c8XCKluizadapql5aRAS3lWY"
+                    value={form.watch("aiAssistantId") || ""}
+                    onChange={(e) => form.setValue("aiAssistantId", e.target.value)}
+                    className={assistantIdError ? "border-destructive" : ""}
+                  />
+                  {assistantIdError && (
+                    <p className="text-xs text-destructive">
+                      ID do assistente inválido. Deve começar com "asst_"
+                    </p>
+                  )}
+                  <p className="text-xs text-muted-foreground">
+                    ID do assistente criado no painel da OpenAI. Deixe em branco para usar o assistente padrão.
+                  </p>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="aiAssistantPrompt" className="text-sm font-medium">
+                    Instruções complementares para o assistente IA
+                  </Label>
+                  <Textarea 
+                    id="aiAssistantPrompt"
+                    placeholder="Insira instruções específicas para personalizar o assistente de IA para esta aula. Ex: 'Você é um especialista em marketing digital que responde dúvidas sobre esta aula.'"
+                    rows={5}
+                    className="resize-none"
+                    value={form.watch("aiAssistantPrompt") || ""}
+                    onChange={(e) => form.setValue("aiAssistantPrompt", e.target.value)}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Essas instruções serão usadas para complementar o contexto do assistente IA.
+                    Se deixado em branco, apenas o ID do assistente será usado.
+                  </p>
+                  {errors.aiAssistantPrompt && (
+                    <p className="text-sm text-destructive">{errors.aiAssistantPrompt.message}</p>
+                  )}
+                </div>
+                
+                <Alert className="bg-amber-50 border-amber-200 text-amber-800">
+                  <AlertCircle className="h-4 w-4 text-amber-800" />
+                  <AlertDescription>
+                    Para usar esta funcionalidade, você deve ter criado um assistente no painel da OpenAI e configurado a chave da API nas configurações.
+                  </AlertDescription>
+                </Alert>
               </div>
             )}
           </div>
@@ -189,7 +245,7 @@ const EtapaPublicacao: React.FC<EtapaPublicacaoProps> = ({
         <Button 
           type="button"
           onClick={handleSubmit}
-          disabled={isSaving || saving || saveStatus === "success"}
+          disabled={isSaving || saving || saveStatus === "success" || assistantIdError}
           className="min-w-[120px]"
         >
           {(isSaving || saving) ? (

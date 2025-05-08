@@ -117,6 +117,7 @@ export interface LearningLesson {
   estimated_time_minutes: number | null;
   ai_assistant_enabled: boolean;
   ai_assistant_prompt: string | null;
+  ai_assistant_id: string | null;
   difficulty_level?: string | null;
   videos?: LearningLessonVideo[];
   resources?: LearningResource[];

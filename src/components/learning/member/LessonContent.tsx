@@ -4,6 +4,7 @@ import { LearningLesson } from "@/lib/supabase/types";
 import { LessonVideoPlayer } from "./LessonVideoPlayer";
 import { LessonComments } from "../comments/LessonComments";
 import { LessonResources } from "./LessonResources";
+import { LessonAssistantChat } from "../assistant/LessonAssistantChat";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -40,8 +41,11 @@ export const LessonContent: React.FC<LessonContentProps> = ({
   // Verificar se há recursos para exibir
   const hasResources = resources && resources.length > 0;
   
-  // Determinar se devemos usar abas ou não
-  const useTabs = (hasVideos && hasResources);
+  // Verificar se há assistente de IA habilitado
+  const hasAiAssistant = lesson.ai_assistant_enabled;
+  
+  // Determinar se devemos usar abas
+  const useTabs = hasVideos || hasResources || hasAiAssistant;
 
   // Calcular duração total dos vídeos em formato legível
   const formatTotalDuration = () => {
@@ -116,6 +120,7 @@ export const LessonContent: React.FC<LessonContentProps> = ({
           <TabsList className="mb-4">
             {hasVideos && <TabsTrigger value="video">Vídeos</TabsTrigger>}
             {hasResources && <TabsTrigger value="resources">Materiais</TabsTrigger>}
+            {hasAiAssistant && <TabsTrigger value="assistant">Assistente IA</TabsTrigger>}
           </TabsList>
           
           {hasVideos && (
@@ -130,6 +135,16 @@ export const LessonContent: React.FC<LessonContentProps> = ({
           {hasResources && (
             <TabsContent value="resources">
               <LessonResources resources={resources} />
+            </TabsContent>
+          )}
+          
+          {hasAiAssistant && (
+            <TabsContent value="assistant">
+              <LessonAssistantChat 
+                lessonId={lesson.id}
+                assistantId={lesson.ai_assistant_id}
+                assistantPrompt={lesson.ai_assistant_prompt}
+              />
             </TabsContent>
           )}
         </Tabs>
@@ -181,6 +196,18 @@ export const LessonContent: React.FC<LessonContentProps> = ({
         <section className="mt-6">
           <h2 className="text-xl font-semibold mb-4">Materiais complementares</h2>
           <LessonResources resources={resources} />
+        </section>
+      )}
+      
+      {/* Assistente de IA */}
+      {hasAiAssistant && (
+        <section className="mt-6">
+          <h2 className="text-xl font-semibold mb-4">Assistente IA</h2>
+          <LessonAssistantChat 
+            lessonId={lesson.id}
+            assistantId={lesson.ai_assistant_id}
+            assistantPrompt={lesson.ai_assistant_prompt}
+          />
         </section>
       )}
       

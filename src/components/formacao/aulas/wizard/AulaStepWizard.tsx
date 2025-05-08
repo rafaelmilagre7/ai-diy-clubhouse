@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -73,6 +72,10 @@ const aulaFormSchema = z.object({
   published: z.boolean().default(false),
   aiAssistantEnabled: z.boolean().default(false),
   aiAssistantPrompt: z.string().optional(),
+  aiAssistantId: z.string().optional()
+    .refine(val => val === undefined || val === "" || val?.startsWith("asst_"), {
+      message: "ID do assistente deve começar com 'asst_'",
+    }),
 });
 
 export type AulaFormValues = z.infer<typeof aulaFormSchema>;
@@ -117,6 +120,7 @@ const AulaStepWizard: React.FC<AulaStepWizardProps> = ({
     published: aula?.published || false,
     aiAssistantEnabled: aula?.ai_assistant_enabled || false,
     aiAssistantPrompt: aula?.ai_assistant_prompt || "",
+    aiAssistantId: aula?.ai_assistant_id || "",
     videos: [],
     resources: [],
   };
@@ -506,6 +510,7 @@ const AulaStepWizard: React.FC<AulaStepWizardProps> = ({
         estimated_time_minutes: totalDurationMinutes,
         ai_assistant_enabled: values.aiAssistantEnabled,
         ai_assistant_prompt: values.aiAssistantPrompt || null,
+        ai_assistant_id: values.aiAssistantId || null,
         published: values.published,
         difficulty_level: values.difficultyLevel
       };
