@@ -144,7 +144,7 @@ export const MemberSidebarNav = ({ sidebarOpen }: SidebarNavProps) => {
           >
             <Link to="/formacao">
               <GraduationCap className="h-4 w-4" />
-              {sidebarOpen && <span>Área de Formação</span>}
+              {sidebarOpen && <span>Área de Cursos</span>}
             </Link>
           </Button>
         )}
