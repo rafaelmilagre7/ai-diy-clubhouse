@@ -7,42 +7,19 @@ import {
   AccordionTrigger 
 } from "@/components/ui/accordion";
 import { Card } from "@/components/ui/card";
-import { LearningModule, LearningLesson, LearningCourse } from "@/lib/supabase/types";
+import { LearningModule, LearningLesson, LearningCourse, LearningProgress } from "@/lib/supabase/types";
 import { CheckCircle, Lock, Clock, Play } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useLessonsByModule } from "@/hooks/learning";
 
-// Definindo um tipo personalizado para progress que é compatível com ambos os contextos
-type ProgressItem = {
-  lesson_id: string;
-  progress_percentage: number;
-  completed_at?: string;
-  updated_at?: string;
-  [key: string]: any; // Para permitir campos adicionais
-};
-
-export interface LearningProgress {
-  id: string;
-  user_id: string;
-  lesson_id: string;
-  progress_percentage: number;
-  started_at?: string;
-  completed_at?: string;
-  updated_at?: string;
-  created_at?: string;
-  [key: string]: any; // Para permitir campos adicionais
-}
-
 interface CourseModulesProps {
   modules: LearningModule[];
   courseId: string;
   userProgress: LearningProgress[];
-  course?: LearningCourse;
+  course: LearningCourse;
   expandedModules?: string[];
-  lessons?: LearningLesson[]; // Adicionada esta prop para compatibilidade
-  progress?: ProgressItem[]; // Modificado para usar o tipo compatível
 }
 
 export const CourseModules: React.FC<CourseModulesProps> = ({ 
@@ -50,46 +27,38 @@ export const CourseModules: React.FC<CourseModulesProps> = ({
   courseId, 
   userProgress,
   course,
-  expandedModules = [],
-  lessons, // Nova prop
-  progress // Nova prop
+  expandedModules = []
 }) => {
   // Estado para rastrear módulos expandidos (para lembrar o estado mesmo ao recarregar componente)
   const [openModules, setOpenModules] = useState<string[]>(expandedModules);
 
-  // Usar progress se fornecido, caso contrário usar userProgress
-  const effectiveProgress = progress || userProgress;
-
   // Verificar se uma aula está completa
   const isLessonCompleted = (lessonId: string): boolean => {
-    const lessonProgress = effectiveProgress?.find(p => p.lesson_id === lessonId);
-    return !!lessonProgress && (
-      lessonProgress.progress_percentage >= 100 || 
-      !!lessonProgress.completed_at
+    return !!userProgress?.find(p => 
+      p.lesson_id === lessonId && 
+      (p.progress_percentage >= 100 || !!p.completed_at)
     );
   };
 
   // Verificar se uma aula está em progresso
   const isLessonInProgress = (lessonId: string): boolean => {
-    const lessonProgress = effectiveProgress?.find(p => p.lesson_id === lessonId);
-    return !!lessonProgress && lessonProgress.progress_percentage > 0 && lessonProgress.progress_percentage < 100;
+    const progress = userProgress?.find(p => p.lesson_id === lessonId);
+    return !!progress && progress.progress_percentage > 0 && progress.progress_percentage < 100;
   };
   
   // Obter porcentagem de progresso para uma aula
   const getLessonProgress = (lessonId: string): number => {
-    const lessonProgress = effectiveProgress?.find(p => p.lesson_id === lessonId);
-    return lessonProgress ? lessonProgress.progress_percentage : 0;
+    const progress = userProgress?.find(p => p.lesson_id === lessonId);
+    return progress ? progress.progress_percentage : 0;
   };
   
   // Calcular a última aula em que o usuário estava
   const getLastAccessedLesson = (): string | null => {
-    if (!effectiveProgress || effectiveProgress.length === 0) return null;
+    if (!userProgress || userProgress.length === 0) return null;
     
-    // Ordenar por updated_at (mais recente primeiro) com verificação segura
-    const sortedProgress = [...effectiveProgress].sort((a, b) => {
-      const dateA = a.updated_at ? new Date(a.updated_at).getTime() : 0;
-      const dateB = b.updated_at ? new Date(b.updated_at).getTime() : 0;
-      return dateB - dateA;
+    // Ordenar por updated_at (mais recente primeiro)
+    const sortedProgress = [...userProgress].sort((a, b) => {
+      return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
     });
     
     return sortedProgress[0].lesson_id;
@@ -181,11 +150,10 @@ export const CourseModules: React.FC<CourseModulesProps> = ({
                 <ModuleLessons 
                   moduleId={module.id} 
                   courseId={courseId}
-                  userProgress={effectiveProgress as LearningProgress[]} // Usando type assertion para garantir compatibilidade
+                  userProgress={userProgress}
                   isLessonCompleted={isLessonCompleted}
                   isLessonInProgress={isLessonInProgress}
                   getLessonProgress={getLessonProgress}
-                  providedLessons={lessons} // Passar as aulas fornecidas
                 />
               </AccordionContent>
             </AccordionItem>
@@ -203,8 +171,7 @@ const ModuleLessons = ({
   userProgress, 
   isLessonCompleted, 
   isLessonInProgress,
-  getLessonProgress,
-  providedLessons
+  getLessonProgress
 }: { 
   moduleId: string;
   courseId: string;
@@ -212,12 +179,8 @@ const ModuleLessons = ({
   isLessonCompleted: (id: string) => boolean;
   isLessonInProgress: (id: string) => boolean;
   getLessonProgress: (id: string) => number;
-  providedLessons?: LearningLesson[];
 }) => {
-  const { data: fetchedLessons, isLoading } = useLessonsByModule(moduleId);
-  
-  // Usar aulas fornecidas se disponíveis, caso contrário usar aulas buscadas
-  const lessons = providedLessons?.filter(l => l.module_id === moduleId) || fetchedLessons;
+  const { data: lessons, isLoading } = useLessonsByModule(moduleId);
   
   const LessonItem = ({ lesson }: { lesson: LearningLesson }) => {
     const completed = isLessonCompleted(lesson.id);
@@ -281,7 +244,7 @@ const ModuleLessons = ({
     );
   };
   
-  if (isLoading && !providedLessons) {
+  if (isLoading) {
     return (
       <div className="p-4 text-center">
         <p className="text-muted-foreground">Carregando aulas...</p>

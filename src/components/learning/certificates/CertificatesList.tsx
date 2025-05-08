@@ -1,7 +1,7 @@
 
 import React from "react";
 import { CertificateCard } from "./CertificateCard";
-import { useUserCertificates } from "@/hooks/learning/useUserCertificates";
+import { useCertificates } from "@/hooks/learning/useCertificates";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertCircle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -16,7 +16,7 @@ export const CertificatesList = ({ courseId }: CertificatesListProps) => {
     isLoading, 
     error, 
     downloadCertificate
-  } = useUserCertificates(courseId);
+  } = useCertificates(courseId);
   
   if (isLoading) {
     return (

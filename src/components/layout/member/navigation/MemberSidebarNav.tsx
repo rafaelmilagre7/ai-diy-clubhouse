@@ -1,10 +1,10 @@
 
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { Home, BookOpen, Wrench, Bell, Settings, Lightbulb, GraduationCap, Award, ScrollText } from "lucide-react";
+import { Home, BookOpen, Wrench, Bell, Settings, Lightbulb, GraduationCap } from "lucide-react";
 import { useAuth } from "@/contexts/auth";
 
-export const MemberNavigation = ({ sidebarOpen, className }: {
+export const MemberSidebarNav = ({ sidebarOpen, className }: {
   sidebarOpen: boolean,
   className?: string
 }) => {
@@ -26,11 +26,6 @@ export const MemberNavigation = ({ sidebarOpen, className }: {
       name: "Cursos", 
       path: "/learning", 
       icon: GraduationCap 
-    },
-    { 
-      name: "Certificados", 
-      path: "/learning/certificates", 
-      icon: ScrollText // Atualizando para ScrollText
     },
     { 
       name: "Ferramentas", 
