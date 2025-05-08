@@ -85,23 +85,37 @@ export function getVideoTypeFromUrl(url: string): 'youtube' | 'panda' | 'other' 
 
 /**
  * Extrai o ID de um vídeo do Panda Video a partir da URL
- * @param url URL do vídeo no Panda Video
+ * @param url URL do vídeo no Panda Video ou iframe
  * @returns ID do vídeo ou null se não for possível extrair
  */
 export function getPandaVideoId(url: string): string | null {
   if (!url) return null;
   
-  // Padrão para URLs do Panda Video
-  // https://player.pandavideo.com.br/embed/?v=ID
-  const pattern = /pandavideo\.com\.br\/embed\/?\?v=([^&]+)/;
-  const match = url.match(pattern);
+  // Padrões para extração do ID do Panda Video
   
-  if (match && match[1]) {
-    return match[1];
+  // Padrão para URLs diretas do player
+  const playerPattern = /player-[\w-]+\.tv\.pandavideo\.com\.br\/embed\/\?v=([\w-]+)/;
+  const playerMatch = url.match(playerPattern);
+  if (playerMatch && playerMatch[1]) {
+    return playerMatch[1];
   }
   
-  // Verificar se a URL já é o ID em si
-  if (url.match(/^[a-zA-Z0-9_-]{10,}$/)) {
+  // Padrão para URLs de embed padrão
+  const embedPattern = /pandavideo\.com\.br\/embed\/\?v=([\w-]+)/;
+  const embedMatch = url.match(embedPattern);
+  if (embedMatch && embedMatch[1]) {
+    return embedMatch[1];
+  }
+  
+  // Padrão para iframe
+  const iframePattern = /id="panda-([\w-]+)"|src="https:\/\/player-[\w-]+\.tv\.pandavideo\.com\.br\/embed\/\?v=([\w-]+)"/;
+  const iframeMatch = url.match(iframePattern);
+  if (iframeMatch) {
+    return iframeMatch[1] || iframeMatch[2];
+  }
+  
+  // Se a própria URL já for um ID
+  if (/^[\w-]{36}$/.test(url)) {
     return url;
   }
   
