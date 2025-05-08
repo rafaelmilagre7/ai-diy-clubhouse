@@ -27,7 +27,7 @@ export const ModuleContentTools = ({ module }: ModuleContentToolsProps) => {
       log("Buscando ferramentas da solução", { solution_id: module.solution_id });
       
       try {
-        // Buscar as ferramentas associadas à solução com tipagem segura
+        // Buscar as ferramentas associadas à solução usando any para contornar o problema de tipos
         const { data: solutionTools, error: toolsError } = await supabase
           .from("solution_tools")
           .select("*")
@@ -38,7 +38,8 @@ export const ModuleContentTools = ({ module }: ModuleContentToolsProps) => {
           throw toolsError;
         }
         
-        const typedSolutionTools = solutionTools as SolutionTool[];
+        // Usar type assertion para garantir que solutionTools seja tratado como SolutionTool[]
+        const typedSolutionTools = solutionTools as unknown as SolutionTool[];
         
         // Para cada ferramenta da solução, buscar informações detalhadas
         const toolsWithDetails: SolutionToolWithDetails[] = await Promise.all(
@@ -125,7 +126,7 @@ export const ModuleContentTools = ({ module }: ModuleContentToolsProps) => {
             toolUrl={tool.tool_url || ""}
             isRequired={tool.is_required} 
             hasBenefit={tool.details?.has_member_benefit || false}
-            benefitType={tool.details?.benefit_type || undefined}
+            benefitType={tool.details?.benefit_type}
           />
         ))}
       </div>

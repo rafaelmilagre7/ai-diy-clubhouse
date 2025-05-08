@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -17,7 +18,6 @@ import { Button } from "@/components/ui/button"
 import { 
   Dialog, 
   DialogContent, 
-  DialogDescription, 
   DialogFooter, 
   DialogHeader, 
   DialogTitle
@@ -337,18 +337,14 @@ const AulaWizard: React.FC<AulaWizardProps> = ({ open, onOpenChange, aula, modul
       }
       
       // Mostrar mensagem de sucesso
-      toast.success({
-        description: lessonId ? "A aula foi atualizada com sucesso." : "A aula foi criada com sucesso."
-      });
+      toast.success(lessonId ? "A aula foi atualizada com sucesso." : "A aula foi criada com sucesso.");
       
       // Fechar o modal e chamar callback de sucesso
       onOpenChange(false);
       if (onSuccess) onSuccess();
     } catch (error: any) {
       console.error("Erro ao salvar aula:", error);
-      toast.error({
-        description: error.message || "Ocorreu um erro ao salvar a aula."
-      });
+      toast.error(error.message || "Ocorreu um erro ao salvar a aula.");
     } finally {
       setIsSaving(false);
     }
@@ -394,9 +390,6 @@ const AulaWizard: React.FC<AulaWizardProps> = ({ open, onOpenChange, aula, modul
       <DialogContent className="w-full max-w-3xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
         <DialogHeader className="sticky top-0 z-10 bg-background pb-4">
           <DialogTitle>{aula ? "Editar Aula" : "Criar Nova Aula"}</DialogTitle>
-          <DialogDescription>
-            Preencha os campos abaixo para {aula ? "editar a aula." : "criar uma nova aula."}
-          </DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
