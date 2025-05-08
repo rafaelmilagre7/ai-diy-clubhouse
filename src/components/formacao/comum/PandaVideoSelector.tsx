@@ -1,11 +1,32 @@
 
 import React, { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Loader2, Search, Video } from "lucide-react";
-import { Input } from "@/components/ui/input";
 import { supabase } from "@/lib/supabase";
-import { formatVideoDuration } from "@/lib/supabase/videoUtils";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { 
+  AlertCircle, 
+  Loader2, 
+  Search,
+  Check,
+  Video,
+  RefreshCw
+} from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useToast } from "@/hooks/use-toast";
+import { PandaVideoPlayer } from "./PandaVideoPlayer";
+import { Skeleton } from "@/components/ui/skeleton";
+
+interface PandaVideoSelectorProps {
+  onSelect: (videoData: {
+    id: string;
+    title: string;
+    description?: string;
+    url: string;
+    thumbnail_url?: string;
+    duration_seconds?: number;
+  }) => void;
+  currentVideoId?: string;
+}
 
 interface PandaVideo {
   id: string;
@@ -17,161 +38,246 @@ interface PandaVideo {
   created_at?: string;
 }
 
-interface PandaVideoSelectorProps {
-  onSelect: (video: PandaVideo) => void;
-  currentVideoId?: string;
-}
-
 export const PandaVideoSelector: React.FC<PandaVideoSelectorProps> = ({
   onSelect,
   currentVideoId
 }) => {
   const [videos, setVideos] = useState<PandaVideo[]>([]);
+  const [filteredVideos, setFilteredVideos] = useState<PandaVideo[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState("");
-  
-  // Função para listar vídeos existentes
-  const loadVideos = async () => {
-    setLoading(true);
-    setError(null);
-    
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedVideoId, setSelectedVideoId] = useState<string | null>(currentVideoId || null);
+  const { toast } = useToast();
+
+  // Buscar vídeos do Panda Video
+  const fetchVideos = async () => {
     try {
-      // Simular chamada para edge function
-      // Em produção, substituir por uma chamada real à edge function que obtém os vídeos do Panda
-      
-      // Consultar vídeos existentes de lições
-      const { data, error } = await supabase
-        .from('learning_lesson_videos')
-        .select('*')
-        .eq('video_type', 'panda')
-        .order('created_at', { ascending: false })
-        .limit(10);
-        
+      setLoading(true);
+      setError(null);
+
+      // Chamada para Edge Function ou API do Supabase
+      const { data, error } = await supabase.functions.invoke('list-panda-videos', {
+        body: { limit: 50 }  // Solicitar os últimos 50 vídeos
+      });
+
       if (error) {
-        throw new Error(`Erro ao carregar vídeos: ${error.message}`);
+        throw error;
       }
-      
-      // Transformar em formato PandaVideo
-      const formattedVideos: PandaVideo[] = data?.map(video => ({
-        id: video.video_file_path || video.id,
-        title: video.title || 'Vídeo sem título',
-        description: video.description || '',
-        url: video.url,
-        thumbnail_url: video.thumbnail_url,
-        duration_seconds: video.duration_seconds,
-        created_at: video.created_at
-      })) || [];
-      
-      setVideos(formattedVideos);
+
+      if (data && data.videos) {
+        setVideos(data.videos);
+        setFilteredVideos(data.videos);
+      } else {
+        setVideos([]);
+        setFilteredVideos([]);
+      }
     } catch (err: any) {
-      console.error("Erro ao carregar vídeos:", err);
-      setError(err.message);
+      console.error("Erro ao buscar vídeos do Panda Video:", err);
+      setError(err.message || "Não foi possível carregar os vídeos. Tente novamente mais tarde.");
+      toast({
+        title: "Erro ao carregar vídeos",
+        description: "Não foi possível obter a lista de vídeos do Panda Video.",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
   };
-  
-  // Carregar vídeos na montagem do componente
+
+  // Carregar vídeos ao iniciar
   useEffect(() => {
-    loadVideos();
+    fetchVideos();
   }, []);
-  
-  // Função para filtrar vídeos com base na busca
-  const filteredVideos = videos.filter(video =>
-    video.title.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-  
+
+  // Filtrar vídeos quando a busca mudar
+  useEffect(() => {
+    if (searchQuery.trim() === "") {
+      setFilteredVideos(videos);
+    } else {
+      const lowerQuery = searchQuery.toLowerCase();
+      const filtered = videos.filter((video) =>
+        video.title.toLowerCase().includes(lowerQuery) ||
+        (video.description && video.description.toLowerCase().includes(lowerQuery))
+      );
+      setFilteredVideos(filtered);
+    }
+  }, [searchQuery, videos]);
+
+  const handleVideoSelect = (video: PandaVideo) => {
+    setSelectedVideoId(video.id);
+    onSelect({
+      id: video.id,
+      title: video.title,
+      description: video.description,
+      url: video.url,
+      thumbnail_url: video.thumbnail_url,
+      duration_seconds: video.duration_seconds,
+    });
+  };
+
+  const formatDuration = (seconds?: number): string => {
+    if (!seconds) return "00:00";
+    
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const formatDate = (dateString?: string): string => {
+    if (!dateString) return "";
+    
+    return new Date(dateString).toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+  };
+
+  const handleRetry = () => {
+    fetchVideos();
+    toast({
+      title: "Tentando novamente",
+      description: "Buscando vídeos do Panda Video...",
+    });
+  };
+
   return (
     <div className="space-y-4">
+      {error && (
+        <Alert variant="destructive">
+          <div className="flex justify-between items-start">
+            <div className="flex items-center gap-2">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{error}</AlertDescription>
+            </div>
+            <Button 
+              size="sm" 
+              onClick={handleRetry} 
+              variant="outline"
+              className="ml-2"
+            >
+              <RefreshCw className="h-4 w-4 mr-1" /> Tentar novamente
+            </Button>
+          </div>
+        </Alert>
+      )}
+
       <div className="flex items-center gap-2">
         <div className="relative flex-1">
-          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Buscar vídeos..."
+            placeholder="Buscar vídeo por título..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-8"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
           />
+          <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         </div>
-        <Button
-          variant="outline"
-          onClick={loadVideos}
+        <Button 
+          variant="outline" 
+          size="icon" 
+          onClick={fetchVideos} 
           disabled={loading}
         >
-          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Atualizar'}
+          {loading ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <RefreshCw className="h-4 w-4" />
+          )}
         </Button>
       </div>
-      
-      {error && (
-        <div className="p-4 border border-destructive/50 rounded-md bg-destructive/10 text-destructive text-center">
-          {error}
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="ml-2" 
-            onClick={loadVideos}
-          >
-            Tentar novamente
-          </Button>
-        </div>
-      )}
-      
-      {loading ? (
-        <div className="flex justify-center py-8">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-        </div>
-      ) : videos.length === 0 ? (
-        <div className="text-center py-8 border-2 border-dashed rounded-md">
-          <Video className="h-12 w-12 mx-auto text-muted-foreground mb-2" />
-          <p className="text-muted-foreground">Nenhum vídeo encontrado</p>
-          <p className="text-xs text-muted-foreground mt-1">
-            Faça upload de vídeos para poder selecioná-los
-          </p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 gap-4 max-h-80 overflow-y-auto p-2">
-          {filteredVideos.map((video) => (
-            <Card 
-              key={video.id} 
-              className={`cursor-pointer hover:bg-accent/50 transition-colors ${
-                currentVideoId === video.id ? 'border-primary' : ''
-              }`}
-              onClick={() => onSelect(video)}
-            >
-              <CardContent className="p-3 flex items-center gap-3">
-                <div className="w-24 h-16 bg-muted relative overflow-hidden rounded">
+
+      <div className="border rounded-md p-1 overflow-hidden">
+        <div className="max-h-[400px] overflow-y-auto p-1 space-y-2">
+          {loading ? (
+            // Esqueletos para carregamento
+            Array(5).fill(0).map((_, i) => (
+              <div key={i} className="flex items-start space-x-2 p-2 border rounded-md">
+                <Skeleton className="h-16 w-28 rounded" />
+                <div className="space-y-2 flex-1">
+                  <Skeleton className="h-4 w-3/4" />
+                  <Skeleton className="h-4 w-1/2" />
+                </div>
+              </div>
+            ))
+          ) : filteredVideos.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              {searchQuery ? (
+                <p>Nenhum vídeo encontrado para "{searchQuery}"</p>
+              ) : error ? (
+                <div className="flex flex-col items-center gap-2">
+                  <p>Não foi possível carregar os vídeos.</p>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={handleRetry}
+                  >
+                    <RefreshCw className="h-4 w-4 mr-1" /> Tentar novamente
+                  </Button>
+                </div>
+              ) : (
+                <p>Nenhum vídeo disponível. Faça upload de novos vídeos.</p>
+              )}
+            </div>
+          ) : (
+            filteredVideos.map((video) => (
+              <div
+                key={video.id}
+                className={`flex items-start space-x-3 p-2 border rounded-md cursor-pointer transition-colors hover:bg-gray-50 ${
+                  selectedVideoId === video.id ? "bg-blue-50 border-blue-200" : ""
+                }`}
+                onClick={() => handleVideoSelect(video)}
+              >
+                <div className="relative h-16 w-28 flex-shrink-0 bg-gray-100 rounded overflow-hidden">
                   {video.thumbnail_url ? (
                     <img 
                       src={video.thumbnail_url} 
-                      alt={video.title} 
-                      className="w-full h-full object-cover"
+                      alt={video.title}
+                      className="h-full w-full object-cover"
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-muted">
-                      <Video className="h-6 w-6 text-muted-foreground" />
+                    <div className="flex items-center justify-center h-full">
+                      <Video className="h-8 w-8 text-gray-400" />
                     </div>
                   )}
                   {video.duration_seconds && (
                     <div className="absolute bottom-1 right-1 bg-black/70 text-white text-xs px-1 rounded">
-                      {formatVideoDuration(video.duration_seconds)}
+                      {formatDuration(video.duration_seconds)}
                     </div>
                   )}
                 </div>
-                <div className="flex-1 min-w-0">
-                  <h4 className="text-sm font-medium truncate">{video.title}</h4>
+                
+                <div className="flex-1">
+                  <p className="font-medium text-sm line-clamp-1">{video.title}</p>
                   {video.description && (
-                    <p className="text-xs text-muted-foreground line-clamp-1">
+                    <p className="text-xs text-muted-foreground line-clamp-1 mt-1">
                       {video.description}
                     </p>
                   )}
+                  <div className="text-[10px] text-muted-foreground mt-1">
+                    {formatDate(video.created_at)}
+                  </div>
                 </div>
-                {currentVideoId === video.id && (
-                  <div className="w-2 h-2 rounded-full bg-primary"></div>
+                
+                {selectedVideoId === video.id && (
+                  <div className="self-center">
+                    <Check className="h-5 w-5 text-primary" />
+                  </div>
                 )}
-              </CardContent>
-            </Card>
-          ))}
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+
+      {selectedVideoId && (
+        <div className="mt-4">
+          <p className="text-sm font-medium mb-2">Prévia do vídeo selecionado:</p>
+          <PandaVideoPlayer 
+            videoId={selectedVideoId} 
+            title="Prévia"
+          />
         </div>
       )}
     </div>

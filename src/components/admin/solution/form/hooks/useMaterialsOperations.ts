@@ -2,10 +2,8 @@
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase";
-import { SolutionResource } from "@/lib/supabase/types";
 import { Resource, ResourceMetadata } from "../types/ResourceTypes";
 import { detectFileType, getFileFormatName } from "../utils/resourceUtils";
-import { parseResourceMetadata } from "../utils/resourceMetadataUtils";
 
 export const useMaterialsOperations = (
   solutionId: string | null,
@@ -21,7 +19,7 @@ export const useMaterialsOperations = (
       const fileType = detectFileType(fileName);
       const format = getFileFormatName(fileName);
       
-      const metadata: ResourceMetadata = {
+      const metadata = {
         title: fileName,
         description: `Arquivo ${format}`,
         url: url,
@@ -34,14 +32,13 @@ export const useMaterialsOperations = (
         version: "1.0"
       };
       
-      // Converter ResourceMetadata para string JSON para armazenamento
       const newResource = {
         solution_id: solutionId,
         name: fileName,
         url: url,
         type: fileType,
         format: format,
-        metadata: JSON.stringify(metadata), // Convertendo para string JSON
+        metadata: metadata,
         size: fileSize
       };
       
@@ -54,11 +51,7 @@ export const useMaterialsOperations = (
       if (error) throw error;
       
       if (data) {
-        // Converter o resultado do Supabase para o formato esperado pelo componente
-        // Usando parseResourceMetadata para garantir que o metadata seja do tipo correto
-        const resource = parseResourceMetadata(data);
-        
-        setMaterials(prev => [...prev, resource]);
+        setMaterials(prev => [...prev, data as Resource]);
       }
       
       toast({

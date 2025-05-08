@@ -7,61 +7,52 @@ export const fallbackSolutionsData: Solution[] = [
     id: "1",
     title: "Assistente de IA no WhatsApp",
     description: "Implemente um assistente de IA para atendimento automatizado via WhatsApp",
-    thumbnail_url: "/images/whatsapp-ai.jpg", // Certifique-se que não é null
+    thumbnail_url: "/images/whatsapp-ai.jpg",
     category: "operational",
     difficulty: "easy",
     slug: "whatsapp-ai-assistant",
-    estimated_time: 45,  // Já estava definido como número
-    success_rate: 95,    // Já estava definido como número
+    estimated_time: 45,
+    success_rate: 95,
     tags: ["whatsapp", "automation", "ai"],
-    related_solutions: [], // Garantindo que é uma array vazia em vez de opcional
+    related_solutions: [],
     published: true,
     author_id: "",
     created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    checklist_items: [],
-    implementation_steps: [],
-    completion_requirements: {}
+    updated_at: new Date().toISOString()
   },
   {
     id: "2",
     title: "Chatbot para Geração de Leads",
     description: "Crie um chatbot para qualificar e capturar leads no seu site",
-    thumbnail_url: "/images/chatbot-leads.jpg", // Certifique-se que não é null
+    thumbnail_url: "/images/chatbot-leads.jpg",
     category: "revenue",
     difficulty: "medium",
     slug: "chatbot-lead-generation",
-    estimated_time: 60,  // Já estava definido como número
-    success_rate: 80,    // Já estava definido como número
+    estimated_time: 60,
+    success_rate: 80,
     tags: ["chatbot", "lead generation", "sales"],
-    related_solutions: [], // Garantindo que é uma array vazia em vez de opcional
+    related_solutions: [],
     published: true,
     author_id: "",
     created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    checklist_items: [],
-    implementation_steps: [],
-    completion_requirements: {}
+    updated_at: new Date().toISOString()
   },
   {
     id: "3",
     title: "Análise de Sentimento de Clientes",
     description: "Analise o sentimento dos seus clientes para melhorar a satisfação e retenção",
-    thumbnail_url: "/images/sentiment-analysis.jpg", // Certifique-se que não é null
+    thumbnail_url: "/images/sentiment-analysis.jpg",
     category: "operational",
     difficulty: "advanced",
     slug: "customer-sentiment-analysis",
-    estimated_time: 90,  // Já estava definido como número
-    success_rate: 70,    // Já estava definido como número
+    estimated_time: 90,
+    success_rate: 70,
     tags: ["sentiment analysis", "customer satisfaction", "retention"],
-    related_solutions: [], // Garantindo que é uma array vazia em vez de opcional
+    related_solutions: [],
     published: true,
     author_id: "",
     created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    checklist_items: [],
-    implementation_steps: [],
-    completion_requirements: {}
+    updated_at: new Date().toISOString()
   }
 ];
 

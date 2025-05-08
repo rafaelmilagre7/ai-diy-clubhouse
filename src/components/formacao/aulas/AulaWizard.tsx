@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -18,6 +17,7 @@ import { Button } from "@/components/ui/button"
 import { 
   Dialog, 
   DialogContent, 
+  DialogDescription, 
   DialogFooter, 
   DialogHeader, 
   DialogTitle
@@ -282,69 +282,138 @@ const AulaWizard: React.FC<AulaWizardProps> = ({ open, onOpenChange, aula, modul
       
       // Calcular o tempo estimado com base nos vídeos
       const totalDurationMinutes = calculateTotalDuration(values.videos);
-      console.log("Tempo total calculado dos vídeos:", totalDurationMinutes);
+      console.log("Tempo total calculado dos vídeos (minutos):", totalDurationMinutes);
       
-      // Definir dados básicos da aula
-      const lessonData = {
+      // Preparar os dados completos da lição
+      const completeLessonData: Partial<LearningLesson> = {
         title: values.title,
         description: values.description || null,
         module_id: values.moduleId,
         cover_image_url: values.coverImageUrl || null,
+        estimated_time_minutes: totalDurationMinutes, // Tempo calculado automaticamente
         ai_assistant_enabled: values.aiAssistantEnabled,
         ai_assistant_prompt: values.aiAssistantPrompt || null,
         published: values.published,
-        estimated_time_minutes: totalDurationMinutes || 0
+        order_index: values.orderIndex || 0
       };
       
-      let lessonResponse;
+      console.log("Dados completos a serem salvos:", completeLessonData);
+      console.log("Status de publicação a ser salvo:", completeLessonData.published);
       
       if (lessonId) {
         // Atualizar aula existente
-        lessonResponse = await supabase
-          .from('learning_lessons')
-          .update(lessonData)
-          .eq('id', lessonId)
-          .select()
-          .single();
+        console.log("Atualizando aula existente:", lessonId);
         
-        if (lessonResponse.error) {
-          throw lessonResponse.error;
+        // 1. Primeiro fazer a atualização sem retorno de dados
+        const { error: updateError } = await supabase
+          .from('learning_lessons')
+          .update(completeLessonData)
+          .eq('id', lessonId);
+          
+        if (updateError) {
+          console.error("Erro ao atualizar aula:", updateError);
+          throw updateError;
         }
         
-        console.log("Aula atualizada com sucesso:", lessonResponse.data);
+        // 2. Depois buscar os dados atualizados para verificar
+        const { data: updatedData, error: fetchError } = await supabase
+          .from('learning_lessons')
+          .select('*')
+          .eq('id', lessonId)
+          .single();
+          
+        if (fetchError) {
+          console.error("Erro ao buscar aula atualizada:", fetchError);
+          throw fetchError;
+        }
         
-        // Salvar vídeos
+        console.log("Aula atualizada com sucesso:", updatedData);
+        console.log("Status de publicação após atualização:", updatedData.published);
+        
+        if (updatedData.published !== values.published) {
+          console.warn("AVISO: Status de publicação após atualização não corresponde ao esperado!");
+          console.log("Tentando atualização específica do status de publicação...");
+          
+          // Tenta atualizar especificamente o status de publicação para garantir
+          const { error: pubUpdateError } = await supabase
+            .from('learning_lessons')
+            .update({ published: values.published })
+            .eq('id', lessonId);
+            
+          if (pubUpdateError) {
+            console.error("Erro na atualização específica do status:", pubUpdateError);
+          } else {
+            console.log("Status de publicação atualizado com sucesso!");
+          }
+        }
+        
+        // Atualizar os vídeos da aula
         await handleSaveVideos(lessonId, values.videos);
+        
+        toast.success("Aula atualizada com sucesso!");
       } else {
         // Criar nova aula
-        lessonResponse = await supabase
-          .from('learning_lessons')
-          .insert({
-            ...lessonData,
-            order_index: values.orderIndex || 0, // Usar o valor do formulário
-          })
-          .select()
-          .single();
+        console.log("Criando nova aula...");
         
-        if (lessonResponse.error) {
-          throw lessonResponse.error;
+        // Verificar se o bucket de vídeos existe para evitar problemas de upload
+        try {
+          const { data: buckets } = await supabase.storage.listBuckets();
+          const bucketExists = buckets?.some(bucket => bucket.name === 'learning_videos');
+          
+          if (!bucketExists) {
+            console.log("Bucket de vídeos não existe, tentando criar...");
+            await supabase.storage.createBucket('learning_videos', {
+              public: true,
+              fileSizeLimit: 104857600, // 100MB
+            });
+            console.log("Bucket de vídeos criado com sucesso!");
+          }
+        } catch (err) {
+          console.log("Erro ao verificar/criar bucket:", err);
+          // Continuamos mesmo em caso de erro, pois o bucket pode existir
         }
         
-        console.log("Nova aula criada:", lessonResponse.data);
+        const { data, error } = await supabase
+          .from('learning_lessons')
+          .insert([completeLessonData])
+          .select('*')
+          .single();
+          
+        if (error) {
+          console.error("Erro ao criar aula:", error);
+          throw error;
+        }
         
-        // Salvar vídeos
-        await handleSaveVideos(lessonResponse.data.id, values.videos);
+        console.log("Aula criada com sucesso:", data);
+        
+        // Verificar se os dados foram realmente persistidos
+        const { data: verifyData, error: verifyError } = await supabase
+          .from('learning_lessons')
+          .select('*')
+          .eq('id', data.id)
+          .single();
+          
+        if (verifyError) {
+          console.error("Erro ao verificar aula criada:", verifyError);
+        } else {
+          console.log("Verificação da aula criada:", verifyData);
+          console.log("Status de publicação verificado:", verifyData.published);
+        }
+        
+        // Salvar os vídeos da aula
+        const newLessonId = data.id;
+        await handleSaveVideos(newLessonId, values.videos);
+        
+        toast.success("Aula criada com sucesso!");
       }
       
-      // Mostrar mensagem de sucesso
-      toast.success(lessonId ? "A aula foi atualizada com sucesso." : "A aula foi criada com sucesso.");
-      
-      // Fechar o modal e chamar callback de sucesso
-      onOpenChange(false);
       if (onSuccess) onSuccess();
+      form.reset(defaultValues);
+      onOpenChange(false);
+      
     } catch (error: any) {
       console.error("Erro ao salvar aula:", error);
-      toast.error(error.message || "Ocorreu um erro ao salvar a aula.");
+      toast.error(`Erro ao salvar aula: ${error.message || "Ocorreu um erro ao tentar salvar."}`);
     } finally {
       setIsSaving(false);
     }
@@ -390,6 +459,9 @@ const AulaWizard: React.FC<AulaWizardProps> = ({ open, onOpenChange, aula, modul
       <DialogContent className="w-full max-w-3xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
         <DialogHeader className="sticky top-0 z-10 bg-background pb-4">
           <DialogTitle>{aula ? "Editar Aula" : "Criar Nova Aula"}</DialogTitle>
+          <DialogDescription>
+            Preencha os campos abaixo para {aula ? "editar a aula." : "criar uma nova aula."}
+          </DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">

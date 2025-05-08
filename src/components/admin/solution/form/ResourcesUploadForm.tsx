@@ -92,8 +92,6 @@ const ResourcesUploadForm: React.FC<ResourcesUploadFormProps> = ({
         size: 0
       };
       
-      // Usamos "solution_resources" como string direta, mas precisamos ter certeza de que ela está definida nas tipagens
-      // @ts-ignore - A tabela solution_resources foi adicionada, mas o TypeScript pode não reconhecê-la imediatamente
       const { data, error } = await supabase
         .from("solution_resources")
         .insert(newResource)

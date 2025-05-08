@@ -6,7 +6,6 @@ import { CardThumbnail } from "./CardThumbnail";
 import { CardHeader } from "./CardHeader";
 import { CardContentSection } from "./CardContent";
 import { CardFooterSection } from "./CardFooter";
-import { SolutionCategory } from "@/lib/types/categoryTypes";
 
 interface SolutionCardProps {
   solution: Solution;
@@ -40,7 +39,7 @@ export const SolutionCard = ({ solution, onClick }: SolutionCardProps) => {
         <CardThumbnail thumbnailUrl={solution.thumbnail_url} />
         <div className="p-4 space-y-2">
           <CardHeader 
-            category={solution.category as SolutionCategory} 
+            category={solution.category} 
             difficulty={solution.difficulty} 
           />
           <CardContentSection 

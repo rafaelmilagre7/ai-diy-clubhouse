@@ -1,54 +1,72 @@
 
-import React from 'react';
-import { Check } from 'lucide-react';
+import React from "react";
+import { CheckIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface WizardProgressProps {
   currentStep: number;
   totalSteps: number;
   stepTitles: string[];
-  onStepClick: (step: number) => void;
+  onStepClick?: (step: number) => void;
 }
 
 const WizardProgress: React.FC<WizardProgressProps> = ({
   currentStep,
   totalSteps,
   stepTitles,
-  onStepClick
+  onStepClick,
 }) => {
   return (
     <div className="py-4">
       <div className="flex items-center justify-between">
-        {Array.from({ length: totalSteps }).map((_, index) => {
-          const isCompleted = index < currentStep;
-          const isCurrent = index === currentStep;
+        {Array.from({ length: totalSteps }).map((_, i) => {
+          const isCompleted = i < currentStep;
+          const isActive = i === currentStep;
           
           return (
-            <React.Fragment key={index}>
-              {index > 0 && (
-                <div className={`flex-1 h-0.5 ${index <= currentStep ? 'bg-primary' : 'bg-gray-200'}`} />
-              )}
-              
+            <React.Fragment key={i}>
+              {/* Etapa */}
               <button
                 type="button"
-                onClick={() => onStepClick(index)}
-                className={`relative flex items-center justify-center w-8 h-8 rounded-full ${
+                onClick={() => onStepClick?.(i)}
+                className={cn(
+                  "relative flex h-8 w-8 items-center justify-center rounded-full border-2 transition-colors",
                   isCompleted
-                    ? 'bg-primary text-white'
-                    : isCurrent
-                    ? 'border-2 border-primary text-primary bg-white'
-                    : 'bg-gray-200 text-gray-500'
-                } transition-colors`}
-                disabled={index > currentStep}
-                aria-current={isCurrent ? 'step' : undefined}
+                    ? "border-primary bg-primary text-primary-foreground"
+                    : isActive
+                    ? "border-primary text-foreground"
+                    : "border-muted-foreground/30 text-muted-foreground"
+                )}
+                disabled={!isCompleted && !isActive}
               >
-                {isCompleted ? <Check className="h-5 w-5" /> : index + 1}
+                {isCompleted ? (
+                  <CheckIcon className="h-4 w-4" />
+                ) : (
+                  <span>{i + 1}</span>
+                )}
                 
-                <div className="absolute -bottom-7 left-1/2 transform -translate-x-1/2 whitespace-nowrap">
-                  <span className={`text-xs ${isCurrent ? 'font-medium' : 'text-gray-500'}`}>
-                    {stepTitles[index]}
-                  </span>
-                </div>
+                {/* Título da etapa */}
+                <span
+                  className={cn(
+                    "absolute -bottom-7 left-1/2 -translate-x-1/2 whitespace-nowrap text-xs",
+                    isActive ? "font-medium text-foreground" : "text-muted-foreground"
+                  )}
+                >
+                  {stepTitles[i]}
+                </span>
               </button>
+              
+              {/* Linha conectora entre etapas */}
+              {i < totalSteps - 1 && (
+                <div
+                  className={cn(
+                    "h-0.5 w-full max-w-[5rem] flex-1",
+                    i < currentStep
+                      ? "bg-primary"
+                      : "bg-muted-foreground/30"
+                  )}
+                />
+              )}
             </React.Fragment>
           );
         })}

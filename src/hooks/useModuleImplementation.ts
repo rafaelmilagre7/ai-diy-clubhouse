@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
@@ -111,13 +112,12 @@ export const useModuleImplementation = () => {
             type: "implementation",
             module_order: 0,
             content: {},
-            metrics: {}, // Campo obrigatório adicionado
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
-          } as Module;
+          };
           
-          setModules([placeholderModule]);
-          setCurrentModule(placeholderModule);
+          setModules([placeholderModule as Module]);
+          setCurrentModule(placeholderModule as Module);
         }
         
         // Fetch progress for logged in user

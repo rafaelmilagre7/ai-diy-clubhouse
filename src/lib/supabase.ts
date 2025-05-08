@@ -1,8 +1,6 @@
 
-// Re-exportação centralizada para garantir compatibilidade com importações existentes
+// Re-exportação centralizada de todos os módulos do Supabase
 export * from './supabase/index';
 
-// Importar e re-exportar o cliente Supabase
-import { supabase } from './supabase/client';
-export { supabase };
-export default supabase;
+// Aviso de depreciação para este arquivo
+console.warn('O arquivo src/lib/supabase.ts está depreciado. Importe diretamente de @/lib/supabase/index.ts');

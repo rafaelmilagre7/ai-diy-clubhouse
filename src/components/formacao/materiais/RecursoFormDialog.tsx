@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -225,12 +226,12 @@ export const RecursoFormDialog = ({
                   <FormLabel>Arquivo</FormLabel>
                   <FormControl>
                     <FileUpload
-                      initialValue={field.value}
-                      onUploadComplete={(url, fileType, fileName, fileSize) => {
+                      value={field.value}
+                      onChange={(url, fileType, fileSize) => {
                         console.log("Arquivo enviado:", { url, fileType, fileSize });
                         field.onChange(url);
                         form.setValue("file_type", fileType || "");
-                        form.setValue("file_size_bytes", Number(fileSize) || 0);
+                        form.setValue("file_size_bytes", fileSize || 0);
                       }}
                       bucketName={STORAGE_BUCKETS.LEARNING_MATERIALS}
                       folderPath="materials"

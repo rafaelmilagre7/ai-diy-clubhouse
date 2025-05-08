@@ -8,7 +8,7 @@ import {
   Play,
   CheckCircle2
 } from "lucide-react";
-import { formatVideoDuration } from "@/lib/supabase/videoUtils";
+import { formatVideoDuration } from "@/lib/supabase/storage";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 

@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
@@ -144,9 +145,7 @@ const ModuloDetalhes = () => {
   }
 
   const courseId = modulo.course_id;
-  // Verificando se learning_courses existe antes de acessar a propriedade title
-  const courseInfo = (modulo as any).learning_courses;
-  const courseTitle = courseInfo?.title || 'Curso';
+  const courseTitle = modulo.learning_courses?.title || 'Curso';
 
   return (
     <div className="space-y-6">

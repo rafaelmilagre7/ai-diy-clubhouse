@@ -10,12 +10,9 @@ import { TrailEmptyState } from "./TrailEmptyState";
 import { TrailCardList } from "./TrailCardList";
 import { TrailCardHeader } from "./TrailCardHeader";
 
-// Atualizando a interface TrailSolution para aceitar strings nos campos 'category' e 'difficulty'
-interface TrailSolution extends Omit<Solution, 'category' | 'difficulty'> {
+interface TrailSolution extends Solution {
   priority: number;
   justification: string;
-  category: string; // Mantendo como string para compatibilidade
-  difficulty: string; // Mantendo como string para compatibilidade
 }
 
 export const ImplementationTrail = () => {
@@ -60,9 +57,7 @@ export const ImplementationTrail = () => {
             mappedSolutions.push({
               ...solution,
               priority: 1,
-              justification: rec.justification,
-              category: solution.category as string,
-              difficulty: solution.difficulty as string
+              justification: rec.justification
             });
           }
         });
@@ -73,9 +68,7 @@ export const ImplementationTrail = () => {
             mappedSolutions.push({
               ...solution,
               priority: 2,
-              justification: rec.justification,
-              category: solution.category as string,
-              difficulty: solution.difficulty as string
+              justification: rec.justification
             });
           }
         });
@@ -86,9 +79,7 @@ export const ImplementationTrail = () => {
             mappedSolutions.push({
               ...solution,
               priority: 3,
-              justification: rec.justification,
-              category: solution.category as string,
-              difficulty: solution.difficulty as string
+              justification: rec.justification
             });
           }
         });
@@ -126,7 +117,7 @@ export const ImplementationTrail = () => {
       <TrailCardHeader onUpdate={handleRegenerateTrail} />
       <CardContent>
         <TrailCardList
-          solutions={solutions} // Removido o cast para evitar erros
+          solutions={solutions}
           onSolutionClick={handleSolutionClick}
           onSeeAll={() => navigate('/solutions')}
         />

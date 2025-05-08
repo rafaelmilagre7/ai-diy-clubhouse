@@ -2,7 +2,7 @@
 export interface Event {
   id: string;
   title: string;
-  description?: string; // Tornando opcional para corresponder ao tipo Supabase
+  description?: string;
   start_time: string;
   end_time: string;
   location_link?: string;

@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
@@ -15,8 +16,11 @@ import { Loader2, Plus, File, Video, Edit, Upload } from "lucide-react";
 import { useLogging } from "@/hooks/useLogging";
 
 // Adicionar interface temporária para lidar com os novos campos até que os tipos sejam atualizados
-interface VideoWithType extends Omit<LearningLessonVideo, 'video_type'> {
-  video_type: string; // Tornando video_type obrigatório para resolver erro de tipo
+interface VideoWithType extends LearningLessonVideo {
+  video_type?: string;
+  video_file_path?: string | null;
+  video_file_name?: string | null;
+  file_size_bytes?: number | null;
 }
 
 const FormacaoAulaDetalhes = () => {

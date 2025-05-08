@@ -2,7 +2,6 @@
 import { Solution } from "@/lib/supabase";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { SolutionCategory } from "@/lib/types/categoryTypes";
 
 interface SolutionHeaderSectionProps {
   solution: Solution;

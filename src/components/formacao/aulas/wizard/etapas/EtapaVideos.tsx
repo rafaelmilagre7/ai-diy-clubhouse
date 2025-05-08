@@ -1,25 +1,25 @@
 
 import React, { useState } from "react";
 import {
+  Form,
+  FormControl,
   FormField,
+  FormItem,
   FormLabel,
   FormMessage,
   FormDescription
 } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { UseFormReturn } from "react-hook-form";
-import { AulaFormValues, AulaVideo } from "../AulaStepWizard";
+import { AulaFormValues } from "../AulaStepWizard";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { AlertCircle, GripVertical, Plus, Video, Youtube } from "lucide-react";
+import { AlertCircle, GripVertical, Plus } from "lucide-react";
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PandaVideoUpload } from "@/components/formacao/comum/PandaVideoUpload";
 import { PandaVideoSelector } from "@/components/formacao/comum/PandaVideoSelector";
-import { getYoutubeVideoId, youtubeUrlToEmbed, formatVideoDuration } from "@/lib/supabase/videoUtils";
 
 interface EtapaVideosProps {
   form: UseFormReturn<AulaFormValues>;
@@ -27,8 +27,6 @@ interface EtapaVideosProps {
   onPrevious: () => void;
   isSaving: boolean;
 }
-
-type VideoOriginType = "youtube" | "panda_upload" | "panda_select";
 
 const EtapaVideos: React.FC<EtapaVideosProps> = ({
   form,
@@ -39,27 +37,10 @@ const EtapaVideos: React.FC<EtapaVideosProps> = ({
   const [validationError, setValidationError] = useState<string | null>(null);
   
   const videos = form.watch('videos') || [];
-  const maxVideos = 5; // Limite de 5 vídeos
+  const maxVideos = 5; // Aumentado para 5 vídeos
   
   const handleContinue = async () => {
     setValidationError(null);
-    
-    // Validar vídeos
-    const currentVideos = form.getValues().videos || [];
-    
-    // Verificar se pelo menos um vídeo foi adicionado
-    if (currentVideos.length === 0) {
-      setValidationError("Adicione pelo menos um vídeo para a aula.");
-      return;
-    }
-    
-    // Verificar se todos os vídeos têm título e URL
-    const invalidVideos = currentVideos.filter(v => !v.title || !v.url);
-    if (invalidVideos.length > 0) {
-      setValidationError("Todos os vídeos devem ter título e URL. Verifique os campos destacados.");
-      return;
-    }
-    
     // Validar esta etapa
     const result = await form.trigger(['videos']);
     if (result) {
@@ -68,26 +49,12 @@ const EtapaVideos: React.FC<EtapaVideosProps> = ({
   };
 
   const handleVideoChange = (index: number, field: string, value: any) => {
-    const newVideos = [...form.getValues().videos || []];
+    const newVideos = [...form.getValues().videos];
     newVideos[index] = { ...newVideos[index], [field]: value };
-    
     // Garantir que o vídeo tenha um ID único para satisfazer as validações de tipo
     if (field === 'title' && !newVideos[index].id) {
       newVideos[index].id = `temp-video-${index}-${Date.now()}`;
     }
-    
-    // Se estivermos alterando a URL do YouTube, converter para formato de embed e extrair thumbnail
-    if (field === 'url' && newVideos[index].type === 'youtube') {
-      // Verificar se é uma URL do YouTube válida
-      const videoId = getYoutubeVideoId(value);
-      if (videoId) {
-        // Converter para URL de embed
-        newVideos[index].url = youtubeUrlToEmbed(value);
-        // Definir thumbnail automaticamente
-        newVideos[index].thumbnail_url = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
-      }
-    }
-    
     form.setValue("videos", newVideos, { shouldValidate: true });
     setValidationError(null);
   };
@@ -105,8 +72,7 @@ const EtapaVideos: React.FC<EtapaVideosProps> = ({
       title: "", 
       description: "", 
       url: "", 
-      type: "youtube", // Tipo padrão agora é YouTube
-      origin: "youtube" as VideoOriginType // Nova propriedade que indica a origem
+      type: "panda"
     }], { shouldValidate: true });
   };
 
@@ -121,36 +87,13 @@ const EtapaVideos: React.FC<EtapaVideosProps> = ({
   const onDragEnd = (result: any) => {
     if (!result.destination) return;
 
-    const items = Array.from(form.getValues().videos || []);
+    const items = Array.from(form.getValues().videos);
     const [reorderedItem] = items.splice(result.source.index, 1);
     items.splice(result.destination.index, 0, reorderedItem);
 
     form.setValue("videos", items, { shouldValidate: true });
   };
 
-  const handleChangeVideoOrigin = (index: number, origin: VideoOriginType) => {
-    // Limpar valores relacionados ao tipo anterior para evitar dados incorretos
-    const currentVideo = { ...form.getValues().videos?.[index] };
-    
-    const updatedVideo = {
-      ...currentVideo,
-      origin,
-      url: "", // Limpa URL ao mudar de origem
-      type: origin === "youtube" ? "youtube" : "panda", // Ajusta o tipo com base na origem
-      thumbnail_url: "", // Limpa thumbnail
-      duration_seconds: 0, // Reseta duração
-      fileName: "", // Limpa nome do arquivo
-      filePath: "", // Limpa caminho do arquivo
-      fileSize: undefined, // Limpa tamanho do arquivo
-      video_id: "" // Limpa ID do vídeo
-    };
-    
-    // Atualizar o vídeo no formulário
-    const newVideos = [...form.getValues().videos || []];
-    newVideos[index] = updatedVideo;
-    form.setValue("videos", newVideos, { shouldValidate: true });
-  };
-  
   // Função para selecionar vídeo existente
   const handleSelectExistingVideo = (index: number, videoData: any) => {
     handleVideoChange(index, "title", videoData.title || "Vídeo sem título");
@@ -162,135 +105,62 @@ const EtapaVideos: React.FC<EtapaVideosProps> = ({
     handleVideoChange(index, "thumbnail_url", videoData.thumbnail_url || "");
     handleVideoChange(index, "video_id", videoData.id);
   };
-  
-  // Função para renderizar o componente específico com base na origem do vídeo
-  const renderVideoSourceComponent = (video: AulaVideo, index: number) => {
-    const origin = video.origin || "youtube";
-    
-    switch(origin) {
-      case "youtube":
-        return (
-          <div className="space-y-4">
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                <Youtube className="h-4 w-4 text-muted-foreground" />
-              </div>
-              <Input
-                placeholder="Cole a URL do YouTube (ex: https://youtube.com/watch?v=...)"
-                className="pl-10"
-                value={video.url ? (video.url.includes('embed') ? video.url.replace('embed/', 'watch?v=') : video.url) : ''}
-                onChange={(e) => handleVideoChange(index, "url", e.target.value)}
-              />
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Formatos suportados: youtube.com/watch, youtu.be
-            </p>
-            
-            {video.url && video.url.includes("youtube") && (
-              <div className="mt-4 rounded-md overflow-hidden border">
-                <div className="relative pb-[56.25%] h-0">
-                  <iframe
-                    src={video.url}
-                    title={video.title || "Vídeo do YouTube"}
-                    className="absolute top-0 left-0 w-full h-full"
-                    frameBorder="0"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                  ></iframe>
-                </div>
-              </div>
-            )}
-          </div>
-        );
-        
-      case "panda_upload":
-        return (
-          <PandaVideoUpload
-            value={video.url || ""}
-            videoData={video}
-            onChange={(url, type, fileName, filePath, fileSize, duration_seconds, thumbnail_url, videoId) => {
-              handleVideoChange(index, "url", url);
-              handleVideoChange(index, "type", "panda");
-              handleVideoChange(index, "fileName", fileName || "");
-              handleVideoChange(index, "filePath", filePath || videoId || "");
-              handleVideoChange(index, "fileSize", fileSize || 0);
-              handleVideoChange(index, "video_id", videoId || "");
-              handleVideoChange(index, "duration_seconds", duration_seconds || 0);
-              handleVideoChange(index, "thumbnail_url", thumbnail_url || "");
-            }}
-          />
-        );
-        
-      case "panda_select":
-        return (
-          <PandaVideoSelector 
-            onSelect={(videoData) => handleSelectExistingVideo(index, videoData)}
-            currentVideoId={video.video_id || video.filePath}
-          />
-        );
-        
-      default:
-        return <p>Selecione uma origem de vídeo acima</p>;
-    }
-  };
 
   return (
-    <div className="space-y-6 py-4">
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <FormLabel className="text-base">Vídeos da Aula (máx. {maxVideos})</FormLabel>
-          <Button
-            type="button"
-            size="sm"
-            onClick={handleAddVideo}
-            disabled={videos.length >= maxVideos || isSaving}
-          >
-            <Plus className="w-4 h-4 mr-1" /> Adicionar Vídeo
-          </Button>
-        </div>
-        
-        <FormDescription>
-          Adicione até {maxVideos} vídeos para esta aula através de YouTube, upload pelo Panda Video ou seleção de vídeos já existentes.
-        </FormDescription>
-        
-        {validationError && (
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Erro</AlertTitle>
-            <AlertDescription>{validationError}</AlertDescription>
-          </Alert>
-        )}
-        
-        {videos.length === 0 ? (
-          <div className="p-8 border-2 border-dashed rounded-md text-center">
-            <Video className="h-12 w-12 mx-auto mb-2 text-muted-foreground" />
-            <p className="text-muted-foreground">
-              Nenhum vídeo adicionado. Clique em "Adicionar Vídeo" para começar.
-            </p>
+    <Form {...form}>
+      <div className="space-y-6 py-4">
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <FormLabel className="text-base">Vídeos da Aula (máx. {maxVideos})</FormLabel>
+            <Button
+              type="button"
+              size="sm"
+              onClick={handleAddVideo}
+              disabled={videos.length >= maxVideos}
+            >
+              <Plus className="w-4 h-4 mr-1" /> Adicionar Vídeo
+            </Button>
           </div>
-        ) : (
-          <DragDropContext onDragEnd={onDragEnd}>
-            <Droppable droppableId="videos">
-              {(provided) => (
-                <div 
-                  {...provided.droppableProps} 
-                  ref={provided.innerRef} 
-                  className="space-y-4"
-                >
-                  {videos.map((video, index) => (
-                    <Draggable 
-                      key={`video-${video.id || index}`} 
-                      draggableId={`video-${video.id || index}`} 
-                      index={index}
-                      isDragDisabled={isSaving}
-                    >
-                      {(provided) => (
-                        <Card
-                          ref={provided.innerRef}
-                          {...provided.draggableProps}
-                          className="border rounded-md overflow-hidden"
-                        >
-                          <CardContent className="p-4">
+          
+          <FormDescription>
+            Adicione até {maxVideos} vídeos para esta aula. Você pode selecionar vídeos existentes ou fazer upload de novos vídeos.
+          </FormDescription>
+          
+          {validationError && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Erro</AlertTitle>
+              <AlertDescription>{validationError}</AlertDescription>
+            </Alert>
+          )}
+          
+          {videos.length === 0 ? (
+            <div className="p-8 border-2 border-dashed rounded-md text-center">
+              <p className="text-muted-foreground">
+                Nenhum vídeo adicionado. Clique em "Adicionar Vídeo" para começar.
+              </p>
+            </div>
+          ) : (
+            <DragDropContext onDragEnd={onDragEnd}>
+              <Droppable droppableId="videos">
+                {(provided) => (
+                  <div 
+                    {...provided.droppableProps} 
+                    ref={provided.innerRef} 
+                    className="space-y-4"
+                  >
+                    {videos.map((video, index) => (
+                      <Draggable 
+                        key={`video-${index}`} 
+                        draggableId={`video-${index}`} 
+                        index={index}
+                      >
+                        {(provided) => (
+                          <div
+                            ref={provided.innerRef}
+                            {...provided.draggableProps}
+                            className="border rounded-md p-4"
+                          >
                             <div className="flex items-center justify-between mb-3">
                               <div className="flex items-center">
                                 <div 
@@ -306,7 +176,6 @@ const EtapaVideos: React.FC<EtapaVideosProps> = ({
                                 variant="ghost" 
                                 size="sm" 
                                 onClick={() => handleRemoveVideo(index)}
-                                disabled={isSaving}
                               >
                                 Remover
                               </Button>
@@ -318,7 +187,6 @@ const EtapaVideos: React.FC<EtapaVideosProps> = ({
                                 value={video.title || ''}
                                 onChange={(e) => handleVideoChange(index, "title", e.target.value)}
                                 className="mb-2"
-                                disabled={isSaving}
                               />
                               
                               <Textarea
@@ -326,81 +194,74 @@ const EtapaVideos: React.FC<EtapaVideosProps> = ({
                                 value={video.description || ''}
                                 onChange={(e) => handleVideoChange(index, "description", e.target.value)}
                                 className="mb-2 resize-none h-20"
-                                disabled={isSaving}
                               />
                               
-                              <div className="border rounded-md p-4 bg-muted/20">
-                                <RadioGroup 
-                                  value={video.origin || "youtube"} 
-                                  onValueChange={(value) => handleChangeVideoOrigin(index, value as VideoOriginType)}
-                                  className="flex flex-col space-y-1 md:flex-row md:space-y-0 md:space-x-4 mb-4"
-                                  disabled={isSaving}
-                                >
-                                  <div className="flex items-center space-x-2">
-                                    <RadioGroupItem value="youtube" id={`youtube-${index}`} disabled={isSaving} />
-                                    <Label htmlFor={`youtube-${index}`} className="flex items-center">
-                                      <Youtube className="h-4 w-4 mr-1.5" />
-                                      YouTube
-                                    </Label>
-                                  </div>
-                                  <div className="flex items-center space-x-2">
-                                    <RadioGroupItem value="panda_upload" id={`panda-upload-${index}`} disabled={isSaving} />
-                                    <Label htmlFor={`panda-upload-${index}`} className="flex items-center">
-                                      <Video className="h-4 w-4 mr-1.5" />
-                                      Enviar via Panda Video
-                                    </Label>
-                                  </div>
-                                  <div className="flex items-center space-x-2">
-                                    <RadioGroupItem value="panda_select" id={`panda-select-${index}`} disabled={isSaving} />
-                                    <Label htmlFor={`panda-select-${index}`} className="flex items-center">
-                                      <Video className="h-4 w-4 mr-1.5" />
-                                      Selecionar do Panda
-                                    </Label>
-                                  </div>
-                                </RadioGroup>
+                              <Tabs defaultValue="selector" className="w-full">
+                                <TabsList className="w-full mb-4">
+                                  <TabsTrigger value="selector" className="flex-1">Selecionar Vídeo Existente</TabsTrigger>
+                                  <TabsTrigger value="upload" className="flex-1">Fazer Upload de Novo Vídeo</TabsTrigger>
+                                </TabsList>
                                 
-                                {/* Componente específico para cada tipo de origem de vídeo */}
-                                {renderVideoSourceComponent(video, index)}
+                                <TabsContent value="selector">
+                                  <PandaVideoSelector 
+                                    onSelect={(videoData) => handleSelectExistingVideo(index, videoData)}
+                                    currentVideoId={video.video_id || video.filePath}
+                                  />
+                                </TabsContent>
                                 
-                                {/* Mostrar informações adicionais se disponíveis */}
-                                {video.duration_seconds > 0 && (
-                                  <div className="mt-3 text-sm text-muted-foreground">
-                                    Duração: {formatVideoDuration(video.duration_seconds)}
-                                  </div>
-                                )}
-                              </div>
+                                <TabsContent value="upload">
+                                  <PandaVideoUpload
+                                    value={video.url || ""}
+                                    videoData={video}
+                                    onChange={(url, type, fileName, filePath, fileSize, duration_seconds, thumbnail_url, videoId) => {
+                                      handleVideoChange(index, "url", url);
+                                      handleVideoChange(index, "type", "panda");
+                                      handleVideoChange(index, "fileName", fileName);
+                                      handleVideoChange(index, "filePath", filePath || videoId); // Usar videoId como fallback para filePath
+                                      handleVideoChange(index, "fileSize", fileSize);
+                                      handleVideoChange(index, "video_id", videoId);
+                                      
+                                      if (duration_seconds) {
+                                        handleVideoChange(index, "duration_seconds", duration_seconds);
+                                      }
+                                      
+                                      if (thumbnail_url) {
+                                        handleVideoChange(index, "thumbnail_url", thumbnail_url);
+                                      }
+                                    }}
+                                  />
+                                </TabsContent>
+                              </Tabs>
                             </div>
-                          </CardContent>
-                        </Card>
-                      )}
-                    </Draggable>
-                  ))}
-                  {provided.placeholder}
-                </div>
-              )}
-            </Droppable>
-          </DragDropContext>
-        )}
+                          </div>
+                        )}
+                      </Draggable>
+                    ))}
+                    {provided.placeholder}
+                  </div>
+                )}
+              </Droppable>
+            </DragDropContext>
+          )}
+        </div>
+        
+        <div className="flex justify-between pt-4 border-t">
+          <Button 
+            type="button" 
+            variant="outline" 
+            onClick={onPrevious}
+          >
+            Voltar
+          </Button>
+          <Button 
+            type="button" 
+            onClick={handleContinue}
+          >
+            Continuar
+          </Button>
+        </div>
       </div>
-      
-      <div className="flex justify-between pt-4 border-t">
-        <Button 
-          type="button" 
-          variant="outline" 
-          onClick={onPrevious}
-          disabled={isSaving}
-        >
-          Voltar
-        </Button>
-        <Button 
-          type="button" 
-          onClick={handleContinue}
-          disabled={isSaving}
-        >
-          Continuar
-        </Button>
-      </div>
-    </div>
+    </Form>
   );
 };
 

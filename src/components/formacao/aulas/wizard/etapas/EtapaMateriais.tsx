@@ -1,73 +1,254 @@
 
-import React from "react";
+import React, { useEffect } from "react";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormDescription,
+  FormMessage
+} from "@/components/ui/form";
+import { Button } from "@/components/ui/button";
 import { UseFormReturn } from "react-hook-form";
 import { AulaFormValues } from "../AulaStepWizard";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Plus } from "lucide-react";
+import { FileUpload } from "@/components/formacao/comum/FileUpload";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { File, Trash, Plus, Loader2 } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/lib/supabase";
 
 interface EtapaMateriaisProps {
   form: UseFormReturn<AulaFormValues>;
   onNext: () => void;
   onPrevious: () => void;
+  isSaving: boolean;
+  aulaId?: string; // ID da aula sendo editada, se for uma edição
 }
 
 const EtapaMateriais: React.FC<EtapaMateriaisProps> = ({
   form,
   onNext,
   onPrevious,
+  isSaving,
+  aulaId
 }) => {
+  const { toast } = useToast();
+  const [savingMaterial, setSavingMaterial] = React.useState<number | null>(null);
+
   const handleContinue = async () => {
-    // Sem validação obrigatória para materiais
-    onNext();
+    const result = await form.trigger(['resources']);
+    if (result) {
+      onNext();
+    }
   };
 
-  const handleAddResource = () => {
-    const resources = form.getValues().resources || [];
+  const handleAddMaterial = () => {
+    const currentResources = form.getValues().resources || [];
     form.setValue("resources", [
-      ...resources,
-      {
-        id: `resource-${resources.length + 1}`,
-        title: "",
-        type: "",
-        url: "",
-      },
+      ...currentResources, 
+      { title: "", description: "", url: "", type: "document" }
     ]);
   };
 
+  const handleRemoveMaterial = (index: number) => {
+    const resources = form.getValues().resources || [];
+    const newResources = [...resources];
+    newResources.splice(index, 1);
+    form.setValue("resources", newResources);
+  };
+
+  const handleMaterialChange = (index: number, field: string, value: any) => {
+    const newResources = [...form.getValues().resources];
+    newResources[index] = { ...newResources[index], [field]: value };
+    form.setValue("resources", newResources);
+  };
+
+  // Função para salvar o material no banco de dados quando o upload for concluído
+  const saveResourceToDatabase = async (index: number) => {
+    try {
+      setSavingMaterial(index);
+      const resources = form.getValues().resources || [];
+      const resource = resources[index];
+      
+      if (!resource?.url || !resource?.title) {
+        toast({
+          title: "Erro ao salvar material",
+          description: "URL e título são obrigatórios.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Se estamos editando uma aula, salvar diretamente no banco
+      if (aulaId) {
+        console.log("Salvando material para a aula:", aulaId);
+        
+        const { data, error } = await supabase
+          .from("learning_resources")
+          .insert({
+            lesson_id: aulaId,
+            name: resource.title,
+            description: resource.description || "",
+            file_url: resource.url,
+            file_type: resource.type,
+            file_size_bytes: resource.fileSize,
+            order_index: index
+          })
+          .select("*")
+          .single();
+          
+        if (error) {
+          console.error("Erro ao salvar material no banco:", error);
+          throw error;
+        }
+
+        console.log("Material salvo com sucesso:", data);
+        
+        toast({
+          title: "Material adicionado",
+          description: "O material foi salvo com sucesso.",
+        });
+      }
+      
+    } catch (error: any) {
+      console.error("Erro ao salvar material:", error);
+      toast({
+        title: "Erro ao salvar material",
+        description: error.message || "Ocorreu um erro ao tentar salvar o material.",
+        variant: "destructive",
+      });
+    } finally {
+      setSavingMaterial(null);
+    }
+  };
+
+  const handleFileUpload = async (index: number, url: string, fileType: string | undefined, fileSize: number | undefined) => {
+    handleMaterialChange(index, "url", url);
+    handleMaterialChange(index, "type", fileType || "document");
+    handleMaterialChange(index, "fileSize", fileSize);
+    
+    // Se temos um aulaId, salvar material diretamente no banco
+    if (aulaId) {
+      await saveResourceToDatabase(index);
+    }
+  };
+
+  const resources = form.watch('resources') || [];
+
   return (
-    <div className="space-y-6 py-4">
-      <div className="flex items-center justify-between">
-        <h3 className="text-base font-medium">Materiais Complementares</h3>
-        <Button
-          type="button"
-          size="sm"
-          onClick={handleAddResource}
-        >
-          <Plus className="w-4 h-4 mr-1" /> Adicionar Material
-        </Button>
-      </div>
-
-      <Card className="p-6 min-h-[200px] flex items-center justify-center border-dashed">
-        <div className="text-center">
-          <p className="text-muted-foreground">
-            Funcionalidade de materiais complementares em desenvolvimento.
-          </p>
-          <p className="text-sm text-muted-foreground">
-            Em breve você poderá adicionar links, PDFs e outros recursos.
-          </p>
+    <Form {...form}>
+      <div className="space-y-6 py-4">
+        <div>
+          <div className="flex items-center justify-between mb-4">
+            <FormLabel className="text-base">Materiais de Apoio</FormLabel>
+            <Button
+              type="button"
+              size="sm"
+              onClick={handleAddMaterial}
+            >
+              <Plus className="w-4 h-4 mr-1" /> Adicionar Material
+            </Button>
+          </div>
+          
+          <FormDescription className="mb-6">
+            Adicione arquivos como PDFs, documentos ou planilhas que serão disponibilizados aos alunos.
+          </FormDescription>
+          
+          {resources.length === 0 ? (
+            <div className="p-8 border-2 border-dashed rounded-md text-center">
+              <p className="text-muted-foreground">
+                Nenhum material adicionado. Clique em "Adicionar Material" para começar.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {resources.map((resource, index) => (
+                <Card key={index} className="overflow-hidden">
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center">
+                        <File className="h-5 w-5 mr-2 text-primary" />
+                        <span className="font-medium">Material {index + 1}</span>
+                      </div>
+                      <Button 
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleRemoveMaterial(index)}
+                        disabled={savingMaterial === index}
+                      >
+                        <Trash className="h-4 w-4 mr-1" />
+                        Remover
+                      </Button>
+                    </div>
+                    
+                    <div className="space-y-4">
+                      <Input
+                        placeholder="Título do material"
+                        value={resource.title || ''}
+                        onChange={(e) => handleMaterialChange(index, "title", e.target.value)}
+                        disabled={savingMaterial === index}
+                      />
+                      
+                      <Textarea
+                        placeholder="Descrição do material"
+                        value={resource.description || ''}
+                        onChange={(e) => handleMaterialChange(index, "description", e.target.value)}
+                        className="resize-none h-20"
+                        disabled={savingMaterial === index}
+                      />
+                      
+                      <FileUpload
+                        value={resource.url || ''}
+                        onChange={(url, fileType, fileSize) => handleFileUpload(index, url, fileType, fileSize)}
+                        bucketName="solution_files"
+                        folderPath="learning_materials"
+                        acceptedFileTypes="application/pdf, application/msword, application/vnd.openxmlformats-officedocument.wordprocessingml.document, application/vnd.ms-excel, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/zip, image/jpeg, image/png"
+                        disabled={savingMaterial === index}
+                      />
+                      
+                      {savingMaterial === index && (
+                        <div className="flex items-center justify-center p-2 bg-muted rounded">
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          <span className="text-sm">Salvando material...</span>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
         </div>
-      </Card>
-
-      <div className="flex justify-between pt-4 border-t">
-        <Button type="button" variant="outline" onClick={onPrevious}>
-          Voltar
-        </Button>
-        <Button type="button" onClick={handleContinue}>
-          Continuar
-        </Button>
+        
+        <div className="flex justify-between pt-4 border-t">
+          <Button 
+            type="button" 
+            variant="outline" 
+            onClick={onPrevious}
+          >
+            Voltar
+          </Button>
+          <Button 
+            type="button" 
+            onClick={handleContinue}
+            disabled={isSaving}
+          >
+            {isSaving ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Salvando...
+              </>
+            ) : (
+              'Continuar'
+            )}
+          </Button>
+        </div>
       </div>
-    </div>
+    </Form>
   );
 };
 

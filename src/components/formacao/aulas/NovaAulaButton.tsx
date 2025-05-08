@@ -44,15 +44,15 @@ export const NovaAulaButton: React.FC<NovaAulaButtonProps> = ({
         {buttonText}
       </Button>
 
-      <AulaStepWizard 
-        open={isModalOpen} 
-        onOpenChange={setIsModalOpen}
-        moduleId={moduleId}
-        onClose={handleCloseModal}
-        onSuccess={onSuccess}
-      />
+      {isModalOpen && (
+        <AulaStepWizard 
+          open={isModalOpen} 
+          onOpenChange={setIsModalOpen}
+          moduleId={moduleId}
+          onClose={handleCloseModal}
+          onSuccess={onSuccess}
+        />
+      )}
     </>
   );
 };
-
-export default NovaAulaButton;

@@ -3,7 +3,7 @@ import { Resource, ResourceMetadata } from "../types/ResourceTypes";
 import { detectFileType, getFileFormatName } from "./resourceUtils";
 
 export function parseResourceMetadata(item: any): Resource {
-  // Criar objeto de metadata padrão a partir das propriedades do resource
+  // Create default metadata object from the resource properties
   const defaultMetadata: ResourceMetadata = {
     title: item.name,
     description: `Arquivo ${item.format || getFileFormatName(item.name)}`,
@@ -17,44 +17,19 @@ export function parseResourceMetadata(item: any): Resource {
     version: "1.0"
   };
   
-  // Tentar analisar metadata se existir, caso contrário usar o padrão
+  // Try to parse metadata if it exists, otherwise use default
   let metadata = defaultMetadata;
   
   if (item.metadata) {
     try {
       if (typeof item.metadata === 'string') {
-        const parsedMetadata = JSON.parse(item.metadata);
-        // Garantir que todos os campos obrigatórios existam
-        metadata = {
-          title: parsedMetadata.title || defaultMetadata.title,
-          description: parsedMetadata.description || defaultMetadata.description,
-          url: parsedMetadata.url || defaultMetadata.url,
-          type: parsedMetadata.type || defaultMetadata.type,
-          format: parsedMetadata.format || defaultMetadata.format,
-          tags: parsedMetadata.tags || [],
-          order: parsedMetadata.order || 0,
-          downloads: parsedMetadata.downloads || 0,
-          size: parsedMetadata.size || defaultMetadata.size,
-          version: parsedMetadata.version || "1.0"
-        };
+        metadata = JSON.parse(item.metadata);
       } else if (typeof item.metadata === 'object') {
-        // Se já for um objeto, garantir que todos os campos obrigatórios existam
-        metadata = {
-          title: item.metadata.title || defaultMetadata.title,
-          description: item.metadata.description || defaultMetadata.description,
-          url: item.metadata.url || defaultMetadata.url,
-          type: item.metadata.type || defaultMetadata.type,
-          format: item.metadata.format || defaultMetadata.format,
-          tags: item.metadata.tags || [],
-          order: item.metadata.order || 0,
-          downloads: item.metadata.downloads || 0,
-          size: item.metadata.size || defaultMetadata.size,
-          version: item.metadata.version || "1.0"
-        };
+        metadata = item.metadata as ResourceMetadata;
       }
     } catch (e) {
-      console.error("Erro ao analisar metadata:", e);
-      // Fallback para metadata padrão em caso de erro
+      console.error("Error parsing metadata:", e);
+      // Fallback to default metadata on parse error
       metadata = defaultMetadata;
     }
   }

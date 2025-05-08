@@ -1,98 +1,155 @@
 
 import React from "react";
-import { UseFormReturn } from "react-hook-form";
-import { AulaFormValues } from "../AulaStepWizard";
-import { Button } from "@/components/ui/button";
 import {
+  Form,
   FormControl,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { LearningModule } from "@/lib/supabase";
+import { UseFormReturn } from "react-hook-form";
+import { AulaFormValues, DifficultyLevel } from "../AulaStepWizard";
 
 interface EtapaInfoBasicaProps {
   form: UseFormReturn<AulaFormValues>;
+  modules: LearningModule[];
   onNext: () => void;
+  onPrevious: () => void;
+  isSaving: boolean;
 }
 
 const EtapaInfoBasica: React.FC<EtapaInfoBasicaProps> = ({
   form,
-  onNext,
+  modules,
+  onNext
 }) => {
   const handleContinue = async () => {
-    const result = await form.trigger(["title", "description", "difficultyLevel"]);
+    // Validar apenas os campos desta etapa
+    const result = await form.trigger(['title', 'moduleId', 'description', 'difficultyLevel']);
     if (result) {
       onNext();
     }
   };
 
   return (
-    <div className="space-y-6 py-4">
-      <FormField
-        control={form.control}
-        name="title"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Título da Aula</FormLabel>
-            <FormControl>
-              <Input placeholder="Digite o título da aula" {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-
-      <FormField
-        control={form.control}
-        name="description"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Descrição</FormLabel>
-            <FormControl>
-              <Textarea 
-                placeholder="Digite uma breve descrição da aula" 
-                className="resize-none h-20" 
-                {...field} 
-              />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-
-      <FormField
-        control={form.control}
-        name="difficultyLevel"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Nível de Dificuldade</FormLabel>
-            <Select onValueChange={field.onChange} defaultValue={field.value}>
-              <FormControl>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione o nível de dificuldade" />
-                </SelectTrigger>
-              </FormControl>
-              <SelectContent>
-                <SelectItem value="iniciante">Iniciante</SelectItem>
-                <SelectItem value="intermediario">Intermediário</SelectItem>
-                <SelectItem value="avancado">Avançado</SelectItem>
-              </SelectContent>
-            </Select>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-
-      <div className="flex justify-end pt-4 border-t">
-        <Button type="button" onClick={handleContinue}>
-          Continuar
-        </Button>
+    <Form {...form}>
+      <div className="space-y-6 py-4">
+        <div className="space-y-4">
+          <FormField
+            control={form.control}
+            name="title"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Título da Aula</FormLabel>
+                <FormControl>
+                  <Input placeholder="Digite o título da aula" {...field} />
+                </FormControl>
+                <FormDescription>
+                  O título deve ser claro e objetivo
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="description"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Descrição da Aula</FormLabel>
+                <FormControl>
+                  <Textarea
+                    placeholder="Descreva brevemente o conteúdo da aula"
+                    className="min-h-[100px]"
+                    {...field}
+                  />
+                </FormControl>
+                <FormDescription>
+                  Uma breve descrição do que será abordado nesta aula
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="moduleId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Módulo</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione um módulo" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {modules.map((module) => (
+                        <SelectItem key={module.id} value={module.id}>
+                          {module.title}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormDescription>
+                    O módulo ao qual esta aula pertence
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="difficultyLevel"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Nível de Dificuldade</FormLabel>
+                  <Select 
+                    onValueChange={field.onChange} 
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione o nível de dificuldade" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value={DifficultyLevel.BEGINNER}>Iniciante</SelectItem>
+                      <SelectItem value={DifficultyLevel.INTERMEDIATE}>Intermediário</SelectItem>
+                      <SelectItem value={DifficultyLevel.ADVANCED}>Avançado</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormDescription>
+                    Nível de dificuldade do conteúdo
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        </div>
+        
+        <div className="flex justify-end">
+          <button
+            type="button"
+            className="bg-primary text-primary-foreground px-4 py-2 rounded hover:bg-primary/90"
+            onClick={handleContinue}
+          >
+            Continuar
+          </button>
+        </div>
       </div>
-    </div>
+    </Form>
   );
 };
 
