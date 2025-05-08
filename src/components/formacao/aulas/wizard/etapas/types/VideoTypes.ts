@@ -11,4 +11,5 @@ export interface VideoFormValues {
   duration_seconds?: number;
   thumbnail_url?: string;
   embedCode?: string;
+  fileName?: string;
 }

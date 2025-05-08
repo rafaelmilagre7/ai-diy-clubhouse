@@ -2,9 +2,21 @@
 import { useState } from "react";
 import { UseFormReturn } from "react-hook-form";
 import { VideoFormValues } from "../types/VideoTypes";
-import { AulaFormValues } from "../../AulaStepWizard";
+import { AulaFormValues } from "../../schemas/aulaFormSchema";
 
-export function useVideoManager(form: UseFormReturn<AulaFormValues>) {
+export interface VideoManagerHookReturnType {
+  videos: VideoFormValues[];
+  maxVideos: number;
+  validationError: string | null;
+  handleVideoChange: (index: number, field: string, value: any) => void;
+  handleEmbedChange: (index: number, embedCode: string, videoId: string, url: string, thumbnailUrl: string) => void;
+  handleAddVideo: () => void;
+  handleRemoveVideo: (index: number) => void;
+  onDragEnd: (result: any) => void;
+  setValidationError: (error: string | null) => void;
+}
+
+export function useVideoManager(form: UseFormReturn<AulaFormValues>): VideoManagerHookReturnType {
   const [validationError, setValidationError] = useState<string | null>(null);
   
   const videos = form.watch('videos') || [];
