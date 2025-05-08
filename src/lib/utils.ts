@@ -7,44 +7,37 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 /**
- * Converte bytes para uma representação legível
- * @param bytes - Número de bytes
- * @returns String formatada (ex: "1.5 MB")
+ * Converte um tamanho em bytes para uma string formatada (KB, MB, GB)
+ * @param bytes - O tamanho em bytes para converter
+ * @returns String formatada com o tamanho
  */
-export function bytesToSize(bytes: number): string {
+export function bytesToSize(bytes: number | undefined): string {
+  if (bytes === undefined || bytes === 0) return '0 Bytes';
+  
   const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
-  if (bytes === 0) return '0 Bytes';
   const i = Math.floor(Math.log(bytes) / Math.log(1024));
+  
   return parseFloat((bytes / Math.pow(1024, i)).toFixed(2)) + ' ' + sizes[i];
 }
 
-// Adicionando alias para manter compatibilidade com os componentes existentes
-export const formatFileSize = bytesToSize;
+/**
+ * Gera um ID aleatório
+ * @returns String com ID aleatório
+ */
+export function generateId(): string {
+  return Math.random().toString(36).substr(2, 9);
+}
 
 /**
- * Converte texto para formato slug (URL amigável)
- * @param text - Texto a ser convertido
- * @param addTimestamp - Adicionar timestamp ao slug para garantir unicidade
- * @returns Slug formatado
+ * Formata data para exibição
+ * @param date - Data para formatar
+ * @returns String com data formatada
  */
-export function slugify(text: string, addTimestamp = true): string {
-  const slug = text
-    .toString()
-    .normalize('NFD')           // normaliza os caracteres decompostos
-    .replace(/[\u0300-\u036f]/g, '') // remove acentos
-    .toLowerCase()
-    .trim()
-    .replace(/\s+/g, '-')       // substitui espaços por -
-    .replace(/[^\w\-]+/g, '')   // remove caracteres não-palavra
-    .replace(/\-\-+/g, '-')     // substitui múltiplos hifens por um único
-    .replace(/^-+/, '')         // remove hifens do início
-    .replace(/-+$/, '');        // remove hifens do final
-  
-  // Adiciona um timestamp ao slug para garantir unicidade
-  if (addTimestamp) {
-    const timestamp = new Date().getTime();
-    return `${slug}-${timestamp}`;
-  }
-  
-  return slug;
+export function formatDate(date: Date | string): string {
+  const d = typeof date === 'string' ? new Date(date) : date;
+  return d.toLocaleDateString('pt-BR', { 
+    day: '2-digit', 
+    month: '2-digit', 
+    year: 'numeric' 
+  });
 }

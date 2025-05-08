@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { 
@@ -8,13 +8,15 @@ import {
   Upload, 
   Video, 
   X,
-  RefreshCw
+  RefreshCw,
+  AlertTriangle
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { supabase } from "@/lib/supabase";
 import { Progress } from "@/components/ui/progress";
 import { bytesToSize } from "@/lib/utils";
+import { supabase } from "@/lib/supabase";
+import { PandaVideoPlayer } from "./PandaVideoPlayer";
 
 interface PandaVideoUploadProps {
   value: string;
@@ -35,12 +37,14 @@ interface PandaVideoUploadProps {
     thumbnail_url?: string,
     videoId?: string
   ) => void;
+  disabled?: boolean;
 }
 
 export const PandaVideoUpload = ({
   value,
   videoData,
-  onChange
+  onChange,
+  disabled = false
 }: PandaVideoUploadProps) => {
   const [uploading, setUploading] = useState(false);
   const [retrying, setRetrying] = useState(false);
@@ -48,14 +52,42 @@ export const PandaVideoUpload = ({
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [videoFile, setVideoFile] = useState<File | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const videoPreviewRef = useRef<HTMLVideoElement | null>(null);
+  const [videoTitle, setVideoTitle] = useState<string>("");
+  const [playerError, setPlayerError] = useState<string | null>(null);
   const { toast } = useToast();
 
   const maxSizeMB = 500; // 500MB máximo
   const maxRetries = 3;   // Número máximo de tentativas
+  
+  // Inicializar título a partir dos dados do vídeo, se disponíveis
+  useEffect(() => {
+    if (videoData?.title) {
+      setVideoTitle(videoData.title);
+    }
+  }, [videoData]);
+
+  const handleCancelUpload = useCallback(() => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+      setUploading(false);
+      setProgress(0);
+      toast({
+        title: "Upload cancelado",
+        description: "O upload do vídeo foi cancelado pelo usuário."
+      });
+    }
+  }, [toast]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    // Limpar erros anteriores
+    setError(null);
+    setPlayerError(null);
 
     // Validar tipo de arquivo (vídeo)
     const fileType = file.type.split('/')[0];
@@ -81,22 +113,26 @@ export const PandaVideoUpload = ({
       return;
     }
 
-    setError(null);
+    // Definir título do arquivo automaticamente (sem extensão)
+    const fileName = file.name.replace(/\.[^/.]+$/, "");
+    setVideoTitle(fileName);
+    
     setVideoFile(file);
     setRetryCount(0);
+    
+    // Criar URL de pré-visualização para o vídeo selecionado
+    if (videoPreviewRef.current) {
+      const objectURL = URL.createObjectURL(file);
+      videoPreviewRef.current.src = objectURL;
+      
+      // Limpar URL quando o componente for desmontado
+      return () => {
+        URL.revokeObjectURL(objectURL);
+      };
+    }
   };
 
-  const handleUpload = async () => {
-    if (!videoFile) {
-      setError("Selecione um arquivo de vídeo para fazer upload");
-      return;
-    }
-
-    setUploading(true);
-    setProgress(5);
-    setError(null);
-    setRetrying(false);
-
+  const uploadToPandaVideo = async (file: File, title: string): Promise<any> => {
     try {
       // Verificar a sessão antes de prosseguir
       const { data: { session } } = await supabase.auth.getSession();
@@ -111,49 +147,40 @@ export const PandaVideoUpload = ({
 
       // Criar FormData para envio do vídeo
       const formData = new FormData();
-      formData.append("video", videoFile);
-      formData.append("title", videoFile.name.replace(/\.[^/.]+$/, ""));
+      formData.append("video", file);
+      formData.append("title", title || file.name.replace(/\.[^/.]+$/, ""));
       formData.append("private", "true");
 
       // Verificar tamanho antes do envio
-      console.log(`Iniciando upload do vídeo: ${videoFile.name}, tamanho: ${bytesToSize(videoFile.size)}, tipo: ${videoFile.type}`);
+      console.log(`Iniciando upload do vídeo: ${file.name}, tamanho: ${bytesToSize(file.size)}, tipo: ${file.type}`);
 
-      // URL da Edge Function do Supabase com o ID completo do projeto
-      const functionUrl = 'https://zotzvtepvpnkcoobdubt.functions.supabase.co/upload-panda-video';
+      // URL da Edge Function do Supabase
+      const projectId = 'zotzvtepvpnkcoobdubt';
+      const functionUrl = `https://${projectId}.functions.supabase.co/upload-panda-video`;
       console.log("Chamando Edge Function:", functionUrl);
       
       // Adicionar tempo limite estendido para vídeos maiores
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 600000); // 10 minutos de timeout
+      abortControllerRef.current = new AbortController();
+      const timeoutId = setTimeout(() => {
+        if (abortControllerRef.current) {
+          abortControllerRef.current.abort();
+        }
+      }, 600000); // 10 minutos de timeout
       
       // Iniciar upload para a Edge Function com timeout estendido
       const response = await fetch(functionUrl, {
         method: "POST",
         headers: {
-          "Authorization": `Bearer ${session.access_token}`,
-          "x-client-info": `@supabase/auth-helpers-nextjs@0.7.4`
+          "Authorization": `Bearer ${session.access_token}`
         },
         body: formData,
-        signal: controller.signal
+        signal: abortControllerRef.current.signal
       });
       
       clearTimeout(timeoutId);
-
-      // Progresso artificial durante o upload
-      const progressInterval = setInterval(() => {
-        setProgress((prev) => {
-          if (prev >= 90) {
-            clearInterval(progressInterval);
-            return 90;
-          }
-          return prev + 5;
-        });
-      }, 1000);
-
+      
       // Verificar resposta HTTP (status code)
       if (!response.ok) {
-        clearInterval(progressInterval);
-        
         // Clone a resposta antes de tentar lê-la
         const clonedResponse = response.clone();
         let errorMessage = "";
@@ -191,69 +218,65 @@ export const PandaVideoUpload = ({
           }
         }
         
-        // Verificar se devemos tentar novamente
-        if (retryCount < maxRetries && (response.status === 500 || response.status === 503 || response.status === 429)) {
-          clearInterval(progressInterval);
-          setProgress(0);
-          setRetrying(true);
-          setRetryCount(prevCount => prevCount + 1);
-          
-          toast({
-            title: "Tentando novamente",
-            description: `Tentativa ${retryCount + 1} de ${maxRetries}. Por favor, aguarde...`,
-            variant: "default",
-          });
-          
-          // Esperar antes de tentar novamente (backoff exponencial)
-          const retryDelay = Math.pow(2, retryCount) * 2000;
-          await new Promise(resolve => setTimeout(resolve, retryDelay));
-          
-          // Chamar a função de upload novamente
-          setRetrying(false);
-          setUploading(false);
-          setTimeout(() => handleUpload(), 500);
-          return;
-        }
-        
         throw new Error(errorMessage);
       }
 
       // Esta é a forma segura de ler o corpo da resposta uma única vez
-      let responseText;
-      try {
-        responseText = await response.text();
-        console.log("Resposta bruta do servidor:", responseText);
-      } catch (textError) {
-        clearInterval(progressInterval);
-        console.error("Erro ao ler resposta do servidor:", textError);
-        throw new Error("Não foi possível ler a resposta do servidor");
-      }
+      const responseText = await response.text();
+      console.log("Resposta bruta do servidor:", responseText);
       
       // Verificar se o texto da resposta não está vazio antes de fazer o parse
       if (!responseText || responseText.trim() === '') {
-        clearInterval(progressInterval);
         throw new Error("Resposta vazia do servidor");
       }
       
       // Tentar fazer parse da resposta como JSON
-      let result;
-      try {
-        result = JSON.parse(responseText);
-      } catch (parseError) {
-        clearInterval(progressInterval);
-        console.error("Erro ao analisar resposta JSON:", parseError);
-        console.error("Resposta que falhou no parse:", responseText);
-        throw new Error(`Erro ao processar resposta do servidor: ${parseError.message}`);
-      }
-
-      clearInterval(progressInterval);
-      setProgress(100);
+      const result = JSON.parse(responseText);
 
       if (!result.success) {
         throw new Error(result.error || "Falha no upload do vídeo");
       }
 
-      const videoInfo = result.video;
+      return result.video;
+    } catch (error: any) {
+      if (error.name === 'AbortError') {
+        throw new Error("Upload cancelado pelo usuário");
+      }
+      throw error;
+    }
+  };
+
+  const handleUpload = async () => {
+    if (!videoFile) {
+      setError("Selecione um arquivo de vídeo para fazer upload");
+      return;
+    }
+
+    // Verificar se temos um título
+    const title = videoTitle.trim() || videoFile.name.replace(/\.[^/.]+$/, "");
+
+    setUploading(true);
+    setProgress(5);
+    setError(null);
+    setRetrying(false);
+
+    try {
+      // Simular progresso durante upload
+      const progressInterval = setInterval(() => {
+        setProgress((prev) => {
+          if (prev >= 90) {
+            clearInterval(progressInterval);
+            return 90;
+          }
+          return prev + Math.random() * 5;
+        });
+      }, 1000);
+
+      // Fazer upload para o PandaVideo
+      const videoInfo = await uploadToPandaVideo(videoFile, title);
+      
+      clearInterval(progressInterval);
+      setProgress(100);
       
       console.log("Upload concluído com sucesso:", videoInfo);
       
@@ -272,13 +295,34 @@ export const PandaVideoUpload = ({
       toast({
         title: "Upload concluído",
         description: "O vídeo foi enviado com sucesso e está sendo processado.",
-        variant: "default",
       });
 
       // Limpar arquivo após upload bem-sucedido
       setVideoFile(null);
     } catch (error: any) {
       console.error("Erro ao fazer upload para Panda Video:", error);
+      
+      // Verificar se devemos tentar novamente
+      if (retryCount < maxRetries && !error.message?.includes("cancelado")) {
+        setProgress(0);
+        setRetrying(true);
+        setRetryCount(prevCount => prevCount + 1);
+        
+        toast({
+          title: "Tentando novamente",
+          description: `Tentativa ${retryCount + 1} de ${maxRetries}. Por favor, aguarde...`,
+          variant: "default",
+        });
+        
+        // Esperar antes de tentar novamente (backoff exponencial)
+        const retryDelay = Math.pow(2, retryCount) * 2000;
+        setTimeout(() => {
+          setRetrying(false);
+          setUploading(false);
+          handleUpload();
+        }, retryDelay);
+        return;
+      }
       
       // Mensagem mais específica baseada no erro
       let errorMessage = error.message || "Não foi possível enviar o vídeo. Tente novamente.";
@@ -289,7 +333,7 @@ export const PandaVideoUpload = ({
         description: errorMessage,
         variant: "destructive",
       });
-    } finally {
+      setProgress(0);
       setUploading(false);
     }
   };
@@ -298,6 +342,9 @@ export const PandaVideoUpload = ({
     onChange("", "", "", "", undefined, undefined, undefined, undefined);
     setVideoFile(null);
     setError(null);
+    setPlayerError(null);
+    setVideoTitle("");
+    setProgress(0);
   };
 
   // Renderizar preview se tivermos uma URL válida
@@ -312,26 +359,41 @@ export const PandaVideoUpload = ({
         </Alert>
       )}
 
+      {playerError && (
+        <Alert variant="warning">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>{playerError}</AlertDescription>
+        </Alert>
+      )}
+
       {hasValue ? (
-        <div className="relative">
-          <div className="aspect-video w-full overflow-hidden rounded-md border">
-            <iframe
-              src={value}
-              title="Panda Video Player"
-              className="h-full w-full"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
+        <div className="space-y-4">
+          <div className="relative">
+            <PandaVideoPlayer 
+              videoId={videoData?.id || value.split('embed/')[1]?.split('?')[0] || ''}
+              title={videoData?.title || videoTitle || "Vídeo"}
+              onError={setPlayerError}
+            />
+            <Button
+              type="button"
+              size="icon"
+              variant="destructive"
+              className="absolute right-2 top-2"
+              onClick={handleClear}
+              disabled={disabled}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+          
+          <div>
+            <Input 
+              value={videoTitle} 
+              onChange={(e) => setVideoTitle(e.target.value)}
+              placeholder="Título do vídeo"
+              disabled={disabled}
             />
           </div>
-          <Button
-            type="button"
-            size="icon"
-            variant="destructive"
-            className="absolute right-2 top-2"
-            onClick={handleClear}
-          >
-            <X className="h-4 w-4" />
-          </Button>
         </div>
       ) : videoFile ? (
         <div className="rounded-md border p-4">
@@ -345,28 +407,51 @@ export const PandaVideoUpload = ({
               type="button" 
               variant="ghost" 
               size="sm" 
-              disabled={uploading || retrying}
+              disabled={uploading || retrying || disabled}
               onClick={() => setVideoFile(null)}
             >
               <X className="h-4 w-4" />
             </Button>
           </div>
 
+          <div className="mt-3">
+            <Input 
+              value={videoTitle} 
+              onChange={(e) => setVideoTitle(e.target.value)}
+              placeholder="Título do vídeo"
+              disabled={uploading || retrying || disabled}
+              className="mb-3"
+            />
+          </div>
+
           {(uploading || retrying) && (
             <div className="mt-2 space-y-2">
               <Progress value={retrying ? 0 : progress} />
-              <p className="text-xs text-center text-muted-foreground">
-                {retrying ? (
-                  <span className="flex items-center justify-center">
-                    <RefreshCw className="h-3 w-3 mr-1 animate-spin" />
-                    Preparando tentativa {retryCount} de {maxRetries}...
-                  </span>
-                ) : progress < 100 ? (
-                  `Enviando... ${progress}%`
-                ) : (
-                  "Processando vídeo..."
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>
+                  {retrying ? (
+                    <span className="flex items-center">
+                      <RefreshCw className="h-3 w-3 mr-1 animate-spin" />
+                      Preparando tentativa {retryCount} de {maxRetries}...
+                    </span>
+                  ) : progress < 100 ? (
+                    `Enviando... ${progress.toFixed(0)}%`
+                  ) : (
+                    "Processando vídeo..."
+                  )}
+                </span>
+                
+                {progress > 0 && progress < 100 && !retrying && (
+                  <Button 
+                    type="button" 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={handleCancelUpload}
+                  >
+                    Cancelar
+                  </Button>
                 )}
-              </p>
+              </div>
             </div>
           )}
 
@@ -376,11 +461,15 @@ export const PandaVideoUpload = ({
               variant="default"
               className="mt-2 w-full"
               onClick={handleUpload}
+              disabled={disabled}
             >
               <Upload className="mr-2 h-4 w-4" />
               Enviar vídeo
             </Button>
           )}
+          
+          {/* Video preview para debug - oculto */}
+          <video ref={videoPreviewRef} className="hidden" controls />
         </div>
       ) : (
         <div className="flex flex-col items-center space-y-2">
@@ -396,14 +485,14 @@ export const PandaVideoUpload = ({
                 type="file"
                 accept="video/*"
                 onChange={handleFileChange}
-                disabled={uploading || retrying}
+                disabled={uploading || retrying || disabled}
                 className="hidden"
               />
             </label>
           </div>
 
           <p className="text-xs text-muted-foreground">
-            Formatos aceitos: MP4, MOV, AVI, etc.
+            Formatos aceitos: MP4, MOV, AVI, WebM
           </p>
         </div>
       )}

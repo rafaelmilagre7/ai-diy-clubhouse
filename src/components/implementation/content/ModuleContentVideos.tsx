@@ -3,13 +3,19 @@ import React, { useState, useEffect } from "react";
 import { Module, Solution, supabase } from "@/lib/supabase";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLogging } from "@/hooks/useLogging";
+import { PandaVideoPlayer } from "@/components/formacao/comum/PandaVideoPlayer";
 import { YoutubeEmbed } from "@/components/common/YoutubeEmbed";
+import { getVideoTypeFromUrl, getPandaVideoId } from "@/lib/supabase/videoUtils";
 
 interface Video {
   title?: string;
   description?: string;
   url?: string;
   youtube_id?: string;
+  id?: string;
+  type?: string;
+  thumbnail_url?: string;
+  duration_seconds?: number;
 }
 
 interface ModuleContentVideosProps {
@@ -65,14 +71,31 @@ export const ModuleContentVideos: React.FC<ModuleContentVideosProps> = ({ module
             logError("Error fetching video resources:", resourcesError);
           } else if (resourcesData && resourcesData.length > 0) {
             // Convert resource data to video format
-            const videoResources = resourcesData.map(resource => ({
-              title: resource.name,
-              description: resource.format || "",
-              url: resource.url,
-              youtube_id: resource.url.includes("youtube.com/embed/") 
-                ? resource.url.split("youtube.com/embed/")[1]?.split("?")[0] 
-                : null
-            }));
+            const videoResources = resourcesData.map(resource => {
+              // Determinar se é um vídeo do YouTube ou do Panda
+              const videoType = getVideoTypeFromUrl(resource.url);
+              let youtubeId = null;
+              let pandaId = null;
+              
+              if (videoType === "youtube") {
+                const urlParts = resource.url.split('embed/');
+                youtubeId = urlParts.length > 1 ? urlParts[1]?.split('?')[0] : null;
+              } else if (videoType === "panda") {
+                pandaId = getPandaVideoId(resource.url);
+              }
+              
+              return {
+                id: resource.id,
+                title: resource.name,
+                description: resource.format || "",
+                url: resource.url,
+                type: videoType,
+                youtube_id: youtubeId,
+                panda_id: pandaId,
+                thumbnail_url: resource.metadata?.thumbnail_url || null,
+                duration_seconds: resource.metadata?.duration_seconds || 0
+              };
+            });
             
             setVideos(videoResources);
             log("Found videos in resources", { count: videoResources.length });
@@ -93,18 +116,6 @@ export const ModuleContentVideos: React.FC<ModuleContentVideosProps> = ({ module
     
     fetchSolution();
   }, [module, logError, log]);
-
-  // Extract YouTube ID from URL
-  const getYouTubeId = (url: string): string | null => {
-    try {
-      const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
-      const match = url.match(regExp);
-      return (match && match[2].length === 11) ? match[2] : null;
-    } catch (error) {
-      logError("Error extracting YouTube ID:", error);
-      return null;
-    }
-  };
 
   if (loading) {
     return (
@@ -129,37 +140,60 @@ export const ModuleContentVideos: React.FC<ModuleContentVideosProps> = ({ module
     );
   }
 
+  // Renderiza o player de vídeo baseado no tipo
+  const renderVideoPlayer = (video: Video, index: number) => {
+    // Detectar tipo de vídeo pela URL se não estiver explícito
+    const videoType = video.type || getVideoTypeFromUrl(video.url || '');
+    
+    if (videoType === 'youtube' || (video.youtube_id && !video.url?.includes('pandavideo'))) {
+      const youtubeId = video.youtube_id || (video.url ? video.url.split('embed/')[1]?.split('?')[0] : null);
+      if (youtubeId) {
+        return <YoutubeEmbed youtubeId={youtubeId} title={video.title} />;
+      }
+    }
+    
+    if (videoType === 'panda' || video.url?.includes('pandavideo')) {
+      const pandaVideoId = getPandaVideoId(video.url || '');
+      if (pandaVideoId) {
+        return (
+          <PandaVideoPlayer 
+            videoId={pandaVideoId} 
+            title={video.title || `Vídeo ${index + 1}`} 
+          />
+        );
+      }
+    }
+    
+    // Fallback para player de vídeo HTML nativo
+    if (video.url) {
+      return (
+        <div className="aspect-video rounded-md overflow-hidden">
+          <video
+            src={video.url}
+            controls
+            className="w-full h-full"
+            title={video.title || `Vídeo ${index + 1}`}
+          />
+        </div>
+      );
+    }
+    
+    return (
+      <div className="aspect-video rounded-md bg-gray-100 flex items-center justify-center">
+        <p className="text-muted-foreground">Vídeo não disponível</p>
+      </div>
+    );
+  };
+
   return (
     <div className="space-y-8 mt-8">
       <h3 className="text-lg font-semibold">Vídeos</h3>
       
       <div className="space-y-8">
         {videos.map((video, index) => {
-          // Log video data for debugging
-          log("Processing video", { video, index });
-          
-          // Get video ID from provided youtube_id or extract from URL
-          const youtubeId = video.youtube_id || (video.url ? getYouTubeId(video.url) : null);
-          
-          if (!youtubeId && !video.url) {
-            log("Skipping video - no youtube_id or url", { video });
-            return null;
-          }
-          
           return (
-            <div key={index} className="space-y-2">
-              {youtubeId ? (
-                <YoutubeEmbed youtubeId={youtubeId} title={video.title} />
-              ) : video.url ? (
-                <div className="aspect-video rounded-md overflow-hidden">
-                  <video
-                    src={video.url}
-                    controls
-                    className="w-full h-full"
-                    title={video.title || `Vídeo ${index + 1}`}
-                  />
-                </div>
-              ) : null}
+            <div key={video.id || index} className="space-y-2">
+              {renderVideoPlayer(video, index)}
               
               {video.title && (
                 <h4 className="font-medium text-lg mt-2">{video.title}</h4>

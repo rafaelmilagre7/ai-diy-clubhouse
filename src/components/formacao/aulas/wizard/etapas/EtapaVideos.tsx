@@ -1,9 +1,7 @@
 
 import React, { useState } from "react";
 import {
-  FormControl,
   FormField,
-  FormItem,
   FormLabel,
   FormMessage,
   FormDescription
@@ -21,6 +19,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { PandaVideoUpload } from "@/components/formacao/comum/PandaVideoUpload";
 import { PandaVideoSelector } from "@/components/formacao/comum/PandaVideoSelector";
+import { getYoutubeVideoId, youtubeUrlToEmbed, formatVideoDuration } from "@/lib/supabase/videoUtils";
 
 interface EtapaVideosProps {
   form: UseFormReturn<AulaFormValues>;
@@ -44,6 +43,23 @@ const EtapaVideos: React.FC<EtapaVideosProps> = ({
   
   const handleContinue = async () => {
     setValidationError(null);
+    
+    // Validar vídeos
+    const currentVideos = form.getValues().videos || [];
+    
+    // Verificar se pelo menos um vídeo foi adicionado
+    if (currentVideos.length === 0) {
+      setValidationError("Adicione pelo menos um vídeo para a aula.");
+      return;
+    }
+    
+    // Verificar se todos os vídeos têm título e URL
+    const invalidVideos = currentVideos.filter(v => !v.title || !v.url);
+    if (invalidVideos.length > 0) {
+      setValidationError("Todos os vídeos devem ter título e URL. Verifique os campos destacados.");
+      return;
+    }
+    
     // Validar esta etapa
     const result = await form.trigger(['videos']);
     if (result) {
@@ -54,10 +70,24 @@ const EtapaVideos: React.FC<EtapaVideosProps> = ({
   const handleVideoChange = (index: number, field: string, value: any) => {
     const newVideos = [...form.getValues().videos || []];
     newVideos[index] = { ...newVideos[index], [field]: value };
+    
     // Garantir que o vídeo tenha um ID único para satisfazer as validações de tipo
     if (field === 'title' && !newVideos[index].id) {
       newVideos[index].id = `temp-video-${index}-${Date.now()}`;
     }
+    
+    // Se estivermos alterando a URL do YouTube, converter para formato de embed e extrair thumbnail
+    if (field === 'url' && newVideos[index].type === 'youtube') {
+      // Verificar se é uma URL do YouTube válida
+      const videoId = getYoutubeVideoId(value);
+      if (videoId) {
+        // Converter para URL de embed
+        newVideos[index].url = youtubeUrlToEmbed(value);
+        // Definir thumbnail automaticamente
+        newVideos[index].thumbnail_url = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+      }
+    }
+    
     form.setValue("videos", newVideos, { shouldValidate: true });
     setValidationError(null);
   };
@@ -106,7 +136,13 @@ const EtapaVideos: React.FC<EtapaVideosProps> = ({
       ...currentVideo,
       origin,
       url: "", // Limpa URL ao mudar de origem
-      type: origin === "youtube" ? "youtube" : "panda" // Ajusta o tipo com base na origem
+      type: origin === "youtube" ? "youtube" : "panda", // Ajusta o tipo com base na origem
+      thumbnail_url: "", // Limpa thumbnail
+      duration_seconds: 0, // Reseta duração
+      fileName: "", // Limpa nome do arquivo
+      filePath: "", // Limpa caminho do arquivo
+      fileSize: undefined, // Limpa tamanho do arquivo
+      video_id: "" // Limpa ID do vídeo
     };
     
     // Atualizar o vídeo no formulário
@@ -142,7 +178,7 @@ const EtapaVideos: React.FC<EtapaVideosProps> = ({
               <Input
                 placeholder="Cole a URL do YouTube (ex: https://youtube.com/watch?v=...)"
                 className="pl-10"
-                value={video.url || ''}
+                value={video.url ? (video.url.includes('embed') ? video.url.replace('embed/', 'watch?v=') : video.url) : ''}
                 onChange={(e) => handleVideoChange(index, "url", e.target.value)}
               />
             </div>
@@ -154,7 +190,7 @@ const EtapaVideos: React.FC<EtapaVideosProps> = ({
               <div className="mt-4 rounded-md overflow-hidden border">
                 <div className="relative pb-[56.25%] h-0">
                   <iframe
-                    src={`https://www.youtube.com/embed/${getYoutubeVideoId(video.url)}`}
+                    src={video.url}
                     title={video.title || "Vídeo do YouTube"}
                     className="absolute top-0 left-0 w-full h-full"
                     frameBorder="0"
@@ -175,12 +211,12 @@ const EtapaVideos: React.FC<EtapaVideosProps> = ({
             onChange={(url, type, fileName, filePath, fileSize, duration_seconds, thumbnail_url, videoId) => {
               handleVideoChange(index, "url", url);
               handleVideoChange(index, "type", "panda");
-              handleVideoChange(index, "fileName", fileName);
-              handleVideoChange(index, "filePath", filePath || videoId);
-              handleVideoChange(index, "fileSize", fileSize);
-              handleVideoChange(index, "video_id", videoId);
-              handleVideoChange(index, "duration_seconds", duration_seconds);
-              handleVideoChange(index, "thumbnail_url", thumbnail_url);
+              handleVideoChange(index, "fileName", fileName || "");
+              handleVideoChange(index, "filePath", filePath || videoId || "");
+              handleVideoChange(index, "fileSize", fileSize || 0);
+              handleVideoChange(index, "video_id", videoId || "");
+              handleVideoChange(index, "duration_seconds", duration_seconds || 0);
+              handleVideoChange(index, "thumbnail_url", thumbnail_url || "");
             }}
           />
         );
@@ -197,20 +233,6 @@ const EtapaVideos: React.FC<EtapaVideosProps> = ({
         return <p>Selecione uma origem de vídeo acima</p>;
     }
   };
-  
-  // Função para extrair ID do YouTube de uma URL
-  const getYoutubeVideoId = (url: string): string => {
-    if (!url) return '';
-    
-    try {
-      const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
-      const match = url.match(regExp);
-      return (match && match[2].length === 11) ? match[2] : '';
-    } catch (error) {
-      console.error("Erro ao extrair ID do YouTube:", error);
-      return '';
-    }
-  };
 
   return (
     <div className="space-y-6 py-4">
@@ -221,7 +243,7 @@ const EtapaVideos: React.FC<EtapaVideosProps> = ({
             type="button"
             size="sm"
             onClick={handleAddVideo}
-            disabled={videos.length >= maxVideos}
+            disabled={videos.length >= maxVideos || isSaving}
           >
             <Plus className="w-4 h-4 mr-1" /> Adicionar Vídeo
           </Button>
@@ -241,6 +263,7 @@ const EtapaVideos: React.FC<EtapaVideosProps> = ({
         
         {videos.length === 0 ? (
           <div className="p-8 border-2 border-dashed rounded-md text-center">
+            <Video className="h-12 w-12 mx-auto mb-2 text-muted-foreground" />
             <p className="text-muted-foreground">
               Nenhum vídeo adicionado. Clique em "Adicionar Vídeo" para começar.
             </p>
@@ -256,9 +279,10 @@ const EtapaVideos: React.FC<EtapaVideosProps> = ({
                 >
                   {videos.map((video, index) => (
                     <Draggable 
-                      key={`video-${index}`} 
-                      draggableId={`video-${index}`} 
+                      key={`video-${video.id || index}`} 
+                      draggableId={`video-${video.id || index}`} 
                       index={index}
+                      isDragDisabled={isSaving}
                     >
                       {(provided) => (
                         <Card
@@ -282,6 +306,7 @@ const EtapaVideos: React.FC<EtapaVideosProps> = ({
                                 variant="ghost" 
                                 size="sm" 
                                 onClick={() => handleRemoveVideo(index)}
+                                disabled={isSaving}
                               >
                                 Remover
                               </Button>
@@ -293,6 +318,7 @@ const EtapaVideos: React.FC<EtapaVideosProps> = ({
                                 value={video.title || ''}
                                 onChange={(e) => handleVideoChange(index, "title", e.target.value)}
                                 className="mb-2"
+                                disabled={isSaving}
                               />
                               
                               <Textarea
@@ -300,6 +326,7 @@ const EtapaVideos: React.FC<EtapaVideosProps> = ({
                                 value={video.description || ''}
                                 onChange={(e) => handleVideoChange(index, "description", e.target.value)}
                                 className="mb-2 resize-none h-20"
+                                disabled={isSaving}
                               />
                               
                               <div className="border rounded-md p-4 bg-muted/20">
@@ -307,23 +334,24 @@ const EtapaVideos: React.FC<EtapaVideosProps> = ({
                                   value={video.origin || "youtube"} 
                                   onValueChange={(value) => handleChangeVideoOrigin(index, value as VideoOriginType)}
                                   className="flex flex-col space-y-1 md:flex-row md:space-y-0 md:space-x-4 mb-4"
+                                  disabled={isSaving}
                                 >
                                   <div className="flex items-center space-x-2">
-                                    <RadioGroupItem value="youtube" id={`youtube-${index}`} />
+                                    <RadioGroupItem value="youtube" id={`youtube-${index}`} disabled={isSaving} />
                                     <Label htmlFor={`youtube-${index}`} className="flex items-center">
                                       <Youtube className="h-4 w-4 mr-1.5" />
                                       YouTube
                                     </Label>
                                   </div>
                                   <div className="flex items-center space-x-2">
-                                    <RadioGroupItem value="panda_upload" id={`panda-upload-${index}`} />
+                                    <RadioGroupItem value="panda_upload" id={`panda-upload-${index}`} disabled={isSaving} />
                                     <Label htmlFor={`panda-upload-${index}`} className="flex items-center">
                                       <Video className="h-4 w-4 mr-1.5" />
                                       Enviar via Panda Video
                                     </Label>
                                   </div>
                                   <div className="flex items-center space-x-2">
-                                    <RadioGroupItem value="panda_select" id={`panda-select-${index}`} />
+                                    <RadioGroupItem value="panda_select" id={`panda-select-${index}`} disabled={isSaving} />
                                     <Label htmlFor={`panda-select-${index}`} className="flex items-center">
                                       <Video className="h-4 w-4 mr-1.5" />
                                       Selecionar do Panda
@@ -333,6 +361,13 @@ const EtapaVideos: React.FC<EtapaVideosProps> = ({
                                 
                                 {/* Componente específico para cada tipo de origem de vídeo */}
                                 {renderVideoSourceComponent(video, index)}
+                                
+                                {/* Mostrar informações adicionais se disponíveis */}
+                                {video.duration_seconds > 0 && (
+                                  <div className="mt-3 text-sm text-muted-foreground">
+                                    Duração: {formatVideoDuration(video.duration_seconds)}
+                                  </div>
+                                )}
                               </div>
                             </div>
                           </CardContent>
@@ -353,12 +388,14 @@ const EtapaVideos: React.FC<EtapaVideosProps> = ({
           type="button" 
           variant="outline" 
           onClick={onPrevious}
+          disabled={isSaving}
         >
           Voltar
         </Button>
         <Button 
           type="button" 
           onClick={handleContinue}
+          disabled={isSaving}
         >
           Continuar
         </Button>
