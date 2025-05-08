@@ -1,170 +1,118 @@
 
-import { useState } from "react";
-import { Link } from "react-router-dom";
-import { LearningLesson } from "@/lib/supabase/types";
+import React from "react";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { toast } from "sonner";
+import { CheckCircle, ArrowLeft, ArrowRight, Star } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { useNavigate } from "react-router-dom";
+import { LearningLesson } from "@/lib/supabase/types";
 
 interface LessonNavigationProps {
   courseId: string;
   currentLesson: LearningLesson;
   allLessons: LearningLesson[];
-  onComplete?: () => Promise<void>;
   isCompleted?: boolean;
+  onComplete?: () => Promise<void>;
+  prevLesson?: LearningLesson | null;
+  nextLesson?: LearningLesson | null;
 }
 
 export const LessonNavigation: React.FC<LessonNavigationProps> = ({
   courseId,
   currentLesson,
   allLessons,
+  isCompleted = false,
   onComplete,
-  isCompleted = false
+  prevLesson,
+  nextLesson
 }) => {
-  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
-  const [isCompleting, setIsCompleting] = useState(false);
+  const navigate = useNavigate();
 
-  // Encontrar índice da aula atual
-  const currentIndex = allLessons.findIndex(lesson => lesson.id === currentLesson.id);
-
-  // Determinar aulas anterior e próxima
-  const prevLesson = currentIndex > 0 ? allLessons[currentIndex - 1] : null;
-  const nextLesson = currentIndex < allLessons.length - 1 ? allLessons[currentIndex + 1] : null;
-
-  // Manipular conclusão da aula
   const handleCompleteLesson = async () => {
-    if (!onComplete) return;
-    
-    setIsCompleting(true);
-    try {
+    if (onComplete) {
       await onComplete();
-      setIsConfirmOpen(false);
-      toast.success("Aula marcada como concluída!");
-      
-      // Se houver próxima aula e o usuário acabou de concluir esta, perguntar se quer ir para a próxima
-      if (nextLesson) {
-        toast("Deseja continuar para a próxima aula?", {
-          action: {
-            label: "Continuar",
-            onClick: () => {
-              window.location.href = `/learning/course/${courseId}/lesson/${nextLesson.id}`;
-            },
-          },
-          duration: 5000,
-        });
-      } else {
-        toast.success("Você concluiu todas as aulas deste módulo!");
-      }
-    } catch (error) {
-      console.error("Erro ao marcar aula como concluída:", error);
-      toast.error("Erro ao marcar a aula como concluída. Tente novamente.");
-    } finally {
-      setIsCompleting(false);
     }
   };
 
+  const handlePrevious = () => {
+    if (prevLesson) {
+      navigate(`/learning/course/${courseId}/lesson/${prevLesson.id}`);
+    }
+  };
+
+  const handleNext = () => {
+    if (nextLesson) {
+      navigate(`/learning/course/${courseId}/lesson/${nextLesson.id}`);
+    } else {
+      // Se não houver próxima aula, navegar de volta para a página do curso
+      navigate(`/learning/course/${courseId}`);
+    }
+  };
+
+  // Encontrar a posição atual na lista de aulas
+  const currentIndex = allLessons.findIndex(lesson => lesson.id === currentLesson.id);
+  const totalLessons = allLessons.length;
+  const lessonNumber = currentIndex !== -1 ? currentIndex + 1 : 0;
+
   return (
-    <>
-      <div className="flex flex-col sm:flex-row items-stretch gap-2 sm:justify-between">
-        <div>
-          {prevLesson ? (
-            <Button 
-              variant="outline" 
-              asChild
-              size="sm"
-              className="flex items-center"
-            >
-              <Link to={`/learning/course/${courseId}/lesson/${prevLesson.id}`}>
-                <ChevronLeft className="h-4 w-4 mr-1" />
-                Aula anterior
-              </Link>
-            </Button>
-          ) : (
-            <Button 
-              variant="outline" 
-              size="sm"
-              disabled
-            >
-              <ChevronLeft className="h-4 w-4 mr-1" />
-              Aula anterior
-            </Button>
-          )}
+    <div className="flex flex-col gap-4">
+      {/* Barra de progresso */}
+      <div className="flex items-center gap-2 mb-2">
+        <div className="flex-1">
+          <Progress value={isCompleted ? 100 : 0} className="h-2" />
+        </div>
+        <span className="text-xs text-muted-foreground whitespace-nowrap">
+          Aula {lessonNumber} de {totalLessons}
+        </span>
+      </div>
+      
+      {/* Botões de navegação */}
+      <div className="flex justify-between items-center gap-2">
+        <div className="flex-1">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handlePrevious}
+            disabled={!prevLesson}
+            className="gap-1"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            {prevLesson ? "Aula anterior" : "Início do curso"}
+          </Button>
         </div>
         
-        <div className="flex items-center justify-center">
-          {isCompleted ? (
-            <Button variant="ghost" disabled className="text-green-500">
-              <CheckCircle className="h-4 w-4 mr-2" />
+        <div className="flex-1 text-center">
+          {!isCompleted ? (
+            <Button
+              variant="default"
+              size="sm"
+              onClick={handleCompleteLesson}
+              className="gap-1"
+            >
+              <CheckCircle className="h-4 w-4" />
+              Concluir aula
+            </Button>
+          ) : (
+            <Button variant="outline" size="sm" disabled className="gap-1">
+              <CheckCircle className="h-4 w-4" />
               Aula concluída
             </Button>
-          ) : (
-            <Button 
-              variant="outline"
-              onClick={() => setIsConfirmOpen(true)}
-              disabled={isCompleting}
-            >
-              {isCompleting ? (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              ) : null}
-              Marcar como concluída
-            </Button>
           )}
         </div>
         
-        <div>
-          {nextLesson ? (
-            <Button 
-              variant={isCompleted ? "default" : "outline"} 
-              asChild
-              size="sm"
-              className="flex items-center ml-auto"
-            >
-              <Link to={`/learning/course/${courseId}/lesson/${nextLesson.id}`}>
-                Próxima aula
-                <ChevronRight className="h-4 w-4 ml-1" />
-              </Link>
-            </Button>
-          ) : (
-            <Button 
-              variant="outline" 
-              size="sm"
-              disabled
-            >
-              Próxima aula
-              <ChevronRight className="h-4 w-4 ml-1" />
-            </Button>
-          )}
+        <div className="flex-1 text-right">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleNext}
+            className="gap-1"
+          >
+            {nextLesson ? "Próxima aula" : "Finalizar curso"}
+            <ArrowRight className="h-4 w-4" />
+          </Button>
         </div>
       </div>
-
-      {/* Diálogo de confirmação para marcar como concluído */}
-      <AlertDialog open={isConfirmOpen} onOpenChange={setIsConfirmOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Marcar aula como concluída?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Tem certeza que deseja marcar esta aula como concluída? Isso atualizará seu progresso no curso.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleCompleteLesson} disabled={isCompleting}>
-              {isCompleting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-              Confirmar
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </>
+    </div>
   );
 };
+
+export default LessonNavigation;

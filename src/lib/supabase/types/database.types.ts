@@ -1,4 +1,3 @@
-
 export type Database = {
   public: {
     Tables: {
@@ -304,6 +303,35 @@ export type Database = {
           created_at?: string;
           updated_at?: string;
           is_hidden?: boolean;
+        };
+      };
+      learning_lesson_nps: {
+        Row: {
+          id: string;
+          user_id: string;
+          lesson_id: string;
+          score: number;
+          feedback: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          lesson_id: string;
+          score: number;
+          feedback?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          lesson_id?: string;
+          score?: number;
+          feedback?: string | null;
+          created_at?: string;
+          updated_at?: string;
         };
       };
       // Definição mínima necessária para compilação

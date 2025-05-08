@@ -451,6 +451,44 @@ export type Database = {
         }
         Relationships: []
       }
+      learning_lesson_nps: {
+        Row: {
+          created_at: string
+          feedback: string | null
+          id: string
+          lesson_id: string
+          score: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          feedback?: string | null
+          id?: string
+          lesson_id: string
+          score: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          feedback?: string | null
+          id?: string
+          lesson_id?: string
+          score?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "learning_lesson_nps_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "learning_lessons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       learning_lesson_tools: {
         Row: {
           created_at: string

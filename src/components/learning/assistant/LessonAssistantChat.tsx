@@ -1,275 +1,208 @@
 
 import React, { useState, useRef, useEffect } from "react";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
-import { Send, Loader, Bot, XCircle, User } from "lucide-react";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { supabase } from "@/lib/supabase";
+import { Separator } from "@/components/ui/separator";
+import { SendIcon, Loader2, BotIcon, User } from "lucide-react";
 import { useAuth } from "@/contexts/auth";
+import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
-interface Message {
-  id: string;
-  role: "user" | "assistant";
+interface ChatMessage {
+  role: 'user' | 'assistant';
   content: string;
-  createdAt: Date;
+  timestamp: Date;
 }
 
 interface LessonAssistantChatProps {
   lessonId: string;
-  assistantId: string | null;
-  assistantPrompt: string | null;
-  className?: string;
+  assistantId?: string | null;
+  assistantPrompt?: string | null;
 }
 
-export const LessonAssistantChat: React.FC<LessonAssistantChatProps> = ({
-  lessonId,
-  assistantId,
-  assistantPrompt,
-  className = "",
+export const LessonAssistantChat: React.FC<LessonAssistantChatProps> = ({ 
+  lessonId, 
+  assistantId = null,
+  assistantPrompt = null
 }) => {
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [input, setInput] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [threadId, setThreadId] = useState<string | null>(null);
-  const scrollAreaRef = useRef<HTMLDivElement>(null);
-  const messageEndRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [input, setInput] = useState<string>("");
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Inicializar chat com mensagem de boas-vindas
+  // Efeito para rolar para o final da conversa quando novas mensagens são adicionadas
   useEffect(() => {
-    // Adicionar mensagem de boas-vindas do assistente
-    setMessages([
-      {
-        id: "welcome-message",
-        role: "assistant",
-        content: "Olá! Sou o assistente desta aula. Como posso ajudar com suas dúvidas?",
-        createdAt: new Date(),
-      },
-    ]);
-
-    // Tentar carregar thread existente ou criar uma nova
-    const loadOrCreateThread = async () => {
-      if (!user) return;
-      
-      try {
-        setIsLoading(true);
-        
-        // Verificar se existe thread para este usuário e aula
-        const { data: existingThread, error: threadError } = await supabase
-          .from("assistant_threads")
-          .select("thread_id")
-          .eq("user_id", user.id)
-          .eq("lesson_id", lessonId)
-          .maybeSingle();
-
-        if (threadError) throw threadError;
-        
-        if (existingThread && existingThread.thread_id) {
-          setThreadId(existingThread.thread_id);
-          await loadMessages(existingThread.thread_id);
-        } else {
-          // Criar novo thread
-          const { data } = await supabase.functions.invoke("create-assistant-thread", {
-            body: { lessonId, assistantId }
-          });
-          
-          if (data && data.threadId) {
-            setThreadId(data.threadId);
-            
-            // Salvar referência ao thread no banco
-            await supabase.from("assistant_threads").insert({
-              user_id: user.id,
-              lesson_id: lessonId,
-              thread_id: data.threadId,
-              assistant_id: assistantId
-            });
-          }
-        }
-      } catch (error) {
-        console.error("Erro ao inicializar chat:", error);
-        toast.error("Não foi possível inicializar o chat do assistente");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadOrCreateThread();
-  }, [lessonId, assistantId, user]);
-
-  // Carregar mensagens do thread existente
-  const loadMessages = async (threadId: string) => {
-    try {
-      const { data, error } = await supabase.functions.invoke("get-assistant-messages", {
-        body: { threadId }
-      });
-      
-      if (error) throw error;
-      
-      if (data && data.messages && Array.isArray(data.messages)) {
-        // Adicionar todas as mensagens exceto a inicial de boas-vindas
-        setMessages(prevMessages => {
-          const welcomeMessage = prevMessages.find(m => m.id === "welcome-message");
-          
-          const formattedMessages = data.messages.map((msg: any) => ({
-            id: msg.id,
-            role: msg.role,
-            content: msg.content[0].text.value,
-            createdAt: new Date(msg.created_at * 1000)
-          }));
-          
-          return welcomeMessage 
-            ? [welcomeMessage, ...formattedMessages] 
-            : formattedMessages;
-        });
-      }
-    } catch (error) {
-      console.error("Erro ao carregar mensagens:", error);
-    }
-  };
-
-  // Rolar para a última mensagem sempre que as mensagens mudarem
-  useEffect(() => {
-    messageEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Função para enviar mensagem
+  // Ajustar altura do textarea automaticamente
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+    }
+  }, [input]);
+
+  // Função para enviar mensagem para o assistente
   const sendMessage = async () => {
-    if (!input.trim() || isLoading || !threadId) return;
-    
-    const userMessage = {
-      id: `temp-${Date.now()}`,
-      role: "user" as const,
-      content: input,
-      createdAt: new Date()
+    if (!input.trim() || !user) return;
+
+    const userMessage: ChatMessage = {
+      role: 'user',
+      content: input.trim(),
+      timestamp: new Date()
     };
-    
+
+    // Adiciona a mensagem do usuário à conversa
     setMessages(prev => [...prev, userMessage]);
     setInput("");
-    
+    setIsLoading(true);
+
+    // Simula um atraso na resposta (substitua isto com uma chamada real ao seu backend/API)
     try {
-      setIsLoading(true);
-      
-      // Enviar mensagem para o assistante
-      const { data, error } = await supabase.functions.invoke("send-assistant-message", {
-        body: { 
-          threadId, 
-          content: input,
-          assistantId,
-          context: {
-            lessonId,
-            assistantPrompt
-          }
-        }
-      });
-      
-      if (error) throw error;
-      
-      if (data && data.response) {
-        setMessages(prev => [...prev, {
-          id: data.messageId || `assistant-${Date.now()}`,
-          role: "assistant",
-          content: data.response,
-          createdAt: new Date()
-        }]);
-      }
+      setTimeout(() => {
+        // Esta é apenas uma simulação
+        // Em um ambiente de produção, você usaria uma função Supabase Edge para chamar a API do OpenAI
+        const assistantMessage: ChatMessage = {
+          role: 'assistant',
+          content: `Isso é uma simulação de resposta do assistente. Em uma implementação real, você chamaria a API do OpenAI usando o assistantId: ${assistantId || 'não definido'} e incluiria o contexto da aula.`,
+          timestamp: new Date()
+        };
+        
+        setMessages(prev => [...prev, assistantMessage]);
+        setIsLoading(false);
+      }, 1000);
     } catch (error: any) {
       console.error("Erro ao enviar mensagem:", error);
-      toast.error("Erro ao enviar mensagem: " + (error.message || "Tente novamente"));
-      
-      // Adicionar mensagem de erro do assistante
-      setMessages(prev => [...prev, {
-        id: `error-${Date.now()}`,
-        role: "assistant",
-        content: "Desculpe, ocorreu um erro ao processar sua mensagem. Por favor, tente novamente.",
-        createdAt: new Date()
-      }]);
-    } finally {
+      toast.error("Não foi possível enviar sua mensagem. Tente novamente.");
       setIsLoading(false);
     }
   };
 
-  // Lidar com tecla Enter (enviar mensagem)
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === "Enter" && !e.shiftKey) {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       sendMessage();
     }
   };
 
-  // Renderizar mensagens
-  const renderMessages = () => {
-    return messages.map((message) => (
-      <div 
-        key={message.id} 
-        className={`flex ${
-          message.role === "user" ? "justify-end" : "justify-start"
-        } mb-4`}
-      >
-        <div className={`flex items-start gap-2 max-w-[80%] ${
-          message.role === "user" ? "flex-row-reverse" : ""
-        }`}>
-          <Avatar className={`h-8 w-8 ${message.role === "assistant" ? "bg-primary" : "bg-muted"}`}>
-            <AvatarFallback>
-              {message.role === "assistant" ? <Bot size={16} /> : <User size={16} />}
-            </AvatarFallback>
-          </Avatar>
-          <div className={`rounded-lg p-3 ${
-            message.role === "user" 
-              ? "bg-primary text-primary-foreground" 
-              : "bg-muted text-foreground"
-          }`}>
-            <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
-            <span className="text-xs opacity-70 mt-1 block">
-              {message.createdAt.toLocaleTimeString([], {
-                hour: "2-digit",
-                minute: "2-digit"
-              })}
-            </span>
+  if (!assistantId) {
+    return (
+      <Card className="mt-4">
+        <CardContent className="pt-6">
+          <div className="flex items-center justify-center py-10 text-muted-foreground">
+            <p>Assistente IA não está configurado para esta aula.</p>
           </div>
-        </div>
-      </div>
-    ));
-  };
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
-    <Card className={`flex flex-col h-[500px] ${className}`}>
-      <CardHeader className="px-4 py-2 border-b">
-        <CardTitle className="text-lg flex items-center">
-          <Bot className="w-5 h-5 mr-2 text-primary" />
-          Assistente IA
-        </CardTitle>
+    <Card className="w-full">
+      <CardHeader>
+        <div className="flex items-center gap-2">
+          <BotIcon className="h-5 w-5 text-primary" />
+          <CardTitle className="text-lg">Assistente IA</CardTitle>
+        </div>
+        <CardDescription>
+          Tire suas dúvidas sobre o conteúdo desta aula com nosso assistente IA.
+        </CardDescription>
       </CardHeader>
-      <CardContent className="flex-grow p-4 overflow-hidden">
-        <ScrollArea className="h-full pr-4" ref={scrollAreaRef}>
-          <div className="flex flex-col">
-            {renderMessages()}
-            <div ref={messageEndRef} />
-          </div>
-        </ScrollArea>
+      <CardContent className="p-0">
+        <div className="h-[400px] overflow-y-auto p-4 space-y-4">
+          {messages.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground space-y-4 py-10">
+              <BotIcon className="h-12 w-12" />
+              <div>
+                <p className="font-medium">Assistente IA disponível</p>
+                <p className="text-sm">Envie uma mensagem para começar a conversa.</p>
+              </div>
+            </div>
+          ) : (
+            messages.map((msg, index) => (
+              <div 
+                key={index}
+                className={`flex ${
+                  msg.role === 'user' ? 'justify-end' : 'justify-start'
+                }`}
+              >
+                <div 
+                  className={`flex items-start gap-2 max-w-[80%] ${
+                    msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'
+                  }`}
+                >
+                  <Avatar className={`h-8 w-8 ${msg.role === 'user' ? 'bg-primary' : 'bg-muted'}`}>
+                    {msg.role === 'user' ? (
+                      <AvatarFallback>U</AvatarFallback>
+                    ) : (
+                      <AvatarFallback><BotIcon className="h-4 w-4" /></AvatarFallback>
+                    )}
+                  </Avatar>
+                  <div 
+                    className={`rounded-lg p-3 ${
+                      msg.role === 'user' 
+                        ? 'bg-primary text-primary-foreground' 
+                        : 'bg-muted'
+                    }`}
+                  >
+                    <p>{msg.content}</p>
+                    <div className="text-xs opacity-70 mt-1 text-right">
+                      {new Intl.DateTimeFormat('pt-BR', {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      }).format(msg.timestamp)}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+          {isLoading && (
+            <div className="flex items-start gap-2">
+              <Avatar className="h-8 w-8 bg-muted">
+                <AvatarFallback><BotIcon className="h-4 w-4" /></AvatarFallback>
+              </Avatar>
+              <div className="bg-muted rounded-lg p-3">
+                <Loader2 className="h-4 w-4 animate-spin" />
+              </div>
+            </div>
+          )}
+          <div ref={messagesEndRef} />
+        </div>
       </CardContent>
-      <CardFooter className="p-3 border-t">
-        <div className="flex w-full items-end gap-2">
+      <Separator />
+      <CardFooter className="p-4">
+        <div className="flex items-end w-full gap-2">
           <Textarea
-            placeholder="Digite sua mensagem..."
+            ref={textareaRef}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            className="min-h-10 flex-grow resize-none"
-            disabled={isLoading || !threadId}
+            placeholder="Digite sua mensagem aqui..."
+            className="resize-none min-h-[40px] max-h-[120px]"
+            disabled={isLoading}
           />
           <Button
-            size="icon"
             onClick={sendMessage}
-            disabled={isLoading || !input.trim() || !threadId}
+            disabled={!input.trim() || isLoading}
+            className="flex-shrink-0"
+            size="icon"
           >
-            {isLoading ? <Loader className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-            <span className="sr-only">Enviar mensagem</span>
+            {isLoading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <SendIcon className="h-4 w-4" />
+            )}
           </Button>
         </div>
       </CardFooter>
     </Card>
   );
 };
+
+export default LessonAssistantChat;

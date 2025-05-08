@@ -7,7 +7,6 @@ import { LessonContent } from "@/components/learning/member/LessonContent";
 import { LessonNavigation } from "@/components/learning/member/LessonNavigation";
 import { LessonHeader } from "@/components/learning/member/LessonHeader";
 import { LessonSidebar } from "@/components/learning/member/LessonSidebar";
-import { LessonResources } from "@/components/learning/member/LessonResources";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
@@ -253,6 +252,33 @@ const LessonView = () => {
     }
   }, [lessonId, userProgress]);
 
+  // Encontrar aulas anterior e próxima para navegação
+  const findAdjacentLessons = () => {
+    if (!moduleData?.lessons || !lessonId) return { prev: null, next: null };
+    
+    const lessons = moduleData.lessons;
+    const currentIndex = lessons.findIndex(lesson => lesson.id === lessonId);
+    
+    if (currentIndex === -1) return { prev: null, next: null };
+    
+    return {
+      prev: currentIndex > 0 ? lessons[currentIndex - 1] : null,
+      next: currentIndex < lessons.length - 1 ? lessons[currentIndex + 1] : null
+    };
+  };
+  
+  const { prev, next } = findAdjacentLessons();
+  
+  // Função de navegação para próxima aula
+  const navigateToNext = () => {
+    if (next) {
+      navigate(`/learning/course/${courseId}/lesson/${next.id}`);
+    } else {
+      // Voltar para a página do curso se não houver próxima aula
+      navigate(`/learning/course/${courseId}`);
+    }
+  };
+
   const isLoading = isLoadingLesson || isLoadingResources || isLoadingVideos;
   
   if (isLoading) {
@@ -298,22 +324,21 @@ const LessonView = () => {
               allLessons={moduleData?.lessons || []}
               onComplete={handleComplete}
               isCompleted={progress >= 100}
+              prevLesson={prev}
+              nextLesson={next}
             />
           </div>
           
           <div className="mt-8">
             <LessonContent 
               lesson={lesson!} 
-              videos={videos || []} 
+              videos={videos || []}
+              resources={resources || []}
+              isCompleted={progress >= 100}
               onProgressUpdate={handleProgressUpdate} 
+              onComplete={handleComplete}
             />
           </div>
-          
-          {(resources && resources.length > 0) && (
-            <div className="mt-8">
-              <LessonResources resources={resources} />
-            </div>
-          )}
         </div>
         
         <div>

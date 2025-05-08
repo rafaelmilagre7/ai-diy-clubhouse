@@ -1,4 +1,3 @@
-
 export * from './types/database.types';
 
 export type UserRole = 'admin' | 'member' | 'formacao';
@@ -204,4 +203,14 @@ export interface VideoFormValues {
   video_id?: string;
   thumbnail_url?: string;
   order_index?: number;
+}
+
+export interface LearningLessonNps {
+  id: string;
+  user_id: string;
+  lesson_id: string;
+  score: number;
+  feedback: string | null;
+  created_at: string;
+  updated_at: string;
 }

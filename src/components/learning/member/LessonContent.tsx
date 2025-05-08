@@ -1,5 +1,5 @@
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { LearningLesson } from "@/lib/supabase/types";
 import { LessonVideoPlayer } from "./LessonVideoPlayer";
 import { LessonComments } from "../comments/LessonComments";
@@ -8,20 +8,29 @@ import { LessonAssistantChat } from "../assistant/LessonAssistantChat";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { CheckCircle } from "lucide-react";
+import { LessonCompletionModal } from "../completion/LessonCompletionModal";
 
 interface LessonContentProps {
   lesson: LearningLesson;
   videos: any[];
   resources?: any[];
+  isCompleted?: boolean;
   onProgressUpdate?: (videoId: string, progress: number) => void;
+  onComplete?: () => void;
 }
 
 export const LessonContent: React.FC<LessonContentProps> = ({ 
   lesson, 
   videos,
   resources = [],
-  onProgressUpdate
+  isCompleted = false,
+  onProgressUpdate,
+  onComplete
 }) => {
+  const [completionDialogOpen, setCompletionDialogOpen] = useState(false);
+  
   useEffect(() => {
     // Marcar progresso inicial quando o componente é montado
     if (onProgressUpdate && videos.length > 0) {
@@ -32,6 +41,13 @@ export const LessonContent: React.FC<LessonContentProps> = ({
   const handleVideoProgress = (videoId: string, progress: number) => {
     if (onProgressUpdate) {
       onProgressUpdate(videoId, progress);
+    }
+  };
+  
+  const handleCompleteLesson = () => {
+    setCompletionDialogOpen(true);
+    if (onComplete) {
+      onComplete();
     }
   };
   
@@ -116,6 +132,19 @@ export const LessonContent: React.FC<LessonContentProps> = ({
           </div>
         )}
         
+        {/* Botão para marcar aula como concluída */}
+        <div className="flex justify-end">
+          <Button
+            onClick={handleCompleteLesson}
+            disabled={isCompleted}
+            className="gap-2"
+            variant={isCompleted ? "outline" : "default"}
+          >
+            <CheckCircle className="h-4 w-4" />
+            {isCompleted ? "Aula concluída" : "Marcar como concluída"}
+          </Button>
+        </div>
+        
         <Tabs defaultValue="video" className="w-full">
           <TabsList className="mb-4">
             {hasVideos && <TabsTrigger value="video">Vídeos</TabsTrigger>}
@@ -154,6 +183,14 @@ export const LessonContent: React.FC<LessonContentProps> = ({
           <Separator className="mb-6" />
           <LessonComments lessonId={lesson.id} />
         </section>
+
+        {/* Modal de conclusão com NPS */}
+        <LessonCompletionModal
+          isOpen={completionDialogOpen}
+          setIsOpen={setCompletionDialogOpen}
+          lesson={lesson}
+          onNext={() => {}} // Aqui você pode adicionar navegação para próxima aula
+        />
       </div>
     );
   }
@@ -180,6 +217,19 @@ export const LessonContent: React.FC<LessonContentProps> = ({
           <span>Duração total: {formatTotalDuration()}</span>
         </div>
       )}
+      
+      {/* Botão para marcar aula como concluída */}
+      <div className="flex justify-end">
+        <Button
+          onClick={handleCompleteLesson}
+          disabled={isCompleted}
+          className="gap-2"
+          variant={isCompleted ? "outline" : "default"}
+        >
+          <CheckCircle className="h-4 w-4" />
+          {isCompleted ? "Aula concluída" : "Marcar como concluída"}
+        </Button>
+      </div>
       
       {/* Reprodutor de vídeo com playlist se houver vídeos */}
       {hasVideos && (
@@ -216,6 +266,14 @@ export const LessonContent: React.FC<LessonContentProps> = ({
         <Separator className="mb-6" />
         <LessonComments lessonId={lesson.id} />
       </section>
+
+      {/* Modal de conclusão com NPS */}
+      <LessonCompletionModal
+        isOpen={completionDialogOpen}
+        setIsOpen={setCompletionDialogOpen}
+        lesson={lesson}
+        onNext={() => {}} // Aqui você pode adicionar navegação para próxima aula
+      />
     </div>
   );
 };
