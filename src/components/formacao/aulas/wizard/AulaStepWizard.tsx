@@ -1,8 +1,7 @@
 
 import React, { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, FormProvider } from "react-hook-form";
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useNavigate } from "react-router-dom";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -137,46 +136,48 @@ const AulaStepWizard: React.FC<AulaStepWizardProps> = ({
       </Tabs>
 
       <Card className="p-4">
-        {activeTab === "informacoes" && (
-          <EtapaInfoBasica form={form} onNext={() => handleNext("conteudo")} />
-        )}
-        {activeTab === "conteudo" && (
-          <EtapaConteudo
-            form={form}
-            onNext={() => handleNext("videos")}
-            onPrevious={() => handlePrevious("informacoes")}
-          />
-        )}
-        {activeTab === "videos" && (
-          <EtapaVideos
-            form={form}
-            onNext={() => handleNext("atividades")}
-            onPrevious={() => handlePrevious("conteudo")}
-            isSaving={isSaving}
-          />
-        )}
-        {activeTab === "atividades" && (
-          <EtapaAtividades
-            form={form}
-            onNext={() => handleNext("materiais")}
-            onPrevious={() => handlePrevious("videos")}
-          />
-        )}
-        {activeTab === "materiais" && (
-          <EtapaMateriais
-            form={form}
-            onNext={() => handleNext("revisao")}
-            onPrevious={() => handlePrevious("atividades")}
-          />
-        )}
-        {activeTab === "revisao" && (
-          <EtapaRevisao
-            form={form}
-            onPrevious={() => handlePrevious("materiais")}
-            onSubmit={form.handleSubmit(handleSubmit)}
-            isSaving={isSaving || isAulaCreating}
-          />
-        )}
+        <FormProvider {...form}>
+          {activeTab === "informacoes" && (
+            <EtapaInfoBasica form={form} onNext={() => handleNext("conteudo")} />
+          )}
+          {activeTab === "conteudo" && (
+            <EtapaConteudo
+              form={form}
+              onNext={() => handleNext("videos")}
+              onPrevious={() => handlePrevious("informacoes")}
+            />
+          )}
+          {activeTab === "videos" && (
+            <EtapaVideos
+              form={form}
+              onNext={() => handleNext("atividades")}
+              onPrevious={() => handlePrevious("conteudo")}
+              isSaving={isSaving}
+            />
+          )}
+          {activeTab === "atividades" && (
+            <EtapaAtividades
+              form={form}
+              onNext={() => handleNext("materiais")}
+              onPrevious={() => handlePrevious("videos")}
+            />
+          )}
+          {activeTab === "materiais" && (
+            <EtapaMateriais
+              form={form}
+              onNext={() => handleNext("revisao")}
+              onPrevious={() => handlePrevious("atividades")}
+            />
+          )}
+          {activeTab === "revisao" && (
+            <EtapaRevisao
+              form={form}
+              onPrevious={() => handlePrevious("materiais")}
+              onSubmit={form.handleSubmit(handleSubmit)}
+              isSaving={isSaving || isAulaCreating}
+            />
+          )}
+        </FormProvider>
       </Card>
     </Card>
   );

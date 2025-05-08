@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { AlertCircle, Loader2, Upload } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
+import { supabase } from "@/lib/supabase";
 
 interface PandaVideoUploadProps {
   value: string;
@@ -70,62 +71,56 @@ export const PandaVideoUpload: React.FC<PandaVideoUploadProps> = ({
     setError(null);
     
     try {
-      // Simulamos a chamada para uma função edge que enviaria o vídeo para o Panda Video
-      // Em um ambiente real, esta seria uma chamada para o Supabase Edge Function
+      // Preparar dados para envio
+      const formData = new FormData();
+      formData.append('video', file);
+      formData.append('title', videoData?.title || file.name);
+      formData.append('private', 'false');
       
-      // Simular o progresso do upload
-      const simulateProgress = () => {
-        let currentProgress = 0;
-        const interval = setInterval(() => {
-          currentProgress += Math.random() * 10;
-          if (currentProgress > 95) {
-            currentProgress = 95; // Mantenha em 95% até a conclusão
-            clearInterval(interval);
-          }
-          setProgress(Math.min(currentProgress, 95));
-        }, 500);
-        
-        return interval;
-      };
-      
-      const progressInterval = simulateProgress();
-      
-      // Simular uma resposta de API após um tempo
-      setTimeout(() => {
-        clearInterval(progressInterval);
-        setProgress(100);
-        
-        // Dados simulados que seriam retornados pela API do Panda
-        const mockPandaResponse = {
-          id: `panda-${Date.now()}`,
-          title: videoData?.title || file.name,
-          url: `https://player.pandavideo.com.br/embed/?v=panda-${Date.now()}`,
-          thumbnail: `https://placekitten.com/640/360?t=${Date.now()}`,
-          duration: Math.floor(Math.random() * 300) + 60 // Duração simulada entre 60 e 360 segundos
-        };
-        
-        // Chamar o callback com os dados simulados
-        onChange(
-          mockPandaResponse.url,
-          'panda',
-          file.name,
-          mockPandaResponse.id,
-          file.size,
-          mockPandaResponse.duration,
-          mockPandaResponse.thumbnail,
-          mockPandaResponse.id
-        );
-        
-        setUploading(false);
-        setFile(null);
-        
-        // Limpar o input de arquivo
-        const fileInput = document.getElementById('video-file-input') as HTMLInputElement;
-        if (fileInput) {
-          fileInput.value = '';
+      // Chamar edge function para fazer o upload para o Panda Video
+      const { data, error: funcError } = await supabase.functions.invoke(
+        'upload-panda-video', 
+        {
+          body: formData,
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
         }
-      }, 3000);
+      );
       
+      if (funcError) {
+        throw new Error(`Erro na função de upload: ${funcError.message}`);
+      }
+      
+      if (!data || !data.success) {
+        throw new Error(data?.error || 'Erro desconhecido no upload');
+      }
+      
+      // Processar resposta bem-sucedida
+      const videoResponse = data.video;
+      
+      setProgress(100);
+      
+      // Chamar o callback com os dados recebidos
+      onChange(
+        videoResponse.url,
+        'panda',
+        file.name,
+        videoResponse.id,
+        file.size,
+        videoResponse.duration || 0,
+        videoResponse.thumbnail_url || null,
+        videoResponse.id
+      );
+      
+      setUploading(false);
+      setFile(null);
+      
+      // Limpar o input de arquivo
+      const fileInput = document.getElementById('video-file-input') as HTMLInputElement;
+      if (fileInput) {
+        fileInput.value = '';
+      }
     } catch (err: any) {
       console.error("Erro ao fazer upload do vídeo:", err);
       setError(err.message || 'Erro ao fazer upload do vídeo');
@@ -133,6 +128,28 @@ export const PandaVideoUpload: React.FC<PandaVideoUploadProps> = ({
       setProgress(0);
     }
   };
+  
+  // Simulação de progresso durante o upload para melhorar UX
+  const simulateProgress = React.useCallback(() => {
+    if (!uploading) return;
+    
+    const interval = setInterval(() => {
+      setProgress(prev => {
+        if (prev >= 95) {
+          clearInterval(interval);
+          return prev;
+        }
+        return prev + Math.random() * 10;
+      });
+    }, 800);
+    
+    return () => clearInterval(interval);
+  }, [uploading]);
+  
+  React.useEffect(() => {
+    const cleanup = simulateProgress();
+    return cleanup;
+  }, [simulateProgress]);
   
   return (
     <div className="space-y-4">

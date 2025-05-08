@@ -35,7 +35,7 @@ export const useCreateAula = () => {
         content: aulaData.content || {},
         cover_image_url: aulaData.coverImageUrl || null,
         estimated_time_minutes: aulaData.order_index || 0, // Usar um valor padrão para estimated_time
-        published: aulaData.published || false,
+        published: aulaData.published !== false, // default true
         order_index: aulaData.order_index || 0, // Usar order_index como está definido
         ai_assistant_enabled: aulaData.aiAssistantEnabled !== false, // default true
         ai_assistant_prompt: aulaData.aiAssistantPrompt || ''
