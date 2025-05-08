@@ -249,3 +249,71 @@ export const setupLearningStorageBuckets = async () => {
       `Alguns buckets não puderam ser configurados: ${errorMessages.join(', ')}`
   };
 };
+
+// Função para extrair o ID do vídeo do Panda Video de uma URL
+export const getPandaVideoId = (url: string): string | null => {
+  try {
+    // Formato comum do player do Panda Video
+    if (url.includes('pandavideo.com.br/embed')) {
+      // Formato: https://player-vz-XXXXX.tv.pandavideo.com.br/embed/?v=VIDEO_ID
+      const match = url.match(/[?&]v=([^&]+)/);
+      if (match && match[1]) {
+        return match[1];
+      }
+    }
+    
+    // Formato comum do iframe do Panda Video (id="panda-VIDEO_ID")
+    const iframeMatch = url.match(/id="panda-(.*?)"/i);
+    if (iframeMatch && iframeMatch[1]) {
+      return iframeMatch[1];
+    }
+    
+    // Formato alternativo
+    if (url.includes('/embed/?') && url.includes('pandavideo')) {
+      const urlObj = new URL(url);
+      return urlObj.searchParams.get('v');
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('Erro ao extrair ID do vídeo Panda:', error);
+    return null;
+  }
+};
+
+// Função para obter a URL da thumbnail do Panda Video
+export const getPandaThumbnailUrl = (videoId: string): string => {
+  return `https://thumbnails-vz-d6ebf577-797.tv.pandavideo.com.br/thumbnails/${videoId}/default.jpg`;
+};
+
+// Função para extrair informações do iframe do Panda Video
+export const extractPandaVideoInfo = (iframeCode: string): {
+  videoId: string;
+  url: string;
+  thumbnailUrl: string;
+} | null => {
+  try {
+    // Extrair o ID do vídeo
+    const idMatch = iframeCode.match(/id="panda-(.*?)"/i);
+    const srcMatch = iframeCode.match(/src="(.*?)"/i);
+    
+    if (!idMatch || idMatch.length < 2 || !srcMatch || srcMatch.length < 2) {
+      return null;
+    }
+    
+    const videoId = idMatch[1];
+    const embedUrl = srcMatch[1];
+    
+    // Construir URL da thumbnail com base no ID
+    const thumbnailUrl = getPandaThumbnailUrl(videoId);
+    
+    return {
+      videoId,
+      url: embedUrl,
+      thumbnailUrl
+    };
+  } catch (error) {
+    console.error("Erro ao extrair informações do iframe:", error);
+    return null;
+  }
+};

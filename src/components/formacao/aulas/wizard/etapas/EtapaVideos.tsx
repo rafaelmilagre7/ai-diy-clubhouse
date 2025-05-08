@@ -17,9 +17,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { AlertCircle, GripVertical, Plus } from "lucide-react";
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PandaVideoUpload } from "@/components/formacao/comum/PandaVideoUpload";
-import { PandaVideoSelector } from "@/components/formacao/comum/PandaVideoSelector";
 
 interface EtapaVideosProps {
   form: UseFormReturn<AulaFormValues>;
@@ -37,24 +34,83 @@ const EtapaVideos: React.FC<EtapaVideosProps> = ({
   const [validationError, setValidationError] = useState<string | null>(null);
   
   const videos = form.watch('videos') || [];
-  const maxVideos = 5; // Aumentado para 5 vídeos
+  const maxVideos = 5;
   
   const handleContinue = async () => {
     setValidationError(null);
-    // Validar esta etapa
     const result = await form.trigger(['videos']);
     if (result) {
       onNext();
     }
   };
 
+  // Função para extrair informações do iframe do Panda Video
+  const extractPandaVideoInfo = (iframeCode: string): {
+    videoId: string;
+    url: string;
+    thumbUrl?: string;
+  } | null => {
+    try {
+      // Extrair o ID do vídeo do código de incorporação (iframe)
+      const idMatch = iframeCode.match(/id="panda-(.*?)"/i);
+      const srcMatch = iframeCode.match(/src="(.*?)"/i);
+      
+      if (!idMatch || idMatch.length < 2 || !srcMatch || srcMatch.length < 2) {
+        return null;
+      }
+      
+      const videoId = idMatch[1];
+      const embedUrl = srcMatch[1];
+      
+      // Construir URL da thumbnail com base no ID do vídeo (formato padrão do Panda Video)
+      const thumbnailUrl = `https://thumbnails-vz-d6ebf577-797.tv.pandavideo.com.br/thumbnails/${videoId}/default.jpg`;
+      
+      return {
+        videoId: videoId,
+        url: embedUrl,
+        thumbUrl: thumbnailUrl
+      };
+    } catch (error) {
+      console.error("Erro ao extrair informações do iframe:", error);
+      return null;
+    }
+  };
+
+  const handleIframeChange = (index: number, iframeCode: string) => {
+    const videoInfo = extractPandaVideoInfo(iframeCode);
+    
+    if (!videoInfo) {
+      setValidationError("O código de incorporação (iframe) do Panda Video parece ser inválido. Verifique se você copiou o código completo.");
+      return;
+    }
+    
+    setValidationError(null);
+    
+    // Atualizar os dados do vídeo com as informações extraídas do iframe
+    const newVideos = [...form.getValues().videos];
+    newVideos[index] = { 
+      ...newVideos[index],
+      url: videoInfo.url,
+      type: "panda",
+      video_id: videoInfo.videoId,
+      filePath: videoInfo.videoId,
+      thumbnail_url: videoInfo.thumbUrl || "",
+      // Armazenar o iframe completo para referência
+      embedCode: iframeCode
+    };
+    
+    form.setValue("videos", newVideos, { shouldValidate: true });
+  };
+
   const handleVideoChange = (index: number, field: string, value: any) => {
     const newVideos = [...form.getValues().videos];
     newVideos[index] = { ...newVideos[index], [field]: value };
-    // Garantir que o vídeo tenha um ID único para satisfazer as validações de tipo
+    
+    // Garantir que o vídeo tenha um ID único
     if (field === 'title' && !newVideos[index].id) {
       newVideos[index].id = `temp-video-${index}-${Date.now()}`;
     }
+    
     form.setValue("videos", newVideos, { shouldValidate: true });
     setValidationError(null);
   };
@@ -66,7 +122,6 @@ const EtapaVideos: React.FC<EtapaVideosProps> = ({
     }
     
     const currentVideos = form.getValues().videos || [];
-    // Adicionar um ID temporário para satisfazer as validações de tipo
     form.setValue("videos", [...currentVideos, { 
       id: `temp-video-${currentVideos.length}-${Date.now()}`,
       title: "", 
@@ -94,18 +149,6 @@ const EtapaVideos: React.FC<EtapaVideosProps> = ({
     form.setValue("videos", items, { shouldValidate: true });
   };
 
-  // Função para selecionar vídeo existente
-  const handleSelectExistingVideo = (index: number, videoData: any) => {
-    handleVideoChange(index, "title", videoData.title || "Vídeo sem título");
-    handleVideoChange(index, "description", videoData.description || "");
-    handleVideoChange(index, "url", videoData.url);
-    handleVideoChange(index, "type", "panda");
-    handleVideoChange(index, "filePath", videoData.id);
-    handleVideoChange(index, "duration_seconds", videoData.duration_seconds || 0);
-    handleVideoChange(index, "thumbnail_url", videoData.thumbnail_url || "");
-    handleVideoChange(index, "video_id", videoData.id);
-  };
-
   return (
     <Form {...form}>
       <div className="space-y-6 py-4">
@@ -123,7 +166,7 @@ const EtapaVideos: React.FC<EtapaVideosProps> = ({
           </div>
           
           <FormDescription>
-            Adicione até {maxVideos} vídeos para esta aula. Você pode selecionar vídeos existentes ou fazer upload de novos vídeos.
+            Adicione até {maxVideos} vídeos para esta aula. Cole o código de incorporação (iframe) do Panda Video para cada vídeo.
           </FormDescription>
           
           {validationError && (
@@ -196,42 +239,37 @@ const EtapaVideos: React.FC<EtapaVideosProps> = ({
                                 className="mb-2 resize-none h-20"
                               />
                               
-                              <Tabs defaultValue="selector" className="w-full">
-                                <TabsList className="w-full mb-4">
-                                  <TabsTrigger value="selector" className="flex-1">Selecionar Vídeo Existente</TabsTrigger>
-                                  <TabsTrigger value="upload" className="flex-1">Fazer Upload de Novo Vídeo</TabsTrigger>
-                                </TabsList>
-                                
-                                <TabsContent value="selector">
-                                  <PandaVideoSelector 
-                                    onSelect={(videoData) => handleSelectExistingVideo(index, videoData)}
-                                    currentVideoId={video.video_id || video.filePath}
-                                  />
-                                </TabsContent>
-                                
-                                <TabsContent value="upload">
-                                  <PandaVideoUpload
-                                    value={video.url || ""}
-                                    videoData={video}
-                                    onChange={(url, type, fileName, filePath, fileSize, duration_seconds, thumbnail_url, videoId) => {
-                                      handleVideoChange(index, "url", url);
-                                      handleVideoChange(index, "type", "panda");
-                                      handleVideoChange(index, "fileName", fileName);
-                                      handleVideoChange(index, "filePath", filePath || videoId); // Usar videoId como fallback para filePath
-                                      handleVideoChange(index, "fileSize", fileSize);
-                                      handleVideoChange(index, "video_id", videoId);
-                                      
-                                      if (duration_seconds) {
-                                        handleVideoChange(index, "duration_seconds", duration_seconds);
-                                      }
-                                      
-                                      if (thumbnail_url) {
-                                        handleVideoChange(index, "thumbnail_url", thumbnail_url);
-                                      }
-                                    }}
-                                  />
-                                </TabsContent>
-                              </Tabs>
+                              <div className="space-y-2">
+                                <FormLabel>Código de Incorporação do Panda Video (iframe)</FormLabel>
+                                <Textarea
+                                  placeholder="Cole aqui o código iframe do Panda Video"
+                                  value={video.embedCode || ''}
+                                  onChange={(e) => handleIframeChange(index, e.target.value)}
+                                  className="font-mono text-xs h-32 resize-none"
+                                />
+                                <FormDescription>
+                                  Cole o código iframe completo fornecido pelo Panda Video
+                                </FormDescription>
+                              </div>
+                              
+                              {video.thumbnail_url && (
+                                <div className="mt-2">
+                                  <p className="text-sm font-medium mb-1">Preview:</p>
+                                  <div className="aspect-video bg-gray-100 rounded-md overflow-hidden relative">
+                                    <img 
+                                      src={video.thumbnail_url}
+                                      alt="Thumbnail do vídeo"
+                                      className="w-full h-full object-cover"
+                                    />
+                                  </div>
+                                </div>
+                              )}
+                              
+                              {video.video_id && (
+                                <div className="text-xs text-muted-foreground">
+                                  ID do vídeo: {video.video_id}
+                                </div>
+                              )}
                             </div>
                           </div>
                         )}
