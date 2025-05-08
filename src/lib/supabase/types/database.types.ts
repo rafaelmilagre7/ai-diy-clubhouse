@@ -297,6 +297,36 @@ export interface Database {
         }
         Relationships: []
       }
+      learning_lesson_tools: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          lesson_id: string
+          name: string
+          order_index: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          lesson_id: string
+          name: string
+          order_index: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          lesson_id?: string
+          name?: string
+          order_index?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       implementation_checkpoints: {
         Row: {
           checkpoint_order: number
@@ -534,6 +564,48 @@ export interface Database {
           created_by?: string
           created_at?: string
           description?: string | null
+        }
+        Relationships: []
+      }
+      solution_resources: {
+        Row: {
+          id: string
+          format: string | null
+          url: string
+          name: string
+          type: string
+          solution_id: string | null
+          module_id: string | null
+          size: number | null
+          created_at: string
+          updated_at: string
+          metadata: Json | null
+        }
+        Insert: {
+          id?: string
+          format?: string | null
+          url: string
+          name: string
+          type: string
+          solution_id?: string | null
+          module_id?: string | null
+          size?: number | null
+          created_at?: string
+          updated_at?: string
+          metadata?: Json | null
+        }
+        Update: {
+          id?: string
+          format?: string | null
+          url?: string
+          name?: string
+          type?: string
+          solution_id?: string | null
+          module_id?: string | null
+          size?: number | null
+          created_at?: string
+          updated_at?: string
+          metadata?: Json | null
         }
         Relationships: []
       }

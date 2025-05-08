@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
-import type { Event } from "@/types/events";
+import type { Event } from "@/lib/supabase/types";
 import { useQueryClient } from "@tanstack/react-query";
 import { eventSchema, type EventFormData } from "./form/EventFormSchema";
 import { EventBasicInfo } from "./form/EventBasicInfo";
@@ -68,12 +68,18 @@ export const EventForm = ({ event, initialData, onSuccess }: EventFormProps) => 
         if (error) throw error;
         toast.success("Evento atualizado com sucesso!");
       } else {
+        // Garantir que os campos obrigatórios estejam presentes
+        const eventData = {
+          ...data,
+          created_by: (await supabase.auth.getUser()).data.user?.id as string,
+          title: data.title,
+          start_time: data.start_time,
+          end_time: data.end_time
+        };
+
         const { error } = await supabase
           .from("events")
-          .insert([{
-            ...data,
-            created_by: (await supabase.auth.getUser()).data.user?.id
-          }]);
+          .insert(eventData);
 
         if (error) throw error;
         toast.success("Evento criado com sucesso!");

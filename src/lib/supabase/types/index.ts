@@ -15,6 +15,7 @@ export type Solution = Database['public']['Tables']['solutions']['Row'];
 export type Module = Database['public']['Tables']['modules']['Row'];
 export type ImplementationCheckpoint = Database['public']['Tables']['implementation_checkpoints']['Row'];
 export type Event = Database['public']['Tables']['events']['Row'];
+export type SolutionResource = Database['public']['Tables']['solution_resources']['Row'];
 
 // Outros tipos existentes
 export * from './database.types';
