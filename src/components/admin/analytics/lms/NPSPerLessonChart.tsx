@@ -31,6 +31,10 @@ export const NPSPerLessonChart: React.FC<NPSPerLessonChartProps> = ({ npsData, i
     return "#ef4444";                      // Vermelho para ruim
   };
   
+  // Criar array de cores estáticas para o gráfico
+  // Isso resolve o erro de tipo que estávamos enfrentando
+  const barColors = ["#8B5CF6"]; // Cor padrão roxa para todas as barras
+  
   return (
     <Card className="col-span-1">
       <CardHeader>
@@ -53,14 +57,10 @@ export const NPSPerLessonChart: React.FC<NPSPerLessonChartProps> = ({ npsData, i
             data={chartData}
             index="lesson"
             categories={["nps"]}
-            colors={[
-              (context) => {
-                const value = context.dataPoint?.value as number;
-                return getBarColor(value);
-              }
-            ]}
+            colors={barColors}
             valueFormatter={(value) => `${value}`}
             layout="vertical"
+            className="h-full"
           />
         ) : (
           <div className="h-full flex items-center justify-center text-muted-foreground">

@@ -36,6 +36,22 @@ interface LmsAnalyticsData {
   }>;
 }
 
+// Interfaces para as respostas do Supabase
+interface LessonNpsResponse {
+  id: string;
+  lesson_id: string;
+  score: number;
+  feedback: string | null;
+  created_at: string;
+  user_id: string;
+  learning_lessons?: { 
+    title: string;
+  } | null;
+  profiles?: { 
+    name: string;
+  } | null;
+}
+
 export const useLmsAnalyticsData = (timeRange: string) => {
   const [startDate, setStartDate] = useState<string | null>(null);
   
@@ -84,7 +100,7 @@ export const useLmsAnalyticsData = (timeRange: string) => {
       }
       
       // Processar os dados para o formato necessário
-      const npsResponses = data.map(item => ({
+      const npsResponses = (data as LessonNpsResponse[]).map(item => ({
         id: item.id,
         lessonId: item.lesson_id,
         lessonTitle: item.learning_lessons?.title || 'Aula sem título',
