@@ -16,6 +16,7 @@ import { AulaFormValues } from "../AulaStepWizard";
 import { Input } from "@/components/ui/input";
 import { AlertCircle, CheckCircle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
 
 interface EtapaPublicacaoProps {
   form: UseFormReturn<AulaFormValues>;
@@ -35,6 +36,7 @@ const EtapaPublicacao: React.FC<EtapaPublicacaoProps> = ({
   const title = form.watch("title");
   const moduleId = form.watch("moduleId");
   const coverImageUrl = form.watch("coverImageUrl");
+  const difficultyLevel = form.watch("difficultyLevel");
   
   const dadosObrigatoriosPreenchidos = !!title && !!moduleId;
   
@@ -43,6 +45,32 @@ const EtapaPublicacao: React.FC<EtapaPublicacaoProps> = ({
       onSubmit();
     } else {
       form.trigger();
+    }
+  };
+
+  const getDifficultyLabel = (difficulty: string) => {
+    switch(difficulty) {
+      case 'beginner':
+        return 'Iniciante';
+      case 'intermediate':
+        return 'Intermediário';
+      case 'advanced':
+        return 'Avançado';
+      default:
+        return 'Iniciante';
+    }
+  };
+
+  const getDifficultyColor = (difficulty: string) => {
+    switch(difficulty) {
+      case 'beginner':
+        return 'bg-green-100 text-green-800 border-green-200';
+      case 'intermediate':
+        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'advanced':
+        return 'bg-red-100 text-red-800 border-red-200';
+      default:
+        return 'bg-green-100 text-green-800 border-green-200';
     }
   };
 
@@ -145,6 +173,16 @@ const EtapaPublicacao: React.FC<EtapaPublicacaoProps> = ({
             <div className="flex justify-between">
               <span className="text-muted-foreground">Imagem de Capa:</span>
               <span className="font-medium">{coverImageUrl ? "Definida" : "Não definida"}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Nível de Dificuldade:</span>
+              <span className="font-medium">
+                {difficultyLevel && (
+                  <Badge className={getDifficultyColor(difficultyLevel)}>
+                    {getDifficultyLabel(difficultyLevel)}
+                  </Badge>
+                )}
+              </span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Assistente de IA:</span>

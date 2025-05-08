@@ -20,13 +20,15 @@ interface PublishLessonButtonProps {
   isPublished: boolean;
   onPublishChange?: (published: boolean) => void;
   showPreview?: boolean;
+  difficulty?: string;
 }
 
 export const PublishLessonButton = ({ 
   lessonId, 
   isPublished, 
   onPublishChange,
-  showPreview = true
+  showPreview = true,
+  difficulty
 }: PublishLessonButtonProps) => {
   const [loading, setLoading] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
@@ -104,12 +106,19 @@ export const PublishLessonButton = ({
   const togglePublishStatus = async () => {
     setLoading(true);
     try {
+      const updateData = { 
+        published: !isPublished,
+        updated_at: new Date().toISOString()
+      };
+      
+      // Verifica se temos informação de dificuldade e inclui no update se necessário
+      if (difficulty && !isPublished) {
+        Object.assign(updateData, { difficulty_level: difficulty });
+      }
+      
       const { data, error } = await supabase
         .from("learning_lessons")
-        .update({ 
-          published: !isPublished,
-          updated_at: new Date().toISOString()
-        })
+        .update(updateData)
         .eq("id", lessonId)
         .select()
         .single();

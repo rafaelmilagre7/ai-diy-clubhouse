@@ -504,6 +504,7 @@ export type Database = {
           url: string
           video_file_name: string | null
           video_file_path: string | null
+          video_id: string | null
           video_type: string | null
         }
         Insert: {
@@ -519,6 +520,7 @@ export type Database = {
           url: string
           video_file_name?: string | null
           video_file_path?: string | null
+          video_id?: string | null
           video_type?: string | null
         }
         Update: {
@@ -534,6 +536,7 @@ export type Database = {
           url?: string
           video_file_name?: string | null
           video_file_path?: string | null
+          video_id?: string | null
           video_type?: string | null
         }
         Relationships: [
@@ -554,6 +557,7 @@ export type Database = {
           cover_image_url: string | null
           created_at: string
           description: string | null
+          difficulty_level: string | null
           estimated_time_minutes: number | null
           id: string
           module_id: string
@@ -569,6 +573,7 @@ export type Database = {
           cover_image_url?: string | null
           created_at?: string
           description?: string | null
+          difficulty_level?: string | null
           estimated_time_minutes?: number | null
           id?: string
           module_id: string
@@ -584,6 +589,7 @@ export type Database = {
           cover_image_url?: string | null
           created_at?: string
           description?: string | null
+          difficulty_level?: string | null
           estimated_time_minutes?: number | null
           id?: string
           module_id?: string
