@@ -101,17 +101,6 @@ const LessonView = () => {
             progress={progress}
           />
           
-          {/* Alerta se o progresso for muito baixo (aula recém iniciada) */}
-          {progress > 0 && progress < 5 && videos && videos.length > 0 && (
-            <Alert className="mt-6 bg-blue-50 dark:bg-blue-950/20 text-blue-800 dark:text-blue-300 border-blue-200 dark:border-blue-900">
-              <AlertCircle className="h-4 w-4" />
-              <AlertTitle>Dica para seu aprendizado</AlertTitle>
-              <AlertDescription>
-                Assista os vídeos até o final para registrar seu progresso. Você pode marcar a aula como concluída ao terminar.
-              </AlertDescription>
-            </Alert>
-          )}
-          
           <div className="mt-6">
             <LessonNavigation 
               courseId={courseId!}

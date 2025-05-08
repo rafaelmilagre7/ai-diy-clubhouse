@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { LearningLessonVideo } from "@/lib/supabase";
 import { Play, Pause, Volume2, VolumeX, ChevronLeft, ChevronRight } from "lucide-react";
@@ -5,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { PandaVideoPlayer } from "@/components/formacao/comum/PandaVideoPlayer";
 import { VideoPlaylist } from "./VideoPlaylist";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 
 interface LessonVideoPlayerProps {
   videos: LearningLessonVideo[];
@@ -24,7 +25,6 @@ export const LessonVideoPlayer: React.FC<LessonVideoPlayerProps> = ({
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(1);
   const [isMuted, setIsMuted] = useState(false);
-  const [showPlaylist, setShowPlaylist] = useState(true);
   const [videoProgresses, setVideoProgresses] = useState<Record<string, number>>({});
   
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -32,10 +32,10 @@ export const LessonVideoPlayer: React.FC<LessonVideoPlayerProps> = ({
   // Garantir que temos pelo menos um vídeo
   if (!videos || videos.length === 0) {
     return (
-      <Card>
-        <CardContent className="p-6 flex items-center justify-center">
+      <Card className="rounded-md overflow-hidden">
+        <div className="aspect-video bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
           <p className="text-muted-foreground">Nenhum vídeo disponível para esta aula.</p>
-        </CardContent>
+        </div>
       </Card>
     );
   }
@@ -88,7 +88,7 @@ export const LessonVideoPlayer: React.FC<LessonVideoPlayerProps> = ({
       pandaVideoId = currentVideo.video_file_path;
     } else if (currentVideo.url) {
       // Tentar extrair o ID do vídeo da URL do Panda Video
-      const matches = currentVideo.url.match(/\/embed\/([a-zA-Z0-9]+)/);
+      const matches = currentVideo.url.match(/embed\/\?v=([^&]+)/);
       if (matches && matches[1]) {
         pandaVideoId = matches[1];
       } else {
@@ -100,17 +100,21 @@ export const LessonVideoPlayer: React.FC<LessonVideoPlayerProps> = ({
       return (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="md:col-span-3">
-            <PandaVideoPlayer
-              videoId={pandaVideoId}
-              title={currentVideo.title}
-              onProgress={(progress: number) => {
-                if (onProgress && currentVideo) {
-                  handleProgress(progress);
-                }
-              }}
-              onEnded={handleVideoEnd}
-            />
+            {/* Player de vídeo */}
+            <div className="overflow-hidden rounded-lg shadow-lg">
+              <PandaVideoPlayer
+                videoId={pandaVideoId}
+                title={currentVideo.title}
+                onProgress={(progress: number) => {
+                  if (onProgress && currentVideo) {
+                    handleProgress(progress);
+                  }
+                }}
+                onEnded={handleVideoEnd}
+              />
+            </div>
             
+            {/* Título e descrição do vídeo */}
             <div className="mt-3">
               <h3 className="text-lg font-medium">{currentVideo.title}</h3>
               {currentVideo.description && (
@@ -119,55 +123,61 @@ export const LessonVideoPlayer: React.FC<LessonVideoPlayerProps> = ({
             </div>
             
             {/* Controles de navegação em tela pequena (visíveis apenas em dispositivos móveis) */}
-            <div className="flex justify-between mt-3 md:hidden">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentVideoIndex(prev => Math.max(0, prev - 1))}
-                disabled={currentVideoIndex <= 0}
-              >
-                <ChevronLeft className="mr-1 h-4 w-4" />
-                Anterior
-              </Button>
-              
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentVideoIndex(prev => Math.min(videos.length - 1, prev + 1))}
-                disabled={currentVideoIndex >= videos.length - 1}
-              >
-                Próximo
-                <ChevronRight className="ml-1 h-4 w-4" />
-              </Button>
-            </div>
+            {videos.length > 1 && (
+              <div className="flex justify-between mt-4 md:hidden">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentVideoIndex(prev => Math.max(0, prev - 1))}
+                  disabled={currentVideoIndex <= 0}
+                >
+                  <ChevronLeft className="mr-1 h-4 w-4" />
+                  Anterior
+                </Button>
+                
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentVideoIndex(prev => Math.min(videos.length - 1, prev + 1))}
+                  disabled={currentVideoIndex >= videos.length - 1}
+                >
+                  Próximo
+                  <ChevronRight className="ml-1 h-4 w-4" />
+                </Button>
+              </div>
+            )}
           </div>
           
           {/* Playlist de vídeos (visível apenas em desktop) */}
-          <div className="hidden md:block">
-            <VideoPlaylist
-              videos={videos}
-              currentVideoIndex={currentVideoIndex}
-              onSelectVideo={setCurrentVideoIndex}
-              progresses={videoProgresses}
-            />
-          </div>
+          {videos.length > 1 && (
+            <div className="hidden md:block">
+              <VideoPlaylist
+                videos={videos}
+                currentVideoIndex={currentVideoIndex}
+                onSelectVideo={setCurrentVideoIndex}
+                progresses={videoProgresses}
+              />
+            </div>
+          )}
           
           {/* Playlist de vídeos para mobile */}
-          <div className="md:hidden mt-4">
-            <details>
-              <summary className="cursor-pointer font-medium">
-                Ver todos os vídeos ({videos.length})
-              </summary>
-              <div className="mt-2">
-                <VideoPlaylist
-                  videos={videos}
-                  currentVideoIndex={currentVideoIndex}
-                  onSelectVideo={setCurrentVideoIndex}
-                  progresses={videoProgresses}
-                />
-              </div>
-            </details>
-          </div>
+          {videos.length > 1 && (
+            <div className="md:hidden mt-4">
+              <details>
+                <summary className="cursor-pointer font-medium">
+                  Lista de vídeos
+                </summary>
+                <div className="mt-2">
+                  <VideoPlaylist
+                    videos={videos}
+                    currentVideoIndex={currentVideoIndex}
+                    onSelectVideo={setCurrentVideoIndex}
+                    progresses={videoProgresses}
+                  />
+                </div>
+              </details>
+            </div>
+          )}
         </div>
       );
     }
@@ -213,71 +223,13 @@ export const LessonVideoPlayer: React.FC<LessonVideoPlayerProps> = ({
       videoElement.removeEventListener('timeupdate', handleTimeUpdate);
       videoElement.removeEventListener('ended', handleEnded);
     };
-  }, [duration, onProgress, currentVideo, handleProgress, handleVideoEnd]);
+  }, [duration, onProgress, currentVideo]);
   
-  // Funções de controle de reprodução
-  function togglePlay() {
-    const videoElement = videoRef.current;
-    if (!videoElement) return;
-    
-    if (isPlaying) {
-      videoElement.pause();
-    } else {
-      videoElement.play();
-    }
-    
-    setIsPlaying(!isPlaying);
-  }
-  
-  // Controle de volume
-  function toggleMute() {
-    const videoElement = videoRef.current;
-    if (!videoElement) return;
-    
-    videoElement.muted = !isMuted;
-    setIsMuted(!isMuted);
-  }
-  
-  function handleVolumeChange(value: number[]) {
-    const newVolume = value[0];
-    
-    const videoElement = videoRef.current;
-    if (!videoElement) return;
-    
-    videoElement.volume = newVolume;
-    setVolume(newVolume);
-    
-    if (newVolume === 0) {
-      setIsMuted(true);
-      videoElement.muted = true;
-    } else if (isMuted) {
-      setIsMuted(false);
-      videoElement.muted = false;
-    }
-  }
-  
-  // Controle da timeline
-  function handleTimelineChange(value: number[]) {
-    const newTime = value[0];
-    
-    const videoElement = videoRef.current;
-    if (!videoElement) return;
-    
-    videoElement.currentTime = newTime * duration / 100;
-    setCurrentTime(videoElement.currentTime);
-  }
-  
-  // Formatação do tempo
-  function formatTime(seconds: number) {
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
-  }
-
+  // Para outros tipos de vídeo, mostrar player padrão
   return (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
       <div className="md:col-span-3">
-        <div className="w-full overflow-hidden rounded-lg bg-black">
+        <div className="overflow-hidden rounded-lg shadow-lg bg-black">
           <div className="relative">
             <video
               ref={videoRef}
@@ -293,7 +245,18 @@ export const LessonVideoPlayer: React.FC<LessonVideoPlayerProps> = ({
                     size="icon" 
                     variant="ghost" 
                     className="h-8 w-8 text-white hover:bg-white/20" 
-                    onClick={togglePlay}
+                    onClick={() => {
+                      const videoElement = videoRef.current;
+                      if (!videoElement) return;
+                      
+                      if (isPlaying) {
+                        videoElement.pause();
+                      } else {
+                        videoElement.play();
+                      }
+                      
+                      setIsPlaying(!isPlaying);
+                    }}
                   >
                     {isPlaying ? <Pause size={16} /> : <Play size={16} />}
                   </Button>
@@ -308,7 +271,13 @@ export const LessonVideoPlayer: React.FC<LessonVideoPlayerProps> = ({
                       max={100}
                       step={1}
                       value={[(currentTime / duration) * 100 || 0]}
-                      onValueChange={handleTimelineChange}
+                      onValueChange={(value) => {
+                        const videoElement = videoRef.current;
+                        if (!videoElement) return;
+                        
+                        videoElement.currentTime = value[0] * duration / 100;
+                        setCurrentTime(videoElement.currentTime);
+                      }}
                       className="cursor-pointer"
                     />
                   </div>
@@ -317,7 +286,13 @@ export const LessonVideoPlayer: React.FC<LessonVideoPlayerProps> = ({
                     size="icon" 
                     variant="ghost" 
                     className="h-8 w-8 text-white hover:bg-white/20" 
-                    onClick={toggleMute}
+                    onClick={() => {
+                      const videoElement = videoRef.current;
+                      if (!videoElement) return;
+                      
+                      videoElement.muted = !isMuted;
+                      setIsMuted(!isMuted);
+                    }}
                   >
                     {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
                   </Button>
@@ -328,7 +303,23 @@ export const LessonVideoPlayer: React.FC<LessonVideoPlayerProps> = ({
                       max={1}
                       step={0.1}
                       value={[isMuted ? 0 : volume]}
-                      onValueChange={handleVolumeChange}
+                      onValueChange={(value) => {
+                        const newVolume = value[0];
+                        
+                        const videoElement = videoRef.current;
+                        if (!videoElement) return;
+                        
+                        videoElement.volume = newVolume;
+                        setVolume(newVolume);
+                        
+                        if (newVolume === 0) {
+                          setIsMuted(true);
+                          videoElement.muted = true;
+                        } else if (isMuted) {
+                          setIsMuted(false);
+                          videoElement.muted = false;
+                        }
+                      }}
                       className="cursor-pointer"
                     />
                   </div>
@@ -345,56 +336,69 @@ export const LessonVideoPlayer: React.FC<LessonVideoPlayerProps> = ({
           </div>
         </div>
         
-        {/* Controles de navegação em tela pequena (visíveis apenas em dispositivos móveis) */}
-        <div className="flex justify-between mt-3 md:hidden">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setCurrentVideoIndex(prev => Math.max(0, prev - 1))}
-            disabled={currentVideoIndex <= 0}
-          >
-            <ChevronLeft className="mr-1 h-4 w-4" />
-            Anterior
-          </Button>
-          
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setCurrentVideoIndex(prev => Math.min(videos.length - 1, prev + 1))}
-            disabled={currentVideoIndex >= videos.length - 1}
-          >
-            Próximo
-            <ChevronRight className="ml-1 h-4 w-4" />
-          </Button>
-        </div>
+        {/* Controles de navegação em tela pequena */}
+        {videos.length > 1 && (
+          <div className="flex justify-between mt-4 md:hidden">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentVideoIndex(prev => Math.max(0, prev - 1))}
+              disabled={currentVideoIndex <= 0}
+            >
+              <ChevronLeft className="mr-1 h-4 w-4" />
+              Anterior
+            </Button>
+            
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentVideoIndex(prev => Math.min(videos.length - 1, prev + 1))}
+              disabled={currentVideoIndex >= videos.length - 1}
+            >
+              Próximo
+              <ChevronRight className="ml-1 h-4 w-4" />
+            </Button>
+          </div>
+        )}
       </div>
       
-      {/* Playlist de vídeos (visível apenas em desktop) */}
-      <div className="hidden md:block">
-        <VideoPlaylist
-          videos={videos}
-          currentVideoIndex={currentVideoIndex}
-          onSelectVideo={setCurrentVideoIndex}
-          progresses={videoProgresses}
-        />
-      </div>
+      {/* Playlist de vídeos para desktop */}
+      {videos.length > 1 && (
+        <div className="hidden md:block">
+          <VideoPlaylist
+            videos={videos}
+            currentVideoIndex={currentVideoIndex}
+            onSelectVideo={setCurrentVideoIndex}
+            progresses={videoProgresses}
+          />
+        </div>
+      )}
       
       {/* Playlist de vídeos para mobile */}
-      <div className="md:hidden mt-4">
-        <details>
-          <summary className="cursor-pointer font-medium">
-            Ver todos os vídeos ({videos.length})
-          </summary>
-          <div className="mt-2">
-            <VideoPlaylist
-              videos={videos}
-              currentVideoIndex={currentVideoIndex}
-              onSelectVideo={setCurrentVideoIndex}
-              progresses={videoProgresses}
-            />
-          </div>
-        </details>
-      </div>
+      {videos.length > 1 && (
+        <div className="md:hidden mt-4">
+          <details>
+            <summary className="cursor-pointer font-medium">
+              Lista de vídeos
+            </summary>
+            <div className="mt-2">
+              <VideoPlaylist
+                videos={videos}
+                currentVideoIndex={currentVideoIndex}
+                onSelectVideo={setCurrentVideoIndex}
+                progresses={videoProgresses}
+              />
+            </div>
+          </details>
+        </div>
+      )}
     </div>
   );
+
+  // Função auxiliar para formatar o tempo
+  function formatTime(seconds: number) {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+  }
 };

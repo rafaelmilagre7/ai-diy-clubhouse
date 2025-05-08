@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import { LearningLesson } from "@/lib/supabase/types";
+import { LearningLesson } from "@/lib/supabase";
 import { LessonVideoPlayer } from "./LessonVideoPlayer";
 import { LessonComments } from "../comments/LessonComments";
 import { LessonResources } from "./LessonResources";
@@ -8,10 +8,11 @@ import { LessonAssistantChat } from "../assistant/LessonAssistantChat";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LessonCompletionModal } from "../completion/LessonCompletionModal";
-import { LessonCoverImage } from "./LessonCoverImage";
 import { LessonDescription } from "./LessonDescription";
 import { LessonDuration } from "./LessonDuration";
 import { LessonCompleteButton } from "./LessonCompleteButton";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 interface LessonContentProps {
   lesson: LearningLesson;
@@ -49,108 +50,82 @@ export const LessonContent: React.FC<LessonContentProps> = ({
   const hasVideos = videos && videos.length > 0;
   const hasResources = resources && resources.length > 0;
   const hasAiAssistant = lesson.ai_assistant_enabled;
-  const useTabs = hasVideos || hasResources || hasAiAssistant;
-
-  // Renderização baseada em tabs ou seções individuais
-  if (useTabs) {
-    return (
-      <div className="space-y-6">
-        <LessonCoverImage lesson={lesson} />
-        <LessonDescription lesson={lesson} />
-        {hasVideos && <LessonDuration videos={videos} />}
-        
-        <LessonCompleteButton 
-          isCompleted={isCompleted} 
-          onComplete={handleCompleteLesson} 
-        />
-        
-        <Tabs defaultValue="video" className="w-full">
-          <TabsList className="mb-4">
-            {hasVideos && <TabsTrigger value="video">Vídeos</TabsTrigger>}
-            {hasResources && <TabsTrigger value="resources">Materiais</TabsTrigger>}
-            {hasAiAssistant && <TabsTrigger value="assistant">Assistente IA</TabsTrigger>}
-          </TabsList>
-          
-          {hasVideos && (
-            <TabsContent value="video" className="space-y-4">
-              <LessonVideoPlayer 
-                videos={videos}
-                onProgress={(videoId, progress) => handleVideoProgress(videoId, progress)}
-              />
-            </TabsContent>
-          )}
-          
-          {hasResources && (
-            <TabsContent value="resources">
-              <LessonResources resources={resources} />
-            </TabsContent>
-          )}
-          
-          {hasAiAssistant && (
-            <TabsContent value="assistant">
-              <LessonAssistantChat 
-                lessonId={lesson.id}
-                assistantId={lesson.ai_assistant_id}
-                assistantPrompt={lesson.ai_assistant_prompt}
-              />
-            </TabsContent>
-          )}
-        </Tabs>
-        
-        <section className="mt-8">
-          <Separator className="mb-6" />
-          <LessonComments lessonId={lesson.id} />
-        </section>
-
-        <LessonCompletionModal
-          isOpen={completionDialogOpen}
-          setIsOpen={setCompletionDialogOpen}
-          lesson={lesson}
-          onNext={() => {}} // Navegação para próxima aula será implementada
-        />
-      </div>
-    );
-  }
+  const hasDescription = lesson.description && lesson.description.trim() !== "" && 
+                        !lesson.description.toLowerCase().includes("bem-vindo") &&
+                        !lesson.description.toLowerCase().includes("seja bem-vindo");
   
-  // Versão sem abas quando há somente um tipo de conteúdo
+  // Verificar se há conteúdo adicional para exibir em abas
+  const hasTabs = hasResources || hasAiAssistant;
+  
   return (
     <div className="space-y-6">
-      <LessonCoverImage lesson={lesson} />
-      <LessonDescription lesson={lesson} />
-      {hasVideos && <LessonDuration videos={videos} />}
-      
-      <LessonCompleteButton 
-        isCompleted={isCompleted} 
-        onComplete={handleCompleteLesson} 
-      />
-      
+      {/* Player de vídeo como elemento principal */}
       {hasVideos && (
-        <section>
+        <div>
           <LessonVideoPlayer 
             videos={videos}
             onProgress={(videoId, progress) => handleVideoProgress(videoId, progress)}
           />
-        </section>
+          
+          {/* Informações sobre a duração e botão de completar abaixo do player */}
+          <div className="mt-4 flex items-center justify-between">
+            <LessonDuration videos={videos} />
+            
+            <LessonCompleteButton 
+              isCompleted={isCompleted} 
+              onComplete={handleCompleteLesson} 
+            />
+          </div>
+          
+          {/* Alerta se o progresso for baixo (após começar a assistir) */}
+          {!isCompleted && videos.length > 0 && (
+            <Alert className="mt-4 bg-blue-50 dark:bg-blue-950/20 text-blue-800 dark:text-blue-300 border-blue-200 dark:border-blue-900">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Dica de aprendizado</AlertTitle>
+              <AlertDescription>
+                Assista os vídeos até o final para registrar seu progresso. Marque a aula como concluída quando terminar.
+              </AlertDescription>
+            </Alert>
+          )}
+        </div>
       )}
       
-      {hasResources && (
-        <section className="mt-6">
-          <h2 className="text-xl font-semibold mb-4">Materiais complementares</h2>
-          <LessonResources resources={resources} />
-        </section>
+      {/* Descrição da aula (se houver e não for apenas "boas-vindas") */}
+      {hasDescription && (
+        <div className="mt-6">
+          <LessonDescription lesson={lesson} />
+        </div>
       )}
       
-      {hasAiAssistant && (
-        <section className="mt-6">
-          <h2 className="text-xl font-semibold mb-4">Assistente IA</h2>
-          <LessonAssistantChat 
-            lessonId={lesson.id}
-            assistantId={lesson.ai_assistant_id}
-            assistantPrompt={lesson.ai_assistant_prompt}
-          />
-        </section>
+      {/* Abas para conteúdo adicional (recursos e assistente IA) */}
+      {hasTabs && (
+        <div className="mt-6">
+          <Tabs defaultValue={hasResources ? "resources" : "assistant"}>
+            <TabsList>
+              {hasResources && <TabsTrigger value="resources">Materiais</TabsTrigger>}
+              {hasAiAssistant && <TabsTrigger value="assistant">Assistente IA</TabsTrigger>}
+            </TabsList>
+            
+            {hasResources && (
+              <TabsContent value="resources" className="mt-4">
+                <LessonResources resources={resources} />
+              </TabsContent>
+            )}
+            
+            {hasAiAssistant && (
+              <TabsContent value="assistant" className="mt-4">
+                <LessonAssistantChat 
+                  lessonId={lesson.id}
+                  assistantId={lesson.ai_assistant_id}
+                  assistantPrompt={lesson.ai_assistant_prompt}
+                />
+              </TabsContent>
+            )}
+          </Tabs>
+        </div>
       )}
       
+      {/* Comentários da aula */}
       <section className="mt-8">
         <Separator className="mb-6" />
         <LessonComments lessonId={lesson.id} />

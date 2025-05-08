@@ -23,9 +23,6 @@ export const VideoPlaylist: React.FC<VideoPlaylistProps> = ({
   
   return (
     <div className="bg-card border rounded-md overflow-hidden">
-      <div className="p-3 border-b bg-muted/50">
-        <h3 className="font-medium">Vídeos da aula ({videos.length})</h3>
-      </div>
       <div className="max-h-[400px] overflow-y-auto">
         {videos.map((video, index) => (
           <div
