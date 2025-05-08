@@ -18,6 +18,11 @@ const NewSuggestion = lazy(() => import("@/pages/member/NewSuggestion"));
 const Achievements = lazy(() => import("@/pages/member/Achievements"));
 const Events = lazy(() => import("@/pages/member/Events"));
 
+// Páginas de formação/learning
+const MemberLearning = lazy(() => import("@/pages/member/learning/MemberLearning"));
+const CourseDetails = lazy(() => import("@/pages/member/learning/CourseDetails"));
+const LessonView = lazy(() => import("@/pages/member/learning/LessonView"));
+
 export const MemberRoutes = () => {
   return (
     <Fragment>
@@ -147,6 +152,38 @@ export const MemberRoutes = () => {
           <ProtectedRoute>
             <MemberLayout>
               <Events />
+            </MemberLayout>
+          </ProtectedRoute>
+        }
+      />
+      
+      {/* Rotas de Learning/Formação */}
+      <Route
+        path="/learning"
+        element={
+          <ProtectedRoute>
+            <MemberLayout>
+              <MemberLearning />
+            </MemberLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/learning/course/:id"
+        element={
+          <ProtectedRoute>
+            <MemberLayout>
+              <CourseDetails />
+            </MemberLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/learning/course/:courseId/lesson/:lessonId"
+        element={
+          <ProtectedRoute>
+            <MemberLayout>
+              <LessonView />
             </MemberLayout>
           </ProtectedRoute>
         }
