@@ -24,7 +24,7 @@ const EtapaPublicacao: React.FC<EtapaPublicacaoProps> = ({
   isSaving,
   onSubmit
 }) => {
-  const { register, watch, formState: { errors } } = form;
+  const { watch, setValue, formState: { errors } } = form;
   const aiAssistantEnabled = watch("aiAssistantEnabled");
   const published = watch("published");
   
@@ -32,11 +32,28 @@ const EtapaPublicacao: React.FC<EtapaPublicacaoProps> = ({
   const [saveStatus, setSaveStatus] = React.useState<"idle" | "saving" | "success" | "error">("idle");
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
   
+  // Funções para manipular o estado dos switches
+  const handleAiAssistantToggle = (checked: boolean) => {
+    console.log("Toggle IA assistente:", checked);
+    setValue("aiAssistantEnabled", checked);
+  };
+  
+  const handlePublishedToggle = (checked: boolean) => {
+    console.log("Toggle publicação:", checked);
+    setValue("published", checked);
+  };
+  
   const handleSubmit = async () => {
     try {
       setSaving(true);
       setSaveStatus("saving");
       setErrorMessage(null);
+      
+      console.log("Valores antes de salvar:", {
+        aiAssistantEnabled: form.getValues("aiAssistantEnabled"),
+        published: form.getValues("published"),
+        aiAssistantPrompt: form.getValues("aiAssistantPrompt"),
+      });
       
       await onSubmit();
       
@@ -83,7 +100,7 @@ const EtapaPublicacao: React.FC<EtapaPublicacaoProps> = ({
               <Switch 
                 id="published" 
                 checked={published}
-                {...register("published")}
+                onCheckedChange={handlePublishedToggle}
               />
             </div>
           </div>
@@ -116,7 +133,7 @@ const EtapaPublicacao: React.FC<EtapaPublicacaoProps> = ({
               <Switch 
                 id="aiAssistantEnabled" 
                 checked={aiAssistantEnabled}
-                {...register("aiAssistantEnabled")}
+                onCheckedChange={handleAiAssistantToggle}
               />
             </div>
             
@@ -130,7 +147,8 @@ const EtapaPublicacao: React.FC<EtapaPublicacaoProps> = ({
                   placeholder="Insira instruções específicas para personalizar o assistente de IA para esta aula. Ex: 'Você é um especialista em marketing digital que responde dúvidas sobre esta aula.'"
                   rows={5}
                   className="resize-none"
-                  {...register("aiAssistantPrompt")}
+                  value={form.watch("aiAssistantPrompt") || ""}
+                  onChange={(e) => form.setValue("aiAssistantPrompt", e.target.value)}
                 />
                 <p className="text-xs text-muted-foreground">
                   Essas instruções serão usadas para personalizar o comportamento do assistente IA. 
