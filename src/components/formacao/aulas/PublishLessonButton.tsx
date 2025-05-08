@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Check, Loader2, Eye } from "lucide-react";
 import { supabase } from "@/lib/supabase";
@@ -30,6 +30,38 @@ export const PublishLessonButton = ({
 }: PublishLessonButtonProps) => {
   const [loading, setLoading] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [courseId, setCourseId] = useState<string | null>(null);
+  
+  // Buscar o ID do curso para o link de visualização
+  useEffect(() => {
+    const fetchCourseId = async () => {
+      if (!lessonId || !showPreview) return;
+      
+      try {
+        // Buscar informações da aula incluindo o módulo e o curso
+        const { data, error } = await supabase
+          .from("learning_lessons")
+          .select(`
+            module_id,
+            module:learning_modules(
+              course_id
+            )
+          `)
+          .eq("id", lessonId)
+          .single();
+        
+        if (error) throw error;
+        
+        if (data && data.module && data.module.course_id) {
+          setCourseId(data.module.course_id);
+        }
+      } catch (err) {
+        console.error("Erro ao buscar ID do curso:", err);
+      }
+    };
+    
+    fetchCourseId();
+  }, [lessonId, showPreview]);
   
   const handlePublishToggle = async () => {
     // Se estiver publicado, mostra confirmação antes de despublicar
@@ -79,9 +111,17 @@ export const PublishLessonButton = ({
     }
   };
   
+  const getPreviewUrl = () => {
+    // Se temos o ID do curso, construímos a URL completa para visualização de membro
+    if (courseId) {
+      return `/formacao/aulas/view/${courseId}/${lessonId}`;
+    }
+    // URL de fallback se não temos o ID do curso
+    return `/formacao/aulas/view/preview/${lessonId}`;
+  };
+  
   const handlePreviewClick = () => {
-    const courseId = "placeholder"; // Idealmente, você teria o ID do curso aqui
-    const previewUrl = `/learning/course/${courseId}/lesson/${lessonId}`;
+    const previewUrl = getPreviewUrl();
     window.open(previewUrl, '_blank');
   };
   
@@ -101,7 +141,7 @@ export const PublishLessonButton = ({
           {isPublished ? "Publicada" : "Publicar"}
         </Button>
         
-        {showPreview && (
+        {showPreview && isPublished && (
           <Button variant="outline" onClick={handlePreviewClick}>
             <Eye className="h-4 w-4 mr-1" />
             Visualizar

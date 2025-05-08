@@ -29,7 +29,10 @@ const FormacaoAulaDetalhes = () => {
             *,
             videos:learning_lesson_videos(*),
             resources:learning_resources(*),
-            module:learning_modules(*)
+            module:learning_modules(
+              *,
+              learning_courses(*)
+            )
           `)
           .eq("id", id)
           .single();
@@ -63,6 +66,31 @@ const FormacaoAulaDetalhes = () => {
     try {
       if (!id) return;
       
+      // Primeiro excluir recursos relacionados
+      const { error: resourcesError } = await supabase
+        .from("learning_resources")
+        .delete()
+        .eq("lesson_id", id);
+        
+      if (resourcesError) throw resourcesError;
+      
+      // Depois excluir vídeos relacionados
+      const { error: videosError } = await supabase
+        .from("learning_lesson_videos")
+        .delete()
+        .eq("lesson_id", id);
+        
+      if (videosError) throw videosError;
+      
+      // Por fim, excluir registros de progresso relacionados
+      const { error: progressError } = await supabase
+        .from("learning_progress")
+        .delete()
+        .eq("lesson_id", id);
+        
+      if (progressError) throw progressError;
+      
+      // Finalmente excluir a aula
       const { error } = await supabase
         .from("learning_lessons")
         .delete()

@@ -7,7 +7,7 @@ import { Pencil, ArrowLeft, FileText, Trash2 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { LearningLesson } from "@/lib/supabase";
+import { LearningLesson, LearningResource } from "@/lib/supabase";
 import { PublishLessonButton } from "./PublishLessonButton";
 
 interface AulaDetailsProps {
@@ -31,6 +31,19 @@ export const AulaDetails = ({ aula, onEditClick, onDeleteClick }: AulaDetailsPro
     
   // Calcula o total de vídeos
   const totalVideos = aula.videos?.length || 0;
+  // Calcula o total de recursos
+  const totalRecursos = aula.resources?.length || 0;
+  
+  // Função para gerar o caminho para a visualização de membro
+  const getPreviewPath = () => {
+    // Estrutura esperada: /formacao/aulas/view/:cursoId/:aulaId
+    // Primeiro precisamos encontrar o curso através do módulo
+    if (aula.module?.course_id) {
+      return `/formacao/aulas/view/${aula.module.course_id}/${aula.id}`;
+    }
+    // Fallback se não tiver o course_id
+    return `/formacao/aulas/view/preview/${aula.id}`;
+  };
   
   return (
     <div className="space-y-6">
@@ -84,7 +97,7 @@ export const AulaDetails = ({ aula, onEditClick, onDeleteClick }: AulaDetailsPro
             <TabsList className="mb-4">
               <TabsTrigger value="details">Detalhes</TabsTrigger>
               <TabsTrigger value="videos">Vídeos ({totalVideos})</TabsTrigger>
-              <TabsTrigger value="resources">Recursos</TabsTrigger>
+              <TabsTrigger value="resources">Recursos ({totalRecursos})</TabsTrigger>
             </TabsList>
             
             <TabsContent value="details" className="space-y-4">
@@ -169,6 +182,14 @@ export const AulaDetails = ({ aula, onEditClick, onDeleteClick }: AulaDetailsPro
               Ver módulo
             </Link>
           </Button>
+          
+          {isPublished && (
+            <Button variant="outline" size="sm" asChild>
+              <Link to={getPreviewPath()}>
+                Visualizar como membro
+              </Link>
+            </Button>
+          )}
         </CardFooter>
       </Card>
     </div>

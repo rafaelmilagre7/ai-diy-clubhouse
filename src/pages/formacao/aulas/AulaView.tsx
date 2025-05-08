@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation } from "@tanstack/react-query";
@@ -10,11 +11,14 @@ import { LessonResources } from "@/components/learning/member/LessonResources";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
+import { VideoPlayer } from "@/components/formacao/aulas/VideoPlayer";
+import { VideoDisplay } from "@/components/formacao/aulas/VideoDisplay";
 
 const AulaView: React.FC = () => {
   const { cursoId, aulaId } = useParams<{ cursoId: string; aulaId: string }>();
   const navigate = useNavigate();
   const [videoProgresses, setVideoProgresses] = useState<Record<string, number>>({});
+  const [selectedVideo, setSelectedVideo] = useState<any>(null);
   
   // Buscar detalhes da aula
   const { data: aula, isLoading: isLoadingAula } = useQuery({
@@ -61,7 +65,12 @@ const AulaView: React.FC = () => {
       if (error) return [];
       return data || [];
     },
-    enabled: !!aulaId
+    enabled: !!aulaId,
+    onSuccess: (data) => {
+      if (data && data.length > 0 && !selectedVideo) {
+        setSelectedVideo(data[0]);
+      }
+    }
   });
   
   // Buscar informações do módulo
@@ -120,8 +129,66 @@ const AulaView: React.FC = () => {
     enabled: !!aulaId
   });
   
+  // Usamos uma mutação para atualizar o progresso
+  const updateProgressMutation = useMutation({
+    mutationFn: async ({ 
+      progress, 
+      videoProgress 
+    }: { 
+      progress: number, 
+      videoProgress: Record<string, number> 
+    }) => {
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) return null;
+      
+      const now = new Date().toISOString();
+      
+      if (userProgress) {
+        // Atualizar progresso existente
+        const { data, error } = await supabase
+          .from("learning_progress")
+          .update({
+            progress_percentage: progress,
+            video_progress: videoProgress,
+            updated_at: now,
+            completed_at: progress >= 100 ? now : userProgress.completed_at
+          })
+          .eq("id", userProgress.id)
+          .select();
+          
+        if (error) throw error;
+        return data;
+      } else {
+        // Criar novo registro de progresso
+        const { data, error } = await supabase
+          .from("learning_progress")
+          .insert({
+            user_id: userData.user.id,
+            lesson_id: aulaId,
+            progress_percentage: progress,
+            video_progress: videoProgress,
+            started_at: now,
+            completed_at: progress >= 100 ? now : null
+          })
+          .select();
+          
+        if (error) throw error;
+        return data;
+      }
+    },
+    onSuccess: () => {
+      refetchProgress();
+    },
+    onError: (error) => {
+      console.error("Erro ao atualizar progresso:", error);
+      toast.error("Não foi possível salvar seu progresso");
+    }
+  });
+  
   // Função para atualizar o progresso de um vídeo específico
-  const handleVideoProgress = async (videoId: string, progress: number) => {
+  const handleVideoProgress = (videoId: string, progress: number) => {
+    if (!videoId) return;
+    
     // Atualizar o estado local
     setVideoProgresses(prev => {
       // Se o progresso anterior for maior, manter o maior progresso
@@ -131,61 +198,40 @@ const AulaView: React.FC = () => {
       const newProgresses = { ...prev, [videoId]: progress };
       
       // Calcular o progresso geral da aula
-      const videoIds = Object.keys(newProgresses);
       let totalProgress = 0;
+      let videoCount = 0;
       
-      videoIds.forEach(id => {
-        totalProgress += newProgresses[id] || 0;
-      });
-      
-      // Média do progresso de todos os vídeos
-      const averageProgress = Math.round(
-        totalProgress / (videos?.length || 1)
-      );
-      
-      // Atualizar no banco de dados
-      updateLessonProgress(averageProgress, newProgresses);
+      // Considerar apenas os vídeos que temos na lista
+      if (videos && videos.length > 0) {
+        videoCount = videos.length;
+        videos.forEach(video => {
+          const videoProgress = newProgresses[video.id] || 0;
+          totalProgress += videoProgress;
+        });
+        
+        // Média do progresso de todos os vídeos
+        const averageProgress = Math.round(totalProgress / videoCount);
+        
+        // Atualizar no banco de dados
+        updateProgressMutation.mutate({
+          progress: averageProgress,
+          videoProgress: newProgresses
+        });
+      }
       
       return newProgresses;
     });
   };
   
-  // Função para atualizar o progresso no banco de dados
-  const updateLessonProgress = async (progress: number, videoProgress: Record<string, number>) => {
-    const { data: userData } = await supabase.auth.getUser();
-    if (!userData.user) return;
+  // Função para lidar com a atualização de progresso do vídeo
+  const handleVideoTimeUpdate = (currentTime: number, duration: number) => {
+    if (!selectedVideo || !duration) return;
     
-    const now = new Date().toISOString();
-    try {
-      if (userProgress) {
-        // Atualizar progresso existente
-        await supabase
-          .from("learning_progress")
-          .update({
-            progress_percentage: progress,
-            video_progress: videoProgress,
-            updated_at: now,
-            completed_at: progress >= 100 ? now : userProgress.completed_at
-          })
-          .eq("id", userProgress.id);
-      } else {
-        // Criar novo registro de progresso
-        await supabase
-          .from("learning_progress")
-          .insert({
-            user_id: userData.user.id,
-            lesson_id: aulaId,
-            progress_percentage: progress,
-            video_progress: videoProgress,
-            started_at: now,
-            completed_at: progress >= 100 ? now : null
-          });
-      }
-      
-      refetchProgress();
-    } catch (error) {
-      console.error("Erro ao atualizar progresso:", error);
-    }
+    // Calcular a porcentagem de progresso
+    const progress = Math.round((currentTime / duration) * 100);
+    
+    // Atualizar o progresso deste vídeo específico
+    handleVideoProgress(selectedVideo.id, progress);
   };
   
   // Marcar aula como concluída manualmente
@@ -196,7 +242,25 @@ const AulaView: React.FC = () => {
     });
     
     setVideoProgresses(fullProgress);
-    updateLessonProgress(100, fullProgress);
+    updateProgressMutation.mutate({
+      progress: 100,
+      videoProgress: fullProgress
+    });
+    
+    toast.success("Aula concluída! Parabéns!");
+  };
+  
+  // Selecionar um vídeo para exibir
+  const handleVideoSelect = (video: any) => {
+    setSelectedVideo(video);
+  };
+  
+  // Obter o último tempo assistido para o vídeo selecionado
+  const getLastPosition = () => {
+    if (selectedVideo && userProgress?.last_position_seconds) {
+      return userProgress.last_position_seconds;
+    }
+    return 0;
   };
   
   const isLoading = isLoadingAula || isLoadingRecursos || isLoadingVideos;
@@ -211,7 +275,7 @@ const AulaView: React.FC = () => {
     return (
       <div className="container py-8">
         <h2 className="text-xl font-semibold">Aula não encontrada</h2>
-        <p className="text-muted-foreground mt-2 mb-4">O módulo que você está procurando não existe ou foi removido.</p>
+        <p className="text-muted-foreground mt-2 mb-4">A aula que você está procurando não existe ou foi removida.</p>
         <Button onClick={() => navigate(`/formacao/cursos/${cursoId}`)}>Voltar para o curso</Button>
       </div>
     );
@@ -246,13 +310,36 @@ const AulaView: React.FC = () => {
             />
           </div>
           
-          <div className="mt-8">
-            <LessonContent
-              lesson={aula}
-              videos={videos || []}
-              resources={recursos || []}
-              onProgressUpdate={handleVideoProgress}
+          <div className="mt-8 space-y-6">
+            {/* Player de vídeo */}
+            <VideoPlayer 
+              video={selectedVideo} 
+              onTimeUpdate={handleVideoTimeUpdate}
+              startTime={getLastPosition()}
             />
+            
+            {/* Lista de vídeos da aula */}
+            {videos && videos.length > 1 && (
+              <VideoDisplay 
+                lessonId={aulaId || ''} 
+                onVideoSelect={handleVideoSelect}
+              />
+            )}
+            
+            {/* Recursos da aula */}
+            {recursos && recursos.length > 0 && (
+              <LessonResources resources={recursos} />
+            )}
+            
+            {/* Conteúdo da aula */}
+            {aula.description && (
+              <div className="mt-8">
+                <h3 className="text-xl font-semibold mb-4">Sobre esta aula</h3>
+                <div className="prose max-w-none">
+                  <p>{aula.description}</p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
         

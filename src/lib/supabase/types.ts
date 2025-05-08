@@ -1,3 +1,4 @@
+
 export * from './types/database.types';
 
 export type UserRole = 'admin' | 'member' | 'formacao';
@@ -119,20 +120,13 @@ export interface LearningLesson {
   estimated_time_minutes: number | null;
   ai_assistant_enabled: boolean;
   ai_assistant_prompt: string | null;
-  difficulty_level: string | null;  // Adicionada esta propriedade que estava faltando
-  videos?: Array<{
-    id?: string;
-    title?: string;
-    description?: string | null;
-    url?: string;
-    type?: string;
-    fileName?: string;
-    filePath?: string;
-    fileSize?: number;
-    video_id?: string;
-    thumbnail_url?: string;
-    duration_seconds?: number;
-  }>;
+  difficulty_level?: string | null;
+  videos?: LearningLessonVideo[];
+  resources?: LearningResource[];
+  module?: LearningModule & {
+    course_id?: string;
+    learning_courses?: LearningCourse;
+  };
 }
 
 export interface LearningProgress {
