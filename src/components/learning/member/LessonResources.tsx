@@ -9,7 +9,8 @@ import { Separator } from "@/components/ui/separator";
 
 interface LessonResourceProps {
   id: string;
-  title: string;
+  title?: string | null;
+  name?: string | null; // Adicionado para compatibilidade com o banco
   description?: string | null;
   file_url?: string | null;
   file_type?: string | null;
@@ -102,7 +103,8 @@ export const LessonResources = ({ resources = [] }: { resources: LessonResourceP
       
       const link = document.createElement("a");
       link.href = url;
-      link.download = resource.title;
+      // Usar o campo title ou name para o nome do arquivo, dependendo de qual está disponível
+      link.download = resource.title || resource.name || "arquivo";
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -158,7 +160,8 @@ export const LessonResources = ({ resources = [] }: { resources: LessonResourceP
                   <div className="flex items-start gap-3">
                     {getResourceIcon(resource)}
                     <div>
-                      <h4 className="font-medium">{resource.title}</h4>
+                      {/* Usar title ou name, com fallback para garantir que sempre exiba algo */}
+                      <h4 className="font-medium">{resource.title || resource.name || "Material sem título"}</h4>
                       {resource.description && (
                         <p className="text-sm text-muted-foreground mt-0.5">
                           {resource.description}

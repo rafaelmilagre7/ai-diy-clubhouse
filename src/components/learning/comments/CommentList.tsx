@@ -8,7 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 interface CommentListProps {
   comments: Comment[];
-  lessonId: string;
+  lessonId?: string;
   onReply: (content: string, parentId: string) => Promise<void>;
   onDelete: (commentId: string) => Promise<void>;
   onLike: (commentId: string) => Promise<void>;
@@ -72,7 +72,7 @@ export const CommentList: React.FC<CommentListProps> = ({
         <CommentItem
           key={comment.id}
           comment={comment}
-          lessonId={lessonId}
+          lessonId={lessonId || ""}
           onReply={onReply}
           onDelete={onDelete}
           onLike={onLike}

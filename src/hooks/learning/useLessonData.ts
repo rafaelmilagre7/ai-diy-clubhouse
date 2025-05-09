@@ -56,7 +56,12 @@ export function useLessonData({ lessonId, courseId }: UseLessonDataProps) {
         .order("order_index", { ascending: true });
         
       if (error) return [];
-      return data || [];
+      
+      // Mapear campos para garantir compatibilidade
+      return (data || []).map(resource => ({
+        ...resource,
+        title: resource.name || resource.title // Garantir compatibilidade entre os campos name e title
+      }));
     },
     enabled: !!lessonId
   });

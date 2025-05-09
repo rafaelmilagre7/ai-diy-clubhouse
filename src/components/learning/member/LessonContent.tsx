@@ -94,9 +94,10 @@ export const LessonContent: React.FC<LessonContentProps> = ({
         </div>
       )}
       
-      {/* Descrição da aula (se houver e não for apenas "boas-vindas") */}
+      {/* Título da aula em destaque acima da descrição */}
       {hasDescription && (
         <div className="mt-6">
+          <h2 className="text-2xl font-bold mb-3">{lesson.title}</h2>
           <LessonDescription lesson={lesson} />
         </div>
       )}
