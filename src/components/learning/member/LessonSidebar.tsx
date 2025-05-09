@@ -21,9 +21,13 @@ export const LessonSidebar = ({
   courseId,
   completedLessons = []
 }: LessonSidebarProps) => {
+  // Garantir que lessons e completedLessons sejam sempre arrays
+  const safeLessons = Array.isArray(lessons) ? lessons : [];
+  const safeCompletedLessons = Array.isArray(completedLessons) ? completedLessons : [];
+  
   // Cálculo simples de progresso
-  const totalLessons = lessons.length;
-  const completedCount = completedLessons.length;
+  const totalLessons = safeLessons.length;
+  const completedCount = safeCompletedLessons.length;
   const progressPercentage = totalLessons > 0 ? Math.round((completedCount / totalLessons) * 100) : 0;
 
   return (
@@ -63,8 +67,8 @@ export const LessonSidebar = ({
       </CardHeader>
       <CardContent className="p-0">
         <div className="divide-y">
-          {lessons.map((lesson) => {
-            const isCompleted = completedLessons.includes(lesson.id);
+          {safeLessons.map((lesson) => {
+            const isCompleted = safeCompletedLessons.includes(lesson.id);
             const isCurrent = lesson.id === currentLesson.id;
             
             return (

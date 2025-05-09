@@ -35,6 +35,9 @@ export const useLessonComments = (lessonId: string) => {
           
         if (rootError) throw rootError;
         
+        // Garantir que rootComments seja um array
+        const safeRootComments = Array.isArray(rootComments) ? rootComments : [];
+        
         // Buscar respostas aos comentários
         const { data: replies, error: repliesError } = await supabase
           .from('learning_comments')
@@ -48,6 +51,9 @@ export const useLessonComments = (lessonId: string) => {
           
         if (repliesError) throw repliesError;
         
+        // Garantir que replies seja um array
+        const safeReplies = Array.isArray(replies) ? replies : [];
+        
         // Verificar se o usuário curtiu cada comentário
         let userLikes: Record<string, boolean> = {};
         
@@ -57,7 +63,7 @@ export const useLessonComments = (lessonId: string) => {
             .select('comment_id')
             .eq('user_id', user.id);
             
-          if (likesData) {
+          if (likesData && Array.isArray(likesData)) {
             userLikes = likesData.reduce((acc, like) => {
               acc[like.comment_id] = true;
               return acc;
@@ -66,8 +72,8 @@ export const useLessonComments = (lessonId: string) => {
         }
         
         // Organizar comentários com suas respostas
-        const organizedComments = rootComments.map((comment: Comment) => {
-          const commentReplies = replies.filter(
+        const organizedComments = safeRootComments.map((comment: Comment) => {
+          const commentReplies = safeReplies.filter(
             (reply: Comment) => reply.parent_id === comment.id
           ).map((reply: Comment) => ({
             ...reply,

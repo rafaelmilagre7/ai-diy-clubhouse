@@ -24,11 +24,18 @@ const LessonView = () => {
     videos,
     courseInfo,
     moduleData,
-    isLoading
+    isLoading,
+    error
   } = useLessonData({ 
     lessonId, 
     courseId 
   });
+  
+  // Garantir que temos arrays válidos
+  const safeResources = Array.isArray(resources) ? resources : [];
+  const safeVideos = Array.isArray(videos) ? videos : [];
+  const safeModuleLessons = moduleData?.lessons ? 
+    (Array.isArray(moduleData.lessons) ? moduleData.lessons : []) : [];
   
   // Gerenciar navegação entre lições
   const {
@@ -38,7 +45,7 @@ const LessonView = () => {
   } = useLessonNavigation({
     courseId,
     currentLessonId: lessonId,
-    lessons: moduleData?.lessons || []
+    lessons: safeModuleLessons
   });
   
   // Gerenciar progresso da lição
@@ -49,7 +56,7 @@ const LessonView = () => {
   } = useLessonProgress({ lessonId });
   
   // Buscar lições completadas para o sidebar
-  const { data: completedLessons = [] } = useQuery({
+  const { data: completedLessonsData = [] } = useQuery({
     queryKey: ["learning-completed-lessons", moduleData?.module?.id],
     queryFn: async () => {
       const { data: userData } = await supabase.auth.getUser();
@@ -66,10 +73,15 @@ const LessonView = () => {
         return [];
       }
       
+      if (!data || !Array.isArray(data)) return [];
+      
       return data.map(item => item.lesson_id);
     },
     enabled: !!moduleData?.module?.id
   });
+  
+  // Garantir que completedLessons é sempre um array
+  const completedLessons = Array.isArray(completedLessonsData) ? completedLessonsData : [];
 
   // Atualizar progresso quando o usuário interage com a lição
   const handleProgressUpdate = (videoId: string, newProgress: number) => {
@@ -78,6 +90,29 @@ const LessonView = () => {
 
   if (isLoading) {
     return <div className="container py-8">Carregando conteúdo da aula...</div>;
+  }
+  
+  // Se não tiver a lição, mostrar erro
+  if (!lesson) {
+    return (
+      <div className="container py-8">
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Erro ao carregar aula</AlertTitle>
+          <AlertDescription>
+            {error ? error.message : "Não foi possível carregar a aula solicitada. Por favor, tente novamente."} 
+          </AlertDescription>
+        </Alert>
+        <Button
+          variant="outline"
+          className="mt-4"
+          onClick={() => window.history.back()}
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Voltar
+        </Button>
+      </div>
+    );
   }
 
   return (
@@ -104,8 +139,8 @@ const LessonView = () => {
           <div className="mt-6">
             <LessonNavigation 
               courseId={courseId!}
-              currentLesson={lesson!}
-              allLessons={moduleData?.lessons || []}
+              currentLesson={lesson}
+              allLessons={safeModuleLessons}
               onComplete={completeLesson}
               isCompleted={progress >= 100}
               prevLesson={prevLesson}
@@ -115,9 +150,9 @@ const LessonView = () => {
           
           <div className="mt-8">
             <LessonContent 
-              lesson={lesson!} 
-              videos={videos || []}
-              resources={resources || []}
+              lesson={lesson} 
+              videos={safeVideos}
+              resources={safeResources}
               isCompleted={progress >= 100}
               onProgressUpdate={handleProgressUpdate} 
               onComplete={completeLesson}
@@ -127,9 +162,9 @@ const LessonView = () => {
         
         <div>
           <LessonSidebar 
-            currentLesson={lesson!}
+            currentLesson={lesson}
             module={moduleData?.module}
-            lessons={moduleData?.lessons || []}
+            lessons={safeModuleLessons}
             courseId={courseId!}
             completedLessons={completedLessons}
           />

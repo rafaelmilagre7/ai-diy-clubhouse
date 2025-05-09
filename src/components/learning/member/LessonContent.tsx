@@ -33,6 +33,10 @@ export const LessonContent: React.FC<LessonContentProps> = ({
 }) => {
   const [completionDialogOpen, setCompletionDialogOpen] = useState(false);
   
+  // Garantir que videos e resources sejam sempre arrays
+  const safeVideos = Array.isArray(videos) ? videos : [];
+  const safeResources = Array.isArray(resources) ? resources : [];
+  
   const handleVideoProgress = (videoId: string, progress: number) => {
     if (onProgressUpdate) {
       onProgressUpdate(videoId, progress);
@@ -47,8 +51,8 @@ export const LessonContent: React.FC<LessonContentProps> = ({
   };
   
   // Verificar condições para exibição dos componentes
-  const hasVideos = videos && videos.length > 0;
-  const hasResources = resources && resources.length > 0;
+  const hasVideos = safeVideos.length > 0;
+  const hasResources = safeResources.length > 0;
   const hasAiAssistant = lesson.ai_assistant_enabled;
   const hasDescription = lesson.description && lesson.description.trim() !== "" && 
                         !lesson.description.toLowerCase().includes("bem-vindo") &&
@@ -63,13 +67,13 @@ export const LessonContent: React.FC<LessonContentProps> = ({
       {hasVideos && (
         <div>
           <LessonVideoPlayer 
-            videos={videos}
+            videos={safeVideos}
             onProgress={(videoId, progress) => handleVideoProgress(videoId, progress)}
           />
           
           {/* Informações sobre a duração e botão de completar abaixo do player */}
           <div className="mt-4 flex items-center justify-between">
-            <LessonDuration videos={videos} />
+            <LessonDuration videos={safeVideos} />
             
             <LessonCompleteButton 
               isCompleted={isCompleted} 
@@ -78,7 +82,7 @@ export const LessonContent: React.FC<LessonContentProps> = ({
           </div>
           
           {/* Alerta se o progresso for baixo (após começar a assistir) */}
-          {!isCompleted && videos.length > 0 && (
+          {!isCompleted && safeVideos.length > 0 && (
             <Alert className="mt-4 bg-blue-50 dark:bg-blue-950/20 text-blue-800 dark:text-blue-300 border-blue-200 dark:border-blue-900">
               <AlertCircle className="h-4 w-4" />
               <AlertTitle>Dica de aprendizado</AlertTitle>
@@ -108,7 +112,7 @@ export const LessonContent: React.FC<LessonContentProps> = ({
             
             {hasResources && (
               <TabsContent value="resources" className="mt-4">
-                <LessonResources resources={resources} />
+                <LessonResources resources={safeResources} />
               </TabsContent>
             )}
             

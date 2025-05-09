@@ -1,11 +1,11 @@
 
 import React from 'react';
-import { useModuleCommentsRefactored } from '@/hooks/implementation/useModuleCommentsRefactored';
-import { CommentForm } from './CommentForm';
-import { CommentList } from './CommentList';
 import { Separator } from '@/components/ui/separator';
-import { useLogging } from '@/hooks/useLogging';
-import { useRealtimeComments } from '@/hooks/implementation/useRealtimeComments';
+import { CommentList } from './CommentList';
+import { CommentForm } from './CommentForm';
+import { useToolComments } from '@/hooks/useToolComments';
+import { MessageSquare } from 'lucide-react';
+import { Comment } from '@/types/commentTypes';
 
 interface CommentsSectionProps {
   solutionId: string;
@@ -13,14 +13,6 @@ interface CommentsSectionProps {
 }
 
 export const CommentsSection = ({ solutionId, moduleId }: CommentsSectionProps) => {
-  const { log } = useLogging();
-  
-  // Ativar atualizações em tempo real dos comentários
-  useRealtimeComments(solutionId, moduleId, true);
-  
-  // Log para diagnosticar possíveis problemas
-  log('Renderizando seção de comentários', { solutionId, moduleId });
-  
   const {
     comments,
     isLoading,
@@ -33,14 +25,34 @@ export const CommentsSection = ({ solutionId, moduleId }: CommentsSectionProps) 
     cancelReply,
     likeComment,
     deleteComment
-  } = useModuleCommentsRefactored(solutionId, moduleId);
+  } = useToolComments(`${solutionId}_${moduleId}`);
+  
+  // Garantir que comments é um array
+  const safeComments = Array.isArray(comments) ? comments : [];
+
+  // Adaptar as funções para corresponder aos tipos esperados
+  const handleLikeComment = (commentId: string) => {
+    const commentToLike = safeComments.find(c => c.id === commentId) || 
+                          safeComments.flatMap(c => c.replies || []).find(c => c.id === commentId);
+    if (commentToLike) {
+      likeComment(commentToLike);
+    }
+  };
+
+  const handleDeleteComment = (commentId: string) => {
+    const commentToDelete = safeComments.find(c => c.id === commentId) || 
+                            safeComments.flatMap(c => c.replies || []).find(c => c.id === commentId);
+    if (commentToDelete) {
+      deleteComment(commentToDelete);
+    }
+  };
 
   return (
-    <div className="space-y-6 mt-8">
-      <h3 className="text-lg font-semibold">Discussão</h3>
-      <p className="text-muted-foreground">
-        Compartilhe suas experiências, dúvidas ou dicas sobre esta solução com outros membros do club.
-      </p>
+    <div className="space-y-6">
+      <div className="flex items-center gap-2">
+        <MessageSquare className="h-5 w-5 text-[#0ABAB5]" />
+        <h2 className="text-xl font-semibold">Comentários</h2>
+      </div>
       
       <CommentForm
         comment={comment}
@@ -51,14 +63,14 @@ export const CommentsSection = ({ solutionId, moduleId }: CommentsSectionProps) 
         isSubmitting={isSubmitting}
       />
 
-      <Separator className="my-6" />
+      <Separator />
       
       <CommentList
-        comments={comments}
+        comments={safeComments}
         isLoading={isLoading}
         onReply={startReply}
-        onLike={likeComment}
-        onDelete={deleteComment}
+        onLike={handleLikeComment}
+        onDelete={handleDeleteComment}
       />
     </div>
   );

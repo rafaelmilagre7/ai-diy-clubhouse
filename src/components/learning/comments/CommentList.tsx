@@ -23,8 +23,11 @@ export const CommentList: React.FC<CommentListProps> = ({
   onLike,
   isLoading = false
 }) => {
+  // Garantir que comments seja sempre um array antes de chamar filter
+  const safeComments = Array.isArray(comments) ? comments : [];
+  
   // Filtrar para mostrar apenas comentários principais (não respostas)
-  const rootComments = comments.filter(comment => !comment.parent_id);
+  const rootComments = safeComments.filter(comment => !comment.parent_id);
   
   if (isLoading) {
     return (

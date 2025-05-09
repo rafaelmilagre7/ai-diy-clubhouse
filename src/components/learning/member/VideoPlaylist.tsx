@@ -16,6 +16,9 @@ export const VideoPlaylist: React.FC<VideoPlaylistProps> = ({
   onSelectVideo,
   progresses = {}
 }) => {
+  // Garantir que videos seja sempre um array
+  const safeVideos = Array.isArray(videos) ? videos : [];
+
   // Função para verificar se um vídeo está completo (>=95% assistido)
   const isVideoCompleted = (videoId: string): boolean => {
     return (progresses[videoId] || 0) >= 95;
@@ -24,7 +27,7 @@ export const VideoPlaylist: React.FC<VideoPlaylistProps> = ({
   return (
     <div className="bg-card border rounded-md overflow-hidden">
       <div className="max-h-[400px] overflow-y-auto">
-        {videos.map((video, index) => (
+        {safeVideos.map((video, index) => (
           <div
             key={video.id}
             className={cn(
