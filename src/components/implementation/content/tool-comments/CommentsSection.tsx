@@ -30,21 +30,13 @@ export const CommentsSection = ({ solutionId, moduleId }: CommentsSectionProps) 
   // Garantir que comments é um array
   const safeComments = Array.isArray(comments) ? comments : [];
 
-  // Adaptar as funções para corresponder aos tipos esperados
-  const handleLikeComment = (commentId: string) => {
-    const commentToLike = safeComments.find(c => c.id === commentId) || 
-                          safeComments.flatMap(c => c.replies || []).find(c => c.id === commentId);
-    if (commentToLike) {
-      likeComment(commentToLike);
-    }
+  // Adaptar as funções para passar diretamente o objeto de comentário
+  const handleLikeComment = (comment: Comment) => {
+    likeComment(comment);
   };
 
-  const handleDeleteComment = (commentId: string) => {
-    const commentToDelete = safeComments.find(c => c.id === commentId) || 
-                            safeComments.flatMap(c => c.replies || []).find(c => c.id === commentId);
-    if (commentToDelete) {
-      deleteComment(commentToDelete);
-    }
+  const handleDeleteComment = (comment: Comment) => {
+    deleteComment(comment);
   };
 
   return (
