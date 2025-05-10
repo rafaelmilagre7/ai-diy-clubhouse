@@ -9,10 +9,11 @@ import { useProgress } from "@/hooks/onboarding/useProgress";
 import { Button } from "@/components/ui/button";
 import { ReviewStep } from "@/components/onboarding/steps/ReviewStep";
 import { toast } from "sonner";
+import { steps } from "@/hooks/onboarding/useStepDefinitions";
 
 const Review: React.FC = () => {
   const navigate = useNavigate();
-  const { currentStepIndex, steps, completeOnboarding } = useOnboardingSteps();
+  const { currentStepIndex, completeOnboarding } = useOnboardingSteps();
   const { progress, isLoading, refreshProgress } = useProgress();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isInitialLoadAttempted, setIsInitialLoadAttempted] = useState(false);
@@ -60,8 +61,12 @@ const Review: React.FC = () => {
   
   const handleNavigateToStep = (index: number) => {
     console.log("[Review] Navegando para etapa:", index, steps[index]);
-    if (steps[index]) {
-      navigate(steps[index].path);
+    
+    // Correção: Verificar se o índice é válido e garantir que navegamos para o caminho correto
+    if (index >= 0 && index < steps.length) {
+      const targetStep = steps[index];
+      console.log(`[Review] Redirecionando para etapa ${targetStep.id} (${targetStep.path})`);
+      navigate(targetStep.path);
     } else {
       console.error("[Review] Tentativa de navegar para etapa inválida:", index);
       toast.error("Erro ao navegar. Etapa não encontrada.");

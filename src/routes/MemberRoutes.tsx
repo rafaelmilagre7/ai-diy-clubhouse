@@ -23,6 +23,11 @@ const LearningPage = lazy(() => import("@/pages/member/learning/LearningPage"));
 const CourseDetails = lazy(() => import("@/pages/member/learning/CourseDetails"));
 const LessonView = lazy(() => import("@/pages/member/learning/LessonView"));
 
+// Páginas de onboarding
+const Onboarding = lazy(() => import("@/pages/onboarding/Onboarding"));
+const PersonalInfo = lazy(() => import("@/pages/onboarding/steps/PersonalInfo"));
+const Review = lazy(() => import("@/pages/onboarding/Review"));
+
 export const MemberRoutes = () => {
   return (
     <Fragment>
@@ -175,6 +180,24 @@ export const MemberRoutes = () => {
             <MemberLayout>
               <LessonView />
             </MemberLayout>
+          </ProtectedRoute>
+        }
+      />
+      
+      {/* Rotas de Onboarding */}
+      <Route
+        path="/onboarding"
+        element={
+          <ProtectedRoute>
+            <PersonalInfo />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/onboarding/review"
+        element={
+          <ProtectedRoute>
+            <Review />
           </ProtectedRoute>
         }
       />

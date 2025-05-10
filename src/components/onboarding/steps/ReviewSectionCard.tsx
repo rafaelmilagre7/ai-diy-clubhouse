@@ -165,6 +165,16 @@ export const ReviewSectionCard: React.FC<ReviewSectionCardProps> = ({
     return getSummaryComponent(step.section, sectionData, progress);
   }, [step, sectionData, progress]);
 
+  // Corrigir o índice da etapa para navegação
+  // Precisamos corrigir o índice já que o stepIndex é 1-based para UI mas precisamos 0-based para arrays
+  const handleEditClick = () => {
+    console.log(`[ReviewSectionCard] Editando seção ${step.id} com índice UI ${stepIndex}, índice array ${stepIndex - 1}`);
+    
+    // Passar o índice exato correto (com base zero) para a função de navegação
+    // O stepIndex é base-1 (começa em 1), mas arrays são base-0, então subtraímos 1
+    navigateToStep(stepIndex - 1);
+  };
+
   return (
     <Card className="overflow-hidden border-l-4 border-l-gray-200">
       <CardHeader className="flex flex-row items-center justify-between bg-gray-50 py-2 px-4">
@@ -185,7 +195,7 @@ export const ReviewSectionCard: React.FC<ReviewSectionCardProps> = ({
             variant="outline"
             size="sm"
             className="flex items-center gap-1"
-            onClick={() => navigateToStep(stepIndex - 1)}
+            onClick={handleEditClick}
           >
             <PenSquare className="h-4 w-4" />
             <span>Editar</span>

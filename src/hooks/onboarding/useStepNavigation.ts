@@ -4,7 +4,6 @@ import { steps } from "./useStepDefinitions";
 import { useProgress } from "./useProgress";
 import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "sonner";
-import { OnboardingProgress } from "@/types/onboarding";
 
 export const useStepNavigation = () => {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
@@ -12,6 +11,7 @@ export const useStepNavigation = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  // Mapeamento de caminhos para IDs de etapa
   const pathToStepId = {
     "/onboarding": "personal",
     "/onboarding/professional-data": "professional_data",
@@ -32,33 +32,35 @@ export const useStepNavigation = () => {
       const currentPath = location.pathname;
       const currentStepId = pathToStepId[currentPath as keyof typeof pathToStepId];
       
+      console.log(`[useStepNavigation] Caminho atual: ${currentPath}, ID de etapa mapeado: ${currentStepId}`);
+      
       if (currentStepId) {
         const stepIndexByPath = steps.findIndex(step => step.id === currentStepId);
         
         if (stepIndexByPath !== -1) {
-          console.log(`Definindo etapa atual baseada na URL: ${currentStepId} (índice ${stepIndexByPath})`);
+          console.log(`[useStepNavigation] Definindo etapa atual baseada na URL: ${currentStepId} (índice ${stepIndexByPath})`);
           setCurrentStepIndex(stepIndexByPath);
         }
       } else if (refreshedProgress && refreshedProgress.current_step) {
         const stepIndex = steps.findIndex(step => step.id === refreshedProgress.current_step);
         
         if (stepIndex !== -1) {
-          console.log(`Continuando onboarding da etapa: ${refreshedProgress.current_step} (índice ${stepIndex})`);
+          console.log(`[useStepNavigation] Continuando onboarding da etapa: ${refreshedProgress.current_step} (índice ${stepIndex})`);
           setCurrentStepIndex(stepIndex);
           
           const correctPath = steps[stepIndex].path;
           
           if (currentPath !== correctPath) {
-            console.log(`Redirecionando de ${currentPath} para ${correctPath}`);
+            console.log(`[useStepNavigation] Redirecionando de ${currentPath} para ${correctPath}`);
             navigate(correctPath);
           }
         } else {
-          console.warn(`Etapa não encontrada nos passos definidos: ${refreshedProgress.current_step}`);
+          console.warn(`[useStepNavigation] Etapa não encontrada nos passos definidos: ${refreshedProgress.current_step}`);
           navigate(steps[0].path);
           toast.info("Iniciando o preenchimento do onboarding");
         }
       } else if (refreshedProgress) {
-        console.log("Nenhuma etapa atual definida, começando do início");
+        console.log("[useStepNavigation] Nenhuma etapa atual definida, começando do início");
         navigate(steps[0].path);
       }
     };
@@ -68,18 +70,22 @@ export const useStepNavigation = () => {
 
   const navigateToStep = (stepIndex: number) => {
     if (stepIndex >= 0 && stepIndex < steps.length) {
-      console.log(`Navegando manualmente para etapa índice ${stepIndex}: ${steps[stepIndex].id} (${steps[stepIndex].path})`);
+      console.log(`[useStepNavigation] Navegando para etapa índice ${stepIndex}: ${steps[stepIndex].id} (${steps[stepIndex].path})`);
       setCurrentStepIndex(stepIndex);
       navigate(steps[stepIndex].path);
+    } else {
+      console.warn(`[useStepNavigation] Tentativa de navegação para índice inválido: ${stepIndex}`);
     }
   };
 
   const navigateToStepById = (stepId: string) => {
     const index = steps.findIndex(step => step.id === stepId);
     if (index !== -1) {
-      console.log(`Navegando para etapa ID ${stepId} (índice ${index}): ${steps[index].path}`);
+      console.log(`[useStepNavigation] Navegando para etapa ID ${stepId} (índice ${index}): ${steps[index].path}`);
       setCurrentStepIndex(index);
       navigate(steps[index].path);
+    } else {
+      console.warn(`[useStepNavigation] Etapa não encontrada com ID: ${stepId}`);
     }
   };
 
