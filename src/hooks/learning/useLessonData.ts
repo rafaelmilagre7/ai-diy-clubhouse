@@ -2,6 +2,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { LearningLesson, LearningLessonVideo, LearningResource } from "@/lib/supabase";
+import { sortLessonsByNumber } from "@/components/learning/member/course-modules/CourseModulesHelpers";
 
 interface UseLessonDataProps {
   lessonId?: string;
@@ -134,7 +135,10 @@ export function useLessonData({ lessonId, courseId }: UseLessonDataProps) {
         return { module: moduleInfo, lessons: [] };
       }
       
-      return { module: moduleInfo, lessons: moduleLessons };
+      // Ordenar lições por número no título para garantir navegação correta
+      const sortedLessons = sortLessonsByNumber(moduleLessons || []);
+      
+      return { module: moduleInfo, lessons: sortedLessons };
     },
     enabled: !!lesson?.module_id
   });

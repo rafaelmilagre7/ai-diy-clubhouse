@@ -23,6 +23,7 @@ interface LessonContentProps {
   nextLesson?: any;
   courseId?: string;
   allLessons?: any[];
+  onNextLesson?: () => void; // Nova prop para navegar para a próxima aula
 }
 
 export const LessonContent: React.FC<LessonContentProps> = ({ 
@@ -35,7 +36,8 @@ export const LessonContent: React.FC<LessonContentProps> = ({
   prevLesson,
   nextLesson,
   courseId,
-  allLessons = []
+  allLessons = [],
+  onNextLesson
 }) => {
   const [completionDialogOpen, setCompletionDialogOpen] = useState(false);
   
@@ -53,6 +55,16 @@ export const LessonContent: React.FC<LessonContentProps> = ({
     setCompletionDialogOpen(true);
     if (onComplete) {
       onComplete();
+    }
+  };
+
+  // Função para lidar com a navegação para a próxima aula a partir do modal
+  const handleNavigateToNext = () => {
+    if (onNextLesson) {
+      // Fechar o modal primeiro
+      setCompletionDialogOpen(false);
+      // Em seguida, navegar para a próxima aula
+      onNextLesson();
     }
   };
 
@@ -76,8 +88,6 @@ export const LessonContent: React.FC<LessonContentProps> = ({
             videos={safeVideos}
             onProgress={(videoId, progress) => handleVideoProgress(videoId, progress)}
           />
-          
-          {/* Removida a informação de duração do vídeo */}
           
           {/* Alerta se o progresso for baixo (após começar a assistir) */}
           {!isCompleted && safeVideos.length > 0 && (
@@ -134,11 +144,13 @@ export const LessonContent: React.FC<LessonContentProps> = ({
         <LessonComments lessonId={lesson.id} />
       </section>
 
+      {/* Modal de conclusão da aula com navegação para a próxima */}
       <LessonCompletionModal
         isOpen={completionDialogOpen}
         setIsOpen={setCompletionDialogOpen}
         lesson={lesson}
-        onNext={() => {}} // Navegação para próxima aula será implementada
+        onNext={handleNavigateToNext} // Implementamos a navegação para a próxima aula
+        nextLesson={nextLesson} // Passar a próxima lição para exibir informações no modal
       />
     </div>
   );

@@ -11,13 +11,15 @@ interface LessonCompletionModalProps {
   setIsOpen: (open: boolean) => void;
   lesson: LearningLesson;
   onNext?: () => void;
+  nextLesson?: LearningLesson | null;
 }
 
 export const LessonCompletionModal: React.FC<LessonCompletionModalProps> = ({
   isOpen,
   setIsOpen,
   lesson,
-  onNext
+  onNext,
+  nextLesson
 }) => {
   const handleNPSCompleted = () => {
     // Mantém o modal aberto por um momento para que o usuário veja a confirmação
@@ -25,6 +27,13 @@ export const LessonCompletionModal: React.FC<LessonCompletionModalProps> = ({
       setIsOpen(false);
       if (onNext) onNext();
     }, 1000);
+  };
+
+  const getNextLessonText = () => {
+    if (nextLesson) {
+      return `Próxima aula: ${nextLesson.title}`;
+    }
+    return "Finalizar curso";
   };
 
   return (
@@ -56,7 +65,7 @@ export const LessonCompletionModal: React.FC<LessonCompletionModalProps> = ({
           </Button>
           {onNext && (
             <Button onClick={onNext} className="gap-2">
-              Próxima aula
+              {getNextLessonText()}
               <ArrowRight className="h-4 w-4" />
             </Button>
           )}

@@ -54,6 +54,10 @@ export const LessonNavigation: React.FC<LessonNavigationProps> = ({
   const totalLessons = allLessons.length;
   const lessonNumber = currentIndex !== -1 ? currentIndex + 1 : 0;
 
+  // Obter textos para os botões de navegação
+  const nextButtonText = nextLesson ? "Próxima aula" : "Finalizar curso";
+  const prevButtonText = prevLesson ? "Aula anterior" : "Início do curso";
+
   return (
     <div className="flex flex-col gap-4">
       {/* Barra de progresso */}
@@ -75,9 +79,10 @@ export const LessonNavigation: React.FC<LessonNavigationProps> = ({
             onClick={handlePrevious}
             disabled={!prevLesson}
             className="gap-1"
+            title={prevLesson?.title || ""}
           >
             <ArrowLeft className="h-4 w-4" />
-            {prevLesson ? "Aula anterior" : "Início do curso"}
+            {prevButtonText}
           </Button>
         </div>
         
@@ -106,8 +111,9 @@ export const LessonNavigation: React.FC<LessonNavigationProps> = ({
             size="sm"
             onClick={handleNext}
             className="gap-1"
+            title={nextLesson?.title || "Voltar para a página do curso"}
           >
-            Próxima aula
+            {nextButtonText}
             <ArrowRight className="h-4 w-4" />
           </Button>
         </div>

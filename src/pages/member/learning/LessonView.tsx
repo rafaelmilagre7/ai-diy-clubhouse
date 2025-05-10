@@ -41,7 +41,8 @@ const LessonView = () => {
   const {
     prevLesson,
     nextLesson,
-    navigateToCourse
+    navigateToCourse,
+    navigateToNext
   } = useLessonNavigation({
     courseId,
     currentLessonId: lessonId,
@@ -148,6 +149,7 @@ const LessonView = () => {
               nextLesson={nextLesson}
               courseId={courseId}
               allLessons={safeModuleLessons}
+              onNextLesson={navigateToNext} // Passamos a função de navegação para a próxima aula
             />
           </div>
           
