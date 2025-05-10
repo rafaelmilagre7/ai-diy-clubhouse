@@ -4,6 +4,7 @@ import { LearningProgress } from "@/lib/supabase/types";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { LessonThumbnail } from "./LessonThumbnail";
 import { LessonListItem } from "./LessonListItem";
+import { sortLessonsByNumber } from "./CourseModulesHelpers";
 
 interface ModuleLessonsProps { 
   moduleId: string;
@@ -26,13 +27,6 @@ export const ModuleLessons = ({
   
   // Garantir que lessons seja sempre um array válido
   const lessons = Array.isArray(data) ? data : [];
-  
-  console.log(`ModuleLessons - moduleId: ${moduleId}`, { 
-    dataType: typeof data,
-    isArray: Array.isArray(data),
-    dataValue: data,
-    lessonsLength: lessons.length
-  });
   
   if (isLoading) {
     return (
