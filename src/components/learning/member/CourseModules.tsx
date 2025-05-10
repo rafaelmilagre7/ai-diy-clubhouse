@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { 
   Accordion,
@@ -176,7 +177,7 @@ const ModuleLessons = ({
                     className="block group"
                   >
                     <div className="relative overflow-hidden rounded-md">
-                      <AspectRatio ratio={16/9}>
+                      <AspectRatio ratio={9/16}>
                         {lesson.cover_image_url ? (
                           <img 
                             src={lesson.cover_image_url} 
