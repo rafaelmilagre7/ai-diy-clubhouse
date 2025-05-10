@@ -34,11 +34,11 @@ export const LessonDuration: React.FC<LessonDurationProps> = ({
   
   // Calcular duração total dos vídeos
   const calculateTotalDuration = (): number => {
-    if (!videos || videos.length === 0) return 0;
+    if (!videos || !Array.isArray(videos) || videos.length === 0) return 0;
     
     return videos.reduce((total, video) => {
       // Usar a duração em segundos se disponível, caso contrário valor padrão
-      const duration = video.duration_seconds || 0;
+      const duration = video?.duration_seconds || 0;
       return total + duration;
     }, 0);
   };
@@ -47,8 +47,10 @@ export const LessonDuration: React.FC<LessonDurationProps> = ({
   const formattedDuration = formatTime(totalDurationInSeconds);
   
   // Verificar se há vídeos sem duração definida
-  const hasVideosMissingDuration = videos?.some(video => !video.duration_seconds);
+  const hasVideosMissingDuration = Array.isArray(videos) && videos.some(video => !video?.duration_seconds);
   
+  // Componente mantido apenas para uso administrativo
+  // O botão de atualização não é mais exibido na interface do membro
   return (
     <div className="text-sm text-muted-foreground flex items-center">
       <span>
@@ -56,7 +58,8 @@ export const LessonDuration: React.FC<LessonDurationProps> = ({
         {hasVideosMissingDuration && " (estimado)"}
       </span>
       
-      {showUpdateButton && hasVideosMissingDuration && (
+      {/* Botão de atualização desativado na interface do membro, mantido apenas para admins */}
+      {showUpdateButton && hasVideosMissingDuration && onUpdateDurations && (
         <Button 
           variant="ghost" 
           size="sm" 

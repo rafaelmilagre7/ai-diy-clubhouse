@@ -6,11 +6,19 @@ import { toast } from "sonner";
 
 /**
  * Componente para atualizar automaticamente as durações dos vídeos da aula atual
+ * NOTA: Este componente está desativado e não é mais utilizado na interface do usuário
+ * Mantido apenas para referência futura
  */
 export const AtualizarDuracoesAutomaticamente = () => {
   const { aulaId } = useParams<{ aulaId: string }>();
   
+  // Componente desativado - não faz mais nada
   useEffect(() => {
+    // Funcionalidade desativada
+    return;
+    
+    // Código original comentado para referência futura
+    /*
     if (!aulaId) return;
     
     // Verificar se essa aula tem vídeos sem duração
@@ -51,6 +59,7 @@ export const AtualizarDuracoesAutomaticamente = () => {
     
     // Executar a verificação quando o componente montar
     verificarEAtualizarVideos();
+    */
   }, [aulaId]);
   
   // Este componente não renderiza nada

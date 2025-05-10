@@ -9,10 +9,8 @@ import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LessonCompletionModal } from "../completion/LessonCompletionModal";
 import { LessonDescription } from "./LessonDescription";
-import { LessonDuration } from "./LessonDuration";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
-import { atualizarDuracoesAulaAtual } from "@/pages/atualizarDuracoesAtuais";
 
 interface LessonContentProps {
   lesson: LearningLesson;
@@ -40,7 +38,6 @@ export const LessonContent: React.FC<LessonContentProps> = ({
   allLessons = []
 }) => {
   const [completionDialogOpen, setCompletionDialogOpen] = useState(false);
-  const [isUpdatingDurations, setIsUpdatingDurations] = useState(false);
   
   // Garantir que videos e resources sejam sempre arrays
   const safeVideos = Array.isArray(videos) ? videos : [];
@@ -59,19 +56,6 @@ export const LessonContent: React.FC<LessonContentProps> = ({
     }
   };
 
-  const handleUpdateDurations = async () => {
-    if (lesson && lesson.id) {
-      setIsUpdatingDurations(true);
-      try {
-        await atualizarDuracoesAulaAtual(lesson.id);
-        // A função já recarrega a página após atualização
-      } catch (err) {
-        console.error("Erro ao atualizar durações:", err);
-        setIsUpdatingDurations(false);
-      }
-    }
-  };
-  
   // Verificar condições para exibição dos componentes
   const hasVideos = safeVideos.length > 0;
   const hasResources = safeResources.length > 0;
@@ -93,15 +77,7 @@ export const LessonContent: React.FC<LessonContentProps> = ({
             onProgress={(videoId, progress) => handleVideoProgress(videoId, progress)}
           />
           
-          {/* Informações sobre a duração abaixo do player - agora com botão de atualização */}
-          <div className="mt-4">
-            <LessonDuration 
-              videos={safeVideos} 
-              showUpdateButton={true} 
-              isLoading={isUpdatingDurations}
-              onUpdateDurations={handleUpdateDurations}
-            />
-          </div>
+          {/* Removida a informação de duração do vídeo */}
           
           {/* Alerta se o progresso for baixo (após começar a assistir) */}
           {!isCompleted && safeVideos.length > 0 && (

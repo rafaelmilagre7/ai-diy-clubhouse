@@ -12,8 +12,6 @@ import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { VideoPlayer } from "@/components/formacao/aulas/VideoPlayer";
 import { VideoDisplay } from "@/components/formacao/aulas/VideoDisplay";
-import { LessonDuration } from "@/components/learning/member/LessonDuration";
-import { AtualizarDuracoesAutomaticamente } from "./atualizar";
 
 const AulaView: React.FC = () => {
   const { cursoId, aulaId } = useParams<{ cursoId: string; aulaId: string }>();
@@ -287,7 +285,6 @@ const AulaView: React.FC = () => {
   return (
     <div className="container py-6">
       {/* Componente invisível para atualizar durações automaticamente */}
-      <AtualizarDuracoesAutomaticamente />
       
       <Button
         variant="ghost"

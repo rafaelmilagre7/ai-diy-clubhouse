@@ -4,6 +4,8 @@ import { toast } from "sonner";
 
 /**
  * Função para atualizar as durações dos vídeos da aula atual
+ * NOTA: Esta funcionalidade foi desativada na interface do usuário
+ * Mantida apenas para uso administrativo
  * @param lessonId ID da aula
  */
 export const atualizarDuracoesAulaAtual = async (lessonId: string): Promise<boolean> => {
@@ -42,9 +44,16 @@ export const atualizarDuracoesAulaAtual = async (lessonId: string): Promise<bool
   }
 };
 
-// Executar automaticamente quando este módulo for importado
-// Obter o lessonId da URL atual para atualizar apenas a aula atual
+/**
+ * Esta função foi desativada e não é mais executada automaticamente
+ * Mantida apenas para referência futura
+ */
 export const executarAtualizacaoAutomatica = () => {
+  // Funcionalidade desativada
+  return;
+  
+  // Código original comentado para referência futura
+  /*
   const url = new URL(window.location.href);
   const path = url.pathname;
   
@@ -64,4 +73,5 @@ export const executarAtualizacaoAutomatica = () => {
         }
       });
   }
+  */
 };
