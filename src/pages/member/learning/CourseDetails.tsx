@@ -11,6 +11,7 @@ import { CourseProgress } from "@/components/learning/member/CourseProgress";
 import { CourseInfoPanel } from "@/components/learning/member/CourseInfoPanel";
 import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
+import { sortLessonsByNumber } from "@/components/learning/member/course-modules/CourseModulesHelpers";
 
 const CourseDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -58,7 +59,7 @@ const CourseDetails = () => {
   });
   
   // Buscar todas as aulas do curso para estatísticas
-  const { data: lessons, isLoading: isLoadingLessons } = useQuery({
+  const { data: allLessons, isLoading: isLoadingLessons } = useQuery({
     queryKey: ["learning-course-lessons", id],
     queryFn: async () => {
       if (!modules?.length) return [];
@@ -75,7 +76,8 @@ const CourseDetails = () => {
         return [];
       }
       
-      return data || [];
+      // Ordenar aulas por número no título
+      return sortLessonsByNumber(data || []);
     },
     enabled: !!modules?.length
   });
@@ -104,12 +106,12 @@ const CourseDetails = () => {
   
   // Calcular estatísticas do curso
   const calculateCourseStats = () => {
-    if (!lessons) return {};
+    if (!allLessons) return {};
     
     let totalVideos = 0;
     let totalDuration = 0;
     
-    lessons.forEach(lesson => {
+    allLessons.forEach(lesson => {
       if (lesson.learning_lesson_videos && Array.isArray(lesson.learning_lesson_videos)) {
         totalVideos += lesson.learning_lesson_videos.length;
         
@@ -123,7 +125,7 @@ const CourseDetails = () => {
     
     return {
       moduleCount: modules?.length || 0,
-      lessonCount: lessons.length,
+      lessonCount: allLessons.length,
       videoCount: totalVideos,
       durationMinutes: Math.ceil(totalDuration / 60)
     };
@@ -131,16 +133,16 @@ const CourseDetails = () => {
   
   // Obter ID da primeira aula (para o botão de iniciar curso)
   const getFirstLessonId = () => {
-    if (!lessons || lessons.length === 0) return null;
-    return lessons[0].id;
+    if (!allLessons || allLessons.length === 0) return null;
+    return allLessons[0].id; // Agora allLessons já está ordenado pelo sortLessonsByNumber
   };
   
   // Função para calcular o progresso do curso
   const calculateCourseProgress = () => {
-    if (!lessons || !userProgress || lessons.length === 0) return 0;
+    if (!allLessons || !userProgress || allLessons.length === 0) return 0;
     
     // Extrair IDs de todas as lições do curso
-    const allLessonIds = lessons.map(lesson => lesson.id);
+    const allLessonIds = allLessons.map(lesson => lesson.id);
     
     // Contar lições completadas
     let completedLessons = 0;
