@@ -9,7 +9,7 @@ import { ProfileHeader } from "@/components/profile/ProfileHeader";
 import { ProfileTabs } from "@/components/profile/tabs/ProfileTabs";
 
 const Profile = () => {
-  const { loading, profile, stats, implementations, achievements } = useProfileData();
+  const { loading, profile, stats, implementations } = useProfileData();
   const [searchParams] = useSearchParams();
   const defaultTab = searchParams.get("tab") || "stats";
   
@@ -59,7 +59,6 @@ const Profile = () => {
           <ProfileTabs 
             defaultTab={defaultTab}
             implementations={implementations}
-            achievements={achievements}
             stats={stats}
           />
         </div>
