@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation } from "@tanstack/react-query";
@@ -311,10 +312,7 @@ const AulaView: React.FC = () => {
               startTime={getLastPosition()}
             />
             
-            {/* Exibir duração sem botão de atualização */}
-            {videos && videos.length > 0 && (
-              <LessonDuration videos={videos} showUpdateButton={false} />
-            )}
+            {/* Removido o componente de exibição de duração */}
             
             {/* Lista de vídeos da aula */}
             {videos && videos.length > 1 && (
