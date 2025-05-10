@@ -5,9 +5,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { AlertCircle, ArrowLeft } from "lucide-react";
 import { LessonContent } from "@/components/learning/member/LessonContent";
-import { LessonNavigation } from "@/components/learning/member/LessonNavigation";
 import { LessonHeader } from "@/components/learning/member/LessonHeader";
-import { LessonSidebar } from "@/components/learning/member/LessonSidebar";
 import { useLessonData } from "@/hooks/learning/useLessonData";
 import { useLessonNavigation } from "@/hooks/learning/useLessonNavigation";
 import { useLessonProgress } from "@/hooks/learning/useLessonProgress";
@@ -130,53 +128,29 @@ const LessonView = () => {
         Voltar para o curso
       </Button>
       
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-        <div className="lg:col-span-3">
-          <LessonHeader 
-            title={lesson?.title || ""} 
-            moduleTitle={moduleData?.module?.title || ""}
-            courseTitle={courseInfo?.title}
-            courseId={courseId}
-            progress={progress}
-          />
-          
-          <div className="mt-8">
-            <LessonContent 
-              lesson={lesson} 
-              videos={safeVideos}
-              resources={safeResources}
-              isCompleted={progress >= 100}
-              onProgressUpdate={handleProgressUpdate} 
-              onComplete={completeLesson}
-              prevLesson={prevLesson}
-              nextLesson={nextLesson}
-              courseId={courseId}
-              allLessons={safeModuleLessons}
-              onNextLesson={navigateToNext}
-            />
-          </div>
-          
-          {/* Navegação movida para o final da página */}
-          <div className="mt-8">
-            <LessonNavigation 
-              courseId={courseId!}
-              currentLesson={lesson}
-              allLessons={safeModuleLessons}
-              onComplete={completeLesson}
-              isCompleted={progress >= 100}
-              prevLesson={prevLesson}
-              nextLesson={nextLesson}
-            />
-          </div>
-        </div>
+      {/* Conteúdo principal da aula (sem barra lateral) */}
+      <div>
+        <LessonHeader 
+          title={lesson?.title || ""} 
+          moduleTitle={moduleData?.module?.title || ""}
+          courseTitle={courseInfo?.title}
+          courseId={courseId}
+          progress={progress}
+        />
         
-        <div>
-          <LessonSidebar 
-            currentLesson={lesson}
-            module={moduleData?.module}
-            lessons={safeModuleLessons}
-            courseId={courseId!}
-            completedLessons={completedLessons}
+        <div className="mt-8">
+          <LessonContent 
+            lesson={lesson} 
+            videos={safeVideos}
+            resources={safeResources}
+            isCompleted={progress >= 100}
+            onProgressUpdate={handleProgressUpdate} 
+            onComplete={completeLesson}
+            prevLesson={prevLesson}
+            nextLesson={nextLesson}
+            courseId={courseId}
+            allLessons={safeModuleLessons}
+            onNextLesson={navigateToNext}
           />
         </div>
       </div>

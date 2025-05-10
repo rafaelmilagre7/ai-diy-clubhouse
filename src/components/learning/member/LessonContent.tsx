@@ -10,7 +10,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LessonCompletionModal } from "../completion/LessonCompletionModal";
 import { LessonDescription } from "./LessonDescription";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, CheckCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface LessonContentProps {
   lesson: LearningLesson;
@@ -23,7 +24,7 @@ interface LessonContentProps {
   nextLesson?: any;
   courseId?: string;
   allLessons?: any[];
-  onNextLesson?: () => void; // Prop para navegar para a próxima aula
+  onNextLesson?: () => void;
 }
 
 export const LessonContent: React.FC<LessonContentProps> = ({ 
@@ -96,6 +97,20 @@ export const LessonContent: React.FC<LessonContentProps> = ({
             videos={safeVideos}
             onProgress={(videoId, progress) => handleVideoProgress(videoId, progress)}
           />
+          
+          {/* Botão de Concluir Aula logo abaixo do vídeo */}
+          <div className="flex justify-center mt-4">
+            <Button
+              onClick={handleCompleteLesson}
+              disabled={isCompleted}
+              className="gap-2"
+              variant={isCompleted ? "outline" : "default"}
+              size="lg"
+            >
+              <CheckCircle className="h-5 w-5" />
+              {isCompleted ? "Aula concluída" : "Concluir aula"}
+            </Button>
+          </div>
           
           {/* Alerta se o progresso for baixo (após começar a assistir) */}
           {!isCompleted && safeVideos.length > 0 && (

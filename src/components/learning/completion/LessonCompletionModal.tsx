@@ -37,13 +37,6 @@ export const LessonCompletionModal: React.FC<LessonCompletionModalProps> = ({
     return "Finalizar curso";
   };
 
-  // Adicionar log para depuração
-  console.log("Modal de conclusão da aula:", {
-    lessonTitle: lesson?.title,
-    hasNextLesson: !!nextLesson,
-    nextLessonTitle: nextLesson?.title
-  });
-
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogContent className="sm:max-w-lg">
