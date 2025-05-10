@@ -87,6 +87,8 @@ export interface LearningCourse {
   updated_at: string;
   order_index: number;
   created_by: string | null;
+  module_count?: number;
+  lesson_count?: number;
 }
 
 export interface LearningModule {

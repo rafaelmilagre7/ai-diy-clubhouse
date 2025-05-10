@@ -1,8 +1,5 @@
 
-import React, { Suspense } from "react";
-import { Canvas } from "@react-three/fiber";
-import { OrbitControls, Environment } from "@react-three/drei";
-import { MagicSphere } from "./MagicSphere";
+import React from "react";
 
 interface MagicSceneProps {
   stage?: number;
@@ -10,36 +7,30 @@ interface MagicSceneProps {
   isAnimating?: boolean;
 }
 
+// Versão simplificada sem Three.js
 export function MagicScene({ 
   stage = 1, 
   onCanvasCreated, 
   isAnimating = false 
 }: MagicSceneProps) {
+  React.useEffect(() => {
+    if (onCanvasCreated) {
+      onCanvasCreated();
+    }
+  }, [onCanvasCreated]);
+
   return (
-    <Canvas 
-      shadows 
-      dpr={[1, 2]} 
-      camera={{ position: [0, 0, 5], fov: 50 }}
-      onCreated={() => {
-        if (onCanvasCreated) {
-          onCanvasCreated();
-        }
-      }}
+    <div 
+      className="w-full h-full flex items-center justify-center"
       style={{ background: 'transparent' }}
     >
-      <Suspense fallback={null}>
-        <ambientLight intensity={0.5} />
-        <spotLight position={[10, 10, 10]} angle={0.15} penumbra={1} />
-        <MagicSphere stage={stage} isAnimating={isAnimating} />
-        <Environment preset="city" />
-        <OrbitControls 
-          enablePan={false} 
-          enableZoom={false} 
-          rotateSpeed={0.5}
-          autoRotate 
-          autoRotateSpeed={0.5} 
-        />
-      </Suspense>
-    </Canvas>
+      <div 
+        className={`w-40 h-40 rounded-full bg-[#0ABAB5] bg-opacity-50 ${isAnimating ? 'animate-pulse' : ''}`}
+        style={{
+          boxShadow: `0 0 ${isAnimating ? '30px' : '15px'} #0ABAB5`,
+          transition: 'all 0.3s ease-in-out'
+        }}
+      />
+    </div>
   );
 }
