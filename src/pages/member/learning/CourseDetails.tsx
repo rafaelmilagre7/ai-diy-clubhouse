@@ -21,6 +21,14 @@ const CourseDetails = () => {
     userProgress 
   });
 
+  // Log para depuração
+  console.log("Dados do curso carregados:", {
+    courseId: id,
+    modulesCount: modules?.length || 0,
+    allLessonsCount: allLessons?.length || 0,
+    firstLessonId,
+  });
+
   // Se o curso não foi encontrado, o hook de useCourseDetails já fará o redirecionamento
   if (!id || !course) {
     return null;

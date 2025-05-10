@@ -1,48 +1,73 @@
 
-import { LearningProgress } from "@/lib/supabase/types";
+import { LearningLesson, LearningProgress } from "@/lib/supabase/types";
 
 /**
- * Verifica se uma aula está completa
+ * Extrai números do título das aulas para permitir ordenação numérica
+ * Ex: "Aula 1 - Introdução" e "Aula 10 - Conclusão" serão ordenadas corretamente
  */
-export const isLessonCompleted = (lessonId: string, userProgress?: LearningProgress[]): boolean => {
-  return !!userProgress?.find(p => 
-    p.lesson_id === lessonId && 
-    (p.progress_percentage >= 100 || !!p.completed_at)
-  );
-};
-
-/**
- * Verifica se uma aula está em progresso
- */
-export const isLessonInProgress = (lessonId: string, userProgress?: LearningProgress[]): boolean => {
-  const progress = userProgress?.find(p => p.lesson_id === lessonId);
-  return !!progress && progress.progress_percentage > 0 && progress.progress_percentage < 100;
-};
-
-/**
- * Obter porcentagem de progresso para uma aula
- */
-export const getLessonProgress = (lessonId: string, userProgress?: LearningProgress[]): number => {
-  const progress = userProgress?.find(p => p.lesson_id === lessonId);
-  return progress ? progress.progress_percentage : 0;
-};
-
-/**
- * Função para ordenar aulas baseado no título numérico
- * Extrai o número do início do título (por exemplo: "01 - Introdução" => 1)
- */
-export const sortLessonsByNumber = (lessons: any[]): any[] => {
-  return [...lessons].sort((a, b) => {
-    // Extrair números do início do título (ex: "01 - ", "1 - ", "2. " etc.)
-    const numA = parseInt(a.title.match(/^(\d+)[^\d]*/)?.[1] || '0');
-    const numB = parseInt(b.title.match(/^(\d+)[^\d]*/)?.[1] || '0');
+export function sortLessonsByNumber(lessons: LearningLesson[]): LearningLesson[] {
+  // Função para extrair números do título
+  const extractNumber = (title: string): number => {
+    // Procura por padrões como "Aula 1", "Lição 2", etc.
+    const match = title.match(/(?:aula|lição|lesson|module)\s*(\d+)/i);
+    if (match && match[1]) {
+      return parseInt(match[1], 10);
+    }
     
-    // Se ambos têm números, ordenar numericamente
-    if (!isNaN(numA) && !isNaN(numB)) {
+    // Tenta encontrar qualquer número no título
+    const numMatch = title.match(/\d+/);
+    if (numMatch) {
+      return parseInt(numMatch[0], 10);
+    }
+    
+    return 0; // Padrão se nenhum número for encontrado
+  };
+
+  // Criar uma cópia para não modificar o array original
+  return [...lessons].sort((a, b) => {
+    // Primeiro tentar ordenar por order_index se forem diferentes
+    if (a.order_index !== b.order_index) {
+      return a.order_index - b.order_index;
+    }
+    
+    // Se order_index for igual, ordenar por número no título
+    const numA = extractNumber(a.title);
+    const numB = extractNumber(b.title);
+    
+    if (numA !== numB) {
       return numA - numB;
     }
     
-    // Ordenação alfabética para casos sem números
+    // Se ainda empatados, ordenar alfabeticamente
     return a.title.localeCompare(b.title);
   });
-};
+}
+
+/**
+ * Verificar se uma lição está completa baseado no progresso do usuário
+ */
+export function isLessonCompleted(lessonId: string, progress: LearningProgress[]): boolean {
+  return progress.some(p => 
+    p.lesson_id === lessonId && 
+    p.progress_percentage >= 100
+  );
+}
+
+/**
+ * Verificar se uma lição está em progresso
+ */
+export function isLessonInProgress(lessonId: string, progress: LearningProgress[]): boolean {
+  return progress.some(p => 
+    p.lesson_id === lessonId && 
+    p.progress_percentage > 0 && 
+    p.progress_percentage < 100
+  );
+}
+
+/**
+ * Obter o percentual de progresso de uma lição
+ */
+export function getLessonProgress(lessonId: string, progress: LearningProgress[]): number {
+  const lessonProgress = progress.find(p => p.lesson_id === lessonId);
+  return lessonProgress ? lessonProgress.progress_percentage : 0;
+}

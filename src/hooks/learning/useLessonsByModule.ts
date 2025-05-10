@@ -27,6 +27,10 @@ export const useLessonsByModule = (moduleId: string) => {
         // Garantir que data é sempre um array
         const lessons = Array.isArray(data) ? data : [];
         
+        // Fazer um log para depuração das aulas encontradas
+        console.log(`Encontradas ${lessons.length} aulas para o módulo ${moduleId}:`, 
+          lessons.map(l => ({id: l.id, title: l.title, order_index: l.order_index})));
+        
         // Ordenar as aulas por número no título
         return sortLessonsByNumber(lessons);
       } catch (err) {

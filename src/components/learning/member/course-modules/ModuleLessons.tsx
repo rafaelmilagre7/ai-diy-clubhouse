@@ -44,6 +44,10 @@ export const ModuleLessons = ({
     );
   }
   
+  // Log para depuração
+  console.log(`Renderizando ${lessons.length} aulas do módulo ${moduleId}:`, 
+    lessons.map(l => ({id: l.id, title: l.title})));
+  
   return (
     <div>
       {/* Carrossel de miniaturas para as aulas (estilo Netflix) */}
