@@ -18,10 +18,10 @@ export function useCourseStats({ modules, allLessons, userProgress }: CourseStat
     let totalDuration = 0;
     
     allLessons.forEach(lesson => {
-      if (lesson.learning_lesson_videos && Array.isArray(lesson.learning_lesson_videos)) {
-        totalVideos += lesson.learning_lesson_videos.length;
+      if (lesson.videos && Array.isArray(lesson.videos)) {
+        totalVideos += lesson.videos.length;
         
-        lesson.learning_lesson_videos.forEach(video => {
+        lesson.videos.forEach(video => {
           if (video.duration_seconds) {
             totalDuration += video.duration_seconds;
           }
