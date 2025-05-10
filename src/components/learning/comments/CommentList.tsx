@@ -3,8 +3,9 @@ import React from "react";
 import { Comment } from "@/types/learningTypes";
 import { CommentItem } from "./CommentItem";
 import { Card } from "@/components/ui/card";
-import { MessageSquare } from "lucide-react";
+import { AlertTriangle, MessageSquare } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface CommentListProps {
   comments: Comment[];
@@ -13,6 +14,7 @@ interface CommentListProps {
   onDelete: (commentId: string) => Promise<void>;
   onLike: (commentId: string) => Promise<void>;
   isLoading?: boolean;
+  error?: Error | null;
 }
 
 export const CommentList: React.FC<CommentListProps> = ({
@@ -21,13 +23,25 @@ export const CommentList: React.FC<CommentListProps> = ({
   onReply,
   onDelete,
   onLike,
-  isLoading = false
+  isLoading = false,
+  error = null
 }) => {
   // Garantir que comments seja sempre um array antes de chamar filter
   const safeComments = Array.isArray(comments) ? comments : [];
   
   // Filtrar para mostrar apenas comentários principais (não respostas)
   const rootComments = safeComments.filter(comment => !comment.parent_id);
+  
+  if (error) {
+    return (
+      <Alert variant="destructive">
+        <AlertTriangle className="h-4 w-4" />
+        <AlertDescription>
+          Erro ao carregar comentários: {error.message || "Ocorreu um erro inesperado"}
+        </AlertDescription>
+      </Alert>
+    );
+  }
   
   if (isLoading) {
     return (

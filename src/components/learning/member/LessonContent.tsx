@@ -41,6 +41,7 @@ export const LessonContent: React.FC<LessonContentProps> = ({
   onNextLesson
 }) => {
   const [completionDialogOpen, setCompletionDialogOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState('video');
   
   // Garantir que videos e resources sejam sempre arrays
   const safeVideos = Array.isArray(videos) ? videos : [];
@@ -69,14 +70,6 @@ export const LessonContent: React.FC<LessonContentProps> = ({
     }
   };
 
-  // Log para depuração
-  console.log("LessonContent rendering:", {
-    lessonTitle: lesson?.title,
-    hasNextLesson: !!nextLesson,
-    nextLessonTitle: nextLesson?.title,
-    hasOnNextLesson: !!onNextLesson
-  });
-
   // Verificar condições para exibição dos componentes
   const hasVideos = safeVideos.length > 0;
   const hasResources = safeResources.length > 0;
@@ -86,7 +79,7 @@ export const LessonContent: React.FC<LessonContentProps> = ({
                         !lesson.description.toLowerCase().includes("seja bem-vindo");
   
   // Verificar se há conteúdo adicional para exibir em abas
-  const hasTabs = hasResources || hasAiAssistant;
+  const hasTabs = hasResources || hasAiAssistant || true; // Sempre mostrar abas para incluir comentários
   
   return (
     <div className="space-y-6">
@@ -99,84 +92,76 @@ export const LessonContent: React.FC<LessonContentProps> = ({
           />
           
           {/* Botão de Concluir Aula logo abaixo do vídeo */}
-          <div className="flex justify-center mt-4">
-            <Button
+          <div className="mt-4 flex justify-end">
+            <Button 
               onClick={handleCompleteLesson}
-              disabled={isCompleted}
-              className="gap-2"
+              size="sm"
               variant={isCompleted ? "outline" : "default"}
-              size="lg"
+              className="gap-2"
             >
-              <CheckCircle className="h-5 w-5" />
-              {isCompleted ? "Aula concluída" : "Concluir aula"}
+              <CheckCircle className="h-4 w-4" />
+              {isCompleted ? "Aula Concluída" : "Marcar como Concluída"}
             </Button>
           </div>
-          
-          {/* Alerta se o progresso for baixo (após começar a assistir) */}
-          {!isCompleted && safeVideos.length > 0 && (
-            <Alert className="mt-4 bg-blue-50 dark:bg-blue-950/20 text-blue-800 dark:text-blue-300 border-blue-200 dark:border-blue-900">
-              <AlertCircle className="h-4 w-4" />
-              <AlertTitle>Dica de aprendizado</AlertTitle>
-              <AlertDescription>
-                Assista os vídeos até o final para registrar seu progresso. Marque a aula como concluída quando terminar.
-              </AlertDescription>
-            </Alert>
-          )}
         </div>
       )}
       
-      {/* Título da aula em destaque acima da descrição */}
+      {/* Descrição da aula, se existir */}
       {hasDescription && (
         <div className="mt-6">
-          <h2 className="text-2xl font-bold mb-3">{lesson.title}</h2>
-          <LessonDescription lesson={lesson} />
+          <LessonDescription content={lesson.description || ""} />
         </div>
       )}
       
-      {/* Abas para conteúdo adicional (recursos e assistente IA) */}
+      <Separator className="my-6" />
+      
+      {/* Abas para recursos, assistente e comentários */}
       {hasTabs && (
-        <div className="mt-6">
-          <Tabs defaultValue={hasResources ? "resources" : "assistant"}>
-            <TabsList>
-              {hasResources && <TabsTrigger value="resources">Materiais</TabsTrigger>}
-              {hasAiAssistant && <TabsTrigger value="assistant">Assistente IA</TabsTrigger>}
-            </TabsList>
-            
-            {hasResources && (
-              <TabsContent value="resources" className="mt-4">
-                <LessonResources resources={safeResources} />
-              </TabsContent>
+        <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="mt-4">
+          <TabsList className="grid grid-cols-3 mb-6">
+            <TabsTrigger value="video">Conteúdo</TabsTrigger>
+            {hasResources && <TabsTrigger value="resources">Recursos</TabsTrigger>}
+            <TabsTrigger value="comments">Comentários</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="video" className="space-y-4">
+            {hasDescription ? (
+              <div className="text-sm text-muted-foreground">
+                Veja a descrição acima e os recursos na aba correspondente.
+              </div>
+            ) : (
+              <div className="text-sm text-muted-foreground">
+                Assista ao vídeo acima para completar esta aula.
+              </div>
             )}
             
             {hasAiAssistant && (
-              <TabsContent value="assistant" className="mt-4">
-                <LessonAssistantChat 
-                  lessonId={lesson.id}
-                  assistantId={lesson.ai_assistant_id}
-                  assistantPrompt={lesson.ai_assistant_prompt}
-                />
-              </TabsContent>
+              <div className="mt-6">
+                <LessonAssistantChat lessonId={lesson.id} />
+              </div>
             )}
-          </Tabs>
-        </div>
+          </TabsContent>
+          
+          {hasResources && (
+            <TabsContent value="resources">
+              <LessonResources resources={safeResources} />
+            </TabsContent>
+          )}
+          
+          <TabsContent value="comments">
+            <LessonComments lessonId={lesson.id} />
+          </TabsContent>
+        </Tabs>
       )}
       
-      {/* Comentários da aula */}
-      <section className="mt-8">
-        <Separator className="mb-6" />
-        <LessonComments lessonId={lesson.id} />
-      </section>
-
-      {/* Modal de conclusão da aula com navegação para a próxima */}
+      {/* Modal de conclusão da aula */}
       <LessonCompletionModal
         isOpen={completionDialogOpen}
         setIsOpen={setCompletionDialogOpen}
         lesson={lesson}
-        onNext={handleNavigateToNext}
+        onNext={onNextLesson}
         nextLesson={nextLesson}
       />
     </div>
   );
 };
-
-export default LessonContent;

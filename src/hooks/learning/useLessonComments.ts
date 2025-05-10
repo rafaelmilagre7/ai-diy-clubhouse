@@ -1,15 +1,17 @@
 
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/auth";
 import { toast } from "sonner";
 import { Comment } from "@/types/learningTypes";
+import { useLogging } from "@/hooks/useLogging";
 
 export const useLessonComments = (lessonId: string) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const { log, logError } = useLogging();
   
   // Buscar comentários da lição
   const { 
@@ -22,18 +24,20 @@ export const useLessonComments = (lessonId: string) => {
       if (!lessonId) return [];
       
       try {
+        log('Buscando comentários da aula', { lessonId });
+        
         // Buscar comentários principais (não respostas)
         const { data: rootComments, error: rootError } = await supabase
           .from('learning_comments')
-          .select(`
-            *,
-            profiles:user_id(name, avatar_url, role)
-          `)
+          .select('*, profiles:user_id(*)')
           .eq('lesson_id', lessonId)
           .is('parent_id', null)
           .order('created_at', { ascending: false });
           
-        if (rootError) throw rootError;
+        if (rootError) {
+          logError('Erro ao buscar comentários principais', rootError);
+          throw rootError;
+        }
         
         // Garantir que rootComments seja um array
         const safeRootComments = Array.isArray(rootComments) ? rootComments : [];
@@ -41,18 +45,23 @@ export const useLessonComments = (lessonId: string) => {
         // Buscar respostas aos comentários
         const { data: replies, error: repliesError } = await supabase
           .from('learning_comments')
-          .select(`
-            *,
-            profiles:user_id(name, avatar_url, role)
-          `)
+          .select('*, profiles:user_id(*)')
           .eq('lesson_id', lessonId)
           .not('parent_id', 'is', null)
           .order('created_at', { ascending: true });
           
-        if (repliesError) throw repliesError;
+        if (repliesError) {
+          logError('Erro ao buscar respostas', repliesError);
+          throw repliesError;
+        }
         
         // Garantir que replies seja um array
         const safeReplies = Array.isArray(replies) ? replies : [];
+        
+        log('Busca de comentários e respostas concluída', { 
+          commentCount: safeRootComments.length, 
+          replyCount: safeReplies.length 
+        });
         
         // Verificar se o usuário curtiu cada comentário
         let userLikes: Record<string, boolean> = {};
@@ -89,11 +98,12 @@ export const useLessonComments = (lessonId: string) => {
         
         return organizedComments;
       } catch (error) {
-        console.error("Erro ao buscar comentários:", error);
-        return [];
+        logError("Erro ao buscar comentários da aula", error);
+        throw error;
       }
     },
-    enabled: !!lessonId
+    enabled: !!lessonId,
+    retry: 1
   });
   
   // Adicionar comentário
@@ -110,6 +120,7 @@ export const useLessonComments = (lessonId: string) => {
     
     try {
       setIsSubmitting(true);
+      log('Adicionando comentário à aula', { lessonId, hasParentId: !!parentId });
       
       const { data, error } = await supabase
         .from('learning_comments')
@@ -122,14 +133,20 @@ export const useLessonComments = (lessonId: string) => {
         })
         .select();
         
-      if (error) throw error;
+      if (error) {
+        logError('Erro ao adicionar comentário à aula', error);
+        throw error;
+      }
       
       toast.success(parentId ? "Resposta adicionada!" : "Comentário adicionado!");
+      log('Comentário adicionado com sucesso', { commentId: data?.[0]?.id });
+      
+      // Invalidar cache para forçar atualização
       queryClient.invalidateQueries({ queryKey: ['learning-comments', lessonId] });
       
       return data;
     } catch (error: any) {
-      console.error("Erro ao adicionar comentário:", error);
+      logError("Erro ao adicionar comentário à aula", error);
       toast.error(`Erro ao enviar comentário: ${error.message}`);
     } finally {
       setIsSubmitting(false);
@@ -144,17 +161,22 @@ export const useLessonComments = (lessonId: string) => {
     }
     
     try {
+      log('Excluindo comentário da aula', { commentId, lessonId });
+      
       const { error } = await supabase
         .from('learning_comments')
         .delete()
         .eq('id', commentId);
         
-      if (error) throw error;
+      if (error) {
+        logError('Erro ao excluir comentário da aula', error);
+        throw error;
+      }
       
       toast.success("Comentário excluído com sucesso");
       queryClient.invalidateQueries({ queryKey: ['learning-comments', lessonId] });
     } catch (error: any) {
-      console.error("Erro ao excluir comentário:", error);
+      logError("Erro ao excluir comentário da aula", error);
       toast.error(`Erro ao excluir comentário: ${error.message}`);
     }
   };
@@ -167,6 +189,8 @@ export const useLessonComments = (lessonId: string) => {
     }
     
     try {
+      log('Processando curtida em comentário de aula', { commentId, lessonId });
+      
       // Verificar se o usuário já curtiu este comentário
       const { data: existingLike } = await supabase
         .from('learning_comment_likes')
@@ -176,6 +200,8 @@ export const useLessonComments = (lessonId: string) => {
         .maybeSingle();
         
       if (existingLike) {
+        log('Removendo curtida existente', { likeId: existingLike.id });
+        
         // Remover curtida
         await supabase
           .from('learning_comment_likes')
@@ -190,6 +216,8 @@ export const useLessonComments = (lessonId: string) => {
           column_name: 'likes_count'
         });
       } else {
+        log('Adicionando nova curtida');
+        
         // Adicionar curtida
         await supabase
           .from('learning_comment_likes')
@@ -208,7 +236,7 @@ export const useLessonComments = (lessonId: string) => {
       
       queryClient.invalidateQueries({ queryKey: ['learning-comments', lessonId] });
     } catch (error: any) {
-      console.error("Erro ao curtir comentário:", error);
+      logError("Erro ao curtir comentário da aula", error);
       toast.error(`Erro ao curtir comentário: ${error.message}`);
     }
   };
