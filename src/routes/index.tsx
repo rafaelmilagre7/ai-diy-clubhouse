@@ -1,4 +1,3 @@
-
 import { Routes, Route } from 'react-router-dom';
 import { AdminProtectedRoutes } from '@/auth/AdminProtectedRoutes';
 import { FormacaoProtectedRoutes } from '@/auth/FormacaoProtectedRoutes';
@@ -43,7 +42,7 @@ import Events from '@/pages/member/Events';
 import ImplementationTrailPage from '@/pages/member/ImplementationTrailPage';
 
 // Member Learning pages
-import MemberLearning from '@/pages/member/learning/MemberLearning';
+import LearningPage from '@/pages/member/learning/LearningPage';
 import CourseDetails from '@/pages/member/learning/CourseDetails';
 import LessonView from '@/pages/member/learning/LessonView';
 
@@ -101,7 +100,7 @@ const AppRoutes = () => {
       <Route path="/events" element={<ProtectedRoutes><MemberLayout><Events /></MemberLayout></ProtectedRoutes>} />
       
       {/* Learning/LMS Routes para membro */}
-      <Route path="/learning" element={<ProtectedRoutes><MemberLayout><MemberLearning /></MemberLayout></ProtectedRoutes>} />
+      <Route path="/learning" element={<ProtectedRoutes><MemberLayout><LearningPage /></MemberLayout></ProtectedRoutes>} />
       <Route path="/learning/course/:id" element={<ProtectedRoutes><MemberLayout><CourseDetails /></MemberLayout></ProtectedRoutes>} />
       <Route path="/learning/course/:courseId/lesson/:lessonId" element={<ProtectedRoutes><MemberLayout><LessonView /></MemberLayout></ProtectedRoutes>} />
       
@@ -242,4 +241,3 @@ const AppRoutes = () => {
 };
 
 export default AppRoutes;
-

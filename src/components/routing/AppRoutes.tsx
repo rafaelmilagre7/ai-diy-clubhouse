@@ -41,7 +41,7 @@ import FormacaoLayout from '@/components/layout/formacao/FormacaoLayout';
 import ImplementationTrailPage from '@/pages/member/ImplementationTrailPage';
 import AdminEvents from '@/pages/admin/AdminEvents';
 import Events from '@/pages/member/Events';
-import MemberLearning from '@/pages/member/learning/MemberLearning';
+import LearningPage from '@/pages/member/learning/LearningPage';
 import CourseDetails from '@/pages/member/learning/CourseDetails';
 import LessonView from '@/pages/member/learning/LessonView';
 // Importar a página de atualização de durações
@@ -77,7 +77,7 @@ const AppRoutes = () => {
       <Route path="/events" element={<ProtectedRoutes><MemberLayout><Events /></MemberLayout></ProtectedRoutes>} />
 
       {/* Learning Routes */}
-      <Route path="/learning" element={<ProtectedRoutes><MemberLayout><MemberLearning /></MemberLayout></ProtectedRoutes>} />
+      <Route path="/learning" element={<ProtectedRoutes><MemberLayout><LearningPage /></MemberLayout></ProtectedRoutes>} />
       <Route path="/learning/course/:id" element={<ProtectedRoutes><MemberLayout><CourseDetails /></MemberLayout></ProtectedRoutes>} />
       <Route path="/learning/course/:courseId/lesson/:lessonId" element={<ProtectedRoutes><MemberLayout><LessonView /></MemberLayout></ProtectedRoutes>} />
       
