@@ -90,7 +90,6 @@ async function fetchVideosWithoutDuration(supabase, lessonId?: string, courseId?
     } 
     // Se um ID de curso foi especificado, precisamos fazer um join complexo
     else if (courseId) {
-      // Precisamos fazer uma consulta mais complexa para buscar os vídeos por curso
       // Primeiro obtemos todas as aulas do curso
       const { data: lessons, error: lessonsError } = await supabase
         .from('learning_lessons')
@@ -167,6 +166,9 @@ serve(async (req) => {
         const body = await req.json();
         lessonId = body.lessonId;
         courseId = body.courseId;
+        
+        // Log de depuração para ajudar a identificar problemas
+        console.log(`Solicitação recebida para: ${lessonId ? `aula ${lessonId}` : courseId ? `curso ${courseId}` : 'todos os vídeos'}`);
       } catch (e) {
         // Ignorar erro se o body não for um JSON válido
         console.log('Requisição sem body ou com body inválido');
@@ -198,6 +200,8 @@ serve(async (req) => {
     // Processar cada vídeo
     for (const video of videos) {
       try {
+        console.log(`Processando vídeo ${video.id}`);
+        
         // Obter o ID do vídeo no Panda Video
         const pandaVideoId = video.video_id || video.video_file_path || '';
         
@@ -212,6 +216,7 @@ serve(async (req) => {
         
         // Buscar metadados
         const metadata = await fetchPandaVideoMetadata(pandaVideoId);
+        console.log(`Metadados obtidos para ${video.id}: duração=${metadata.duration_seconds}s`);
         
         // Atualizar no banco de dados
         const result = await updateVideoDuration(
@@ -232,12 +237,18 @@ serve(async (req) => {
       }
     }
     
+    // Calcular estatísticas
+    const successCount = results.filter(r => r.success).length;
+    const failedCount = results.filter(r => !r.success).length;
+    
+    console.log(`Processamento concluído: ${successCount} sucesso, ${failedCount} falhas`);
+    
     // Retornar resultados
     return new Response(JSON.stringify({
       totalProcessed: videos.length,
       results,
-      success: results.filter(r => r.success).length,
-      failed: results.filter(r => !r.success).length
+      success: successCount,
+      failed: failedCount
     }), {
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
