@@ -75,7 +75,8 @@ export const CourseHeader: React.FC<CourseHeaderProps> = ({
                 </div>
               )}
               
-              {stats.durationMinutes !== undefined && (
+              {/* Oculta a duração quando for 0 minutos */}
+              {stats.durationMinutes !== undefined && stats.durationMinutes > 0 && (
                 <div className="flex items-center gap-1">
                   <Clock className="h-4 w-4" />
                   <span>{stats.durationMinutes} min</span>

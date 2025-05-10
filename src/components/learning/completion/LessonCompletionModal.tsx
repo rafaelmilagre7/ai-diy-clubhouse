@@ -1,10 +1,11 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { LessonNPSForm } from "../nps/LessonNPSForm";
 import { CheckCircle2, ArrowRight } from "lucide-react";
 import { LearningLesson } from "@/lib/supabase";
+import { useLogging } from "@/hooks/useLogging";
 
 interface LessonCompletionModalProps {
   isOpen: boolean;
@@ -21,7 +22,13 @@ export const LessonCompletionModal: React.FC<LessonCompletionModalProps> = ({
   onNext,
   nextLesson
 }) => {
+  const [npsSubmitted, setNpsSubmitted] = useState(false);
+  const { log, logError } = useLogging();
+
   const handleNPSCompleted = () => {
+    log('NPS enviado com sucesso para a aula', { lessonId: lesson.id, lessonTitle: lesson.title });
+    setNpsSubmitted(true);
+    
     // Mantém o modal aberto por um momento para que o usuário veja a confirmação
     setTimeout(() => {
       setIsOpen(false);
@@ -65,7 +72,16 @@ export const LessonCompletionModal: React.FC<LessonCompletionModalProps> = ({
             Fechar
           </Button>
           {onNext && (
-            <Button onClick={onNext} className="gap-2">
+            <Button 
+              onClick={() => {
+                if (!npsSubmitted) {
+                  log('Usuário avançou sem enviar NPS', { lessonId: lesson.id });
+                }
+                setIsOpen(false);
+                onNext();
+              }} 
+              className="gap-2"
+            >
               {getNextLessonText()}
               <ArrowRight className="h-4 w-4" />
             </Button>

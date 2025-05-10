@@ -6,6 +6,7 @@ import { CommentForm } from './CommentForm';
 import { useToolComments } from '@/hooks/useToolComments';
 import { MessageSquare } from 'lucide-react';
 import { Comment } from '@/types/commentTypes';
+import { useRealtimeComments } from '@/hooks/implementation/useRealtimeComments';
 
 interface CommentsSectionProps {
   solutionId: string;
@@ -13,6 +14,8 @@ interface CommentsSectionProps {
 }
 
 export const CommentsSection = ({ solutionId, moduleId }: CommentsSectionProps) => {
+  const toolId = `${solutionId}_${moduleId}`;
+  
   const {
     comments,
     isLoading,
@@ -25,7 +28,10 @@ export const CommentsSection = ({ solutionId, moduleId }: CommentsSectionProps) 
     cancelReply,
     likeComment,
     deleteComment
-  } = useToolComments(`${solutionId}_${moduleId}`);
+  } = useToolComments(toolId);
+  
+  // Ativar comentários em tempo real
+  useRealtimeComments(solutionId, moduleId);
   
   // Garantir que comments é um array
   const safeComments = Array.isArray(comments) ? comments : [];

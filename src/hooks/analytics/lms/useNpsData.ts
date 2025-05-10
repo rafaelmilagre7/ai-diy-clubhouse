@@ -2,15 +2,20 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { LessonNpsResponse, LmsNpsData, LmsFeedbackData } from './types';
+import { useLogging } from '@/hooks/useLogging';
 
 // Hook para buscar e processar dados de NPS
 export const useNpsData = (startDate: string | null) => {
+  const { log, logError } = useLogging();
+
   return useQuery({
     queryKey: ['lms-nps-data', startDate],
     queryFn: async (): Promise<{
       npsData: LmsNpsData;
       feedbackData: LmsFeedbackData[];
     }> => {
+      log('Buscando dados de NPS', { startDate });
+      
       // Buscar dados de NPS do Supabase
       const query = supabase
         .from('learning_lesson_nps')
@@ -33,12 +38,14 @@ export const useNpsData = (startDate: string | null) => {
       const { data, error } = await query;
       
       if (error) {
-        console.error('Erro ao buscar dados de NPS:', error);
+        logError('Erro ao buscar dados de NPS:', error);
         throw error;
       }
       
+      log(`Dados de NPS recuperados: ${data?.length || 0} respostas encontradas`);
+      
       // Processar os dados para o formato necessário
-      const npsResponses = (data as unknown as LessonNpsResponse[]).map(item => ({
+      const npsResponses = (data as unknown as LessonNpsResponse[] || []).map(item => ({
         id: item.id,
         lessonId: item.lesson_id,
         lessonTitle: item.learning_lessons?.title || 'Aula sem título',
@@ -62,6 +69,14 @@ export const useNpsData = (startDate: string | null) => {
       
       // Calcular score NPS (promoters% - detractors%)
       const npsScore = Math.round(promotersPercent - detractorsPercent);
+      
+      log('Métricas de NPS calculadas', { 
+        total, 
+        promoters, 
+        neutrals, 
+        detractors,
+        npsScore
+      });
       
       // Calcular NPS por aula
       const perLessonNps = processLessonNpsData(npsResponses);
