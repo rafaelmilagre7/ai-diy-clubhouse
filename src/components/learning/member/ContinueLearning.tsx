@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Play, Clock } from "lucide-react";
+import { Play } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Link } from "react-router-dom";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
@@ -58,7 +58,6 @@ export const ContinueLearning = ({ className }: ContinueLearningProps) => {
         course_title: userProgress.lesson.module?.course?.title,
         cover_image: userProgress.lesson.cover_image_url || userProgress.lesson.module?.course?.cover_image_url,
         progress: userProgress.progress_percentage,
-        estimated_time: userProgress.lesson.estimated_time_minutes || 5
       });
     }
   }, [userProgress]);
@@ -122,11 +121,6 @@ export const ContinueLearning = ({ className }: ContinueLearningProps) => {
                     <Play className="h-4 w-4 fill-current" />
                     Continuar
                   </Button>
-                  
-                  <div className="text-sm flex items-center text-white/80">
-                    <Clock className="w-4 h-4 mr-1" />
-                    {lastLesson.estimated_time} min restantes
-                  </div>
                 </div>
               </div>
               
