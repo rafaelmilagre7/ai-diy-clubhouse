@@ -12,8 +12,19 @@ export default function LearningPage() {
   const { userProgress } = useUserProgress();
   
   // Filtrar cursos por categoria
-  const recommendedCourses = courses.filter(course => course.is_recommended);
-  const recentCourses = courses.filter(course => course.is_recent);
+  const recommendedCourses = courses
+    .filter(course => course.published)
+    .slice(0, 4); // Pega os 4 primeiros cursos publicados como recomendados
+
+  // Filtrar cursos recentes com base na data de criação (últimos 30 dias)
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+  
+  const recentCourses = courses
+    .filter(course => course.published && new Date(course.created_at) > thirtyDaysAgo)
+    .slice(0, 4);
+
+  // Todos os cursos publicados
   const allCourses = courses.filter(course => course.published);
   
   return (
@@ -74,9 +85,20 @@ export default function LearningPage() {
         <TabsContent value="concluidos">
           <div className="py-3">
             <h2 className="text-2xl font-semibold mb-6">Cursos concluídos</h2>
-            {/* Lógica para exibir cursos concluídos */}
             <MemberCoursesList 
-              courses={[]} 
+              courses={allCourses.filter(course => {
+                // Cursos concluídos: todos os cursos onde pelo menos uma lição foi completada
+                const courseLessons = userProgress.filter(p => 
+                  p.lesson?.module?.course_id === course.id
+                );
+                
+                // Se não há lições ou o curso não tem progresso registrado
+                if (courseLessons.length === 0) return false;
+                
+                // Verificar se todas as lições do curso foram completadas
+                const completedLessons = courseLessons.filter(p => p.completed_at);
+                return completedLessons.length > 0 && completedLessons.length === courseLessons.length;
+              })}
               userProgress={userProgress}
             />
           </div>
