@@ -10,12 +10,10 @@ import {
   MessageSquare,
   ShieldCheck,
   User,
-  Award,
   BookOpen,
   Map,
   Calendar,
   GraduationCap,
-  Book,
   Wrench
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -73,11 +71,6 @@ export const MemberSidebarNav = ({ sidebarOpen }: SidebarNavProps) => {
       title: "Sugestões",
       href: "/suggestions",
       icon: MessageSquare,
-    },
-    {
-      title: "Conquistas",
-      href: "/achievements",
-      icon: Award,
     },
     {
       title: "Perfil",

@@ -16,7 +16,6 @@ const ToolDetails = lazy(() => import("@/pages/member/ToolDetails"));
 const Suggestions = lazy(() => import("@/pages/member/Suggestions"));
 const SuggestionDetails = lazy(() => import("@/pages/member/SuggestionDetails"));
 const NewSuggestion = lazy(() => import("@/pages/member/NewSuggestion"));
-const Achievements = lazy(() => import("@/pages/member/Achievements"));
 const Events = lazy(() => import("@/pages/member/Events"));
 
 // Páginas de formação/learning
@@ -133,16 +132,6 @@ export const MemberRoutes = () => {
           <ProtectedRoute>
             <MemberLayout>
               <NewSuggestion />
-            </MemberLayout>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/achievements"
-        element={
-          <ProtectedRoute>
-            <MemberLayout>
-              <Achievements />
             </MemberLayout>
           </ProtectedRoute>
         }
