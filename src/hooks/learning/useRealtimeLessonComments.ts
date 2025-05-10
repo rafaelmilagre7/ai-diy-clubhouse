@@ -24,8 +24,8 @@ export const useRealtimeLessonComments = (lessonId: string, isEnabled = true) =>
         schema: 'public', 
         table: 'learning_comments',
         filter: `lesson_id=eq.${lessonId}`
-      }, () => {
-        log('Novo comentário de aula detectado', { lessonId });
+      }, (payload) => {
+        log('Novo comentário de aula detectado', { lessonId, payload });
         invalidateComments();
       })
       .subscribe((status) => {
@@ -40,8 +40,8 @@ export const useRealtimeLessonComments = (lessonId: string, isEnabled = true) =>
         schema: 'public', 
         table: 'learning_comments',
         filter: `lesson_id=eq.${lessonId}`
-      }, () => {
-        log('Comentário de aula atualizado', { lessonId });
+      }, (payload) => {
+        log('Comentário de aula atualizado', { lessonId, payload });
         invalidateComments();
       })
       .subscribe((status) => {
@@ -56,8 +56,8 @@ export const useRealtimeLessonComments = (lessonId: string, isEnabled = true) =>
         schema: 'public', 
         table: 'learning_comments',
         filter: `lesson_id=eq.${lessonId}`
-      }, () => {
-        log('Comentário de aula removido', { lessonId });
+      }, (payload) => {
+        log('Comentário de aula removido', { lessonId, payload });
         invalidateComments();
       })
       .subscribe((status) => {
@@ -71,8 +71,8 @@ export const useRealtimeLessonComments = (lessonId: string, isEnabled = true) =>
         event: '*',
         schema: 'public',
         table: 'learning_comment_likes'
-      }, () => {
-        log('Curtida de comentário modificada, atualizando', { lessonId });
+      }, (payload) => {
+        log('Curtida de comentário modificada, atualizando', { lessonId, payload });
         invalidateComments();
       })
       .subscribe((status) => {

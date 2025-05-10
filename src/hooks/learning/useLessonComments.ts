@@ -27,17 +27,31 @@ export const useLessonComments = (lessonId: string) => {
         log('Buscando comentários da aula', { lessonId });
         
         // Buscar comentários principais (não respostas)
+        // Usamos join manual em vez do select * para garantir que os dados do perfil sejam obtidos
         const { data: rootComments, error: rootError } = await supabase
           .from('learning_comments')
-          .select('*, profiles:user_id(*)')
+          .select(`
+            *,
+            profiles:user_id (
+              id,
+              name,
+              email,
+              avatar_url,
+              role
+            )
+          `)
           .eq('lesson_id', lessonId)
           .is('parent_id', null)
           .order('created_at', { ascending: false });
           
         if (rootError) {
+          console.error('Query error (root):', rootError);
           logError('Erro ao buscar comentários principais', rootError);
           throw rootError;
         }
+        
+        // Debug para verificar a estrutura dos dados retornados
+        console.log('Root comments data:', rootComments);
         
         // Garantir que rootComments seja um array
         const safeRootComments = Array.isArray(rootComments) ? rootComments : [];
@@ -45,12 +59,22 @@ export const useLessonComments = (lessonId: string) => {
         // Buscar respostas aos comentários
         const { data: replies, error: repliesError } = await supabase
           .from('learning_comments')
-          .select('*, profiles:user_id(*)')
+          .select(`
+            *,
+            profiles:user_id (
+              id,
+              name,
+              email,
+              avatar_url,
+              role
+            )
+          `)
           .eq('lesson_id', lessonId)
           .not('parent_id', 'is', null)
           .order('created_at', { ascending: true });
           
         if (repliesError) {
+          console.error('Query error (replies):', repliesError);
           logError('Erro ao buscar respostas', repliesError);
           throw repliesError;
         }
@@ -98,6 +122,7 @@ export const useLessonComments = (lessonId: string) => {
         
         return organizedComments;
       } catch (error) {
+        console.error('Error fetching comments:', error);
         logError("Erro ao buscar comentários da aula", error);
         throw error;
       }
@@ -134,6 +159,7 @@ export const useLessonComments = (lessonId: string) => {
         .select();
         
       if (error) {
+        console.error('Insert error:', error);
         logError('Erro ao adicionar comentário à aula', error);
         throw error;
       }
@@ -169,6 +195,7 @@ export const useLessonComments = (lessonId: string) => {
         .eq('id', commentId);
         
       if (error) {
+        console.error('Delete error:', error);
         logError('Erro ao excluir comentário da aula', error);
         throw error;
       }
@@ -236,6 +263,7 @@ export const useLessonComments = (lessonId: string) => {
       
       queryClient.invalidateQueries({ queryKey: ['learning-comments', lessonId] });
     } catch (error: any) {
+      console.error('Like error:', error);
       logError("Erro ao curtir comentário da aula", error);
       toast.error(`Erro ao curtir comentário: ${error.message}`);
     }

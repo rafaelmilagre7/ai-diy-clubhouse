@@ -41,7 +41,7 @@ export const LessonContent: React.FC<LessonContentProps> = ({
   onNextLesson
 }) => {
   const [completionDialogOpen, setCompletionDialogOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState('video');
+  const [activeTab, setActiveTab] = useState('comments');
   
   // Verificar se temos um objeto lesson válido
   if (!lesson) {
@@ -96,7 +96,8 @@ export const LessonContent: React.FC<LessonContentProps> = ({
   const hasAiAssistant = lesson.ai_assistant_enabled;
   
   // Verificar se há conteúdo adicional para exibir em abas
-  const hasTabs = hasResources || hasAiAssistant || true; // Sempre mostrar abas para incluir comentários
+  // Removida a condição "|| true" para não mostrar abas desnecessárias
+  const hasTabs = hasResources || hasAiAssistant;
   
   return (
     <div className="space-y-6">
@@ -132,32 +133,18 @@ export const LessonContent: React.FC<LessonContentProps> = ({
       
       <Separator className="my-6" />
       
-      {/* Abas para recursos, assistente e comentários */}
+      {/* Comentários sempre visíveis, independente das abas */}
+      <div className="mt-6">
+        <LessonComments lessonId={lesson.id} />
+      </div>
+      
+      {/* Abas para recursos e assistente, se existirem */}
       {hasTabs && (
         <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="mt-4">
-          <TabsList className="grid w-full grid-cols-3 md:grid-cols-4">
-            <TabsTrigger value="video">Conteúdo</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-2">
             {hasResources && <TabsTrigger value="resources">Recursos</TabsTrigger>}
-            <TabsTrigger value="comments">Comentários</TabsTrigger>
+            {hasAiAssistant && <TabsTrigger value="assistant">Assistente IA</TabsTrigger>}
           </TabsList>
-          
-          <TabsContent value="video" className="space-y-4">
-            {hasDescription ? (
-              <div className="text-sm text-muted-foreground">
-                Veja a descrição acima e os recursos na aba correspondente.
-              </div>
-            ) : (
-              <div className="text-sm text-muted-foreground">
-                Assista ao vídeo acima para completar esta aula.
-              </div>
-            )}
-            
-            {hasAiAssistant && (
-              <div className="mt-6">
-                <LessonAssistantChat lessonId={lesson.id} />
-              </div>
-            )}
-          </TabsContent>
           
           {hasResources && (
             <TabsContent value="resources">
@@ -165,9 +152,11 @@ export const LessonContent: React.FC<LessonContentProps> = ({
             </TabsContent>
           )}
           
-          <TabsContent value="comments">
-            <LessonComments lessonId={lesson.id} />
-          </TabsContent>
+          {hasAiAssistant && (
+            <TabsContent value="assistant">
+              <LessonAssistantChat lessonId={lesson.id} />
+            </TabsContent>
+          )}
         </Tabs>
       )}
       

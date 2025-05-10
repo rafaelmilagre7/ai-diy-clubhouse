@@ -30,6 +30,9 @@ export const CommentItem: React.FC<CommentItemProps> = ({
   const [isReplying, setIsReplying] = useState(false);
   const { user } = useAuth();
   
+  // Debug the comment data to see what we're getting
+  console.log("Comment data:", comment);
+  
   // Verifica se o usuário é dono do comentário ou é admin/formacao
   const canDelete = user?.id === comment.user_id || 
     (user && ['admin', 'formacao'].includes(user?.role || ''));
@@ -68,13 +71,17 @@ export const CommentItem: React.FC<CommentItemProps> = ({
     }
   };
   
-  const profileName = comment.profiles?.name || "Usuário";
+  // Acesso seguro aos dados do perfil do usuário
+  const profileData = comment.profiles || {};
+  const profileName = profileData.name || "Usuário";
+  const profileRole = profileData.role || "";
+  const avatarUrl = profileData.avatar_url || "";
   
   return (
     <Card className={`p-4 ${isReply ? 'border-l-4 border-l-primary/20' : ''}`}>
       <div className="flex gap-3">
         <Avatar className="h-8 w-8">
-          <AvatarImage src={comment.profiles?.avatar_url || ""} alt={profileName} />
+          <AvatarImage src={avatarUrl} alt={profileName} />
           <AvatarFallback className="bg-primary/10 text-primary">
             {getInitials(profileName)}
           </AvatarFallback>
@@ -84,10 +91,10 @@ export const CommentItem: React.FC<CommentItemProps> = ({
           <div className="flex flex-wrap items-center gap-2">
             <span className="font-medium">{profileName}</span>
             <span className="text-xs text-muted-foreground">{formatDate(comment.created_at)}</span>
-            {comment.profiles?.role === 'admin' && (
+            {profileRole === 'admin' && (
               <span className="text-xs px-1.5 py-0.5 bg-primary/10 text-primary rounded">Admin</span>
             )}
-            {comment.profiles?.role === 'formacao' && (
+            {profileRole === 'formacao' && (
               <span className="text-xs px-1.5 py-0.5 bg-amber-500/10 text-amber-600 rounded">Instrutor</span>
             )}
           </div>

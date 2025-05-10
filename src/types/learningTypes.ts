@@ -6,7 +6,9 @@ export interface Comment {
   user_id: string;
   parent_id: string | null;
   profiles?: {
+    id?: string;
     name: string;
+    email?: string;
     avatar_url: string;
     role?: string;
   };
