@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
@@ -25,19 +26,10 @@ export const useLessonComments = (lessonId: string) => {
       try {
         log('Buscando comentários da aula', { lessonId });
         
-        // Buscar comentários principais (não respostas) - Usando JOIN explícito
+        // 1. Buscar comentários principais (não respostas)
         const { data: rootComments, error: rootError } = await supabase
           .from('learning_comments')
-          .select(`
-            *,
-            profiles:profiles(
-              id,
-              name,
-              email,
-              avatar_url,
-              role
-            )
-          `)
+          .select('*')
           .eq('lesson_id', lessonId)
           .is('parent_id', null)
           .order('created_at', { ascending: false });
@@ -54,19 +46,10 @@ export const useLessonComments = (lessonId: string) => {
         // Garantir que rootComments seja um array
         const safeRootComments = Array.isArray(rootComments) ? rootComments : [];
         
-        // Buscar respostas aos comentários - Usando JOIN explícito
+        // 2. Buscar respostas aos comentários
         const { data: replies, error: repliesError } = await supabase
           .from('learning_comments')
-          .select(`
-            *,
-            profiles:profiles(
-              id,
-              name,
-              email,
-              avatar_url,
-              role
-            )
-          `)
+          .select('*')
           .eq('lesson_id', lessonId)
           .not('parent_id', 'is', null)
           .order('created_at', { ascending: true });
@@ -80,10 +63,33 @@ export const useLessonComments = (lessonId: string) => {
         // Garantir que replies seja um array
         const safeReplies = Array.isArray(replies) ? replies : [];
         
-        log('Busca de comentários e respostas concluída', { 
-          commentCount: safeRootComments.length, 
-          replyCount: safeReplies.length 
-        });
+        // 3. Extrair todos os user_ids dos comentários e respostas
+        const userIds = [
+          ...new Set([
+            ...safeRootComments.map(comment => comment.user_id),
+            ...safeReplies.map(reply => reply.user_id)
+          ])
+        ];
+        
+        // 4. Buscar perfis dos usuários
+        const { data: userProfiles, error: profilesError } = await supabase
+          .from('profiles')
+          .select('*')
+          .in('id', userIds);
+          
+        if (profilesError) {
+          console.error('Query error (profiles):', profilesError);
+          logError('Erro ao buscar perfis dos usuários', profilesError);
+          // Não interrompemos o fluxo aqui, podemos continuar mesmo sem perfis
+        }
+        
+        // Criar um mapa de perfis por user_id para facilitar o acesso
+        const profilesMap: Record<string, any> = {};
+        if (userProfiles && Array.isArray(userProfiles)) {
+          userProfiles.forEach(profile => {
+            profilesMap[profile.id] = profile;
+          });
+        }
         
         // Verificar se o usuário curtiu cada comentário
         let userLikes: Record<string, boolean> = {};
@@ -102,22 +108,35 @@ export const useLessonComments = (lessonId: string) => {
           }
         }
         
-        // Organizar comentários com suas respostas
+        // 5. Organizar comentários com suas respostas e adicionar dados do perfil manualmente
         const organizedComments = safeRootComments.map((comment: Comment) => {
-          const commentReplies = safeReplies.filter(
-            (reply: Comment) => reply.parent_id === comment.id
-          ).map((reply: Comment) => ({
-            ...reply,
-            user_has_liked: !!userLikes[reply.id]
-          }));
+          // Encontrar respostas para este comentário
+          const commentReplies = safeReplies
+            .filter(reply => reply.parent_id === comment.id)
+            .map(reply => ({
+              ...reply,
+              profiles: profilesMap[reply.user_id] || {
+                name: "Usuário",
+                avatar_url: "",
+                role: ""
+              },
+              user_has_liked: !!userLikes[reply.id]
+            }));
           
+          // Adicionar dados do perfil ao comentário
           return {
             ...comment,
+            profiles: profilesMap[comment.user_id] || {
+              name: "Usuário",
+              avatar_url: "",
+              role: ""
+            },
             replies: commentReplies,
             user_has_liked: !!userLikes[comment.id]
           };
         });
         
+        log('Comentários organizados com sucesso', { total: organizedComments.length });
         return organizedComments;
       } catch (error) {
         console.error('Error fetching comments:', error);
