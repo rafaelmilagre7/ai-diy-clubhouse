@@ -1,16 +1,18 @@
 
-import React from 'react';
-import { AchievementsPage } from '@/components/achievements/AchievementsPage';
+import React, { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useDocumentTitle } from '@/hooks/use-document-title';
 
 const Achievements = () => {
-  useDocumentTitle('Conquistas | VIVER DE IA Club');
+  useDocumentTitle('VIVER DE IA Club');
+  const navigate = useNavigate();
   
-  return (
-    <div className="container mx-auto px-4 py-8">
-      <AchievementsPage />
-    </div>
-  );
+  // Redirecionar para o dashboard quando alguém tentar acessar esta página diretamente
+  useEffect(() => {
+    navigate('/dashboard');
+  }, [navigate]);
+  
+  return null; // Não renderizamos nada já que redirecionamos
 };
 
 export default Achievements;

@@ -30,7 +30,6 @@ import SolutionDetails from '@/pages/member/SolutionDetails';
 import SolutionImplementation from '@/pages/member/SolutionImplementation';
 import ImplementationCompleted from '@/pages/member/ImplementationCompleted';
 import Benefits from '@/pages/member/Benefits';
-import Achievements from '@/pages/member/Achievements';
 import Suggestions from '@/pages/member/Suggestions';
 import SuggestionDetails from '@/pages/member/SuggestionDetails';
 import NewSuggestion from '@/pages/member/NewSuggestion';
@@ -73,7 +72,6 @@ const AppRoutes = () => {
       <Route path="/implementation/:id/:moduleIdx" element={<ProtectedRoutes><MemberLayout><SolutionImplementation /></MemberLayout></ProtectedRoutes>} />
       <Route path="/implementation/completed/:id" element={<ProtectedRoutes><MemberLayout><ImplementationCompleted /></MemberLayout></ProtectedRoutes>} />
       <Route path="/benefits" element={<ProtectedRoutes><MemberLayout><Benefits /></MemberLayout></ProtectedRoutes>} />
-      <Route path="/achievements" element={<ProtectedRoutes><MemberLayout><Achievements /></MemberLayout></ProtectedRoutes>} />
       <Route path="/events" element={<ProtectedRoutes><MemberLayout><Events /></MemberLayout></ProtectedRoutes>} />
 
       {/* Learning Routes */}
@@ -227,8 +225,6 @@ const AppRoutes = () => {
       <Route path="/formacao/cursos/:id" element={<FormacaoProtectedRoutes><FormacaoLayout><FormacaoCursoDetalhes /></FormacaoLayout></FormacaoProtectedRoutes>} />
       <Route path="/formacao/modulos/:id" element={<FormacaoProtectedRoutes><FormacaoLayout><FormacaoModuloDetalhes /></FormacaoLayout></FormacaoProtectedRoutes>} />
       <Route path="/formacao/aulas" element={<FormacaoProtectedRoutes><FormacaoLayout><FormacaoAulas /></FormacaoLayout></FormacaoProtectedRoutes>} />
-      {/* Removido a rota para FormacaoAulaNova: */}
-      {/* <Route path="/formacao/aulas/nova" element={<FormacaoProtectedRoutes><FormacaoLayout><FormacaoAulaNova /></FormacaoLayout></FormacaoProtectedRoutes>} /> */}
       <Route path="/formacao/aulas/:id" element={<FormacaoProtectedRoutes><FormacaoLayout><FormacaoAulaDetalhes /></FormacaoLayout></FormacaoProtectedRoutes>} />
       {/* Adicionar nova rota para edição de aulas */}
       <Route path="/formacao/aulas/:id/editar" element={<FormacaoProtectedRoutes><FormacaoLayout><FormacaoAulaEditar /></FormacaoLayout></FormacaoProtectedRoutes>} />

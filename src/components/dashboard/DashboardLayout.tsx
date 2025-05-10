@@ -8,7 +8,6 @@ import { Solution } from "@/lib/supabase";
 import { ModernDashboardHeader } from "./ModernDashboardHeader";
 import { KpiGrid } from "./KpiGrid";
 import { useAuth } from "@/contexts/auth";
-import { AchievementsSummary } from "./AchievementsSummary"; 
 import { SolutionsGridLoader } from "./SolutionsGridLoader";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DashboardConnectionErrorState } from "./states/DashboardConnectionErrorState";
@@ -62,11 +61,6 @@ export const DashboardLayout: FC<DashboardLayoutProps> = memo(({
       {/* HEADER IMERSIVO */}
       <ModernDashboardHeader userName={userName} />
 
-      {/* Resumo gamificação - conquistas */}
-      <div className="animate-fade-in">
-        <AchievementsSummary />
-      </div>
-
       {/* CARDS DE PROGRESSO (KPI) */}
       <KpiGrid 
         completed={completed?.length || 0} 
@@ -77,33 +71,42 @@ export const DashboardLayout: FC<DashboardLayoutProps> = memo(({
 
       {/* Mostrar loaders enquanto carrega, ou conteúdo quando pronto */}
       {isLoading ? (
-        <SolutionsGridLoader />
+        <div className="space-y-10">
+          <SolutionsGridLoader title="Em andamento" count={2} />
+          <SolutionsGridLoader title="Concluídas" count={2} />
+          <SolutionsGridLoader title="Recomendadas" count={3} />
+        </div>
       ) : hasNoSolutions ? (
         <NoSolutionsPlaceholder />
       ) : (
-        <>
+        <div className="space-y-10">
+          {/* Soluções Ativas */}
           {active && active.length > 0 && (
-            <ActiveSolutions 
-              solutions={active} 
-              onSolutionClick={onSolutionClick} 
+            <ActiveSolutions
+              solutions={active}
+              onSolutionClick={onSolutionClick}
             />
           )}
+
+          {/* Soluções Completadas */}
           {completed && completed.length > 0 && (
-            <CompletedSolutions 
-              solutions={completed} 
-              onSolutionClick={onSolutionClick} 
+            <CompletedSolutions
+              solutions={completed}
+              onSolutionClick={onSolutionClick}
             />
           )}
+
+          {/* Soluções Recomendadas */}
           {recommended && recommended.length > 0 && (
-            <RecommendedSolutions 
-              solutions={recommended} 
-              onSolutionClick={onSolutionClick} 
+            <RecommendedSolutions
+              solutions={recommended}
+              onSolutionClick={onSolutionClick}
             />
           )}
-        </>
+        </div>
       )}
     </div>
   );
 });
 
-DashboardLayout.displayName = 'DashboardLayout';
+export default DashboardLayout;
