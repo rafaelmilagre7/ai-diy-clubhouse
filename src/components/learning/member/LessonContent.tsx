@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { LearningLesson } from "@/lib/supabase";
 import { LessonVideoPlayer } from "./LessonVideoPlayer";
@@ -78,9 +77,9 @@ export const LessonContent: React.FC<LessonContentProps> = ({
             onProgress={(videoId, progress) => handleVideoProgress(videoId, progress)}
           />
           
-          {/* Informações sobre a duração abaixo do player - removido botão de atualização */}
+          {/* Informações sobre a duração abaixo do player - agora com botão de atualização */}
           <div className="mt-4">
-            <LessonDuration videos={safeVideos} showUpdateButton={false} />
+            <LessonDuration videos={safeVideos} showUpdateButton={true} />
           </div>
           
           {/* Alerta se o progresso for baixo (após começar a assistir) */}
