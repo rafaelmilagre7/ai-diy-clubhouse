@@ -40,6 +40,7 @@ export const LessonNavigation: React.FC<LessonNavigationProps> = ({
   };
 
   const handleNext = () => {
+    // Se houver uma próxima aula, navegue para ela
     if (nextLesson) {
       navigate(`/learning/course/${courseId}/lesson/${nextLesson.id}`);
     } else {
@@ -106,7 +107,6 @@ export const LessonNavigation: React.FC<LessonNavigationProps> = ({
             onClick={handleNext}
             className="gap-1"
           >
-            {/* Sempre mostra "Próxima aula" mesmo quando não há próxima aula */}
             Próxima aula
             <ArrowRight className="h-4 w-4" />
           </Button>

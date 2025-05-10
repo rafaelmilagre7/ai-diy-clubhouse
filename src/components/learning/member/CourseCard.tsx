@@ -32,7 +32,8 @@ export const CourseCard: React.FC<CourseCardProps> = ({
     <Link to={`/learning/course/${id}`} className="block h-full group">
       <Card className="overflow-hidden h-full flex flex-col transition-all duration-300 border-transparent hover:scale-105 hover:z-10 hover:shadow-xl">
         <div className="relative">
-          <AspectRatio ratio={16/9}>
+          {/* Alterando o AspectRatio para formato vertical 9:16 */}
+          <AspectRatio ratio={9/16}>
             <div 
               className={cn(
                 "h-full w-full bg-gradient-to-r",

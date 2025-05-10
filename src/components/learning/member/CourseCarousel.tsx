@@ -74,7 +74,7 @@ export const CourseCarousel: React.FC<CourseCarouselProps> = ({
             {courses.map((course) => (
               <CarouselItem 
                 key={course.id} 
-                className="pl-4 md:basis-1/2 lg:basis-1/3 xl:basis-1/4"
+                className="pl-4 md:basis-1/3 lg:basis-1/4 xl:basis-1/5"
               >
                 <CourseCard 
                   id={course.id}
