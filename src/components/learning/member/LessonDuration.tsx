@@ -14,16 +14,15 @@ interface LessonDurationProps {
 
 export const LessonDuration: React.FC<LessonDurationProps> = ({ 
   videos, 
-  showUpdateButton = false,
+  showUpdateButton = false, // Mantido apenas por compatibilidade
   showIcon = true,
   showPrefix = true,
   className = ""
 }) => {
   const [totalDuration, setTotalDuration] = useState<string | null>(null);
-  const [hasMissingDurations, setHasMissingDurations] = useState(false);
   
   useEffect(() => {
-    // Calcula a duração total dos vídeos e identifica se há vídeos sem duração
+    // Calcula a duração total dos vídeos
     const calculateTotalDuration = () => {
       if (!videos || videos.length === 0) return null;
       
@@ -39,8 +38,6 @@ export const LessonDuration: React.FC<LessonDurationProps> = ({
           hasInvalidDurations = true;
         }
       });
-      
-      setHasMissingDurations(hasInvalidDurations);
       
       // Se não tiver durações válidas, retorna null
       if (!hasValidDurations) return null;

@@ -1,11 +1,9 @@
 
-import React, { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { supabase } from "@/lib/supabase";
-import { toast } from "sonner";
-import { RefreshCw, Clock } from "lucide-react";
-import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
+import React, { useState } from 'react';
+import { supabase } from '@/lib/supabase';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Loader2, CheckCircle, AlertTriangle } from 'lucide-react';
 
 interface VideoMetadataUpdaterProps {
   lessonId?: string;
@@ -13,119 +11,101 @@ interface VideoMetadataUpdaterProps {
   onComplete?: () => void;
 }
 
-export const VideoMetadataUpdater = ({ lessonId, courseId, onComplete }: VideoMetadataUpdaterProps) => {
-  const [isUpdating, setIsUpdating] = useState(false);
-  const [results, setResults] = useState<any>(null);
-  const [progress, setProgress] = useState<number>(0);
+export const VideoMetadataUpdater: React.FC<VideoMetadataUpdaterProps> = ({
+  lessonId,
+  courseId,
+  onComplete
+}) => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [result, setResult] = useState<any>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const updateVideosMetadata = async () => {
+  const updateVideoMetadata = async () => {
     try {
-      setIsUpdating(true);
-      setProgress(10);
-      toast.loading("Atualizando metadados dos vídeos...");
+      setIsLoading(true);
+      setError(null);
       
-      // Limpar resultados anteriores
-      setResults(null);
-      
-      // Parâmetros para a edge function
-      const params = {
-        lessonId,
-        courseId,
-      };
-      
-      setProgress(30);
-      
-      // Chamar edge function para atualizar durações
-      const { data, error } = await supabase.functions.invoke(
-        'update-video-durations',
-        { body: JSON.stringify(params) }
-      );
-      
-      setProgress(90);
+      // Chamar a edge function update-video-durations
+      const { data, error } = await supabase.functions.invoke('update-video-durations', {
+        body: { 
+          lessonId: lessonId,
+          courseId: courseId
+        }
+      });
       
       if (error) {
-        console.error("Erro na edge function:", error);
-        toast.error("Ocorreu um erro ao atualizar os metadados dos vídeos");
-        return;
+        throw error;
       }
       
-      setResults(data);
-      setProgress(100);
+      setResult(data);
       
-      if (data && data.success > 0) {
-        toast.success(`Metadados atualizados para ${data.success} vídeos`);
-        
-        // Se houver um callback de conclusão, chamá-lo
-        if (onComplete) {
-          onComplete();
-        }
-      } else if (data && data.totalProcessed === 0) {
-        toast.info("Nenhum vídeo encontrado para atualização");
-      } else {
-        toast.info("Nenhum vídeo foi atualizado");
+      if (onComplete) {
+        onComplete();
       }
-    } catch (error) {
-      console.error("Erro ao atualizar metadados:", error);
-      toast.error("Ocorreu um erro ao atualizar metadados dos vídeos");
+    } catch (err: any) {
+      console.error('Erro ao atualizar metadados dos vídeos:', err);
+      setError(err.message || 'Erro desconhecido ao atualizar metadados dos vídeos');
     } finally {
-      setIsUpdating(false);
+      setIsLoading(false);
     }
   };
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Clock className="h-5 w-5" />
-          Atualizar Metadados dos Vídeos
-        </CardTitle>
+        <CardTitle>Atualização de Metadados</CardTitle>
         <CardDescription>
-          Busca as informações atualizadas de duração e thumbnail dos vídeos do Panda Video
+          Atualizar as durações e miniaturas dos vídeos {lessonId ? 'desta aula' : courseId ? 'deste curso' : 'da plataforma'}
         </CardDescription>
       </CardHeader>
-      
       <CardContent>
-        <p className="text-sm mb-4">
-          Utilize esta ferramenta para sincronizar os metadados dos vídeos (duração e thumbnails) 
-          com os valores corretos do Panda Video.
+        {error && (
+          <div className="bg-destructive/10 dark:bg-destructive/20 text-destructive p-4 rounded-md mb-4 flex items-start">
+            <AlertTriangle className="h-5 w-5 mr-2 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="font-medium">Erro ao atualizar metadados dos vídeos</p>
+              <p className="text-sm mt-1">{error}</p>
+            </div>
+          </div>
+        )}
+        
+        {result && (
+          <div className="bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-300 p-4 rounded-md mb-4">
+            <div className="flex items-center">
+              <CheckCircle className="h-5 w-5 mr-2 text-green-600 dark:text-green-400" />
+              <p className="font-medium">Atualização concluída com sucesso!</p>
+            </div>
+            <div className="mt-2 text-sm">
+              <p>Total de vídeos processados: {result.totalProcessed}</p>
+              <p>Vídeos atualizados: {result.success}</p>
+              {result.failed > 0 && (
+                <p className="text-amber-600 dark:text-amber-400">
+                  Falha ao atualizar {result.failed} vídeo(s)
+                </p>
+              )}
+            </div>
+          </div>
+        )}
+        
+        <p className="mb-4 text-sm">
+          Este processo vai buscar as durações e miniaturas dos vídeos no Panda Video e atualizar no banco de dados.
+          {!lessonId && !courseId && ' Isso pode levar alguns minutos dependendo da quantidade de vídeos.'}
         </p>
-        
-        {isUpdating && (
-          <div className="my-4 space-y-2">
-            <Progress value={progress} className="h-2" />
-            <p className="text-xs text-center text-muted-foreground">{progress}% completo</p>
-          </div>
-        )}
-        
-        {results && (
-          <div className="mt-4 p-3 bg-muted rounded-md text-sm">
-            <h4 className="font-medium mb-1">Resultados da atualização:</h4>
-            <ul className="space-y-1">
-              <li>Total processados: {results.totalProcessed}</li>
-              <li>Atualizados com sucesso: {results.success}</li>
-              <li>Falhas: {results.failed}</li>
-            </ul>
-          </div>
-        )}
       </CardContent>
       
-      <CardFooter>
-        <Button 
-          onClick={updateVideosMetadata} 
-          disabled={isUpdating}
+      <CardFooter className="flex justify-between">
+        <Button
+          onClick={updateVideoMetadata}
+          disabled={isLoading}
           className="w-full"
-          variant={results && results.failed > 0 ? "destructive" : "default"}
         >
-          {isUpdating ? (
+          {isLoading ? (
             <>
-              <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               Atualizando...
             </>
           ) : (
-            <>
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Atualizar Metadados
-            </>
+            'Atualizar Metadados dos Vídeos'
           )}
         </Button>
       </CardFooter>
