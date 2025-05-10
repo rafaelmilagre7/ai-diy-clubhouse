@@ -1,3 +1,4 @@
+
 import { Routes, Route } from 'react-router-dom';
 import { AdminProtectedRoutes } from '@/auth/AdminProtectedRoutes';
 import { FormacaoProtectedRoutes } from '@/auth/FormacaoProtectedRoutes';
@@ -43,6 +44,8 @@ import Events from '@/pages/member/Events';
 import MemberLearning from '@/pages/member/learning/MemberLearning';
 import CourseDetails from '@/pages/member/learning/CourseDetails';
 import LessonView from '@/pages/member/learning/LessonView';
+// Importar a página de atualização de durações
+import AtualizarDuracoesPage from "@/pages/admin/aulas/AtualizarDuracoesPage";
 
 const AppRoutes = () => {
   console.log("Renderizando AppRoutes");
@@ -191,6 +194,29 @@ const AppRoutes = () => {
         <AdminProtectedRoutes>
           <AdminLayout>
             <AdminAnalytics />
+          </AdminLayout>
+        </AdminProtectedRoutes>
+      } />
+      
+      {/* Nova rota para atualização de durações de vídeos */}
+      <Route path="/admin/duracao-videos" element={
+        <AdminProtectedRoutes>
+          <AdminLayout>
+            <AtualizarDuracoesPage />
+          </AdminLayout>
+        </AdminProtectedRoutes>
+      } />
+      <Route path="/admin/duracao-videos/curso/:cursoId" element={
+        <AdminProtectedRoutes>
+          <AdminLayout>
+            <AtualizarDuracoesPage />
+          </AdminLayout>
+        </AdminProtectedRoutes>
+      } />
+      <Route path="/admin/duracao-videos/aula/:aulaId" element={
+        <AdminProtectedRoutes>
+          <AdminLayout>
+            <AtualizarDuracoesPage />
           </AdminLayout>
         </AdminProtectedRoutes>
       } />

@@ -38,4 +38,3 @@ export const formatVideoTime = (seconds: number): string => {
     return `${minutes}:${secs.toString().padStart(2, '0')}`;
   }
 };
-
