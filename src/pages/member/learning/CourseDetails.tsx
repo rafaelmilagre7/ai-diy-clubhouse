@@ -57,6 +57,29 @@ const CourseDetails = () => {
     enabled: !!course
   });
   
+  // Buscar todas as aulas do curso para estatísticas
+  const { data: lessons, isLoading: isLoadingLessons } = useQuery({
+    queryKey: ["learning-course-lessons", id],
+    queryFn: async () => {
+      if (!modules?.length) return [];
+      
+      const moduleIds = modules.map(m => m.id);
+      const { data, error } = await supabase
+        .from("learning_lessons")
+        .select("*, learning_lesson_videos(*)")
+        .in("module_id", moduleIds)
+        .eq("published", true);
+        
+      if (error) {
+        console.error("Erro ao carregar aulas:", error);
+        return [];
+      }
+      
+      return data || [];
+    },
+    enabled: !!modules?.length
+  });
+  
   // Buscar progresso do usuário para este curso
   const { data: userProgress } = useQuery({
     queryKey: ["learning-progress", id],
@@ -79,12 +102,45 @@ const CourseDetails = () => {
     enabled: !!course
   });
   
+  // Calcular estatísticas do curso
+  const calculateCourseStats = () => {
+    if (!lessons) return {};
+    
+    let totalVideos = 0;
+    let totalDuration = 0;
+    
+    lessons.forEach(lesson => {
+      if (lesson.learning_lesson_videos && Array.isArray(lesson.learning_lesson_videos)) {
+        totalVideos += lesson.learning_lesson_videos.length;
+        
+        lesson.learning_lesson_videos.forEach(video => {
+          if (video.duration_seconds) {
+            totalDuration += video.duration_seconds;
+          }
+        });
+      }
+    });
+    
+    return {
+      moduleCount: modules?.length || 0,
+      lessonCount: lessons.length,
+      videoCount: totalVideos,
+      durationMinutes: Math.ceil(totalDuration / 60)
+    };
+  };
+  
+  // Obter ID da primeira aula (para o botão de iniciar curso)
+  const getFirstLessonId = () => {
+    if (!lessons || lessons.length === 0) return null;
+    return lessons[0].id;
+  };
+  
   // Função para calcular o progresso do curso
   const calculateCourseProgress = () => {
-    if (!modules || !userProgress) return 0;
+    if (!lessons || !userProgress || lessons.length === 0) return 0;
     
     // Extrair IDs de todas as lições do curso
-    const allLessonIds: string[] = []; // Este array precisará ser preenchido com os IDs de lições
+    const allLessonIds = lessons.map(lesson => lesson.id);
     
     // Contar lições completadas
     let completedLessons = 0;
@@ -96,11 +152,10 @@ const CourseDetails = () => {
       });
     }
     
-    if (allLessonIds.length === 0) return 0;
     return Math.round((completedLessons / allLessonIds.length) * 100);
   };
   
-  const isLoading = isLoadingCourse || isLoadingModules;
+  const isLoading = isLoadingCourse || isLoadingModules || isLoadingLessons;
   
   if (courseError) {
     toast.error("Curso não encontrado ou indisponível");
@@ -109,7 +164,7 @@ const CourseDetails = () => {
   }
 
   return (
-    <div className="container py-6">
+    <div className="container pt-6 pb-12">
       <Button
         variant="ghost"
         className="mb-4"
@@ -126,29 +181,25 @@ const CourseDetails = () => {
           <CourseHeader 
             title={course.title} 
             description={course.description} 
-            coverImage={course.cover_image_url} 
+            coverImage={course.cover_image_url}
+            stats={calculateCourseStats()}
+            firstLessonId={getFirstLessonId()}
+            courseId={id}
           />
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-8">
-            <div className="md:col-span-2">
-              <CourseModules 
-                modules={modules || []} 
-                courseId={id!} 
-                userProgress={userProgress || []}
-                course={course}
-              />
-            </div>
+          <div className="mt-8">
+            <CourseProgress 
+              percentage={calculateCourseProgress()} 
+              className="mb-8"
+            />
             
-            <div className="space-y-6">
-              <CourseProgress 
-                percentage={calculateCourseProgress()} 
-              />
-              
-              <CourseInfoPanel 
-                course={course} 
-                moduleCount={modules?.length || 0} 
-              />
-            </div>
+            <CourseModules 
+              modules={modules || []} 
+              courseId={id!} 
+              userProgress={userProgress || []}
+              course={course}
+              expandedModules={[modules?.[0]?.id].filter(Boolean)}
+            />
           </div>
         </>
       )}

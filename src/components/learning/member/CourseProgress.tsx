@@ -1,36 +1,46 @@
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { Card } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 interface CourseProgressProps {
   percentage: number;
+  className?: string;
 }
 
-export const CourseProgress = ({ percentage }: CourseProgressProps) => {
+export const CourseProgress: React.FC<CourseProgressProps> = ({ 
+  percentage, 
+  className 
+}) => {
+  const isCompleted = percentage >= 100;
+  
   return (
-    <Card>
-      <CardHeader className="pb-3">
-        <CardTitle className="text-lg">Seu progresso</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="flex justify-between mb-2 text-sm font-medium">
-          <span>Progresso do curso</span>
-          <span>{percentage}%</span>
-        </div>
-        <Progress value={percentage} className="h-2" />
-        
-        <div className="mt-6 text-center">
-          <p className="text-muted-foreground text-sm">
-            {percentage === 0 ? (
-              "Comece a estudar para registrar seu progresso"
-            ) : percentage < 100 ? (
-              "Continue estudando para concluir o curso"
-            ) : (
-              "Parabéns! Você concluiu este curso"
-            )}
-          </p>
-        </div>
-      </CardContent>
+    <Card className={cn("p-6", className)}>
+      <div className="flex items-center justify-between mb-2">
+        <h3 className="font-semibold">Seu progresso</h3>
+        <span className={cn(
+          "font-medium",
+          isCompleted ? "text-green-500" : "text-primary"
+        )}>
+          {percentage}%
+        </span>
+      </div>
+      
+      <Progress
+        value={percentage}
+        className="h-2"
+        indicatorClassName={isCompleted ? "bg-green-500" : undefined}
+      />
+      
+      <p className="text-sm text-muted-foreground mt-2">
+        {isCompleted ? (
+          "Você já completou este curso, parabéns!"
+        ) : percentage > 0 ? (
+          `Continue assistindo para completar o curso`
+        ) : (
+          "Comece a assistir as aulas para registrar seu progresso"
+        )}
+      </p>
     </Card>
   );
 };

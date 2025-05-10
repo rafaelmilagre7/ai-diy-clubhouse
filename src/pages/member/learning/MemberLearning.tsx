@@ -5,22 +5,27 @@ import { supabase } from "@/lib/supabase";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CourseCard } from "@/components/learning/member/CourseCard";
+import { CourseCarousel } from "@/components/learning/member/CourseCarousel";
 import { ContinueLearning } from "@/components/learning/member/ContinueLearning";
-import { Search } from "lucide-react";
-import { LearningCourse, LearningProgress } from "@/lib/supabase/types";
+import { Search, X } from "lucide-react";
 
 const MemberLearning = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("all");
   
   // Buscar cursos disponíveis
-  const { data: courses, isLoading: isLoadingCourses } = useQuery({
+  const { data: courses = [], isLoading: isLoadingCourses } = useQuery({
     queryKey: ["learning-courses"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("learning_courses")
-        .select("*")
+        .select(`
+          *,
+          modules:learning_modules(count),
+          lessons:learning_modules(
+            lessons:learning_lessons(count)
+          )
+        `)
         .eq("published", true)
         .order("order_index", { ascending: true });
         
@@ -29,12 +34,19 @@ const MemberLearning = () => {
         return [];
       }
       
-      return data;
+      // Processar contagens de módulos e aulas
+      return data.map(course => ({
+        ...course,
+        module_count: course.modules ? course.modules.length : 0,
+        lesson_count: course.modules ? course.modules.reduce((count, module) => {
+          return count + (module.lessons ? module.lessons.length : 0);
+        }, 0) : 0
+      }));
     }
   });
   
   // Buscar progresso do usuário
-  const { data: userProgress, isLoading: isLoadingProgress } = useQuery({
+  const { data: userProgress = [], isLoading: isLoadingProgress } = useQuery({
     queryKey: ["learning-user-progress"],
     queryFn: async () => {
       const { data: userData } = await supabase.auth.getUser();
@@ -42,7 +54,15 @@ const MemberLearning = () => {
       
       const { data, error } = await supabase
         .from("learning_progress")
-        .select("*")
+        .select(`
+          *,
+          lesson:learning_lessons(*),
+          lesson:learning_lessons(
+            module:learning_modules(
+              course_id
+            )
+          )
+        `)
         .eq("user_id", userData.user.id);
         
       if (error) {
@@ -54,91 +74,124 @@ const MemberLearning = () => {
     }
   });
   
-  // Filtrar cursos com base na pesquisa e na aba ativa
-  const filteredCourses = (courses || []).filter(course => {
-    // Filtro de pesquisa
-    const matchesSearch = 
-      course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (course.description || "").toLowerCase().includes(searchQuery.toLowerCase());
-      
-    // Se não passar no filtro de pesquisa, não mostrar
-    if (!matchesSearch) return false;
+  // Filtrar cursos com base na pesquisa
+  const getFilteredCourses = () => {
+    if (!courses) return [];
     
-    // Filtros de abas
-    if (activeTab === "all") return true;
-    
-    if (activeTab === "in-progress") {
-      // Verificar se há algum progresso neste curso
-      if (!userProgress) return false;
+    return courses.filter(course => {
+      // Filtro de pesquisa
+      if (searchQuery) {
+        const matchesSearch = 
+          course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          (course.description || "").toLowerCase().includes(searchQuery.toLowerCase());
+          
+        if (!matchesSearch) return false;
+      }
       
-      // Obter todos os IDs de aulas que o usuário iniciou neste curso
-      // Esta parte exigiria um JOIN para saber quais aulas pertencem a este curso
-      // Como isso é complexo sem a API completa, simularemos assumindo que temos essa informação
-      const hasProgress = userProgress.some(progress => {
-        // Aqui precisaríamos verificar se a aula pertence ao curso
-        // Como simplificação, consideramos que há progresso se houver qualquer registro
-        return true;
-      });
+      // Filtros de abas
+      if (activeTab === "all") return true;
       
-      return hasProgress;
-    }
-    
-    if (activeTab === "completed") {
-      // Verificar se o curso foi concluído
-      // Isso requer saber quantas aulas o curso tem no total
-      // Como simplificação, consideramos concluído se o usuário tiver algum registro de progresso = 100%
-      if (!userProgress) return false;
+      if (activeTab === "in-progress") {
+        // Verificar se há algum progresso neste curso
+        if (!userProgress) return false;
+        
+        const hasProgress = userProgress.some(progress => {
+          return progress.lesson?.module?.course_id === course.id 
+            && progress.progress_percentage > 0 
+            && progress.progress_percentage < 100;
+        });
+        
+        return hasProgress;
+      }
       
-      const isCompleted = userProgress.some(progress => {
-        return progress.progress_percentage === 100;
-      });
+      if (activeTab === "completed") {
+        // Verificar se o curso foi concluído
+        if (!userProgress) return false;
+        
+        const isCompleted = userProgress.some(progress => {
+          return progress.lesson?.module?.course_id === course.id 
+            && progress.progress_percentage === 100;
+        });
+        
+        return isCompleted;
+      }
       
-      return isCompleted;
-    }
-    
-    return true;
-  });
-  
-  // Calcular progresso de um curso
-  const calculateCourseProgress = (courseId: string): number => {
-    if (!userProgress || userProgress.length === 0) return 0;
-    
-    // Isto é uma simplificação. Em uma implementação real,
-    // precisaríamos buscar todas as aulas do curso e verificar o progresso de cada uma
-    const courseLessonsProgress = userProgress.filter(progress => {
-      // Verificaria se a aula pertence ao curso, mas como simplificação:
-      return progress.progress_percentage > 0;
+      return true;
     });
+  };
+  
+  // Obter cursos em destaque (por exemplo, os mais recentes)
+  const getFeaturedCourses = () => {
+    return getFilteredCourses().slice(0, 4);
+  };
+  
+  // Obter cursos que o usuário começou mas não terminou
+  const getContinueWatchingCourses = () => {
+    if (!userProgress || !courses) return [];
     
-    if (courseLessonsProgress.length === 0) return 0;
+    // Encontrar IDs únicos de cursos em progresso
+    const inProgressCourseIds = [...new Set(
+      userProgress
+        .filter(p => p.progress_percentage > 0 && p.progress_percentage < 100)
+        .map(p => p.lesson?.module?.course_id)
+        .filter(Boolean)
+    )];
     
-    // Calcular média de progresso
-    const totalProgress = courseLessonsProgress.reduce(
-      (sum, progress) => sum + progress.progress_percentage, 
-      0
-    );
+    // Retornar os cursos correspondentes
+    return courses.filter(course => inProgressCourseIds.includes(course.id));
+  };
+  
+  // Obter cursos concluídos
+  const getCompletedCourses = () => {
+    if (!userProgress || !courses) return [];
     
-    return Math.round(totalProgress / courseLessonsProgress.length);
+    // Encontrar IDs únicos de cursos concluídos
+    const completedCourseIds = [...new Set(
+      userProgress
+        .filter(p => p.progress_percentage === 100)
+        .map(p => p.lesson?.module?.course_id)
+        .filter(Boolean)
+    )];
+    
+    // Retornar os cursos correspondentes
+    return courses.filter(course => completedCourseIds.includes(course.id));
   };
   
   const isLoading = isLoadingCourses || isLoadingProgress;
 
   return (
     <div className="container py-6">
-      <h1 className="text-3xl font-bold mb-6">Cursos</h1>
+      {/* Cabeçalho da página */}
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold">Cursos</h1>
+        <p className="text-muted-foreground mt-2">
+          Explore nossos cursos e continue aprendendo para se desenvolver
+        </p>
+      </div>
       
       {/* Componente para continuar de onde parou */}
-      <ContinueLearning />
+      <ContinueLearning className="mb-6" />
       
-      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between mb-8">
+      {/* Barra de pesquisa e filtros */}
+      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between mb-8 sticky top-0 z-10 bg-background py-4">
         <div className="relative w-full sm:w-72">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
           <Input
             placeholder="Buscar cursos..."
-            className="pl-10"
+            className="pl-10 pr-10"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
+          {searchQuery && (
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 h-5 w-5" 
+              onClick={() => setSearchQuery("")}
+            >
+              <X className="h-3 w-3" />
+            </Button>
+          )}
         </div>
         
         <Tabs 
@@ -155,27 +208,62 @@ const MemberLearning = () => {
       </div>
       
       {isLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[1, 2, 3].map(i => (
-            <div key={i} className="h-[280px] rounded-lg animate-pulse bg-muted"></div>
+        <div className="space-y-12 py-4">
+          {[1, 2].map(section => (
+            <div key={section} className="space-y-4">
+              <div className="h-8 w-48 bg-muted animate-pulse rounded-md" />
+              <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                {[1, 2, 3, 4].map(i => (
+                  <div 
+                    key={i} 
+                    className="aspect-video rounded-md animate-pulse bg-muted"
+                  />
+                ))}
+              </div>
+            </div>
           ))}
         </div>
-      ) : filteredCourses.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredCourses.map(course => (
-            <CourseCard
-              key={course.id}
-              id={course.id}
-              title={course.title}
-              description={course.description || ""}
-              imageUrl={course.cover_image_url || undefined}
-              progress={calculateCourseProgress(course.id)}
-            />
-          ))}
+      ) : searchQuery ? (
+        // Resultados da pesquisa
+        <div className="py-4">
+          <CourseCarousel 
+            title={`Resultados para: "${searchQuery}"`}
+            courses={getFilteredCourses()}
+            userProgress={userProgress}
+          />
         </div>
       ) : (
-        <div className="text-center py-12">
-          <p className="text-muted-foreground">Nenhum curso encontrado.</p>
+        // Carrosséis por categoria
+        <div className="space-y-16 py-4">
+          {/* Cursos em destaque */}
+          <CourseCarousel 
+            title="Em destaque" 
+            courses={getFeaturedCourses()} 
+            userProgress={userProgress}
+          />
+          
+          {/* Continuar assistindo */}
+          <CourseCarousel 
+            title="Continue assistindo" 
+            courses={getContinueWatchingCourses()} 
+            userProgress={userProgress}
+            showEmptyMessage={false}
+          />
+          
+          {/* Todos os cursos */}
+          <CourseCarousel 
+            title="Todos os cursos" 
+            courses={getFilteredCourses()} 
+            userProgress={userProgress}
+          />
+          
+          {/* Cursos concluídos */}
+          <CourseCarousel 
+            title="Cursos concluídos" 
+            courses={getCompletedCourses()} 
+            userProgress={userProgress}
+            showEmptyMessage={false}
+          />
         </div>
       )}
     </div>
