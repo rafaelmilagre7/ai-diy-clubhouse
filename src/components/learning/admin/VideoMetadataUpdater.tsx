@@ -5,20 +5,27 @@ import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { RefreshCw, Clock } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
 
 interface VideoMetadataUpdaterProps {
   lessonId?: string;
   courseId?: string;
+  onComplete?: () => void;
 }
 
-export const VideoMetadataUpdater = ({ lessonId, courseId }: VideoMetadataUpdaterProps) => {
+export const VideoMetadataUpdater = ({ lessonId, courseId, onComplete }: VideoMetadataUpdaterProps) => {
   const [isUpdating, setIsUpdating] = useState(false);
   const [results, setResults] = useState<any>(null);
+  const [progress, setProgress] = useState<number>(0);
 
   const updateVideosMetadata = async () => {
     try {
       setIsUpdating(true);
+      setProgress(10);
       toast.loading("Atualizando metadados dos vídeos...");
+      
+      // Limpar resultados anteriores
+      setResults(null);
       
       // Parâmetros para a edge function
       const params = {
@@ -26,11 +33,15 @@ export const VideoMetadataUpdater = ({ lessonId, courseId }: VideoMetadataUpdate
         courseId,
       };
       
+      setProgress(30);
+      
       // Chamar edge function para atualizar durações
       const { data, error } = await supabase.functions.invoke(
         'update-video-durations',
         { body: JSON.stringify(params) }
       );
+      
+      setProgress(90);
       
       if (error) {
         console.error("Erro na edge function:", error);
@@ -39,9 +50,17 @@ export const VideoMetadataUpdater = ({ lessonId, courseId }: VideoMetadataUpdate
       }
       
       setResults(data);
+      setProgress(100);
       
       if (data && data.success > 0) {
         toast.success(`Metadados atualizados para ${data.success} vídeos`);
+        
+        // Se houver um callback de conclusão, chamá-lo
+        if (onComplete) {
+          onComplete();
+        }
+      } else if (data && data.totalProcessed === 0) {
+        toast.info("Nenhum vídeo encontrado para atualização");
       } else {
         toast.info("Nenhum vídeo foi atualizado");
       }
@@ -71,6 +90,13 @@ export const VideoMetadataUpdater = ({ lessonId, courseId }: VideoMetadataUpdate
           com os valores corretos do Panda Video.
         </p>
         
+        {isUpdating && (
+          <div className="my-4 space-y-2">
+            <Progress value={progress} className="h-2" />
+            <p className="text-xs text-center text-muted-foreground">{progress}% completo</p>
+          </div>
+        )}
+        
         {results && (
           <div className="mt-4 p-3 bg-muted rounded-md text-sm">
             <h4 className="font-medium mb-1">Resultados da atualização:</h4>
@@ -88,6 +114,7 @@ export const VideoMetadataUpdater = ({ lessonId, courseId }: VideoMetadataUpdate
           onClick={updateVideosMetadata} 
           disabled={isUpdating}
           className="w-full"
+          variant={results && results.failed > 0 ? "destructive" : "default"}
         >
           {isUpdating ? (
             <>

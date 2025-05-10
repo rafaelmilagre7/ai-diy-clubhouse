@@ -43,7 +43,7 @@ async function fetchPandaVideoMetadata(videoId: string) {
     
     // Retornar dados relevantes
     return {
-      duration_seconds: data.duration || 0,
+      duration_seconds: Math.round(data.duration) || 0,
       thumbnail_url: data.thumbnail?.url || null,
     };
   } catch (error) {
@@ -55,7 +55,7 @@ async function fetchPandaVideoMetadata(videoId: string) {
 // Função para atualizar a duração de um vídeo no banco de dados
 async function updateVideoDuration(supabase, videoId: string, durationSeconds: number, thumbnailUrl: string | null) {
   try {
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('learning_lesson_videos')
       .update({
         duration_seconds: durationSeconds,
@@ -75,19 +75,60 @@ async function updateVideoDuration(supabase, videoId: string, durationSeconds: n
 }
 
 // Função para buscar vídeos sem duração
-async function fetchVideosWithoutDuration(supabase) {
-  const { data, error } = await supabase
-    .from('learning_lesson_videos')
-    .select('id, video_file_path, video_id, video_type')
-    .or('duration_seconds.is.null,duration_seconds.eq.0')
-    .eq('video_type', 'panda')
-    .limit(20);
+async function fetchVideosWithoutDuration(supabase, lessonId?: string, courseId?: string, limit: number = 50) {
+  try {
+    let query = supabase
+      .from('learning_lesson_videos')
+      .select('id, video_file_path, video_id, video_type, lesson_id')
+      .or('duration_seconds.is.null,duration_seconds.eq.0')
+      .eq('video_type', 'panda')
+      .limit(limit);
     
-  if (error) {
+    // Se um ID de aula foi especificado, filtrar apenas os vídeos dessa aula
+    if (lessonId) {
+      query = query.eq('lesson_id', lessonId);
+    } 
+    // Se um ID de curso foi especificado, precisamos fazer um join complexo
+    else if (courseId) {
+      // Precisamos fazer uma consulta mais complexa para buscar os vídeos por curso
+      // Primeiro obtemos todas as aulas do curso
+      const { data: lessons, error: lessonsError } = await supabase
+        .from('learning_lessons')
+        .select('id')
+        .eq('module.course_id', courseId)
+        .select(`
+          id,
+          module:module_id (
+            course_id
+          )
+        `);
+      
+      if (lessonsError) {
+        console.error('Erro ao buscar aulas do curso:', lessonsError);
+        throw lessonsError;
+      }
+      
+      if (lessons && lessons.length > 0) {
+        const lessonIds = lessons.map(lesson => lesson.id);
+        query = query.in('lesson_id', lessonIds);
+      } else {
+        // Se não encontramos aulas, retornar array vazio
+        return [];
+      }
+    }
+    
+    const { data, error } = await query;
+    
+    if (error) {
+      console.error('Erro ao buscar vídeos sem duração:', error);
+      throw error;
+    }
+    
+    return data || [];
+  } catch (error) {
+    console.error('Erro ao buscar vídeos sem duração:', error);
     throw error;
   }
-  
-  return data || [];
 }
 
 // Servidor HTTP
@@ -118,9 +159,38 @@ serve(async (req) => {
     
     const supabase = createClient(supabaseUrl, supabaseKey);
     
+    // Obter parâmetros da requisição
+    let lessonId, courseId;
+    
+    if (req.body) {
+      try {
+        const body = await req.json();
+        lessonId = body.lessonId;
+        courseId = body.courseId;
+      } catch (e) {
+        // Ignorar erro se o body não for um JSON válido
+        console.log('Requisição sem body ou com body inválido');
+      }
+    }
+    
     // Buscar vídeos sem duração
-    const videos = await fetchVideosWithoutDuration(supabase);
+    const videos = await fetchVideosWithoutDuration(supabase, lessonId, courseId);
     console.log(`Encontrados ${videos.length} vídeos sem duração`);
+    
+    if (videos.length === 0) {
+      return new Response(JSON.stringify({
+        totalProcessed: 0,
+        results: [],
+        success: 0,
+        failed: 0,
+        message: lessonId ? 
+          "Nenhum vídeo sem duração encontrado para esta aula" : 
+          "Nenhum vídeo sem duração encontrado"
+      }), {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
     
     // Resultados das atualizações
     const results = [];

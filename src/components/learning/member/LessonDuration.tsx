@@ -2,20 +2,24 @@
 import React, { useEffect, useState } from "react";
 import { LearningLessonVideo } from "@/lib/supabase";
 import { formatSeconds } from "@/utils/timeUtils";
-import { Clock } from "lucide-react";
+import { Clock, RefreshCw } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface LessonDurationProps {
   videos: LearningLessonVideo[];
+  showUpdateButton?: boolean;
 }
 
-export const LessonDuration: React.FC<LessonDurationProps> = ({ videos }) => {
+export const LessonDuration: React.FC<LessonDurationProps> = ({ videos, showUpdateButton = true }) => {
   const [isUpdating, setIsUpdating] = useState(false);
   const [totalDuration, setTotalDuration] = useState<string | null>(null);
+  const [hasMissingDurations, setHasMissingDurations] = useState(false);
   
   useEffect(() => {
-    // Calcula a duração total dos vídeos
+    // Calcula a duração total dos vídeos e identifica se há vídeos sem duração
     const calculateTotalDuration = () => {
       if (!videos || videos.length === 0) return null;
       
@@ -24,13 +28,15 @@ export const LessonDuration: React.FC<LessonDurationProps> = ({ videos }) => {
       let hasInvalidDurations = false;
       
       videos.forEach(video => {
-        if (video.duration_seconds) {
+        if (video.duration_seconds && video.duration_seconds > 0) {
           totalSeconds += video.duration_seconds;
           hasValidDurations = true;
         } else {
           hasInvalidDurations = true;
         }
       });
+      
+      setHasMissingDurations(hasInvalidDurations);
       
       // Se não tiver durações válidas, retorna null
       if (!hasValidDurations) return null;
@@ -63,10 +69,22 @@ export const LessonDuration: React.FC<LessonDurationProps> = ({ videos }) => {
       setIsUpdating(true);
       toast.loading("Atualizando informações de duração dos vídeos...");
       
-      // Chamar edge function para atualizar durações
-      const { data: response } = await supabase.functions.invoke('update-video-durations');
+      // Extrair o ID da aula do primeiro vídeo para atualizar apenas os vídeos desta aula
+      const lessonId = videos[0]?.lesson_id;
       
-      if (response.success > 0) {
+      // Chamar edge function para atualizar durações
+      const { data: response, error } = await supabase.functions.invoke(
+        'update-video-durations',
+        { body: JSON.stringify({ lessonId }) }
+      );
+      
+      if (error) {
+        console.error("Erro ao atualizar durações:", error);
+        toast.error("Ocorreu um erro ao atualizar as durações dos vídeos");
+        return;
+      }
+      
+      if (response && response.success > 0) {
         toast.success(`Duração atualizada para ${response.success} vídeos`);
         
         // Recarregar a página para mostrar os novos dados
@@ -87,13 +105,27 @@ export const LessonDuration: React.FC<LessonDurationProps> = ({ videos }) => {
       <div className="flex items-center text-sm text-muted-foreground">
         <Clock className="h-4 w-4 mr-1" />
         <span>Duração não disponível</span>
-        <button 
-          className="ml-2 text-xs text-primary hover:underline"
-          onClick={updateVideosDuration}
-          disabled={isUpdating}
-        >
-          {isUpdating ? "Atualizando..." : "Atualizar"}
-        </button>
+        {showUpdateButton && (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="ml-1 h-6 w-6"
+                  onClick={updateVideosDuration}
+                  disabled={isUpdating}
+                >
+                  <RefreshCw className={`h-4 w-4 ${isUpdating ? 'animate-spin' : ''}`} />
+                  <span className="sr-only">Atualizar duração</span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Atualizar informações de duração</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        )}
       </div>
     );
   }
@@ -102,6 +134,27 @@ export const LessonDuration: React.FC<LessonDurationProps> = ({ videos }) => {
     <div className="flex items-center text-sm text-muted-foreground">
       <Clock className="h-4 w-4 mr-1" />
       <span>Duração total: {totalDuration}</span>
+      {showUpdateButton && hasMissingDurations && (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="ml-1 h-6 w-6"
+                onClick={updateVideosDuration}
+                disabled={isUpdating}
+              >
+                <RefreshCw className={`h-4 w-4 ${isUpdating ? 'animate-spin' : ''}`} />
+                <span className="sr-only">Atualizar duração</span>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Atualizar informações de duração</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      )}
     </div>
   );
 };
