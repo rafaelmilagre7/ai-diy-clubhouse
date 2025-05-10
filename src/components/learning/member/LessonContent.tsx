@@ -109,7 +109,7 @@ export const LessonContent: React.FC<LessonContentProps> = ({
       {/* Descrição da aula, se existir */}
       {hasDescription && (
         <div className="mt-6">
-          <LessonDescription content={lesson.description || ""} />
+          <LessonDescription lesson={lesson} />
         </div>
       )}
       
@@ -165,3 +165,4 @@ export const LessonContent: React.FC<LessonContentProps> = ({
     </div>
   );
 };
+
