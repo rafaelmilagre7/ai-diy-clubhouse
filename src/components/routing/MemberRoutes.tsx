@@ -5,7 +5,7 @@ import Dashboard from "@/pages/member/Dashboard";
 import Profile from "@/pages/member/Profile";
 import SolutionDetails from "@/pages/member/SolutionDetails";
 import NotFound from "@/pages/NotFound";
-import MemberLearning from "@/pages/member/learning/MemberLearning";
+import LearningPage from "@/pages/member/learning/LearningPage";
 import CourseDetails from "@/pages/member/learning/CourseDetails";
 import LessonView from "@/pages/member/learning/LessonView";
 import MemberCertificates from "@/pages/member/learning/MemberCertificates";
@@ -29,7 +29,7 @@ const MemberRoutes = () => {
       <Route path="/solutions/:id" element={<SolutionDetails />} />
       
       {/* Rotas de aprendizado */}
-      <Route path="/learning" element={<MemberLearning />} />
+      <Route path="/learning" element={<LearningPage />} />
       <Route path="/learning/course/:id" element={<CourseDetails />} />
       <Route path="/learning/course/:courseId/lesson/:lessonId" element={<LessonView />} />
       <Route path="/certificates" element={<MemberCertificates />} />

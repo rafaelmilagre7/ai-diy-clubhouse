@@ -1,3 +1,4 @@
+
 import { Fragment } from "react";
 import { Route } from "react-router-dom";
 import { lazy } from "react";
@@ -19,7 +20,7 @@ const Achievements = lazy(() => import("@/pages/member/Achievements"));
 const Events = lazy(() => import("@/pages/member/Events"));
 
 // Páginas de formação/learning
-const MemberLearning = lazy(() => import("@/pages/member/learning/MemberLearning"));
+const LearningPage = lazy(() => import("@/pages/member/learning/LearningPage"));
 const CourseDetails = lazy(() => import("@/pages/member/learning/CourseDetails"));
 const LessonView = lazy(() => import("@/pages/member/learning/LessonView"));
 
@@ -163,7 +164,7 @@ export const MemberRoutes = () => {
         element={
           <ProtectedRoute>
             <MemberLayout>
-              <MemberLearning />
+              <LearningPage />
             </MemberLayout>
           </ProtectedRoute>
         }
