@@ -43,6 +43,19 @@ export const LessonContent: React.FC<LessonContentProps> = ({
   const [completionDialogOpen, setCompletionDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('video');
   
+  // Verificar se temos um objeto lesson válido
+  if (!lesson) {
+    return (
+      <Alert variant="destructive">
+        <AlertCircle className="h-4 w-4" />
+        <AlertTitle>Erro ao carregar aula</AlertTitle>
+        <AlertDescription>
+          Não foi possível carregar os dados da aula. Por favor, tente novamente.
+        </AlertDescription>
+      </Alert>
+    );
+  }
+  
   // Garantir que videos e resources sejam sempre arrays
   const safeVideos = Array.isArray(videos) ? videos : [];
   const safeResources = Array.isArray(resources) ? resources : [];
@@ -70,13 +83,17 @@ export const LessonContent: React.FC<LessonContentProps> = ({
     }
   };
 
+  // Verificação mais robusta para a descrição da aula
+  const hasDescription = lesson && 
+                        lesson.description && 
+                        lesson.description.trim() !== "" && 
+                        !lesson.description.toLowerCase().includes("bem-vindo") &&
+                        !lesson.description.toLowerCase().includes("seja bem-vindo");
+  
   // Verificar condições para exibição dos componentes
   const hasVideos = safeVideos.length > 0;
   const hasResources = safeResources.length > 0;
   const hasAiAssistant = lesson.ai_assistant_enabled;
-  const hasDescription = lesson.description && lesson.description.trim() !== "" && 
-                        !lesson.description.toLowerCase().includes("bem-vindo") &&
-                        !lesson.description.toLowerCase().includes("seja bem-vindo");
   
   // Verificar se há conteúdo adicional para exibir em abas
   const hasTabs = hasResources || hasAiAssistant || true; // Sempre mostrar abas para incluir comentários
@@ -118,7 +135,7 @@ export const LessonContent: React.FC<LessonContentProps> = ({
       {/* Abas para recursos, assistente e comentários */}
       {hasTabs && (
         <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="mt-4">
-          <TabsList className="grid grid-cols-3 mb-6">
+          <TabsList className="grid w-full grid-cols-3 md:grid-cols-4">
             <TabsTrigger value="video">Conteúdo</TabsTrigger>
             {hasResources && <TabsTrigger value="resources">Recursos</TabsTrigger>}
             <TabsTrigger value="comments">Comentários</TabsTrigger>
@@ -165,4 +182,3 @@ export const LessonContent: React.FC<LessonContentProps> = ({
     </div>
   );
 };
-

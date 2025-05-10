@@ -8,13 +8,14 @@ interface LessonDescriptionProps {
 }
 
 export const LessonDescription: React.FC<LessonDescriptionProps> = ({ lesson }) => {
-  if (!lesson.description) return null;
+  // Verificação completa de segurança
+  if (!lesson || !lesson.description) return null;
   
   return (
     <Card className="overflow-hidden">
       <CardContent className="p-6">
         <div className="prose dark:prose-invert max-w-none">
-          <p>{lesson.description}</p>
+          <p className="whitespace-pre-line">{lesson.description}</p>
         </div>
       </CardContent>
     </Card>
