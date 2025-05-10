@@ -1,8 +1,7 @@
 
 import { LearningCourse } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
-import { Book, Clock, Play, Video } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Book, Clock, Video } from "lucide-react";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 
 interface CourseHeaderProps {
@@ -29,10 +28,10 @@ export const CourseHeader: React.FC<CourseHeaderProps> = ({
 }) => {
   return (
     <div className="relative rounded-lg overflow-hidden">
-      {/* Imagem de capa do curso */}
+      {/* Imagem de capa do curso com altura reduzida */}
       <AspectRatio 
-        ratio={16/9} 
-        className="md:aspect-[21/9] w-full bg-gradient-to-r from-blue-900 to-blue-700"
+        ratio={21/5} 
+        className="w-full bg-gradient-to-r from-blue-900 to-blue-700"
       >
         {coverImage ? (
           <img
@@ -51,54 +50,39 @@ export const CourseHeader: React.FC<CourseHeaderProps> = ({
       </AspectRatio>
       
       {/* Conteúdo sobre a imagem */}
-      <div className="absolute bottom-0 left-0 right-0 p-6 md:p-10 text-white">
+      <div className="absolute bottom-0 left-0 right-0 p-4 md:p-6 text-white">
         <div className="max-w-3xl">
-          <h1 className="text-2xl md:text-4xl font-bold mb-4">{title}</h1>
+          <h1 className="text-xl md:text-3xl font-bold mb-2">{title}</h1>
           
-          <p className="text-white/80 md:text-lg mb-6 line-clamp-2">
+          <p className="text-white/80 text-sm md:text-base mb-4 line-clamp-2">
             {description}
           </p>
           
-          <div className="flex flex-wrap gap-4">
-            {firstLessonId && courseId && (
-              <Button 
-                size="lg" 
-                className="bg-primary hover:bg-primary/90 text-white gap-2"
-                asChild
-              >
-                <a href={`/learning/course/${courseId}/lesson/${firstLessonId}`}>
-                  <Play className="h-4 w-4 fill-current" />
-                  Iniciar Curso
-                </a>
-              </Button>
-            )}
-            
-            {/* Estatísticas do curso */}
-            {stats && (
-              <div className="flex items-center gap-4 text-white/70 text-sm">
-                {stats.moduleCount !== undefined && (
-                  <div className="flex items-center gap-1">
-                    <Book className="h-4 w-4" />
-                    <span>{stats.moduleCount} {stats.moduleCount === 1 ? 'módulo' : 'módulos'}</span>
-                  </div>
-                )}
-                
-                {stats.lessonCount !== undefined && (
-                  <div className="flex items-center gap-1">
-                    <Video className="h-4 w-4" />
-                    <span>{stats.lessonCount} {stats.lessonCount === 1 ? 'aula' : 'aulas'}</span>
-                  </div>
-                )}
-                
-                {stats.durationMinutes !== undefined && (
-                  <div className="flex items-center gap-1">
-                    <Clock className="h-4 w-4" />
-                    <span>{stats.durationMinutes} min</span>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
+          {/* Estatísticas do curso - mantidas e destacadas */}
+          {stats && (
+            <div className="flex flex-wrap items-center gap-4 text-white/80 text-sm">
+              {stats.moduleCount !== undefined && (
+                <div className="flex items-center gap-1">
+                  <Book className="h-4 w-4" />
+                  <span>{stats.moduleCount} {stats.moduleCount === 1 ? 'módulo' : 'módulos'}</span>
+                </div>
+              )}
+              
+              {stats.lessonCount !== undefined && (
+                <div className="flex items-center gap-1">
+                  <Video className="h-4 w-4" />
+                  <span>{stats.lessonCount} {stats.lessonCount === 1 ? 'aula' : 'aulas'}</span>
+                </div>
+              )}
+              
+              {stats.durationMinutes !== undefined && (
+                <div className="flex items-center gap-1">
+                  <Clock className="h-4 w-4" />
+                  <span>{stats.durationMinutes} min</span>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -58,10 +58,10 @@ const CourseDetails = () => {
             courseId={id}
           />
           
-          <div className="mt-8">
+          <div className="mt-6">
             <CourseProgress 
               percentage={courseProgress} 
-              className="mb-8"
+              className="mb-6"
             />
             
             <CourseModules 
