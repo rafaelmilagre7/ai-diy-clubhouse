@@ -56,7 +56,7 @@ export const OnboardingSteps = () => {
         progress={progress} 
         onComplete={completeOnboarding} 
         isSubmitting={isSubmitting}
-        navigateToStep={(index: number) => navigateToStep(index)}
+        navigateToStep={(stepId: string) => navigateToStep(stepId)}
       />
     ),
   };

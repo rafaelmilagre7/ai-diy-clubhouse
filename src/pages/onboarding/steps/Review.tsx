@@ -89,8 +89,18 @@ const Review: React.FC = () => {
     }
   }, [progress]);
   
-  const handleNavigateToStep = (index: number) => {
-    navigate(steps[index].path);
+  // Atualização da função para usar string como tipo de parâmetro
+  const handleNavigateToStep = (stepId: string) => {
+    // Buscar o passo correspondente pelo ID
+    const targetStep = steps.find(step => step.id === stepId);
+    
+    if (targetStep) {
+      console.log(`[Review] Redirecionando para etapa ${targetStep.id} (${targetStep.path})`);
+      navigate(targetStep.path);
+    } else {
+      console.error("[Review] Etapa não encontrada com ID:", stepId);
+      toast.error("Erro ao navegar. Etapa não encontrada.");
+    }
   };
   
   const handleComplete = async () => {
@@ -170,12 +180,15 @@ const Review: React.FC = () => {
         />
         
         <div className="bg-gray-50 rounded-lg p-6">
-          <ReviewStep 
-            progress={progress}
-            onComplete={handleComplete}
-            isSubmitting={isSubmitting}
-            navigateToStep={handleNavigateToStep}
-          />
+          {progress && (
+            <ReviewStep 
+              progress={progress}
+              onComplete={handleComplete}
+              isSubmitting={isSubmitting}
+              // Aqui está a correção: definimos explicitamente que handleNavigateToStep recebe uma string
+              navigateToStep={handleNavigateToStep}
+            />
+          )}
         </div>
       </div>
     </OnboardingLayout>

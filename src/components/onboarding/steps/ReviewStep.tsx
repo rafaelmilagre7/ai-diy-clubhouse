@@ -1,4 +1,5 @@
 
+// Modificando apenas a interface para garantir consistência de tipos
 import React, { useEffect, useState, useMemo } from "react";
 import { OnboardingProgress } from "@/types/onboarding";
 import { ReviewData } from "@/types/reviewTypes";
@@ -12,7 +13,7 @@ interface ReviewStepProps {
   progress: OnboardingProgress | null;
   onComplete: () => void;
   isSubmitting: boolean;
-  navigateToStep: (stepId: string) => void; // Atualizado para aceitar ID em vez de índice
+  navigateToStep: (stepId: string) => void; // Mantida a definição de string como parâmetro
 }
 
 export const ReviewStep: React.FC<ReviewStepProps> = ({
