@@ -12,7 +12,7 @@ import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { VideoPlayer } from "@/components/formacao/aulas/VideoPlayer";
 import { VideoDisplay } from "@/components/formacao/aulas/VideoDisplay";
-import { LessonDuration } from "@/components/formacao/aulas/LessonDuration";
+import { LessonDuration } from "@/components/learning/member/LessonDuration";
 
 const AulaView: React.FC = () => {
   const { cursoId, aulaId } = useParams<{ cursoId: string; aulaId: string }>();

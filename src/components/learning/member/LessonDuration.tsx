@@ -14,7 +14,7 @@ interface LessonDurationProps {
 
 export const LessonDuration: React.FC<LessonDurationProps> = ({ 
   videos, 
-  showUpdateButton = false, // Alterado o padrão para false
+  showUpdateButton = false,
   showIcon = true,
   showPrefix = true,
   className = ""
