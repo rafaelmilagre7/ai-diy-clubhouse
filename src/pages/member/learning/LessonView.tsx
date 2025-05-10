@@ -13,6 +13,7 @@ import { useLessonNavigation } from "@/hooks/learning/useLessonNavigation";
 import { useLessonProgress } from "@/hooks/learning/useLessonProgress";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
+import { sortLessonsByNumber } from "@/components/learning/member/course-modules/CourseModulesHelpers";
 
 const LessonView = () => {
   const { courseId, lessonId } = useParams<{ courseId: string; lessonId: string }>();
@@ -34,8 +35,10 @@ const LessonView = () => {
   // Garantir que temos arrays válidos
   const safeResources = Array.isArray(resources) ? resources : [];
   const safeVideos = Array.isArray(videos) ? videos : [];
+  
+  // Garantir que as aulas do módulo estão ordenadas corretamente por número no título
   const safeModuleLessons = moduleData?.lessons ? 
-    (Array.isArray(moduleData.lessons) ? moduleData.lessons : []) : [];
+    (Array.isArray(moduleData.lessons) ? sortLessonsByNumber([...moduleData.lessons]) : []) : [];
   
   // Gerenciar navegação entre lições
   const {
@@ -149,7 +152,7 @@ const LessonView = () => {
               nextLesson={nextLesson}
               courseId={courseId}
               allLessons={safeModuleLessons}
-              onNextLesson={navigateToNext} // Passamos a função de navegação para a próxima aula
+              onNextLesson={navigateToNext}
             />
           </div>
           

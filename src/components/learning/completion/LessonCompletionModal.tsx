@@ -29,6 +29,7 @@ export const LessonCompletionModal: React.FC<LessonCompletionModalProps> = ({
     }, 1000);
   };
 
+  // Determina o texto para o botão de próxima aula baseado na existência de uma próxima aula
   const getNextLessonText = () => {
     if (nextLesson) {
       return `Próxima aula: ${nextLesson.title}`;

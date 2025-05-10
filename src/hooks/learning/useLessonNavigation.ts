@@ -2,6 +2,7 @@
 import { useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { LearningLesson } from "@/lib/supabase";
+import { sortLessonsByNumber } from "@/components/learning/member/course-modules/CourseModulesHelpers";
 
 interface UseLessonNavigationProps {
   courseId?: string;
@@ -26,15 +27,18 @@ export function useLessonNavigation({
       return { prev: null, next: null };
     }
     
-    const currentIndex = lessons.findIndex(lesson => lesson.id === currentLessonId);
+    // Aplicar a ordenação consistente por número no título antes de buscar aulas adjacentes
+    const sortedLessons = sortLessonsByNumber([...lessons]);
+    
+    const currentIndex = sortedLessons.findIndex(lesson => lesson.id === currentLessonId);
     
     if (currentIndex === -1) {
       return { prev: null, next: null };
     }
     
     return {
-      prev: currentIndex > 0 ? lessons[currentIndex - 1] : null,
-      next: currentIndex < lessons.length - 1 ? lessons[currentIndex + 1] : null
+      prev: currentIndex > 0 ? sortedLessons[currentIndex - 1] : null,
+      next: currentIndex < sortedLessons.length - 1 ? sortedLessons[currentIndex + 1] : null
     };
   }, [currentLessonId, lessons]);
 

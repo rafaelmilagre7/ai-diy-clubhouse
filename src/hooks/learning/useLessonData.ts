@@ -129,7 +129,9 @@ export function useLessonData({ lessonId, courseId }: UseLessonDataProps) {
         .select("*")
         .eq("module_id", lesson.module_id)
         .eq("published", true)
-        .order("order_index", { ascending: true });
+        .order("order_index", { ascending: true })
+        // Adicionando ordenação secundária pelo título para garantir consistência
+        .order("title", { ascending: true });
         
       if (lessonsError) {
         return { module: moduleInfo, lessons: [] };
