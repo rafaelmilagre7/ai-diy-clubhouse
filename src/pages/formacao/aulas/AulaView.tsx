@@ -12,6 +12,7 @@ import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { VideoPlayer } from "@/components/formacao/aulas/VideoPlayer";
 import { VideoDisplay } from "@/components/formacao/aulas/VideoDisplay";
+import { LessonDuration } from "@/components/formacao/aulas/LessonDuration";
 
 const AulaView: React.FC = () => {
   const { cursoId, aulaId } = useParams<{ cursoId: string; aulaId: string }>();
@@ -308,6 +309,11 @@ const AulaView: React.FC = () => {
               onTimeUpdate={handleVideoTimeUpdate}
               startTime={getLastPosition()}
             />
+            
+            {/* Exibir duração sem botão de atualização */}
+            {videos && videos.length > 0 && (
+              <LessonDuration videos={videos} showUpdateButton={false} />
+            )}
             
             {/* Lista de vídeos da aula */}
             {videos && videos.length > 1 && (
