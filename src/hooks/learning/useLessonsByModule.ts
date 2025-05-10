@@ -10,19 +10,25 @@ export const useLessonsByModule = (moduleId: string) => {
   return useQuery({
     queryKey: ["learning-module-lessons", moduleId],
     queryFn: async (): Promise<LearningLesson[]> => {
-      const { data, error } = await supabase
-        .from("learning_lessons")
-        .select("*, videos:learning_lesson_videos(*)")
-        .eq("module_id", moduleId)
-        .eq("published", true)
-        .order("order_index", { ascending: true });
+      try {
+        const { data, error } = await supabase
+          .from("learning_lessons")
+          .select("*, videos:learning_lesson_videos(*)")
+          .eq("module_id", moduleId)
+          .eq("published", true)
+          .order("order_index", { ascending: true });
+          
+        if (error) {
+          console.error("Erro ao buscar lições do módulo:", error);
+          return [];
+        }
         
-      if (error) {
-        console.error("Erro ao buscar lições do módulo:", error);
+        // Garantir que data é sempre um array
+        return Array.isArray(data) ? data : [];
+      } catch (err) {
+        console.error("Erro inesperado ao buscar lições:", err);
         return [];
       }
-      
-      return data || [];
     },
     enabled: !!moduleId
   });

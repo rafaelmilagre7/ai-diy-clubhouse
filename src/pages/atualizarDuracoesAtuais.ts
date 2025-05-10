@@ -26,6 +26,10 @@ export const atualizarDuracoesAulaAtual = async (lessonId: string): Promise<bool
     
     if (data.success > 0) {
       toast.success(`Duração de ${data.success} vídeo(s) atualizada com sucesso!`);
+      // Recarregar a página após 2 segundos para mostrar as novas durações
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
       return true;
     } else {
       toast.info("Nenhuma duração de vídeo precisou ser atualizada.");

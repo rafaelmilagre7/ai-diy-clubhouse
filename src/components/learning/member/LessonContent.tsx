@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { LearningLesson } from "@/lib/supabase";
 import { LessonVideoPlayer } from "./LessonVideoPlayer";
@@ -11,6 +12,7 @@ import { LessonDescription } from "./LessonDescription";
 import { LessonDuration } from "./LessonDuration";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
+import { atualizarDuracoesAulaAtual } from "@/pages/atualizarDuracoesAtuais";
 
 interface LessonContentProps {
   lesson: LearningLesson;
@@ -38,6 +40,7 @@ export const LessonContent: React.FC<LessonContentProps> = ({
   allLessons = []
 }) => {
   const [completionDialogOpen, setCompletionDialogOpen] = useState(false);
+  const [isUpdatingDurations, setIsUpdatingDurations] = useState(false);
   
   // Garantir que videos e resources sejam sempre arrays
   const safeVideos = Array.isArray(videos) ? videos : [];
@@ -53,6 +56,19 @@ export const LessonContent: React.FC<LessonContentProps> = ({
     setCompletionDialogOpen(true);
     if (onComplete) {
       onComplete();
+    }
+  };
+
+  const handleUpdateDurations = async () => {
+    if (lesson && lesson.id) {
+      setIsUpdatingDurations(true);
+      try {
+        await atualizarDuracoesAulaAtual(lesson.id);
+        // A função já recarrega a página após atualização
+      } catch (err) {
+        console.error("Erro ao atualizar durações:", err);
+        setIsUpdatingDurations(false);
+      }
     }
   };
   
@@ -79,7 +95,12 @@ export const LessonContent: React.FC<LessonContentProps> = ({
           
           {/* Informações sobre a duração abaixo do player - agora com botão de atualização */}
           <div className="mt-4">
-            <LessonDuration videos={safeVideos} showUpdateButton={true} />
+            <LessonDuration 
+              videos={safeVideos} 
+              showUpdateButton={true} 
+              isLoading={isUpdatingDurations}
+              onUpdateDurations={handleUpdateDurations}
+            />
           </div>
           
           {/* Alerta se o progresso for baixo (após começar a assistir) */}

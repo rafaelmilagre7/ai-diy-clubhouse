@@ -122,7 +122,17 @@ const ModuleLessons = ({
   isLessonInProgress: (id: string) => boolean;
   getLessonProgress: (id: string) => number;
 }) => {
-  const { data: lessons = [], isLoading } = useLessonsByModule(moduleId);
+  const { data, isLoading } = useLessonsByModule(moduleId);
+  
+  // Garantir que lessons seja sempre um array válido
+  const lessons = Array.isArray(data) ? data : [];
+  
+  console.log(`ModuleLessons - moduleId: ${moduleId}`, { 
+    dataType: typeof data,
+    isArray: Array.isArray(data),
+    dataValue: data,
+    lessonsLength: lessons.length
+  });
   
   if (isLoading) {
     return (
