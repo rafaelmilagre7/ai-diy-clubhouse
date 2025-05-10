@@ -30,15 +30,38 @@ export function useLessonNavigation({
     // Aplicar a ordenação consistente por número no título antes de buscar aulas adjacentes
     const sortedLessons = sortLessonsByNumber([...lessons]);
     
+    // Adicionar log para depuração da ordem das aulas
+    console.log("Aulas ordenadas para navegação:", 
+      sortedLessons.map(l => ({
+        id: l.id, 
+        title: l.title, 
+        order_index: l.order_index,
+        isCurrent: l.id === currentLessonId
+      }))
+    );
+    
     const currentIndex = sortedLessons.findIndex(lesson => lesson.id === currentLessonId);
     
     if (currentIndex === -1) {
+      console.log("Aula atual não encontrada na lista de aulas ordenadas");
       return { prev: null, next: null };
     }
     
+    const prevLesson = currentIndex > 0 ? sortedLessons[currentIndex - 1] : null;
+    const nextLesson = currentIndex < sortedLessons.length - 1 ? sortedLessons[currentIndex + 1] : null;
+    
+    console.log("Navegação calculada:", {
+      currentIndex,
+      totalLessons: sortedLessons.length,
+      hasPrev: !!prevLesson,
+      hasNext: !!nextLesson,
+      prevTitle: prevLesson?.title,
+      nextTitle: nextLesson?.title
+    });
+    
     return {
-      prev: currentIndex > 0 ? sortedLessons[currentIndex - 1] : null,
-      next: currentIndex < sortedLessons.length - 1 ? sortedLessons[currentIndex + 1] : null
+      prev: prevLesson,
+      next: nextLesson
     };
   }, [currentLessonId, lessons]);
 

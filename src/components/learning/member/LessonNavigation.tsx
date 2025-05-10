@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, ArrowLeft, ArrowRight, Star } from "lucide-react";
+import { CheckCircle, ArrowLeft, ArrowRight } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { useNavigate } from "react-router-dom";
 import { LearningLesson } from "@/lib/supabase/types";
@@ -54,9 +54,8 @@ export const LessonNavigation: React.FC<LessonNavigationProps> = ({
   const totalLessons = allLessons.length;
   const lessonNumber = currentIndex !== -1 ? currentIndex + 1 : 0;
 
-  // Obter textos para os botões de navegação
-  const nextButtonText = nextLesson ? `Próxima aula: ${nextLesson.title}` : "Finalizar curso";
-  const prevButtonText = prevLesson ? `Aula anterior: ${prevLesson.title}` : "Início do curso";
+  // Determinar se estamos na última aula do módulo
+  const isLastLesson = !nextLesson || currentIndex === totalLessons - 1;
 
   return (
     <div className="flex flex-col gap-4">
@@ -120,6 +119,6 @@ export const LessonNavigation: React.FC<LessonNavigationProps> = ({
       </div>
     </div>
   );
-}
+};
 
 export default LessonNavigation;

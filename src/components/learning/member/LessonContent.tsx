@@ -23,7 +23,7 @@ interface LessonContentProps {
   nextLesson?: any;
   courseId?: string;
   allLessons?: any[];
-  onNextLesson?: () => void; // Nova prop para navegar para a próxima aula
+  onNextLesson?: () => void; // Prop para navegar para a próxima aula
 }
 
 export const LessonContent: React.FC<LessonContentProps> = ({ 
@@ -67,6 +67,14 @@ export const LessonContent: React.FC<LessonContentProps> = ({
       onNextLesson();
     }
   };
+
+  // Log para depuração
+  console.log("LessonContent rendering:", {
+    lessonTitle: lesson?.title,
+    hasNextLesson: !!nextLesson,
+    nextLessonTitle: nextLesson?.title,
+    hasOnNextLesson: !!onNextLesson
+  });
 
   // Verificar condições para exibição dos componentes
   const hasVideos = safeVideos.length > 0;
@@ -149,8 +157,8 @@ export const LessonContent: React.FC<LessonContentProps> = ({
         isOpen={completionDialogOpen}
         setIsOpen={setCompletionDialogOpen}
         lesson={lesson}
-        onNext={handleNavigateToNext} // Implementamos a navegação para a próxima aula
-        nextLesson={nextLesson} // Passar a próxima lição para exibir informações no modal
+        onNext={handleNavigateToNext}
+        nextLesson={nextLesson}
       />
     </div>
   );
