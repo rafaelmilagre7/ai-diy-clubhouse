@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
@@ -26,13 +25,12 @@ export const useLessonComments = (lessonId: string) => {
       try {
         log('Buscando comentários da aula', { lessonId });
         
-        // Buscar comentários principais (não respostas)
-        // Usamos join manual em vez do select * para garantir que os dados do perfil sejam obtidos
+        // Buscar comentários principais (não respostas) - Usando JOIN explícito
         const { data: rootComments, error: rootError } = await supabase
           .from('learning_comments')
           .select(`
             *,
-            profiles:user_id (
+            profiles:profiles(
               id,
               name,
               email,
@@ -56,12 +54,12 @@ export const useLessonComments = (lessonId: string) => {
         // Garantir que rootComments seja um array
         const safeRootComments = Array.isArray(rootComments) ? rootComments : [];
         
-        // Buscar respostas aos comentários
+        // Buscar respostas aos comentários - Usando JOIN explícito
         const { data: replies, error: repliesError } = await supabase
           .from('learning_comments')
           .select(`
             *,
-            profiles:user_id (
+            profiles:profiles(
               id,
               name,
               email,

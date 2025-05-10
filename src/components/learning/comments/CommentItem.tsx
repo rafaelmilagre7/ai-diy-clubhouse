@@ -30,8 +30,8 @@ export const CommentItem: React.FC<CommentItemProps> = ({
   const [isReplying, setIsReplying] = useState(false);
   const { user } = useAuth();
   
-  // Debug the comment data to see what we're getting
-  console.log("Comment data:", comment);
+  // Debug do objeto comment para verificar sua estrutura
+  console.log("Dados do comentário:", comment);
   
   // Verifica se o usuário é dono do comentário ou é admin/formacao
   const canDelete = user?.id === comment.user_id || 
@@ -71,8 +71,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
     }
   };
   
-  // Acesso seguro aos dados do perfil do usuário
-  // Garantindo que profiles não seja tratado como um objeto vazio
+  // Garantindo que profiles tenha valores padrão se for null/undefined
   const profileData = comment.profiles || {
     name: "Usuário",
     role: "",
@@ -81,7 +80,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
     email: ""
   };
   
-  // Usando os dados do perfil com verificação de tipo
+  // Usando os dados do perfil com verificação
   const profileName = profileData.name || "Usuário";
   const profileRole = profileData.role || "";
   const avatarUrl = profileData.avatar_url || "";
