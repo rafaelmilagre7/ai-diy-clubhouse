@@ -80,7 +80,7 @@ interface ReviewSectionCardProps {
   sectionData: any;
   progress: any;
   stepIndex: number;
-  navigateToStep: (index: number) => void;
+  navigateToStep: (stepId: string) => void; // Atualizado para receber ID em vez de índice
 }
 
 export const ReviewSectionCard: React.FC<ReviewSectionCardProps> = ({
@@ -165,14 +165,12 @@ export const ReviewSectionCard: React.FC<ReviewSectionCardProps> = ({
     return getSummaryComponent(step.section, sectionData, progress);
   }, [step, sectionData, progress]);
 
-  // Corrigir o índice da etapa para navegação
-  // Precisamos corrigir o índice já que o stepIndex é 1-based para UI mas precisamos 0-based para arrays
+  // Função de edição atualizada para usar o ID do passo diretamente
   const handleEditClick = () => {
-    console.log(`[ReviewSectionCard] Editando seção ${step.id} com índice UI ${stepIndex}, índice array ${stepIndex - 1}`);
+    console.log(`[ReviewSectionCard] Editando seção ${step.id}`);
     
-    // Passar o índice exato correto (com base zero) para a função de navegação
-    // O stepIndex é base-1 (começa em 1), mas arrays são base-0, então subtraímos 1
-    navigateToStep(stepIndex - 1);
+    // Passar o ID do passo diretamente para a função de navegação
+    navigateToStep(step.id);
   };
 
   return (

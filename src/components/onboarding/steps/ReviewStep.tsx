@@ -12,7 +12,7 @@ interface ReviewStepProps {
   progress: OnboardingProgress | null;
   onComplete: () => void;
   isSubmitting: boolean;
-  navigateToStep: (index: number) => void;
+  navigateToStep: (stepId: string) => void; // Atualizado para aceitar ID em vez de índice
 }
 
 export const ReviewStep: React.FC<ReviewStepProps> = ({
@@ -254,6 +254,7 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({
             // Passamos o índice real (começando em 1) para a UI
             const stepIndex = idx + 1;
 
+            // Passando o ID do passo diretamente para navegação
             return (
               <ReviewSectionCard
                 key={step.id}
@@ -261,7 +262,7 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({
                 sectionData={safeData}
                 progress={dataToUse}
                 stepIndex={stepIndex}
-                navigateToStep={navigateToStep}
+                navigateToStep={navigateToStep}  // Esta função agora espera receber um ID
               />
             );
           })}

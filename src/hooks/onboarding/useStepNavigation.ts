@@ -68,16 +68,7 @@ export const useStepNavigation = () => {
     loadProgress();
   }, [navigate, refreshProgress, isLoading, location.pathname]);
 
-  const navigateToStep = (stepIndex: number) => {
-    if (stepIndex >= 0 && stepIndex < steps.length) {
-      console.log(`[useStepNavigation] Navegando para etapa índice ${stepIndex}: ${steps[stepIndex].id} (${steps[stepIndex].path})`);
-      setCurrentStepIndex(stepIndex);
-      navigate(steps[stepIndex].path);
-    } else {
-      console.warn(`[useStepNavigation] Tentativa de navegação para índice inválido: ${stepIndex}`);
-    }
-  };
-
+  // Nova função de navegação que usa ID do passo em vez do índice
   const navigateToStepById = (stepId: string) => {
     const index = steps.findIndex(step => step.id === stepId);
     if (index !== -1) {
@@ -89,12 +80,22 @@ export const useStepNavigation = () => {
     }
   };
 
+  const navigateToStep = (stepIndex: number) => {
+    if (stepIndex >= 0 && stepIndex < steps.length) {
+      console.log(`[useStepNavigation] Navegando para etapa índice ${stepIndex}: ${steps[stepIndex].id} (${steps[stepIndex].path})`);
+      setCurrentStepIndex(stepIndex);
+      navigate(steps[stepIndex].path);
+    } else {
+      console.warn(`[useStepNavigation] Tentativa de navegação para índice inválido: ${stepIndex}`);
+    }
+  };
+
   return {
     currentStepIndex,
     setCurrentStepIndex,
     progress,
     navigateToStep,
-    navigateToStepById,
+    navigateToStepById, // Exportando a nova função
     isLoading,
     currentStep: steps[currentStepIndex] || steps[0]
   };

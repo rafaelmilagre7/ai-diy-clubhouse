@@ -59,17 +59,26 @@ const Review: React.FC = () => {
     loadFreshData();
   }, []); // Dependência vazia garante que carregue apenas uma vez
   
-  const handleNavigateToStep = (index: number) => {
-    console.log("[Review] Navegando para etapa:", index, steps[index]);
+  // Função melhorada para navegação por ID do passo
+  const handleNavigateToStep = (stepId: string) => {
+    console.log("[Review] Navegando para etapa por ID:", stepId);
     
-    // Correção: Verificar se o índice é válido e garantir que navegamos para o caminho correto
-    if (index >= 0 && index < steps.length) {
-      const targetStep = steps[index];
+    // Buscar o passo correspondente pelo ID
+    const targetStep = steps.find(step => step.id === stepId);
+    
+    if (targetStep) {
       console.log(`[Review] Redirecionando para etapa ${targetStep.id} (${targetStep.path})`);
       navigate(targetStep.path);
     } else {
-      console.error("[Review] Tentativa de navegar para etapa inválida:", index);
-      toast.error("Erro ao navegar. Etapa não encontrada.");
+      // Fallback para navegação baseada em índice
+      const index = parseInt(stepId, 10);
+      if (!isNaN(index) && index >= 0 && index < steps.length) {
+        console.log(`[Review] Navegando para índice ${index}: ${steps[index].path}`);
+        navigate(steps[index].path);
+      } else {
+        console.error("[Review] Etapa não encontrada com ID:", stepId);
+        toast.error("Erro ao navegar. Etapa não encontrada.");
+      }
     }
   };
   

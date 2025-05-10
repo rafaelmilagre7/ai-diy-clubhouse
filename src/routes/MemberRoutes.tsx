@@ -26,6 +26,12 @@ const LessonView = lazy(() => import("@/pages/member/learning/LessonView"));
 // Páginas de onboarding
 const Onboarding = lazy(() => import("@/pages/onboarding/Onboarding"));
 const PersonalInfo = lazy(() => import("@/pages/onboarding/steps/PersonalInfo"));
+const ProfessionalData = lazy(() => import("@/pages/onboarding/steps/ProfessionalData"));
+const BusinessContext = lazy(() => import("@/pages/onboarding/steps/BusinessContext"));
+const AIExperience = lazy(() => import("@/pages/onboarding/steps/AIExperience"));
+const BusinessGoals = lazy(() => import("@/pages/onboarding/steps/BusinessGoals"));
+const ExperiencePersonalization = lazy(() => import("@/pages/onboarding/steps/ExperiencePersonalization"));
+const ComplementaryInfo = lazy(() => import("@/pages/onboarding/steps/ComplementaryInfo"));
 const Review = lazy(() => import("@/pages/onboarding/Review"));
 
 export const MemberRoutes = () => {
@@ -190,6 +196,54 @@ export const MemberRoutes = () => {
         element={
           <ProtectedRoute>
             <PersonalInfo />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/onboarding/professional-data"
+        element={
+          <ProtectedRoute>
+            <ProfessionalData />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/onboarding/business-context"
+        element={
+          <ProtectedRoute>
+            <BusinessContext />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/onboarding/ai-experience"
+        element={
+          <ProtectedRoute>
+            <AIExperience />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/onboarding/club-goals"
+        element={
+          <ProtectedRoute>
+            <BusinessGoals />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/onboarding/customization"
+        element={
+          <ProtectedRoute>
+            <ExperiencePersonalization />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/onboarding/complementary"
+        element={
+          <ProtectedRoute>
+            <ComplementaryInfo />
           </ProtectedRoute>
         }
       />

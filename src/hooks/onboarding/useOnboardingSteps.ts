@@ -4,32 +4,38 @@ import { useNavigate } from "react-router-dom";
 import { useProgress } from "./useProgress";
 import { useStepPersistenceCore } from "./useStepPersistenceCore";
 import { steps } from "./useStepDefinitions";
+import { useStepNavigation } from "./useStepNavigation";
 
 export const useOnboardingSteps = () => {
   const navigate = useNavigate();
-  const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  const { 
+    currentStepIndex, 
+    navigateToStep: baseNavigateToStep,
+    navigateToStepById 
+  } = useStepNavigation();
   const { progress, isLoading, refreshProgress } = useProgress();
   const { saveStepData, completeOnboarding } = useStepPersistenceCore({
     currentStepIndex,
-    setCurrentStepIndex,
+    setCurrentStepIndex: (idx: number) => { /* Esta função será substituída */ },
     navigate,
   });
 
-  // Determinar o índice atual baseado nas etapas completadas
-  useEffect(() => {
-    if (progress?.completed_steps) {
-      const lastCompletedStep = progress.completed_steps[progress.completed_steps.length - 1];
-      const nextStepIndex = steps.findIndex(step => step.id === lastCompletedStep) + 1;
-      if (nextStepIndex < steps.length) {
-        setCurrentStepIndex(nextStepIndex);
+  // Função melhorada para navegação - pode receber ID ou índice
+  const navigateToStep = (indexOrId: number | string) => {
+    console.log(`[useOnboardingSteps] Navegando para: ${indexOrId}, tipo: ${typeof indexOrId}`);
+    
+    if (typeof indexOrId === 'string') {
+      // Se for string, assumimos que é um ID
+      navigateToStepById(indexOrId);
+    } else if (typeof indexOrId === 'number') {
+      // Se for número, usamos a navegação baseada em índice
+      if (indexOrId >= 0 && indexOrId < steps.length) {
+        baseNavigateToStep(indexOrId);
+      } else {
+        console.error(`[useOnboardingSteps] Índice inválido: ${indexOrId}`);
       }
-    }
-  }, [progress?.completed_steps]);
-
-  const navigateToStep = (index: number) => {
-    if (index >= 0 && index < steps.length) {
-      setCurrentStepIndex(index);
-      navigate(steps[index].path);
+    } else {
+      console.error(`[useOnboardingSteps] Tipo inválido para navegação:`, indexOrId);
     }
   };
 
@@ -43,6 +49,6 @@ export const useOnboardingSteps = () => {
     isLoading,
     refreshProgress,
     navigateToStep,
-    completeOnboarding // Adicionando a função aqui
+    completeOnboarding
   };
 };
