@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React from "react";
 import { CardHeader, CardTitle } from "@/components/ui/card";
 import { MessageCircle } from "lucide-react";
 import { useLessonComments } from "@/hooks/learning/useLessonComments";
