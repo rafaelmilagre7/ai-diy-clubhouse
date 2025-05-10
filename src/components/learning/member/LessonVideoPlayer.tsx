@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { LearningLessonVideo } from "@/lib/supabase";
 import { Play, Pause, Volume2, VolumeX, ChevronLeft, ChevronRight } from "lucide-react";
@@ -7,6 +6,7 @@ import { Slider } from "@/components/ui/slider";
 import { PandaVideoPlayer } from "@/components/formacao/comum/PandaVideoPlayer";
 import { VideoPlaylist } from "./VideoPlaylist";
 import { Card } from "@/components/ui/card";
+import { formatVideoTime, formatSeconds } from "@/utils/timeUtils";
 
 interface LessonVideoPlayerProps {
   videos: LearningLessonVideo[];
@@ -262,7 +262,7 @@ export const LessonVideoPlayer: React.FC<LessonVideoPlayerProps> = ({
                   </Button>
                   
                   <span className="text-xs">
-                    {formatTime(currentTime)} / {formatTime(duration)}
+                    {formatVideoTime(currentTime)} / {formatVideoTime(duration)}
                   </span>
                   
                   <div className="flex-grow mx-2">
@@ -394,11 +394,4 @@ export const LessonVideoPlayer: React.FC<LessonVideoPlayerProps> = ({
       )}
     </div>
   );
-
-  // Função auxiliar para formatar o tempo
-  function formatTime(seconds: number) {
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
-  }
 };

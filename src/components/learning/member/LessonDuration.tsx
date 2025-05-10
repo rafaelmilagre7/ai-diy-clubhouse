@@ -1,6 +1,7 @@
 
 import React from "react";
 import { LearningLessonVideo } from "@/lib/supabase";
+import { formatSeconds } from "@/utils/timeUtils";
 
 interface LessonDurationProps {
   videos: LearningLessonVideo[];
@@ -22,14 +23,7 @@ export const LessonDuration: React.FC<LessonDurationProps> = ({ videos }) => {
     
     if (!hasValidDurations) return null;
     
-    const hours = Math.floor(totalSeconds / 3600);
-    const minutes = Math.floor((totalSeconds % 3600) / 60);
-    
-    if (hours > 0) {
-      return `${hours}h ${minutes}min`;
-    } else {
-      return `${minutes} minutos`;
-    }
+    return formatSeconds(totalSeconds);
   };
 
   const duration = formatTotalDuration();

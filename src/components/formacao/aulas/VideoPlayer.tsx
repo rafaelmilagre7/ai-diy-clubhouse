@@ -5,6 +5,7 @@ import { LearningLessonVideo } from "@/lib/supabase";
 import { YoutubeEmbed } from "@/components/common/YoutubeEmbed";
 import { getYoutubeVideoId } from "@/lib/supabase/storage";
 import { PandaVideoPlayer } from "@/components/formacao/comum/PandaVideoPlayer";
+import { formatVideoTime } from "@/utils/timeUtils";
 
 interface VideoPlayerProps {
   video: LearningLessonVideo | null;
