@@ -5,7 +5,7 @@ export interface Comment {
   created_at: string;
   user_id: string;
   parent_id: string | null;
-  profiles?: {
+  profiles: {
     id?: string;
     name: string;
     email?: string;

@@ -72,7 +72,16 @@ export const CommentItem: React.FC<CommentItemProps> = ({
   };
   
   // Acesso seguro aos dados do perfil do usuário
-  const profileData = comment.profiles || {};
+  // Garantindo que profiles não seja tratado como um objeto vazio
+  const profileData = comment.profiles || {
+    name: "Usuário",
+    role: "",
+    avatar_url: "",
+    id: "",
+    email: ""
+  };
+  
+  // Usando os dados do perfil com verificação de tipo
   const profileName = profileData.name || "Usuário";
   const profileRole = profileData.role || "";
   const avatarUrl = profileData.avatar_url || "";
