@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { 
   Accordion,
@@ -8,7 +7,7 @@ import {
 } from "@/components/ui/accordion";
 import { Card } from "@/components/ui/card";
 import { LearningModule, LearningLesson, LearningCourse, LearningProgress } from "@/lib/supabase/types";
-import { CheckCircle, Lock, Clock, Play, ChevronDown } from "lucide-react";
+import { CheckCircle, Lock, Play, ChevronDown } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -200,10 +199,6 @@ const ModuleLessons = ({
                           </div>
                           
                           <div className="flex items-center gap-2 mt-1">
-                            <span className="text-xs text-white/80 flex items-center">
-                              <Clock className="h-3 w-3 mr-1" />
-                              {lesson.estimated_time_minutes || 5} min
-                            </span>
                             
                             {lesson.difficulty_level && (
                               <span className={cn(
@@ -249,10 +244,6 @@ const ModuleLessons = ({
                     <div className="mt-2">
                       <div className="font-medium line-clamp-1">{lesson.title}</div>
                       <div className="flex items-center gap-2 mt-1">
-                        <span className="text-xs text-muted-foreground flex items-center">
-                          <Clock className="h-3 w-3 mr-1" />
-                          {lesson.estimated_time_minutes || 5} min
-                        </span>
                         
                         {inProgress && !completed && (
                           <Badge variant="secondary" className="text-xs">
@@ -314,10 +305,6 @@ const ModuleLessons = ({
                 <div>
                   <div className="font-medium">{lesson.title}</div>
                   <div className="flex items-center gap-2 mt-1">
-                    <span className="text-xs text-muted-foreground flex items-center">
-                      <Clock className="h-3 w-3 mr-1" />
-                      {lesson.estimated_time_minutes || 5} min
-                    </span>
                     
                     {lesson.difficulty_level && (
                       <span className={cn(

@@ -1,7 +1,6 @@
-
 import { Link } from "react-router-dom";
 import { LearningLesson } from "@/lib/supabase";
-import { CheckCircle, Circle, Clock, Video } from "lucide-react";
+import { CheckCircle, Circle, Video, Clock } from "lucide-react";
 
 interface LessonItemProps {
   lesson: LearningLesson;
