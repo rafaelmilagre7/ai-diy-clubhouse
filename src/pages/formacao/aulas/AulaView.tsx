@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation } from "@tanstack/react-query";
@@ -302,16 +301,6 @@ const AulaView: React.FC = () => {
             progress={userProgress?.progress_percentage || 0}
           />
           
-          <div className="mt-6">
-            <LessonNavigation
-              courseId={cursoId!}
-              currentLesson={aula}
-              allLessons={moduloData?.aulas || []}
-              onComplete={handleComplete}
-              isCompleted={(userProgress?.progress_percentage || 0) >= 100}
-            />
-          </div>
-          
           <div className="mt-8 space-y-6">
             {/* Player de vídeo */}
             <VideoPlayer 
@@ -342,6 +331,17 @@ const AulaView: React.FC = () => {
                 </div>
               </div>
             )}
+          </div>
+          
+          {/* Navegação movida para o final da página */}
+          <div className="mt-8">
+            <LessonNavigation
+              courseId={cursoId!}
+              currentLesson={aula}
+              allLessons={moduloData?.aulas || []}
+              onComplete={handleComplete}
+              isCompleted={(userProgress?.progress_percentage || 0) >= 100}
+            />
           </div>
         </div>
         

@@ -106,7 +106,8 @@ export const LessonNavigation: React.FC<LessonNavigationProps> = ({
             onClick={handleNext}
             className="gap-1"
           >
-            {nextLesson ? "Próxima aula" : "Finalizar curso"}
+            {/* Sempre mostra "Próxima aula" mesmo quando não há próxima aula */}
+            Próxima aula
             <ArrowRight className="h-4 w-4" />
           </Button>
         </div>

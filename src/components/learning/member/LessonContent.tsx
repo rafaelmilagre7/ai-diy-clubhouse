@@ -10,7 +10,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LessonCompletionModal } from "../completion/LessonCompletionModal";
 import { LessonDescription } from "./LessonDescription";
 import { LessonDuration } from "./LessonDuration";
-import { LessonCompleteButton } from "./LessonCompleteButton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 
@@ -21,6 +20,10 @@ interface LessonContentProps {
   isCompleted?: boolean;
   onProgressUpdate?: (videoId: string, progress: number) => void;
   onComplete?: () => void;
+  prevLesson?: any;
+  nextLesson?: any;
+  courseId?: string;
+  allLessons?: any[];
 }
 
 export const LessonContent: React.FC<LessonContentProps> = ({ 
@@ -29,7 +32,11 @@ export const LessonContent: React.FC<LessonContentProps> = ({
   resources = [],
   isCompleted = false,
   onProgressUpdate,
-  onComplete
+  onComplete,
+  prevLesson,
+  nextLesson,
+  courseId,
+  allLessons = []
 }) => {
   const [completionDialogOpen, setCompletionDialogOpen] = useState(false);
   
@@ -71,14 +78,9 @@ export const LessonContent: React.FC<LessonContentProps> = ({
             onProgress={(videoId, progress) => handleVideoProgress(videoId, progress)}
           />
           
-          {/* Informações sobre a duração e botão de completar abaixo do player */}
-          <div className="mt-4 flex items-center justify-between">
+          {/* Informações sobre a duração abaixo do player */}
+          <div className="mt-4">
             <LessonDuration videos={safeVideos} />
-            
-            <LessonCompleteButton 
-              isCompleted={isCompleted} 
-              onComplete={handleCompleteLesson} 
-            />
           </div>
           
           {/* Alerta se o progresso for baixo (após começar a assistir) */}

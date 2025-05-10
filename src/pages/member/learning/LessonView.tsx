@@ -136,18 +136,6 @@ const LessonView = () => {
             progress={progress}
           />
           
-          <div className="mt-6">
-            <LessonNavigation 
-              courseId={courseId!}
-              currentLesson={lesson}
-              allLessons={safeModuleLessons}
-              onComplete={completeLesson}
-              isCompleted={progress >= 100}
-              prevLesson={prevLesson}
-              nextLesson={nextLesson}
-            />
-          </div>
-          
           <div className="mt-8">
             <LessonContent 
               lesson={lesson} 
@@ -156,6 +144,23 @@ const LessonView = () => {
               isCompleted={progress >= 100}
               onProgressUpdate={handleProgressUpdate} 
               onComplete={completeLesson}
+              prevLesson={prevLesson}
+              nextLesson={nextLesson}
+              courseId={courseId}
+              allLessons={safeModuleLessons}
+            />
+          </div>
+          
+          {/* Navegação movida para o final da página */}
+          <div className="mt-8">
+            <LessonNavigation 
+              courseId={courseId!}
+              currentLesson={lesson}
+              allLessons={safeModuleLessons}
+              onComplete={completeLesson}
+              isCompleted={progress >= 100}
+              prevLesson={prevLesson}
+              nextLesson={nextLesson}
             />
           </div>
         </div>
