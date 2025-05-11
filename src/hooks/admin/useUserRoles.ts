@@ -66,7 +66,7 @@ export function useUserRoles() {
       if (error) throw error;
       
       return {
-        roleId: data.role_id,
+        roleId: data.role_id !== null && data.role_id !== undefined ? String(data.role_id) : null,
         roleName: data.user_roles && typeof data.user_roles === 'object' && 'name' in data.user_roles ? data.user_roles.name : null,
         roleData: data.user_roles
       };
