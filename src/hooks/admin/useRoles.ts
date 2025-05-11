@@ -120,6 +120,28 @@ export function useRoles() {
     try {
       setIsDeleting(true);
       
+      // Primeiro verificamos se há usuários usando este papel
+      const { data: usersWithRole, error: usersCheckError } = await supabase
+        .from('profiles')
+        .select('count')
+        .eq('role_id', id);
+        
+      if (usersCheckError) throw usersCheckError;
+      
+      const userCount = parseInt(usersWithRole?.[0]?.count || '0');
+      if (userCount > 0) {
+        throw new Error(`Não é possível excluir este papel pois existem ${userCount} usuários associados a ele.`);
+      }
+      
+      // Excluir permissões associadas ao papel
+      const { error: permissionsDeleteError } = await supabase
+        .from('role_permissions')
+        .delete()
+        .eq('role_id', id);
+        
+      if (permissionsDeleteError) throw permissionsDeleteError;
+      
+      // Excluir o papel
       const { error } = await supabase
         .from('user_roles')
         .delete()
@@ -129,9 +151,8 @@ export function useRoles() {
       
       setRoles(prev => prev.filter(r => r.id !== id));
       toast.success('Papel excluído com sucesso!');
-    } catch (err) {
+    } catch (err: any) {
       console.error('Erro ao excluir papel:', err);
-      toast.error('Erro ao excluir papel');
       throw err;
     } finally {
       setIsDeleting(false);

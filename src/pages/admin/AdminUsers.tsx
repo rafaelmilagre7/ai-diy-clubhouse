@@ -1,9 +1,9 @@
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useUsers } from "@/hooks/admin/useUsers";
 import { UsersHeader } from "@/components/admin/users/UsersHeader";
 import { UsersTable } from "@/components/admin/users/UsersTable";
-import { UserRoleDialog } from "@/components/admin/users/UserRoleDialog";
+import { UserRoleManager } from "@/components/admin/users/UserRoleManager";
 import { UserProfile } from "@/lib/supabase";
 import { PermissionGuard } from "@/components/auth/PermissionGuard";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -19,20 +19,20 @@ const AdminUsers = () => {
     fetchUsers,
     selectedUser,
     setSelectedUser,
-    editRoleOpen,
-    setEditRoleOpen,
-    newRoleId,
-    setNewRoleId,
-    saving,
-    handleUpdateRole,
     canManageUsers,
     canAssignRoles,
   } = useUsers();
 
+  const [roleManagerOpen, setRoleManagerOpen] = useState(false);
+
+  useEffect(() => {
+    // Recarregar usuários quando a página for montada
+    fetchUsers();
+  }, [fetchUsers]);
+
   const handleEditRole = (user: UserProfile) => {
     setSelectedUser(user);
-    setNewRoleId(user.role_id || "");
-    setEditRoleOpen(true);
+    setRoleManagerOpen(true);
   };
 
   return (
@@ -66,14 +66,10 @@ const AdminUsers = () => {
         </div>
         
         {canAssignRoles && (
-          <UserRoleDialog
-            open={editRoleOpen}
-            onOpenChange={setEditRoleOpen}
-            selectedUser={selectedUser}
-            newRoleId={newRoleId}
-            onRoleChange={setNewRoleId}
-            onUpdateRole={handleUpdateRole}
-            saving={saving}
+          <UserRoleManager
+            open={roleManagerOpen}
+            onOpenChange={setRoleManagerOpen}
+            user={selectedUser}
             availableRoles={availableRoles}
           />
         )}

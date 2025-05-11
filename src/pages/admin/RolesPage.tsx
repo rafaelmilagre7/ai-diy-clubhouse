@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { PermissionGuard } from "@/components/auth/PermissionGuard";
 import { RoleForm } from "@/components/admin/roles/RoleForm";
 import { RolePermissions } from "@/components/admin/roles/RolePermissions";
+import { DeleteRoleDialog } from "@/components/admin/roles/DeleteRoleDialog";
 
 export default function RolesPage() {
   // Substituindo o Helmet pelo hook useDocumentTitle
@@ -25,10 +26,14 @@ export default function RolesPage() {
     editDialogOpen,
     setEditDialogOpen,
     selectedRole,
-    setSelectedRole
+    setSelectedRole,
+    deleteRole,
+    isDeleting,
+    deleteDialogOpen,
+    setDeleteDialogOpen
   } = useRoles();
 
-  // Novo estado para controlar o diálogo de permissões
+  // Estado para controlar o diálogo de permissões
   const [permissionsDialogOpen, setPermissionsDialogOpen] = useState(false);
 
   useEffect(() => {
@@ -42,6 +47,19 @@ export default function RolesPage() {
       });
     }
   }, [error]);
+
+  const handleDeleteRole = async () => {
+    if (!selectedRole) return;
+    
+    try {
+      await deleteRole(selectedRole.id);
+      toast.success("Papel excluído com sucesso");
+    } catch (error: any) {
+      toast.error("Erro ao excluir papel", {
+        description: error.message || "Não foi possível excluir o papel."
+      });
+    }
+  };
 
   return (
     <div className="flex flex-col gap-6">
@@ -76,6 +94,10 @@ export default function RolesPage() {
               setSelectedRole(role);
               setPermissionsDialogOpen(true);
             }}
+            onDeleteRole={(role) => {
+              setSelectedRole(role);
+              setDeleteDialogOpen(true);
+            }}
           />
         </CardContent>
       </Card>
@@ -99,6 +121,14 @@ export default function RolesPage() {
             open={permissionsDialogOpen}
             onOpenChange={setPermissionsDialogOpen}
             role={selectedRole}
+          />
+
+          <DeleteRoleDialog
+            open={deleteDialogOpen}
+            onOpenChange={setDeleteDialogOpen}
+            role={selectedRole}
+            onDelete={handleDeleteRole}
+            isDeleting={isDeleting}
           />
         </>
       )}
