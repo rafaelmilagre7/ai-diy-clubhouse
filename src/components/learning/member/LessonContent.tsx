@@ -41,7 +41,7 @@ export const LessonContent: React.FC<LessonContentProps> = ({
   onNextLesson
 }) => {
   const [completionDialogOpen, setCompletionDialogOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState('comments');
+  const [activeTab, setActiveTab] = useState('assistant');
   
   // Verificar se temos um objeto lesson válido
   if (!lesson) {
@@ -95,10 +95,6 @@ export const LessonContent: React.FC<LessonContentProps> = ({
   const hasResources = safeResources.length > 0;
   const hasAiAssistant = lesson.ai_assistant_enabled;
   
-  // Verificar se há conteúdo adicional para exibir em abas
-  // Removida a condição "|| true" para não mostrar abas desnecessárias
-  const hasTabs = hasResources || hasAiAssistant;
-  
   return (
     <div className="space-y-6">
       {/* Player de vídeo como elemento principal */}
@@ -131,33 +127,32 @@ export const LessonContent: React.FC<LessonContentProps> = ({
         </div>
       )}
       
+      {/* Recursos/Materiais da aula (agora sempre visíveis) */}
+      {hasResources && (
+        <div className="mt-6">
+          <LessonResources resources={safeResources} />
+        </div>
+      )}
+      
       <Separator className="my-6" />
       
-      {/* Comentários sempre visíveis, independente das abas */}
+      {/* Comentários sempre visíveis após os recursos */}
       <div className="mt-6">
         <LessonComments lessonId={lesson.id} />
       </div>
       
-      {/* Abas para recursos e assistente, se existirem */}
-      {hasTabs && (
-        <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="mt-4">
-          <TabsList className="grid w-full grid-cols-2">
-            {hasResources && <TabsTrigger value="resources">Recursos</TabsTrigger>}
-            {hasAiAssistant && <TabsTrigger value="assistant">Assistente IA</TabsTrigger>}
-          </TabsList>
-          
-          {hasResources && (
-            <TabsContent value="resources">
-              <LessonResources resources={safeResources} />
-            </TabsContent>
-          )}
-          
-          {hasAiAssistant && (
+      {/* Assistente IA em uma aba separada, se estiver disponível */}
+      {hasAiAssistant && (
+        <div className="mt-6">
+          <Tabs defaultValue="assistant" className="mt-4">
+            <TabsList>
+              <TabsTrigger value="assistant">Assistente IA</TabsTrigger>
+            </TabsList>
             <TabsContent value="assistant">
               <LessonAssistantChat lessonId={lesson.id} />
             </TabsContent>
-          )}
-        </Tabs>
+          </Tabs>
+        </div>
       )}
       
       {/* Modal de conclusão da aula */}
@@ -171,3 +166,4 @@ export const LessonContent: React.FC<LessonContentProps> = ({
     </div>
   );
 };
+
