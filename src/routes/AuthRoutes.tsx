@@ -1,11 +1,9 @@
 
 import { Route } from "react-router-dom";
-import { lazy } from "react";
-
-const Login = lazy(() => import("@/pages/auth/Login"));
-const Register = lazy(() => import("@/pages/auth/Register"));
-const ResetPassword = lazy(() => import("@/pages/auth/ResetPassword"));
-const SetNewPassword = lazy(() => import("@/pages/auth/SetNewPassword"));
+import Login from '@/pages/auth/Login';
+import Register from '@/pages/auth/Register';
+import ResetPassword from '@/pages/auth/ResetPassword';
+import SetNewPassword from '@/pages/auth/SetNewPassword';
 
 export const AuthRoutes = () => {
   return (
@@ -13,7 +11,7 @@ export const AuthRoutes = () => {
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/reset-password" element={<ResetPassword />} />
-      <Route path="/reset-password/update" element={<SetNewPassword />} />
+      <Route path="/set-new-password" element={<SetNewPassword />} />
     </>
   );
 };
