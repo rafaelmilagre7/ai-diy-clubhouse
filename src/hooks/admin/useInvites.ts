@@ -17,10 +17,8 @@ export interface Invite {
   role?: {
     name: string;
   };
-  creator?: {
-    name: string;
-    email: string;
-  };
+  creator_name?: string;
+  creator_email?: string;
 }
 
 export function useInvites() {
@@ -37,18 +35,44 @@ export function useInvites() {
       setLoading(true);
       setError(null);
       
-      const { data, error } = await supabase
+      // Consulta modificada para evitar o join direto com auth.users
+      const { data: invitesData, error: invitesError } = await supabase
         .from('invites')
         .select(`
           *,
-          role:role_id(name),
-          creator:created_by(name, email)
+          role:role_id(name)
         `)
         .order('created_at', { ascending: false });
       
-      if (error) throw error;
+      if (invitesError) throw invitesError;
       
-      setInvites(data || []);
+      // Obter IDs dos criadores para buscar seus perfis separadamente
+      const creatorIds = invitesData?.map(invite => invite.created_by) || [];
+      
+      // Buscar dados dos criadores da tabela de perfis
+      const { data: creatorsData, error: creatorsError } = await supabase
+        .from('profiles')
+        .select('id, name, email')
+        .in('id', creatorIds);
+        
+      if (creatorsError) {
+        console.error('Erro ao buscar perfis dos criadores:', creatorsError);
+      }
+      
+      // Mapa de ID para dados do criador
+      const creatorsMap = (creatorsData || []).reduce((acc, profile) => {
+        acc[profile.id] = { name: profile.name, email: profile.email };
+        return acc;
+      }, {} as Record<string, { name?: string, email?: string }>);
+      
+      // Combinar dados de convites com dados de criadores
+      const enrichedInvites = (invitesData || []).map(invite => ({
+        ...invite,
+        creator_name: creatorsMap[invite.created_by]?.name || 'Usuário desconhecido',
+        creator_email: creatorsMap[invite.created_by]?.email
+      }));
+      
+      setInvites(enrichedInvites);
     } catch (err: any) {
       console.error('Erro ao buscar convites:', err);
       setError(err);
