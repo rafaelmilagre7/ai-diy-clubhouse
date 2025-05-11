@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { Helmet } from "react-helmet";
+import { useDocumentTitle } from "@/hooks/use-document-title";
 import {
   Card,
   CardContent,
@@ -38,6 +38,9 @@ interface AuditLog {
 }
 
 export default function PermissionAuditLogPage() {
+  // Substituindo o Helmet pelo hook useDocumentTitle
+  useDocumentTitle("Log de Auditoria de Permissões | Admin");
+  
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -81,100 +84,94 @@ export default function PermissionAuditLogPage() {
   };
 
   return (
-    <>
-      <Helmet>
-        <title>Log de Auditoria de Permissões | Admin</title>
-      </Helmet>
-
-      <div className="flex flex-col gap-6">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Log de Auditoria de Permissões</h1>
-          <p className="text-muted-foreground">
-            Acompanhe todas as alterações feitas em papéis e permissões do sistema
-          </p>
-        </div>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Histórico de Alterações</CardTitle>
-            <CardDescription>
-              Os 100 registros mais recentes de alterações em permissões e papéis
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <div className="flex justify-center py-8">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                <span className="ml-2">Carregando logs de auditoria...</span>
-              </div>
-            ) : error ? (
-              <div className="bg-red-50 border border-red-200 rounded-md p-4 text-red-800">
-                <p>Ocorreu um erro ao carregar os logs de auditoria.</p>
-                <p className="text-sm mt-1">{error}</p>
-              </div>
-            ) : auditLogs.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                Nenhum registro de auditoria encontrado.
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Data e Hora</TableHead>
-                      <TableHead>Usuário</TableHead>
-                      <TableHead>Ação</TableHead>
-                      <TableHead>Detalhes</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {auditLogs.map((log) => (
-                      <TableRow key={log.id}>
-                        <TableCell>
-                          <div className="font-medium">
-                            {formatDistanceToNow(new Date(log.created_at), {
-                              addSuffix: true,
-                              locale: ptBR
-                            })}
-                          </div>
-                          <div className="text-xs text-muted-foreground">
-                            {new Date(log.created_at).toLocaleString()}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div>{log.profiles?.name || "Usuário desconhecido"}</div>
-                          <div className="text-xs text-muted-foreground">
-                            {log.profiles?.email || log.user_id}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          {getActionBadge(log.action)}
-                        </TableCell>
-                        <TableCell>
-                          <div>
-                            {log.details?.role_name && (
-                              <span>
-                                Papel: <strong>{log.details.role_name}</strong>
-                              </span>
-                            )}
-                          </div>
-                          <div className="text-xs text-muted-foreground">
-                            {log.details?.permission_name && (
-                              <span>
-                                Permissão: {log.details.permission_name}
-                              </span>
-                            )}
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+    <div className="flex flex-col gap-6">
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">Log de Auditoria de Permissões</h1>
+        <p className="text-muted-foreground">
+          Acompanhe todas as alterações feitas em papéis e permissões do sistema
+        </p>
       </div>
-    </>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Histórico de Alterações</CardTitle>
+          <CardDescription>
+            Os 100 registros mais recentes de alterações em permissões e papéis
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <div className="flex justify-center py-8">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <span className="ml-2">Carregando logs de auditoria...</span>
+            </div>
+          ) : error ? (
+            <div className="bg-red-50 border border-red-200 rounded-md p-4 text-red-800">
+              <p>Ocorreu um erro ao carregar os logs de auditoria.</p>
+              <p className="text-sm mt-1">{error}</p>
+            </div>
+          ) : auditLogs.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              Nenhum registro de auditoria encontrado.
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Data e Hora</TableHead>
+                    <TableHead>Usuário</TableHead>
+                    <TableHead>Ação</TableHead>
+                    <TableHead>Detalhes</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {auditLogs.map((log) => (
+                    <TableRow key={log.id}>
+                      <TableCell>
+                        <div className="font-medium">
+                          {formatDistanceToNow(new Date(log.created_at), {
+                            addSuffix: true,
+                            locale: ptBR
+                          })}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          {new Date(log.created_at).toLocaleString()}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div>{log.profiles?.name || "Usuário desconhecido"}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {log.profiles?.email || log.user_id}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        {getActionBadge(log.action)}
+                      </TableCell>
+                      <TableCell>
+                        <div>
+                          {log.details?.role_name && (
+                            <span>
+                              Papel: <strong>{log.details.role_name}</strong>
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          {log.details?.permission_name && (
+                            <span>
+                              Permissão: {log.details.permission_name}
+                            </span>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 }
