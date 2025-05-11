@@ -18,7 +18,7 @@ import {
   processRecentImplementations
 } from './processors/dataProcessors';
 
-export { ImplementationData } from './types/implementationTypes';
+export type { ImplementationData } from './types/implementationTypes';
 
 export const useImplementationsAnalyticsData = (timeRangeStr: string) => {
   const { log, logWarning } = useLogging();
