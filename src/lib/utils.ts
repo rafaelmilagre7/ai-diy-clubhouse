@@ -1,4 +1,3 @@
-
 import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
  
@@ -47,4 +46,45 @@ export function slugify(text: string, addTimestamp = true): string {
   }
   
   return slug;
+}
+
+/**
+ * Formata uma data como uma string relativa (hoje, ontem, há X dias, etc.)
+ * @param dateString Data em formato string para formatar
+ * @returns String formatada com a data relativa
+ */
+export function formatRelativeDate(dateString: string): string {
+  const date = new Date(dateString);
+  const now = new Date();
+  
+  // Verificar se é hoje
+  if (date.toDateString() === now.toDateString()) {
+    return "Hoje";
+  }
+  
+  // Verifica se é ontem
+  const yesterday = new Date(now);
+  yesterday.setDate(now.getDate() - 1);
+  if (date.toDateString() === yesterday.toDateString()) {
+    return "Ontem";
+  }
+  
+  // Calcular diferença em dias
+  const diffTime = Math.abs(now.getTime() - date.getTime());
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  
+  // Formatar baseado na diferença
+  if (diffDays < 7) {
+    return `${diffDays} dias atrás`;
+  } else if (diffDays < 30) {
+    const weeks = Math.floor(diffDays / 7);
+    return `${weeks} ${weeks === 1 ? 'semana' : 'semanas'} atrás`;
+  } else {
+    // Formatar como data local para datas mais antigas
+    return date.toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: '2-digit'
+    });
+  }
 }

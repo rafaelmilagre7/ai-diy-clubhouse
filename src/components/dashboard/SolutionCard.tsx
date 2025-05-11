@@ -18,26 +18,34 @@ export const SolutionCard = ({ solution, onClick }: SolutionCardProps) => {
     onClick();
   };
 
-  // Classes de gradiente baseadas na categoria
-  const categoryGradient = {
-    revenue: "from-revenue-lighter to-white border-l-4 border-l-revenue",
-    operational: "from-operational-lighter to-white border-l-4 border-l-operational",
-    strategy: "from-strategy-lighter to-white border-l-4 border-l-strategy"
+  // Definir classes específicas baseadas na categoria
+  const categoryStyles = {
+    revenue: "from-revenue-lighter to-white/95 border-l-4 border-l-revenue",
+    operational: "from-operational-lighter to-white/95 border-l-4 border-l-operational",
+    strategy: "from-strategy-lighter to-white/95 border-l-4 border-l-strategy"
+  };
+
+  // Aplicar animação de entrada com delay baseado na posição
+  // Isso será processado pelo CSS na classe animate-fade-in definida em utilities.css
+  const getAnimationDelay = () => {
+    const randomDelay = Math.floor(Math.random() * 5) * 100; // 0, 100, 200, 300, 400ms
+    return { '--delay': randomDelay } as React.CSSProperties;
   };
 
   return (
     <Card 
       className={cn(
-        "overflow-hidden rounded-xl shadow-md transition-all duration-300 cursor-pointer depth-effect",
+        "overflow-hidden rounded-xl shadow-md transition-all duration-300 cursor-pointer",
         "hover:shadow-xl hover:translate-y-[-4px]",
-        "bg-gradient-to-br",
-        categoryGradient[solution.category as keyof typeof categoryGradient]
+        "bg-gradient-to-br stat-item-enter",
+        categoryStyles[solution.category as keyof typeof categoryStyles] || "from-gray-100 to-white"
       )}
+      style={getAnimationDelay()}
       onClick={handleSelect}
     >
       <CardContent className="p-0 relative">
         <CardThumbnail thumbnailUrl={solution.thumbnail_url} />
-        <div className="p-4 space-y-2">
+        <div className="p-4 space-y-3">
           <CardHeader 
             category={solution.category} 
             difficulty={solution.difficulty} 

@@ -1,45 +1,40 @@
 
+import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
 interface DifficultyBadgeProps {
   difficulty: string;
 }
 
-export const DifficultyBadge = ({ difficulty }: DifficultyBadgeProps) => {
-  const getColor = () => {
-    switch (difficulty) {
-      case "easy":
-        return "bg-gradient-to-r from-green-100 to-green-50 text-green-800 border-green-200";
-      case "medium":
-        return "bg-gradient-to-r from-yellow-100 to-yellow-50 text-yellow-800 border-yellow-200";
+export const DifficultyBadge: React.FC<DifficultyBadgeProps> = ({ difficulty }) => {
+  const getLevelInfo = (level: string) => {
+    switch (level?.toLowerCase()) {
+      case "beginner":
+      case "iniciante":
+        return { label: "Iniciante", color: "bg-green-100 text-green-700 border-green-200" };
+      case "intermediate":
+      case "intermediário":
+        return { label: "Intermediário", color: "bg-amber-100 text-amber-700 border-amber-200" };
       case "advanced":
-        return "bg-gradient-to-r from-orange-100 to-orange-50 text-orange-800 border-orange-200";
+      case "avançado":
+        return { label: "Avançado", color: "bg-red-100 text-red-700 border-red-200" };
       default:
-        return "bg-gradient-to-r from-gray-100 to-gray-50 text-gray-800 border-gray-200";
+        return { label: level || "N/A", color: "bg-gray-100 text-gray-700 border-gray-200" };
     }
   };
 
-  const getLabel = () => {
-    switch (difficulty) {
-      case "easy":
-        return "Fácil";
-      case "medium":
-        return "Normal";
-      case "advanced":
-        return "Avançado";
-      default:
-        return difficulty;
-    }
-  };
+  const { label, color } = getLevelInfo(difficulty);
 
   return (
-    <span
+    <Badge
+      variant="outline"
       className={cn(
-        "inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border shadow-sm animate-scale-in",
-        getColor()
+        "text-xs rounded-full px-2 border",
+        "transition-all duration-300 hover:scale-105",
+        color
       )}
     >
-      {getLabel()}
-    </span>
+      {label}
+    </Badge>
   );
 };
