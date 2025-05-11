@@ -56,7 +56,6 @@ export const LogoUpload = ({ form }: LogoUploadProps) => {
       name="logo_url"
       render={({ field }) => (
         <FormItem>
-          <FormLabel>Logo da Ferramenta</FormLabel>
           <div className="space-y-4">
             {logoUrl && (
               <div className="flex items-center gap-4">
