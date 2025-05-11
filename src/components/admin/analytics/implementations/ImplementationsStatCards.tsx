@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowUp, ArrowDown, CheckCircle2, Clock, FileChart } from 'lucide-react';
+import { ArrowUp, ArrowDown, CheckCircle2, Clock, FileText } from 'lucide-react';
 import { ImplementationData } from '@/hooks/analytics/implementations/useImplementationsAnalyticsData';
 
 interface ImplementationsStatCardsProps {
@@ -48,7 +48,7 @@ export const ImplementationsStatCards: React.FC<ImplementationsStatCardsProps> =
             {stats.totalImplementations}
           </CardTitle>
           <CardDescription className="flex items-center gap-1">
-            <FileChart className="h-4 w-4 text-muted-foreground" />
+            <FileText className="h-4 w-4 text-muted-foreground" />
             <span>Total de implementações</span>
           </CardDescription>
         </CardHeader>

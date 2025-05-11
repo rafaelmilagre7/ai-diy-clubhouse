@@ -48,15 +48,14 @@ export const useImplementationsAnalyticsData = (timeRangeStr: string) => {
         // 1. Buscar dados sobre conclusões
         let completionQuery = supabase
           .from('progress')
-          .select('is_completed, count');
+          .select('is_completed');
 
         if (startDate) {
           completionQuery = completionQuery.gte('created_at', startDate);
         }
 
-        const { data: completionData, error: completionError } = await completionQuery
-          .select('is_completed')
-          .count();
+        // Executando a consulta e contando resultados
+        const { data: completionData, error: completionError } = await completionQuery;
 
         if (completionError) {
           logWarning('Erro ao buscar dados de conclusão', { 
@@ -174,12 +173,13 @@ export const useImplementationsAnalyticsData = (timeRangeStr: string) => {
         }
 
         // Processar dados de conclusão
-        const completed = completionData?.filter(item => item.is_completed)?.length || 0;
-        const inProgress = completionData?.filter(item => !item.is_completed)?.length || 0;
+        const completedCount = completionData?.filter(item => item.is_completed)?.length || 0;
+        const inProgressCount = completionData?.filter(item => !item.is_completed)?.length || 0;
 
         // Processar dados por dificuldade
         const difficultyMap: Record<string, number> = {};
         difficultyData?.forEach(item => {
+          // Verificar se solutions existe e possui a propriedade difficulty
           const difficulty = item.solutions?.difficulty || 'Desconhecido';
           if (!difficultyMap[difficulty]) {
             difficultyMap[difficulty] = 0;
@@ -202,10 +202,12 @@ export const useImplementationsAnalyticsData = (timeRangeStr: string) => {
             const daysToComplete = (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24);
             
             if (!solutionCompletionTimes[item.solution_id]) {
+              // Verificar se solutions existe e possui a propriedade title
+              const title = item.solutions?.title || 'Solução desconhecida';
               solutionCompletionTimes[item.solution_id] = { 
                 totalDays: 0, 
                 count: 0, 
-                title: item.solutions.title 
+                title
               };
             }
             
@@ -224,6 +226,11 @@ export const useImplementationsAnalyticsData = (timeRangeStr: string) => {
         // Processar dados de abandono por módulo
         // Para cada módulo, calculamos a taxa de abandono com base nas implementações
         const abandonmentByModule = moduleData?.map(module => {
+          const moduleTitle = module.title || 'Módulo sem título';
+
+          // Garantir que temos acesso ao solution_id
+          if (!module.solution_id) return null;
+          
           const totalStarts = recentData?.filter(item => 
             item.solution_id === module.solution_id && 
             item.current_module >= module.module_order
@@ -231,7 +238,7 @@ export const useImplementationsAnalyticsData = (timeRangeStr: string) => {
           
           const totalCompletions = recentData?.filter(item => 
             item.solution_id === module.solution_id && 
-            (item.completed_modules?.includes(module.module_order) || item.is_completed)
+            ((item.completed_modules && item.completed_modules.includes(module.module_order)) || item.is_completed)
           ).length || 0;
           
           let abandonmentRate = 0;
@@ -241,29 +248,35 @@ export const useImplementationsAnalyticsData = (timeRangeStr: string) => {
           
           return {
             moduleOrder: module.module_order,
-            moduleTitle: module.title,
+            moduleTitle,
             abandonmentRate,
             totalStarts
           };
-        }).sort((a, b) => b.abandonmentRate - a.abandonmentRate).slice(0, 10); // Top 10 módulos com maior taxa de abandono
+        })
+        .filter(Boolean) // Remover itens nulos
+        .sort((a, b) => b!.abandonmentRate - a!.abandonmentRate)
+        .slice(0, 10); // Top 10 módulos com maior taxa de abandono
         
         // Processar implementações recentes
         const recentImplementations = recentData?.map(item => {
+          // Verificar se solutions e profiles existem e possuem as propriedades necessárias
+          const solutionTitle = item.solutions?.title || 'Solução desconhecida';
+          const userName = item.profiles?.name || 'Usuário desconhecido';
+          
           // Calcular percentual completo com base nos módulos completados
           let percentComplete = 0;
           if (item.is_completed) {
             percentComplete = 100;
           } else if (item.completed_modules && item.completed_modules.length > 0) {
             // Se não foi possível determinar o total de módulos, assumir que current_module é o último
-            // Uma alternativa seria fazer outra consulta para obter o total de módulos por solução
             const totalModules = item.current_module + 1;
             percentComplete = Math.round((item.completed_modules.length / totalModules) * 100);
           }
           
           return {
             id: item.id,
-            solutionTitle: item.solutions.title,
-            userName: item.profiles.name,
+            solutionTitle,
+            userName,
             status: item.is_completed ? 'Concluído' : 'Em andamento',
             lastActivity: new Date(item.last_activity).toLocaleDateString('pt-BR'),
             percentComplete
@@ -272,12 +285,12 @@ export const useImplementationsAnalyticsData = (timeRangeStr: string) => {
         
         return {
           completionRate: {
-            completed,
-            inProgress
+            completed: completedCount,
+            inProgress: inProgressCount
           },
           implementationsByDifficulty,
           averageCompletionTime,
-          abandonmentByModule,
+          abandonmentByModule: abandonmentByModule as ImplementationData['abandonmentByModule'],
           recentImplementations
         };
 
