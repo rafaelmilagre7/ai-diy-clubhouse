@@ -14,19 +14,85 @@ const InvitePage = () => {
   const [token, setToken] = useState<string>(tokenFromUrl || '');
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [inviteInfo, setInviteInfo] = useState<{ email?: string; role_id?: string } | null>(null);
   const navigate = useNavigate();
   const { user } = useAuth();
 
   useEffect(() => {
-    // Se tiver um token na URL e o usuário estiver autenticado, processar automaticamente
-    if (tokenFromUrl && user) {
-      processInvite(tokenFromUrl);
+    if (tokenFromUrl) {
+      // Se tiver um token na URL, vamos verificar o convite
+      verifyInvite(tokenFromUrl);
     }
-  }, [tokenFromUrl, user]);
-
+  }, [tokenFromUrl]);
+  
+  // Função para normalizar o token (remover espaços, etc.)
   const normalizeToken = (inputToken: string): string => {
-    // Remover espaços, converter para maiúsculas e limpar caracteres especiais
     return inputToken.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+  };
+  
+  // Função para verificar o convite antes de processá-lo
+  const verifyInvite = async (inviteToken: string) => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const normalizedToken = normalizeToken(inviteToken);
+      if (!normalizedToken) {
+        throw new Error('Token de convite inválido');
+      }
+      
+      // Verificar se o convite existe e está válido
+      const { data, error } = await supabase
+        .from('invites')
+        .select('email, role_id, used_at, expires_at')
+        .eq('token', normalizedToken)
+        .single();
+        
+      if (error) {
+        console.error("Erro ao verificar convite:", error);
+        throw new Error('Token não encontrado ou inválido');
+      }
+      
+      if (data.used_at) {
+        throw new Error('Este convite já foi utilizado');
+      }
+      
+      if (new Date(data.expires_at) < new Date()) {
+        throw new Error('Este convite expirou');
+      }
+      
+      // Armazenar os dados do convite
+      setInviteInfo({
+        email: data.email,
+        role_id: data.role_id
+      });
+      
+      // Verificar se o usuário já está logado
+      if (user) {
+        // Se estiver logado, processar o convite
+        await processInvite(normalizedToken);
+      } else {
+        // Se não estiver logado, verificar se o usuário já existe
+        const { data: userData, error: userError } = await supabase.auth.admin.getUserByEmail(data.email);
+        
+        if (userError) {
+          console.log("Erro ou usuário não encontrado:", userError);
+          // Redirecionar para página de registro com os dados do convite
+          navigate(`/register?token=${normalizedToken}&email=${encodeURIComponent(data.email)}`);
+        } else {
+          // Usuário existe, mostrar mensagem para fazer login
+          toast.info("Você já possui uma conta", {
+            description: "Por favor, faça login para aceitar o convite"
+          });
+          navigate(`/login?token=${normalizedToken}&email=${encodeURIComponent(data.email)}`);
+        }
+      }
+    } catch (err: any) {
+      console.error("Erro ao verificar convite:", err);
+      setError(err.message || 'Erro ao verificar convite');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const processInvite = async (inviteToken: string) => {
@@ -69,7 +135,7 @@ const InvitePage = () => {
       });
 
       // Redirecionar para a página principal após sucesso
-      setTimeout(() => navigate('/'), 2000);
+      setTimeout(() => navigate('/dashboard'), 2000);
 
     } catch (err: any) {
       console.error('Erro ao processar convite:', err);
@@ -84,7 +150,7 @@ const InvitePage = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    processInvite(token);
+    verifyInvite(token);
   };
 
   return (
@@ -94,7 +160,7 @@ const InvitePage = () => {
           <CardTitle className="text-2xl">Aceitar Convite</CardTitle>
           <CardDescription>
             {tokenFromUrl 
-              ? 'Processando seu convite...' 
+              ? 'Verificando seu convite...' 
               : 'Insira o código do convite que você recebeu por e-mail'}
           </CardDescription>
         </CardHeader>
@@ -122,10 +188,10 @@ const InvitePage = () => {
                   {loading ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Processando...
+                      Verificando...
                     </>
                   ) : (
-                    'Aceitar Convite'
+                    'Verificar Convite'
                   )}
                 </Button>
               </div>
@@ -136,7 +202,10 @@ const InvitePage = () => {
             <div className="flex flex-col items-center space-y-4">
               <div className="flex items-center justify-center">
                 {loading ? (
-                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  <div className="text-center space-y-4">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
+                    <p className="text-muted-foreground">Verificando convite...</p>
+                  </div>
                 ) : error ? (
                   <div className="text-center">
                     <p className="text-destructive mb-4">{error}</p>
@@ -157,26 +226,31 @@ const InvitePage = () => {
                       </div>
                     </form>
                   </div>
-                ) : (
-                  <p className="text-green-600">
-                    Convite processado com sucesso!
-                  </p>
-                )}
+                ) : null}
               </div>
             </div>
           )}
 
-          {!user && (
+          {!user && !loading && !error && (
             <div className="mt-6 text-center">
               <p className="text-muted-foreground text-sm mb-2">
                 Você precisa estar logado para aceitar um convite.
               </p>
-              <Button 
-                variant="outline" 
-                onClick={() => navigate('/login')}
-              >
-                Fazer Login
-              </Button>
+              <div className="space-y-2">
+                <Button 
+                  onClick={() => navigate('/login')}
+                  className="w-full"
+                >
+                  Fazer Login
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => navigate('/register')}
+                  className="w-full"
+                >
+                  Criar Conta
+                </Button>
+              </div>
             </div>
           )}
         </CardContent>

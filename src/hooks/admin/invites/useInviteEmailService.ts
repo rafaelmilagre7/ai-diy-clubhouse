@@ -42,6 +42,12 @@ export function useInviteEmailService() {
         roleName
       });
       
+      // Verificar se o usuário já está cadastrado
+      const { data: existingUser, error: userCheckError } = await supabase.auth.admin.getUserByEmail(email);
+      
+      let emailType = existingUser ? 'existing_user' : 'new_user';
+      console.log(`Tipo de destinatário: ${emailType} para ${email}`);
+      
       // Chamar a edge function para envio de email
       const { data, error } = await supabase.functions.invoke('send-invite-email', {
         body: {
@@ -51,7 +57,8 @@ export function useInviteEmailService() {
           expiresAt,
           senderName,
           notes,
-          inviteId // Passar o ID do convite para atualizar estatísticas
+          inviteId,
+          userType: emailType // Informa se é um usuário novo ou existente
         }
       });
       

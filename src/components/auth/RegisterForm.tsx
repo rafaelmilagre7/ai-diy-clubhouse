@@ -1,5 +1,6 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,6 +16,21 @@ const RegisterForm = () => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [inviteToken, setInviteToken] = useState<string | null>(null);
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Verificar se há parâmetros de convite na URL
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const token = params.get('token');
+    const emailParam = params.get('email');
+    
+    if (token) setInviteToken(token);
+    if (emailParam) {
+      setEmail(emailParam);
+    }
+  }, [location]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,10 +74,49 @@ const RegisterForm = () => {
       
       if (error) throw error;
       
-      toast({
-        title: "Cadastro realizado",
-        description: "Sua conta foi criada com sucesso!",
-      });
+      // Aguardar um pouco para garantir que o perfil do usuário foi criado
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Se temos um token de convite, processar após o registro
+      if (inviteToken && data.user) {
+        try {
+          toast({
+            title: "Processando convite...",
+            description: "Estamos atualizando seus acessos."
+          });
+          
+          const { data: inviteData, error: inviteError } = await supabase.rpc('use_invite', {
+            invite_token: inviteToken,
+            user_id: data.user.id
+          });
+          
+          if (inviteError) {
+            console.error("Erro ao processar convite:", inviteError);
+            toast({
+              title: "Cadastro realizado",
+              description: "Sua conta foi criada, mas houve um erro ao processar seu convite. Entre em contato com o administrador.",
+              variant: "warning"
+            });
+          } else if (inviteData.status === 'success') {
+            toast({
+              title: "Sucesso!",
+              description: "Sua conta foi criada e o convite foi aceito com sucesso!",
+            });
+          }
+        } catch (inviteErr) {
+          console.error("Erro ao processar convite após registro:", inviteErr);
+        }
+      } else {
+        toast({
+          title: "Cadastro realizado",
+          description: "Sua conta foi criada com sucesso!",
+        });
+      }
+      
+      // Redirecionar para a dashboard ou página inicial
+      setTimeout(() => {
+        navigate('/dashboard');
+      }, 2000);
       
     } catch (error: any) {
       console.error("Erro ao criar conta:", error);
@@ -78,12 +133,20 @@ const RegisterForm = () => {
   const handleGoogleSignIn = async () => {
     try {
       setIsLoading(true);
+
+      // Se temos um token de convite, incluí-lo nos parâmetros de redirecionamento
+      let redirectOptions = {};
+      
+      if (inviteToken) {
+        // Incluir token no estado de redirecionamento
+        redirectOptions = {
+          redirectTo: `${window.location.origin}/auth?token=${inviteToken}`
+        };
+      }
       
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/auth`,
-        },
+        options: redirectOptions
       });
       
       if (error) throw error;
@@ -137,8 +200,14 @@ const RegisterForm = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="pl-10 bg-gray-800 border-gray-700 text-white"
+              disabled={!!inviteToken && email.length > 0} // Desabilitar se vier de um convite
             />
           </div>
+          {inviteToken && email && (
+            <p className="text-sm text-muted-foreground">
+              Este email foi informado no convite e não pode ser alterado.
+            </p>
+          )}
         </div>
 
         <div className="space-y-2">
@@ -178,6 +247,12 @@ const RegisterForm = () => {
         >
           {isLoading ? "Criando conta..." : "Criar conta"}
         </Button>
+        
+        {inviteToken && (
+          <p className="text-sm text-center text-muted-foreground">
+            Você está se cadastrando através de um convite. Seu acesso será configurado automaticamente.
+          </p>
+        )}
       </form>
 
       <Divider />

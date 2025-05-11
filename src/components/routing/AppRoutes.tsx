@@ -40,10 +40,28 @@ const AppRoutes = () => {
         <Route key={route.path} path={route.path} element={route.element} />
       ))}
       
+      {/* Autenticação com parâmetros de convite */}
+      <Route path="/auth" element={<AuthRedirect />} />
+      
       {/* Fallback route */}
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
+};
+
+// Componente para processar redirecionamentos após autenticação
+const AuthRedirect = () => {
+  const location = window.location;
+  const params = new URLSearchParams(location.search);
+  const token = params.get('token');
+  
+  if (token) {
+    // Se temos um token de convite, redirecionar para a página de convite
+    return <Navigate to={`/convite/${token}`} replace />;
+  }
+  
+  // Caso contrário, redirecionar para a dashboard
+  return <Navigate to="/dashboard" replace />;
 };
 
 export default AppRoutes;
