@@ -73,10 +73,14 @@ const InvitePage = () => {
         await processInvite(normalizedToken);
       } else {
         // Se não estiver logado, verificar se o usuário já existe
-        const { data: userData, error: userError } = await supabase.auth.admin.getUserByEmail(data.email);
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('email', data.email)
+          .maybeSingle();
         
-        if (userError) {
-          console.log("Erro ou usuário não encontrado:", userError);
+        if (!profileData) {
+          console.log("Usuário não encontrado, redirecionando para registro");
           // Redirecionar para página de registro com os dados do convite
           navigate(`/register?token=${normalizedToken}&email=${encodeURIComponent(data.email)}`);
         } else {

@@ -42,10 +42,14 @@ export function useInviteEmailService() {
         roleName
       });
       
-      // Verificar se o usuário já está cadastrado
-      const { data: existingUser, error: userCheckError } = await supabase.auth.admin.getUserByEmail(email);
+      // Verificar se o usuário já está cadastrado consultando a tabela de perfis
+      const { data: existingProfile, error: profileCheckError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('email', email)
+        .single();
       
-      let emailType = existingUser ? 'existing_user' : 'new_user';
+      let emailType = existingProfile ? 'existing_user' : 'new_user';
       console.log(`Tipo de destinatário: ${emailType} para ${email}`);
       
       // Chamar a edge function para envio de email

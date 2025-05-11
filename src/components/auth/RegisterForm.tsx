@@ -95,7 +95,7 @@ const RegisterForm = () => {
             toast({
               title: "Cadastro realizado",
               description: "Sua conta foi criada, mas houve um erro ao processar seu convite. Entre em contato com o administrador.",
-              variant: "warning"
+              variant: "default"
             });
           } else if (inviteData.status === 'success') {
             toast({
