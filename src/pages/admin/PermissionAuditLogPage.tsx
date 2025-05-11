@@ -25,20 +25,27 @@ import { toast } from "sonner";
 
 interface AuditLog {
   id: string;
-  action: string;
-  entity_type: string;
-  entity_id: string;
+  action_type: string;
   user_id: string;
-  details: any;
+  target_user_id: string | null;
+  role_id: string | null;
+  role_name: string | null;
+  permission_id: string | null;
+  permission_code: string | null;
+  old_value: string | null;
+  new_value: string | null;
   created_at: string;
   profiles?: {
+    name: string;
+    email: string;
+  };
+  target_profile?: {
     name: string;
     email: string;
   };
 }
 
 export default function PermissionAuditLogPage() {
-  // Substituindo o Helmet pelo hook useDocumentTitle
   useDocumentTitle("Log de Auditoria de Permissões | Admin");
   
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
@@ -54,9 +61,12 @@ export default function PermissionAuditLogPage() {
       setIsLoading(true);
       
       const { data, error } = await supabase
-        .from("audit_logs")
-        .select("*, profiles(name, email)")
-        .eq("entity_type", "role_permission")
+        .from("permission_audit_logs")
+        .select(`
+          *,
+          profiles:user_id(name, email),
+          target_profile:target_user_id(name, email)
+        `)
         .order("created_at", { ascending: false })
         .limit(100);
 
@@ -75,11 +85,74 @@ export default function PermissionAuditLogPage() {
   const getActionBadge = (action: string) => {
     switch (action) {
       case "create":
+      case "assign_permission":
         return <Badge variant="outline" className="bg-green-100 text-green-800 border-green-200">Adicionada</Badge>;
       case "delete":
+      case "remove_permission":
         return <Badge variant="outline" className="bg-red-100 text-red-800 border-red-200">Removida</Badge>;
+      case "assign_role":
+        return <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-200">Papel Atribuído</Badge>;
+      case "use_invite":
+        return <Badge variant="outline" className="bg-purple-100 text-purple-800 border-purple-200">Convite Utilizado</Badge>;
       default:
         return <Badge variant="outline">{action}</Badge>;
+    }
+  };
+
+  const formatActionDetails = (log: AuditLog) => {
+    switch (log.action_type) {
+      case "assign_permission":
+      case "remove_permission":
+        return (
+          <>
+            <div>
+              {log.role_name && (
+                <span>
+                  Papel: <strong>{log.role_name}</strong>
+                </span>
+              )}
+            </div>
+            <div className="text-xs text-muted-foreground">
+              {log.permission_code && (
+                <span>
+                  Permissão: {log.permission_code}
+                </span>
+              )}
+            </div>
+          </>
+        );
+      
+      case "assign_role":
+      case "use_invite":
+        return (
+          <>
+            <div>
+              {log.role_name && (
+                <span>
+                  Papel: <strong>{log.role_name}</strong>
+                </span>
+              )}
+              {!log.role_name && log.role_id && (
+                <span>
+                  Papel ID: <strong>{log.role_id}</strong>
+                </span>
+              )}
+            </div>
+            {log.target_user_id && (
+              <div className="text-xs text-muted-foreground">
+                Atribuído a: {log.target_profile?.name || log.target_user_id}
+              </div>
+            )}
+          </>
+        );
+        
+      default:
+        return (
+          <div className="text-xs text-muted-foreground">
+            {log.old_value && <div>Valor anterior: {log.old_value}</div>}
+            {log.new_value && <div>Novo valor: {log.new_value}</div>}
+          </div>
+        );
     }
   };
 
@@ -101,9 +174,9 @@ export default function PermissionAuditLogPage() {
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <div className="flex justify-center py-8">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              <span className="ml-2">Carregando logs de auditoria...</span>
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-8 w-8 animate-spin text-primary mr-2" />
+              <span>Carregando logs de auditoria...</span>
             </div>
           ) : error ? (
             <div className="bg-red-50 border border-red-200 rounded-md p-4 text-red-800">
@@ -146,23 +219,10 @@ export default function PermissionAuditLogPage() {
                         </div>
                       </TableCell>
                       <TableCell>
-                        {getActionBadge(log.action)}
+                        {getActionBadge(log.action_type)}
                       </TableCell>
                       <TableCell>
-                        <div>
-                          {log.details?.role_name && (
-                            <span>
-                              Papel: <strong>{log.details.role_name}</strong>
-                            </span>
-                          )}
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          {log.details?.permission_name && (
-                            <span>
-                              Permissão: {log.details.permission_name}
-                            </span>
-                          )}
-                        </div>
+                        {formatActionDetails(log)}
                       </TableCell>
                     </TableRow>
                   ))}
