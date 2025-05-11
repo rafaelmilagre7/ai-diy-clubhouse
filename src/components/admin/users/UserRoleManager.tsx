@@ -35,7 +35,8 @@ export function UserRoleManager({
           roleId: result.roleId,
           roleName: result.roleName
         });
-        setSelectedRoleId(result.roleId ? String(result.roleId) : "");
+        // Garantir que role.id seja convertido para string e que nunca seja null/undefined
+        setSelectedRoleId(result.roleId !== null && result.roleId !== undefined ? String(result.roleId) : "");
       };
       fetchUserRole();
     }
