@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -6,6 +7,7 @@ import { Tool } from '@/types/toolTypes';
 import { Gift, Copy, ExternalLink, Check } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
+import { BenefitAccessDenied } from './BenefitAccessDenied';
 
 interface MemberBenefitModalProps {
   tool: Tool;
@@ -34,6 +36,8 @@ export const MemberBenefitModal = ({
   };
 
   const promoCode = extractPromoCode();
+  const hasAccessRestriction = tool.is_access_restricted === true;
+  const hasAccess = tool.has_access !== false;
 
   const handleCopyCode = () => {
     if (promoCode) {
@@ -67,70 +71,79 @@ export const MemberBenefitModal = ({
       </DialogTrigger>
       
       <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <div className="flex items-center gap-2 mb-1">
-            <Badge className="bg-[#10b981]">Benefício Exclusivo</Badge>
-          </div>
-          <DialogTitle className="text-xl">
-            {tool.benefit_title}
-          </DialogTitle>
-          <DialogDescription>
-            Oferta exclusiva para membros do VIVER DE IA Club
-          </DialogDescription>
-        </DialogHeader>
-        
-        <div className="flex flex-col items-center py-4">
-          {tool.benefit_badge_url ? (
-            <img 
-              src={tool.benefit_badge_url} 
-              alt="Badge" 
-              className="w-24 h-24 object-contain mb-4" 
-            />
-          ) : (
-            <div className="w-20 h-20 rounded-full bg-[#10b981]/10 flex items-center justify-center mb-4">
-              <Gift className="h-10 w-10 text-[#10b981]" />
+        {hasAccessRestriction && !hasAccess ? (
+          <BenefitAccessDenied 
+            tool={tool} 
+            onClose={() => setOpen(false)} 
+          />
+        ) : (
+          <>
+            <DialogHeader>
+              <div className="flex items-center gap-2 mb-1">
+                <Badge className="bg-[#10b981]">Benefício Exclusivo</Badge>
+              </div>
+              <DialogTitle className="text-xl">
+                {tool.benefit_title}
+              </DialogTitle>
+              <DialogDescription>
+                Oferta exclusiva para membros do VIVER DE IA Club
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="flex flex-col items-center py-4">
+              {tool.benefit_badge_url ? (
+                <img 
+                  src={tool.benefit_badge_url} 
+                  alt="Badge" 
+                  className="w-24 h-24 object-contain mb-4" 
+                />
+              ) : (
+                <div className="w-20 h-20 rounded-full bg-[#10b981]/10 flex items-center justify-center mb-4">
+                  <Gift className="h-10 w-10 text-[#10b981]" />
+                </div>
+              )}
+              
+              <div className="prose max-w-full w-full">
+                <p className="text-center whitespace-pre-line">
+                  {tool.benefit_description}
+                </p>
+              </div>
+              
+              {promoCode && (
+                <div className="mt-4 p-3 bg-gray-100 rounded-md flex items-center justify-between w-full">
+                  <code className="font-mono font-bold text-[#10b981]">{promoCode}</code>
+                  <Button 
+                    size="sm" 
+                    variant="ghost" 
+                    onClick={handleCopyCode}
+                    className="text-[#10b981]"
+                  >
+                    {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                  </Button>
+                </div>
+              )}
             </div>
-          )}
-          
-          <div className="prose max-w-full w-full">
-            <p className="text-center whitespace-pre-line">
-              {tool.benefit_description}
-            </p>
-          </div>
-          
-          {promoCode && (
-            <div className="mt-4 p-3 bg-gray-100 rounded-md flex items-center justify-between w-full">
-              <code className="font-mono font-bold text-[#10b981]">{promoCode}</code>
-              <Button 
-                size="sm" 
-                variant="ghost" 
-                onClick={handleCopyCode}
-                className="text-[#10b981]"
+            
+            <DialogFooter className="flex flex-col sm:flex-row gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setOpen(false)}
+                className="sm:w-auto flex-1"
               >
-                {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                Fechar
               </Button>
-            </div>
-          )}
-        </div>
-        
-        <DialogFooter className="flex flex-col sm:flex-row gap-2">
-          <Button
-            variant="outline"
-            onClick={() => setOpen(false)}
-            className="sm:w-auto flex-1"
-          >
-            Fechar
-          </Button>
-          
-          <Button 
-            className="bg-[#10b981] hover:bg-[#10b981]/90 sm:w-auto flex-1"
-            onClick={handleAccessBenefit}
-            disabled={isProcessing}
-          >
-            <ExternalLink className="mr-2 h-4 w-4" />
-            Acessar Benefício
-          </Button>
-        </DialogFooter>
+              
+              <Button 
+                className="bg-[#10b981] hover:bg-[#10b981]/90 sm:w-auto flex-1"
+                onClick={handleAccessBenefit}
+                disabled={isProcessing}
+              >
+                <ExternalLink className="mr-2 h-4 w-4" />
+                Acessar Benefício
+              </Button>
+            </DialogFooter>
+          </>
+        )}
       </DialogContent>
     </Dialog>
   );

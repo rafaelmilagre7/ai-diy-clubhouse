@@ -81,6 +81,42 @@ export type Database = {
         }
         Relationships: []
       }
+      benefit_access_control: {
+        Row: {
+          created_at: string
+          id: string
+          role_id: string
+          tool_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role_id: string
+          tool_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role_id?: string
+          tool_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "benefit_access_control_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "user_roles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "benefit_access_control_tool_id_fkey"
+            columns: ["tool_id"]
+            isOneToOne: false
+            referencedRelation: "tools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       benefit_clicks: {
         Row: {
           benefit_link: string
@@ -2972,6 +3008,10 @@ export type Database = {
       }
     }
     Functions: {
+      can_access_benefit: {
+        Args: { user_id: string; tool_id: string }
+        Returns: boolean
+      }
       can_access_course: {
         Args: { user_id: string; course_id: string }
         Returns: boolean

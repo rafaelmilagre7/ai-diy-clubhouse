@@ -9,18 +9,20 @@ import { Input } from '@/components/ui/input';
 import { Search, Gift, AlertCircle } from 'lucide-react';
 import { BenefitBadge } from '@/components/tools/BenefitBadge';
 import { MemberBenefitModal } from '@/components/tools/MemberBenefitModal';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
+import { useAuth } from '@/contexts/auth';
 
 const Benefits = () => {
-  const { toast } = useToast();
+  const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [benefitType, setBenefitType] = useState<string>('all');
 
   // Buscar todas as ferramentas com benefícios
   const { data: tools, isLoading, error } = useQuery({
-    queryKey: ['tools-with-benefits'],
+    queryKey: ['tools-with-benefits', user?.id],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // Buscar ferramentas com benefícios
+      const { data: toolsData, error } = await supabase
         .from('tools')
         .select('*')
         .eq('has_member_benefit', true)
@@ -28,7 +30,50 @@ const Benefits = () => {
         .order('name');
       
       if (error) throw error;
-      return data as Tool[];
+      
+      if (!user) {
+        // Se não estiver autenticado, só retornar os dados sem verificar restrições
+        return toolsData.map(tool => ({ ...tool, is_access_restricted: false, has_access: true }));
+      }
+      
+      // Buscar benefícios com restrições
+      const { data: restrictedBenefits } = await supabase
+        .from('benefit_access_control')
+        .select('tool_id');
+      
+      if (!restrictedBenefits || restrictedBenefits.length === 0) {
+        // Se não houver benefícios restritos, todos têm acesso
+        return toolsData.map(tool => ({ ...tool, is_access_restricted: false, has_access: true }));
+      }
+      
+      // Conjunto de IDs de ferramentas restritas
+      const restrictedIds = new Set(restrictedBenefits.map(rb => rb.tool_id));
+      
+      // Para ferramentas com restrições, verificar acesso
+      const toolsWithAccessInfo = await Promise.all(toolsData.map(async tool => {
+        if (restrictedIds.has(tool.id)) {
+          // Verificar acesso
+          const { data: hasAccess } = await supabase.rpc('can_access_benefit', {
+            user_id: user.id,
+            tool_id: tool.id
+          });
+          
+          return {
+            ...tool,
+            is_access_restricted: true,
+            has_access: hasAccess || false
+          };
+        }
+        
+        // Sem restrições = acesso liberado
+        return {
+          ...tool,
+          is_access_restricted: false,
+          has_access: true
+        };
+      }));
+      
+      return toolsWithAccessInfo as Tool[];
     }
   });
 
@@ -145,8 +190,12 @@ const Benefits = () => {
 
 // Componente de card para cada benefício
 const BenefitCard = ({ tool }: { tool: Tool }) => {
+  // Adicionar indicador visual de acesso restrito
+  const isRestricted = tool.is_access_restricted === true;
+  const hasAccess = tool.has_access !== false;
+  
   return (
-    <Card className="h-full flex flex-col overflow-hidden hover:shadow-md transition-shadow">
+    <Card className={`h-full flex flex-col overflow-hidden hover:shadow-md transition-shadow ${isRestricted && !hasAccess ? 'border-amber-300' : ''}`}>
       <CardHeader className="pb-2 pt-6">
         <div className="flex items-center gap-3 mb-2">
           <div className="h-10 w-10 rounded bg-gray-100 border flex items-center justify-center overflow-hidden">
@@ -164,9 +213,16 @@ const BenefitCard = ({ tool }: { tool: Tool }) => {
           </div>
           <div>
             <CardTitle className="text-lg">{tool.name}</CardTitle>
-            {tool.benefit_type && (
-              <BenefitBadge type={tool.benefit_type} className="mt-1" />
-            )}
+            <div className="flex flex-wrap gap-2">
+              {tool.benefit_type && (
+                <BenefitBadge type={tool.benefit_type} className="mt-1" />
+              )}
+              {isRestricted && !hasAccess && (
+                <Badge variant="outline" className="bg-amber-100 text-amber-700 border-amber-200">
+                  Acesso Restrito
+                </Badge>
+              )}
+            </div>
           </div>
         </div>
         <CardDescription className="line-clamp-2 h-10">
