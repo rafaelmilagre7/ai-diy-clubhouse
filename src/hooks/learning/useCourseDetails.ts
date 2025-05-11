@@ -5,9 +5,29 @@ import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { sortLessonsByNumber } from "@/components/learning/member/course-modules/CourseModulesHelpers";
 import { useNavigate } from "react-router-dom";
+import { useCourseAccess } from "./useCourseAccess";
+import { useAuth } from "@/contexts/auth";
 
 export function useCourseDetails(courseId?: string) {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { checkCourseAccess } = useCourseAccess();
+  const [accessDenied, setAccessDenied] = useState(false);
+  
+  // Verificar acesso ao curso
+  const { 
+    data: hasAccess,
+    isLoading: isCheckingAccess,
+    isError: isAccessError
+  } = useQuery({
+    queryKey: ["learning-course-access", user?.id, courseId],
+    queryFn: async () => {
+      if (!courseId || !user?.id) return true; // Se não tiver curso ou usuário, não tem como verificar
+      const result = await checkCourseAccess(courseId);
+      return result;
+    },
+    enabled: !!user?.id && !!courseId
+  });
   
   // Buscar detalhes do curso
   const { 
@@ -30,7 +50,8 @@ export function useCourseDetails(courseId?: string) {
       }
       
       return data;
-    }
+    },
+    enabled: !!courseId && (hasAccess === true) && !accessDenied
   });
   
   // Buscar módulos do curso
@@ -54,7 +75,7 @@ export function useCourseDetails(courseId?: string) {
       
       return data;
     },
-    enabled: !!course
+    enabled: !!course && (hasAccess === true) && !accessDenied
   });
   
   // Buscar todas as aulas do curso para estatísticas
@@ -81,7 +102,7 @@ export function useCourseDetails(courseId?: string) {
       // Ordenar aulas por número no título
       return sortLessonsByNumber(data || []);
     },
-    enabled: !!modules?.length
+    enabled: !!modules?.length && (hasAccess === true) && !accessDenied
   });
   
   // Buscar progresso do usuário para este curso
@@ -103,23 +124,30 @@ export function useCourseDetails(courseId?: string) {
       
       return data;
     },
-    enabled: !!course
+    enabled: !!course && (hasAccess === true) && !accessDenied
   });
 
   // Verificar erro do curso e redirecionar se necessário
   if (courseError) {
     toast.error("Curso não encontrado ou indisponível");
     navigate("/learning");
-    return { course: null, modules: [], allLessons: [], userProgress: [], isLoading: false };
+    return { course: null, modules: [], allLessons: [], userProgress: [], isLoading: false, accessDenied: false };
+  }
+  
+  // Verificar acesso negado
+  if (hasAccess === false && !accessDenied && !isCheckingAccess) {
+    setAccessDenied(true);
+    toast.error("Você não tem acesso a este curso");
   }
 
-  const isLoading = isLoadingCourse || isLoadingModules || isLoadingLessons;
+  const isLoading = isLoadingCourse || isLoadingModules || isLoadingLessons || isCheckingAccess;
   
   return {
     course,
     modules,
     allLessons,
     userProgress,
-    isLoading
+    isLoading,
+    accessDenied: hasAccess === false || accessDenied
   };
 }

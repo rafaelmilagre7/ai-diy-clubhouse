@@ -8,13 +8,14 @@ import { CourseProgress } from "@/components/learning/member/CourseProgress";
 import { ArrowLeft } from "lucide-react";
 import { useCourseDetails } from "@/hooks/learning/useCourseDetails";
 import { useCourseStats } from "@/hooks/learning/useCourseStats";
+import { AccessDenied } from "@/components/learning/member/AccessDenied";
 
 const CourseDetails = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   
   // Usar nossos hooks customizados
-  const { course, modules, allLessons, userProgress, isLoading } = useCourseDetails(id);
+  const { course, modules, allLessons, userProgress, isLoading, accessDenied } = useCourseDetails(id);
   const { courseStats, firstLessonId, courseProgress } = useCourseStats({ 
     modules, 
     allLessons, 
@@ -27,7 +28,26 @@ const CourseDetails = () => {
     modulesCount: modules?.length || 0,
     allLessonsCount: allLessons?.length || 0,
     firstLessonId,
+    accessDenied
   });
+
+  // Se o acesso foi negado, mostrar o componente específico
+  if (accessDenied) {
+    return (
+      <div className="container pt-6 pb-12">
+        <Button
+          variant="ghost"
+          className="mb-4"
+          onClick={() => navigate("/learning")}
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Voltar para Cursos
+        </Button>
+        
+        <AccessDenied courseId={id} />
+      </div>
+    );
+  }
 
   // Se o curso não foi encontrado, o hook de useCourseDetails já fará o redirecionamento
   if (!id || !course) {

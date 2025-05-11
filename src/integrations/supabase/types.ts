@@ -113,6 +113,42 @@ export type Database = {
           },
         ]
       }
+      course_access_control: {
+        Row: {
+          course_id: string | null
+          created_at: string | null
+          id: string
+          role_id: string | null
+        }
+        Insert: {
+          course_id?: string | null
+          created_at?: string | null
+          id?: string
+          role_id?: string | null
+        }
+        Update: {
+          course_id?: string | null
+          created_at?: string | null
+          id?: string
+          role_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "course_access_control_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "learning_courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "course_access_control_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "user_roles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       events: {
         Row: {
           cover_image_url: string | null
@@ -2936,6 +2972,10 @@ export type Database = {
       }
     }
     Functions: {
+      can_access_course: {
+        Args: { user_id: string; course_id: string }
+        Returns: boolean
+      }
       check_onboarding_data_consistency: {
         Args: { progress_id: string }
         Returns: Json

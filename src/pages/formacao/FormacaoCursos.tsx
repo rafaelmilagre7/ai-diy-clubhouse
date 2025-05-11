@@ -19,6 +19,7 @@ const FormacaoCursos = () => {
   const fetchCursos = async () => {
     setLoading(true);
     try {
+      // Buscar todos os cursos
       const { data, error } = await supabase
         .from('learning_courses')
         .select('*')
@@ -26,7 +27,22 @@ const FormacaoCursos = () => {
       
       if (error) throw error;
       
-      setCursos(data || []);
+      // Para cada curso, verificar se ele tem restrições de acesso
+      const coursesWithRestrictionInfo = await Promise.all(
+        (data || []).map(async (course) => {
+          const { count, error: restrictionError } = await supabase
+            .from('course_access_control')
+            .select('*', { count: 'exact', head: true })
+            .eq('course_id', course.id);
+            
+          return {
+            ...course,
+            is_restricted: count ? count > 0 : false
+          };
+        })
+      );
+      
+      setCursos(coursesWithRestrictionInfo);
     } catch (error) {
       console.error("Erro ao buscar cursos:", error);
       toast.error("Não foi possível carregar os cursos. Tente novamente.");
