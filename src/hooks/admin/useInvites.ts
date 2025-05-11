@@ -113,6 +113,8 @@ export function useInvites() {
         throw new Error(data.message);
       }
       
+      console.log("Convite criado:", data);
+      
       // Enviar email de convite
       const inviteUrl = getInviteLink(data.token);
       const { data: roleData } = await supabase
@@ -130,6 +132,8 @@ export function useInvites() {
         notes,
         inviteId: data.invite_id // Passar o ID do convite para atualizar estatísticas
       });
+      
+      console.log("Resultado do envio:", sendResult);
       
       if (!sendResult.success) {
         toast.warning('Convite criado, mas houve um erro ao enviar o e-mail', {
@@ -200,6 +204,16 @@ export function useInvites() {
     try {
       setIsSending(true);
       
+      console.log("Enviando e-mail com os dados:", {
+        email,
+        inviteUrl,
+        roleName,
+        expiresAt,
+        senderName,
+        notes: notes ? "Presente" : "Ausente",
+        inviteId
+      });
+      
       // Chamar a edge function para envio de email
       const { data, error } = await supabase.functions.invoke('send-invite-email', {
         body: {
@@ -213,10 +227,16 @@ export function useInvites() {
         }
       });
       
-      if (error) throw error;
+      if (error) {
+        console.error("Erro ao chamar a edge function:", error);
+        throw error;
+      }
+      
+      console.log("Resposta da edge function:", data);
       
       if (!data.success) {
-        throw new Error(data.message || 'Erro ao enviar e-mail');
+        console.error("Edge function reportou erro:", data.error || data.message);
+        throw new Error(data.message || data.error || 'Erro ao enviar e-mail');
       }
       
       return {
@@ -288,6 +308,7 @@ export function useInvites() {
 
   // Gerar link de convite
   const getInviteLink = useCallback((token: string) => {
+    // Usar URL absoluta baseada no ambiente atual
     return `${window.location.origin}/convite/${token}`;
   }, []);
 

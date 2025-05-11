@@ -29,6 +29,7 @@ export default function InvitePage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [invite, setInvite] = useState<InviteData | null>(null);
   const [inviteStatus, setInviteStatus] = useState<"valid" | "used" | "expired" | "error" | "success">("valid");
+  const [fetchError, setFetchError] = useState<string | null>(null);
   
   // Formulário de registro
   const [email, setEmail] = useState("");
@@ -41,6 +42,9 @@ export default function InvitePage() {
       
       try {
         setIsLoading(true);
+        setFetchError(null);
+        
+        console.log("Buscando convite com token:", token);
         
         const { data, error } = await supabase
           .from("invites")
@@ -49,9 +53,18 @@ export default function InvitePage() {
           .single();
         
         if (error) {
+          console.error("Erro ao buscar convite:", error);
+          setFetchError(`Erro ao buscar convite: ${error.message || error.code || 'Erro desconhecido'}`);
           throw error;
         }
         
+        if (!data) {
+          console.error("Convite não encontrado para o token:", token);
+          setFetchError(`Convite não encontrado para o token: ${token}`);
+          throw new Error("Convite não encontrado");
+        }
+        
+        console.log("Convite encontrado:", data);
         setInvite(data);
         
         // Verificar status do convite
@@ -192,6 +205,10 @@ export default function InvitePage() {
               src="https://milagredigital.com/wp-content/uploads/2025/04/viverdeiaclub.avif" 
               alt="VIVER DE IA Club" 
               className="h-12 w-auto" 
+              onError={(e) => {
+                const target = e.target as HTMLImageElement;
+                target.src = "https://placehold.co/200x80?text=VIVER+DE+IA+Club";
+              }}
             />
           </div>
           <CardTitle className="text-2xl">
@@ -212,6 +229,14 @@ export default function InvitePage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {/* Exibir erro de depuração se houver */}
+          {fetchError && (
+            <div className="bg-red-50 border border-red-200 text-red-800 p-3 rounded-md mb-4 text-xs overflow-auto">
+              <p className="font-semibold">Erro de depuração:</p>
+              <p className="font-mono">{fetchError}</p>
+            </div>
+          )}
+          
           {/* Mostrar detalhes do convite */}
           {invite && (inviteStatus === "valid" || inviteStatus === "success") && (
             <div className="bg-primary/5 p-4 rounded-md mb-6">
@@ -338,6 +363,11 @@ export default function InvitePage() {
               <p className="text-center text-muted-foreground">
                 O link pode estar incorreto ou o convite já foi removido.
               </p>
+              {fetchError && (
+                <p className="text-xs text-gray-500 mt-4">
+                  Detalhes técnicos: houve um problema ao consultar a base de dados.
+                </p>
+              )}
             </div>
           )}
           

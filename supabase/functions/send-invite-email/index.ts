@@ -1,13 +1,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import * as smtp from "npm:nodemailer@6.9.10";
-
-// Configurar headers CORS
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
-};
+import { corsHeaders } from "../_shared/cors.ts";
 
 interface InviteEmailRequest {
   email: string;
@@ -37,11 +31,37 @@ serve(async (req) => {
   }
 
   try {
+    console.log("Iniciando função send-invite-email");
+    console.log("Configuração SMTP:", {
+      host: smtpConfig.host,
+      port: smtpConfig.port,
+      secure: smtpConfig.secure,
+      authUser: smtpConfig.auth.user ? "Configurado" : "Não configurado",
+      authPass: smtpConfig.auth.pass ? "Configurado" : "Não configurado"
+    });
+    
     const { email, inviteUrl, roleName, expiresAt, senderName, notes, inviteId } = await req.json() as InviteEmailRequest;
 
     // Verificar se temos todas as informações necessárias
     if (!email || !inviteUrl || !roleName || !expiresAt) {
+      console.error("Dados incompletos:", { email, inviteUrl, roleName, expiresAt });
       throw new Error("Dados de convite incompletos");
+    }
+
+    // Verificar se temos as credenciais SMTP
+    if (!smtpConfig.auth.user || !smtpConfig.auth.pass) {
+      console.error("Credenciais SMTP não configuradas");
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: "Credenciais SMTP não configuradas",
+          message: "As credenciais do servidor de e-mail não estão configuradas."
+        }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 500,
+        }
+      );
     }
 
     // Formatar a data de expiração
@@ -143,48 +163,65 @@ serve(async (req) => {
 
     // Enviar email
     console.log("Tentando enviar e-mail para:", email);
-    const result = await transporter.sendMail(mailOptions);
-    console.log("E-mail enviado com sucesso:", result);
+    try {
+      const result = await transporter.sendMail(mailOptions);
+      console.log("E-mail enviado com sucesso:", result);
 
-    // Se um ID de convite foi fornecido, atualizar as estatísticas de envio
-    if (inviteId) {
-      try {
-        // Atualizar as estatísticas do convite usando a função RPC
-        const { data: updateData, error: updateError } = await fetch(
-          `${Deno.env.get("SUPABASE_URL")}/rest/v1/rpc/update_invite_send_attempt`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
-              "apikey": Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || ""
-            },
-            body: JSON.stringify({ invite_id: inviteId })
+      // Se um ID de convite foi fornecido, atualizar as estatísticas de envio
+      if (inviteId) {
+        try {
+          // Atualizar as estatísticas do convite usando a função RPC
+          const { data: updateData, error: updateError } = await fetch(
+            `${Deno.env.get("SUPABASE_URL")}/rest/v1/rpc/update_invite_send_attempt`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+                "apikey": Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || ""
+              },
+              body: JSON.stringify({ invite_id: inviteId })
+            }
+          ).then(res => res.json());
+
+          if (updateError) {
+            console.error("Erro ao atualizar estatísticas de envio:", updateError);
           }
-        ).then(res => res.json());
-
-        if (updateError) {
-          console.error("Erro ao atualizar estatísticas de envio:", updateError);
+        } catch (updateErr) {
+          console.error("Falha ao atualizar estatísticas de envio:", updateErr);
         }
-      } catch (updateErr) {
-        console.error("Falha ao atualizar estatísticas de envio:", updateErr);
       }
-    }
 
-    return new Response(
-      JSON.stringify({
-        success: true,
-        data: {
-          messageId: result.messageId,
-          accepted: result.accepted
-        },
-        message: `Convite enviado para ${email} com sucesso.`
-      }),
-      {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 200,
-      }
-    );
+      return new Response(
+        JSON.stringify({
+          success: true,
+          data: {
+            messageId: result.messageId,
+            accepted: result.accepted
+          },
+          message: `Convite enviado para ${email} com sucesso.`
+        }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200,
+        }
+      );
+    } catch (emailError) {
+      console.error("Erro ao enviar e-mail:", emailError);
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: emailError.message,
+          code: emailError.code || "UNKNOWN",
+          command: emailError.command || "",
+          message: `Falha ao enviar e-mail para ${email}: ${emailError.message}`
+        }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 500,
+        }
+      );
+    }
   } catch (error) {
     console.error("Erro na função send-invite-email:", error);
     
