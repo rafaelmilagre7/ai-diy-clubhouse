@@ -65,10 +65,13 @@ export function useUserRoles() {
       
       if (error) throw error;
       
+      // Garantir que role_id seja convertido para string ou definido como null
+      const roleId = data?.role_id ? String(data.role_id) : null;
+      
       return {
-        roleId: data.role_id !== null && data.role_id !== undefined ? String(data.role_id) : null,
-        roleName: data.user_roles && typeof data.user_roles === 'object' && 'name' in data.user_roles ? data.user_roles.name : null,
-        roleData: data.user_roles
+        roleId,
+        roleName: data?.user_roles?.name ?? null,
+        roleData: data?.user_roles ?? null
       };
     } catch (err) {
       console.error('Erro ao buscar papel do usuário:', err);
