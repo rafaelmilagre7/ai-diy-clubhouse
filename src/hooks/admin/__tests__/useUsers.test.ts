@@ -33,13 +33,10 @@ describe('useUsers', () => {
     expect(result.current.canAssignRoles).toBe(true);
   });
 
-  it('fetches users on mount', async () => {
-    const { result } = renderHook(() => useUsers());
+  it('loads users data on mount', async () => {
+    renderHook(() => useUsers());
     
-    await act(async () => {
-      await result.current.fetchUsers();
-    });
-    
+    // Verificamos se o supabase.from foi chamado com o parâmetro correto
     expect(supabase.from).toHaveBeenCalledWith('profiles');
   });
 });
