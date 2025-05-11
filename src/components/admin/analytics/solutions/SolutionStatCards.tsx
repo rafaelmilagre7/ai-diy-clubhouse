@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { Grid, Box } from '@mui/material';
 import { StatCard } from '@/components/admin/dashboard/StatCard';
 import { BookOpen, FileCheck, Clock, Award } from 'lucide-react';
 
@@ -21,7 +20,7 @@ export const SolutionStatCards: React.FC<SolutionStatCardsProps> = ({
 }) => {
   if (loading) {
     return (
-      <Box className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatCard 
           title="Total de Soluções" 
           value="-" 
@@ -46,12 +45,12 @@ export const SolutionStatCards: React.FC<SolutionStatCardsProps> = ({
           icon={<Award className="h-6 w-6" />}
           colorScheme="blue"
         />
-      </Box>
+      </div>
     );
   }
 
   return (
-    <Box className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
       <StatCard 
         title="Total de Soluções" 
         value={totalSolutions} 
@@ -76,6 +75,6 @@ export const SolutionStatCards: React.FC<SolutionStatCardsProps> = ({
         icon={<Award className="h-6 w-6" />}
         colorScheme="blue"
       />
-    </Box>
+    </div>
   );
 };
