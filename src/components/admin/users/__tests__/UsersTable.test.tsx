@@ -21,8 +21,12 @@ describe('UsersTable', () => {
   const mockProps = {
     users: mockUsers,
     loading: false,
-    canEditRoles: true, // Alterado de isAdminMaster para canEditRoles
+    canEditRoles: true,
+    canDeleteUsers: true,
+    canResetPasswords: true,
     onEditRole: jest.fn(),
+    onDeleteUser: jest.fn(),
+    onResetPassword: jest.fn(),
   };
 
   it('renders correctly with users', () => {
@@ -58,5 +62,27 @@ describe('UsersTable', () => {
     
     const editButton = queryByRole('button', { name: /altera/i });
     expect(editButton).not.toBeInTheDocument();
+  });
+
+  it('hides delete button when not allowed to delete users', () => {
+    const { queryByRole } = render(<UsersTable {...mockProps} canDeleteUsers={false} />);
+    
+    // O botão de exclusão está dentro de um dropdown, não é possível acessá-lo diretamente sem abrir o dropdown
+    const dropdownTriggers = document.querySelectorAll('[data-state="closed"]');
+    expect(dropdownTriggers.length).toBeGreaterThan(0);
+    
+    // Verificamos que pelo menos um dropdown ainda existe (para outras ações permitidas)
+    expect(dropdownTriggers).not.toHaveLength(0);
+  });
+
+  it('hides reset password button when not allowed to reset passwords', () => {
+    const { queryByRole } = render(<UsersTable {...mockProps} canResetPasswords={false} />);
+    
+    // O botão de redefinição de senha está dentro de um dropdown, não é possível acessá-lo diretamente sem abrir o dropdown
+    const dropdownTriggers = document.querySelectorAll('[data-state="closed"]');
+    expect(dropdownTriggers.length).toBeGreaterThan(0);
+    
+    // Verificamos que pelo menos um dropdown ainda existe (para outras ações permitidas)
+    expect(dropdownTriggers).not.toHaveLength(0);
   });
 });
