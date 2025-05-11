@@ -68,10 +68,28 @@ export function useUserRoles() {
       // Garantir que role_id seja convertido para string ou definido como null
       const roleId = data?.role_id ? String(data.role_id) : null;
       
+      // Verificar se user_roles é um array e extrair apropriadamente
+      let roleName: string | null = null;
+      let roleData: any = null;
+      
+      if (data?.user_roles) {
+        if (Array.isArray(data.user_roles)) {
+          // Se for um array, pegue o primeiro item (se existir)
+          if (data.user_roles.length > 0) {
+            roleName = data.user_roles[0].name ?? null;
+            roleData = data.user_roles[0];
+          }
+        } else {
+          // Se não for um array, é um objeto
+          roleName = data.user_roles.name ?? null;
+          roleData = data.user_roles;
+        }
+      }
+      
       return {
         roleId,
-        roleName: data?.user_roles?.name ?? null,
-        roleData: data?.user_roles ?? null
+        roleName,
+        roleData
       };
     } catch (err) {
       console.error('Erro ao buscar papel do usuário:', err);
