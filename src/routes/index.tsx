@@ -1,29 +1,39 @@
 
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { AuthRoutes } from './AuthRoutes';
-import { AdminRoutes } from './AdminRoutes';
-import { MemberRoutes } from './MemberRoutes';
-import { OnboardingRoutes } from './OnboardingRoutes';
-import { FormacaoRoutes } from './FormacaoRoutes';
+import { authRoutes } from './AuthRoutes';
+import { adminRoutes } from './AdminRoutes';
+import { memberRoutes } from './MemberRoutes';
+import { onboardingRoutes } from './OnboardingRoutes';
+import { formacaoRoutes } from './FormacaoRoutes';
 import NotFound from '@/pages/NotFound';
 
 const AppRoutes = () => {
   return (
     <Routes>
       {/* Auth Routes */}
-      <AuthRoutes />
+      {authRoutes.map((route) => (
+        <Route key={route.path} path={route.path} element={route.element} />
+      ))}
       
       {/* Member Routes */}
-      <MemberRoutes />
+      {memberRoutes.map((route) => (
+        <Route key={route.path} path={route.path} element={route.element} />
+      ))}
       
       {/* Admin Routes */}
-      <AdminRoutes />
+      {adminRoutes.map((route) => (
+        <Route key={route.path} path={route.path} element={route.element} />
+      ))}
       
       {/* Onboarding Routes */}
-      <OnboardingRoutes />
+      {onboardingRoutes.map((route) => (
+        <Route key={route.path} path={route.path} element={route.element} />
+      ))}
       
       {/* Formação Routes */}
-      <FormacaoRoutes />
+      {formacaoRoutes.map((route) => (
+        <Route key={route.path} path={route.path} element={route.element} />
+      ))}
       
       {/* Fallback route */}
       <Route path="*" element={<NotFound />} />

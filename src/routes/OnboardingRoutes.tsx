@@ -1,5 +1,5 @@
 
-import { Route } from "react-router-dom";
+import { RouteObject } from "react-router-dom";
 import { ProtectedRoutes } from '@/auth/ProtectedRoutes';
 
 // Onboarding
@@ -14,20 +14,45 @@ import ComplementaryInfo from '@/pages/onboarding/steps/ComplementaryInfo';
 import Review from '@/pages/onboarding/steps/Review';
 import TrailGeneration from '@/pages/onboarding/steps/TrailGeneration';
 
-export const OnboardingRoutes = () => {
-  return (
-    <>
-      {/* Onboarding Routes */}
-      <Route path="/onboarding" element={<ProtectedRoutes><OnboardingIntro /></ProtectedRoutes>} />
-      <Route path="/onboarding/personal-info" element={<ProtectedRoutes><PersonalInfo /></ProtectedRoutes>} />
-      <Route path="/onboarding/professional-data" element={<ProtectedRoutes><ProfessionalData /></ProtectedRoutes>} />
-      <Route path="/onboarding/business-context" element={<ProtectedRoutes><BusinessContext /></ProtectedRoutes>} />
-      <Route path="/onboarding/ai-experience" element={<ProtectedRoutes><AIExperience /></ProtectedRoutes>} />
-      <Route path="/onboarding/club-goals" element={<ProtectedRoutes><BusinessGoalsClub /></ProtectedRoutes>} />
-      <Route path="/onboarding/customization" element={<ProtectedRoutes><ExperiencePersonalization /></ProtectedRoutes>} />
-      <Route path="/onboarding/complementary" element={<ProtectedRoutes><ComplementaryInfo /></ProtectedRoutes>} />
-      <Route path="/onboarding/review" element={<ProtectedRoutes><Review /></ProtectedRoutes>} />
-      <Route path="/onboarding/trail-generation" element={<ProtectedRoutes><TrailGeneration /></ProtectedRoutes>} />
-    </>
-  );
-};
+export const onboardingRoutes: RouteObject[] = [
+  {
+    path: "/onboarding",
+    element: <ProtectedRoutes><OnboardingIntro /></ProtectedRoutes>
+  },
+  {
+    path: "/onboarding/personal-info",
+    element: <ProtectedRoutes><PersonalInfo /></ProtectedRoutes>
+  },
+  {
+    path: "/onboarding/professional-data",
+    element: <ProtectedRoutes><ProfessionalData /></ProtectedRoutes>
+  },
+  {
+    path: "/onboarding/business-context",
+    element: <ProtectedRoutes><BusinessContext /></ProtectedRoutes>
+  },
+  {
+    path: "/onboarding/ai-experience",
+    element: <ProtectedRoutes><AIExperience /></ProtectedRoutes>
+  },
+  {
+    path: "/onboarding/club-goals",
+    element: <ProtectedRoutes><BusinessGoalsClub /></ProtectedRoutes>
+  },
+  {
+    path: "/onboarding/customization",
+    element: <ProtectedRoutes><ExperiencePersonalization /></ProtectedRoutes>
+  },
+  {
+    path: "/onboarding/complementary",
+    element: <ProtectedRoutes><ComplementaryInfo /></ProtectedRoutes>
+  },
+  {
+    path: "/onboarding/review",
+    element: <ProtectedRoutes><Review /></ProtectedRoutes>
+  },
+  {
+    path: "/onboarding/trail-generation",
+    element: <ProtectedRoutes><TrailGeneration /></ProtectedRoutes>
+  },
+];
