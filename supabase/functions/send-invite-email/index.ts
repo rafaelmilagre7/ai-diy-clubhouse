@@ -15,9 +15,9 @@ interface InviteEmailRequest {
 
 // Obter configurações SMTP do ambiente
 const smtpConfig = {
-  host: Deno.env.get("SUPABASE_SMTP_HOST") || "email-smtp.us-east-1.amazonaws.com",
-  port: parseInt(Deno.env.get("SUPABASE_SMTP_PORT") || "587"),
-  secure: false, // true para porta 465, false para outras portas
+  host: Deno.env.get("SUPABASE_SMTP_HOST") || "smtp.hostinger.com",
+  port: parseInt(Deno.env.get("SUPABASE_SMTP_PORT") || "465"),
+  secure: true, // true para porta 465 (SSL), false para outras portas
   auth: {
     user: Deno.env.get("SUPABASE_SMTP_USER"),
     pass: Deno.env.get("SUPABASE_SMTP_PASS")
@@ -77,9 +77,13 @@ serve(async (req) => {
     // Criar transportador SMTP
     const transporter = smtp.createTransport(smtpConfig);
 
+    // Obter o email do remetente das variáveis de ambiente ou usar o padrão
+    const senderEmail = Deno.env.get("SUPABASE_SMTP_USER") || "no-reply@viverdeia.ai";
+    const senderDomain = senderEmail.split('@')[1];
+
     // Configurar email
     const mailOptions = {
-      from: '"VIVER DE IA Club" <no-reply@viverdeia.ai>',
+      from: `"VIVER DE IA Club" <${senderEmail}>`,
       to: email,
       subject: "Convite para o VIVER DE IA Club",
       html: `
