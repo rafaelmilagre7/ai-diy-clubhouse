@@ -18,6 +18,14 @@ export function useInviteCreate() {
     try {
       setIsCreating(true);
       
+      // Validar email básico (simples mas evita erros óbvios)
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        throw new Error("Formato de email inválido");
+      }
+      
+      console.log("Criando convite para", email, "com papel", roleId);
+      
       const { data, error } = await supabase.rpc('create_invite', {
         p_email: email,
         p_role_id: roleId,
@@ -25,13 +33,23 @@ export function useInviteCreate() {
         p_notes: notes
       });
       
-      if (error) throw error;
+      if (error) {
+        console.error("Erro ao criar convite via RPC:", error);
+        throw error;
+      }
       
       if (data.status === 'error') {
+        console.error("Erro retornado pela função create_invite:", data.message);
         throw new Error(data.message);
       }
       
       console.log("Convite criado:", data);
+      
+      // Verificar se o token está no formato esperado
+      if (!data.token || typeof data.token !== 'string' || data.token.length < 6) {
+        console.error("Token gerado é inválido ou muito curto:", data.token);
+        throw new Error("Erro ao gerar token de convite");
+      }
       
       // Enviar email de convite
       const inviteUrl = getInviteLink(data.token);

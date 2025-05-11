@@ -11,7 +11,7 @@ import InvitePage from '@/pages/InvitePage';
 const AppRoutes = () => {
   return (
     <Routes>
-      {/* Convite Routes - Adicionado no início para maior prioridade */}
+      {/* Convite Routes - Alta prioridade e fora do sistema de autenticação */}
       <Route path="/convite/:token" element={<InvitePage />} />
       <Route path="/convite" element={<InvitePage />} />
       

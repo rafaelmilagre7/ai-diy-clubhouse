@@ -36,6 +36,12 @@ export function useInviteEmailService() {
         };
       }
       
+      console.log("Enviando convite por email: ", {
+        email,
+        inviteUrl,
+        roleName
+      });
+      
       // Chamar a edge function para envio de email
       const { data, error } = await supabase.functions.invoke('send-invite-email', {
         body: {
@@ -75,25 +81,30 @@ export function useInviteEmailService() {
     }
   }, []);
 
-  // Gerar link de convite - MELHORADO para maior robustez
+  // Gerar link de convite - Melhorado para robustez máxima
   const getInviteLink = useCallback((token: string) => {
-    // Verificar se o token existe e tem o formato esperado
+    // Verificar se o token existe
     if (!token) {
       console.error("Erro: Token vazio ao gerar link de convite");
       return "";
     }
     
-    console.log("Gerando link de convite para token:", token, "comprimento:", token.length);
+    // Limpar o token de espaços e normalizar
+    const cleanToken = token.trim().replace(/[\s\n\r\t]+/g, '');
     
-    // Limpar o token de possíveis caracteres problemáticos
-    const cleanToken = token.trim().replace(/\s+/g, '');
+    console.log("Gerando link de convite para token:", {
+      original: token,
+      limpo: cleanToken,
+      comprimento: cleanToken.length
+    });
     
-    if (cleanToken !== token) {
-      console.warn("Token foi limpo antes de gerar o link. Original:", token, "Limpo:", cleanToken);
+    // Verificação de integridade do token
+    if (!cleanToken.match(/^[A-Z0-9]+$/i)) {
+      console.warn("Token contém caracteres não alfanuméricos:", token);
     }
     
     // Construir URL absoluta com origem da janela atual
-    const baseUrl = `${window.location.origin}/convite/${cleanToken}`;
+    const baseUrl = `${window.location.origin}/convite/${encodeURIComponent(cleanToken)}`;
     console.log("URL do convite gerado:", baseUrl);
     
     return baseUrl;

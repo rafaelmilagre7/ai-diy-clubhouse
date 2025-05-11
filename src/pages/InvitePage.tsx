@@ -8,7 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Mail, CheckCircle, XCircle, Loader2, ArrowRight } from "lucide-react";
+import { Mail, CheckCircle, XCircle, Loader2, ArrowRight, AlertCircle } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface InviteData {
   id: string;
@@ -16,10 +17,13 @@ interface InviteData {
   expires_at: string;
   role_id: string;
   used_at: string | null;
+  token: string;
   role?: {
     name: string;
   };
 }
+
+const TOKEN_DEBUG = true; // Ativa logs detalhados para depuração de tokens
 
 export default function InvitePage() {
   const { token } = useParams<{ token: string }>();
@@ -33,6 +37,7 @@ export default function InvitePage() {
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [manualToken, setManualToken] = useState("");
   const [isManualEntry, setIsManualEntry] = useState(!token); // Se não tiver token na URL, mostrar entrada manual
+  const [debugInfo, setDebugInfo] = useState<any>(null);
   
   // Formulário de registro
   const [email, setEmail] = useState("");
@@ -43,13 +48,38 @@ export default function InvitePage() {
   const cleanToken = (inputToken: string | undefined): string => {
     if (!inputToken) return "";
     
-    // Remover espaços em branco, quebras de linha e outros caracteres indesejados
-    return inputToken.trim().replace(/[\s\n\r\t]+/g, '').toUpperCase();
+    // Logging para debug
+    if (TOKEN_DEBUG) console.log("Token original:", inputToken, "comprimento:", inputToken?.length);
+    
+    // Normalização agressiva:
+    // 1. Remover espaços, quebras de linha e caracteres invisíveis
+    // 2. Converter para maiúsculas (banco de dados pode ser case-sensitive)
+    // 3. Remover caracteres não alfanuméricos (segurança)
+    let cleaned = inputToken
+      .trim()
+      .replace(/[\s\n\r\t]+/g, '')
+      .toUpperCase()
+      .replace(/[^A-Z0-9]/g, '');
+      
+    if (TOKEN_DEBUG) {
+      console.log("Token após limpeza:", cleaned, "comprimento:", cleaned?.length);
+      if (cleaned !== inputToken) {
+        console.log("Token foi modificado durante limpeza");
+        // Mostrar caracteres hexadecimais para depuração
+        console.log("Original em hex:", 
+          Array.from(inputToken).map(c => c.charCodeAt(0).toString(16).padStart(2, '0')).join(' '));
+        console.log("Limpo em hex:", 
+          Array.from(cleaned).map(c => c.charCodeAt(0).toString(16).padStart(2, '0')).join(' '));
+      }
+    }
+    
+    return cleaned;
   };
   
   // Função para buscar convite
   const fetchInviteWithToken = async (tokenToUse: string) => {
     if (!tokenToUse) return;
+    setDebugInfo(null);
     
     try {
       setIsLoading(true);
@@ -58,92 +88,164 @@ export default function InvitePage() {
       // Limpar o token antes de fazer a consulta
       const cleanedToken = cleanToken(tokenToUse);
       
-      console.log("Buscando convite com token:", cleanedToken);
-      console.log("Token comprimento:", cleanedToken?.length);
+      if (TOKEN_DEBUG) {
+        console.log("Buscando convite com token:", cleanedToken);
+        console.log("Token comprimento:", cleanedToken?.length);
+      }
       
       // Log detalhado para depuração
-      console.log("Token em formato hexadecimal:", 
-        Array.from(cleanedToken).map(c => c.charCodeAt(0).toString(16)).join(' '));
+      if (TOKEN_DEBUG) {
+        console.log("Token em formato hexadecimal:", 
+          Array.from(cleanedToken).map(c => c.charCodeAt(0).toString(16)).join(' '));
+      }
       
-      // Usar maybeSingle em vez de single para evitar erros quando não encontrar o convite
-      const { data, error } = await supabase
+      // Busca no banco com token exato
+      const { data: exactMatch, error: exactError } = await supabase
         .from("invites")
         .select("*, role:role_id(name)")
         .eq("token", cleanedToken)
         .maybeSingle();
-      
-      if (error) {
-        console.error("Erro na consulta do convite:", error);
-        setFetchError(`Erro ao buscar convite: ${error.message || error.code || 'Erro desconhecido'}`);
-        throw error;
-      }
-      
-      console.log("Resultado da consulta:", data ? "Convite encontrado" : "Convite não encontrado");
-      
-      if (!data) {
-        console.error("Convite não encontrado para o token:", cleanedToken);
-        setFetchError(`Convite não encontrado para o token fornecido`);
         
-        // Tentar uma busca mais flexível usando LIKE para debug (apenas em ambiente não-produtivo)
-        if (import.meta.env.DEV) {
-          try {
-            console.log("Tentando busca alternativa com LIKE...");
-            const { data: similarTokens, error: similarError } = await supabase
-              .from("invites")
-              .select("token")
-              .ilike("token", `%${cleanedToken.substring(0, Math.min(10, cleanedToken.length))}%`) // Primeiros 10 caracteres
-              .limit(5);
-              
-            if (!similarError && similarTokens && similarTokens.length > 0) {
-              console.log("Tokens similares encontrados:", similarTokens.map(i => 
-                `${i.token.substring(0, 10)}...${i.token.substring(i.token.length-5)} (${i.token.length} caracteres)`
-              ));
-              
-              setFetchError(`Convite não encontrado exato, mas encontramos ${similarTokens.length} tokens similares. Tente inserir o código manualmente.`);
-              setIsManualEntry(true);
+      // Se não encontrou com o token exato, tenta buscar com LIKE
+      if (!exactMatch && !exactError) {
+        if (TOKEN_DEBUG) console.log("Tentando busca flexível com LIKE");
+        
+        // Buscar por tokens similares para debug
+        const { data: similarTokens, error: similarError } = await supabase
+          .from("invites")
+          .select("id, token, email, expires_at, used_at")
+          .ilike("token", `%${cleanedToken.substring(0, Math.min(6, cleanedToken.length))}%`) // Primeiros 6 caracteres
+          .limit(5);
+          
+        if (!similarError && similarTokens && similarTokens.length > 0) {
+          if (TOKEN_DEBUG) {
+            console.log("Tokens similares encontrados:", similarTokens.map(i => 
+              `${i.token} (${i.token.length} caracteres) - usado: ${i.used_at ? 'sim' : 'não'}`
+            ));
+          }
+          
+          // Para informações de debug
+          setDebugInfo({
+            searched: cleanedToken,
+            similar_tokens: similarTokens.map(t => ({
+              token: t.token,
+              length: t.token.length,
+              email: t.email,
+              used: t.used_at ? true : false,
+              expired: new Date(t.expires_at) < new Date()
+            }))
+          });
+          
+          // Tenta encontrar um token não usado que corresponda a pelo menos 70% dos caracteres
+          const bestMatch = similarTokens.find(t => {
+            if (t.used_at) return false; // Já usado
+            if (new Date(t.expires_at) < new Date()) return false; // Expirado
+            
+            // Verificar se há pelo menos 70% de correspondência no começo do token
+            const matchLength = Math.min(t.token.length, cleanedToken.length);
+            let matchCount = 0;
+            
+            for (let i = 0; i < matchLength; i++) {
+              if (t.token[i].toUpperCase() === cleanedToken[i].toUpperCase()) {
+                matchCount++;
+              }
             }
-          } catch (e) {
-            console.error("Erro ao buscar tokens similares:", e);
+            
+            const matchPercentage = matchCount / matchLength;
+            return matchPercentage >= 0.7;
+          });
+          
+          if (bestMatch) {
+            if (TOKEN_DEBUG) console.log("Melhor correspondência encontrada:", bestMatch.token);
+            
+            // Buscar dados completos do convite encontrado
+            const { data: fullInvite, error: fullInviteError } = await supabase
+              .from("invites")
+              .select("*, role:role_id(name)")
+              .eq("id", bestMatch.id)
+              .single();
+              
+            if (!fullInviteError && fullInvite) {
+              setInvite(fullInvite);
+              setEmail(fullInvite.email);
+              
+              if (fullInvite.used_at) {
+                setInviteStatus("used");
+              } else if (new Date(fullInvite.expires_at) < new Date()) {
+                setInviteStatus("expired");
+              } else {
+                setInviteStatus("valid");
+              }
+              
+              setIsLoading(false);
+              return fullInvite;
+            }
           }
         }
         
+        // Nenhuma correspondência encontrada
         setInviteStatus("error");
-        throw new Error("Convite não encontrado");
+        setFetchError(`Convite não encontrado para o token fornecido`);
+        setIsLoading(false);
+        return null;
       }
       
-      console.log("Convite encontrado:", {
-        id: data.id,
-        email: data.email,
-        expires_at: data.expires_at,
-        used_at: data.used_at,
-        role: data.role?.name
-      });
+      if (exactError) {
+        console.error("Erro na consulta do convite:", exactError);
+        setFetchError(`Erro ao buscar convite: ${exactError.message || exactError.code || 'Erro desconhecido'}`);
+        throw exactError;
+      }
       
-      setInvite(data);
+      if (!exactMatch) {
+        console.error("Convite não encontrado para o token:", cleanedToken);
+        setFetchError(`Convite não encontrado para o token fornecido`);
+        setInviteStatus("error");
+        setIsLoading(false);
+        return null;
+      }
+      
+      if (TOKEN_DEBUG) {
+        console.log("Convite encontrado:", {
+          id: exactMatch.id,
+          email: exactMatch.email,
+          token: exactMatch.token,
+          token_length: exactMatch.token?.length,
+          expires_at: exactMatch.expires_at,
+          used_at: exactMatch.used_at,
+          role: exactMatch.role?.name
+        });
+      }
+      
+      setInvite(exactMatch);
       
       // Verificar status do convite
-      if (data.used_at) {
+      if (exactMatch.used_at) {
         setInviteStatus("used");
-      } else if (new Date(data.expires_at) < new Date()) {
+      } else if (new Date(exactMatch.expires_at) < new Date()) {
         setInviteStatus("expired");
       } else {
         setInviteStatus("valid");
-        setEmail(data.email); // Preencher o email automaticamente
+        setEmail(exactMatch.email); // Preencher o email automaticamente
       }
       
-      return data;
+      setIsLoading(false);
+      return exactMatch;
     } catch (error) {
       console.error("Erro ao buscar convite:", error);
       setInviteStatus("error");
-      return null;
-    } finally {
       setIsLoading(false);
+      return null;
     }
   };
   
   // Efeito para buscar o convite quando o componente carrega
   useEffect(() => {
     if (token) {
+      // Remover espaços do token na URL
+      const cleanedToken = cleanToken(token);
+      if (cleanedToken !== token) {
+        console.log("Token na URL foi limpo de", token, "para", cleanedToken);
+      }
       fetchInviteWithToken(token);
     } else {
       // Se não tiver token na URL, desativar o loading (estamos na página de entrada manual)
@@ -158,7 +260,7 @@ export default function InvitePage() {
         try {
           setIsProcessing(true);
           
-          const cleanedToken = cleanToken(token || manualToken);
+          const cleanedToken = invite.token || cleanToken(token || manualToken);
           console.log("Tentando usar convite para usuário já logado:", {
             token: cleanedToken,
             userId: user.id
@@ -235,11 +337,11 @@ export default function InvitePage() {
       
       console.log("Usuário criado com sucesso, agora usando o convite");
       
-      // Usar o convite com token limpo
-      const cleanedToken = cleanToken(token || manualToken);
+      // Usar o token do convite recuperado do banco (mais seguro que o da URL)
+      const tokenToUse = invite.token || cleanToken(token || manualToken);
       
       const { data, error } = await supabase.rpc('use_invite', {
-        invite_token: cleanedToken,
+        invite_token: tokenToUse,
         user_id: authData.user.id
       });
       
@@ -371,16 +473,32 @@ export default function InvitePage() {
                   <p className="font-mono text-xs mt-1">
                     (Comprimento: {token.length} caracteres)
                   </p>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={() => setIsManualEntry(true)}
-                    className="mt-2 text-xs"
-                  >
-                    Inserir código manualmente
-                  </Button>
                 </>
               )}
+              
+              {debugInfo && debugInfo.similar_tokens?.length > 0 && (
+                <>
+                  <p className="font-semibold mt-2">Tokens similares encontrados:</p>
+                  <ul className="text-xs mt-1">
+                    {debugInfo.similar_tokens.map((t: any, i: number) => (
+                      <li key={i} className="font-mono mt-1">
+                        {t.token} ({t.length} caracteres) - 
+                        {t.used ? ' Já usado' : ' Disponível'}
+                        {t.expired ? ' (Expirado)' : ''}
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              )}
+              
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => setIsManualEntry(true)}
+                className="mt-2 text-xs"
+              >
+                Inserir código do convite manualmente
+              </Button>
             </div>
           )}
           
@@ -477,10 +595,13 @@ export default function InvitePage() {
           {/* Mensagem para convite já utilizado */}
           {inviteStatus === "used" && (
             <div className="flex flex-col items-center justify-center py-6">
-              <div className="bg-amber-50 text-amber-700 p-4 rounded-md mb-4 flex items-center">
-                <CheckCircle className="h-5 w-5 mr-2" />
-                <p>Este convite já foi utilizado anteriormente.</p>
-              </div>
+              <Alert variant="warning" className="mb-4">
+                <AlertCircle className="h-5 w-5 mr-2" />
+                <AlertTitle>Convite já utilizado</AlertTitle>
+                <AlertDescription>
+                  Este convite já foi utilizado anteriormente.
+                </AlertDescription>
+              </Alert>
               <p className="text-center text-muted-foreground">
                 Se você já se cadastrou, faça login para acessar sua conta.
               </p>
@@ -490,10 +611,13 @@ export default function InvitePage() {
           {/* Mensagem para convite expirado */}
           {inviteStatus === "expired" && (
             <div className="flex flex-col items-center justify-center py-6">
-              <div className="bg-red-50 text-red-700 p-4 rounded-md mb-4 flex items-center">
+              <Alert variant="destructive" className="mb-4">
                 <XCircle className="h-5 w-5 mr-2" />
-                <p>Este convite expirou e não pode mais ser utilizado.</p>
-              </div>
+                <AlertTitle>Convite expirado</AlertTitle>
+                <AlertDescription>
+                  Este convite expirou e não pode mais ser utilizado.
+                </AlertDescription>
+              </Alert>
               <p className="text-center text-muted-foreground">
                 Entre em contato com o administrador para solicitar um novo convite.
               </p>
@@ -503,10 +627,13 @@ export default function InvitePage() {
           {/* Mensagem para convite com erro */}
           {inviteStatus === "error" && !isManualEntry && (
             <div className="flex flex-col items-center justify-center py-6">
-              <div className="bg-red-50 text-red-700 p-4 rounded-md mb-4 flex items-center">
+              <Alert variant="destructive" className="mb-4">
                 <XCircle className="h-5 w-5 mr-2" />
-                <p>Não foi possível encontrar o convite solicitado.</p>
-              </div>
+                <AlertTitle>Convite não encontrado</AlertTitle>
+                <AlertDescription>
+                  Não foi possível encontrar o convite solicitado.
+                </AlertDescription>
+              </Alert>
               <p className="text-center text-muted-foreground mb-4">
                 O link pode estar incorreto ou o convite já foi removido.
               </p>
@@ -522,11 +649,14 @@ export default function InvitePage() {
           {/* Mensagem para convite com sucesso */}
           {inviteStatus === "success" && (
             <div className="flex flex-col items-center justify-center py-6">
-              <div className="bg-green-50 text-green-700 p-4 rounded-md mb-4 flex items-center">
-                <CheckCircle className="h-5 w-5 mr-2" />
-                <p>Seu acesso foi configurado com sucesso!</p>
-              </div>
-              <Button asChild>
+              <Alert variant="default" className="bg-green-50 text-green-800 mb-4 border-green-200">
+                <CheckCircle className="h-5 w-5 mr-2 text-green-600" />
+                <AlertTitle>Acesso confirmado</AlertTitle>
+                <AlertDescription>
+                  Seu acesso foi configurado com sucesso!
+                </AlertDescription>
+              </Alert>
+              <Button asChild className="bg-green-600 hover:bg-green-700">
                 <Link to="/dashboard">
                   Ir para o Dashboard
                   <ArrowRight className="ml-2 h-4 w-4" />
