@@ -1,4 +1,9 @@
 
+// Este arquivo define rotas, mas está sendo substituído pelo sistema
+// de rotas em src/components/routing/AppRoutes.tsx
+// Mantemos a definição das rotas para referência e para uso nos arquivos
+// que ainda importam estas definições
+
 import { createBrowserRouter, RouteObject } from "react-router-dom";
 
 import { PublicRoutes } from "./PublicRoutes";
@@ -47,3 +52,6 @@ export const routes = [
 
 // Criar o router
 export const router = createBrowserRouter(routes);
+
+// Este router não está sendo usado ativamente, pois o aplicativo
+// está usando BrowserRouter com AppRoutes.tsx
