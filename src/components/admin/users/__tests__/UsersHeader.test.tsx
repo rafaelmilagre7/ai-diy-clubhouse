@@ -1,5 +1,6 @@
 
-import { render, fireEvent } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import { UsersHeader } from '../UsersHeader';
 
@@ -16,11 +17,12 @@ describe('UsersHeader', () => {
     expect(getByPlaceholderText('Buscar usuário...')).toBeInTheDocument();
   });
 
-  it('calls onSearchChange when input changes', () => {
+  it('calls onSearchChange when input changes', async () => {
+    const user = userEvent.setup();
     const { getByPlaceholderText } = render(<UsersHeader {...mockProps} />);
     
     const input = getByPlaceholderText('Buscar usuário...');
-    fireEvent.change(input, { target: { value: 'teste' } });
+    await user.type(input, 'teste');
     
     expect(mockProps.onSearchChange).toHaveBeenCalled();
   });
