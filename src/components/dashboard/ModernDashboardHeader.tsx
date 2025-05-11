@@ -27,16 +27,13 @@ export function ModernDashboardHeader({ userName }: { userName: string }) {
 
       {/* Conteúdo do banner */}
       <div className="relative z-10 flex flex-row items-center gap-6 px-6 md:px-12 py-8 md:py-12">
-        {/* Avatar Milagrinho - Com design de quadrado dentro de círculo */}
-        <div className="flex-shrink-0 flex items-center justify-center h-24 w-24 md:h-32 md:w-32 rounded-full glassmorphism shadow-2xl border-4 border-white/20 bg-white/90 overflow-hidden animate-fade-in">
-          <div className="h-16 w-16 md:h-20 md:w-20 bg-viverblue-dark rounded-md flex items-center justify-center">
-            <img
-              src="/lovable-uploads/6bdb44c0-b115-45bc-977d-4284836453c2.png"
-              alt="Avatar Milagrinho"
-              className="h-12 w-12 md:h-16 md:w-16 object-contain"
-              style={{ maxWidth: '100%', maxHeight: '100%' }}
-            />
-          </div>
+        {/* Avatar Milagrinho - Círculo com imagem preenchendo todo o espaço */}
+        <div className="flex-shrink-0 h-24 w-24 md:h-32 md:w-32 rounded-full glassmorphism shadow-2xl border-4 border-white/20 bg-white/90 overflow-hidden animate-fade-in">
+          <img
+            src="/lovable-uploads/6bdb44c0-b115-45bc-977d-4284836453c2.png"
+            alt="Avatar Milagrinho"
+            className="w-full h-full object-cover object-center"
+          />
         </div>
 
         {/* Texto à direita do avatar com melhorias visuais */}
