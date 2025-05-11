@@ -71,7 +71,10 @@ export const useUsers = () => {
     setSearchQuery,
     selectedUser,
     setSelectedUser,
+    fetchUsers,
     canManageUsers: hasPermission('users.manage'),
     canAssignRoles: hasPermission('users.roles.assign'),
+    canDeleteUsers: hasPermission('users.delete'),
+    canResetPasswords: hasPermission('users.reset_password'),
   };
 };

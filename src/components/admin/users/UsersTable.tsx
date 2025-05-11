@@ -10,7 +10,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { UserProfile } from "@/lib/supabase";
-import { Edit2, MoreHorizontal } from "lucide-react";
+import { Edit2, MoreHorizontal, Key, Trash2 } from "lucide-react";
 import { useState, useMemo } from "react";
 import {
   DropdownMenu,
@@ -25,14 +25,22 @@ interface UsersTableProps {
   users: UserProfile[];
   loading: boolean;
   canEditRoles: boolean;
+  canDeleteUsers: boolean;
+  canResetPasswords: boolean;
   onEditRole: (user: UserProfile) => void;
+  onDeleteUser: (user: UserProfile) => void;
+  onResetPassword: (user: UserProfile) => void;
 }
 
 export const UsersTable = ({
   users,
   loading,
   canEditRoles,
+  canDeleteUsers,
+  canResetPasswords,
   onEditRole,
+  onDeleteUser,
+  onResetPassword,
 }: UsersTableProps) => {
   const [sortConfig, setSortConfig] = useState<{
     key: keyof UserProfile | "roleDisplay";
@@ -212,7 +220,7 @@ export const UsersTable = ({
                 <TableCell>{renderUserRole(user)}</TableCell>
                 <TableCell>{formatDate(user.created_at)}</TableCell>
                 <TableCell>
-                  {canEditRoles ? (
+                  {(canEditRoles || canDeleteUsers || canResetPasswords) ? (
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="icon">
@@ -220,10 +228,29 @@ export const UsersTable = ({
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => onEditRole(user)}>
-                          <Edit2 className="mr-2 h-4 w-4" />
-                          Alterar Papel
-                        </DropdownMenuItem>
+                        {canEditRoles && (
+                          <DropdownMenuItem onClick={() => onEditRole(user)}>
+                            <Edit2 className="mr-2 h-4 w-4" />
+                            Alterar Papel
+                          </DropdownMenuItem>
+                        )}
+                        
+                        {canResetPasswords && (
+                          <DropdownMenuItem onClick={() => onResetPassword(user)}>
+                            <Key className="mr-2 h-4 w-4" />
+                            Redefinir Senha
+                          </DropdownMenuItem>
+                        )}
+                        
+                        {canDeleteUsers && (
+                          <DropdownMenuItem 
+                            onClick={() => onDeleteUser(user)}
+                            className="text-destructive focus:text-destructive"
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Excluir Usuário
+                          </DropdownMenuItem>
+                        )}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   ) : (
