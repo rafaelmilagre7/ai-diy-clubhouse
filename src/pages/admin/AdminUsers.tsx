@@ -1,17 +1,18 @@
 
-import { useEffect, useState } from "react";
-import { useAuth } from "@/contexts/auth";
-import { isSuperAdmin } from "@/contexts/auth/utils/profileUtils/roleValidation";
+import { useEffect } from "react";
 import { useUsers } from "@/hooks/admin/useUsers";
 import { UsersHeader } from "@/components/admin/users/UsersHeader";
 import { UsersTable } from "@/components/admin/users/UsersTable";
 import { UserRoleDialog } from "@/components/admin/users/UserRoleDialog";
 import { UserProfile } from "@/lib/supabase";
+import { PermissionGuard } from "@/components/auth/PermissionGuard";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 const AdminUsers = () => {
-  const { user } = useAuth();
   const {
     users,
+    availableRoles,
     loading,
     searchQuery,
     setSearchQuery,
@@ -20,54 +21,64 @@ const AdminUsers = () => {
     setSelectedUser,
     editRoleOpen,
     setEditRoleOpen,
-    newRole,
-    setNewRole,
+    newRoleId,
+    setNewRoleId,
     saving,
     handleUpdateRole,
+    canManageUsers,
+    canAssignRoles,
   } = useUsers();
-
-  const [isAdminMaster, setIsAdminMaster] = useState(false);
-
-  useEffect(() => {
-    if (user?.email) {
-      setIsAdminMaster(isSuperAdmin(user.email));
-    }
-  }, [user]);
 
   const handleEditRole = (user: UserProfile) => {
     setSelectedUser(user);
-    setNewRole(user.role as 'admin' | 'member');
+    setNewRoleId(user.role_id || "");
     setEditRoleOpen(true);
   };
 
   return (
-    <div className="space-y-6">
-      <UsersHeader
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        onRefresh={fetchUsers}
-        loading={loading}
-      />
-      
-      <div className="border rounded-lg">
-        <UsersTable
-          users={users}
+    <PermissionGuard
+      permission="users.view"
+      fallback={
+        <Alert variant="destructive" className="my-4">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Acesso restrito</AlertTitle>
+          <AlertDescription>
+            Você não tem permissão para visualizar a lista de usuários.
+          </AlertDescription>
+        </Alert>
+      }
+    >
+      <div className="space-y-6">
+        <UsersHeader
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          onRefresh={fetchUsers}
           loading={loading}
-          isAdminMaster={isAdminMaster}
-          onEditRole={handleEditRole}
         />
+        
+        <div className="border rounded-lg">
+          <UsersTable
+            users={users}
+            loading={loading}
+            canEditRoles={canAssignRoles}
+            onEditRole={handleEditRole}
+          />
+        </div>
+        
+        {canAssignRoles && (
+          <UserRoleDialog
+            open={editRoleOpen}
+            onOpenChange={setEditRoleOpen}
+            selectedUser={selectedUser}
+            newRoleId={newRoleId}
+            onRoleChange={setNewRoleId}
+            onUpdateRole={handleUpdateRole}
+            saving={saving}
+            availableRoles={availableRoles}
+          />
+        )}
       </div>
-      
-      <UserRoleDialog
-        open={editRoleOpen}
-        onOpenChange={setEditRoleOpen}
-        selectedUser={selectedUser}
-        newRole={newRole}
-        onRoleChange={(value) => setNewRole(value as 'admin' | 'member')}
-        onUpdateRole={handleUpdateRole}
-        saving={saving}
-      />
-    </div>
+    </PermissionGuard>
   );
 };
 

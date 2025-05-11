@@ -17,54 +17,69 @@ import {
 } from "@/components/ui/select";
 import { Shield, User } from "lucide-react";
 import { UserProfile } from "@/lib/supabase";
+import { Role } from "@/hooks/admin/useUsers";
 
 interface UserRoleDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   selectedUser: UserProfile | null;
-  newRole: string;
+  newRoleId: string;
   onRoleChange: (value: string) => void;
   onUpdateRole: () => void;
   saving: boolean;
+  availableRoles: Role[];
 }
 
 export const UserRoleDialog = ({
   open,
   onOpenChange,
   selectedUser,
-  newRole,
+  newRoleId,
   onRoleChange,
   onUpdateRole,
   saving,
+  availableRoles,
 }: UserRoleDialogProps) => {
+  const getUserName = () => {
+    return selectedUser?.name || selectedUser?.email || 'Usuário';
+  };
+
+  const getRoleIcon = (roleName: string) => {
+    switch(roleName.toLowerCase()) {
+      case 'admin':
+        return <Shield className="h-4 w-4 mr-2 text-blue-600" />;
+      case 'moderator':
+        return <Shield className="h-4 w-4 mr-2 text-purple-600" />;
+      default:
+        return <User className="h-4 w-4 mr-2 text-green-600" />;
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Alterar Função do Usuário</DialogTitle>
+          <DialogTitle>Alterar Papel do Usuário</DialogTitle>
           <DialogDescription>
-            Altere a função do usuário {selectedUser?.name || selectedUser?.email}.
+            Altere o papel do usuário {getUserName()}.
           </DialogDescription>
         </DialogHeader>
         
         <div className="py-4">
-          <Select value={newRole} onValueChange={onRoleChange}>
+          <Select value={newRoleId} onValueChange={onRoleChange}>
             <SelectTrigger>
-              <SelectValue placeholder="Selecione uma função" />
+              <SelectValue placeholder="Selecione um papel" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="admin">
-                <div className="flex items-center">
-                  <Shield className="h-4 w-4 mr-2 text-blue-600" />
-                  Administrador
-                </div>
-              </SelectItem>
-              <SelectItem value="member">
-                <div className="flex items-center">
-                  <User className="h-4 w-4 mr-2 text-green-600" />
-                  Membro
-                </div>
-              </SelectItem>
+              {availableRoles.map(role => (
+                <SelectItem key={role.id} value={role.id}>
+                  <div className="flex items-center">
+                    {getRoleIcon(role.name)}
+                    {role.name.charAt(0).toUpperCase() + role.name.slice(1)}
+                    {role.is_system && <span className="ml-2 text-xs text-gray-400">(sistema)</span>}
+                  </div>
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
