@@ -45,26 +45,52 @@ export default function InvitePage() {
         setFetchError(null);
         
         console.log("Buscando convite com token:", token);
+        console.log("Token comprimento:", token?.length);
         
+        // Usar maybeSingle em vez de single para evitar erros quando não encontrar o convite
         const { data, error } = await supabase
           .from("invites")
           .select("*, role:role_id(name)")
           .eq("token", token)
-          .single();
+          .maybeSingle();
         
         if (error) {
-          console.error("Erro ao buscar convite:", error);
+          console.error("Erro na consulta do convite:", error);
           setFetchError(`Erro ao buscar convite: ${error.message || error.code || 'Erro desconhecido'}`);
           throw error;
         }
         
+        console.log("Resultado da consulta:", data ? "Convite encontrado" : "Convite não encontrado");
+        
         if (!data) {
           console.error("Convite não encontrado para o token:", token);
           setFetchError(`Convite não encontrado para o token: ${token}`);
+          
+          // Verificar diretamente na tabela invites se há tokens similares para debug
+          console.log("Verificando todos os tokens ativos...");
+          const { data: allInvites, error: allError } = await supabase
+            .from("invites")
+            .select("token")
+            .is("used_at", null)
+            .limit(5);
+            
+          if (!allError && allInvites) {
+            console.log("Exemplos de tokens ativos disponíveis:", allInvites.map(i => 
+              `${i.token.substring(0, 5)}...${i.token.substring(i.token.length-5)} (${i.token.length} caracteres)`
+            ));
+          }
+          
           throw new Error("Convite não encontrado");
         }
         
-        console.log("Convite encontrado:", data);
+        console.log("Convite encontrado:", {
+          id: data.id,
+          email: data.email,
+          expires_at: data.expires_at,
+          used_at: data.used_at,
+          role: data.role?.name
+        });
+        
         setInvite(data);
         
         // Verificar status do convite
@@ -98,12 +124,22 @@ export default function InvitePage() {
         try {
           setIsProcessing(true);
           
+          console.log("Tentando usar convite para usuário já logado:", {
+            token,
+            userId: user.id
+          });
+          
           const { data, error } = await supabase.rpc('use_invite', {
             invite_token: token,
             user_id: user.id
           });
           
-          if (error) throw error;
+          if (error) {
+            console.error("Erro na RPC use_invite:", error);
+            throw error;
+          }
+          
+          console.log("Resultado da RPC use_invite:", data);
           
           if (data.status === 'success') {
             setInviteStatus("success");
@@ -136,6 +172,11 @@ export default function InvitePage() {
     try {
       setIsProcessing(true);
       
+      console.log("Iniciando processo de registro para o convite:", {
+        email,
+        roleId: invite.role_id
+      });
+      
       // Registrar o usuário
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
@@ -148,11 +189,16 @@ export default function InvitePage() {
         }
       });
       
-      if (authError) throw authError;
+      if (authError) {
+        console.error("Erro ao registrar usuário:", authError);
+        throw authError;
+      }
       
       if (!authData.user) {
         throw new Error("Falha ao criar usuário");
       }
+      
+      console.log("Usuário criado com sucesso, agora usando o convite");
       
       // Usar o convite
       const { data, error } = await supabase.rpc('use_invite', {
@@ -160,7 +206,12 @@ export default function InvitePage() {
         user_id: authData.user.id
       });
       
-      if (error) throw error;
+      if (error) {
+        console.error("Erro ao usar convite após registro:", error);
+        throw error;
+      }
+      
+      console.log("Resultado de use_invite após registro:", data);
       
       if (data.status === 'success') {
         setInviteStatus("success");

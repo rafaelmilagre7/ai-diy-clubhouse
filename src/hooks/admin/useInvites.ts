@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/auth';
@@ -117,6 +116,8 @@ export function useInvites() {
       
       // Enviar email de convite
       const inviteUrl = getInviteLink(data.token);
+      console.log("Link de convite gerado:", inviteUrl);
+      
       const { data: roleData } = await supabase
         .from('user_roles')
         .select('name')
@@ -130,7 +131,7 @@ export function useInvites() {
         expiresAt: data.expires_at,
         senderName: user.user_metadata?.name,
         notes,
-        inviteId: data.invite_id // Passar o ID do convite para atualizar estatísticas
+        inviteId: data.invite_id
       });
       
       console.log("Resultado do envio:", sendResult);
@@ -308,8 +309,19 @@ export function useInvites() {
 
   // Gerar link de convite
   const getInviteLink = useCallback((token: string) => {
-    // Usar URL absoluta baseada no ambiente atual
-    return `${window.location.origin}/convite/${token}`;
+    // Verificar se o token existe e tem o formato esperado
+    if (!token) {
+      console.error("Erro: Token vazio ao gerar link de convite");
+      return "";
+    }
+    
+    console.log("Gerando link de convite para token:", token, "comprimento:", token.length);
+    
+    // Construir URL absoluta com origem da janela atual
+    const baseUrl = `${window.location.origin}/convite/${token}`;
+    console.log("URL do convite gerado:", baseUrl);
+    
+    return baseUrl;
   }, []);
 
   return {
