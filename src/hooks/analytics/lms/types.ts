@@ -39,7 +39,7 @@ export interface LmsAnalyticsData {
   feedbackData: LmsFeedbackData[];
 }
 
-// Interfaces para as respostas do Supabase
+// Interfaces atualizadas para as respostas do Supabase
 export interface LessonNpsResponse {
   id: string;
   lesson_id: string;
@@ -47,12 +47,13 @@ export interface LessonNpsResponse {
   feedback: string | null;
   created_at: string;
   user_id: string;
+  // Definição mais precisa das junções LEFT JOIN
   learning_lessons?: { 
     title: string;
-  } | null;
+  } | { title: string }[] | null;
   profiles?: { 
     name: string;
-  } | null;
+  } | { name: string }[] | null;
 }
 
 export interface ProgressResponse {

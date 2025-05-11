@@ -41,7 +41,7 @@ export const useNpsData = (startDate: string | null) => {
         
         if (error) {
           // Log do erro sem interromper a execução
-          logWarning('Erro ao buscar dados de NPS:', { error: error.message });
+          logWarning('Erro ao buscar dados de NPS:', { error: error.message, critical: false });
           
           // Retornar dados padrão em caso de erro
           return {
@@ -60,12 +60,23 @@ export const useNpsData = (startDate: string | null) => {
         const npsResponses = (data || []).map(item => ({
           id: item.id,
           lessonId: item.lesson_id,
-          lessonTitle: item.learning_lessons?.title || 'Aula sem título',
+          // Corrigir acesso às propriedades retornadas pela junção LEFT JOIN
+          // O Supabase pode retornar um objeto ou um array dependendo da consulta
+          lessonTitle: typeof item.learning_lessons === 'object' 
+            ? (item.learning_lessons?.title || 'Aula sem título')
+            : Array.isArray(item.learning_lessons) && item.learning_lessons.length > 0
+              ? item.learning_lessons[0]?.title || 'Aula sem título' 
+              : 'Aula sem título',
           score: item.score,
           feedback: item.feedback,
           createdAt: item.created_at,
           userId: item.user_id,
-          userName: item.profiles?.name || 'Aluno anônimo'
+          // Da mesma forma, tratando profiles como possível objeto ou array
+          userName: typeof item.profiles === 'object' 
+            ? (item.profiles?.name || 'Aluno anônimo')
+            : Array.isArray(item.profiles) && item.profiles.length > 0
+              ? item.profiles[0]?.name || 'Aluno anônimo' 
+              : 'Aluno anônimo'
         }));
         
         // Verificar se temos dados suficientes
