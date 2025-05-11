@@ -9,9 +9,17 @@ import { LmsAnalyticsTabContent } from '@/components/admin/analytics/lms/LmsAnal
 import { UserAnalyticsTabContent } from '@/components/admin/analytics/users/UserAnalyticsTabContent';
 import { SolutionsAnalyticsTabContent } from '@/components/admin/analytics/solutions/SolutionsAnalyticsTabContent';
 import { ImplementationsAnalyticsTabContent } from '@/components/admin/analytics/implementations/ImplementationsAnalyticsTabContent';
+import { useAnalyticsData } from '@/hooks/analytics/useAnalyticsData';
 
 const AdminAnalytics = () => {
   const [timeRange, setTimeRange] = useState('7d');
+  
+  // Buscar dados de análise para a visão geral
+  const { data: analyticsData, loading: analyticsLoading } = useAnalyticsData({
+    timeRange: timeRange,
+    category: 'all',
+    difficulty: 'all'
+  });
 
   return (
     <div className="space-y-6">
@@ -31,7 +39,11 @@ const AdminAnalytics = () => {
         </TabsList>
         
         <TabsContent value="overview" className="space-y-4">
-          <OverviewTabContent timeRange={timeRange} />
+          <OverviewTabContent 
+            timeRange={timeRange} 
+            loading={analyticsLoading} 
+            data={analyticsData} 
+          />
         </TabsContent>
         
         <TabsContent value="lms" className="space-y-4">

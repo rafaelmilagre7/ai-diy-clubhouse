@@ -7,9 +7,11 @@ import { CompletionRateChart } from './CompletionRateChart';
 import { WeeklyActivityChart } from './WeeklyActivityChart';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { AlertTriangle } from 'lucide-react';
 
 interface OverviewTabContentProps {
-  timeRange?: string;
+  timeRange: string;
   loading?: boolean;
   data?: {
     usersByTime: any[];
@@ -20,13 +22,17 @@ interface OverviewTabContentProps {
   };
 }
 
-export const OverviewTabContent = ({ timeRange, loading = true, data = {
-  usersByTime: [],
-  solutionPopularity: [],
-  implementationsByCategory: [],
-  userCompletionRate: [],
-  dayOfWeekActivity: []
-} }: OverviewTabContentProps) => {
+export const OverviewTabContent = ({ 
+  timeRange, 
+  loading = true, 
+  data = {
+    usersByTime: [],
+    solutionPopularity: [],
+    implementationsByCategory: [],
+    userCompletionRate: [],
+    dayOfWeekActivity: []
+  } 
+}: OverviewTabContentProps) => {
   const renderSkeleton = () => (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -67,8 +73,29 @@ export const OverviewTabContent = ({ timeRange, loading = true, data = {
     </div>
   );
 
+  const hasData = !loading && (
+    data?.usersByTime.length > 0 || 
+    data?.solutionPopularity.length > 0 || 
+    data?.implementationsByCategory.length > 0 || 
+    data?.userCompletionRate.length > 0 || 
+    data?.dayOfWeekActivity.length > 0
+  );
+
   if (loading) {
     return renderSkeleton();
+  }
+
+  if (!hasData) {
+    return (
+      <Alert className="mb-6">
+        <AlertTriangle className="h-5 w-5" />
+        <AlertTitle>Sem dados disponíveis</AlertTitle>
+        <AlertDescription>
+          Não foram encontrados dados de análise para o período selecionado. 
+          Tente selecionar um período diferente ou verificar se existem registros no sistema.
+        </AlertDescription>
+      </Alert>
+    );
   }
 
   return (
