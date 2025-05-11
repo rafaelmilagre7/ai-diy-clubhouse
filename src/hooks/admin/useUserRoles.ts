@@ -5,6 +5,13 @@ import { UserProfile } from '@/lib/supabase';
 import { useAuth } from '@/contexts/auth';
 import { toast } from 'sonner';
 
+// Interface para o retorno da função getUserRole
+interface UserRoleResult {
+  roleId: string | null;
+  roleName: string | null;
+  roleData: any | null;
+}
+
 export function useUserRoles() {
   const { user } = useAuth();
   const [isUpdating, setIsUpdating] = useState(false);
@@ -48,7 +55,7 @@ export function useUserRoles() {
   }, [user?.id]);
 
   // Buscar o papel atual de um usuário
-  const getUserRole = useCallback(async (userId: string) => {
+  const getUserRole = useCallback(async (userId: string): Promise<UserRoleResult> => {
     try {
       const { data, error } = await supabase
         .from("profiles")
