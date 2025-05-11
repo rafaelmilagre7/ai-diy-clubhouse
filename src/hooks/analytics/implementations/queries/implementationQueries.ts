@@ -1,8 +1,12 @@
 
 import { supabase } from '@/lib/supabase';
-import { useLogging } from '@/hooks/useLogging';
 
-const { logWarning } = useLogging();
+/**
+ * Função utilitária para logging que não depende de hooks React
+ */
+const logWarning = (message: string, data: any = {}) => {
+  console.warn(`[Warning] ${message}:`, data);
+};
 
 /**
  * Busca dados sobre conclusões de implementações
