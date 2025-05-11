@@ -26,6 +26,7 @@ export function useInviteCreate() {
       
       console.log("Criando convite para", email, "com papel", roleId);
       
+      // Usar a função RPC create_invite para criar o convite
       const { data, error } = await supabase.rpc('create_invite', {
         p_email: email,
         p_role_id: roleId,
