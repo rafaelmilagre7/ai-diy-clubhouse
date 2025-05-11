@@ -12,6 +12,12 @@ interface UserRoleResult {
   roleData: any | null;
 }
 
+// Interface para o objeto user_roles para ajudar no TypeScript
+interface UserRoleData {
+  name?: string;
+  [key: string]: any;
+}
+
 export function useUserRoles() {
   const { user } = useAuth();
   const [isUpdating, setIsUpdating] = useState(false);
@@ -72,17 +78,20 @@ export function useUserRoles() {
       let roleName: string | null = null;
       let roleData: any = null;
       
+      // Tratamento mais robusto para diferentes formatos de resposta
       if (data?.user_roles) {
         if (Array.isArray(data.user_roles)) {
           // Se for um array, pegue o primeiro item (se existir)
-          if (data.user_roles.length > 0) {
-            roleName = data.user_roles[0].name ?? null;
-            roleData = data.user_roles[0];
+          const firstRole = data.user_roles.length > 0 ? data.user_roles[0] as UserRoleData : null;
+          if (firstRole) {
+            roleName = firstRole.name !== undefined ? firstRole.name : null;
+            roleData = firstRole;
           }
         } else {
           // Se não for um array, é um objeto
-          roleName = data.user_roles.name ?? null;
-          roleData = data.user_roles;
+          const roleObject = data.user_roles as UserRoleData;
+          roleName = roleObject.name !== undefined ? roleObject.name : null;
+          roleData = roleObject;
         }
       }
       
