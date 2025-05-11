@@ -6,9 +6,10 @@ import { ImplementationsByCategoryChart } from './ImplementationsByCategoryChart
 import { CompletionRateChart } from './CompletionRateChart';
 import { WeeklyActivityChart } from './WeeklyActivityChart';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Card, CardHeader, CardContent } from '@/components/ui/card';
+import { Card, CardHeader, CardContent, CardTitle, CardDescription } from '@/components/ui/card';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, RefreshCw } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface OverviewTabContentProps {
   timeRange: string;
@@ -20,6 +21,7 @@ interface OverviewTabContentProps {
     userCompletionRate: any[];
     dayOfWeekActivity: any[];
   };
+  onRefresh?: () => void;
 }
 
 export const OverviewTabContent = ({ 
@@ -31,7 +33,8 @@ export const OverviewTabContent = ({
     implementationsByCategory: [],
     userCompletionRate: [],
     dayOfWeekActivity: []
-  } 
+  },
+  onRefresh
 }: OverviewTabContentProps) => {
   const renderSkeleton = () => (
     <div className="space-y-6">
@@ -90,9 +93,22 @@ export const OverviewTabContent = ({
       <Alert className="mb-6">
         <AlertTriangle className="h-5 w-5" />
         <AlertTitle>Sem dados disponíveis</AlertTitle>
-        <AlertDescription>
-          Não foram encontrados dados de análise para o período selecionado. 
-          Tente selecionar um período diferente ou verificar se existem registros no sistema.
+        <AlertDescription className="space-y-4">
+          <p>
+            Não foram encontrados dados de análise para o período selecionado. 
+            Tente selecionar um período diferente ou verificar se existem registros no sistema.
+          </p>
+          {onRefresh && (
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={onRefresh} 
+              className="mt-2"
+            >
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Atualizar dados
+            </Button>
+          )}
         </AlertDescription>
       </Alert>
     );

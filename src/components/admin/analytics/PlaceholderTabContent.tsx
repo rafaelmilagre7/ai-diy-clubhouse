@@ -1,36 +1,37 @@
 
 import React from 'react';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { FileBarChart, LineChart } from 'lucide-react';
 
 interface PlaceholderTabContentProps {
   title: string;
-  description?: string;
-  badges?: string[];
+  description: string;
+  icon?: 'chart' | 'graph';
 }
 
-export const PlaceholderTabContent = ({ title, description = "Conteúdo em desenvolvimento", badges = [] }: PlaceholderTabContentProps) => {
+export const PlaceholderTabContent: React.FC<PlaceholderTabContentProps> = ({
+  title,
+  description,
+  icon = 'chart'
+}) => {
   return (
-    <Card>
+    <Card className="border-dashed">
       <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>
-          {description}
-        </CardDescription>
+        <CardTitle className="text-muted-foreground">{title}</CardTitle>
+        <CardDescription>{description}</CardDescription>
       </CardHeader>
-      <CardContent>
-        <div className="py-8 text-center">
-          <p className="text-muted-foreground">
-            {description}
-          </p>
-          {badges.length > 0 && (
-            <div className="flex flex-wrap justify-center gap-2 mt-4">
-              {badges.map((badge, i) => (
-                <Badge key={i} variant="outline">{badge}</Badge>
-              ))}
-            </div>
-          )}
-        </div>
+      <CardContent className="flex flex-col items-center justify-center py-10">
+        {icon === 'chart' ? (
+          <FileBarChart className="h-16 w-16 text-muted-foreground/50" />
+        ) : (
+          <LineChart className="h-16 w-16 text-muted-foreground/50" />
+        )}
+        <p className="mt-4 text-center text-muted-foreground">
+          Esta funcionalidade está em desenvolvimento e estará disponível em breve.
+        </p>
+        <p className="text-center text-sm text-muted-foreground">
+          Os dados necessários estão sendo coletados para fornecer análises relevantes.
+        </p>
       </CardContent>
     </Card>
   );

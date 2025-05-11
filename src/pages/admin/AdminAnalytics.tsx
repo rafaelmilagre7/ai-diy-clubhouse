@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { OverviewTabContent } from '@/components/admin/analytics/OverviewTabContent';
@@ -12,17 +12,47 @@ import { ImplementationsAnalyticsTabContent } from '@/components/admin/analytics
 import { useAnalyticsData } from '@/hooks/analytics/useAnalyticsData';
 import { PermissionGuard } from '@/components/auth/PermissionGuard';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, RefreshCw } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
 
 const AdminAnalytics = () => {
   const [timeRange, setTimeRange] = useState('7d');
+  const [category, setCategory] = useState('all');
+  const [difficulty, setDifficulty] = useState('all');
+  const { toast } = useToast();
   
   // Buscar dados de análise para a visão geral
-  const { data: analyticsData, loading: analyticsLoading } = useAnalyticsData({
-    timeRange: timeRange,
-    category: 'all',
-    difficulty: 'all'
+  const { 
+    data: analyticsData, 
+    loading: analyticsLoading, 
+    error: analyticsError,
+    refresh: refreshAnalytics 
+  } = useAnalyticsData({
+    timeRange,
+    category,
+    difficulty
   });
+
+  const handleTimeRangeChange = (value: string) => {
+    setTimeRange(value);
+  };
+
+  const handleCategoryChange = (value: string) => {
+    setCategory(value);
+  };
+
+  const handleDifficultyChange = (value: string) => {
+    setDifficulty(value);
+  };
+
+  const handleRefresh = useCallback(() => {
+    toast({
+      title: "Atualizando dados",
+      description: "Os dados estão sendo atualizados...",
+    });
+    refreshAnalytics();
+  }, [refreshAnalytics, toast]);
 
   return (
     <PermissionGuard 
@@ -39,13 +69,38 @@ const AdminAnalytics = () => {
       }
     >
       <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h1 className="text-3xl font-bold tracking-tight">Analytics</h1>
+          <Button 
+            variant="outline"
+            size="sm"
+            onClick={handleRefresh}
+            disabled={analyticsLoading}
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${analyticsLoading ? 'animate-spin' : ''}`} />
+            Atualizar dados
+          </Button>
+        </div>
+
         <AnalyticsHeader 
           timeRange={timeRange}
-          setTimeRange={setTimeRange}
+          setTimeRange={handleTimeRangeChange}
+          category={category}
+          setCategory={handleCategoryChange}
+          difficulty={difficulty}
+          setDifficulty={handleDifficultyChange}
         />
 
+        {analyticsError && (
+          <Alert variant="destructive" className="mb-6">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Erro ao carregar dados</AlertTitle>
+            <AlertDescription>{analyticsError}</AlertDescription>
+          </Alert>
+        )}
+
         <Tabs defaultValue="overview" className="space-y-4">
-          <TabsList>
+          <TabsList className="grid grid-cols-6 max-w-4xl">
             <TabsTrigger value="overview">Visão Geral</TabsTrigger>
             <TabsTrigger value="lms">LMS</TabsTrigger>
             <TabsTrigger value="users">Usuários</TabsTrigger>
@@ -59,6 +114,7 @@ const AdminAnalytics = () => {
               timeRange={timeRange} 
               loading={analyticsLoading} 
               data={analyticsData} 
+              onRefresh={handleRefresh} 
             />
           </TabsContent>
           
