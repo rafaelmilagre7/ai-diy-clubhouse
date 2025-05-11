@@ -1,22 +1,20 @@
 
-import * as React from "react"
-import { Bar, BarChart as RechartsBarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid, ReferenceLine, Legend } from "recharts"
-import { ChartConfig } from "./chart-container"
+import * as React from "react";
+import { Bar, BarChart as RechartsBarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
 
 interface BarChartProps {
-  data: any[]
-  index: string
-  categories: string[]
-  colors?: string[]
-  valueFormatter?: (value: number) => string
-  yAxisWidth?: number
-  showLegend?: boolean
-  showXAxis?: boolean
-  showYAxis?: boolean
-  showGridLines?: boolean
-  layout?: "horizontal" | "vertical"
-  stack?: boolean
-  className?: string
+  data: any[];
+  index: string;
+  categories: string[];
+  colors?: string[];
+  valueFormatter?: (value: number) => string;
+  yAxisWidth?: number;
+  showLegend?: boolean;
+  showXAxis?: boolean;
+  showYAxis?: boolean;
+  showGridLines?: boolean;
+  layout?: "vertical" | "horizontal";
+  className?: string;
 }
 
 export function BarChart({
@@ -31,16 +29,15 @@ export function BarChart({
   showYAxis = true,
   showGridLines = true,
   layout = "horizontal",
-  stack = false,
   className,
 }: BarChartProps) {
-  const [hoveredValue, setHoveredValue] = React.useState<number | null>(null)
+  const [hoveredValue, setHoveredValue] = React.useState<number | null>(null);
 
   const formatValue = (value: number) => {
-    return valueFormatter(value)
-  }
+    return valueFormatter(value);
+  };
 
-  const customColors = colors || ["var(--color-primary)", "var(--color-secondary)", "var(--color-muted)"]
+  const customColors = colors || ["var(--color-primary)", "var(--color-secondary)", "var(--color-muted)"];
 
   return (
     <div className={className || "h-full w-full"}>
@@ -51,8 +48,8 @@ export function BarChart({
           margin={{
             top: 10,
             right: 10,
-            left: 0,
-            bottom: 0,
+            left: yAxisWidth,
+            bottom: 20,
           }}
         >
           {showGridLines && (
@@ -60,32 +57,39 @@ export function BarChart({
           )}
           {showXAxis && (
             <XAxis
-              dataKey={index}
+              dataKey={layout === "horizontal" ? index : undefined}
+              type={layout === "horizontal" ? "category" : "number"}
               tick={{ fill: "var(--muted-foreground)" }}
               tickLine={{ stroke: "var(--border)" }}
               axisLine={{ stroke: "var(--border)" }}
               tickMargin={10}
-              type={layout === "horizontal" ? "category" : "number"}
+              tickFormatter={layout === "horizontal" ? undefined : formatValue}
             />
           )}
           {showYAxis && (
             <YAxis
+              dataKey={layout === "vertical" ? index : undefined}
+              type={layout === "vertical" ? "category" : "number"}
               width={yAxisWidth}
-              tickFormatter={formatValue}
               tick={{ fill: "var(--muted-foreground)" }}
               tickLine={{ stroke: "var(--border)" }}
               axisLine={{ stroke: "var(--border)" }}
               tickMargin={10}
-              type={layout === "horizontal" ? "number" : "category"}
+              tickFormatter={layout === "vertical" ? undefined : formatValue}
             />
           )}
           <Tooltip
-            cursor={{ fill: "var(--accent)" }}
+            cursor={false}
             content={({ active, payload }) => {
               if (active && payload && payload.length) {
                 return (
                   <div className="rounded-lg border bg-background p-2 shadow-sm">
                     <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <p className="text-xs text-muted-foreground">
+                          {payload[0].payload[index]}
+                        </p>
+                      </div>
                       {payload.map((entry, index) => (
                         <div key={`tooltip-${index}`}>
                           <p className="text-xs text-muted-foreground">
@@ -101,45 +105,15 @@ export function BarChart({
                       ))}
                     </div>
                   </div>
-                )
+                );
               }
-              return null
+              return null;
             }}
           />
-          {showLegend && (
-            <Legend
-              verticalAlign="top"
-              height={36}
-              content={({ payload }) => {
-                if (payload && payload.length) {
-                  return (
-                    <div className="flex items-center justify-center gap-4">
-                      {payload.map((entry, index) => (
-                        <div
-                          key={`legend-${index}`}
-                          className="flex items-center gap-1"
-                        >
-                          <div
-                            className="h-3 w-3 rounded-full"
-                            style={{ backgroundColor: entry.color }}
-                          />
-                          <span className="text-sm text-muted-foreground">
-                            {entry.value}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  )
-                }
-                return null
-              }}
-            />
-          )}
           {categories.map((category, index) => (
             <Bar
               key={category}
               dataKey={category}
-              stackId={stack ? "a" : undefined}
               fill={customColors[index % customColors.length]}
               radius={[4, 4, 0, 0]}
               onMouseOver={(props: any) => setHoveredValue(props.value)}
@@ -149,5 +123,5 @@ export function BarChart({
         </RechartsBarChart>
       </ResponsiveContainer>
     </div>
-  )
+  );
 }
