@@ -11,6 +11,10 @@ import InvitePage from '@/pages/InvitePage';
 const AppRoutes = () => {
   return (
     <Routes>
+      {/* Convite Routes - Adicionado no início para maior prioridade */}
+      <Route path="/convite/:token" element={<InvitePage />} />
+      <Route path="/convite" element={<InvitePage />} />
+      
       {/* Auth Routes */}
       {authRoutes.map((route) => (
         <Route key={route.path} path={route.path} element={route.element} />
@@ -35,9 +39,6 @@ const AppRoutes = () => {
       {formacaoRoutes.map((route) => (
         <Route key={route.path} path={route.path} element={route.element} />
       ))}
-      
-      {/* Convite Route - Adicionado para acesso público */}
-      <Route path="/convite/:token" element={<InvitePage />} />
       
       {/* Fallback route */}
       <Route path="*" element={<NotFound />} />

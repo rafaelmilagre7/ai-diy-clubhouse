@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -6,7 +7,6 @@ import { LoggingProvider } from './hooks/useLogging';
 import { AuthProvider } from './contexts/auth';
 import { AppRoutes } from './routes';
 import { Toaster } from './components/ui/sonner';
-import InvitesManagement from "./pages/admin/invites";
 
 // Criar uma instância do QueryClient fora do componente para evitar recriação a cada render
 const queryClient = new QueryClient({

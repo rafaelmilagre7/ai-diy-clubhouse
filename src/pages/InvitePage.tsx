@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { useParams, Navigate, Link } from "react-router-dom";
+import { useParams, Navigate, Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/auth";
 import { toast } from "sonner";
@@ -24,6 +24,7 @@ interface InviteData {
 export default function InvitePage() {
   const { token } = useParams<{ token: string }>();
   const { user } = useAuth();
+  const navigate = useNavigate();
   
   const [isLoading, setIsLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -31,7 +32,7 @@ export default function InvitePage() {
   const [inviteStatus, setInviteStatus] = useState<"valid" | "used" | "expired" | "error" | "success">("valid");
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [manualToken, setManualToken] = useState("");
-  const [isManualEntry, setIsManualEntry] = useState(false);
+  const [isManualEntry, setIsManualEntry] = useState(!token); // Se não tiver token na URL, mostrar entrada manual
   
   // Formulário de registro
   const [email, setEmail] = useState("");
@@ -43,7 +44,7 @@ export default function InvitePage() {
     if (!inputToken) return "";
     
     // Remover espaços em branco, quebras de linha e outros caracteres indesejados
-    return inputToken.trim().replace(/[\s\n\r\t]+/g, '');
+    return inputToken.trim().replace(/[\s\n\r\t]+/g, '').toUpperCase();
   };
   
   // Função para buscar convite
@@ -140,8 +141,14 @@ export default function InvitePage() {
     }
   };
   
+  // Efeito para buscar o convite quando o componente carrega
   useEffect(() => {
-    fetchInviteWithToken(token);
+    if (token) {
+      fetchInviteWithToken(token);
+    } else {
+      // Se não tiver token na URL, desativar o loading (estamos na página de entrada manual)
+      setIsLoading(false);
+    }
   }, [token]);
   
   // Se o usuário já estiver logado e o convite for válido, usar o convite
@@ -151,7 +158,7 @@ export default function InvitePage() {
         try {
           setIsProcessing(true);
           
-          const cleanedToken = cleanToken(token);
+          const cleanedToken = cleanToken(token || manualToken);
           console.log("Tentando usar convite para usuário já logado:", {
             token: cleanedToken,
             userId: user.id
@@ -190,7 +197,7 @@ export default function InvitePage() {
     };
     
     useInviteForLoggedUser();
-  }, [user, invite, inviteStatus, token]);
+  }, [user, invite, inviteStatus, token, manualToken]);
   
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -265,7 +272,7 @@ export default function InvitePage() {
   const handleManualTokenSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!manualToken.trim()) {
-      toast.error("Token inválido", { description: "Por favor, insira um código de convite válido." });
+      toast.error("Código inválido", { description: "Por favor, insira um código de convite válido." });
       return;
     }
     
@@ -306,27 +313,28 @@ export default function InvitePage() {
             />
           </div>
           <CardTitle className="text-2xl">
-            {inviteStatus === "valid" && !user && "Aceitar Convite"}
+            {isManualEntry && !invite && "Inserir Código de Convite"}
+            {inviteStatus === "valid" && !user && !isManualEntry && "Aceitar Convite"}
             {inviteStatus === "valid" && user && "Ativando seu acesso..."}
             {inviteStatus === "expired" && "Convite Expirado"}
             {inviteStatus === "used" && "Convite Já Utilizado"}
-            {inviteStatus === "error" && "Convite Inválido"}
+            {inviteStatus === "error" && !isManualEntry && "Convite Inválido"}
             {inviteStatus === "success" && "Convite Aceito!"}
           </CardTitle>
           <CardDescription>
-            {inviteStatus === "valid" && !user && "Complete seu cadastro para acessar a plataforma"}
+            {isManualEntry && !invite && "Insira o código de convite que você recebeu por email"}
+            {inviteStatus === "valid" && !user && !isManualEntry && "Complete seu cadastro para acessar a plataforma"}
             {inviteStatus === "valid" && user && "Estamos processando seu convite"}
             {inviteStatus === "expired" && "Este convite já expirou e não pode mais ser utilizado"}
             {inviteStatus === "used" && "Este convite já foi utilizado anteriormente"}
-            {inviteStatus === "error" && "Não foi possível encontrar o convite solicitado"}
+            {inviteStatus === "error" && !isManualEntry && "Não foi possível encontrar o convite solicitado"}
             {inviteStatus === "success" && "Seu acesso foi configurado com sucesso"}
           </CardDescription>
         </CardHeader>
         <CardContent>
           {/* Entrada manual do token */}
-          {inviteStatus === "error" && isManualEntry && (
-            <form onSubmit={handleManualTokenSubmit} className="space-y-4 mb-6 bg-amber-50 p-4 rounded-md border border-amber-200">
-              <h3 className="font-semibold text-amber-800">Inserir código do convite manualmente</h3>
+          {(isManualEntry) && (
+            <form onSubmit={handleManualTokenSubmit} className="space-y-4 mb-6">
               <div className="space-y-2">
                 <Label htmlFor="manualToken">Código do convite</Label>
                 <Input
