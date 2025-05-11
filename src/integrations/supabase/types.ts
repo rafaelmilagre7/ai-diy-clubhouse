@@ -383,8 +383,10 @@ export type Database = {
           email: string
           expires_at: string
           id: string
+          last_sent_at: string | null
           notes: string | null
           role_id: string
+          send_attempts: number | null
           token: string
           used_at: string | null
         }
@@ -394,8 +396,10 @@ export type Database = {
           email: string
           expires_at: string
           id?: string
+          last_sent_at?: string | null
           notes?: string | null
           role_id: string
+          send_attempts?: number | null
           token: string
           used_at?: string | null
         }
@@ -405,8 +409,10 @@ export type Database = {
           email?: string
           expires_at?: string
           id?: string
+          last_sent_at?: string | null
           notes?: string | null
           role_id?: string
+          send_attempts?: number | null
           token?: string
           used_at?: string | null
         }
@@ -3189,6 +3195,10 @@ export type Database = {
       setup_learning_storage_buckets: {
         Args: Record<PropertyKey, never>
         Returns: Json
+      }
+      update_invite_send_attempt: {
+        Args: { invite_id: string }
+        Returns: undefined
       }
       use_invite: {
         Args: { invite_token: string; user_id: string }

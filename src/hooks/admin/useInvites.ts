@@ -26,6 +26,7 @@ export interface Invite {
 export interface SendInviteResponse {
   success: boolean;
   message: string;
+  error?: string;
 }
 
 export function useInvites() {
@@ -120,18 +121,25 @@ export function useInvites() {
         .eq('id', roleId)
         .single();
 
-      await sendInviteEmail({
+      const sendResult = await sendInviteEmail({
         email,
         inviteUrl,
         roleName: roleData?.name || 'membro',
         expiresAt: data.expires_at,
         senderName: user.user_metadata?.name,
-        notes
+        notes,
+        inviteId: data.invite_id // Passar o ID do convite para atualizar estatísticas
       });
       
-      toast.success('Convite criado com sucesso', {
-        description: `Um convite para ${email} foi criado e enviado por email.`
-      });
+      if (!sendResult.success) {
+        toast.warning('Convite criado, mas houve um erro ao enviar o e-mail', {
+          description: sendResult.error || 'O sistema tentará reenviar o e-mail mais tarde.'
+        });
+      } else {
+        toast.success('Convite criado com sucesso', {
+          description: `Um convite para ${email} foi criado e enviado por email.`
+        });
+      }
       
       await fetchInvites();
       return data;
@@ -178,7 +186,8 @@ export function useInvites() {
     roleName,
     expiresAt,
     senderName,
-    notes
+    notes,
+    inviteId
   }: {
     email: string;
     inviteUrl: string;
@@ -186,6 +195,7 @@ export function useInvites() {
     expiresAt: string;
     senderName?: string;
     notes?: string;
+    inviteId?: string;
   }): Promise<SendInviteResponse> => {
     try {
       setIsSending(true);
@@ -198,11 +208,16 @@ export function useInvites() {
           roleName,
           expiresAt,
           senderName,
-          notes
+          notes,
+          inviteId // Passar o ID do convite para atualizar estatísticas
         }
       });
       
       if (error) throw error;
+      
+      if (!data.success) {
+        throw new Error(data.message || 'Erro ao enviar e-mail');
+      }
       
       return {
         success: true,
@@ -210,7 +225,11 @@ export function useInvites() {
       };
     } catch (err: any) {
       console.error('Erro ao enviar email de convite:', err);
-      throw new Error(err.message || 'Erro ao enviar email de convite');
+      return {
+        success: false,
+        message: 'Erro ao enviar email de convite',
+        error: err.message
+      };
     } finally {
       setIsSending(false);
     }
@@ -230,20 +249,27 @@ export function useInvites() {
         
       const inviteUrl = getInviteLink(invite.token);
       
-      await sendInviteEmail({
+      const sendResult = await sendInviteEmail({
         email: invite.email,
         inviteUrl: inviteUrl,
         roleName: roleData?.name || invite.role?.name || 'membro',
         expiresAt: invite.expires_at,
-        notes: invite.notes || undefined
+        notes: invite.notes || undefined,
+        inviteId: invite.id // Passar o ID do convite para atualizar estatísticas
       });
       
-      toast.success('Convite reenviado com sucesso', {
-        description: `Um novo e-mail foi enviado para ${invite.email}.`
-      });
-      
-      // Atualizar o convite com a informação de reenvio
-      // Idealmente, deveríamos registrar isso no banco de dados
+      if (sendResult.success) {
+        toast.success('Convite reenviado com sucesso', {
+          description: `Um novo e-mail foi enviado para ${invite.email}.`
+        });
+        
+        // Atualizar o convite na lista com as novas informações de tentativas
+        await fetchInvites();
+      } else {
+        toast.error('Erro ao reenviar convite', {
+          description: sendResult.error || 'Não foi possível reenviar o e-mail.'
+        });
+      }
 
       return {
         token: invite.token,
@@ -258,7 +284,7 @@ export function useInvites() {
     } finally {
       setIsSending(false);
     }
-  }, []);
+  }, [fetchInvites]);
 
   // Gerar link de convite
   const getInviteLink = useCallback((token: string) => {

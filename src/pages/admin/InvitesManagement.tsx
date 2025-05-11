@@ -389,6 +389,8 @@ const InvitesList = ({
   };
 
   const formatDate = (dateString: string) => {
+    if (!dateString) return "-";
+    
     const date = new Date(dateString);
     return date.toLocaleDateString('pt-BR', { 
       day: '2-digit', 
@@ -432,6 +434,7 @@ const InvitesList = ({
             <TableHead>Papel</TableHead>
             <TableHead>Expira em</TableHead>
             <TableHead>Status</TableHead>
+            <TableHead>Envio</TableHead>
             <TableHead className="text-right">Ações</TableHead>
           </TableRow>
         </TableHeader>
@@ -467,6 +470,28 @@ const InvitesList = ({
                       <CheckCircle className="h-3 w-3" />
                       Ativo
                     </Badge>
+                  )}
+                </TableCell>
+                <TableCell>
+                  {invite.last_sent_at ? (
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="flex items-center gap-1 cursor-help">
+                            <Mail className="h-4 w-4 text-muted-foreground" />
+                            <span className="text-sm">
+                              {invite.send_attempts || 0}x 
+                            </span>
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Enviado {invite.send_attempts || 0} vezes</p>
+                          <p>Último envio: {formatDate(invite.last_sent_at)}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  ) : (
+                    <span className="text-muted-foreground text-sm">Pendente</span>
                   )}
                 </TableCell>
                 <TableCell className="text-right space-x-2">
@@ -523,7 +548,7 @@ const InvitesList = ({
             ))
           ) : (
             <TableRow>
-              <TableCell colSpan={5} className="text-center py-10 text-muted-foreground">
+              <TableCell colSpan={6} className="text-center py-10 text-muted-foreground">
                 Nenhum convite encontrado.
               </TableCell>
             </TableRow>

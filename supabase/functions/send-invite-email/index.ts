@@ -1,9 +1,6 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { Resend } from "npm:resend@2.0.0";
-
-// Inicializar o cliente Resend com a chave API
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+import * as smtp from "npm:nodemailer@6.9.10";
 
 // Configurar headers CORS
 const corsHeaders = {
@@ -19,7 +16,19 @@ interface InviteEmailRequest {
   expiresAt: string;
   senderName?: string;
   notes?: string;
+  inviteId?: string; // ID do convite para atualizar estatísticas
 }
+
+// Obter configurações SMTP do ambiente
+const smtpConfig = {
+  host: Deno.env.get("SUPABASE_SMTP_HOST") || "email-smtp.us-east-1.amazonaws.com",
+  port: parseInt(Deno.env.get("SUPABASE_SMTP_PORT") || "587"),
+  secure: false, // true para porta 465, false para outras portas
+  auth: {
+    user: Deno.env.get("SUPABASE_SMTP_USER"),
+    pass: Deno.env.get("SUPABASE_SMTP_PASS")
+  }
+};
 
 serve(async (req) => {
   // Lidar com requisições preflight CORS
@@ -28,7 +37,12 @@ serve(async (req) => {
   }
 
   try {
-    const { email, inviteUrl, roleName, expiresAt, senderName, notes } = await req.json() as InviteEmailRequest;
+    const { email, inviteUrl, roleName, expiresAt, senderName, notes, inviteId } = await req.json() as InviteEmailRequest;
+
+    // Verificar se temos todas as informações necessárias
+    if (!email || !inviteUrl || !roleName || !expiresAt) {
+      throw new Error("Dados de convite incompletos");
+    }
 
     // Formatar a data de expiração
     const expireDate = new Date(expiresAt);
@@ -40,10 +54,13 @@ serve(async (req) => {
       minute: '2-digit'
     });
 
-    // Criar e enviar o email
-    const { data, error } = await resend.emails.send({
-      from: "Viver de IA Club <noreply@viverdeia.ai>",
-      to: [email],
+    // Criar transportador SMTP
+    const transporter = smtp.createTransport(smtpConfig);
+
+    // Configurar email
+    const mailOptions = {
+      from: '"VIVER DE IA Club" <no-reply@viverdeia.ai>',
+      to: email,
       subject: "Convite para o VIVER DE IA Club",
       html: `
         <!DOCTYPE html>
@@ -121,20 +138,46 @@ serve(async (req) => {
           </div>
         </body>
         </html>
-      `,
-    });
+      `
+    };
 
-    if (error) {
-      console.error("Erro ao enviar e-mail:", error);
-      throw error;
+    // Enviar email
+    console.log("Tentando enviar e-mail para:", email);
+    const result = await transporter.sendMail(mailOptions);
+    console.log("E-mail enviado com sucesso:", result);
+
+    // Se um ID de convite foi fornecido, atualizar as estatísticas de envio
+    if (inviteId) {
+      try {
+        // Atualizar as estatísticas do convite usando a função RPC
+        const { data: updateData, error: updateError } = await fetch(
+          `${Deno.env.get("SUPABASE_URL")}/rest/v1/rpc/update_invite_send_attempt`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+              "apikey": Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || ""
+            },
+            body: JSON.stringify({ invite_id: inviteId })
+          }
+        ).then(res => res.json());
+
+        if (updateError) {
+          console.error("Erro ao atualizar estatísticas de envio:", updateError);
+        }
+      } catch (updateErr) {
+        console.error("Falha ao atualizar estatísticas de envio:", updateErr);
+      }
     }
-
-    console.log("E-mail de convite enviado com sucesso:", data);
 
     return new Response(
       JSON.stringify({
         success: true,
-        data: data,
+        data: {
+          messageId: result.messageId,
+          accepted: result.accepted
+        },
         message: `Convite enviado para ${email} com sucesso.`
       }),
       {
