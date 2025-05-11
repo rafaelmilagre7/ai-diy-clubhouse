@@ -12,6 +12,7 @@ jest.mock('@/lib/supabase', () => ({
       })),
       update: jest.fn(() => Promise.resolve({ error: null })),
     })),
+    rpc: jest.fn(() => Promise.resolve({ data: null, error: null })),
   },
 }));
 
@@ -24,7 +25,7 @@ describe('useUsers', () => {
     expect(result.current.searchQuery).toBe('');
     expect(result.current.selectedUser).toBe(null);
     expect(result.current.editRoleOpen).toBe(false);
-    expect(result.current.newRole).toBe('member');
+    expect(result.current.newRoleId).toBe(''); // Alterado de newRole para newRoleId
     expect(result.current.saving).toBe(false);
   });
 
@@ -52,7 +53,7 @@ describe('useUsers', () => {
         industry: null,
         created_at: '2024-01-01T00:00:00Z',
       });
-      result.current.setNewRole('admin');
+      result.current.setNewRoleId('admin-role-id'); // Alterado de setNewRole para setNewRoleId
       await result.current.handleUpdateRole();
     });
     

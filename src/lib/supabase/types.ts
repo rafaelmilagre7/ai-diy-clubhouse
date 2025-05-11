@@ -10,6 +10,8 @@ export interface UserProfile {
   company_name: string | null;
   industry: string | null;
   role: UserRole;
+  role_id?: string; // Adicionando o role_id
+  user_roles?: any; // Interface para a relação com a tabela user_roles
   created_at: string;
 }
 

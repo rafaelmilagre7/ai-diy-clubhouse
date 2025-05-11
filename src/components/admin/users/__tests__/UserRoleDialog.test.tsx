@@ -16,20 +16,26 @@ describe('UserRoleDialog', () => {
     created_at: '2024-01-01T00:00:00Z',
   };
 
+  const mockAvailableRoles = [
+    { id: 'member-role-id', name: 'member', description: 'Membro', is_system: true },
+    { id: 'admin-role-id', name: 'admin', description: 'Administrador', is_system: true }
+  ];
+
   const mockProps = {
     open: true,
     onOpenChange: jest.fn(),
     selectedUser: mockUser,
-    newRole: 'member' as const,
+    newRoleId: 'member-role-id',
     onRoleChange: jest.fn(),
     onUpdateRole: jest.fn(),
     saving: false,
+    availableRoles: mockAvailableRoles
   };
 
   it('renders correctly when open', () => {
     const { getByText } = render(<UserRoleDialog {...mockProps} />);
     
-    expect(getByText('Alterar Função do Usuário')).toBeInTheDocument();
+    expect(getByText('Alterar Papel do Usuário')).toBeInTheDocument();
     expect(getByText(/Test User/)).toBeInTheDocument();
   });
 

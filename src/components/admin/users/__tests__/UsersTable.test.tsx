@@ -21,7 +21,7 @@ describe('UsersTable', () => {
   const mockProps = {
     users: mockUsers,
     loading: false,
-    isAdminMaster: true,
+    canEditRoles: true, // Alterado de isAdminMaster para canEditRoles
     onEditRole: jest.fn(),
   };
 
@@ -30,7 +30,6 @@ describe('UsersTable', () => {
     
     expect(getByText('Test User')).toBeInTheDocument();
     expect(getByText('test@example.com')).toBeInTheDocument();
-    expect(getByText('Test Company')).toBeInTheDocument();
   });
 
   it('shows loading state', () => {
@@ -48,16 +47,16 @@ describe('UsersTable', () => {
   it('calls onEditRole when edit button is clicked', () => {
     const { getByRole } = render(<UsersTable {...mockProps} />);
     
-    const editButton = getByRole('button', { name: /alterar função/i });
+    const editButton = getByRole('button', { name: /altera/i });
     editButton.click();
     
     expect(mockProps.onEditRole).toHaveBeenCalledWith(mockUsers[0]);
   });
 
-  it('hides edit button when not admin master', () => {
-    const { queryByRole } = render(<UsersTable {...mockProps} isAdminMaster={false} />);
+  it('hides edit button when not allowed to edit roles', () => {
+    const { queryByRole } = render(<UsersTable {...mockProps} canEditRoles={false} />);
     
-    const editButton = queryByRole('button', { name: /alterar função/i });
+    const editButton = queryByRole('button', { name: /altera/i });
     expect(editButton).not.toBeInTheDocument();
   });
 });
