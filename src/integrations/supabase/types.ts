@@ -2960,6 +2960,10 @@ export type Database = {
         Args: { email: string }
         Returns: string
       }
+      get_user_permissions: {
+        Args: { user_id: string }
+        Returns: string[]
+      }
       increment: {
         Args: { row_id: string; table_name: string; column_name: string }
         Returns: undefined

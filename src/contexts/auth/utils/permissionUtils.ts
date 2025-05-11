@@ -25,40 +25,16 @@ export const checkUserPermission = async (
 
 export const getUserPermissions = async (userId: string): Promise<string[]> => {
   try {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select(`
-        role_id,
-        user_roles!inner (
-          id,
-          name,
-          permissions,
-          role_permissions (
-            permission_definitions (
-              code
-            )
-          )
-        )
-      `)
-      .eq('id', userId)
-      .single();
+    const { data, error } = await supabase.rpc('get_user_permissions', {
+      user_id: userId
+    });
     
     if (error) {
       console.error('Erro ao buscar permissões do usuário:', error);
       return [];
     }
     
-    // Verificar se é admin (tem todas as permissões)
-    if (data?.user_roles?.permissions?.all === true) {
-      return ['*']; // Wildcard para todas as permissões
-    }
-    
-    // Extrair códigos de permissão
-    const permissionCodes = data?.user_roles?.role_permissions
-      ?.map((rp: any) => rp.permission_definitions?.code)
-      .filter(Boolean) || [];
-    
-    return permissionCodes;
+    return data || [];
   } catch (error) {
     console.error('Erro ao buscar permissões do usuário:', error);
     return [];
