@@ -19,6 +19,7 @@ import AdminSuggestionDetails from '@/pages/admin/AdminSuggestionDetails';
 import AdminEvents from '@/pages/admin/AdminEvents';
 import RolesPage from '@/pages/admin/RolesPage';
 import PermissionAuditLogPage from '@/pages/admin/PermissionAuditLogPage';
+import InvitesManagement from '@/pages/admin/InvitesManagement';
 
 export const adminRoutes: RouteObject[] = [
   {
@@ -177,6 +178,16 @@ export const adminRoutes: RouteObject[] = [
       <AdminProtectedRoutes>
         <AdminLayout>
           <PermissionAuditLogPage />
+        </AdminLayout>
+      </AdminProtectedRoutes>
+    )
+  },
+  {
+    path: "/admin/invites",
+    element: (
+      <AdminProtectedRoutes>
+        <AdminLayout>
+          <InvitesManagement />
         </AdminLayout>
       </AdminProtectedRoutes>
     )

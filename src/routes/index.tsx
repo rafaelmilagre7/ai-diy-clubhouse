@@ -1,44 +1,49 @@
 
-import { Routes, Route, Navigate } from 'react-router-dom';
-import { authRoutes } from './AuthRoutes';
-import { adminRoutes } from './AdminRoutes';
-import { memberRoutes } from './MemberRoutes';
-import { onboardingRoutes } from './OnboardingRoutes';
-import { formacaoRoutes } from './FormacaoRoutes';
-import NotFound from '@/pages/NotFound';
+import { createBrowserRouter, RouteObject } from "react-router-dom";
 
-const AppRoutes = () => {
-  return (
-    <Routes>
-      {/* Auth Routes */}
-      {authRoutes.map((route) => (
-        <Route key={route.path} path={route.path} element={route.element} />
-      ))}
-      
-      {/* Member Routes */}
-      {memberRoutes.map((route) => (
-        <Route key={route.path} path={route.path} element={route.element} />
-      ))}
-      
-      {/* Admin Routes */}
-      {adminRoutes.map((route) => (
-        <Route key={route.path} path={route.path} element={route.element} />
-      ))}
-      
-      {/* Onboarding Routes */}
-      {onboardingRoutes.map((route) => (
-        <Route key={route.path} path={route.path} element={route.element} />
-      ))}
-      
-      {/* Formação Routes */}
-      {formacaoRoutes.map((route) => (
-        <Route key={route.path} path={route.path} element={route.element} />
-      ))}
-      
-      {/* Fallback route */}
-      <Route path="*" element={<NotFound />} />
-    </Routes>
-  );
-};
+import { PublicRoutes } from "./PublicRoutes";
+import { adminRoutes } from "./AdminRoutes";
 
-export default AppRoutes;
+import RootLayout from '@/components/layout/RootLayout';
+import ErrorPage from "@/pages/ErrorPage";
+import NotFoundPage from "@/pages/NotFoundPage";
+import HomePage from "@/pages/HomePage";
+import LoginPage from "@/pages/LoginPage";
+import InvitePage from "@/pages/InvitePage";
+
+// Definição das rotas principais
+const mainRoutes: RouteObject[] = [
+  {
+    path: "/",
+    element: <RootLayout />,
+    errorElement: <ErrorPage />,
+    children: [
+      {
+        index: true,
+        element: <HomePage />,
+      },
+      ...PublicRoutes,
+    ],
+  },
+  {
+    path: "/login",
+    element: <LoginPage />,
+  },
+  {
+    path: "/convite/:token",
+    element: <InvitePage />,
+  },
+  {
+    path: "*",
+    element: <NotFoundPage />,
+  },
+];
+
+// Combinar todas as rotas
+export const routes = [
+  ...mainRoutes,
+  ...adminRoutes,
+];
+
+// Criar o router
+export const router = createBrowserRouter(routes);

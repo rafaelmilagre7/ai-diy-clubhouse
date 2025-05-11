@@ -12,7 +12,8 @@ import {
   Calendar,
   GraduationCap,
   Shield,
-  FileText
+  FileText,
+  Mail
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "react-router-dom";
@@ -103,6 +104,12 @@ export const AdminSidebarNav = ({ sidebarOpen }: AdminSidebarNavProps) => {
       href: "/admin/roles",
       icon: Shield,
       permission: "roles.view"
+    },
+    {
+      title: "Convites",
+      href: "/admin/invites",
+      icon: Mail,
+      permission: "users.invite"
     },
     {
       title: "Log de Auditoria",

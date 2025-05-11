@@ -376,6 +376,50 @@ export type Database = {
         }
         Relationships: []
       }
+      invites: {
+        Row: {
+          created_at: string
+          created_by: string
+          email: string
+          expires_at: string
+          id: string
+          notes: string | null
+          role_id: string
+          token: string
+          used_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          email: string
+          expires_at: string
+          id?: string
+          notes?: string | null
+          role_id: string
+          token: string
+          used_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          notes?: string | null
+          role_id?: string
+          token?: string
+          used_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invites_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "user_roles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       learning_certificates: {
         Row: {
           certificate_url: string | null
@@ -2763,6 +2807,44 @@ export type Database = {
         }
         Relationships: []
       }
+      trusted_domains: {
+        Row: {
+          created_at: string
+          created_by: string
+          description: string | null
+          domain: string
+          id: string
+          is_active: boolean
+          role_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          description?: string | null
+          domain: string
+          id?: string
+          is_active?: boolean
+          role_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          domain?: string
+          id?: string
+          is_active?: boolean
+          role_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trusted_domains_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "user_roles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_badges: {
         Row: {
           badge_id: string
@@ -3020,6 +3102,19 @@ export type Database = {
         Args: { progress_id: string }
         Returns: Json
       }
+      check_trusted_domain: {
+        Args: { p_email: string }
+        Returns: Json
+      }
+      create_invite: {
+        Args: {
+          p_email: string
+          p_role_id: string
+          p_expires_in?: unknown
+          p_notes?: string
+        }
+        Returns: Json
+      }
       create_storage_public_policy: {
         Args: { bucket_name: string }
         Returns: boolean
@@ -3038,6 +3133,10 @@ export type Database = {
       }
       determinerolefromemail: {
         Args: { email: string }
+        Returns: string
+      }
+      generate_invite_token: {
+        Args: Record<PropertyKey, never>
         Returns: string
       }
       get_user_permissions: {
@@ -3089,6 +3188,10 @@ export type Database = {
       }
       setup_learning_storage_buckets: {
         Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      use_invite: {
+        Args: { invite_token: string; user_id: string }
         Returns: Json
       }
       user_has_permission: {
