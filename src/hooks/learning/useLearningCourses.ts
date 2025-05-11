@@ -42,13 +42,16 @@ export const useLearningCourses = () => {
         throw restrictedError;
       }
 
+      // Criar um conjunto com IDs dos cursos restritos para acesso mais rápido
+      const restrictedIds = new Set(restrictedCourses?.map(rc => rc.course_id) || []);
+      
       // Se o usuário não estiver autenticado, filtrar os cursos restritos
       if (!user) {
-        const restrictedIds = new Set(restrictedCourses.map(rc => rc.course_id));
         const filteredCourses = data.filter(course => !restrictedIds.has(course.id));
         
         return filteredCourses.map(course => ({
           ...course,
+          is_restricted: restrictedIds.has(course.id),
           module_count: course.modules ? course.modules.length : 0,
           lesson_count: course.modules ? course.modules.reduce((count, module) => {
             return count + (module.lessons ? module.lessons.length : 0);
@@ -59,6 +62,7 @@ export const useLearningCourses = () => {
       // Processar contagens de módulos e aulas para todos os cursos
       return data.map(course => ({
         ...course,
+        is_restricted: restrictedIds.has(course.id),
         module_count: course.modules ? course.modules.length : 0,
         lesson_count: course.modules ? course.modules.reduce((count, module) => {
           return count + (module.lessons ? module.lessons.length : 0);

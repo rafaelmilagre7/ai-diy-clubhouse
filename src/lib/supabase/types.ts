@@ -92,6 +92,7 @@ export interface LearningCourse {
   created_by: string | null;
   module_count?: number;
   lesson_count?: number;
+  is_restricted?: boolean; // Adicionando a propriedade is_restricted
 }
 
 export interface LearningModule {
