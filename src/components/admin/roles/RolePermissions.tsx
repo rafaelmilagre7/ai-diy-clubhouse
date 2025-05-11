@@ -6,6 +6,7 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -186,11 +187,11 @@ export function RolePermissions({ open, onOpenChange, role }: RolePermissionsPro
               ))}
             </Accordion>
 
-            <div className="flex justify-end">
+            <DialogFooter>
               <Button onClick={() => onOpenChange(false)}>
                 Fechar
               </Button>
-            </div>
+            </DialogFooter>
           </div>
         )}
       </DialogContent>

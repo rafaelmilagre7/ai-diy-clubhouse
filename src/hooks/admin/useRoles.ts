@@ -42,7 +42,7 @@ export function useRoles() {
       setError(null);
       
       const { data, error } = await supabase
-        .from('roles')
+        .from('user_roles')
         .select('*')
         .order('is_system', { ascending: false })
         .order('name');
@@ -64,7 +64,7 @@ export function useRoles() {
       setIsCreating(true);
       
       const { data, error } = await supabase
-        .from('roles')
+        .from('user_roles')
         .insert(role)
         .select()
         .single();
@@ -95,7 +95,7 @@ export function useRoles() {
       setIsUpdating(true);
       
       const { data, error } = await supabase
-        .from('roles')
+        .from('user_roles')
         .update(role)
         .eq('id', id)
         .select()
@@ -121,7 +121,7 @@ export function useRoles() {
       setIsDeleting(true);
       
       const { error } = await supabase
-        .from('roles')
+        .from('user_roles')
         .delete()
         .eq('id', id);
         
