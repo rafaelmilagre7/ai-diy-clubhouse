@@ -109,7 +109,7 @@ export const AdminSidebarNav = ({ sidebarOpen }: AdminSidebarNavProps) => {
       title: "Convites",
       href: "/admin/invites",
       icon: Mail,
-      permission: "users.invite"
+      permission: "users.invite" // Permissão específica para acessar convites
     },
     {
       title: "Log de Auditoria",
@@ -124,8 +124,11 @@ export const AdminSidebarNav = ({ sidebarOpen }: AdminSidebarNavProps) => {
   };
 
   const renderMenuItem = (item: any) => {
-    // Se não tiver permissão específica, não renderize
-    if (item.permission && !hasPermission(item.permission)) {
+    // Verificação especial para administradores - sempre mostrar as opções de gerenciamento
+    const isAdmin = hasPermission('admin.all');
+    
+    // Se não tiver permissão específica e não for admin, não renderize
+    if (item.permission && !hasPermission(item.permission) && !isAdmin) {
       return null;
     }
 

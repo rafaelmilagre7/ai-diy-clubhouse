@@ -104,8 +104,13 @@ export const usePermissions = () => {
 
   // Verificar se o usuário tem determinada permissão
   const hasPermission = (permissionCode: string): boolean => {
-    return userPermissions.includes(permissionCode) || 
-           userPermissions.includes('admin.all');
+    // Verificar se o usuário tem a permissão específica
+    const hasSpecificPermission = userPermissions.includes(permissionCode);
+    
+    // Verificar se o usuário tem permissão admin.all (é um superadmin)
+    const isAdmin = userPermissions.includes('admin.all');
+    
+    return hasSpecificPermission || isAdmin;
   };
 
   useEffect(() => {

@@ -15,13 +15,17 @@ export const PermissionGuard: React.FC<PermissionGuardProps> = ({
   children,
   fallback
 }) => {
-  const { hasPermission, loading } = usePermissions();
+  const { hasPermission, loading, userPermissions } = usePermissions();
+
+  // Verificar se o usuário tem a permissão admin.all (é um superadmin)
+  const isAdmin = userPermissions.includes('admin.all');
 
   if (loading) {
     return <div className="p-4 animate-pulse">Verificando permissões...</div>;
   }
 
-  if (!hasPermission(permission)) {
+  // Permitir acesso se o usuário tem a permissão específica ou é admin
+  if (!hasPermission(permission) && !isAdmin) {
     return fallback || (
       <Alert variant="destructive" className="my-4">
         <AlertCircle className="h-4 w-4" />
