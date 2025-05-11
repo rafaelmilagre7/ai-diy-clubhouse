@@ -5,6 +5,8 @@ import { supabase } from "@/lib/supabase";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, BookOpen, Users, CheckCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 
 const FormacaoDashboard = () => {
   const { profile } = useAuth();
@@ -179,7 +181,3 @@ const FormacaoDashboard = () => {
 };
 
 export default FormacaoDashboard;
-
-// Importação de componentes necessários que não foram definidos acima
-import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
