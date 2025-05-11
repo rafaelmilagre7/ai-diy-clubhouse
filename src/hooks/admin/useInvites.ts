@@ -319,7 +319,7 @@ export function useInvites() {
     }
   }, [fetchInvites]);
 
-  // Gerar link de convite - MODIFICADO para melhorar a robustez
+  // Gerar link de convite - MELHORADO para maior robustez
   const getInviteLink = useCallback((token: string) => {
     // Verificar se o token existe e tem o formato esperado
     if (!token) {

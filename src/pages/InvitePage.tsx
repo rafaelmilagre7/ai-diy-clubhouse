@@ -30,113 +30,118 @@ export default function InvitePage() {
   const [invite, setInvite] = useState<InviteData | null>(null);
   const [inviteStatus, setInviteStatus] = useState<"valid" | "used" | "expired" | "error" | "success">("valid");
   const [fetchError, setFetchError] = useState<string | null>(null);
+  const [manualToken, setManualToken] = useState("");
+  const [isManualEntry, setIsManualEntry] = useState(false);
   
   // Formulário de registro
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   
-  useEffect(() => {
-    const fetchInvite = async () => {
-      if (!token) return;
-      
-      try {
-        setIsLoading(true);
-        setFetchError(null);
-        
-        // Limpar o token antes de fazer a consulta
-        const cleanToken = token.trim().replace(/\s+/g, '');
-        
-        console.log("Buscando convite com token:", cleanToken);
-        console.log("Token comprimento:", cleanToken?.length);
-        
-        // Log detalhado para depuração
-        console.log("Token em formato hexadecimal:", 
-          Array.from(cleanToken).map(c => c.charCodeAt(0).toString(16)).join(' '));
-        
-        // Buscar convites ativos para depuração
-        const { data: activeInvites, error: activeError } = await supabase
-          .from("invites")
-          .select("token")
-          .is("used_at", null)
-          .limit(5);
-          
-        if (!activeError && activeInvites) {
-          console.log("Exemplos de tokens ativos disponíveis:", activeInvites.map(i => 
-            `${i.token.substring(0, 5)}...${i.token.substring(i.token.length-5)} (${i.token.length} caracteres)`
-          ));
-        }
-        
-        // Usar maybeSingle em vez de single para evitar erros quando não encontrar o convite
-        const { data, error } = await supabase
-          .from("invites")
-          .select("*, role:role_id(name)")
-          .eq("token", cleanToken)
-          .maybeSingle();
-        
-        if (error) {
-          console.error("Erro na consulta do convite:", error);
-          setFetchError(`Erro ao buscar convite: ${error.message || error.code || 'Erro desconhecido'}`);
-          throw error;
-        }
-        
-        console.log("Resultado da consulta:", data ? "Convite encontrado" : "Convite não encontrado");
-        
-        if (!data) {
-          console.error("Convite não encontrado para o token:", cleanToken);
-          setFetchError(`Convite não encontrado para o token fornecido`);
-          
-          // Tentar uma busca mais flexível usando LIKE para debug
-          console.log("Tentando busca alternativa com LIKE...");
-          const { data: similarTokens, error: similarError } = await supabase
-            .from("invites")
-            .select("token")
-            .ilike("token", `%${cleanToken.substring(0, 20)}%`) // Primeiros 20 caracteres
-            .limit(5);
-            
-          if (!similarError && similarTokens && similarTokens.length > 0) {
-            console.log("Tokens similares encontrados:", similarTokens.map(i => 
-              `${i.token.substring(0, 10)}...${i.token.substring(i.token.length-10)} (${i.token.length} caracteres)`
-            ));
-            
-            setFetchError(`Convite não encontrado exato, mas encontramos ${similarTokens.length} tokens similares`);
-          }
-          
-          throw new Error("Convite não encontrado");
-        }
-        
-        console.log("Convite encontrado:", {
-          id: data.id,
-          email: data.email,
-          expires_at: data.expires_at,
-          used_at: data.used_at,
-          role: data.role?.name
-        });
-        
-        setInvite(data);
-        
-        // Verificar status do convite
-        if (data.used_at) {
-          setInviteStatus("used");
-        } else if (new Date(data.expires_at) < new Date()) {
-          setInviteStatus("expired");
-        } else {
-          setInviteStatus("valid");
-          setEmail(data.email); // Preencher o email automaticamente
-        }
-        
-      } catch (error) {
-        console.error("Erro ao buscar convite:", error);
-        setInviteStatus("error");
-        toast.error("Convite inválido", {
-          description: "O link de convite não é válido ou expirou."
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  // Função para limpar tokens
+  const cleanToken = (inputToken: string | undefined): string => {
+    if (!inputToken) return "";
     
-    fetchInvite();
+    // Remover espaços em branco, quebras de linha e outros caracteres indesejados
+    return inputToken.trim().replace(/[\s\n\r\t]+/g, '');
+  };
+  
+  // Função para buscar convite
+  const fetchInviteWithToken = async (tokenToUse: string) => {
+    if (!tokenToUse) return;
+    
+    try {
+      setIsLoading(true);
+      setFetchError(null);
+      
+      // Limpar o token antes de fazer a consulta
+      const cleanedToken = cleanToken(tokenToUse);
+      
+      console.log("Buscando convite com token:", cleanedToken);
+      console.log("Token comprimento:", cleanedToken?.length);
+      
+      // Log detalhado para depuração
+      console.log("Token em formato hexadecimal:", 
+        Array.from(cleanedToken).map(c => c.charCodeAt(0).toString(16)).join(' '));
+      
+      // Usar maybeSingle em vez de single para evitar erros quando não encontrar o convite
+      const { data, error } = await supabase
+        .from("invites")
+        .select("*, role:role_id(name)")
+        .eq("token", cleanedToken)
+        .maybeSingle();
+      
+      if (error) {
+        console.error("Erro na consulta do convite:", error);
+        setFetchError(`Erro ao buscar convite: ${error.message || error.code || 'Erro desconhecido'}`);
+        throw error;
+      }
+      
+      console.log("Resultado da consulta:", data ? "Convite encontrado" : "Convite não encontrado");
+      
+      if (!data) {
+        console.error("Convite não encontrado para o token:", cleanedToken);
+        setFetchError(`Convite não encontrado para o token fornecido`);
+        
+        // Tentar uma busca mais flexível usando LIKE para debug (apenas em ambiente não-produtivo)
+        if (import.meta.env.DEV) {
+          try {
+            console.log("Tentando busca alternativa com LIKE...");
+            const { data: similarTokens, error: similarError } = await supabase
+              .from("invites")
+              .select("token")
+              .ilike("token", `%${cleanedToken.substring(0, Math.min(10, cleanedToken.length))}%`) // Primeiros 10 caracteres
+              .limit(5);
+              
+            if (!similarError && similarTokens && similarTokens.length > 0) {
+              console.log("Tokens similares encontrados:", similarTokens.map(i => 
+                `${i.token.substring(0, 10)}...${i.token.substring(i.token.length-5)} (${i.token.length} caracteres)`
+              ));
+              
+              setFetchError(`Convite não encontrado exato, mas encontramos ${similarTokens.length} tokens similares. Tente inserir o código manualmente.`);
+              setIsManualEntry(true);
+            }
+          } catch (e) {
+            console.error("Erro ao buscar tokens similares:", e);
+          }
+        }
+        
+        setInviteStatus("error");
+        throw new Error("Convite não encontrado");
+      }
+      
+      console.log("Convite encontrado:", {
+        id: data.id,
+        email: data.email,
+        expires_at: data.expires_at,
+        used_at: data.used_at,
+        role: data.role?.name
+      });
+      
+      setInvite(data);
+      
+      // Verificar status do convite
+      if (data.used_at) {
+        setInviteStatus("used");
+      } else if (new Date(data.expires_at) < new Date()) {
+        setInviteStatus("expired");
+      } else {
+        setInviteStatus("valid");
+        setEmail(data.email); // Preencher o email automaticamente
+      }
+      
+      return data;
+    } catch (error) {
+      console.error("Erro ao buscar convite:", error);
+      setInviteStatus("error");
+      return null;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  useEffect(() => {
+    fetchInviteWithToken(token);
   }, [token]);
   
   // Se o usuário já estiver logado e o convite for válido, usar o convite
@@ -146,13 +151,14 @@ export default function InvitePage() {
         try {
           setIsProcessing(true);
           
+          const cleanedToken = cleanToken(token);
           console.log("Tentando usar convite para usuário já logado:", {
-            token,
+            token: cleanedToken,
             userId: user.id
           });
           
           const { data, error } = await supabase.rpc('use_invite', {
-            invite_token: token,
+            invite_token: cleanedToken,
             user_id: user.id
           });
           
@@ -222,9 +228,11 @@ export default function InvitePage() {
       
       console.log("Usuário criado com sucesso, agora usando o convite");
       
-      // Usar o convite
+      // Usar o convite com token limpo
+      const cleanedToken = cleanToken(token || manualToken);
+      
       const { data, error } = await supabase.rpc('use_invite', {
-        invite_token: token,
+        invite_token: cleanedToken,
         user_id: authData.user.id
       });
       
@@ -251,6 +259,19 @@ export default function InvitePage() {
       });
     } finally {
       setIsProcessing(false);
+    }
+  };
+  
+  const handleManualTokenSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!manualToken.trim()) {
+      toast.error("Token inválido", { description: "Por favor, insira um código de convite válido." });
+      return;
+    }
+    
+    const result = await fetchInviteWithToken(manualToken);
+    if (result) {
+      setIsManualEntry(false);
     }
   };
   
@@ -295,25 +316,61 @@ export default function InvitePage() {
           <CardDescription>
             {inviteStatus === "valid" && !user && "Complete seu cadastro para acessar a plataforma"}
             {inviteStatus === "valid" && user && "Estamos processando seu convite"}
-            {inviteStatus === "expired" && "Este convite já expirou e não pode ser utilizado"}
+            {inviteStatus === "expired" && "Este convite já expirou e não pode mais ser utilizado"}
             {inviteStatus === "used" && "Este convite já foi utilizado anteriormente"}
             {inviteStatus === "error" && "Não foi possível encontrar o convite solicitado"}
             {inviteStatus === "success" && "Seu acesso foi configurado com sucesso"}
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {/* Entrada manual do token */}
+          {inviteStatus === "error" && isManualEntry && (
+            <form onSubmit={handleManualTokenSubmit} className="space-y-4 mb-6 bg-amber-50 p-4 rounded-md border border-amber-200">
+              <h3 className="font-semibold text-amber-800">Inserir código do convite manualmente</h3>
+              <div className="space-y-2">
+                <Label htmlFor="manualToken">Código do convite</Label>
+                <Input
+                  id="manualToken"
+                  value={manualToken}
+                  onChange={(e) => setManualToken(e.target.value)}
+                  placeholder="Cole o código do convite aqui"
+                  required
+                  className="font-mono"
+                />
+              </div>
+              <Button type="submit" className="w-full" disabled={isProcessing}>
+                {isProcessing ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Verificando...
+                  </>
+                ) : (
+                  "Verificar convite"
+                )}
+              </Button>
+            </form>
+          )}
+
           {/* Exibir erro de depuração se houver */}
           {fetchError && (
             <div className="bg-red-50 border border-red-200 text-red-800 p-3 rounded-md mb-4 text-xs overflow-auto">
               <p className="font-semibold">Erro de depuração:</p>
               <p className="font-mono">{fetchError}</p>
-              {token && (
+              {token && !isManualEntry && (
                 <>
                   <p className="font-semibold mt-2">Token recebido:</p>
                   <p className="font-mono break-all">{token}</p>
                   <p className="font-mono text-xs mt-1">
                     (Comprimento: {token.length} caracteres)
                   </p>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => setIsManualEntry(true)}
+                    className="mt-2 text-xs"
+                  >
+                    Inserir código manualmente
+                  </Button>
                 </>
               )}
             </div>
@@ -436,20 +493,21 @@ export default function InvitePage() {
           )}
           
           {/* Mensagem para convite com erro */}
-          {inviteStatus === "error" && (
+          {inviteStatus === "error" && !isManualEntry && (
             <div className="flex flex-col items-center justify-center py-6">
               <div className="bg-red-50 text-red-700 p-4 rounded-md mb-4 flex items-center">
                 <XCircle className="h-5 w-5 mr-2" />
                 <p>Não foi possível encontrar o convite solicitado.</p>
               </div>
-              <p className="text-center text-muted-foreground">
+              <p className="text-center text-muted-foreground mb-4">
                 O link pode estar incorreto ou o convite já foi removido.
               </p>
-              {fetchError && (
-                <p className="text-xs text-gray-500 mt-4">
-                  Detalhe: Pode ser necessário verificar o formato do token no link.
-                </p>
-              )}
+              <Button 
+                variant="outline" 
+                onClick={() => setIsManualEntry(true)}
+              >
+                Inserir código do convite manualmente
+              </Button>
             </div>
           )}
           
@@ -470,7 +528,7 @@ export default function InvitePage() {
           )}
         </CardContent>
         <CardFooter className="flex justify-center border-t pt-4">
-          {inviteStatus !== "valid" && inviteStatus !== "success" && (
+          {inviteStatus !== "valid" && inviteStatus !== "success" && !isManualEntry && (
             <Button asChild variant="outline">
               <Link to="/login">Voltar para Login</Link>
             </Button>

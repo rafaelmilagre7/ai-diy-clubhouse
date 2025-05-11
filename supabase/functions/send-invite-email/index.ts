@@ -76,10 +76,17 @@ serve(async (req) => {
     
     // Extrair token do URL para exibição separada
     let token = "";
+    let cleanUrl = inviteUrl;
     try {
       const url = new URL(inviteUrl);
+      // Certificar-se de que a URL não contenha caracteres problemáticos
       token = url.pathname.split('/').pop() || "";
-      console.log("Token extraído do URL:", token);
+      
+      // Limpar qualquer espaço em branco na URL
+      cleanUrl = url.toString().trim();
+      
+      console.log("Token extraído do URL:", token, "comprimento:", token.length);
+      console.log("URL limpa:", cleanUrl);
     } catch (e) {
       console.error("Erro ao extrair token do URL:", e);
     }
@@ -129,6 +136,7 @@ serve(async (req) => {
               font-weight: 600;
               margin: 20px 0;
               text-align: center;
+              white-space: nowrap;
             }
             .footer {
               margin-top: 40px;
@@ -143,14 +151,27 @@ serve(async (req) => {
             }
             .token-display {
               font-family: monospace;
-              font-size: 16px;
+              font-size: 18px;
               background-color: #f0f0f0;
               border: 1px solid #ddd;
               padding: 10px;
               border-radius: 4px;
               margin: 10px 0;
               text-align: center;
-              letter-spacing: 1px;
+              letter-spacing: 2px;
+              font-weight: bold;
+            }
+            .url-container {
+              word-break: break-all;
+              background-color: #f5f5f5;
+              padding: 10px;
+              border-radius: 4px;
+              margin: 15px 0;
+              border: 1px solid #eee;
+            }
+            .important-note {
+              color: #d32f2f;
+              font-weight: bold;
             }
           </style>
         </head>
@@ -167,19 +188,24 @@ serve(async (req) => {
           
           <p>Para aceitar o convite, clique no botão abaixo:</p>
           
-          <div style="text-align: center;">
-            <a href="${inviteUrl}" class="button" style="color: white !important; text-decoration: none !important;">Aceitar Convite</a>
-          </div>
+          <table width="100%" cellpadding="0" cellspacing="0" border="0">
+            <tr>
+              <td align="center">
+                <a href="${cleanUrl}" class="button" style="color: white !important; text-decoration: none !important;">Aceitar Convite</a>
+              </td>
+            </tr>
+          </table>
           
           <p><strong>Importante:</strong> Este convite expira em ${formattedExpireDate}.</p>
           
           <p>Se o botão acima não funcionar, você pode copiar e colar o link a seguir no seu navegador:</p>
-          <div style="word-break: break-all; background-color: #f5f5f5; padding: 10px; border-radius: 4px;">
-            <a href="${inviteUrl}" style="color: #4361ee;">${inviteUrl}</a>
+          <div class="url-container">
+            <a href="${cleanUrl}" style="color: #4361ee;">${cleanUrl}</a>
           </div>
           
-          <p>Ou use diretamente este código de convite:</p>
+          <p class="important-note">⚠️ ATENÇÃO: Se tiver problemas com o link acima, use este código de convite:</p>
           <div class="token-display">${token}</div>
+          <p>Entre em <strong>viverdeia.ai/convite</strong> e cole o código acima</p>
           
           ${senderName ? `<p>Convite enviado por: ${senderName}</p>` : ''}
           
