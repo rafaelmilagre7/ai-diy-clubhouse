@@ -15,7 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Shield, User } from "lucide-react";
+import { Shield, User, Loader2 } from "lucide-react";
 import { UserProfile } from "@/lib/supabase";
 import { Role } from "@/hooks/admin/useRoles";
 
@@ -27,6 +27,7 @@ interface UserRoleDialogProps {
   onRoleChange: (value: string) => void;
   onUpdateRole: () => void;
   saving: boolean;
+  loading?: boolean;
   availableRoles: Role[];
 }
 
@@ -38,6 +39,7 @@ export const UserRoleDialog = ({
   onRoleChange,
   onUpdateRole,
   saving,
+  loading = false,
   availableRoles,
 }: UserRoleDialogProps) => {
   const getUserName = () => {
@@ -66,30 +68,42 @@ export const UserRoleDialog = ({
         </DialogHeader>
         
         <div className="py-4">
-          <Select value={newRoleId} onValueChange={onRoleChange}>
-            <SelectTrigger>
-              <SelectValue placeholder="Selecione um papel" />
-            </SelectTrigger>
-            <SelectContent>
-              {availableRoles.map(role => (
-                <SelectItem key={role.id} value={role.id}>
-                  <div className="flex items-center">
-                    {getRoleIcon(role.name)}
-                    {role.name.charAt(0).toUpperCase() + role.name.slice(1)}
-                    {role.is_system && <span className="ml-2 text-xs text-gray-400">(sistema)</span>}
-                  </div>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          {loading ? (
+            <div className="flex items-center justify-center py-4">
+              <Loader2 className="h-6 w-6 animate-spin text-viverblue" />
+              <span className="ml-2">Carregando papel atual...</span>
+            </div>
+          ) : (
+            <Select value={newRoleId} onValueChange={onRoleChange}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione um papel" />
+              </SelectTrigger>
+              <SelectContent>
+                {availableRoles.map(role => (
+                  <SelectItem key={role.id} value={role.id}>
+                    <div className="flex items-center">
+                      {getRoleIcon(role.name)}
+                      {role.name.charAt(0).toUpperCase() + role.name.slice(1)}
+                      {role.is_system && <span className="ml-2 text-xs text-gray-400">(sistema)</span>}
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
         </div>
         
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving || loading}>
             Cancelar
           </Button>
-          <Button onClick={onUpdateRole} disabled={saving}>
-            {saving ? 'Salvando...' : 'Salvar'}
+          <Button onClick={onUpdateRole} disabled={saving || loading}>
+            {saving ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Salvando...
+              </>
+            ) : 'Salvar'}
           </Button>
         </DialogFooter>
       </DialogContent>

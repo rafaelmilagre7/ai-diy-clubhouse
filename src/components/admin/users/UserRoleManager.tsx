@@ -25,21 +25,45 @@ export function UserRoleManager({
     roleId: string | null;
     roleName: string | null;
   }>({ roleId: null, roleName: null });
+  const [isLoadingRole, setIsLoadingRole] = useState(false);
   
   // Efeito para carregar o papel atual quando o diálogo abrir
   useEffect(() => {
+    let isMounted = true;
+    
     if (open && user) {
       const fetchUserRole = async () => {
-        const result = await getUserRole(user.id);
-        setCurrentRole({
-          roleId: result.roleId,
-          roleName: result.roleName
-        });
-        // Definir o roleId selecionado com garantia de que seja string
-        setSelectedRoleId(result.roleId ?? "");
+        try {
+          setIsLoadingRole(true);
+          const result = await getUserRole(user.id);
+          
+          // Verificar se o componente ainda está montado antes de atualizar o estado
+          if (isMounted) {
+            setCurrentRole({
+              roleId: result.roleId,
+              roleName: result.roleName
+            });
+            
+            // Definir o roleId selecionado com garantia de que seja string
+            setSelectedRoleId(result.roleId ?? "");
+            setIsLoadingRole(false);
+          }
+        } catch (error) {
+          console.error("Erro ao buscar papel do usuário:", error);
+          if (isMounted) {
+            setIsLoadingRole(false);
+            toast.error("Erro ao carregar papel do usuário");
+          }
+        }
       };
+      
       fetchUserRole();
     }
+    
+    // Função de cleanup para evitar atualizações de estado em componentes desmontados
+    return () => {
+      isMounted = false;
+    };
   }, [open, user, getUserRole]);
 
   // Verificar se houve mudança na seleção
@@ -70,6 +94,7 @@ export function UserRoleManager({
       onRoleChange={setSelectedRoleId}
       onUpdateRole={handleSave}
       saving={isUpdating}
+      loading={isLoadingRole}
       availableRoles={availableRoles}
     />
   );
