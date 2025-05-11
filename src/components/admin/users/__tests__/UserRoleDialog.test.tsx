@@ -17,8 +17,22 @@ describe('UserRoleDialog', () => {
   };
 
   const mockAvailableRoles = [
-    { id: 'member-role-id', name: 'member', description: 'Membro', is_system: true, permissions: {} },
-    { id: 'admin-role-id', name: 'admin', description: 'Administrador', is_system: true, permissions: {} }
+    { 
+      id: 'member-role-id', 
+      name: 'member', 
+      description: 'Membro', 
+      is_system: true, 
+      permissions: {},
+      created_at: '2024-01-01T00:00:00Z' 
+    },
+    { 
+      id: 'admin-role-id', 
+      name: 'admin', 
+      description: 'Administrador', 
+      is_system: true, 
+      permissions: {},
+      created_at: '2024-01-01T00:00:00Z'
+    }
   ];
 
   const mockProps = {
