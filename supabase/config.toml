@@ -41,5 +41,8 @@ site_url = "http://127.0.0.1:5173"
 enabled = true
 
 [functions]
+[functions.send-invite-email]
+verify_jwt = true
+
 [functions.update-video-durations]
 verify_jwt = true

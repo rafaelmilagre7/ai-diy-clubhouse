@@ -1,8 +1,7 @@
-
 import { useState, useEffect } from "react";
 import { useDocumentTitle } from "@/hooks/use-document-title";
 import { Button } from "@/components/ui/button";
-import { Plus, Copy, Mail, Trash2, RefreshCw, Calendar, CheckCircle, XCircle } from "lucide-react";
+import { Plus, Copy, Mail, Trash2, RefreshCw, Calendar, CheckCircle, XCircle, Loader2 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -39,6 +38,12 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 // Componente para criar novo convite
 const CreateInviteDialog = ({ roles, onInviteCreated }: { roles: any[], onInviteCreated: () => void }) => {
@@ -141,7 +146,14 @@ const CreateInviteDialog = ({ roles, onInviteCreated }: { roles: any[], onInvite
               Cancelar
             </Button>
             <Button type="submit" disabled={isCreating}>
-              {isCreating ? "Criando..." : "Criar Convite"}
+              {isCreating ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Enviando...
+                </>
+              ) : (
+                "Criar Convite"
+              )}
             </Button>
           </DialogFooter>
         </form>
@@ -249,12 +261,128 @@ const CreateDomainDialog = ({ roles, onDomainCreated }: { roles: any[], onDomain
   );
 };
 
-// Componente para a lista de convites
-const InvitesList = ({ invites, onDelete, onResend }: { 
-  invites: Invite[], 
-  onDelete: (id: string) => void,
-  onResend: (invite: Invite) => void
+// Componente para confirmar reenvio de convite
+const ConfirmResendDialog = ({ 
+  invite,
+  onConfirm,
+  isOpen,
+  onOpenChange,
+  isSending
+}: { 
+  invite: Invite | null;
+  onConfirm: () => void;
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
+  isSending: boolean;
 }) => {
+  if (!invite) return null;
+  
+  return (
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Reenviar convite</DialogTitle>
+          <DialogDescription>
+            Você está prestes a reenviar o convite para <strong>{invite.email}</strong>.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="py-4">
+          <p>Um novo email será enviado com o link de convite.</p>
+          <p className="text-sm text-muted-foreground mt-2">
+            O email será enviado com os dados do convite original.
+          </p>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Cancelar
+          </Button>
+          <Button onClick={onConfirm} disabled={isSending}>
+            {isSending ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Enviando...
+              </>
+            ) : (
+              "Reenviar"
+            )}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+// Componente para confirmar exclusão de convite
+const ConfirmDeleteDialog = ({ 
+  invite,
+  onConfirm,
+  isOpen,
+  onOpenChange,
+  isDeleting
+}: { 
+  invite: Invite | null;
+  onConfirm: () => void;
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
+  isDeleting: boolean;
+}) => {
+  if (!invite) return null;
+  
+  return (
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Excluir convite</DialogTitle>
+          <DialogDescription>
+            Você está prestes a excluir o convite para <strong>{invite.email}</strong>.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="py-4">
+          <p>Esta ação não pode ser desfeita. O convite será permanentemente removido do sistema.</p>
+          {!invite.used_at && new Date(invite.expires_at) >= new Date() && (
+            <p className="text-sm text-amber-500 mt-2">
+              Atenção: este convite ainda está ativo e não foi utilizado.
+            </p>
+          )}
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Cancelar
+          </Button>
+          <Button variant="destructive" onClick={onConfirm} disabled={isDeleting}>
+            {isDeleting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Excluindo...
+              </>
+            ) : (
+              "Excluir"
+            )}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+// Componente para a lista de convites
+const InvitesList = ({ 
+  invites, 
+  onDelete, 
+  onResend,
+  isSending,
+  isDeleting 
+}: { 
+  invites: Invite[], 
+  onDelete: (invite: Invite) => void,
+  onResend: (invite: Invite) => void,
+  isSending: boolean,
+  isDeleting: boolean
+}) => {
+  const [resendDialogOpen, setResendDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [selectedInvite, setSelectedInvite] = useState<Invite | null>(null);
+
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
     toast.success("Link copiado para área de transferência");
@@ -271,90 +399,154 @@ const InvitesList = ({ invites, onDelete, onResend }: {
     });
   };
 
+  const handleResendClick = (invite: Invite) => {
+    setSelectedInvite(invite);
+    setResendDialogOpen(true);
+  };
+
+  const handleDeleteClick = (invite: Invite) => {
+    setSelectedInvite(invite);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmResend = () => {
+    if (selectedInvite) {
+      onResend(selectedInvite);
+      setResendDialogOpen(false);
+    }
+  };
+
+  const confirmDelete = () => {
+    if (selectedInvite) {
+      onDelete(selectedInvite);
+      setDeleteDialogOpen(false);
+    }
+  };
+
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>Email</TableHead>
-          <TableHead>Papel</TableHead>
-          <TableHead>Expira em</TableHead>
-          <TableHead>Status</TableHead>
-          <TableHead className="text-right">Ações</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {invites.length > 0 ? (
-          invites.map((invite) => (
-            <TableRow key={invite.id}>
-              <TableCell className="font-medium">{invite.email}</TableCell>
-              <TableCell>
-                <Badge variant="outline">
-                  {invite.role?.name || "Desconhecido"}
-                </Badge>
-              </TableCell>
-              <TableCell>
-                <div className="flex items-center">
-                  <Calendar className="mr-2 h-4 w-4 text-muted-foreground" />
-                  <span>{formatDate(invite.expires_at)}</span>
-                </div>
-              </TableCell>
-              <TableCell>
-                {invite.used_at ? (
-                  <Badge variant="secondary" className="flex items-center gap-1">
-                    <CheckCircle className="h-3 w-3" />
-                    Utilizado
+    <>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Email</TableHead>
+            <TableHead>Papel</TableHead>
+            <TableHead>Expira em</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead className="text-right">Ações</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {invites.length > 0 ? (
+            invites.map((invite) => (
+              <TableRow key={invite.id}>
+                <TableCell className="font-medium">{invite.email}</TableCell>
+                <TableCell>
+                  <Badge variant="outline">
+                    {invite.role?.name || "Desconhecido"}
                   </Badge>
-                ) : new Date(invite.expires_at) < new Date() ? (
-                  <Badge variant="destructive" className="flex items-center gap-1">
-                    <XCircle className="h-3 w-3" />
-                    Expirado
-                  </Badge>
-                ) : (
-                  <Badge variant="default" className="flex items-center gap-1 bg-green-500 hover:bg-green-600">
-                    <CheckCircle className="h-3 w-3" />
-                    Ativo
-                  </Badge>
-                )}
-              </TableCell>
-              <TableCell className="text-right space-x-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => copyToClipboard(`${window.location.origin}/convite/${invite.token}`)}
-                  title="Copiar link de convite"
-                >
-                  <Copy className="h-4 w-4" />
-                </Button>
-                {!invite.used_at && new Date(invite.expires_at) >= new Date() && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => onResend(invite)}
-                    title="Reenviar convite"
-                  >
-                    <Mail className="h-4 w-4" />
-                  </Button>
-                )}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => onDelete(invite.id)}
-                  title="Excluir convite"
-                >
-                  <Trash2 className="h-4 w-4 text-destructive" />
-                </Button>
+                </TableCell>
+                <TableCell>
+                  <div className="flex items-center">
+                    <Calendar className="mr-2 h-4 w-4 text-muted-foreground" />
+                    <span>{formatDate(invite.expires_at)}</span>
+                  </div>
+                </TableCell>
+                <TableCell>
+                  {invite.used_at ? (
+                    <Badge variant="secondary" className="flex items-center gap-1">
+                      <CheckCircle className="h-3 w-3" />
+                      Utilizado
+                    </Badge>
+                  ) : new Date(invite.expires_at) < new Date() ? (
+                    <Badge variant="destructive" className="flex items-center gap-1">
+                      <XCircle className="h-3 w-3" />
+                      Expirado
+                    </Badge>
+                  ) : (
+                    <Badge variant="default" className="flex items-center gap-1 bg-green-500 hover:bg-green-600">
+                      <CheckCircle className="h-3 w-3" />
+                      Ativo
+                    </Badge>
+                  )}
+                </TableCell>
+                <TableCell className="text-right space-x-2">
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => copyToClipboard(`${window.location.origin}/convite/${invite.token}`)}
+                        >
+                          <Copy className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Copiar link de convite</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  
+                    {!invite.used_at && new Date(invite.expires_at) >= new Date() && (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleResendClick(invite)}
+                          >
+                            <Mail className="h-4 w-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Reenviar convite</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    )}
+                  
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDeleteClick(invite)}
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Excluir convite</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </TableCell>
+              </TableRow>
+            ))
+          ) : (
+            <TableRow>
+              <TableCell colSpan={5} className="text-center py-10 text-muted-foreground">
+                Nenhum convite encontrado.
               </TableCell>
             </TableRow>
-          ))
-        ) : (
-          <TableRow>
-            <TableCell colSpan={5} className="text-center py-10 text-muted-foreground">
-              Nenhum convite encontrado.
-            </TableCell>
-          </TableRow>
-        )}
-      </TableBody>
-    </Table>
+          )}
+        </TableBody>
+      </Table>
+
+      <ConfirmResendDialog 
+        invite={selectedInvite} 
+        onConfirm={confirmResend}
+        isOpen={resendDialogOpen}
+        onOpenChange={setResendDialogOpen}
+        isSending={isSending}
+      />
+
+      <ConfirmDeleteDialog 
+        invite={selectedInvite} 
+        onConfirm={confirmDelete}
+        isOpen={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        isDeleting={isDeleting}
+      />
+    </>
   );
 };
 
@@ -431,7 +623,9 @@ export default function InvitesManagement() {
     loading: loadingInvites,
     fetchInvites,
     deleteInvite,
-    resendInvite
+    resendInvite,
+    isDeleting,
+    isSending
   } = useInvites();
   
   const {
@@ -473,11 +667,8 @@ export default function InvitesManagement() {
   );
   
   // Manipuladores de evento
-  const handleDeleteInvite = async (id: string) => {
-    const confirmed = window.confirm("Tem certeza que deseja excluir este convite?");
-    if (confirmed) {
-      await deleteInvite(id);
-    }
+  const handleDeleteInvite = async (invite: Invite) => {
+    await deleteInvite(invite.id);
   };
   
   const handleResendInvite = async (invite: Invite) => {
@@ -566,6 +757,8 @@ export default function InvitesManagement() {
                   invites={filteredInvites} 
                   onDelete={handleDeleteInvite}
                   onResend={handleResendInvite}
+                  isSending={isSending}
+                  isDeleting={isDeleting}
                 />
               )}
             </TabsContent>

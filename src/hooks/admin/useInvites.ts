@@ -19,6 +19,13 @@ export interface Invite {
   };
   creator_name?: string;
   creator_email?: string;
+  last_sent_at?: string;
+  send_attempts?: number;
+}
+
+export interface SendInviteResponse {
+  success: boolean;
+  message: string;
 }
 
 export function useInvites() {
@@ -28,6 +35,7 @@ export function useInvites() {
   const [error, setError] = useState<Error | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isSending, setIsSending] = useState(false);
 
   // Buscar todos os convites
   const fetchInvites = useCallback(async () => {
@@ -104,8 +112,25 @@ export function useInvites() {
         throw new Error(data.message);
       }
       
+      // Enviar email de convite
+      const inviteUrl = getInviteLink(data.token);
+      const { data: roleData } = await supabase
+        .from('user_roles')
+        .select('name')
+        .eq('id', roleId)
+        .single();
+
+      await sendInviteEmail({
+        email,
+        inviteUrl,
+        roleName: roleData?.name || 'membro',
+        expiresAt: data.expires_at,
+        senderName: user.user_metadata?.name,
+        notes
+      });
+      
       toast.success('Convite criado com sucesso', {
-        description: `Um convite para ${email} foi criado.`
+        description: `Um convite para ${email} foi criado e enviado por email.`
       });
       
       await fetchInvites();
@@ -146,18 +171,93 @@ export function useInvites() {
     }
   }, []);
 
+  // Função para enviar email de convite
+  const sendInviteEmail = async ({
+    email,
+    inviteUrl,
+    roleName,
+    expiresAt,
+    senderName,
+    notes
+  }: {
+    email: string;
+    inviteUrl: string;
+    roleName: string;
+    expiresAt: string;
+    senderName?: string;
+    notes?: string;
+  }): Promise<SendInviteResponse> => {
+    try {
+      setIsSending(true);
+      
+      // Chamar a edge function para envio de email
+      const { data, error } = await supabase.functions.invoke('send-invite-email', {
+        body: {
+          email,
+          inviteUrl,
+          roleName,
+          expiresAt,
+          senderName,
+          notes
+        }
+      });
+      
+      if (error) throw error;
+      
+      return {
+        success: true,
+        message: 'Email enviado com sucesso'
+      };
+    } catch (err: any) {
+      console.error('Erro ao enviar email de convite:', err);
+      throw new Error(err.message || 'Erro ao enviar email de convite');
+    } finally {
+      setIsSending(false);
+    }
+  };
+
   // Reenviar convite
   const resendInvite = useCallback(async (invite: Invite) => {
-    // Aqui implementaríamos a lógica para reenviar o email de convite
-    // Para agora, apenas retornamos os dados do convite existente
-    toast.success('Convite reenviado com sucesso', {
-      description: `Um novo e-mail foi enviado para ${invite.email}.`
-    });
-    
-    return {
-      token: invite.token,
-      expires_at: invite.expires_at
-    };
+    try {
+      setIsSending(true);
+      
+      // Buscar o nome do papel
+      const { data: roleData } = await supabase
+        .from('user_roles')
+        .select('name')
+        .eq('id', invite.role_id)
+        .single();
+        
+      const inviteUrl = getInviteLink(invite.token);
+      
+      await sendInviteEmail({
+        email: invite.email,
+        inviteUrl: inviteUrl,
+        roleName: roleData?.name || invite.role?.name || 'membro',
+        expiresAt: invite.expires_at,
+        notes: invite.notes || undefined
+      });
+      
+      toast.success('Convite reenviado com sucesso', {
+        description: `Um novo e-mail foi enviado para ${invite.email}.`
+      });
+      
+      // Atualizar o convite com a informação de reenvio
+      // Idealmente, deveríamos registrar isso no banco de dados
+
+      return {
+        token: invite.token,
+        expires_at: invite.expires_at
+      };
+    } catch (err: any) {
+      console.error('Erro ao reenviar convite:', err);
+      toast.error('Erro ao reenviar convite', {
+        description: err.message || 'Não foi possível reenviar o convite.'
+      });
+      throw err;
+    } finally {
+      setIsSending(false);
+    }
   }, []);
 
   // Gerar link de convite
@@ -171,6 +271,7 @@ export function useInvites() {
     error,
     isCreating,
     isDeleting,
+    isSending,
     fetchInvites,
     createInvite,
     deleteInvite,
