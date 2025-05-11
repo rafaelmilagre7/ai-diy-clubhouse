@@ -1,12 +1,12 @@
 
 import React from 'react';
 import { BrowserRouter } from 'react-router-dom';
-import { Toaster } from './components/ui/toaster';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { LoggingProvider } from './hooks/useLogging';
 import { AuthProvider } from './contexts/auth';
 import AppRoutes from './components/routing/AppRoutes';
+import { Toaster } from './components/ui/sonner';
 
 // Criar uma instância do QueryClient fora do componente para evitar recriação a cada render
 const queryClient = new QueryClient({
@@ -27,7 +27,7 @@ const App = () => {
         <LoggingProvider>
           <AuthProvider>
             <AppRoutes />
-            <Toaster />
+            <Toaster position="top-right" richColors closeButton />
             <ReactQueryDevtools initialIsOpen={false} />
           </AuthProvider>
         </LoggingProvider>

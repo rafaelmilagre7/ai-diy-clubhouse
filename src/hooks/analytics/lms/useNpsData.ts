@@ -6,7 +6,7 @@ import { useLogging } from '@/hooks/useLogging';
 
 // Hook para buscar e processar dados de NPS
 export const useNpsData = (startDate: string | null) => {
-  const { log, logError } = useLogging();
+  const { log, logWarning, logError } = useLogging();
 
   return useQuery({
     queryKey: ['lms-nps-data', startDate],
@@ -16,87 +16,130 @@ export const useNpsData = (startDate: string | null) => {
     }> => {
       log('Buscando dados de NPS', { startDate });
       
-      // Buscar dados de NPS do Supabase
-      const query = supabase
-        .from('learning_lesson_nps')
-        .select(`
-          id,
-          lesson_id,
-          score,
-          feedback,
-          created_at,
-          user_id,
-          learning_lessons(title),
-          profiles:user_id(name)
-        `);
+      try {
+        // Buscar dados de NPS do Supabase com LEFT JOINs
+        const query = supabase
+          .from('learning_lesson_nps')
+          .select(`
+            id,
+            lesson_id,
+            score,
+            feedback,
+            created_at,
+            user_id,
+            learning_lessons:lesson_id (title),
+            profiles:user_id (name)
+          `)
+          .order('created_at', { ascending: false });
+          
+        // Aplicar filtro de data se necessário
+        if (startDate) {
+          query.gte('created_at', startDate);
+        }
         
-      // Aplicar filtro de data se necessário
-      if (startDate) {
-        query.gte('created_at', startDate);
-      }
-      
-      const { data, error } = await query;
-      
-      if (error) {
-        logError('Erro ao buscar dados de NPS:', error);
-        throw error;
-      }
-      
-      log(`Dados de NPS recuperados: ${data?.length || 0} respostas encontradas`);
-      
-      // Processar os dados para o formato necessário
-      const npsResponses = (data as unknown as LessonNpsResponse[] || []).map(item => ({
-        id: item.id,
-        lessonId: item.lesson_id,
-        lessonTitle: item.learning_lessons?.title || 'Aula sem título',
-        score: item.score,
-        feedback: item.feedback,
-        createdAt: item.created_at,
-        userId: item.user_id,
-        userName: item.profiles?.name || 'Aluno anônimo'
-      }));
-      
-      // Calcular métricas de NPS
-      const promoters = npsResponses.filter(r => r.score >= 9).length;
-      const neutrals = npsResponses.filter(r => r.score >= 7 && r.score <= 8).length;
-      const detractors = npsResponses.filter(r => r.score <= 6).length;
-      const total = npsResponses.length || 1; // Evitar divisão por zero
-      
-      // Calcular percentuais
-      const promotersPercent = (promoters / total) * 100;
-      const neutralsPercent = (neutrals / total) * 100;
-      const detractorsPercent = (detractors / total) * 100;
-      
-      // Calcular score NPS (promoters% - detractors%)
-      const npsScore = Math.round(promotersPercent - detractorsPercent);
-      
-      log('Métricas de NPS calculadas', { 
-        total, 
-        promoters, 
-        neutrals, 
-        detractors,
-        npsScore
-      });
-      
-      // Calcular NPS por aula
-      const perLessonNps = processLessonNpsData(npsResponses);
-      
-      const feedbackData = npsResponses
-        .filter(response => response.feedback)
-        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-      
-      return {
-        npsData: {
-          overall: npsScore,
-          distribution: {
-            promoters: Math.round(promotersPercent),
-            neutrals: Math.round(neutralsPercent),
-            detractors: Math.round(detractorsPercent)
+        const { data, error } = await query;
+        
+        if (error) {
+          // Log do erro sem interromper a execução
+          logWarning('Erro ao buscar dados de NPS:', { error: error.message });
+          
+          // Retornar dados padrão em caso de erro
+          return {
+            npsData: {
+              overall: 0,
+              distribution: { promoters: 0, neutrals: 0, detractors: 0 },
+              perLesson: []
+            },
+            feedbackData: []
+          };
+        }
+        
+        log(`Dados de NPS recuperados: ${data?.length || 0} respostas encontradas`);
+        
+        // Processar os dados para o formato necessário, com tratamento para valores nulos
+        const npsResponses = (data || []).map(item => ({
+          id: item.id,
+          lessonId: item.lesson_id,
+          lessonTitle: item.learning_lessons?.title || 'Aula sem título',
+          score: item.score,
+          feedback: item.feedback,
+          createdAt: item.created_at,
+          userId: item.user_id,
+          userName: item.profiles?.name || 'Aluno anônimo'
+        }));
+        
+        // Verificar se temos dados suficientes
+        if (npsResponses.length === 0) {
+          log('Nenhum dado de NPS encontrado para o período selecionado');
+          return {
+            npsData: {
+              overall: 0,
+              distribution: { promoters: 0, neutrals: 0, detractors: 0 },
+              perLesson: []
+            },
+            feedbackData: []
+          };
+        }
+        
+        // Calcular métricas de NPS
+        const promoters = npsResponses.filter(r => r.score >= 9).length;
+        const neutrals = npsResponses.filter(r => r.score >= 7 && r.score <= 8).length;
+        const detractors = npsResponses.filter(r => r.score <= 6).length;
+        const total = npsResponses.length || 1; // Evitar divisão por zero
+        
+        // Calcular percentuais
+        const promotersPercent = (promoters / total) * 100;
+        const neutralsPercent = (neutrals / total) * 100;
+        const detractorsPercent = (detractors / total) * 100;
+        
+        // Calcular score NPS (promoters% - detractors%)
+        const npsScore = Math.round(promotersPercent - detractorsPercent);
+        
+        log('Métricas de NPS calculadas', { 
+          total, 
+          promoters, 
+          neutrals, 
+          detractors,
+          npsScore
+        });
+        
+        // Calcular NPS por aula
+        const perLessonNps = processLessonNpsData(npsResponses);
+        
+        const feedbackData = npsResponses
+          .filter(response => response.feedback)
+          .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        
+        return {
+          npsData: {
+            overall: npsScore,
+            distribution: {
+              promoters: Math.round(promotersPercent),
+              neutrals: Math.round(neutralsPercent),
+              detractors: Math.round(detractorsPercent)
+            },
+            perLesson: perLessonNps
           },
-          perLesson: perLessonNps
-        },
-        feedbackData
-      };
+          feedbackData
+        };
+      } catch (error: any) {
+        // Log do erro crítico com tratamento para não interromper a aplicação
+        logWarning('Erro ao processar dados de NPS:', { 
+          error: error.message, 
+          stack: error.stack,
+          critical: false // Marcar como não crítico para evitar toast
+        });
+        
+        // Retornar dados padrão em caso de erro
+        return {
+          npsData: {
+            overall: 0,
+            distribution: { promoters: 0, neutrals: 0, detractors: 0 },
+            perLesson: []
+          },
+          feedbackData: []
+        };
+      }
     }
   });
 };
@@ -134,6 +177,15 @@ function processLessonNpsData(npsResponses: {
       const promoters = lesson.scores.filter(score => score >= 9).length;
       const detractors = lesson.scores.filter(score => score <= 6).length;
       const total = lesson.scores.length;
+      
+      // Evitar divisão por zero
+      if (total === 0) return {
+        lessonId: lesson.lessonId,
+        lessonTitle: lesson.lessonTitle,
+        npsScore: 0,
+        responseCount: 0
+      };
+      
       const npsScore = Math.round((promoters / total) * 100) - Math.round((detractors / total) * 100);
       
       return {

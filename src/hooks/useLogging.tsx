@@ -39,24 +39,39 @@ export const LoggingProvider = ({ children }: { children: ReactNode }) => {
     if (data.user_id) {
       storeLog(action, data, "warning", data.user_id);
     }
-  }, []);
+    
+    // Mostrar toast apenas para avisos críticos
+    if (data.critical === true) {
+      toast({
+        title: "Aviso",
+        description: action,
+        variant: "default",
+      });
+    }
+  }, [toast]);
   
   const logError = useCallback((action: string, error: any) => {
     console.error(`[Error] ${action}:`, error);
     setLastError(error);
     
-    // Show toast notification for errors
-    toast({
-      title: "Erro ao carregar conteúdo",
-      description: "Ocorreu um erro ao carregar o conteúdo. Alguns dados podem não estar disponíveis.",
-      variant: "destructive",
-    });
+    // Verificar se o erro deve mostrar um toast (padrão é mostrar)
+    const shouldShowToast = error?.showToast !== false;
+    
+    // Show toast notification for errors that should be shown
+    if (shouldShowToast) {
+      toast({
+        title: "Erro ao carregar conteúdo",
+        description: "Ocorreu um erro ao carregar o conteúdo. Alguns dados podem não estar disponíveis.",
+        variant: "destructive",
+      });
+    }
     
     // Armazenar erros apenas se tivermos um user_id
     if (error?.user_id) {
       storeLog(action, { 
         error: error?.message || String(error),
-        stack: error?.stack
+        stack: error?.stack,
+        showToast: shouldShowToast
       }, "error", error.user_id);
     }
     
