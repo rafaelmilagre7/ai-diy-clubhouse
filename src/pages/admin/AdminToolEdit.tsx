@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
@@ -14,7 +13,7 @@ import { toast } from 'sonner';
 import { MemberBenefit } from '@/components/admin/tools/components/MemberBenefit';
 import { useForm } from 'react-hook-form';
 import { ToolFormValues } from '@/components/admin/tools/types/toolFormTypes';
-import { LogoUpload } from '@/components/admin/tools/components/LogoUpload';
+import { LogoUpload } from '@/components/admin/tools/components/form/LogoUpload';
 import { BenefitAccessControl } from '@/components/admin/tools/BenefitAccessControl';
 
 const AdminToolEdit = () => {
@@ -37,7 +36,7 @@ const AdminToolEdit = () => {
       benefit_title: '',
       benefit_description: '',
       benefit_link: '',
-      benefit_type: '',
+      benefit_type: null,
       formModified: false
     }
   });

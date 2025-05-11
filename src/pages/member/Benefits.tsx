@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Search, Gift, AlertCircle } from 'lucide-react';
 import { BenefitBadge } from '@/components/tools/BenefitBadge';
 import { MemberBenefitModal } from '@/components/tools/MemberBenefitModal';
+import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/auth';
 
