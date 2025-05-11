@@ -1731,6 +1731,81 @@ export type Database = {
         }
         Relationships: []
       }
+      permission_audit_logs: {
+        Row: {
+          action_type: string
+          created_at: string | null
+          id: string
+          ip_address: string | null
+          new_value: string | null
+          old_value: string | null
+          permission_code: string | null
+          permission_id: string | null
+          role_id: string | null
+          role_name: string | null
+          target_user_id: string | null
+          user_id: string
+        }
+        Insert: {
+          action_type: string
+          created_at?: string | null
+          id?: string
+          ip_address?: string | null
+          new_value?: string | null
+          old_value?: string | null
+          permission_code?: string | null
+          permission_id?: string | null
+          role_id?: string | null
+          role_name?: string | null
+          target_user_id?: string | null
+          user_id: string
+        }
+        Update: {
+          action_type?: string
+          created_at?: string | null
+          id?: string
+          ip_address?: string | null
+          new_value?: string | null
+          old_value?: string | null
+          permission_code?: string | null
+          permission_id?: string | null
+          role_id?: string | null
+          role_name?: string | null
+          target_user_id?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      permission_definitions: {
+        Row: {
+          category: string
+          code: string
+          created_at: string | null
+          description: string | null
+          id: string
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          category: string
+          code: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          category?: string
+          code?: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -1741,6 +1816,7 @@ export type Database = {
           industry: string | null
           name: string | null
           role: string
+          role_id: string | null
         }
         Insert: {
           avatar_url?: string | null
@@ -1751,6 +1827,7 @@ export type Database = {
           industry?: string | null
           name?: string | null
           role?: string
+          role_id?: string | null
         }
         Update: {
           avatar_url?: string | null
@@ -1761,8 +1838,17 @@ export type Database = {
           industry?: string | null
           name?: string | null
           role?: string
+          role_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "user_roles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       progress: {
         Row: {
@@ -1810,6 +1896,42 @@ export type Database = {
             columns: ["solution_id"]
             isOneToOne: false
             referencedRelation: "solutions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      role_permissions: {
+        Row: {
+          created_at: string | null
+          id: string
+          permission_id: string
+          role_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          permission_id: string
+          role_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          permission_id?: string
+          role_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "role_permissions_permission_id_fkey"
+            columns: ["permission_id"]
+            isOneToOne: false
+            referencedRelation: "permission_definitions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "role_permissions_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "user_roles"
             referencedColumns: ["id"]
           },
         ]
@@ -2633,6 +2755,36 @@ export type Database = {
           },
         ]
       }
+      user_roles: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          is_system: boolean | null
+          name: string
+          permissions: Json | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_system?: boolean | null
+          name: string
+          permissions?: Json | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_system?: boolean | null
+          name?: string
+          permissions?: Json | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       users: {
         Row: {
           created_at: string
@@ -2832,6 +2984,21 @@ export type Database = {
         Args: { user_id_param?: string }
         Returns: string
       }
+      log_permission_change: {
+        Args: {
+          user_id: string
+          action_type: string
+          target_user_id?: string
+          role_id?: string
+          role_name?: string
+          permission_id?: string
+          permission_code?: string
+          old_value?: string
+          new_value?: string
+          ip_address?: string
+        }
+        Returns: string
+      }
       merge_json_data: {
         Args: { target: Json; source: Json }
         Returns: Json
@@ -2839,6 +3006,10 @@ export type Database = {
       setup_learning_storage_buckets: {
         Args: Record<PropertyKey, never>
         Returns: Json
+      }
+      user_has_permission: {
+        Args: { user_id: string; permission_code: string }
+        Returns: boolean
       }
       validateuserrole: {
         Args: { profileid: string; currentrole: string; email: string }
