@@ -6,6 +6,7 @@ import { OverviewTabContent } from '@/components/admin/analytics/OverviewTabCont
 import { AnalyticsHeader } from '@/components/admin/analytics/AnalyticsHeader';
 import { PlaceholderTabContent } from '@/components/admin/analytics/PlaceholderTabContent';
 import { LmsAnalyticsTabContent } from '@/components/admin/analytics/lms/LmsAnalyticsTabContent';
+import { UserAnalyticsTabContent } from '@/components/admin/analytics/users/UserAnalyticsTabContent';
 
 const AdminAnalytics = () => {
   const [timeRange, setTimeRange] = useState('7d');
@@ -36,16 +37,13 @@ const AdminAnalytics = () => {
         </TabsContent>
         
         <TabsContent value="users" className="space-y-4">
-          <PlaceholderTabContent 
-            title="Análise de Usuários" 
-            description="Estatísticas e métricas detalhadas sobre os usuários da plataforma."
-          />
+          <UserAnalyticsTabContent timeRange={timeRange} />
         </TabsContent>
         
         <TabsContent value="solutions" className="space-y-4">
           <PlaceholderTabContent 
             title="Análise de Soluções" 
-            description="Métricas de implementação e engajamento das soluções disponíveis."
+            description="Estatísticas e métricas detalhadas sobre as soluções da plataforma."
           />
         </TabsContent>
         
