@@ -35,6 +35,39 @@ export interface ImplementationData {
   }>;
 }
 
+// Funções auxiliares para extrair dados com segurança
+const extractSolutionDifficulty = (item: any): string => {
+  if (!item.solutions) return 'Desconhecido';
+  if (Array.isArray(item.solutions)) {
+    return item.solutions[0]?.difficulty || 'Desconhecido';
+  }
+  return item.solutions.difficulty || 'Desconhecido';
+};
+
+const extractSolutionTitle = (item: any): string => {
+  if (!item.solutions) return 'Solução desconhecida';
+  if (Array.isArray(item.solutions)) {
+    return item.solutions[0]?.title || 'Solução desconhecida';
+  }
+  return item.solutions.title || 'Solução desconhecida';
+};
+
+const extractSolutionId = (item: any): string => {
+  if (!item.solutions) return item.solution_id || '';
+  if (Array.isArray(item.solutions)) {
+    return item.solutions[0]?.id || item.solution_id || '';
+  }
+  return item.solutions.id || item.solution_id || '';
+};
+
+const extractUserName = (item: any): string => {
+  if (!item.profiles) return 'Usuário desconhecido';
+  if (Array.isArray(item.profiles)) {
+    return item.profiles[0]?.name || 'Usuário desconhecido';
+  }
+  return item.profiles.name || 'Usuário desconhecido';
+};
+
 export const useImplementationsAnalyticsData = (timeRangeStr: string) => {
   const { log, logWarning } = useLogging();
   const startDate = useTimeRange(timeRangeStr);
@@ -176,11 +209,10 @@ export const useImplementationsAnalyticsData = (timeRangeStr: string) => {
         const completedCount = completionData?.filter(item => item.is_completed)?.length || 0;
         const inProgressCount = completionData?.filter(item => !item.is_completed)?.length || 0;
 
-        // Processar dados por dificuldade
+        // Processar dados por dificuldade usando a função auxiliar
         const difficultyMap: Record<string, number> = {};
         difficultyData?.forEach(item => {
-          // Verificar se solutions existe e possui a propriedade difficulty
-          const difficulty = item.solutions?.difficulty || 'Desconhecido';
+          const difficulty = extractSolutionDifficulty(item);
           if (!difficultyMap[difficulty]) {
             difficultyMap[difficulty] = 0;
           }
@@ -192,7 +224,7 @@ export const useImplementationsAnalyticsData = (timeRangeStr: string) => {
           count
         }));
 
-        // Processar dados de tempo de conclusão
+        // Processar dados de tempo de conclusão usando a função auxiliar
         const solutionCompletionTimes: Record<string, { totalDays: number; count: number; title: string }> = {};
         
         timeData?.forEach(item => {
@@ -202,8 +234,7 @@ export const useImplementationsAnalyticsData = (timeRangeStr: string) => {
             const daysToComplete = (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24);
             
             if (!solutionCompletionTimes[item.solution_id]) {
-              // Verificar se solutions existe e possui a propriedade title
-              const title = item.solutions?.title || 'Solução desconhecida';
+              const title = extractSolutionTitle(item);
               solutionCompletionTimes[item.solution_id] = { 
                 totalDays: 0, 
                 count: 0, 
@@ -253,15 +284,14 @@ export const useImplementationsAnalyticsData = (timeRangeStr: string) => {
             totalStarts
           };
         })
-        .filter(Boolean) // Remover itens nulos
-        .sort((a, b) => b!.abandonmentRate - a!.abandonmentRate)
+        .filter(Boolean as any) // Remover itens nulos
+        .sort((a, b) => (b?.abandonmentRate || 0) - (a?.abandonmentRate || 0))
         .slice(0, 10); // Top 10 módulos com maior taxa de abandono
         
-        // Processar implementações recentes
+        // Processar implementações recentes usando as funções auxiliares
         const recentImplementations = recentData?.map(item => {
-          // Verificar se solutions e profiles existem e possuem as propriedades necessárias
-          const solutionTitle = item.solutions?.title || 'Solução desconhecida';
-          const userName = item.profiles?.name || 'Usuário desconhecido';
+          const solutionTitle = extractSolutionTitle(item);
+          const userName = extractUserName(item);
           
           // Calcular percentual completo com base nos módulos completados
           let percentComplete = 0;
