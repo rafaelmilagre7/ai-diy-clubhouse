@@ -10,6 +10,7 @@ interface NPSPerLessonChartProps {
       lessonId: string;
       lessonTitle: string;
       npsScore: number;
+      responseCount?: number;
     }>;
   };
   isLoading: boolean;
@@ -18,10 +19,11 @@ interface NPSPerLessonChartProps {
 export const NPSPerLessonChart: React.FC<NPSPerLessonChartProps> = ({ npsData, isLoading }) => {
   // Preparar dados para o gráfico de barras
   const chartData = npsData.perLesson.slice(0, 10).map(lesson => ({
-    lesson: lesson.lessonTitle.length > 20 
+    lesson: lesson.lessonTitle && lesson.lessonTitle.length > 20 
       ? `${lesson.lessonTitle.substring(0, 20)}...` 
-      : lesson.lessonTitle,
-    nps: lesson.npsScore
+      : lesson.lessonTitle || `Aula ${lesson.lessonId.substring(0, 4)}`,
+    nps: lesson.npsScore,
+    respostas: lesson.responseCount || 0
   }));
   
   // Determinar cores com base no score NPS
@@ -31,8 +33,7 @@ export const NPSPerLessonChart: React.FC<NPSPerLessonChartProps> = ({ npsData, i
     return "#ef4444";                      // Vermelho para ruim
   };
   
-  // Criar array de cores estáticas para o gráfico
-  // Isso resolve o erro de tipo que estávamos enfrentando
+  // Criar array de cores para o gráfico
   const barColors = ["#8B5CF6"]; // Cor padrão roxa para todas as barras
   
   return (
@@ -40,7 +41,7 @@ export const NPSPerLessonChart: React.FC<NPSPerLessonChartProps> = ({ npsData, i
       <CardHeader>
         <CardTitle>NPS por Aula</CardTitle>
         <CardDescription>
-          Score NPS para as 10 aulas mais avaliadas
+          Score NPS para as {chartData.length > 0 ? chartData.length : 10} aulas mais avaliadas
         </CardDescription>
       </CardHeader>
       <CardContent className="h-[300px]">
@@ -63,8 +64,11 @@ export const NPSPerLessonChart: React.FC<NPSPerLessonChartProps> = ({ npsData, i
             className="h-full"
           />
         ) : (
-          <div className="h-full flex items-center justify-center text-muted-foreground">
-            Sem dados suficientes para exibir
+          <div className="h-full flex flex-col items-center justify-center text-muted-foreground p-4 text-center">
+            <p className="mb-2">Sem avaliações de aulas para exibir</p>
+            <p className="text-sm">
+              As avaliações são coletadas ao final de cada aula através do formulário de NPS
+            </p>
           </div>
         )}
       </CardContent>

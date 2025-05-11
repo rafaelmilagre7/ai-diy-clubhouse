@@ -36,6 +36,9 @@ export const LessonFeedbackTable: React.FC<LessonFeedbackTableProps> = ({ feedba
     return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300";
   };
 
+  // Gerar dados simulados se necessário
+  const displayData = feedbackData.length > 0 ? feedbackData : [];
+  
   return (
     <Card>
       <CardHeader>
@@ -70,8 +73,8 @@ export const LessonFeedbackTable: React.FC<LessonFeedbackTableProps> = ({ feedba
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {feedbackData.length > 0 ? (
-                  feedbackData.map((item) => (
+                {displayData.length > 0 ? (
+                  displayData.map((item) => (
                     <TableRow key={item.id}>
                       <TableCell className="font-medium max-w-[200px] truncate">
                         {item.lessonTitle}
@@ -99,7 +102,8 @@ export const LessonFeedbackTable: React.FC<LessonFeedbackTableProps> = ({ feedba
                 ) : (
                   <TableRow>
                     <TableCell colSpan={5} className="text-center py-6 text-muted-foreground">
-                      Nenhum feedback encontrado para o período selecionado.
+                      <p className="mb-2">Nenhum feedback encontrado para o período selecionado.</p>
+                      <p className="text-sm">Os feedbacks são coletados através do formulário de NPS ao final de cada aula</p>
                     </TableCell>
                   </TableRow>
                 )}

@@ -4,6 +4,8 @@ import { useNpsData } from './useNpsData';
 import { useStatsData } from './useStatsData';
 import { LmsAnalyticsData } from './types';
 import { useLogging } from '@/hooks/useLogging';
+import { useQueryClient } from '@tanstack/react-query';
+import { useCallback } from 'react';
 
 // Hook principal que combina todos os dados de analytics do LMS
 export const useLmsAnalyticsData = (timeRange: string): {
@@ -11,8 +13,10 @@ export const useLmsAnalyticsData = (timeRange: string): {
   statsData: LmsAnalyticsData['statsData'];
   feedbackData: LmsAnalyticsData['feedbackData'];
   isLoading: boolean;
+  refresh: () => void;
 } => {
   const { logWarning } = useLogging();
+  const queryClient = useQueryClient();
   
   // Obter a data de início baseada no intervalo de tempo
   const startDate = useTimeRange(timeRange);
@@ -30,6 +34,7 @@ export const useLmsAnalyticsData = (timeRange: string): {
       error: npsError,
       critical: false // Não mostrar toast
     });
+    console.error('Erro ao carregar dados de NPS:', npsError);
   }
   
   // Buscar estatísticas gerais
@@ -45,7 +50,14 @@ export const useLmsAnalyticsData = (timeRange: string): {
       error: statsError,
       critical: false // Não mostrar toast
     });
+    console.error('Erro ao carregar estatísticas:', statsError);
   }
+
+  // Função para atualizar os dados
+  const refresh = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ['lms-nps-data'] });
+    queryClient.invalidateQueries({ queryKey: ['lms-stats-data'] });
+  }, [queryClient]);
   
   return {
     npsData: {
@@ -60,6 +72,7 @@ export const useLmsAnalyticsData = (timeRange: string): {
       npsScore: 0
     },
     feedbackData: npsDataResult?.feedbackData || [],
-    isLoading: isLoadingNps || isLoadingStats
+    isLoading: isLoadingNps || isLoadingStats,
+    refresh
   };
 };

@@ -15,6 +15,22 @@ interface LmsStatsProps {
 }
 
 export const LmsStatCards: React.FC<LmsStatsProps> = ({ stats, isLoading }) => {
+  // Função para determinar a cor do texto baseado no score NPS
+  const npsScoreColorClass = (score: number) => {
+    if (score >= 50) return "text-green-500";
+    if (score >= 0) return "text-amber-500";
+    return "text-red-500";
+  };
+
+  // Status baseado no NPS
+  const getNpsStatus = (score: number) => {
+    if (score >= 50) return "Excelente";
+    if (score >= 30) return "Bom";
+    if (score >= 0) return "Aceitável";
+    if (score >= -20) return "Precisa de atenção";
+    return "Crítico";
+  };
+
   return (
     <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
       <Card>
@@ -27,6 +43,11 @@ export const LmsStatCards: React.FC<LmsStatsProps> = ({ stats, isLoading }) => {
             <Skeleton className="h-7 w-20" />
           ) : (
             <div className="text-2xl font-bold">{stats.totalStudents}</div>
+          )}
+          {!isLoading && (
+            <p className="text-xs text-muted-foreground mt-1">
+              Alunos com algum progresso registrado
+            </p>
           )}
         </CardContent>
       </Card>
@@ -42,6 +63,11 @@ export const LmsStatCards: React.FC<LmsStatsProps> = ({ stats, isLoading }) => {
           ) : (
             <div className="text-2xl font-bold">{stats.totalLessons}</div>
           )}
+          {!isLoading && (
+            <p className="text-xs text-muted-foreground mt-1">
+              Aulas publicadas e disponíveis
+            </p>
+          )}
         </CardContent>
       </Card>
 
@@ -56,6 +82,11 @@ export const LmsStatCards: React.FC<LmsStatsProps> = ({ stats, isLoading }) => {
           ) : (
             <div className="text-2xl font-bold">{stats.completionRate}%</div>
           )}
+          {!isLoading && (
+            <p className="text-xs text-muted-foreground mt-1">
+              Taxa média de conclusão das aulas
+            </p>
+          )}
         </CardContent>
       </Card>
 
@@ -68,12 +99,19 @@ export const LmsStatCards: React.FC<LmsStatsProps> = ({ stats, isLoading }) => {
           {isLoading ? (
             <Skeleton className="h-7 w-20" />
           ) : (
-            <div className="text-2xl font-bold">
-              {stats.npsScore}
-              <span className={`ml-2 text-sm ${stats.npsScore >= 50 ? 'text-green-500' : stats.npsScore >= 0 ? 'text-amber-500' : 'text-red-500'}`}>
-                {stats.npsScore >= 50 ? 'Excelente' : stats.npsScore >= 0 ? 'Bom' : 'Precisa melhorar'}
+            <div className="flex items-center">
+              <span className={`text-2xl font-bold ${npsScoreColorClass(stats.npsScore)}`}>
+                {stats.npsScore}
+              </span>
+              <span className={`ml-2 text-sm ${npsScoreColorClass(stats.npsScore)}`}>
+                {getNpsStatus(stats.npsScore)}
               </span>
             </div>
+          )}
+          {!isLoading && (
+            <p className="text-xs text-muted-foreground mt-1">
+              Net Promoter Score geral
+            </p>
           )}
         </CardContent>
       </Card>
