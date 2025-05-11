@@ -1,4 +1,4 @@
 
-import AppRoutes from '@/components/routing/AppRoutes';
+import AppRoutes from './index.tsx';
 
 export { AppRoutes };

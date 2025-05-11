@@ -23,6 +23,8 @@ import SolutionEditor from '@/pages/admin/SolutionEditor';
 import AdminToolEdit from '@/pages/admin/AdminToolEdit';
 import AdminSuggestionDetails from '@/pages/admin/AdminSuggestionDetails';
 import AdminEvents from '@/pages/admin/AdminEvents';
+import RolesPage from '@/pages/admin/RolesPage';
+import PermissionAuditLogPage from '@/pages/admin/PermissionAuditLogPage';
 
 // Member pages
 import Dashboard from '@/pages/member/Dashboard';
@@ -216,6 +218,22 @@ const AppRoutes = () => {
         <AdminProtectedRoutes>
           <AdminLayout>
             <AdminAnalytics />
+          </AdminLayout>
+        </AdminProtectedRoutes>
+      } />
+      
+      {/* Adicionando as novas rotas para Roles e Audit Log */}
+      <Route path="/admin/roles" element={
+        <AdminProtectedRoutes>
+          <AdminLayout>
+            <RolesPage />
+          </AdminLayout>
+        </AdminProtectedRoutes>
+      } />
+      <Route path="/admin/permissions/audit" element={
+        <AdminProtectedRoutes>
+          <AdminLayout>
+            <PermissionAuditLogPage />
           </AdminLayout>
         </AdminProtectedRoutes>
       } />
