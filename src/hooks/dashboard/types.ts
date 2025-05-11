@@ -42,3 +42,12 @@ export interface Dashboard {
   userProgress: UserProgress;
   loading: boolean;
 }
+
+// Interface para atividades recentes
+export interface RecentActivity {
+  id: string;
+  user_id: string;
+  event_type: string;
+  solution?: string;
+  created_at: string;
+}

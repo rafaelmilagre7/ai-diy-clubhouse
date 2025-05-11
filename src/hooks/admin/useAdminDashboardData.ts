@@ -7,10 +7,10 @@ import { useToast } from "@/hooks/use-toast";
 
 interface RecentActivity {
   id: string;
-  user: string;
-  action: string;
-  solution: string;
-  date: Date;
+  user_id: string;
+  event_type: string;
+  solution?: string;
+  created_at: string;
 }
 
 export const useAdminDashboardData = (timeRange: string) => {
@@ -32,38 +32,38 @@ export const useAdminDashboardData = (timeRange: string) => {
         const mockActivities: RecentActivity[] = [
           {
             id: "1",
-            user: "João Silva",
-            action: "concluiu",
+            user_id: "joao.silva",
+            event_type: "view",
             solution: "Integração de IA no Atendimento",
-            date: new Date(2023, 6, 25)
+            created_at: new Date(2023, 6, 25).toISOString()
           },
           {
             id: "2",
-            user: "Maria Oliveira",
-            action: "iniciou",
+            user_id: "maria.oliveira",
+            event_type: "start",
             solution: "Automação de Marketing",
-            date: new Date(2023, 6, 24)
+            created_at: new Date(2023, 6, 24).toISOString()
           },
           {
             id: "3",
-            user: "Pedro Santos",
-            action: "revisou",
+            user_id: "pedro.santos",
+            event_type: "complete",
             solution: "Chatbot para WhatsApp",
-            date: new Date(2023, 6, 24)
+            created_at: new Date(2023, 6, 24).toISOString()
           },
           {
             id: "4",
-            user: "Ana Ferreira",
-            action: "concluiu",
+            user_id: "ana.ferreira",
+            event_type: "complete",
             solution: "Analytics avançado",
-            date: new Date(2023, 6, 23)
+            created_at: new Date(2023, 6, 23).toISOString()
           },
           {
             id: "5",
-            user: "Carlos Mendes",
-            action: "abandonou",
+            user_id: "carlos.mendes",
+            event_type: "login",
             solution: "CRM Inteligente",
-            date: new Date(2023, 6, 22)
+            created_at: new Date(2023, 6, 22).toISOString()
           }
         ];
         

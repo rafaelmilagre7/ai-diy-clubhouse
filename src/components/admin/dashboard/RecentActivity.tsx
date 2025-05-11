@@ -20,8 +20,16 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
+interface Activity {
+  id: string;
+  user_id: string;
+  event_type: string;
+  solution?: string;
+  created_at: string;
+}
+
 interface RecentActivityProps {
-  activities: any[];
+  activities: Activity[];
   loading: boolean;
 }
 
@@ -57,17 +65,32 @@ export const RecentActivity = ({ activities, loading }: RecentActivityProps) => 
         return 'realizou uma ação';
     }
   };
-  
-  // Se não houver atividades, criar algumas atividades simuladas
+
+  // Garantir que temos dados válidos para exibir
   const displayActivities = activities.length > 0 ? activities : [
-    { id: '1', event_type: 'login', created_at: new Date().toISOString(), user_id: 'user1' },
-    { id: '2', event_type: 'view', created_at: new Date(Date.now() - 1000 * 60 * 30).toISOString(), user_id: 'user2' },
-    { id: '3', event_type: 'start', created_at: new Date(Date.now() - 1000 * 60 * 120).toISOString(), user_id: 'user3' },
-    { id: '4', event_type: 'complete', created_at: new Date(Date.now() - 1000 * 60 * 240).toISOString(), user_id: 'user4' }
+    { id: '1', event_type: 'login', created_at: new Date().toISOString(), user_id: 'user1', solution: '' },
+    { id: '2', event_type: 'view', created_at: new Date(Date.now() - 1000 * 60 * 30).toISOString(), user_id: 'user2', solution: '' },
+    { id: '3', event_type: 'start', created_at: new Date(Date.now() - 1000 * 60 * 120).toISOString(), user_id: 'user3', solution: '' },
+    { id: '4', event_type: 'complete', created_at: new Date(Date.now() - 1000 * 60 * 240).toISOString(), user_id: 'user4', solution: '' }
   ];
   
   // Limitar o número de atividades exibidas
   const displayCount = expanded ? displayActivities.length : Math.min(4, displayActivities.length);
+  
+  // Função segura para formatar a data
+  const formatDateSafe = (dateStr: string) => {
+    try {
+      const date = new Date(dateStr);
+      // Verifica se a data é válida antes de formatar
+      if (!isNaN(date.getTime())) {
+        return formatDistanceToNow(date, { addSuffix: true, locale: ptBR });
+      }
+      return "data desconhecida";
+    } catch (error) {
+      console.error("Erro ao formatar data:", error, dateStr);
+      return "data inválida";
+    }
+  };
   
   return (
     <Card>
@@ -104,7 +127,7 @@ export const RecentActivity = ({ activities, loading }: RecentActivityProps) => 
                         <AvatarFallback>{activity.user_id?.substring(0, 2) || "U"}</AvatarFallback>
                       </Avatar>
                       <span className="font-medium">
-                        Usuário {activity.user_id?.substring(0, 8) || "desconhecido"}
+                        {activity.user_id?.substring(0, 8) || "Usuário desconhecido"}
                       </span>
                       <span className="text-muted-foreground">
                         {getEventText(activity)}
@@ -112,10 +135,7 @@ export const RecentActivity = ({ activities, loading }: RecentActivityProps) => 
                     </div>
                     <div className="flex items-center mt-1 text-xs text-muted-foreground">
                       <Clock className="h-3 w-3 mr-1" />
-                      {formatDistanceToNow(new Date(activity.created_at), {
-                        addSuffix: true,
-                        locale: ptBR
-                      })}
+                      {formatDateSafe(activity.created_at)}
                     </div>
                   </div>
                 </div>
