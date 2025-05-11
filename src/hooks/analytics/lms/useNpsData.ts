@@ -4,6 +4,18 @@ import { supabase } from '@/lib/supabase';
 import { LessonNpsResponse, LmsNpsData, LmsFeedbackData } from './types';
 import { useLogging } from '@/hooks/useLogging';
 
+// Função auxiliar para extrair título da aula com segurança
+const extractLessonTitle = (item: LessonNpsResponse): string => {
+  if (!item.learning_lessons) return 'Aula sem título';
+  return item.learning_lessons.title || 'Aula sem título';
+};
+
+// Função auxiliar para extrair nome do usuário com segurança
+const extractUserName = (item: LessonNpsResponse): string => {
+  if (!item.profiles) return 'Aluno anônimo';
+  return item.profiles.name || 'Aluno anônimo';
+};
+
 // Hook para buscar e processar dados de NPS
 export const useNpsData = (startDate: string | null) => {
   const { log, logWarning, logError } = useLogging();
@@ -18,7 +30,7 @@ export const useNpsData = (startDate: string | null) => {
       
       try {
         // Buscar dados de NPS do Supabase com LEFT JOINs
-        const query = supabase
+        let query = supabase
           .from('learning_lesson_nps')
           .select(`
             id,
@@ -34,7 +46,7 @@ export const useNpsData = (startDate: string | null) => {
           
         // Aplicar filtro de data se necessário
         if (startDate) {
-          query.gte('created_at', startDate);
+          query = query.gte('created_at', startDate);
         }
         
         const { data, error } = await query;
@@ -57,27 +69,19 @@ export const useNpsData = (startDate: string | null) => {
         log(`Dados de NPS recuperados: ${data?.length || 0} respostas encontradas`);
         
         // Processar os dados para o formato necessário, com tratamento para valores nulos
-        const npsResponses = (data || []).map(item => ({
-          id: item.id,
-          lessonId: item.lesson_id,
-          // Corrigir acesso às propriedades retornadas pela junção LEFT JOIN
-          // O Supabase pode retornar um objeto ou um array dependendo da consulta
-          lessonTitle: typeof item.learning_lessons === 'object' 
-            ? (item.learning_lessons?.title || 'Aula sem título')
-            : Array.isArray(item.learning_lessons) && item.learning_lessons.length > 0
-              ? item.learning_lessons[0]?.title || 'Aula sem título' 
-              : 'Aula sem título',
-          score: item.score,
-          feedback: item.feedback,
-          createdAt: item.created_at,
-          userId: item.user_id,
-          // Da mesma forma, tratando profiles como possível objeto ou array
-          userName: typeof item.profiles === 'object' 
-            ? (item.profiles?.name || 'Aluno anônimo')
-            : Array.isArray(item.profiles) && item.profiles.length > 0
-              ? item.profiles[0]?.name || 'Aluno anônimo' 
-              : 'Aluno anônimo'
-        }));
+        const npsResponses = (data || []).map(item => {
+          const response = item as unknown as LessonNpsResponse;
+          return {
+            id: response.id,
+            lessonId: response.lesson_id,
+            lessonTitle: extractLessonTitle(response),
+            score: response.score,
+            feedback: response.feedback,
+            createdAt: response.created_at,
+            userId: response.user_id,
+            userName: extractUserName(response)
+          };
+        });
         
         // Verificar se temos dados suficientes
         if (npsResponses.length === 0) {

@@ -13,13 +13,17 @@ export const useStatsData = (startDate: string | null, npsScore: number) => {
     queryFn: async (): Promise<LmsStatsData> => {
       try {
         // Buscar contagem total de alunos ativos (com algum progresso)
-        const { count: totalStudents, error: studentsError } = await supabase
+        let studentsQuery = supabase
           .from('learning_progress')
           .select('user_id', { count: 'exact', head: true })
-          .gte('progress_percentage', 1)
-          .when(startDate !== null, query => 
-            query.gte('created_at', startDate as string)
-          );
+          .gte('progress_percentage', 1);
+          
+        // Aplicar filtro de data condicionalmente
+        if (startDate !== null) {
+          studentsQuery = studentsQuery.gte('created_at', startDate);
+        }
+        
+        const { count: totalStudents, error: studentsError } = await studentsQuery;
 
         if (studentsError) {
           logWarning('Erro ao buscar total de alunos:', { 
@@ -42,13 +46,17 @@ export const useStatsData = (startDate: string | null, npsScore: number) => {
         }
 
         // Calcular taxa média de conclusão
-        const { data: progressData, error: progressError } = await supabase
+        let progressQuery = supabase
           .from('learning_progress')
           .select('progress_percentage')
-          .gte('progress_percentage', 1)
-          .when(startDate !== null, query => 
-            query.gte('created_at', startDate as string)
-          );
+          .gte('progress_percentage', 1);
+          
+        // Aplicar filtro de data condicionalmente
+        if (startDate !== null) {
+          progressQuery = progressQuery.gte('created_at', startDate);
+        }
+        
+        const { data: progressData, error: progressError } = await progressQuery;
 
         if (progressError) {
           logWarning('Erro ao buscar dados de progresso:', { 

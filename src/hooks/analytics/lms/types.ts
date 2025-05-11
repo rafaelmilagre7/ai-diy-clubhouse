@@ -48,12 +48,8 @@ export interface LessonNpsResponse {
   created_at: string;
   user_id: string;
   // Definição mais precisa das junções LEFT JOIN
-  learning_lessons?: { 
-    title: string;
-  } | { title: string }[] | null;
-  profiles?: { 
-    name: string;
-  } | { name: string }[] | null;
+  learning_lessons: { title: string } | null;
+  profiles: { name: string } | null;
 }
 
 export interface ProgressResponse {
