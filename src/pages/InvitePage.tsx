@@ -44,14 +44,34 @@ export default function InvitePage() {
         setIsLoading(true);
         setFetchError(null);
         
-        console.log("Buscando convite com token:", token);
-        console.log("Token comprimento:", token?.length);
+        // Limpar o token antes de fazer a consulta
+        const cleanToken = token.trim().replace(/\s+/g, '');
+        
+        console.log("Buscando convite com token:", cleanToken);
+        console.log("Token comprimento:", cleanToken?.length);
+        
+        // Log detalhado para depuração
+        console.log("Token em formato hexadecimal:", 
+          Array.from(cleanToken).map(c => c.charCodeAt(0).toString(16)).join(' '));
+        
+        // Buscar convites ativos para depuração
+        const { data: activeInvites, error: activeError } = await supabase
+          .from("invites")
+          .select("token")
+          .is("used_at", null)
+          .limit(5);
+          
+        if (!activeError && activeInvites) {
+          console.log("Exemplos de tokens ativos disponíveis:", activeInvites.map(i => 
+            `${i.token.substring(0, 5)}...${i.token.substring(i.token.length-5)} (${i.token.length} caracteres)`
+          ));
+        }
         
         // Usar maybeSingle em vez de single para evitar erros quando não encontrar o convite
         const { data, error } = await supabase
           .from("invites")
           .select("*, role:role_id(name)")
-          .eq("token", token)
+          .eq("token", cleanToken)
           .maybeSingle();
         
         if (error) {
@@ -63,21 +83,23 @@ export default function InvitePage() {
         console.log("Resultado da consulta:", data ? "Convite encontrado" : "Convite não encontrado");
         
         if (!data) {
-          console.error("Convite não encontrado para o token:", token);
-          setFetchError(`Convite não encontrado para o token: ${token}`);
+          console.error("Convite não encontrado para o token:", cleanToken);
+          setFetchError(`Convite não encontrado para o token fornecido`);
           
-          // Verificar diretamente na tabela invites se há tokens similares para debug
-          console.log("Verificando todos os tokens ativos...");
-          const { data: allInvites, error: allError } = await supabase
+          // Tentar uma busca mais flexível usando LIKE para debug
+          console.log("Tentando busca alternativa com LIKE...");
+          const { data: similarTokens, error: similarError } = await supabase
             .from("invites")
             .select("token")
-            .is("used_at", null)
+            .ilike("token", `%${cleanToken.substring(0, 20)}%`) // Primeiros 20 caracteres
             .limit(5);
             
-          if (!allError && allInvites) {
-            console.log("Exemplos de tokens ativos disponíveis:", allInvites.map(i => 
-              `${i.token.substring(0, 5)}...${i.token.substring(i.token.length-5)} (${i.token.length} caracteres)`
+          if (!similarError && similarTokens && similarTokens.length > 0) {
+            console.log("Tokens similares encontrados:", similarTokens.map(i => 
+              `${i.token.substring(0, 10)}...${i.token.substring(i.token.length-10)} (${i.token.length} caracteres)`
             ));
+            
+            setFetchError(`Convite não encontrado exato, mas encontramos ${similarTokens.length} tokens similares`);
           }
           
           throw new Error("Convite não encontrado");
@@ -285,6 +307,15 @@ export default function InvitePage() {
             <div className="bg-red-50 border border-red-200 text-red-800 p-3 rounded-md mb-4 text-xs overflow-auto">
               <p className="font-semibold">Erro de depuração:</p>
               <p className="font-mono">{fetchError}</p>
+              {token && (
+                <>
+                  <p className="font-semibold mt-2">Token recebido:</p>
+                  <p className="font-mono break-all">{token}</p>
+                  <p className="font-mono text-xs mt-1">
+                    (Comprimento: {token.length} caracteres)
+                  </p>
+                </>
+              )}
             </div>
           )}
           
@@ -416,7 +447,7 @@ export default function InvitePage() {
               </p>
               {fetchError && (
                 <p className="text-xs text-gray-500 mt-4">
-                  Detalhes técnicos: houve um problema ao consultar a base de dados.
+                  Detalhe: Pode ser necessário verificar o formato do token no link.
                 </p>
               )}
             </div>

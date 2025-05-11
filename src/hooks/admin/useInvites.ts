@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/auth';
@@ -215,6 +216,17 @@ export function useInvites() {
         inviteId
       });
       
+      // Verificar se o URL está correto antes de enviar
+      const urlPattern = new RegExp('^https?://[a-z0-9-]+(\\.[a-z0-9-]+)+([/?].*)?$', 'i');
+      if (!urlPattern.test(inviteUrl)) {
+        console.error("URL inválida gerada para o convite:", inviteUrl);
+        return {
+          success: false,
+          message: 'Erro ao gerar URL do convite',
+          error: 'URL inválida gerada'
+        };
+      }
+      
       // Chamar a edge function para envio de email
       const { data, error } = await supabase.functions.invoke('send-invite-email', {
         body: {
@@ -307,7 +319,7 @@ export function useInvites() {
     }
   }, [fetchInvites]);
 
-  // Gerar link de convite
+  // Gerar link de convite - MODIFICADO para melhorar a robustez
   const getInviteLink = useCallback((token: string) => {
     // Verificar se o token existe e tem o formato esperado
     if (!token) {
@@ -317,8 +329,15 @@ export function useInvites() {
     
     console.log("Gerando link de convite para token:", token, "comprimento:", token.length);
     
+    // Limpar o token de possíveis caracteres problemáticos
+    const cleanToken = token.trim().replace(/\s+/g, '');
+    
+    if (cleanToken !== token) {
+      console.warn("Token foi limpo antes de gerar o link. Original:", token, "Limpo:", cleanToken);
+    }
+    
     // Construir URL absoluta com origem da janela atual
-    const baseUrl = `${window.location.origin}/convite/${token}`;
+    const baseUrl = `${window.location.origin}/convite/${cleanToken}`;
     console.log("URL do convite gerado:", baseUrl);
     
     return baseUrl;

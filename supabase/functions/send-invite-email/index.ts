@@ -73,6 +73,16 @@ serve(async (req) => {
       hour: '2-digit',
       minute: '2-digit'
     });
+    
+    // Extrair token do URL para exibição separada
+    let token = "";
+    try {
+      const url = new URL(inviteUrl);
+      token = url.pathname.split('/').pop() || "";
+      console.log("Token extraído do URL:", token);
+    } catch (e) {
+      console.error("Erro ao extrair token do URL:", e);
+    }
 
     // Criar transportador SMTP
     const transporter = smtp.createTransport(smtpConfig);
@@ -81,7 +91,7 @@ serve(async (req) => {
     const senderEmail = Deno.env.get("SMTP_USER") || "no-reply@viverdeia.ai";
     const senderDomain = senderEmail.split('@')[1];
 
-    // Configurar email
+    // Configurar email com layout melhorado para garantir que os links não quebrem
     const mailOptions = {
       from: `"VIVER DE IA Club" <${senderEmail}>`,
       to: email,
@@ -112,12 +122,13 @@ serve(async (req) => {
             .button {
               display: inline-block;
               background-color: #4361ee;
-              color: white;
+              color: white !important;
               text-decoration: none;
               padding: 12px 24px;
               border-radius: 6px;
               font-weight: 600;
               margin: 20px 0;
+              text-align: center;
             }
             .footer {
               margin-top: 40px;
@@ -129,6 +140,17 @@ serve(async (req) => {
               border-left: 4px solid #4361ee;
               padding: 15px;
               margin: 20px 0;
+            }
+            .token-display {
+              font-family: monospace;
+              font-size: 16px;
+              background-color: #f0f0f0;
+              border: 1px solid #ddd;
+              padding: 10px;
+              border-radius: 4px;
+              margin: 10px 0;
+              text-align: center;
+              letter-spacing: 1px;
             }
           </style>
         </head>
@@ -146,13 +168,18 @@ serve(async (req) => {
           <p>Para aceitar o convite, clique no botão abaixo:</p>
           
           <div style="text-align: center;">
-            <a href="${inviteUrl}" class="button">Aceitar Convite</a>
+            <a href="${inviteUrl}" class="button" style="color: white !important; text-decoration: none !important;">Aceitar Convite</a>
           </div>
           
           <p><strong>Importante:</strong> Este convite expira em ${formattedExpireDate}.</p>
           
           <p>Se o botão acima não funcionar, você pode copiar e colar o link a seguir no seu navegador:</p>
-          <p style="word-break: break-all;">${inviteUrl}</p>
+          <div style="word-break: break-all; background-color: #f5f5f5; padding: 10px; border-radius: 4px;">
+            <a href="${inviteUrl}" style="color: #4361ee;">${inviteUrl}</a>
+          </div>
+          
+          <p>Ou use diretamente este código de convite:</p>
+          <div class="token-display">${token}</div>
           
           ${senderName ? `<p>Convite enviado por: ${senderName}</p>` : ''}
           
