@@ -60,7 +60,7 @@ export function useUserRoles() {
       
       return {
         roleId: data.role_id,
-        roleName: data.user_roles?.name,
+        roleName: data.user_roles ? data.user_roles.name : null,
         roleData: data.user_roles
       };
     } catch (err) {

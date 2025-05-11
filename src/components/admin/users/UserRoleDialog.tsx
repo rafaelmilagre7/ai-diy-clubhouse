@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/select";
 import { Shield, User } from "lucide-react";
 import { UserProfile } from "@/lib/supabase";
-import { Role } from "@/hooks/admin/useUsers";
+import { Role } from "@/hooks/admin/useRoles";
 
 interface UserRoleDialogProps {
   open: boolean;

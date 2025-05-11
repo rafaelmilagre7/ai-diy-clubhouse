@@ -128,7 +128,7 @@ export function useRoles() {
         
       if (usersCheckError) throw usersCheckError;
       
-      const userCount = parseInt(usersWithRole?.[0]?.count || '0');
+      const userCount = parseInt(String(usersWithRole?.[0]?.count || '0'));
       if (userCount > 0) {
         throw new Error(`Não é possível excluir este papel pois existem ${userCount} usuários associados a ele.`);
       }

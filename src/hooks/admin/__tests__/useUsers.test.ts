@@ -10,10 +10,15 @@ jest.mock('@/lib/supabase', () => ({
       select: jest.fn(() => ({
         order: jest.fn(() => Promise.resolve({ data: [], error: null })),
       })),
-      update: jest.fn(() => Promise.resolve({ error: null })),
     })),
-    rpc: jest.fn(() => Promise.resolve({ data: null, error: null })),
   },
+}));
+
+// Mock do hook usePermissions
+jest.mock('@/hooks/auth/usePermissions', () => ({
+  usePermissions: () => ({
+    hasPermission: jest.fn(() => true),
+  }),
 }));
 
 describe('useUsers', () => {
@@ -24,9 +29,8 @@ describe('useUsers', () => {
     expect(result.current.loading).toBe(true);
     expect(result.current.searchQuery).toBe('');
     expect(result.current.selectedUser).toBe(null);
-    expect(result.current.editRoleOpen).toBe(false);
-    expect(result.current.newRoleId).toBe(''); // Alterado de newRole para newRoleId
-    expect(result.current.saving).toBe(false);
+    expect(result.current.canManageUsers).toBe(true);
+    expect(result.current.canAssignRoles).toBe(true);
   });
 
   it('fetches users on mount', async () => {
@@ -34,27 +38,6 @@ describe('useUsers', () => {
     
     await act(async () => {
       await result.current.fetchUsers();
-    });
-    
-    expect(supabase.from).toHaveBeenCalledWith('profiles');
-  });
-
-  it('handles role update correctly', async () => {
-    const { result } = renderHook(() => useUsers());
-    
-    await act(async () => {
-      result.current.setSelectedUser({
-        id: '1',
-        email: 'test@example.com',
-        name: 'Test User',
-        role: 'member',
-        avatar_url: null,
-        company_name: null,
-        industry: null,
-        created_at: '2024-01-01T00:00:00Z',
-      });
-      result.current.setNewRoleId('admin-role-id'); // Alterado de setNewRole para setNewRoleId
-      await result.current.handleUpdateRole();
     });
     
     expect(supabase.from).toHaveBeenCalledWith('profiles');
