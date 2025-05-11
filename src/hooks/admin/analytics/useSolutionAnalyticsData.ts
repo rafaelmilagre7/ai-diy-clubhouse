@@ -76,11 +76,13 @@ export const useSolutionAnalyticsData = (timeRange: string) => {
           timeRange
         );
         
-        setData({
+        // Corrigido: usar o spread operator com prev para garantir todos os campos
+        setData(prev => ({
+          ...prev,
           ...processedData,
           loading: false,
           error: null
-        });
+        }));
         
       } catch (error: any) {
         console.error("Erro ao carregar dados de soluções:", error);
