@@ -2,11 +2,15 @@
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useState, useRef } from "react";
+import { useDocumentTitle } from "@/hooks/use-document-title";
 
 const Index = () => {
   const navigate = useNavigate();
   const redirectTimerRef = useRef<number | null>(null);
   const [isRedirecting, setIsRedirecting] = useState(false);
+  
+  // Definir o título da página
+  useDocumentTitle("Viver de IA Hub");
 
   // Redirecionar automaticamente para a página de autenticação após um breve delay
   useEffect(() => {
@@ -36,11 +40,11 @@ const Index = () => {
           <img
             className="mx-auto h-24 w-auto"
             src="https://milagredigital.com/wp-content/uploads/2025/04/viverdeiaclub.avif"
-            alt="VIVER DE IA Club"
+            alt="VIVER DE IA Hub"
             loading="eager" // Priorizar o carregamento da imagem de marca
           />
           <h1 className="mt-6 text-center text-4xl font-extrabold text-gray-900">
-            VIVER DE IA Club
+            VIVER DE IA Hub
           </h1>
           <p className="mt-2 text-center text-lg text-gray-600">
             Implemente soluções de IA com autonomia e sucesso
@@ -51,7 +55,7 @@ const Index = () => {
           <div className="inline-flex items-center px-4 py-2 border border-transparent text-base font-medium rounded-md text-white bg-viverblue">
             {isRedirecting ? 
               'Redirecionando para a página de login...' : 
-              'Bem-vindo ao VIVER DE IA Club'
+              'Bem-vindo ao VIVER DE IA Hub'
             }
           </div>
         </div>
