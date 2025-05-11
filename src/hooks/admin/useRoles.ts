@@ -1,197 +1,141 @@
 
-import { useState } from "react";
-import { supabase } from "@/lib/supabase";
-import { toast } from "sonner";
-import { usePermissions } from "@/hooks/auth/usePermissions";
+import { useState, useCallback } from 'react';
+import { supabase } from '@/lib/supabase';
+import { toast } from 'sonner';
 
 export interface Role {
   id: string;
   name: string;
   description: string | null;
   is_system: boolean;
-  permissions: Record<string, any>;
+  created_at: string;
+  permissions?: string[];
 }
 
-interface CreateRoleData {
+interface RoleCreate {
   name: string;
   description: string;
   is_system: boolean;
 }
 
-interface UpdateRoleData {
-  name?: string;
-  description?: string;
+interface RoleUpdate {
+  name: string;
+  description: string;
 }
 
 export function useRoles() {
-  const { hasPermission } = usePermissions();
   const [roles, setRoles] = useState<Role[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<any>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [selectedRole, setSelectedRole] = useState<Role | null>(null);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [selectedRole, setSelectedRole] = useState<Role | null>(null);
 
-  const fetchRoles = async () => {
+  // Buscar todos os papéis
+  const fetchRoles = useCallback(async () => {
     try {
       setIsLoading(true);
+      setError(null);
       
       const { data, error } = await supabase
-        .from("user_roles")
-        .select("*")
-        .order("name", { ascending: true });
-      
+        .from('roles')
+        .select('*')
+        .order('is_system', { ascending: false })
+        .order('name');
+        
       if (error) throw error;
       
-      setRoles(data as Role[]);
-    } catch (err: any) {
-      console.error("Erro ao buscar papéis:", err);
+      setRoles(data || []);
+    } catch (err) {
+      console.error('Erro ao buscar papéis:', err);
       setError(err);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  const createRole = async (roleData: CreateRoleData) => {
+  // Criar novo papel
+  const createRole = async (role: RoleCreate) => {
     try {
       setIsCreating(true);
       
       const { data, error } = await supabase
-        .from("user_roles")
-        .insert([roleData])
+        .from('roles')
+        .insert(role)
         .select()
         .single();
-      
+        
       if (error) throw error;
       
-      setRoles((prevRoles) => [...prevRoles, data as Role]);
-      toast.success("Papel criado com sucesso");
+      setRoles(prev => [...prev, data]);
+      toast.success('Papel criado com sucesso!');
       return data;
     } catch (err: any) {
-      console.error("Erro ao criar papel:", err);
-      toast.error("Erro ao criar papel", {
-        description: err.message || "Tente novamente mais tarde",
-      });
+      console.error('Erro ao criar papel:', err);
+      if (err.code === '23505') {
+        toast.error('Erro ao criar papel', {
+          description: 'Já existe um papel com este nome'
+        });
+      } else {
+        toast.error('Erro ao criar papel');
+      }
       throw err;
     } finally {
       setIsCreating(false);
     }
   };
 
-  const updateRole = async (roleId: string, roleData: UpdateRoleData) => {
+  // Atualizar papel existente
+  const updateRole = async (id: string, role: RoleUpdate) => {
     try {
       setIsUpdating(true);
       
       const { data, error } = await supabase
-        .from("user_roles")
-        .update(roleData)
-        .eq("id", roleId)
+        .from('roles')
+        .update(role)
+        .eq('id', id)
         .select()
         .single();
-      
+        
       if (error) throw error;
       
-      setRoles((prevRoles) =>
-        prevRoles.map((role) => (role.id === roleId ? data as Role : role))
-      );
-      
-      toast.success("Papel atualizado com sucesso");
+      setRoles(prev => prev.map(r => r.id === id ? data : r));
+      toast.success('Papel atualizado com sucesso!');
       return data;
-    } catch (err: any) {
-      console.error("Erro ao atualizar papel:", err);
-      toast.error("Erro ao atualizar papel", {
-        description: err.message || "Tente novamente mais tarde",
-      });
+    } catch (err) {
+      console.error('Erro ao atualizar papel:', err);
+      toast.error('Erro ao atualizar papel');
       throw err;
     } finally {
       setIsUpdating(false);
     }
   };
 
-  const deleteRole = async (roleId: string) => {
+  // Excluir papel
+  const deleteRole = async (id: string) => {
     try {
       setIsDeleting(true);
       
-      // Verificar se há usuários com este papel
-      const { data: users, error: userError } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("role_id", roleId)
-        .limit(1);
-      
-      if (userError) throw userError;
-      
-      if (users && users.length > 0) {
-        toast.error("Não é possível excluir este papel", {
-          description: "Existem usuários atribuídos a este papel.",
-        });
-        return false;
-      }
-      
-      // Excluir o papel
       const { error } = await supabase
-        .from("user_roles")
+        .from('roles')
         .delete()
-        .eq("id", roleId);
-      
+        .eq('id', id);
+        
       if (error) throw error;
       
-      setRoles((prevRoles) => prevRoles.filter((role) => role.id !== roleId));
-      toast.success("Papel excluído com sucesso");
-      return true;
-    } catch (err: any) {
-      console.error("Erro ao excluir papel:", err);
-      toast.error("Erro ao excluir papel", {
-        description: err.message || "Tente novamente mais tarde",
-      });
+      setRoles(prev => prev.filter(r => r.id !== id));
+      toast.success('Papel excluído com sucesso!');
+    } catch (err) {
+      console.error('Erro ao excluir papel:', err);
+      toast.error('Erro ao excluir papel');
       throw err;
     } finally {
       setIsDeleting(false);
-    }
-  };
-
-  // Permissões
-  const assignPermissionToRole = async (roleId: string, permissionId: string) => {
-    try {
-      const { data, error } = await supabase.rpc("assign_permission_to_role", {
-        role_id: roleId,
-        permission_id: permissionId,
-      });
-
-      if (error) throw error;
-      
-      toast.success("Permissão atribuída com sucesso");
-      return data;
-    } catch (err: any) {
-      console.error("Erro ao atribuir permissão:", err);
-      toast.error("Erro ao atribuir permissão", {
-        description: err.message || "Tente novamente mais tarde",
-      });
-      throw err;
-    }
-  };
-
-  const removePermissionFromRole = async (roleId: string, permissionId: string) => {
-    try {
-      const { data, error } = await supabase.rpc("remove_permission_from_role", {
-        role_id: roleId,
-        permission_id: permissionId,
-      });
-
-      if (error) throw error;
-      
-      toast.success("Permissão removida com sucesso");
-      return data;
-    } catch (err: any) {
-      console.error("Erro ao remover permissão:", err);
-      toast.error("Erro ao remover permissão", {
-        description: err.message || "Tente novamente mais tarde",
-      });
-      throw err;
+      setDeleteDialogOpen(false);
     }
   };
 
@@ -206,18 +150,13 @@ export function useRoles() {
     isCreating,
     isUpdating,
     isDeleting,
+    selectedRole,
+    setSelectedRole,
     createDialogOpen,
     setCreateDialogOpen,
     editDialogOpen,
     setEditDialogOpen,
     deleteDialogOpen,
-    setDeleteDialogOpen,
-    selectedRole,
-    setSelectedRole,
-    assignPermissionToRole,
-    removePermissionFromRole,
-    canManageRoles: hasPermission("roles.manage"),
-    canViewRoles: hasPermission("roles.view"),
-    canManagePermissions: hasPermission("permissions.manage"),
+    setDeleteDialogOpen
   };
 }

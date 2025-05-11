@@ -1,5 +1,5 @@
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Helmet } from "react-helmet";
 import { RolesList } from "@/components/admin/roles/RolesList";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,7 @@ import { useRoles } from "@/hooks/admin/useRoles";
 import { toast } from "sonner";
 import { PermissionGuard } from "@/components/auth/PermissionGuard";
 import { RoleForm } from "@/components/admin/roles/RoleForm";
+import { RolePermissions } from "@/components/admin/roles/RolePermissions";
 
 export default function RolesPage() {
   const { 
@@ -23,6 +24,9 @@ export default function RolesPage() {
     selectedRole,
     setSelectedRole
   } = useRoles();
+
+  // Novo estado para controlar o diálogo de permissões
+  const [permissionsDialogOpen, setPermissionsDialogOpen] = useState(false);
 
   useEffect(() => {
     fetchRoles();
@@ -70,6 +74,10 @@ export default function RolesPage() {
                 setSelectedRole(role);
                 setEditDialogOpen(true);
               }}
+              onManagePermissions={(role) => {
+                setSelectedRole(role);
+                setPermissionsDialogOpen(true);
+              }}
             />
           </CardContent>
         </Card>
@@ -81,12 +89,20 @@ export default function RolesPage() {
         />
 
         {selectedRole && (
-          <RoleForm 
-            open={editDialogOpen} 
-            onOpenChange={setEditDialogOpen}
-            mode="edit"
-            role={selectedRole}
-          />
+          <>
+            <RoleForm 
+              open={editDialogOpen} 
+              onOpenChange={setEditDialogOpen}
+              mode="edit"
+              role={selectedRole}
+            />
+            
+            <RolePermissions
+              open={permissionsDialogOpen}
+              onOpenChange={setPermissionsDialogOpen}
+              role={selectedRole}
+            />
+          </>
         )}
       </div>
     </>

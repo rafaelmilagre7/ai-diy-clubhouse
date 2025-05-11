@@ -1,9 +1,13 @@
 
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { Helmet } from "react-helmet";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { supabase } from "@/lib/supabase";
-import { toast } from "sonner";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -12,187 +16,156 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { format } from "date-fns";
+import { supabase } from "@/lib/supabase";
+import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Search } from "lucide-react";
-import { PermissionGuard } from "@/components/auth/PermissionGuard";
+import { Badge } from "@/components/ui/badge";
+import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 interface AuditLog {
   id: string;
+  action: string;
+  entity_type: string;
+  entity_id: string;
   user_id: string;
-  action_type: string;
-  target_user_id?: string;
-  role_id?: string;
-  role_name?: string;
-  permission_id?: string;
-  permission_code?: string;
-  old_value?: string;
-  new_value?: string;
+  details: any;
   created_at: string;
-  profile?: {
-    name: string;
-    email: string;
-  };
-  target_profile?: {
+  profiles?: {
     name: string;
     email: string;
   };
 }
 
 export default function PermissionAuditLogPage() {
-  const [logs, setLogs] = useState<AuditLog[]>([]);
+  const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
-  const fetchLogs = async () => {
+  useEffect(() => {
+    fetchAuditLogs();
+  }, []);
+
+  const fetchAuditLogs = async () => {
     try {
       setIsLoading(true);
       
       const { data, error } = await supabase
-        .from("permission_audit_logs")
-        .select(`
-          *,
-          profile:user_id (name, email),
-          target_profile:target_user_id (name, email)
-        `)
+        .from("audit_logs")
+        .select("*, profiles(name, email)")
+        .eq("entity_type", "role_permission")
         .order("created_at", { ascending: false })
         .limit(100);
-      
+
       if (error) throw error;
-      
-      setLogs(data as AuditLog[]);
+
+      setAuditLogs(data || []);
     } catch (err: any) {
-      console.error("Erro ao buscar logs de auditoria:", err);
+      console.error("Erro ao carregar logs de auditoria:", err);
+      setError(err.message);
       toast.error("Erro ao carregar logs de auditoria");
     } finally {
       setIsLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchLogs();
-  }, []);
-
-  const filteredLogs = logs.filter((log) => {
-    const searchLower = searchTerm.toLowerCase();
-    
-    return (
-      log.profile?.name?.toLowerCase().includes(searchLower) ||
-      log.profile?.email?.toLowerCase().includes(searchLower) ||
-      log.target_profile?.name?.toLowerCase().includes(searchLower) ||
-      log.target_profile?.email?.toLowerCase().includes(searchLower) ||
-      log.action_type.toLowerCase().includes(searchLower) ||
-      log.role_name?.toLowerCase().includes(searchLower) ||
-      log.permission_code?.toLowerCase().includes(searchLower)
-    );
-  });
-
-  // Formatar tipo de ação para exibição
-  const formatActionType = (actionType: string) => {
-    switch (actionType) {
-      case "assign_role":
-        return "Atribuir papel";
-      case "add_permission":
-        return "Adicionar permissão";
-      case "remove_permission":
-        return "Remover permissão";
-      case "create_role":
-        return "Criar papel";
-      case "update_role":
-        return "Atualizar papel";
-      case "delete_role":
-        return "Excluir papel";
+  const getActionBadge = (action: string) => {
+    switch (action) {
+      case "create":
+        return <Badge variant="outline" className="bg-green-100 text-green-800 border-green-200">Adicionada</Badge>;
+      case "delete":
+        return <Badge variant="outline" className="bg-red-100 text-red-800 border-red-200">Removida</Badge>;
       default:
-        return actionType;
+        return <Badge variant="outline">{action}</Badge>;
     }
   };
 
-  // Formatar data para exibição
-  const formatDate = (dateString: string) => {
-    return format(new Date(dateString), "dd/MM/yyyy HH:mm:ss", {
-      locale: ptBR,
-    });
-  };
-
   return (
-    <PermissionGuard permission="permissions.view">
+    <>
       <Helmet>
         <title>Log de Auditoria de Permissões | Admin</title>
       </Helmet>
 
       <div className="flex flex-col gap-6">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">
-              Log de Auditoria de Permissões
-            </h1>
-            <p className="text-muted-foreground">
-              Acompanhe alterações em papéis e permissões no sistema
-            </p>
-          </div>
-          <Button onClick={fetchLogs} variant="outline">
-            Atualizar
-          </Button>
-        </div>
-
-        <div className="w-full flex items-center space-x-2 mb-4">
-          <Search className="h-4 w-4 text-muted-foreground ml-2" />
-          <Input
-            placeholder="Buscar por usuário, papel ou permissão..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="flex-1"
-          />
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Log de Auditoria de Permissões</h1>
+          <p className="text-muted-foreground">
+            Acompanhe todas as alterações feitas em papéis e permissões do sistema
+          </p>
         </div>
 
         <Card>
           <CardHeader>
             <CardTitle>Histórico de Alterações</CardTitle>
+            <CardDescription>
+              Os 100 registros mais recentes de alterações em permissões e papéis
+            </CardDescription>
           </CardHeader>
           <CardContent>
             {isLoading ? (
               <div className="flex justify-center py-8">
-                Carregando logs de auditoria...
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <span className="ml-2">Carregando logs de auditoria...</span>
               </div>
-            ) : filteredLogs.length === 0 ? (
+            ) : error ? (
+              <div className="bg-red-50 border border-red-200 rounded-md p-4 text-red-800">
+                <p>Ocorreu um erro ao carregar os logs de auditoria.</p>
+                <p className="text-sm mt-1">{error}</p>
+              </div>
+            ) : auditLogs.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
-                {searchTerm
-                  ? "Nenhum registro encontrado para a busca realizada."
-                  : "Nenhum registro de alteração de permissões encontrado."}
+                Nenhum registro de auditoria encontrado.
               </div>
             ) : (
               <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Data</TableHead>
+                      <TableHead>Data e Hora</TableHead>
                       <TableHead>Usuário</TableHead>
                       <TableHead>Ação</TableHead>
-                      <TableHead>Usuário Alvo</TableHead>
-                      <TableHead>Papel</TableHead>
-                      <TableHead>Permissão</TableHead>
+                      <TableHead>Detalhes</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredLogs.map((log) => (
+                    {auditLogs.map((log) => (
                       <TableRow key={log.id}>
-                        <TableCell className="whitespace-nowrap">
-                          {formatDate(log.created_at)}
+                        <TableCell>
+                          <div className="font-medium">
+                            {formatDistanceToNow(new Date(log.created_at), {
+                              addSuffix: true,
+                              locale: ptBR
+                            })}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            {new Date(log.created_at).toLocaleString()}
+                          </div>
                         </TableCell>
                         <TableCell>
-                          {log.profile?.name || log.profile?.email || log.user_id}
+                          <div>{log.profiles?.name || "Usuário desconhecido"}</div>
+                          <div className="text-xs text-muted-foreground">
+                            {log.profiles?.email || log.user_id}
+                          </div>
                         </TableCell>
-                        <TableCell>{formatActionType(log.action_type)}</TableCell>
                         <TableCell>
-                          {log.target_profile?.name ||
-                            log.target_profile?.email ||
-                            log.target_user_id ||
-                            "-"}
+                          {getActionBadge(log.action)}
                         </TableCell>
-                        <TableCell>{log.role_name || "-"}</TableCell>
-                        <TableCell>{log.permission_code || "-"}</TableCell>
+                        <TableCell>
+                          <div>
+                            {log.details?.role_name && (
+                              <span>
+                                Papel: <strong>{log.details.role_name}</strong>
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            {log.details?.permission_name && (
+                              <span>
+                                Permissão: {log.details.permission_name}
+                              </span>
+                            )}
+                          </div>
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -202,6 +175,6 @@ export default function PermissionAuditLogPage() {
           </CardContent>
         </Card>
       </div>
-    </PermissionGuard>
+    </>
   );
 }

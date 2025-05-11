@@ -63,9 +63,11 @@ export function RolePermissions({ open, onOpenChange, role }: RolePermissionsPro
 
       if (error) throw error;
 
+      // Corrigindo o acesso à propriedade code
       const permissionCodes = data.map(
-        (item) => item.permission_definitions.code
-      );
+        (item: any) => item.permission_definitions?.code
+      ).filter(Boolean);
+      
       setRolePermissions(permissionCodes);
     } catch (err) {
       console.error("Erro ao buscar permissões do papel:", err);

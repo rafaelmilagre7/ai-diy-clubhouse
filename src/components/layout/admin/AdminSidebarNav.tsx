@@ -96,7 +96,7 @@ export const AdminSidebarNav = ({ sidebarOpen }: AdminSidebarNavProps) => {
     },
   ];
 
-  // Novos itens de menu para gerenciamento de papéis e permissões
+  // Itens de menu para gerenciamento de papéis e permissões
   const rbacItems = [
     {
       title: "Papéis",
@@ -185,4 +185,4 @@ export const AdminSidebarNav = ({ sidebarOpen }: AdminSidebarNavProps) => {
       </div>
     </div>
   );
-};
+}
