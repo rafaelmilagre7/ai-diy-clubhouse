@@ -22,7 +22,7 @@ export function useUserRoles() {
   const { user } = useAuth();
   const [isUpdating, setIsUpdating] = useState(false);
   const [error, setError] = useState<Error | null>(null);
-  // Adicionar cache simples para evitar consultas repetidas
+  // Cache simples para evitar consultas repetidas
   const roleCache = useRef<Map<string, UserRoleResult>>(new Map());
 
   // Atribuir papel ao usuário

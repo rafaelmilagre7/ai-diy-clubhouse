@@ -16,7 +16,6 @@ const AdminUsers = () => {
     loading,
     searchQuery,
     setSearchQuery,
-    fetchUsers,
     selectedUser,
     setSelectedUser,
     canManageUsers,
@@ -24,11 +23,6 @@ const AdminUsers = () => {
   } = useUsers();
 
   const [roleManagerOpen, setRoleManagerOpen] = useState(false);
-
-  useEffect(() => {
-    // Recarregar usuários quando a página for montada
-    fetchUsers();
-  }, [fetchUsers]);
 
   const handleEditRole = (user: UserProfile) => {
     setSelectedUser(user);
@@ -52,8 +46,6 @@ const AdminUsers = () => {
         <UsersHeader
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
-          onRefresh={fetchUsers}
-          loading={loading}
         />
         
         <div className="border rounded-lg">

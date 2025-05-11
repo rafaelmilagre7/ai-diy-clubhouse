@@ -58,6 +58,7 @@ export const useUsers = () => {
   };
 
   useEffect(() => {
+    // Fetch data when component mounts
     fetchUsers();
     fetchRoles();
   }, []);
@@ -68,7 +69,6 @@ export const useUsers = () => {
     loading,
     searchQuery,
     setSearchQuery,
-    fetchUsers,
     selectedUser,
     setSelectedUser,
     canManageUsers: hasPermission('users.manage'),

@@ -45,7 +45,11 @@ export function UserRoleManager({
             });
             
             // Definir o roleId selecionado com garantia de que seja string
-            setSelectedRoleId(result.roleId ?? "");
+            if (result.roleId) {
+              setSelectedRoleId(result.roleId);
+            } else {
+              setSelectedRoleId("");
+            }
             setIsLoadingRole(false);
           }
         } catch (error) {
