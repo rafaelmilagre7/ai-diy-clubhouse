@@ -2,15 +2,13 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { EventForm } from "./EventForm";
 import type { Event } from "@/types/events";
-import type { EventFormData } from "./form/EventFormSchema";
 
 interface EventFormDialogProps {
   event?: Event;
-  initialData?: EventFormData | null;
   onClose: () => void;
 }
 
-export const EventFormDialog = ({ event, initialData, onClose }: EventFormDialogProps) => {
+export const EventFormDialog = ({ event, onClose }: EventFormDialogProps) => {
   const isEditing = !!event;
   
   return (
@@ -22,8 +20,7 @@ export const EventFormDialog = ({ event, initialData, onClose }: EventFormDialog
           </DialogTitle>
         </DialogHeader>
         <EventForm 
-          event={event} 
-          initialData={initialData}
+          event={event}
           onSuccess={onClose} 
         />
       </DialogContent>
